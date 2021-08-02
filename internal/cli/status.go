@@ -154,11 +154,9 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 	project := resp.Project
 
 	var workspace string
-	if len(resp.Workspaces) == 0 {
-		// this happens if you just wapyoint init
-		workspace = "???"
-	} else {
-		workspace = resp.Workspaces[0].Workspace.Workspace // TODO: assume the first workspace is correct??
+	if len(resp.Workspaces) != 0 {
+		// TODO: assume the first workspace is correct??
+		workspace = resp.Workspaces[0].Workspace.Workspace
 	}
 
 	// Summary
@@ -172,7 +170,8 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 
 	appFailures := false
 	for _, app := range project.Applications {
-		if workspace == "???" {
+		if workspace == "" {
+			// At least try to look in default
 			workspace = "default"
 		}
 		appStatusResp, err := client.GetLatestStatusReport(c.Ctx, &pb.GetLatestStatusReportRequest{
@@ -251,11 +250,9 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	project := projResp.Project
 
 	var workspace string
-	if len(projResp.Workspaces) == 0 {
-		// this happens if you just wapyoint init
-		workspace = "???"
-	} else {
-		workspace = projResp.Workspaces[0].Workspace.Workspace // TODO: assume the first workspace is correct??
+	if len(projResp.Workspaces) != 0 {
+		// TODO: assume the first workspace is correct??
+		workspace = projResp.Workspaces[0].Workspace.Workspace
 	}
 
 	// App Summary
@@ -449,18 +446,17 @@ func (c *StatusCommand) FormatProjectStatus() error {
 		}
 
 		var workspace string
-		if len(resp.Workspaces) == 0 {
-			// this happens if you just wapyoint init
-			workspace = "???"
-		} else {
-			workspace = resp.Workspaces[0].Workspace.Workspace // TODO: assume the first workspace is correct??
+		if len(resp.Workspaces) != 0 {
+			// TODO: assume the first workspace is correct??
+			workspace = resp.Workspaces[0].Workspace.Workspace
 		}
 
 		// Get App Statuses
 		var appStatusReports []*pb.StatusReport
 		var ready, alive, down, unknown int
 		for _, app := range resp.Project.Applications {
-			if workspace == "???" {
+			if workspace == "" {
+				// At least try to look in default
 				workspace = "default"
 			}
 			appStatusResp, err := client.GetLatestStatusReport(c.Ctx, &pb.GetLatestStatusReportRequest{
