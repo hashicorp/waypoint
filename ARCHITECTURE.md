@@ -300,10 +300,6 @@ more data available. If there is more data available, the reader continues
 reading. When the reader is blocked again, it once again sleeps on the
 condition variable.
 
-### Authentication
-
-TODO
-
 ## Code Path of a Waypoint Operation (such as `waypoint up`)
 
 The list below shows a high-level overview of the code path of a
