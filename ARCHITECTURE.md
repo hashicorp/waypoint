@@ -22,7 +22,6 @@ specific part of Waypoint, then study the code there for specifics.
     - [Runner Job Stream](#runner-job-stream)
   - [Log Streaming](#log-streaming)
     - [Blocking Behavior](#blocking-behavior)
-  - [Authentication](#authentication)
 - [Code Path of a Waypoint Operation (such as `waypoint up`)](#code-path-of-a-waypoint-operation-such-as-waypoint-up)
 - [Code Map](#code-map)
   - [`internal/appconfig`](#internalappconfig)
