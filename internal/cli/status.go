@@ -101,8 +101,7 @@ func (c *StatusCommand) Run(args []string) int {
 		// Show high-level status of all projects
 		err = c.FormatProjectStatus()
 		if err != nil {
-			c.ui.Output("CLI failed to build project statuses:", terminal.WithErrorStyle())
-			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			c.ui.Output("CLI failed to build project statuses: "+clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
 	} else if projectTarget != "" && appTarget == "" {
@@ -112,8 +111,7 @@ func (c *StatusCommand) Run(args []string) int {
 			if status.Code(err) == codes.NotFound {
 				c.ui.Output(wpProjectNotFound, projectTarget, c.serverCtx.Server.Address, terminal.WithErrorStyle())
 			} else {
-				c.ui.Output("CLI failed to format project app statuses:", terminal.WithErrorStyle())
-				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				c.ui.Output("CLI failed to format project app statuses:"+clierrors.Humanize(err), terminal.WithErrorStyle())
 			}
 			return 1
 		}
@@ -124,8 +122,7 @@ func (c *StatusCommand) Run(args []string) int {
 			if status.Code(err) == codes.NotFound {
 				c.ui.Output(wpAppNotFound, appTarget, projectTarget, c.serverCtx.Server.Address, terminal.WithErrorStyle())
 			} else {
-				c.ui.Output("CLI failed to format app status", terminal.WithErrorStyle())
-				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				c.ui.Output("CLI failed to format app status:"+clierrors.Humanize(err), terminal.WithErrorStyle())
 			}
 			return 1
 		}
