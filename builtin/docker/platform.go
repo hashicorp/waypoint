@@ -20,6 +20,7 @@ import (
 	goUnits "github.com/docker/go-units"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
+	"github.com/mitchellh/copystructure"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -129,27 +130,12 @@ func (p *Platform) Status(
 	s := sg.Add("Gathering health report for Docker platform...")
 	defer s.Abort()
 
+	log.Debug("querying docker for container health")
+
 	// currently the docker platform only deploys 1 container
 	containerInfo, err := cli.ContainerInspect(ctx, deployment.Container)
 	if err != nil {
 		return nil, err
-	}
-
-	// Create our status report
-	var result sdk.StatusReport
-	result.External = true
-
-	// NOTE(briancain): The docker platform currently only deploys a single
-	// container, so for now the status report makes the same assumption.
-
-	log.Debug("querying docker for container health")
-
-	// Find the declared resource that corresponds to our observed container
-	var containerDeclaredResource *sdk.DeclaredResource
-	for _, r := range declaredResources.Resources {
-		if r != nil && r.Name == "container" {
-			containerDeclaredResource = r
-		}
 	}
 
 	containerCreatedTime, err := time.Parse(time.RFC3339, containerInfo.Created)
@@ -157,33 +143,43 @@ func (p *Platform) Status(
 		return nil, status.Errorf(codes.Internal, "failed to parse docker timestamp %q: %s", containerInfo.Created, err)
 	}
 
-	// Redact environment variables so we don't expose secrets on resources. Unmarshal/remarshaling to avoid mutating
-	// containerInfo
-	stateJson, err := json.Marshal(containerInfo)
+	// Use docker's containerInfo as our resource's stateJson.
+	// Redact environment variables so we don't expose secrets on resources. Copying to avoid mutating containerInfo
+	containerInfoCopy, err := copystructure.Copy(containerInfo)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to copy container info: %s", err)
+	}
+	containerInfoRedacted := containerInfoCopy.(types.ContainerJSON)
+	containerInfoRedacted.Config.Env = []string{}
+
+	stateJson, err := json.Marshal(containerInfoRedacted)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to marshal container info to json: %s", err)
 	}
-	var containerInfoRedacted types.ContainerJSON
-	if err := json.Unmarshal(stateJson, &containerInfoRedacted); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to unmarshal container info from json: %s", err)
-	}
-	containerInfoRedacted.Config.Env = []string{}
-	stateJson, err = json.Marshal(containerInfoRedacted)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to re-marshal container info to json: %s", err)
-	}
+
+	// NOTE(briancain): The docker platform currently only deploys a single
+	// container, so for now the status report makes the same assumption.
 
 	containerResource := &sdk.StatusReport_Resource{
-		Id:                  containerInfo.ID,
-		DeclaredResource:    &sdk.Ref_DeclaredResource{Id: containerDeclaredResource.Id},
-		Name:                containerInfo.Name,
-		Platform:            platformName,
-		Type:                containerDeclaredResource.Name,
-		CategoryDisplayHint: containerDeclaredResource.CategoryDisplayHint,
-		CreatedTime:         timestamppb.New(containerCreatedTime),
-		StateJson:           string(stateJson),
+		Id:          containerInfo.ID,
+		Name:        containerInfo.Name,
+		Platform:    platformName,
+		CreatedTime: timestamppb.New(containerCreatedTime),
+		StateJson:   string(stateJson),
 	}
-	resources := []*sdk.StatusReport_Resource{containerResource}
+
+	// Find the declared resource that corresponds to our observed container
+	containerDeclaredResource, err := declaredResources.ByName("container")
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if containerDeclaredResource != nil {
+		containerResource.DeclaredResource = &sdk.Ref_DeclaredResource{Id: containerDeclaredResource.Id}
+		containerResource.Type = containerDeclaredResource.Name
+		containerResource.CategoryDisplayHint = containerDeclaredResource.CategoryDisplayHint
+	} else {
+		log.Warn("no container declared resource found - this must be a status check running on an old deployment.")
+	}
 
 	if containerInfo.State.Health != nil {
 		// Built-in Docker health reporting
@@ -221,7 +217,10 @@ func (p *Platform) Status(
 		}
 	}
 
-	result.Resources = resources
+	// Create our status report
+	var result sdk.StatusReport
+	result.External = true
+	result.Resources = []*sdk.StatusReport_Resource{containerResource}
 
 	// Determine overall deployment health based on its resource health
 	var ready, alive, down, unknown int
