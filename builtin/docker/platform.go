@@ -162,7 +162,7 @@ func (p *Platform) Status(
 
 	containerResource := &sdk.StatusReport_Resource{
 		Id:          containerInfo.ID,
-		Name:        containerInfo.Name,
+		Name:        strings.TrimPrefix(containerInfo.Name, "/"), // container names officially begin with "/" when running on the local daemon
 		Platform:    platformName,
 		CreatedTime: timestamppb.New(containerCreatedTime),
 		StateJson:   string(stateJson),
