@@ -143,9 +143,9 @@ build {
 
 	doc.SetField(
 		"platform",
-		"set platform if server is multi-platform capable",
+		"set target platform to build container if server is multi-platform capable",
 		docs.Summary(
-			"Recommended usage with buildkit enabled.",
+			"Must enable Docker buildkit to use the 'platform' flag.",
 		),
 	)
 
