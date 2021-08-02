@@ -72,14 +72,12 @@ func (c *StatusCommand) Run(args []string) int {
 	// Determine which view to show based on user input
 	var projectTarget, appTarget string
 	if len(cmdArgs) >= 1 {
-		s := cmdArgs[0]
-		target := strings.Split(s, "/") // This breaks if we allow projects with "/" in the name
+		match := reAppTarget.FindStringSubmatch(cmdArgs[0])
 
-		projectTarget = target[0]
-		if len(target) == 2 {
-			appTarget = target[1]
+		if match != nil {
+			projectTarget = match[1]
+			appTarget = match[2]
 		}
-
 	} else if len(cmdArgs) == 0 {
 		// If we're in a project dir, load the name. Otherwise we'll
 		// show a list of all projects and their status and leave projectTarget
