@@ -32,6 +32,8 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 )
 
+const minBuildkitDockerVersion = "1.39"
+
 // Builder uses `docker build` to build a Docker image.
 type Builder struct {
 	config BuilderConfig
@@ -251,7 +253,7 @@ func (b *Builder) Build(
 		step.Done()
 		step = nil
 		if err := b.buildWithDocker(
-			ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.BuildArgs,
+			ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.BuildArgs, log,
 		); err != nil {
 			return nil, err
 		}
@@ -308,6 +310,7 @@ func (b *Builder) buildWithDocker(
 	relDockerfile string,
 	tag string,
 	buildArgs map[string]*string,
+	log hclog.Logger,
 ) error {
 	excludes, err := build.ReadDockerignore(contextDir)
 	if err != nil {
@@ -353,18 +356,25 @@ func (b *Builder) buildWithDocker(
 	}
 
 	// Buildkit builds need a session under most circumstances, but sessions are only supported in >1.39
-	if ver == types.BuilderBuildKit && versions.GreaterThanOrEqualTo(cli.ClientVersion(), "1.39") {
+	if ver == types.BuilderBuildKit {
+		dockerClientVersion := cli.ClientVersion()
+		if !versions.GreaterThanOrEqualTo(dockerClientVersion, minBuildkitDockerVersion) {
+			log.Warn("Buildkit requested and docker engine does not support sessions, so not using a session",
+				"dockerClientVersion", dockerClientVersion,
+				"minBuildkitDockerVersion", minBuildkitDockerVersion,
+			)
+		} else {
+			s, _ := session.NewSession(ctx, "waypoint", "")
 
-		s, _ := session.NewSession(ctx, "waypoint", "")
+			dialSession := func(ctx context.Context, proto string, meta map[string][]string) (net.Conn, error) {
+				return cli.DialHijack(ctx, "/session", proto, meta)
+			}
 
-		dialSession := func(ctx context.Context, proto string, meta map[string][]string) (net.Conn, error) {
-			return cli.DialHijack(ctx, "/session", proto, meta)
+			go s.Run(ctx, dialSession)
+			defer s.Close()
+
+			buildOpts.SessionID = s.ID()
 		}
-
-		go s.Run(ctx, dialSession)
-		defer s.Close()
-
-		buildOpts.SessionID = s.ID()
 	}
 
 	resp, err := cli.ImageBuild(ctx, buildCtx, buildOpts)
