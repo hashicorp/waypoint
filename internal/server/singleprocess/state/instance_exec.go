@@ -2,7 +2,7 @@ package state
 
 import (
 	"context"
-	"math/rand"
+	"strings"
 	"sync/atomic"
 
 	"github.com/hashicorp/go-memdb"
@@ -85,6 +85,12 @@ func (s *State) InstanceExecCreateByTargetedInstance(id string, exec *InstanceEx
 		return status.Errorf(codes.NotFound, "No instance by given id: %s", id)
 	}
 
+	instance := raw.(*Instance)
+	if instance.DisableExec {
+		return status.Errorf(codes.PermissionDenied,
+			"The requested instance (id: %s) does not support exec.", id)
+	}
+
 	// Set our ID
 	exec.Id = atomic.AddInt64(&instanceExecId, 1)
 	exec.InstanceId = id
@@ -131,71 +137,6 @@ func (s *State) InstanceExecCreateForVirtualInstance(ctx context.Context, id str
 	return nil
 }
 
-// CalculateInstanceExecByDeployment considers all the instances registered
-// to the given deployment and finds the one that is least loaded. If there
-// are no instances, returns a ResourceExhausted error. Calls to this
-// function in quick succession will return could return the same instance,
-// which is why a simple random sampling is done on all prospective instances.
-func (s *State) CalculateInstanceExecByDeployment(did string) (*Instance, error) {
-	txn := s.inmem.Txn(false)
-	defer txn.Abort()
-
-	// Find all the instances by deployment
-	iter, err := txn.Get(instanceTableName, instanceDeploymentIdIndexName, did)
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, err.Error())
-	}
-
-	// Go through each to try to find the least loaded. Most likely there
-	// will be an instance with no exec sessions and we prefer that.
-	var min []*Instance
-	minCount := 0
-	for raw := iter.Next(); raw != nil; raw = iter.Next() {
-		rec := raw.(*Instance)
-
-		// When looking through all the instances for an exec capable instance
-		// we only consider LONG_RUNNING type instances. These are the only ones
-		// that it makes sense to send random exec sessions to.
-		if rec.Type != pb.Instance_LONG_RUNNING {
-			continue
-		}
-
-		execs, err := s.instanceExecListByInstanceId(txn, rec.Id, nil)
-		if err != nil {
-			return nil, err
-		}
-
-		// Otherwise we keep track of the lowest "load" exec which we just
-		// choose by the minimum number of registered sessions.
-		if len(execs) < minCount {
-			// If we're less than the min count we've seen before, then
-			// we reset the slice of candidates because we only want
-			// candidates with this count.
-			min = nil
-		}
-		if min == nil || len(execs) <= minCount {
-			min = append(min, rec)
-			minCount = len(execs)
-		}
-	}
-
-	if min == nil {
-		return nil, status.Errorf(codes.ResourceExhausted,
-			"No available instances for exec.")
-	}
-
-	if len(min) == 1 {
-		return min[0], nil
-	}
-
-	// To avoid callers always picking the first one if there are multiple
-	// canditates, pick a random one. This helps even out the load.
-
-	tgt := rand.Intn(len(min))
-
-	return min[tgt], nil
-}
-
 func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
@@ -210,6 +151,8 @@ func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) e
 	// will be an instance with no exec sessions and we prefer that.
 	var min *Instance
 	minCount := 0
+	empty := true
+	disabled := false
 	for raw := iter.Next(); raw != nil; raw = iter.Next() {
 		rec := raw.(*Instance)
 
@@ -217,6 +160,16 @@ func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) e
 		// we only consider LONG_RUNNING type instances. These are the only ones
 		// that it makes sense to send random exec sessions to.
 		if rec.Type != pb.Instance_LONG_RUNNING {
+			continue
+		}
+
+		// We saw at least one instance
+		empty = false
+
+		// If this instance doesn't support exec then we ignore it.
+		if rec.DisableExec {
+			// We saw at least one disabled
+			disabled = true
 			continue
 		}
 
@@ -240,8 +193,22 @@ func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) e
 	}
 
 	if min == nil {
-		return status.Errorf(codes.ResourceExhausted,
-			"No available instances for exec.")
+		// If we have no running instances then show a special error.
+		if empty {
+			return status.Errorf(codes.ResourceExhausted, strings.TrimSpace(errNoRunningInstances))
+		}
+
+		// If we have at least one disabled, that means all have to be disabled
+		// to get to this error.
+		if disabled {
+			return status.Errorf(codes.ResourceExhausted, strings.TrimSpace(errExecAllDisabled))
+		}
+
+		// This SHOULD be impossible since right now we'll always assign
+		// an instance exec if we're non-empty and have any non-disabled.
+		// Therefore, we'll keep this error somewhat vague. This should not
+		// happen.
+		return status.Errorf(codes.ResourceExhausted, "No available instances for exec.")
 	}
 
 	// Set the instance ID that we'll be using
@@ -308,3 +275,20 @@ func (s *State) instanceExecListByInstanceId(
 
 	return result, nil
 }
+
+const (
+	errNoRunningInstances = `
+No running instances found for exec!
+
+If you just recently deployed, the instances could still be starting up.
+Otherwise, please diagnose the issue by inspecting your application logs.
+If application logs are not available, the application may have failed to start.
+`
+
+	errExecAllDisabled = `
+Exec is not available for any running instance. Every instance has exec
+explicitly disabled. This is only possible by disabling exec at deploy time.
+It is not possible to re-enable Waypoint exec for this deployment using
+"waypoint config".
+`
+)

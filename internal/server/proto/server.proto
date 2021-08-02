@@ -105,12 +105,6 @@ service Waypoint {
   // ListInstances returns the running instances of deployments.
   rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse);
 
-  // FindExecInstance returns an instance that can be used for an exec session.
-  // This is used by the exec cli command to detect if there is a long running
-  // instance to connect to or if a virtual instance should be created by running
-  // the plugins exec function.
-  rpc FindExecInstance(FindExecInstanceRequest) returns (FindExecInstanceResponse);
-
   // GetDeployment returns a deployment
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment);
 
@@ -2611,18 +2605,6 @@ message Instance {
   }
 }
 
-message FindExecInstanceRequest {
-  // List instances for a specific deployment.
-  string deployment_id = 1;
-
-  // Time to wait before retrying a request to connect to requested instance
-  string wait_timeout = 3;
-}
-
-message FindExecInstanceResponse {
-  Instance instance = 1;
-}
-
 /********************************************************************
 * Release Management
 ********************************************************************/
@@ -3222,6 +3204,11 @@ message EntrypointConfigRequest {
   // The type of instance that is making the config request. This type will be
   // recorded by the server to alter how the server interacts with the instance.
   Instance.Type type = 3;
+
+  // If this is true, then this instance will never be assigned any exec
+  // sessions. If no instances support exec, an error will be shown to the
+  // user.
+  bool disable_exec = 4;
 }
 
 message EntrypointConfigResponse {
