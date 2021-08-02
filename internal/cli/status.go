@@ -167,10 +167,6 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 
 	appFailures := false
 	for _, app := range project.Applications {
-		if workspace == "" {
-			// At least try to look in default
-			workspace = "default"
-		}
 		appStatusResp, err := client.GetLatestStatusReport(c.Ctx, &pb.GetLatestStatusReportRequest{
 			Application: &pb.Ref_Application{
 				Application: app.Name,
@@ -452,10 +448,6 @@ func (c *StatusCommand) FormatProjectStatus() error {
 		var appStatusReports []*pb.StatusReport
 		var ready, alive, down, unknown int
 		for _, app := range resp.Project.Applications {
-			if workspace == "" {
-				// At least try to look in default
-				workspace = "default"
-			}
 			appStatusResp, err := client.GetLatestStatusReport(c.Ctx, &pb.GetLatestStatusReportRequest{
 				Application: &pb.Ref_Application{
 					Application: app.Name,
