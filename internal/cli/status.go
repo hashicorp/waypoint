@@ -336,11 +336,11 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		deploy := respDeployList.Deployments[0]
 		statusColor := ""
 
-		var details []string
+		var details string
 		if img, ok := deploy.Preload.Build.Labels["common/image-id"]; ok {
 			img = shortImg(img)
 
-			details = append(details, "image:"+img)
+			details = "image:" + img
 		}
 
 		columns := []string{
@@ -348,7 +348,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 			fmt.Sprintf("v%d", deploy.Sequence),
 			deploy.Workspace.Workspace,
 			deploy.Component.Name,
-			details[0],
+			details,
 			deploy.Status.State.String(),
 		}
 
