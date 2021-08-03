@@ -445,7 +445,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 
 			// Deployment Resources Summary
 			//   Resources List
-			for _, rr := range release.DeclaredResources {
+			for _, rr := range statusReport.Resources {
 				columns := []string{
 					rr.Name,
 					rr.Platform,
@@ -649,15 +649,14 @@ func (c *StatusCommand) FormatProjectStatus() error {
 }
 
 func (c *StatusCommand) outputJsonProjectStatus(t *terminal.Table) error {
-	var output []map[string]interface{}
+	output := make(map[string]interface{})
 
 	// Add server context
 	serverContext := map[string]interface{}{}
 	serverContext["Address"] = c.serverCtx.Server.Address
 	serverContext["ServerPlatform"] = c.serverCtx.Server.Platform
 
-	sc := map[string]interface{}{"ServerContext": serverContext}
-	output = append(output, sc)
+	output["ServerContext"] = serverContext
 
 	p := []map[string]interface{}{}
 	for _, row := range t.Rows {
@@ -671,8 +670,7 @@ func (c *StatusCommand) outputJsonProjectStatus(t *terminal.Table) error {
 		p = append(p, c)
 	}
 
-	ps := map[string]interface{}{"Projects": p}
-	output = append(output, ps)
+	output["Projects"] = p
 
 	data, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
@@ -688,22 +686,20 @@ func (c *StatusCommand) outputJsonProjectAppStatus(
 	t *terminal.Table,
 	project *pb.Project,
 ) error {
-	var output []map[string]interface{}
+	output := make(map[string]interface{})
 
 	// Add server context
 	serverContext := map[string]interface{}{}
 	serverContext["Address"] = c.serverCtx.Server.Address
 	serverContext["ServerPlatform"] = c.serverCtx.Server.Platform
 
-	sc := map[string]interface{}{"ServerContext": serverContext}
-	output = append(output, sc)
+	output["ServerContext"] = serverContext
 
 	// Add project info
 	projectInfo := map[string]interface{}{}
 	projectInfo["Name"] = project.Name
 
-	pc := map[string]interface{}{"Project": projectInfo}
-	output = append(output, pc)
+	output["Project"] = projectInfo
 
 	a := []map[string]interface{}{}
 	for _, row := range t.Rows {
@@ -717,8 +713,7 @@ func (c *StatusCommand) outputJsonProjectAppStatus(
 		a = append(a, c)
 	}
 
-	ps := map[string]interface{}{"Applications": a}
-	output = append(output, ps)
+	output["Applications"] = a
 
 	data, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
@@ -738,22 +733,20 @@ func (c *StatusCommand) outputJsonAppStatus(
 	releaseResourcesTbl *terminal.Table,
 	project *pb.Project,
 ) error {
-	var output []map[string]interface{}
+	output := make(map[string]interface{})
 
 	// Add server context
 	serverContext := map[string]interface{}{}
 	serverContext["Address"] = c.serverCtx.Server.Address
 	serverContext["ServerPlatform"] = c.serverCtx.Server.Platform
 
-	sc := map[string]interface{}{"ServerContext": serverContext}
-	output = append(output, sc)
+	output["ServerContext"] = serverContext
 
 	// Add project info
 	projectInfo := map[string]interface{}{}
 	projectInfo["Name"] = project.Name
 
-	pc := map[string]interface{}{"Project": projectInfo}
-	output = append(output, pc)
+	output["Project"] = projectInfo
 
 	a := []map[string]interface{}{}
 	for _, row := range appTbl.Rows {
@@ -767,8 +760,7 @@ func (c *StatusCommand) outputJsonAppStatus(
 		a = append(a, c)
 	}
 
-	ps := map[string]interface{}{"Applications": a}
-	output = append(output, ps)
+	output["Applications"] = a
 
 	d := []map[string]interface{}{}
 	for _, row := range deployTbl.Rows {
@@ -782,8 +774,7 @@ func (c *StatusCommand) outputJsonAppStatus(
 		d = append(d, c)
 	}
 
-	ds := map[string]interface{}{"DeploymentSummary": d}
-	output = append(output, ds)
+	output["DeploymentSummary"] = d
 
 	dr := []map[string]interface{}{}
 	for _, row := range resourcesTbl.Rows {
@@ -797,8 +788,7 @@ func (c *StatusCommand) outputJsonAppStatus(
 		dr = append(dr, c)
 	}
 
-	drs := map[string]interface{}{"DeploymentResourcesSummary": dr}
-	output = append(output, drs)
+	output["DeploymentResourcesSummary"] = dr
 
 	rs := []map[string]interface{}{}
 	for _, row := range releaseTbl.Rows {
@@ -812,8 +802,7 @@ func (c *StatusCommand) outputJsonAppStatus(
 		rs = append(rs, c)
 	}
 
-	rsj := map[string]interface{}{"ReleasesSummary": rs}
-	output = append(output, rsj)
+	output["ReleasesSummary"] = rs
 
 	rr := []map[string]interface{}{}
 	for _, row := range releaseResourcesTbl.Rows {
@@ -827,8 +816,7 @@ func (c *StatusCommand) outputJsonAppStatus(
 		rr = append(rr, c)
 	}
 
-	rrs := map[string]interface{}{"ReleaseResourcesSummary": rr}
-	output = append(output, rrs)
+	output["ReleasesResourcesSummary"] = rr
 
 	data, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
