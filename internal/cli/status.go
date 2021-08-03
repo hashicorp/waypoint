@@ -3,7 +3,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -322,7 +321,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	}
 
 	deployHeaders := []string{
-		"App Name", "Version", "Physical State", "Id", "Artifact Id", "Exec", "Logs",
+		"App Name", "Version", "Workspace", "Platform", "Details", "Lifecycle State",
 	}
 
 	deployTbl := terminal.NewTable(deployHeaders...)
@@ -337,14 +336,20 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		deploy := respDeployList.Deployments[0]
 		statusColor := ""
 
+		var details []string
+		if img, ok := deploy.Preload.Build.Labels["common/image-id"]; ok {
+			img = shortImg(img)
+
+			details = append(details, "image:"+img)
+		}
+
 		columns := []string{
 			deploy.Application.Application,
 			fmt.Sprintf("v%d", deploy.Sequence),
+			deploy.Workspace.Workspace,
+			deploy.Component.Name,
+			details[0],
 			deploy.Status.State.String(),
-			deploy.Id,
-			deploy.ArtifactId,
-			strconv.FormatBool(deploy.HasExecPlugin),
-			strconv.FormatBool(deploy.HasLogsPlugin),
 		}
 
 		// Add column data to table
