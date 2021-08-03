@@ -60,12 +60,10 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 			"err", err)
 	}
 
-	unimplemented := false
 	c, err := a.createReleaser(ctx, &evalCtx)
 	if status.Code(err) == codes.Unimplemented {
 		c = nil
 		err = nil
-		unimplemented = true
 	}
 	if err != nil {
 		return nil, nil, err
@@ -78,12 +76,6 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 	})
 	if err != nil {
 		return nil, nil, err
-	}
-
-	if releasepb != nil {
-		rpb := releasepb.(*pb.Release)
-		rpb.Unimplemented = unimplemented
-		releasepb = rpb
 	}
 
 	var release component.Release
@@ -243,6 +235,7 @@ func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App, 
 	op.result = result.(component.Release)
 
 	rm := msg.(*pb.Release)
+	rm.Unimplemented = false
 	rm.Url = op.result.URL()
 
 	// Convert from the plugin declaredResources to server declaredResources. Should be identical.
