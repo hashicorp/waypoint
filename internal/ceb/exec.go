@@ -17,6 +17,15 @@ import (
 )
 
 func (ceb *CEB) startExecGroup(es []*pb.EntrypointConfig_Exec, env []string) {
+	// If exec is disabled, log. This should never happen because we advertise
+	// disabled exec to the server, and the server should not assign us any
+	// exec sessions. However, we don't want to explicitly trust the server
+	// so we also safeguard here that we do not exec if we've disabled it.
+	if ceb.execDisable {
+		ceb.logger.Warn("startExecGroup called but disableExec is true. This should not happen.")
+		return
+	}
+
 	idx := ceb.execIdx
 	for _, exec := range es {
 		// Ignore exec sessions we already have

@@ -408,36 +408,6 @@ func (_m *WaypointClient) EntrypointLogStream(ctx context.Context, opts ...grpc.
 	return r0, r1
 }
 
-// FindExecInstance provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) FindExecInstance(ctx context.Context, in *gen.FindExecInstanceRequest, opts ...grpc.CallOption) (*gen.FindExecInstanceResponse, error) {
-	_va := make([]interface{}, len(opts))
-	for _i := range opts {
-		_va[_i] = opts[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, in)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	var r0 *gen.FindExecInstanceResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.FindExecInstanceRequest, ...grpc.CallOption) *gen.FindExecInstanceResponse); ok {
-		r0 = rf(ctx, in, opts...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.FindExecInstanceResponse)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.FindExecInstanceRequest, ...grpc.CallOption) error); ok {
-		r1 = rf(ctx, in, opts...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GenerateInviteToken provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) GenerateInviteToken(ctx context.Context, in *gen.InviteTokenRequest, opts ...grpc.CallOption) (*gen.NewTokenResponse, error) {
 	_va := make([]interface{}, len(opts))

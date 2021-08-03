@@ -30,6 +30,7 @@ const (
 	envServerTls           = "WAYPOINT_SERVER_TLS"
 	envServerTlsSkipVerify = "WAYPOINT_SERVER_TLS_SKIP_VERIFY"
 	envCEBDisable          = "WAYPOINT_CEB_DISABLE"
+	envCEBDisableExec      = "WAYPOINT_CEB_DISABLE_EXEC"
 	envCEBServerRequired   = "WAYPOINT_CEB_SERVER_REQUIRED"
 	envCEBToken            = "WAYPOINT_CEB_INVITE_TOKEN"
 
@@ -49,6 +50,7 @@ type CEB struct {
 	deploymentId string
 	context      context.Context
 	execIdx      int64
+	execDisable  bool
 
 	// stateCond and its associated locker are used to protect all the
 	// state-prefixed fields. These state fields can be watched using this
@@ -325,6 +327,11 @@ func WithEnvDefaults() Option {
 		}
 
 		ceb.deploymentId = os.Getenv(envDeploymentId)
+
+		ceb.execDisable, err = env.GetBool(envCEBDisableExec, false)
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}
