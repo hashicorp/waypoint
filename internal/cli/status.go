@@ -158,7 +158,7 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 	//   App list
 
 	appHeaders := []string{
-		"App", "Workspace", "Latest Status", "Last Check",
+		"App", "Workspace", "Latest Report", "Latest Status", "Last Check",
 	}
 
 	appTbl := terminal.NewTable(appHeaders...)
@@ -187,10 +187,21 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 			return err
 		}
 
+		var reportType string
+		switch appStatusResp.TargetId.(type) {
+		case *pb.StatusReport_DeploymentId:
+			reportType = "Deployment"
+		case *pb.StatusReport_ReleaseId:
+			reportType = "Release"
+		default:
+			reportType = "None"
+		}
+
 		statusColor := ""
 		columns := []string{
 			app.Name,
 			workspace,
+			reportType,
 			statusReportComplete,
 			statusReportCheckTime,
 		}
