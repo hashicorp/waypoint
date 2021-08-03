@@ -273,7 +273,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		}
 	}
 	if app == nil {
-		return fmt.Errorf("Did not find aplication %q in project %q", appTarget, projectTarget)
+		return fmt.Errorf("Did not find application %q in project %q", appTarget, projectTarget)
 	}
 
 	// Deployment Summary
