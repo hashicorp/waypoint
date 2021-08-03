@@ -258,51 +258,6 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		return fmt.Errorf("Did not find aplication %q in project %q", appTarget, projectTarget)
 	}
 
-	appStatusResp, err := client.GetLatestStatusReport(c.Ctx, &pb.GetLatestStatusReportRequest{
-		Application: &pb.Ref_Application{
-			Application: app.Name,
-			Project:     project.Name,
-		},
-		Workspace: &pb.Ref_Workspace{
-			Workspace: workspace,
-		},
-	})
-	if status.Code(err) == codes.NotFound {
-		// App doesn't have a status report yet, likely not deployed
-		err = nil
-	}
-	if err != nil {
-		return err
-	}
-
-	appHeaders := []string{
-		"App", "Workspace", "Latest Status", "Last Check",
-	}
-
-	appTbl := terminal.NewTable(appHeaders...)
-
-	appFailures := false
-	statusReportComplete, statusReportCheckTime, err := c.FormatStatusReportComplete(appStatusResp)
-	if err != nil {
-		return err
-	}
-
-	statusColor := ""
-	columns := []string{
-		app.Name,
-		workspace,
-		statusReportComplete, // app statuses overall
-		statusReportCheckTime,
-	}
-
-	// Add column data to table
-	appTbl.Rich(
-		columns,
-		[]string{
-			statusColor,
-		},
-	)
-
 	// Deployment Summary
 	//   Deployment List
 
@@ -320,6 +275,24 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		return err
 	}
 
+	// Pregrab status report list
+	statusReportsResp, err := client.ListStatusReports(c.Ctx, &pb.ListStatusReportsRequest{
+		Application: &pb.Ref_Application{
+			Application: app.Name,
+			Project:     project.Name,
+		},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: workspace,
+		},
+	})
+	if status.Code(err) == codes.NotFound || status.Code(err) == codes.Unimplemented {
+		err = nil
+		statusReportsResp = nil
+	}
+	if err != nil {
+		return err
+	}
+
 	deployHeaders := []string{
 		"App Name", "Version", "Workspace", "Platform", "Details", "Lifecycle State",
 	}
@@ -332,6 +305,9 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 
 	resourcesTbl := terminal.NewTable(resourcesHeaders...)
 
+	deployStatusReportComplete := "N/A"
+	var deployStatusReportCheckTime string
+	appFailures := false // actually check this
 	if len(respDeployList.Deployments) > 0 {
 		deploy := respDeployList.Deployments[0]
 		statusColor := ""
@@ -360,25 +336,157 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 			},
 		)
 
+		// get deploy status report
+		statusReport, err := c.getLatestStatusReportByDeployId(statusReportsResp, deploy.Id)
+		if status.Code(err) == codes.NotFound {
+			err = nil
+			statusReport = nil
+		}
+		if err != nil {
+			return err
+		}
+		deployStatusReportComplete, deployStatusReportCheckTime, err = c.FormatStatusReportComplete(statusReport)
+		if err != nil {
+			return err
+		}
+
 		// Deployment Resources Summary
 		//   Resources List
-		for _, dr := range deploy.DeclaredResources {
+		// TODO(briancain): Add resource health when it exists
+		if statusReport != nil {
+			for _, dr := range statusReport.Resources {
+				columns := []string{
+					dr.Name,
+					dr.Platform,
+					dr.CategoryDisplayHint.String(),
+				}
+
+				// Add column data to table
+				resourcesTbl.Rich(
+					columns,
+					[]string{
+						statusColor,
+					},
+				)
+			}
+		}
+
+	} // else show no table
+
+	// Release Summary
+	//   Release List
+
+	release, err := client.GetLatestRelease(c.Ctx, &pb.GetLatestReleaseRequest{
+		Application: &pb.Ref_Application{
+			Application: app.Name,
+			Project:     project.Name,
+		},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: workspace,
+		},
+		LoadDetails: pb.Release_BUILD,
+	})
+	if status.Code(err) == codes.NotFound {
+		err = nil
+		release = nil
+	}
+	if err != nil {
+		return err
+	}
+
+	// Same headers as deploy
+	releaseTbl := terminal.NewTable(deployHeaders...)
+	releaseResourcesTbl := terminal.NewTable(resourcesHeaders...)
+
+	releaseUnimplemented := true
+	releaseStatusReportComplete := "N/A"
+	var releaseStatusReportCheckTime string
+	if release != nil {
+		releaseUnimplemented = release.Unimplemented
+		if !release.Unimplemented {
+			statusColor := ""
+
+			var details []string
+			if img, ok := release.Preload.Build.Labels["common/image-id"]; ok {
+				img = shortImg(img)
+
+				details = append(details, "image:"+img)
+			}
+
 			columns := []string{
-				dr.Name,
-				dr.Platform,
-				dr.CategoryDisplayHint.String(),
+				release.Application.Application,
+				fmt.Sprintf("v%d", release.Sequence),
+				release.Workspace.Workspace,
+				release.Component.Name,
+				details[0],
+				release.Status.State.String(),
 			}
 
 			// Add column data to table
-			resourcesTbl.Rich(
+			releaseTbl.Rich(
 				columns,
 				[]string{
 					statusColor,
 				},
 			)
-		}
 
+			statusReport, err := c.getLatestStatusReportByReleaseId(statusReportsResp, release.Id)
+			if status.Code(err) == codes.NotFound {
+				err = nil
+				statusReport = nil
+			}
+			if err != nil {
+				return err
+			}
+			releaseStatusReportComplete, releaseStatusReportCheckTime, err = c.FormatStatusReportComplete(statusReport)
+			if err != nil {
+				return err
+			}
+
+			// Deployment Resources Summary
+			//   Resources List
+			for _, rr := range release.DeclaredResources {
+				columns := []string{
+					rr.Name,
+					rr.Platform,
+					rr.CategoryDisplayHint.String(),
+				}
+
+				// Add column data to table
+				releaseResourcesTbl.Rich(
+					columns,
+					[]string{
+						statusColor,
+					},
+				)
+			}
+
+		}
 	} // else show no table
+
+	appHeaders := []string{
+		"App", "Workspace", "Deployment Status", "Deployment Checked", "Release Status", "Release Checked",
+	}
+
+	appTbl := terminal.NewTable(appHeaders...)
+
+	statusColor := ""
+	columns := []string{
+		app.Name,
+		workspace,
+		deployStatusReportComplete,
+		deployStatusReportCheckTime,
+		releaseStatusReportComplete,
+		releaseStatusReportCheckTime,
+	}
+
+	// Add column data to table
+	appTbl.Rich(
+		columns,
+		[]string{
+			statusColor,
+		},
+	)
 
 	// TODO(briancain): we don't yet store a list of recent events per app
 	// but it would go here if we did.
@@ -398,6 +506,16 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		c.ui.Output("Deployment Resources Summary")
 		c.ui.Table(resourcesTbl, terminal.WithStyle("Simple"))
 		c.ui.Output("")
+
+		if !releaseUnimplemented {
+			c.ui.Output("Release Summary")
+			c.ui.Table(deployTbl, terminal.WithStyle("Simple"))
+			c.ui.Output("")
+			c.ui.Output("Release Resources Summary")
+			c.ui.Table(resourcesTbl, terminal.WithStyle("Simple"))
+			c.ui.Output("")
+		}
+
 		c.ui.Output(wpStatusAppSuccessMsg)
 	}
 
@@ -744,6 +862,36 @@ func (c *StatusCommand) getWorkspaceFromProject(pr *pb.GetProjectResponse) (stri
 	}
 
 	return workspace, nil
+}
+
+func (c *StatusCommand) getLatestStatusReportByDeployId(
+	statusReportsResp *pb.ListStatusReportsResponse,
+	deployId string,
+) (*pb.StatusReport, error) {
+	for _, statusReport := range statusReportsResp.StatusReports {
+		if deploymentTargetId, ok := statusReport.TargetId.(*pb.StatusReport_DeploymentId); ok {
+			if deploymentTargetId.DeploymentId == deployId {
+				return statusReport, nil
+			}
+		}
+	}
+
+	return nil, status.Errorf(codes.NotFound, "Failed to find associated Status Report by deployment id %q", deployId)
+}
+
+func (c *StatusCommand) getLatestStatusReportByReleaseId(
+	statusReportsResp *pb.ListStatusReportsResponse,
+	releaseId string,
+) (*pb.StatusReport, error) {
+	for _, statusReport := range statusReportsResp.StatusReports {
+		if releaseTargetId, ok := statusReport.TargetId.(*pb.StatusReport_ReleaseId); ok {
+			if releaseTargetId.ReleaseId == releaseId {
+				return statusReport, nil
+			}
+		}
+	}
+
+	return nil, status.Errorf(codes.NotFound, "Failed to find associated Status Report by release id %q", releaseId)
 }
 
 func (c *StatusCommand) Flags() *flag.Sets {
