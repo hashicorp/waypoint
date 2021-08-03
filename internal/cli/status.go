@@ -197,6 +197,13 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 			reportType = "None"
 		}
 
+		if appStatusResp != nil {
+			if appStatusResp.Health.HealthStatus == "ERROR" ||
+				appStatusResp.Health.HealthStatus == "DOWN" {
+				appFailures = true
+			}
+		}
+
 		statusColor := ""
 		columns := []string{
 			app.Name,
@@ -318,7 +325,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 
 	deployStatusReportComplete := "N/A"
 	var deployStatusReportCheckTime string
-	appFailures := false // actually check this
+	appFailures := false
 	if len(respDeployList.Deployments) > 0 {
 		deploy := respDeployList.Deployments[0]
 		statusColor := ""
@@ -365,6 +372,11 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		//   Resources List
 		// TODO(briancain): Add resource health when it exists
 		if statusReport != nil {
+			if statusReport.Health.HealthStatus == "ERROR" ||
+				statusReport.Health.HealthStatus == "DOWN" {
+				appFailures = true
+			}
+
 			for _, dr := range statusReport.Resources {
 				columns := []string{
 					dr.Name,
@@ -454,22 +466,29 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 				return err
 			}
 
-			// Deployment Resources Summary
+			// Release Resources Summary
 			//   Resources List
-			for _, rr := range statusReport.Resources {
-				columns := []string{
-					rr.Name,
-					rr.Platform,
-					rr.CategoryDisplayHint.String(),
+			if statusReport != nil {
+				if statusReport.Health.HealthStatus == "ERROR" ||
+					statusReport.Health.HealthStatus == "DOWN" {
+					appFailures = true
 				}
 
-				// Add column data to table
-				releaseResourcesTbl.Rich(
-					columns,
-					[]string{
-						statusColor,
-					},
-				)
+				for _, rr := range statusReport.Resources {
+					columns := []string{
+						rr.Name,
+						rr.Platform,
+						rr.CategoryDisplayHint.String(),
+					}
+
+					// Add column data to table
+					releaseResourcesTbl.Rich(
+						columns,
+						[]string{
+							statusColor,
+						},
+					)
+				}
 			}
 
 		}
@@ -642,9 +661,6 @@ func (c *StatusCommand) FormatProjectStatus() error {
 			},
 		)
 	}
-
-	// TODO: Sort by Name, Workspace, or Status
-	// might have to pre-sort by status since strings are ascii
 
 	// Render the table
 	if c.flagJson {
@@ -967,7 +983,6 @@ The 'app' flag was included, but an application was also requested as an argumen
 The app flag will be ignored.
 `)
 
-	// TODO do we need a "waypoint application list"
 	wpAppNotFound = strings.TrimSpace(`
 No application named %q was found in project %q for the server context %q. To see a
 list of currently configured projects, run “waypoint project list”.
