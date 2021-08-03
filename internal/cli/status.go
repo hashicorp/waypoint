@@ -494,7 +494,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	//   Events List
 
 	if c.flagJson {
-		c.outputJsonAppStatus(appTbl, deployTbl, resourcesTbl, project)
+		c.outputJsonAppStatus(appTbl, deployTbl, resourcesTbl, releaseTbl, releaseResourcesTbl, project)
 	} else {
 		c.ui.Output("")
 		c.ui.Output("Application Summary")
@@ -509,10 +509,10 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 
 		if !releaseUnimplemented {
 			c.ui.Output("Release Summary")
-			c.ui.Table(deployTbl, terminal.WithStyle("Simple"))
+			c.ui.Table(releaseTbl, terminal.WithStyle("Simple"))
 			c.ui.Output("")
 			c.ui.Output("Release Resources Summary")
-			c.ui.Table(resourcesTbl, terminal.WithStyle("Simple"))
+			c.ui.Table(releaseResourcesTbl, terminal.WithStyle("Simple"))
 			c.ui.Output("")
 		}
 
@@ -734,6 +734,8 @@ func (c *StatusCommand) outputJsonAppStatus(
 	appTbl *terminal.Table,
 	deployTbl *terminal.Table,
 	resourcesTbl *terminal.Table,
+	releaseTbl *terminal.Table,
+	releaseResourcesTbl *terminal.Table,
 	project *pb.Project,
 ) error {
 	var output []map[string]interface{}
@@ -797,6 +799,36 @@ func (c *StatusCommand) outputJsonAppStatus(
 
 	drs := map[string]interface{}{"DeploymentResourcesSummary": dr}
 	output = append(output, drs)
+
+	rs := []map[string]interface{}{}
+	for _, row := range releaseTbl.Rows {
+		c := map[string]interface{}{}
+
+		for j, r := range row {
+			// Remove any whitespacess in key
+			header := strings.ReplaceAll(releaseTbl.Headers[j], " ", "")
+			c[header] = r.Value
+		}
+		rs = append(rs, c)
+	}
+
+	rsj := map[string]interface{}{"ReleasesSummary": rs}
+	output = append(output, rsj)
+
+	rr := []map[string]interface{}{}
+	for _, row := range releaseResourcesTbl.Rows {
+		c := map[string]interface{}{}
+
+		for j, r := range row {
+			// Remove any whitespacess in key
+			header := strings.ReplaceAll(releaseResourcesTbl.Headers[j], " ", "")
+			c[header] = r.Value
+		}
+		rr = append(rr, c)
+	}
+
+	rrs := map[string]interface{}{"ReleaseResourcesSummary": rr}
+	output = append(output, rrs)
 
 	data, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
