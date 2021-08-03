@@ -139,3 +139,67 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 		require.Equal(sr.StatusReports[0].Id, resp.StatusReport.Id)
 	})
 }
+
+func TestServiceStatusReport_ExpediteStatusReport(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	db := testDB(t)
+	impl, err := New(WithDB(db))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	// Create a project with an application
+	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+		Project: serverptypes.TestProject(t, &pb.Project{
+			Name: "Example",
+			DataSource: &pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Local{
+					Local: &pb.Job_Local{},
+				},
+			},
+			Applications: []*pb.Application{
+				{
+					Project: &pb.Ref_Project{Project: "Example"},
+					Name:    "apple-app",
+				},
+			},
+		}),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, respProj)
+
+	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+			Component: &pb.Component{
+				Name: "testapp",
+			},
+			Application: &pb.Ref_Application{
+				Application: "apple-app",
+				Project:     "Example",
+			},
+		}),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	t.Run("Expedite Status Report", func(t *testing.T) {
+		require := require.New(t)
+
+		jobResp, err := client.ExpediteStatusReport(ctx, &pb.ExpediteStatusReportRequest{
+			Target: &pb.ExpediteStatusReportRequest_Deployment{
+				Deployment: &pb.Ref_Operation{
+					Target: &pb.Ref_Operation_Id{Id: resp.Deployment.Id},
+				},
+			},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "default",
+			},
+		})
+		require.NoError(err)
+		require.NotEmpty(t, jobResp)
+		require.NotNil(t, jobResp.JobId)
+	})
+
+	require.NoError(t, err)
+}
