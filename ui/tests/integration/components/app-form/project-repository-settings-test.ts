@@ -102,7 +102,7 @@ module('Integration | Component | app-form/project-settings', function (hooks) {
     assert.dom('#git-auth-ssh').isChecked();
     assert.dom('#git-source-ssh-user').hasValue('user');
     assert.dom('#git-source-ssh-password').hasValue('password');
-    assert.dom('#git-source-ssh-key').hasValue('private key');
+    assert.dom('#git-source-ssh-key').hasValue(atob('private key'));
   });
 
   test('no auth loads properly', async function (assert) {
