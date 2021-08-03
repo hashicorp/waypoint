@@ -65,6 +65,23 @@ setting the `WAYPOINT_CEB_DISABLE_EXEC` environment variable to a truthy
 value (e.g. "1"). Other entrypoint features such as logs, application config,
 etc. will continue to work.
 
+This environment variable must be set _before_ the entrypoint starts.
+Therefore, it cannot be set with [application configuration](/docs/app-config).
+It must be set at build time or by using functionality of your deployment
+plugin.
+
+The example below shows how to set this using the [Kubernetes plugin](/plugins/kubernetes):
+
+```hcl
+deploy {
+  use "kubernetes" {
+    static_environment = {
+      "WAYPOINT_CEB_DISABLE_EXEC" = "1"
+    }
+  }
+}
+```
+
 When exec is disabled, the entrypoint will not allow `waypoint exec` to
 target _that specific instance_. If there are other instances running without
 the environment variable set (such as from a previous deployment), those may
@@ -75,8 +92,3 @@ plugins, `waypoint exec` works without the Waypoint entrypoint. For example,
 the AWS Lambda plugin launches a just-in-time instance for `exec` that
 doesn't use the entrypoint. This environment variable will have no effect
 on this functionality.
-
-This environment variable must be set _before_ the entrypoint starts.
-Therefore, it cannot be set with [application configuration](/docs/app-config).
-It must be set at build time or by using functionality of your deployment
-plugin.
