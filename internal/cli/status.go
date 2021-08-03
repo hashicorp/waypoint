@@ -658,19 +658,8 @@ func (c *StatusCommand) outputJsonProjectStatus(t *terminal.Table) error {
 
 	output["ServerContext"] = serverContext
 
-	p := []map[string]interface{}{}
-	for _, row := range t.Rows {
-		c := map[string]interface{}{}
-
-		for j, r := range row {
-			// Remove any whitespacess in key
-			header := strings.ReplaceAll(t.Headers[j], " ", "")
-			c[header] = r.Value
-		}
-		p = append(p, c)
-	}
-
-	output["Projects"] = p
+	projects := c.formatJsonMap(t)
+	output["Projects"] = projects
 
 	data, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
@@ -701,19 +690,8 @@ func (c *StatusCommand) outputJsonProjectAppStatus(
 
 	output["Project"] = projectInfo
 
-	a := []map[string]interface{}{}
-	for _, row := range t.Rows {
-		c := map[string]interface{}{}
-
-		for j, r := range row {
-			// Remove any whitespacess in key
-			header := strings.ReplaceAll(t.Headers[j], " ", "")
-			c[header] = r.Value
-		}
-		a = append(a, c)
-	}
-
-	output["Applications"] = a
+	app := c.formatJsonMap(t)
+	output["Applications"] = app
 
 	data, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
@@ -748,75 +726,20 @@ func (c *StatusCommand) outputJsonAppStatus(
 
 	output["Project"] = projectInfo
 
-	a := []map[string]interface{}{}
-	for _, row := range appTbl.Rows {
-		c := map[string]interface{}{}
+	app := c.formatJsonMap(appTbl)
+	output["Applications"] = app
 
-		for j, r := range row {
-			// Remove any whitespacess in key
-			header := strings.ReplaceAll(appTbl.Headers[j], " ", "")
-			c[header] = r.Value
-		}
-		a = append(a, c)
-	}
+	deploySummary := c.formatJsonMap(deployTbl)
+	output["DeploymentSummary"] = deploySummary
 
-	output["Applications"] = a
+	deployResourcesSummary := c.formatJsonMap(resourcesTbl)
+	output["DeploymentResourcesSummary"] = deployResourcesSummary
 
-	d := []map[string]interface{}{}
-	for _, row := range deployTbl.Rows {
-		c := map[string]interface{}{}
+	releasesSummary := c.formatJsonMap(releaseTbl)
+	output["ReleasesSummary"] = releasesSummary
 
-		for j, r := range row {
-			// Remove any whitespacess in key
-			header := strings.ReplaceAll(deployTbl.Headers[j], " ", "")
-			c[header] = r.Value
-		}
-		d = append(d, c)
-	}
-
-	output["DeploymentSummary"] = d
-
-	dr := []map[string]interface{}{}
-	for _, row := range resourcesTbl.Rows {
-		c := map[string]interface{}{}
-
-		for j, r := range row {
-			// Remove any whitespacess in key
-			header := strings.ReplaceAll(resourcesTbl.Headers[j], " ", "")
-			c[header] = r.Value
-		}
-		dr = append(dr, c)
-	}
-
-	output["DeploymentResourcesSummary"] = dr
-
-	rs := []map[string]interface{}{}
-	for _, row := range releaseTbl.Rows {
-		c := map[string]interface{}{}
-
-		for j, r := range row {
-			// Remove any whitespacess in key
-			header := strings.ReplaceAll(releaseTbl.Headers[j], " ", "")
-			c[header] = r.Value
-		}
-		rs = append(rs, c)
-	}
-
-	output["ReleasesSummary"] = rs
-
-	rr := []map[string]interface{}{}
-	for _, row := range releaseResourcesTbl.Rows {
-		c := map[string]interface{}{}
-
-		for j, r := range row {
-			// Remove any whitespacess in key
-			header := strings.ReplaceAll(releaseResourcesTbl.Headers[j], " ", "")
-			c[header] = r.Value
-		}
-		rr = append(rr, c)
-	}
-
-	output["ReleasesResourcesSummary"] = rr
+	releaseResourcesSummary := c.formatJsonMap(releaseResourcesTbl)
+	output["ReleasesResourcesSummary"] = releaseResourcesSummary
 
 	data, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
@@ -912,6 +835,24 @@ func (c *StatusCommand) getLatestStatusReportByReleaseId(
 	}
 
 	return nil, status.Errorf(codes.NotFound, "Failed to find associated Status Report by release id %q", releaseId)
+}
+
+// Takes a terminal Table and formats it into a map of key values to be used
+// for formatting a JSON output response
+func (c *StatusCommand) formatJsonMap(t *terminal.Table) []map[string]interface{} {
+	result := []map[string]interface{}{}
+	for _, row := range t.Rows {
+		c := map[string]interface{}{}
+
+		for j, r := range row {
+			// Remove any whitespacess in key
+			header := strings.ReplaceAll(t.Headers[j], " ", "")
+			c[header] = r.Value
+		}
+		result = append(result, c)
+	}
+
+	return result
 }
 
 func (c *StatusCommand) Flags() *flag.Sets {
