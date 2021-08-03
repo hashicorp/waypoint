@@ -1,0 +1,3 @@
+```release-note:bug
+ui: display and read/write base64 strings correctly in SSH and Hcl inputs
+```
