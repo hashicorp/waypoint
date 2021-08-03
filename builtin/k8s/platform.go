@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/mapstructure"
 	corev1 "k8s.io/api/core/v1"
@@ -24,7 +23,6 @@ import (
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/docker"
-	"github.com/hashicorp/waypoint/internal/clierrors"
 )
 
 const (
@@ -102,6 +100,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithState(&Resource_Deployment{}),
 			resource.WithCreate(p.resourceDeploymentCreate),
 			resource.WithDestroy(p.resourceDeploymentDestroy),
+			resource.WithStatus(p.resourceDeploymentStatus),
 
 			resource.WithPlatform(platformName),
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
@@ -123,6 +122,55 @@ func (p *Platform) getClientset() (*clientsetInfo, error) {
 		Namespace: ns,
 		Config:    config,
 	}, nil
+}
+
+func (p *Platform) resourceDeploymentStatus(
+	//ctx context.Context,
+	//log hclog.Logger,
+	state *Resource_Deployment,
+	//dcr *component.DeclaredResources,
+	//ui terminal.UI,
+	sr *resource.StatusResponse, // Including this arg breaks everything
+) {
+
+	return
+	//sg := ui.StepGroup()
+	//defer sg.Wait()
+	//
+	//step := sg.Add("Checking the kubernetes deployment status...")
+	//defer func() { step.Abort() }() // Defer in func in case more steps are added to this func in the future
+	//
+	//csInfo, err := p.getClientset()
+	//if err != nil {
+	//	return err
+	//}
+	//clientSet := csInfo.Clientset
+	//namespace := csInfo.Namespace
+	//if p.config.Namespace != "" {
+	//	namespace = p.config.Namespace
+	//}
+	//
+	//podClient := clientSet.CoreV1().Pods(namespace)
+	//podLabelId := fmt.Sprintf("app=%s", state.Name)
+	//podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: podLabelId})
+	//if err != nil {
+	//	ui.Output(
+	//		"Error listing pods to determine application health: %s", clierrors.Humanize(err),
+	//		terminal.WithErrorStyle(),
+	//	)
+	//	return err
+	//}
+	//
+	//var resources []*sdk.StatusReport_Resource
+	//
+	//for _, pod := range podList.Items {
+	//	resources = append(resources, &sdk.StatusReport_Resource{
+	//		Health: podPhaseToHealth(pod.Status.Phase),
+	//		// TODO(izaak): more...
+	//	})
+	//}
+	////sr.Reports = resources
+	//return nil
 }
 
 // resourceDeploymentCreate creates the Kubernetes deployment.
@@ -652,72 +700,72 @@ func (p *Platform) Status(
 	ctx context.Context,
 	log hclog.Logger,
 	deployment *Deployment,
+	dcr *component.DeclaredResources,
 	ui terminal.UI,
 ) (*sdk.StatusReport, error) {
-	sg := ui.StepGroup()
-	defer sg.Wait()
 
-	step := sg.Add("Gathering health report for Kubernetes platform...")
-	defer func() { step.Abort() }() // Defer in func in case more steps are added to this func in the future
+	rm := p.resourceManager(log, nil)
 
-	csInfo, err := p.getClientset()
-	if err != nil {
-		return nil, err
-	}
-	clientSet := csInfo.Clientset
-	namespace := csInfo.Namespace
-	if p.config.Namespace != "" {
-		namespace = p.config.Namespace
-	}
-
-	podClient := clientSet.CoreV1().Pods(namespace)
-	podLabelId := fmt.Sprintf("app=%s", deployment.Name)
-	podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: podLabelId})
-	if err != nil {
-		ui.Output(
-			"Error listing pods to determine application health: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return nil, err
-	}
-
-	// Create our status report
-	step.Update("Building status report for running pods...")
-	result := buildStatusReport(podList)
-
-	result.GeneratedTime = ptypes.TimestampNow()
-	log.Debug("status report complete")
-
-	// update output based on main health state
-	step.Update("Finished building report for Kubernetes platform")
-	step.Done()
-
-	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
-	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
-	st := ui.Status()
-	defer st.Close()
-
-	st.Update("Determining overall container health...")
-	if result.Health == sdk.StatusReport_READY {
-		st.Step(terminal.StatusOK, fmt.Sprintf("Deployment %q is reporting ready!", deployment.Name))
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if deployment.ResourceState == nil {
+		rm.Resource("deployment").SetState(&Resource_Deployment{
+			Name: deployment.Name,
+		})
 	} else {
-		if result.Health == sdk.StatusReport_PARTIAL {
-			st.Step(terminal.StatusWarn, fmt.Sprintf("Deployment %q is reporting partially available!", deployment.Name))
-		} else {
-			st.Step(terminal.StatusError, fmt.Sprintf("Deployment %q is reporting not ready!", deployment.Name))
-		}
-
-		// Extra advisory wording to let user know that the deployment could be still starting up
-		// if the report was generated immediately after it was deployed or released.
-		st.Step(terminal.StatusWarn, mixedHealthWarn)
-	}
-
-	// More UI detail for non-ready resources
-	for _, resource := range result.Resources {
-		if resource.Health != sdk.StatusReport_READY {
-			st.Step(terminal.StatusWarn, fmt.Sprintf("Resource %q is reporting %q", resource.Name, resource.Health.String()))
+		// Load our set state
+		if err := rm.LoadState(deployment.ResourceState); err != nil {
+			return nil, err
 		}
 	}
+
+	resourceStatuses, err := rm.StatusAll(ctx, log, ui, dcr)
+	if err != nil {
+		return nil, err
+	}
+
+	var result sdk.StatusReport
+
+	result.Resources = resourceStatuses
+	result.HealthMessage = "test health message 3"
+
+	//// Create our status report
+	//step.Update("Building status report for running pods...")
+	//result := buildStatusReport(podList)
+	//
+	//result.GeneratedTime = ptypes.TimestampNow()
+	//log.Debug("status report complete")
+	//
+	//// update output based on main health state
+	//step.Update("Finished building report for Kubernetes platform")
+	//step.Done()
+	//
+	//// NOTE(briancain): Replace ui.Status with StepGroups once this bug
+	//// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
+	//st := ui.Status()
+	//defer st.Close()
+	//
+	//st.Update("Determining overall container health...")
+	//if result.Health == sdk.StatusReport_READY {
+	//	st.Step(terminal.StatusOK, fmt.Sprintf("Deployment %q is reporting ready!", deployment.Name))
+	//} else {
+	//	if result.Health == sdk.StatusReport_PARTIAL {
+	//		st.Step(terminal.StatusWarn, fmt.Sprintf("Deployment %q is reporting partially available!", deployment.Name))
+	//	} else {
+	//		st.Step(terminal.StatusError, fmt.Sprintf("Deployment %q is reporting not ready!", deployment.Name))
+	//	}
+	//
+	//	// Extra advisory wording to let user know that the deployment could be still starting up
+	//	// if the report was generated immediately after it was deployed or released.
+	//	st.Step(terminal.StatusWarn, mixedHealthWarn)
+	//}
+	//
+	//// More UI detail for non-ready resources
+	//for _, resource := range result.Resources {
+	//	if resource.Health != sdk.StatusReport_READY {
+	//		st.Step(terminal.StatusWarn, fmt.Sprintf("Resource %q is reporting %q", resource.Name, resource.Health.String()))
+	//	}
+	//}
 
 	return &result, nil
 }
