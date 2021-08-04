@@ -5,8 +5,10 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/mitchellh/mapstructure"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -224,12 +226,15 @@ func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App, 
 		return nil, nil
 	}
 
+	declaredResourcesResp := &component.DeclaredResourcesResp{}
+
 	result, err := app.callDynamicFunc(ctx,
 		log,
 		(*component.Release)(nil),
 		op.Component,
 		op.Component.Value.(component.ReleaseManager).ReleaseFunc(),
 		plugin.ArgNamedAny("target", op.Target.Deployment),
+		argmapper.Typed(declaredResourcesResp),
 	)
 	if err != nil {
 		return nil, err
@@ -239,6 +244,18 @@ func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App, 
 
 	rm := msg.(*pb.Release)
 	rm.Url = op.result.URL()
+
+	// Convert from the plugin declaredResources to server declaredResources. Should be identical.
+	declaredResources := make([]*pb.DeclaredResource, len(declaredResourcesResp.DeclaredResources))
+	for i, pluginDeclaredResource := range declaredResourcesResp.DeclaredResources {
+		var serverDeclaredResource pb.DeclaredResource
+		if err := mapstructure.Decode(pluginDeclaredResource, &serverDeclaredResource); err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to decode plugin declared resource named %q: %s", pluginDeclaredResource.Name, err)
+		}
+		declaredResources[i] = &serverDeclaredResource
+	}
+
+	rm.DeclaredResources = declaredResources
 
 	return result, nil
 }
