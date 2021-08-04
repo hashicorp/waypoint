@@ -190,6 +190,7 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 		})
 		require.NoError(err)
 		require.NotEmpty(sr)
+		require.Equal(len(sr.StatusReports), 2)
 		require.Equal(sr.StatusReports[0].Id, resp.StatusReport.Id)
 	})
 
