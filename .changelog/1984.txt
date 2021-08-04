@@ -1,0 +1,3 @@
+```release-note:bug
+serverinstall/ecs: handle errors when resources are already destroyed
+```
