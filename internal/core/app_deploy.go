@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/mitchellh/mapstructure"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
@@ -339,15 +341,12 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 
 	// Convert from the plugin declaredResources to server declaredResources. Should be identical.
 	declaredResources := make([]*pb.DeclaredResource, len(declaredResourcesResp.DeclaredResources))
-	for i, resource := range declaredResourcesResp.DeclaredResources {
-		declaredResources[i] = &pb.DeclaredResource{
-			Id:                  resource.Id,
-			Name:                resource.Name,
-			Platform:            resource.Platform,
-			State:               resource.State,
-			StateJson:           resource.StateJson,
-			CategoryDisplayHint: pb.ResourceCategoryDisplayHint(resource.CategoryDisplayHint.Number()),
+	for i, pluginDeclaredResource := range declaredResourcesResp.DeclaredResources {
+		var serverDeclaredResource pb.DeclaredResource
+		if err := mapstructure.Decode(pluginDeclaredResource, &serverDeclaredResource); err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to decode plugin declared resource named %q: %s", pluginDeclaredResource.Name, err)
 		}
+		declaredResources[i] = &serverDeclaredResource
 	}
 
 	deploy.DeclaredResources = declaredResources
