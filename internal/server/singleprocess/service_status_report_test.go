@@ -170,7 +170,7 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
+	releaseStatusResp, err := client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
 		StatusReport: serverptypes.TestValidStatusReport(t, &pb.StatusReport{
 			TargetId: &pb.StatusReport_ReleaseId{
 				ReleaseId: releaseResp.Release.Id,
@@ -212,6 +212,27 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 		require.Equal(len(sr.StatusReports), 1)
 		require.Equal(sr.StatusReports[0].Id, resp.StatusReport.Id)
 		require.Equal(sr.StatusReports[0].TargetId.(*pb.StatusReport_DeploymentId).DeploymentId, deployResp.Deployment.Id)
+	})
+
+	t.Run("list only release reports", func(t *testing.T) {
+		require := require.New(t)
+
+		// Get, should return a status report
+		sr, err := client.ListStatusReports(ctx, &Req{
+			Application: resp.StatusReport.Application,
+			Target: &pb.ListStatusReportsRequest_Release{
+				Release: &pb.Ref_Operation{
+					Target: &pb.Ref_Operation_Id{
+						Id: releaseResp.Release.Id,
+					},
+				},
+			},
+		})
+		require.NoError(err)
+		require.NotEmpty(sr)
+		require.Equal(len(sr.StatusReports), 1)
+		require.Equal(sr.StatusReports[0].Id, releaseStatusResp.StatusReport.Id)
+		require.Equal(sr.StatusReports[0].TargetId.(*pb.StatusReport_ReleaseId).ReleaseId, releaseResp.Release.Id)
 	})
 }
 
