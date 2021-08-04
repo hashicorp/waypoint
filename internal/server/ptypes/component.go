@@ -129,7 +129,7 @@ func TestValidStatusReport(t testing.T, src *pb.StatusReport) *pb.StatusReport {
 		Workspace: &pb.Ref_Workspace{
 			Workspace: "default",
 		},
-		ResourcesHealth: []*pb.StatusReport_Health{
+		DeprecatedResourcesHealth: []*pb.StatusReport_Health{
 			{
 				HealthStatus:  "READY",
 				HealthMessage: "ready for requests",

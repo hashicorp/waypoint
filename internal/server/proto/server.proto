@@ -700,7 +700,7 @@ message Ref {
 
   // DeclaredResource references a declared resource.
   message DeclaredResource {
-    string id = 1;
+    string name = 1;
   }
 }
 
@@ -834,11 +834,11 @@ message Generation {
 
 // A platform resource that an operation (release/deployment) has created, depends on, or manages.
 message DeclaredResource {
-  // The id of the declared resource. Automatically generated
-  string id = 6;
-
   // platform-specific name of the resource type. i.e. instance, pod, auto-scaling group, etc
   string name = 1;
+
+  // platform-specific type of the resource type. i.e. instance, pod, auto-scaling group, etc
+  string type = 6;
 
   // The platform on which the resource should exist, i.e. docker, gcp, k8s, etc.
   string platform = 2;
@@ -852,7 +852,6 @@ message DeclaredResource {
 
   // high level type of the resource, used for display purposes.
   ResourceCategoryDisplayHint category_display_hint = 5;
-
 }
 
 enum ResourceCategoryDisplayHint {
@@ -2840,6 +2839,10 @@ message GetStatusReportRequest {
 // used to run the StatusReport job operation for Waypoint Server. The raw SDK
 // StatusReport message is stored as an option on this message
 message StatusReport {
+  // Deprecated in favor of resources
+  // A health report of all of the resources that make up the report.
+  // Copied from the plugin generated raw SDK status report for convenient API access.
+  repeated Health deprecated_resources_health = 9;
 
   // The application that this build is part of.
   Ref.Application application = 1;
@@ -2872,9 +2875,7 @@ message StatusReport {
   // Copied from the plugin generated raw SDK status report for convenient API access.
   Health health = 8;
 
-  // A health report of all of the resources that make up the report.
-  // Copied from the plugin generated raw SDK status report for convenient API access.
-  repeated Health resources_health = 9;
+
 
   // the time when this report was generated
   // Copied from the plugin generated raw SDK status report for convenient API access.
@@ -2924,20 +2925,29 @@ message StatusReport {
 
     // a simple human readable message detailing the Health state
     string health_message = 12;
+
+    // the state of overall health of a deployed application
+    enum Health {
+      UNKNOWN = 0;
+      ALIVE = 1;
+      READY = 2;
+      DOWN = 3;
+      MISSING = 5; // We're expecting it to exist, but it does not.
+      PARTIAL = 4; // Some resources in deployment are OK, others are not OK
+    }
   }
 
   message Health {
+    string deprecated_name = 3;
+    string deprecated_id = 4;
+
     // the overall health of the report for a resource
     string health_status = 1;
 
     // the overall health message of the report for a resource
     string health_message = 2;
 
-    // Resource name
-    string name = 3;
 
-    // Resource id
-    string id = 4;
   }
 }
 
