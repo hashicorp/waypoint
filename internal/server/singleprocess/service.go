@@ -227,9 +227,11 @@ func WithSuperuser() Option {
 	}
 }
 
+// WithAcceptURLTerms will either accept or reject the terms of service
+// for using the URL service. Rejecting the TOS will disable the URL service.
 func WithAcceptURLTerms(accept bool) Option {
 	return func(s *service, cfg *config) error {
-		cfg.acceptUrlTerms = true
+		cfg.acceptUrlTerms = accept
 		return nil
 	}
 }
