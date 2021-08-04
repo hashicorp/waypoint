@@ -132,40 +132,50 @@ func (p *Platform) Status(
 
 	log.Debug("querying docker for container health")
 
-	// currently the docker platform only deploys 1 container
-	containerInfo, err := cli.ContainerInspect(ctx, deployment.Container)
-	if err != nil {
-		return nil, err
-	}
-
-	containerCreatedTime, err := time.Parse(time.RFC3339, containerInfo.Created)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to parse docker timestamp %q: %s", containerInfo.Created, err)
-	}
-
-	// Use docker's containerInfo as our resource's stateJson.
-	// Redact environment variables so we don't expose secrets on resources. Copying to avoid mutating containerInfo
-	containerInfoCopy, err := copystructure.Copy(containerInfo)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to copy container info: %s", err)
-	}
-	containerInfoRedacted := containerInfoCopy.(types.ContainerJSON)
-	containerInfoRedacted.Config.Env = []string{}
-
-	stateJson, err := json.Marshal(containerInfoRedacted)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to marshal container info to json: %s", err)
+	containerResource := &sdk.StatusReport_Resource{
+		Type:                "container",
+		Platform:            platformName,
+		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE,
 	}
 
 	// NOTE(briancain): The docker platform currently only deploys a single
 	// container, so for now the status report makes the same assumption.
+	containerInfo, err := cli.ContainerInspect(ctx, deployment.Container)
+	if err != nil {
+		if client.IsErrNotFound(err) {
+			// We expected this container to be present, but it's not.
+			// It has likely been killed and removed from the platform since it was deployed.
+			containerResource.Name = deployment.Container
+			containerResource.Health = sdk.StatusReport_MISSING
+		} else {
+			return nil, fmt.Errorf("error quering docker for container status: %s", err)
+		}
+	} else {
+		log.Debug("Found docker container", "name", deployment.Container)
 
-	containerResource := &sdk.StatusReport_Resource{
-		Id:          containerInfo.ID,
-		Name:        strings.TrimPrefix(containerInfo.Name, "/"), // container names officially begin with "/" when running on the local daemon
-		Platform:    platformName,
-		CreatedTime: timestamppb.New(containerCreatedTime),
-		StateJson:   string(stateJson),
+		containerResource.Id = containerInfo.ID
+		containerResource.Name = strings.TrimPrefix(containerInfo.Name, "/") // container names officially begin with "/" when running on the local daemon
+
+		containerCreatedTime, err := time.Parse(time.RFC3339, containerInfo.Created)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to parse docker timestamp %q: %s", containerInfo.Created, err)
+		}
+		containerResource.CreatedTime = timestamppb.New(containerCreatedTime)
+
+		// Use docker's containerInfo as our resource's stateJson.
+		// Redact environment variables so we don't expose secrets on resources. Copying to avoid mutating containerInfo
+		containerInfoCopy, err := copystructure.Copy(containerInfo)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to copy container info: %s", err)
+		}
+		containerInfoRedacted := containerInfoCopy.(types.ContainerJSON)
+		containerInfoRedacted.Config.Env = []string{}
+
+		stateJson, err := json.Marshal(containerInfoRedacted)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to marshal container info to json: %s", err)
+		}
+		containerResource.StateJson = string(stateJson)
 	}
 
 	// Find the declared resource that corresponds to our observed container
@@ -174,11 +184,9 @@ func (p *Platform) Status(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	if containerDeclaredResource != nil {
-		containerResource.DeclaredResource = &sdk.Ref_DeclaredResource{Id: containerDeclaredResource.Id}
-		containerResource.Type = containerDeclaredResource.Name
-		containerResource.CategoryDisplayHint = containerDeclaredResource.CategoryDisplayHint
+		containerResource.DeclaredResource = &sdk.Ref_DeclaredResource{Name: containerDeclaredResource.Name}
 	} else {
-		log.Warn("no container declared resource found - this must be a status check running on an old deployment.")
+		log.Warn("no container declared resource found - this must be a status check running on an old deployment, or is orphaned.")
 	}
 
 	if containerInfo.State.Health != nil {
