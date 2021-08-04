@@ -2262,6 +2262,25 @@ message Build {
 
   // ID of the job that created this build. This may be empty.
   string job_id = 9;
+
+  // Preload is information that is available via further queries but it
+  // sometimes pre-populated in the initial load (see the field docs for more
+  // info).
+  Preload preload = 11;
+
+  message Preload {
+    // The ref that was used in the job to run this operation. This is
+    // also accessible by querying the job via the job_id and should always
+    // match.
+    //
+    // This may be null under multiple circumstances: (1) the job was
+    // manually triggered with local data (no datasource) or (2) the job
+    // was run in earlier versions of Waypoint before we tracked this or
+    // (3) the job hasn't yet loaded the data.
+    //
+    // This is always pre-populated if it is exists.
+    Job.DataSource.Ref job_data_source_ref = 1;
+  }
 }
 
 // Artifact is the result of a build or registry. This is the metadata only.
@@ -2365,6 +2384,25 @@ message PushedArtifact {
 
   // ID of the job that created this. This may be empty.
   string job_id = 11;
+
+  // Preload is information that is available via further queries but it
+  // sometimes pre-populated in the initial load (see the field docs for more
+  // info).
+  Preload preload = 13;
+
+  message Preload {
+    // The ref that was used in the job to run this operation. This is
+    // also accessible by querying the job via the job_id and should always
+    // match.
+    //
+    // This may be null under multiple circumstances: (1) the job was
+    // manually triggered with local data (no datasource) or (2) the job
+    // was run in earlier versions of Waypoint before we tracked this or
+    // (3) the job hasn't yet loaded the data.
+    //
+    // This is always pre-populated if it is exists.
+    Job.DataSource.Ref job_data_source_ref = 1;
+  }
 }
 
 /********************************************************************
@@ -2527,6 +2565,18 @@ message Deployment {
     // all deployment API calls. This will be empty if the URL service
     // is not enabled or there was an error loading this information.
     string deploy_url = 3;
+
+    // The ref that was used in the job to run this operation. This is
+    // also accessible by querying the job via the job_id and should always
+    // match.
+    //
+    // This may be null under multiple circumstances: (1) the job was
+    // manually triggered with local data (no datasource) or (2) the job
+    // was run in earlier versions of Waypoint before we tracked this or
+    // (3) the job hasn't yet loaded the data.
+    //
+    // This is always pre-populated if it is exists.
+    Job.DataSource.Ref job_data_source_ref = 4;
   }
 }
 
@@ -2747,6 +2797,18 @@ message Release {
 
     // Populated when LoadDetails is set.
     Build build = 3;
+
+    // The ref that was used in the job to run this operation. This is
+    // also accessible by querying the job via the job_id and should always
+    // match.
+    //
+    // This may be null under multiple circumstances: (1) the job was
+    // manually triggered with local data (no datasource) or (2) the job
+    // was run in earlier versions of Waypoint before we tracked this or
+    // (3) the job hasn't yet loaded the data.
+    //
+    // This is always pre-populated if it is exists.
+    Job.DataSource.Ref job_data_source_ref = 4;
   }
 }
 
