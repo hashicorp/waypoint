@@ -334,6 +334,17 @@ func (op *statusReportOperation) Do(
 	}
 	realMsg.Resources = resources
 
+	// Populate resource health with health in plugin compiled report
+	resourcesHealth := make([]*pb.StatusReport_Health, len(report.Resources))
+	for i, r := range report.Resources {
+		resourcesHealth[i] = &pb.StatusReport_Health{
+			HealthStatus:  r.Health.String(),
+			HealthMessage: r.HealthMessage,
+			Name:          r.Name,
+		}
+	}
+	realMsg.ResourcesHealth = resourcesHealth
+
 	// Add the deployment/release ID to the report.
 	// TODO: this is a stopgap solution - we should wire resource ID information into here in a more generic way
 	// rather than continue to append to this switch case.

@@ -2842,7 +2842,7 @@ message StatusReport {
   // Deprecated in favor of resources
   // A health report of all of the resources that make up the report.
   // Copied from the plugin generated raw SDK status report for convenient API access.
-  repeated Health deprecated_resources_health = 9;
+  repeated Health resources_health = 9;
 
   // The application that this build is part of.
   Ref.Application application = 1;
@@ -2938,8 +2938,8 @@ message StatusReport {
   }
 
   message Health {
-    string deprecated_name = 3;
-    string deprecated_id = 4;
+    string name = 3;
+    string id = 4;
 
     // the overall health of the report for a resource
     string health_status = 1;
