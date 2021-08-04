@@ -120,8 +120,62 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
 
+	// Create a project with an application
+	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+		Project: serverptypes.TestProject(t, &pb.Project{
+			Name: "Example",
+			DataSource: &pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Local{
+					Local: &pb.Job_Local{},
+				},
+			},
+			Applications: []*pb.Application{
+				{
+					Project: &pb.Ref_Project{Project: "Example"},
+					Name:    "apple-app",
+				},
+			},
+		}),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, respProj)
+
+	deployResp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+			Component: &pb.Component{
+				Name: "testapp",
+			},
+			Application: &pb.Ref_Application{
+				Application: "apple-app",
+				Project:     "Example",
+			},
+		}),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, deployResp)
+
 	resp, err := client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
-		StatusReport: serverptypes.TestValidStatusReport(t, nil),
+		StatusReport: serverptypes.TestValidStatusReport(t, &pb.StatusReport{
+			TargetId: &pb.StatusReport_DeploymentId{
+				DeploymentId: deployResp.Deployment.Id,
+			},
+		}),
+	})
+	require.NoError(t, err)
+
+	releaseResp, err := client.UpsertRelease(ctx, &pb.UpsertReleaseRequest{
+		Release: serverptypes.TestValidRelease(t, &pb.Release{
+			DeploymentId: deployResp.Deployment.Id,
+		}),
+	})
+	require.NoError(t, err)
+
+	_, err = client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
+		StatusReport: serverptypes.TestValidStatusReport(t, &pb.StatusReport{
+			TargetId: &pb.StatusReport_ReleaseId{
+				ReleaseId: releaseResp.Release.Id,
+			},
+		}),
 	})
 	require.NoError(t, err)
 
@@ -137,6 +191,27 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 		require.NoError(err)
 		require.NotEmpty(sr)
 		require.Equal(sr.StatusReports[0].Id, resp.StatusReport.Id)
+	})
+
+	t.Run("list only deployment reports", func(t *testing.T) {
+		require := require.New(t)
+
+		// Get, should return a status report
+		sr, err := client.ListStatusReports(ctx, &Req{
+			Application: resp.StatusReport.Application,
+			Target: &pb.ListStatusReportsRequest_Deployment{
+				Deployment: &pb.Ref_Operation{
+					Target: &pb.Ref_Operation_Id{
+						Id: deployResp.Deployment.Id,
+					},
+				},
+			},
+		})
+		require.NoError(err)
+		require.NotEmpty(sr)
+		require.Equal(len(sr.StatusReports), 1)
+		require.Equal(sr.StatusReports[0].Id, resp.StatusReport.Id)
+		require.Equal(sr.StatusReports[0].TargetId.(*pb.StatusReport_DeploymentId).DeploymentId, deployResp.Deployment.Id)
 	})
 }
 

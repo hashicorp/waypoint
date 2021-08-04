@@ -2863,19 +2863,25 @@ message ListStatusReportsRequest {
   // workspace that this should belong to. If this is empty, values in
   // all workspaces will be listed.
   Ref.Workspace workspace = 4;
+
+  // Target is used to determine which status reports to return. By default
+  // if no target is requested, the response will include both deployments
+  // and release status reports for the requested Application.
+  oneof target {
+    // the deployment id that this status report was generated on
+    Ref.Operation deployment = 5;
+
+    // the release id that this status report was generated on
+    Ref.Operation release = 6;
+  }
 }
 
-
 message ListStatusReportsResponse {
-  // For 0.4.0, there should only the one 'latest' status report
   repeated StatusReport status_reports = 1;
 }
 
 message GetStatusReportRequest {
   Ref.Operation ref = 1;
-
-  // TODO(briancain): Once polling is in place, provide a way to query for
-  // a report by deployment or release operation id
 }
 
 message ExpediteStatusReportRequest {
