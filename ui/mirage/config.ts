@@ -50,6 +50,7 @@ export default function (this: Server): void {
   this.post('/GetJobStream', job.stream);
   this.post('/GetLogStream', log.stream);
   this.post('/ListPushedArtifacts', pushedArtifact.list);
+  this.post('/ExpediteStatusReport', statusReport.expediteStatusReport);
 
   if (!Ember.testing) {
     // Pass through all other requests

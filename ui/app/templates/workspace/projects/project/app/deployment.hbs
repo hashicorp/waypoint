@@ -22,21 +22,6 @@
   </div>
 </PageHeader>
 
-<div class="status-row">
-  <div class="item">
-    {{#if @model.statusReport}}
-      <StatusReportIndicator @statusReport={{@model.statusReport}} />
-    {{/if}}
-  </div>
-
-  {{#if @model.build}}
-  <div class="item">
-    <small>
-      Build <a href="#"><b class="badge badge--version">#{{@model.build.sequence}}</b>
-        <code>{{@model.build.id}}</code></a>
-    </small>
-  </div>
-  {{/if}}
-</div>
+<StatusReportBar @model={{@model}} @artifactType="Deployment"/>
 
 <OperationLogs @jobId={{@model.jobId}} />

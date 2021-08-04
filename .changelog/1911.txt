@@ -1,0 +1,3 @@
+```release-note:feature
+ui: added button on individual artifact (deployments + releases) page for on demand health checks
+```

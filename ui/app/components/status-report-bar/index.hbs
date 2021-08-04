@@ -1,0 +1,26 @@
+{{#if this._statusReport}}
+  <div class="status-row">
+    <div class="item">
+      <StatusReportIndicator @statusReport={{this._statusReport}} />
+    </div>
+
+    {{#if @model.build}}
+    <div class="item">
+      <small>
+        Build <a href="#"><b class="badge badge--version">#{{@model.build.sequence}}</b>
+          <code>{{@model.build.id}}</code></a>
+      </small>
+    </div>
+    {{/if}}
+    {{#if this._statusReport.status.completeTime.seconds}}
+      <div class="item" data-test-complete-time-status-report>
+        Last checked {{date-format-distance-to-now this._statusReport.status.completeTime.seconds }}
+      </div>
+    {{/if}}
+    <div class="item">
+      <Pds::Button @variant="ghost" @iconStart="refresh-default" disabled={{this.isRefreshRunning}} {{on "click" this.refreshHealthCheck}}>
+        Re-run health check
+      </Pds::Button>
+    </div>
+  </div>
+{{/if}}
