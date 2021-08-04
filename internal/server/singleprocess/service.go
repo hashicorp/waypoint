@@ -227,9 +227,13 @@ func WithSuperuser() Option {
 	}
 }
 
+// WithAcceptURLTerms will set the config to either accept or reject the terms
+// of service for using the URL service. Rejecting the TOS will disable the
+// URL service. Note that the actual rejection does not occur until the
+// waypoint horizon client attempts to register its guest account.
 func WithAcceptURLTerms(accept bool) Option {
 	return func(s *service, cfg *config) error {
-		cfg.acceptUrlTerms = true
+		cfg.acceptUrlTerms = accept
 		return nil
 	}
 }
