@@ -1393,12 +1393,6 @@ EFSLOOP:
 			},
 			Path: aws.String("/waypointserverdata"),
 		},
-		Tags: []*efs.Tag{
-			{
-				Key:   aws.String(defaultServerTagName),
-				Value: aws.String(defaultServerTagValue),
-			},
-		},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating access point: %w", err)
@@ -1901,12 +1895,6 @@ func createNLB(
 					TargetGroups: gtgs,
 				},
 				Type: aws.String("forward"),
-			},
-		},
-		Tags: []*elbv2.Tag{
-			{
-				Key:   aws.String(defaultServerTagName),
-				Value: aws.String(defaultServerTagValue),
 			},
 		},
 	})
