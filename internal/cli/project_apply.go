@@ -497,7 +497,7 @@ func (c *ProjectApplyCommand) Synopsis() string {
 
 func (c *ProjectApplyCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint project apply [OPTIONS] NAME
+Usage: waypoint project apply [options] NAME
 
   Create or update a project.
 

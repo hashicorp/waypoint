@@ -156,7 +156,7 @@ func (c *AuthMethodSetOIDCCommand) Synopsis() string {
 
 func (c *AuthMethodSetOIDCCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint auth-method set oidc [options] name
+Usage: waypoint auth-method set oidc [options] NAME
 
   Configure an OIDC auth method.
 
