@@ -338,6 +338,11 @@ export class Project extends jspb.Message {
   clearVariablesList(): Project;
   addVariables(value?: Variable, index?: number): Variable;
 
+  getStatusReportPoll(): Project.AppStatusPoll | undefined;
+  setStatusReportPoll(value?: Project.AppStatusPoll): Project;
+  hasStatusReportPoll(): boolean;
+  clearStatusReportPoll(): Project;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Project.AsObject;
   static toObject(includeInstance: boolean, msg: Project): Project.AsObject;
@@ -357,6 +362,7 @@ export namespace Project {
     waypointHclFormat: Project.Format,
     fileChangeSignal: string,
     variablesList: Array<Variable.AsObject>,
+    statusReportPoll?: Project.AppStatusPoll.AsObject,
   }
 
   export class Poll extends jspb.Message {
@@ -375,6 +381,29 @@ export namespace Project {
   }
 
   export namespace Poll {
+    export type AsObject = {
+      enabled: boolean,
+      interval: string,
+    }
+  }
+
+
+  export class AppStatusPoll extends jspb.Message {
+    getEnabled(): boolean;
+    setEnabled(value: boolean): AppStatusPoll;
+
+    getInterval(): string;
+    setInterval(value: string): AppStatusPoll;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): AppStatusPoll.AsObject;
+    static toObject(includeInstance: boolean, msg: AppStatusPoll): AppStatusPoll.AsObject;
+    static serializeBinaryToWriter(message: AppStatusPoll, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): AppStatusPoll;
+    static deserializeBinaryFromReader(message: AppStatusPoll, reader: jspb.BinaryReader): AppStatusPoll;
+  }
+
+  export namespace AppStatusPoll {
     export type AsObject = {
       enabled: boolean,
       interval: string,
@@ -1127,8 +1156,11 @@ export namespace Generation {
 }
 
 export class DeclaredResource extends jspb.Message {
-  getType(): string;
-  setType(value: string): DeclaredResource;
+  getId(): string;
+  setId(value: string): DeclaredResource;
+
+  getName(): string;
+  setName(value: string): DeclaredResource;
 
   getPlatform(): string;
   setPlatform(value: string): DeclaredResource;
@@ -1154,7 +1186,8 @@ export class DeclaredResource extends jspb.Message {
 
 export namespace DeclaredResource {
   export type AsObject = {
-    type: string,
+    id: string,
+    name: string,
     platform: string,
     state?: google_protobuf_any_pb.Any.AsObject,
     stateJson: string,
@@ -2237,6 +2270,9 @@ export namespace Job {
     getPath(): string;
     setPath(value: string): Git;
 
+    getIgnoreChangesOutsidePath(): boolean;
+    setIgnoreChangesOutsidePath(value: boolean): Git;
+
     getBasic(): Job.Git.Basic | undefined;
     setBasic(value?: Job.Git.Basic): Git;
     hasBasic(): boolean;
@@ -2262,6 +2298,7 @@ export namespace Job {
       url: string,
       ref: string,
       path: string,
+      ignoreChangesOutsidePath: boolean,
       basic?: Job.Git.Basic.AsObject,
       ssh?: Job.Git.SSH.AsObject,
     }
@@ -5756,48 +5793,6 @@ export namespace Instance {
   }
 }
 
-export class FindExecInstanceRequest extends jspb.Message {
-  getDeploymentId(): string;
-  setDeploymentId(value: string): FindExecInstanceRequest;
-
-  getWaitTimeout(): string;
-  setWaitTimeout(value: string): FindExecInstanceRequest;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): FindExecInstanceRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: FindExecInstanceRequest): FindExecInstanceRequest.AsObject;
-  static serializeBinaryToWriter(message: FindExecInstanceRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): FindExecInstanceRequest;
-  static deserializeBinaryFromReader(message: FindExecInstanceRequest, reader: jspb.BinaryReader): FindExecInstanceRequest;
-}
-
-export namespace FindExecInstanceRequest {
-  export type AsObject = {
-    deploymentId: string,
-    waitTimeout: string,
-  }
-}
-
-export class FindExecInstanceResponse extends jspb.Message {
-  getInstance(): Instance | undefined;
-  setInstance(value?: Instance): FindExecInstanceResponse;
-  hasInstance(): boolean;
-  clearInstance(): FindExecInstanceResponse;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): FindExecInstanceResponse.AsObject;
-  static toObject(includeInstance: boolean, msg: FindExecInstanceResponse): FindExecInstanceResponse.AsObject;
-  static serializeBinaryToWriter(message: FindExecInstanceResponse, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): FindExecInstanceResponse;
-  static deserializeBinaryFromReader(message: FindExecInstanceResponse, reader: jspb.BinaryReader): FindExecInstanceResponse;
-}
-
-export namespace FindExecInstanceResponse {
-  export type AsObject = {
-    instance?: Instance.AsObject,
-  }
-}
-
 export class UpsertReleaseRequest extends jspb.Message {
   getRelease(): Release | undefined;
   setRelease(value?: Release): UpsertReleaseRequest;
@@ -6259,6 +6254,64 @@ export class GetStatusReportRequest extends jspb.Message {
 export namespace GetStatusReportRequest {
   export type AsObject = {
     ref?: Ref.Operation.AsObject,
+  }
+}
+
+export class ExpediteStatusReportRequest extends jspb.Message {
+  getWorkspace(): Ref.Workspace | undefined;
+  setWorkspace(value?: Ref.Workspace): ExpediteStatusReportRequest;
+  hasWorkspace(): boolean;
+  clearWorkspace(): ExpediteStatusReportRequest;
+
+  getDeployment(): Ref.Operation | undefined;
+  setDeployment(value?: Ref.Operation): ExpediteStatusReportRequest;
+  hasDeployment(): boolean;
+  clearDeployment(): ExpediteStatusReportRequest;
+
+  getRelease(): Ref.Operation | undefined;
+  setRelease(value?: Ref.Operation): ExpediteStatusReportRequest;
+  hasRelease(): boolean;
+  clearRelease(): ExpediteStatusReportRequest;
+
+  getTargetCase(): ExpediteStatusReportRequest.TargetCase;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ExpediteStatusReportRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ExpediteStatusReportRequest): ExpediteStatusReportRequest.AsObject;
+  static serializeBinaryToWriter(message: ExpediteStatusReportRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ExpediteStatusReportRequest;
+  static deserializeBinaryFromReader(message: ExpediteStatusReportRequest, reader: jspb.BinaryReader): ExpediteStatusReportRequest;
+}
+
+export namespace ExpediteStatusReportRequest {
+  export type AsObject = {
+    workspace?: Ref.Workspace.AsObject,
+    deployment?: Ref.Operation.AsObject,
+    release?: Ref.Operation.AsObject,
+  }
+
+  export enum TargetCase { 
+    TARGET_NOT_SET = 0,
+    DEPLOYMENT = 2,
+    RELEASE = 3,
+  }
+}
+
+export class ExpediteStatusReportResponse extends jspb.Message {
+  getJobId(): string;
+  setJobId(value: string): ExpediteStatusReportResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ExpediteStatusReportResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ExpediteStatusReportResponse): ExpediteStatusReportResponse.AsObject;
+  static serializeBinaryToWriter(message: ExpediteStatusReportResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ExpediteStatusReportResponse;
+  static deserializeBinaryFromReader(message: ExpediteStatusReportResponse, reader: jspb.BinaryReader): ExpediteStatusReportResponse;
+}
+
+export namespace ExpediteStatusReportResponse {
+  export type AsObject = {
+    jobId: string,
   }
 }
 
@@ -7175,6 +7228,9 @@ export class EntrypointConfigRequest extends jspb.Message {
   getType(): Instance.Type;
   setType(value: Instance.Type): EntrypointConfigRequest;
 
+  getDisableExec(): boolean;
+  setDisableExec(value: boolean): EntrypointConfigRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): EntrypointConfigRequest.AsObject;
   static toObject(includeInstance: boolean, msg: EntrypointConfigRequest): EntrypointConfigRequest.AsObject;
@@ -7188,6 +7244,7 @@ export namespace EntrypointConfigRequest {
     deploymentId: string,
     instanceId: string,
     type: Instance.Type,
+    disableExec: boolean,
   }
 }
 
