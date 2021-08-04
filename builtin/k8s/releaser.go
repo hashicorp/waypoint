@@ -51,10 +51,11 @@ func (r *Releaser) StatusFunc() interface{} {
 	return r.Status
 }
 
-func (r *Releaser) resourceManager(log hclog.Logger) *resource.Manager {
+func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
 	return resource.NewManager(
 		resource.WithLogger(log.Named("resource_manager")),
 		resource.WithValueProvider(r.getClientset),
+		resource.WithDeclaredResourcesResp(dcr),
 		resource.WithResource(resource.NewResource(
 			resource.WithName("service"),
 			resource.WithState(&Resource_Service{}),
@@ -298,6 +299,7 @@ func (r *Releaser) Release(
 	src *component.Source,
 	ui terminal.UI,
 	target *Deployment,
+	dcr *component.DeclaredResourcesResp,
 ) (*Release, error) {
 	var result Release
 	result.ServiceName = src.App
@@ -306,7 +308,7 @@ func (r *Releaser) Release(
 	defer sg.Wait()
 
 	// Create our resource manager and create
-	rm := r.resourceManager(log)
+	rm := r.resourceManager(log, dcr)
 	if err := rm.CreateAll(
 		ctx, log, sg, ui,
 		target, &result,
@@ -331,7 +333,7 @@ func (r *Releaser) Destroy(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	rm := r.resourceManager(log)
+	rm := r.resourceManager(log, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
