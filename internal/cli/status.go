@@ -188,13 +188,15 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 		}
 
 		var reportType string
-		switch appStatusResp.TargetId.(type) {
-		case *pb.StatusReport_DeploymentId:
-			reportType = "Deployment"
-		case *pb.StatusReport_ReleaseId:
-			reportType = "Release"
-		default:
-			reportType = "None"
+		if appStatusResp != nil {
+			switch appStatusResp.TargetId.(type) {
+			case *pb.StatusReport_DeploymentId:
+				reportType = "Deployment"
+			case *pb.StatusReport_ReleaseId:
+				reportType = "Release"
+			default:
+				reportType = "None"
+			}
 		}
 
 		if appStatusResp != nil {
