@@ -1,1 +1,8 @@
 <h3>Config Variables</h3>
+{{#if this.model.variablesList.length}}
+  <ul>
+    {{#each this.model.variablesList as |variable|}}
+      <li>{{variable.name}} | {{variable.pb_static}}</li>
+    {{/each}}
+  </ul>
+{{/if}}
