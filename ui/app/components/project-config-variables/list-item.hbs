@@ -1,0 +1,89 @@
+<li data-test-config-variables-list-item>
+  {{#if (or this.isEditing this.isCreating)}}
+    <form class="pds-form" data-test-config-variables-form {{on "submit" this.saveVariable}}>
+      <div part="fields" class="card">
+        <div class="card-header">
+          <h4>{{t "form.config_variables_settings.title"}}</h4>
+        </div>
+        <fieldset class="pds-formFieldSet">
+          <div class="pds-formField">
+            <label for="config-variable-name" class="pds-fieldName">
+              {{t "form.config_variables_settings.variable_name"}}
+            </label>
+            <Pds::Input
+              @type="text"
+              data-test-config-variables-var-name
+              id="config-variable-name"
+              placeholder={{t "form.config_variables_settings.variable_name_placeholder"}}
+              value={{this.variable.name}}
+              {{on "input" (pick "target.value" (set this "variable.name"))}}
+            />
+          </div>
+          <div class="pds-formField">
+            <label for="config-variable-value" class="pds-fieldName">
+              {{t "form.config_variables_settings.variable_value"}}
+            </label>
+            <div class="pds-formField__input-inline-toggle">
+                <Pds::Input
+                  @type="text"
+                  id="config-variable-value"
+                  data-test-config-variables-var-str
+                  placeholder={{t "form.config_variables_settings.variable_value_placeholder"}}
+                  value={{this.variable.pb_static}}
+                  {{on "input" (pick "target.value" (set this "variable.pb_static"))}}
+                />
+            </div>
+          </div>
+        </fieldset>
+        <div class="card-footer">
+          <Pds::ButtonSet>
+            <Pds::Button
+              data-test-config-variables-edit-save
+              @variant="primary"
+              @type="submit">
+              {{t "form.config_variables_settings.button_submit"}}
+            </Pds::Button>
+            <Pds::Button
+              data-test-config-variables-edit-cancel
+              @variant="secondary"
+              {{on "click"
+                (if this.isCreating this.cancelCreate this.cancelEdit)
+              }}>
+              {{t "form.config_variables_settings.button_cancel"}}
+            </Pds::Button>
+          </Pds::ButtonSet>
+        </div>
+      </div>
+    </form>
+  {{else}}
+    <div class="variables--list-item">
+      <span class="variables--list-item-name" data-test-config-variables-var-name>{{this.variable.name}}</span>
+      <span class="variables--list-item-value" data-test-config-variables-var-value>
+        <pre><code>{{this.variable.pb_static}}</code></pre>
+      </span>
+      <Pds::Dropdown @align="right" as |D|>
+        <D.Trigger
+          data-test-config-variables-dropdown
+          @variant="ghost">
+          Actions
+        </D.Trigger>
+        <D.Dialog >
+          <section>
+            <Pds::Button
+              data-test-config-variables-dropdown-edit
+              @variant="secondary"
+              {{on "click" (fn this.editVariable this.variable)}}>
+              Edit
+            </Pds::Button>
+            <Pds::Button
+              data-test-config-variables-dropdown-delete
+              @variant="warning"
+              {{on "click" (fn this.deleteVariable this.variable)}}>
+              Delete
+            </Pds::Button>
+          </section>
+        </D.Dialog>
+      </Pds::Dropdown>
+    </div>
+  {{/if}}
+</li>

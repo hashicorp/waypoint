@@ -77,6 +77,17 @@ form:
     variable_value_placeholder: 'var_value'
     button_submit: 'Save variable'
     button_cancel: 'Cancel'
+  config_variables_settings:
+    empty_state_heading: 'No configuration variables'
+    empty_state_content: 'Configuration variables can be modified here as well as in the CLI.'
+    title: 'Config variable'
+    button_apply: 'Add variable'
+    variable_name: 'Key'
+    variable_name_placeholder: 'var_key'
+    variable_value: 'Value'
+    variable_value_placeholder: 'var_value'
+    button_submit: 'Save variable'
+    button_cancel: 'Cancel'
 
 
 
