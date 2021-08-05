@@ -1,22 +1,22 @@
-.project-input-variables-list {
+.variables-list {
   margin-bottom: scale.$lg-1;
-  .project-input-variables--list-item {
+  .variables--list-item {
     display: flex;
     align-items: center;
     border-bottom: 1px solid rgb(var(--border));
     padding: scale.$sm-1;
-    &.project-input-variables--list-item__header {
+    &.variables--list-item__header {
       color: rgb(var(--text-muted));
-      .project-input-variables--list-item-value {
+      .variables--list-item-value {
         font-weight: bold;
       }
     }
   }
-  .project-input-variables--list-item-name {
+  .variables--list-item-name {
     width: 50%;
     font-weight: bold;
   }
-  .project-input-variables--list-item-value {
+  .variables--list-item-value {
     max-width: 40%;
     margin-right: auto;
   }
