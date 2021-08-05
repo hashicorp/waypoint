@@ -38,7 +38,7 @@ export default function App({ Component, pageProps }) {
         <meta name="og:description" property="og:title" content={description} />
       </HashiHead>
       {ALERT_BANNER_ACTIVE && (
-        <AlertBanner {...alertBannerData} product="waypoint" />
+        <AlertBanner {...alertBannerData} product="waypoint" hideOnMobile />
       )}
       <HashiStackMenu />
       <ProductSubnav />
