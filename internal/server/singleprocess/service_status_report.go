@@ -51,7 +51,32 @@ func (s *service) ListStatusReports(
 		return nil, err
 	}
 
-	return &pb.ListStatusReportsResponse{StatusReports: result}, nil
+	var response *pb.ListStatusReportsResponse
+	switch req.Target.(type) {
+	case *pb.ListStatusReportsRequest_Deployment:
+		var r []*pb.StatusReport
+
+		for _, sr := range result {
+			if _, ok := sr.TargetId.(*pb.StatusReport_DeploymentId); ok {
+				r = append(r, sr)
+			}
+		}
+
+		response = &pb.ListStatusReportsResponse{StatusReports: r}
+	case *pb.ListStatusReportsRequest_Release:
+		var r []*pb.StatusReport
+
+		for _, sr := range result {
+			if _, ok := sr.TargetId.(*pb.StatusReport_ReleaseId); ok {
+				r = append(r, sr)
+			}
+		}
+		response = &pb.ListStatusReportsResponse{StatusReports: r}
+	default:
+		response = &pb.ListStatusReportsResponse{StatusReports: result}
+	}
+
+	return response, nil
 }
 
 func (s *service) GetLatestStatusReport(
