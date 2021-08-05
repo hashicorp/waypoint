@@ -5088,6 +5088,11 @@ export class Build extends jspb.Message {
   getJobId(): string;
   setJobId(value: string): Build;
 
+  getPreload(): Build.Preload | undefined;
+  setPreload(value?: Build.Preload): Build;
+  hasPreload(): boolean;
+  clearPreload(): Build;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Build.AsObject;
   static toObject(includeInstance: boolean, msg: Build): Build.AsObject;
@@ -5108,7 +5113,29 @@ export namespace Build {
     labelsMap: Array<[string, string]>,
     templateData: Uint8Array | string,
     jobId: string,
+    preload?: Build.Preload.AsObject,
   }
+
+  export class Preload extends jspb.Message {
+    getJobDataSourceRef(): Job.DataSource.Ref | undefined;
+    setJobDataSourceRef(value?: Job.DataSource.Ref): Preload;
+    hasJobDataSourceRef(): boolean;
+    clearJobDataSourceRef(): Preload;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Preload.AsObject;
+    static toObject(includeInstance: boolean, msg: Preload): Preload.AsObject;
+    static serializeBinaryToWriter(message: Preload, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Preload;
+    static deserializeBinaryFromReader(message: Preload, reader: jspb.BinaryReader): Preload;
+  }
+
+  export namespace Preload {
+    export type AsObject = {
+      jobDataSourceRef?: Job.DataSource.Ref.AsObject,
+    }
+  }
+
 }
 
 export class Artifact extends jspb.Message {
@@ -5330,6 +5357,11 @@ export class PushedArtifact extends jspb.Message {
   getJobId(): string;
   setJobId(value: string): PushedArtifact;
 
+  getPreload(): PushedArtifact.Preload | undefined;
+  setPreload(value?: PushedArtifact.Preload): PushedArtifact;
+  hasPreload(): boolean;
+  clearPreload(): PushedArtifact;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): PushedArtifact.AsObject;
   static toObject(includeInstance: boolean, msg: PushedArtifact): PushedArtifact.AsObject;
@@ -5352,7 +5384,29 @@ export namespace PushedArtifact {
     templateData: Uint8Array | string,
     build?: Build.AsObject,
     jobId: string,
+    preload?: PushedArtifact.Preload.AsObject,
   }
+
+  export class Preload extends jspb.Message {
+    getJobDataSourceRef(): Job.DataSource.Ref | undefined;
+    setJobDataSourceRef(value?: Job.DataSource.Ref): Preload;
+    hasJobDataSourceRef(): boolean;
+    clearJobDataSourceRef(): Preload;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Preload.AsObject;
+    static toObject(includeInstance: boolean, msg: Preload): Preload.AsObject;
+    static serializeBinaryToWriter(message: Preload, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Preload;
+    static deserializeBinaryFromReader(message: Preload, reader: jspb.BinaryReader): Preload;
+  }
+
+  export namespace Preload {
+    export type AsObject = {
+      jobDataSourceRef?: Job.DataSource.Ref.AsObject,
+    }
+  }
+
 }
 
 export class GetDeploymentRequest extends jspb.Message {
@@ -5616,6 +5670,11 @@ export namespace Deployment {
     getDeployUrl(): string;
     setDeployUrl(value: string): Preload;
 
+    getJobDataSourceRef(): Job.DataSource.Ref | undefined;
+    setJobDataSourceRef(value?: Job.DataSource.Ref): Preload;
+    hasJobDataSourceRef(): boolean;
+    clearJobDataSourceRef(): Preload;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Preload.AsObject;
     static toObject(includeInstance: boolean, msg: Preload): Preload.AsObject;
@@ -5629,6 +5688,7 @@ export namespace Deployment {
       artifact?: PushedArtifact.AsObject,
       build?: Build.AsObject,
       deployUrl: string,
+      jobDataSourceRef?: Job.DataSource.Ref.AsObject,
     }
   }
 
@@ -6062,6 +6122,11 @@ export namespace Release {
     hasBuild(): boolean;
     clearBuild(): Preload;
 
+    getJobDataSourceRef(): Job.DataSource.Ref | undefined;
+    setJobDataSourceRef(value?: Job.DataSource.Ref): Preload;
+    hasJobDataSourceRef(): boolean;
+    clearJobDataSourceRef(): Preload;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Preload.AsObject;
     static toObject(includeInstance: boolean, msg: Preload): Preload.AsObject;
@@ -6075,6 +6140,7 @@ export namespace Release {
       deployment?: Deployment.AsObject,
       artifact?: PushedArtifact.AsObject,
       build?: Build.AsObject,
+      jobDataSourceRef?: Job.DataSource.Ref.AsObject,
     }
   }
 
