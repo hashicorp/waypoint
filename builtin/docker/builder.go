@@ -63,6 +63,9 @@ type BuilderConfig struct {
 
 	// Controls the passing of build context
 	Context string `hcl:"context,optional"`
+
+	// Controls the passing of the target stage
+	Target string `hcl:"target,optional"`
 }
 
 func (b *Builder) Documentation() (*docs.Documentation, error) {
@@ -152,6 +155,14 @@ build {
 	doc.SetField(
 		"context",
 		"Build context path",
+	)
+
+	doc.SetField(
+		"target",
+		"the target build stage in a multi-stage Dockerfile",
+		docs.Summary(
+			"If buildkit is enabled unused stages will be skipped",
+		),
 	)
 
 	return doc, nil
@@ -246,10 +257,7 @@ func (b *Builder) Build(
 		step.Update("Docker isn't available. Falling back to daemonless image build...")
 		step.Done()
 		step = nil
-		if err := b.buildWithImg(
-			ctx, ui, sg, relDockerfile, contextDir, result.Name(),
-			b.config.BuildArgs,
-		); err != nil {
+		if err := b.buildWithImg(ctx, ui, sg, relDockerfile, contextDir, result.Name(), b.config.BuildArgs, b.config.Target); err != nil {
 			return nil, err
 		}
 
@@ -263,9 +271,7 @@ func (b *Builder) Build(
 		// No fallback, build with Docker
 		step.Done()
 		step = nil
-		if err := b.buildWithDocker(
-			ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.Platform, b.config.BuildArgs, log,
-		); err != nil {
+		if err := b.buildWithDocker(ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.Platform, b.config.BuildArgs, b.config.Target, log); err != nil {
 			return nil, err
 		}
 	}
@@ -322,6 +328,7 @@ func (b *Builder) buildWithDocker(
 	tag string,
 	platform string,
 	buildArgs map[string]*string,
+	target string,
 	log hclog.Logger,
 ) error {
 	excludes, err := build.ReadDockerignore(contextDir)
@@ -370,6 +377,7 @@ func (b *Builder) buildWithDocker(
 		Remove:     true,
 		Platform:   platform,
 		BuildArgs:  buildArgs,
+		Target:     target,
 	}
 
 	// Buildkit builds need a session under most circumstances, but sessions are only supported in >1.39
