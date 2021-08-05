@@ -14,7 +14,7 @@ export default function WaypointDiagram({ className }) {
         <div className={styles.detailItem}>
           <img className={styles.icon} src={require('./img/code.svg')} />
           <div>
-            <h4>Your application code</h4>
+            <h4 className="g-type-display-4">Your application code</h4>
             <LogoList
               className={styles.logoList}
               logos={[
@@ -58,7 +58,7 @@ export default function WaypointDiagram({ className }) {
         <div className={styles.detailItem}>
           <img className={styles.icon} src={require('./img/platform.svg')} />
           <div>
-            <h4>Your deployment platform</h4>
+            <h4 className="g-type-display-4">Your deployment platform</h4>
             <LogoList
               reverse
               className={styles.logoList}
