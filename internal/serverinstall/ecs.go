@@ -576,20 +576,34 @@ func (i *ECSInstaller) Uninstall(
 	if err != nil {
 		return err
 	}
-	rgSvc := resourcegroups.New(sess)
 
+	rgSvc := resourcegroups.New(sess)
+	var resources []*resourcegroups.ResourceIdentifier
 	query := fmt.Sprintf(serverResourceQuery, defaultServerTagName)
-	results, err := rgSvc.SearchResources(&resourcegroups.SearchResourcesInput{
+	searchInput := resourcegroups.SearchResourcesInput{
+		MaxResults: aws.Int64(20),
 		ResourceQuery: &resourcegroups.ResourceQuery{
 			Type:  aws.String(resourcegroups.QueryTypeTagFilters10),
 			Query: aws.String(query),
 		},
-	})
-	if err != nil {
-		return err
 	}
 
-	resources := results.ResourceIdentifiers
+	// The Resource Group Search results can sometimes be limited to a few
+	// results at a time and may not include all resources tagged. Use the
+	// pagination function to retrieve the complete list.
+	err = rgSvc.SearchResourcesPages(&searchInput,
+		func(page *resourcegroups.SearchResourcesOutput, _ bool) bool {
+			resources = append(resources, page.ResourceIdentifiers...)
+			return page.NextToken != nil
+		})
+
+	if err != nil {
+		return fmt.Errorf("error retrieving tag search results: %w", err)
+	}
+
+	if len(resources) == 0 {
+		return fmt.Errorf("no server resources found with tag (%s)", defaultServerTagName)
+	}
 
 	// Start destroying things. Some cannot be destroyed before others. The
 	// general order to destroy things:
@@ -678,6 +692,7 @@ func deleteEFSResources(
 		}
 
 		if deleted == mtgCount {
+			break
 		}
 
 		time.Sleep(5 * time.Second)
@@ -688,6 +703,13 @@ func deleteEFSResources(
 		FileSystemId: &id,
 	})
 	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "FileSystemNotFound":
+				// the file system has already been destroyed
+				return nil
+			}
+		}
 		return err
 	}
 	return nil
@@ -751,7 +773,7 @@ func deleteNLBResources(
 	}
 	if len(results.SecurityGroups) > 0 {
 		for _, g := range results.SecurityGroups {
-			for i := 0; i < 20; i++ {
+			for i := 0; i < 60; i++ {
 				_, err := ec2Svc.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 					GroupId: g.GroupId,
 				})
@@ -759,7 +781,7 @@ func deleteNLBResources(
 				if aerr, ok := err.(awserr.Error); ok {
 					switch aerr.Code() {
 					case "DependencyViolation":
-						time.Sleep(2 * time.Second)
+						time.Sleep(3 * time.Second)
 						continue
 					default:
 						return err
@@ -791,6 +813,13 @@ func deleteCWLResources(
 		LogGroupName: aws.String(logGroup),
 	})
 	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "ResourceNotFoundException":
+				// the log group has already been destroyed
+				return nil
+			}
+		}
 		return err
 	}
 	return nil
@@ -817,6 +846,13 @@ func deleteEcsResources(
 		Cluster: &clusterArn,
 	})
 	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "ClusterNotFoundException":
+				// the cluster has already been destroyed
+				return nil
+			}
+		}
 		return err
 	}
 
@@ -1357,12 +1393,6 @@ EFSLOOP:
 			},
 			Path: aws.String("/waypointserverdata"),
 		},
-		Tags: []*efs.Tag{
-			{
-				Key:   aws.String(defaultServerTagName),
-				Value: aws.String(defaultServerTagValue),
-			},
-		},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating access point: %w", err)
@@ -1865,12 +1895,6 @@ func createNLB(
 					TargetGroups: gtgs,
 				},
 				Type: aws.String("forward"),
-			},
-		},
-		Tags: []*elbv2.Tag{
-			{
-				Key:   aws.String(defaultServerTagName),
-				Value: aws.String(defaultServerTagValue),
 			},
 		},
 	})
