@@ -7,7 +7,7 @@ export default function LongformPage({ className, title, alert, children }) {
       <div className="g-container">
         <div className={styles.longformWrapper}>
           {alert && <div className={styles.alert}>{alert}</div>}
-          <h2>{title}</h2>
+          <h2 className="g-type-display-2">{title}</h2>
           {children}
         </div>
       </div>

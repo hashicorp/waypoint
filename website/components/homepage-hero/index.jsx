@@ -6,7 +6,7 @@ export default function HomepageHero({ title, description, subtitle, links }) {
     <div className={styles.homepageHero}>
       <div className={styles.gridContainer}>
         <div className={styles.content}>
-          <h1>{title}</h1>
+          <h1 className="g-type-display-1">{title}</h1>
           <p className={styles.subtitle}>{subtitle}</p>
           <p className={styles.description}>{description}</p>
           <div className={styles.links}>

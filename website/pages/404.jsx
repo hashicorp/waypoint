@@ -17,7 +17,7 @@ export default function NotFound() {
 
   return (
     <div id="p-404" className="g-grid-container">
-      <h1>Page Not Found</h1>
+      <h1 className="g-type-display-1">Page Not Found</h1>
       <p>
         We&lsquo;re sorry but we can&lsquo;t find the page you&lsquo;re looking
         for.
