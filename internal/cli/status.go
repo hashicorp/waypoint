@@ -158,14 +158,15 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 	//   App list
 
 	appHeaders := []string{
-		"App", "Workspace", "Latest Report", "Latest Status", "Last Check",
+		"App", "Workspace", "Deployment Status", "Deployment Checked", "Release Status", "Release Checked",
 	}
 
 	appTbl := terminal.NewTable(appHeaders...)
 
 	appFailures := false
 	for _, app := range project.Applications {
-		appStatusResp, err := client.GetLatestStatusReport(c.Ctx, &pb.GetLatestStatusReportRequest{
+		// Get the latest deployment
+		deploymentsResp, err := client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
 			Application: &pb.Ref_Application{
 				Application: app.Name,
 				Project:     project.Name,
@@ -173,35 +174,61 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 			Workspace: &pb.Ref_Workspace{
 				Workspace: workspace,
 			},
+			Order: &pb.OperationOrder{
+				Order: pb.OperationOrder_COMPLETE_TIME,
+				Limit: 1,
+			},
 		})
-		if status.Code(err) == codes.NotFound {
-			// App doesn't have a status report yet, likely not deployed
-			err = nil
+		if err != nil {
+			return err
 		}
+		var appDeployStatus *pb.StatusReport
+		if deploymentsResp.Deployments != nil && len(deploymentsResp.Deployments) > 0 {
+			appDeployStatus = deploymentsResp.Deployments[0].LatestStatusReport
+		}
+
+		statusReportComplete, statusReportCheckTime, err := c.FormatStatusReportComplete(appDeployStatus)
 		if err != nil {
 			return err
 		}
 
-		statusReportComplete, statusReportCheckTime, err := c.FormatStatusReportComplete(appStatusResp)
-		if err != nil {
-			return err
-		}
-
-		var reportType string
-		if appStatusResp != nil {
-			switch appStatusResp.TargetId.(type) {
-			case *pb.StatusReport_DeploymentId:
-				reportType = "Deployment"
-			case *pb.StatusReport_ReleaseId:
-				reportType = "Release"
-			default:
-				reportType = "None"
+		if appDeployStatus != nil {
+			if appDeployStatus.Health.HealthStatus == "ERROR" ||
+				appDeployStatus.Health.HealthStatus == "DOWN" {
+				appFailures = true
 			}
 		}
 
-		if appStatusResp != nil {
-			if appStatusResp.Health.HealthStatus == "ERROR" ||
-				appStatusResp.Health.HealthStatus == "DOWN" {
+		// Get the latest release, if there was one
+		releasesResp, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
+			Application: &pb.Ref_Application{
+				Application: app.Name,
+				Project:     project.Name,
+			},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: workspace,
+			},
+			Order: &pb.OperationOrder{
+				Order: pb.OperationOrder_COMPLETE_TIME,
+				Limit: 1,
+			},
+		})
+		if err != nil {
+			return err
+		}
+		var appReleaseStatus *pb.StatusReport
+		if releasesResp.Releases != nil && len(releasesResp.Releases) > 0 {
+			appReleaseStatus = releasesResp.Releases[0].LatestStatusReport
+		}
+
+		statusReportCompleteRelease, statusReportCheckTimeRelease, err := c.FormatStatusReportComplete(appReleaseStatus)
+		if err != nil {
+			return err
+		}
+
+		if appReleaseStatus != nil {
+			if appDeployStatus.Health.HealthStatus == "ERROR" ||
+				appDeployStatus.Health.HealthStatus == "DOWN" {
 				appFailures = true
 			}
 		}
@@ -210,9 +237,10 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 		columns := []string{
 			app.Name,
 			workspace,
-			reportType,
 			statusReportComplete,
 			statusReportCheckTime,
+			statusReportCompleteRelease,
+			statusReportCheckTimeRelease,
 		}
 
 		// Add column data to table
@@ -281,7 +309,8 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	// Deployment Summary
 	//   Deployment List
 
-	respDeployList, err := client.ListDeployments(c.Ctx, &pb.ListDeploymentsRequest{
+	// Get the latest deployment
+	respDeployList, err := client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
 		Application: &pb.Ref_Application{
 			Application: app.Name,
 			Project:     project.Name,
@@ -289,26 +318,11 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		Workspace: &pb.Ref_Workspace{
 			Workspace: workspace,
 		},
-		LoadDetails: pb.Deployment_BUILD,
-	})
-	if err != nil {
-		return err
-	}
-
-	// Pregrab status report list
-	statusReportsResp, err := client.ListStatusReports(c.Ctx, &pb.ListStatusReportsRequest{
-		Application: &pb.Ref_Application{
-			Application: app.Name,
-			Project:     project.Name,
-		},
-		Workspace: &pb.Ref_Workspace{
-			Workspace: workspace,
+		Order: &pb.OperationOrder{
+			Order: pb.OperationOrder_COMPLETE_TIME,
+			Limit: 1,
 		},
 	})
-	if status.Code(err) == codes.NotFound || status.Code(err) == codes.Unimplemented {
-		err = nil
-		statusReportsResp = nil
-	}
 	if err != nil {
 		return err
 	}
@@ -329,7 +343,8 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	var deployStatusReportCheckTime string
 	appFailures := false
 	if len(respDeployList.Deployments) > 0 {
-		deploy := respDeployList.Deployments[0]
+		deploy := respDeployList.Deployments[0].Deployment
+		appDeployStatus := respDeployList.Deployments[0].LatestStatusReport
 		statusColor := ""
 
 		var details string
@@ -356,30 +371,20 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 			},
 		)
 
-		// get deploy status report
-		statusReport, err := c.getLatestStatusReportByDeployId(statusReportsResp, deploy.Id)
-		if status.Code(err) == codes.NotFound {
-			err = nil
-			statusReport = nil
-		}
-		if err != nil {
-			return err
-		}
-		deployStatusReportComplete, deployStatusReportCheckTime, err = c.FormatStatusReportComplete(statusReport)
+		deployStatusReportComplete, deployStatusReportCheckTime, err = c.FormatStatusReportComplete(appDeployStatus)
 		if err != nil {
 			return err
 		}
 
 		// Deployment Resources Summary
 		//   Resources List
-		// TODO(briancain): Add resource health when it exists
-		if statusReport != nil {
-			if statusReport.Health.HealthStatus == "ERROR" ||
-				statusReport.Health.HealthStatus == "DOWN" {
+		if appDeployStatus != nil {
+			if appDeployStatus.Health.HealthStatus == "ERROR" ||
+				appDeployStatus.Health.HealthStatus == "DOWN" {
 				appFailures = true
 			}
 
-			for _, dr := range statusReport.Resources {
+			for _, dr := range appDeployStatus.Resources {
 				var createdTime string
 				if dr.CreatedTime != nil {
 					t, err := ptypes.Timestamp(dr.CreatedTime)
@@ -411,7 +416,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	// Release Summary
 	//   Release List
 
-	release, err := client.GetLatestRelease(c.Ctx, &pb.GetLatestReleaseRequest{
+	releasesResp, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
 		Application: &pb.Ref_Application{
 			Application: app.Name,
 			Project:     project.Name,
@@ -419,12 +424,11 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		Workspace: &pb.Ref_Workspace{
 			Workspace: workspace,
 		},
-		LoadDetails: pb.Release_BUILD,
+		Order: &pb.OperationOrder{
+			Order: pb.OperationOrder_COMPLETE_TIME,
+			Limit: 1,
+		},
 	})
-	if status.Code(err) == codes.NotFound {
-		err = nil
-		release = nil
-	}
 	if err != nil {
 		return err
 	}
@@ -436,9 +440,13 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	releaseUnimplemented := true
 	releaseStatusReportComplete := "N/A"
 	var releaseStatusReportCheckTime string
-	if release != nil {
+	if releasesResp.Releases != nil {
+		release := releasesResp.Releases[0].Release
 		releaseUnimplemented = release.Unimplemented
+
 		if !release.Unimplemented {
+			appReleaseStatus := releasesResp.Releases[0].LatestStatusReport
+
 			statusColor := ""
 
 			var details []string
@@ -465,28 +473,20 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 				},
 			)
 
-			statusReport, err := c.getLatestStatusReportByReleaseId(statusReportsResp, release.Id)
-			if status.Code(err) == codes.NotFound {
-				err = nil
-				statusReport = nil
-			}
-			if err != nil {
-				return err
-			}
-			releaseStatusReportComplete, releaseStatusReportCheckTime, err = c.FormatStatusReportComplete(statusReport)
+			releaseStatusReportComplete, releaseStatusReportCheckTime, err = c.FormatStatusReportComplete(appReleaseStatus)
 			if err != nil {
 				return err
 			}
 
 			// Release Resources Summary
 			//   Resources List
-			if statusReport != nil {
-				if statusReport.Health.HealthStatus == "ERROR" ||
-					statusReport.Health.HealthStatus == "DOWN" {
+			if appReleaseStatus != nil {
+				if appReleaseStatus.Health.HealthStatus == "ERROR" ||
+					appReleaseStatus.Health.HealthStatus == "DOWN" {
 					appFailures = true
 				}
 
-				for _, rr := range statusReport.Resources {
+				for _, rr := range appReleaseStatus.Resources {
 					var createdTime string
 					if rr.CreatedTime != nil {
 						t, err := ptypes.Timestamp(rr.CreatedTime)
@@ -597,7 +597,7 @@ func (c *StatusCommand) FormatProjectStatus() error {
 	projNameList := projectResp.Projects
 
 	headers := []string{
-		"Project", "Workspace", "App Statuses",
+		"Project", "Workspace", "Deployment Statuses", "Release Statuses",
 	}
 
 	tbl := terminal.NewTable(headers...)
@@ -616,10 +616,11 @@ func (c *StatusCommand) FormatProjectStatus() error {
 		}
 
 		// Get App Statuses
-		var appStatusReports []*pb.StatusReport
-		var ready, alive, down, unknown int
+		var appDeployStatusReports []*pb.StatusReport
+		var appReleaseStatusReports []*pb.StatusReport
 		for _, app := range resp.Project.Applications {
-			appStatusResp, err := client.GetLatestStatusReport(c.Ctx, &pb.GetLatestStatusReportRequest{
+			// Latest Deployment for app
+			respDeployList, err := client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
 				Application: &pb.Ref_Application{
 					Application: app.Name,
 					Project:     resp.Project.Name,
@@ -627,52 +628,61 @@ func (c *StatusCommand) FormatProjectStatus() error {
 				Workspace: &pb.Ref_Workspace{
 					Workspace: workspace,
 				},
+				Order: &pb.OperationOrder{
+					Order: pb.OperationOrder_COMPLETE_TIME,
+					Limit: 1,
+				},
 			})
-			if status.Code(err) == codes.NotFound {
-				// App doesn't have a status report yet, likely not deployed
-				err = nil
-				continue
-			}
 			if err != nil {
 				return err
 			}
 
-			switch appStatusResp.Health.HealthStatus {
-			case "DOWN":
-				down++
-			case "UNKNOWN":
-				unknown++
-			case "READY":
-				ready++
-			case "ALIVE":
-				alive++
+			var appStatusReportDeploy *pb.StatusReport
+			if respDeployList.Deployments != nil && len(respDeployList.Deployments) > 0 {
+				appStatusReportDeploy = respDeployList.Deployments[0].LatestStatusReport
+
+				if appStatusReportDeploy != nil {
+					appDeployStatusReports = append(appDeployStatusReports, appStatusReportDeploy)
+				}
 			}
-			appStatusReports = append(appStatusReports, appStatusResp)
+
+			// Latest Release for app
+			respReleaseList, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
+				Application: &pb.Ref_Application{
+					Application: app.Name,
+					Project:     resp.Project.Name,
+				},
+				Workspace: &pb.Ref_Workspace{
+					Workspace: workspace,
+				},
+				Order: &pb.OperationOrder{
+					Order: pb.OperationOrder_COMPLETE_TIME,
+					Limit: 1,
+				},
+			})
+			if err != nil {
+				return err
+			}
+
+			var appStatusReportRelease *pb.StatusReport
+			if respReleaseList.Releases != nil && len(respReleaseList.Releases) > 0 {
+				appStatusReportRelease = respReleaseList.Releases[0].LatestStatusReport
+
+				if appStatusReportRelease != nil {
+					appReleaseStatusReports = append(appReleaseStatusReports, appStatusReportRelease)
+				}
+			}
 		}
 
-		statusReportComplete := "N/A"
-
-		if len(appStatusReports) != 0 {
-			statusReportComplete = ""
-			if ready > 0 {
-				statusReportComplete = statusReportComplete + fmt.Sprintf("%v READY ", ready)
-			}
-			if alive > 0 {
-				statusReportComplete = statusReportComplete + fmt.Sprintf("%v ALIVE ", alive)
-			}
-			if down > 0 {
-				statusReportComplete = statusReportComplete + fmt.Sprintf("%v DOWN ", down)
-			}
-			if alive > 0 {
-				statusReportComplete = statusReportComplete + fmt.Sprintf("%v UNKNOWN ", unknown)
-			}
-		}
+		deployStatusReportComplete := c.buildAppStatus(appDeployStatusReports)
+		releaseStatusReportComplete := c.buildAppStatus(appReleaseStatusReports)
 
 		statusColor := ""
 		columns := []string{
 			resp.Project.Name,
 			workspace,
-			statusReportComplete, // app statuses overall
+			deployStatusReportComplete,
+			releaseStatusReportComplete,
 		}
 
 		// Add column data to table
@@ -856,34 +866,43 @@ func (c *StatusCommand) getWorkspaceFromProject(pr *pb.GetProjectResponse) (stri
 	return workspace, nil
 }
 
-func (c *StatusCommand) getLatestStatusReportByDeployId(
-	statusReportsResp *pb.ListStatusReportsResponse,
-	deployId string,
-) (*pb.StatusReport, error) {
-	for _, statusReport := range statusReportsResp.StatusReports {
-		if deploymentTargetId, ok := statusReport.TargetId.(*pb.StatusReport_DeploymentId); ok {
-			if deploymentTargetId.DeploymentId == deployId {
-				return statusReport, nil
-			}
+// buildAppStatus takes a list of Status Reports and builds a string
+// that details each apps status in a human readable format.
+func (c *StatusCommand) buildAppStatus(reports []*pb.StatusReport) string {
+	var ready, alive, down, unknown int
+
+	for _, sr := range reports {
+		switch sr.Health.HealthStatus {
+		case "DOWN":
+			down++
+		case "UNKNOWN":
+			unknown++
+		case "READY":
+			ready++
+		case "ALIVE":
+			alive++
 		}
 	}
 
-	return nil, status.Errorf(codes.NotFound, "Failed to find associated Status Report by deployment id %q", deployId)
-}
-
-func (c *StatusCommand) getLatestStatusReportByReleaseId(
-	statusReportsResp *pb.ListStatusReportsResponse,
-	releaseId string,
-) (*pb.StatusReport, error) {
-	for _, statusReport := range statusReportsResp.StatusReports {
-		if releaseTargetId, ok := statusReport.TargetId.(*pb.StatusReport_ReleaseId); ok {
-			if releaseTargetId.ReleaseId == releaseId {
-				return statusReport, nil
-			}
-		}
+	var result string
+	if ready > 0 {
+		result = result + fmt.Sprintf("%v READY ", ready)
+	}
+	if alive > 0 {
+		result = result + fmt.Sprintf("%v ALIVE ", alive)
+	}
+	if down > 0 {
+		result = result + fmt.Sprintf("%v DOWN ", down)
+	}
+	if alive > 0 {
+		result = result + fmt.Sprintf("%v UNKNOWN ", unknown)
 	}
 
-	return nil, status.Errorf(codes.NotFound, "Failed to find associated Status Report by release id %q", releaseId)
+	if result == "" {
+		result = "N/A"
+	}
+
+	return result
 }
 
 // Takes a terminal Table and formats it into a map of key values to be used
