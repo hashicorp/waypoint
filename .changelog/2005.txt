@@ -1,0 +1,9 @@
+```release-note:improvement
+plugin/google: Update Google Cloud platform to use SDK Resource Manager
+```
+```release-note:improvement
+plugin/google: Add non-blocking alert if unable to delete revision
+```
+```release-note:improvement
+plugin/google: Implement DestroyWorkspace to cleanup all created resources
+```
