@@ -298,5 +298,20 @@ func TestServiceStatusReport_ExpediteStatusReport(t *testing.T) {
 		require.NotNil(t, jobResp.JobId)
 	})
 
+	t.Run("Expedite Status Report with no workspace uses default and doesn't error", func(t *testing.T) {
+		require := require.New(t)
+
+		jobResp, err := client.ExpediteStatusReport(ctx, &pb.ExpediteStatusReportRequest{
+			Target: &pb.ExpediteStatusReportRequest_Deployment{
+				Deployment: &pb.Ref_Operation{
+					Target: &pb.Ref_Operation_Id{Id: resp.Deployment.Id},
+				},
+			},
+		})
+		require.NoError(err)
+		require.NotEmpty(t, jobResp)
+		require.NotNil(t, jobResp.JobId)
+	})
+
 	require.NoError(t, err)
 }
