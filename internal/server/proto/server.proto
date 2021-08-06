@@ -321,7 +321,7 @@ service Waypoint {
   rpc UpsertStatusReport(UpsertStatusReportRequest) returns (UpsertStatusReportResponse);
 
   //----------------------------------------------------------------------
-  // UI endpoints. The endpoints below are convenience methods for waypoint's
+  // UI endpoints. The endpoints below are convenience methods for Waypoint's
   // various UIs (web GUI and CLI). They contain no unique functionality, i.e.
   // anything achievable through these endpoints should also be achievable through
   // a combination of calls to non-UI endpoints.
