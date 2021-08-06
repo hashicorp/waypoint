@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/docker: Enables image build for specified platform
+```
