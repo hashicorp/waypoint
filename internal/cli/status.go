@@ -328,7 +328,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	}
 
 	deployHeaders := []string{
-		"App Name", "Version", "Workspace", "Platform", "Details", "Lifecycle State",
+		"App Name", "Version", "Workspace", "Platform", "Artifact", "Lifecycle State",
 	}
 
 	deployTbl := terminal.NewTable(deployHeaders...)
@@ -348,10 +348,16 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		statusColor := ""
 
 		var details string
-		if img, ok := deploy.Preload.Build.Labels["common/image-id"]; ok {
-			img = shortImg(img)
+		if deploy.Preload != nil && deploy.Preload.Build != nil {
+			if deploy.Preload.Artifact != nil {
+				artDetails := fmt.Sprintf("id:%d", deploy.Preload.Artifact.Sequence)
+				details = artDetails
+			}
+			if img, ok := deploy.Preload.Build.Labels["common/image-id"]; ok {
+				img = shortImg(img)
 
-			details = "image:" + img
+				details = details + " image:" + img
+			}
 		}
 
 		columns := []string{
@@ -449,11 +455,15 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 
 			statusColor := ""
 
-			var details []string
+			var details string
+			if release.Preload.Artifact != nil {
+				artDetails := fmt.Sprintf("id:%d", release.Preload.Artifact.Sequence)
+				details = artDetails
+			}
 			if img, ok := release.Preload.Build.Labels["common/image-id"]; ok {
 				img = shortImg(img)
 
-				details = append(details, "image:"+img)
+				details = details + " image:" + img
 			}
 
 			columns := []string{
@@ -461,7 +471,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 				fmt.Sprintf("v%d", release.Sequence),
 				release.Workspace.Workspace,
 				release.Component.Name,
-				details[0],
+				details,
 				release.Status.State.String(),
 			}
 
