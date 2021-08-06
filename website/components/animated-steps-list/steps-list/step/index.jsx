@@ -21,7 +21,7 @@ export default function Step({
 
   return (
     <li className={styles.step} ref={ref}>
-      <h4>{name}</h4>
+      <h4 className="g-type-display-4">{name}</h4>
       <div className={styles.description}>{description}</div>
       <LogoList className={styles.logoList} logos={logos} />
     </li>

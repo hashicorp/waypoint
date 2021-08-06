@@ -1,5 +1,4 @@
 import styles from './style.module.css'
-import classNames from 'classnames'
 import VerticalTextBlockList from '@hashicorp/react-vertical-text-block-list'
 import SectionHeader from '@hashicorp/react-section-header'
 import Head from 'next/head'
@@ -10,9 +9,7 @@ export default function CommunityPage() {
       <Head>
         <title key="title">Community | Waypoint by HashiCorp</title>
       </Head>
-      <div
-        className={classNames(styles.sectionHeaderWrapper, 'g-grid-container')}
-      >
+      <div className={styles.sectionHeaderWrapper}>
         <SectionHeader
           headline="Community"
           description="Waypoint is a newly-launched open source project. The project team depends on the community’s engagement and feedback. Get involved today."

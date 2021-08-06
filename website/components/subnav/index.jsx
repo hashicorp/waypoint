@@ -27,6 +27,7 @@ export default function ProductSubnav() {
       menuItems={subnavItems}
       constrainWidth
       Link={Link}
+      matchOnBasePath
     />
   )
 }
