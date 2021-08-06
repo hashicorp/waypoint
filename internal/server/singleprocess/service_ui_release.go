@@ -21,17 +21,15 @@ func (s *service) UI_ListReleases(
 		return nil, err
 	}
 
-	// TODO: make this more efficient. We should be able to just
-	// grab the relevant status report in one go, not have to iterate
-	// over all of them.
+	// TODO: make this more efficient. We should be able to just grab the relevant status report in one go, not have to
+	// iterate over all of them.
+	// NOTE(brian): We need to redo how GetLatestStatusReport is implemented. Right now it just calls its inherited func
+	// from app operation to get the latest item in the database. For us to target a Release or release status report
+	// we'll have to not use that abstraction and instead write our own query for grabbing a status report if a target
+	// is requested.
 	statusReports, err := s.state.StatusReportList(
 		req.Application,
-		state.ListWithOrder(&pb.OperationOrder{
-			// We only ever care about the latest status report for each operation,
-			// so if we sort this way we can stop when we hit the first match.
-			Order: pb.OperationOrder_COMPLETE_TIME,
-			Desc:  true,
-		}),
+		// NOTE(izaak): the only implemented order for list is pb.OperationOrder_COMPLETE_TIME, which doesn't apply here.
 		state.ListWithWorkspace(req.Workspace),
 	)
 	if err != nil {
@@ -42,13 +40,13 @@ func (s *service) UI_ListReleases(
 
 	for _, release := range releaseList {
 		var matchingStatusReport *pb.StatusReport
-	MATCH_STATUS_REPORT_LOOP:
 		for _, statusReport := range statusReports {
 			switch target := statusReport.TargetId.(type) {
 			case *pb.StatusReport_ReleaseId:
 				if target.ReleaseId == release.Id {
-					matchingStatusReport = statusReport
-					break MATCH_STATUS_REPORT_LOOP
+					if matchingStatusReport == nil || statusReport.GeneratedTime.GetSeconds() > matchingStatusReport.GeneratedTime.Seconds {
+						matchingStatusReport = statusReport
+					}
 				}
 			}
 		}
