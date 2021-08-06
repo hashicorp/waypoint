@@ -92,7 +92,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			// networks have no destroy logic, we leave the network
 			// lingering around for now. This was the logic prior to
 			// refactoring into the resource manager so we kept it.
-
+			resource.WithStatus(p.resourceNetworkStatus),
 			resource.WithPlatform(platformName),
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_ROUTER), // Not a perfect fit but good enough.
 		)),
@@ -228,6 +228,61 @@ func (p *Platform) resourceContainerStatus(
 	return nil
 }
 
+func (p *Platform) resourceNetworkStatus(
+	ctx context.Context,
+	log hclog.Logger,
+	ui terminal.UI,
+	cli *client.Client,
+	network *Resource_Network,
+	sr *resource.StatusResponse,
+) error {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Checking status of the docker network resource...")
+	defer s.Abort()
+
+	log.Debug("querying docker for network status")
+
+	nets, err := cli.NetworkList(ctx, types.NetworkListOptions{
+		Filters: filters.NewArgs(filters.Arg("label", fmt.Sprintf("use=%s", network.Name))),
+	})
+	if err != nil {
+		return status.Errorf(codes.FailedPrecondition, "unable to list Docker networks: %s", err)
+	}
+	if len(nets) == 0 {
+		sr.Resources = append(sr.Resources, &sdk.StatusReport_Resource{
+			Name:                network.Name,
+			Type:                "network",
+			Platform:            platformName,
+			CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_ROUTER,
+			Health:              sdk.StatusReport_MISSING,
+		})
+	} else {
+		// There shouldn't be multiple networks, but if there are somehow we should show them
+		for _, net := range nets {
+			netJson, err := json.Marshal(map[string]interface{}{
+				"dockerNetwork": net,
+			})
+			if err != nil {
+				return status.Errorf(codes.FailedPrecondition, "failed to marshal docker network status for network with id %q: %s", net.ID, err)
+			}
+			sr.Resources = append(sr.Resources, &sdk.StatusReport_Resource{
+				Name:                net.Name,
+				Id:                  net.ID,
+				Type:                "network",
+				Platform:            platformName,
+				CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_ROUTER,
+				Health:              sdk.StatusReport_READY, // Not that many states a network can be in, if it exists.
+				HealthMessage:       "exists",
+				StateJson:           string(netJson),
+				CreatedTime:         timestamppb.New(net.Created),
+			})
+		}
+	}
+	return nil
+}
+
 func (p *Platform) Status(
 	ctx context.Context,
 	log hclog.Logger,
@@ -253,11 +308,15 @@ func (p *Platform) Status(
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
 	if deployment.ResourceState == nil {
-		err := rm.Resource("container").SetState(&Resource_Container{
+		if err := rm.Resource("container").SetState(&Resource_Container{
 			Id: deployment.Container,
-		})
-		if err != nil {
+		}); err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to manually set container resource state while restoring from an old deployment: %s", err)
+		}
+		if err := rm.Resource("network").SetState(&Resource_Network{
+			Name: "waypoint",
+		}); err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to manually set network resource state while restoring from an old deployment: %s", err)
 		}
 	} else {
 		// Load our set state
