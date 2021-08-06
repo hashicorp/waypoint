@@ -7,6 +7,7 @@ export default Model.extend({
   component: belongsTo({ inverse: 'owner' }),
   status: belongsTo({ inverse: 'owner' }),
   deployments: hasMany(),
+  pushedArtifact: belongsTo({ inverse: 'build' }),
 
   toProtobuf(): Build {
     let result = new Build();

@@ -3,25 +3,14 @@
     <Card::Header>
       <h4>
         <Pds::Icon @type="build" class="icon" />
-        <span>Latest builds</span>
+        <span>Latest build</span>
       </h4>
       <LinkTo @route="workspace.projects.project.app.builds">
         View all builds
       </LinkTo>
     </Card::Header>
 
-    <AppCard::Build @model={{@builds.[0]}} @isLatest="true" />
-
-    {{#if (gt @builds.length '1')}}
-      <ul class="app-card-items">
-        {{#if @builds.[1]}}
-          <AppCard::Build @model={{@builds.[1]}} />
-        {{/if}}
-        {{#if @builds.[2]}}
-          <AppCard::Build @model={{@builds.[2]}} />
-        {{/if}}
-      </ul>
-    {{/if}}
+    <AppCard::Build @model={{@builds.[0]}} />
   {{else}}
     <p>
       <Pds::Icon @type="build" class="icon" />

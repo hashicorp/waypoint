@@ -294,7 +294,7 @@ func TestGitSourceChanges(t *testing.T) {
 		require := require.New(t)
 
 		var s GitSource
-		newRef, err := s.Changes(
+		newRef, ignore, err := s.Changes(
 			context.Background(),
 			hclog.L(),
 			terminal.ConsoleUI(context.Background()),
@@ -306,9 +306,11 @@ func TestGitSourceChanges(t *testing.T) {
 				},
 			},
 			nil,
+			"",
 		)
 		require.NoError(err)
 		require.NotNil(newRef)
+		require.False(ignore)
 
 		latestRef = newRef
 	})
@@ -319,7 +321,7 @@ func TestGitSourceChanges(t *testing.T) {
 		require := require.New(t)
 
 		var s GitSource
-		newRef, err := s.Changes(
+		newRef, ignore, err := s.Changes(
 			context.Background(),
 			hclog.L(),
 			terminal.ConsoleUI(context.Background()),
@@ -331,16 +333,18 @@ func TestGitSourceChanges(t *testing.T) {
 				},
 			},
 			latestRef,
+			"",
 		)
 		require.NoError(err)
 		require.Nil(newRef)
+		require.False(ignore)
 	})
 
 	t.Run("with old ref", func(t *testing.T) {
 		require := require.New(t)
 
 		var s GitSource
-		newRef, err := s.Changes(
+		newRef, ignore, err := s.Changes(
 			context.Background(),
 			hclog.L(),
 			terminal.ConsoleUI(context.Background()),
@@ -358,9 +362,11 @@ func TestGitSourceChanges(t *testing.T) {
 					},
 				},
 			},
+			"",
 		)
 		require.NoError(err)
 		require.NotNil(newRef)
+		require.False(ignore)
 	})
 
 	// Test a specific tag ref, we expect our public Waypoint repo tags
@@ -369,7 +375,7 @@ func TestGitSourceChanges(t *testing.T) {
 		require := require.New(t)
 
 		var s GitSource
-		newRef, err := s.Changes(
+		newRef, ignore, err := s.Changes(
 			context.Background(),
 			hclog.L(),
 			terminal.ConsoleUI(context.Background()),
@@ -382,9 +388,11 @@ func TestGitSourceChanges(t *testing.T) {
 				},
 			},
 			nil,
+			"",
 		)
 		require.NoError(err)
 		require.NotNil(newRef)
+		require.False(ignore)
 
 		hash := newRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
 		require.Equal(hash, "66d19f02c5da9e628998d688cbc0d1755eeabf62")
@@ -394,7 +402,7 @@ func TestGitSourceChanges(t *testing.T) {
 		require := require.New(t)
 
 		var s GitSource
-		newRef, err := s.Changes(
+		newRef, ignore, err := s.Changes(
 			context.Background(),
 			hclog.L(),
 			terminal.ConsoleUI(context.Background()),
@@ -407,9 +415,11 @@ func TestGitSourceChanges(t *testing.T) {
 				},
 			},
 			nil,
+			"",
 		)
 		require.NoError(err)
 		require.NotNil(newRef)
+		require.False(ignore)
 
 		hash := newRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
 		require.Equal(hash, "66d19f02c5da9e628998d688cbc0d1755eeabf62")
@@ -420,7 +430,7 @@ func TestGitSourceChanges(t *testing.T) {
 		require := require.New(t)
 
 		var s GitSource
-		newRef, err := s.Changes(
+		newRef, ignore, err := s.Changes(
 			context.Background(),
 			hclog.L(),
 			terminal.ConsoleUI(context.Background()),
@@ -433,9 +443,11 @@ func TestGitSourceChanges(t *testing.T) {
 				},
 			},
 			nil,
+			"",
 		)
 		require.NoError(err)
 		require.NotNil(newRef)
+		require.False(ignore)
 
 		hash := newRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
 		require.Equal(hash, "a71a259607c26e93037aee9f2496a1da83dea6f2")
@@ -445,7 +457,7 @@ func TestGitSourceChanges(t *testing.T) {
 		require := require.New(t)
 
 		var s GitSource
-		newRef, err := s.Changes(
+		newRef, ignore, err := s.Changes(
 			context.Background(),
 			hclog.L(),
 			terminal.ConsoleUI(context.Background()),
@@ -458,12 +470,145 @@ func TestGitSourceChanges(t *testing.T) {
 				},
 			},
 			nil,
+			"",
 		)
 		require.NoError(err)
 		require.NotNil(newRef)
+		require.False(ignore)
 
 		hash := newRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
 		require.Equal(hash, "a71a259607c26e93037aee9f2496a1da83dea6f2")
+	})
+
+	t.Run("no changes in specific path without ignore setting", func(t *testing.T) {
+		require := require.New(t)
+
+		hclog.L().SetLevel(hclog.Trace)
+
+		var s GitSource
+		newRef, ignore, err := s.Changes(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url:  "https://github.com/hashicorp/waypoint.git",
+						Ref:  "release/0.1.0",
+						Path: "idontexist",
+					},
+				},
+			},
+			&pb.Job_DataSource_Ref{
+				Ref: &pb.Job_DataSource_Ref_Git{
+					Git: &pb.Job_Git_Ref{
+						Commit: "38a28ec5af18265189fc6d55fd5970fd5e48544d",
+					},
+				},
+			},
+			"",
+		)
+		require.NoError(err)
+		require.NotNil(newRef)
+		require.False(ignore)
+	})
+
+	// Detect no changes in a specific path
+	t.Run("no changes in specific path", func(t *testing.T) {
+		require := require.New(t)
+
+		hclog.L().SetLevel(hclog.Trace)
+
+		var s GitSource
+		newRef, ignore, err := s.Changes(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url:                      "https://github.com/hashicorp/waypoint.git",
+						Ref:                      "release/0.1.0",
+						Path:                     "idontexist",
+						IgnoreChangesOutsidePath: true,
+					},
+				},
+			},
+			&pb.Job_DataSource_Ref{
+				Ref: &pb.Job_DataSource_Ref_Git{
+					Git: &pb.Job_Git_Ref{
+						Commit: "38a28ec5af18265189fc6d55fd5970fd5e48544d",
+					},
+				},
+			},
+			"",
+		)
+		require.NoError(err)
+		require.NotNil(newRef)
+		require.True(ignore)
+	})
+
+	t.Run("changes in specific path", func(t *testing.T) {
+		require := require.New(t)
+
+		hclog.L().SetLevel(hclog.Trace)
+
+		var s GitSource
+		newRef, ignore, err := s.Changes(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url:                      "https://github.com/hashicorp/waypoint.git",
+						Ref:                      "release/0.1.0",
+						Path:                     "./internal",
+						IgnoreChangesOutsidePath: true,
+					},
+				},
+			},
+			&pb.Job_DataSource_Ref{
+				Ref: &pb.Job_DataSource_Ref_Git{
+					Git: &pb.Job_Git_Ref{
+						Commit: "38a28ec5af18265189fc6d55fd5970fd5e48544d",
+					},
+				},
+			},
+			"",
+		)
+		require.NoError(err)
+		require.NotNil(newRef)
+		require.False(ignore)
+	})
+
+	// If there is no current commit, specific path always returns changes
+	t.Run("specific path with no current commit", func(t *testing.T) {
+		require := require.New(t)
+
+		hclog.L().SetLevel(hclog.Trace)
+
+		var s GitSource
+		newRef, ignore, err := s.Changes(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url:                      "https://github.com/hashicorp/waypoint.git",
+						Ref:                      "release/0.1.0",
+						Path:                     "idontexist",
+						IgnoreChangesOutsidePath: true,
+					},
+				},
+			},
+			nil,
+			"",
+		)
+		require.NoError(err)
+		require.NotNil(newRef)
+		require.False(ignore)
 	})
 }
 

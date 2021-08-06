@@ -16,7 +16,6 @@ func TestConfigValidate(t *testing.T) {
 			"valid.hcl",
 			"",
 		},
-
 		{
 			"no_build.hcl",
 			"'build' stanza",

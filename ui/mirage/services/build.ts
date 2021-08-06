@@ -2,6 +2,7 @@ import { ListBuildsRequest, ListBuildsResponse, GetBuildRequest } from 'waypoint
 import { Request, Response } from 'miragejs';
 import { decode } from '../helpers/protobufs';
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
 export function list(schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(ListBuildsRequest, requestBody);
   let projectName = requestMsg.getApplication().getProject();
@@ -21,6 +22,7 @@ export function list(schema: any, { requestBody }: Request): Response {
   return this.serialize(resp, 'application');
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
 export function get(schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(GetBuildRequest, requestBody);
   let id = requestMsg.getRef().getId();

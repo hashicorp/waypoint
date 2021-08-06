@@ -1,0 +1,63 @@
+.app-card {
+  display: flex;
+
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+
+  &__meta__primary {
+    display: flex;
+    align-items: center;
+    margin-bottom: scale.$sm--3;
+
+    // Simulates flex gap...
+    > * {
+      margin-right: scale.$sm--2;
+    }
+    > :last-child {
+      margin-right: 0;
+    }
+  }
+
+  &__meta__secondary {
+    display: flex;
+    align-items: center;
+
+    @include Typography.Interface(S);
+    color: rgb(var(--text-muted));
+
+    // Simulates flex gap...
+    > * {
+      margin-right: scale.$sm--3;
+    }
+    > :last-child {
+      margin-right: 0;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    margin-left: scale.$base;
+    justify-content: center;
+  }
+
+  &__sequence-link {
+    display: flex;
+    // undoes Structure rule for `:any-link:not(.pds-button)`
+    margin-block-end: unset !important;
+  }
+
+  &__launch-link {
+    display: flex;
+    box-sizing: border-box;
+    width: scale.$lg--4;
+    min-height: scale.$lg--3 !important;
+  }
+
+  &__component-icon {
+    font-size: scale.$base;
+  }
+}

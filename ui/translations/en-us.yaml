@@ -22,7 +22,6 @@ page:
   deployments:
     title: 'Deployments'
     destroyed_label: 'Destroyed'
-    external_url_label: 'Visit Deployment'
     replaced_label: 'Replaced by '
     destroyed_and_hidden_state: 'Some deployments have been destroyed and are hidden'
     display_destroyed: 'Display destroyed deployments'
@@ -37,36 +36,52 @@ page:
 form:
   project_new:
     title: 'New Project'
-    project_name_label: 'Project Name'
-    create_git_label: 'Connect a git repository'
-    create_git_helptext: 'If you skip this, you can always configure this later in project settings.'
-    create_git_checkbox_label: 'Connect a repository to this project'
-    button: 'Create project'
-  project_settings:
+    project_name_label: 'Project name'
+    create_git_label: 'Connect a Git repository'
+    create_git_helptext: 'If you skip this, you can always configure this later in Project settings.'
+    create_git_checkbox_label: 'Connect a repository to this Project'
+    button: 'Create Project'
+  project_git_settings:
     git_title: 'Git settings'
-    git_source_url_label: 'Git Source URL'
-    git_source_ref_label: 'Git Ref'
-    git_source_ref_helptext: 'This can be a branch name, a tag name, or a fully qualified git ref such as'
+    git_source_url_label: 'Git source URL'
+    git_source_ref_label: 'Git ref'
+    git_source_ref_helptext: 'This can be a branch name, a tag name, or a fully qualified Git ref such as'
     git_source_ref_example: 'refs/pull/1014'
-    git_source_path_label: 'Git Source Path (optional)'
+    git_source_path_label: 'Git source path (optional)'
     git_auth_type_label: 'Authentication'
-    git_auth_type_basic_label: 'Username & Password'
-    git_auth_type_not_set_label: 'No Authentication'
+    git_auth_type_basic_label: 'Username & password'
+    git_auth_type_not_set_label: 'No authentication'
     git_auth_type_ssh_label: 'SSH'
     git_source_ssh_user_label: 'Git User (optional)'
     git_source_ssh_password_label: 'Passphrase (optional)'
     git_source_ssh_key_label: 'SSH Private Key'
     git_source_basic_username_label: 'Username'
     git_source_basic_password_label: 'Password'
-    git_sync_label: 'Automated Sync'
+    git_sync_label: 'Automated sync'
     git_sync_description_label: 'Enable automated deployment on changes'
     hcl_title: 'Waypoint.hcl settings'
-    hcl_location: 'Waypoint.hcl config location'
-    hcl_location_repo_label: 'in Project repository'
-    hcl_location_server_label: 'on the Waypoint server'
-    hcl_content_helptext: 'Paste or edit your waypoint configuration here to store it on the server'
+    hcl_location: 'waypoint.hcl config location'
+    hcl_location_repo_label: 'Project repository'
+    hcl_location_server_label: 'Waypoint server'
+    hcl_content_helptext: 'Paste or edit your Waypoint configuration here to store it on the server'
     hcl_content_label: 'waypoint.hcl file'
     button: 'Apply'
+  project_variables_settings:
+    empty_state_heading: 'No input variables configured'
+    empty_state_content: 'Variables defined in your waypoint.hcl file can be assigned a server value here.'
+    title: 'Input variable'
+    button_apply: 'Add variable'
+    variable_name: 'Key'
+    variable_name_placeholder: 'var_key'
+    variable_value: 'Value'
+    variable_value_placeholder: 'var_value'
+    button_submit: 'Save variable'
+    button_cancel: 'Cancel'
+
+
+
+
+
 
 auth:
   title: 'Welcome to Waypoint'
@@ -80,7 +95,7 @@ login:
   input:
     label: 'Then enter the token below'
     placeholder: 'Enter your token from the CLI'
-  button: 'Authenticate with Token'
+  button: 'Authenticate with token'
 
 invite_login:
   title: 'Welcome to Waypoint'
@@ -91,8 +106,8 @@ invite_login:
     cli_label: 'Your token'
     placeholder: 'Get your invite token from your teammate'
     cli_placeholder: 'Your token'
-  button: 'Redeem Invite and Authenticate'
-  cli_button: 'Authenticate with Token'
+  button: 'Redeem invite and authenticate'
+  cli_button: 'Authenticate with token'
 
 state:
   deployment:
@@ -120,3 +135,31 @@ status_badge:
   unknown:
     text: 'Unknown'
     tooltip: 'Unknown Application state'
+
+status_report_indicator:
+  label:
+    prefix: 'Health:'
+    unknown: Unknown
+    alive: Starting…
+    ready: Available
+    down: Down
+    partial: Degraded
+  tooltip:
+    checking_now: Checking now…
+    last_checked: Last checked
+    unknown: Status unknown
+
+app_item_build:
+  built_in: Built in {duration}
+
+build_status:
+  type-1: # BUILDER
+    state-0: Building with # UNKNOWN
+    state-1: Building with # RUNNING
+    state-2: Built with # SUCCESS
+    state-3: Failed to build with # ERROR
+  type-2: # REGISTRY
+    state-0: Pushing to # UNKNOWN
+    state-1: Pushing to # RUNNING
+    state-2: Pushed to # SUCCESS
+    state-3: Failed to push to # ERROR

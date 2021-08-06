@@ -1,0 +1,370 @@
+---
+layout: docs
+page_title: Input Variables - Variables - waypoint.hcl
+description: |-
+  Input variables allow you to customize Waypoint configuration according to 
+  set parameters. This section documents input variable syntax, including how to
+  define, reference, and use input variables.
+---
+
+# Input Variables
+
+Input variables let you customize aspects of Waypoint configuration with values
+that may change, or that need to be set per Waypoint run.
+
+You can parameterize your configuration by declaring variables in the
+waypoint.hcl file, and setting their values using CLI options, environment variables,
+`auto` files, and the Waypoint server UI.
+
+> **Hands-on:** Try the [Input Variables](https://learn.hashicorp.com/collections/waypoint/input-variables)
+> tutorial on HashiCorp Learn.
+
+## Declaring an Input Variable
+
+Each input variable referenced in the waypoint.hcl file must be declared using a
+[`variable` block](/docs/waypoint-hcl/variable). Example variable declaration
+blocks include:
+
+```hcl
+variable "port" {
+  type    = number
+  default = 8080
+}
+
+variable "image_name" {
+  type    = string
+  default = "latest"
+}
+
+variable "docker_labels" {
+  type = object({
+    environment = string
+    log_level   = string
+  })
+  default = {
+      environment = test
+      log_level   = debug
+  }
+}
+```
+
+The label after the `variable` keyword is a name for the variable, which must
+be unique among all variables in the same waypoint.hcl file. This name is used
+to assign a value to the variable and to reference the variable's value when
+evaluating the configuration.
+
+The name of a variable can be any valid [identifier](/docs/waypoint-hcl/syntax#identifiers).
+
+## Arguments
+
+Waypoint CLI defines the following optional arguments for variable declarations:
+
+- [`default`][inpage-default] - A default value.
+- [`type`][inpage-type] - This specifies what value types are accepted for the variable.
+- [`description`][inpage-description] - This specifies the input variable's documentation.
+
+### Default values
+
+[inpage-default]: #default-values
+
+The variable declaration can include a `default` argument. If present, the
+default value will be used if no value is set when running Waypoint. The
+`default` argument requires a literal value and cannot reference functions or
+other objects in the configuration. The default value can be `null`.
+
+A default value of `null` can useful when you want to initialize a project
+with variables you intend to define just-in-time, such as via a -var flag on
+the command line. `waypoint init` will fail to initialize plugins that rely
+on variables with no defined value. While a `null` value in a given stage
+will not be valid when the receiving field needs to evaluate the value
+it is a fine placeholder for initializing a project.
+
+This also allows for variables that are not used in all stanzas to be
+indicated as optional values.
+
+For example, given the below waypoint.hcl file, you could run `waypoint build`
+without needing to pass in a value for the `port` variable. If you ran
+`waypoint up` or `waypoint deploy` without specifying a value, you would
+receive an error.
+
+```hcl
+app "my-app" {
+  build {
+    use "docker" {}
+  }
+
+  deploy {
+    use "docker" {
+      service_port = var.port
+    }
+  }
+}
+
+variable "port" {
+  type    = number
+  default = null
+}
+
+```
+
+### Type Constraints
+
+[inpage-type]: #type-constraints
+
+The `type` argument in a `variable` block allows you to restrict the
+[type of value](/docs/waypoint-hcl/syntax/expressions#types-and-values) that
+will be accepted as the value for a variable.
+
+While type constraints are optional, we recommend specifying them; they
+can serve as helpful reminders for users of the module, and they
+allow Waypoint to return a helpful error message if the wrong type is used.
+
+Type constraints are created from a mixture of type keywords and type
+constructors. The supported type keywords are:
+
+- `string`
+- `number`
+- `bool`
+
+The type constructors allow you to specify complex types such as
+collections:
+
+- `list(<TYPE>)`
+- `set(<TYPE>)`
+- `map(<TYPE>)`
+- `object({<ATTR NAME> = <TYPE>, ... })`
+- `tuple([<TYPE>, ...])`
+
+If both the `type` and `default` arguments are specified, the given default
+value must be convertible to the specified type.
+
+If no type constraint is set then a type will be inferred from the `default`
+value.
+
+If neither `type` nor `default` is set, then the value type will be
+evaluated as follows:
+
+- A value supplied from an environment variable or a CLI flag will be evaluated
+  as a `string`.
+- A value supplied from a wpvars file will be evaluated as one of the three
+  primitive types, `string`, `number`, or `bool`, based on syntax.
+- A value supplied from the UI will be evaluated as either a `string` or HCL
+  type constructor, dependent on if the HCL option is selected.
+
+### Input Variable Documentation
+
+[inpage-description]: #input-variable-documentation
+
+To aid in documentation of what defined variables are expected to be used for,
+you can briefly describe the purpose of each variable using the optional
+`description` argument:
+
+```hcl
+variable "image_tag" {
+  type        = string
+  description = "The tag assigned to built Docker images."
+}
+```
+
+The description should concisely explain the purpose of the variable and what
+kind of value is expected.
+
+## Using Input Variable Values
+
+Within the waypoint.hcl file that declared a variable, its value can be accessed
+from within [expressions](/docs/waypoint-hcl/syntax/expressions) as
+`var.<NAME>`, where `<NAME>` matches the label given in the declaration block:
+
+-> **Note:** Input variables are _created_ by a `variable` block, but you
+_reference_ them as attributes on an object named `var`.
+
+```hcl
+  deploy {
+    use "docker" {
+      service_port = var.port
+    }
+  }
+```
+
+The value assigned to a variable can only be accessed within the `app` stanza.
+[Top-level parameters](/docs/waypoint-hcl#top-level-parameters), such as the
+project or app names, cannot reference variable values.
+
+## Assigning Values to Custom Input Variables
+
+When variables are declared in your configuration, they can be set in a
+number of ways. Waypoint loads variables in the following order, with
+later sources taking precedence over earlier ones:
+
+- In the project settings via [the Waypoint server's UI](https://www.waypointproject.io/docs/server#waypoint-server).
+- Automatically loaded variable definition files, named with the pattern
+  `*.auto.wpvars`.
+- As environment variables.
+- In variable definitions (`.wpvars`) files specified with the `-var-file` command
+  line option.
+- Individually, with the `-var` command line option.
+
+The following sections describe these options in more detail.
+
+### Variables on the Command Line
+
+To specify individual variables on the command line, use the `-var` option
+when running the `waypoint up` or specific stage commands (e.g. `waypoint build`).
+You can use the `-var` option multiple times in a single command to set several
+different variables.
+
+```
+waypoint up -var="port=8080"
+waypoint up -var='networks=["internal","dev-test"]' -var="port=8080"
+waypoint up -var='network_map={"internal":8080,"dev-test":9701}'
+```
+
+The above examples show appropriate syntax for Unix-style shells, such as on
+Linux or macOS.
+If you're on Windows, we recommend using the Windows Command Prompt (cmd.exe).
+When you pass a variable value to Waypoint from the Windows Command Prompt,
+use double quotes " around the argument:
+
+```
+waypoint up -var "name=value"
+```
+
+If your intended value includes literal double quotes then you'll need to
+escape those with a backslash:
+
+```
+waypoint up -var "name=va\"lue"
+```
+
+### Variable Definitions (`.wpvars`) Files
+
+To set lots of variables, it is more convenient to specify their values in
+a _variable definitions file_ (with a filename ending in either `.wpvars`
+or `.wpvars.json`) and then specify that file on the command line with
+`-var-file`:
+
+```
+waypoint up -var-file="testing.wpvars"
+```
+
+A variable definitions file uses the same basic syntax as Waypoint language
+files, but consists only of variable name assignments:
+
+```hcl
+port = "8080"
+networks = [
+  "internal",
+  "dev-test",
+]
+```
+
+Waypoint also automatically loads any `auto` variable definitions files - files
+with names ending in `.auto.wpvars` or `.auto.wpvars.json` - if they are present.
+
+Files whose names end with `.json` are parsed instead as JSON objects, with
+the root object properties corresponding to variable names:
+
+```json
+{
+  "port": 8080,
+  "networks": ["internal", "dev-test"]
+}
+```
+
+### Environment Variables
+
+As a fallback for the other ways of defining variables, Waypoint searches
+the environment of its own process for environment variables named `WP_VAR_`
+followed by the name of a declared variable.
+
+This can be useful when running Waypoint in automation, or when running a
+sequence of Waypoint commands in succession with the same variables.
+For example, at a `bash` prompt on a Unix system:
+
+```
+$ export WP_VAR_port=8080
+$ waypoint up
+...
+```
+
+On operating systems where environment variable names are case-sensitive,
+Waypoint matches the variable name exactly as given in configuration, and
+so the required environment variable name will usually have a mix of upper
+and lower case letters as in the above example.
+
+### Variables in the UI
+
+To assign variable values in the UI, navigate to the Project Settings page and
+then to the Input Variables tab.
+
+![input-variables-settings](/img/input-vars-empty-settings-tab.png)
+
+Add new variables using the variable name as the `key`, and the value you
+wish to assign as the `value`. All non-HCL values will be evaluated as strings,
+and values with the `HCL` box selected will be evaluated as a
+[complex type][inpage-complex-types].
+
+![input-variables-settings](/img/input-vars-add-variable-dialog.png)
+
+All values will then be converted to the `type` specified in the corresponding
+`variable` definition block in the waypoint.hcl file.
+If the value cannot be converted to this type (or, if `type` is unset, the
+implicit type of the `default` value), you will receive an error.
+
+### Complex-typed Values
+
+[inpage-complex-types]: #complex-types
+
+When variable values are provided in a variable definitions file, you can use
+Waypoint's usual syntax for
+[literal expressions](/docs/language/expressions/types.html#literal-expressions)
+to assign complex-typed values, like lists and maps.
+
+Some special rules apply to the `-var` command line option and to environment
+variables. For convenience, Waypoint defaults to interpreting `-var` and
+environment variable values as literal strings, which need only shell quoting,
+and no special quoting for Waypoint. For example, in a Unix-style shell:
+
+```
+$ export WP_VAR_port=8080
+```
+
+However, if a root module variable uses a [type constraint](#type-constraints)
+to require a complex value (list, set, map, object, or tuple), Waypoint will
+instead attempt to parse its value using the same syntax used within variable
+definitions files, which requires careful attention to the string escaping rules
+in your shell:
+
+```
+$ export TF_VAR_networks='["internal","dev-test"]'
+```
+
+For readability, and to avoid the need to worry about shell escaping, we
+recommend always setting complex variable values via variable definitions files.
+
+### Values for Undeclared Variables
+
+If you have defined a variable value, but not its corresponding `variable {}`
+definition in the waypoint.hcl file, you will get an error.
+
+To avoid this error, either declare a variable block for the value, or remove
+the variable value from your Waypoint call.
+
+### Variable Definition Precedence
+
+The above mechanisms for setting variables can be used together in any
+combination. If the same variable is assigned multiple values, Waypoint uses
+the _last_ value it finds, overriding any previous values. Note that the same
+variable cannot be assigned multiple values within a single source. Doing so
+will result in an error.
+
+Waypoint loads variables in the following order, with later sources taking
+precedence over earlier ones:
+
+- In the project settings via [the Waypoint server's UI](https://www.waypointproject.io/docs/server#waypoint-server).
+- Automatically loaded variable definition files, named with the pattern
+  `*.auto.wpvars`.
+- From environment variables prefixed with `WP_VAR_`.
+- In variable definitions files (e.g. `dev.wpvars`) specified with the
+  `-var-file` command line option.
+- Individually, with the `-var` command line option.

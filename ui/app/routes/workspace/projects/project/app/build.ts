@@ -1,39 +1,56 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { Ref, GetBuildRequest } from 'waypoint-pb';
-import { AppRouteModel } from '../app';
+import { Ref, GetBuildRequest, Build, PushedArtifact } from 'waypoint-pb';
+import { Model as AppRouteModel } from '../app';
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
-interface BuildModelParams {
-  build_id: string;
+type Params = { sequence: string };
+type Model = Build.AsObject & WithPushedArtifact;
+
+interface WithPushedArtifact {
+  pushedArtifact?: PushedArtifact.AsObject;
 }
+
+type BuildWithArtifact = Build.AsObject & WithPushedArtifact;
+
 export default class BuildDetail extends Route {
   @service api!: ApiService;
 
-  breadcrumbs(model: AppRouteModel) {
+  breadcrumbs(model: Model): Breadcrumb[] {
     if (!model) return [];
     return [
       {
-        label: model.application.application,
+        label: model.application?.application ?? 'unknown',
         icon: 'git-repository',
-        args: ['workspace.projects.project.app'],
+        route: 'workspace.projects.project.app',
       },
       {
         label: 'Builds',
         icon: 'build',
-        args: ['workspace.projects.project.app.builds'],
+        route: 'workspace.projects.project.app.builds',
       },
     ];
   }
 
-  async model(params: BuildModelParams) {
-    // Setup the build request
+  async model(params: Params): Promise<Model> {
+    let { builds } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
+    let buildFromAppRoute = builds.find((obj) => obj.sequence === Number(params.sequence));
+
+    if (!buildFromAppRoute) {
+      throw new Error(`Build v${params.sequence} not found`);
+    }
+
     let ref = new Ref.Operation();
-    ref.setId(params.build_id);
+    ref.setId(buildFromAppRoute.id);
     let req = new GetBuildRequest();
     req.setRef(ref);
 
     let build = await this.api.client.getBuild(req, this.api.WithMeta());
-    return build.toObject();
+    let result: BuildWithArtifact = build.toObject();
+
+    result.pushedArtifact = buildFromAppRoute.pushedArtifact;
+
+    return result;
   }
 }

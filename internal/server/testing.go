@@ -4,12 +4,14 @@ import (
 	"context"
 	"net"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/internal/protocolversion"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverclient"
 )
 
 // TestServer starts a server and returns a gRPC client to that server.
@@ -32,11 +34,16 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 	// We make run a function since we'll call it to restart too
 	run := func(ctx context.Context) context.CancelFunc {
 		ctx, cancel := context.WithCancel(ctx)
-		go Run(
+		opts := []Option{
 			WithContext(ctx),
 			WithGRPC(ln),
 			WithImpl(impl),
-		)
+		}
+		if ac, ok := impl.(AuthChecker); ok {
+			opts = append(opts, WithAuthentication(ac))
+		}
+
+		go Run(opts...)
 		t.Cleanup(func() { cancel() })
 
 		return cancel
@@ -77,16 +84,37 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 	// Get our version info we'll set on the client
 	vsnInfo := testVersionInfoResponse().Info
 
+	// connect is a function since we need to connect multiple times:
+	// once to bootstrap, then again with our auth information.
+	connect := func(token string) (*grpc.ClientConn, error) {
+		opts := []grpc.DialOption{
+			grpc.WithBlock(),
+			grpc.WithInsecure(),
+			grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(vsnInfo)),
+			grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(vsnInfo)),
+		}
+		if token != "" {
+			opts = append(opts, grpc.WithPerRPCCredentials(serverclient.StaticToken(token)))
+		}
+
+		return grpc.DialContext(context.Background(), ln.Addr().String(), opts...)
+	}
+
 	// Connect, this should retry in the case Run is not going yet
-	conn, err := grpc.DialContext(context.Background(), ln.Addr().String(),
-		grpc.WithBlock(),
-		grpc.WithInsecure(),
-		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(vsnInfo)),
-		grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(vsnInfo)),
-	)
+	conn, err := connect("")
+	require.NoError(err)
+	client := pb.NewWaypointClient(conn)
+
+	// Bootstrap
+	tokenResp, err := client.BootstrapToken(context.Background(), &empty.Empty{})
+	conn.Close()
+	require.NoError(err)
+	require.NotEmpty(tokenResp.Token)
+
+	// Reconnect with a token
+	conn, err = connect(tokenResp.Token)
 	require.NoError(err)
 	t.Cleanup(func() { conn.Close() })
-
 	return pb.NewWaypointClient(conn)
 }
 

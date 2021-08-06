@@ -5,10 +5,12 @@
 @use 'pds/tokens/font';
 @use 'pds/core/typography/config' as Typography;
 @use 'utilities/animations';
+@use 'utilities/focus-ring';
 
 @import './variables';
 @import './layout';
 
+@import './components/app-card';
 @import './components/app-card-item';
 @import './components/app-item';
 @import './pages/auth-page';
@@ -27,9 +29,12 @@
 @import './pages/login';
 @import './components/notifications';
 @import './pages/onboarding';
+@import './components/operation-status-indicator';
 @import './components/output-pane';
+@import './components/project-input-variables';
 @import './components/navigation/page-header';
+@import './components/status-report-indicator';
 @import './components/structure/pds-form';
 @import './components/structure/pds-tabnav';
-@import './components/status-badge';
+@import './components/tooltip';
 @import './components/x-toggle';

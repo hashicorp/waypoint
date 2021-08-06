@@ -2,17 +2,11 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { GetReleaseRequest, Release, Ref, StatusReport } from 'waypoint-pb';
-import { AppRouteModel, ResolvedModel as ResolvedAppRouteModel } from '../app';
+import { Model as AppRouteModel } from '../app';
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
-interface ReleaseModelParams {
-  release_id: string;
-}
-
-interface Breadcrumb {
-  label: string;
-  icon: string;
-  args: string[];
-}
+type Params = { sequence: string };
+type Model = Release.AsObject & WithStatusReport;
 
 interface WithStatusReport {
   statusReport?: StatusReport.AsObject;
@@ -21,35 +15,42 @@ interface WithStatusReport {
 export default class ReleaseDetail extends Route {
   @service api!: ApiService;
 
-  breadcrumbs(model: AppRouteModel): Breadcrumb[] {
+  breadcrumbs(model: Model): Breadcrumb[] {
     if (!model) return [];
+
     return [
       {
-        label: model.application.application,
+        label: model.application?.application ?? 'unknown',
         icon: 'git-repository',
-        args: ['workspace.projects.project.app'],
+        route: 'workspace.projects.project.app',
       },
       {
         label: 'Releases',
         icon: 'public-default',
-        args: ['workspace.projects.project.app.releases'],
+        route: 'workspace.projects.project.app.releases',
       },
     ];
   }
 
-  async model(params: ReleaseModelParams): Promise<Release.AsObject> {
+  async model(params: Params): Promise<Model> {
+    let { releases } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
+    let releaseFromAppRoute = releases.find((obj) => obj.sequence === Number(params.sequence));
+
+    if (!releaseFromAppRoute) {
+      throw new Error(`Release v${params.sequence} not found`);
+    }
+
     let ref = new Ref.Operation();
-    ref.setId(params.release_id);
+    ref.setId(releaseFromAppRoute.id);
     let req = new GetReleaseRequest();
     req.setRef(ref);
 
     let release: Release = await this.api.client.getRelease(req, this.api.WithMeta());
-
     return release.toObject();
   }
 
   afterModel(model: Release.AsObject & WithStatusReport): void {
-    let { statusReports } = this.modelFor('workspace.projects.project.app') as ResolvedAppRouteModel;
+    let { statusReports } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
     let statusReport = statusReports.find((sr) => sr.releaseId === model.id);
 
     model.statusReport = statusReport;

@@ -1,0 +1,44 @@
+---
+layout: commands
+page_title: 'Commands: Auth-method set oidc'
+sidebar_title: 'auth-method set oidc'
+description: 'Configure an OIDC auth method'
+---
+
+# Waypoint Auth-method set oidc
+
+Command: `waypoint auth-method set oidc`
+
+Configure an OIDC auth method
+
+@include "commands/auth-method-set-oidc_desc.mdx"
+
+## Usage
+
+Usage: `waypoint auth-method set oidc [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-display-name=<string>` - Display name for the UI. Optional.
+- `-description=<string>` - Short description of this auth method. Optional.
+- `-access-selector=<string>` - Selector expression to control access based on claims. See docs for more details.
+
+#### OIDC Auth Method Options
+
+- `-client-id=<string>` - The OAuth 2.0 Client Identifier.
+- `-client-secret=<string>` - The client secret corresponding with the client ID.
+- `-claim-scope=<string>` - The optional claims scope requested. May be specified multiple times.
+- `-signing-algorithm=<string>` - The allowed signing algorithm. May be specified multiple times.
+- `-issuer=<string>` - Discovery URL of the OIDC provider that implements the .well-known/openid-configuration metadata endpoint.
+- `-issuer-ca-pem=<string>` - PEM-encoded certificates for connecting to the issuer. May be specified multiple times.
+- `-allowed-redirect-uri=<string>` - Allowed URI for auth redirection. This automatically has localhost (for CLI auth) and the server address configured. If you have additional external addresses, you can specify them here. May be specified multiple times.
+- `-claim-mapping=<key=value>` - Mapping of a claim to a variable value for the access selector. This can be specified multiple times. Example value: 'http://example.com/key=key'
+- `-list-claim-mapping=<key=value>` - Same as claim-mapping but for list values. This can be repeated multiple times.
+
+@include "commands/auth-method-set-oidc_more.mdx"

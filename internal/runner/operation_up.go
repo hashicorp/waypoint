@@ -64,7 +64,7 @@ func (r *Runner) executeUpOp(
 
 	// Status Report for Deployments
 	app.UI.Output("")
-	result, err = r.executeStatusReportOp(ctx, &pb.Job{
+	result, err = r.executeStatusReportOp(ctx, log, &pb.Job{
 		Application: job.Application,
 		Operation: &pb.Job_StatusReport{
 			StatusReport: &pb.Job_StatusReportOp{
@@ -93,6 +93,10 @@ func (r *Runner) executeUpOp(
 	}
 	releaseResult := result.Release
 
+	if releaseResult.Release.Unimplemented {
+		app.UI.Output("No release phase specified, skipping...")
+	}
+
 	// NOTE(briancain): Because executeReleaseOp returns an initialized struct
 	// of release results, we need this deep check here to really ensure that a
 	// release actually happened, otherwise we'd attempt to run a status report
@@ -101,7 +105,7 @@ func (r *Runner) executeUpOp(
 		releaseResult.Release.Release != nil {
 		// Status Report for Releases
 		app.UI.Output("")
-		result, err = r.executeStatusReportOp(ctx, &pb.Job{
+		result, err = r.executeStatusReportOp(ctx, log, &pb.Job{
 			Application: job.Application,
 			Operation: &pb.Job_StatusReport{
 				StatusReport: &pb.Job_StatusReportOp{

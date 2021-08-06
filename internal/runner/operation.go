@@ -2,20 +2,27 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
+	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
+	goplugin "github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	sdk "github.com/hashicorp/waypoint-plugin-sdk"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
@@ -31,30 +38,29 @@ func (r *Runner) executeJob(
 	job *pb.Job,
 	wd string,
 ) (*pb.Job_Result, error) {
+	// NOTE(mitchellh; krantzinator): For now, we query the project directly here
+	// since we use it only in case of a missing local waypoint.hcl, and to
+	// collect input variable values set on the server. I can see us moving this
+	// to accept() eventually though if other data is used.
+	resp, err := r.client.GetProject(ctx, &pb.GetProjectRequest{
+		Project: &pb.Ref_Project{
+			Project: job.Application.Project,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	// Eventually we'll need to extract the data source. For now we're
 	// just building for local exec so it is the working directory.
 	path, err := configpkg.FindPath(wd, "", false)
 	if err != nil {
 		return nil, err
 	}
-
 	if path == "" {
 		// If no waypoint.hcl file is found in the downloaded data, look for
 		// a default waypoint HCL.
-		//
-		// NOTE(mitchellh): For now, we query the project directly here
-		// since we don't need it for anything else. I can see us moving this
-		// to accept() eventually though if other data is used.
 		log.Trace("waypoint.hcl not found in downloaded data, looking for default in server")
-		resp, err := r.client.GetProject(ctx, &pb.GetProjectRequest{
-			Project: &pb.Ref_Project{
-				Project: job.Application.Project,
-			},
-		})
-		if err != nil {
-			return nil, err
-		}
-
 		if v := resp.Project.WaypointHcl; len(v) > 0 {
 			log.Info("using waypoint.hcl associated with the project in the server")
 
@@ -118,6 +124,25 @@ func (r *Runner) executeJob(
 		return nil, err
 	}
 
+	// Here we'll load our values from auto vars files and the server/UI, and
+	// combine them with any values set on the job
+	// The order values are added to our final pbVars slice is the order
+	// of precedence
+	vcsVars, diags := variables.LoadAutoFiles(wd)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+
+	pbVars := resp.Project.GetVariables()
+	pbVars = append(pbVars, vcsVars...)
+	pbVars = append(pbVars, job.Variables...)
+
+	// evaluate all variables against the variable blocks we just decoded
+	inputVars, diags := variables.EvaluateVariables(pbVars, cfg.InputVariables, log)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+
 	// Build our job info
 	jobInfo := &component.JobInfo{
 		Id:    job.Id,
@@ -134,6 +159,7 @@ func (r *Runner) executeJob(
 		core.WithConfig(cfg),
 		core.WithDataDir(projDir),
 		core.WithLabels(job.Labels),
+		core.WithVariables(inputVars),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),
 	)
@@ -200,7 +226,7 @@ func (r *Runner) executeJob(
 		return r.executeQueueProjectOp(ctx, log, job, project)
 
 	case *pb.Job_StatusReport:
-		return r.executeStatusReportOp(ctx, job, project)
+		return r.executeStatusReportOp(ctx, log, job, project)
 
 	default:
 		return nil, status.Errorf(codes.Aborted, "unknown operation %T", job.Operation)
@@ -225,14 +251,38 @@ func (r *Runner) pluginFactories(
 	}
 	log.Debug("plugin search path", "path", pluginPaths)
 
+	// Look for any reattach plugins
+	var reattachPluginConfigs map[string]*goplugin.ReattachConfig
+	reattachPluginsStr := os.Getenv("WP_REATTACH_PLUGINS")
+	if reattachPluginsStr != "" {
+		var err error
+		reattachPluginConfigs, err = parseReattachPlugins(reattachPluginsStr)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// Search for all of our plugins
 	var perr error
 	for _, pluginCfg := range plugins {
 		plog := log.With("plugin_name", pluginCfg.Name)
 		plog.Debug("searching for plugin")
 
+		if reattachConfig, ok := reattachPluginConfigs[pluginCfg.Name]; ok {
+			plog.Debug(fmt.Sprintf("plugin %s is declared as running for reattachment", pluginCfg.Name))
+			for _, t := range pluginCfg.Types() {
+				if err := result[t].Register(pluginCfg.Name, plugin.ReattachPluginFactory(reattachConfig, t)); err != nil {
+					return nil, err
+				}
+			}
+			continue
+		}
+
 		// Find our plugin.
-		cmd, err := plugin.Discover(pluginCfg, pluginPaths)
+		cmd, err := plugin.Discover(&plugin.Config{
+			Name:     pluginCfg.Name,
+			Checksum: pluginCfg.Checksum,
+		}, pluginPaths)
 		if err != nil {
 			plog.Warn("error searching for plugin", "err", err)
 			perr = multierror.Append(perr, err)
@@ -250,6 +300,7 @@ func (r *Runner) pluginFactories(
 			} else {
 				plog.Debug("plugin found as builtin")
 				for _, t := range pluginCfg.Types() {
+					plog.Info("register", "type", t.String(), "nil", result[t] == nil)
 					result[t].Register(pluginCfg.Name, plugin.BuiltinFactory(pluginCfg.Name, t))
 				}
 			}
@@ -265,6 +316,46 @@ func (r *Runner) pluginFactories(
 	}
 
 	return result, perr
+}
+
+// parse information on reattaching to plugins out of a
+// JSON-encoded environment variable.
+func parseReattachPlugins(in string) (map[string]*goplugin.ReattachConfig, error) {
+	reattachConfigs := map[string]*goplugin.ReattachConfig{}
+	if in != "" {
+		in = strings.TrimRight(in, "'")
+		in = strings.TrimLeft(in, "'")
+		var m map[string]sdk.ReattachConfig
+		err := json.Unmarshal([]byte(in), &m)
+		if err != nil {
+			return reattachConfigs, fmt.Errorf("Invalid format for WP_REATTACH_PROVIDERS: %w", err)
+		}
+		for p, c := range m {
+			var addr net.Addr
+			switch c.Addr.Network {
+			case "unix":
+				addr, err = net.ResolveUnixAddr("unix", c.Addr.String)
+				if err != nil {
+					return reattachConfigs, fmt.Errorf("Invalid unix socket path %q for %q: %w", c.Addr.String, p, err)
+				}
+			case "tcp":
+				addr, err = net.ResolveTCPAddr("tcp", c.Addr.String)
+				if err != nil {
+					return reattachConfigs, fmt.Errorf("Invalid TCP address %q for %q: %w", c.Addr.String, p, err)
+				}
+			default:
+				return reattachConfigs, fmt.Errorf("Unknown address type %q for %q", c.Addr.String, p)
+			}
+			reattachConfigs[p] = &goplugin.ReattachConfig{
+				Protocol:        goplugin.Protocol(c.Protocol),
+				ProtocolVersion: c.ProtocolVersion,
+				Pid:             c.Pid,
+				Test:            c.Test,
+				Addr:            addr,
+			}
+		}
+	}
+	return reattachConfigs, nil
 }
 
 // operationNoDataFunc is the function type for operations that are

@@ -1,6 +1,8 @@
 package state
 
 import (
+	"time"
+
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
@@ -54,6 +56,45 @@ func (s *State) AppGet(ref *pb.Ref_Application) (*pb.Application, error) {
 	})
 
 	return result, err
+}
+
+// AppPollPeek peeks at the next available project that will be polled against,
+// and returns the project as the result along with the poll time. The poll queuer
+// will queue a job against every defined application for the given project.
+// For more information on how ProjectPollPeek works, refer to the ProjectPollPeek
+// docs.
+func (s *State) ApplicationPollPeek(
+	ws memdb.WatchSet,
+) (*pb.Project, time.Time, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	var result *pb.Project
+	var pollTime time.Time
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		var err error
+		result, pollTime, err = s.appPollPeek(dbTxn, memTxn, ws)
+		return err
+	})
+
+	return result, pollTime, err
+}
+
+// AppPollComplete sets the next poll time for a given project given the app
+// reference along with the time interval "t".
+func (s *State) ApplicationPollComplete(
+	project *pb.Project,
+	t time.Time,
+) error {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		err := s.appPollComplete(dbTxn, memTxn, project, t)
+		return err
+	})
+
+	return err
 }
 
 // GetFileChangeSignal checks the metadata for the given application and its
@@ -162,4 +203,106 @@ func (s *State) appDefaultForRef(ref *pb.Ref_Application) *pb.Application {
 			Project: ref.Project,
 		},
 	}
+}
+
+func (s *State) appPollPeek(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ws memdb.WatchSet,
+) (*pb.Project, time.Time, error) {
+	// LowerBound doesn't support watches so we have to do a Get first
+	// to get a valid watch channel on these fields.
+	iter, err := memTxn.Get(
+		projectIndexTableName,
+		appIndexNextPollIndexName,
+		true,            // polling enabled
+		time.Unix(0, 0), // lowest next poll time
+	)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+	ws.Add(iter.WatchCh())
+
+	// Get the projects app with the lowest "next poll" time.
+	iter, err = memTxn.LowerBound(
+		projectIndexTableName,
+		appIndexNextPollIndexName,
+		true,            // polling enabled
+		time.Unix(0, 0), // lowest next poll time
+	)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+
+	// If we have no values, then return
+	raw := iter.Next()
+	if raw == nil {
+		return nil, time.Time{}, nil
+	}
+
+	rec := raw.(*projectIndexRecord)
+	if rec.AppStatusNextPoll.IsZero() {
+		// This happens if this applications poller hasn't been switched on
+		return nil, time.Time{}, nil
+	}
+
+	var result *pb.Project
+	err = s.db.View(func(dbTxn *bolt.Tx) error {
+		var err error
+		result, err = s.projectGet(dbTxn, memTxn, &pb.Ref_Project{
+			Project: rec.Id,
+		})
+
+		return err
+	})
+
+	return result, rec.AppStatusNextPoll, err
+}
+
+func (s *State) appPollComplete(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	project *pb.Project,
+	t time.Time,
+) error {
+	// Get the project
+	p, err := s.projectGet(dbTxn, memTxn, &pb.Ref_Project{
+		Project: project.Name,
+	})
+	if status.Code(err) == codes.NotFound {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	raw, err := memTxn.First(
+		projectIndexTableName,
+		projectIndexIdIndexName,
+		string(s.projectId(p)),
+	)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return nil
+	}
+
+	record := raw.(*projectIndexRecord)
+	if !record.AppStatusPoll {
+		// If this project doesn't have polling enabled, then do nothing.
+		// This could happen if a project had polling when Peek was called,
+		// then between Peek and Complete, polling was disabled.
+		return nil
+	}
+
+	record = record.Copy()
+	record.AppStatusLastPoll = t
+	record.AppStatusNextPoll = t.Add(record.AppStatusPollInterval)
+	if err := memTxn.Insert(projectIndexTableName, record); err != nil {
+		return err
+	}
+
+	memTxn.Commit()
+	return nil
 }

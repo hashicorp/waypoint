@@ -53,3 +53,13 @@ resource intensive tasks since user traffic may be sharing the same instance.
 -> A future version of Waypoint will enable targeting specific deployments
 and instances. We will also enable an option to deploy a special exec-only
 instance so resources aren't shared.
+
+## Disabling Exec
+
+Currently, exec can only be disabled by
+[disabling the Waypoint entrypoint](docs/entrypoint/disable) completely
+or by disabling only the exec functionality of the entrypoint. Please see
+the linked documentation for more information.
+
+In the future, we'd like to support disabling exec using user policy, but
+this functionality is not available today.

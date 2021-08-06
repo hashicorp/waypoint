@@ -52,11 +52,11 @@ func (r *Runner) executePollOp(
 	log.Debug("current ref for poll operation", "ref", currentRef)
 
 	// Get any changes
-	newRef, err := sourcer.Changes(ctx, log, ui, job.DataSource, currentRef)
+	newRef, ignore, err := sourcer.Changes(ctx, log, ui, job.DataSource, currentRef, r.tempDir)
 	if err != nil {
 		return nil, err
 	}
-	log.Debug("result of Changes, nil means no changes", "result", newRef)
+	log.Debug("result of Changes, nil means no changes", "result", newRef, "ignore", ignore)
 
 	// If we have no changes, then we're done.
 	if newRef == nil {
@@ -90,6 +90,17 @@ func (r *Runner) executePollOp(
 		Operation: &pb.Job_Up{
 			Up: &pb.Job_UpOp{},
 		},
+	}
+
+	// If we're ignoring, we change the job to a noop job. This will
+	// still trigger the machinery to update the ref associated with
+	// the project/app and avoids the poll job from having to have too
+	// much access or require new APIs to do this.
+	if ignore {
+		log.Debug("changes marked as ignorable, scheduling a noop job to update our data ref")
+		jobTemplate.Operation = &pb.Job_Noop_{
+			Noop: &pb.Job_Noop{},
+		}
 	}
 
 	log.Debug("queueing job")

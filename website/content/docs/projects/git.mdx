@@ -54,13 +54,30 @@ would if you were to start a new one. You'll want to configure Git via the CLI
 or Web, or include a runner stanza in your `waypoint.hcl`. Also ensure your Waypoint
 server is [at least 0.3.0 and has runners enabled.](#Waypoint-Server-Requirement)
 
-#### Configuring via the UI
+#### Configuring git via the UI
 
 If you wish to enable Git settings on a project in the UI, you'll want to navigate
 to the project homepage after running `waypoint ui -authenticate`. From there,
 you can click on the settings gear icon on the right to navigate to the project
 settings. Fill in the requested fields to setup Git on your project. **It is
 recommended that you configure the Git data source using the CLI or web UI.**
+
+#### Configuring git via the CLI
+
+If you wish to enable git with the CLI instead, you'll want to apply your
+git settings per project like you would in the UI with the
+[waypoint project apply](/commands/project-apply#waypoint-project-apply)
+command. An example of what you would run is shown below:
+
+```
+waypoint project apply \
+   -data-source=git \
+   -git-auth-type=ssh \
+   -git-private-key-path=$HOME/.ssh/id_ed25519 \
+   -git-url=git@github.com:hashicorp/waypoint-examples.git \
+   -waypoint-hcl=waypoint.hcl \
+   my-project
+```
 
 #### Configuring via waypoint.hcl
 
@@ -98,8 +115,17 @@ the server (typically around 30 seconds).
 ### Configure via the CLI
 
 You may also enable polling using the `-poll` and `-poll-interval` flags
-on the [`waypoint project apply`](/commands/project-apply) command.
+on the [`waypoint project apply`](/commands/project-apply#poll) command.
 **This is an advanced approach. The UI is the recommended way to enable polling.**
+
+An example of the command you would run to apply polling to your project could be:
+
+```
+waypoint project apply \
+   -poll \
+   -poll-interval="30s" \
+   my-project
+```
 
 ## Ref Tracking
 

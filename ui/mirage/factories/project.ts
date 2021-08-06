@@ -14,6 +14,15 @@ export default Factory.extend({
     remoteEnabled: true,
   }),
 
+  'with-input-variables': trait({
+    name: 'with-input-variables',
+
+    afterCreate(project, server) {
+      server.createList('variable', 2, 'random-str', { project });
+      server.create('variable', 'random-hcl', { project });
+    },
+  }),
+
   // This is our primary demo trait for development mode
   'marketing-public': trait({
     name: 'marketing-public',
@@ -84,30 +93,37 @@ export default Factory.extend({
         server.create('build', 'docker', 'days-old-success', {
           application,
           sequence: 1,
+          pushedArtifact: server.create('pushed-artifact', 'docker', 'days-old-success'),
         }),
         server.create('build', 'docker', 'days-old-success', {
           application,
           sequence: 2,
+          pushedArtifact: server.create('pushed-artifact', 'docker', 'days-old-success'),
         }),
         server.create('build', 'docker', 'hours-old-success', {
           application,
           sequence: 3,
+          pushedArtifact: server.create('pushed-artifact', 'docker', 'hours-old-success'),
         }),
         server.create('build', 'docker', 'hours-old-success', {
           application,
           sequence: 4,
+          pushedArtifact: server.create('pushed-artifact', 'docker', 'hours-old-success'),
         }),
         server.create('build', 'docker', 'minutes-old-success', {
           application,
           sequence: 5,
+          pushedArtifact: server.create('pushed-artifact', 'docker', 'minutes-old-success'),
         }),
         server.create('build', 'docker', 'minutes-old-success', {
           application,
           sequence: 6,
+          pushedArtifact: server.create('pushed-artifact', 'docker', 'minutes-old-success'),
         }),
         server.create('build', 'docker', 'seconds-old-success', {
           application,
           sequence: 7,
+          pushedArtifact: server.create('pushed-artifact', 'docker', 'seconds-old-success'),
         }),
       ];
 
@@ -172,6 +188,41 @@ export default Factory.extend({
         sequence: 1,
         deployment: deployments[0],
         application,
+      });
+    },
+  }),
+
+  'example-nodejs': trait({
+    name: 'example-nodejs',
+
+    afterCreate(project, server) {
+      let application = server.create('application', { name: 'example-nodejs', project });
+
+      server.create('build', 'pack', 'minutes-old-success', { application, sequence: 1 });
+      server.create('build', 'pack', 'seconds-old-success', { application, sequence: 2 });
+
+      server.create('deployment', 'docker', 'minutes-old-success', {
+        application,
+        sequence: 1,
+        statusReport: server.create('status-report', 'ready', { application }),
+        deployUrl: `https://instantly-worthy-shrew--v1.waypoint.run`,
+      });
+      server.create('deployment', 'docker', 'seconds-old-success', {
+        application,
+        sequence: 2,
+        statusReport: server.create('status-report', 'ready', { application }),
+        deployUrl: `https://instantly-worthy-shrew--v2.waypoint.run`,
+      });
+
+      server.create('release', 'docker', 'minutes-old-success', {
+        application,
+        sequence: 1,
+        statusReport: server.create('status-report', 'ready', { application }),
+      });
+      server.create('release', 'docker', 'seconds-old-success', {
+        application,
+        sequence: 2,
+        statusReport: server.create('status-report', 'ready', { application }),
       });
     },
   }),

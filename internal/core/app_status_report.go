@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/zclconf/go-cty/cty"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -358,9 +360,9 @@ func (op *statusReportOperation) argsStatusReport() ([]argmapper.Arg, error) {
 
 	switch t := op.Target.(type) {
 	case *pb.Deployment:
-		args = append(args, argNamedAny("target", t.Deployment))
+		args = append(args, plugin.ArgNamedAny("target", t.Deployment))
 	case *pb.Release:
-		args = append(args, argNamedAny("target", t.Release))
+		args = append(args, plugin.ArgNamedAny("target", t.Release))
 	default:
 		return nil, status.Errorf(codes.FailedPrecondition, "unsupported status report target given")
 	}

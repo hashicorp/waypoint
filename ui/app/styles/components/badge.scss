@@ -27,6 +27,13 @@
     background: rgb(var(--warning));
   }
 
+  &--info {
+    @media (prefers-color-scheme: light) {
+      color: color.$ui-cool-gray-700;
+      background: color.$ui-cool-gray-100;
+    }
+  }
+
   .icon {
     width: scale.$base;
     height: scale.$base;

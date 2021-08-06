@@ -97,6 +97,22 @@ func (i *ECSInstaller) Install(
 		err error
 	)
 
+	// validate we have a memory/cpu combination that ECS will accept. See
+	// https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
+	// for more information on valid combinations
+	mem, err := strconv.Atoi(i.config.Memory)
+	if err != nil {
+		return nil, err
+	}
+	cpu, err := strconv.Atoi(i.config.CPU)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := utils.ValidateEcsMemCPUPair(mem, cpu); err != nil {
+		return nil, err
+	}
+
 	lf := &Lifecycle{
 		Init: func(ui terminal.UI) error {
 			sess, err = utils.GetSession(&utils.SessionConfig{
@@ -283,6 +299,8 @@ func (i *ECSInstaller) Launch(
 		return nil, err
 	}
 
+	// registerTaskDefinition() above ensures taskDef here is non-nil, if the
+	// error returned is nil
 	taskDefArn := *taskDef.TaskDefinitionArn
 
 	// Create the service
@@ -558,20 +576,34 @@ func (i *ECSInstaller) Uninstall(
 	if err != nil {
 		return err
 	}
-	rgSvc := resourcegroups.New(sess)
 
+	rgSvc := resourcegroups.New(sess)
+	var resources []*resourcegroups.ResourceIdentifier
 	query := fmt.Sprintf(serverResourceQuery, defaultServerTagName)
-	results, err := rgSvc.SearchResources(&resourcegroups.SearchResourcesInput{
+	searchInput := resourcegroups.SearchResourcesInput{
+		MaxResults: aws.Int64(20),
 		ResourceQuery: &resourcegroups.ResourceQuery{
 			Type:  aws.String(resourcegroups.QueryTypeTagFilters10),
 			Query: aws.String(query),
 		},
-	})
-	if err != nil {
-		return err
 	}
 
-	resources := results.ResourceIdentifiers
+	// The Resource Group Search results can sometimes be limited to a few
+	// results at a time and may not include all resources tagged. Use the
+	// pagination function to retrieve the complete list.
+	err = rgSvc.SearchResourcesPages(&searchInput,
+		func(page *resourcegroups.SearchResourcesOutput, _ bool) bool {
+			resources = append(resources, page.ResourceIdentifiers...)
+			return page.NextToken != nil
+		})
+
+	if err != nil {
+		return fmt.Errorf("error retrieving tag search results: %w", err)
+	}
+
+	if len(resources) == 0 {
+		return fmt.Errorf("no server resources found with tag (%s)", defaultServerTagName)
+	}
 
 	// Start destroying things. Some cannot be destroyed before others. The
 	// general order to destroy things:
@@ -660,6 +692,7 @@ func deleteEFSResources(
 		}
 
 		if deleted == mtgCount {
+			break
 		}
 
 		time.Sleep(5 * time.Second)
@@ -670,6 +703,13 @@ func deleteEFSResources(
 		FileSystemId: &id,
 	})
 	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "FileSystemNotFound":
+				// the file system has already been destroyed
+				return nil
+			}
+		}
 		return err
 	}
 	return nil
@@ -733,7 +773,7 @@ func deleteNLBResources(
 	}
 	if len(results.SecurityGroups) > 0 {
 		for _, g := range results.SecurityGroups {
-			for i := 0; i < 20; i++ {
+			for i := 0; i < 60; i++ {
 				_, err := ec2Svc.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 					GroupId: g.GroupId,
 				})
@@ -741,7 +781,7 @@ func deleteNLBResources(
 				if aerr, ok := err.(awserr.Error); ok {
 					switch aerr.Code() {
 					case "DependencyViolation":
-						time.Sleep(2 * time.Second)
+						time.Sleep(3 * time.Second)
 						continue
 					default:
 						return err
@@ -773,6 +813,13 @@ func deleteCWLResources(
 		LogGroupName: aws.String(logGroup),
 	})
 	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "ResourceNotFoundException":
+				// the log group has already been destroyed
+				return nil
+			}
+		}
 		return err
 	}
 	return nil
@@ -799,6 +846,13 @@ func deleteEcsResources(
 		Cluster: &clusterArn,
 	})
 	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "ClusterNotFoundException":
+				// the cluster has already been destroyed
+				return nil
+			}
+		}
 		return err
 	}
 
@@ -1339,12 +1393,6 @@ EFSLOOP:
 			},
 			Path: aws.String("/waypointserverdata"),
 		},
-		Tags: []*efs.Tag{
-			{
-				Key:   aws.String(defaultServerTagName),
-				Value: aws.String(defaultServerTagValue),
-			},
-		},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating access point: %w", err)
@@ -1849,12 +1897,6 @@ func createNLB(
 				Type: aws.String("forward"),
 			},
 		},
-		Tags: []*elbv2.Tag{
-			{
-				Key:   aws.String(defaultServerTagName),
-				Value: aws.String(defaultServerTagValue),
-			},
-		},
 	})
 	if err != nil {
 		return nil, err
@@ -1964,7 +2006,7 @@ func registerTaskDefinition(def *ecs.RegisterTaskDefinitionInput, ecsSvc *ecs.EC
 
 		// if we encounter an unrecoverable error, exit now.
 		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Code() == "ResourceConflictException" {
+			if aerr.Code() == "ResourceConflictException" || aerr.Code() == "ClientException" {
 				return nil, err
 			}
 		}
@@ -1972,6 +2014,13 @@ func registerTaskDefinition(def *ecs.RegisterTaskDefinitionInput, ecsSvc *ecs.EC
 		// otherwise sleep and try again
 		time.Sleep(2 * time.Second)
 	}
+
+	// the above loop could expire and never get a valid task definition, so
+	// guard against a nil taskOut here
+	if taskOut == nil {
+		return nil, fmt.Errorf("error registering task definition, last error: %w", err)
+	}
+
 	return taskOut.TaskDefinition, nil
 }
 

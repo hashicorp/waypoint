@@ -2,24 +2,28 @@ import Route from '@ember/routing/route';
 import { UAParser } from 'ua-parser-js';
 
 export default class OnboardingInstallIndex extends Route {
-  redirect() {
-    const parser = new UAParser();
+  redirect(): void {
+    let parser = new UAParser();
 
     switch (parser.getResult().os.name) {
       case 'Mac OS':
-        return this.transitionTo('onboarding.install.homebrew');
+        this.transitionTo('onboarding.install.homebrew');
+        return;
       // There isn't yet a chocolatey package for Waypoint
       // case 'Windows':
       //   return this.transitionTo('onboarding.install.chocolatey');
       case 'Debian':
       case 'Ubuntu':
-        return this.transitionTo('onboarding.install.linux.ubuntu');
+        this.transitionTo('onboarding.install.linux.ubuntu');
+        return;
       case 'CentOS':
-        return this.transitionTo('onboarding.install.linux.centos');
+        this.transitionTo('onboarding.install.linux.centos');
+        return;
       case 'Fedora':
-        return this.transitionTo('onboarding.install.linux.fedora');
+        this.transitionTo('onboarding.install.linux.fedora');
+        return;
       default:
-        return this.transitionTo('onboarding.install.manual');
+        this.transitionTo('onboarding.install.manual');
     }
   }
 }

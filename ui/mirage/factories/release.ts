@@ -28,6 +28,10 @@ export default Factory.extend({
     component: association('release-manager', { name: 'nomad' }),
   }),
 
+  docker: trait({
+    component: association('release-manager', { name: 'docker' }),
+  }),
+
   'nomad-jobspec': trait({
     component: association('release-manager', { name: 'nomad-jobspec' }),
   }),

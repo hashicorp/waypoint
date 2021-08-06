@@ -1,0 +1,32 @@
+{{#if this.variablesList}}
+  <ul class="project-input-variables-list">
+    <li>
+      <div class="project-input-variables--list-item project-input-variables--list-item__header">
+        <span class="project-input-variables--list-item-name">{{t "form.project_variables_settings.variable_name"}}</span>
+        <span class="project-input-variables--list-item-value">{{t "form.project_variables_settings.variable_value"}}</span>
+      </div>
+    </li>
+    {{#each this.variablesList as |variable|}}
+      <ProjectInputVariables::ListItem @variable={{variable}} @isEditing={{eq variable.name this.activeVariable.name}}
+        @isCreating={{this.isCreating}} @saveVariableSettings={{this.saveVariableSettings}}
+        @deleteVariable={{this.deleteVariable}} />
+    {{/each}}
+  </ul>
+  <Pds::ButtonSet>
+    <Pds::Button data-test-input-variables-add-variable disabled={{this.isCreating}} @variant="primary" {{on "click" this.addVariable}}>
+      <Pds::Icon @type="plus-plain" />{{t "form.project_variables_settings.button_apply"}}
+    </Pds::Button>
+  </Pds::ButtonSet>
+{{else}}
+  <Pds::EmptyState as |P|>
+    <P.Header>{{t "form.project_variables_settings.empty_state_heading"}}</P.Header>
+    <P.Body>
+      {{t "form.project_variables_settings.empty_state_content"}}
+    </P.Body>
+    <P.Footer>
+      <Pds::Button data-test-input-variables-add-variable @variant="primary" {{on "click" this.addVariable}}>
+        <Pds::Icon @type="plus-plain" />{{t "form.project_variables_settings.button_apply"}}
+      </Pds::Button>
+    </P.Footer>
+  </Pds::EmptyState>
+{{/if}}

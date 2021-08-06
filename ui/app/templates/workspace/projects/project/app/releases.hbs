@@ -1,7 +1,9 @@
+{{page-title (concat @model.application.application "Releases")}}
+
 <h3>{{t "page.releases.title"}}</h3>
 
 <ul data-test-release-list class="list">
-  {{#each @model as |release releaseIndex|}}
+  {{#each @model key="id" as |release releaseIndex|}}
     <AppItem::Release @release={{release}} @isLatest={{ eq releaseIndex 0}} />
   {{else}}
     <EmptyState>

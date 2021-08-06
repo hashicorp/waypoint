@@ -16,6 +16,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -144,6 +145,9 @@ type deployOperation struct {
 
 	// cebToken is the token to set for the deployment to auth
 	cebToken string
+
+	// result is either a component.Deployment or component.DeploymentWithUrl
+	result interface{}
 }
 
 func (op *deployOperation) Close() error {
@@ -228,7 +232,7 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 		}
 	}
 
-	return &pb.Deployment{
+	deployment := &pb.Deployment{
 		Generation:  &pb.Generation{Id: generationId},
 		Application: app.ref,
 		Workspace:   app.workspace,
@@ -238,7 +242,9 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 		State:       pb.Operation_CREATED,
 		HasEntrypointConfig: op.DeploymentConfig != nil &&
 			op.DeploymentConfig.ServerAddr != "",
-	}, nil
+	}
+
+	return deployment, nil
 }
 
 func (op *deployOperation) Hooks(app *App) map[string][]*config.Hook {
@@ -313,13 +319,38 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 		return nil, err
 	}
 
-	val, err := app.callDynamicFunc(ctx,
+	baseArgs := op.args()
+
+	// Add an outparameter for declared resources, which will be populated by the dynamic func
+	declaredResourcesResp := &component.DeclaredResourcesResp{}
+	args := append(baseArgs, argmapper.Typed(declaredResourcesResp))
+
+	result, err := app.callDynamicFunc(ctx,
 		log,
 		(*component.Deployment)(nil),
 		op.component,
 		op.component.Value.(component.Platform).DeployFunc(),
-		op.args()...,
+		args...,
 	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert from the plugin declaredResources to server declaredResources. Should be identical.
+	declaredResources := make([]*pb.DeclaredResource, len(declaredResourcesResp.DeclaredResources))
+	for i, resource := range declaredResourcesResp.DeclaredResources {
+		declaredResources[i] = &pb.DeclaredResource{
+			Id:                  resource.Id,
+			Name:                resource.Name,
+			Platform:            resource.Platform,
+			State:               resource.State,
+			StateJson:           resource.StateJson,
+			CategoryDisplayHint: pb.ResourceCategoryDisplayHint(resource.CategoryDisplayHint.Number()),
+		}
+	}
+
+	deploy.DeclaredResources = declaredResources
 
 	if ep, ok := op.component.Value.(component.Execer); ok && ep.ExecFunc() != nil {
 		log.Debug("detected deployment uses an exec plugin, decorating deployment with info")
@@ -334,8 +365,7 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 	} else {
 		log.Debug("no logs plugin detected on platform component")
 	}
-
-	return val, err
+	return result, err
 }
 
 // args returns the args we send to the Deploy function call
@@ -347,7 +377,7 @@ func (op *deployOperation) args() []argmapper.Arg {
 		// If we don't do this we will panic so its best to protect against this
 		// anyways.
 		args = append(args,
-			argNamedAny("artifact", op.Push.Artifact.Artifact),
+			plugin.ArgNamedAny("artifact", op.Push.Artifact.Artifact),
 		)
 	}
 

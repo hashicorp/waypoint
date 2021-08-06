@@ -78,6 +78,36 @@ func (_m *WaypointClient) CancelJob(ctx context.Context, in *gen.CancelJobReques
 	return r0, r1
 }
 
+// CompleteOIDCAuth provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) CompleteOIDCAuth(ctx context.Context, in *gen.CompleteOIDCAuthRequest, opts ...grpc.CallOption) (*gen.CompleteOIDCAuthResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.CompleteOIDCAuthResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.CompleteOIDCAuthRequest, ...grpc.CallOption) *gen.CompleteOIDCAuthResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.CompleteOIDCAuthResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.CompleteOIDCAuthRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ConvertInviteToken provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) ConvertInviteToken(ctx context.Context, in *gen.ConvertInviteTokenRequest, opts ...grpc.CallOption) (*gen.NewTokenResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -198,6 +228,36 @@ func (_m *WaypointClient) DecodeToken(ctx context.Context, in *gen.DecodeTokenRe
 	return r0, r1
 }
 
+// DeleteAuthMethod provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) DeleteAuthMethod(ctx context.Context, in *gen.DeleteAuthMethodRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteAuthMethodRequest, ...grpc.CallOption) *emptypb.Empty); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteAuthMethodRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteHostname provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) DeleteHostname(ctx context.Context, in *gen.DeleteHostnameRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	_va := make([]interface{}, len(opts))
@@ -220,6 +280,36 @@ func (_m *WaypointClient) DeleteHostname(ctx context.Context, in *gen.DeleteHost
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteHostnameRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DeleteUser provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) DeleteUser(ctx context.Context, in *gen.DeleteUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteUserRequest, ...grpc.CallOption) *emptypb.Empty); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteUserRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -318,8 +408,8 @@ func (_m *WaypointClient) EntrypointLogStream(ctx context.Context, opts ...grpc.
 	return r0, r1
 }
 
-// FindExecInstance provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) FindExecInstance(ctx context.Context, in *gen.FindExecInstanceRequest, opts ...grpc.CallOption) (*gen.FindExecInstanceResponse, error) {
+// ExpediteStatusReport provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ExpediteStatusReport(ctx context.Context, in *gen.ExpediteStatusReportRequest, opts ...grpc.CallOption) (*gen.ExpediteStatusReportResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -329,17 +419,17 @@ func (_m *WaypointClient) FindExecInstance(ctx context.Context, in *gen.FindExec
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *gen.FindExecInstanceResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.FindExecInstanceRequest, ...grpc.CallOption) *gen.FindExecInstanceResponse); ok {
+	var r0 *gen.ExpediteStatusReportResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ExpediteStatusReportRequest, ...grpc.CallOption) *gen.ExpediteStatusReportResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.FindExecInstanceResponse)
+			r0 = ret.Get(0).(*gen.ExpediteStatusReportResponse)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.FindExecInstanceRequest, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ExpediteStatusReportRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -400,6 +490,36 @@ func (_m *WaypointClient) GenerateLoginToken(ctx context.Context, in *gen.LoginT
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.LoginTokenRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAuthMethod provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetAuthMethod(ctx context.Context, in *gen.GetAuthMethodRequest, opts ...grpc.CallOption) (*gen.GetAuthMethodResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.GetAuthMethodResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetAuthMethodRequest, ...grpc.CallOption) *gen.GetAuthMethodResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetAuthMethodResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetAuthMethodRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -738,6 +858,36 @@ func (_m *WaypointClient) GetLogStream(ctx context.Context, in *gen.GetLogStream
 	return r0, r1
 }
 
+// GetOIDCAuthURL provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetOIDCAuthURL(ctx context.Context, in *gen.GetOIDCAuthURLRequest, opts ...grpc.CallOption) (*gen.GetOIDCAuthURLResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.GetOIDCAuthURLResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetOIDCAuthURLRequest, ...grpc.CallOption) *gen.GetOIDCAuthURLResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetOIDCAuthURLResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetOIDCAuthURLRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetProject provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) GetProject(ctx context.Context, in *gen.GetProjectRequest, opts ...grpc.CallOption) (*gen.GetProjectResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -918,6 +1068,36 @@ func (_m *WaypointClient) GetStatusReport(ctx context.Context, in *gen.GetStatus
 	return r0, r1
 }
 
+// GetUser provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetUser(ctx context.Context, in *gen.GetUserRequest, opts ...grpc.CallOption) (*gen.GetUserResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.GetUserResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetUserRequest, ...grpc.CallOption) *gen.GetUserResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetUserResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetUserRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetVersionInfo provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) GetVersionInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.GetVersionInfoResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -970,6 +1150,36 @@ func (_m *WaypointClient) GetWorkspace(ctx context.Context, in *gen.GetWorkspace
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetWorkspaceRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListAuthMethods provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ListAuthMethods(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.ListAuthMethodsResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.ListAuthMethodsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) *gen.ListAuthMethodsResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListAuthMethodsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -1098,6 +1308,36 @@ func (_m *WaypointClient) ListInstances(ctx context.Context, in *gen.ListInstanc
 	return r0, r1
 }
 
+// ListOIDCAuthMethods provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ListOIDCAuthMethods(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.ListOIDCAuthMethodsResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.ListOIDCAuthMethodsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) *gen.ListOIDCAuthMethodsResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListOIDCAuthMethodsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListProjects provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) ListProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.ListProjectsResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -1210,6 +1450,36 @@ func (_m *WaypointClient) ListStatusReports(ctx context.Context, in *gen.ListSta
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListStatusReportsRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListUsers provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ListUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.ListUsersResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.ListUsersResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) *gen.ListUsersResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListUsersResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -1518,6 +1788,36 @@ func (_m *WaypointClient) StartExecStream(ctx context.Context, opts ...grpc.Call
 	return r0, r1
 }
 
+// UpdateUser provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UpdateUser(ctx context.Context, in *gen.UpdateUserRequest, opts ...grpc.CallOption) (*gen.UpdateUserResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UpdateUserResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpdateUserRequest, ...grpc.CallOption) *gen.UpdateUserResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpdateUserResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpdateUserRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UpsertApplication provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) UpsertApplication(ctx context.Context, in *gen.UpsertApplicationRequest, opts ...grpc.CallOption) (*gen.UpsertApplicationResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -1540,6 +1840,36 @@ func (_m *WaypointClient) UpsertApplication(ctx context.Context, in *gen.UpsertA
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertApplicationRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpsertAuthMethod provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UpsertAuthMethod(ctx context.Context, in *gen.UpsertAuthMethodRequest, opts ...grpc.CallOption) (*gen.UpsertAuthMethodResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UpsertAuthMethodResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertAuthMethodRequest, ...grpc.CallOption) *gen.UpsertAuthMethodResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertAuthMethodResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertAuthMethodRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

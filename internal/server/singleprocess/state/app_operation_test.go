@@ -83,6 +83,49 @@ func TestAppOperation(t *testing.T) {
 		}
 	})
 
+	t.Run("get with data source ref", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a job with a data source ref
+		ref := &pb.Job_DataSource_Ref{
+			Ref: &pb.Job_DataSource_Ref_Git{
+				Git: &pb.Job_Git_Ref{
+					Commit: "hello!",
+				},
+			},
+		}
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:            "jobA",
+			DataSourceRef: ref,
+		})))
+
+		// Create a build
+		require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+			Id:    "A",
+			JobId: "jobA",
+		})))
+
+		// Read it back
+		raw, err := op.Get(s, appOpById("A"))
+		require.NoError(err)
+		require.NotNil(raw)
+
+		b, ok := raw.(*pb.Build)
+		require.True(ok)
+		require.NotNil(b.Application)
+		require.Equal("A", b.Id)
+		require.NotNil(b.Preload)
+		require.NotNil(b.Preload.JobDataSourceRef)
+
+		actualRef := b.Preload.JobDataSourceRef
+		gitRef, ok := actualRef.Ref.(*pb.Job_DataSource_Ref_Git)
+		require.True(ok)
+		require.Equal("hello!", gitRef.Git.Commit)
+	})
+
 	t.Run("latest basic", func(t *testing.T) {
 		require := require.New(t)
 

@@ -4,7 +4,17 @@ package nomad;
 
 option go_package = "waypoint/builtin/nomad";
 
+import "google/protobuf/any.proto";
+
 message Deployment {
   string id = 1;
   string name = 2;
+  google.protobuf.Any resource_state = 3;
+}
+
+// Resource contains the internal resource states.
+message Resource {
+  message Job {
+    string name = 1;
+  }
 }

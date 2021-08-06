@@ -32,6 +32,10 @@
     "path": "install"
   },
   {
+    "title": "login",
+    "path": "login"
+  },
+  {
     "title": "logs",
     "path": "logs"
   },
@@ -69,6 +73,22 @@
   {
     "title": "artifact push",
     "path": "artifact-push"
+  },
+  {
+    "title": "auth-method list",
+    "path": "auth-method-list"
+  },
+  {
+    "title": "auth-method inspect",
+    "path": "auth-method-inspect"
+  },
+  {
+    "title": "auth-method set oidc",
+    "path": "auth-method-set-oidc"
+  },
+  {
+    "title": "auth-method delete",
+    "path": "auth-method-delete"
   },
   {
     "title": "config get",
@@ -205,6 +225,22 @@
   {
     "title": "token new",
     "path": "token-new"
+  },
+  {
+    "title": "user inspect",
+    "path": "user-inspect"
+  },
+  {
+    "title": "user invite",
+    "path": "user-invite"
+  },
+  {
+    "title": "user modify",
+    "path": "user-modify"
+  },
+  {
+    "title": "user token",
+    "path": "user-token"
   },
   {
     "title": "version",

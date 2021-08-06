@@ -1,7 +1,8 @@
+{{page-title (concat "Deployment" " v" @model.sequence)}}
+
 <PageHeader @iconName="upload">
   <div class="title">
-    {{! TODO(jgwhite): Make this a real <h1> }}
-    <h2 aria-level="1"><b class="badge badge--version">#{{@model.sequence}}</b> <code>{{@model.id}}</code></h2>
+    <h1><b class="badge badge--version">v{{@model.sequence}}</b></h1>
     <small>
       <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
       <span>Deployed by <b>{{component-name @model.component.name}}</b>
@@ -10,11 +11,13 @@
   </div>
   <div class="actions">
     <div class="button-group">
-      <ExternalLink href="https://{{@model.preload.deployUrl}}" class="button button--secondary button--external-link">
+      <ExternalLink
+        href={{enforce-protocol @model.preload.deployUrl}}
+        class="button button--secondary button--external-link">
         <span>{{lowercase @model.preload.deployUrl}}</span>
         <Pds::Icon @type="exit" class="icon" />
       </ExternalLink>
-      <Actions::Release @id={{@model.id}} />
+      <Actions::Release @sequence={{@model.sequence}} />
     </div>
   </div>
 </PageHeader>
@@ -22,13 +25,7 @@
 <div class="status-row">
   <div class="item">
     {{#if @model.statusReport}}
-      {{#let @model.statusReport.health as |health|}}
-        <StatusBadge
-          @state={{health.healthStatus}}
-          @message={{health.healthMessage}}
-          @tooltipSide="right"
-        />
-      {{/let}}
+      <StatusReportIndicator @statusReport={{@model.statusReport}} />
     {{/if}}
   </div>
 

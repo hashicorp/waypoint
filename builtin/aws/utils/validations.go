@@ -1,6 +1,11 @@
 package utils
 
 import (
+	"fmt"
+	"sort"
+	"strconv"
+	"strings"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
@@ -39,6 +44,77 @@ func Error(err error) error {
 	}
 
 	return st.Err()
+}
+
+var fargateResources = map[int][]int{
+	512:  {256},
+	1024: {256, 512},
+	2048: {256, 512, 1024},
+	3072: {512, 1024},
+	4096: {512, 1024},
+	5120: {1024},
+	6144: {1024},
+	7168: {1024},
+	8192: {1024},
+}
+
+func init() {
+	for i := 4096; i < 16384; i += 1024 {
+		fargateResources[i] = append(fargateResources[i], 2048)
+	}
+
+	for i := 8192; i <= 30720; i += 1024 {
+		fargateResources[i] = append(fargateResources[i], 4096)
+	}
+}
+
+func ValidateEcsMemCPUPair(mem, cpu int) error {
+	cpuValues, ok := fargateResources[mem]
+	if !ok {
+		var (
+			allValues  []int
+			goodValues []string
+		)
+
+		for k := range fargateResources {
+			allValues = append(allValues, k)
+		}
+
+		sort.Ints(allValues)
+
+		for _, k := range allValues {
+			goodValues = append(goodValues, strconv.Itoa(k))
+		}
+
+		return fmt.Errorf("invalid memory value: %d (valid values: %s)", mem,
+			strings.Join(goodValues, ", "))
+	}
+
+	if cpu == 0 {
+		// if cpu is 0 a default will likely be chosen by which ever AWS service
+		// is being used, based on the memory value
+		return nil
+	}
+
+	var (
+		valid      bool
+		goodValues []string
+	)
+
+	for _, c := range cpuValues {
+		goodValues = append(goodValues, strconv.Itoa(c))
+		if c == cpu {
+			valid = true
+			break
+		}
+	}
+
+	if !valid {
+		return fmt.Errorf("invalid cpu value: %d (valid values: %s)",
+			mem, strings.Join(goodValues, ", "))
+	}
+
+	return nil
 }
 
 // errorAppend accumulates field violations by recursively nesting into the

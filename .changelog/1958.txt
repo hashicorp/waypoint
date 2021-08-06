@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/google: Update error message to be more helpful
+```

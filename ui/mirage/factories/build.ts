@@ -11,6 +11,9 @@ export default Factory.extend({
         server.schema.workspaces.findBy({ name: 'default' }) || server.create('workspace', 'default');
       build.update('workspace', workspace);
     }
+
+    build.pushedArtifact?.update('application', build.application);
+    build.pushedArtifact?.update('workspace', build.workspace);
   },
 
   random: trait({
@@ -20,6 +23,7 @@ export default Factory.extend({
     }),
     component: association('builder', 'with-random-name'),
     status: association('random'),
+    pushedArtifact: association('random'),
   }),
 
   docker: trait({

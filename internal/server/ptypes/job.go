@@ -4,6 +4,7 @@ import (
 	"errors"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/go-ozzo/ozzo-validation/v4"
@@ -56,6 +57,9 @@ func ValidateJob(job *pb.Job) error {
 		validation.Field(&job.Workspace, validation.Required),
 		validation.Field(&job.TargetRunner, validation.Required),
 		validation.Field(&job.Operation, validation.Required),
+		validationext.StructField(&job.DataSource, func() []*validation.FieldRules {
+			return ValidateJobDataSourceRules(job.DataSource)
+		}),
 	))
 }
 
@@ -76,7 +80,7 @@ func ValidateJobDataSourceRules(v *pb.Job_DataSource) []*validation.FieldRules {
 func validateJobDataSourceGitRules(v *pb.Job_DataSource_Git) []*validation.FieldRules {
 	return []*validation.FieldRules{
 		validation.Field(&v.Git.Url, validation.Required),
-		validation.Field(&v.Git.Path, validation.By(hasNoDotDot)),
+		validation.Field(&v.Git.Path, validation.By(hasNoDotDot), validation.By(isGitPath)),
 
 		validationext.StructOneof(&v.Git.Auth, (*pb.Job_Git_Basic_)(nil),
 			func() []*validation.FieldRules {
@@ -106,6 +110,42 @@ func isEmpty(v interface{}) error {
 	return errors.New("must be empty")
 }
 
+// isGitPath validates the Git path.
+func isGitPath(v interface{}) error {
+	path := v.(string)
+	if len(path) == 0 {
+		return nil
+	}
+
+	if filepath.IsAbs(path) {
+		return errors.New("must be relative")
+	}
+
+	// We do this so we can just assume that all slashes are filepath.Sep
+	path = filepath.ToSlash(path)
+
+	// Verify we don't start with ./ or .\
+	if len(path) >= 2 && path[0] == '.' && path[1] == filepath.Separator {
+		return errors.New("relative path shouldn't start with " + path[:2])
+	}
+
+	// Verify we don't have any '//' in there. This also catches anything
+	// more than 2 since any grouping of 3 or more is also a grouping of at least 2
+	multisep := strings.Repeat(string(filepath.Separator), 2)
+	if strings.Contains(path, multisep) {
+		return errors.New("path should not contain repeated separator characters such as '//'")
+	}
+
+	// We also don't want '..' anywhere in the path, but that
+	// is validated with hasNoDotDot.
+
+	// We also want paths to end with / but that seems overly
+	// pedantic so that is something we'll add ourselves in our
+	// data source anytime we need the path to end with a slash.
+
+	return nil
+}
+
 // isGitSSHKey validates the SSH key given.
 func isSSHKey(v *pb.Job_Git_Ssh) validation.Rule {
 	return validation.By(func(_ interface{}) error {
@@ -124,7 +164,9 @@ func isSSHKey(v *pb.Job_Git_Ssh) validation.Rule {
 }
 
 func hasNoDotDot(v interface{}) error {
-	for _, part := range filepath.SplitList(v.(string)) {
+	path := v.(string)
+	path = filepath.ToSlash(path)
+	for _, part := range strings.Split(path, string(filepath.Separator)) {
 		if part == ".." {
 			return errors.New("must not contain '..'")
 		}

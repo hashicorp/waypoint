@@ -2,10 +2,6 @@
 
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 
-const ENV = EmberApp.env();
-const isProd = ENV.environment === 'production';
-const isTest = ENV.environment === 'test';
-
 module.exports = function (defaults) {
   let app = new EmberApp(defaults, {
     babel: {
@@ -35,12 +31,8 @@ module.exports = function (defaults) {
         },
       },
     },
-    svg: {
-      paths: ['node_modules/@hashicorp/structure-icons/dist', 'public/images', 'public/images/icons'],
-      optimize: false,
-    },
     svgJar: {
-      sourceDirs: ['node_modules/@hashicorp/structure-icons/dist', 'public/images', 'public/images/icons'],
+      sourceDirs: ['node_modules/@hashicorp/structure-icons/dist', 'public/images'],
     },
     autoImport: {
       // allows use of a CSP without 'unsafe-eval' directive
