@@ -109,8 +109,6 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 	)
 }
 
-// TODO(izaak): status func for docker network
-
 func (p *Platform) resourceContainerStatus(
 	ctx context.Context,
 	log hclog.Logger,
