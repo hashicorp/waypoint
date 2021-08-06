@@ -61,6 +61,11 @@ func (p *Platform) DestroyFunc() interface{} {
 	return p.Destroy
 }
 
+// DestroyWorkspaceFunc implements component.WorkspaceDestroyer
+func (p *Platform) DestroyWorkspaceFunc() interface{} {
+	return p.DestroyWorkspace
+}
+
 // ValidateAuthFunc implements component.Authenticator
 func (p *Platform) ValidateAuthFunc() interface{} {
 	return p.ValidateAuth
@@ -407,7 +412,7 @@ func (p *Platform) resourceServiceCreate(
 	deployment.Url = service.Status.Url
 
 	// Set state
-	state.Name = service.Metadata.Name
+	state.ApiName = deployment.apiName()
 	state.RevisionName = deployment.apiRevisionName()
 
 	// If we have tracing enabled we just dump the full service as we know it
@@ -423,13 +428,40 @@ func (p *Platform) resourceServiceDestroy(
 	ctx context.Context,
 	apiService *run.APIService,
 	st terminal.Status,
+	isWorkspaceDestroy bool,
+	d *Deployment,
 	state *Resource_Service,
 ) error {
+	if isWorkspaceDestroy {
+		client := run.NewNamespacesServicesService(apiService)
+		st.Step("Deleting service: %s", state.ApiName)
+
+		_, err := client.Delete(d.apiName()).Context(ctx).Do()
+		return err
+	}
+	rn := state.RevisionName
 	client := run.NewNamespacesRevisionsService(apiService)
+	st.Step("Deleting deployment with revision: %s", rn)
 
-	st.Step("Deleting deployment: %s", state.RevisionName)
+	// First check if it's currently serving traffic
+	r, err := client.Get(rn).Context(ctx).Do()
+	if err != nil {
+		return err
+	}
+	// the slice of status conditions returned by GCP stores the reason
+	// for the most recent status transition at index [1]. We check that
+	// the revision is serving by verifying the operating status is active
+	// https://cloud.google.com/run/docs/reference/rest/v1/namespaces.revisions
+	cs := r.Status.Conditions[1]
+	if cs.Status == "True" {
+		st.Step(
+			terminal.StatusWarn,
+			fmt.Sprintf("Cannot destroy deployment with revision %q, as revision is actively receiving traffic.", rn),
+		)
+		return nil
+	}
 
-	_, err := client.Delete(state.RevisionName).Context(ctx).Do()
+	_, err = client.Delete(state.RevisionName).Context(ctx).Do()
 	return err
 }
 
@@ -519,6 +551,7 @@ func (p *Platform) Destroy(
 	// and we need to manually recreate it.
 	if deployment.ResourceState == nil {
 		rm.Resource(rmResourceServiceName).SetState(&Resource_Service{
+			ApiName:         deployment.apiName(),
 			RevisionName: deployment.apiRevisionName(),
 		})
 	} else {
@@ -528,7 +561,36 @@ func (p *Platform) Destroy(
 		}
 	}
 
-	return rm.DestroyAll(ctx, st, deployment)
+	return rm.DestroyAll(ctx, st, false, deployment)
+}
+
+func (p *Platform) DestroyWorkspace(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) error {
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
+
+	rm := p.resourceManager(log)
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if deployment.ResourceState == nil {
+		rm.Resource(rmResourceServiceName).SetState(&Resource_Service{
+			ApiName:         deployment.apiName(),
+			RevisionName: deployment.apiRevisionName(),
+		})
+	} else {
+		// Load state
+		if err := rm.LoadState(deployment.ResourceState); err != nil {
+			return err
+		}
+	}
+
+	return rm.DestroyAll(ctx, st, true, deployment)
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {

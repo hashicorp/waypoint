@@ -27,7 +27,7 @@ message Release {
 
 message Resource {
   message Service {
-    string name = 1;
+    string api_name = 1;
     string revision_name = 2;
   }
 }
