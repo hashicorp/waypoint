@@ -149,6 +149,12 @@ specific deployment. It cannot trigger new deploys, list existing deploys,
 etc. Therefore, if the environment the entrypoint is running in is compromised
 in any way, it poses a minimal risk to Waypoint as a whole.
 
+The Waypoint entrypoint can be [completely disabled](/docs/entrypoint/disable)
+if that is desired. This will disable all entrypoint-related functionality
+including app config, logs, exec, etc. You may also
+[disable specific features](/docs/entrypoint/disable#disabling-specific-features)
+instead of the entire entrypoint.
+
 -> Many improvements are planned to improve the security of the entrypoint.
 We plan on restricting the commands that can be used with `exec`, we plan
 on supporting more fine-grained feature enable/disable flags, etc.

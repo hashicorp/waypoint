@@ -44,6 +44,11 @@ type Sourcer interface {
 	// contains the current ref in use by the default workspace. The return
 	// value should be non-nil only if there is a new ref to set.
 	//
+	// The boolean return value is the "ignore" boolean: if this is true,
+	// there IS a change detected in the exact ref, but it should be ignored.
+	// In this scenario, it means that the ref change doesn't result in a
+	// triggerable-change (i.e. maybe the files didn't change at all).
+	//
 	// NOTE(mitchellh): I'm fairly sure that this will change when we
 	// introduce per-workspace refs and stuff but given this is all internal
 	// we're going with the crufty-but-works approach first.
@@ -53,7 +58,8 @@ type Sourcer interface {
 		ui terminal.UI,
 		source *pb.Job_DataSource,
 		current *pb.Job_DataSource_Ref,
-	) (*pb.Job_DataSource_Ref, error)
+		tempDir string,
+	) (*pb.Job_DataSource_Ref, bool, error)
 }
 
 var (

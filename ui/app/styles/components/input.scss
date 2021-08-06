@@ -36,7 +36,7 @@ $input-focus: inset 0 1px 1px 1px rgba(var(--shadow), 0.1), 0 0 0 3px rgba(var(-
   }
 }
 
-input {
+input:not([type='checkbox']) {
   color: rgb(var(--input-text));
   font-size: scale.$base;
   padding: scale.$sm-2 scale.$sm-2;

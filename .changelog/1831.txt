@@ -1,0 +1,5 @@
+```release-note:feature
+**OIDC Authentication and User Accounts:** Waypoint now has a user account system
+and can be configured to sign up and log in users using any OIDC provider
+such as Google, GitLab, etc.
+```

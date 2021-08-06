@@ -1,4 +1,5 @@
 import { VersionInfo, GetVersionInfoResponse } from 'waypoint-pb';
+import { Response } from 'miragejs';
 
 function createVersionInfo(): VersionInfo {
   let versionInfo = new VersionInfo();
@@ -6,11 +7,11 @@ function createVersionInfo(): VersionInfo {
   protocolVersion.setCurrent(1);
   versionInfo.setApi(protocolVersion);
   versionInfo.setEntrypoint(protocolVersion);
-  versionInfo.setVersion('0.3.12');
+  versionInfo.setVersion('0.4.2');
   return versionInfo;
 }
 
-export function get(schema: any, { params, requestHeaders }) {
+export function get(): Response {
   let resp = new GetVersionInfoResponse();
   let versionInfo = createVersionInfo();
   resp.setInfo(versionInfo);

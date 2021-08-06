@@ -11,10 +11,58 @@ import "google/rpc/status.proto";
 
 // The service that is implemented for the server backend.
 service Waypoint {
+  //----------------------------------------------------------------------
+  // Unauthenticated endpoints
+  //----------------------------------------------------------------------
+
   // GetVersionInfo returns information about the server. This RPC call does
   // NOT require authentication. It can be used by clients to determine if they
   // are capable of talking to this server.
   rpc GetVersionInfo(google.protobuf.Empty) returns (GetVersionInfoResponse);
+
+  // List the available OIDC providers for authentication. The "name" of the
+  // OIDC provider can be used with GetOIDCAuthURL and CompleteOIDCAuth to
+  // perform OIDC-based authentication.
+  rpc ListOIDCAuthMethods(google.protobuf.Empty) returns (ListOIDCAuthMethodsResponse);
+
+  // Get the URL to visit to start authentication with OIDC.
+  rpc GetOIDCAuthURL(GetOIDCAuthURLRequest) returns (GetOIDCAuthURLResponse);
+
+  // Complete the OIDC auth cycle after receiving the callback from the
+  // OIDC provider.
+  rpc CompleteOIDCAuth(CompleteOIDCAuthRequest) returns (CompleteOIDCAuthResponse);
+
+  //----------------------------------------------------------------------
+  // Authenticated endpoints for general API use.
+  //----------------------------------------------------------------------
+
+  // GetUser returns the current logged in user or some other user.
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+
+  // List all users in the system.
+  rpc ListUsers(google.protobuf.Empty) returns (ListUsersResponse);
+
+  // Update the details about an existing user.
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+
+  // Delete a user. This will invalidate all authentication for this user
+  // as well since they no longer exist.
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
+
+  // UpsertAuthMethod upserts the auth method. All users logged in with
+  // this auth method will remain logged in even if settings change.
+  rpc UpsertAuthMethod(UpsertAuthMethodRequest) returns (UpsertAuthMethodResponse);
+
+  // GetAuthMethod returns the auth method.
+  rpc GetAuthMethod(GetAuthMethodRequest) returns (GetAuthMethodResponse);
+
+  // ListAuthMethods returns a list of all the auth methods.
+  rpc ListAuthMethods(google.protobuf.Empty) returns (ListAuthMethodsResponse);
+
+  // Delete an auth method. This will invalidate all users authenticated
+  // using this auth method and they will have to reauthenticate some other
+  // way.
+  rpc DeleteAuthMethod(DeleteAuthMethodRequest) returns (google.protobuf.Empty);
 
   // ListWorkspaces returns a list of all workspaces.
   //
@@ -36,8 +84,7 @@ service Waypoint {
   // can use GetProject to get more information about the project.
   rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse);
 
-  // UpsertApplication upserts an application with a project. If the application
-  // is already registered this does nothing.
+  // UpsertApplication upserts an application with a project.
   rpc UpsertApplication(UpsertApplicationRequest) returns (UpsertApplicationResponse);
 
   // ListBuilds returns the builds.
@@ -57,12 +104,6 @@ service Waypoint {
 
   // ListInstances returns the running instances of deployments.
   rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse);
-
-  // FindExecInstance returns an instance that can be used for an exec session.
-  // This is used by the exec cli command to detect if there is a long running
-  // instance to connect to or if a virtual instance should be created by running
-  // the plugins exec function.
-  rpc FindExecInstance(FindExecInstanceRequest) returns (FindExecInstanceResponse);
 
   // GetDeployment returns a deployment
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment);
@@ -206,6 +247,9 @@ service Waypoint {
   // ListStatusReports returns the deployments.
   rpc ListStatusReports(ListStatusReportsRequest) returns (ListStatusReportsResponse);
 
+  // ExpediteStatusReport returns the queued status report job id
+  rpc ExpediteStatusReport(ExpediteStatusReportRequest) returns (ExpediteStatusReportResponse);
+
   //----------------------------------------------------------------------
   // Runner endpoints. These are expected to be called only by a runner.
   // These are not meant to be public endpoints.
@@ -318,8 +362,18 @@ message Application {
 message Variable {
   string name = 1;
 
+  // value stores one of three simple types (string, number, bool) as their
+  // matching protobuf format, or any complex hcl type as a raw string. Values
+  // taken from cli -var arguments and env vars are all processed as strings;
+  // if a complex type is assigned from one of these sources, it is checked
+  // for being assigned a complex type in the variable evaluation stage.
   oneof value {
     string str = 2;
+    bool bool = 9;
+    int64 num = 10;
+    // hcl stores values of any complex type in a raw string format, and
+    // converts it to hcl when we evaluate variables. This is used when
+    // loading values from a file or from the server/UI.
     string hcl = 3;
   }
 
@@ -421,6 +475,15 @@ message Project {
   // WIP: Variable values stored on the server. These values are set in the UI.
   repeated Variable variables = 9;
 
+  // Application polling settings. Polling will trigger a "StatusFunc" for collecting a
+  // report on the current status of the application.
+  // For now, polling is only done on the `default` workspace. A future
+  // version of Waypoint will expand polling to other workspaces.
+  //
+  // Each polling event is tracked as a separate job. You can query the
+  // poll operations and their success/failure by using the ListJobs API.
+  AppStatusPoll status_report_poll = 10;
+
   enum Format {
     HCL = 0; // We assume HCL by default
     JSON = 1;
@@ -428,6 +491,16 @@ message Project {
 
   message Poll {
     // enabled must be set to true to enable polling.
+    bool enabled = 1;
+
+    // interval is a duration string of how often to poll, such as "5s".
+    // The server may enforce minimum values, in which case a value lower
+    // than the minimum will be ignored.
+    string interval = 2;
+  }
+
+  message AppStatusPoll {
+    // enabled must be set to true to enable application polling for the project
     bool enabled = 1;
 
     // interval is a duration string of how often to poll, such as "5s".
@@ -480,6 +553,48 @@ message Workspace {
 
     // active_time is the last time that this application was active
     google.protobuf.Timestamp active_time = 2;
+  }
+}
+
+// User represents a single user identity within the Waypoint server. A
+// user account may represent multiple authentication methods (OIDC from
+// multiple sources, tokens, etc.).
+message User {
+  // Id that is unique to the Waypoint server (usually a ULID).
+  string id = 1;
+
+  // username, unique to the Waypoint server. May not be blank,
+  // but can be changed. We allow changing so that auth methods
+  // such as OIDC can generate non-user-friendly usernames and
+  // the user can fix them up later.
+  string username = 2;
+
+  // Display name, not used for login. May be blank.
+  string display = 3;
+
+  // Email, not used for login. May be blank. May not be verified.
+  // Verification currently depends on the auth system. One day maybe
+  // Waypoint will handle this.
+  string email = 4;
+
+  // Links is the list of account links with 3rd party
+  // identity systems.
+  repeated Link links = 5;
+
+  // Link is a connection between an authentication provider and
+  // the user identity. This is used to lookup a unique user account
+  // within Waypoint from multiple auth sources (i.e. GitHub auth,
+  // user/pass, etc.).
+  message Link {
+    oneof method {
+      OIDC oidc = 1;
+    }
+
+    message OIDC {
+      // issuer and sub claims can be used to uniquely identify a user
+      string iss = 1;
+      string sub = 2;
+    }
   }
 }
 
@@ -572,6 +687,17 @@ message Ref {
   // the ID should be used.
   message UserUsername {
     string username = 1;
+  }
+
+
+  // AuthMethod references an auth method.
+  message AuthMethod {
+    string name = 1;
+  }
+
+  // DeclaredResource references a declared resource.
+  message DeclaredResource {
+    string id = 1;
   }
 }
 
@@ -703,6 +829,262 @@ message Generation {
   uint64 initial_sequence = 2;
 }
 
+// A platform resource that an operation (release/deployment) has created, depends on, or manages.
+message DeclaredResource {
+  // The id of the declared resource. Automatically generated
+  string id = 6;
+
+  // platform-specific name of the resource type. i.e. instance, pod, auto-scaling group, etc
+  string name = 1;
+
+  // The platform on which the resource should exist, i.e. docker, gcp, k8s, etc.
+  string platform = 2;
+
+  // Internal ResourceManager representation of the resource.
+  google.protobuf.Any state = 3;
+
+  // Any additional information a plugin wants to expose on this resource.
+  // EX: Availability zones on a load balancer, concurrency limit on a lambda function, etc.
+  string state_json = 4;
+
+  // high level type of the resource, used for display purposes.
+  ResourceCategoryDisplayHint category_display_hint = 5;
+
+}
+
+enum ResourceCategoryDisplayHint {
+  UNKNOWN = 0;
+  OTHER = 1; // catch-all for types that do not fit well into other predefined roles. i.e. aws target group
+  INSTANCE = 2; // i.e. k8s pod, docker container, ecs task
+  INSTANCE_MANAGER = 3; // i.e. k8s deployment, ec2 asg, nomad job, ecs service
+  ROUTER = 4; // i.e. k8s service, aws alb
+  POLICY = 5; // i.e. aws security group or iam role, k8s RoleBinding
+  CONFIG = 6; // i.e. aws launch config, k8s configmap
+  FUNCTION = 7; // i.e. lambda function, azure function
+  STORAGE = 8; // i.e. EBS volume, EFS filesystem, k8s PVC
+}
+
+/********************************************************************
+* Tasks
+********************************************************************/
+
+message TaskLaunchInfo {
+  // The URL of the OCI image to execute the task under.
+  string oci_url = 1;
+
+  // The environment variables that will be exposed to the task.
+  map<string, string> environment_variables = 2;
+
+  // The arguments that will be passed to the new container on boot
+  repeated string arguments = 3;
+}
+
+/********************************************************************
+* User
+********************************************************************/
+
+message GetUserRequest {
+  // User to get. If this is not set then the currently logged in
+  // user will be requested.
+  Ref.User user = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+}
+
+message UpdateUserRequest {
+  // User to update along with the edited fields. Please see the docs
+  // on User to determine what can be edited. Fields that aren't editable
+  // will be ignored.
+  User user = 1;
+}
+
+message UpdateUserResponse {
+  User user = 1;
+}
+
+message DeleteUserRequest {
+  Ref.User user = 1;
+}
+
+/********************************************************************
+* Auth Methods
+********************************************************************/
+
+// AuthMethod is a mechanism for authenticating to the Waypoint server.
+// An AuthMethod deals with AuthN only: it provides identity and trades
+// that for a Waypoint token.
+message AuthMethod {
+  // unique name for this auth method
+  string name = 1;
+
+  // human friendly name for display and description. This has no impact
+  // internally and is only helpful for the UI and API. This is optional.
+  string display_name = 2;
+  string description = 3;
+
+  // A selector to determine whether a user who authenticates using this
+  // is allowed to authenticate at all. This runs before authentication
+  // completes. This can be used to check group membership and so on.
+  // Available variables depend on the auth method used.
+  //
+  // The syntax of this is this:
+  // https://github.com/hashicorp/go-bexpr
+  // (better docs to follow)
+  string access_selector = 4;
+
+  // The method to configure.
+  oneof method {
+    // OIDC uses OpenID Connect for auth. OIDC is supported by most
+    // major identity providers.
+    OIDC oidc = 20;
+  }
+
+  message OIDC {
+    // client ID and secret provided by OIDC provider.
+    string client_id = 1;
+    string client_secret = 2;
+
+    // scopes is a list of scopes to request from the provider
+    repeated string scopes = 3;
+
+    // List of valid audience values to accept login. This can be
+    // used to restrict only certain folks in a shared OIDC domain.
+    repeated string auds = 4;
+
+    // List of allowed redirect URIs, since our redirect URIs
+    // are somewhat dynamic (UI for web UI, localhost server for
+    // CLI, etc.). This protects against attack since this is not
+    // generally recommended.
+    repeated string allowed_redirect_uris = 5;
+
+    // The signing algorithms supported by the OIDC connect server.
+    // If this isn't specified, this will default to RS256 since that
+    // should be supported according to the RFC. The string values here
+    // should be valid OIDC signing algorithms.
+    repeated string signing_algs = 11;
+
+    // Discovery URL endpoint to get other information.
+    // Required by OIDC.
+    string discovery_url = 6;
+
+    // Optional CA certificate chain to validate the discovery URL.
+    // Multiple CA certificates can be specified to support easier
+    // rotation.
+    repeated string discovery_ca_pem = 7;
+
+    // Mapping claims to keys for usage in selectors such as the
+    // "access_selector" on the root auth method.
+    //
+    // claim mappings are available as "value.<name>" and list
+    // mappings are available as "list.<name>".
+    map<string, string> claim_mappings = 8;
+    map<string, string> list_claim_mappings = 9;
+  }
+}
+
+// This is used by ListOIDCAuthMethods to return the minimal information
+// for an OIDC auth method in an unauthenticated setting.
+message OIDCAuthMethod {
+  // unique identifier used for this auth method. This may or may
+  // not be human friendly; use display_name for human display.
+  string name = 1;
+
+  // human friendly name
+  string display_name = 2;
+
+  // kind is a well known kind of OIDC provider. This is sniffed by
+  // the server heuristically and is only here to assist in the UI.
+  Kind kind = 3;
+
+  enum Kind {
+    UNKNOWN = 0;
+    GITHUB = 1;
+    GOOGLE = 2;
+  }
+}
+
+message UpsertAuthMethodRequest {
+  // AuthMethod to upsert. See the message for what fields to set.
+  AuthMethod auth_method = 1;
+}
+
+message UpsertAuthMethodResponse {
+  AuthMethod auth_method = 1;
+}
+
+message GetAuthMethodRequest {
+  Ref.AuthMethod auth_method = 1;
+}
+
+message GetAuthMethodResponse {
+  AuthMethod auth_method = 1;
+}
+
+message DeleteAuthMethodRequest {
+  Ref.AuthMethod auth_method = 1;
+}
+
+message ListAuthMethodsResponse {
+  repeated AuthMethod auth_methods = 1;
+}
+
+message ListOIDCAuthMethodsResponse {
+  repeated OIDCAuthMethod auth_methods = 1;
+}
+
+message GetOIDCAuthURLRequest {
+  // OIDC auth method to use
+  Ref.AuthMethod auth_method = 1;
+
+  // The URL that authorization should redirect to.
+  string redirect_uri = 2;
+
+  // Nonce is a randomly generated string to prevent replay attacks.
+  // It is up to the client to generate this. This must then be passed
+  // back to CompleteOIDCAuthRequest.
+  string nonce = 3;
+}
+
+message GetOIDCAuthURLResponse {
+  // The URL to begin authorization. The user should go here.
+  string url = 1;
+}
+
+message CompleteOIDCAuthRequest {
+  Ref.AuthMethod auth_method = 1;
+
+  // This should match the GetOIDCAuthURL RPC. This is not used anymore
+  // except for verification.
+  string redirect_uri = 2;
+
+  // This should be provided from the parameters given to the redirect URL.
+  string state = 3;
+  string nonce = 4;
+  string code = 5;
+}
+
+message CompleteOIDCAuthResponse {
+  string token = 1;
+
+  // The user that was authenticated. This is the same as if GetUser
+  // was called with the token returned. This is eager returned because
+  // it is commonly useful and also readily available as part of auth.
+  User user = 2;
+
+  // These are all the claims that were associated with this OIDC
+  // authentication. This is used for debugging and operator inspection
+  // when setting up an OIDC auth method and aren't meant for general purpose
+  // use. These may also contain sensitive data so it shouldn't be stored.
+  string id_claims_json = 3;
+  string user_claims_json = 4;
+}
+
 /********************************************************************
 * Queueing
 ********************************************************************/
@@ -757,7 +1139,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 66 to 99; // future operation range
+  reserved 68 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -829,6 +1211,8 @@ message Job {
     QueueProjectOp queue_project = 63;
     PollOp poll = 64;
     StatusReportOp status_report = 65;
+    StartTaskLaunchOp start_task = 66;
+    StopTaskLaunchOp stop_task = 67;
   }
 
   //-----------------------------------------------------------------
@@ -896,6 +1280,7 @@ message Job {
     QueueProjectResult queue_project = 10;
     PollResult poll = 11;
     StatusReportResult status_report = 12;
+    StartTaskResult start_task = 13;
   }
 
   message DataSource {
@@ -937,6 +1322,12 @@ message Job {
     // go into for the configuration. This must be a relative path
     // and may not contain ".."
     string path = 3;
+
+    // This setting only takes effect if both "path" is true AND the
+    // Git polling is enabled. Under those conditions, if this option
+    // is true, then only changes in Git commits within the "path" will
+    // trigger a deploy. Changes outside the "path" will be ignored.
+    bool ignore_changes_outside_path = 10;
 
     // auth is the auth mechanism to use for this data source. This is optional.
     // If this isn't set, then the data source will attempt to clone
@@ -1171,6 +1562,40 @@ message Job {
     // Callers can verify by checking if the target deployment changed
     // or not.
     Release release = 1;
+  }
+
+  // TaskPluginParams contains the information about a specific task plugin
+  // that is used by both StartTask and StopTask
+  message TaskPluginParams {
+    // The plugin type to invoke for the task plugin.
+    string plugin_type = 2;
+
+    // The configuration information for the task. This is HCL that is
+    // decoded to figure out the task plugin and then provide that
+    // task plugin with configuration
+    bytes hcl_config = 3;
+    Project.Format hcl_format = 4;
+  }
+
+  message StartTaskLaunchOp {
+    // The info to use to create the task
+    TaskLaunchInfo info = 1;
+
+    // Params is needed to spawn the plugin so we can send it the start.
+    TaskPluginParams params = 2;
+  }
+
+  message StartTaskResult {
+    // The state of the create task, used to identify it later.
+    google.protobuf.Any state = 1;
+  }
+
+  message StopTaskLaunchOp {
+    // The state returned by the start operation.
+    google.protobuf.Any state = 1;
+
+    // Params is needed to spawn the plugin so we can send it the stop.
+    TaskPluginParams params = 2;
   }
 
   message StatusReportOp {
@@ -1837,6 +2262,25 @@ message Build {
 
   // ID of the job that created this build. This may be empty.
   string job_id = 9;
+
+  // Preload is information that is available via further queries but it
+  // sometimes pre-populated in the initial load (see the field docs for more
+  // info).
+  Preload preload = 11;
+
+  message Preload {
+    // The ref that was used in the job to run this operation. This is
+    // also accessible by querying the job via the job_id and should always
+    // match.
+    //
+    // This may be null under multiple circumstances: (1) the job was
+    // manually triggered with local data (no datasource) or (2) the job
+    // was run in earlier versions of Waypoint before we tracked this or
+    // (3) the job hasn't yet loaded the data.
+    //
+    // This is always pre-populated if it is exists.
+    Job.DataSource.Ref job_data_source_ref = 1;
+  }
 }
 
 // Artifact is the result of a build or registry. This is the metadata only.
@@ -1940,6 +2384,25 @@ message PushedArtifact {
 
   // ID of the job that created this. This may be empty.
   string job_id = 11;
+
+  // Preload is information that is available via further queries but it
+  // sometimes pre-populated in the initial load (see the field docs for more
+  // info).
+  Preload preload = 13;
+
+  message Preload {
+    // The ref that was used in the job to run this operation. This is
+    // also accessible by querying the job via the job_id and should always
+    // match.
+    //
+    // This may be null under multiple circumstances: (1) the job was
+    // manually triggered with local data (no datasource) or (2) the job
+    // was run in earlier versions of Waypoint before we tracked this or
+    // (3) the job hasn't yet loaded the data.
+    //
+    // This is always pre-populated if it is exists.
+    Job.DataSource.Ref job_data_source_ref = 1;
+  }
 }
 
 /********************************************************************
@@ -2025,6 +2488,12 @@ message Deployment {
   // id is the unique ID for this deployment
   string id = 1;
 
+  // url is the URL to the Deployment
+  // this URL might be empty, indicating that the deployment doesn't have
+  // the possibility to be contacted directly (e.g: Kubernetes pod)
+  // and thus the URL Service (Hashicorp Horizon) will be used instead, if enabled.
+  string url = 18;
+
   // See the docs for Generation.
   Generation generation = 17;
 
@@ -2075,6 +2544,9 @@ message Deployment {
     BUILD = 2;
   }
 
+  // Resources that this deployment has created or manages.
+  repeated DeclaredResource declared_resources = 19;
+
   // This is the populated preload data. Most of this data can be retrieved
   // through additional API calls or manually computed, but certain API
   // calls will pre-populate some of these fields for convenience. The exact
@@ -2093,8 +2565,30 @@ message Deployment {
     // all deployment API calls. This will be empty if the URL service
     // is not enabled or there was an error loading this information.
     string deploy_url = 3;
+
+    // The ref that was used in the job to run this operation. This is
+    // also accessible by querying the job via the job_id and should always
+    // match.
+    //
+    // This may be null under multiple circumstances: (1) the job was
+    // manually triggered with local data (no datasource) or (2) the job
+    // was run in earlier versions of Waypoint before we tracked this or
+    // (3) the job hasn't yet loaded the data.
+    //
+    // This is always pre-populated if it is exists.
+    Job.DataSource.Ref job_data_source_ref = 4;
   }
 }
+
+// A deployment with additional related messages pre-fetched.
+message DeploymentExpanded {
+  // The deployment in question
+  Deployment deployment = 1;
+
+  // The most recent status report generated for this deployment
+  StatusReport latest_status_report = 2;
+}
+
 
 /********************************************************************
 * Instances
@@ -2162,18 +2656,6 @@ message Instance {
     // exec and logs functionality
     VIRTUAL = 2;
   }
-}
-
-message FindExecInstanceRequest {
-  // List instances for a specific deployment.
-  string deployment_id = 1;
-
-  // Time to wait before retrying a request to connect to requested instance
-  string wait_timeout = 3;
-}
-
-message FindExecInstanceResponse {
-  Instance instance = 1;
 }
 
 /********************************************************************
@@ -2285,6 +2767,14 @@ message Release {
   // ID of the job that created this. This may be empty.
   string job_id = 13;
 
+  // A boolean to mark this release message as unimplemented by the plugin
+  // that generated the message. If true, that means there was not a releaser
+  // to execute for the release lifecycle phase.
+  bool unimplemented = 15;
+
+  // A platform resource that this release has created, depends on, or manages.
+  repeated DeclaredResource declared_resources = 19;
+
   // This is the populated preload data. Most of this data can be retrieved
   // through additional API calls or manually computed, but certain API
   // calls will pre-populate some of these fields for convenience. The exact
@@ -2307,8 +2797,30 @@ message Release {
 
     // Populated when LoadDetails is set.
     Build build = 3;
+
+    // The ref that was used in the job to run this operation. This is
+    // also accessible by querying the job via the job_id and should always
+    // match.
+    //
+    // This may be null under multiple circumstances: (1) the job was
+    // manually triggered with local data (no datasource) or (2) the job
+    // was run in earlier versions of Waypoint before we tracked this or
+    // (3) the job hasn't yet loaded the data.
+    //
+    // This is always pre-populated if it is exists.
+    Job.DataSource.Ref job_data_source_ref = 4;
   }
 }
+
+// A release with additional related messages pre-fetched.
+message ReleaseExpanded {
+  // The release in question
+  Release release = 1;
+
+  // The most recent status report generated for this release
+  StatusReport latest_status_report = 2;
+}
+
 
 /********************************************************************
 * Status Reports
@@ -2351,19 +2863,44 @@ message ListStatusReportsRequest {
   // workspace that this should belong to. If this is empty, values in
   // all workspaces will be listed.
   Ref.Workspace workspace = 4;
+
+  // Target is used to determine which status reports to return. By default
+  // if no target is requested, the response will include both deployments
+  // and release status reports for the requested Application.
+  oneof target {
+    // the deployment id that this status report was generated on
+    Ref.Operation deployment = 5;
+
+    // the release id that this status report was generated on
+    Ref.Operation release = 6;
+  }
 }
 
-
 message ListStatusReportsResponse {
-  // For 0.4.0, there should only the one 'latest' status report
   repeated StatusReport status_reports = 1;
 }
 
 message GetStatusReportRequest {
   Ref.Operation ref = 1;
+}
 
-  // TODO(briancain): Once polling is in place, provide a way to query for
-  // a report by deployment or release operation id
+message ExpediteStatusReportRequest {
+  // The workspace that this exists in
+  Ref.Workspace workspace = 1;
+
+  // Target is used to determine what a status report should be run against
+  oneof target {
+    // the deployment id that this status report was generated on
+    Ref.Operation deployment = 2;
+
+    // the release id that this status report was generated on
+    Ref.Operation release = 3;
+  }
+}
+
+// id of job expedited by the request
+message ExpediteStatusReportResponse {
+    string job_id = 1;
 }
 
 // StatusReport is the report genrated when querying the overall health of
@@ -2414,6 +2951,52 @@ message StatusReport {
   // the time when this report was generated
   // Copied from the plugin generated raw SDK status report for convenient API access.
   google.protobuf.Timestamp generated_time = 10;
+
+  // where the health check was performed. External means not executed by Waypoint,
+  // but by the platform deployed to.
+  bool external = 11;
+
+  // a collection of resources, e.x. platform resources generated and monitored by a deployment.
+  repeated Resource resources = 12;
+
+  // A resource as observed in a platform
+  message Resource {
+    // The id of the resource, according to the platform.
+    string id = 1;
+
+    // declared resource that this directly references.
+    Ref.DeclaredResource declared_resource = 2;
+
+    // Resources that created this resource.
+    string parent_resource_id = 3;
+
+    // Friendly name of the resource, if applicable
+    string name = 4;
+
+    // The platform on which the resource exists.
+    string platform = 5;
+
+    // platform-specific name of the resource type. i.e. instance, pod, auto-scaling group, etc
+    string type = 6;
+
+    // A link directly to the resource in the platform, if applicable.
+    string platform_url = 7;
+
+    // The high level category of the resource, used as a hint to the UI on how to display the resource.
+    ResourceCategoryDisplayHint category_display_hint = 8;
+
+    // platform-reported time of resource creation
+    google.protobuf.Timestamp created_time = 9;
+
+    // any additional metadata about the resource, encoded as JSON
+    string state_json = 10;
+
+    // the current health state for a single resource
+    Health health = 11;
+
+    // a simple human readable message detailing the Health state
+    string health_message = 12;
+  }
 
   message Health {
     // the overall health of the report for a resource
@@ -2711,6 +3294,11 @@ message EntrypointConfigRequest {
   // The type of instance that is making the config request. This type will be
   // recorded by the server to alter how the server interacts with the instance.
   Instance.Type type = 3;
+
+  // If this is true, then this instance will never be assigned any exec
+  // sessions. If no instances support exec, an error will be shown to the
+  // user.
+  bool disable_exec = 4;
 }
 
 message EntrypointConfigResponse {

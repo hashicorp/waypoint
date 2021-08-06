@@ -1,0 +1,51 @@
+{{#let
+  (hash
+    status=(or (downcase @statusReport.health.healthStatus) "unknown")
+    message=@statusReport.health.healthMessage
+    isReportRunning=(eq @statusReport.status.state 1)
+    completeTime=@statusReport.status.completeTime
+  )
+  as |vars|
+}}
+  <span
+    data-test-status-report-indicator={{vars.status}}
+    class="
+      status-report-indicator
+      status-report-indicator--{{vars.status}}
+      focus-ring
+    "
+    tabindex="0"
+  >
+    <span class="status-report-indicator__badge" aria-hidden="true"></span>
+
+    <span class="status-report-indicator__label">
+      <span class="pds--visuallyHidden">{{t "status_report_indicator.label.prefix"}}</span>
+      {{t (concat "status_report_indicator.label." vars.status)}}
+    </span>
+
+    <EmberTooltip
+      @popperOptions={{hash
+        modifiers=(hash
+          preventOverflow=(hash
+            escapeWithReference=false
+            boundariesElement="viewport"
+          )
+        )
+      }}
+    >
+      {{#if vars.isReportRunning}}
+        {{t "status_report_indicator.tooltip.checking_now"}}
+      {{else}}
+        {{or vars.message (t "status_report_indicator.tooltip.unknown")}}
+
+        {{#if vars.completeTime}}
+          <small>
+            {{! TODO(jgwhite): figure out how to internationalize this properly }}
+            {{t "status_report_indicator.tooltip.last_checked"}}
+            {{date-format-distance-to-now vars.completeTime.seconds}}
+          </small>
+        {{/if}}
+      {{/if}}
+    </EmberTooltip>
+  </span>
+{{/let}}

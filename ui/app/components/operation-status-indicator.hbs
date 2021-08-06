@@ -1,0 +1,77 @@
+{{!--
+
+  ## Usage
+
+  <OperationStatusIndicator
+    @status={{build.status}}
+  />
+
+  If you would like the indicator to match the surrounding typography,
+  pass `@matchTypography={{true}}`:
+
+  <OperationStatusIndicator
+    @status={{build.status}}
+    @matchTypography={{true}}
+  />
+
+--}}
+
+{{#let
+  (hash
+    state=(or
+      (and (eq @status.state 0) "unknown")
+      (and (eq @status.state 1) "running")
+      (and (eq @status.state 2) "success")
+      (and (eq @status.state 3) "error")
+    )
+    message=(or
+      @status.error.message
+      @status.details
+    )
+  )
+  as |vars|
+}}
+  <span
+    data-test-operation-status-indicator={{vars.state}}
+    class="
+      operation-status-indicator
+      operation-status-indicator--{{vars.state}}
+      {{if @matchTypography "operation-status-indicator--match-typography"}}
+      focus-ring
+    "
+    tabindex="0"
+  >
+    <Pds::Icon
+      class="operation-status-indicator__badge"
+      @type={{or
+        (and (eq vars.state "unknown") "help-circle-outline")
+        (and (eq vars.state "running") "clock-outline")
+        (and (eq vars.state "success") "check-plain")
+        (and (eq vars.state "error") "alert-triangle")
+      }}
+    />
+
+    <span class="operation-status-indicator__label">
+      {{#if (eq vars.state "running")}}
+        {{date-format-distance-to-now @status.startTime.seconds}}
+      {{else}}
+        {{date-format-distance-to-now @status.completeTime.seconds}}
+      {{/if}}
+    </span>
+
+    {{#if vars.message}}
+      <EmberTooltip
+        @popperOptions={{hash
+          modifiers=(hash
+            preventOverflow=(hash
+              escapeWithReference=false
+              boundariesElement="viewport"
+            )
+          )
+        }}
+      >
+        {{vars.message}}
+      </EmberTooltip>
+    {{/if}}
+  </span>
+{{/let}}

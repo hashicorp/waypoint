@@ -1,0 +1,3 @@
+variable "thatsnotmy" {
+  default = "name"
+}

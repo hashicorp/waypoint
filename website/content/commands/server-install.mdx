@@ -30,6 +30,10 @@ Usage: `waypoint server install [options]`
 - `-context-set-default` - Set the newly installed server as the default CLI context.
 - `-platform=<string>` - Platform to install the Waypoint server into.
 
+#### docker Options
+
+- `-docker-server-image=<string>` - Docker image for the Waypoint server.
+
 #### ecs Options
 
 - `-ecs-cluster=<string>` - Configures the Cluster to install into.
@@ -72,9 +76,5 @@ Usage: `waypoint server install [options]`
 - `-nomad-consul-service=<string>` - Create service for Waypoint UI in Consul.
 - `-nomad-consul-service-ui-tags=<string>` - Tags for the Waypoint UI service generated in Consul.
 - `-nomad-consul-service-backend-tags=<string>` - Tags for the Waypoint backend service generated in Consul.
-
-#### docker Options
-
-- `-docker-server-image=<string>` - Docker image for the Waypoint server.
 
 @include "commands/server-install_more.mdx"

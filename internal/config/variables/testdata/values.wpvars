@@ -1,0 +1,2 @@
+mug = "yeti"
+art = "gdbee"

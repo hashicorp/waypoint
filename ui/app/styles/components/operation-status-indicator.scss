@@ -1,0 +1,14 @@
+.operation-status-indicator {
+  @include Typography.Interface(S);
+  color: rgb(var(--text-muted));
+  cursor: default;
+
+  &--error {
+    color: rgb(var(--error-text));
+  }
+
+  &--match-typography {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+}

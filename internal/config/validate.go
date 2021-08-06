@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/zclconf/go-cty/cty"
 )
 
 // validateStruct is the validation structure for the configuration.
@@ -16,12 +17,13 @@ import (
 // requires duplication between this struct and the other config structs
 // since we don't do any lazy loading here.
 type validateStruct struct {
-	Project string            `hcl:"project,optional"`
-	Runner  *Runner           `hcl:"runner,block" default:"{}"`
-	Labels  map[string]string `hcl:"labels,optional"`
-	Plugin  []*Plugin         `hcl:"plugin,block"`
-	Apps    []*validateApp    `hcl:"app,block"`
-	Config  *genericConfig    `hcl:"config,block"`
+	Project   string              `hcl:"project,optional"`
+	Runner    *Runner             `hcl:"runner,block" default:"{}"`
+	Labels    map[string]string   `hcl:"labels,optional"`
+	Variables []*validateVariable `hcl:"variable,block"`
+	Plugin    []*Plugin           `hcl:"plugin,block"`
+	Apps      []*validateApp      `hcl:"app,block"`
+	Config    *genericConfig      `hcl:"config,block"`
 }
 
 type validateApp struct {
@@ -33,6 +35,16 @@ type validateApp struct {
 	Deploy  *Deploy           `hcl:"deploy,block"`
 	Release *Release          `hcl:"release,block"`
 	Config  *genericConfig    `hcl:"config,block"`
+}
+
+// validateVariable is separate from HclVariable because of the limitations
+// of hclsimple, which we use in config.Load. hclsimple needs Type to be an
+// hcl.Expression, but we want it to be a cty.Type for everything else.
+type validateVariable struct {
+	Name        string    `hcl:",label"`
+	Default     cty.Value `hcl:"default,optional"`
+	Type        cty.Type  `hcl:"type,optional"`
+	Description string    `hcl:"description,optional"`
 }
 
 // Validate the structure of the configuration.

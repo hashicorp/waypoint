@@ -1,0 +1,3 @@
+```release-note:feature
+cli: can login with a token using the new `waypoint login` command
+```

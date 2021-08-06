@@ -27,6 +27,7 @@ type DeploymentListCommand struct {
 
 	flagWorkspaceAll bool
 	flagVerbose      bool
+	flagUrl          bool
 	flagJson         bool
 	flagId           idFormat
 	filterFlags      filterFlags
@@ -127,7 +128,15 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			return c.displayJson(resp.Deployments)
 		}
 
-		tbl := terminal.NewTable("", "ID", "Platform", "Details", "Started", "Completed", "Health")
+		headers := []string{
+			"", "ID", "Platform", "Details", "Started", "Completed", "Health",
+		}
+
+		if c.flagUrl {
+			headers = append(headers, "URL")
+		}
+
+		tbl := terminal.NewTable(headers...)
 
 		const bullet = "●"
 
@@ -216,12 +225,12 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				details = append(details, "image:"+img)
 			}
 
-			artdetails := fmt.Sprintf("artifact:%s", c.flagId.FormatId(b.Preload.Artifact.Sequence, b.Preload.Artifact.Id))
+			artDetails := fmt.Sprintf("artifact:%s", c.flagId.FormatId(b.Preload.Artifact.Sequence, b.Preload.Artifact.Id))
 			if len(details) == 0 {
-				details = append(details, artdetails)
+				details = append(details, artDetails)
 			} else if c.flagVerbose {
 				details = append(details,
-					artdetails,
+					artDetails,
 					fmt.Sprintf("build:%s", c.flagId.FormatId(b.Preload.Build.Sequence, b.Preload.Build.Id)))
 			}
 
@@ -267,16 +276,30 @@ func (c *DeploymentListCommand) Run(args []string) int {
 
 			sort.Strings(details)
 
+			var columns []string
+
+			columns = []string{
+				status,
+				c.flagId.FormatId(b.Sequence, b.Id),
+				b.Component.Name,
+				details[0],
+				startTime,
+				completeTime,
+				statusReportComplete,
+			}
+
+			if c.flagUrl {
+				url := "n/a"
+				if b.Url != "" {
+					url = b.Url
+				} else if b.Preload.DeployUrl != "" {
+					url = b.Preload.DeployUrl
+				}
+				columns = append(columns, url)
+			}
+
 			tbl.Rich(
-				[]string{
-					status,
-					c.flagId.FormatId(b.Sequence, b.Id),
-					b.Component.Name,
-					details[0],
-					startTime,
-					completeTime,
-					statusReportComplete,
-				},
+				columns,
 				[]string{
 					statusColor,
 				},
@@ -382,6 +405,13 @@ func (c *DeploymentListCommand) Flags() *flag.Sets {
 			Aliases: []string{"V"},
 			Target:  &c.flagVerbose,
 			Usage:   "Display more details about each deployment.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "url",
+			Aliases: []string{"u"},
+			Target:  &c.flagUrl,
+			Usage:   "Display deployment URL.",
 		})
 
 		f.BoolVar(&flag.BoolVar{

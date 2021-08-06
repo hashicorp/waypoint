@@ -18,6 +18,7 @@ require (
 	github.com/containerd/console v1.0.1
 	github.com/creack/pty v1.1.11
 	github.com/davecgh/go-spew v1.1.1
+	github.com/denisenkom/go-mssqldb v0.0.0-20191128021309-1d7a30a10f73 // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/docker/cli v20.10.0-beta1.0.20201029214301-1d20b15adc38+incompatible
 	github.com/docker/distribution v2.7.1+incompatible
@@ -28,7 +29,7 @@ require (
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/elazarl/go-bindata-assetfs v1.0.1
-	github.com/fatih/color v1.9.0
+	github.com/fatih/color v1.12.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gliderlabs/ssh v0.3.1
 	github.com/go-git/go-git/v5 v5.2.0
@@ -37,19 +38,22 @@ require (
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/gofrs/flock v0.8.0
 	github.com/golang/protobuf v1.5.2
+	github.com/google/go-cmp v0.5.5
 	github.com/google/go-jsonnet v0.17.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/handlers v1.4.2
 	github.com/hashicorp/aws-sdk-go-base v0.7.0
+	github.com/hashicorp/cap v0.1.1
 	github.com/hashicorp/go-argmapper v0.2.0
-	github.com/hashicorp/go-cleanhttp v0.5.1
+	github.com/hashicorp/go-bexpr v0.1.7
+	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-gcp-common v0.6.0
 	github.com/hashicorp/go-getter v1.4.1
-	github.com/hashicorp/go-hclog v0.14.1
+	github.com/hashicorp/go-hclog v0.16.1
 	github.com/hashicorp/go-memdb v1.3.2
-	github.com/hashicorp/go-multierror v1.1.0
-	github.com/hashicorp/go-plugin v1.3.0
+	github.com/hashicorp/go-multierror v1.1.1
+	github.com/hashicorp/go-plugin v1.4.2
 	github.com/hashicorp/go-uuid v1.0.2
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/hcl/v2 v2.10.1-0.20210621220818-327f3ce2570e
@@ -58,12 +62,14 @@ require (
 	github.com/hashicorp/vault/api v1.0.5-0.20200519221902-385fac77e20f
 	github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210609145036-5c5b44751ee6
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210729135349-62df318a2458
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
+	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/kevinburke/go-bindata v3.22.0+incompatible
 	github.com/kr/text v0.2.0
 	github.com/leodido/go-urn v1.2.0 // indirect
+	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/mitchellh/cli v1.1.2
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-glint v0.0.0-20201015034436-f80573c636de
@@ -72,16 +78,15 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/mitchellh/hashstructure/v2 v2.0.1
-	github.com/mitchellh/mapstructure v1.3.3
-	github.com/mitchellh/pointerstructure v1.0.0
+	github.com/mitchellh/mapstructure v1.4.1
+	github.com/mitchellh/pointerstructure v1.2.0
 	github.com/mitchellh/protoc-gen-go-json v0.0.0-20200917194518-364b693410ae
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
-	github.com/moby/buildkit v0.8.3 // indirect
+	github.com/moby/buildkit v0.8.3
 	github.com/moby/sys/mountinfo v0.4.1 // indirect
 	github.com/moby/sys/symlink v0.1.0 // indirect
 	github.com/mr-tron/base58 v1.2.0
 	github.com/natefinch/atomic v0.0.0-20200526193002-18c0533a5b09
-	github.com/oklog/run v1.1.0
 	github.com/oklog/ulid v1.3.1
 	github.com/oklog/ulid/v2 v2.0.2
 	github.com/olekukonko/tablewriter v0.0.4
@@ -94,16 +99,15 @@ require (
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/slack-go/slack v0.6.5
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/vektra/mockery v1.1.2
 	github.com/zclconf/go-cty v1.8.4
 	github.com/zclconf/go-cty-yaml v1.0.2
 	go.etcd.io/bbolt v1.3.5
 	go.uber.org/goleak v1.1.10
-	golang.org/x/crypto v0.0.0-20201117144127-c1f2f97bffc9
+	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20210511113859-b0526f3d8744
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
 	google.golang.org/api v0.25.0
 	google.golang.org/genproto v0.0.0-20201022181438-0ff5f38871d5
 	google.golang.org/grpc v1.33.1
@@ -119,6 +123,8 @@ require (
 // replace github.com/hashicorp/go-argmapper => ../go-argmapper
 // replace github.com/hashicorp/horizon => ../horizon
 // replace github.com/hashicorp/waypoint-plugin-sdk => ../waypoint-plugin-sdk
+
+// replace github.com/hashicorp/go-plugin => ../go-plugin
 
 // v0.3.11 panics for some reason on our tests
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.9

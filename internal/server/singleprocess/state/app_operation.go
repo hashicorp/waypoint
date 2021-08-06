@@ -163,7 +163,7 @@ func (op *appOperation) Get(s *State, ref *pb.Ref_Operation) (interface{}, error
 				"value with given id not found: %s", id)
 		}
 
-		return op.dbGet(tx, []byte(id), result)
+		return op.get(s, tx, []byte(id), result)
 	})
 	if err != nil {
 		return nil, err
@@ -250,7 +250,7 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 			}
 
 			value := op.newStruct()
-			if err := op.dbGet(tx, []byte(record.Id), value); err != nil {
+			if err := op.get(s, tx, []byte(record.Id), value); err != nil {
 				return err
 			}
 
@@ -359,6 +359,52 @@ func (op *appOperation) Latest(
 	}
 
 	return nil, status.Errorf(codes.NotFound, "No application named %q is available!", ref.Application)
+}
+
+// get reads the value from the database. This populates any computed fields
+// as necessary, unlike dbGet which just pulls the raw value. This should
+// be used instead of dbGet in most cases.
+func (op *appOperation) get(
+	s *State,
+	dbTxn *bolt.Tx,
+	id []byte,
+	result proto.Message,
+) error {
+	// Get the value
+	if err := op.dbGet(dbTxn, id, result); err != nil {
+		return err
+	}
+
+	// If we have a preload field then we check if we have to prepopulate.
+	if f := op.valueFieldReflect(result, "Preload"); f.IsValid() {
+		preloadIface := f.Interface()
+
+		// If we have a job data source ref field, then we attempt to
+		// load the job and populate this.
+		jobIdRaw := op.valueField(result, "JobId")
+		dsrefF := op.valueFieldReflect(preloadIface, "JobDataSourceRef")
+		if jobIdRaw != nil && dsrefF.IsValid() {
+			job, err := s.jobById(dbTxn, jobIdRaw.(string))
+
+			// We ignore not found by simply not populating the field.
+			if status.Code(err) == codes.NotFound {
+				err = nil
+				job = nil
+			}
+
+			// Any other error we return back to the user.
+			if err != nil {
+				return err
+			}
+
+			// If we found the job, we set it.
+			if job != nil {
+				dsrefF.Set(reflect.ValueOf(job.DataSourceRef))
+			}
+		}
+	}
+
+	return nil
 }
 
 // dbGet reads the value from the database.

@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/waypoint/builtin/aws/ecs"
 	"github.com/hashicorp/waypoint/builtin/aws/lambda"
 	"github.com/hashicorp/waypoint/builtin/aws/ssm"
-	pluginAWSSSM "github.com/hashicorp/waypoint/builtin/aws/ssm"
 	"github.com/hashicorp/waypoint/builtin/azure/aci"
 	"github.com/hashicorp/waypoint/builtin/docker"
 	dockerpull "github.com/hashicorp/waypoint/builtin/docker/pull"
@@ -26,7 +25,6 @@ import (
 	"github.com/hashicorp/waypoint/builtin/pack"
 	"github.com/hashicorp/waypoint/builtin/tfc"
 	"github.com/hashicorp/waypoint/builtin/vault"
-	pluginVault "github.com/hashicorp/waypoint/builtin/vault"
 )
 
 var (
@@ -65,6 +63,7 @@ var (
 		component.PlatformType:       mustFactory(factory.New(component.TypeMap[component.PlatformType])),
 		component.ReleaseManagerType: mustFactory(factory.New(component.TypeMap[component.ReleaseManagerType])),
 		component.ConfigSourcerType:  mustFactory(factory.New(component.TypeMap[component.ConfigSourcerType])),
+		component.TaskLauncherType:   mustFactory(factory.New(component.TypeMap[component.TaskLauncherType])),
 	}
 
 	// ConfigSourcers are the list of built-in config sourcers. These will
@@ -72,13 +71,13 @@ var (
 	// hardcode them. This is used by the CEB.
 	ConfigSourcers = map[string]*Instance{
 		"aws-ssm": {
-			Component: &pluginAWSSSM.ConfigSourcer{},
+			Component: &ssm.ConfigSourcer{},
 		},
 		"kubernetes": {
 			Component: &k8s.ConfigSourcer{},
 		},
 		"vault": {
-			Component: &pluginVault.ConfigSourcer{},
+			Component: &vault.ConfigSourcer{},
 		},
 		"terraform-cloud": {
 			Component: &tfc.ConfigSourcer{},

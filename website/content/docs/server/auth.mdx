@@ -2,61 +2,75 @@
 layout: docs
 page_title: Server Authentication
 description: |-
-  All connections to the Waypoint server via the CLI or UI require an auth token to authenticate.
+  All connections to the Waypoint server via the CLI or UI require authentication. Waypoint supports authentication using an API token or via OpenID Connect (OIDC).
 ---
 
 # Server Authentication
 
-All connections to the Waypoint server via the CLI or UI require an
-auth token to authenticate.
+All connections to the Waypoint server via the CLI or UI require authentication.
+Waypoint supports authentication using an API token or via OpenID Connect (OIDC).
+OIDC allows Waypoint to use existing accounts from providers such as Google,
+Okta, GitLab, and more.
 
 If you're a new user that ran `waypoint install`, the auth token was automatically
-configured for your local CLI.
+configured for your local CLI. As a next step, we recomend
+[setting up OIDC](/docs/server/auth/oidc).
 
-## Using Your Token
+## Logging In
 
-### CLI
+<Tabs>
+<Tab heading="UI">
 
-To use the token with the CLI, the preferred way is to persist it with
-a context using `waypoint context create`. This will store the token in
-your home directory and make it always available when using Waypoint.
+To log in in the Waypoint UI, open the UI in your browser and follow
+the onscreen instructions.
 
-You may also set the token at any time using the `WAYPOINT_TOKEN`
-environment variable. This will override any context settings.
+</Tab>
+<Tab heading="CLI">
 
-### UI
-
-When you first visit the Waypoint UI, you will be asked to enter a token.
-Enter your token to authenticate. The UI will save this token in your browser's
-local storage.
-
-## Invite
-
-If you're inviting other users to access your Waypoint server, you should
-generate an invite token. An invite token is a special type of token that
-can be exchanged exactly once for a real auth token. To generate an invite
-token, you can use the "Invite" link in the UI or the CLI;
+To log in using either a token or OIDC, use the
+[waypoint login](/commands/login) command. Specify the address to the
+Waypoint server as the argument:
 
 ```shell-session
-$ waypoint token invite
+$ waypoint login 127.0.0.1:9701
+...
+```
+
+If the server is configured to use OIDC, then this will open your browser
+to complete authentication. Otherwise, the command will prompt you for
+your token by asking you to specify the `-token` flag. After successfully
+logging in, your CLI is configured with your authentication information.
+
+For automation-based workflows, you may also set the `WAYPOINT_SERVER_ADDR` and
+`WAYPOINT_SERVER_TOKEN` environment variables. This will be used instead of
+any current saved auth information if it is present.
+
+</Tab>
+</Tabs>
+
+## Invite Teammates
+
+If using OIDC, other teammates can attempt to authenticate using the
+UI or `waypoint login`. This will create a new account if they're allowed to
+authenticate.
+
+For tokens, use the
+[waypoint user invite](/commands/user-invite) CLI command with
+the `-username` flag. This will create an invite token that can be exchanged
+for a token for a specific user.
+
+To invite a new user `alice`:
+
+```shell-session
+$ waypoint user invite -username=alice
 svESKuVYKeLkgFP3heNanrhvwiMfxfM7q7d3m8UTU3fTDwetfq9vMsBtdqeRmKakXZXJjLDinApxkDcVe594vR2FfVeF3m6gupZ8NVcSC
 ```
 
-The receiving user can exchange this token using the UI or using
-`waypoint token exchange`.
-
-## Generate
-
-If you're creating a new token for yourself, you can generate a new
-auth token directly:
-
-```shell-session
-$ waypoint token new
-svESKuVYKeLkgFP3heNanrhvwiMfxfM7q7d3m8UTU3fTDwetfq9vMsBtdqeRmKakXZXJjLDinApxkDcVe594vR2FfVeF3m6gupZ8NVcSC
-```
+After giving Alice the invite token, they can setup their account using
+the standard `waypoint login` flow.
 
 ## Revoke, Inspect, etc.
 
-Waypoint currently doesn't have any mechanism to revoke tokens,
-audit token usage, inspect an existing token, etc. We plan on expanding
-our token system to support this in the future.
+Waypoint currently doesn't have any mechanism to revoke sessions,
+audit token usage, inspect existing sessions, etc. We plan on expanding
+our authentication system to support this in the future.

@@ -1,0 +1,3 @@
+```release-note:improvement
+serverinstall/k8s: add information to cli output for upgrade path
+```

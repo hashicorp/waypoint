@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"errors"
+	stdflag "flag"
 	"io"
 	"path/filepath"
 	"regexp"
@@ -17,6 +18,7 @@ import (
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
@@ -65,6 +67,9 @@ type baseCommand struct {
 	refApp       *pb.Ref_Application
 	refWorkspace *pb.Ref_Workspace
 
+	// variables hold the values set via flags and local env vars
+	variables []*pb.Variable
+
 	//---------------------------------------------------------------
 	// Internal fields that should not be accessed directly
 
@@ -73,6 +78,13 @@ type baseCommand struct {
 
 	// flagLabels are set via -label if flagSetOperation is set.
 	flagLabels map[string]string
+
+	// flagVars sets values for defined input variables
+	flagVars map[string]string
+
+	// flagVarFile is a HCL or JSON file setting one or more values
+	// for defined input variables
+	flagVarFile []string
 
 	// flagRemote is whether to execute using a remote runner or use
 	// a local runner.
@@ -154,9 +166,25 @@ func (c *baseCommand) Init(opts ...Option) error {
 	}
 	c.args = baseCfg.Flags.Args()
 
+	// Check for flags after args
+	if err := checkFlagsAfterArgs(c.args, baseCfg.Flags); err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return err
+	}
+
 	// Reset the UI to plain if that was set
 	if c.flagPlain {
 		c.ui = terminal.NonInteractiveUI(c.Ctx)
+	}
+
+	// If we're parsing the connection from the arg, then use that.
+	if baseCfg.ConnArg && len(c.args) > 0 {
+		if err := c.flagConnection.FromURL(c.args[0]); err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return err
+		}
+
+		c.args = c.args[1:]
 	}
 
 	// With the flags we now know what workspace we're targeting
@@ -238,6 +266,17 @@ func (c *baseCommand) Init(opts ...Option) error {
 			}
 		}
 	}
+
+	// Collect variable values from -var and -varfile flags,
+	// and env vars set with WP_VAR_* and set them on the job
+	vars, diags := variables.LoadVariableValues(c.flagVars, c.flagVarFile)
+	if diags.HasErrors() {
+		// we only return errors for file parsing, so we are specific
+		// in the error log here
+		c.logError(c.Log, "failed to load wpvars file", errors.New(diags.Error()))
+		return diags
+	}
+	c.variables = vars
 
 	// Create our client
 	if baseCfg.Client {
@@ -405,6 +444,20 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 				"This is specified to the data source type being used in your configuration. " +
 				"This is used for example to set a specific Git ref to run against.",
 		})
+
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "var",
+			Target: &c.flagVars,
+			Usage:  "Variable value to set for this operation. Can be specified multiple times.",
+		})
+
+		f.StringSliceVar(&flag.StringSliceVar{
+			Name:   "var-file",
+			Target: &c.flagVarFile,
+			Usage: "HCL or JSON file containing variable values to set for this " +
+				"operation. If any \"*.auto.wpvars\" or \"*.auto.wpvars.json\" " +
+				"files are present, they will be automatically loaded.",
+		})
 	}
 
 	if bit&flagSetConnection != 0 {
@@ -438,6 +491,79 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 	return set
 }
 
+// checkFlagsAfterArgs checks for a very common user error scenario where
+// CLI flags are specified after positional arguments. Since we use the
+// stdlib flag package, this is not allowed. However, we can detect this
+// scenario, and notify a user. We can't easily automatically fix it because
+// its hard to tell positional vs intentional flags.
+func checkFlagsAfterArgs(args []string, set *flag.Sets) error {
+	if len(args) == 0 {
+		return nil
+	}
+
+	// Build up our arg map for easy searching.
+	flagMap := map[string]struct{}{}
+	for _, v := range args {
+		// If we reach a "--" we're done. This is a common designator
+		// in CLIs (such as exec) that everything following is fair game.
+		if v == "--" {
+			break
+		}
+
+		// There is always at least 2 chars in a flag "-v" example.
+		if len(v) < 2 {
+			continue
+		}
+
+		// Flags start with a hyphen
+		if v[0] != '-' {
+			continue
+		}
+
+		// Detect double hyphen flags too
+		if v[1] == '-' {
+			v = v[1:]
+		}
+
+		// More than double hyphen, ignore. note this looks like we can
+		// go out of bounds and panic cause this is the 3rd char if we have
+		// a double hyphen and we only protect on 2, but since we check first
+		// against plain "--" we know that its not exactly "--" AND the length
+		// is at least 2, meaning we can safely imply we have length 3+ for
+		// double-hyphen prefixed values.
+		if v[1] == '-' {
+			continue
+		}
+
+		// If we have = for "-foo=bar", trim out the =.
+		if idx := strings.Index(v, "="); idx >= 0 {
+			v = v[:idx]
+		}
+
+		flagMap[v[1:]] = struct{}{}
+	}
+
+	// Now look for anything that looks like a flag we accept. We only
+	// look for flags we accept because that is the most common error and
+	// limits the false positives we'll get on arguments that want to be
+	// hyphen-prefixed.
+	didIt := false
+	set.VisitSets(func(name string, s *flag.Set) {
+		s.VisitAll(func(f *stdflag.Flag) {
+			if _, ok := flagMap[f.Name]; ok {
+				// Uh oh, we done it. We put a flag after an arg.
+				didIt = true
+			}
+		})
+	})
+
+	if didIt {
+		return errFlagAfterArgs
+	}
+
+	return nil
+}
+
 // flagSetBit is used with baseCommand.flagSet
 type flagSetBit uint
 
@@ -450,6 +576,17 @@ const (
 var (
 	// ErrSentinel is a sentinel value that we can return from Init to force an exit.
 	ErrSentinel = errors.New("error sentinel")
+
+	errFlagAfterArgs = errors.New(strings.TrimSpace(`
+Flags must be specified before positional arguments in the CLI command.
+For example "waypoint up -example project" not "waypoint up project -example".
+Please reorder your arguments and try again.
+
+Note: we can't automatically fix this or allow this since we can't safely
+detect what you want as flag arguments and what you want as positional arguments.
+The underlying library we use for flag parsing (the Go standard library)
+enforces this requirement. Sorry!
+`))
 
 	errAppModeSingle = strings.TrimSpace(`
 This command requires a single targeted app. You have multiple apps defined

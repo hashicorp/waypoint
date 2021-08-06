@@ -101,6 +101,7 @@ type Instance struct {
 	Workspace    string
 	LogBuffer    *logbuffer.Buffer
 	Type         pb.Instance_Type
+	DisableExec  bool
 }
 
 func (i *Instance) Proto() *pb.Instance {

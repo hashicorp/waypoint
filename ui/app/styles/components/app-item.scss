@@ -5,11 +5,13 @@
   justify-content: space-between;
   flex-wrap: wrap;
   width: 100%;
+  height: 70px;
   padding-left: scale.$sm-2;
 
   a:not(.button) {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-grow: 1;
     color: inherit;
     text-decoration: none;
     margin-right: scale.$base;
@@ -38,13 +40,18 @@
 
   .badge--destroyed {
     margin-left: scale.$sm-2;
+
+    @media (prefers-color-scheme: light) {
+      background: color.$ui-cool-gray-200;
+      color: color.$ui-cool-gray-800;
+    }
   }
 
-  small {
+  &__meta__secondary {
     display: flex;
     align-items: center;
-    padding-top: scale.$sm-3;
     color: rgb(var(--text-muted));
+    margin-right: scale.$sm-2;
 
     b {
       text-transform: capitalize;
@@ -57,13 +64,9 @@
     }
   }
 
-  .badge-status {
-    margin-left: auto;
-    margin-right: scale.$lg--2;
-  }
-
   .button {
     max-width: 100%;
+    margin-left: scale.$base;
 
     span {
       overflow: hidden;

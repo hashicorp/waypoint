@@ -19,6 +19,10 @@ bin: # bin creates the binaries for Waypoint for the current platform
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
 	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
 
+.PHONY: bin/cli-only
+bin/cli-only: # bin/cli-only only recompiles waypoint
+	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
+
 .PHONY: bin/linux
 bin/linux: # bin creates the binaries for Waypoint for the linux platform
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
@@ -80,7 +84,7 @@ gen/plugins:
 .PHONY: gen/server
 gen/server:
 	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
-	go generate ./internal/server 
+	go generate ./internal/server
 
 .PHONY: gen/ts
 gen/ts:
@@ -119,12 +123,18 @@ static-assets:
 
 .PHONY: gen/doc
 gen/doc:
-	mkdir -p ./doc/ 
+	mkdir -p ./doc/
 	@rm -rf ./doc/* 2> /dev/null
 	protoc -I=. \
 		-I=./thirdparty/proto/api-common-protos/ \
 		--doc_out=./doc --doc_opt=html,index.html \
 		./internal/server/proto/server.proto
+
+.PHONY: gen/website-mdx
+gen/website-mdx:
+	go run ./cmd/waypoint docs -website-mdx
+	go run ./tools/gendocs
+	cd ./website; npx --no-install next-hashicorp format
 
 .PHONY: tools
 tools: # install dependencies and tools required to build

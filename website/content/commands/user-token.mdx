@@ -1,0 +1,31 @@
+---
+layout: commands
+page_title: 'Commands: User token'
+sidebar_title: 'user token'
+description: 'Request a new token to access the server'
+---
+
+# Waypoint User token
+
+Command: `waypoint user token`
+
+Request a new token to access the server
+
+@include "commands/user-token_desc.mdx"
+
+## Usage
+
+Usage: `waypoint user token [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-expires-in=<duration>` - The duration until the token expires. i.e. '5m'.
+- `-username=<string>` - Username to generate the login token for. This defaults to the currently logged in user.
+
+@include "commands/user-token_more.mdx"

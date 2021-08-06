@@ -350,10 +350,14 @@ func (r *Runner) prepareAndExecuteJob(
 	client pb.Waypoint_RunnerJobStreamClient,
 	job *pb.Job,
 ) (*pb.Job_Result, error) {
+	log.Trace("preparing to execute job operation", "type", hclog.Fmt("%T", job.Operation))
+
 	// Some operation types don't need to download data, execute those here.
 	switch job.Operation.(type) {
 	case *pb.Job_Poll:
 		return r.executePollOp(ctx, log, ui, job)
+	case *pb.Job_StartTask:
+		return r.executeStartTaskOp(ctx, log, ui, job)
 	}
 
 	// We need to get our data source next prior to executing.
@@ -403,7 +407,7 @@ func (r *Runner) prepareAndExecuteJob(
 
 		if err == nil {
 			// Execute the job. We have to close the UI right afterwards to
-			// ensure that no more output is writting to the client.
+			// ensure that no more output is written to the client.
 			result, err = r.executeJob(ctx, log, ui, job, wd)
 		}
 	}

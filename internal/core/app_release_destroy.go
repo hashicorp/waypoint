@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -195,7 +196,7 @@ func (a *App) destroyReleaseWorkspace(ctx context.Context) error {
 		nil,
 		c,
 		d.DestroyWorkspaceFunc(),
-		argNamedAny("release", results[0].Release),
+		plugin.ArgNamedAny("release", results[0].Release),
 	)
 	return err
 }
@@ -257,7 +258,7 @@ func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app
 		nil,
 		op.Component,
 		destroyer.DestroyFunc(),
-		argNamedAny("release", op.Release.Release),
+		plugin.ArgNamedAny("release", op.Release.Release),
 	)
 }
 

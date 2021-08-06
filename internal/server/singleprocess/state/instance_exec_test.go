@@ -7,11 +7,37 @@ import (
 
 	"github.com/hashicorp/go-memdb"
 	"github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+func TestInstanceExecCreateByTargetedInstance_disabled(t *testing.T) {
+	require := require.New(t)
+
+	s := TestState(t)
+	defer s.Close()
+
+	// Create an instance
+	instance := testInstance(t, nil)
+	instance.DisableExec = true
+	require.NoError(s.InstanceCreate(instance))
+
+	{
+		// Create an instance exec targetting the specific instance
+		rec := &InstanceExec{
+			InstanceId: instance.Id,
+		}
+		err := s.InstanceExecCreateByTargetedInstance(instance.Id, rec)
+		require.Error(err)
+		require.Equal(codes.PermissionDenied, status.Code(err))
+	}
+
+	// List them
+	list, err := s.InstanceExecListByInstanceId(instance.Id, nil)
+	require.NoError(err)
+	require.Len(list, 0)
+}
 
 func TestInstanceExecCreateByDeploymentId_invalidDeployment(t *testing.T) {
 	require := require.New(t)
@@ -24,6 +50,31 @@ func TestInstanceExecCreateByDeploymentId_invalidDeployment(t *testing.T) {
 	err := s.InstanceExecCreateByDeployment("nope", rec)
 	require.Error(err)
 	require.Equal(codes.ResourceExhausted, status.Code(err))
+}
+
+func TestInstanceExecCreateByDeploymentId_allDisabled(t *testing.T) {
+	require := require.New(t)
+
+	s := TestState(t)
+	defer s.Close()
+
+	// Create an instance
+	instance := testInstance(t, nil)
+	instance.DisableExec = true
+	require.NoError(s.InstanceCreate(instance))
+
+	{
+		// Create an instance exec targetting the specific instance
+		rec := &InstanceExec{}
+		err := s.InstanceExecCreateByDeployment(instance.DeploymentId, rec)
+		require.Error(err)
+		require.Equal(codes.ResourceExhausted, status.Code(err))
+	}
+
+	// List them
+	list, err := s.InstanceExecListByInstanceId(instance.Id, nil)
+	require.NoError(err)
+	require.Len(list, 0)
 }
 
 func TestInstanceExecCreateByDeploymentId_valid(t *testing.T) {
@@ -86,6 +137,22 @@ func TestInstanceExecCreateByDeploymentId_valid(t *testing.T) {
 		require.NoError(s.InstanceExecDelete(rec.Id))
 	}
 
+	// Create another instance, with exec disabled
+	{
+		instance := testInstance(t, &Instance{
+			Id: "C", DeploymentId: "A", DisableExec: true})
+		require.NoError(s.InstanceCreate(instance))
+
+		// Should not get C
+		rec := &InstanceExec{}
+		require.NoError(s.InstanceExecCreateByDeployment(instance.DeploymentId, rec))
+		require.NotEmpty(rec.Id)
+		require.NotEqual("C", rec.InstanceId)
+
+		// Should be able to delete
+		require.NoError(s.InstanceExecDelete(rec.Id))
+	}
+
 	{
 		// Create an instance exec targetting the specific instance
 		rec := &InstanceExec{
@@ -137,59 +204,6 @@ func TestInstanceExecCreateByDeploymentId_longrunningonly(t *testing.T) {
 		require.NoError(err)
 		require.Equal(rec, found)
 	}
-}
-
-func TestCalculateInstanceExecByDeployment(t *testing.T) {
-	require := require.New(t)
-	assert := assert.New(t)
-
-	s := TestState(t)
-	defer s.Close()
-
-	// Create a ondemand instance
-	od := testInstance(t, nil)
-	od.Id = "A2"
-	od.Type = gen.Instance_ON_DEMAND
-	require.NoError(s.InstanceCreate(od))
-
-	// Create a virtual instance
-	virt := testInstance(t, nil)
-	virt.Id = "A3"
-	virt.Type = gen.Instance_VIRTUAL
-	require.NoError(s.InstanceCreate(virt))
-
-	// Should get an error because there are no long running instances
-	_, err := s.CalculateInstanceExecByDeployment(od.DeploymentId)
-	require.Error(err)
-
-	// Create an instance
-	instance := testInstance(t, nil)
-	require.NoError(s.InstanceCreate(instance))
-
-	// Run it 3 times and make sure we only see the long running instance
-	for i := 0; i < 3; i++ {
-		inst, err := s.CalculateInstanceExecByDeployment(instance.DeploymentId)
-		require.NoError(err)
-		require.Equal(instance.Id, inst.Id)
-	}
-
-	// Create another long running instance
-	lr := testInstance(t, nil)
-	lr.Id = "A4"
-	lr.Type = gen.Instance_LONG_RUNNING
-	require.NoError(s.InstanceCreate(lr))
-
-	// Get an instance, it should be one of the long running ones
-	reserve, err := s.CalculateInstanceExecByDeployment(instance.DeploymentId)
-	require.NoError(err)
-
-	var exec InstanceExec
-	require.NoError(s.InstanceExecCreateByTargetedInstance(reserve.Id, &exec))
-
-	// ok, now see that on the next time, we get the other long running instance
-	reserve2, err := s.CalculateInstanceExecByDeployment(instance.DeploymentId)
-	require.NoError(err)
-	assert.NotEqual(reserve.Id, reserve2.Id)
 }
 
 func TestInstanceExecCreateForVirtualInstance(t *testing.T) {

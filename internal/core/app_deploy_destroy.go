@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -182,7 +183,7 @@ func (a *App) destroyDeployWorkspace(ctx context.Context) error {
 		nil,
 		c,
 		d.DestroyWorkspaceFunc(),
-		argNamedAny("deployment", results[0].Deployment),
+		plugin.ArgNamedAny("deployment", results[0].Deployment),
 	)
 	return err
 }
@@ -229,7 +230,7 @@ func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app 
 	}
 
 	if op.Deployment.Deployment == nil {
-		log.Error("Unable to destroy the Deployment as the proto message Deployment returned from the plugin's DeployFunc is nil. This situation occurs when the deployment process is interupted by the user.", "deployment", op.Deployment)
+		log.Error("Unable to destroy the Deployment as the proto message Deployment returned from the plugin's DeployFunc is nil. This situation occurs when the deployment process is interrupted by the user.", "deployment", op.Deployment)
 		return nil, nil // Fail silently for now, this will be fixed in v0.2
 	}
 
@@ -238,7 +239,7 @@ func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app 
 		nil,
 		op.Component,
 		destroyer.DestroyFunc(),
-		argNamedAny("deployment", op.Deployment.Deployment),
+		plugin.ArgNamedAny("deployment", op.Deployment.Deployment),
 	)
 }
 

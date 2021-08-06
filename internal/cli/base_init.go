@@ -32,7 +32,7 @@ func (c *baseCommand) initConfig(filename string, optional bool) (*configpkg.Con
 			return nil, nil
 		}
 
-		return nil, errors.New("A Waypoint configuration file is required but wasn't found.")
+		return nil, errors.New("A Waypoint configuration file (waypoint.hcl) is required but wasn't found.")
 	}
 
 	return c.initConfigLoad(path)
@@ -98,6 +98,7 @@ func (c *baseCommand) initClient(ctx context.Context) (*clientpkg.Project, error
 		clientpkg.WithClientConnect(connectOpts...),
 		clientpkg.WithProjectRef(c.refProject),
 		clientpkg.WithWorkspaceRef(c.refWorkspace),
+		clientpkg.WithVariables(c.variables),
 		clientpkg.WithLabels(c.flagLabels),
 		clientpkg.WithSourceOverrides(c.flagRemoteSource),
 	}

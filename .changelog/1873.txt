@@ -1,0 +1,3 @@
+```release-note:bug
+core: Add unimplemented field to release if no release phase implemented for a plugin
+```

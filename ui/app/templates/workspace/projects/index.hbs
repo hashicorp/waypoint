@@ -1,3 +1,5 @@
+{{page-title "Projects"}}
+
 {{#if this.cli}}
 <div class="flash flash--success">
   <div class="flash-header">
@@ -18,9 +20,9 @@
       {{/if}}
     </small>
   </div>
-  <Pds::CtaLink @route="workspace.projects.new" @variant="primary "class="pds--iconStart">
+  <Pds::CtaLink @route="workspace.projects.new" @variant="secondary "class="pds--iconStart">
     <Pds::Icon @type="plus-plain" class="pds-button__iconStart"/>
-    &nbsp;New project
+    &nbsp;{{t "form.project_new.title"}}
   </Pds::CtaLink>
 </PageHeader>
 

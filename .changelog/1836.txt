@@ -1,0 +1,3 @@
+```release-note:bug
+ui: fix release and deploy links with duplicate or missing URL protocols
+```

@@ -55,3 +55,7 @@ message Resource {
     string name = 2;
   }
 }
+
+message TaskInfo {
+  string id = 1;
+}

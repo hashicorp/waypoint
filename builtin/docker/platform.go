@@ -79,18 +79,21 @@ func (p *Platform) StatusFunc() interface{} {
 	return p.Status
 }
 
-func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
+func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
 	return resource.NewManager(
 		resource.WithLogger(log.Named("resource_manager")),
 		resource.WithValueProvider(p.getDockerClient),
+		resource.WithDeclaredResourcesResp(dcr),
 		resource.WithResource(resource.NewResource(
 			resource.WithName("network"),
 			resource.WithState(&Resource_Network{}),
 			resource.WithCreate(p.resourceNetworkCreate),
-
 			// networks have no destroy logic, we leave the network
 			// lingering around for now. This was the logic prior to
 			// refactoring into the resource manager so we kept it.
+
+			resource.WithPlatform(platformName),
+			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_ROUTER), // Not a perfect fit but good enough.
 		)),
 
 		resource.WithResource(resource.NewResource(
@@ -98,9 +101,11 @@ func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
 			resource.WithState(&Resource_Container{}),
 			resource.WithCreate(p.resourceContainerCreate),
 			resource.WithDestroy(p.resourceContainerDestroy),
+
+			resource.WithPlatform(platformName),
+			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE),
 		)),
 	)
-	return nil
 }
 
 func (p *Platform) Status(
@@ -370,7 +375,6 @@ func (p *Platform) resourceContainerCreate(
 			netState.Name: {},
 		},
 	}
-	log.Warn("NETWORK NAME", "name", netState.Name)
 
 	for k, v := range p.config.StaticEnvVars {
 		cfg.Env = append(cfg.Env, k+"="+v)
@@ -468,6 +472,7 @@ func (p *Platform) Deploy(
 	job *component.JobInfo,
 	img *Image,
 	deployConfig *component.DeploymentConfig,
+	dcr *component.DeclaredResourcesResp,
 	ui terminal.UI,
 ) (*Deployment, error) {
 	// We'll update the user in real time
@@ -489,7 +494,7 @@ func (p *Platform) Deploy(
 	result.Name = src.App
 
 	// Create our resource manager and create
-	rm := p.resourceManager(log)
+	rm := p.resourceManager(log, dcr)
 	if err := rm.CreateAll(
 		ctx, log, sg, ui,
 		src, job, img, deployConfig, &result,
@@ -524,7 +529,7 @@ func (p *Platform) Destroy(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	rm := p.resourceManager(log)
+	rm := p.resourceManager(log, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.

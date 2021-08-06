@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -107,7 +108,7 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 			// g = unknown()
 			// s = "ok"
 			//
-			// After running the algorith, we want b to still be 'more: ${a}', NOT
+			// After running the algorithm, we want b to still be 'more: ${a}', NOT
 			// 'more: ${g} ok'. The reason being the 2nd one confuses the escaping
 			// as it appears like it might be data that was returned from a file or
 			// something.
@@ -129,6 +130,12 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 
 				// We have to escape any HCL we find in the string so that we don't
 				// evaluate it down-stream.
+				// First, we need to check if the value is not null, since we allow
+				// `null` defaults for input variables, and a user may forget to
+				// provide a value to an input variable
+				if val.IsNull() {
+					return nil, fmt.Errorf("could not evaluate %q in app config with `null` value", newVar.Name)
+				}
 				newVar.Value = &pb.ConfigVar_Static{
 					Static: hclEscaper.Replace(val.AsString()),
 				}

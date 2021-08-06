@@ -60,10 +60,45 @@ func (s *service) CancelJob(
 	return &empty.Empty{}, nil
 }
 
-func (s *service) QueueJob(
+// queueJobMulti queues multiple jobs transactionally. The return value
+// are the responses for each in the same order as the requests.
+//
+// Postcondition: len(result) == len(req) iff err == nil
+func (s *service) queueJobMulti(
+	ctx context.Context,
+	req []*pb.QueueJobRequest,
+) ([]*pb.QueueJobResponse, error) {
+	jobs := make([]*pb.Job, len(req))
+	for i, single := range req {
+		job, err := s.queueJobReqToJob(ctx, single)
+		if err != nil {
+			return nil, err
+		}
+
+		jobs[i] = job
+	}
+
+	// Queue the jobs
+	if err := s.state.JobCreate(jobs...); err != nil {
+		return nil, err
+	}
+
+	// Get the response
+	resp := make([]*pb.QueueJobResponse, len(jobs))
+	for i, job := range jobs {
+		resp[i] = &pb.QueueJobResponse{JobId: job.Id}
+	}
+
+	return resp, nil
+
+}
+
+// queueJobReqToJob converts a QueueJobRequest to a job to queue, but
+// does not queue it.
+func (s *service) queueJobReqToJob(
 	ctx context.Context,
 	req *pb.QueueJobRequest,
-) (*pb.QueueJobResponse, error) {
+) (*pb.Job, error) {
 	job := req.Job
 
 	// Validation
@@ -84,7 +119,7 @@ func (s *service) QueueJob(
 	project, err := s.state.ProjectGet(&pb.Ref_Project{Project: job.Application.Project})
 	if status.Code(err) == codes.NotFound {
 		return nil, status.Errorf(codes.NotFound,
-			"Project %s was not found! Please ensure that 'waypoint init' was run with this project.",
+			"Project %q was not found! Please ensure that 'waypoint init' was run with this project.",
 			job.Application.Project,
 		)
 	}
@@ -123,6 +158,18 @@ func (s *service) QueueJob(
 		if err != nil {
 			return nil, status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
 		}
+	}
+
+	return job, nil
+}
+
+func (s *service) QueueJob(
+	ctx context.Context,
+	req *pb.QueueJobRequest,
+) (*pb.QueueJobResponse, error) {
+	job, err := s.queueJobReqToJob(ctx, req)
+	if err != nil {
+		return nil, err
 	}
 
 	// Queue the job

@@ -2,7 +2,6 @@ package runner
 
 import (
 	"context"
-
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -24,15 +23,15 @@ func (r *Runner) executeDeployOp(
 		panic("operation not expected type")
 	}
 
-	deployment, err := app.Deploy(ctx, op.Deploy.Artifact)
+	deploymentResult, err := app.Deploy(ctx, op.Deploy.Artifact)
 	if err != nil {
 		return nil, err
 	}
 
 	// Update to the latest deployment in order to get all the preload data.
-	deployment, err = r.client.GetDeployment(ctx, &pb.GetDeploymentRequest{
+	deployment, err := r.client.GetDeployment(ctx, &pb.GetDeploymentRequest{
 		Ref: &pb.Ref_Operation{
-			Target: &pb.Ref_Operation_Id{Id: deployment.Id},
+			Target: &pb.Ref_Operation_Id{Id: deploymentResult.Id},
 		},
 	})
 	if err != nil {

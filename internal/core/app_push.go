@@ -13,6 +13,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -164,7 +165,7 @@ func (op *pushBuildOperation) Do(ctx context.Context, log hclog.Logger, app *App
 		(*component.Artifact)(nil),
 		op.ComponentRegistry,
 		op.ComponentRegistry.Value.(component.Registry).PushFunc(),
-		argNamedAny("artifact", op.Build.Artifact.Artifact),
+		plugin.ArgNamedAny("artifact", op.Build.Artifact.Artifact),
 	)
 }
 

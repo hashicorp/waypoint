@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -57,10 +58,12 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 			"err", err)
 	}
 
+	unimplemented := false
 	c, err := a.createReleaser(ctx, &evalCtx)
 	if status.Code(err) == codes.Unimplemented {
 		c = nil
 		err = nil
+		unimplemented = true
 	}
 	if err != nil {
 		return nil, nil, err
@@ -73,6 +76,12 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 	})
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if releasepb != nil {
+		rpb := releasepb.(*pb.Release)
+		rpb.Unimplemented = unimplemented
+		releasepb = rpb
 	}
 
 	var release component.Release
@@ -157,11 +166,12 @@ type releaseOperation struct {
 
 func (op *releaseOperation) Init(app *App) (proto.Message, error) {
 	release := &pb.Release{
-		Application:  app.ref,
-		Workspace:    app.workspace,
-		DeploymentId: op.Target.Id,
-		State:        pb.Operation_CREATED,
-		Component:    op.Target.Component,
+		Application:   app.ref,
+		Workspace:     app.workspace,
+		DeploymentId:  op.Target.Id,
+		State:         pb.Operation_CREATED,
+		Component:     op.Target.Component,
+		Unimplemented: true,
 	}
 
 	if v := op.Component; v != nil {
@@ -219,7 +229,7 @@ func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App, 
 		(*component.Release)(nil),
 		op.Component,
 		op.Component.Value.(component.ReleaseManager).ReleaseFunc(),
-		argNamedAny("target", op.Target.Deployment),
+		plugin.ArgNamedAny("target", op.Target.Deployment),
 	)
 	if err != nil {
 		return nil, err

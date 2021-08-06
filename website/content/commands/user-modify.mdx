@@ -1,0 +1,32 @@
+---
+layout: commands
+page_title: 'Commands: User modify'
+sidebar_title: 'user modify'
+description: 'Modify details about a user'
+---
+
+# Waypoint User modify
+
+Command: `waypoint user modify`
+
+Modify details about a user
+
+@include "commands/user-modify_desc.mdx"
+
+## Usage
+
+Usage: `waypoint user modify [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-username=<string>` - The user to modify. This defaults to the currently logged in user.
+- `-new-username=<string>` - Set a new username for this user. This must be unique to the server.
+- `-display-name=<string>` - The display name for a user. If this is set, this is used in some places in the CLI and UI. This does not have to be unique.
+
+@include "commands/user-modify_more.mdx"

@@ -90,16 +90,26 @@ func (s *service) ListDeployments(
 	}
 
 	for _, dep := range result {
+		setDeploymentUrlIfNeeded(dep)
 		if err := s.deploymentPreloadUrl(ctx, dep); err != nil {
 			return nil, err
 		}
-
 		if err := s.deploymentPreloadDetails(ctx, req.LoadDetails, dep); err != nil {
 			return nil, err
 		}
 	}
 
 	return &pb.ListDeploymentsResponse{Deployments: result}, nil
+}
+
+func setDeploymentUrlIfNeeded(d *pb.Deployment) {
+	if d.Url != "" {
+		if d.Preload == nil {
+			d.Preload = &pb.Deployment_Preload{}
+		}
+
+		d.Preload.DeployUrl = d.Url
+	}
 }
 
 // GetDeployment returns a Deployment based on ID
@@ -111,6 +121,8 @@ func (s *service) GetDeployment(
 	if err != nil {
 		return nil, err
 	}
+
+	setDeploymentUrlIfNeeded(d)
 
 	// Populate the URL preload data
 	if err := s.deploymentPreloadUrl(ctx, d); err != nil {

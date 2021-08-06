@@ -1,6 +1,6 @@
 .card {
   // all instances of cards (including the list of projects/apps)
-  padding: scale.$base;
+  padding: scale.$sm--1 scale.$base;
   margin-bottom: scale.$lg-2;
   box-shadow: $shadow;
   border-radius: 2px;
@@ -29,9 +29,7 @@
   &-header {
     display: flex;
     align-items: center;
-    padding-bottom: scale.$sm-1;
-    margin-bottom: scale.$sm-1;
-    border-bottom: 1px solid rgb(var(--border));
+    padding-bottom: scale.$sm--2;
 
     h4 {
       display: flex;

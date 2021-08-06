@@ -322,8 +322,8 @@ build {
 		"ignore",
 		"file patterns to match files which will not be included in the build",
 		docs.Summary(
-			"Each pattern follows the semantics of .gitignore. This is a summarized version:",
-			strings.TrimSpace(`
+			`Each pattern follows the semantics of .gitignore. This is a summarized version:
+
 1. A blank line matches no files, so it can serve as a separator
 	 for readability.
 
@@ -362,6 +362,7 @@ build {
 
 9. Two consecutive asterisks ("**") in patterns matched against full
 	 pathname may have special meaning:
+
 		i.   A leading "**" followed by a slash means match in all directories.
 				 For example, "** /foo" matches file or directory "foo" anywhere,
 				 the same as pattern "foo". "** /foo/bar" matches file or directory
@@ -376,7 +377,6 @@ build {
 				 "a/x/b", "a/x/y/b" and so on.
 
 		iv.  Other consecutive asterisks are considered invalid.`),
-		),
 	)
 
 	doc.SetField(

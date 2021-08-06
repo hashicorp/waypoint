@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/internal-shared/protomappers"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -60,6 +61,9 @@ type Project struct {
 	// overrideLabels are the labels specified via the CLI to override
 	// all other conflicting keys.
 	overrideLabels map[string]string
+
+	// variables is the final map of values to use when evaluating config vars
+	variables variables.Values
 }
 
 // NewProject creates a new Project with the given options.
@@ -124,7 +128,11 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 
 	// Initialize all the applications and load all their components.
 	for _, name := range opts.Config.Apps() {
-		appConfig, err := opts.Config.App(name, nil)
+		// Set input variables for applications and components
+		evalCtx := config.EvalContext(nil, p.dir.DataDir()).NewChild()
+		config.AddVariables(evalCtx, p.variables)
+
+		appConfig, err := opts.Config.App(name, evalCtx)
 		if err != nil {
 			return nil, fmt.Errorf("error loading app %q: %w", name, err)
 		}
@@ -289,6 +297,11 @@ func WithMappers(m ...*argmapper.Func) Option {
 // WithLabels sets the labels that will override any other labels set.
 func WithLabels(m map[string]string) Option {
 	return func(p *Project, opts *options) { p.overrideLabels = m }
+}
+
+// WithVariables sets the final set of variable values for the operation.
+func WithVariables(vs variables.Values) Option {
+	return func(p *Project, opts *options) { p.variables = vs }
 }
 
 // WithWorkspace sets the workspace we'll be working in.
