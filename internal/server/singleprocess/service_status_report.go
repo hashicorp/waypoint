@@ -146,6 +146,13 @@ func (s *service) ExpediteStatusReport(
 		return nil, err
 	}
 
+	var workspace string
+	if req.Workspace == nil {
+		workspace = "default"
+	} else {
+		workspace = req.Workspace.Workspace
+	}
+
 	// build job
 	jobRequest := &pb.QueueJobRequest{
 		Job: &pb.Job{
@@ -160,7 +167,7 @@ func (s *service) ExpediteStatusReport(
 			// needed to query the deploy or release
 			DataSource: project.DataSource,
 
-			Workspace: &pb.Ref_Workspace{Workspace: req.Workspace.Workspace},
+			Workspace: &pb.Ref_Workspace{Workspace: workspace},
 
 			// Generate a status report
 			Operation: statusReportJob,
