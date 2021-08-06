@@ -403,6 +403,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 				columns := []string{
 					dr.Type,
 					dr.Name,
+					dr.Platform,
 					dr.Health.HealthStatus,
 					createdTime,
 				}
@@ -509,6 +510,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 					columns := []string{
 						rr.Type,
 						rr.Name,
+						rr.Platform,
 						rr.Health.HealthStatus,
 						createdTime,
 					}
