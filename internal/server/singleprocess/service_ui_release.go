@@ -8,7 +8,6 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// TODO: test
 func (s *service) UI_ListReleases(
 	cxt context.Context,
 	req *pb.UI_ListReleasesRequest,
