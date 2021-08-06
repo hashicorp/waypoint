@@ -9,7 +9,7 @@ import (
 )
 
 func (s *service) UI_ListDeployments(
-	cxt context.Context,
+	ctx context.Context,
 	req *pb.UI_ListDeploymentsRequest,
 ) (*pb.UI_ListDeploymentsResponse, error) {
 	deployList, err := s.state.DeploymentList(req.Application,
@@ -50,6 +50,12 @@ func (s *service) UI_ListDeployments(
 				}
 			}
 		}
+
+		// Always pre-populate deployment details for bundles
+		if err := s.deploymentPreloadDetails(ctx, pb.Deployment_BUILD, deploy); err != nil {
+			return nil, err
+		}
+
 		bundle := pb.UI_DeploymentBundle{
 			Deployment:         deploy,
 			LatestStatusReport: matchingStatusReport,
