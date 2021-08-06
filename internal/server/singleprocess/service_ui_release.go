@@ -43,6 +43,7 @@ func (s *service) UI_ListReleases(
 			switch target := statusReport.TargetId.(type) {
 			case *pb.StatusReport_ReleaseId:
 				if target.ReleaseId == release.Id {
+					// We need to find the _latest_ status report that matches. Another opportunity for efficiency by improving the statue query
 					if matchingStatusReport == nil || statusReport.GeneratedTime.GetSeconds() > matchingStatusReport.GeneratedTime.Seconds {
 						matchingStatusReport = statusReport
 					}

@@ -43,6 +43,7 @@ func (s *service) UI_ListDeployments(
 			switch target := statusReport.TargetId.(type) {
 			case *pb.StatusReport_DeploymentId:
 				if target.DeploymentId == deploy.Id {
+					// We need to find the _latest_ status report that matches. Another opportunity for efficiency by improving the statue query
 					if matchingStatusReport == nil || statusReport.GeneratedTime.GetSeconds() > matchingStatusReport.GeneratedTime.Seconds {
 						matchingStatusReport = statusReport
 					}
