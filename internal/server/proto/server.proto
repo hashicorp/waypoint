@@ -319,7 +319,77 @@ service Waypoint {
 
   // UpsertStatusReport updates or inserts a statusreport.
   rpc UpsertStatusReport(UpsertStatusReportRequest) returns (UpsertStatusReportResponse);
+
+  //----------------------------------------------------------------------
+  // UI endpoints. The endpoints below are convenience methods for Waypoint's
+  // various UIs (web GUI and CLI). They contain no unique functionality, i.e.
+  // anything achievable through these endpoints should also be achievable through
+  // a combination of calls to non-UI endpoints.
+  //----------------------------------------------------------------------
+
+  // List deployments for a given application.
+  rpc UI_ListDeployments(UI.ListDeploymentsRequest) returns (UI.ListDeploymentsResponse);
+
+  // List releases for a given application.
+  rpc UI_ListReleases(UI.ListReleasesRequest) returns (UI.ListReleasesResponse);
 }
+
+/********************************************************************
+* UI
+********************************************************************/
+message UI {
+
+  message ListDeploymentsRequest {
+    // Application that the deployments belong to.
+    Ref.Application application = 1;
+
+    // Workspace that the deployments belong to.
+    // If undefined, deployments from all workspaces will be listed.
+    Ref.Workspace workspace = 2;
+
+    OperationOrder order = 3;
+  }
+
+  message ListDeploymentsResponse {
+    // The list of deployments with related messages prefetched.
+    repeated UI.DeploymentBundle deployments = 1;
+  }
+
+  // A deployment packaged alongside prefetched related messages.
+  message DeploymentBundle {
+    // The deployment in question.
+    Deployment deployment = 1;
+
+    // The most recent status report generated for this deployment.
+    StatusReport latest_status_report = 2;
+  }
+
+  message ListReleasesRequest {
+    // Application that the releases belong to.
+    Ref.Application application = 1;
+
+    // Workspace that the releases belong to.
+    // If undefined, releases from all workspaces will be listed.
+    Ref.Workspace workspace = 2;
+
+    OperationOrder order = 3;
+  }
+
+  message ListReleasesResponse {
+    // The list of releases with related messages prefetched.
+    repeated UI.ReleaseBundle releases = 1;
+  }
+
+  // A release packaged alongside prefetched related messages.
+  message ReleaseBundle {
+    // The release in question.
+    Release release = 1;
+
+    // The most recent status report generated for this release.
+    StatusReport latest_status_report = 2;
+  }
+}
+
 
 /********************************************************************
 * Server Info

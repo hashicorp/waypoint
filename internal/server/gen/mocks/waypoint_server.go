@@ -1283,6 +1283,52 @@ func (_m *WaypointServer) StartExecStream(_a0 gen.Waypoint_StartExecStreamServer
 	return r0
 }
 
+// UI_ListDeployments provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UI_ListDeployments(_a0 context.Context, _a1 *gen.UI_ListDeploymentsRequest) (*gen.UI_ListDeploymentsResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UI_ListDeploymentsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UI_ListDeploymentsRequest) *gen.UI_ListDeploymentsResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_ListDeploymentsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_ListDeploymentsRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UI_ListReleases provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UI_ListReleases(_a0 context.Context, _a1 *gen.UI_ListReleasesRequest) (*gen.UI_ListReleasesResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UI_ListReleasesResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UI_ListReleasesRequest) *gen.UI_ListReleasesResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_ListReleasesResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_ListReleasesRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UpdateUser provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) UpdateUser(_a0 context.Context, _a1 *gen.UpdateUserRequest) (*gen.UpdateUserResponse, error) {
 	ret := _m.Called(_a0, _a1)
