@@ -320,7 +320,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	deployTbl := terminal.NewTable(deployHeaders...)
 
 	resourcesHeaders := []string{
-		"Type", "Platform", "Category",
+		"Type", "Name", "Platform", "Health", "Time Created",
 	}
 
 	resourcesTbl := terminal.NewTable(resourcesHeaders...)
@@ -380,10 +380,20 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 			}
 
 			for _, dr := range statusReport.Resources {
+				var createdTime string
+				if dr.CreatedTime != nil {
+					t, err := ptypes.Timestamp(dr.CreatedTime)
+					if err != nil {
+						return err
+					}
+					createdTime = humanize.Time(t)
+				}
+
 				columns := []string{
+					dr.Type,
 					dr.Name,
-					dr.Platform,
-					dr.CategoryDisplayHint.String(),
+					dr.Health.HealthStatus,
+					createdTime,
 				}
 
 				// Add column data to table
@@ -477,10 +487,20 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 				}
 
 				for _, rr := range statusReport.Resources {
+					var createdTime string
+					if rr.CreatedTime != nil {
+						t, err := ptypes.Timestamp(rr.CreatedTime)
+						if err != nil {
+							return err
+						}
+						createdTime = humanize.Time(t)
+					}
+
 					columns := []string{
+						rr.Type,
 						rr.Name,
-						rr.Platform,
-						rr.CategoryDisplayHint.String(),
+						rr.Health.HealthStatus,
+						createdTime,
 					}
 
 					// Add column data to table
