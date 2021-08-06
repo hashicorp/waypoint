@@ -277,6 +277,27 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 	case "":
 		// Do nothing, we aren't updating this information for this project.
 
+		// Some basic error handling if polling is requested but was not explicit
+		// about a data source for the project
+		if c.flagPoll {
+			c.ui.Output(
+				"To enable polling, you must specify a git data source for the project with -data-source=git",
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+
+		// Some basic error handling if app status polling is requested but was not explicit
+		// about a data source for the project
+		if c.flagAppStatusPoll {
+			c.ui.Output(
+				"To enable application status polling, you must specify a git data "+
+					"source for the project with -data-source=git",
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+
 	default:
 		s.Abort()
 
