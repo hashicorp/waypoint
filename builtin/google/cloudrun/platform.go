@@ -406,6 +406,8 @@ func (p *Platform) resourceServiceCreate(
 	deployment.RevisionId = service.Status.LatestCreatedRevisionName
 	deployment.Url = service.Status.Url
 
+	// Set state
+	state.Name = service.Metadata.Name
 	state.RevisionName = deployment.apiRevisionName()
 
 	// If we have tracing enabled we just dump the full service as we know it
