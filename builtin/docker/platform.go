@@ -92,6 +92,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			// networks have no destroy logic, we leave the network
 			// lingering around for now. This was the logic prior to
 			// refactoring into the resource manager so we kept it.
+
 			resource.WithStatus(p.resourceNetworkStatus),
 			resource.WithPlatform(platformName),
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_ROUTER), // Not a perfect fit but good enough.
@@ -112,14 +113,12 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 func (p *Platform) resourceContainerStatus(
 	ctx context.Context,
 	log hclog.Logger,
+	sg terminal.StepGroup,
 	ui terminal.UI,
 	cli *client.Client,
 	container *Resource_Container,
 	sr *resource.StatusResponse,
 ) error {
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
 	s := sg.Add("Checking status of the docker container resource...")
 	defer s.Abort()
 
@@ -223,20 +222,18 @@ func (p *Platform) resourceContainerStatus(
 		}
 		containerResource.StateJson = string(stateJson)
 	}
+	s.Done()
 	return nil
 }
 
 func (p *Platform) resourceNetworkStatus(
 	ctx context.Context,
 	log hclog.Logger,
-	ui terminal.UI,
+	sg terminal.StepGroup,
 	cli *client.Client,
 	network *Resource_Network,
 	sr *resource.StatusResponse,
 ) error {
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
 	s := sg.Add("Checking status of the docker network resource...")
 	defer s.Abort()
 
@@ -278,6 +275,7 @@ func (p *Platform) resourceNetworkStatus(
 			})
 		}
 	}
+	s.Done()
 	return nil
 }
 
@@ -285,7 +283,6 @@ func (p *Platform) Status(
 	ctx context.Context,
 	log hclog.Logger,
 	deployment *Deployment,
-	dcr *component.DeclaredResources,
 	ui terminal.UI,
 ) (*sdk.StatusReport, error) {
 
@@ -323,7 +320,7 @@ func (p *Platform) Status(
 		}
 	}
 
-	resources, err := rm.StatusAll(ctx, log, sg, cli, ui, dcr)
+	resources, err := rm.StatusAll(ctx, log, sg, cli, ui)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "resource manager failed to generate resource statuses: %s", err)
 	}
