@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -105,8 +106,36 @@ description: "%s"
 	if hf, ok := cmd.(HasFlags); ok {
 		flags := hf.Flags()
 
-		fmt.Fprintf(w, "## Usage\n\nUsage: `waypoint %s [options]`\n", name)
+		// Generate the Usage headers based on the cmd Help text
+		helpText := strings.Split(cmd.Help(), "\n")
+		usage := helpText[0]
 
+		var optionalAlias string
+		if len(helpText) > 1 {
+			optionalAlias = helpText[1]
+		}
+
+		reUsage := regexp.MustCompile(`waypoint (?P<cmd>.*)$`)
+		reAlias := regexp.MustCompile(`Alias: `)
+
+		matches := reUsage.FindStringSubmatch(usage)
+
+		if len(matches) > 0 {
+			fmt.Fprintf(w, fmt.Sprintf("## Usage\n\nUsage: `waypoint %s`", matches[1]))
+
+			if optionalAlias != "" {
+				matchAlias := reAlias.FindStringSubmatch(optionalAlias)
+				if len(matchAlias) > 0 {
+					aliasMatch := reUsage.FindStringSubmatch(optionalAlias)
+					fmt.Fprintf(w, fmt.Sprintf("\nAlias: `waypoint %s`", aliasMatch[1]))
+				}
+			}
+		} else {
+			// Fail over to simple docs gen
+			fmt.Fprintf(w, "## Usage\n\nUsage: `waypoint %s [options]`\n", name)
+		}
+
+		// Generate flag options
 		flags.VisitSets(func(name string, set *flag.Set) {
 			// Only print a set if it contains vars
 			numVars := 0
