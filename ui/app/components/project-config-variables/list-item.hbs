@@ -69,12 +69,14 @@
         </D.Trigger>
         <D.Dialog >
           <section>
-            <Pds::Button
-              data-test-config-variables-dropdown-edit
-              @variant="secondary"
-              {{on "click" (fn this.editVariable this.variable)}}>
-              Edit
-            </Pds::Button>
+            {{#if this.isEditable}}
+              <Pds::Button
+                data-test-config-variables-dropdown-edit
+                @variant="secondary"
+                {{on "click" (fn this.editVariable this.variable)}}>
+                Edit
+              </Pds::Button>
+            {{/if}}
             <Pds::Button
               data-test-config-variables-dropdown-delete
               @variant="warning"

@@ -34,5 +34,10 @@ module('Integration | Component | project-config-variables-list', function (hook
     this.set('variablesList', varList);
     await render(hbs`<ProjectConfigVariables::List @variablesList={{this.variablesList}}/>`);
     assert.dom('.variables-list').exists('The list renders');
+    assert.equal(page.variablesList.length, 10, 'it renders: the list has the proper length');
   });
+
+  // test('only static variables are editable', async function (assert) {});
+  // test('internal variables', async function (assert) {});
+  // test('nameIsPath works', async function (assert) {});
 });

@@ -19,4 +19,11 @@ export default class WorkspaceProjectsProjectSettingsConfigVariables extends Rou
     let config = await this.api.client.getConfig(req, this.api.WithMeta());
     return config?.toObject();
   }
+
+  setupController(controller, model, transition) {
+    super.setupController(controller, model, transition);
+    let project = this.modelFor('workspace.projects.project');
+
+    controller.project = project;
+  }
 }
