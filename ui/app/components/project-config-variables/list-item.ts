@@ -70,7 +70,7 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
   cancelCreate() {
     this.isCreating = false;
     this.isEditing = false;
-    this.deleteVariable(this.variable);
+    this.args.cancelCreate(this.variable);
   }
 
   @action

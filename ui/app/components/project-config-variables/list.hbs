@@ -7,8 +7,12 @@
       </div>
     </li>
     {{#each this.variablesList as |variable|}}
-      <ProjectConfigVariables::ListItem @variable={{variable}} @isEditing={{eq variable.name this.activeVariable.name}}
-        @isCreating={{this.isCreating}} @saveVariableSettings={{this.saveVariableSettings}}
+      <ProjectConfigVariables::ListItem
+        @variable={{variable}}
+        @isEditing={{eq variable.name this.activeVariable.name}}
+        @isCreating={{this.isCreating}}
+        @cancelCreate={{this.cancelCreate}}
+        @saveVariableSettings={{this.saveVariableSettings}}
         @deleteVariable={{this.deleteVariable}} />
     {{/each}}
   </ul>

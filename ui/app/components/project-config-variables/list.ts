@@ -30,6 +30,13 @@ export default class ProjectConfigVariablesListComponent extends Component<Proje
   }
 
   @action
+  cancelCreate(variable) {
+    this.variablesList.splice(0, 1);
+    this.variablesList = [...this.variablesList];
+    this.isCreating = false;
+  }
+
+  @action
   async deleteVariable(variable) {
     await this.saveVariableSettings(variable, undefined, true);
   }
