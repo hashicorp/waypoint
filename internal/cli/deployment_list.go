@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/waypoint/internal/version"
+
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
@@ -104,8 +106,20 @@ func (c *DeploymentListCommand) Run(args []string) int {
 		if err != nil {
 			if s, ok := status.FromError(err); ok {
 				if s.Code() == codes.Unimplemented {
+					var serverVersion string
+					serverVersionResp := c.project.ServerVersion()
+					if serverVersionResp != nil {
+						serverVersion = serverVersionResp.Version
+					}
+
+					var clientVersion string
+					clientVersionResp := version.GetVersion()
+					if clientVersionResp != nil {
+						clientVersion = clientVersionResp.Version
+					}
+
 					c.project.UI.Output(
-						"This CLI version is incompatible with the current server - missing UI_ListDeployments method. Upgrade your server or downgrade your CLI.",
+						fmt.Sprintf("This CLI version %q is incompatible with the current server %q - missing UI_ListDeployments method. Upgrade your server to v0.5.0 or higher or downgrade your CLI to v0.4 or older.", clientVersion, serverVersion),
 						terminal.WithErrorStyle(),
 					)
 					return ErrSentinel
