@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/mitchellh/mapstructure"
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -241,11 +242,9 @@ func (op *statusReportOperation) Init(app *App) (proto.Message, error) {
 	return &pb.StatusReport{
 		Application: app.ref,
 		Workspace:   app.workspace,
-		ResourcesHealth: []*pb.StatusReport_Health{
-			{
-				HealthStatus:  "UNKNOWN",
-				HealthMessage: "Unknown health status",
-			},
+		Health: &pb.StatusReport_Health{
+			HealthStatus:  "UNKNOWN",
+			HealthMessage: "Unknown health status",
 		},
 	}, nil
 }
@@ -311,6 +310,7 @@ func (op *statusReportOperation) Do(
 
 	// Populate message with results before Upsert is called
 	report := result.(*sdk.StatusReport)
+
 	// Load Status Report message compiled by the plugin into the overall generated report
 	reportAny, err := anypb.New(report)
 	if err != nil {
@@ -323,16 +323,16 @@ func (op *statusReportOperation) Do(
 		HealthMessage: report.HealthMessage,
 	}
 
-	// Populate resource health with health in plugin compiled report
-	resourcesHealth := make([]*pb.StatusReport_Health, len(report.Resources))
-	for i, r := range report.Resources {
-		resourcesHealth[i] = &pb.StatusReport_Health{
-			HealthStatus:  r.Health.String(),
-			HealthMessage: r.HealthMessage,
-			Name:          r.Name,
+	// Add our resources
+	var resources []*pb.StatusReport_Resource
+	for _, sdkResource := range report.Resources {
+		var resource pb.StatusReport_Resource
+		if err := mapstructure.Decode(sdkResource, &resource); err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to decode status report resource named %q: %s", sdkResource.Name, err)
 		}
+		resources = append(resources, &resource)
 	}
-	realMsg.ResourcesHealth = resourcesHealth
+	realMsg.Resources = resources
 
 	// Add the deployment/release ID to the report.
 	// TODO: this is a stopgap solution - we should wire resource ID information into here in a more generic way
@@ -346,8 +346,8 @@ func (op *statusReportOperation) Do(
 		return nil, status.Errorf(codes.FailedPrecondition, "unsupported status operation type")
 	}
 
-	// Add the time generated to the outer status report
 	realMsg.GeneratedTime = report.GeneratedTime
+	realMsg.External = report.External
 
 	op.result = result.(*sdk.StatusReport)
 

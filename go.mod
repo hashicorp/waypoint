@@ -62,7 +62,7 @@ require (
 	github.com/hashicorp/vault/api v1.0.5-0.20200519221902-385fac77e20f
 	github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210804234639-71cf81c85c9d
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210809173348-3366194d8f2a
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/jinzhu/now v1.1.1 // indirect

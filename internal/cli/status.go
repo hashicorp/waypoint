@@ -404,7 +404,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 					dr.Type,
 					dr.Name,
 					dr.Platform,
-					dr.Health.HealthStatus,
+					dr.Health.String(),
 					createdTime,
 				}
 
@@ -511,7 +511,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 						rr.Type,
 						rr.Name,
 						rr.Platform,
-						rr.Health.HealthStatus,
+						rr.Health.String(),
 						createdTime,
 					}
 
