@@ -63,7 +63,7 @@ logic for builds, deploys, etc. Runners connect out to the server, wait for
 assigned jobs from the server, and execute those jobs. Importantly, these are the 
 only components in the entire architecture that need access to the target platform.
 
-4. **Waypoint Entrypoint** - An optional component a deployment may have that 
+4. **Waypoint Entrypoint** - A default, optional component a deployment may have that 
 connects back to the Waypoint server for features such as application configuration,
 logs, and more.
 
