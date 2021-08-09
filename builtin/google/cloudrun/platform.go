@@ -40,7 +40,7 @@ func (p *Platform) ConfigSet(config interface{}) error {
 	c, ok := config.(*Config)
 	if !ok {
 		// this should never happen
-		return fmt.Errorf("Invalid configuration, expected *cloudrun.Config, got %s", reflect.TypeOf(config))
+		return status.Errorf(codes.InvalidArgument, "Invalid configuration, expected *cloudrun.Config, got %s", reflect.TypeOf(config))
 	}
 
 	return validateConfig(*c)
@@ -141,7 +141,7 @@ func (p *Platform) ValidateAuth(
 	// If our resulting permissions do not equal our expected permissions, auth does not validate
 	if !reflect.DeepEqual(result.Permissions, expectedPermissions) {
 		st.Step(terminal.StatusError, "Incorrect IAM permissions, received "+strings.Join(result.Permissions, ", "))
-		return fmt.Errorf("incorrect IAM permissions, received %s", strings.Join(result.Permissions, ", "))
+		return status.Errorf(codes.PermissionDenied, "incorrect IAM permissions, received %s", strings.Join(result.Permissions, ", "))
 	}
 
 	// Validate if user has access to the service account specified
@@ -179,7 +179,7 @@ func (p *Platform) ValidateAuth(
 		// If our resulting permissions do not equal our expected permissions, auth does not validate
 		if !reflect.DeepEqual(result.Permissions, expectedPermissions) {
 			st.Step(terminal.StatusError, "Incorrect IAM permissions on the Service Account, received "+strings.Join(result.Permissions, ", "))
-			return fmt.Errorf("Incorrect IAM permissions on the Service Account, received %s", strings.Join(result.Permissions, ", "))
+			return status.Errorf(codes.PermissionDenied, "Incorrect IAM permissions on the Service Account, received %s", strings.Join(result.Permissions, ", "))
 		}
 	}
 	return nil
@@ -237,7 +237,7 @@ func (p *Platform) resourceServiceCreate(
 	// Is there a deployment for this service
 	services, err := deployment.findServicesForLocations(ctx, pls)
 	if err != nil {
-		return fmt.Errorf("Unable to query existing Cloud Run services: %s", err)
+		return status.Errorf(codes.FailedPrecondition, "Unable to query existing Cloud Run services: %s", err)
 	}
 
 	// no services found create a new one
@@ -253,14 +253,14 @@ func (p *Platform) resourceServiceCreate(
 		}
 	} else if len(services) != 1 {
 		// the service should only exist in a single region
-		return fmt.Errorf("Cloud Run services named '%s' exist in multiple regions. Please remove any manually created services.", src.App)
+		return status.Errorf(codes.FailedPrecondition, "Cloud Run services named '%s' exist in multiple regions. Please remove any manually created services.", src.App)
 	} else {
 		// Loop through the regions which contain services and ensure that
 		// the current deployment is not in a different region to an existing service
 		for k := range services {
 			if k != p.config.Location {
 				// Waypoint can not change the region of a service so return an error.
-				return fmt.Errorf("The Cloud Run service '%s' already exists in the region '%s', Waypoint is unable to change the region of a deployed service", src.App, k)
+				return status.Errorf(codes.AlreadyExists, "The Cloud Run service '%s' already exists in the region '%s', Waypoint is unable to change the region of a deployed service", src.App, k)
 			}
 		}
 
