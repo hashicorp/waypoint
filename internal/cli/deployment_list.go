@@ -102,6 +102,15 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			Status:        c.filterFlags.statusFilters(),
 		})
 		if err != nil {
+			if s, ok := status.FromError(err); ok {
+				if s.Code() == codes.Unimplemented {
+					c.project.UI.Output(
+						"This CLI version is incompatible with the current server - missing UI_ListDeployments method. Upgrade your server or downgrade your CLI.",
+						terminal.WithErrorStyle(),
+					)
+					return ErrSentinel
+				}
+			}
 			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
