@@ -165,7 +165,7 @@ queued jobs. The Waypoint Server process itself never executes a job.
 #### State Machine
 
 A job is represented in Waypoint as a state machine. The diagram below shows
-the full state machine a job:
+the full state machine of a job:
 
 <p align="center"><img src=".github/images/job-states.png" width="70%"></p>
 
