@@ -348,6 +348,14 @@ message UI {
     Ref.Workspace workspace = 2;
 
     OperationOrder order = 3;
+
+    // The filters to apply to this request. These are ORed, so you should
+    // specify multiple filters in the StatusFilter for AND behavior.
+    repeated StatusFilter status = 4;
+
+    // The physical state to filter for. If this is zero or unset then no
+    // filtering on physical state will be done.
+    Operation.PhysicalState physical_state = 5;
   }
 
   message ListDeploymentsResponse {
@@ -359,6 +367,30 @@ message UI {
   message DeploymentBundle {
     // The deployment in question.
     Deployment deployment = 1;
+
+    // Populated when a Deployment is read with LoadDetails set
+    // to ARTIFACT or BUILD
+    PushedArtifact artifact = 3;
+
+    // Populated when a Deployment is read with LoadDetails set to BUILD
+    Build build = 4;
+
+    // The deployment-specific URL from the URL service. This is set on
+    // all deployment API calls. This will be empty if the URL service
+    // is not enabled or there was an error loading this information.
+    string deploy_url = 5;
+
+    // The ref that was used in the job to run this operation. This is
+    // also accessible by querying the job via the job_id and should always
+    // match.
+    //
+    // This may be null under multiple circumstances: (1) the job was
+    // manually triggered with local data (no datasource) or (2) the job
+    // was run in earlier versions of Waypoint before we tracked this or
+    // (3) the job hasn't yet loaded the data.
+    //
+    // This is always pre-populated if it is exists.
+    Job.DataSource.Ref job_data_source_ref = 6;
 
     // The most recent status report generated for this deployment.
     StatusReport latest_status_report = 2;

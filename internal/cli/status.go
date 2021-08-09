@@ -357,17 +357,18 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	var deployStatusReportCheckTime string
 	appFailures := false
 	if len(respDeployList.Deployments) > 0 {
-		deploy := respDeployList.Deployments[0].Deployment
+		deployBundle := respDeployList.Deployments[0]
+		deploy := deployBundle.Deployment
 		appDeployStatus := respDeployList.Deployments[0].LatestStatusReport
 		statusColor := ""
 
 		var details string
-		if deploy.Preload != nil && deploy.Preload.Build != nil {
-			if deploy.Preload.Artifact != nil {
-				artDetails := fmt.Sprintf("id:%d", deploy.Preload.Artifact.Sequence)
+		if deployBundle.Build != nil {
+			if deployBundle.Artifact != nil {
+				artDetails := fmt.Sprintf("id:%d", deployBundle.Artifact.Sequence)
 				details = artDetails
 			}
-			if img, ok := deploy.Preload.Build.Labels["common/image-id"]; ok {
+			if img, ok := deployBundle.Build.Labels["common/image-id"]; ok {
 				img = shortImg(img)
 
 				details = details + " image:" + img
