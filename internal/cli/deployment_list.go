@@ -217,7 +217,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				details = append(details, "user:"+user)
 			} else if deployBundle.Build != nil {
 				build := deployBundle.Build
-				// preload labels have been set, safe to use them
+				// labels have been set, safe to use them
 
 				if user, ok := build.Labels["common/user"]; ok {
 					details = append(details, "build-user:"+user)
@@ -257,28 +257,32 @@ func (c *DeploymentListCommand) Run(args []string) int {
 					extraDetails = append(extraDetails, fmt.Sprintf("deployment.%s:%s", k, val))
 				}
 
-				for k, val := range b.Preload.Artifact.Labels {
-					if strings.HasPrefix(k, "waypoint/") {
-						continue
-					}
+				if deployBundle.Artifact != nil {
+					for k, val := range deployBundle.Artifact.Labels {
+						if strings.HasPrefix(k, "waypoint/") {
+							continue
+						}
 
-					if len(val) > 30 {
-						val = val[:30] + "..."
-					}
+						if len(val) > 30 {
+							val = val[:30] + "..."
+						}
 
-					extraDetails = append(extraDetails, fmt.Sprintf("artifact.%s:%s", k, val))
+						extraDetails = append(extraDetails, fmt.Sprintf("artifact.%s:%s", k, val))
+					}
 				}
 
-				for k, val := range b.Preload.Build.Labels {
-					if strings.HasPrefix(k, "waypoint/") {
-						continue
-					}
+				if deployBundle.Build != nil {
+					for k, val := range deployBundle.Build.Labels {
+						if strings.HasPrefix(k, "waypoint/") {
+							continue
+						}
 
-					if len(val) > 30 {
-						val = val[:30] + "..."
-					}
+						if len(val) > 30 {
+							val = val[:30] + "..."
+						}
 
-					extraDetails = append(extraDetails, fmt.Sprintf("build.%s:%s", k, val))
+						extraDetails = append(extraDetails, fmt.Sprintf("build.%s:%s", k, val))
+					}
 				}
 
 				sort.Strings(extraDetails)
@@ -306,8 +310,8 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				url := "n/a"
 				if b.Url != "" {
 					url = b.Url
-				} else if b.Preload.DeployUrl != "" {
-					url = b.Preload.DeployUrl
+				} else if deployBundle.DeployUrl != "" {
+					url = deployBundle.DeployUrl
 				}
 				columns = append(columns, url)
 			}
