@@ -182,7 +182,7 @@ for the runner to acknowledge that it has taken responsibility for the job.
 A job may optionally have an expiration deadline associated with it. If a job is in the **QUEUED** or **WAITING** states when its deadline expires, then the job will immediately move to the **ERROR** state with a message noting
 it expired.
 
-While a job is in the **WAITING**, it will not be assigned to any other runner.
+While a job is in the **WAITING** state, it will not be assigned to any other runner.
 
 After being assigned a job, the runner acknowledges (acks) the job. This means that
 the runner has taken responsibility for the job and the job enters the **RUNNING**
