@@ -46,7 +46,47 @@ func (s DeploymentCompleteDesc) Less(i, j int) bool {
 	return t2.Before(t1)
 }
 
+// DeploymentBundleStartDesc sorts deployment bundles by start time descending.
+type DeploymentBundleStartDesc []*pb.UI_DeploymentBundle
+
+func (s DeploymentBundleStartDesc) Len() int      { return len(s) }
+func (s DeploymentBundleStartDesc) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s DeploymentBundleStartDesc) Less(i, j int) bool {
+	t1, err := ptypes.Timestamp(s[i].Deployment.Status.StartTime)
+	if err != nil {
+		return false
+	}
+
+	t2, err := ptypes.Timestamp(s[j].Deployment.Status.StartTime)
+	if err != nil {
+		return false
+	}
+
+	return t2.Before(t1)
+}
+
+// DeploymentBundleCompleteDesc sorts deployment bundles by completion time descending.
+type DeploymentBundleCompleteDesc []*pb.UI_DeploymentBundle
+
+func (s DeploymentBundleCompleteDesc) Len() int      { return len(s) }
+func (s DeploymentBundleCompleteDesc) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s DeploymentBundleCompleteDesc) Less(i, j int) bool {
+	t1, err := ptypes.Timestamp(s[i].Deployment.Status.CompleteTime)
+	if err != nil {
+		return false
+	}
+
+	t2, err := ptypes.Timestamp(s[j].Deployment.Status.CompleteTime)
+	if err != nil {
+		return false
+	}
+
+	return t2.Before(t1)
+}
+
 var (
 	_ sort.Interface = (DeploymentStartDesc)(nil)
 	_ sort.Interface = (DeploymentCompleteDesc)(nil)
+	_ sort.Interface = (DeploymentBundleStartDesc)(nil)
+	_ sort.Interface = (DeploymentBundleCompleteDesc)(nil)
 )

@@ -95,34 +95,17 @@ func (c *DeploymentListCommand) Run(args []string) int {
 		}
 
 		// List builds
-		resp, err := client.ListDeployments(c.Ctx, &pb.ListDeploymentsRequest{
+		resp, err := client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
 			Application:   app.Ref(),
 			Workspace:     wsRef,
 			PhysicalState: phyState,
 			Status:        c.filterFlags.statusFilters(),
-			Order:         c.filterFlags.orderOp(),
-			LoadDetails:   pb.Deployment_BUILD,
 		})
 		if err != nil {
 			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
-		sort.Sort(serversort.DeploymentCompleteDesc(resp.Deployments))
-
-		// get status reports
-		statusReportsResp, err := client.ListStatusReports(ctx, &pb.ListStatusReportsRequest{
-			Application: app.Ref(),
-			Workspace:   wsRef,
-		})
-
-		if status.Code(err) == codes.NotFound || status.Code(err) == codes.Unimplemented {
-			err = nil
-			statusReportsResp = nil
-		}
-		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
+		sort.Sort(serversort.DeploymentBundleCompleteDesc(resp.Deployments))
 
 		if c.flagJson {
 			return c.displayJson(resp.Deployments)
@@ -140,7 +123,8 @@ func (c *DeploymentListCommand) Run(args []string) int {
 
 		const bullet = "●"
 
-		for _, b := range resp.Deployments {
+		for _, deployBundle := range resp.Deployments {
+			b := deployBundle.Deployment
 			// Determine our bullet
 			status := ""
 			statusColor := ""
@@ -181,26 +165,23 @@ func (c *DeploymentListCommand) Run(args []string) int {
 
 			// Add status report information if we have any
 			statusReportComplete := "n/a"
-			for _, statusReport := range statusReportsResp.StatusReports {
-				if deploymentTargetId, ok := statusReport.TargetId.(*pb.StatusReport_DeploymentId); ok {
-					if deploymentTargetId.DeploymentId == b.Id {
-						switch statusReport.Health.HealthStatus {
-						case "READY":
-							statusReportComplete = "✔"
-						case "ALIVE":
-							statusReportComplete = "✔"
-						case "DOWN":
-							statusReportComplete = "✖"
-						case "PARTIAL":
-							statusReportComplete = "●"
-						case "UNKNOWN":
-							statusReportComplete = "?"
-						}
+			if deployBundle.LatestStatusReport != nil {
+				statusReport := deployBundle.LatestStatusReport
+				switch statusReport.Health.HealthStatus {
+				case "READY":
+					statusReportComplete = "✔"
+				case "ALIVE":
+					statusReportComplete = "✔"
+				case "DOWN":
+					statusReportComplete = "✖"
+				case "PARTIAL":
+					statusReportComplete = "●"
+				case "UNKNOWN":
+					statusReportComplete = "?"
+				}
 
-						if t, err := ptypes.Timestamp(statusReport.GeneratedTime); err == nil {
-							statusReportComplete = fmt.Sprintf("%s - %s", statusReportComplete, humanize.Time(t))
-						}
-					}
+				if t, err := ptypes.Timestamp(statusReport.GeneratedTime); err == nil {
+					statusReportComplete = fmt.Sprintf("%s - %s", statusReportComplete, humanize.Time(t))
 				}
 			}
 
@@ -211,27 +192,33 @@ func (c *DeploymentListCommand) Run(args []string) int {
 
 			if user, ok := b.Labels["common/user"]; ok {
 				details = append(details, "user:"+user)
-			} else if user, ok := b.Preload.Build.Labels["common/user"]; ok {
-				details = append(details, "build-user:"+user)
+			} else if deployBundle.Build != nil {
+				build := deployBundle.Build
+				// preload labels have been set, safe to use them
+
+				if user, ok := build.Labels["common/user"]; ok {
+					details = append(details, "build-user:"+user)
+				}
+				if bp, ok := build.Labels["common/languages"]; ok {
+					details = append(details, niceLanguages(bp))
+				}
+
+				if img, ok := build.Labels["common/image-id"]; ok {
+					img = shortImg(img)
+
+					details = append(details, "image:"+img)
+				}
 			}
 
-			if bp, ok := b.Preload.Build.Labels["common/languages"]; ok {
-				details = append(details, niceLanguages(bp))
-			}
-
-			if img, ok := b.Preload.Build.Labels["common/image-id"]; ok {
-				img = shortImg(img)
-
-				details = append(details, "image:"+img)
-			}
-
-			artDetails := fmt.Sprintf("artifact:%s", c.flagId.FormatId(b.Preload.Artifact.Sequence, b.Preload.Artifact.Id))
-			if len(details) == 0 {
-				details = append(details, artDetails)
-			} else if c.flagVerbose {
-				details = append(details,
-					artDetails,
-					fmt.Sprintf("build:%s", c.flagId.FormatId(b.Preload.Build.Sequence, b.Preload.Build.Id)))
+			if deployBundle.Artifact != nil {
+				artDetails := fmt.Sprintf("artifact:%s", c.flagId.FormatId(deployBundle.Artifact.Sequence, deployBundle.Artifact.Id))
+				if len(details) == 0 {
+					details = append(details, artDetails)
+				} else if c.flagVerbose && deployBundle.Build != nil {
+					details = append(details,
+						artDetails,
+						fmt.Sprintf("build:%s", c.flagId.FormatId(deployBundle.Build.Sequence, deployBundle.Build.Id)))
+				}
 			}
 
 			if c.flagVerbose {
@@ -275,6 +262,10 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			}
 
 			sort.Strings(details)
+			var firstDetails string
+			if len(details) > 0 {
+				firstDetails = details[0]
+			}
 
 			var columns []string
 
@@ -282,7 +273,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				status,
 				c.flagId.FormatId(b.Sequence, b.Id),
 				b.Component.Name,
-				details[0],
+				firstDetails,
 				startTime,
 				completeTime,
 				statusReportComplete,
@@ -305,7 +296,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				},
 			)
 
-			if len(details[1:]) > 0 {
+			if len(details) > 1 {
 				for _, dr := range details[1:] {
 					tbl.Rich([]string{"", "", "", dr}, nil)
 				}
@@ -329,22 +320,23 @@ func (c *DeploymentListCommand) Run(args []string) int {
 	return 0
 }
 
-func (c *DeploymentListCommand) displayJson(deployments []*pb.Deployment) error {
+func (c *DeploymentListCommand) displayJson(deployments []*pb.UI_DeploymentBundle) error {
 	var output []map[string]interface{}
 
 	for _, dep := range deployments {
 		i := map[string]interface{}{}
 
-		i["id"] = dep.Id
-		i["sequence"] = dep.Sequence
-		i["application"] = dep.Application
-		i["labels"] = dep.Labels
-		i["component"] = dep.Component.Name
-		i["physical_state"] = dep.State.String()
-		i["status"] = c.statusJson(dep.Status)
-		i["workspace"] = dep.Workspace.Workspace
-		i["artifact"] = c.artifactJson(dep.Preload.Artifact)
-		i["build"] = c.buildJson(dep.Preload.Build)
+		i["id"] = dep.Deployment.Id
+		i["sequence"] = dep.Deployment.Sequence
+		i["application"] = dep.Deployment.Application
+		i["labels"] = dep.Deployment.Labels
+		i["component"] = dep.Deployment.Component.Name
+		i["physical_state"] = dep.Deployment.State.String()
+		i["status"] = c.statusJson(dep.Deployment.Status)
+		i["workspace"] = dep.Deployment.Workspace.Workspace
+		i["artifact"] = c.artifactJson(dep.Artifact)
+		i["build"] = c.buildJson(dep.Build)
+		i["latestStatusReport"] = dep.LatestStatusReport
 
 		output = append(output, i)
 	}
@@ -360,6 +352,10 @@ func (c *DeploymentListCommand) displayJson(deployments []*pb.Deployment) error 
 }
 
 func (c *DeploymentListCommand) artifactJson(art *pb.PushedArtifact) interface{} {
+	if art == nil {
+		return nil
+	}
+
 	i := map[string]interface{}{}
 
 	i["id"] = art.Id
@@ -371,6 +367,9 @@ func (c *DeploymentListCommand) artifactJson(art *pb.PushedArtifact) interface{}
 }
 
 func (c *DeploymentListCommand) statusJson(status *pb.Status) interface{} {
+	if status == nil {
+		return nil
+	}
 	i := map[string]interface{}{}
 
 	i["state"] = status.State.String()
@@ -381,6 +380,9 @@ func (c *DeploymentListCommand) statusJson(status *pb.Status) interface{} {
 }
 
 func (c *DeploymentListCommand) buildJson(b *pb.Build) interface{} {
+	if b == nil {
+		return nil
+	}
 	i := map[string]interface{}{}
 
 	i["id"] = b.Id
