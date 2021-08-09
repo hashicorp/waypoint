@@ -285,7 +285,6 @@ func (p *Platform) Status(
 	deployment *Deployment,
 	ui terminal.UI,
 ) (*sdk.StatusReport, error) {
-
 	cli, err := p.getDockerClient(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
