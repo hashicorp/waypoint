@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/waypoint/internal/server/ptypes"
-
-	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
-
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/ptypes"
+	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
 func (s *service) UI_ListDeployments(
