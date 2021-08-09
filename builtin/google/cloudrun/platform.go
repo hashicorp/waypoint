@@ -11,14 +11,22 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/api/iam/v1"
+	"google.golang.org/api/option"
 	run "google.golang.org/api/run/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/docker"
+)
+
+const (
+	rmResourceServiceName = "service"
+	platformName          = "gcp"
 )
 
 // Platform is the Platform implementation for Google Cloud Run.
@@ -32,7 +40,7 @@ func (p *Platform) ConfigSet(config interface{}) error {
 	c, ok := config.(*Config)
 	if !ok {
 		// this should never happen
-		return fmt.Errorf("Invalid configuration, expected *cloudrun.Config, got %s", reflect.TypeOf(config))
+		return status.Errorf(codes.InvalidArgument, "Invalid configuration, expected *cloudrun.Config, got %s", reflect.TypeOf(config))
 	}
 
 	return validateConfig(*c)
@@ -51,6 +59,11 @@ func (p *Platform) DeployFunc() interface{} {
 // DestroyFunc implements component.Destroyer
 func (p *Platform) DestroyFunc() interface{} {
 	return p.Destroy
+}
+
+// DestroyWorkspaceFunc implements component.WorkspaceDestroyer
+func (p *Platform) DestroyWorkspaceFunc() interface{} {
+	return p.DestroyWorkspace
 }
 
 // ValidateAuthFunc implements component.Authenticator
@@ -128,7 +141,7 @@ func (p *Platform) ValidateAuth(
 	// If our resulting permissions do not equal our expected permissions, auth does not validate
 	if !reflect.DeepEqual(result.Permissions, expectedPermissions) {
 		st.Step(terminal.StatusError, "Incorrect IAM permissions, received "+strings.Join(result.Permissions, ", "))
-		return fmt.Errorf("incorrect IAM permissions, received %s", strings.Join(result.Permissions, ", "))
+		return status.Errorf(codes.PermissionDenied, "incorrect IAM permissions, received %s", strings.Join(result.Permissions, ", "))
 	}
 
 	// Validate if user has access to the service account specified
@@ -166,59 +179,50 @@ func (p *Platform) ValidateAuth(
 		// If our resulting permissions do not equal our expected permissions, auth does not validate
 		if !reflect.DeepEqual(result.Permissions, expectedPermissions) {
 			st.Step(terminal.StatusError, "Incorrect IAM permissions on the Service Account, received "+strings.Join(result.Permissions, ", "))
-			return fmt.Errorf("Incorrect IAM permissions on the Service Account, received %s", strings.Join(result.Permissions, ", "))
+			return status.Errorf(codes.PermissionDenied, "Incorrect IAM permissions on the Service Account, received %s", strings.Join(result.Permissions, ", "))
 		}
 	}
 	return nil
 }
 
-// Deploy deploys an image to Cloud Run.
-func (p *Platform) Deploy(
+func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
+	return resource.NewManager(
+		resource.WithLogger(log.Named("resource_manager")),
+		resource.WithValueProvider(p.getApiService),
+		resource.WithResource(resource.NewResource(
+			resource.WithName(rmResourceServiceName),
+			resource.WithState(&Resource_Service{}),
+			resource.WithCreate(p.resourceServiceCreate),
+			resource.WithDestroy(p.resourceServiceDestroy),
+
+			resource.WithPlatform(platformName),
+			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
+		)),
+	)
+}
+
+func (p *Platform) getApiService(ctx context.Context, d *Deployment) (*run.APIService, error) {
+	apiService, err := run.NewService(ctx,
+		option.WithEndpoint("https://"+d.Resource.Location+"-run.googleapis.com"),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return apiService, nil
+}
+
+func (p *Platform) resourceServiceCreate(
 	ctx context.Context,
+	deployment *Deployment,
 	log hclog.Logger,
-	src *component.Source,
-	img *docker.Image,
+	st terminal.Status,
+	pls []*run.Location,
 	deployConfig *component.DeploymentConfig,
-	ui terminal.UI,
-) (*Deployment, error) {
-	// Start building our deployment since we use this information
-	deployment := &Deployment{
-		Resource: &Deployment_Resource{
-			Location: p.config.Location,
-			Project:  p.config.Project,
-			Name:     src.App,
-		},
-	}
-	id, err := component.Id()
-	if err != nil {
-		return nil, err
-	}
-	deployment.Id = id
-
-	// Validate that the Docker image is stored in a GCP registry
-	// It is not possible to deploy to Cloud Run using external container registries
-	err = validateImageName(img.Image)
-	if err != nil {
-		return nil, status.Error(codes.FailedPrecondition, err.Error())
-	}
-
-	// Get the Cloud Run Locations available for this project
-	// Cloud Run is only available in a limited number of Locations, this may be further restricted
-	// by the users access
-	pls, err := deployment.getLocationsForProject(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Aborted, err.Error())
-	}
-
-	// Validate that the Location specified for the deployment is available for the project
-	err = validateLocationAvailable(p.config.Location, pls)
-	if err != nil {
-		return nil, err
-	}
-
-	// We'll update the user in real time
-	st := ui.Status()
-	defer st.Close()
+	img *docker.Image,
+	src *component.Source,
+	state *Resource_Service,
+) error {
 
 	// We need to determine if we're creating or updating a service. To
 	// do this, we just query GCP directly. There is a bit of a race here
@@ -233,7 +237,7 @@ func (p *Platform) Deploy(
 	// Is there a deployment for this service
 	services, err := deployment.findServicesForLocations(ctx, pls)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to query existing Cloud Run services: %s", err)
+		return status.Errorf(codes.FailedPrecondition, "Unable to query existing Cloud Run services: %s", err)
 	}
 
 	// no services found create a new one
@@ -249,14 +253,14 @@ func (p *Platform) Deploy(
 		}
 	} else if len(services) != 1 {
 		// the service should only exist in a single region
-		return nil, fmt.Errorf("Cloud Run services named '%s' exist in multiple regions. Please remove any manually created services.", src.App)
+		return status.Errorf(codes.FailedPrecondition, "Cloud Run services named '%s' exist in multiple regions. Please remove any manually created services.", src.App)
 	} else {
 		// Loop through the regions which contain services and ensure that
 		// the current deployment is not in a different region to an existing service
 		for k := range services {
 			if k != p.config.Location {
 				// Waypoint can not change the region of a service so return an error.
-				return nil, fmt.Errorf("The Cloud Run service '%s' already exists in the region '%s', Waypoint is unable to change the region of a deployed service", src.App, k)
+				return status.Errorf(codes.AlreadyExists, "The Cloud Run service '%s' already exists in the region '%s', Waypoint is unable to change the region of a deployed service", src.App, k)
 			}
 		}
 
@@ -383,7 +387,7 @@ func (p *Platform) Deploy(
 
 		service, err = deployment.createService(ctx, service)
 		if err != nil {
-			return nil, status.Errorf(codes.Aborted, "Unable to create Cloud Run service: %s", err.Error())
+			return status.Errorf(codes.Aborted, "Unable to create Cloud Run service: %s", err.Error())
 		}
 	} else {
 		// Update
@@ -392,7 +396,7 @@ func (p *Platform) Deploy(
 
 		service, err = deployment.replaceService(ctx, service)
 		if err != nil {
-			return nil, status.Errorf(codes.Aborted, "Unable to deploy new Cloud Run revision: %s", err.Error())
+			return status.Errorf(codes.Aborted, "Unable to deploy new Cloud Run revision: %s", err.Error())
 		}
 	}
 
@@ -400,18 +404,131 @@ func (p *Platform) Deploy(
 	st.Update("Waiting for revision to be ready")
 	service, err = deployment.pollServiceReady(ctx, log)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Now that the service is ready we can set the latest URL
 	deployment.RevisionId = service.Status.LatestCreatedRevisionName
 	deployment.Url = service.Status.Url
 
+	// Set state
+	state.ApiName = deployment.apiName()
+	state.RevisionName = deployment.apiRevisionName()
+
 	// If we have tracing enabled we just dump the full service as we know it
 	// in case we need to look up what the raw value is.
 	if log.IsTrace() {
 		bs, _ := json.Marshal(service)
 		log.Trace("service JSON", "json", base64.StdEncoding.EncodeToString(bs))
+	}
+	return nil
+}
+
+func (p *Platform) resourceServiceDestroy(
+	ctx context.Context,
+	apiService *run.APIService,
+	st terminal.Status,
+	isWorkspaceDestroy bool,
+	d *Deployment,
+	state *Resource_Service,
+) error {
+	if isWorkspaceDestroy {
+		client := run.NewNamespacesServicesService(apiService)
+		st.Step("Deleting service: %s", state.ApiName)
+
+		_, err := client.Delete(d.apiName()).Context(ctx).Do()
+		return err
+	}
+	rn := state.RevisionName
+	client := run.NewNamespacesRevisionsService(apiService)
+	st.Step("Deleting deployment with revision: %s", rn)
+
+	// First check if it's currently serving traffic
+	r, err := client.Get(rn).Context(ctx).Do()
+	if err != nil {
+		return err
+	}
+	// the slice of status conditions returned by GCP stores the reason
+	// for the most recent status transition at index [1]. We check that
+	// the revision is serving by verifying the operating status is active
+	// https://cloud.google.com/run/docs/reference/rest/v1/namespaces.revisions
+	cs := r.Status.Conditions[1]
+	if cs.Status == "True" {
+		st.Step(
+			terminal.StatusWarn,
+			fmt.Sprintf("Cannot destroy deployment with revision %q, as revision is actively receiving traffic.", rn),
+		)
+		return nil
+	}
+
+	_, err = client.Delete(state.RevisionName).Context(ctx).Do()
+	return err
+}
+
+// Deploy deploys an image to Cloud Run.
+func (p *Platform) Deploy(
+	ctx context.Context,
+	log hclog.Logger,
+	src *component.Source,
+	img *docker.Image,
+	deployConfig *component.DeploymentConfig,
+	ui terminal.UI,
+) (*Deployment, error) {
+	// Start building our deployment since we use this information
+	deployment := &Deployment{
+		Resource: &Deployment_Resource{
+			Location: p.config.Location,
+			Project:  p.config.Project,
+			Name:     src.App,
+		},
+	}
+	id, err := component.Id()
+	if err != nil {
+		return nil, err
+	}
+	deployment.Id = id
+
+	// Validate that the Docker image is stored in a GCP registry
+	// It is not possible to deploy to Cloud Run using external container registries
+	err = validateImageName(img.Image)
+	if err != nil {
+		return nil, status.Error(codes.FailedPrecondition, err.Error())
+	}
+
+	// Get the Cloud Run Locations available for this project
+	// Cloud Run is only available in a limited number of Locations, this may be further restricted
+	// by the users access
+	pls, err := deployment.getLocationsForProject(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Aborted, err.Error())
+	}
+
+	// Validate that the Location specified for the deployment is available for the project
+	err = validateLocationAvailable(p.config.Location, pls)
+	if err != nil {
+		return nil, err
+	}
+
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
+
+	rm := p.resourceManager(log)
+	if err := rm.CreateAll(
+		ctx, deployment, log, st, pls,
+		deployConfig, img, src,
+	); err != nil {
+		return nil, err
+	}
+
+	// Store our resource state
+	deployment.ResourceState = rm.State()
+
+	// Get our service state
+	servState := rm.Resource(rmResourceServiceName).State().(*Resource_Service)
+	if servState == nil {
+		return nil, status.Errorf(codes.Internal,
+			"service state is nil, this should never happen")
 	}
 
 	return deployment, nil
@@ -428,16 +545,52 @@ func (p *Platform) Destroy(
 	st := ui.Status()
 	defer st.Close()
 
-	apiService, err := deployment.apiService(ctx)
-	if err != nil {
-		return err
+	rm := p.resourceManager(log)
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if deployment.ResourceState == nil {
+		rm.Resource(rmResourceServiceName).SetState(&Resource_Service{
+			ApiName:         deployment.apiName(),
+			RevisionName: deployment.apiRevisionName(),
+		})
+	} else {
+		// Load state
+		if err := rm.LoadState(deployment.ResourceState); err != nil {
+			return err
+		}
 	}
-	client := run.NewNamespacesRevisionsService(apiService)
 
-	st.Update("Deleting deployment...")
+	return rm.DestroyAll(ctx, st, false, deployment)
+}
 
-	_, err = client.Delete(deployment.apiRevisionName()).Context(ctx).Do()
-	return err
+func (p *Platform) DestroyWorkspace(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) error {
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
+
+	rm := p.resourceManager(log)
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if deployment.ResourceState == nil {
+		rm.Resource(rmResourceServiceName).SetState(&Resource_Service{
+			ApiName:         deployment.apiName(),
+			RevisionName: deployment.apiRevisionName(),
+		})
+	} else {
+		// Load state
+		if err := rm.LoadState(deployment.ResourceState); err != nil {
+			return err
+		}
+	}
+
+	return rm.DestroyAll(ctx, st, true, deployment)
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {

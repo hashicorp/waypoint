@@ -83,7 +83,7 @@ Usage: waypoint destroy [options]
   all the resources created for this app up to this point.
 
   This functionality must be supported by the plugins in use and is dependent
-  on their behavior. The expect behavior is that any physical resources created
+  on their behavior. The expected behavior is that any physical resources created
   as part of deploys and releases are destroyed. For example, any load balancers,
   VMs, containers, etc.
 

@@ -4,12 +4,15 @@ package google.cloudrun;
 
 option go_package = "waypoint/builtin/google/cloudrun";
 
+import "google/protobuf/any.proto";
+
 message Deployment {
   string url = 1;
   Resource resource = 2;
   string revision_id = 3;
   string region = 4;
   string id = 5;
+  google.protobuf.Any resource_state = 6;
 
   message Resource {
     string location = 1;
@@ -20,4 +23,11 @@ message Deployment {
 
 message Release {
   string url = 1;
+}
+
+message Resource {
+  message Service {
+    string api_name = 1;
+    string revision_name = 2;
+  }
 }
