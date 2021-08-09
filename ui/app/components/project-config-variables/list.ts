@@ -2,6 +2,7 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { ConfigSetRequest, ConfigGetRequest, ConfigVar, Project, Ref } from 'waypoint-pb';
+import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 
@@ -29,6 +30,11 @@ export default class ProjectConfigVariablesListComponent extends Component<Proje
   }
 
   @action
+  async deleteVariable(variable) {
+    await this.saveVariableSettings(variable, undefined, true);
+  }
+
+  @action
   addVariable() {
     this.isCreating = true;
     let newVar = new ConfigVar();
@@ -40,7 +46,8 @@ export default class ProjectConfigVariablesListComponent extends Component<Proje
   @action
   async saveVariableSettings(
     variable: ConfigVar.AsObject,
-    initialVariable?: ConfigVar.AsObject
+    initialVariable?: ConfigVar.AsObject,
+    deleteVariable?: boolean
   ): Promise<any | void> {
     let req = new ConfigSetRequest();
 
@@ -59,6 +66,10 @@ export default class ProjectConfigVariablesListComponent extends Component<Proje
 
     if (variable.internal) {
       newVar.setInternal(variable.internal);
+    }
+
+    if (deleteVariable) {
+      newVar.setUnset(new Empty());
     }
 
     req.setVariablesList([newVar]);

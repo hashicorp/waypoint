@@ -45,7 +45,7 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
 
   @action
   async deleteVariable(variable) {
-    // await this.args.deleteVariable(variable);
+    await this.args.deleteVariable(variable);
   }
 
   @action
