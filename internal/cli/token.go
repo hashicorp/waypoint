@@ -78,8 +78,7 @@ func (c *GetInviteCommand) Help() string {
 Usage: waypoint token invite [options]
 
   Request a new invite token. This token can be exchanged for a normal token to login.
-
-` + c.Flags().Help())
+` + warnTokenDeprecated + "\n" + c.Flags().Help())
 }
 
 type ExchangeInviteCommand struct {
@@ -154,8 +153,7 @@ func (c *ExchangeInviteCommand) Help() string {
 Usage: waypoint token exchange [options]
 
   Exchange an invite token for a normal token for login.
-
-` + c.Flags().Help())
+` + warnTokenDeprecated + "\n" + c.Flags().Help())
 }
 
 type GetTokenCommand struct {
@@ -211,8 +209,7 @@ func (c *GetTokenCommand) Help() string {
 Usage: waypoint token new [options]
 
   Request a new token to log into the server.
-
-` + c.Flags().Help()
+` + warnTokenDeprecated + "\n" + c.Flags().Help()
 
 	return strings.TrimSpace(helpText)
 }
