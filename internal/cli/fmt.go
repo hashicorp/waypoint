@@ -124,7 +124,7 @@ func (c *FmtCommand) Synopsis() string {
 
 func (c *FmtCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint fmt [FILE]
+Usage: waypoint fmt [options] [FILE]
 
   Rewrite a waypoint.hcl file to a canonical format.
 

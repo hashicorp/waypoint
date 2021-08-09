@@ -131,7 +131,8 @@ description: "%s"
 				}
 			}
 		} else {
-			// Fail over to simple docs gen
+			// Fail over to simple docs gen. These are for top level commands
+			// like `waypoint context` that don't work without a subcommand and fail the regex match.
 			fmt.Fprintf(w, "## Usage\n\nUsage: `waypoint %s [options]`\n", name)
 		}
 

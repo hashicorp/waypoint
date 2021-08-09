@@ -223,7 +223,7 @@ func (c *ConfigGetCommand) Synopsis() string {
 
 func (c *ConfigGetCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint config-get [prefix]
+Usage: waypoint config get [prefix]
 
   Retrieve and print all config variables previously configured that have
   the given prefix. If no prefix is given, all variables are returned.
