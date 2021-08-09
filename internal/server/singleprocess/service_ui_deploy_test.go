@@ -42,6 +42,26 @@ func TestServiceUI_Deployment_ListDeployments(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, respProj)
 
+	buildresp, err := client.UpsertBuild(ctx, &pb.UpsertBuildRequest{
+		Build: serverptypes.TestValidBuild(t, nil),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, buildresp)
+
+	build := buildresp.Build
+
+	artifact := serverptypes.TestValidArtifact(t, nil)
+	artifact.BuildId = build.Id
+
+	artifactresp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{
+		Artifact: artifact,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, artifactresp)
+
+	dep := serverptypes.TestValidDeployment(t, nil)
+	dep.ArtifactId = artifactresp.Artifact.Id
+
 	deployResp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
 		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
 			Component: &pb.Component{
@@ -51,6 +71,7 @@ func TestServiceUI_Deployment_ListDeployments(t *testing.T) {
 				Application: "apple-app",
 				Project:     "Example",
 			},
+			ArtifactId: artifactresp.Artifact.Id,
 		}),
 	})
 	require.NoError(t, err)

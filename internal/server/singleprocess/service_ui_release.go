@@ -9,7 +9,7 @@ import (
 )
 
 func (s *service) UI_ListReleases(
-	cxt context.Context,
+	ctx context.Context,
 	req *pb.UI_ListReleasesRequest,
 ) (*pb.UI_ListReleasesResponse, error) {
 	releaseList, err := s.state.ReleaseList(req.Application,
@@ -50,6 +50,12 @@ func (s *service) UI_ListReleases(
 				}
 			}
 		}
+
+		// Always pre-populate release details for bundles
+		if err := s.releasePreloadDetails(ctx, pb.Release_BUILD, release); err != nil {
+			return nil, err
+		}
+
 		bundle := pb.UI_ReleaseBundle{
 			Release:            release,
 			LatestStatusReport: matchingStatusReport,

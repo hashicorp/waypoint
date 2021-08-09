@@ -1,0 +1,4 @@
+```release-note:feature
+cli: Introduce a new command, `waypoint status` for showing the status of
+projects, its applications, deployments, and deployment resources.
+``

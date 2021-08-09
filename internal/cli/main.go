@@ -42,6 +42,7 @@ var (
 		"build",
 		"deploy",
 		"release",
+		"status",
 		"up",
 	}
 
@@ -333,6 +334,11 @@ func Commands(
 		},
 		"server upgrade": func() (cli.Command, error) {
 			return &ServerUpgradeCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"status": func() (cli.Command, error) {
+			return &StatusCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},

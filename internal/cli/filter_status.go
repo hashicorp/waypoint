@@ -10,7 +10,7 @@ import (
 type filterOption int
 
 const (
-	fillterOptionAll filterOption = iota
+	filterOptionAll filterOption = iota
 	filterOptionState
 	filterOptionPhyState
 	filterOptionOrder
@@ -119,15 +119,15 @@ func (ff *filterFlags) orderOp() *pb.OperationOrder {
 func initFilterFlags(set *flag.Sets, ff *filterFlags, opts filterOption) {
 	f := set.NewSet("Filter Options")
 
-	if opts == fillterOptionAll || opts&filterOptionState != 0 {
+	if opts == filterOptionAll || opts == filterOptionState {
 		f.EnumVar(stateFlagVar(&ff.flagStatusFilter))
 	}
 
-	if opts == fillterOptionAll || opts&filterOptionPhyState != 0 {
+	if opts == filterOptionAll || opts == filterOptionPhyState {
 		f.EnumSingleVar(phyStateFlagVar(&ff.flagPhysState))
 	}
 
-	if opts == fillterOptionAll || opts&filterOptionOrder != 0 {
+	if opts == filterOptionAll || opts == filterOptionOrder {
 		f.EnumSingleVar(&flag.EnumSingleVar{
 			Name:   "order-by",
 			Target: new(string),

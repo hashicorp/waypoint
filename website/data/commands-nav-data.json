@@ -215,6 +215,10 @@
     "path": "server-upgrade"
   },
   {
+    "title": "status",
+    "path": "status"
+  },
+  {
     "title": "token exchange",
     "path": "token-exchange"
   },

@@ -1,0 +1,32 @@
+---
+layout: commands
+page_title: 'Commands: Status'
+sidebar_title: 'status'
+description: 'List statuses.'
+---
+
+# Waypoint Status
+
+Command: `waypoint status`
+
+List statuses.
+
+@include "commands/status_desc.mdx"
+
+## Usage
+
+Usage: `waypoint status [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-verbose` (`-V`) - Display more details.
+- `-json` - Output the status information as JSON.
+- `-all-projects` - Output status about every project in a workspace.
+
+@include "commands/status_more.mdx"
