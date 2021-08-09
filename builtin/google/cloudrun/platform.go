@@ -551,7 +551,7 @@ func (p *Platform) Destroy(
 	// and we need to manually recreate it.
 	if deployment.ResourceState == nil {
 		rm.Resource(rmResourceServiceName).SetState(&Resource_Service{
-			ApiName:         deployment.apiName(),
+			ApiName:      deployment.apiName(),
 			RevisionName: deployment.apiRevisionName(),
 		})
 	} else {
@@ -580,7 +580,7 @@ func (p *Platform) DestroyWorkspace(
 	// and we need to manually recreate it.
 	if deployment.ResourceState == nil {
 		rm.Resource(rmResourceServiceName).SetState(&Resource_Service{
-			ApiName:         deployment.apiName(),
+			ApiName:      deployment.apiName(),
 			RevisionName: deployment.apiRevisionName(),
 		})
 	} else {
