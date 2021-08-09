@@ -882,7 +882,8 @@ Authenticate and invite collaborators.
 
 Tokens are the primary form of authentication to Waypoint. Everyone who
 accesses a Waypoint server requires a token.
-`,
+
+` + warnTokenDeprecated,
 	},
 
 	"user": {

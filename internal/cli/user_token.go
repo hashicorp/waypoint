@@ -102,8 +102,7 @@ Usage: waypoint user token [options]
   to the Waypoint server. If you're inviting a new user to Waypoint,
   its recommended to generate an invite token with "waypoint user invite"
   or share the UI URL for logging in.
-
-` + c.Flags().Help()
+` + warnTokenDeprecated + "\n" + c.Flags().Help()
 
 	return strings.TrimSpace(helpText)
 }
