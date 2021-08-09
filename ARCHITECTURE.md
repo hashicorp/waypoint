@@ -186,7 +186,7 @@ While a job is in the **WAITING** state, it will not be assigned to any other ru
 
 After being assigned a job, the runner acknowledges (acks) the job. This means that
 the runner has taken responsibility for the job and the job enters the **RUNNING**
-state. If the runner nacks (negative acknowledgement) the job or the runner doesn't
+state. If the runner negatively acknowledges (nacks) the job or the runner doesn't
 ack or nack within a specified timeout period, then the job moves back to the 
 **QUEUED** state and can be assigned to another runner.
 
