@@ -69,6 +69,14 @@ Set along with alb.domain_name to have DNS automatically setup for the ALB.
 - Type: **string**
 - **Optional**
 
+##### alb.subnets
+
+The VPC subnets to use for the ALB.
+
+- Type: **list of string**
+- **Optional**
+- Default: public subnets in the default VPC
+
 #### logging (category)
 
 Provides additional configuration for logging flags for ECS.

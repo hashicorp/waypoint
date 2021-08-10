@@ -1185,6 +1185,16 @@ func (p *Platform) Launch(
 			return nil, err
 		}
 
+		var subnetsALB []*string
+		if len(p.config.ALB.Subnets) == 0 {
+			subnetsALB = subnets
+		} else {
+			subnetsALB = make([]*string, len(p.config.ALB.Subnets))
+			for i := range p.config.ALB.Subnets {
+				subnetsALB[i] = &p.config.ALB.Subnets[i]
+			}
+		}
+
 		lbArn, tgArn, err = createALB(
 			ctx, s, L, sess,
 			app,
@@ -1193,7 +1203,7 @@ func (p *Platform) Launch(
 			&serviceName,
 			sgweb,
 			&p.config.ServicePort,
-			subnets,
+			subnetsALB,
 		)
 		if err != nil {
 			return nil, err
@@ -1445,6 +1455,9 @@ type ALBConfig struct {
 	// Indicates, when creating an ALB, that it should be internal rather than
 	// internet facing.
 	InternalScheme *bool `hcl:"internal,optional"`
+
+	// Subnets to place the ALB. Defaults to the subnets in the default VPC.
+	Subnets []string `hcl:"subnets,optional"`
 }
 
 type HealthCheckConfig struct {
@@ -1727,6 +1740,12 @@ deploy {
 					"configure their ALB outside waypoint but still have waypoint hook the application",
 					"to that ALB",
 				),
+			)
+
+			doc.SetField(
+				"subnets",
+				"the VPC subnets to use for the ALB",
+				docs.Default("public subnets in the default VPC"),
 			)
 		}),
 	)
