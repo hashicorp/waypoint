@@ -29,11 +29,6 @@ cd ci/sinatra || exit 1
 "$WP" deployment list -V
 "$WP" deployment list -json
 
-"$WP" status
-"$WP" status sinatra
-"$WP" status -app sinatra sinatra
-"$WP" status -app sinatra -json sinatra
-
 ## Let things get going.
 sleep 10
 
