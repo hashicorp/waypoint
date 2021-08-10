@@ -20,10 +20,10 @@ Usage: `waypoint server restore [-exit] [<filename>]`
     Stage a backup snapshot within the current server. The data in the snapshot is not restored
     immediately, but rather staged such that on the next server start, it will be restored.
 
-    If [95m-exit[0m is passed, the server process will exit after staging the data. This allows a process
+    If -exit is passed, the server process will exit after staging the data. This allows a process
     monitor to restart the server, where it will see the staged snapshot and restore the data.
 
-    If [95m-exit[0m is not passed, an operator must restart the server manually to finish the restoration
+    If -exit is not passed, an operator must restart the server manually to finish the restoration
     process.
 
     The argument should be to a file written previously by 'waypoint server snapshot'.
