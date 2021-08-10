@@ -54,12 +54,16 @@ func (c *StatusCommand) Run(args []string) int {
 	}
 	ctxName = defaultName
 
-	ctxConfig, err := c.contextStorage.Load(ctxName)
-	if err != nil {
-		c.ui.Output("Error loading context %q: %s", ctxName, err.Error(), terminal.WithErrorStyle())
-		return 1
+	if ctxName != "" {
+		ctxConfig, err := c.contextStorage.Load(ctxName)
+		if err != nil {
+			c.ui.Output("Error loading context %q: %s", ctxName, err.Error(), terminal.WithErrorStyle())
+			return 1
+		}
+		c.serverCtx = ctxConfig
+	} else {
+		c.ui.Output(wpNoServerContext, terminal.WithWarningStyle())
 	}
-	c.serverCtx = ctxConfig
 
 	cmdArgs := flagSet.Args()
 
@@ -108,7 +112,12 @@ func (c *StatusCommand) Run(args []string) int {
 		err = c.FormatProjectAppStatus(projectTarget)
 		if err != nil {
 			if status.Code(err) == codes.NotFound {
-				c.ui.Output(wpProjectNotFound, projectTarget, c.serverCtx.Server.Address, terminal.WithErrorStyle())
+				var serverAddress string
+				if c.serverCtx != nil {
+					serverAddress = c.serverCtx.Server.Address
+				}
+
+				c.ui.Output(wpProjectNotFound, projectTarget, serverAddress, terminal.WithErrorStyle())
 			} else {
 				c.ui.Output("CLI failed to format project app statuses:"+clierrors.Humanize(err), terminal.WithErrorStyle())
 			}
@@ -119,7 +128,12 @@ func (c *StatusCommand) Run(args []string) int {
 		err = c.FormatAppStatus(projectTarget, appTarget)
 		if err != nil {
 			if status.Code(err) == codes.NotFound {
-				c.ui.Output(wpAppNotFound, appTarget, projectTarget, c.serverCtx.Server.Address, terminal.WithErrorStyle())
+				var serverAddress string
+				if c.serverCtx != nil {
+					serverAddress = c.serverCtx.Server.Address
+				}
+
+				c.ui.Output(wpAppNotFound, appTarget, projectTarget, serverAddress, terminal.WithErrorStyle())
 			} else {
 				c.ui.Output("CLI failed to format app status:"+clierrors.Humanize(err), terminal.WithErrorStyle())
 			}
@@ -132,7 +146,7 @@ func (c *StatusCommand) Run(args []string) int {
 
 // FormatProjectAppStatus formats all applications inside a project
 func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
-	if !c.flagJson {
+	if !c.flagJson && c.serverCtx != nil {
 		c.ui.Output(wpStatusProjectMsg, projectTarget, c.serverCtx.Server.Address)
 	}
 
@@ -271,7 +285,7 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 }
 
 func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) error {
-	if !c.flagJson {
+	if !c.flagJson && c.serverCtx != nil {
 		c.ui.Output(wpStatusAppProjectMsg, appTarget, projectTarget, c.serverCtx.Server.Address)
 	}
 
@@ -594,7 +608,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 
 // FormatProjectStatus formats all known projects into a table
 func (c *StatusCommand) FormatProjectStatus() error {
-	if !c.flagJson {
+	if !c.flagJson && c.serverCtx != nil {
 		c.ui.Output(wpStatusMsg, c.serverCtx.Server.Address)
 	}
 
@@ -724,8 +738,15 @@ func (c *StatusCommand) outputJsonProjectStatus(t *terminal.Table) error {
 
 	// Add server context
 	serverContext := map[string]interface{}{}
-	serverContext["Address"] = c.serverCtx.Server.Address
-	serverContext["ServerPlatform"] = c.serverCtx.Server.Platform
+
+	var serverAddress, serverPlatform string
+	if c.serverCtx != nil {
+		serverAddress = c.serverCtx.Server.Address
+		serverPlatform = c.serverCtx.Server.Platform
+	}
+
+	serverContext["Address"] = serverAddress
+	serverContext["ServerPlatform"] = serverPlatform
 
 	output["ServerContext"] = serverContext
 
@@ -750,8 +771,15 @@ func (c *StatusCommand) outputJsonProjectAppStatus(
 
 	// Add server context
 	serverContext := map[string]interface{}{}
-	serverContext["Address"] = c.serverCtx.Server.Address
-	serverContext["ServerPlatform"] = c.serverCtx.Server.Platform
+
+	var serverAddress, serverPlatform string
+	if c.serverCtx != nil {
+		serverAddress = c.serverCtx.Server.Address
+		serverPlatform = c.serverCtx.Server.Platform
+	}
+
+	serverContext["Address"] = serverAddress
+	serverContext["ServerPlatform"] = serverPlatform
 
 	output["ServerContext"] = serverContext
 
@@ -786,8 +814,15 @@ func (c *StatusCommand) outputJsonAppStatus(
 
 	// Add server context
 	serverContext := map[string]interface{}{}
-	serverContext["Address"] = c.serverCtx.Server.Address
-	serverContext["ServerPlatform"] = c.serverCtx.Server.Platform
+
+	var serverAddress, serverPlatform string
+	if c.serverCtx != nil {
+		serverAddress = c.serverCtx.Server.Address
+		serverPlatform = c.serverCtx.Server.Platform
+	}
+
+	serverContext["Address"] = serverAddress
+	serverContext["ServerPlatform"] = serverPlatform
 
 	output["ServerContext"] = serverContext
 
@@ -1010,6 +1045,12 @@ Current status for application % q in project %q in server context %q.
 `)
 
 	// Failure messages
+
+	wpNoServerContext = strings.TrimSpace(`
+No default server context set for the Waypoint CLI. To set a default, use
+'waypoint context use <context-name>'. To see a full list of known contexts,
+run 'waypoint context list'.
+`)
 
 	wpStatusHealthTriageMsg = strings.TrimSpace(`
 To see more information about the failing application, please check out the application logs:
