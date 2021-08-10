@@ -3,6 +3,7 @@ package singleprocess
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -583,6 +584,8 @@ func TestApplicationPollHandler_turnoff(t *testing.T) {
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
+	appName := "apple-app"
+
 	// Create a project with an application
 	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 		Project: serverptypes.TestProject(t, &pb.Project{
@@ -603,7 +606,7 @@ func TestApplicationPollHandler_turnoff(t *testing.T) {
 			Applications: []*pb.Application{
 				{
 					Project: &pb.Ref_Project{Project: "Example"},
-					Name:    "apple-app",
+					Name:    appName,
 				},
 			},
 		}),
@@ -629,7 +632,7 @@ func TestApplicationPollHandler_turnoff(t *testing.T) {
 				Name: "testapp",
 			},
 			Application: &pb.Ref_Application{
-				Application: "apple-app",
+				Application: appName,
 				Project:     "Example",
 			},
 		}),
@@ -664,7 +667,9 @@ func TestApplicationPollHandler_turnoff(t *testing.T) {
 		var jobs []*pb.Job
 		raw, err := testServiceImpl(impl).state.JobList()
 		for _, j := range raw {
-			if j.State != pb.Job_ERROR {
+			if j.State != pb.Job_ERROR &&
+				j.SingletonId == fmt.Sprintf("appl-poll/%s", appName) {
+				// App status polling should only have this singleton id
 				jobs = append(jobs, j)
 			}
 		}
