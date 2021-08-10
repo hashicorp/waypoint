@@ -93,10 +93,10 @@ func (c *SnapshotBackupCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint server snapshot [<filename>]
 
-	Generate a snapshot from the current server and write it to a file specified
-	by the given name. If no name is specified and standard out is not a terminal,
-	the backup will be written to standard out. Using a name of '-' will force writing
-	to standard out.
+Generate a snapshot from the current server and write it to a file specified
+by the given name. If no name is specified and standard out is not a terminal,
+the backup will be written to standard out. Using a name of '-' will force writing
+to standard out.
 
 ` + c.Flags().Help())
 }

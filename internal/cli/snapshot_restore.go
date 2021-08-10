@@ -105,18 +105,18 @@ func (c *SnapshotRestoreCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint server restore [-exit] [<filename>]
 
-	Stage a backup snapshot within the current server. The data in the snapshot is not restored
-	immediately, but rather staged such that on the next server start, it will be restored.
+Stage a backup snapshot within the current server. The data in the snapshot is not restored
+immediately, but rather staged such that on the next server start, it will be restored.
 
-	If -exit is passed, the server process will exit after staging the data. This allows a process
-	monitor to restart the server, where it will see the staged snapshot and restore the data.
+If -exit is passed, the server process will exit after staging the data. This allows a process
+monitor to restart the server, where it will see the staged snapshot and restore the data.
 
-	If -exit is not passed, an operator must restart the server manually to finish the restoration
-	process.
+If -exit is not passed, an operator must restart the server manually to finish the restoration
+process.
 
-	The argument should be to a file written previously by 'waypoint server snapshot'.
-	If no name is specified and standard input is not a terminal, the backup will read from
-	standard input. Using a name of '-' will force reading from standard input.
+The argument should be to a file written previously by 'waypoint server snapshot'.
+If no name is specified and standard input is not a terminal, the backup will read from
+standard input. Using a name of '-' will force reading from standard input.
 
 ` + c.Flags().Help())
 }

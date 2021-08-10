@@ -134,7 +134,10 @@ func (c *BuildListCommand) Synopsis() string {
 func (c *BuildListCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint artifact list-builds [options]
-  List builds.
+
+List artifacts created from a build. An artifact is the result of a build or
+registry. This is the metadata only. The binary contents of an artifact are
+expected to be stored in a registry.
 
 ` + c.Flags().Help())
 }
