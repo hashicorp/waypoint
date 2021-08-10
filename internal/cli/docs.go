@@ -129,7 +129,7 @@ description: "%s"
 				if len(matchAlias) > 0 {
 					hasAlias = true
 					aliasMatch := reUsage.FindStringSubmatch(optionalAlias)
-					fmt.Fprintf(w, fmt.Sprintf("Alias: `waypoint %s`\n", aliasMatch[1]))
+					fmt.Fprintf(w, fmt.Sprintf("\nAlias: `waypoint %s`\n", aliasMatch[1]))
 				}
 			}
 
@@ -159,6 +159,11 @@ description: "%s"
 				// Strip any color formatting
 				reAsciColor := regexp.MustCompile(ansi)
 				helpMsg = reAsciColor.ReplaceAllString(helpMsg, "")
+
+				// Trim any left leading whitespace, if any. We do this because any
+				// chunk of text that's indented in markdown will be rendered as a
+				// code block rather than a paragraph of text.
+				helpMsg = strings.TrimLeft(helpMsg, " ")
 				fmt.Fprintf(w, "\n%s", helpMsg)
 			}
 		} else {
