@@ -1049,7 +1049,7 @@ Current status for application % q in project %q in server context %q.
 	wpNoServerContext = strings.TrimSpace(`
 No default server context set for the Waypoint CLI. To set a default, use
 'waypoint context use <context-name>'. To see a full list of known contexts,
-run 'waypoint context list'.
+run 'waypoint context list'. If Waypoint is running in local mode, this is expected.
 `)
 
 	wpStatusHealthTriageMsg = strings.TrimSpace(`
