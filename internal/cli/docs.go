@@ -121,14 +121,40 @@ description: "%s"
 		matches := reUsage.FindStringSubmatch(usage)
 
 		if len(matches) > 0 {
-			fmt.Fprintf(w, fmt.Sprintf("## Usage\n\nUsage: `waypoint %s`", matches[1]))
+			fmt.Fprintf(w, fmt.Sprintf("## Usage\n\nUsage: `waypoint %s`\n", matches[1]))
 
+			hasAlias := false
 			if optionalAlias != "" {
 				matchAlias := reAlias.FindStringSubmatch(optionalAlias)
 				if len(matchAlias) > 0 {
+					hasAlias = true
 					aliasMatch := reUsage.FindStringSubmatch(optionalAlias)
-					fmt.Fprintf(w, fmt.Sprintf("\nAlias: `waypoint %s`", aliasMatch[1]))
+					fmt.Fprintf(w, fmt.Sprintf("Alias: `waypoint %s`\n", aliasMatch[1]))
 				}
+			}
+
+			// Don't include flag options, we do this later. We trim it here because
+			// most commands include it in the help text.
+			reOptions := regexp.MustCompile(` Options:`)
+			optionsIndex := 0
+			for i, opt := range helpText {
+				optMatch := reOptions.FindStringSubmatch(opt)
+				if len(optMatch) > 0 {
+					optionsIndex = i
+					break
+				}
+			}
+
+			if optionsIndex > 1 {
+				startIndex := 1
+				helpMsg := ""
+
+				if hasAlias {
+					startIndex = 2
+				}
+
+				helpMsg = strings.Join(helpText[startIndex:optionsIndex], "\n")
+				fmt.Fprintf(w, "\n%s", helpMsg)
 			}
 		} else {
 			// Fail over to simple docs gen. These are for top level commands
