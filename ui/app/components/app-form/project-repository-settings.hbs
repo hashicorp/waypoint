@@ -9,14 +9,16 @@
         <label for="git-source-url" class="pds-fieldName">
           {{t "form.project_git_settings.git_source_url_label"}}
         </label>
+        <Pds::HelpText>Use <code>git@</code> If using an SSH key. Otherwise, use <code>https://</code> when using a password or no authentication</Pds::HelpText>
         <Pds::Input
           @type="text"
           id="git-source-url"
-          placeholder="git@github.com:mycompany/awesome-project.git"
+          placeholder="https://github.com/mycompany/awesome-project.git"
           value={{this.git.url}}
           required
           {{on "input" (pick "target.value" (set this "project.dataSource.git.url"))}}
         />
+
       </div>
       <div class="pds-formField">
         <label for="git-source-ref" class="pds-fieldName">
