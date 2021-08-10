@@ -146,6 +146,7 @@ description: "%s"
 			}
 
 			if optionsIndex > 1 {
+				// Assume all commands have at least "Global Options"
 				startIndex := 1
 				helpMsg := ""
 
@@ -154,6 +155,10 @@ description: "%s"
 				}
 
 				helpMsg = strings.Join(helpText[startIndex:optionsIndex], "\n")
+
+				// Strip any color formatting
+				reAsciColor := regexp.MustCompile(ansi)
+				helpMsg = reAsciColor.ReplaceAllString(helpMsg, "")
 				fmt.Fprintf(w, "\n%s", helpMsg)
 			}
 		} else {
@@ -224,3 +229,8 @@ func (c *DocsCommand) Help() string {
 func (c *DocsCommand) Synopsis() string {
 	return "Generate docs"
 }
+
+const (
+	// NOTE: adapted from https://github.com/acarl005/stripansi
+	ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
+)
