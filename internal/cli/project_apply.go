@@ -25,6 +25,7 @@ type ProjectApplyCommand struct {
 
 	flagDataSource            string
 	flagGitURL                string
+	flagGitPath               string
 	flagGitRef                string
 	flagGitAuthType           string
 	flagGitUsername           string
@@ -200,6 +201,9 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 
 		if v := c.flagGitURL; v != "" {
 			gitInfo.Url = v
+		}
+		if v := c.flagGitPath; v != "" {
+			gitInfo.Path = v
 		}
 		if v := c.flagGitRef; v != "" {
 			gitInfo.Ref = v
@@ -423,6 +427,15 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 			Target:  &c.flagGitURL,
 			Default: "",
 			Usage:   "URL of the Git repository to clone. This can be an HTTP or SSH URL.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "git-path",
+			Target:  &c.flagGitPath,
+			Default: "",
+			Usage: "Path is a subdirectory within the checked out repository to " +
+				"go into for the configuration. This must be a relative path " + "" +
+				"and may not contain '..'",
 		})
 
 		f.StringVar(&flag.StringVar{
