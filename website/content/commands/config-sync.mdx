@@ -17,6 +17,13 @@ Synchronize declared variables in waypoint.hcl
 
 Usage: `waypoint config sync [options]`
 
+Synchronize declared application configuration in the waypoint.hcl file
+for existing and new deployments.
+
+Conflicting configuration keys will be overwritten. Configuration keys
+that do not exist in the waypoint.hcl file but exist on the server will not
+be deleted.
+
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.

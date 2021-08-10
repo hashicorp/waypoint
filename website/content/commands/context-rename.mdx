@@ -15,7 +15,12 @@ Rename a context.
 
 ## Usage
 
-Usage: `waypoint context rename [options]`
+Usage: `waypoint context rename [options] FROM TO`
+
+Rename a context FROM to TO.
+
+This will error if FROM does not exist. This will overwrite TO if it
+exists. If the current default is FROM, the default will be set to TO.
 
 #### Global Options
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -105,8 +106,73 @@ description: "%s"
 	if hf, ok := cmd.(HasFlags); ok {
 		flags := hf.Flags()
 
-		fmt.Fprintf(w, "## Usage\n\nUsage: `waypoint %s [options]`\n", name)
+		// Generate the Usage headers based on the cmd Help text
+		helpText := strings.Split(cmd.Help(), "\n")
+		usage := helpText[0]
 
+		var optionalAlias string
+		if len(helpText) > 1 {
+			optionalAlias = helpText[1]
+		}
+
+		reUsage := regexp.MustCompile(`waypoint (?P<cmd>.*)$`)
+		reAlias := regexp.MustCompile(`Alias: `)
+
+		matches := reUsage.FindStringSubmatch(usage)
+
+		if len(matches) > 0 {
+			fmt.Fprintf(w, fmt.Sprintf("## Usage\n\nUsage: `waypoint %s`\n", matches[1]))
+
+			hasAlias := false
+			if optionalAlias != "" {
+				matchAlias := reAlias.FindStringSubmatch(optionalAlias)
+				if len(matchAlias) > 0 {
+					hasAlias = true
+					aliasMatch := reUsage.FindStringSubmatch(optionalAlias)
+					fmt.Fprintf(w, fmt.Sprintf("\nAlias: `waypoint %s`\n", aliasMatch[1]))
+				}
+			}
+
+			// Don't include flag options, we do this later. We trim it here because
+			// most commands include it in the help text.
+			reOptions := regexp.MustCompile(` Options:`)
+			optionsIndex := 0
+			for i, opt := range helpText {
+				optMatch := reOptions.FindStringSubmatch(opt)
+				if len(optMatch) > 0 {
+					optionsIndex = i
+					break
+				}
+			}
+
+			if optionsIndex > 1 {
+				// Assume all commands have at least "Global Options"
+				startIndex := 1
+				helpMsg := ""
+
+				if hasAlias {
+					startIndex = 2
+				}
+
+				helpMsg = strings.Join(helpText[startIndex:optionsIndex], "\n")
+
+				// Strip any color formatting
+				reAsciColor := regexp.MustCompile(ansi)
+				helpMsg = reAsciColor.ReplaceAllString(helpMsg, "")
+
+				// Trim any left leading whitespace, if any. We do this because any
+				// chunk of text that's indented in markdown will be rendered as a
+				// code block rather than a paragraph of text.
+				helpMsg = strings.TrimLeft(helpMsg, " ")
+				fmt.Fprintf(w, "\n%s", helpMsg)
+			}
+		} else {
+			// Fail over to simple docs gen. These are for top level commands
+			// like `waypoint context` that don't work without a subcommand and fail the regex match.
+			fmt.Fprintf(w, "## Usage\n\nUsage: `waypoint %s [options]`\n", name)
+		}
+
+		// Generate flag options
 		flags.VisitSets(func(name string, set *flag.Set) {
 			// Only print a set if it contains vars
 			numVars := 0
@@ -168,3 +234,8 @@ func (c *DocsCommand) Help() string {
 func (c *DocsCommand) Synopsis() string {
 	return "Generate docs"
 }
+
+const (
+	// NOTE: adapted from https://github.com/acarl005/stripansi
+	ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
+)

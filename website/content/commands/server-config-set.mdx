@@ -17,6 +17,16 @@ Set the server online configuration
 
 Usage: `waypoint server config-set [options]`
 
+Set the online configuration for a running Waypoint server.
+
+The configuration that can be set here is different from the configuration
+given via the startup file. This configuration is persisted in the server
+database.
+
+Each flag represents a setting and all settings are transmitted to the server
+on submission. To correctly set the configuration, provide all flags
+together in one call.
+
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.

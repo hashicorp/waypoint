@@ -17,6 +17,19 @@ Delete all the resources created for an app
 
 Usage: `waypoint destroy [options]`
 
+Delete all resources created for an app in the current workspace.
+
+The workspace can continue to be used after this call, this just deletes
+all the resources created for this app up to this point.
+
+This functionality must be supported by the plugins in use and is dependent
+on their behavior. The expected behavior is that any physical resources created
+as part of deploys and releases are destroyed. For example, any load balancers,
+VMs, containers, etc.
+
+This targets one app in one workspace. You must call this for each workspace
+you've used if you want to destroy everything.
+
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.

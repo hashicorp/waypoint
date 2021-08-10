@@ -73,7 +73,7 @@ func (c *ArtifactBuildCommand) Synopsis() string {
 func (c *ArtifactBuildCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint artifact build [options]
-Alias: waypoint build
+Alias: waypoint build [options]
 
   Build a new versioned artifact from source.
 

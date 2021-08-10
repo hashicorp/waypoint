@@ -17,6 +17,15 @@ Show log output from the current application deployment
 
 Usage: `waypoint logs [options]`
 
+Show log output from all current deployments.
+
+The logs will include output from deployments that aren't released.
+As new deployments are made, their logs will appear automatically.
+
+The six character text after the date on a log line is the last six
+characters of the instance ID. This can be used to trace any logs back
+to a specific deployment or filter out certain log messages.
+
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.

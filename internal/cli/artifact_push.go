@@ -76,7 +76,7 @@ func (c *ArtifactPushCommand) Synopsis() string {
 func (c *ArtifactPushCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint artifact push [options]
-Alias: waypoint push
+Alias: waypoint push [options]
 
   Push a local build to a registry. This will push the most recent
   successful local build by default. You can view a list of the recent

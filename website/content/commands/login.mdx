@@ -15,7 +15,20 @@ Log in to a Waypoint server
 
 ## Usage
 
-Usage: `waypoint login [options]`
+Usage: `waypoint login [server address]`
+
+Log in to a Waypoint server.
+
+This is usually the first command a new user runs to gain CLI access to
+an existing Waypoint server.
+
+If the server address is not specified and you have an active
+context (see "waypoint context"), then this command will reauthenticate
+to the currently active server.
+
+This command can be used for token-based authentication as well as
+other forms such as OIDC. You can use "-token" to specify a login or
+invite token and configure the CLI to access the server.
 
 #### Global Options
 

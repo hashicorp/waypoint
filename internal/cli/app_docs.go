@@ -837,10 +837,10 @@ func (c *AppDocsCommand) Help() string {
 	helpText := `
 Usage: waypoint docs [options]
 
-  Output documentation about the plugins. By default, it lists the documentation
-	for the plugins configured by this project.
+Output documentation about the plugins. By default, it lists the documentation
+for the plugins configured by this project.
 
-	The flags can change which plugins are listed and in which format.
+The flags can change which plugins are listed and in which format.
 
 ` + c.Flags().Help()
 
