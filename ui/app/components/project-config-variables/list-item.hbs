@@ -27,7 +27,7 @@
                 <Pds::Input
                   @type="text"
                   id="config-variable-value"
-                  data-test-config-variables-var-str
+                  data-test-config-variables-var-static
                   placeholder={{t "form.config_variables_settings.variable_value_placeholder"}}
                   value={{this.variable.pb_static}}
                   {{on "input" (pick "target.value" (set this "variable.pb_static"))}}

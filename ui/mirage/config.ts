@@ -53,6 +53,7 @@ export default function (this: Server): void {
   this.post('/ListPushedArtifacts', pushedArtifact.list);
   this.post('/ExpediteStatusReport', statusReport.expediteStatusReport);
   this.post('/GetConfig', config.get);
+  this.post('/SetConfig', config.set);
 
   if (!Ember.testing) {
     // Pass through all other requests

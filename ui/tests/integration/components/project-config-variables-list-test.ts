@@ -18,7 +18,7 @@ const page = create({
   cancelButton: clickable('[data-test-config-variables-edit-cancel]'),
   saveButton: clickable('[data-test-config-variables-edit-save]'),
   varName: fillable('[data-test-config-variables-var-name]'),
-  varStr: fillable('[data-test-config-variables-var-str]'),
+  varStatic: fillable('[data-test-config-variables-var-static]'),
 });
 
 module('Integration | Component | project-config-variables-list', function (hooks) {
@@ -65,6 +65,12 @@ module('Integration | Component | project-config-variables-list', function (hook
       3,
       'Attempt to create: the list still has the normal count of variables after cancelling'
     );
+    await page.createButton();
+    await page.varName('var_name');
+    await page.varStatic('foozbarz');
+    await page.saveButton();
+    assert.notOk(page.hasForm, 'Create Variable: the form disappears after creation');
+    assert.equal(page.variablesList.length, 4, 'Create Variable: the list has the new variable');
   });
 
   // test('only static variables are editable', async function (assert) {});

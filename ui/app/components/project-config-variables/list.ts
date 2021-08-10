@@ -37,8 +37,8 @@ export default class ProjectConfigVariablesListComponent extends Component<Proje
   }
 
   @action
-  async deleteVariable(variable) {
-    await this.saveVariableSettings(variable, undefined, true);
+  async deleteVariable(variable: ConfigVar.AsObject) {
+    await this.saveVariableSettings(variable, true);
   }
 
   @action
@@ -51,11 +51,7 @@ export default class ProjectConfigVariablesListComponent extends Component<Proje
   }
 
   @action
-  async saveVariableSettings(
-    variable: ConfigVar.AsObject,
-    initialVariable?: ConfigVar.AsObject,
-    deleteVariable?: boolean
-  ): Promise<any | void> {
+  async saveVariableSettings(variable: ConfigVar.AsObject, deleteVariable?: boolean): Promise<any | void> {
     let req = new ConfigSetRequest();
 
     let projectRef = new Ref.Project();

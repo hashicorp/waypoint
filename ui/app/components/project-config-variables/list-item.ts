@@ -9,10 +9,7 @@ interface VariableArgs {
   variable: ConfigVar.AsObject;
   isEditing: boolean;
   isCreating: boolean;
-  saveVariableSettings: (
-    variable: ConfigVar.AsObject,
-    initialVariable: ConfigVar.AsObject
-  ) => Promise<Project.AsObject>;
+  saveVariableSettings: (variable: ConfigVar.AsObject, deleteVariable?: boolean) => Promise<Project.AsObject>;
   deleteVariable: (variable: ConfigVar.AsObject) => Promise<void>;
 }
 
@@ -60,8 +57,7 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
     if (this.variable.name === '' || this.variable.pb_static === '') {
       return this.flashMessages.error('Variable keys or values can not be empty');
     }
-    let req = new ConfigSetRequest();
-    let savedVars = await this.args.saveVariableSettings(this.variable, this.initialVariable);
+    let savedVars = await this.args.saveVariableSettings(this.variable, false);
     this.isCreating = false;
     this.isEditing = false;
   }
