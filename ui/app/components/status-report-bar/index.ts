@@ -3,6 +3,7 @@ import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import ApiService from 'waypoint/services/api';
+import FlashMessagesService from 'waypoint/services/flash-messages';
 import {
   Deployment,
   Ref,
@@ -24,6 +25,7 @@ interface WithStatusReport {
 
 export default class StatusReportBar extends Component<StatusReportBarArgs> {
   @service api!: ApiService;
+  @service flashMessages!: FlashMessagesService;
   @tracked isRefreshRunning = false;
   @tracked _statusReport?: StatusReport.AsObject;
 
@@ -56,7 +58,9 @@ export default class StatusReportBar extends Component<StatusReportBarArgs> {
       req.setRelease(ref);
     }
 
-    let resp = await this.api.client.expediteStatusReport(req, this.api.WithMeta());
+    let resp = await this.api.client.expediteStatusReport(req, this.api.WithMeta()).catch((error) => {
+      this.flashMessages.error(error.message);
+    });
 
     if (resp?.getJobId()) {
       this.isRefreshRunning = true;
