@@ -17,6 +17,17 @@ Set the configuration for a dynamic source plugin
 
 Usage: `waypoint config source-set [options]`
 
+Set the configuration for a dynamic configuration source plugin.
+
+This does not add a dynamic configuration variable to your application.
+This command is for configuring the plugin that is used to fetch dynamic
+configurations globally. For example, configuring authentication information
+or server addresses and so on.
+
+To use this command, you should specify a "[95m-type[0m" flag along with one or more
+"[95m-config[0m" values. Please see the documentation for the config source type
+you're configuring for details on what configuration fields are available.
+
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.

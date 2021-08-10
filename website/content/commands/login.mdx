@@ -17,6 +17,19 @@ Log in to a Waypoint server
 
 Usage: `waypoint login [server address]`
 
+Log in to a Waypoint server.
+
+This is usually the first command a new user runs to gain CLI access to
+an existing Waypoint server.
+
+If the server address is not specified and you have an active
+context (see "[95mwaypoint context[0m"), then this command will reauthenticate
+to the currently active server.
+
+This command can be used for token-based authentication as well as
+other forms such as OIDC. You can use "[95m-token[0m" to specify a login or
+invite token and configure the CLI to access the server.
+
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.

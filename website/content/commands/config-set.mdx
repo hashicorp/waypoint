@@ -17,6 +17,12 @@ Set a config variable.
 
 Usage: `waypoint config set <name>=<value>`
 
+Set a config variable that will be available to deployments as an
+environment variable.
+
+This will scope the variable to the entire project by default.
+Specify the "[95m-app[0m" flag to set a config variable for a specific app.
+
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.

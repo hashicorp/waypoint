@@ -17,6 +17,13 @@ Destroy one or more deployments.
 
 Usage: `waypoint deployment destroy [options] [id...]`
 
+Destroy one or more deployments. This will "undeploy" this specific
+instance of an application.
+
+When no arguments are given, this will default to destroying ALL
+unreleased deployments. This will require interactive confirmation
+by the user unless the force flag (-force) is specified.
+
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.
