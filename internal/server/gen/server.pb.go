@@ -14352,7 +14352,7 @@ type Job_Git struct {
 	// ref that is cloned from the URL above will be used.
 	Ref string `protobuf:"bytes,2,opt,name=ref,proto3" json:"ref,omitempty"`
 	// path is a subdirectory within the checked out repository to
-	// go into for the configuration. This must be a relative path
+	// go into for the project's configuration. This must be a relative path
 	// and may not contain ".."
 	Path string `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
 	// This setting only takes effect if both "path" is true AND the

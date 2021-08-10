@@ -1388,7 +1388,7 @@ message Job {
     string ref = 2;
 
     // path is a subdirectory within the checked out repository to
-    // go into for the configuration. This must be a relative path
+    // go into for the project's configuration. This must be a relative path
     // and may not contain ".."
     string path = 3;
 
