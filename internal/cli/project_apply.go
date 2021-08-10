@@ -434,7 +434,7 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 			Target:  &c.flagGitPath,
 			Default: "",
 			Usage: "Path is a subdirectory within the checked out repository to " +
-				"go into for the configuration. This must be a relative path " + "" +
+				"go into for the projects configuration. This must be a relative path " +
 				"and may not contain '..'",
 		})
 
