@@ -19,6 +19,24 @@ You will need the following things properly installed on your computer.
 - `cd waypoint/ui`
 - `yarn install`
 
+## Testing UI Changes
+
+If you are trying out UI changes on a pull request and don't want to run Ember
+locally, you can build the static assets and compile it into Waypoint server.
+
+Run the following commands to build the UI and compile it into Waypoint Server:
+
+```shell
+cd ui
+make
+cd ..
+make static-assets
+make docker/server
+```
+
+Then when that finishes, you will be able to install the locally built server
+into Docker or another platform to try out the UI changes.
+
 ## Running / Development
 
 There are two modes of development.
