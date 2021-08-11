@@ -405,10 +405,9 @@ func EvaluateVariables(
 			return nil, append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  fmt.Sprintf("Unset variable %q", name),
-				// TODO krantzinator: add our docs link here
 				Detail: "A variable must be set or have a default value; see " +
-					"[docs] for " +
-					"details.",
+					"https://www.waypointproject.io/docs/waypoint-hcl/variables/input " +
+					"for details.",
 			})
 		}
 	}
