@@ -155,7 +155,7 @@ func (p *Platform) resourceDeploymentStatus(
 
 	deployResp, err := clientset.Clientset.AppsV1().Deployments(namespace).Get(ctx, deploymentState.Name, metav1.GetOptions{})
 	if deployResp == nil {
-		return status.Errorf(codes.FailedPrecondition, "kubernetes deployment response cannot be nil")
+		return status.Errorf(codes.FailedPrecondition, "kubernetes deployment response cannot be empty")
 	} else if err != nil {
 		if !errors.IsNotFound(err) {
 			return status.Errorf(codes.FailedPrecondition, "error getting kubernetes deployment %s: %s", deploymentState.Name, err)
@@ -282,7 +282,7 @@ func (p *Platform) resourceDeploymentStatus(
 			CreatedTime:         timestamppb.New(pod.CreationTimestamp.Time),
 		})
 	}
-	s.Update("Finished building report for kubernetes deployment resource!")
+	s.Update("Finished building report for Kubernetes deployment resource")
 	s.Done()
 	return nil
 }
@@ -866,11 +866,7 @@ func (p *Platform) Status(
 			// We only use pod healths to determine overall status
 			continue
 		}
-		if _, ok := healths[r.Health]; !ok {
-			healths[r.Health] = 1
-		} else {
-			healths[r.Health]++
-		}
+		healths[r.Health]++
 	}
 
 	var overallHealth sdk.StatusReport_Health

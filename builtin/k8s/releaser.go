@@ -93,7 +93,7 @@ func (r *Releaser) resourceServiceStatus(
 
 	serviceResp, err := clientset.Clientset.CoreV1().Services(namespace).Get(ctx, state.Name, metav1.GetOptions{})
 	if serviceResp == nil {
-		return status.Errorf(codes.FailedPrecondition, "kubernetes service response cannot be nil")
+		return status.Errorf(codes.FailedPrecondition, "kubernetes service response cannot be empty")
 	} else if err != nil {
 		if !errors.IsNotFound(err) {
 			return err
@@ -129,7 +129,7 @@ func (r *Releaser) resourceServiceStatus(
 		serviceResource.StateJson = string(serviceJson)
 	}
 
-	s.Update("Finished building report for kubernetes status resource!")
+	s.Update("Finished building report for Kubernetes service resource")
 	s.Done()
 	return nil
 }
