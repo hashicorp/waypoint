@@ -25,25 +25,19 @@
   </div>
 </PageHeader>
 
-<div class="status-row">
-  <div class="item">
-    {{#if @model.statusReport}}
-      <StatusReportIndicator @statusReport={{@model.statusReport}} />
-    {{/if}}
-  </div>
-
+<StatusReportBar @model={{@model}} @artifactType="Release">
   {{!-- todo(pearkes): API doesn't return this object but just a string of it, so wait for that to be fixed --}}
   {{#if @model.deployment }}
-  <div class="item">
-    <small>
-      Released deployment <LinkTo @route="workspace.projects.project.app.deployment"
-        @models={{array @model.deployment.id}}>
-        <b class="badge badge--version">v{{@model.deployment.sequence}}</b>
-        <code>{{@model.deployment.id}}</code>
-      </LinkTo>
-    </small>
-  </div>
+    <div class="item">
+      <small>
+        Released deployment <LinkTo @route="workspace.projects.project.app.deployment"
+          @models={{array @model.deployment.id}}>
+          <b class="badge badge--version">v{{@model.deployment.sequence}}</b>
+          <code>{{@model.deployment.id}}</code>
+        </LinkTo>
+      </small>
+    </div>
   {{/if}}
-</div>
+</StatusReportBar>
 
 <OperationLogs @jobId={{@model.jobId}} />

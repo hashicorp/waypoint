@@ -1,5 +1,10 @@
 import { Request, Response } from 'miragejs';
-import { ListStatusReportsRequest, ListStatusReportsResponse } from 'waypoint-pb';
+import {
+  ListStatusReportsRequest,
+  ListStatusReportsResponse,
+  ExpediteStatusReportRequest,
+  ExpediteStatusReportResponse,
+} from 'waypoint-pb';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { decode } from '../helpers/protobufs';
 
@@ -23,4 +28,14 @@ export function list(schema: any, { requestBody }: Request): Response {
 
 export function getLatest(): Response {
   return this.serialize(new Empty(), 'application');
+}
+
+export function expediteStatusReport(schema: any, { requestBody }: Request): Response {
+  // while this is not being used in the current implementation to generate the mocked job id response
+  // i'm leaving this here in case we want to update this to handle specific requests
+  // let requestMsg = decode(ExpediteStatusReportRequest, requestBody);
+  // let ref = requestMsg.getRef();
+  let result = new ExpediteStatusReportResponse();
+  result.setId('JOB_ID');
+  return this.serialize(result, 'application');
 }

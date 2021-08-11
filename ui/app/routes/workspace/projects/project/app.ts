@@ -76,14 +76,17 @@ function injectStatusReports(model: Model): void {
   let { deployments, releases, statusReports } = model;
 
   for (let statusReport of statusReports) {
+    let statusTime = statusReport.generatedTime?.seconds || 0;
     if (statusReport.deploymentId) {
       let deployment = deployments.find((d) => d.id === statusReport.deploymentId);
-      if (deployment) {
+      let deploymentTime = deployment?.statusReport?.generatedTime?.seconds || 0;
+      if (deployment && statusTime >= deploymentTime) {
         deployment.statusReport = statusReport;
       }
     } else if (statusReport.releaseId) {
       let release = releases.find((d) => d.id === statusReport.releaseId);
-      if (release) {
+      let releaseTime = release?.statusReport?.generatedTime?.seconds || 0;
+      if (release && statusTime >= releaseTime) {
         release.statusReport = statusReport;
       }
     }
