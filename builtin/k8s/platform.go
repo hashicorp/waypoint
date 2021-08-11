@@ -133,70 +133,83 @@ func (p *Platform) resourceDeploymentStatus(
 	log hclog.Logger,
 	sg terminal.StepGroup,
 	deploymentState *Resource_Deployment,
-	clientSet *clientsetInfo,
+	clientset *clientsetInfo,
 	sr *resource.StatusResponse,
 ) error {
+	s := sg.Add("Checking status of the kubernetes deployment resource...")
+	defer s.Abort()
 
 	namespace := p.config.Namespace
 	if namespace == "" {
-		// TODO(izaak): where and why would config namespace be nil?
-		namespace = clientSet.Namespace
+		namespace = clientset.Namespace
 	}
 
 	// Get deployment status
 
-	deploymentsClient := clientSet.Clientset.AppsV1().Deployments(namespace)
-	deployResp, err := deploymentsClient.Get(ctx, deploymentState.Name, metav1.GetOptions{})
-	if err != nil {
-		return status.Errorf(codes.FailedPrecondition, "error getting kubernetes deployment %s: %s", deploymentState.Name, err)
-	}
-	if deployResp == nil {
-		return status.Errorf(codes.FailedPrecondition, "kubernetes deployment response cannot be nil")
-	}
-
-	var mostRecentCondition v1.DeploymentCondition
-	for _, condition := range deployResp.Status.Conditions {
-		if condition.LastUpdateTime.Time.After(mostRecentCondition.LastUpdateTime.Time) {
-			mostRecentCondition = condition
-		}
-	}
-
-	var deployHealth sdk.StatusReport_Health
-	switch mostRecentCondition.Type {
-	case v1.DeploymentAvailable:
-		deployHealth = sdk.StatusReport_READY
-	case v1.DeploymentProgressing:
-		deployHealth = sdk.StatusReport_ALIVE
-	case v1.DeploymentReplicaFailure:
-		deployHealth = sdk.StatusReport_DOWN
-	default:
-		deployHealth = sdk.StatusReport_UNKNOWN
-	}
-
-	deployStateJson, err := json.Marshal(map[string]interface{}{
-		"deployment": deployResp,
-	})
-	if err != nil {
-		return status.Errorf(codes.FailedPrecondition, "failed to marshal deployment to json: %s", err)
-	}
-	// TODO(izaak): redact if necessary
-
 	deploymentResource := sdk.StatusReport_Resource{
-		Name:                deployResp.Name,
-		Id:                  fmt.Sprintf("%s", deployResp.UID), // TODO(izaak): is this good?
 		Platform:            platformName,
 		Type:                "deployment",
 		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
-		CreatedTime:         timestamppb.New(deployResp.CreationTimestamp.Time),
-		Health:              deployHealth,
-		HealthMessage:       fmt.Sprintf("%s: %s", mostRecentCondition.Type, mostRecentCondition.Message), // TODO(izaak): is this useful?
-		StateJson:           string(deployStateJson),
 	}
 	sr.Resources = append(sr.Resources, &deploymentResource)
 
+	deploymentsClient := clientset.Clientset.AppsV1().Deployments(namespace)
+	deployResp, err := deploymentsClient.Get(ctx, deploymentState.Name, metav1.GetOptions{})
+	if err != nil {
+		if errors.IsNotFound(err) {
+			deploymentResource.Name = deploymentState.Name
+			deploymentResource.Health = sdk.StatusReport_MISSING
+			deploymentResource.HealthMessage = sdk.StatusReport_MISSING.String()
+		} else {
+			return status.Errorf(codes.FailedPrecondition, "error getting kubernetes deployment %s: %s", deploymentState.Name, err)
+		}
+	} else if deployResp == nil {
+		return status.Errorf(codes.FailedPrecondition, "kubernetes deployment response cannot be nil")
+	} else {
+		// We found the deployment, and we can use it to populate our resource
+
+		var mostRecentCondition v1.DeploymentCondition
+		for _, condition := range deployResp.Status.Conditions {
+			if condition.LastUpdateTime.Time.After(mostRecentCondition.LastUpdateTime.Time) {
+				mostRecentCondition = condition
+			}
+		}
+
+		var deployHealth sdk.StatusReport_Health
+		switch mostRecentCondition.Type {
+		case v1.DeploymentAvailable:
+			deployHealth = sdk.StatusReport_READY
+		case v1.DeploymentProgressing:
+			deployHealth = sdk.StatusReport_ALIVE
+		case v1.DeploymentReplicaFailure:
+			deployHealth = sdk.StatusReport_DOWN
+		default:
+			deployHealth = sdk.StatusReport_UNKNOWN
+		}
+
+		// Redact env vars from containers - they can contain secrets
+		for _, container := range deployResp.Spec.Template.Spec.Containers {
+			container.Env = []corev1.EnvVar{}
+		}
+
+		deployStateJson, err := json.Marshal(map[string]interface{}{
+			"deployment": deployResp,
+		})
+		if err != nil {
+			return status.Errorf(codes.FailedPrecondition, "failed to marshal deployment to json: %s", err)
+		}
+
+		deploymentResource.Name = deployResp.Name
+		deploymentResource.Id = fmt.Sprintf("%s", deployResp.UID) // TODO(izaak): is this good?
+		deploymentResource.CreatedTime = timestamppb.New(deployResp.CreationTimestamp.Time)
+		deploymentResource.Health = deployHealth
+		deploymentResource.HealthMessage = fmt.Sprintf("%s: %s", mostRecentCondition.Type, mostRecentCondition.Message) // TODO(izaak): is this useful?
+		deploymentResource.StateJson = string(deployStateJson)
+	}
+
 	// Get pod status
 
-	podClient := clientSet.Clientset.CoreV1().Pods(namespace)
+	podClient := clientset.Clientset.CoreV1().Pods(namespace)
 	podLabelId := fmt.Sprintf("app=%s", deploymentState.Name)
 	podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: podLabelId})
 	if err != nil {
@@ -207,13 +220,18 @@ func (p *Platform) resourceDeploymentStatus(
 	}
 
 	for _, pod := range podList.Items {
+		// Redact env vars because they can contain secrets
+		for _, container := range pod.Spec.Containers {
+			container.Env = []corev1.EnvVar{}
+		}
+
 		podJson, err := json.Marshal(map[string]interface{}{
 			"pod":       pod,
 			"hostIP":    pod.Status.HostIP,
 			"ipAddress": pod.Status.PodIP,
 		})
 		if err != nil {
-			return status.Errorf(codes.FailedPrecondition, "failed to marshal k8s pod definition to json: %s", podJson)
+			return status.Errorf(codes.Internal, "failed to marshal k8s pod definition to json: %s", podJson)
 		}
 		// TODO(izaak) redact if necessary
 
@@ -255,6 +273,7 @@ func (p *Platform) resourceDeploymentStatus(
 		})
 	}
 
+	s.Done()
 	return nil
 }
 
@@ -790,7 +809,7 @@ func (p *Platform) Status(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	step := sg.Add("Gathering health report for Kubernetes platform...")
+	step := sg.Add("Gathering health report for Kubernetes deployment...")
 	defer func() { step.Abort() }() // Defer in func in case more steps are added to this func in the future
 
 	rm := p.resourceManager(log, nil)
@@ -825,8 +844,6 @@ func (p *Platform) Status(
 		GeneratedTime: timestamppb.Now(),
 		Resources:     resources,
 	}
-	result.External = true
-	result.Resources = resources
 
 	// Figure out our overall status based on our resource list. If all pods are in the same state, the
 	// status report state will match. If pods are in mixes states, we'll return a PARTIAL health
@@ -894,7 +911,7 @@ func (p *Platform) Status(
 	// More UI detail for non-ready resources
 	for _, resource := range result.Resources {
 		if resource.Health != sdk.StatusReport_READY {
-			st.Step(terminal.StatusWarn, fmt.Sprintf("Resource %q is reporting %q", resource.Name, resource.Health.String()))
+			st.Step(terminal.StatusWarn, fmt.Sprintf("%s %q is reporting %q", resource.Type, resource.Name, resource.Health.String()))
 		}
 	}
 
