@@ -402,7 +402,7 @@ func EvaluateVariables(
 	for name := range vs {
 		v, ok := iv[name]
 		if !ok || v == nil {
-			return nil, append(diags, &hcl.Diagnostic{
+			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  fmt.Sprintf("Unset variable %q", name),
 				Detail: "A variable must be set or have a default value; see " +
