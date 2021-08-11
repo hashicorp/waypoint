@@ -136,7 +136,7 @@ func (p *Platform) resourceDeploymentStatus(
 	clientset *clientsetInfo,
 	sr *resource.StatusResponse,
 ) error {
-	s := sg.Add("Checking status of the kubernetes deployment resource...")
+	s := sg.Add("Checking status of the Kubernetes deployment resource...")
 	defer s.Abort()
 
 	namespace := p.config.Namespace
