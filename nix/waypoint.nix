@@ -18,6 +18,10 @@
       pkgs.go-tools
       pkgs.go-mockery
       pkgs.go-changelog
+
+      # For testing
+      pkgs.doctl
+      pkgs.kubectl
     ] ++ (with pkgs; [
       # Needed for website/
       pkgconfig autoconf automake libtool nasm autogen zlib libpng
