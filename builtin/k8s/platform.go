@@ -153,8 +153,7 @@ func (p *Platform) resourceDeploymentStatus(
 	}
 	sr.Resources = append(sr.Resources, &deploymentResource)
 
-	deploymentsClient := clientset.Clientset.AppsV1().Deployments(namespace)
-	deployResp, err := deploymentsClient.Get(ctx, deploymentState.Name, metav1.GetOptions{})
+	deployResp, err := clientset.Clientset.AppsV1().Deployments(namespace).Get(ctx, deploymentState.Name, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			deploymentResource.Name = deploymentState.Name
@@ -166,7 +165,7 @@ func (p *Platform) resourceDeploymentStatus(
 	} else if deployResp == nil {
 		return status.Errorf(codes.FailedPrecondition, "kubernetes deployment response cannot be nil")
 	} else {
-		// We found the deployment, and we can use it to populate our resource
+		// Found the deployment, and can use it to populate our resource
 
 		var mostRecentCondition v1.DeploymentCondition
 		for _, condition := range deployResp.Status.Conditions {
@@ -188,8 +187,8 @@ func (p *Platform) resourceDeploymentStatus(
 		}
 
 		// Redact env vars from containers - they can contain secrets
-		for _, container := range deployResp.Spec.Template.Spec.Containers {
-			container.Env = []corev1.EnvVar{}
+		for i := 0; i < len(deployResp.Spec.Template.Spec.Containers); i++ {
+			deployResp.Spec.Template.Spec.Containers[i].Env = []corev1.EnvVar{}
 		}
 
 		deployStateJson, err := json.Marshal(map[string]interface{}{
@@ -200,10 +199,10 @@ func (p *Platform) resourceDeploymentStatus(
 		}
 
 		deploymentResource.Name = deployResp.Name
-		deploymentResource.Id = fmt.Sprintf("%s", deployResp.UID) // TODO(izaak): is this good?
+		deploymentResource.Id = fmt.Sprintf("%s", deployResp.UID)
 		deploymentResource.CreatedTime = timestamppb.New(deployResp.CreationTimestamp.Time)
 		deploymentResource.Health = deployHealth
-		deploymentResource.HealthMessage = fmt.Sprintf("%s: %s", mostRecentCondition.Type, mostRecentCondition.Message) // TODO(izaak): is this useful?
+		deploymentResource.HealthMessage = fmt.Sprintf("%s: %s", mostRecentCondition.Type, mostRecentCondition.Message)
 		deploymentResource.StateJson = string(deployStateJson)
 	}
 
@@ -221,8 +220,8 @@ func (p *Platform) resourceDeploymentStatus(
 
 	for _, pod := range podList.Items {
 		// Redact env vars because they can contain secrets
-		for _, container := range pod.Spec.Containers {
-			container.Env = []corev1.EnvVar{}
+		for i := 0; i < len(pod.Spec.Containers); i++ {
+			pod.Spec.Containers[i].Env = []corev1.EnvVar{}
 		}
 
 		podJson, err := json.Marshal(map[string]interface{}{
@@ -233,9 +232,9 @@ func (p *Platform) resourceDeploymentStatus(
 		if err != nil {
 			return status.Errorf(codes.Internal, "failed to marshal k8s pod definition to json: %s", podJson)
 		}
-		// TODO(izaak) redact if necessary
 
 		var health sdk.StatusReport_Health
+		var healthMessage string
 		switch pod.Status.Phase {
 		case corev1.PodPending:
 			health = sdk.StatusReport_ALIVE
@@ -244,6 +243,7 @@ func (p *Platform) resourceDeploymentStatus(
 			for _, c := range pod.Status.Conditions {
 				if c.Status == corev1.ConditionTrue && c.Type == corev1.PodReady {
 					health = sdk.StatusReport_READY
+					healthMessage = fmt.Sprintf("ready")
 					break
 				}
 			}
@@ -259,13 +259,20 @@ func (p *Platform) resourceDeploymentStatus(
 			health = sdk.StatusReport_UNKNOWN
 		}
 
+		// If we don't have anything better, the pod status phase is an OK health message
+		// NOTE(izaak): An alternative health message could be the "type" of all conditions tied for the most recent
+		// latestTransitionTime concatenated together.
+		if healthMessage == "" {
+			healthMessage = fmt.Sprintf("%s", pod.Status.Phase)
+		}
+
 		sr.Resources = append(sr.Resources, &sdk.StatusReport_Resource{
 			Name:                pod.ObjectMeta.Name,
-			Id:                  fmt.Sprintf("%s", pod.UID), // TODO(izaak): should this just be name again? Is it useful?
+			Id:                  fmt.Sprintf("%s", pod.UID),
 			Type:                "pod",
 			ParentResourceId:    deploymentResource.Id,
 			Health:              health,
-			HealthMessage:       fmt.Sprintf("%s", pod.Status.Phase),
+			HealthMessage:       healthMessage,
 			Platform:            platformName,
 			CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE,
 			StateJson:           string(podJson),
