@@ -92,5 +92,8 @@ you do not need to accept any terms.
 - `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz.
 - `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server.
+- `-nomad-consul-service` - Create service for Waypoint UI in Consul.
+- `-nomad-consul-service-ui-tags=<string>` - Tags for the Waypoint UI service generated in Consul.
+- `-nomad-consul-service-backend-tags=<string>` - Tags for the Waypoint backend service generated in Consul.
 
 @include "commands/server-install_more.mdx"
