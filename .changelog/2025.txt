@@ -1,0 +1,3 @@
+```release-note:improvement
+ui: Add git commit SHAs to operations in the browser UI
+```
