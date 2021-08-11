@@ -76,7 +76,7 @@ func (r *Releaser) resourceServiceStatus(
 	clientset *clientsetInfo,
 	sr *resource.StatusResponse,
 ) error {
-	s := sg.Add("Checking status of kubernetes service resource...")
+	s := sg.Add("Checking status of Kubernetes service resource...")
 	defer s.Abort()
 
 	namespace := r.config.Namespace
