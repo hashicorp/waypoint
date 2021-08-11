@@ -9,4 +9,11 @@
   &__sha {
     padding: 0 scale.$sm-4;
   }
+  .copy-btn {
+    @include button-reset;
+    cursor: pointer;
+    &:active {
+      color: rgb(var(--text));
+    }
+  }
 }

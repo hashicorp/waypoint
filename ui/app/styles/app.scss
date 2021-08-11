@@ -5,7 +5,10 @@
 @use 'pds/tokens/font';
 @use 'pds/core/typography/config' as Typography;
 @use 'utilities/animations';
+
 @use 'utilities/focus-ring';
+
+@import 'mixins/index';
 
 @import './variables';
 @import './layout';
