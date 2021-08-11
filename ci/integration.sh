@@ -24,6 +24,11 @@ cd ci/sinatra || exit 1
 
 "$WP" release
 
+# Smoke test list methods
+"$WP" deployment list
+"$WP" deployment list -V
+"$WP" deployment list -json
+
 ## Let things get going.
 sleep 10
 

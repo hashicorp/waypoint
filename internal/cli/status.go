@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/waypoint/internal/version"
+
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -194,6 +196,27 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 			},
 		})
 		if err != nil {
+			if s, ok := status.FromError(err); ok {
+				if s.Code() == codes.Unimplemented {
+					var serverVersion string
+					serverVersionResp := c.project.ServerVersion()
+					if serverVersionResp != nil {
+						serverVersion = serverVersionResp.Version
+					}
+
+					var clientVersion string
+					clientVersionResp := version.GetVersion()
+					if clientVersionResp != nil {
+						clientVersion = clientVersionResp.Version
+					}
+
+					c.project.UI.Output(
+						fmt.Sprintf("This CLI version %q is incompatible with the current server %q - missing UI_ListDeployments method. Upgrade your server to v0.5.0 or higher or downgrade your CLI to v0.4 or older.", clientVersion, serverVersion),
+						terminal.WithErrorStyle(),
+					)
+					return ErrSentinel
+				}
+			}
 			return err
 		}
 		var appDeployStatus *pb.StatusReport
@@ -338,6 +361,27 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		},
 	})
 	if err != nil {
+		if s, ok := status.FromError(err); ok {
+			if s.Code() == codes.Unimplemented {
+				var serverVersion string
+				serverVersionResp := c.project.ServerVersion()
+				if serverVersionResp != nil {
+					serverVersion = serverVersionResp.Version
+				}
+
+				var clientVersion string
+				clientVersionResp := version.GetVersion()
+				if clientVersionResp != nil {
+					clientVersion = clientVersionResp.Version
+				}
+
+				c.project.UI.Output(
+					fmt.Sprintf("This CLI version %q is incompatible with the current server %q - missing UI_ListDeployments method. Upgrade your server to v0.5.0 or higher or downgrade your CLI to v0.4 or older.", clientVersion, serverVersion),
+					terminal.WithErrorStyle(),
+				)
+				return ErrSentinel
+			}
+		}
 		return err
 	}
 
@@ -357,17 +401,18 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	var deployStatusReportCheckTime string
 	appFailures := false
 	if len(respDeployList.Deployments) > 0 {
-		deploy := respDeployList.Deployments[0].Deployment
+		deployBundle := respDeployList.Deployments[0]
+		deploy := deployBundle.Deployment
 		appDeployStatus := respDeployList.Deployments[0].LatestStatusReport
 		statusColor := ""
 
 		var details string
-		if deploy.Preload != nil && deploy.Preload.Build != nil {
-			if deploy.Preload.Artifact != nil {
-				artDetails := fmt.Sprintf("id:%d", deploy.Preload.Artifact.Sequence)
+		if deployBundle.Build != nil {
+			if deployBundle.Artifact != nil {
+				artDetails := fmt.Sprintf("id:%d", deployBundle.Artifact.Sequence)
 				details = artDetails
 			}
-			if img, ok := deploy.Preload.Build.Labels["common/image-id"]; ok {
+			if img, ok := deployBundle.Build.Labels["common/image-id"]; ok {
 				img = shortImg(img)
 
 				details = details + " image:" + img
@@ -660,6 +705,27 @@ func (c *StatusCommand) FormatProjectStatus() error {
 				},
 			})
 			if err != nil {
+				if s, ok := status.FromError(err); ok {
+					if s.Code() == codes.Unimplemented {
+						var serverVersion string
+						serverVersionResp := c.project.ServerVersion()
+						if serverVersionResp != nil {
+							serverVersion = serverVersionResp.Version
+						}
+
+						var clientVersion string
+						clientVersionResp := version.GetVersion()
+						if clientVersionResp != nil {
+							clientVersion = clientVersionResp.Version
+						}
+
+						c.project.UI.Output(
+							fmt.Sprintf("This CLI version %q is incompatible with the current server %q - missing UI_ListDeployments method. Upgrade your server to v0.5.0 or higher or downgrade your CLI to v0.4 or older.", clientVersion, serverVersion),
+							terminal.WithErrorStyle(),
+						)
+						return ErrSentinel
+					}
+				}
 				return err
 			}
 
