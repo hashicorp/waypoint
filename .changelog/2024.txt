@@ -1,3 +1,4 @@
 ```release-note:improvement
-plugin/k8s: Include deployment and release resources in `waypoint status` output
+plugin/k8s: Include deployment and release resources in `waypoint status` output.
+plugin/k8s: Updates release status report to check k8s service status
 ```
