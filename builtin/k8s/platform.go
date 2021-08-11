@@ -281,7 +281,7 @@ func (p *Platform) resourceDeploymentStatus(
 			CreatedTime:         timestamppb.New(pod.CreationTimestamp.Time),
 		})
 	}
-
+	s.Update("Finished building report for kubernetes deployment resource!")
 	s.Done()
 	return nil
 }

@@ -127,6 +127,7 @@ func (r *Releaser) resourceServiceStatus(
 		serviceResource.StateJson = string(serviceJson)
 	}
 
+	s.Update("Finished building report for kubernetes status resource!")
 	s.Done()
 	return nil
 }
