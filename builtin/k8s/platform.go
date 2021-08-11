@@ -236,20 +236,19 @@ func (p *Platform) resourceDeploymentStatus(
 		var health sdk.StatusReport_Health
 		var healthMessage string
 
-	OUTER:
 		switch pod.Status.Phase {
 		case corev1.PodPending:
 			health = sdk.StatusReport_ALIVE
 		case corev1.PodRunning:
+			health = sdk.StatusReport_ALIVE
 			// Extra checks on the latest condition to ensure pod is reporting ready and running
 			for _, c := range pod.Status.Conditions {
 				if c.Status == corev1.ConditionTrue && c.Type == corev1.PodReady {
 					health = sdk.StatusReport_READY
 					healthMessage = fmt.Sprintf("ready")
-					break OUTER
+					break
 				}
 			}
-			health = sdk.StatusReport_ALIVE
 		case corev1.PodSucceeded:
 			// kind of a weird one - in our current model pods are always assumed to be long-lived. If a pod exits at all, it's Down.
 			health = sdk.StatusReport_DOWN
