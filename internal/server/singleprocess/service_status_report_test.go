@@ -191,7 +191,16 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 		require.NoError(err)
 		require.NotEmpty(sr)
 		require.Equal(len(sr.StatusReports), 2)
-		require.Equal(sr.StatusReports[0].Id, resp.StatusReport.Id)
+
+		// ensure each returned report matches the generated report id for both types
+		for _, report := range sr.StatusReports {
+			switch report.TargetId.(type) {
+			case *pb.StatusReport_DeploymentId:
+				require.Equal(report.Id, resp.StatusReport.Id)
+			case *pb.StatusReport_ReleaseId:
+				require.Equal(report.Id, releaseStatusResp.StatusReport.Id)
+			}
+		}
 	})
 
 	t.Run("list only deployment reports", func(t *testing.T) {
