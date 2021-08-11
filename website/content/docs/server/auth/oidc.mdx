@@ -24,7 +24,9 @@ Please see the documentation for that command for all available options.
 Before you setup OIDC, you'll need at least the client ID and client secret
 for your identity provider. Please see the documentation for your identity
 provider to determine what these values are. See [Popular OIDC Providers](#popular-oidc-providers)
-for some help and guidance with specific popular providers.
+for some help and guidance with specific popular providers. Please read the
+documentation on [redirect URLs](/docs/server/auth/oidc#redirect-urls) while
+configuring your OIDC provider.
 
 Once you have the required information, use the CLI:
 
@@ -39,6 +41,28 @@ $ waypoint auth-method set oidc \
 This will configure an OIDC auth method that is available to users immediately.
 You can use the other commands in the `waypoint auth-method` subcommand group
 to list, inspect, and delete auth methods.
+
+### Redirect URLs
+
+When configuring your OIDC provider, the provider should ask you to configure
+a set of allowed redirect URLs. This configurations happens on the provider's
+side, i.e. within Google, Okta, etc.
+
+You should set the following redirect URLs:
+
+- `http://127.0.0.1/oidc/callback` - This must be set for `waypoint login`
+  to work in the CLI. If you do not set this, the CLI login will not work.
+  Note that non-TLS is expected here since it is a loopback call.
+
+- `https://<ui addr>/oidc/callback` - This must be set for UI-based
+  OIDC authentication to work. In this case, "ui addr" should be the
+  routable UI address you visit. And note you SHOULD set TLS (`https`) for
+  this.
+
+-> **Note:** UI-based OIDC authentication doesn't currently exist. This
+will be added in an upcoming Waypoint release. For now, users must use
+`waypoint login` and then get a token with `waypoint user token` or
+use `waypoint ui -authenticate` to open their browser window.
 
 ### Restricting Access
 
