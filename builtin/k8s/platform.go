@@ -235,6 +235,8 @@ func (p *Platform) resourceDeploymentStatus(
 
 		var health sdk.StatusReport_Health
 		var healthMessage string
+
+	OUTER:
 		switch pod.Status.Phase {
 		case corev1.PodPending:
 			health = sdk.StatusReport_ALIVE
@@ -244,7 +246,7 @@ func (p *Platform) resourceDeploymentStatus(
 				if c.Status == corev1.ConditionTrue && c.Type == corev1.PodReady {
 					health = sdk.StatusReport_READY
 					healthMessage = fmt.Sprintf("ready")
-					break
+					break OUTER
 				}
 			}
 			health = sdk.StatusReport_ALIVE
