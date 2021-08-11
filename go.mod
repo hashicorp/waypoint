@@ -46,7 +46,7 @@ require (
 	github.com/gorilla/handlers v1.4.2
 	github.com/hashicorp/aws-sdk-go-base v0.7.0
 	github.com/hashicorp/cap v0.1.1
-	github.com/hashicorp/go-argmapper v0.2.0
+	github.com/hashicorp/go-argmapper v0.2.1
 	github.com/hashicorp/go-bexpr v0.1.7
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-gcp-common v0.6.0
@@ -63,7 +63,7 @@ require (
 	github.com/hashicorp/vault/api v1.0.5-0.20200519221902-385fac77e20f
 	github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210810193543-44d395cc4f35
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210809173757-0bc50acab522
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/jinzhu/now v1.1.1 // indirect
