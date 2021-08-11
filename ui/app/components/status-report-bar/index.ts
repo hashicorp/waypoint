@@ -27,15 +27,21 @@ export default class StatusReportBar extends Component<StatusReportBarArgs> {
   @service api!: ApiService;
   @service flashMessages!: FlashMessagesService;
   @tracked isRefreshRunning = false;
-  @tracked _statusReport?: StatusReport.AsObject;
 
   constructor(owner: any, args: any) {
     super(owner, args);
-    this._statusReport = this.args.model.statusReport;
   }
 
   get artifactType() {
     return this.args.artifactType;
+  }
+
+  get model() {
+    return this.args.model;
+  }
+
+  get statusReport() {
+    return this.model.statusReport;
   }
 
   @action

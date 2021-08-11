@@ -7,14 +7,14 @@ import hbs from 'htmlbars-inline-precompile';
 module('Integration | Component | status-report-bar', function (hooks) {
   setupRenderingTest(hooks);
 
-  test('does not render when no status report', async function (assert) {
+  test('does not render indicator when no status report', async function (assert) {
     this.set('model', {
       statusReport: undefined,
     });
 
     await render(hbs`<StatusReportBar @model={{this.model}}/>`);
 
-    assert.equal(this.element.textContent?.trim(), '');
+    assert.dom('[data-test-status-report-indicator]').doesNotExist();
   });
 
   test('does render when status report exists', async function (assert) {
