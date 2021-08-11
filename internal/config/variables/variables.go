@@ -306,7 +306,9 @@ func EvaluateVariables(
 					"but was not found in known variables. To declare variable "+
 					"%q, place a variable definition block in your waypoint.hcl file.",
 					pbv.Name, pbv.Name),
-				Subject: &hcl.Range{},
+				Subject: &hcl.Range{
+					Filename: "waypoint.hcl",
+				},
 			})
 			continue
 		}
@@ -403,7 +405,7 @@ func EvaluateVariables(
 	}
 
 	// check that all variables have a set value, including default of null
-	for name := range vs {
+	for name, variable := range vs {
 		v, ok := iv[name]
 		if !ok || v == nil {
 			diags = append(diags, &hcl.Diagnostic{
@@ -412,7 +414,7 @@ func EvaluateVariables(
 				Detail: "A variable must be set or have a default value; see " +
 					"https://www.waypointproject.io/docs/waypoint-hcl/variables/input " +
 					"for details.",
-				Subject: &hcl.Range{},
+				Subject: &variable.Range,
 			})
 		}
 	}
@@ -527,7 +529,9 @@ func readFileValues(filename string) (*hcl.File, hcl.Diagnostics) {
 			Severity: hcl.DiagError,
 			Summary:  "Failed to read variable values from file",
 			Detail:   errStr,
-			Subject:  &hcl.Range{},
+			Subject: &hcl.Range{
+				Filename: filename,
+			},
 		})
 	}
 
