@@ -862,11 +862,11 @@ func (p *Platform) Status(
 	healths := make(map[sdk.StatusReport_Health]int)
 	for _, r := range resources {
 		if r.Type != "pod" {
-			// We will need different logic to calculate overall health if we have more than just pod resources
+			// We only use pod healths to determine overall status
 			continue
 		}
 		if _, ok := healths[r.Health]; !ok {
-			healths[r.Health] = 0
+			healths[r.Health] = 1
 		} else {
 			healths[r.Health]++
 		}
