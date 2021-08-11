@@ -23,6 +23,11 @@
           <b>{{component-name operation.component.name}}</b>
         </span>
       </small>
+      {{#if @model.preload.jobDataSourceRef.git.commit}}
+        <small>
+          <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
+        </small>
+      {{/if}}
     </div>
     <div class="actions">
       <Actions::Deploy @sequence={{@model.sequence}} />

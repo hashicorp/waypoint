@@ -5,7 +5,10 @@
 @use 'pds/tokens/font';
 @use 'pds/core/typography/config' as Typography;
 @use 'utilities/animations';
+
 @use 'utilities/focus-ring';
+
+@import 'mixins/index';
 
 @import './variables';
 @import './layout';
@@ -22,6 +25,7 @@
 @import './components/copyable-code';
 @import './components/empty-state';
 @import './components/flash';
+@import './components/git-commit';
 @import './components/navigation/footer';
 @import './components/navigation/header';
 @import './components/icon-tile';

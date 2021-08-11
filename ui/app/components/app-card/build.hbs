@@ -10,6 +10,7 @@
       <b class="badge badge--version">v{{@model.sequence}}</b>
     </LinkTo>
     <OperationStatusIndicator @status={{or @model.pushedArtifact.status @model.status}} />
+    <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
   </:meta-primary>
 
   <:meta-secondary>

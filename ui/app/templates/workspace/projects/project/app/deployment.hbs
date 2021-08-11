@@ -8,6 +8,11 @@
       <span>Deployed by <b>{{component-name @model.component.name}}</b>
         {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
     </small>
+    {{#if @model.preload.jobDataSourceRef.git.commit}}
+      <small>
+        <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
+      </small>
+    {{/if}}
   </div>
   <div class="actions">
     <div class="button-group">

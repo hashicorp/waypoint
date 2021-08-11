@@ -1,0 +1,19 @@
+.git-commit {
+  display: flex;
+  align-items: center;
+  @include Typography.Interface(S);
+  background: rgb(var(--badge));
+  color: rgb(var(--text-muted));
+  border-radius: 2px;
+  padding: scale.$sm-4 scale.$sm-4;
+  &__sha {
+    padding: 0 scale.$sm-4;
+  }
+  .copy-btn {
+    @include button-reset;
+    cursor: pointer;
+    &:active {
+      color: rgb(var(--text));
+    }
+  }
+}
