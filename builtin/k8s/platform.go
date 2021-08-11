@@ -2,14 +2,18 @@ package k8s
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/mapstructure"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
@@ -24,7 +28,6 @@ import (
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/docker"
-	"github.com/hashicorp/waypoint/internal/clierrors"
 )
 
 const (
@@ -102,7 +105,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithState(&Resource_Deployment{}),
 			resource.WithCreate(p.resourceDeploymentCreate),
 			resource.WithDestroy(p.resourceDeploymentDestroy),
-
+			resource.WithStatus(p.resourceDeploymentStatus),
 			resource.WithPlatform(platformName),
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
 		)),
@@ -123,6 +126,165 @@ func (p *Platform) getClientset() (*clientsetInfo, error) {
 		Namespace: ns,
 		Config:    config,
 	}, nil
+}
+
+func (p *Platform) resourceDeploymentStatus(
+	ctx context.Context,
+	log hclog.Logger,
+	sg terminal.StepGroup,
+	deploymentState *Resource_Deployment,
+	clientset *clientsetInfo,
+	sr *resource.StatusResponse,
+) error {
+	s := sg.Add("Checking status of the Kubernetes deployment resource...")
+	defer s.Abort()
+
+	namespace := p.config.Namespace
+	if namespace == "" {
+		namespace = clientset.Namespace
+	}
+
+	// Get deployment status
+
+	deploymentResource := sdk.StatusReport_Resource{
+		Platform:            platformName,
+		Type:                "deployment",
+		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
+	}
+	sr.Resources = append(sr.Resources, &deploymentResource)
+
+	deployResp, err := clientset.Clientset.AppsV1().Deployments(namespace).Get(ctx, deploymentState.Name, metav1.GetOptions{})
+	if deployResp == nil {
+		return status.Errorf(codes.FailedPrecondition, "kubernetes deployment response cannot be empty")
+	} else if err != nil {
+		if !errors.IsNotFound(err) {
+			return status.Errorf(codes.FailedPrecondition, "error getting kubernetes deployment %s: %s", deploymentState.Name, err)
+		} else {
+			deploymentResource.Name = deploymentState.Name
+			deploymentResource.Health = sdk.StatusReport_MISSING
+			deploymentResource.HealthMessage = sdk.StatusReport_MISSING.String()
+
+			// Continue on with getting statuses for the rest of our resources
+		}
+	} else {
+		// Found the deployment, and can use it to populate our resource
+
+		var mostRecentCondition v1.DeploymentCondition
+		for _, condition := range deployResp.Status.Conditions {
+			if condition.LastUpdateTime.Time.After(mostRecentCondition.LastUpdateTime.Time) {
+				mostRecentCondition = condition
+			}
+		}
+
+		var deployHealth sdk.StatusReport_Health
+		switch mostRecentCondition.Type {
+		case v1.DeploymentAvailable:
+			deployHealth = sdk.StatusReport_READY
+		case v1.DeploymentProgressing:
+			deployHealth = sdk.StatusReport_ALIVE
+		case v1.DeploymentReplicaFailure:
+			deployHealth = sdk.StatusReport_DOWN
+		default:
+			deployHealth = sdk.StatusReport_UNKNOWN
+		}
+
+		// Redact env vars from containers - they can contain secrets
+		for i := 0; i < len(deployResp.Spec.Template.Spec.Containers); i++ {
+			deployResp.Spec.Template.Spec.Containers[i].Env = []corev1.EnvVar{}
+		}
+
+		deployStateJson, err := json.Marshal(map[string]interface{}{
+			"deployment": deployResp,
+		})
+		if err != nil {
+			return status.Errorf(codes.FailedPrecondition, "failed to marshal deployment to json: %s", err)
+		}
+
+		deploymentResource.Name = deployResp.Name
+		deploymentResource.Id = fmt.Sprintf("%s", deployResp.UID)
+		deploymentResource.CreatedTime = timestamppb.New(deployResp.CreationTimestamp.Time)
+		deploymentResource.Health = deployHealth
+		deploymentResource.HealthMessage = fmt.Sprintf("%s: %s", mostRecentCondition.Type, mostRecentCondition.Message)
+		deploymentResource.StateJson = string(deployStateJson)
+	}
+
+	// Get pod status
+
+	podClient := clientset.Clientset.CoreV1().Pods(namespace)
+	podLabelId := fmt.Sprintf("app=%s", deploymentState.Name)
+	podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: podLabelId})
+	if err != nil {
+		return status.Errorf(codes.FailedPrecondition, "error listing pods to determine application health: %s", err)
+	}
+	if podList == nil {
+		return status.Errorf(codes.FailedPrecondition, "kubernetes pod list cannot be nil")
+	}
+
+	for _, pod := range podList.Items {
+		// Redact env vars because they can contain secrets
+		for i := 0; i < len(pod.Spec.Containers); i++ {
+			pod.Spec.Containers[i].Env = []corev1.EnvVar{}
+		}
+
+		podJson, err := json.Marshal(map[string]interface{}{
+			"pod":       pod,
+			"hostIP":    pod.Status.HostIP,
+			"ipAddress": pod.Status.PodIP,
+		})
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to marshal k8s pod definition to json: %s", podJson)
+		}
+
+		var health sdk.StatusReport_Health
+		var healthMessage string
+
+		switch pod.Status.Phase {
+		case corev1.PodPending:
+			health = sdk.StatusReport_ALIVE
+		case corev1.PodRunning:
+			health = sdk.StatusReport_ALIVE
+			// Extra checks on the latest condition to ensure pod is reporting ready and running
+			for _, c := range pod.Status.Conditions {
+				if c.Status == corev1.ConditionTrue && c.Type == corev1.PodReady {
+					health = sdk.StatusReport_READY
+					healthMessage = fmt.Sprintf("ready")
+					break
+				}
+			}
+		case corev1.PodSucceeded:
+			// kind of a weird one - in our current model pods are always assumed to be long-lived. If a pod exits at all, it's Down.
+			health = sdk.StatusReport_DOWN
+		case corev1.PodFailed:
+			health = sdk.StatusReport_DOWN
+		case corev1.PodUnknown:
+			health = sdk.StatusReport_UNKNOWN
+		default:
+			health = sdk.StatusReport_UNKNOWN
+		}
+
+		// If we don't have anything better, the pod status phase is an OK health message
+		// NOTE(izaak): An alternative health message could be the "type" of all conditions tied for the most recent
+		// latestTransitionTime concatenated together.
+		if healthMessage == "" {
+			healthMessage = fmt.Sprintf("%s", pod.Status.Phase)
+		}
+
+		sr.Resources = append(sr.Resources, &sdk.StatusReport_Resource{
+			Name:                pod.ObjectMeta.Name,
+			Id:                  fmt.Sprintf("%s", pod.UID),
+			Type:                "pod",
+			ParentResourceId:    deploymentResource.Id,
+			Health:              health,
+			HealthMessage:       healthMessage,
+			Platform:            platformName,
+			CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE,
+			StateJson:           string(podJson),
+			CreatedTime:         timestamppb.New(pod.CreationTimestamp.Time),
+		})
+	}
+	s.Update("Finished building report for Kubernetes deployment resource")
+	s.Done()
+	return nil
 }
 
 // resourceDeploymentCreate creates the Kubernetes deployment.
@@ -657,47 +819,87 @@ func (p *Platform) Status(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	step := sg.Add("Gathering health report for Kubernetes platform...")
+	step := sg.Add("Gathering health report for Kubernetes deployment...")
 	defer func() { step.Abort() }() // Defer in func in case more steps are added to this func in the future
 
-	csInfo, err := p.getClientset()
-	if err != nil {
-		return nil, err
-	}
-	clientSet := csInfo.Clientset
-	namespace := csInfo.Namespace
-	if p.config.Namespace != "" {
-		namespace = p.config.Namespace
+	rm := p.resourceManager(log, nil)
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if deployment.ResourceState == nil {
+		rm.Resource("deployment").SetState(&Resource_Deployment{
+			Name: deployment.Name,
+		})
+	} else {
+		// Load our set state
+		if err := rm.LoadState(deployment.ResourceState); err != nil {
+			return nil, err
+		}
 	}
 
-	podClient := clientSet.CoreV1().Pods(namespace)
-	podLabelId := fmt.Sprintf("app=%s", deployment.Name)
-	podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: podLabelId})
+	resources, err := rm.StatusAll(ctx, log, sg, ui)
 	if err != nil {
-		ui.Output(
-			"Error listing pods to determine application health: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "resource manager failed to generate resource statuses: %s", err)
 	}
+
+	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
+	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
+	st := ui.Status()
+	defer st.Close()
+	st.Update("Determining overall container health...")
 
 	// Create our status report
-	step.Update("Building status report for running pods...")
-	result := buildStatusReport(podList)
+	result := sdk.StatusReport{
+		External:      true,
+		GeneratedTime: timestamppb.Now(),
+		Resources:     resources,
+	}
 
-	result.GeneratedTime = ptypes.TimestampNow()
+	// Figure out our overall status based on our resource list. If all pods are in the same state, the
+	// status report state will match. If pods are in mixes states, we'll return a PARTIAL health
+	// and a detailed health message.
+
+	// Create a map of how many pods are in each status
+	healths := make(map[sdk.StatusReport_Health]int)
+	for _, r := range resources {
+		if r.Type != "pod" {
+			// We only use pod healths to determine overall status
+			continue
+		}
+		healths[r.Health]++
+	}
+
+	var overallHealth sdk.StatusReport_Health
+	var overallHealthMessage string
+	for podHealth, countHealthStatuses := range healths {
+		if len(healths) == 1 {
+			// If we only have one kind of health type, we can generate the uniform health status
+			overallHealth = podHealth
+			overallHealthMessage = fmt.Sprintf("All %d pods are reporting %s", countHealthStatuses, podHealth.String())
+			break
+		}
+		// We have more than one distinct health type, we have some kind of partial status
+		overallHealth = sdk.StatusReport_PARTIAL
+
+		// Quick pluralization
+		noun := "pod"
+		if countHealthStatuses > 1 {
+			noun = noun + "s"
+		}
+
+		overallHealthMessage = overallHealthMessage + fmt.Sprintf("%d %s %s, ", countHealthStatuses, noun, podHealth)
+	}
+	overallHealthMessage = strings.TrimSuffix(overallHealthMessage, ", ")
+
+	result.Health = overallHealth
+	result.HealthMessage = overallHealthMessage
+
 	log.Debug("status report complete")
 
 	// update output based on main health state
 	step.Update("Finished building report for Kubernetes platform")
 	step.Done()
 
-	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
-	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
-	st := ui.Status()
-	defer st.Close()
-
-	st.Update("Determining overall container health...")
 	if result.Health == sdk.StatusReport_READY {
 		st.Step(terminal.StatusOK, fmt.Sprintf("Deployment %q is reporting ready!", deployment.Name))
 	} else {
@@ -715,7 +917,7 @@ func (p *Platform) Status(
 	// More UI detail for non-ready resources
 	for _, resource := range result.Resources {
 		if resource.Health != sdk.StatusReport_READY {
-			st.Step(terminal.StatusWarn, fmt.Sprintf("Resource %q is reporting %q", resource.Name, resource.Health.String()))
+			st.Step(terminal.StatusWarn, fmt.Sprintf("%s %q is reporting %q", resource.Type, resource.Name, resource.Health.String()))
 		}
 	}
 

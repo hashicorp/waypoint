@@ -2,14 +2,16 @@ package k8s
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint/internal/clierrors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,8 +63,75 @@ func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithState(&Resource_Service{}),
 			resource.WithCreate(r.resourceServiceCreate),
 			resource.WithDestroy(r.resourceServiceDestroy),
+			resource.WithStatus(r.resourceServiceStatus),
 		)),
 	)
+}
+
+func (r *Releaser) resourceServiceStatus(
+	ctx context.Context,
+	log hclog.Logger,
+	sg terminal.StepGroup,
+	state *Resource_Service,
+	clientset *clientsetInfo,
+	sr *resource.StatusResponse,
+) error {
+	s := sg.Add("Checking status of Kubernetes service resource...")
+	defer s.Abort()
+
+	namespace := r.config.Namespace
+	if namespace == "" {
+		namespace = clientset.Namespace
+	}
+
+	serviceResource := sdk.StatusReport_Resource{
+		Platform:            platformName,
+		Type:                "service",
+		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_ROUTER,
+	}
+	sr.Resources = append(sr.Resources, &serviceResource)
+
+	serviceResp, err := clientset.Clientset.CoreV1().Services(namespace).Get(ctx, state.Name, metav1.GetOptions{})
+	if serviceResp == nil {
+		return status.Errorf(codes.FailedPrecondition, "kubernetes service response cannot be empty")
+	} else if err != nil {
+		if !errors.IsNotFound(err) {
+			return err
+		} else {
+			serviceResource.Name = state.Name
+			serviceResource.Health = sdk.StatusReport_MISSING
+			serviceResource.HealthMessage = sdk.StatusReport_MISSING.String()
+
+			// Continue on with the rest of our resources
+		}
+	} else {
+		// We found the service, and can use it to populate our resource
+		var ipAddress string
+		if serviceResp.Spec.LoadBalancerIP != "" {
+			ipAddress = serviceResp.Spec.LoadBalancerIP
+		} else if serviceResp.Spec.ClusterIP != "" {
+			ipAddress = serviceResp.Spec.ClusterIP
+		}
+
+		serviceJson, err := json.Marshal(map[string]interface{}{
+			"service":   serviceResp,
+			"ipAddress": ipAddress,
+		})
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to marshal k8s service definition to json: %s", err)
+		}
+
+		serviceResource.Id = fmt.Sprintf("%s", serviceResp.UID)
+		serviceResource.Name = serviceResp.Name
+		serviceResource.CreatedTime = timestamppb.New(serviceResp.CreationTimestamp.Time)
+		serviceResource.Health = sdk.StatusReport_READY // If we found the service, then it's ready. It doesn't have any other conditions.
+		serviceResource.HealthMessage = "exists"
+		serviceResource.StateJson = string(serviceJson)
+	}
+
+	s.Update("Finished building report for Kubernetes service resource")
+	s.Done()
+	return nil
 }
 
 func (r *Releaser) resourceServiceCreate(
@@ -361,41 +430,54 @@ func (r *Releaser) Status(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	step := sg.Add("Gathering health report for Kubernetes platform...")
+	rm := r.resourceManager(log, nil)
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if release.ResourceState == nil {
+		rm.Resource("service").SetState(&Resource_Service{
+			Name: release.ServiceName,
+		})
+	} else {
+		// Load our set state
+		if err := rm.LoadState(release.ResourceState); err != nil {
+			return nil, err
+		}
+	}
+
+	step := sg.Add("Gathering health report for Kubernetes release...")
 	defer step.Abort()
 
-	// Get our client
-	clientset, namespace, _, err := clientset(r.config.KubeconfigPath, r.config.Context)
+	resources, err := rm.StatusAll(ctx, log, sg, ui)
 	if err != nil {
-		return nil, err
-	}
-	if r.config.Namespace != "" {
-		namespace = r.config.Namespace
+		return nil, status.Errorf(codes.Internal, "resource manager failed to generate resource statuses: %s", err)
 	}
 
-	serviceclient := clientset.CoreV1().Services(namespace)
-	service, err := serviceclient.Get(ctx, release.ServiceName, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
+	if len(resources) == 0 {
+		// This shouldn't happen - the status func for the releaser should always return a resource or an error.
+		return nil, status.Errorf(codes.Internal, "no resources generated for release - cannot determine status.")
 	}
 
-	appName := service.Spec.Selector["name"]
-	podClient := clientset.CoreV1().Pods(namespace)
-	podLabelId := fmt.Sprintf("app=%s", appName)
-	podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: podLabelId})
-	if err != nil {
-		ui.Output(
-			"Error listing pods to determine application health: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return nil, err
+	var serviceResource *sdk.StatusReport_Resource
+	for _, r := range resources {
+		if r.Type == "service" {
+			serviceResource = r
+			break
+		}
+	}
+	if serviceResource == nil {
+		return nil, status.Errorf(codes.Internal, "no service resource found - cannot determine overall health")
 	}
 
 	// Create our status report
-	step.Update("Building status report for running pods...")
-	result := buildStatusReport(podList)
+	result := sdk.StatusReport{
+		External:      true,
+		GeneratedTime: timestamppb.Now(),
+		Resources:     resources,
+		Health:        serviceResource.Health,
+		HealthMessage: serviceResource.HealthMessage,
+	}
 
-	result.GeneratedTime = ptypes.TimestampNow()
 	log.Debug("status report complete")
 
 	// update output based on main health state
@@ -406,21 +488,6 @@ func (r *Releaser) Status(
 	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
 	st := ui.Status()
 	defer st.Close()
-
-	st.Update("Determining overall container health...")
-	if result.Health == sdk.StatusReport_READY {
-		st.Step(terminal.StatusOK, fmt.Sprintf("Release %q is reporting ready!", appName))
-	} else {
-		if result.Health == sdk.StatusReport_PARTIAL {
-			st.Step(terminal.StatusWarn, fmt.Sprintf("Release %q is reporting partially available!", appName))
-		} else {
-			st.Step(terminal.StatusError, fmt.Sprintf("Release %q is reporting not ready!", appName))
-		}
-
-		// Extra advisory wording to let user know that the deployment could be still starting up
-		// if the report was generated immediately after it was deployed or released.
-		st.Step(terminal.StatusWarn, mixedHealthReleaseWarn)
-	}
 
 	// More UI detail for non-ready resources
 	for _, resource := range result.Resources {
