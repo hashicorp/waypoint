@@ -127,6 +127,7 @@ func DecodeVariableBlocks(content *hcl.BodyContent) (map[string]*Variable, hcl.D
 				Severity: hcl.DiagError,
 				Summary:  "Duplicate variable",
 				Detail:   "Duplicate " + v.Name + " variable definition found.",
+				Subject:  &v.Range,
 				Context:  block.DefRange.Ptr(),
 			}}
 		}
@@ -305,6 +306,7 @@ func EvaluateVariables(
 					"but was not found in known variables. To declare variable "+
 					"%q, place a variable definition block in your waypoint.hcl file.",
 					pbv.Name, pbv.Name),
+				Subject: &hcl.Range{},
 			})
 			continue
 		}
@@ -342,6 +344,7 @@ func EvaluateVariables(
 				Severity: hcl.DiagError,
 				Summary:  "Invalid value type for variable",
 				Detail:   "The variable type was not set as a string, number, bool, or hcl expression",
+				Subject:  &variable.Range,
 			})
 			return nil, diags
 		}
@@ -386,6 +389,7 @@ func EvaluateVariables(
 						valType,
 						err,
 					),
+					Subject: &variable.Range,
 				})
 				val = cty.DynamicVal
 			}
@@ -408,6 +412,7 @@ func EvaluateVariables(
 				Detail: "A variable must be set or have a default value; see " +
 					"https://www.waypointproject.io/docs/waypoint-hcl/variables/input " +
 					"for details.",
+				Subject: &hcl.Range{},
 			})
 		}
 	}
@@ -522,6 +527,7 @@ func readFileValues(filename string) (*hcl.File, hcl.Diagnostics) {
 			Severity: hcl.DiagError,
 			Summary:  "Failed to read variable values from file",
 			Detail:   errStr,
+			Subject:  &hcl.Range{},
 		})
 	}
 
