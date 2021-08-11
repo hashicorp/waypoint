@@ -92,16 +92,18 @@ func (r *Releaser) resourceServiceStatus(
 	sr.Resources = append(sr.Resources, &serviceResource)
 
 	serviceResp, err := clientset.Clientset.CoreV1().Services(namespace).Get(ctx, state.Name, metav1.GetOptions{})
-	if err != nil {
-		if errors.IsNotFound(err) {
+	if serviceResp == nil {
+		return status.Errorf(codes.FailedPrecondition, "kubernetes service response cannot be nil")
+	} else if err != nil {
+		if !errors.IsNotFound(err) {
+			return err
+		} else {
 			serviceResource.Name = state.Name
 			serviceResource.Health = sdk.StatusReport_MISSING
 			serviceResource.HealthMessage = sdk.StatusReport_MISSING.String()
-		} else {
-			return err
+
+			// Continue on with the rest of our resources
 		}
-	} else if serviceResp == nil {
-		return status.Errorf(codes.FailedPrecondition, "kubernetes service response cannot be nil")
 	} else {
 		// We found the service, and can use it to populate our resource
 		var ipAddress string
