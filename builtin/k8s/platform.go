@@ -154,16 +154,18 @@ func (p *Platform) resourceDeploymentStatus(
 	sr.Resources = append(sr.Resources, &deploymentResource)
 
 	deployResp, err := clientset.Clientset.AppsV1().Deployments(namespace).Get(ctx, deploymentState.Name, metav1.GetOptions{})
-	if err != nil {
-		if errors.IsNotFound(err) {
+	if deployResp == nil {
+		return status.Errorf(codes.FailedPrecondition, "kubernetes deployment response cannot be nil")
+	} else if err != nil {
+		if !errors.IsNotFound(err) {
+			return status.Errorf(codes.FailedPrecondition, "error getting kubernetes deployment %s: %s", deploymentState.Name, err)
+		} else {
 			deploymentResource.Name = deploymentState.Name
 			deploymentResource.Health = sdk.StatusReport_MISSING
 			deploymentResource.HealthMessage = sdk.StatusReport_MISSING.String()
-		} else {
-			return status.Errorf(codes.FailedPrecondition, "error getting kubernetes deployment %s: %s", deploymentState.Name, err)
+
+			// Continue on with getting statuses for the rest of our resources
 		}
-	} else if deployResp == nil {
-		return status.Errorf(codes.FailedPrecondition, "kubernetes deployment response cannot be nil")
 	} else {
 		// Found the deployment, and can use it to populate our resource
 
