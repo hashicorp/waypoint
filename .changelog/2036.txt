@@ -1,0 +1,3 @@
+```release-note:improvement
+ui: Improve design of status row on Build/Deployment/Release detail pages
+```
