@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mitchellh/copystructure"
-
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
+	"github.com/mitchellh/copystructure"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
