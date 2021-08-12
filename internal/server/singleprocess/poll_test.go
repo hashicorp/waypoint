@@ -668,7 +668,7 @@ func TestApplicationPollHandler_turnoff(t *testing.T) {
 		raw, err := testServiceImpl(impl).state.JobList()
 		for _, j := range raw {
 			if j.State != pb.Job_ERROR &&
-				j.SingletonId == fmt.Sprintf("appl-poll/%s", appName) {
+				j.SingletonId == fmt.Sprintf("appl-poll/%s/deployment", appName) {
 				// App status polling should only have this singleton id
 				jobs = append(jobs, j)
 			}
