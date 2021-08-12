@@ -102,7 +102,7 @@ func (a *applicationPoll) buildPollJobs(
 	// an error so we fail early instead of queueing an already broken job
 	if project.DataSource == nil {
 		log.Debug("cannot poll a job without a remote data source configured.")
-		return nil, status.Error(codes.FailedPrecondition, "application polling requires a remote data source")
+		return nil, status.Error(codes.FailedPrecondition, "application status polling requires a remote data source")
 	}
 
 	// Determine the latest deployment or release to poll for a status report
