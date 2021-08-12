@@ -203,7 +203,7 @@ func (a *applicationPoll) buildPollJobs(
 		}
 		// SingletonId so that we only have one poll operation at
 		// any time queued per app/operation.
-		releaseJob.Job.SingletonId = fmt.Sprintf("appl-poll/%s/release", app.Name)
+		releaseJob.Job.SingletonId = fmt.Sprintf("app-status-poll/%s/release", app.Name)
 
 		jobs = append(jobs, releaseJob)
 	}
