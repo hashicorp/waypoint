@@ -1,3 +1,55 @@
+## unreleased
+
+FEATURES:
+
+* **Status Reports:** Waypoint now has multiple improvements to support status
+checks for deployed resources. See `Improvements` for more.
+* **Input variables:** Waypoint now allows users to parameterize the waypoint.hcl
+file through an input variable system. [[GH-1548](https://github.com/hashicorp/waypoint/issues/1548)]
+* **OIDC Authentication and User Accounts:** Waypoint now has a user account system
+and can be configured to sign up and log in users using any OIDC provider
+such as Google, GitLab, etc. [[GH-1831](https://github.com/hashicorp/waypoint/issues/1831)]
+* cli: can login with a token using the new `waypoint login` command [[GH-1848](https://github.com/hashicorp/waypoint/issues/1848)]
+* cli: new "waypoint user" CLI for user management [[GH-1864](https://github.com/hashicorp/waypoint/issues/1864)]
+* core: platform plugins may now advertise deployment-specific URLs [[GH-1387](https://github.com/hashicorp/waypoint/issues/1387)]
+* ui: Show deployment URL if available [[GH-1739](https://github.com/hashicorp/waypoint/issues/1739)]
+* ui: added button on individual artifact (deployments + releases) page for on demand health checks [[GH-1911](https://github.com/hashicorp/waypoint/issues/1911)]
+
+IMPROVEMENTS:
+
+* **Status reports:** server: Continuously generate a status report for an application after the initial
+deployment or release for projects backed by a git data source [[GH-1801](https://github.com/hashicorp/waypoint/issues/1801)]
+* cli: Adds a `-git-path` flag to `waypoint project apply` [[GH-2013](https://github.com/hashicorp/waypoint/issues/2013)]
+* core: git poller setting to optionally ignore changes outside of the configured project path [[GH-1821](https://github.com/hashicorp/waypoint/issues/1821)]
+* entrypoint: Can disable `waypoint exec` only by setting the
+`WAYPOINT_CEB_DISABLE_EXEC` environment variable to a truthy value. [[GH-1973](https://github.com/hashicorp/waypoint/issues/1973)]
+* plugin/aws/alb: Update ALB Releaser to use new SDK Resource Manager [[GH-1648](https://github.com/hashicorp/waypoint/issues/1648)]
+* plugin/aws/ecs: Add ability to specify security group IDs [[GH-1919](https://github.com/hashicorp/waypoint/issues/1919)]
+* plugin/docker: Enables image build for specified platform [[GH-1949](https://github.com/hashicorp/waypoint/issues/1949)]
+* plugin/google: Add non-blocking alert if unable to delete revision [[GH-2005](https://github.com/hashicorp/waypoint/issues/2005)]
+* plugin/google: Implement DestroyWorkspace to cleanup all created resources [[GH-2005](https://github.com/hashicorp/waypoint/issues/2005)]
+* plugin/google: Update Google Cloud platform to use SDK Resource Manager [[GH-2005](https://github.com/hashicorp/waypoint/issues/2005)]
+* plugin/google: Update error message to be more helpful [[GH-1958](https://github.com/hashicorp/waypoint/issues/1958)]
+* plugin/k8s: Include deployment and release resources in `waypoint status` output. [[GH-2024](https://github.com/hashicorp/waypoint/issues/2024)]
+* plugin/k8s: Update K8s Releaser to use SDK Resource Manager [[GH-1938](https://github.com/hashicorp/waypoint/issues/1938)]
+* plugin/k8s: Updates release status report to check k8s service status [[GH-2024](https://github.com/hashicorp/waypoint/issues/2024)]
+* plugin/nomad: Add consul service optional flags [[GH-2033](https://github.com/hashicorp/waypoint/issues/2033)]
+* plugin/nomad: Update Nomad platform to use SDK Resource Manager [[GH-1941](https://github.com/hashicorp/waypoint/issues/1941)]
+* ui: Add ability to add input variables in the project settings UI [[GH-1658](https://github.com/hashicorp/waypoint/issues/1658)]
+* ui: Add dynamic page titles [[GH-1916](https://github.com/hashicorp/waypoint/issues/1916)]
+* ui: Add git commit SHAs to operations in the browser UI [[GH-2025](https://github.com/hashicorp/waypoint/issues/2025)]
+* ui: Update authentication page with new supported `waypoint user token` command. [[GH-2006](https://github.com/hashicorp/waypoint/issues/2006)]
+
+BUG FIXES:
+
+* plugin/aws-alb: Fix issue destroying when Target Group still in use [[GH-1648](https://github.com/hashicorp/waypoint/issues/1648)]
+* plugin/docker: Fix docker buildkit build failures [[GH-1937](https://github.com/hashicorp/waypoint/issues/1937)]
+* plugin/nomad: Fix case where nomad error would be ignored during a status check [[GH-1723](https://github.com/hashicorp/waypoint/issues/1723)]
+* plugin/k8s: Fix `ports` configurability [[GH-1650](https://github.com/hashicorp/waypoint/issues/1650)]
+* serverinstall/ecs: Handle errors when resources are already destroyed [[GH-1984](https://github.com/hashicorp/waypoint/issues/1984)]
+* ui: Display and read/write base64 strings correctly in SSH and Hcl inputs [[GH-1967](https://github.com/hashicorp/waypoint/issues/1967)]
+
+
 ## 0.4.2 (July 22, 2021)
 
 FEATURES:
