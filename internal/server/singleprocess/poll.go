@@ -164,7 +164,7 @@ func (s *service) runPollQueuer(
 		log.Trace("queueing jobs for poller", "job_total", totalRequests)
 
 		// Note: We queue all poll jobs transactionally and return any
-		// errors that occured
+		// errors that occurred
 		_, err = s.queueJobMulti(ctx, queueJobRequests)
 		if err != nil {
 			log.Warn("error queueing a poll job", "err", err)
