@@ -157,36 +157,36 @@ func (a *applicationPoll) buildPollJobs(
 	log.Trace("Determining which target to generate a status report on")
 
 	// Default to poll on the "latest" lifecycle operation, so if there's a
-	// release, queue up a status on release. If the latest is deploy, then queue that.
-	if latestRelease != nil && !latestRelease.Unimplemented {
-		releaseJobCopy, err := copystructure.Copy(baseJob)
+	// deploy, queue up a status on deploy. If there is latest is release, then queue that too.
+	if latestDeployment.Deployment != nil {
+		baseJobCopy, err := copystructure.Copy(baseJob)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to generate a job to poll release status: %s", err)
+			return nil, status.Errorf(codes.Internal, "failed to generate a job to poll deployment status: %s", err)
 		}
-		releaseJob := releaseJobCopy.(*pb.QueueJobRequest)
-		releaseJob.Job.Operation = &pb.Job_StatusReport{
+		deploymentJob := baseJobCopy.(*pb.QueueJobRequest)
+		deploymentJob.Job.Operation = &pb.Job_StatusReport{
 			StatusReport: &pb.Job_StatusReportOp{
-				Target: &pb.Job_StatusReportOp_Release{
-					Release: latestRelease,
+				Target: &pb.Job_StatusReportOp_Deployment{
+					Deployment: latestDeployment,
 				},
 			},
 		}
 		// SingletonId so that we only have one poll operation at
 		// any time queued per app/operation.
-		releaseJob.Job.SingletonId = fmt.Sprintf("appl-poll/%s/deployment", app.Name)
+		deploymentJob.Job.SingletonId = fmt.Sprintf("appl-poll/%s/deployment", app.Name)
 
-		jobs = append(jobs, releaseJob)
+		jobs = append(jobs, deploymentJob)
 	}
-	if latestDeployment.Deployment != nil {
-		releaseJobCopy, err := copystructure.Copy(baseJob)
+	if latestRelease != nil && !latestRelease.Unimplemented {
+		baseJobCopy, err := copystructure.Copy(baseJob)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to generate a job to poll release status: %s", err)
 		}
-		releaseJob := releaseJobCopy.(*pb.QueueJobRequest)
+		releaseJob := baseJobCopy.(*pb.QueueJobRequest)
 		releaseJob.Job.Operation = &pb.Job_StatusReport{
 			StatusReport: &pb.Job_StatusReportOp{
-				Target: &pb.Job_StatusReportOp_Deployment{
-					Deployment: latestDeployment,
+				Target: &pb.Job_StatusReportOp_Release{
+					Release: latestRelease,
 				},
 			},
 		}
