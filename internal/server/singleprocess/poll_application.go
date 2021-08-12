@@ -97,7 +97,7 @@ func (a *applicationPoll) buildPollJobs(
 		return nil, err
 	}
 
-	// Application polling requires a remote data source, otherwise a status report
+	// Application status polling requires a remote data source, otherwise a status report
 	// cannot be generated without a project and its hcl context. This returns
 	// an error so we fail early instead of queueing an already broken job
 	if project.DataSource == nil {
