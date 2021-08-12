@@ -1,0 +1,3 @@
+```release-note:improvement
+core: Always generate status reports for latest deployment and release if present
+```
