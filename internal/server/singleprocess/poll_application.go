@@ -101,7 +101,7 @@ func (a *applicationPoll) buildPollJobs(
 	// cannot be generated without a project and its hcl context. This returns
 	// an error so we fail early instead of queueing an already broken job
 	if project.DataSource == nil {
-		log.Debug("cannot poll a job without a remote data source configured.")
+		log.Debug("cannot build an application poll job without a remote data source configured.")
 		return nil, status.Error(codes.FailedPrecondition, "application status polling requires a remote data source")
 	}
 
