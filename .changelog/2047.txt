@@ -1,0 +1,4 @@
+```release-note:improvement
+cli/status: Display '(unknown)' when the time a status report was generated is
+not known
+```
