@@ -142,7 +142,7 @@ func (a *applicationPoll) buildPollJobs(
 			},
 
 			// Application polling requires a data source to be configured for the project
-			// Otherwise a status report can't properly eval the projects hcl context
+			// Otherwise a status report can't properly eval the project's hcl context
 			// needed to query the deploy or release
 			DataSource: project.DataSource,
 
@@ -184,7 +184,7 @@ func (a *applicationPoll) buildPollJobs(
 		}
 		// SingletonId so that we only have one poll operation at
 		// any time queued per app/operation.
-		deploymentJob.Job.SingletonId = fmt.Sprintf("app-status-poll/%s/deployment", app.Name)
+		deploymentJob.Job.SingletonId = appStatusPollSingletonId(app.Name, appStatusPollOperationTypeDeployment)
 
 		jobs = append(jobs, deploymentJob)
 	}
@@ -203,7 +203,7 @@ func (a *applicationPoll) buildPollJobs(
 		}
 		// SingletonId so that we only have one poll operation at
 		// any time queued per app/operation.
-		releaseJob.Job.SingletonId = fmt.Sprintf("app-status-poll/%s/release", app.Name)
+		releaseJob.Job.SingletonId = appStatusPollSingletonId(app.Name, appStatusPollOperationTypeRelease)
 
 		jobs = append(jobs, releaseJob)
 	}
@@ -235,4 +235,18 @@ func (a *applicationPoll) Complete(
 		return err
 	}
 	return nil
+}
+
+// The name of an operation type that status polling is possible for
+type appStatusPollOperationType string
+
+const (
+	appStatusPollOperationTypeDeployment appStatusPollOperationType = "deployment"
+	appStatusPollOperationTypeRelease    appStatusPollOperationType = "release"
+)
+
+// appStatusPollSingletonId generates an application status polling job singleton ID
+// for the given app and operation type.
+func appStatusPollSingletonId(appName string, operationType appStatusPollOperationType) string {
+	return fmt.Sprintf("app-status-poll/%s/%s", appName, operationType)
 }
