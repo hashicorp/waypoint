@@ -835,7 +835,7 @@ func (p *Platform) Status(
 		}
 	}
 
-	statusReport, err := rm.StatusReport(ctx, log, sg, ui)
+	result, err := rm.StatusReport(ctx, log, sg, ui)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "resource manager failed to generate resource statuses: %s", err)
 	}
@@ -852,10 +852,10 @@ func (p *Platform) Status(
 	step.Update("Finished building report for Kubernetes platform")
 	step.Done()
 
-	if statusReport.Health == sdk.StatusReport_READY {
+	if result.Health == sdk.StatusReport_READY {
 		st.Step(terminal.StatusOK, fmt.Sprintf("Deployment %q is reporting ready!", deployment.Name))
 	} else {
-		if statusReport.Health == sdk.StatusReport_PARTIAL {
+		if result.Health == sdk.StatusReport_PARTIAL {
 			st.Step(terminal.StatusWarn, fmt.Sprintf("Deployment %q is reporting partially available!", deployment.Name))
 		} else {
 			st.Step(terminal.StatusError, fmt.Sprintf("Deployment %q is reporting not ready!", deployment.Name))
@@ -867,13 +867,13 @@ func (p *Platform) Status(
 	}
 
 	// More UI detail for non-ready resources
-	for _, resource := range statusReport.Resources {
+	for _, resource := range result.Resources {
 		if resource.Health != sdk.StatusReport_READY {
 			st.Step(terminal.StatusWarn, fmt.Sprintf("%s %q is reporting %q", resource.Type, resource.Name, resource.Health.String()))
 		}
 	}
 
-	return statusReport, nil
+	return result, nil
 }
 
 // Config is the configuration structure for the Platform.

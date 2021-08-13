@@ -317,7 +317,7 @@ func (p *Platform) Status(
 		}
 	}
 
-	statusReport, err := rm.StatusReport(ctx, log, sg, cli, ui)
+	result, err := rm.StatusReport(ctx, log, sg, cli, ui)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "resource manager failed to generate resource statuses: %s", err)
 	}
@@ -334,13 +334,13 @@ func (p *Platform) Status(
 	defer st.Close()
 
 	st.Update("Determining overall container health...")
-	if statusReport.Health == sdk.StatusReport_READY {
-		st.Step(terminal.StatusOK, statusReport.HealthMessage)
+	if result.Health == sdk.StatusReport_READY {
+		st.Step(terminal.StatusOK, result.HealthMessage)
 	} else {
-		if statusReport.Health == sdk.StatusReport_PARTIAL {
-			st.Step(terminal.StatusWarn, statusReport.HealthMessage)
+		if result.Health == sdk.StatusReport_PARTIAL {
+			st.Step(terminal.StatusWarn, result.HealthMessage)
 		} else {
-			st.Step(terminal.StatusError, statusReport.HealthMessage)
+			st.Step(terminal.StatusError, result.HealthMessage)
 		}
 
 		// Extra advisory wording to let user know that the deployment could be still starting up
@@ -348,7 +348,7 @@ func (p *Platform) Status(
 		st.Step(terminal.StatusWarn, mixedHealthWarn)
 	}
 
-	return statusReport, nil
+	return result, nil
 }
 
 func (p *Platform) resourceNetworkCreate(
