@@ -947,12 +947,12 @@ func (c *StatusCommand) FormatStatusReportComplete(
 		statusReportComplete = "? UNKNOWN"
 	}
 
-	t, err := ptypes.Timestamp(statusReport.GeneratedTime)
-	if err != nil {
-		return statusReportComplete, "", err
+	reportTime := "(unknown)"
+	if statusReport.GeneratedTime.IsValid() {
+		reportTime = humanize.Time(statusReport.GeneratedTime.AsTime())
 	}
 
-	return statusReportComplete, humanize.Time(t), nil
+	return statusReportComplete, reportTime, nil
 }
 
 func (c *StatusCommand) getWorkspaceFromProject(pr *pb.GetProjectResponse) (string, error) {
