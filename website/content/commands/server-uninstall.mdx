@@ -17,8 +17,15 @@ Uninstall the Waypoint server
 
 Usage: `waypoint server uninstall [options]`
 
-Uninstall the Waypoint server. The platform should be specified as kubernetes,
-nomad, or docker. '-auto-approve' is required.
+Uninstall the Waypoint server. This command is not intended to uninstall a
+server that was manually run with the 'waypoint server run' CLI, but with
+a Waypoint server that was installed via 'waypoint server install'.
+
+The platform can be specified as kubernetes, nomad, ecs, or docker. If not,
+specified, the CLI command will attempt to retrieve the platform defined in
+the server context.
+
+'-auto-approve' is required.
 
 By default, this command deletes the default server's context and creates
 a server snapshot.
