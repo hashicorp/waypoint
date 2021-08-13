@@ -58,7 +58,7 @@ func (s *State) AppGet(ref *pb.Ref_Application) (*pb.Application, error) {
 	return result, err
 }
 
-// AppPollPeek peeks at the next available project that will be polled against,
+// ApplicationPollPeek peeks at the next available project that will be polled against,
 // and returns the project as the result along with the poll time. The poll queuer
 // will queue a job against every defined application for the given project.
 // For more information on how ProjectPollPeek works, refer to the ProjectPollPeek
@@ -80,7 +80,7 @@ func (s *State) ApplicationPollPeek(
 	return result, pollTime, err
 }
 
-// AppPollComplete sets the next poll time for a given project given the app
+// ApplicationPollComplete sets the next poll time for a given project given the app
 // reference along with the time interval "t".
 func (s *State) ApplicationPollComplete(
 	project *pb.Project,
@@ -128,7 +128,7 @@ func (s *State) appPut(
 		return err
 	}
 
-	// If we have a matching app, then modify that that.
+	// If we have a matching app, then modify that.
 	pt := &serverptypes.Project{Project: p}
 	if idx := pt.App(value.Name); idx >= 0 {
 		p.Applications[idx] = value
@@ -161,7 +161,7 @@ func (s *State) appDelete(
 		return err
 	}
 
-	// If we have a matching app, then modify that that.
+	// If we have a matching app, then modify that.
 	pt := &serverptypes.Project{Project: p}
 	if i := pt.App(ref.Application); i >= 0 {
 		s := p.Applications
@@ -223,7 +223,7 @@ func (s *State) appPollPeek(
 	}
 	ws.Add(iter.WatchCh())
 
-	// Get the projects app with the lowest "next poll" time.
+	// Get the project's app with the lowest "next poll" time.
 	iter, err = memTxn.LowerBound(
 		projectIndexTableName,
 		appIndexNextPollIndexName,
@@ -242,18 +242,14 @@ func (s *State) appPollPeek(
 
 	rec := raw.(*projectIndexRecord)
 	if rec.AppStatusNextPoll.IsZero() {
-		// This happens if this applications poller hasn't been switched on
+		// This happens if this application's poller hasn't been switched on
 		return nil, time.Time{}, nil
 	}
 
 	var result *pb.Project
-	err = s.db.View(func(dbTxn *bolt.Tx) error {
-		var err error
-		result, err = s.projectGet(dbTxn, memTxn, &pb.Ref_Project{
-			Project: rec.Id,
-		})
 
-		return err
+	result, err = s.projectGet(dbTxn, memTxn, &pb.Ref_Project{
+		Project: rec.Id,
 	})
 
 	return result, rec.AppStatusNextPoll, err
