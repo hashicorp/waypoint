@@ -119,7 +119,7 @@ func (p *Platform) resourceContainerStatus(
 	container *Resource_Container,
 	sr *resource.StatusResponse,
 ) error {
-	s := sg.Add("Checking status of the docker container resource...")
+	s := sg.Add("Checking status of the Docker container resource...")
 	defer s.Abort()
 
 	log.Debug("querying docker for container health")
@@ -222,6 +222,8 @@ func (p *Platform) resourceContainerStatus(
 		}
 		containerResource.StateJson = string(stateJson)
 	}
+
+	s.Update("Finished building report for Docker container resource")
 	s.Done()
 	return nil
 }
@@ -234,7 +236,7 @@ func (p *Platform) resourceNetworkStatus(
 	network *Resource_Network,
 	sr *resource.StatusResponse,
 ) error {
-	s := sg.Add("Checking status of the docker network resource...")
+	s := sg.Add("Checking status of the Docker network resource...")
 	defer s.Abort()
 
 	log.Debug("querying docker for network status")
@@ -275,6 +277,8 @@ func (p *Platform) resourceNetworkStatus(
 			})
 		}
 	}
+
+	s.Update("Finished building report for Docker network resource")
 	s.Done()
 	return nil
 }
