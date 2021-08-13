@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -726,6 +727,9 @@ func (r *Releaser) Status(
 
 	var report sdk.StatusReport
 	report.External = true
+	defer func() {
+		report.GeneratedTime = ptypes.TimestampNow()
+	}()
 
 	if release.Region == "" {
 		log.Debug("Region is not available for this release. Unable to determine status.")
