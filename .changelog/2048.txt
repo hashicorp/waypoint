@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/aws/alb: Always set the generated time for a status report
+```
