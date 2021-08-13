@@ -1,7 +1,7 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
-import { render } from '@ember/test-helpers';
+import { render, pauseTest } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import { create, collection, clickable, isPresent, fillable, text } from 'ember-cli-page-object';
 
@@ -10,6 +10,7 @@ const page = create({
   variablesList: collection('[data-test-config-variables-list-item]', {
     dropdown: clickable('[data-test-config-variables-dropdown]'),
     dropdownEdit: clickable('[data-test-config-variables-dropdown-edit]'),
+    hasDropDownEdit: isPresent('[data-test-config-variables-dropdown-edit]'),
     dropdownDelete: clickable('[data-test-config-variables-dropdown-delete]'),
     varName: text('[data-test-config-variables-var-name]'),
     varValue: text('[data-test-config-variables-var-value]'),
@@ -29,7 +30,7 @@ module('Integration | Component | project-config-variables-list', function (hook
     let dbproj = await this.server.create('project', { name: 'Proj1' });
     let proj = dbproj.toProtobuf().toObject();
     let dbVariablesList = this.server.createList('config-variable', 10, 'random');
-    let varList = dbVariablesList.map(v => {
+    let varList = dbVariablesList.map((v) => {
       return v.toProtobuf().toObject();
     });
     this.set('variablesList', varList);
@@ -45,7 +46,7 @@ module('Integration | Component | project-config-variables-list', function (hook
     let dbproj = await this.server.create('project', { name: 'Proj1' });
     let proj = dbproj.toProtobuf().toObject();
     let dbVariablesList = this.server.createList('config-variable', 3, 'random');
-    let varList = dbVariablesList.map(v => {
+    let varList = dbVariablesList.map((v) => {
       return v.toProtobuf().toObject();
     });
     this.set('variablesList', varList);
@@ -73,7 +74,28 @@ module('Integration | Component | project-config-variables-list', function (hook
     assert.equal(page.variablesList.length, 4, 'Create Variable: the list has the new variable');
   });
 
-  // test('only static variables are editable', async function (assert) {});
+  test('only static variables are editable', async function (assert) {
+    let dbproj = await this.server.create('project', { name: 'Proj1' });
+    let proj = dbproj.toProtobuf().toObject();
+    let dbVariablesList = this.server.createList('config-variable', 3, 'random');
+    let dynamicVar = this.server.create('config-variable', 'dynamic');
+    dbVariablesList.push(dynamicVar);
+    let varList = dbVariablesList.map((v) => {
+      return v.toProtobuf().toObject();
+    });
+    this.set('variablesList', varList);
+    this.set('project', proj);
+    await render(
+      hbs`<ProjectConfigVariables::List @variablesList={{this.variablesList}} @project={{this.project}}/>`
+    );
+    assert.dom('.variables-list').exists('The list renders');
+
+    assert.equal(page.variablesList.length, 4, 'the list contains all variables');
+    await page.variablesList.objectAt(0).dropdown();
+    assert.ok(page.variablesList.objectAt(0).hasDropDownEdit, 'Static Variable is editable');
+    await page.variablesList.objectAt(3).dropdown();
+    assert.notOk(page.variablesList.objectAt(3).hasDropDownEdit, 'Dynamic Variable is not editable');
+  });
   // test('internal variables', async function (assert) {});
   // test('nameIsPath works', async function (assert) {});
 });

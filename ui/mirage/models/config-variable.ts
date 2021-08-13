@@ -10,6 +10,19 @@ export default Model.extend({
     // TODO: result.setProject();
     result.setName(this.name);
     result.setStatic(this.pb_static);
+    if (this.dynamic) {
+      let dynamicVal = new ConfigVar.DynamicVal();
+      dynamicVal.setFrom(this.dynamic.from);
+      // DynamicVal.ConfigMap is a map type and has no setter,
+      // and the native JS Map type is not supported: https://github.com/protocolbuffers/protobuf/issues/2789
+      // so we need to use the getter then modify the keys/values
+      // https://developers.google.com/protocol-buffers/docs/reference/javascript-generated#map
+      let configMap = dynamicVal.getConfigMap();
+      this.dynamic.configMap.forEach((value, key) => {
+        configMap.set(key, value);
+      });
+      result.setDynamic(dynamicVal);
+    }
 
     return result;
   },
