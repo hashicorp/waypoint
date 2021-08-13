@@ -68,7 +68,7 @@ export default class StatusReportBar extends Component<StatusReportBarArgs> {
       this.flashMessages.error(error.message);
     });
 
-    if (resp?.getJobId()) {
+    if (resp && resp?.getJobId()) {
       this.isRefreshRunning = true;
 
       let streamReq = new GetJobStreamRequest();

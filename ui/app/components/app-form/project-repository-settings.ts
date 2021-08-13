@@ -126,11 +126,11 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
   }
 
   get decodedWaypointHcl(): string {
-    return atob(this.project.waypointHcl)
+    return atob(this.project.waypointHcl);
   }
 
   get decodedPrivateKey(): string {
-    return atob(this.git.ssh.privateKeyPem)
+    return atob(this.git.ssh.privateKeyPem);
   }
 
   validateGitUrl() {
@@ -198,18 +198,18 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
       };
     }
 
-    let value = e.target.value
-    // if private key, encode input to base 64  
-    if (path === "privateKeyPem") {
-      value = btoa(value)
+    let value = e.target.value;
+    // if private key, encode input to base 64
+    if (path === 'privateKeyPem') {
+      value = btoa(value);
     }
-  
+
     this.project.dataSource.git.ssh[path] = value;
   }
 
   @action
   setWaypointHcl(e: any) {
-    this.project.waypointHcl = btoa(e.target.value)
+    this.project.waypointHcl = btoa(e.target.value);
   }
 
   @action
