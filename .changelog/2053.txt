@@ -1,0 +1,3 @@
+```release-note:improvement
+ui: Improve tab styles for dark mode
+```
