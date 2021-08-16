@@ -1,0 +1,3 @@
+```release-note:feature
+cli: Add a new command for inspecting project information, `waypoint project inspect`.
+```
