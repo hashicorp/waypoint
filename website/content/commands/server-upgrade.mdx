@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: 'Commands: Server upgrade'
-sidebar_title: 'server upgrade'
-description: 'Upgrades Waypoint server in the current context to the latest version'
+page_title: "Commands: Server upgrade"
+sidebar_title: "server upgrade"
+description: "Upgrades Waypoint server in the current context to the latest version"
 ---
 
 # Waypoint Server upgrade
@@ -17,14 +17,15 @@ Upgrades Waypoint server in the current context to the latest version
 
 Usage: `waypoint server upgrade [options]`
 
-Upgrade Waypoint server in the current context to the latest version or the
-server image version specified. By default, Waypoint will upgrade to server
-version "hashicorp/waypoint:latest". Before upgrading, a snapshot of the
-server will be taken in case of any upgrade failures.
 
-If a runner was installed via "waypoint install" then that runner will also
-be upgraded to the latest version after the server is upgraded. Any other
-manually installed runners will not be automatically upgraded.
+  Upgrade Waypoint server in the current context to the latest version or the
+  server image version specified. By default, Waypoint will upgrade to server
+  version "hashicorp/waypoint:latest". Before upgrading, a snapshot of the
+  server will be taken in case of any upgrade failures.
+
+  If a runner was installed via "waypoint install" then that runner will also
+  be upgraded to the latest version after the server is upgraded. Any other
+  manually installed runners will not be automatically upgraded.
 
 #### Global Options
 
@@ -43,6 +44,7 @@ manually installed runners will not be automatically upgraded.
 #### docker Options
 
 - `-docker-server-image=<string>` - Docker image for the Waypoint server.
+- `-docker-odr-image=<string>` - Docker image for the Waypoint Ondemand Runners
 
 #### ecs Options
 

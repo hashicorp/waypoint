@@ -1,0 +1,42 @@
+---
+layout: commands
+page_title: "Commands: Ondemand-runner apply"
+sidebar_title: "ondemand-runner apply"
+description: "Create or update an ondemand runner."
+---
+
+# Waypoint Ondemand-runner apply
+
+Command: `waypoint ondemand-runner apply`
+
+Create or update an ondemand runner.
+
+@include "commands/ondemand-runner-apply_desc.mdx"
+
+## Usage
+
+Usage: `waypoint ondemand-runner apply [OPTIONS]`
+
+
+  Create or update an ondemand runner.
+
+  This will create a new ondemand runner with the given options. If
+	a ondemand runner with the same id already exists, this will update the
+	existing runner using the fields that are set.
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-id=<string>` - The id an existing ondemand runner to update.
+- `-oci-url=<string>` - The url for the OCI image to launch for the ondemand runner.
+- `-env-vars=<string>` - Environment variable to expose to the ondemand runner. Typically used to introduce configuration for the plugins that the runner will execute.
+- `-plugin-type=<string>` - The type of the plugin to launch for the ondemand runner, such as aws-ecs, kubernetes, etc.
+- `-project-config=<string>` - Path to a an hcl file that contains the configuration for the plugin.This is only necessary when the plugin's defaults need to be adjusted for the environment the plugin will launch the ondemand runner.
+- `-default` - Indicates that this ondemand runner should be used by any project that doesn't otherwise specify it's own ondemand runner.
+
+@include "commands/ondemand-runner-apply_more.mdx"
