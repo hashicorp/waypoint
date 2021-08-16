@@ -20,8 +20,10 @@
   }
 
   @media (prefers-color-scheme: dark) {
+    border-bottom: 1px solid color.$ui-cool-gray-700;
+
     a:hover {
-      background: color.$ui-cool-gray-800;
+      background: color.$ui-cool-gray-800!important;
     }
   }
 }
