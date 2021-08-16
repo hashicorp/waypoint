@@ -1,0 +1,3 @@
+```release-note:bug
+ui: prevent deletion of git/input variable settings when saving the other
+```

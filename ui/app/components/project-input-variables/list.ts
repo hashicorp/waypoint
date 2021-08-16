@@ -1,11 +1,11 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
-import { Project, UpsertProjectRequest, Variable } from 'waypoint-pb';
+import { Project, Variable } from 'waypoint-pb';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import RouterService from '@ember/routing/router-service';
-import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
+import PdsFlashMessages from 'waypoint/services/flash-messages';
 
 interface ProjectSettingsArgs {
   project: Project.AsObject;
@@ -14,8 +14,8 @@ interface ProjectSettingsArgs {
 export default class ProjectInputVariablesListComponent extends Component<ProjectSettingsArgs> {
   @service api!: ApiService;
   @service router!: RouterService;
-  @service flashMessages;
-  @tracked project;
+  @service flashMessages: PdsFlashMessages;
+  @tracked project: Project.AsObject;
   @tracked variablesList: Array<Variable.AsObject>;
   @tracked isCreating: boolean;
   @tracked activeVariable;
@@ -57,42 +57,25 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
     variable?: Variable.AsObject,
     initialVariable?: Variable.AsObject
   ): Promise<Project.AsObject | void> {
-    let project = this.project;
-    let ref = new Project();
-    ref.setName(project.name);
-    if (variable && initialVariable) {
-      let existingVarIndex = this.variablesList.findIndex((v) => v.name === initialVariable.name);
-      if (existingVarIndex !== -1) {
-        this.variablesList.splice(existingVarIndex, 1, variable);
-        this.variablesList = [...this.variablesList];
-      }
-    }
-    let varProtosList = this.variablesList.map((v: Variable.AsObject) => {
-      let variable = new Variable();
-      variable.setName(v.name);
-      variable.setServer(new Empty());
-      if (v.hcl) {
-        variable.setHcl(v.hcl);
-      } else {
-        variable.setStr(v.str);
-      }
-      return variable;
-    });
-    ref.setVariablesList(varProtosList);
-    // Build and trigger request
-    let req = new UpsertProjectRequest();
-    req.setProject(ref);
     try {
-      let resp = await this.api.client.upsertProject(req, this.api.WithMeta());
-      let respProject = resp.toObject().project;
-      this.project = respProject;
+      let resp = await this.api.upsertProject(
+        this.project,
+        undefined,
+        variable,
+        initialVariable,
+        this.variablesList
+      );
+
+      this.project = resp;
       this.flashMessages.success('Settings saved');
       this.activeVariable = null;
       this.isCreating = false;
       this.router.refresh('workspace.projects.project');
-      return respProject;
+
+      return resp;
     } catch (err) {
       this.flashMessages.error('Failed to save Settings', { content: err.message, sticky: true });
+      return;
     }
   }
 }

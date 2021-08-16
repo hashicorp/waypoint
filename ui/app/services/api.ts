@@ -3,25 +3,31 @@ import { WaypointClient } from 'waypoint-client';
 import SessionService from 'waypoint/services/session';
 import { inject as service } from '@ember/service';
 import {
-  ListDeploymentsRequest,
-  Ref,
-  Deployment,
-  OperationOrder,
-  ListDeploymentsResponse,
-  ListBuildsRequest,
+  Application,
   Build,
+  Deployment,
+  GetLatestStatusReportRequest,
+  Job,
+  ListBuildsRequest,
   ListBuildsResponse,
-  Release,
+  ListDeploymentsRequest,
+  ListDeploymentsResponse,
+  ListPushedArtifactsRequest,
   ListReleasesRequest,
   ListReleasesResponse,
-  StatusReport,
   ListStatusReportsRequest,
   ListStatusReportsResponse,
-  GetLatestStatusReportRequest,
-  ListPushedArtifactsRequest,
+  OperationOrder,
+  Project,
   PushedArtifact,
+  Ref,
+  Release,
+  StatusReport,
+  UpsertProjectRequest,
+  Variable,
 } from 'waypoint-pb';
 import { Metadata } from 'grpc-web';
+import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import config from 'waypoint/config/environment';
 
 const protocolVersions = {
@@ -147,6 +153,150 @@ export default class ApiService extends Service {
     } catch {
       return;
     }
+  }
+
+  _populateVariableList(
+    variablesList: Variable.AsObject[],
+    variable?: Variable.AsObject,
+    initialVariable?: Variable.AsObject
+  ): Variable[] {
+    if (variable && initialVariable) {
+      let existingVarIndex = variablesList.findIndex((v) => v.name === initialVariable.name);
+      if (existingVarIndex !== -1) {
+        variablesList.splice(existingVarIndex, 1, variable);
+        variablesList = [...variablesList];
+      }
+    }
+
+    let varProtosList = variablesList.map((v: Variable.AsObject) => {
+      let variable = new Variable();
+      variable.setName(v.name);
+      variable.setServer(new Empty());
+      if (v.hcl) {
+        variable.setHcl(v.hcl);
+      } else {
+        variable.setStr(v.str);
+      }
+      return variable;
+    });
+    return varProtosList;
+  }
+
+  _checkAuthCase(git: Job.Git.AsObject): number {
+    if (git.url) {
+      if (git.ssh?.privateKeyPem) {
+        return 5;
+      }
+      if (!git?.basic?.username) {
+        return 1;
+      }
+    }
+    return 4;
+  }
+
+  async upsertProject(
+    project: Project.AsObject,
+    newAuthCase = -1,
+    variable?: Variable.AsObject,
+    initialVariable?: Variable.AsObject,
+    editedVariableList?: Variable.AsObject[]
+  ): Promise<Project.AsObject | undefined> {
+    let ref = new Project();
+    ref.setName(project.name);
+
+    // Data source settings
+    let dataSource = new Job.DataSource();
+    let dataSourcePoll = new Project.Poll();
+    if (project.dataSourcePoll) {
+      dataSourcePoll.setEnabled(project.dataSourcePoll.enabled);
+      dataSourcePoll.setInterval(project.dataSourcePoll.interval);
+    }
+
+    let git = new Job.Git();
+
+    // Git settings
+    if (project?.dataSource?.git) {
+      let projGit = project.dataSource.git;
+
+      git.setUrl(projGit.url);
+      git.setPath(projGit.path);
+      if (!projGit.ref) {
+        git.setRef('HEAD');
+      } else {
+        git.setRef(projGit.ref);
+      }
+
+      // get auth case based on existing project settings
+      // but if we give a new auth case to this function,
+      // that means we're trying to change the auth settings
+      let authCase = this._checkAuthCase(projGit);
+      if (newAuthCase >= 0) {
+        authCase = newAuthCase;
+      }
+
+      // Git authentication settings
+      if (authCase === 4) {
+        let gitBasic = new Job.Git.Basic();
+        gitBasic.setUsername(projGit.basic!.username);
+        gitBasic.setPassword(projGit.basic!.password);
+        git.setBasic(gitBasic);
+        git.clearSsh();
+      }
+
+      // SSH authentication settings
+      if (authCase === 5) {
+        let gitSSH = new Job.Git.SSH();
+        gitSSH.setPrivateKeyPem(projGit.ssh!.privateKeyPem);
+        gitSSH.setUser(projGit.ssh!.user);
+        gitSSH.setPassword(projGit.ssh!.password);
+        git.setSsh(gitSSH);
+        git.clearBasic();
+      }
+
+      // Basic authentication settings
+      if (authCase === 0) {
+        git.clearBasic();
+        git.clearSsh();
+      }
+    } else {
+      // if we set up a project without connecting it to a git repo
+      // but we want to set input variables, a git URL is required
+      // for updating a project's settings. this silences that error
+      // while not adding settings the user did not specify
+      git.setUrl('\n');
+    }
+
+    dataSource.setGit(git);
+    ref.setDataSource(dataSource);
+    ref.setDataSourcePoll(dataSourcePoll);
+
+    if (project.waypointHcl) {
+      // Hardcode hcl for now
+      ref.setWaypointHclFormat(0); // check project-repository-settings.ts for FORMAT obj
+      ref.setWaypointHcl(project.waypointHcl);
+    }
+
+    // Application list settings
+    let appList = project.applicationsList.map((app: Application.AsObject) => {
+      return new Application(app);
+    });
+    ref.setApplicationsList(appList);
+
+    // Input variable settings
+    let startingList = project.variablesList;
+    if (editedVariableList) {
+      startingList = editedVariableList;
+    }
+    let varsList = this._populateVariableList(startingList, variable, initialVariable);
+    ref.setVariablesList(varsList);
+
+    // Build and trigger request
+    let req = new UpsertProjectRequest();
+    req.setProject(ref);
+
+    let resp = await this.client.upsertProject(req, this.WithMeta());
+    let respProject = resp.toObject().project;
+    return respProject;
   }
 }
 
