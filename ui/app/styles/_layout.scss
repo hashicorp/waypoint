@@ -85,6 +85,7 @@ ul.list {
   @include Typography.Interface(M);
 
   .item {
+    display: flex;
     a {
       text-decoration: none;
 
@@ -93,8 +94,13 @@ ul.list {
       }
     }
 
+    .status-report-indicator__label,
+    .operation-status-indicator__label {
+      @include Typography.Interface(M);
+      margin-right: scale.$lg-1;
+    }
+
     .badge {
-      font-size: 0.75rem;
       padding: scale.$sm-3 scale.$sm-2;
     }
   }

@@ -2,6 +2,11 @@
   {{#if this.statusReport}}
     <div class="item">
       <StatusReportIndicator @statusReport={{this.statusReport}} />
+      {{#if this.statusReport.status.completeTime.seconds}}
+      <div data-test-complete-time-status-report>
+        Last checked {{date-format-distance-to-now this.statusReport.status.completeTime.seconds }}
+      </div>
+      {{/if}}
     </div>
   {{/if}}
 
@@ -14,13 +19,11 @@
     </div>
   {{/if}}
   {{yield}}
-  {{#if this.statusReport.status.completeTime.seconds}}
-    <div class="item" data-test-complete-time-status-report>
-      Last checked {{date-format-distance-to-now this.statusReport.status.completeTime.seconds }}
-    </div>
-  {{/if}}
+
+  
   {{#if this.statusReport}}
     <div class="item">
+
       <Pds::Button @variant="ghost" @iconStart="refresh-default" disabled={{this.isRefreshRunning}} {{on "click" this.refreshHealthCheck}}>
         Re-run health check
       </Pds::Button>
