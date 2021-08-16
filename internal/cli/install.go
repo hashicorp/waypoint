@@ -459,6 +459,28 @@ func installRunner(
 	}
 	s.Done()
 
+	if odc, ok := p.(serverinstall.OndemandRunnerConfig); ok {
+		s = sg.Add("Registering ondemand runner...")
+
+		odr := odc.OndemandRunner()
+
+		if odr != nil {
+			_, err = client.UpsertOndemandRunner(ctx, &pb.UpsertOndemandRunnerRequest{
+				OndemandRunner: odr,
+			})
+
+			if err != nil {
+				s.Update("Error creating ondemand runner: %s", err)
+			} else {
+				s.Update("Registered ondemand runner!")
+			}
+		} else {
+			s.Update("Install type did not provide an ondemand runner config")
+		}
+
+		s.Done()
+	}
+
 	return 0
 }
 

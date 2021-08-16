@@ -7,9 +7,12 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -32,9 +35,24 @@ func (a *App) Build(ctx context.Context, optFuncs ...BuildOption) (
 	}
 	defer c.Close()
 
+	cr, err := componentCreatorMap[component.RegistryType].Create(ctx, a, nil)
+	if err != nil {
+		if status.Code(err) == codes.Unimplemented {
+			cr = nil
+			err = nil
+		} else {
+			return nil, nil, err
+		}
+	}
+
+	if cr != nil {
+		defer cr.Close()
+	}
+
 	// First we do the build
 	_, msg, err := a.doOperation(ctx, a.logger.Named("build"), &buildOperation{
 		Component:   c,
+		Registry:    cr,
 		HasRegistry: a.config.RegistryUse() != "",
 	})
 	if err != nil {
@@ -92,6 +110,7 @@ func (opts *buildOptions) Validate() error {
 // buildOperation implements the operation interface.
 type buildOperation struct {
 	Component *Component
+	Registry  *Component
 	Build     *pb.Build
 
 	HasRegistry bool
@@ -129,12 +148,57 @@ func (op *buildOperation) Upsert(
 }
 
 func (op *buildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
+	args := []argmapper.Arg{
+		argmapper.Named("HasRegistry", op.HasRegistry),
+	}
+
+	// If there is a registry defined and it implements RegistryAccess...
+	if op.Registry != nil {
+		if ra, ok := op.Registry.Value.(component.RegistryAccess); ok {
+			fn := ra.AccessInfoFunc()
+
+			// ... and AccessInfoFunc returns non-nil (meaning the plugin boundary detected
+			// that the plugin actually implements the interface).
+			if fn != nil {
+				var err error
+
+				af, ok := fn.(*argmapper.Func)
+				if !ok {
+					af, err = argmapper.NewFunc(fn)
+					if err != nil {
+						return nil, err
+					}
+				}
+
+				// ... then we call it to generate the resulting value
+				res := af.Call(argmapper.Typed(ctx, log, app.UI))
+				if err := res.Err(); err != nil {
+					return nil, err
+				}
+
+				raw := res.Out(0)
+
+				args = append(args, argmapper.Typed(raw))
+
+				if pm, ok := raw.(interface {
+					TypedAny() *any.Any
+				}); ok {
+					any := pm.TypedAny()
+
+					// ... which we make available to build plugin.
+					args = append(args, plugin.ArgNamedAny("access_info", any))
+					log.Debug("injected access info")
+				}
+			}
+		}
+	}
+
 	return app.callDynamicFunc(ctx,
 		log,
 		(*component.Artifact)(nil),
 		op.Component,
 		op.Component.Value.(component.Builder).BuildFunc(),
-		argmapper.Named("HasRegistry", op.HasRegistry),
+		args...,
 	)
 }
 

@@ -555,9 +555,25 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"user token": func() (cli.Command, error) {
 			return &UserTokenCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"ondemand-runner": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["ondemand-runner"][0],
+				HelpText:     helpText["ondemand-runner"][1],
+			}, nil
+		},
+
+		"ondemand-runner apply": func() (cli.Command, error) {
+			return &OndemandRunnerApplyCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"ondemand-runner list": func() (cli.Command, error) {
+			return &OndemandRunnerListCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
@@ -897,6 +913,15 @@ about the currently logged in user, generate new access, and invite new
 users directly into the Waypoint server.
 
 If you are looking to log in to Waypoint, use "waypoint login".
+`,
+	},
+	"ondemand-runner": {
+		"Ondemand Runner configuration",
+		`
+List and edit Ondemand Runner configuration.
+
+Each ondemand runner confiuration entry represents the ability to spawn
+runners when needed using the configured plugin.
 `,
 	},
 }
