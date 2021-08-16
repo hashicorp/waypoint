@@ -1,6 +1,7 @@
 package funcs
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -88,6 +89,13 @@ func (s *VCSGit) refPrettyFunc(args []cty.Value, retType cty.Type) (cty.Value, e
 	cmd.Stdout = ioutil.Discard
 	cmd.Stderr = ioutil.Discard
 	if err := cmd.Run(); err != nil {
+		// If git isn't available, don't worry about trying to calculate changes.
+		// more than likely, if git isn't available, then we're running in an env
+		// where changes aren't even possible anyway.
+		if errors.Is(err, exec.ErrNotFound) {
+			return cty.StringVal(result), nil
+		}
+
 		exitError, ok := err.(*exec.ExitError)
 		if !ok {
 			return cty.UnknownVal(cty.String), fmt.Errorf("error executing git: %s", err)
