@@ -58,7 +58,7 @@ func (c *OndemandRunnerApplyCommand) Run(args []string) int {
 	)
 
 	if c.flagId != "" {
-		s = sg.Add("Checking for an existing ondemand runner: %s", c.flagId)
+		s = sg.Add("Checking for an existing ondemand runner config: %s", c.flagId)
 		// Check for an existing project of the same name.
 		resp, err := c.project.Client().GetOndemandRunner(ctx, &pb.GetOndemandRunnerRequest{
 			OndemandRunner: &pb.Ref_OndemandRunner{
@@ -80,10 +80,10 @@ func (c *OndemandRunnerApplyCommand) Run(args []string) int {
 		}
 
 		od = resp.OndemandRunner
-		s.Update("Updating ondemand runner %q...", od.Id)
+		s.Update("Updating ondemand runner config %q...", od.Id)
 		updated = true
 	} else {
-		s = sg.Add("Creating new ondemand runner")
+		s = sg.Add("Creating new ondemand runner config")
 		od = &pb.OndemandRunner{}
 	}
 
@@ -167,16 +167,16 @@ func (c *OndemandRunnerApplyCommand) Run(args []string) int {
 	})
 	if err != nil {
 		c.ui.Output(
-			"Error upserting ondemand runner: %s", clierrors.Humanize(err),
+			"Error upserting ondemand runner config: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 		return 1
 	}
 
 	if updated {
-		s.Update("Ondemand Runner updated")
+		s.Update("Ondemand Runner configuration updated")
 	} else {
-		s.Update("Ondemand Runner created")
+		s.Update("Ondemand Runner configuration created")
 	}
 	s.Done()
 
@@ -243,18 +243,22 @@ func (c *OndemandRunnerApplyCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *OndemandRunnerApplyCommand) Synopsis() string {
-	return "Create or update an ondemand runner."
+	return "Create or update an ondemand runner configuration."
 }
 
 func (c *OndemandRunnerApplyCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint ondemand-runner apply [OPTIONS]
 
-  Create or update an ondemand runner.
+  Create or update an ondemand runner configuration.
 
-  This will create a new ondemand runner with the given options. If
-  a ondemand runner with the same id already exists, this will update the
-  existing runner using the fields that are set.
+  This will register a new ondemand runner config with the given options. If
+  a ondemand runner config with the same id already exists, this will update the
+  existing runner config using the fields that are set.
+  
+  Waypoint will use an ondemand runner configuration to spawn containers for
+  various kinds of work as needed on the platform requested during any given
+  lifecycle operation.
 
 ` + c.Flags().Help())
 }
