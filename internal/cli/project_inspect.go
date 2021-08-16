@@ -75,13 +75,6 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 	project := resp.Project
 	workspaces := resp.Workspaces
 
-	projectHeaders := []string{
-		"Project", "Applications", "Workspaces", "Remote Enabled", "Data Source", "Project Poll Enabled",
-		"Project Poll Interval", "App Status Poll Enabled", "App Status Poll Interval",
-	}
-
-	projectTbl := terminal.NewTable(projectHeaders...)
-
 	var appNames []string
 	for _, app := range project.Applications {
 		appNames = append(appNames, app.Name)
@@ -116,32 +109,139 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 		appPollInterval = project.StatusReportPoll.Interval
 	}
 
-	statusColor := ""
-	columns := []string{
-		project.Name,
-		strings.Join(appNames, "\n"),
-		strings.Join(workspaceNames, "\n"),
-		strconv.FormatBool(project.RemoteEnabled),
-		dataSource,
-		strconv.FormatBool(projectPollEnabled),
-		projectPollInterval,
-		strconv.FormatBool(appPollEnabled),
-		appPollInterval,
-	}
-
-	projectTbl.Rich(
-		columns,
-		[]string{
-			statusColor,
-		},
-	)
-
 	if c.flagJson {
+		projectHeaders := []string{
+			"Project", "Applications", "Workspaces", "Remote Enabled", "Data Source", "Project Poll Enabled",
+			"Project Poll Interval", "App Status Poll Enabled", "App Status Poll Interval",
+		}
+
+		projectTbl := terminal.NewTable(projectHeaders...)
+
+		statusColor := ""
+		columns := []string{
+			project.Name,
+			strings.Join(appNames, "\n"),
+			strings.Join(workspaceNames, "\n"),
+			strconv.FormatBool(project.RemoteEnabled),
+			dataSource,
+			strconv.FormatBool(projectPollEnabled),
+			projectPollInterval,
+			strconv.FormatBool(appPollEnabled),
+			appPollInterval,
+		}
+
+		projectTbl.Rich(
+			columns,
+			[]string{
+				statusColor,
+			},
+		)
+
 		err = c.outputProjectJson(projectTbl)
 		if err != nil {
 			return err
 		}
 	} else {
+		projectHeaders := []string{
+			"Project Option", "Value",
+		}
+
+		projectTbl := terminal.NewTable(projectHeaders...)
+		statusColor := ""
+
+		// Show project info in a flat list where each project option is its
+		// own row
+		columns := []string{
+			"Project Name",
+			project.Name,
+		}
+		projectTbl.Rich(
+			columns,
+			[]string{
+				statusColor,
+			},
+		)
+		columns = []string{
+			"Applications",
+			strings.Join(appNames, "\n"),
+		}
+		projectTbl.Rich(
+			columns,
+			[]string{
+				statusColor,
+			},
+		)
+		columns = []string{
+			"Workspaces",
+			strings.Join(workspaceNames, "\n"),
+		}
+		projectTbl.Rich(
+			columns,
+			[]string{
+				statusColor,
+			},
+		)
+		columns = []string{
+			"Remote Enabled",
+			strconv.FormatBool(project.RemoteEnabled),
+		}
+		projectTbl.Rich(
+			columns,
+			[]string{
+				statusColor,
+			},
+		)
+		columns = []string{
+			"Data Source",
+			dataSource,
+		}
+		projectTbl.Rich(
+			columns,
+			[]string{
+				statusColor,
+			},
+		)
+		columns = []string{
+			"Project Poll Enabled",
+			strconv.FormatBool(projectPollEnabled),
+		}
+		projectTbl.Rich(
+			columns,
+			[]string{
+				statusColor,
+			},
+		)
+		columns = []string{
+			"Project Poll Interval",
+			projectPollInterval,
+		}
+		projectTbl.Rich(
+			columns,
+			[]string{
+				statusColor,
+			},
+		)
+		columns = []string{
+			"App Status Poll Enabled",
+			strconv.FormatBool(appPollEnabled),
+		}
+		projectTbl.Rich(
+			columns,
+			[]string{
+				statusColor,
+			},
+		)
+		columns = []string{
+			"App Status Poll Interval",
+			appPollInterval,
+		}
+		projectTbl.Rich(
+			columns,
+			[]string{
+				statusColor,
+			},
+		)
+
 		c.ui.Table(projectTbl)
 	}
 
@@ -171,7 +271,14 @@ func (c *ProjectInspectCommand) formatJsonMap(t *terminal.Table) []map[string]in
 		for j, r := range row {
 			// Remove any whitespacess in key
 			header := strings.ReplaceAll(t.Headers[j], " ", "")
-			c[header] = r.Value
+			if header == "Applications" || header == "Workspaces" {
+				// We join apps and ws on '\n' to format the original table, so
+				// undo that here and turn them back into a list for json
+				vals := strings.Split(r.Value, "\n")
+				c[header] = vals
+			} else {
+				c[header] = r.Value
+			}
 		}
 		result = append(result, c)
 	}
