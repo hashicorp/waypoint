@@ -6,41 +6,13 @@ import ApiService from 'waypoint/services/api';
 import FlashMessagesService from 'waypoint/services/flash-messages';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
-import { Project, UpsertProjectRequest, Job, Application } from 'waypoint-pb';
+import { Project } from 'waypoint-pb';
 import parseUrl from 'parse-url';
 
 const FORMAT = {
   HCL: 0,
   JSON: 1,
 };
-class ProjectModel {
-  name: string;
-  applicationsList: [];
-  dataSource: {
-    git: {
-      url: string;
-      path: string;
-      ref: string;
-      basic: {
-        username: string;
-        password: string;
-      };
-      ssh: {
-        user: string;
-        password: string;
-        privateKeyPem: string;
-      };
-    };
-    local: any;
-  };
-  dataSourcePoll: {
-    enabled: boolean;
-    interval: string;
-  };
-  remoteEnabled: boolean;
-  waypointHcl: string;
-  waypointHclFormat: number;
-}
 
 const DEFAULT_PROJECT_MODEL = {
   name: '',
@@ -69,10 +41,11 @@ const DEFAULT_PROJECT_MODEL = {
   remoteEnabled: false,
   waypointHcl: '',
   waypointHclFormat: FORMAT.HCL,
+  variablesList: [],
 };
 
 interface ProjectSettingsArgs {
-  project: ProjectModel;
+  project: Project.AsObject;
 }
 
 export default class AppFormProjectRepositorySettings extends Component<ProjectSettingsArgs> {
@@ -80,14 +53,14 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
   @service api!: ApiService;
   @service flashMessages!: FlashMessagesService;
   @service router!: RouterService;
-  @tracked project: ProjectModel;
+  @tracked project: Project.AsObject;
   @tracked authCase: number;
   @tracked serverHcl: boolean;
 
   constructor(owner: any, args: any) {
     super(owner, args);
+    this.project = JSON.parse(JSON.stringify(DEFAULT_PROJECT_MODEL)) as Project.AsObject; // to ensure we're doing a deep copy
     let { project } = this.args;
-    this.project = JSON.parse(JSON.stringify(DEFAULT_PROJECT_MODEL)); // to ensure we're doing a deep copy
     this.populateExistingFields(project, this.project);
     this.authCase = 4;
     this.serverHcl = !!this.project?.waypointHcl;
@@ -126,11 +99,11 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
   }
 
   get decodedWaypointHcl(): string {
-    return atob(this.project.waypointHcl);
+    return atob((this.project.waypointHcl as string) || '');
   }
 
   get decodedPrivateKey(): string {
-    return atob(this.git.ssh.privateKeyPem);
+    return atob((this.git?.ssh?.privateKeyPem as string) || '');
   }
 
   validateGitUrl() {
@@ -155,6 +128,7 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
   populateExistingFields(projectFromArgs, currentModel) {
     for (let [key, value] of Object.entries(projectFromArgs)) {
       if (isEmpty(value)) {
+        currentModel[key] = DEFAULT_PROJECT_MODEL[key];
         continue;
       }
 
@@ -218,65 +192,13 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
     if (!this.validateGitUrl()) {
       return;
     }
-    let project = this.project;
-    let ref = new Project();
-    ref.setName(project.name);
-    let dataSource = new Job.DataSource();
-    let dataSourcePoll = new Project.Poll();
-    dataSourcePoll.setEnabled(project.dataSourcePoll.enabled);
-    dataSourcePoll.setInterval(project.dataSourcePoll.interval);
-    // Git settings
-    let git = new Job.Git();
-    git.setUrl(project.dataSource.git.url);
-    git.setPath(project.dataSource.git.path);
-    if (!project.dataSource.git.ref) {
-      git.setRef('HEAD');
-    } else {
-      git.setRef(project.dataSource.git.ref);
+
+    if (!this.serverHcl) {
+      this.project.waypointHcl = '';
     }
 
-    // Git Authentication settings
-    if (this.authBasic) {
-      let gitBasic = new Job.Git.Basic();
-      gitBasic.setUsername(this.git.basic.username);
-      gitBasic.setPassword(this.git.basic.password);
-      git.setBasic(gitBasic);
-      git.clearSsh();
-    }
-
-    if (this.authSSH) {
-      let gitSSH = new Job.Git.SSH();
-      gitSSH.setPrivateKeyPem(this.git.ssh.privateKeyPem);
-      gitSSH.setUser(this.git.ssh.user);
-      gitSSH.setPassword(this.git.ssh.password);
-      git.setSsh(gitSSH);
-      git.clearBasic();
-    }
-
-    if (this.authNotSet) {
-      git.clearBasic();
-      git.clearSsh();
-    }
-
-    dataSource.setGit(git);
-    ref.setDataSource(dataSource);
-    ref.setDataSourcePoll(dataSourcePoll);
-
-    if (this.serverHcl && this.project.waypointHcl) {
-      // Hardcode hcl for now
-      ref.setWaypointHclFormat(FORMAT.HCL);
-      ref.setWaypointHcl(this.project.waypointHcl);
-    }
-    let applist = project.applicationsList.map((app: Application.AsObject) => {
-      return new Application(app);
-    });
-    ref.setApplicationsList(applist);
-
-    // Build and trigger request
-    let req = new UpsertProjectRequest();
-    req.setProject(ref);
     try {
-      await this.api.client.upsertProject(req, this.api.WithMeta());
+      await this.api.upsertProject(this.project, this.authCase);
       this.flashMessages.success('Settings saved');
       this.router.transitionTo('workspace.projects.project', this.project.name);
     } catch (err) {
