@@ -169,6 +169,7 @@ func (s *service) RunnerJobStream(
 	// Get the runner to validate it is registered
 	runner, err := s.state.RunnerById(reqEvent.Request.RunnerId)
 	if err != nil {
+		log.Error("unknown runner connected", "id", reqEvent.Request.RunnerId)
 		return err
 	}
 
@@ -425,7 +426,7 @@ func (s *service) handleJobStreamRequest(
 		return nil
 
 	default:
-		log.Warn("unexpected event received", "event", req.Event)
+		log.Warn("unexpected event received", "event", hclog.Fmt("%T", req.Event))
 	}
 
 	return nil
