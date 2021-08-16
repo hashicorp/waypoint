@@ -4,11 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
+	"net/http"
+	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/buildpacks/pack"
 	"github.com/buildpacks/pack/logging"
 	"github.com/buildpacks/pack/project"
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/client"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -17,8 +22,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/builtin/docker"
 	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
 	"github.com/hashicorp/waypoint/internal/assets"
+	"github.com/hashicorp/waypoint/internal/ociregistry"
 	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 )
 
@@ -31,6 +38,11 @@ type Builder struct {
 // BuildFunc implements component.Builder
 func (b *Builder) BuildFunc() interface{} {
 	return b.Build
+}
+
+// BuildFunc implements component.BuilderODR
+func (b *Builder) BuildODRFunc() interface{} {
+	return b.BuildODR
 }
 
 // Config is the configuration structure for the registry.
@@ -57,7 +69,7 @@ type BuilderConfig struct {
 	ProcessType string `hcl:"process_type,optional" default:"web"`
 }
 
-const DefaultBuilder = "heroku/buildpacks:18"
+const DefaultBuilder = "heroku/buildpacks:20"
 
 // Config implements Configurable
 func (b *Builder) Config() (interface{}, error) {
@@ -66,6 +78,168 @@ func (b *Builder) Config() (interface{}, error) {
 
 var skipBuildPacks = map[string]struct{}{
 	"heroku/procfile": {},
+}
+
+// Build
+func (b *Builder) BuildODR(
+	ctx context.Context,
+	ui terminal.UI,
+	jobInfo *component.JobInfo,
+	src *component.Source,
+	log hclog.Logger,
+	ai *docker.AccessInfo,
+) (*DockerImage, error) {
+	sg := ui.StepGroup()
+
+	builder := b.config.Builder
+	if builder == "" {
+		builder = DefaultBuilder
+	}
+
+	log.Info("executing the ODR version of pack")
+
+	// We don't even need to inspect Docker to verify we have the image.
+	// If `pack` succeeded we can assume that it created an image for us.
+	// return &DockerImage{
+	// Image: ai.Image,
+	// Tag:   ai.Tag,
+	// }, nil
+
+	step := sg.Add("Building Buildpack with kaniko...")
+	defer func() {
+		if step != nil {
+			step.Abort()
+		}
+	}()
+
+	target := &docker.Image{
+		Image: ai.Image,
+		Tag:   ai.Tag,
+	}
+
+	var auth string
+
+	if ai.Auth != nil {
+		switch sv := ai.Auth.(type) {
+		case *docker.AccessInfo_Encoded:
+			user, pass, err := docker.CredentialsFromConfig(sv.Encoded)
+			if err != nil {
+				return nil, err
+			}
+			auth = ociregistry.BasicAuth(user, pass)
+		case *docker.AccessInfo_Header:
+			auth = sv.Header
+		}
+	}
+
+	// Determine the host that we're setting auth for. We have to parse the
+	// image for this cause it may not contain a host. Luckily Docker has
+	// libs to normalize this all for us.
+	log.Trace("determining host for auth configuration", "image", target.Name())
+	ref, err := reference.ParseNormalizedNamed(target.Name())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "unable to parse image name: %s", err)
+	}
+	host := reference.Domain(ref)
+	log.Trace("auth host", "host", host)
+
+	var ocis ociregistry.Server
+	ocis.DisableEntrypoint = b.config.DisableCEB
+	ocis.Auth = auth
+	ocis.Logger = log
+	ocis.Upstream = "http://" + host
+
+	data, err := assets.Asset("ceb/ceb")
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
+	}
+
+	refPath := reference.Path(ref)
+
+	step.Done()
+	step = sg.Add("Testing registry and uploading entrypoint layer")
+
+	err = ocis.SetupEntrypointLayer(refPath, data)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer: %s", err)
+	}
+
+	li, err := net.Listen("tcp", ":5000")
+	if err != nil {
+		return nil, err
+	}
+
+	defer li.Close()
+	go http.Serve(li, &ocis)
+
+	localRef := fmt.Sprintf("localhost:5000/%s:%s", refPath, ai.Tag)
+
+	f, err := os.Create("Dockerfile.kaniko")
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Fprintf(f, `FROM %s
+
+ADD --chown=1000 . /app
+
+WORKDIR /app
+
+USER 1000
+
+RUN mkdir /tmp/cache /tmp/layers && \
+	mkdir -p /app/bin && \
+		/cnb/lifecycle/creator \
+			"-app=/app" \
+      "-cache-dir=/tmp/cache" \
+      "-gid=1000" \
+      "-layers=/tmp/layers" \
+      "-platform=/platform" \
+      "-previous-image=%s" \
+      "-uid=1000" \
+      "%s"
+
+`, builder, localRef, localRef)
+
+	err = f.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	dir := src.Path
+
+	step.Done()
+	step = sg.Add("Executing kaniko...")
+
+	// Start constructing our arg string for img
+	args := []string{
+		"/kaniko/executor",
+		"-f", "Dockerfile.kaniko",
+		"--no-push",
+		"--context=dir:///" + dir,
+	}
+
+	// NOTE(mitchellh): we can probably use the img Go pkg directly one day.
+	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
+
+	// Command output should go to the step
+	cmd.Stdout = step.TermOutput()
+	cmd.Stderr = cmd.Stdout
+
+	if err := cmd.Run(); err != nil {
+		return nil, err
+	}
+
+	step.Done()
+
+	step = sg.Add("Image pushed to '%s:%s'", ai.Image, ai.Tag)
+	step.Done()
+
+	return &DockerImage{
+		Image:  ai.Image,
+		Tag:    ai.Tag,
+		Remote: true,
+	}, nil
 }
 
 // Build
