@@ -1,0 +1,56 @@
+# syntax = docker.mirror.hashicorp.services/docker/dockerfile:experimental
+
+#--------------------------------------------------------------------
+# builder builds the Waypoint binaries
+#--------------------------------------------------------------------
+
+FROM docker.mirror.hashicorp.services/golang:1.16.5-alpine3.13 AS builder
+
+RUN apk add --no-cache git gcc libc-dev make
+
+RUN mkdir -p /tmp/wp-prime
+COPY go.sum /tmp/wp-prime
+COPY go.mod /tmp/wp-prime
+
+WORKDIR /tmp/wp-prime
+
+RUN go mod download
+RUN go get github.com/kevinburke/go-bindata/...
+
+COPY . /tmp/wp-src
+WORKDIR /tmp/wp-src
+
+RUN --mount=type=cache,target=/root/.cache/go-build make bin
+
+FROM docker.mirror.hashicorp.services/busybox:stable-musl as busybox
+
+RUN touch /tmp/.keep
+
+#--------------------------------------------------------------------
+# final image
+#--------------------------------------------------------------------
+
+# Notes on img and what is required to make it work, since there's a lot
+# of small details below that are absolutely required for everything to
+# come together:
+#
+#  - img, runc, newuidmap, newgidmap need to be installed
+#  - libseccomp-dev must be installed for runc
+#  - newuidmap/newgidmap need to have suid set (u+s)
+#  - /etc/subuid and /etc/subgid need to have an entry for the user
+#  - USER, HOME, and XDG_RUNTIME_DIR all need to be set
+#
+
+FROM gcr.io/kaniko-project/executor:latest as kaniko
+
+COPY --from=builder /tmp/wp-src/waypoint /kaniko/waypoint
+COPY --from=busybox /bin/busybox /kaniko/busybox
+COPY --from=busybox /tmp /kaniko/tmp
+
+RUN ["/kaniko/busybox", "mkdir", "/kaniko/bin"]
+RUN ["/kaniko/busybox", "--install", "-s", "/kaniko/bin"]
+
+ENV PATH $PATH:/kaniko/bin
+ENV TMPDIR /kaniko/tmp
+
+ENTRYPOINT ["/kaniko/waypoint"]
