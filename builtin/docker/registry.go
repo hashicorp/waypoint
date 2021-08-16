@@ -7,8 +7,6 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Registry represents access to a Docker registry.
@@ -19,6 +17,26 @@ type Registry struct {
 // Config implements Configurable
 func (r *Registry) Config() (interface{}, error) {
 	return &r.config, nil
+}
+
+func (r *Registry) AccessInfoFunc() interface{} {
+	return r.AccessInfo
+}
+
+// Push pushes an image to the registry.
+func (r *Registry) AccessInfo() (*AccessInfo, error) {
+	ai := &AccessInfo{
+		Image: r.config.Image,
+		Tag:   r.config.Tag,
+	}
+
+	if r.config.EncodedAuth != "" {
+		ai.Auth = &AccessInfo_Encoded{
+			Encoded: r.config.EncodedAuth,
+		}
+	}
+
+	return ai, nil
 }
 
 // PushFunc implements component.Registry
@@ -44,10 +62,9 @@ func (r *Registry) Push(
 	// Depending on whethere the image is, we diverge at this point.
 	switch img.Location.(type) {
 	case *Image_Registry:
-		// We can't push an image that isn't pulled locally in some form.
-		return nil, status.Errorf(codes.FailedPrecondition,
-			"Input image is not pulled locally and therefore can't be pushed. "+
-				"Please pull the image or use a builder that pulls the image first.")
+		// This indicates that the builder used the AccessInfo and published the image
+		// directly. Ergo we don't need to do anyhting and can just return the image as is.
+		return img, nil
 
 	case *Image_Img:
 		// If the image is already in img, we have to use `img push`.

@@ -59,3 +59,13 @@ message Resource {
 message TaskInfo {
   string id = 1;
 }
+
+message AccessInfo {
+  string image = 1;
+  string tag = 2;
+
+  oneof auth {
+    string header = 3;
+    string encoded = 4;
+  }
+}

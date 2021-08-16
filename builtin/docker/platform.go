@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -784,7 +785,13 @@ func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.U
 		}
 	*/
 
-	in = makeImageCanonical(in)
+	named, err := reference.ParseNormalizedNamed(in)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "unable to parse image name: %s", in)
+	}
+
+	in = named.Name()
+
 	log.Debug("pulling image", "image", in)
 
 	out, err := cli.ImagePull(context.Background(), in, ipo)
@@ -810,20 +817,6 @@ func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.U
 	s.Done()
 
 	return nil
-}
-
-// makeImageCanonical makes sure the image reference uses full canonical name i.e.
-// consul:1.6.1 -> docker.io/library/consul:1.6.1
-func makeImageCanonical(image string) string {
-	imageParts := strings.Split(image, "/")
-	switch len(imageParts) {
-	case 1:
-		return fmt.Sprintf("docker.io/library/%s", imageParts[0])
-	case 2:
-		return fmt.Sprintf("docker.io/%s/%s", imageParts[0], imageParts[1])
-	}
-
-	return image
 }
 
 // Config is the configuration structure for the Platform.
