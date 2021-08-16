@@ -67,21 +67,22 @@ func (c *UninstallCommand) Run(args []string) int {
 	}
 
 	serverPlatform := c.platform
-	if ctxConfig.Server.Platform == "" && c.platform != "" {
+	if ctxConfig.Server.Platform == "" && serverPlatform != "" {
 		c.ui.Output(
 			"No platform set on server context. Will attempt to uninstall requested "+
 				"platform %q",
-			c.platform,
+			serverPlatform,
 			terminal.WithWarningStyle(),
 		)
 	} else if serverPlatform == "" {
 		// attempt to set the server platform so the platform flag isn't required.
 		serverPlatform = ctxConfig.Server.Platform
 
-		if serverPlatform == "" && c.platform == "" {
+		if serverPlatform == "" {
+			// It's still empty
 			c.ui.Output(
 				"Cannot determine what platform to uninstall Waypoint. "+
-					"The -platform flag is required and the server context did not include "+
+					"The -platform flag is required since the server context did not include "+
 					"a server platform.",
 				terminal.WithErrorStyle(),
 			)
@@ -240,7 +241,7 @@ Usage: waypoint server uninstall [options]
   server that was manually run with the 'waypoint server run' CLI, but with
   a Waypoint server that was installed via 'waypoint server install'.
 
-  The platform can be specified as kubernetes, nomad, ecs, or docker. If not,
+  The platform can be specified as kubernetes, nomad, ecs, or docker. If not
   specified, the CLI command will attempt to retrieve the platform defined in
   the server context.
 
