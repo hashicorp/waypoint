@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"math/rand"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverclient"
 )
 
 // TODO: test
@@ -115,6 +117,10 @@ func (s *service) queueJobReqToJob(
 		return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 	}
 
+	log := hclog.FromContext(ctx)
+
+	log.Debug("checking job project", "project", job.Application.Project)
+
 	// Verify the project exists and use that to set the default data source
 	project, err := s.state.ProjectGet(&pb.Ref_Project{Project: job.Application.Project})
 	if status.Code(err) == codes.NotFound {
@@ -160,6 +166,48 @@ func (s *service) queueJobReqToJob(
 		}
 	}
 
+	_, anyTarget := job.TargetRunner.Target.(*pb.Ref_Runner_Any)
+
+	var od *pb.Ref_OndemandRunner
+
+	if anyTarget {
+		od = project.OndemandRunner
+		if od == nil {
+			ods, err := s.state.OndemandRunnerDefault()
+			if err != nil {
+				return nil, err
+			}
+
+			switch len(ods) {
+			case 0:
+				// ok, no ondemand runners
+			case 1:
+				od = ods[0]
+			default:
+				log.Debug("multiple default ondemand runners detected, choosing a random one")
+				od = ods[rand.Intn(len(ods))]
+			}
+		}
+	}
+
+	// If the job is targetted at any runner AND project has configuration for launching ondemand
+	// runners, then we dutifully launch an ondemand runner now. We'll also assign the job to this
+	// new runner now, so that it doesn't get picked up by other runners.
+	if od != nil {
+		runnerId, err := s.launchOndemandRunner(ctx, job, project, od)
+		if err != nil {
+			return nil, err
+		}
+
+		job.TargetRunner = &pb.Ref_Runner{
+			Target: &pb.Ref_Runner_Id{
+				Id: &pb.Ref_RunnerId{
+					Id: runnerId,
+				},
+			},
+		}
+	}
+
 	return job, nil
 }
 
@@ -178,6 +226,136 @@ func (s *service) QueueJob(
 	}
 
 	return &pb.QueueJobResponse{JobId: job.Id}, nil
+}
+
+func (s *service) launchOndemandRunner(
+	ctx context.Context,
+	source *pb.Job,
+	project *pb.Project,
+	odref *pb.Ref_OndemandRunner,
+) (string, error) {
+	log := hclog.FromContext(ctx)
+
+	od, err := s.state.OndemandRunnerGet(odref)
+	if err != nil {
+		return "", err
+	}
+
+	runnerId, err := server.Id()
+	if err != nil {
+		return "", err
+	}
+
+	log.Info("requesting ondemand runner via task start", "runner-id", runnerId)
+
+	// Get our server config
+	cfg, err := s.state.ServerConfigGet()
+	if err != nil {
+		return "", err
+	}
+
+	// Follow the same logic as RunnerGetDeploymentConfig, which includes this note:
+	// Our addr for now is just the first one since we don't support
+	// multiple addresses yet. In the future we will want to support more
+	// advanced choicing.
+
+	var addr *pb.ServerConfig_AdvertiseAddr
+
+	// This should only happen during tests
+	if len(cfg.AdvertiseAddrs) == 0 {
+		log.Info("server has no advertise addrs, using localhost")
+		addr = &pb.ServerConfig_AdvertiseAddr{
+			Addr: "localhost:9701",
+		}
+	} else {
+		addr = cfg.AdvertiseAddrs[0]
+	}
+
+	// We generate a new login token for each ondemand-runner used. This will inherit
+	// the user of the token to be the user that queue'd the original job, which is
+	// the correct behavior.
+	token, err := s.newToken(60*time.Minute, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Login_{Login: &pb.Token_Login{
+			UserId: DefaultUserId,
+		}},
+	})
+	if err != nil {
+		return "", err
+	}
+
+	envVars := map[string]string{
+		"WAYPOINT_RUNNER_ID":        runnerId,
+		serverclient.EnvServerAddr:  addr.Addr,
+		serverclient.EnvServerToken: token,
+	}
+
+	if addr.Tls {
+		envVars[serverclient.EnvServerTls] = "1"
+	}
+
+	if addr.TlsSkipVerify {
+		envVars[serverclient.EnvServerTlsSkipVerify] = "1"
+	}
+
+	for k, v := range od.EnvironmentVariables {
+		envVars[k] = v
+	}
+
+	args := []string{"runner", "agent", "-vv", "-id", runnerId, "-odr"}
+
+	job := &pb.Job{
+		Workspace:   source.Workspace,
+		Application: source.Application,
+		Operation: &pb.Job_StartTask{
+			StartTask: &pb.Job_StartTaskLaunchOp{
+				Params: &pb.Job_TaskPluginParams{
+					PluginType: od.PluginType,
+					HclConfig:  od.PluginConfig,
+					HclFormat:  od.ConfigFormat,
+				},
+				Info: &pb.TaskLaunchInfo{
+					OciUrl:               od.OciUrl,
+					EnvironmentVariables: envVars,
+					Arguments:            args,
+				},
+			},
+		},
+	}
+
+	// Get the next id
+	id, err := server.Id()
+	if err != nil {
+		return "", status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+	}
+	job.Id = id
+
+	// Validate expiry if we have one
+	job.ExpireTime = nil
+	dur, err := time.ParseDuration("60s")
+	if err != nil {
+		return "", status.Errorf(codes.FailedPrecondition,
+			"Invalid expiry duration: %s", err.Error())
+	}
+
+	job.ExpireTime, err = ptypes.TimestampProto(time.Now().Add(dur))
+	if err != nil {
+		return "", status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
+	}
+
+	job.TargetRunner = &pb.Ref_Runner{
+		Target: &pb.Ref_Runner_Any{
+			Any: &pb.Ref_RunnerAny{},
+		},
+	}
+
+	// Queue the job
+	if err := s.state.JobCreate(job); err != nil {
+		return "", err
+	}
+
+	log.Debug("queue'd task to start ondemand runner", "job-id", job.Id, "runner-id", runnerId)
+
+	return runnerId, nil
 }
 
 func (s *service) ValidateJob(
