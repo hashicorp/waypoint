@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Destroy"
-sidebar_title: "destroy"
-description: "Delete all the resources created for an app"
+page_title: 'Commands: Destroy'
+sidebar_title: 'destroy'
+description: 'Delete all the resources created for an app'
 ---
 
 # Waypoint Destroy
@@ -17,19 +17,18 @@ Delete all the resources created for an app
 
 Usage: `waypoint destroy [options]`
 
+Delete all resources created for an app in the current workspace.
 
-  Delete all resources created for an app in the current workspace.
+The workspace can continue to be used after this call, this just deletes
+all the resources created for this app up to this point.
 
-  The workspace can continue to be used after this call, this just deletes
-  all the resources created for this app up to this point.
+This functionality must be supported by the plugins in use and is dependent
+on their behavior. The expected behavior is that any physical resources created
+as part of deploys and releases are destroyed. For example, any load balancers,
+VMs, containers, etc.
 
-  This functionality must be supported by the plugins in use and is dependent
-  on their behavior. The expected behavior is that any physical resources created
-  as part of deploys and releases are destroyed. For example, any load balancers,
-  VMs, containers, etc.
-
-  This targets one app in one workspace. You must call this for each workspace
-  you've used if you want to destroy everything.
+This targets one app in one workspace. You must call this for each workspace
+you've used if you want to destroy everything.
 
 #### Global Options
 
@@ -40,11 +39,11 @@ Usage: `waypoint destroy [options]`
 #### Operation Options
 
 - `-label=<key=value>` - Labels to set for this operation. Can be specified multiple times.
-- `-remote` - True to use a remote runner to execute. This defaults to false 
-unless 'runner.default' is set in your configuration.
+- `-remote` - True to use a remote runner to execute. This defaults to false
+  unless 'runner.default' is set in your configuration.
 - `-remote-source=<key=value>` - Override configurations for how remote runners source data. This is specified to the data source type being used in your configuration. This is used for example to set a specific Git ref to run against.
 - `-var=<key=value>` - Variable value to set for this operation. Can be specified multiple times.
-- `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "*.auto.wpvars" or "*.auto.wpvars.json" files are present, they will be automatically loaded.
+- `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "_.auto.wpvars" or "_.auto.wpvars.json" files are present, they will be automatically loaded.
 
 #### Command Options
 
