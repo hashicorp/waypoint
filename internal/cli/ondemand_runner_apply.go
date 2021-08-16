@@ -253,8 +253,8 @@ Usage: waypoint ondemand-runner apply [OPTIONS]
   Create or update an ondemand runner.
 
   This will create a new ondemand runner with the given options. If
-	a ondemand runner with the same id already exists, this will update the
-	existing runner using the fields that are set.
+  a ondemand runner with the same id already exists, this will update the
+  existing runner using the fields that are set.
 
 ` + c.Flags().Help())
 }

@@ -57,7 +57,7 @@ func (c *OndemandRunnerListCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *OndemandRunnerListCommand) Synopsis() string {
-	return "List all registered projects."
+	return "List all registered ondemand runners."
 }
 
 func (c *OndemandRunnerListCommand) Help() string {
@@ -67,6 +67,6 @@ Usage: waypoint ondemand-runner list
   List all registered ondemand runners.
 
   Ondemand runners are used to dynamically start tasks to execute operations for
-	projects such as building, deploying, etc.
+  projects such as building, deploying, etc.
 `)
 }
