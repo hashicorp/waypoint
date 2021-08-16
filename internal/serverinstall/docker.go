@@ -28,6 +28,7 @@ type DockerInstaller struct {
 
 type dockerConfig struct {
 	serverImage string `hcl:"server_image,optional"`
+	odrImage    string `hcl:"odr_image,optional"`
 }
 
 var (
@@ -645,13 +646,17 @@ func (i *DockerInstaller) InstallRunner(
 		AttachStdin:  true,
 		OpenStdin:    true,
 		StdinOnce:    true,
+		User:         "root",
 		Image:        i.config.serverImage,
 		Env:          opts.AdvertiseClient.Env(),
-		Cmd:          []string{"runner", "agent", "-vvv"},
+		Cmd:          []string{"runner", "agent", "-vv"},
 		Labels: map[string]string{
 			"waypoint-type": "runner",
 		},
 	}, &container.HostConfig{
+		Privileged: true,
+		CapAdd:     []string{"CAP_DAC_OVERRIDE"},
+		Binds:      []string{"/var/run/docker.sock:/var/run/docker.sock"},
 		// These security options are required for the runner so that
 		// Docker daemonless image building works properly.
 		SecurityOpt: []string{
@@ -676,6 +681,14 @@ func (i *DockerInstaller) InstallRunner(
 	s.Done()
 
 	return nil
+}
+
+func (i *DockerInstaller) OndemandRunner() *pb.OndemandRunner {
+	return &pb.OndemandRunner{
+		OciUrl:     i.config.odrImage,
+		PluginType: "docker",
+		Default:    true,
+	}
 }
 
 // UninstallRunner implements Installer.
@@ -778,6 +791,13 @@ func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
 	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "docker-odr-image",
+		Target:  &i.config.odrImage,
+		Usage:   "Docker image for the Waypoint Ondemand Runners",
+		Default: defaultODRImage,
+	})
 }
 
 func (i *DockerInstaller) UpgradeFlags(set *flag.Set) {
@@ -786,6 +806,13 @@ func (i *DockerInstaller) UpgradeFlags(set *flag.Set) {
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "docker-odr-image",
+		Target:  &i.config.odrImage,
+		Usage:   "Docker image for the Waypoint Ondemand Runners",
+		Default: defaultODRImage,
 	})
 }
 
