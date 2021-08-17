@@ -68,4 +68,6 @@ message AccessInfo {
     string header = 3;
     string encoded = 4;
   }
+
+  bool insecure = 5;
 }

@@ -70,21 +70,28 @@ func (b *Builder) buildWithKaniko(
 	os.DisableEntrypoint = b.config.DisableCEB
 	os.Auth = auth
 	os.Logger = log
-	os.Upstream = "http://" + host
 
-	data, err := assets.Asset("ceb/ceb")
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
+	if ai.Insecure {
+		os.Upstream = "http://" + host
+	} else {
+		os.Upstream = "https://" + host
 	}
 
 	refPath := reference.Path(ref)
 
-	step.Done()
-	step = sg.Add("Testing registry and uploading entrypoint layer")
+	if !b.config.DisableCEB {
+		data, err := assets.Asset("ceb/ceb")
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
+		}
 
-	err = os.SetupEntrypointLayer(refPath, data)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer: %s", err)
+		step.Done()
+		step = sg.Add("Testing registry and uploading entrypoint layer")
+
+		err = os.SetupEntrypointLayer(refPath, data)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer: %s", err)
+		}
 	}
 
 	li, err := net.Listen("tcp", "localhost:0")

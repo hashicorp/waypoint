@@ -120,6 +120,9 @@ type Config struct {
 
 	// The docker specific encoded authentication string to use to talk to the registry.
 	EncodedAuth string `hcl:"encoded_auth,optional"`
+
+	// Insecure indicates if the registry should be accessed via http rather than https
+	Insecure bool `hcl:"insecure,optional"`
 }
 
 func (r *Registry) Documentation() (*docs.Documentation, error) {
@@ -178,6 +181,15 @@ build {
 			"WARNING: be very careful to not leak the authentication information",
 			"by hardcoding it here. Use a helper function like `file()` to read",
 			"the information from a file not stored in VCS",
+		),
+	)
+
+	doc.SetField(
+		"insecure",
+		"access the registry via http rather than https",
+		docs.Summary(
+			"This indicates that the registry should be accessed via http rather than https.",
+			"Not recommended for production usage.",
 		),
 	)
 
