@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/waypoint/internal/version"
@@ -24,11 +25,11 @@ import (
 type StatusCommand struct {
 	*baseCommand
 
-	flagContextName string
-	flagVerbose     bool
-	flagJson        bool
-	flagAllProjects bool
-	filterFlags     filterFlags
+	flagContextName      string
+	flagVerbose          bool
+	flagJson             bool
+	flagAllProjects      bool
+	flagRefreshAppStatus bool
 
 	serverCtx *clicontext.Config
 }
@@ -101,6 +102,15 @@ func (c *StatusCommand) Run(args []string) int {
 		c.ui.Output(wpAppFlagAndTargetIncludedMsg, terminal.WithWarningStyle())
 	}
 
+	// Optionally refresh status
+	if c.flagRefreshAppStatus {
+		if err := c.RefreshApplicationStatus(projectTarget, appTarget); err != nil {
+			c.ui.Output("CLI failed to refresh project statuses: "+clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+		c.ui.Output("")
+	}
+
 	// Generate a status view
 	if projectTarget == "" || c.flagAllProjects {
 		// Show high-level status of all projects
@@ -145,6 +155,460 @@ func (c *StatusCommand) Run(args []string) int {
 
 	return 0
 }
+
+// RefreshApplicationStatus takes a project and application target and generates
+// a list of applications to refresh the status on. If all projects are requested
+// to be refreshed, the CLI will do its best to honor the request. However if
+// a project is local and the CLI was not invoked inside that project dir, the
+// CLI won't be able to refresh that projects application statuses.
+func (c *StatusCommand) RefreshApplicationStatus(projectTarget, appTarget string) error {
+	// Get our API client
+	client := c.project.Client()
+
+	// Get the entire list of apps
+	// Determine project locality
+	// Do the Work (local or remote)
+	if c.flagAllProjects {
+		resp, err := client.ListProjects(c.Ctx, &empty.Empty{})
+		if err != nil {
+			c.ui.Output("Failed to retrieve all projects:"+clierrors.Humanize(err), terminal.WithErrorStyle())
+			return err
+		}
+		allProjectsRef := resp.Projects
+
+		for _, pRef := range allProjectsRef {
+			projectResp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{
+				Project: pRef,
+			})
+			if err != nil {
+				return err
+			}
+			project := projectResp.Project
+
+			workspace, err := c.getWorkspaceFromProject(projectResp)
+			if err != nil {
+				return err
+			}
+
+			// local or remote project?
+			var remote bool
+			if project.DataSource != nil {
+				switch project.DataSource.Source.(type) {
+				case *pb.Job_DataSource_Local:
+					remote = false
+				case *pb.Job_DataSource_Git:
+					remote = true
+				default:
+					remote = false
+				}
+			}
+
+			if !remote {
+				c.ui.Output("Cannot refresh every projects status without command being "+
+					"invoked inside project directory due to project being a local data source. "+
+					"Will attempt to refresh all project statuses anyway, but expect errors.",
+					terminal.WithWarningStyle())
+			}
+
+			if err = c.doRefresh(project, project.Applications, workspace, remote); err != nil {
+				c.ui.Output("Failed to refresh all statuses on project %q:"+clierrors.Humanize(err),
+					project.Name, terminal.WithErrorStyle())
+				return err
+			}
+		}
+	} else {
+		projectResp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{
+			Project: &pb.Ref_Project{
+				Project: projectTarget,
+			},
+		})
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				var serverAddress string
+				if c.serverCtx != nil {
+					serverAddress = c.serverCtx.Server.Address
+				}
+
+				c.ui.Output(wpProjectNotFound, projectTarget, serverAddress, terminal.WithErrorStyle())
+			}
+			return err
+		}
+		project := projectResp.Project
+
+		// local or remote project?
+		var remote bool
+		if project.DataSource != nil {
+			switch project.DataSource.Source.(type) {
+			case *pb.Job_DataSource_Local:
+				remote = false
+			case *pb.Job_DataSource_Git:
+				remote = true
+			default:
+				remote = false
+			}
+		}
+
+		workspace, err := c.getWorkspaceFromProject(projectResp)
+		if err != nil {
+			return err
+		}
+
+		if appTarget != "" {
+			// Single app refresh
+			var app *pb.Application
+			for _, a := range project.Applications {
+				if a.Name == appTarget {
+					app = a
+					break
+				}
+			}
+			if app == nil {
+				return fmt.Errorf("Did not find application %q in project %q", appTarget, projectTarget)
+			}
+
+			appList := []*pb.Application{app}
+
+			if err = c.doRefresh(project, appList, workspace, remote); err != nil {
+				c.ui.Output("Failed to refresh app %q status in project %q: %s",
+					app.Name,
+					project.Name,
+					clierrors.Humanize(err), terminal.WithErrorStyle())
+				return err
+			}
+		} else {
+			if err = c.doRefresh(project, project.Applications, workspace, remote); err != nil {
+				c.ui.Output("Failed to refresh app statuses in project %q: %s",
+					project.Name,
+					clierrors.Humanize(err), terminal.WithErrorStyle())
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// doRefresh takes a list of applications and their parent project and will
+// attempt to run the statusfunc configured for each requested application.
+func (c *StatusCommand) doRefresh(
+	project *pb.Project,
+	appList []*pb.Application,
+	workspace string,
+	remote bool,
+) error {
+	sg := c.ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("")
+	c.ui.Output("")
+	for _, app := range appList {
+		s.Update("Refreshing status for app %q in project %q. Refreshing could take a while...",
+			app.Name, project.Name)
+
+		if remote {
+			err := c.refreshAppStatusRemote(project, app, workspace)
+			if err != nil {
+				s.Update("Failed to refresh app status remotely\n")
+				s.Status(terminal.StatusError)
+				s.Done()
+
+				c.ui.Output(
+					"Error attempting to refresh application %q: %s",
+					app.Name,
+					clierrors.Humanize(err),
+					terminal.WithErrorStyle(),
+				)
+				return err
+			}
+		} else {
+			err := c.refreshAppStatusLocal(project, app, workspace)
+			if err != nil {
+				s.Update("Failed to refresh app status locally\n")
+				s.Status(terminal.StatusError)
+				s.Done()
+
+				c.ui.Output(
+					"Error attempting to refresh application %q: %s",
+					app.Name,
+					clierrors.Humanize(err),
+					terminal.WithErrorStyle(),
+				)
+				return err
+			}
+		}
+	}
+
+	s.Update("Finished refreshing app statuses in project %q", project.Name)
+	s.Done()
+	c.ui.Output("")
+
+	return nil
+}
+
+// refreshAppStatusLocal takes a project and a single application and uses
+// the local runner to execute a StatusReport refresh function by getting
+// the latest Deployment or Release and using the application client to
+// refresh the apps Status Report.
+func (c *StatusCommand) refreshAppStatusLocal(
+	project *pb.Project,
+	app *pb.Application,
+	workspace string,
+) error {
+	// Get our API client
+	client := c.project.Client()
+
+	// Get Latest Deployment and Release
+
+	// Deployments
+	deploymentsResp, err := client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
+		Application: &pb.Ref_Application{
+			Application: app.Name,
+			Project:     project.Name,
+		},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: workspace,
+		},
+		Order: &pb.OperationOrder{
+			Order: pb.OperationOrder_COMPLETE_TIME,
+			Limit: 1,
+		},
+	})
+	if err != nil {
+		if s, ok := status.FromError(err); ok {
+			if s.Code() == codes.Unimplemented {
+				return c.errAPIUnimplemented(err)
+			}
+		}
+		return err
+	}
+
+	var deployment *pb.Deployment
+	if deploymentsResp.Deployments != nil && len(deploymentsResp.Deployments) > 0 {
+		deployment = deploymentsResp.Deployments[0].Deployment
+	} else {
+		c.ui.Output("No deployments in project %q for app %q to refresh a status on!",
+			project.Name,
+			app.Name,
+			terminal.WithWarningStyle())
+		// We probably don't have a release either, so return early
+		return nil
+	}
+
+	// Get our app client
+	appClient := c.project.App(app.Name)
+
+	_, err = appClient.StatusReport(c.Ctx, &pb.Job_StatusReportOp{
+		Target: &pb.Job_StatusReportOp_Deployment{
+			Deployment: deployment,
+		},
+	})
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return err
+	}
+
+	// Releases
+	releaseResp, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
+		Application: &pb.Ref_Application{
+			Application: app.Name,
+			Project:     project.Name,
+		},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: workspace,
+		},
+		Order: &pb.OperationOrder{
+			Order: pb.OperationOrder_COMPLETE_TIME,
+			Limit: 1,
+		},
+	})
+	if err != nil {
+		if s, ok := status.FromError(err); ok {
+			if s.Code() == codes.Unimplemented {
+				return c.errAPIUnimplemented(err)
+			}
+		}
+		return err
+	}
+
+	var release *pb.Release
+	if releaseResp.Releases != nil && len(releaseResp.Releases) > 0 {
+		release = releaseResp.Releases[0].Release
+	}
+
+	if release != nil && !release.Unimplemented {
+		_, err = appClient.StatusReport(c.Ctx, &pb.Job_StatusReportOp{
+			Target: &pb.Job_StatusReportOp_Release{
+				Release: release,
+			},
+		})
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return err
+		}
+	}
+
+	return nil
+}
+
+// refreshAppStatusRemote takes a single project and application and uses a
+// remote runner through the Waypoint Server API to queue and start a
+// status report refresh job. It takes the queued job id and hooks into the
+// job stream to be displayed on the terinal while the status report refresh
+// happens.
+func (c *StatusCommand) refreshAppStatusRemote(
+	project *pb.Project,
+	app *pb.Application,
+	workspace string,
+) error {
+	// Get our API client
+	client := c.project.Client()
+
+	// Get Latest Deployment and Release
+
+	// Deployment
+	deploymentsResp, err := client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
+		Application: &pb.Ref_Application{
+			Application: app.Name,
+			Project:     project.Name,
+		},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: workspace,
+		},
+		Order: &pb.OperationOrder{
+			Order: pb.OperationOrder_COMPLETE_TIME,
+			Limit: 1,
+		},
+	})
+	if err != nil {
+		if s, ok := status.FromError(err); ok {
+			if s.Code() == codes.Unimplemented {
+				return c.errAPIUnimplemented(err)
+			}
+		}
+		return err
+	}
+
+	var deployment *pb.Deployment
+	if deploymentsResp.Deployments != nil && len(deploymentsResp.Deployments) > 0 {
+		deployment = deploymentsResp.Deployments[0].Deployment
+	}
+
+	var deploySeq uint64
+	if v, err := strconv.ParseInt(deployment.Id, 10, 64); err == nil {
+		deploySeq = uint64(v)
+	} else {
+		deploySeq = deployment.Sequence
+	}
+
+	_, err = client.ExpediteStatusReport(c.Ctx, &pb.ExpediteStatusReportRequest{
+		Workspace: &pb.Ref_Workspace{
+			Workspace: workspace,
+		},
+		Target: &pb.ExpediteStatusReportRequest_Deployment{
+			Deployment: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Sequence{
+					Sequence: &pb.Ref_OperationSeq{
+						Application: &pb.Ref_Application{
+							Application: app.Name,
+							Project:     project.Name,
+						},
+						Number: deploySeq,
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		if s, ok := status.FromError(err); ok {
+			if s.Code() == codes.Unimplemented {
+				return c.errAPIUnimplemented(err)
+			}
+		}
+		return err
+	}
+	//jobID := statusResp.JobId
+
+	// TODO: get the job stream
+	//if err = clijob.WatchJobStream(jobID); err != nil {
+	//	return err
+	//}
+
+	// Release
+	releaseResp, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
+		Application: &pb.Ref_Application{
+			Application: app.Name,
+			Project:     project.Name,
+		},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: workspace,
+		},
+		Order: &pb.OperationOrder{
+			Order: pb.OperationOrder_COMPLETE_TIME,
+			Limit: 1,
+		},
+	})
+	if err != nil {
+		if s, ok := status.FromError(err); ok {
+			if s.Code() == codes.Unimplemented {
+				return c.errAPIUnimplemented(err)
+			}
+		}
+		return err
+	}
+
+	var release *pb.Release
+	if releaseResp.Releases != nil && len(releaseResp.Releases) > 0 {
+		release = releaseResp.Releases[0].Release
+	}
+
+	if release != nil && !release.Unimplemented {
+		var releaseSeq uint64
+		if v, err := strconv.ParseInt(release.Id, 10, 64); err == nil {
+			releaseSeq = uint64(v)
+		} else {
+			releaseSeq = release.Sequence
+		}
+
+		_, err = client.ExpediteStatusReport(c.Ctx, &pb.ExpediteStatusReportRequest{
+			Workspace: &pb.Ref_Workspace{
+				Workspace: workspace,
+			},
+			Target: &pb.ExpediteStatusReportRequest_Release{
+				Release: &pb.Ref_Operation{
+					Target: &pb.Ref_Operation_Sequence{
+						Sequence: &pb.Ref_OperationSeq{
+							Application: &pb.Ref_Application{
+								Application: app.Name,
+								Project:     project.Name,
+							},
+							Number: releaseSeq,
+						},
+					},
+				},
+			},
+		})
+		if err != nil {
+			if s, ok := status.FromError(err); ok {
+				if s.Code() == codes.Unimplemented {
+					return c.errAPIUnimplemented(err)
+				}
+			}
+			return err
+		}
+		//jobID := resp.JobId
+
+		// TODO: get the job stream
+		//if err = clijob.WatchJobStream(jobID); err != nil {
+		//	return err
+		//}
+	}
+
+	return nil
+}
+
+//
+// UI format functions
+//
 
 // FormatProjectAppStatus formats all applications inside a project
 func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
@@ -198,27 +662,12 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 		if err != nil {
 			if s, ok := status.FromError(err); ok {
 				if s.Code() == codes.Unimplemented {
-					var serverVersion string
-					serverVersionResp := c.project.ServerVersion()
-					if serverVersionResp != nil {
-						serverVersion = serverVersionResp.Version
-					}
-
-					var clientVersion string
-					clientVersionResp := version.GetVersion()
-					if clientVersionResp != nil {
-						clientVersion = clientVersionResp.Version
-					}
-
-					c.project.UI.Output(
-						fmt.Sprintf("This CLI version %q is incompatible with the current server %q - missing UI_ListDeployments method. Upgrade your server to v0.5.0 or higher or downgrade your CLI to v0.4 or older.", clientVersion, serverVersion),
-						terminal.WithErrorStyle(),
-					)
-					return ErrSentinel
+					return c.errAPIUnimplemented(err)
 				}
 			}
 			return err
 		}
+
 		var appDeployStatus *pb.StatusReport
 		if deploymentsResp.Deployments != nil && len(deploymentsResp.Deployments) > 0 {
 			appDeployStatus = deploymentsResp.Deployments[0].LatestStatusReport
@@ -251,6 +700,11 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 			},
 		})
 		if err != nil {
+			if s, ok := status.FromError(err); ok {
+				if s.Code() == codes.Unimplemented {
+					return c.errAPIUnimplemented(err)
+				}
+			}
 			return err
 		}
 		var appReleaseStatus *pb.StatusReport
@@ -363,23 +817,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	if err != nil {
 		if s, ok := status.FromError(err); ok {
 			if s.Code() == codes.Unimplemented {
-				var serverVersion string
-				serverVersionResp := c.project.ServerVersion()
-				if serverVersionResp != nil {
-					serverVersion = serverVersionResp.Version
-				}
-
-				var clientVersion string
-				clientVersionResp := version.GetVersion()
-				if clientVersionResp != nil {
-					clientVersion = clientVersionResp.Version
-				}
-
-				c.project.UI.Output(
-					fmt.Sprintf("This CLI version %q is incompatible with the current server %q - missing UI_ListDeployments method. Upgrade your server to v0.5.0 or higher or downgrade your CLI to v0.4 or older.", clientVersion, serverVersion),
-					terminal.WithErrorStyle(),
-				)
-				return ErrSentinel
+				return c.errAPIUnimplemented(err)
 			}
 		}
 		return err
@@ -496,6 +934,11 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		},
 	})
 	if err != nil {
+		if s, ok := status.FromError(err); ok {
+			if s.Code() == codes.Unimplemented {
+				return c.errAPIUnimplemented(err)
+			}
+		}
 		return err
 	}
 
@@ -707,23 +1150,7 @@ func (c *StatusCommand) FormatProjectStatus() error {
 			if err != nil {
 				if s, ok := status.FromError(err); ok {
 					if s.Code() == codes.Unimplemented {
-						var serverVersion string
-						serverVersionResp := c.project.ServerVersion()
-						if serverVersionResp != nil {
-							serverVersion = serverVersionResp.Version
-						}
-
-						var clientVersion string
-						clientVersionResp := version.GetVersion()
-						if clientVersionResp != nil {
-							clientVersion = clientVersionResp.Version
-						}
-
-						c.project.UI.Output(
-							fmt.Sprintf("This CLI version %q is incompatible with the current server %q - missing UI_ListDeployments method. Upgrade your server to v0.5.0 or higher or downgrade your CLI to v0.4 or older.", clientVersion, serverVersion),
-							terminal.WithErrorStyle(),
-						)
-						return ErrSentinel
+						return c.errAPIUnimplemented(err)
 					}
 				}
 				return err
@@ -753,6 +1180,11 @@ func (c *StatusCommand) FormatProjectStatus() error {
 				},
 			})
 			if err != nil {
+				if s, ok := status.FromError(err); ok {
+					if s.Code() == codes.Unimplemented {
+						return c.errAPIUnimplemented(err)
+					}
+				}
 				return err
 			}
 
@@ -923,7 +1355,9 @@ func (c *StatusCommand) outputJsonAppStatus(
 	return nil
 }
 
-// Status Helpers
+//
+// CLI Status Helpers
+//
 
 func (c *StatusCommand) FormatStatusReportComplete(
 	statusReport *pb.StatusReport,
@@ -1036,6 +1470,28 @@ func (c *StatusCommand) formatJsonMap(t *terminal.Table) []map[string]interface{
 	return result
 }
 
+func (c *StatusCommand) errAPIUnimplemented(err error) error {
+	var serverVersion string
+	serverVersionResp := c.project.ServerVersion()
+	if serverVersionResp != nil {
+		serverVersion = serverVersionResp.Version
+	}
+
+	var clientVersion string
+	clientVersionResp := version.GetVersion()
+	if clientVersionResp != nil {
+		clientVersion = clientVersionResp.Version
+	}
+
+	c.project.UI.Output("This CLI version %q is incompatible with the current "+
+		"server %q - missing API method. Upgrade your server to v0.5.0 or higher: %s",
+		clierrors.Humanize(err),
+		clientVersion, serverVersion,
+		terminal.WithErrorStyle(),
+	)
+	return err
+}
+
 func (c *StatusCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
@@ -1058,6 +1514,12 @@ func (c *StatusCommand) Flags() *flag.Sets {
 			Target: &c.flagAllProjects,
 			Usage:  "Output status about every project in a workspace.",
 		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "refresh",
+			Target: &c.flagRefreshAppStatus,
+			Usage:  "Refresh application status for the requested app or apps in a project.",
+		})
 	})
 }
 
@@ -1070,14 +1532,19 @@ func (c *StatusCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *StatusCommand) Synopsis() string {
-	return "List statuses."
+	return "List and refresh application statuses."
 }
 
 func (c *StatusCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint status [options] [project]
 
-  View the current status of projects and applications managed by Waypoint.
+  View the current status of projects, applications, and their resources
+  managed by Waypoint.
+
+  When the '-refresh' flag is included, this command will attempt to regenerate
+  every requested applications status report on-demand for both local and remote
+  data sourced projects.
 
 ` + c.Flags().Help())
 }
