@@ -85,13 +85,18 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 		workspaceNames = append(workspaceNames, ws.Workspace.Workspace)
 	}
 
+	var gitUrl, gitRef, gitPath string
 	dataSource := "Local" // if unset, assume local
 	if project.DataSource != nil {
-		switch project.DataSource.Source.(type) {
+		switch ds := project.DataSource.Source.(type) {
 		case *pb.Job_DataSource_Local:
 			dataSource = "Local"
 		case *pb.Job_DataSource_Git:
 			dataSource = "Git"
+
+			gitUrl = ds.Git.Url
+			gitRef = ds.Git.Ref
+			gitPath = ds.Git.Path
 		}
 	}
 
@@ -111,7 +116,8 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 
 	if c.flagJson {
 		projectHeaders := []string{
-			"Project", "Applications", "Workspaces", "Remote Enabled", "Data Source", "Project Poll Enabled",
+			"Project", "Applications", "Workspaces", "Remote Enabled", "Data Source",
+			"Git URL", "Git Ref", "Git Path", "Project Poll Enabled",
 			"Project Poll Interval", "App Status Poll Enabled", "App Status Poll Interval",
 		}
 
@@ -124,6 +130,9 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 			strings.Join(workspaceNames, ", "),
 			strconv.FormatBool(project.RemoteEnabled),
 			dataSource,
+			gitUrl,
+			gitRef,
+			gitPath,
 			strconv.FormatBool(projectPollEnabled),
 			projectPollInterval,
 			strconv.FormatBool(appPollEnabled),
@@ -146,6 +155,7 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 		// own row
 		c.ui.Output("Project Info:", terminal.WithHeaderStyle())
 
+		// Unset value strings will be omitted automatically
 		c.ui.NamedValues([]terminal.NamedValue{
 			{
 				Name: "Project Name", Value: project.Name,
@@ -161,6 +171,15 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 			},
 			{
 				Name: "Data Source", Value: dataSource,
+			},
+			{
+				Name: "Git URL", Value: gitUrl,
+			},
+			{
+				Name: "Git Ref", Value: gitRef,
+			},
+			{
+				Name: "Git Path", Value: gitPath,
 			},
 			{
 				Name: "Project Poll Enabled", Value: strconv.FormatBool(projectPollEnabled),
