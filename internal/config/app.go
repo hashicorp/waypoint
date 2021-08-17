@@ -264,7 +264,7 @@ func (c *App) ReleaseUse() string {
 	return c.ReleaseRaw.Use.Type
 }
 
-// BuildUse returns the plugin "use" value.
+// BuildLabels returns the labels for this stage.
 func (c *App) BuildLabels(ctx *hcl.EvalContext) (map[string]string, error) {
 	if c.BuildRaw == nil {
 		return nil, nil
@@ -272,6 +272,52 @@ func (c *App) BuildLabels(ctx *hcl.EvalContext) (map[string]string, error) {
 
 	ctx = appendContext(c.ctx, ctx)
 	return labels(ctx, c.BuildRaw.Body)
+}
+
+// RegistryLabels returns the labels for this stage.
+func (c *App) RegistryLabels(ctx *hcl.EvalContext) (map[string]string, error) {
+	if c.BuildRaw == nil || c.BuildRaw.Registry == nil {
+		return nil, nil
+	}
+
+	ctx = appendContext(c.ctx, ctx)
+
+	// Get both build and registry labels
+	allLabels, err := labels(ctx, c.BuildRaw.Body)
+	if err != nil {
+		return nil, err
+	}
+	registryLabels, err := labels(ctx, c.BuildRaw.Registry.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Merge em
+	for k, v := range registryLabels {
+		allLabels[k] = v
+	}
+
+	return allLabels, nil
+}
+
+// DeployLabels returns the labels for this stage.
+func (c *App) DeployLabels(ctx *hcl.EvalContext) (map[string]string, error) {
+	if c.DeployRaw == nil {
+		return nil, nil
+	}
+
+	ctx = appendContext(c.ctx, ctx)
+	return labels(ctx, c.DeployRaw.Body)
+}
+
+// ReleaseLabels returns the labels for this stage.
+func (c *App) ReleaseLabels(ctx *hcl.EvalContext) (map[string]string, error) {
+	if c.ReleaseRaw == nil {
+		return nil, nil
+	}
+
+	ctx = appendContext(c.ctx, ctx)
+	return labels(ctx, c.ReleaseRaw.Body)
 }
 
 // labels reads the labels from the given body (if they are available),

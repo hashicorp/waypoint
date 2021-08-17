@@ -87,6 +87,9 @@ var componentCreatorMap = map[component.Type]*componentCreator{
 		UseType: func(a *App) (string, error) {
 			return a.config.RegistryUse(), nil
 		},
+		Labels: func(a *App, ctx *hcl.EvalContext) (map[string]string, error) {
+			return a.config.RegistryLabels(ctx)
+		},
 		ConfigFunc: func(a *App, ctx *hcl.EvalContext) (interface{}, error) {
 			return a.config.Registry(ctx)
 		},
@@ -97,6 +100,9 @@ var componentCreatorMap = map[component.Type]*componentCreator{
 		UseType: func(a *App) (string, error) {
 			return a.config.DeployUse(), nil
 		},
+		Labels: func(a *App, ctx *hcl.EvalContext) (map[string]string, error) {
+			return a.config.DeployLabels(ctx)
+		},
 		ConfigFunc: func(a *App, ctx *hcl.EvalContext) (interface{}, error) {
 			return a.config.Deploy(ctx)
 		},
@@ -106,6 +112,9 @@ var componentCreatorMap = map[component.Type]*componentCreator{
 		Type: component.ReleaseManagerType,
 		UseType: func(a *App) (string, error) {
 			return a.config.ReleaseUse(), nil
+		},
+		Labels: func(a *App, ctx *hcl.EvalContext) (map[string]string, error) {
+			return a.config.ReleaseLabels(ctx)
 		},
 		ConfigFunc: func(a *App, ctx *hcl.EvalContext) (interface{}, error) {
 			return a.config.Release(ctx)
