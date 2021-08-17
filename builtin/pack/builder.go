@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/buildpacks/pack"
@@ -27,6 +28,11 @@ import (
 	"github.com/hashicorp/waypoint/internal/assets"
 	"github.com/hashicorp/waypoint/internal/ociregistry"
 	"github.com/hashicorp/waypoint/internal/pkg/epinject"
+)
+
+const (
+	// This is legacy and comes from heroku, which cnb continued with.
+	DefaultProcessType = "web"
 )
 
 // Builder uses `pack` -- the frontend for CloudNative Buildpacks -- to build
@@ -147,21 +153,28 @@ func (b *Builder) BuildODR(
 	ocis.DisableEntrypoint = b.config.DisableCEB
 	ocis.Auth = auth
 	ocis.Logger = log
-	ocis.Upstream = "http://" + host
 
-	data, err := assets.Asset("ceb/ceb")
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
+	if ai.Insecure {
+		ocis.Upstream = "http://" + host
+	} else {
+		ocis.Upstream = "https://" + host
 	}
 
 	refPath := reference.Path(ref)
 
-	step.Done()
-	step = sg.Add("Testing registry and uploading entrypoint layer")
+	if !b.config.DisableCEB {
+		data, err := assets.Asset("ceb/ceb")
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
+		}
 
-	err = ocis.SetupEntrypointLayer(refPath, data)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer: %s", err)
+		step.Done()
+		step = sg.Add("Testing registry and uploading entrypoint layer")
+
+		err = ocis.SetupEntrypointLayer(refPath, data)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer: %s", err)
+		}
 	}
 
 	li, err := net.Listen("tcp", "localhost:0")
@@ -176,9 +189,39 @@ func (b *Builder) BuildODR(
 
 	localRef := fmt.Sprintf("localhost:%d/%s:%s", port, refPath, ai.Tag)
 
+	// The patterns are the same os docker's patterns, so we just populate .dockerignore
+	// which we know kaniko will honor.
+	if len(b.config.Ignore) > 0 {
+
+		// We open this in append mode to preserve what's there in before we add entries to it.
+		f, err := os.OpenFile(filepath.Join(src.Path, ".dockerignore"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			return nil, status.Errorf(codes.Unavailable, "unable to write dockerignore: %s", err)
+		}
+
+		fmt.Fprintln(f, "")
+
+		for _, pattern := range b.config.Ignore {
+			fmt.Fprintln(f, pattern)
+		}
+
+		f.Close()
+	}
+
 	f, err := os.Create("Dockerfile.kaniko")
 	if err != nil {
 		return nil, err
+	}
+
+	processType := b.config.ProcessType
+	if processType == "" {
+		processType = DefaultProcessType
+	}
+
+	// TODO: buildpacks. They require us downloading data remotely and writing out /cnb/order.toml
+	// to reference which buildpacks should be execute in which order.
+	if len(b.config.Buildpacks) != 0 {
+		return nil, status.Errorf(codes.Unavailable, "explicit buildpacks are not yet implemented")
 	}
 
 	fmt.Fprintf(f, `FROM %s
@@ -199,9 +242,10 @@ RUN mkdir /tmp/cache /tmp/layers && \
       "-platform=/platform" \
       "-previous-image=%s" \
       "-uid=1000" \
+			"-process-type=%s" \
       "%s"
 
-`, builder, localRef, localRef)
+`, builder, localRef, processType, localRef)
 
 	err = f.Close()
 	if err != nil {
@@ -432,19 +476,13 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 	doc.Description(`
 Create a Docker image using CloudNative Buildpacks.
 
-**Pack requires access to a Docker daemon.** For remote builds, such as those
-triggered by [Git polling](/docs/projects/git), the
-[runner](/docs/runner) needs to have access to a Docker daemon such
-as exposing the Docker socket, enabling Docker-in-Docker, etc. Unfortunately,
-pack doesn't support dockerless builds. Configuring Docker access within
-a Docker container is outside the scope of these docs, please search the
-internet for "Docker in Docker" or other terms for more information.
+**This plugin must either be run via Docker or inside an ondemand runner.**
 `)
 
 	doc.Example(`
 build {
   use "pack" {
-	builder     = "heroku/buildpacks:18"
+	builder     = "heroku/buildpacks:20"
 	disable_entrypoint = false
   }
 }
