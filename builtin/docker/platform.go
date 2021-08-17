@@ -126,8 +126,6 @@ func (p *Platform) resourceContainerStatus(
 
 	// Creating our baseline container resource
 	containerResource := &sdk.StatusReport_Resource{
-		Type:                "container",
-		Platform:            platformName,
 		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE,
 	}
 
@@ -250,8 +248,6 @@ func (p *Platform) resourceNetworkStatus(
 	if len(nets) == 0 {
 		sr.Resources = append(sr.Resources, &sdk.StatusReport_Resource{
 			Name:                network.Name,
-			Type:                "network",
-			Platform:            platformName,
 			CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_ROUTER,
 			Health:              sdk.StatusReport_MISSING,
 		})
@@ -267,8 +263,6 @@ func (p *Platform) resourceNetworkStatus(
 			sr.Resources = append(sr.Resources, &sdk.StatusReport_Resource{
 				Name:                net.Name,
 				Id:                  net.ID,
-				Type:                "network",
-				Platform:            platformName,
 				CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_ROUTER,
 				Health:              sdk.StatusReport_READY, // Not that many states a network can be in, if it exists.
 				HealthMessage:       "exists",
@@ -323,64 +317,11 @@ func (p *Platform) Status(
 		}
 	}
 
-	resources, err := rm.StatusAll(ctx, log, sg, cli, ui)
+	result, err := rm.StatusReport(ctx, log, sg, cli, ui)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "resource manager failed to generate resource statuses: %s", err)
 	}
 
-	// Create our status report
-	var result sdk.StatusReport
-	result.External = true
-	result.Resources = resources
-
-	// Determine overall deployment health based on its resource health
-	var ready, alive, down, unknown, missing int
-	for _, r := range result.Resources {
-		switch r.Health {
-		case sdk.StatusReport_DOWN:
-			down++
-		case sdk.StatusReport_UNKNOWN:
-			unknown++
-		case sdk.StatusReport_READY:
-			ready++
-		case sdk.StatusReport_ALIVE:
-			alive++
-		case sdk.StatusReport_MISSING:
-			missing++
-		}
-	}
-
-	var containerResource *sdk.StatusReport_Resource
-	for _, r := range resources {
-		if r.Type == "container" {
-			// Assume there is only one container resource
-			containerResource = r
-			break
-		}
-	}
-	if containerResource != nil {
-		if ready == len(result.Resources) {
-			result.Health = sdk.StatusReport_READY
-			result.HealthMessage = fmt.Sprintf("Container %q is reporting ready!", containerResource.Name)
-		} else if down == len(result.Resources) {
-			result.Health = sdk.StatusReport_DOWN
-			result.HealthMessage = fmt.Sprintf("Container %q is reporting down!", containerResource.Name)
-		} else if unknown == len(result.Resources) {
-			result.Health = sdk.StatusReport_UNKNOWN
-			result.HealthMessage = fmt.Sprintf("Container %q is reporting unknown!", containerResource.Name)
-		} else if alive == len(result.Resources) {
-			result.Health = sdk.StatusReport_ALIVE
-			result.HealthMessage = fmt.Sprintf("Container %q is reporting alive!", containerResource.Name)
-		} else if missing == len(result.Resources) {
-			result.Health = sdk.StatusReport_MISSING
-			result.HealthMessage = fmt.Sprintf("Container %q is missing!", containerResource.Name)
-		} else {
-			result.Health = sdk.StatusReport_PARTIAL
-			result.HealthMessage = fmt.Sprintf("Container %q is reporting partially available!", containerResource.Name)
-		}
-	}
-
-	result.GeneratedTime = timestamppb.Now()
 	log.Debug("status report complete")
 
 	// update output based on main health state
@@ -407,7 +348,7 @@ func (p *Platform) Status(
 		st.Step(terminal.StatusWarn, mixedHealthWarn)
 	}
 
-	return &result, nil
+	return result, nil
 }
 
 func (p *Platform) resourceNetworkCreate(
