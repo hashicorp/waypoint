@@ -51,6 +51,8 @@ func Docs() map[string]string {
 		"regex":           "match the given string against the given regular expression pattern, returning captures if defined",
 		"regexall":        "same as regex but look for all matches of the given pattern rather than just the first",
 		"reverse":         "reverse the order of the elements in the list",
+		"selectormatch":   "applies a selector to a map and returns true if the selector matches",
+		"selectorlookup":  "applies a map of selectors to a map of labels. The value for the first matching selector is returned. If none match, the default is returned.",
 		"setintersection": "takes multiple sets and produces a single set containing only the elements that all of the given sets have in common. In other words, it computes the intersection of the sets",
 		"setproduct":      "finds all of the possible combinations of elements from all of the given sets by computing the Cartesian product",
 		"setsubtract":     "returns a new set containing the elements from the first set that are not present in the second set. In other words, it computes the relative complement of the first set in the second set",
