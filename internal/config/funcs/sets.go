@@ -24,6 +24,7 @@ func AddEntrypointFunctions(ctx *hcl.EvalContext) {
 	addFuncs(Encoding())
 	addFuncs(Datetime())
 	addFuncs(Jsonnet())
+	addFuncs(Selector())
 
 	ctx.Functions = set
 }
@@ -47,6 +48,7 @@ func AddStandardFunctions(ctx *hcl.EvalContext, pwd string) {
 	addFuncs(Encoding())
 	addFuncs(Datetime())
 	addFuncs(Jsonnet())
+	addFuncs(Selector())
 
 	ctx.Functions = set
 }
