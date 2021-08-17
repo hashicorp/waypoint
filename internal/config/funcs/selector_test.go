@@ -28,15 +28,12 @@ func TestSelectorMatch(t *testing.T) {
 			false,
 		},
 
-		/*
-			This fails right now pending a  go-bexpr discussion.
-			{
-				map[string]string{"waypoint/workspace": "foo"},
-				"waypoint.workspace == foo",
-				cty.BoolVal(true),
-				false,
-			},
-		*/
+		{
+			map[string]string{"waypoint/workspace": "foo"},
+			"waypoint/workspace == foo",
+			cty.BoolVal(true),
+			false,
+		},
 	}
 
 	for _, test := range tests {
