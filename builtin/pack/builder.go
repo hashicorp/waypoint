@@ -164,7 +164,7 @@ func (b *Builder) BuildODR(
 		return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer: %s", err)
 	}
 
-	li, err := net.Listen("tcp", ":0")
+	li, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		return nil, err
 	}
