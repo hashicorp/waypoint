@@ -317,7 +317,7 @@ func (u *uiStep) ReactStatus(status string) {
 }
 
 // Called when the step has finished. This must be done otherwise the StepGroup
-// will wait forever for it's Steps to finish.
+// will wait forever for its Steps to finish.
 func (u *uiStep) Done() {
 	if u.done {
 		return

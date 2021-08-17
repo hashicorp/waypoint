@@ -34,7 +34,7 @@ type Project struct {
 
 	localServer bool // True when a local server is created
 
-	// These are used to manage a local runner and it's job processing
+	// These are used to manage a local runner and its job processing
 	// in a goroutine.
 	wg           sync.WaitGroup
 	bg           context.Context

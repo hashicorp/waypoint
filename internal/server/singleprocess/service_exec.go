@@ -137,7 +137,7 @@ func (s *service) StartExecStream(
 			jobId := qresp.JobId
 
 			// Be sure that if we decide things aren't going well, the job doesn't outlive
-			// it's usefulness.
+			// its usefulness.
 			defer s.state.JobCancel(jobId, false)
 
 			log.Debug("waiting on job state", "job-id", jobId)
