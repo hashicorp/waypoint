@@ -100,11 +100,11 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 		}
 	}
 
-	var projectPollEnabled bool
-	var projectPollInterval string
+	var datasourcePollEnabled bool
+	var datasourcePollInterval string
 	if project.DataSourcePoll != nil {
-		projectPollEnabled = project.DataSourcePoll.Enabled
-		projectPollInterval = project.DataSourcePoll.Interval
+		datasourcePollEnabled = project.DataSourcePoll.Enabled
+		datasourcePollInterval = project.DataSourcePoll.Interval
 	}
 
 	var appPollEnabled bool
@@ -114,11 +114,14 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 		appPollInterval = project.StatusReportPoll.Interval
 	}
 
+	fileChangeSignal := project.FileChangeSignal
+
 	if c.flagJson {
 		projectHeaders := []string{
 			"Project", "Applications", "Workspaces", "Remote Enabled", "Data Source",
-			"Git URL", "Git Ref", "Git Path", "Project Poll Enabled",
-			"Project Poll Interval", "App Status Poll Enabled", "App Status Poll Interval",
+			"Git URL", "Git Ref", "Git Path", "Data Source Poll Enabled",
+			"Data Source Poll Interval", "App Status Poll Enabled", "App Status Poll Interval",
+			"File Change Signal",
 		}
 
 		projectTbl := terminal.NewTable(projectHeaders...)
@@ -133,10 +136,11 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 			gitUrl,
 			gitRef,
 			gitPath,
-			strconv.FormatBool(projectPollEnabled),
-			projectPollInterval,
+			strconv.FormatBool(datasourcePollEnabled),
+			datasourcePollInterval,
 			strconv.FormatBool(appPollEnabled),
 			appPollInterval,
+			fileChangeSignal,
 		}
 
 		projectTbl.Rich(
@@ -182,16 +186,19 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 				Name: "Git Path", Value: gitPath,
 			},
 			{
-				Name: "Project Poll Enabled", Value: strconv.FormatBool(projectPollEnabled),
+				Name: "Data Source Poll Enabled", Value: strconv.FormatBool(datasourcePollEnabled),
 			},
 			{
-				Name: "Project Poll Interval", Value: projectPollInterval,
+				Name: "Data Source Poll Interval", Value: datasourcePollInterval,
 			},
 			{
 				Name: "App Status Poll Enabled", Value: strconv.FormatBool(appPollEnabled),
 			},
 			{
 				Name: "App Status Poll Interval", Value: appPollInterval,
+			},
+			{
+				Name: "File Change Signal", Value: fileChangeSignal,
 			},
 		}, terminal.WithInfoStyle())
 
