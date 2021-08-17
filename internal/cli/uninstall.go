@@ -66,28 +66,43 @@ func (c *UninstallCommand) Run(args []string) int {
 		}
 	}
 
+	// Validate platform requested matches the server contexts platform
 	serverPlatform := c.platform
-	if ctxConfig.Server.Platform == "" && serverPlatform != "" {
-		c.ui.Output(
-			"No platform set on server context. Will attempt to uninstall requested "+
-				"platform %q",
-			serverPlatform,
-			terminal.WithWarningStyle(),
-		)
-	} else if serverPlatform == "" {
-		// attempt to set the server platform so the platform flag isn't required.
-		serverPlatform = ctxConfig.Server.Platform
+	if ctxConfig != nil {
+		if serverPlatform != "" {
+			if ctxConfig.Server.Platform == "" {
+				c.ui.Output(
+					"No platform set on server context. Will attempt to uninstall requested "+
+						"platform %q",
+					serverPlatform,
+					terminal.WithWarningStyle(),
+				)
+			} else if ctxConfig.Server.Platform != serverPlatform {
+				c.ui.Output(
+					"The current server platform is %q but the requested platform through "+
+						"the -platform flag was %q",
+					ctxConfig.Server.Platform,
+					serverPlatform,
+					terminal.WithErrorStyle(),
+				)
 
-		if serverPlatform == "" {
-			// It's still empty
-			c.ui.Output(
-				"Cannot determine what platform to uninstall Waypoint. "+
-					"The -platform flag is required since the server context did not include "+
-					"a server platform.",
-				terminal.WithErrorStyle(),
-			)
+				return 1
+			}
+		} else {
+			// attempt to set the server platform so the platform flag isn't required.
+			serverPlatform = ctxConfig.Server.Platform
 
-			return 1
+			if serverPlatform == "" {
+				// It's still empty
+				c.ui.Output(
+					"Cannot determine what platform to uninstall Waypoint. "+
+						"The -platform flag is required since the server context did not include "+
+						"a server platform.",
+					terminal.WithErrorStyle(),
+				)
+
+				return 1
+			}
 		}
 	}
 
