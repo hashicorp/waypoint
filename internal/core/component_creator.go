@@ -149,7 +149,7 @@ func (cc *componentCreator) create(
 	// We first get the labels. We use labels to determine the proper use
 	// plugin and other things so we have to grab these first before we do
 	// anything else.
-	hclCtx, _, err := cc.labels(hclCtx, app)
+	hclCtx, labels, err := cc.labels(hclCtx, app)
 	if err != nil {
 		return nil, err
 	}
@@ -181,6 +181,7 @@ func (cc *componentCreator) create(
 			Name: useType,
 		},
 
+		labels:  labels,
 		mappers: pinst.Mappers,
 		plugin:  pinst,
 	}
@@ -224,7 +225,6 @@ func (cc *componentCreator) create(
 		}
 
 		result.hooks = hooks
-		result.labels = opCfg.Labels
 	}
 
 	return result, nil
