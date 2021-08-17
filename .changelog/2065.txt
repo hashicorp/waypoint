@@ -1,0 +1,8 @@
+```release-note:feature
+config: `labels` variable for accessing the label set of an operation
+```
+
+```release-note:feature
+config: new functions `selectormatch` and `selectorlookup` for working with
+label selectors
+```
