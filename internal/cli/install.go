@@ -364,7 +364,7 @@ func (c *InstallCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *InstallCommand) Synopsis() string {
-	return "Install the Waypoint server to Kubernetes, Nomad, or Docker"
+	return "Install the Waypoint server to Kubernetes, Nomad, ECS, or Docker"
 }
 
 func (c *InstallCommand) Help() string {
@@ -373,7 +373,7 @@ Usage: waypoint server install [options]
 Alias: waypoint install
 
   Installs a Waypoint server to an existing platform. The platform should be
-  specified as kubernetes, nomad, or docker.
+  specified as kubernetes, nomad, ecs, or docker.
 
   This will also install a single Waypoint runner by default. This enables
   remote operations out of the box, such as polling a Git repository. This can

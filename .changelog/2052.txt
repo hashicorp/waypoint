@@ -1,0 +1,5 @@
+```release-note:improvement
+cli/uninstall: Remove hard requirement on platform flag, attempt to read server
+platform from server context. Platform flag overrides anytihng set in a server
+platform context.
+```
