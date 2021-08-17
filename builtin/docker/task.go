@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"fmt"
 
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -190,7 +191,12 @@ func (b *TaskLauncher) setupImage(
 		}
 	}
 
-	img = makeImageCanonical(img)
+	named, err := reference.ParseNormalizedNamed(img)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "unable to parse image name: %s", img)
+	}
+
+	img = named.Name()
 
 	out, err := cli.ImagePull(context.Background(), img, types.ImagePullOptions{})
 	if err != nil {
