@@ -62,7 +62,7 @@ docker/server-only:
 
 .PHONY: docker/odr
 docker/odr:
-	DOCKER_BUILDKIT=1 docker build -f Dockerfile.odr \
+	DOCKER_BUILDKIT=1 docker build --target odr \
 					-t waypoint:dev-odr \
 					.
 
