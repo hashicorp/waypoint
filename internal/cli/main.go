@@ -560,19 +560,19 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-		"ondemand-runner": func() (cli.Command, error) {
+		"runner ondemand": func() (cli.Command, error) {
 			return &helpCommand{
 				SynopsisText: helpText["ondemand-runner"][0],
 				HelpText:     helpText["ondemand-runner"][1],
 			}, nil
 		},
 
-		"ondemand-runner apply": func() (cli.Command, error) {
+		"runner ondemand set": func() (cli.Command, error) {
 			return &OndemandRunnerApplyCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-		"ondemand-runner list": func() (cli.Command, error) {
+		"runner list": func() (cli.Command, error) {
 			return &OndemandRunnerListCommand{
 				baseCommand: baseCommand,
 			}, nil

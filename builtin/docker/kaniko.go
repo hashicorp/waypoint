@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"os/exec"
 
 	"github.com/docker/distribution/reference"
@@ -17,15 +16,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-// HasImg returns true if "img" is available on the PATH.
-//
-// This doesn't do any fancy checking that "img" is the "img" we expect.
-// We can make the checking here more advanced later.
-func HasKaniko() bool {
-	_, err := os.Stat("/kaniko/executor")
-	return err == nil
-}
 
 func (b *Builder) buildWithKaniko(
 	ctx context.Context,
@@ -97,7 +87,7 @@ func (b *Builder) buildWithKaniko(
 		return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer: %s", err)
 	}
 
-	li, err := net.Listen("tcp", ":5000")
+	li, err := net.Listen("tcp", ":0")
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +95,9 @@ func (b *Builder) buildWithKaniko(
 	defer li.Close()
 	go http.Serve(li, &os)
 
-	localRef := fmt.Sprintf("localhost:5000/%s:%s", refPath, ai.Tag)
+	port := li.Addr().(*net.TCPAddr).Port
+
+	localRef := fmt.Sprintf("localhost:%d/%s:%s", port, refPath, ai.Tag)
 
 	// Start constructing our arg string for img
 	args := []string{

@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Registry represents access to a Docker registry.
@@ -62,6 +64,12 @@ func (r *Registry) Push(
 	// Depending on whethere the image is, we diverge at this point.
 	switch img.Location.(type) {
 	case *Image_Registry:
+		if img.Image != r.config.Image || img.Tag != r.config.Tag {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"Input image is not pulled locally and therefore can't be pushed. "+
+					"Please pull the image or use a builder that pulls the image first.")
+		}
+
 		// This indicates that the builder used the AccessInfo and published the image
 		// directly. Ergo we don't need to do anyhting and can just return the image as is.
 		return img, nil

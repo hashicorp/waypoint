@@ -30,26 +30,18 @@ RUN touch /tmp/.keep
 # final image
 #--------------------------------------------------------------------
 
-# Notes on img and what is required to make it work, since there's a lot
-# of small details below that are absolutely required for everything to
-# come together:
-#
-#  - img, runc, newuidmap, newgidmap need to be installed
-#  - libseccomp-dev must be installed for runc
-#  - newuidmap/newgidmap need to have suid set (u+s)
-#  - /etc/subuid and /etc/subgid need to have an entry for the user
-#  - USER, HOME, and XDG_RUNTIME_DIR all need to be set
-#
-
 FROM gcr.io/kaniko-project/executor:latest as kaniko
 
 COPY --from=builder /tmp/wp-src/waypoint /kaniko/waypoint
 COPY --from=busybox /bin/busybox /kaniko/busybox
 COPY --from=busybox /tmp /kaniko/tmp
 
+# We add busybox and populate it with the tool links to make the image
+# easier to use (having a shell, basic tools, etc)
 RUN ["/kaniko/busybox", "mkdir", "/kaniko/bin"]
 RUN ["/kaniko/busybox", "--install", "-s", "/kaniko/bin"]
 
+# Need to add the dir with our tools in PATH
 ENV PATH $PATH:/kaniko/bin
 ENV TMPDIR /kaniko/tmp
 

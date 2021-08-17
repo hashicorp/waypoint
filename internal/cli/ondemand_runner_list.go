@@ -29,13 +29,25 @@ func (c *OndemandRunnerListCommand) Run(args []string) int {
 		return 1
 	}
 
-	tbl := terminal.NewTable("id", "type", "oci-url")
+	if len(resp.OndemandRunners) == 0 {
+		return 0
+	}
+
+	c.ui.Output("Ondemand Runner Configurations")
+
+	tbl := terminal.NewTable("Id", "Plugin Type", "OCI Url", "Default")
 
 	for _, p := range resp.OndemandRunners {
+		def := ""
+		if p.Default {
+			def = "yes"
+		}
+
 		tbl.Rich([]string{
 			p.Id,
 			p.PluginType,
 			p.OciUrl,
+			def,
 		}, nil)
 	}
 

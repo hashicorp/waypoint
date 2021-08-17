@@ -172,7 +172,9 @@ func (b *Builder) BuildODR(
 	defer li.Close()
 	go http.Serve(li, &ocis)
 
-	localRef := fmt.Sprintf("localhost:5000/%s:%s", refPath, ai.Tag)
+	port := li.Addr().(*net.TCPAddr).Port
+
+	localRef := fmt.Sprintf("localhost:%d/%s:%s", port, refPath, ai.Tag)
 
 	f, err := os.Create("Dockerfile.kaniko")
 	if err != nil {
