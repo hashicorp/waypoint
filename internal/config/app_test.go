@@ -69,13 +69,9 @@ func TestConfigApp_compare(t *testing.T) {
 			"build.hcl",
 			"test",
 			func(t *testing.T, c *App) {
-				b, err := c.Build(nil, labelMerge)
+				b, err := c.Build(nil)
 				require.NoError(t, err)
 				require.Equal(t, "bar", b.Labels["foo"])
-
-				// Let's test that the labels rendered correctly in the HCL var.
-				require.Len(t, b.Hooks, 1)
-				require.Equal(t, "bar", b.Hooks[0].When)
 
 				r, err := c.Registry(nil)
 				require.NoError(t, err)
@@ -87,7 +83,7 @@ func TestConfigApp_compare(t *testing.T) {
 			"build_use.hcl",
 			"test",
 			func(t *testing.T, c *App) {
-				b, err := c.Build(nil, labelMerge)
+				b, err := c.Build(nil)
 				require.NoError(t, err)
 
 				op := b.Operation()
@@ -100,7 +96,6 @@ func TestConfigApp_compare(t *testing.T) {
 				}
 
 				require.NotEmpty(t, p.config.Foo)
-				require.Equal(t, "hello", p.config.Bar)
 			},
 		},
 

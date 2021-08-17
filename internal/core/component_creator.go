@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/gocty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -57,6 +59,11 @@ type componentCreator struct {
 	Type       component.Type
 	UseType    func(*App) (string, error)
 	ConfigFunc func(*App, *hcl.EvalContext) (interface{}, error)
+
+	// Labels should return the labels defined for this component. This is
+	// used to compile the final set of operation labels which is further
+	// used for HCL variables, label filtering, and more.
+	Labels func(*App, *hcl.EvalContext) (map[string]string, error)
 }
 
 // componentCreatorMap contains all the components that can be initialized
@@ -66,6 +73,9 @@ var componentCreatorMap = map[component.Type]*componentCreator{
 		Type: component.BuilderType,
 		UseType: func(a *App) (string, error) {
 			return a.config.BuildUse(), nil
+		},
+		Labels: func(a *App, ctx *hcl.EvalContext) (map[string]string, error) {
+			return a.config.BuildLabels(ctx)
 		},
 		ConfigFunc: func(a *App, ctx *hcl.EvalContext) (interface{}, error) {
 			return a.config.Build(ctx)
@@ -127,6 +137,14 @@ func (cc *componentCreator) create(
 	loadConfig bool,
 	hclCtx *hcl.EvalContext,
 ) (*Component, error) {
+	// We first get the labels. We use labels to determine the proper use
+	// plugin and other things so we have to grab these first before we do
+	// anything else.
+	hclCtx, _, err := cc.labels(hclCtx, app)
+	if err != nil {
+		return nil, err
+	}
+
 	useType, err := cc.UseType(app)
 	if err != nil {
 		return nil, err
@@ -201,4 +219,42 @@ func (cc *componentCreator) create(
 	}
 
 	return result, nil
+}
+
+func (cc *componentCreator) labels(
+	hclCtx *hcl.EvalContext,
+	app *App,
+) (*hcl.EvalContext, map[string]string, error) {
+	// Components can have no labels (or a nil way to get labels), in
+	// which case we return an empty label set.
+	if cc.Labels == nil {
+		cc.Labels = func(*App, *hcl.EvalContext) (map[string]string, error) {
+			return nil, nil
+		}
+	}
+
+	// Get the labels from the component
+	labels, err := cc.Labels(app, hclCtx)
+	if err != nil {
+		return nil, nil, err
+	}
+	if labels == nil {
+		labels = map[string]string{}
+	}
+
+	// Merge this label with our app labels to create our final labels set.
+	labels = app.mergeLabels(labels)
+
+	// Create a new child context with our variables. We add the labels var
+	// so that all operations have access to this.
+	labelsCty, err := gocty.ToCtyValue(labels, cty.Map(cty.String))
+	if err != nil {
+		return nil, nil, err
+	}
+	hclCtx = hclCtx.NewChild()
+	hclCtx.Variables = map[string]cty.Value{
+		"labels": labelsCty,
+	}
+
+	return hclCtx, labels, nil
 }

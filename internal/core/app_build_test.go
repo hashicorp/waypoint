@@ -48,6 +48,52 @@ func TestAppBuild_happy(t *testing.T) {
 	}
 }
 
+// Test that labels are available
+func TestAppBuild_labels(t *testing.T) {
+	require := require.New(t)
+
+	mockB := &componentmocks.Builder{}
+	mockC := &componentmocks.Configurable{}
+	mock := struct {
+		component.Builder
+		component.Configurable
+	}{
+		Builder:      mockB,
+		Configurable: mockC,
+	}
+
+	// Make our factory for platforms
+	factory := TestFactory(t, component.BuilderType)
+	TestFactoryRegister(t, factory, "test", mock)
+
+	// Make our app
+	app := TestApp(t, TestProject(t,
+		WithConfig(config.TestConfig(t, testBuildConfigLabels)),
+		WithFactory(component.BuilderType, factory),
+		WithJobInfo(&component.JobInfo{Id: "hello"}),
+	), "test")
+
+	// Setup our value
+	artifact := &componentmocks.Artifact{}
+	artifact.On("Labels").Return(map[string]string{"foo": "foo"})
+	mockB.On("BuildFunc").Return(func() component.Artifact {
+		return artifact
+	})
+
+	// Setup our config
+	var config struct {
+		Foo string `hcl:"foo,optional"`
+	}
+	mockC.On("Config").Return(&config, nil)
+
+	// Build
+	_, _, err := app.Build(context.Background())
+	require.NoError(err)
+
+	// Test our config value
+	require.Equal("bar", config.Foo)
+}
+
 // Test that we have an argument that lets us know there is a registry.
 func TestAppBuild_hasRegistry(t *testing.T) {
 	t.Run("with registry", func(t *testing.T) {
@@ -166,6 +212,22 @@ app "test" {
 
 		registry {
 		  use "foo" {}
+		}
+	}
+
+	deploy {
+		use "test" {}
+	}
+}
+`
+const testBuildConfigLabels = `
+project = "test"
+
+app "test" {
+	build {
+		labels = { "foo" = "bar" }
+		use "test" {
+			foo = labels["foo"]
 		}
 	}
 
