@@ -120,8 +120,8 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 		statusColor := ""
 		columns := []string{
 			project.Name,
-			strings.Join(appNames, "\n"),
-			strings.Join(workspaceNames, "\n"),
+			strings.Join(appNames, ", "),
+			strings.Join(workspaceNames, ", "),
 			strconv.FormatBool(project.RemoteEnabled),
 			dataSource,
 			strconv.FormatBool(projectPollEnabled),
@@ -142,109 +142,41 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 			return err
 		}
 	} else {
-		projectHeaders := []string{
-			"Project Option", "Value",
-		}
-
-		projectTbl := terminal.NewTable(projectHeaders...)
-		statusColor := ""
-
 		// Show project info in a flat list where each project option is its
 		// own row
-		columns := []string{
-			"Project Name",
-			project.Name,
-		}
-		projectTbl.Rich(
-			columns,
-			[]string{
-				statusColor,
-			},
-		)
-		columns = []string{
-			"Applications",
-			strings.Join(appNames, "\n"),
-		}
-		projectTbl.Rich(
-			columns,
-			[]string{
-				statusColor,
-			},
-		)
-		columns = []string{
-			"Workspaces",
-			strings.Join(workspaceNames, "\n"),
-		}
-		projectTbl.Rich(
-			columns,
-			[]string{
-				statusColor,
-			},
-		)
-		columns = []string{
-			"Remote Enabled",
-			strconv.FormatBool(project.RemoteEnabled),
-		}
-		projectTbl.Rich(
-			columns,
-			[]string{
-				statusColor,
-			},
-		)
-		columns = []string{
-			"Data Source",
-			dataSource,
-		}
-		projectTbl.Rich(
-			columns,
-			[]string{
-				statusColor,
-			},
-		)
-		columns = []string{
-			"Project Poll Enabled",
-			strconv.FormatBool(projectPollEnabled),
-		}
-		projectTbl.Rich(
-			columns,
-			[]string{
-				statusColor,
-			},
-		)
-		columns = []string{
-			"Project Poll Interval",
-			projectPollInterval,
-		}
-		projectTbl.Rich(
-			columns,
-			[]string{
-				statusColor,
-			},
-		)
-		columns = []string{
-			"App Status Poll Enabled",
-			strconv.FormatBool(appPollEnabled),
-		}
-		projectTbl.Rich(
-			columns,
-			[]string{
-				statusColor,
-			},
-		)
-		columns = []string{
-			"App Status Poll Interval",
-			appPollInterval,
-		}
-		projectTbl.Rich(
-			columns,
-			[]string{
-				statusColor,
-			},
-		)
+		c.ui.Output("Project Info:", terminal.WithHeaderStyle())
 
-		c.ui.Table(projectTbl)
+		c.ui.NamedValues([]terminal.NamedValue{
+			{
+				Name: "Project Name", Value: project.Name,
+			},
+			{
+				Name: "Applications", Value: strings.Join(appNames, ", "),
+			},
+			{
+				Name: "Workspaces", Value: strings.Join(workspaceNames, ", "),
+			},
+			{
+				Name: "Remote Enabled", Value: strconv.FormatBool(project.RemoteEnabled),
+			},
+			{
+				Name: "Data Source", Value: dataSource,
+			},
+			{
+				Name: "Project Poll Enabled", Value: strconv.FormatBool(projectPollEnabled),
+			},
+			{
+				Name: "Project Poll Interval", Value: projectPollInterval,
+			},
+			{
+				Name: "App Status Poll Enabled", Value: strconv.FormatBool(appPollEnabled),
+			},
+			{
+				Name: "App Status Poll Interval", Value: appPollInterval,
+			},
+		}, terminal.WithInfoStyle())
+
 	}
-
 	return nil
 }
 
@@ -271,10 +203,12 @@ func (c *ProjectInspectCommand) formatJsonMap(t *terminal.Table) []map[string]in
 		for j, r := range row {
 			// Remove any whitespacess in key
 			header := strings.ReplaceAll(t.Headers[j], " ", "")
-			if header == "Applications" || header == "Workspaces" {
+			// Lower case header key
+			header = strings.ToLower(header)
+			if header == "applications" || header == "workspaces" {
 				// We join apps and ws on '\n' to format the original table, so
 				// undo that here and turn them back into a list for json
-				vals := strings.Split(r.Value, "\n")
+				vals := strings.Split(r.Value, ", ")
 				c[header] = vals
 			} else {
 				c[header] = r.Value
