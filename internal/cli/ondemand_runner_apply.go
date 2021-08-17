@@ -191,7 +191,7 @@ func (c *OndemandRunnerApplyCommand) Flags() *flag.Sets {
 			Name:    "id",
 			Target:  &c.flagId,
 			Default: "",
-			Usage:   "The id an existing ondemand runner to update.",
+			Usage:   "The id of an existing ondemand runner to update.",
 		})
 
 		f.StringVar(&flag.StringVar{
@@ -219,9 +219,9 @@ func (c *OndemandRunnerApplyCommand) Flags() *flag.Sets {
 			Name:    "project-config",
 			Target:  &c.flagPluginConfig,
 			Default: "",
-			Usage: "Path to a an hcl file that contains the configuration for the plugin." +
+			Usage: "Path to an hcl file that contains the configuration for the plugin. " +
 				"This is only necessary when the plugin's defaults need to be adjusted for " +
-				"the environment the plugin will launch the ondemand runner.",
+				"the environment the plugin will launch the ondemand runner in.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
@@ -229,7 +229,7 @@ func (c *OndemandRunnerApplyCommand) Flags() *flag.Sets {
 			Target:  &c.flagDefault,
 			Default: false,
 			Usage: "Indicates that this ondemand runner should be used by any project that doesn't " +
-				"otherwise specify it's own ondemand runner.",
+				"otherwise specify its own ondemand runner.",
 		})
 	})
 }
