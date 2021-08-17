@@ -24,14 +24,14 @@
               {{t "form.config_variables_settings.variable_value"}}
             </label>
             <div class="pds-formField__input-inline-toggle">
-                <Pds::Input
-                  @type="text"
-                  id="config-variable-value"
-                  data-test-config-variables-var-static
-                  placeholder={{t "form.config_variables_settings.variable_value_placeholder"}}
-                  value={{this.variable.pb_static}}
-                  {{on "input" (pick "target.value" (set this "variable.pb_static"))}}
-                />
+              <Pds::Input
+                @type="text"
+                id="config-variable-value"
+                data-test-config-variables-var-static
+                placeholder={{t "form.config_variables_settings.variable_value_placeholder"}}
+                value={{this.variable.pb_static}}
+                {{on "input" (pick "target.value" (set this "variable.pb_static"))}}
+              />
             </div>
           </div>
         </fieldset>
@@ -59,33 +59,40 @@
     <div class="variables--list-item">
       <span class="variables--list-item-name" data-test-config-variables-var-name>{{this.variable.name}}</span>
       <span class="variables--list-item-value" data-test-config-variables-var-value>
-        <pre><code>{{this.variable.pb_static}}</code></pre>
+        {{#if this.variable.pb_static}}
+          <pre><code>{{this.variable.pb_static}}</code></pre>
+        {{/if}}
+        {{#if this.variable.dynamic.from}}
+          <pre><code>dynamic via {{this.variable.dynamic.from}}</code></pre>
+        {{/if}}
       </span>
-      <Pds::Dropdown @align="right" as |D|>
-        <D.Trigger
-          data-test-config-variables-dropdown
-          @variant="ghost">
-          Actions
-        </D.Trigger>
-        <D.Dialog >
-          <section>
-            {{#if this.isEditable}}
+      {{#if this.isEditable}}
+        <Pds::Dropdown @align="right" as |D|>
+          <D.Trigger
+            data-test-config-variables-dropdown
+            @variant="ghost">
+            Actions
+          </D.Trigger>
+          <D.Dialog >
+            <section>
+
+                <Pds::Button
+                  data-test-config-variables-dropdown-edit
+                  @variant="secondary"
+                  {{on "click" (fn this.editVariable this.variable)}}>
+                  Edit
+                </Pds::Button>
+
               <Pds::Button
-                data-test-config-variables-dropdown-edit
-                @variant="secondary"
-                {{on "click" (fn this.editVariable this.variable)}}>
-                Edit
+                data-test-config-variables-dropdown-delete
+                @variant="warning"
+                {{on "click" (fn this.deleteVariable this.variable)}}>
+                Delete
               </Pds::Button>
-            {{/if}}
-            <Pds::Button
-              data-test-config-variables-dropdown-delete
-              @variant="warning"
-              {{on "click" (fn this.deleteVariable this.variable)}}>
-              Delete
-            </Pds::Button>
-          </section>
-        </D.Dialog>
-      </Pds::Dropdown>
+            </section>
+          </D.Dialog>
+        </Pds::Dropdown>
+      {{/if}}
     </div>
   {{/if}}
 </li>
