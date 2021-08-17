@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/version"
 )
 
-type DeploymentListCommand struct {
+type ReleaseListCommand struct {
 	*baseCommand
 
 	flagWorkspaceAll bool
@@ -34,30 +34,7 @@ type DeploymentListCommand struct {
 	filterFlags      filterFlags
 }
 
-func shortImg(img string) string {
-	if strings.HasPrefix(img, "sha256:") {
-		return img[7:14]
-	}
-
-	return img[:7]
-}
-
-// Add either language: or languages: based on how many values are specified
-func niceLanguages(langs string) string {
-	parts := strings.Split(langs, ",")
-
-	if len(parts) == 1 {
-		return "language:" + strings.TrimSpace(parts[0])
-	}
-
-	for i, p := range parts {
-		parts[i] = strings.TrimSpace(p)
-	}
-
-	return "languages:" + strings.Join(parts, ", ")
-}
-
-func (c *DeploymentListCommand) Run(args []string) int {
+func (c *ReleaseListCommand) Run(args []string) int {
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	if err := c.Init(
 		WithArgs(args),
@@ -76,32 +53,16 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			wsRef = c.project.WorkspaceRef()
 		}
 
-		phyState, err := c.filterFlags.physState()
-		if err != nil {
-			return err
-		}
-
-		// Get the latest release
-		release, err := client.GetLatestRelease(ctx, &pb.GetLatestReleaseRequest{
-			Application: app.Ref(),
-			Workspace:   c.project.WorkspaceRef(),
-		})
-		if status.Code(err) == codes.NotFound {
-			err = nil
-			release = nil
-		}
-		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-
 		// List builds
-		resp, err := client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
-			Application:   app.Ref(),
-			Workspace:     wsRef,
-			PhysicalState: phyState,
-			Status:        c.filterFlags.statusFilters(),
+		resp, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
+			Application: app.Ref(),
+			Workspace:   wsRef,
+			Order: &pb.OperationOrder{
+				Order: pb.OperationOrder_COMPLETE_TIME,
+				Desc:  true,
+			},
 		})
+
 		if err != nil {
 			if s, ok := status.FromError(err); ok {
 				if s.Code() == codes.Unimplemented {
@@ -118,7 +79,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 					}
 
 					c.project.UI.Output(
-						fmt.Sprintf("This CLI version %q is incompatible with the current server %q - missing UI_ListDeployments method. Upgrade your server to v0.5.0 or higher or downgrade your CLI to v0.4 or older.", clientVersion, serverVersion),
+						fmt.Sprintf("This CLI version %q is incompatible with the current server %q - missing UI_ListReleases method. Upgrade your server to v0.5.0 or higher or downgrade your CLI to v0.4 or older.", clientVersion, serverVersion),
 						terminal.WithErrorStyle(),
 					)
 					return ErrSentinel
@@ -127,14 +88,14 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
-		sort.Sort(serversort.DeploymentBundleCompleteDesc(resp.Deployments))
+		sort.Sort(serversort.ReleaseBundleCompleteDesc(resp.Releases))
 
 		if c.flagJson {
-			return c.displayJson(resp.Deployments)
+			return c.displayJson(resp.Releases)
 		}
 
 		headers := []string{
-			"", "ID", "Platform", "Details", "Started", "Completed", "Health",
+			"", "ID", "Deployment ID", "Platform", "Details", "Started", "Completed", "Health",
 		}
 
 		if c.flagUrl {
@@ -145,8 +106,9 @@ func (c *DeploymentListCommand) Run(args []string) int {
 
 		const bullet = "●"
 
-		for _, deployBundle := range resp.Deployments {
-			b := deployBundle.Deployment
+		for _, releaseBundle := range resp.Releases {
+			b := releaseBundle.Release
+
 			// Determine our bullet
 			status := ""
 			statusColor := ""
@@ -163,7 +125,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 					status = "✔"
 					statusColor = terminal.Green
 
-					if release != nil && release.DeploymentId == b.Id {
+					if resp.Releases[0] != nil {
 						status = "🚀"
 					}
 
@@ -187,8 +149,8 @@ func (c *DeploymentListCommand) Run(args []string) int {
 
 			// Add status report information if we have any
 			statusReportComplete := "n/a"
-			if deployBundle.LatestStatusReport != nil {
-				statusReport := deployBundle.LatestStatusReport
+			if releaseBundle.LatestStatusReport != nil {
+				statusReport := releaseBundle.LatestStatusReport
 				switch statusReport.Health.HealthStatus {
 				case "READY":
 					statusReportComplete = "✔"
@@ -214,8 +176,8 @@ func (c *DeploymentListCommand) Run(args []string) int {
 
 			if user, ok := b.Labels["common/user"]; ok {
 				details = append(details, "user:"+user)
-			} else if deployBundle.Build != nil {
-				build := deployBundle.Build
+			} else if b.Preload.Build != nil {
+				build := b.Preload.Build
 				// labels have been set, safe to use them
 
 				if user, ok := build.Labels["common/user"]; ok {
@@ -232,14 +194,14 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				}
 			}
 
-			if deployBundle.Artifact != nil {
-				artDetails := fmt.Sprintf("artifact:%s", c.flagId.FormatId(deployBundle.Artifact.Sequence, deployBundle.Artifact.Id))
+			if b.Preload.Artifact != nil {
+				artDetails := fmt.Sprintf("artifact:%s", c.flagId.FormatId(b.Preload.Artifact.Sequence, b.Preload.Artifact.Id))
 				if len(details) == 0 {
 					details = append(details, artDetails)
-				} else if c.flagVerbose && deployBundle.Build != nil {
+				} else if c.flagVerbose && b.Preload.Build != nil {
 					details = append(details,
 						artDetails,
-						fmt.Sprintf("build:%s", c.flagId.FormatId(deployBundle.Build.Sequence, deployBundle.Build.Id)))
+						fmt.Sprintf("build:%s", c.flagId.FormatId(b.Preload.Build.Sequence, b.Preload.Build.Id)))
 				}
 			}
 
@@ -253,37 +215,8 @@ func (c *DeploymentListCommand) Run(args []string) int {
 						val = val[:30] + "..."
 					}
 
-					extraDetails = append(extraDetails, fmt.Sprintf("deployment.%s:%s", k, val))
+					extraDetails = append(extraDetails, fmt.Sprintf("Release.%s:%s", k, val))
 				}
-
-				if deployBundle.Artifact != nil {
-					for k, val := range deployBundle.Artifact.Labels {
-						if strings.HasPrefix(k, "waypoint/") {
-							continue
-						}
-
-						if len(val) > 30 {
-							val = val[:30] + "..."
-						}
-
-						extraDetails = append(extraDetails, fmt.Sprintf("artifact.%s:%s", k, val))
-					}
-				}
-
-				if deployBundle.Build != nil {
-					for k, val := range deployBundle.Build.Labels {
-						if strings.HasPrefix(k, "waypoint/") {
-							continue
-						}
-
-						if len(val) > 30 {
-							val = val[:30] + "..."
-						}
-
-						extraDetails = append(extraDetails, fmt.Sprintf("build.%s:%s", k, val))
-					}
-				}
-
 				sort.Strings(extraDetails)
 			}
 
@@ -298,6 +231,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			columns = []string{
 				status,
 				c.flagId.FormatId(b.Sequence, b.Id),
+				c.flagId.FormatId(b.Preload.Deployment.Sequence, b.Id),
 				b.Component.Name,
 				firstDetails,
 				startTime,
@@ -309,28 +243,31 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				url := "n/a"
 				if b.Url != "" {
 					url = b.Url
-				} else if deployBundle.DeployUrl != "" {
-					url = deployBundle.DeployUrl
+				} else if releaseBundle.Release.Url != "" {
+					url = releaseBundle.Release.Url
 				}
 				columns = append(columns, url)
 			}
 
-			tbl.Rich(
-				columns,
-				[]string{
-					statusColor,
-				},
-			)
+			// Omit Waypoint releases that didn't actually happen on the platform
+			if !b.Unimplemented {
+				tbl.Rich(
+					columns,
+					[]string{
+						statusColor,
+					},
+				)
 
-			if len(details) > 1 {
-				for _, dr := range details[1:] {
-					tbl.Rich([]string{"", "", "", dr}, nil)
+				if len(details) > 1 {
+					for _, dr := range details[1:] {
+						tbl.Rich([]string{"", "", "", dr}, nil)
+					}
 				}
-			}
 
-			if len(extraDetails) > 0 {
-				for _, dr := range extraDetails {
-					tbl.Rich([]string{"", "", "", dr}, nil)
+				if len(extraDetails) > 0 {
+					for _, dr := range extraDetails {
+						tbl.Rich([]string{"", "", "", dr}, nil)
+					}
 				}
 			}
 		}
@@ -346,23 +283,26 @@ func (c *DeploymentListCommand) Run(args []string) int {
 	return 0
 }
 
-func (c *DeploymentListCommand) displayJson(deployments []*pb.UI_DeploymentBundle) error {
+func (c *ReleaseListCommand) displayJson(releases []*pb.UI_ReleaseBundle) error {
 	var output []map[string]interface{}
 
-	for _, dep := range deployments {
+	for _, rel := range releases {
+		if rel.Release.Unimplemented {
+			continue
+		}
+
 		i := map[string]interface{}{}
 
-		i["id"] = dep.Deployment.Id
-		i["sequence"] = dep.Deployment.Sequence
-		i["application"] = dep.Deployment.Application
-		i["labels"] = dep.Deployment.Labels
-		i["component"] = dep.Deployment.Component.Name
-		i["physical_state"] = dep.Deployment.State.String()
-		i["status"] = c.statusJson(dep.Deployment.Status)
-		i["workspace"] = dep.Deployment.Workspace.Workspace
-		i["artifact"] = c.artifactJson(dep.Artifact)
-		i["build"] = c.buildJson(dep.Build)
-		i["latestStatusReport"] = dep.LatestStatusReport
+		i["id"] = rel.Release.Sequence
+		i["deploymentId"] = rel.Release.Preload.Deployment.Sequence
+		i["application"] = rel.Release.Application
+		i["workspace"] = rel.Release.Workspace.Workspace
+		i["url"] = rel.Release.Url
+		i["labels"] = rel.Release.Labels
+		i["component"] = rel.Release.Component.Name
+		i["status"] = c.statusJson(rel.Release.Status)
+		i["latestStatusReport"] = rel.LatestStatusReport
+		i["preloadDetails"] = rel.Release.Preload
 
 		output = append(output, i)
 	}
@@ -377,22 +317,7 @@ func (c *DeploymentListCommand) displayJson(deployments []*pb.UI_DeploymentBundl
 	return nil
 }
 
-func (c *DeploymentListCommand) artifactJson(art *pb.PushedArtifact) interface{} {
-	if art == nil {
-		return nil
-	}
-
-	i := map[string]interface{}{}
-
-	i["id"] = art.Id
-	i["sequence"] = art.Sequence
-	i["labels"] = art.Labels
-	i["status"] = c.statusJson(art.Status)
-
-	return i
-}
-
-func (c *DeploymentListCommand) statusJson(status *pb.Status) interface{} {
+func (c *ReleaseListCommand) statusJson(status *pb.Status) interface{} {
 	if status == nil {
 		return nil
 	}
@@ -405,21 +330,7 @@ func (c *DeploymentListCommand) statusJson(status *pb.Status) interface{} {
 	return i
 }
 
-func (c *DeploymentListCommand) buildJson(b *pb.Build) interface{} {
-	if b == nil {
-		return nil
-	}
-	i := map[string]interface{}{}
-
-	i["id"] = b.Id
-	i["sequence"] = b.Sequence
-	i["labels"] = b.Labels
-	i["status"] = c.statusJson(b.Status)
-
-	return i
-}
-
-func (c *DeploymentListCommand) Flags() *flag.Sets {
+func (c *ReleaseListCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.BoolVar(&flag.BoolVar{
@@ -432,20 +343,20 @@ func (c *DeploymentListCommand) Flags() *flag.Sets {
 			Name:    "verbose",
 			Aliases: []string{"V"},
 			Target:  &c.flagVerbose,
-			Usage:   "Display more details about each deployment.",
+			Usage:   "Display more details about each release.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
 			Name:    "url",
 			Aliases: []string{"u"},
 			Target:  &c.flagUrl,
-			Usage:   "Display deployment URL.",
+			Usage:   "Display release URL.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
 			Name:   "json",
 			Target: &c.flagJson,
-			Usage:  "Output the deployment information as JSON.",
+			Usage:  "Output the release information as JSON.",
 		})
 
 		initIdFormat(f, &c.flagId)
@@ -453,23 +364,23 @@ func (c *DeploymentListCommand) Flags() *flag.Sets {
 	})
 }
 
-func (c *DeploymentListCommand) AutocompleteArgs() complete.Predictor {
+func (c *ReleaseListCommand) AutocompleteArgs() complete.Predictor {
 	return complete.PredictNothing
 }
 
-func (c *DeploymentListCommand) AutocompleteFlags() complete.Flags {
+func (c *ReleaseListCommand) AutocompleteFlags() complete.Flags {
 	return c.Flags().Completions()
 }
 
-func (c *DeploymentListCommand) Synopsis() string {
-	return "List deployments."
+func (c *ReleaseListCommand) Synopsis() string {
+	return "List releases."
 }
 
-func (c *DeploymentListCommand) Help() string {
+func (c *ReleaseListCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint deployment list [options]
+Usage: waypoint release list [options]
 
-  Lists the deployments that were created.
+  Lists the releases that were created if the platform includes a releaser.
 
 ` + c.Flags().Help())
 }
