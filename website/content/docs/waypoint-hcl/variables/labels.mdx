@@ -1,0 +1,72 @@
+---
+layout: docs
+page_title: labels - Variables - waypoint.hcl
+description: |-
+  The `labels` variable is a map of the full set of labels that are set for the current operation.
+---
+
+# `labels` Variable
+
+<Placement
+  groups={[
+    ['app', 'build'],
+    ['app', 'deploy'],
+    ['app', 'release'],
+  ]}
+/>
+
+The `labels` variable is a map of the full set of labels that are
+set for the current operation.
+
+### Example: Kubernetes Annotations
+
+The example below shows how we can set annotations on a Kubernetes
+deployment to mirror the Waypoint labels we have set.
+
+```hcl
+app "web" {
+  deploy {
+    use "kubernetes" {
+      annotations = { for k, v in labels: "waypoint/${k}" => v }
+    }
+  }
+}
+```
+
+This examples goes a bit further and uses HCL map expressions to
+prefix all our labels with "waypoint/" to note they come from Waypoint.
+If you wanted to just map the labels directly, you can do
+`annotations = labels` directly.
+
+### Example: Conditional on Labels
+
+The example below shows how we can use the `selectormatch` function
+to perform conditional logic with labels. The `selector`-prefixed functions
+all use the common label selector syntax that is used throughout various
+features in Waypoint.
+
+```hcl
+app "web" {
+  deploy {
+    use "kubernetes" {
+      image_secret = selectormatch(labels, "env == production") ?
+        "ProdSecret" : "DevSecret"
+    }
+  }
+}
+```
+
+This could also be done with `selectorlookup` which allows mapping
+matching selector expressions to specific values:
+
+```hcl
+app "web" {
+  deploy {
+    use "kubernetes" {
+      image_secret = selectorlookup(labels, {
+        "env == production" = "ProdSecret"
+      }, "DevSecret")
+    }
+  }
+}
+```
