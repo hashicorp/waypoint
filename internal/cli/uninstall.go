@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/clisnapshot"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -55,24 +56,59 @@ func (c *UninstallCommand) Run(args []string) int {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
-	c.ui.Output(
-		"Uninstalling Waypoint server with context %q",
-		contextDefault,
-		terminal.WithSuccessStyle(),
-	)
 
-	// Get the platform early so we can validate it.
-	p, ok := serverinstall.Platforms[strings.ToLower(c.platform)]
-	if !ok {
-		if c.platform == "" {
-			c.ui.Output(
-				"The -platform flag is required.",
-				terminal.WithErrorStyle(),
-			)
-
+	var ctxConfig *clicontext.Config
+	if contextDefault != "" {
+		ctxConfig, err = c.contextStorage.Load(contextDefault)
+		if err != nil {
+			c.ui.Output("Error loading context %q: %s", contextDefault, err.Error(), terminal.WithErrorStyle())
 			return 1
 		}
+	}
 
+	// Validate platform requested matches the server contexts platform
+	serverPlatform := c.platform
+	if ctxConfig != nil {
+		if serverPlatform != "" {
+			if ctxConfig.Server.Platform == "" {
+				c.ui.Output(
+					"No platform set on server context. Will attempt to uninstall requested "+
+						"platform %q",
+					serverPlatform,
+					terminal.WithWarningStyle(),
+				)
+			} else if ctxConfig.Server.Platform != serverPlatform {
+				c.ui.Output(
+					"The current server platform is %q but the requested platform through "+
+						"the -platform flag was %q",
+					ctxConfig.Server.Platform,
+					serverPlatform,
+					terminal.WithErrorStyle(),
+				)
+
+				return 1
+			}
+		} else {
+			// attempt to set the server platform so the platform flag isn't required.
+			serverPlatform = ctxConfig.Server.Platform
+
+			if serverPlatform == "" {
+				// It's still empty
+				c.ui.Output(
+					"Cannot determine what platform to uninstall Waypoint. "+
+						"The -platform flag is required since the server context did not include "+
+						"a server platform.",
+					terminal.WithErrorStyle(),
+				)
+
+				return 1
+			}
+		}
+	}
+
+	// Get the platform early so we can validate it.
+	p, ok := serverinstall.Platforms[strings.ToLower(serverPlatform)]
+	if !ok {
 		c.ui.Output(
 			"Error uninstalling server from %s: invalid platform",
 			c.platform,
@@ -82,11 +118,19 @@ func (c *UninstallCommand) Run(args []string) int {
 		return 1
 	}
 
+	c.ui.Output(
+		"Uninstalling Waypoint server on platform %q with context %q",
+		serverPlatform,
+		contextDefault,
+		terminal.WithSuccessStyle(),
+	)
+
 	sg := c.ui.StepGroup()
 	defer sg.Wait()
 
 	// Pre-uninstall work
 	// - generate a snapshot of the current install
+	c.ui.Output("")
 	s := sg.Add("")
 	defer func() { s.Abort() }()
 
@@ -149,7 +193,7 @@ func (c *UninstallCommand) Run(args []string) int {
 					"Note that this may leave your runners dangling.\n\n"+
 					"See Troubleshooting docs "+
 					"for guidance on manual uninstall: https://www.waypointproject.io/docs/troubleshooting",
-				c.platform,
+				serverPlatform,
 				clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
@@ -160,7 +204,7 @@ func (c *UninstallCommand) Run(args []string) int {
 		c.ui.Output(
 			"Error uninstalling runners from %s: %s\n\n"+
 				"-ignore-runner-error is specified so this will be ignored.",
-			c.platform,
+			serverPlatform,
 			clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
@@ -171,7 +215,7 @@ func (c *UninstallCommand) Run(args []string) int {
 		c.ui.Output(
 			"Error uninstalling server from %s: %s\nSee Troubleshooting docs "+
 				"for guidance on manual uninstall: https://www.waypointproject.io/docs/troubleshooting",
-			c.platform,
+			serverPlatform,
 			clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
@@ -187,7 +231,7 @@ func (c *UninstallCommand) Run(args []string) int {
 		}
 	}
 
-	c.ui.Output("Waypoint server successfully uninstalled for %s platform", c.platform, terminal.WithSuccessStyle())
+	c.ui.Output("\nWaypoint server successfully uninstalled for %s platform", serverPlatform, terminal.WithSuccessStyle())
 
 	return 0
 }
@@ -208,8 +252,15 @@ func (c *UninstallCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint server uninstall [options]
 
-  Uninstall the Waypoint server. The platform should be specified as kubernetes,
-  nomad, or docker. '-auto-approve' is required.
+  Uninstall the Waypoint server. This command is not intended to uninstall a
+  server that was manually run with the 'waypoint server run' CLI, but with
+  a Waypoint server that was installed via 'waypoint server install'.
+
+  The platform can be specified as kubernetes, nomad, ecs, or docker. If not
+  specified, the CLI command will attempt to retrieve the platform defined in
+  the server context.
+
+  '-auto-approve' is required.
 
   By default, this command deletes the default server's context and creates 
   a server snapshot.
