@@ -46,6 +46,13 @@ type hclApp struct {
 	Remain hcl.Body `hcl:",remain"`
 }
 
+// hclLabeled is used to partially decode only the labels from a
+// structure that supports it.
+type hclLabeled struct {
+	Labels map[string]string `hcl:"labels,optional"`
+	Remain hcl.Body          `hcl:",remain"`
+}
+
 // Apps returns the names of all the apps.
 func (c *Config) Apps() []string {
 	var result []string
@@ -163,8 +170,15 @@ func (c *App) ConfigMetadata() (*ConfigMetadata, *ConfigMetadata) {
 }
 
 // Build loads the Build section of the configuration.
-func (c *App) Build(ctx *hcl.EvalContext) (*Build, error) {
+func (c *App) Build(
+	ctx *hcl.EvalContext,
+	lm LabelMergeFunc,
+) (*Build, error) {
 	ctx = appendContext(c.ctx, ctx)
+	ctx, _, err := labels(ctx, c.BuildRaw.Body, lm)
+	if err != nil {
+		return nil, err
+	}
 
 	var b Build
 	if diag := gohcl.DecodeBody(c.BuildRaw.Body, finalizeContext(ctx), &b); diag.HasErrors() {
@@ -255,4 +269,49 @@ func (c *App) ReleaseUse() string {
 	}
 
 	return c.ReleaseRaw.Use.Type
+}
+
+// LabelMergeFunc is used with some config loading operations to determine
+// the final set of labels that are valid for a certain context. For example,
+// this is used by the operation functions (Build, Deploy, Release, etc.) to
+// setup the `labels` HCL variable amongst other things.
+type LabelMergeFunc func(ls ...map[string]string) map[string]string
+
+// labelMerge implements LabelMerge func and just merges the set of arguments.
+//
+// In real Waypoint usage, this is NOT what we do, since we usually merge in
+// project labels, CLI labels, and other sources in addition to this. This function
+// is useful for testing. This is why we don't export this.
+func labelMerge(ls ...map[string]string) map[string]string {
+	result := map[string]string{}
+	for _, m := range ls {
+		for k, v := range m {
+			result[k] = v
+		}
+	}
+
+	return result
+}
+
+// labels reads the labels from the given body (if they are available),
+// merges them using lm, and returns the final merged set of labels. This
+// also returns a new EvalContext that has the `labels` HCL variable set.
+func labels(ctx *hcl.EvalContext, body hcl.Body, lm LabelMergeFunc) (
+	*hcl.EvalContext, map[string]string, error,
+) {
+	// First decode into our structure that only reads labels.
+	var labeled hclLabeled
+	if diag := gohcl.DecodeBody(body, finalizeContext(ctx), &labeled); diag.HasErrors() {
+		return nil, nil, diag
+	}
+
+	// Merge em
+	ls := lm(labeled.Labels)
+
+	// Set it up on the context
+	var nextCtx hcl.EvalContext
+	addMapVariable(&nextCtx, "labels", ls)
+	ctx = appendContext(ctx, &nextCtx)
+
+	return ctx, ls, nil
 }

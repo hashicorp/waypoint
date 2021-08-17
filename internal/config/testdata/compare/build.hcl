@@ -5,5 +5,10 @@ app "test" {
         labels = {
             "foo" = "bar"
         }
+
+        hook {
+            when = labels["foo"]
+            command = ["echo", "foo"]
+        }
     }
 }
