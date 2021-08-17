@@ -183,7 +183,7 @@ type TaskInfo struct {
 // This is the port the ECS task will be listening on.
 const sshPort = 2222
 
-// Launch creates the ECS task and returns it's public IP and ARN
+// Launch creates the ECS task and returns its public IP and ARN
 func (e *ecsLauncher) Launch(
 	ctx context.Context,
 	L hclog.Logger,

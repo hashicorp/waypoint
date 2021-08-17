@@ -33,9 +33,9 @@ func (r *Runner) executeReleaseOp(
 	// Our target deployment
 	target := op.Release.Deployment
 
-	// Get our last release. If its the same generation, then release is
+	// Get our last release. If it's the same generation, then release is
 	// a no-op and return this value. We only do this if we have a generation.
-	// We SHOULD but if we have an old client, its possible we don't.
+	// We SHOULD but if we have an old client, it's possible we don't.
 	var release *pb.Release
 	if target.Generation != nil {
 		resp, err := r.client.GetLatestRelease(ctx, &pb.GetLatestReleaseRequest{

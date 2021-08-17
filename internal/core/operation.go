@@ -32,7 +32,7 @@ type operation interface {
 	// Do performs the actual operation and returns the result that you
 	// want to return from the operation. This result will be marshaled into
 	// the ValuePtr if it implements ProtoMarshaler.
-	// Do can alter the proto.Message into it's final form, as it's the value
+	// Do can alter the proto.Message into its final form, as it's the value
 	// returned by Init and that will be written back via Upsert after Do
 	// has completed.
 	Do(context.Context, hclog.Logger, *App, proto.Message) (interface{}, error)

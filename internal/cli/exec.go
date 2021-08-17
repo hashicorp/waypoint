@@ -50,7 +50,7 @@ func (c *ExecCommand) targeted(
 		return ErrSentinel
 	}
 
-	// Ok, the instance id is fine, let's go ahead and have execclient do it's thing.
+	// Ok, the instance id is fine, let's go ahead and have execclient do its thing.
 	ec.InstanceId = c.flagInstanceId
 
 	return nil
