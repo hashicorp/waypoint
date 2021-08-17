@@ -52,7 +52,10 @@ format: # format go code
 	gofmt -s -w ./
 
 .PHONY: docker/server
-docker/server: docker/odr
+docker/server: docker/server-only docker/odr
+
+.PHONY: docker/server-only
+docker/server-only:
 	DOCKER_BUILDKIT=1 docker build \
 					-t waypoint:dev \
 					.
