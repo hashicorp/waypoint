@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -17,7 +18,10 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-var ErrClosed = errors.New("runner is closed")
+var (
+	ErrClosed  = errors.New("runner is closed")
+	ErrTimeout = errors.New("runner timed out waiting for a job")
+)
 
 // Runners in Waypoint execute operations. These can be local (the CLI)
 // or they can be remote (triggered by some webhook). In either case, they
@@ -63,6 +67,8 @@ type Runner struct {
 	// config is the current runner config.
 	config      *pb.RunnerConfig
 	originalEnv []*pb.ConfigVar
+
+	acceptTimeout time.Duration
 
 	// noopCh is used in tests only. This will cause any noop operations
 	// to block until this channel is closed.
@@ -281,6 +287,15 @@ func WithDynamicConfig(set bool) Option {
 func WithId(id string) Option {
 	return func(r *Runner, cfg *config) error {
 		r.id = id
+		return nil
+	}
+}
+
+// WithAcceptTimeout sets a maximum amount of time to wait for a job before returning
+// that one was not accepted.
+func WithAcceptTimeout(dur time.Duration) Option {
+	return func(r *Runner, cfg *config) error {
+		r.acceptTimeout = dur
 		return nil
 	}
 }

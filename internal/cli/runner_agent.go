@@ -42,6 +42,10 @@ type RunnerAgentCommand struct {
 	flagODR bool
 }
 
+// This is how long a runner in ODR mode will wait for it's job assignment before
+// timing out.
+var defaultRunnerODRAcceptTimeout = 60 * time.Second
+
 func (c *RunnerAgentCommand) Run(args []string) int {
 	defer c.Close()
 	ctx := c.Ctx
@@ -128,7 +132,10 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	}
 
 	if c.flagODR {
-		options = append(options, runnerpkg.ByIdOnly())
+		options = append(options,
+			runnerpkg.ByIdOnly(),
+			runnerpkg.WithAcceptTimeout(defaultRunnerODRAcceptTimeout),
+		)
 	}
 
 	runner, err := runnerpkg.New(options...)
@@ -182,6 +189,7 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 
 	// Accept jobs in goroutine so that we can interrupt it.
 	ctx, cancel := context.WithCancel(ctx)
+
 	go func() {
 		defer cancel()
 
@@ -194,6 +202,11 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 
 			if err != nil {
 				if err == runnerpkg.ErrClosed {
+					return
+				}
+
+				if err == runnerpkg.ErrTimeout {
+					log.Error("timed out waiting for a job")
 					return
 				}
 
