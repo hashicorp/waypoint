@@ -888,8 +888,8 @@ func (_m *WaypointClient) GetOIDCAuthURL(ctx context.Context, in *gen.GetOIDCAut
 	return r0, r1
 }
 
-// GetOndemandRunner provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) GetOndemandRunner(ctx context.Context, in *gen.GetOndemandRunnerRequest, opts ...grpc.CallOption) (*gen.GetOndemandRunnerResponse, error) {
+// GetOndemandRunnerConfig provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetOndemandRunnerConfig(ctx context.Context, in *gen.GetOndemandRunnerConfigRequest, opts ...grpc.CallOption) (*gen.GetOndemandRunnerConfigResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -899,17 +899,17 @@ func (_m *WaypointClient) GetOndemandRunner(ctx context.Context, in *gen.GetOnde
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *gen.GetOndemandRunnerResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetOndemandRunnerRequest, ...grpc.CallOption) *gen.GetOndemandRunnerResponse); ok {
+	var r0 *gen.GetOndemandRunnerConfigResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetOndemandRunnerConfigRequest, ...grpc.CallOption) *gen.GetOndemandRunnerConfigResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.GetOndemandRunnerResponse)
+			r0 = ret.Get(0).(*gen.GetOndemandRunnerConfigResponse)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetOndemandRunnerRequest, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetOndemandRunnerConfigRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -1368,8 +1368,8 @@ func (_m *WaypointClient) ListOIDCAuthMethods(ctx context.Context, in *emptypb.E
 	return r0, r1
 }
 
-// ListOndemandRunners provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) ListOndemandRunners(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.ListOndemandRunnersResponse, error) {
+// ListOndemandRunnerConfigs provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ListOndemandRunnerConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.ListOndemandRunnerConfigsResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -1379,12 +1379,12 @@ func (_m *WaypointClient) ListOndemandRunners(ctx context.Context, in *emptypb.E
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *gen.ListOndemandRunnersResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) *gen.ListOndemandRunnersResponse); ok {
+	var r0 *gen.ListOndemandRunnerConfigsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) *gen.ListOndemandRunnerConfigsResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.ListOndemandRunnersResponse)
+			r0 = ret.Get(0).(*gen.ListOndemandRunnerConfigsResponse)
 		}
 	}
 
@@ -2058,8 +2058,8 @@ func (_m *WaypointClient) UpsertDeployment(ctx context.Context, in *gen.UpsertDe
 	return r0, r1
 }
 
-// UpsertOndemandRunner provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) UpsertOndemandRunner(ctx context.Context, in *gen.UpsertOndemandRunnerRequest, opts ...grpc.CallOption) (*gen.UpsertOndemandRunnerResponse, error) {
+// UpsertOndemandRunnerConfig provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UpsertOndemandRunnerConfig(ctx context.Context, in *gen.UpsertOndemandRunnerConfigRequest, opts ...grpc.CallOption) (*gen.UpsertOndemandRunnerConfigResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -2069,17 +2069,17 @@ func (_m *WaypointClient) UpsertOndemandRunner(ctx context.Context, in *gen.Upse
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *gen.UpsertOndemandRunnerResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertOndemandRunnerRequest, ...grpc.CallOption) *gen.UpsertOndemandRunnerResponse); ok {
+	var r0 *gen.UpsertOndemandRunnerConfigResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertOndemandRunnerConfigRequest, ...grpc.CallOption) *gen.UpsertOndemandRunnerConfigResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.UpsertOndemandRunnerResponse)
+			r0 = ret.Get(0).(*gen.UpsertOndemandRunnerConfigResponse)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertOndemandRunnerRequest, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertOndemandRunnerConfigRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

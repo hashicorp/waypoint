@@ -16,16 +16,16 @@ import (
 )
 
 // TestOndemandRunner returns a valid project for tests.
-func TestOndemandRunner(t testing.T, src *pb.OndemandRunner) *pb.OndemandRunner {
+func TestOndemandRunner(t testing.T, src *pb.OndemandRunnerConfig) *pb.OndemandRunnerConfig {
 	t.Helper()
 
 	if src == nil {
-		src = &pb.OndemandRunner{
+		src = &pb.OndemandRunnerConfig{
 			Id: "od_test",
 		}
 	}
 
-	require.NoError(t, mergo.Merge(src, &pb.OndemandRunner{
+	require.NoError(t, mergo.Merge(src, &pb.OndemandRunnerConfig{
 		PluginType: "docker",
 		OciUrl:     "hashicorp/waypoint:stable",
 	}))
@@ -34,34 +34,34 @@ func TestOndemandRunner(t testing.T, src *pb.OndemandRunner) *pb.OndemandRunner 
 }
 
 // Type wrapper around the proto type so that we can add some methods.
-type OndemandRunner struct{ *pb.OndemandRunner }
+type OndemandRunnerConfig struct{ *pb.OndemandRunnerConfig }
 
-// ValidateOndemandRunner validates the project structure.
-func ValidateOndemandRunner(p *pb.OndemandRunner) error {
+// ValidateOndemandRunnerConfig validates the project structure.
+func ValidateOndemandRunnerConfig(p *pb.OndemandRunnerConfig) error {
 	return validationext.Error(validation.ValidateStruct(p,
-		ValidateOndemandRunnerRules(p)...,
+		ValidateOndemandRunnerConfigRules(p)...,
 	))
 }
 
-// ValidateOndemandRunnerRules
-func ValidateOndemandRunnerRules(p *pb.OndemandRunner) []*validation.FieldRules {
+// ValidateOndemandRunnerConfigRules
+func ValidateOndemandRunnerConfigRules(p *pb.OndemandRunnerConfig) []*validation.FieldRules {
 	return []*validation.FieldRules{
 		validation.Field(&p.PluginType, validation.Required),
 		validation.Field(&p.PluginConfig, isPluginHcl(p)),
 	}
 }
 
-// ValidateUpsertOndemandRunnerRequest
-func ValidateUpsertOndemandRunnerRequest(v *pb.UpsertOndemandRunnerRequest) error {
+// ValidateUpsertOndemandRunnerConfigRequest
+func ValidateUpsertOndemandRunnerConfigRequest(v *pb.UpsertOndemandRunnerConfigRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
-		validation.Field(&v.OndemandRunner, validation.Required),
-		validationext.StructField(&v.OndemandRunner, func() []*validation.FieldRules {
-			return ValidateOndemandRunnerRules(v.OndemandRunner)
+		validation.Field(&v.Config, validation.Required),
+		validationext.StructField(&v.Config, func() []*validation.FieldRules {
+			return ValidateOndemandRunnerConfigRules(v.Config)
 		}),
 	))
 }
 
-func isPluginHcl(p *pb.OndemandRunner) validation.Rule {
+func isPluginHcl(p *pb.OndemandRunnerConfig) validation.Rule {
 	return validation.By(func(_ interface{}) error {
 		if len(p.PluginConfig) == 0 {
 			return nil

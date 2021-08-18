@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 )
 
-type OndemandRunnerListCommand struct {
+type OndemandRunnerConfigListCommand struct {
 	*baseCommand
 }
 
-func (c *OndemandRunnerListCommand) Run(args []string) int {
+func (c *OndemandRunnerConfigListCommand) Run(args []string) int {
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	if err := c.Init(
 		WithArgs(args),
@@ -23,13 +23,13 @@ func (c *OndemandRunnerListCommand) Run(args []string) int {
 		return 1
 	}
 
-	resp, err := c.project.Client().ListOndemandRunners(c.Ctx, &empty.Empty{})
+	resp, err := c.project.Client().ListOndemandRunnerConfigs(c.Ctx, &empty.Empty{})
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
-	if len(resp.OndemandRunners) == 0 {
+	if len(resp.Configs) == 0 {
 		return 0
 	}
 
@@ -37,7 +37,7 @@ func (c *OndemandRunnerListCommand) Run(args []string) int {
 
 	tbl := terminal.NewTable("Id", "Plugin Type", "OCI Url", "Default")
 
-	for _, p := range resp.OndemandRunners {
+	for _, p := range resp.Configs {
 		def := ""
 		if p.Default {
 			def = "yes"
@@ -56,23 +56,23 @@ func (c *OndemandRunnerListCommand) Run(args []string) int {
 	return 0
 }
 
-func (c *OndemandRunnerListCommand) Flags() *flag.Sets {
+func (c *OndemandRunnerConfigListCommand) Flags() *flag.Sets {
 	return c.flagSet(0, nil)
 }
 
-func (c *OndemandRunnerListCommand) AutocompleteArgs() complete.Predictor {
+func (c *OndemandRunnerConfigListCommand) AutocompleteArgs() complete.Predictor {
 	return complete.PredictNothing
 }
 
-func (c *OndemandRunnerListCommand) AutocompleteFlags() complete.Flags {
+func (c *OndemandRunnerConfigListCommand) AutocompleteFlags() complete.Flags {
 	return c.Flags().Completions()
 }
 
-func (c *OndemandRunnerListCommand) Synopsis() string {
-	return "List all registered ondemand runners."
+func (c *OndemandRunnerConfigListCommand) Synopsis() string {
+	return "List all registered on-demand runner configurations."
 }
 
-func (c *OndemandRunnerListCommand) Help() string {
+func (c *OndemandRunnerConfigListCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint ondemand-runner list
 

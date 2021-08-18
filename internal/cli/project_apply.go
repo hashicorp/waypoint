@@ -367,13 +367,13 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 	}
 
 	if c.flagOndemandRunner != "" {
-		ref := &pb.Ref_OndemandRunner{
+		ref := &pb.Ref_OndemandRunnerConfig{
 			Id: c.flagOndemandRunner,
 		}
 
 		// Validate the ref is validate by looking up the runner.
-		_, err := c.project.Client().GetOndemandRunner(ctx, &pb.GetOndemandRunnerRequest{
-			OndemandRunner: ref,
+		_, err := c.project.Client().GetOndemandRunnerConfig(ctx, &pb.GetOndemandRunnerConfigRequest{
+			Config: ref,
 		})
 
 		if err != nil {

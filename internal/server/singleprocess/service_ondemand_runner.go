@@ -10,46 +10,46 @@ import (
 )
 
 // TODO: test
-func (s *service) UpsertOndemandRunner(
+func (s *service) UpsertOndemandRunnerConfig(
 	ctx context.Context,
-	req *pb.UpsertOndemandRunnerRequest,
-) (*pb.UpsertOndemandRunnerResponse, error) {
-	if err := serverptypes.ValidateUpsertOndemandRunnerRequest(req); err != nil {
+	req *pb.UpsertOndemandRunnerConfigRequest,
+) (*pb.UpsertOndemandRunnerConfigResponse, error) {
+	if err := serverptypes.ValidateUpsertOndemandRunnerConfigRequest(req); err != nil {
 		return nil, err
 	}
 
-	result := req.OndemandRunner
-	if err := s.state.OndemandRunnerPut(result); err != nil {
+	result := req.Config
+	if err := s.state.OndemandRunnerConfigPut(result); err != nil {
 		return nil, err
 	}
 
-	return &pb.UpsertOndemandRunnerResponse{OndemandRunner: result}, nil
+	return &pb.UpsertOndemandRunnerConfigResponse{Config: result}, nil
 }
 
 // TODO: test
-func (s *service) GetOndemandRunner(
+func (s *service) GetOndemandRunnerConfig(
 	ctx context.Context,
-	req *pb.GetOndemandRunnerRequest,
-) (*pb.GetOndemandRunnerResponse, error) {
-	result, err := s.state.OndemandRunnerGet(req.OndemandRunner)
+	req *pb.GetOndemandRunnerConfigRequest,
+) (*pb.GetOndemandRunnerConfigResponse, error) {
+	result, err := s.state.OndemandRunnerConfigGet(req.Config)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.GetOndemandRunnerResponse{
-		OndemandRunner: result,
+	return &pb.GetOndemandRunnerConfigResponse{
+		Config: result,
 	}, nil
 }
 
 // TODO: test
-func (s *service) ListOndemandRunners(
+func (s *service) ListOndemandRunnerConfigs(
 	ctx context.Context,
 	req *empty.Empty,
-) (*pb.ListOndemandRunnersResponse, error) {
-	result, err := s.state.OndemandRunnerList()
+) (*pb.ListOndemandRunnerConfigsResponse, error) {
+	result, err := s.state.OndemandRunnerConfigList()
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.ListOndemandRunnersResponse{OndemandRunners: result}, nil
+	return &pb.ListOndemandRunnerConfigsResponse{Configs: result}, nil
 }

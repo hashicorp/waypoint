@@ -683,8 +683,8 @@ func (i *DockerInstaller) InstallRunner(
 	return nil
 }
 
-func (i *DockerInstaller) OndemandRunner() *pb.OndemandRunner {
-	return &pb.OndemandRunner{
+func (i *DockerInstaller) OndemandRunnerConfig() *pb.OndemandRunnerConfig {
+	return &pb.OndemandRunnerConfig{
 		OciUrl:     i.config.odrImage,
 		PluginType: "docker",
 		Default:    true,

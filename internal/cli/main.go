@@ -568,12 +568,12 @@ func Commands(
 		},
 
 		"runner ondemand set": func() (cli.Command, error) {
-			return &OndemandRunnerApplyCommand{
+			return &OndemandRunnerConfigApplyCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
 		"runner list": func() (cli.Command, error) {
-			return &OndemandRunnerListCommand{
+			return &OndemandRunnerConfigListCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},

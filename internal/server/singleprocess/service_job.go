@@ -168,12 +168,12 @@ func (s *service) queueJobReqToJob(
 
 	_, anyTarget := job.TargetRunner.Target.(*pb.Ref_Runner_Any)
 
-	var od *pb.Ref_OndemandRunner
+	var od *pb.Ref_OndemandRunnerConfig
 
 	if anyTarget {
 		od = project.OndemandRunner
 		if od == nil {
-			ods, err := s.state.OndemandRunnerDefault()
+			ods, err := s.state.OndemandRunnerConfigDefault()
 			if err != nil {
 				return nil, err
 			}
@@ -232,11 +232,11 @@ func (s *service) launchOndemandRunner(
 	ctx context.Context,
 	source *pb.Job,
 	project *pb.Project,
-	odref *pb.Ref_OndemandRunner,
+	odref *pb.Ref_OndemandRunnerConfig,
 ) (string, error) {
 	log := hclog.FromContext(ctx)
 
-	od, err := s.state.OndemandRunnerGet(odref)
+	od, err := s.state.OndemandRunnerConfigGet(odref)
 	if err != nil {
 		return "", err
 	}

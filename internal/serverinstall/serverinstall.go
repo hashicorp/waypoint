@@ -102,8 +102,8 @@ type InstallRunnerOpts struct {
 
 // An optional interface that the installer can implement to request
 // an ondemand runner be registered.
-type OndemandRunnerConfig interface {
-	OndemandRunner() *pb.OndemandRunner
+type OndemandRunnerConfigProvider interface {
+	OndemandRunnerConfig() *pb.OndemandRunnerConfig
 }
 
 var Platforms = map[string]Installer{
