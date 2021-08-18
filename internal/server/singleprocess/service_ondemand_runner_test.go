@@ -14,7 +14,7 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
-func TestServiceOndemandRunnerConfig(t *testing.T) {
+func TestServiceOnDemandRunnerConfig(t *testing.T) {
 	ctx := context.Background()
 
 	// Create our server
@@ -23,14 +23,14 @@ func TestServiceOndemandRunnerConfig(t *testing.T) {
 	client := server.TestServer(t, impl)
 
 	// Simplify writing tests
-	type Req = pb.UpsertOndemandRunnerConfigRequest
+	type Req = pb.UpsertOnDemandRunnerConfigRequest
 
 	t.Run("create and update", func(t *testing.T) {
 		require := require.New(t)
 
 		// Create, should get an ID back
-		resp, err := client.UpsertOndemandRunnerConfig(ctx, &Req{
-			Config: serverptypes.TestOndemandRunnerConfig(t, nil),
+		resp, err := client.UpsertOnDemandRunnerConfig(ctx, &Req{
+			Config: serverptypes.TestOnDemandRunnerConfig(t, nil),
 		})
 		require.NoError(err)
 		require.NotNil(resp)
@@ -39,7 +39,7 @@ func TestServiceOndemandRunnerConfig(t *testing.T) {
 		require.NotEmpty(result.Id)
 
 		// Let's write some data
-		resp, err = client.UpsertOndemandRunnerConfig(ctx, &Req{
+		resp, err = client.UpsertOnDemandRunnerConfig(ctx, &Req{
 			Config: result,
 		})
 		require.NoError(err)
@@ -53,8 +53,8 @@ func TestServiceOndemandRunnerConfig(t *testing.T) {
 		require := require.New(t)
 
 		// Create, should get an ID back
-		resp, err := client.UpsertOndemandRunnerConfig(ctx, &Req{
-			Config: serverptypes.TestOndemandRunnerConfig(t, &pb.OndemandRunnerConfig{
+		resp, err := client.UpsertOnDemandRunnerConfig(ctx, &Req{
+			Config: serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
 				Id: "nope",
 			}),
 		})
@@ -66,7 +66,7 @@ func TestServiceOndemandRunnerConfig(t *testing.T) {
 	})
 }
 
-func TestServiceOndemandRunnerConfig_GetOndemandRunnerConfig(t *testing.T) {
+func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T) {
 	ctx := context.Background()
 
 	// Create our server
@@ -76,21 +76,21 @@ func TestServiceOndemandRunnerConfig_GetOndemandRunnerConfig(t *testing.T) {
 	client := server.TestServer(t, impl)
 
 	// Best way to mock for now is to make a request
-	resp, err := client.UpsertOndemandRunnerConfig(ctx, &pb.UpsertOndemandRunnerConfigRequest{
-		Config: serverptypes.TestOndemandRunnerConfig(t, nil),
+	resp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+		Config: serverptypes.TestOnDemandRunnerConfig(t, nil),
 	})
 
 	require.NoError(t, err)
 
 	// Simplify writing tests
-	type Req = pb.GetOndemandRunnerConfigRequest
+	type Req = pb.GetOnDemandRunnerConfigRequest
 
 	t.Run("get existing", func(t *testing.T) {
 		require := require.New(t)
 
 		// Get, should return a deployment
-		resp, err := client.GetOndemandRunnerConfig(ctx, &Req{
-			Config: &pb.Ref_OndemandRunnerConfig{
+		resp, err := client.GetOnDemandRunnerConfig(ctx, &Req{
+			Config: &pb.Ref_OnDemandRunnerConfig{
 				Id: resp.Config.Id,
 			},
 		})
@@ -103,8 +103,8 @@ func TestServiceOndemandRunnerConfig_GetOndemandRunnerConfig(t *testing.T) {
 		require := require.New(t)
 
 		// get, should fail
-		resp, err := client.GetOndemandRunnerConfig(ctx, &Req{
-			Config: &pb.Ref_OndemandRunnerConfig{
+		resp, err := client.GetOnDemandRunnerConfig(ctx, &Req{
+			Config: &pb.Ref_OnDemandRunnerConfig{
 				Id: "nope",
 			},
 		})
@@ -116,7 +116,7 @@ func TestServiceOndemandRunnerConfig_GetOndemandRunnerConfig(t *testing.T) {
 	})
 }
 
-func TestServiceOndemandRunnerConfig_ListOndemandRunnerConfigs(t *testing.T) {
+func TestServiceOnDemandRunnerConfig_ListOnDemandRunnerConfigs(t *testing.T) {
 	ctx := context.Background()
 
 	// Create our server
@@ -125,10 +125,10 @@ func TestServiceOndemandRunnerConfig_ListOndemandRunnerConfigs(t *testing.T) {
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
 
-	dep := serverptypes.TestOndemandRunnerConfig(t, nil)
+	dep := serverptypes.TestOnDemandRunnerConfig(t, nil)
 
 	// Best way to mock for now is to make a request
-	resp, err := client.UpsertOndemandRunnerConfig(ctx, &pb.UpsertOndemandRunnerConfigRequest{
+	resp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: dep,
 	})
 
@@ -138,7 +138,7 @@ func TestServiceOndemandRunnerConfig_ListOndemandRunnerConfigs(t *testing.T) {
 		require := require.New(t)
 
 		// Get, should return a deployment
-		deployments, err := client.ListOndemandRunnerConfigs(ctx, &emptypb.Empty{})
+		deployments, err := client.ListOnDemandRunnerConfigs(ctx, &emptypb.Empty{})
 		require.NoError(err)
 		require.NotEmpty(deployments)
 		require.Equal(deployments.Configs[0].Id, resp.Config.Id)

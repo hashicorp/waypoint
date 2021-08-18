@@ -560,20 +560,20 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-		"runner ondemand": func() (cli.Command, error) {
+		"runner on-demand": func() (cli.Command, error) {
 			return &helpCommand{
-				SynopsisText: helpText["ondemand-runner"][0],
-				HelpText:     helpText["ondemand-runner"][1],
+				SynopsisText: helpText["on-demand-runner"][0],
+				HelpText:     helpText["on-demand-runner"][1],
 			}, nil
 		},
 
-		"runner ondemand set": func() (cli.Command, error) {
-			return &OndemandRunnerConfigApplyCommand{
+		"runner on-demand set": func() (cli.Command, error) {
+			return &OnDemandRunnerConfigApplyCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
 		"runner list": func() (cli.Command, error) {
-			return &OndemandRunnerConfigListCommand{
+			return &OnDemandRunnerConfigListCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
@@ -915,12 +915,12 @@ users directly into the Waypoint server.
 If you are looking to log in to Waypoint, use "waypoint login".
 `,
 	},
-	"ondemand-runner": {
-		"Ondemand Runner configuration",
+	"on-demand-runner": {
+		"On-Demand Runner configuration",
 		`
-List and edit Ondemand Runner configuration.
+List and edit On-Demand Runner configuration.
 
-Each ondemand runner confiuration entry represents the ability to spawn
+Each on-demand runner confiuration entry represents the ability to spawn
 runners when needed using the configured plugin.
 `,
 	},

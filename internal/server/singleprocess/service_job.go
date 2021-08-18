@@ -166,7 +166,7 @@ func (s *service) queueJobReqToJob(
 		}
 	}
 
-	var od *pb.Ref_OndemandRunnerConfig
+	var od *pb.Ref_OnDemandRunnerConfig
 
 	// If the job can be run any any runner, then we attempt to see if we should spawn
 	// on on-demand runner for it. We only consider jobs for any runner because ones
@@ -174,7 +174,7 @@ func (s *service) queueJobReqToJob(
 	if _, anyTarget := job.TargetRunner.Target.(*pb.Ref_Runner_Any); anyTarget {
 		od = project.OndemandRunner
 		if od == nil {
-			ods, err := s.state.OndemandRunnerConfigDefault()
+			ods, err := s.state.OnDemandRunnerConfigDefault()
 			if err != nil {
 				return nil, err
 			}
@@ -195,7 +195,7 @@ func (s *service) queueJobReqToJob(
 	// runners, then we dutifully launch an ondemand runner now. We'll also assign the job to this
 	// new runner now, so that it doesn't get picked up by other runners.
 	if od != nil {
-		runnerId, err := s.launchOndemandRunner(ctx, job, project, od)
+		runnerId, err := s.launchOnDemandRunner(ctx, job, project, od)
 		if err != nil {
 			return nil, err
 		}
@@ -229,15 +229,15 @@ func (s *service) QueueJob(
 	return &pb.QueueJobResponse{JobId: job.Id}, nil
 }
 
-func (s *service) launchOndemandRunner(
+func (s *service) launchOnDemandRunner(
 	ctx context.Context,
 	source *pb.Job,
 	project *pb.Project,
-	odref *pb.Ref_OndemandRunnerConfig,
+	odref *pb.Ref_OnDemandRunnerConfig,
 ) (string, error) {
 	log := hclog.FromContext(ctx)
 
-	od, err := s.state.OndemandRunnerConfigGet(odref)
+	od, err := s.state.OnDemandRunnerConfigGet(odref)
 	if err != nil {
 		return "", err
 	}

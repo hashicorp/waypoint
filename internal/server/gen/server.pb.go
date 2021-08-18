@@ -1422,7 +1422,7 @@ type Project struct {
 	StatusReportPoll *Project_AppStatusPoll `protobuf:"bytes,10,opt,name=status_report_poll,json=statusReportPoll,proto3" json:"status_report_poll,omitempty"`
 	// ondemand_runner, if set, indicates the configuation on the ondemand runner
 	// that should be used for the operations of this project.
-	OndemandRunner *Ref_OndemandRunnerConfig `protobuf:"bytes,11,opt,name=ondemand_runner,json=ondemandRunner,proto3" json:"ondemand_runner,omitempty"`
+	OndemandRunner *Ref_OnDemandRunnerConfig `protobuf:"bytes,11,opt,name=ondemand_runner,json=ondemandRunner,proto3" json:"ondemand_runner,omitempty"`
 }
 
 func (x *Project) Reset() {
@@ -1527,7 +1527,7 @@ func (x *Project) GetStatusReportPoll() *Project_AppStatusPoll {
 	return nil
 }
 
-func (x *Project) GetOndemandRunner() *Ref_OndemandRunnerConfig {
+func (x *Project) GetOndemandRunner() *Ref_OnDemandRunnerConfig {
 	if x != nil {
 		return x.OndemandRunner
 	}
@@ -6826,9 +6826,9 @@ func (x *Artifact) GetArtifact() *anypb.Any {
 }
 
 //*******************************************************************
-// Ondemand Runners
+// OnDemand Runners
 //******************************************************************
-type OndemandRunnerConfig struct {
+type OnDemandRunnerConfig struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -6853,8 +6853,8 @@ type OndemandRunnerConfig struct {
 	Default bool `protobuf:"varint,7,opt,name=default,proto3" json:"default,omitempty"`
 }
 
-func (x *OndemandRunnerConfig) Reset() {
-	*x = OndemandRunnerConfig{}
+func (x *OnDemandRunnerConfig) Reset() {
+	*x = OnDemandRunnerConfig{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_internal_server_proto_server_proto_msgTypes[85]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6862,13 +6862,13 @@ func (x *OndemandRunnerConfig) Reset() {
 	}
 }
 
-func (x *OndemandRunnerConfig) String() string {
+func (x *OnDemandRunnerConfig) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*OndemandRunnerConfig) ProtoMessage() {}
+func (*OnDemandRunnerConfig) ProtoMessage() {}
 
-func (x *OndemandRunnerConfig) ProtoReflect() protoreflect.Message {
+func (x *OnDemandRunnerConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_internal_server_proto_server_proto_msgTypes[85]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6880,72 +6880,72 @@ func (x *OndemandRunnerConfig) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use OndemandRunnerConfig.ProtoReflect.Descriptor instead.
-func (*OndemandRunnerConfig) Descriptor() ([]byte, []int) {
+// Deprecated: Use OnDemandRunnerConfig.ProtoReflect.Descriptor instead.
+func (*OnDemandRunnerConfig) Descriptor() ([]byte, []int) {
 	return file_internal_server_proto_server_proto_rawDescGZIP(), []int{85}
 }
 
-func (x *OndemandRunnerConfig) GetId() string {
+func (x *OnDemandRunnerConfig) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-func (x *OndemandRunnerConfig) GetOciUrl() string {
+func (x *OnDemandRunnerConfig) GetOciUrl() string {
 	if x != nil {
 		return x.OciUrl
 	}
 	return ""
 }
 
-func (x *OndemandRunnerConfig) GetEnvironmentVariables() map[string]string {
+func (x *OnDemandRunnerConfig) GetEnvironmentVariables() map[string]string {
 	if x != nil {
 		return x.EnvironmentVariables
 	}
 	return nil
 }
 
-func (x *OndemandRunnerConfig) GetPluginType() string {
+func (x *OnDemandRunnerConfig) GetPluginType() string {
 	if x != nil {
 		return x.PluginType
 	}
 	return ""
 }
 
-func (x *OndemandRunnerConfig) GetPluginConfig() []byte {
+func (x *OnDemandRunnerConfig) GetPluginConfig() []byte {
 	if x != nil {
 		return x.PluginConfig
 	}
 	return nil
 }
 
-func (x *OndemandRunnerConfig) GetConfigFormat() Project_Format {
+func (x *OnDemandRunnerConfig) GetConfigFormat() Project_Format {
 	if x != nil {
 		return x.ConfigFormat
 	}
 	return Project_HCL
 }
 
-func (x *OndemandRunnerConfig) GetDefault() bool {
+func (x *OnDemandRunnerConfig) GetDefault() bool {
 	if x != nil {
 		return x.Default
 	}
 	return false
 }
 
-type UpsertOndemandRunnerConfigRequest struct {
+type UpsertOnDemandRunnerConfigRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// ondemand_runner to upsert. If the id is empty, then this is an insert,
 	// otherwise this is an update operation.
-	Config *OndemandRunnerConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	Config *OnDemandRunnerConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
 }
 
-func (x *UpsertOndemandRunnerConfigRequest) Reset() {
-	*x = UpsertOndemandRunnerConfigRequest{}
+func (x *UpsertOnDemandRunnerConfigRequest) Reset() {
+	*x = UpsertOnDemandRunnerConfigRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_internal_server_proto_server_proto_msgTypes[86]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6953,13 +6953,13 @@ func (x *UpsertOndemandRunnerConfigRequest) Reset() {
 	}
 }
 
-func (x *UpsertOndemandRunnerConfigRequest) String() string {
+func (x *UpsertOnDemandRunnerConfigRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpsertOndemandRunnerConfigRequest) ProtoMessage() {}
+func (*UpsertOnDemandRunnerConfigRequest) ProtoMessage() {}
 
-func (x *UpsertOndemandRunnerConfigRequest) ProtoReflect() protoreflect.Message {
+func (x *UpsertOnDemandRunnerConfigRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_internal_server_proto_server_proto_msgTypes[86]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6971,30 +6971,30 @@ func (x *UpsertOndemandRunnerConfigRequest) ProtoReflect() protoreflect.Message 
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpsertOndemandRunnerConfigRequest.ProtoReflect.Descriptor instead.
-func (*UpsertOndemandRunnerConfigRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use UpsertOnDemandRunnerConfigRequest.ProtoReflect.Descriptor instead.
+func (*UpsertOnDemandRunnerConfigRequest) Descriptor() ([]byte, []int) {
 	return file_internal_server_proto_server_proto_rawDescGZIP(), []int{86}
 }
 
-func (x *UpsertOndemandRunnerConfigRequest) GetConfig() *OndemandRunnerConfig {
+func (x *UpsertOnDemandRunnerConfigRequest) GetConfig() *OnDemandRunnerConfig {
 	if x != nil {
 		return x.Config
 	}
 	return nil
 }
 
-type UpsertOndemandRunnerConfigResponse struct {
+type UpsertOnDemandRunnerConfigResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// The resulting ondemand runner value. It should replace the one that was
 	// sent in the request.
-	Config *OndemandRunnerConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	Config *OnDemandRunnerConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
 }
 
-func (x *UpsertOndemandRunnerConfigResponse) Reset() {
-	*x = UpsertOndemandRunnerConfigResponse{}
+func (x *UpsertOnDemandRunnerConfigResponse) Reset() {
+	*x = UpsertOnDemandRunnerConfigResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_internal_server_proto_server_proto_msgTypes[87]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7002,13 +7002,13 @@ func (x *UpsertOndemandRunnerConfigResponse) Reset() {
 	}
 }
 
-func (x *UpsertOndemandRunnerConfigResponse) String() string {
+func (x *UpsertOnDemandRunnerConfigResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpsertOndemandRunnerConfigResponse) ProtoMessage() {}
+func (*UpsertOnDemandRunnerConfigResponse) ProtoMessage() {}
 
-func (x *UpsertOndemandRunnerConfigResponse) ProtoReflect() protoreflect.Message {
+func (x *UpsertOnDemandRunnerConfigResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_internal_server_proto_server_proto_msgTypes[87]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7020,28 +7020,28 @@ func (x *UpsertOndemandRunnerConfigResponse) ProtoReflect() protoreflect.Message
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpsertOndemandRunnerConfigResponse.ProtoReflect.Descriptor instead.
-func (*UpsertOndemandRunnerConfigResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use UpsertOnDemandRunnerConfigResponse.ProtoReflect.Descriptor instead.
+func (*UpsertOnDemandRunnerConfigResponse) Descriptor() ([]byte, []int) {
 	return file_internal_server_proto_server_proto_rawDescGZIP(), []int{87}
 }
 
-func (x *UpsertOndemandRunnerConfigResponse) GetConfig() *OndemandRunnerConfig {
+func (x *UpsertOnDemandRunnerConfigResponse) GetConfig() *OnDemandRunnerConfig {
 	if x != nil {
 		return x.Config
 	}
 	return nil
 }
 
-type GetOndemandRunnerConfigRequest struct {
+type GetOnDemandRunnerConfigRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Config *Ref_OndemandRunnerConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	Config *Ref_OnDemandRunnerConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
 }
 
-func (x *GetOndemandRunnerConfigRequest) Reset() {
-	*x = GetOndemandRunnerConfigRequest{}
+func (x *GetOnDemandRunnerConfigRequest) Reset() {
+	*x = GetOnDemandRunnerConfigRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_internal_server_proto_server_proto_msgTypes[88]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7049,13 +7049,13 @@ func (x *GetOndemandRunnerConfigRequest) Reset() {
 	}
 }
 
-func (x *GetOndemandRunnerConfigRequest) String() string {
+func (x *GetOnDemandRunnerConfigRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetOndemandRunnerConfigRequest) ProtoMessage() {}
+func (*GetOnDemandRunnerConfigRequest) ProtoMessage() {}
 
-func (x *GetOndemandRunnerConfigRequest) ProtoReflect() protoreflect.Message {
+func (x *GetOnDemandRunnerConfigRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_internal_server_proto_server_proto_msgTypes[88]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7067,28 +7067,28 @@ func (x *GetOndemandRunnerConfigRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetOndemandRunnerConfigRequest.ProtoReflect.Descriptor instead.
-func (*GetOndemandRunnerConfigRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetOnDemandRunnerConfigRequest.ProtoReflect.Descriptor instead.
+func (*GetOnDemandRunnerConfigRequest) Descriptor() ([]byte, []int) {
 	return file_internal_server_proto_server_proto_rawDescGZIP(), []int{88}
 }
 
-func (x *GetOndemandRunnerConfigRequest) GetConfig() *Ref_OndemandRunnerConfig {
+func (x *GetOnDemandRunnerConfigRequest) GetConfig() *Ref_OnDemandRunnerConfig {
 	if x != nil {
 		return x.Config
 	}
 	return nil
 }
 
-type GetOndemandRunnerConfigResponse struct {
+type GetOnDemandRunnerConfigResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Config *OndemandRunnerConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	Config *OnDemandRunnerConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
 }
 
-func (x *GetOndemandRunnerConfigResponse) Reset() {
-	*x = GetOndemandRunnerConfigResponse{}
+func (x *GetOnDemandRunnerConfigResponse) Reset() {
+	*x = GetOnDemandRunnerConfigResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_internal_server_proto_server_proto_msgTypes[89]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7096,13 +7096,13 @@ func (x *GetOndemandRunnerConfigResponse) Reset() {
 	}
 }
 
-func (x *GetOndemandRunnerConfigResponse) String() string {
+func (x *GetOnDemandRunnerConfigResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetOndemandRunnerConfigResponse) ProtoMessage() {}
+func (*GetOnDemandRunnerConfigResponse) ProtoMessage() {}
 
-func (x *GetOndemandRunnerConfigResponse) ProtoReflect() protoreflect.Message {
+func (x *GetOnDemandRunnerConfigResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_internal_server_proto_server_proto_msgTypes[89]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7114,28 +7114,28 @@ func (x *GetOndemandRunnerConfigResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetOndemandRunnerConfigResponse.ProtoReflect.Descriptor instead.
-func (*GetOndemandRunnerConfigResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetOnDemandRunnerConfigResponse.ProtoReflect.Descriptor instead.
+func (*GetOnDemandRunnerConfigResponse) Descriptor() ([]byte, []int) {
 	return file_internal_server_proto_server_proto_rawDescGZIP(), []int{89}
 }
 
-func (x *GetOndemandRunnerConfigResponse) GetConfig() *OndemandRunnerConfig {
+func (x *GetOnDemandRunnerConfigResponse) GetConfig() *OnDemandRunnerConfig {
 	if x != nil {
 		return x.Config
 	}
 	return nil
 }
 
-type ListOndemandRunnerConfigsResponse struct {
+type ListOnDemandRunnerConfigsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Configs []*OndemandRunnerConfig `protobuf:"bytes,1,rep,name=configs,proto3" json:"configs,omitempty"`
+	Configs []*OnDemandRunnerConfig `protobuf:"bytes,1,rep,name=configs,proto3" json:"configs,omitempty"`
 }
 
-func (x *ListOndemandRunnerConfigsResponse) Reset() {
-	*x = ListOndemandRunnerConfigsResponse{}
+func (x *ListOnDemandRunnerConfigsResponse) Reset() {
+	*x = ListOnDemandRunnerConfigsResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_internal_server_proto_server_proto_msgTypes[90]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7143,13 +7143,13 @@ func (x *ListOndemandRunnerConfigsResponse) Reset() {
 	}
 }
 
-func (x *ListOndemandRunnerConfigsResponse) String() string {
+func (x *ListOnDemandRunnerConfigsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListOndemandRunnerConfigsResponse) ProtoMessage() {}
+func (*ListOnDemandRunnerConfigsResponse) ProtoMessage() {}
 
-func (x *ListOndemandRunnerConfigsResponse) ProtoReflect() protoreflect.Message {
+func (x *ListOnDemandRunnerConfigsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_internal_server_proto_server_proto_msgTypes[90]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7161,12 +7161,12 @@ func (x *ListOndemandRunnerConfigsResponse) ProtoReflect() protoreflect.Message 
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListOndemandRunnerConfigsResponse.ProtoReflect.Descriptor instead.
-func (*ListOndemandRunnerConfigsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListOnDemandRunnerConfigsResponse.ProtoReflect.Descriptor instead.
+func (*ListOnDemandRunnerConfigsResponse) Descriptor() ([]byte, []int) {
 	return file_internal_server_proto_server_proto_rawDescGZIP(), []int{90}
 }
 
-func (x *ListOndemandRunnerConfigsResponse) GetConfigs() []*OndemandRunnerConfig {
+func (x *ListOnDemandRunnerConfigsResponse) GetConfigs() []*OnDemandRunnerConfig {
 	if x != nil {
 		return x.Configs
 	}
@@ -14298,9 +14298,9 @@ func (x *Ref_DeclaredResource) GetName() string {
 	return ""
 }
 
-// OndemandRunner references an OndemandRunner value to be used for contextual
+// OnDemandRunner references an OnDemandRunner value to be used for contextual
 // operation.
-type Ref_OndemandRunnerConfig struct {
+type Ref_OnDemandRunnerConfig struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -14308,8 +14308,8 @@ type Ref_OndemandRunnerConfig struct {
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (x *Ref_OndemandRunnerConfig) Reset() {
-	*x = Ref_OndemandRunnerConfig{}
+func (x *Ref_OnDemandRunnerConfig) Reset() {
+	*x = Ref_OnDemandRunnerConfig{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_internal_server_proto_server_proto_msgTypes[190]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -14317,13 +14317,13 @@ func (x *Ref_OndemandRunnerConfig) Reset() {
 	}
 }
 
-func (x *Ref_OndemandRunnerConfig) String() string {
+func (x *Ref_OnDemandRunnerConfig) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Ref_OndemandRunnerConfig) ProtoMessage() {}
+func (*Ref_OnDemandRunnerConfig) ProtoMessage() {}
 
-func (x *Ref_OndemandRunnerConfig) ProtoReflect() protoreflect.Message {
+func (x *Ref_OnDemandRunnerConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_internal_server_proto_server_proto_msgTypes[190]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -14335,12 +14335,12 @@ func (x *Ref_OndemandRunnerConfig) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Ref_OndemandRunnerConfig.ProtoReflect.Descriptor instead.
-func (*Ref_OndemandRunnerConfig) Descriptor() ([]byte, []int) {
+// Deprecated: Use Ref_OnDemandRunnerConfig.ProtoReflect.Descriptor instead.
+func (*Ref_OnDemandRunnerConfig) Descriptor() ([]byte, []int) {
 	return file_internal_server_proto_server_proto_rawDescGZIP(), []int{8, 15}
 }
 
-func (x *Ref_OndemandRunnerConfig) GetId() string {
+func (x *Ref_OnDemandRunnerConfig) GetId() string {
 	if x != nil {
 		return x.Id
 	}
@@ -21291,7 +21291,7 @@ var file_internal_server_proto_server_proto_rawDesc = []byte{
 	0x0a, 0x0f, 0x6f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x5f, 0x72, 0x75, 0x6e, 0x6e, 0x65,
 	0x72, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
 	0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66,
-	0x2e, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43,
+	0x2e, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43,
 	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x0e, 0x6f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52,
 	0x75, 0x6e, 0x6e, 0x65, 0x72, 0x1a, 0x3c, 0x0a, 0x04, 0x50, 0x6f, 0x6c, 0x6c, 0x12, 0x18, 0x0a,
 	0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07,
@@ -21421,7 +21421,7 @@ var file_internal_server_proto_server_proto_rawDesc = []byte{
 	0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x1a,
 	0x26, 0x0a, 0x10, 0x44, 0x65, 0x63, 0x6c, 0x61, 0x72, 0x65, 0x64, 0x52, 0x65, 0x73, 0x6f, 0x75,
 	0x72, 0x63, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x1a, 0x26, 0x0a, 0x14, 0x4f, 0x6e, 0x64, 0x65, 0x6d,
+	0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x1a, 0x26, 0x0a, 0x14, 0x4f, 0x6e, 0x44, 0x65, 0x6d,
 	0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12,
 	0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x22,
 	0xa9, 0x01, 0x0a, 0x09, 0x43, 0x6f, 0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x12, 0x36, 0x0a,
@@ -22744,14 +22744,14 @@ var file_internal_server_proto_server_proto_rawDesc = []byte{
 	0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
 	0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
 	0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x22,
-	0xaa, 0x03, 0x0a, 0x14, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e,
+	0xaa, 0x03, 0x0a, 0x14, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e,
 	0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x6f, 0x63, 0x69, 0x5f,
 	0x75, 0x72, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6f, 0x63, 0x69, 0x55, 0x72,
 	0x6c, 0x12, 0x77, 0x0a, 0x15, 0x65, 0x6e, 0x76, 0x69, 0x72, 0x6f, 0x6e, 0x6d, 0x65, 0x6e, 0x74,
 	0x5f, 0x76, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b,
 	0x32, 0x42, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79,
-	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75,
 	0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2e, 0x45, 0x6e, 0x76, 0x69, 0x72,
 	0x6f, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x45,
 	0x6e, 0x74, 0x72, 0x79, 0x52, 0x14, 0x65, 0x6e, 0x76, 0x69, 0x72, 0x6f, 0x6e, 0x6d, 0x65, 0x6e,
@@ -22771,37 +22771,37 @@ var file_internal_server_proto_server_proto_rawDesc = []byte{
 	0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b,
 	0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
 	0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x65, 0x0a, 0x21,
-	0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75,
+	0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75,
 	0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x12, 0x40, 0x0a, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x0b, 0x32, 0x28, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61,
-	0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52,
+	0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52,
 	0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x63, 0x6f, 0x6e,
-	0x66, 0x69, 0x67, 0x22, 0x66, 0x0a, 0x22, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x4f, 0x6e, 0x64,
+	0x66, 0x69, 0x67, 0x22, 0x66, 0x0a, 0x22, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x4f, 0x6e, 0x44,
 	0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69,
 	0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x40, 0x0a, 0x06, 0x63, 0x6f, 0x6e,
 	0x66, 0x69, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x28, 0x2e, 0x68, 0x61, 0x73, 0x68,
 	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x4f,
-	0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e,
+	0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e,
 	0x66, 0x69, 0x67, 0x52, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x22, 0x66, 0x0a, 0x1e, 0x47,
-	0x65, 0x74, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72,
+	0x65, 0x74, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72,
 	0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x44, 0x0a,
 	0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e,
 	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69,
-	0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52,
+	0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52,
 	0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x63, 0x6f, 0x6e,
-	0x66, 0x69, 0x67, 0x22, 0x63, 0x0a, 0x1f, 0x47, 0x65, 0x74, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61,
+	0x66, 0x69, 0x67, 0x22, 0x63, 0x0a, 0x1f, 0x47, 0x65, 0x74, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61,
 	0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65,
 	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x40, 0x0a, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x28, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
-	0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x4f, 0x6e, 0x64, 0x65,
+	0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x4f, 0x6e, 0x44, 0x65,
 	0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67,
 	0x52, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x22, 0x67, 0x0a, 0x21, 0x4c, 0x69, 0x73, 0x74,
-	0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f,
+	0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f,
 	0x6e, 0x66, 0x69, 0x67, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x42, 0x0a,
 	0x07, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x28,
 	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f,
-	0x69, 0x6e, 0x74, 0x2e, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e,
+	0x69, 0x6e, 0x74, 0x2e, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e,
 	0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x07, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67,
 	0x73, 0x22, 0x5d, 0x0a, 0x1b, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x50, 0x75, 0x73, 0x68, 0x65,
 	0x64, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
@@ -24362,29 +24362,29 @@ var file_internal_server_proto_server_proto_rawDesc = []byte{
 	0x1a, 0x2a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79,
 	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x57, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x48, 0x63,
 	0x6c, 0x46, 0x6d, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x8b, 0x01, 0x0a,
-	0x1a, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52,
+	0x1a, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52,
 	0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x35, 0x2e, 0x68, 0x61,
 	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74,
-	0x2e, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52,
+	0x2e, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52,
 	0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x1a, 0x36, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77,
 	0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x4f, 0x6e,
-	0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66,
+	0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66,
 	0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x82, 0x01, 0x0a, 0x17, 0x47,
-	0x65, 0x74, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72,
+	0x65, 0x74, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72,
 	0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x32, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
 	0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x47, 0x65, 0x74, 0x4f,
-	0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e,
+	0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e,
 	0x66, 0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x68, 0x61, 0x73,
 	0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e,
-	0x47, 0x65, 0x74, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65,
+	0x47, 0x65, 0x74, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65,
 	0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x6a, 0x0a, 0x19, 0x4c, 0x69, 0x73, 0x74, 0x4f, 0x6e, 0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52,
+	0x6a, 0x0a, 0x19, 0x4c, 0x69, 0x73, 0x74, 0x4f, 0x6e, 0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52,
 	0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x73, 0x12, 0x16, 0x2e, 0x67,
 	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45,
 	0x6d, 0x70, 0x74, 0x79, 0x1a, 0x35, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
 	0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4f, 0x6e,
-	0x64, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66,
+	0x44, 0x65, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x66,
 	0x69, 0x67, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0b, 0x55,
 	0x70, 0x73, 0x65, 0x72, 0x74, 0x42, 0x75, 0x69, 0x6c, 0x64, 0x12, 0x26, 0x2e, 0x68, 0x61, 0x73,
 	0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e,
@@ -24555,12 +24555,12 @@ var file_internal_server_proto_server_proto_goTypes = []interface{}{
 	(*GetBuildRequest)(nil),                    // 99: hashicorp.waypoint.GetBuildRequest
 	(*Build)(nil),                              // 100: hashicorp.waypoint.Build
 	(*Artifact)(nil),                           // 101: hashicorp.waypoint.Artifact
-	(*OndemandRunnerConfig)(nil),               // 102: hashicorp.waypoint.OndemandRunnerConfig
-	(*UpsertOndemandRunnerConfigRequest)(nil),  // 103: hashicorp.waypoint.UpsertOndemandRunnerConfigRequest
-	(*UpsertOndemandRunnerConfigResponse)(nil), // 104: hashicorp.waypoint.UpsertOndemandRunnerConfigResponse
-	(*GetOndemandRunnerConfigRequest)(nil),     // 105: hashicorp.waypoint.GetOndemandRunnerConfigRequest
-	(*GetOndemandRunnerConfigResponse)(nil),    // 106: hashicorp.waypoint.GetOndemandRunnerConfigResponse
-	(*ListOndemandRunnerConfigsResponse)(nil),  // 107: hashicorp.waypoint.ListOndemandRunnerConfigsResponse
+	(*OnDemandRunnerConfig)(nil),               // 102: hashicorp.waypoint.OnDemandRunnerConfig
+	(*UpsertOnDemandRunnerConfigRequest)(nil),  // 103: hashicorp.waypoint.UpsertOnDemandRunnerConfigRequest
+	(*UpsertOnDemandRunnerConfigResponse)(nil), // 104: hashicorp.waypoint.UpsertOnDemandRunnerConfigResponse
+	(*GetOnDemandRunnerConfigRequest)(nil),     // 105: hashicorp.waypoint.GetOnDemandRunnerConfigRequest
+	(*GetOnDemandRunnerConfigResponse)(nil),    // 106: hashicorp.waypoint.GetOnDemandRunnerConfigResponse
+	(*ListOnDemandRunnerConfigsResponse)(nil),  // 107: hashicorp.waypoint.ListOnDemandRunnerConfigsResponse
 	(*UpsertPushedArtifactRequest)(nil),        // 108: hashicorp.waypoint.UpsertPushedArtifactRequest
 	(*UpsertPushedArtifactResponse)(nil),       // 109: hashicorp.waypoint.UpsertPushedArtifactResponse
 	(*GetLatestPushedArtifactRequest)(nil),     // 110: hashicorp.waypoint.GetLatestPushedArtifactRequest
@@ -24660,7 +24660,7 @@ var file_internal_server_proto_server_proto_goTypes = []interface{}{
 	(*Ref_UserUsername)(nil),                   // 204: hashicorp.waypoint.Ref.UserUsername
 	(*Ref_AuthMethod)(nil),                     // 205: hashicorp.waypoint.Ref.AuthMethod
 	(*Ref_DeclaredResource)(nil),               // 206: hashicorp.waypoint.Ref.DeclaredResource
-	(*Ref_OndemandRunnerConfig)(nil),           // 207: hashicorp.waypoint.Ref.OndemandRunnerConfig
+	(*Ref_OnDemandRunnerConfig)(nil),           // 207: hashicorp.waypoint.Ref.OnDemandRunnerConfig
 	(*StatusFilter_Filter)(nil),                // 208: hashicorp.waypoint.StatusFilter.Filter
 	nil,                                        // 209: hashicorp.waypoint.TaskLaunchInfo.EnvironmentVariablesEntry
 	(*AuthMethod_OIDC)(nil),                    // 210: hashicorp.waypoint.AuthMethod.OIDC
@@ -24746,7 +24746,7 @@ var file_internal_server_proto_server_proto_goTypes = []interface{}{
 	(*Hostname_TargetApp)(nil),                              // 290: hashicorp.waypoint.Hostname.TargetApp
 	nil,                                                     // 291: hashicorp.waypoint.Build.LabelsEntry
 	(*Build_Preload)(nil),                                   // 292: hashicorp.waypoint.Build.Preload
-	nil,                                                     // 293: hashicorp.waypoint.OndemandRunnerConfig.EnvironmentVariablesEntry
+	nil,                                                     // 293: hashicorp.waypoint.OnDemandRunnerConfig.EnvironmentVariablesEntry
 	nil,                                                     // 294: hashicorp.waypoint.PushedArtifact.LabelsEntry
 	(*PushedArtifact_Preload)(nil),                          // 295: hashicorp.waypoint.PushedArtifact.Preload
 	nil,                                                     // 296: hashicorp.waypoint.Deployment.LabelsEntry
@@ -24808,7 +24808,7 @@ var file_internal_server_proto_server_proto_depIdxs = []int32{
 	1,   // 12: hashicorp.waypoint.Project.waypoint_hcl_format:type_name -> hashicorp.waypoint.Project.Format
 	21,  // 13: hashicorp.waypoint.Project.variables:type_name -> hashicorp.waypoint.Variable
 	187, // 14: hashicorp.waypoint.Project.status_report_poll:type_name -> hashicorp.waypoint.Project.AppStatusPoll
-	207, // 15: hashicorp.waypoint.Project.ondemand_runner:type_name -> hashicorp.waypoint.Ref.OndemandRunnerConfig
+	207, // 15: hashicorp.waypoint.Project.ondemand_runner:type_name -> hashicorp.waypoint.Ref.OnDemandRunnerConfig
 	188, // 16: hashicorp.waypoint.Workspace.projects:type_name -> hashicorp.waypoint.Workspace.Project
 	335, // 17: hashicorp.waypoint.Workspace.active_time:type_name -> google.protobuf.Timestamp
 	190, // 18: hashicorp.waypoint.User.links:type_name -> hashicorp.waypoint.User.Link
@@ -24940,13 +24940,13 @@ var file_internal_server_proto_server_proto_depIdxs = []int32{
 	291, // 144: hashicorp.waypoint.Build.labels:type_name -> hashicorp.waypoint.Build.LabelsEntry
 	292, // 145: hashicorp.waypoint.Build.preload:type_name -> hashicorp.waypoint.Build.Preload
 	337, // 146: hashicorp.waypoint.Artifact.artifact:type_name -> google.protobuf.Any
-	293, // 147: hashicorp.waypoint.OndemandRunnerConfig.environment_variables:type_name -> hashicorp.waypoint.OndemandRunnerConfig.EnvironmentVariablesEntry
-	1,   // 148: hashicorp.waypoint.OndemandRunnerConfig.config_format:type_name -> hashicorp.waypoint.Project.Format
-	102, // 149: hashicorp.waypoint.UpsertOndemandRunnerConfigRequest.config:type_name -> hashicorp.waypoint.OndemandRunnerConfig
-	102, // 150: hashicorp.waypoint.UpsertOndemandRunnerConfigResponse.config:type_name -> hashicorp.waypoint.OndemandRunnerConfig
-	207, // 151: hashicorp.waypoint.GetOndemandRunnerConfigRequest.config:type_name -> hashicorp.waypoint.Ref.OndemandRunnerConfig
-	102, // 152: hashicorp.waypoint.GetOndemandRunnerConfigResponse.config:type_name -> hashicorp.waypoint.OndemandRunnerConfig
-	102, // 153: hashicorp.waypoint.ListOndemandRunnerConfigsResponse.configs:type_name -> hashicorp.waypoint.OndemandRunnerConfig
+	293, // 147: hashicorp.waypoint.OnDemandRunnerConfig.environment_variables:type_name -> hashicorp.waypoint.OnDemandRunnerConfig.EnvironmentVariablesEntry
+	1,   // 148: hashicorp.waypoint.OnDemandRunnerConfig.config_format:type_name -> hashicorp.waypoint.Project.Format
+	102, // 149: hashicorp.waypoint.UpsertOnDemandRunnerConfigRequest.config:type_name -> hashicorp.waypoint.OnDemandRunnerConfig
+	102, // 150: hashicorp.waypoint.UpsertOnDemandRunnerConfigResponse.config:type_name -> hashicorp.waypoint.OnDemandRunnerConfig
+	207, // 151: hashicorp.waypoint.GetOnDemandRunnerConfigRequest.config:type_name -> hashicorp.waypoint.Ref.OnDemandRunnerConfig
+	102, // 152: hashicorp.waypoint.GetOnDemandRunnerConfigResponse.config:type_name -> hashicorp.waypoint.OnDemandRunnerConfig
+	102, // 153: hashicorp.waypoint.ListOnDemandRunnerConfigsResponse.configs:type_name -> hashicorp.waypoint.OnDemandRunnerConfig
 	114, // 154: hashicorp.waypoint.UpsertPushedArtifactRequest.artifact:type_name -> hashicorp.waypoint.PushedArtifact
 	114, // 155: hashicorp.waypoint.UpsertPushedArtifactResponse.artifact:type_name -> hashicorp.waypoint.PushedArtifact
 	193, // 156: hashicorp.waypoint.GetLatestPushedArtifactRequest.application:type_name -> hashicorp.waypoint.Ref.Application
@@ -25317,9 +25317,9 @@ var file_internal_server_proto_server_proto_depIdxs = []int32{
 	158, // 521: hashicorp.waypoint.Waypoint.EntrypointLogStream:input_type -> hashicorp.waypoint.EntrypointLogBatch
 	159, // 522: hashicorp.waypoint.Waypoint.EntrypointExecStream:input_type -> hashicorp.waypoint.EntrypointExecRequest
 	173, // 523: hashicorp.waypoint.Waypoint.WaypointHclFmt:input_type -> hashicorp.waypoint.WaypointHclFmtRequest
-	103, // 524: hashicorp.waypoint.Waypoint.UpsertOndemandRunnerConfig:input_type -> hashicorp.waypoint.UpsertOndemandRunnerConfigRequest
-	105, // 525: hashicorp.waypoint.Waypoint.GetOndemandRunnerConfig:input_type -> hashicorp.waypoint.GetOndemandRunnerConfigRequest
-	334, // 526: hashicorp.waypoint.Waypoint.ListOndemandRunnerConfigs:input_type -> google.protobuf.Empty
+	103, // 524: hashicorp.waypoint.Waypoint.UpsertOnDemandRunnerConfig:input_type -> hashicorp.waypoint.UpsertOnDemandRunnerConfigRequest
+	105, // 525: hashicorp.waypoint.Waypoint.GetOnDemandRunnerConfig:input_type -> hashicorp.waypoint.GetOnDemandRunnerConfigRequest
+	334, // 526: hashicorp.waypoint.Waypoint.ListOnDemandRunnerConfigs:input_type -> google.protobuf.Empty
 	94,  // 527: hashicorp.waypoint.Waypoint.UpsertBuild:input_type -> hashicorp.waypoint.UpsertBuildRequest
 	108, // 528: hashicorp.waypoint.Waypoint.UpsertPushedArtifact:input_type -> hashicorp.waypoint.UpsertPushedArtifactRequest
 	116, // 529: hashicorp.waypoint.Waypoint.UpsertDeployment:input_type -> hashicorp.waypoint.UpsertDeploymentRequest
@@ -25393,9 +25393,9 @@ var file_internal_server_proto_server_proto_depIdxs = []int32{
 	334, // 597: hashicorp.waypoint.Waypoint.EntrypointLogStream:output_type -> google.protobuf.Empty
 	160, // 598: hashicorp.waypoint.Waypoint.EntrypointExecStream:output_type -> hashicorp.waypoint.EntrypointExecResponse
 	174, // 599: hashicorp.waypoint.Waypoint.WaypointHclFmt:output_type -> hashicorp.waypoint.WaypointHclFmtResponse
-	104, // 600: hashicorp.waypoint.Waypoint.UpsertOndemandRunnerConfig:output_type -> hashicorp.waypoint.UpsertOndemandRunnerConfigResponse
-	106, // 601: hashicorp.waypoint.Waypoint.GetOndemandRunnerConfig:output_type -> hashicorp.waypoint.GetOndemandRunnerConfigResponse
-	107, // 602: hashicorp.waypoint.Waypoint.ListOndemandRunnerConfigs:output_type -> hashicorp.waypoint.ListOndemandRunnerConfigsResponse
+	104, // 600: hashicorp.waypoint.Waypoint.UpsertOnDemandRunnerConfig:output_type -> hashicorp.waypoint.UpsertOnDemandRunnerConfigResponse
+	106, // 601: hashicorp.waypoint.Waypoint.GetOnDemandRunnerConfig:output_type -> hashicorp.waypoint.GetOnDemandRunnerConfigResponse
+	107, // 602: hashicorp.waypoint.Waypoint.ListOnDemandRunnerConfigs:output_type -> hashicorp.waypoint.ListOnDemandRunnerConfigsResponse
 	95,  // 603: hashicorp.waypoint.Waypoint.UpsertBuild:output_type -> hashicorp.waypoint.UpsertBuildResponse
 	109, // 604: hashicorp.waypoint.Waypoint.UpsertPushedArtifact:output_type -> hashicorp.waypoint.UpsertPushedArtifactResponse
 	117, // 605: hashicorp.waypoint.Waypoint.UpsertDeployment:output_type -> hashicorp.waypoint.UpsertDeploymentResponse
@@ -26437,7 +26437,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[85].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OndemandRunnerConfig); i {
+			switch v := v.(*OnDemandRunnerConfig); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -26449,7 +26449,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[86].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpsertOndemandRunnerConfigRequest); i {
+			switch v := v.(*UpsertOnDemandRunnerConfigRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -26461,7 +26461,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[87].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpsertOndemandRunnerConfigResponse); i {
+			switch v := v.(*UpsertOnDemandRunnerConfigResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -26473,7 +26473,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[88].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetOndemandRunnerConfigRequest); i {
+			switch v := v.(*GetOnDemandRunnerConfigRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -26485,7 +26485,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[89].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetOndemandRunnerConfigResponse); i {
+			switch v := v.(*GetOnDemandRunnerConfigResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -26497,7 +26497,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[90].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListOndemandRunnerConfigsResponse); i {
+			switch v := v.(*ListOnDemandRunnerConfigsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -27697,7 +27697,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[190].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Ref_OndemandRunnerConfig); i {
+			switch v := v.(*Ref_OnDemandRunnerConfig); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29441,13 +29441,13 @@ type WaypointClient interface {
 	// JSON formatting is not supported.
 	WaypointHclFmt(ctx context.Context, in *WaypointHclFmtRequest, opts ...grpc.CallOption) (*WaypointHclFmtResponse, error)
 	//----------------------------------------------------------------------
-	// Ondemand Runner Config functions.
+	// OnDemand Runner Config functions.
 	//----------------------------------------------------------------------
-	UpsertOndemandRunnerConfig(ctx context.Context, in *UpsertOndemandRunnerConfigRequest, opts ...grpc.CallOption) (*UpsertOndemandRunnerConfigResponse, error)
-	// GetOndemandRunner returns the ondemand runner.
-	GetOndemandRunnerConfig(ctx context.Context, in *GetOndemandRunnerConfigRequest, opts ...grpc.CallOption) (*GetOndemandRunnerConfigResponse, error)
-	// ListOndemandRunners returns a list of all the ondemand runners.
-	ListOndemandRunnerConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListOndemandRunnerConfigsResponse, error)
+	UpsertOnDemandRunnerConfig(ctx context.Context, in *UpsertOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*UpsertOnDemandRunnerConfigResponse, error)
+	// GetOnDemandRunner returns the ondemand runner.
+	GetOnDemandRunnerConfig(ctx context.Context, in *GetOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*GetOnDemandRunnerConfigResponse, error)
+	// ListOnDemandRunners returns a list of all the ondemand runners.
+	ListOnDemandRunnerConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListOnDemandRunnerConfigsResponse, error)
 	// UpsertBuild updates or inserts a build. A build is responsible for
 	// taking some set of source information and turning it into an initial
 	// artifact. This artifact is considered "local" until it is pushed.
@@ -30299,27 +30299,27 @@ func (c *waypointClient) WaypointHclFmt(ctx context.Context, in *WaypointHclFmtR
 	return out, nil
 }
 
-func (c *waypointClient) UpsertOndemandRunnerConfig(ctx context.Context, in *UpsertOndemandRunnerConfigRequest, opts ...grpc.CallOption) (*UpsertOndemandRunnerConfigResponse, error) {
-	out := new(UpsertOndemandRunnerConfigResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpsertOndemandRunnerConfig", in, out, opts...)
+func (c *waypointClient) UpsertOnDemandRunnerConfig(ctx context.Context, in *UpsertOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*UpsertOnDemandRunnerConfigResponse, error) {
+	out := new(UpsertOnDemandRunnerConfigResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpsertOnDemandRunnerConfig", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *waypointClient) GetOndemandRunnerConfig(ctx context.Context, in *GetOndemandRunnerConfigRequest, opts ...grpc.CallOption) (*GetOndemandRunnerConfigResponse, error) {
-	out := new(GetOndemandRunnerConfigResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetOndemandRunnerConfig", in, out, opts...)
+func (c *waypointClient) GetOnDemandRunnerConfig(ctx context.Context, in *GetOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*GetOnDemandRunnerConfigResponse, error) {
+	out := new(GetOnDemandRunnerConfigResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *waypointClient) ListOndemandRunnerConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListOndemandRunnerConfigsResponse, error) {
-	out := new(ListOndemandRunnerConfigsResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListOndemandRunnerConfigs", in, out, opts...)
+func (c *waypointClient) ListOnDemandRunnerConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListOnDemandRunnerConfigsResponse, error) {
+	out := new(ListOnDemandRunnerConfigsResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListOnDemandRunnerConfigs", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -30588,13 +30588,13 @@ type WaypointServer interface {
 	// JSON formatting is not supported.
 	WaypointHclFmt(context.Context, *WaypointHclFmtRequest) (*WaypointHclFmtResponse, error)
 	//----------------------------------------------------------------------
-	// Ondemand Runner Config functions.
+	// OnDemand Runner Config functions.
 	//----------------------------------------------------------------------
-	UpsertOndemandRunnerConfig(context.Context, *UpsertOndemandRunnerConfigRequest) (*UpsertOndemandRunnerConfigResponse, error)
-	// GetOndemandRunner returns the ondemand runner.
-	GetOndemandRunnerConfig(context.Context, *GetOndemandRunnerConfigRequest) (*GetOndemandRunnerConfigResponse, error)
-	// ListOndemandRunners returns a list of all the ondemand runners.
-	ListOndemandRunnerConfigs(context.Context, *emptypb.Empty) (*ListOndemandRunnerConfigsResponse, error)
+	UpsertOnDemandRunnerConfig(context.Context, *UpsertOnDemandRunnerConfigRequest) (*UpsertOnDemandRunnerConfigResponse, error)
+	// GetOnDemandRunner returns the ondemand runner.
+	GetOnDemandRunnerConfig(context.Context, *GetOnDemandRunnerConfigRequest) (*GetOnDemandRunnerConfigResponse, error)
+	// ListOnDemandRunners returns a list of all the ondemand runners.
+	ListOnDemandRunnerConfigs(context.Context, *emptypb.Empty) (*ListOnDemandRunnerConfigsResponse, error)
 	// UpsertBuild updates or inserts a build. A build is responsible for
 	// taking some set of source information and turning it into an initial
 	// artifact. This artifact is considered "local" until it is pushed.
@@ -30816,14 +30816,14 @@ func (*UnimplementedWaypointServer) EntrypointExecStream(Waypoint_EntrypointExec
 func (*UnimplementedWaypointServer) WaypointHclFmt(context.Context, *WaypointHclFmtRequest) (*WaypointHclFmtResponse, error) {
 	return nil, status1.Errorf(codes.Unimplemented, "method WaypointHclFmt not implemented")
 }
-func (*UnimplementedWaypointServer) UpsertOndemandRunnerConfig(context.Context, *UpsertOndemandRunnerConfigRequest) (*UpsertOndemandRunnerConfigResponse, error) {
-	return nil, status1.Errorf(codes.Unimplemented, "method UpsertOndemandRunnerConfig not implemented")
+func (*UnimplementedWaypointServer) UpsertOnDemandRunnerConfig(context.Context, *UpsertOnDemandRunnerConfigRequest) (*UpsertOnDemandRunnerConfigResponse, error) {
+	return nil, status1.Errorf(codes.Unimplemented, "method UpsertOnDemandRunnerConfig not implemented")
 }
-func (*UnimplementedWaypointServer) GetOndemandRunnerConfig(context.Context, *GetOndemandRunnerConfigRequest) (*GetOndemandRunnerConfigResponse, error) {
-	return nil, status1.Errorf(codes.Unimplemented, "method GetOndemandRunnerConfig not implemented")
+func (*UnimplementedWaypointServer) GetOnDemandRunnerConfig(context.Context, *GetOnDemandRunnerConfigRequest) (*GetOnDemandRunnerConfigResponse, error) {
+	return nil, status1.Errorf(codes.Unimplemented, "method GetOnDemandRunnerConfig not implemented")
 }
-func (*UnimplementedWaypointServer) ListOndemandRunnerConfigs(context.Context, *emptypb.Empty) (*ListOndemandRunnerConfigsResponse, error) {
-	return nil, status1.Errorf(codes.Unimplemented, "method ListOndemandRunnerConfigs not implemented")
+func (*UnimplementedWaypointServer) ListOnDemandRunnerConfigs(context.Context, *emptypb.Empty) (*ListOnDemandRunnerConfigsResponse, error) {
+	return nil, status1.Errorf(codes.Unimplemented, "method ListOnDemandRunnerConfigs not implemented")
 }
 func (*UnimplementedWaypointServer) UpsertBuild(context.Context, *UpsertBuildRequest) (*UpsertBuildResponse, error) {
 	return nil, status1.Errorf(codes.Unimplemented, "method UpsertBuild not implemented")
@@ -32099,56 +32099,56 @@ func _Waypoint_WaypointHclFmt_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Waypoint_UpsertOndemandRunnerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpsertOndemandRunnerConfigRequest)
+func _Waypoint_UpsertOnDemandRunnerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertOnDemandRunnerConfigRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WaypointServer).UpsertOndemandRunnerConfig(ctx, in)
+		return srv.(WaypointServer).UpsertOnDemandRunnerConfig(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/UpsertOndemandRunnerConfig",
+		FullMethod: "/hashicorp.waypoint.Waypoint/UpsertOnDemandRunnerConfig",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).UpsertOndemandRunnerConfig(ctx, req.(*UpsertOndemandRunnerConfigRequest))
+		return srv.(WaypointServer).UpsertOnDemandRunnerConfig(ctx, req.(*UpsertOnDemandRunnerConfigRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Waypoint_GetOndemandRunnerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetOndemandRunnerConfigRequest)
+func _Waypoint_GetOnDemandRunnerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOnDemandRunnerConfigRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WaypointServer).GetOndemandRunnerConfig(ctx, in)
+		return srv.(WaypointServer).GetOnDemandRunnerConfig(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/GetOndemandRunnerConfig",
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).GetOndemandRunnerConfig(ctx, req.(*GetOndemandRunnerConfigRequest))
+		return srv.(WaypointServer).GetOnDemandRunnerConfig(ctx, req.(*GetOnDemandRunnerConfigRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Waypoint_ListOndemandRunnerConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Waypoint_ListOnDemandRunnerConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WaypointServer).ListOndemandRunnerConfigs(ctx, in)
+		return srv.(WaypointServer).ListOnDemandRunnerConfigs(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/ListOndemandRunnerConfigs",
+		FullMethod: "/hashicorp.waypoint.Waypoint/ListOnDemandRunnerConfigs",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).ListOndemandRunnerConfigs(ctx, req.(*emptypb.Empty))
+		return srv.(WaypointServer).ListOnDemandRunnerConfigs(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -32508,16 +32508,16 @@ var _Waypoint_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_WaypointHclFmt_Handler,
 		},
 		{
-			MethodName: "UpsertOndemandRunnerConfig",
-			Handler:    _Waypoint_UpsertOndemandRunnerConfig_Handler,
+			MethodName: "UpsertOnDemandRunnerConfig",
+			Handler:    _Waypoint_UpsertOnDemandRunnerConfig_Handler,
 		},
 		{
-			MethodName: "GetOndemandRunnerConfig",
-			Handler:    _Waypoint_GetOndemandRunnerConfig_Handler,
+			MethodName: "GetOnDemandRunnerConfig",
+			Handler:    _Waypoint_GetOnDemandRunnerConfig_Handler,
 		},
 		{
-			MethodName: "ListOndemandRunnerConfigs",
-			Handler:    _Waypoint_ListOndemandRunnerConfigs_Handler,
+			MethodName: "ListOnDemandRunnerConfigs",
+			Handler:    _Waypoint_ListOnDemandRunnerConfigs_Handler,
 		},
 		{
 			MethodName: "UpsertBuild",

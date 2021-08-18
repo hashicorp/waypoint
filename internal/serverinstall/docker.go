@@ -683,8 +683,8 @@ func (i *DockerInstaller) InstallRunner(
 	return nil
 }
 
-func (i *DockerInstaller) OndemandRunnerConfig() *pb.OndemandRunnerConfig {
-	return &pb.OndemandRunnerConfig{
+func (i *DockerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	return &pb.OnDemandRunnerConfig{
 		OciUrl:     i.config.odrImage,
 		PluginType: "docker",
 		Default:    true,
@@ -795,7 +795,7 @@ func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "docker-odr-image",
 		Target:  &i.config.odrImage,
-		Usage:   "Docker image for the Waypoint Ondemand Runners",
+		Usage:   "Docker image for the Waypoint On-Demand Runners",
 		Default: defaultODRImage,
 	})
 }
@@ -811,7 +811,7 @@ func (i *DockerInstaller) UpgradeFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "docker-odr-image",
 		Target:  &i.config.odrImage,
-		Usage:   "Docker image for the Waypoint Ondemand Runners",
+		Usage:   "Docker image for the Waypoint On-Demand Runners",
 		Default: defaultODRImage,
 	})
 }

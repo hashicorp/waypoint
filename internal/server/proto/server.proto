@@ -297,15 +297,15 @@ service Waypoint {
   rpc WaypointHclFmt(WaypointHclFmtRequest) returns (WaypointHclFmtResponse);
 
   //----------------------------------------------------------------------
-  // Ondemand Runner Config functions.
+  // OnDemand Runner Config functions.
   //----------------------------------------------------------------------
-  rpc UpsertOndemandRunnerConfig(UpsertOndemandRunnerConfigRequest) returns (UpsertOndemandRunnerConfigResponse);
+  rpc UpsertOnDemandRunnerConfig(UpsertOnDemandRunnerConfigRequest) returns (UpsertOnDemandRunnerConfigResponse);
 
-  // GetOndemandRunner returns the ondemand runner.
-  rpc GetOndemandRunnerConfig(GetOndemandRunnerConfigRequest) returns (GetOndemandRunnerConfigResponse);
+  // GetOnDemandRunner returns the ondemand runner.
+  rpc GetOnDemandRunnerConfig(GetOnDemandRunnerConfigRequest) returns (GetOnDemandRunnerConfigResponse);
 
-  // ListOndemandRunners returns a list of all the ondemand runners.
-  rpc ListOndemandRunnerConfigs(google.protobuf.Empty) returns (ListOndemandRunnerConfigsResponse);
+  // ListOnDemandRunners returns a list of all the ondemand runners.
+  rpc ListOnDemandRunnerConfigs(google.protobuf.Empty) returns (ListOnDemandRunnerConfigsResponse);
 
 
   //----------------------------------------------------------------------
@@ -599,7 +599,7 @@ message Project {
 
   // ondemand_runner, if set, indicates the configuation on the ondemand runner
   // that should be used for the operations of this project.
-  Ref.OndemandRunnerConfig ondemand_runner = 11;
+  Ref.OnDemandRunnerConfig ondemand_runner = 11;
 
   enum Format {
     HCL = 0; // We assume HCL by default
@@ -816,9 +816,9 @@ message Ref {
     string name = 1;
   }
 
-  // OndemandRunner references an OndemandRunner value to be used for contextual
+  // OnDemandRunner references an OnDemandRunner value to be used for contextual
   // operation.
-  message OndemandRunnerConfig {
+  message OnDemandRunnerConfig {
     string id = 1;
   }
 }
@@ -2414,9 +2414,9 @@ message Artifact {
 }
 
 /********************************************************************
-* Ondemand Runners
+* OnDemand Runners
 ********************************************************************/
-message OndemandRunnerConfig {
+message OnDemandRunnerConfig {
   // id is the unique ID of the runner config
   string id = 1;
 
@@ -2443,28 +2443,28 @@ message OndemandRunnerConfig {
   bool default = 7;
 }
 
-message UpsertOndemandRunnerConfigRequest {
+message UpsertOnDemandRunnerConfigRequest {
   // ondemand_runner to upsert. If the id is empty, then this is an insert,
   // otherwise this is an update operation.
-  OndemandRunnerConfig config = 1;
+  OnDemandRunnerConfig config = 1;
 }
 
-message UpsertOndemandRunnerConfigResponse {
+message UpsertOnDemandRunnerConfigResponse {
   // The resulting ondemand runner value. It should replace the one that was
   // sent in the request.
-  OndemandRunnerConfig config = 1;
+  OnDemandRunnerConfig config = 1;
 }
 
-message GetOndemandRunnerConfigRequest {
-  Ref.OndemandRunnerConfig config = 1;
+message GetOnDemandRunnerConfigRequest {
+  Ref.OnDemandRunnerConfig config = 1;
 }
 
-message GetOndemandRunnerConfigResponse {
-  OndemandRunnerConfig config = 1;
+message GetOnDemandRunnerConfigResponse {
+  OnDemandRunnerConfig config = 1;
 }
 
-message ListOndemandRunnerConfigsResponse {
-  repeated OndemandRunnerConfig configs = 1;
+message ListOnDemandRunnerConfigsResponse {
+  repeated OnDemandRunnerConfig configs = 1;
 }
 
 /********************************************************************

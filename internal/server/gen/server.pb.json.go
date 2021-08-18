@@ -748,7 +748,7 @@ func (msg *Ref_DeclaredResource) UnmarshalJSON(b []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *Ref_OndemandRunnerConfig) MarshalJSON() ([]byte, error) {
+func (msg *Ref_OnDemandRunnerConfig) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
 		EnumsAsInts:  false,
@@ -759,7 +759,7 @@ func (msg *Ref_OndemandRunnerConfig) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (msg *Ref_OndemandRunnerConfig) UnmarshalJSON(b []byte) error {
+func (msg *Ref_OnDemandRunnerConfig) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)
@@ -3520,7 +3520,7 @@ func (msg *Artifact) UnmarshalJSON(b []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *OndemandRunnerConfig) MarshalJSON() ([]byte, error) {
+func (msg *OnDemandRunnerConfig) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
 		EnumsAsInts:  false,
@@ -3531,14 +3531,14 @@ func (msg *OndemandRunnerConfig) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (msg *OndemandRunnerConfig) UnmarshalJSON(b []byte) error {
+func (msg *OnDemandRunnerConfig) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *UpsertOndemandRunnerConfigRequest) MarshalJSON() ([]byte, error) {
+func (msg *UpsertOnDemandRunnerConfigRequest) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
 		EnumsAsInts:  false,
@@ -3549,14 +3549,14 @@ func (msg *UpsertOndemandRunnerConfigRequest) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (msg *UpsertOndemandRunnerConfigRequest) UnmarshalJSON(b []byte) error {
+func (msg *UpsertOnDemandRunnerConfigRequest) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *UpsertOndemandRunnerConfigResponse) MarshalJSON() ([]byte, error) {
+func (msg *UpsertOnDemandRunnerConfigResponse) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
 		EnumsAsInts:  false,
@@ -3567,14 +3567,14 @@ func (msg *UpsertOndemandRunnerConfigResponse) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (msg *UpsertOndemandRunnerConfigResponse) UnmarshalJSON(b []byte) error {
+func (msg *UpsertOnDemandRunnerConfigResponse) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *GetOndemandRunnerConfigRequest) MarshalJSON() ([]byte, error) {
+func (msg *GetOnDemandRunnerConfigRequest) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
 		EnumsAsInts:  false,
@@ -3585,14 +3585,14 @@ func (msg *GetOndemandRunnerConfigRequest) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (msg *GetOndemandRunnerConfigRequest) UnmarshalJSON(b []byte) error {
+func (msg *GetOnDemandRunnerConfigRequest) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *GetOndemandRunnerConfigResponse) MarshalJSON() ([]byte, error) {
+func (msg *GetOnDemandRunnerConfigResponse) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
 		EnumsAsInts:  false,
@@ -3603,14 +3603,14 @@ func (msg *GetOndemandRunnerConfigResponse) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (msg *GetOndemandRunnerConfigResponse) UnmarshalJSON(b []byte) error {
+func (msg *GetOnDemandRunnerConfigResponse) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *ListOndemandRunnerConfigsResponse) MarshalJSON() ([]byte, error) {
+func (msg *ListOnDemandRunnerConfigsResponse) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
 		EnumsAsInts:  false,
@@ -3621,7 +3621,7 @@ func (msg *ListOndemandRunnerConfigsResponse) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (msg *ListOndemandRunnerConfigsResponse) UnmarshalJSON(b []byte) error {
+func (msg *ListOnDemandRunnerConfigsResponse) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)

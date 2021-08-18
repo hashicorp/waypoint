@@ -12,7 +12,7 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
-func TestOndemandRunnerConfig(t *testing.T) {
+func TestOnDemandRunnerConfig(t *testing.T) {
 	t.Run("Get returns not found error if not exist", func(t *testing.T) {
 		require := require.New(t)
 
@@ -20,7 +20,7 @@ func TestOndemandRunnerConfig(t *testing.T) {
 		defer s.Close()
 
 		// Set
-		_, err := s.OndemandRunnerConfigGet(&pb.Ref_OndemandRunnerConfig{
+		_, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
 			Id: "foo",
 		})
 		require.Error(err)
@@ -34,16 +34,16 @@ func TestOndemandRunnerConfig(t *testing.T) {
 		defer s.Close()
 
 		// Set
-		rec := serverptypes.TestOndemandRunnerConfig(t, &pb.OndemandRunnerConfig{
+		rec := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
 			OciUrl: "h/w:s",
 		})
 
-		err := s.OndemandRunnerConfigPut(rec)
+		err := s.OnDemandRunnerConfigPut(rec)
 		require.NoError(err)
 
 		// Get exact
 		{
-			resp, err := s.OndemandRunnerConfigGet(&pb.Ref_OndemandRunnerConfig{
+			resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
 				Id: rec.Id,
 			})
 			require.NoError(err)
@@ -52,7 +52,7 @@ func TestOndemandRunnerConfig(t *testing.T) {
 
 		// Get case insensitive
 		{
-			resp, err := s.OndemandRunnerConfigGet(&pb.Ref_OndemandRunnerConfig{
+			resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
 				Id: strings.ToUpper(rec.Id),
 			})
 			require.NoError(err)
@@ -61,7 +61,7 @@ func TestOndemandRunnerConfig(t *testing.T) {
 
 		// List
 		{
-			resp, err := s.OndemandRunnerConfigList()
+			resp, err := s.OnDemandRunnerConfigList()
 			require.NoError(err)
 			require.Len(resp, 1)
 		}
@@ -74,13 +74,13 @@ func TestOndemandRunnerConfig(t *testing.T) {
 		defer s.Close()
 
 		// Set
-		rec := serverptypes.TestOndemandRunnerConfig(t, &pb.OndemandRunnerConfig{})
+		rec := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{})
 
-		err := s.OndemandRunnerConfigPut(rec)
+		err := s.OnDemandRunnerConfigPut(rec)
 		require.NoError(err)
 
 		// Read
-		resp, err := s.OndemandRunnerConfigGet(&pb.Ref_OndemandRunnerConfig{
+		resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
 			Id: rec.Id,
 		})
 		require.NoError(err)
@@ -88,7 +88,7 @@ func TestOndemandRunnerConfig(t *testing.T) {
 
 		// Delete
 		{
-			err := s.OndemandRunnerConfigDelete(&pb.Ref_OndemandRunnerConfig{
+			err := s.OnDemandRunnerConfigDelete(&pb.Ref_OnDemandRunnerConfig{
 				Id: rec.Id,
 			})
 			require.NoError(err)
@@ -96,7 +96,7 @@ func TestOndemandRunnerConfig(t *testing.T) {
 
 		// Read
 		{
-			_, err := s.OndemandRunnerConfigGet(&pb.Ref_OndemandRunnerConfig{
+			_, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
 				Id: rec.Id,
 			})
 			require.Error(err)
@@ -105,7 +105,7 @@ func TestOndemandRunnerConfig(t *testing.T) {
 
 		// List
 		{
-			resp, err := s.OndemandRunnerConfigList()
+			resp, err := s.OnDemandRunnerConfigList()
 			require.NoError(err)
 			require.Len(resp, 0)
 		}

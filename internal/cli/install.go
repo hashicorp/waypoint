@@ -459,13 +459,13 @@ func installRunner(
 	}
 	s.Done()
 
-	if odc, ok := p.(serverinstall.OndemandRunnerConfigProvider); ok {
+	if odc, ok := p.(serverinstall.OnDemandRunnerConfigProvider); ok {
 		s = sg.Add("Registering ondemand runner...")
 
-		odr := odc.OndemandRunnerConfig()
+		odr := odc.OnDemandRunnerConfig()
 
 		if odr != nil {
-			_, err = client.UpsertOndemandRunnerConfig(ctx, &pb.UpsertOndemandRunnerConfigRequest{
+			_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 				Config: odr,
 			})
 

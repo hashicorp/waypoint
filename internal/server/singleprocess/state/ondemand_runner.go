@@ -12,25 +12,25 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-var ondemandRunnerBucket = []byte("ondemandRunner")
+var onDemandRunnerBucket = []byte("ondemandRunner")
 
 func init() {
-	dbBuckets = append(dbBuckets, ondemandRunnerBucket)
-	dbIndexers = append(dbIndexers, (*State).ondemandRunnerIndexInit)
-	schemas = append(schemas, ondemandRunnerIndexSchema)
+	dbBuckets = append(dbBuckets, onDemandRunnerBucket)
+	dbIndexers = append(dbIndexers, (*State).onDemandRunnerIndexInit)
+	schemas = append(schemas, onDemandRunnerIndexSchema)
 }
 
-// OndemandRunnerConfigPut creates or updates the given ondemandRunner.
+// OnDemandRunnerConfigPut creates or updates the given ondemandRunner.
 //
 // Application changes will be ignored, you must use the Application APIs.
-func (s *State) OndemandRunnerConfigPut(o *pb.OndemandRunnerConfig) error {
+func (s *State) OnDemandRunnerConfigPut(o *pb.OnDemandRunnerConfig) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
 		if o.Id != "" {
 			var err error
-			_, err = s.ondemandRunnerGet(dbTxn, memTxn, &pb.Ref_OndemandRunnerConfig{Id: o.Id})
+			_, err = s.onDemandRunnerGet(dbTxn, memTxn, &pb.Ref_OnDemandRunnerConfig{Id: o.Id})
 			if err != nil {
 				return err
 			}
@@ -52,30 +52,30 @@ func (s *State) OndemandRunnerConfigPut(o *pb.OndemandRunnerConfig) error {
 	return err
 }
 
-// OndemandRunnerConfigGet gets a ondemandRunner by reference.
-func (s *State) OndemandRunnerConfigGet(ref *pb.Ref_OndemandRunnerConfig) (*pb.OndemandRunnerConfig, error) {
+// OnDemandRunnerConfigGet gets a ondemandRunner by reference.
+func (s *State) OnDemandRunnerConfigGet(ref *pb.Ref_OnDemandRunnerConfig) (*pb.OnDemandRunnerConfig, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
-	var result *pb.OndemandRunnerConfig
+	var result *pb.OnDemandRunnerConfig
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
 		var err error
-		result, err = s.ondemandRunnerGet(dbTxn, memTxn, ref)
+		result, err = s.onDemandRunnerGet(dbTxn, memTxn, ref)
 		return err
 	})
 
 	return result, err
 }
 
-// OndemandRunnerConfigDelete deletes a ondemandRunner by reference. This is a complete data
+// OnDemandRunnerConfigDelete deletes a ondemandRunner by reference. This is a complete data
 // delete. This will delete all operations associated with this ondemandRunner
 // as well.
-func (s *State) OndemandRunnerConfigDelete(ref *pb.Ref_OndemandRunnerConfig) error {
+func (s *State) OnDemandRunnerConfigDelete(ref *pb.Ref_OnDemandRunnerConfig) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
-		return s.ondemandRunnerDelete(dbTxn, memTxn, ref)
+		return s.onDemandRunnerDelete(dbTxn, memTxn, ref)
 	})
 	if err == nil {
 		memTxn.Commit()
@@ -84,21 +84,21 @@ func (s *State) OndemandRunnerConfigDelete(ref *pb.Ref_OndemandRunnerConfig) err
 	return err
 }
 
-// OndemandRunnerConfigList returns the list of ondemandRunners.
-func (s *State) OndemandRunnerConfigList() ([]*pb.OndemandRunnerConfig, error) {
+// OnDemandRunnerConfigList returns the list of ondemandRunners.
+func (s *State) OnDemandRunnerConfigList() ([]*pb.OnDemandRunnerConfig, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
-	refs, err := s.ondemandRunnerList(memTxn)
+	refs, err := s.onDemandRunnerList(memTxn)
 	if err != nil {
 		return nil, err
 	}
 
-	var out []*pb.OndemandRunnerConfig
+	var out []*pb.OnDemandRunnerConfig
 
 	err = s.db.View(func(dbTxn *bolt.Tx) error {
 		for _, ref := range refs {
-			val, err := s.ondemandRunnerGet(dbTxn, memTxn, ref)
+			val, err := s.onDemandRunnerGet(dbTxn, memTxn, ref)
 			if err != nil {
 				return err
 			}
@@ -116,18 +116,18 @@ func (s *State) OndemandRunnerConfigList() ([]*pb.OndemandRunnerConfig, error) {
 	return out, nil
 }
 
-// OndemandRunnerConfigDefault returns the list of ondemandRunners that are defaults.
-func (s *State) OndemandRunnerConfigDefault() ([]*pb.Ref_OndemandRunnerConfig, error) {
+// OnDemandRunnerConfigDefault returns the list of ondemandRunners that are defaults.
+func (s *State) OnDemandRunnerConfigDefault() ([]*pb.Ref_OnDemandRunnerConfig, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
-	return s.ondemandRunnerDefaultRefs(memTxn)
+	return s.onDemandRunnerDefaultRefs(memTxn)
 }
 
 func (s *State) ondemandRunnerPut(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
-	value *pb.OndemandRunnerConfig,
+	value *pb.OnDemandRunnerConfig,
 ) error {
 	// This is to prevent mistakes or abuse. Realistically a waypoint.hcl
 	// file should be MUCH smaller than this so this catches the really big
@@ -138,46 +138,46 @@ func (s *State) ondemandRunnerPut(
 		)
 	}
 
-	id := s.ondemandRunnerId(value)
+	id := s.onDemandRunnerId(value)
 
 	// Get the global bucket and write the value to it.
-	b := dbTxn.Bucket(ondemandRunnerBucket)
+	b := dbTxn.Bucket(onDemandRunnerBucket)
 	if err := dbPut(b, id, value); err != nil {
 		return err
 	}
 
 	// Create our index value and write that.
-	return s.ondemandRunnerIndexSet(memTxn, id, value)
+	return s.onDemandRunnerIndexSet(memTxn, id, value)
 }
 
-func (s *State) ondemandRunnerGet(
+func (s *State) onDemandRunnerGet(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
-	ref *pb.Ref_OndemandRunnerConfig,
-) (*pb.OndemandRunnerConfig, error) {
-	var result pb.OndemandRunnerConfig
-	b := dbTxn.Bucket(ondemandRunnerBucket)
+	ref *pb.Ref_OnDemandRunnerConfig,
+) (*pb.OnDemandRunnerConfig, error) {
+	var result pb.OnDemandRunnerConfig
+	b := dbTxn.Bucket(onDemandRunnerBucket)
 
 	return &result, dbGet(b, []byte(strings.ToLower(ref.Id)), &result)
 }
 
-func (s *State) ondemandRunnerList(
+func (s *State) onDemandRunnerList(
 	memTxn *memdb.Txn,
-) ([]*pb.Ref_OndemandRunnerConfig, error) {
-	iter, err := memTxn.Get(ondemandRunnerIndexTableName, ondemandRunnerIndexId+"_prefix", "")
+) ([]*pb.Ref_OnDemandRunnerConfig, error) {
+	iter, err := memTxn.Get(onDemandRunnerIndexTableName, onDemandRunnerIndexId+"_prefix", "")
 	if err != nil {
 		return nil, err
 	}
 
-	var result []*pb.Ref_OndemandRunnerConfig
+	var result []*pb.Ref_OnDemandRunnerConfig
 	for {
 		next := iter.Next()
 		if next == nil {
 			break
 		}
-		idx := next.(*ondemandRunnerIndexRecord)
+		idx := next.(*onDemandRunnerIndexRecord)
 
-		result = append(result, &pb.Ref_OndemandRunnerConfig{
+		result = append(result, &pb.Ref_OnDemandRunnerConfig{
 			Id: idx.Id,
 		})
 	}
@@ -185,12 +185,12 @@ func (s *State) ondemandRunnerList(
 	return result, nil
 }
 
-func (s *State) ondemandRunnerDefaultRefs(
+func (s *State) onDemandRunnerDefaultRefs(
 	memTxn *memdb.Txn,
-) ([]*pb.Ref_OndemandRunnerConfig, error) {
+) ([]*pb.Ref_OnDemandRunnerConfig, error) {
 	iter, err := memTxn.Get(
-		ondemandRunnerIndexTableName,
-		ondemandRunnerIndexDefault+"_prefix",
+		onDemandRunnerIndexTableName,
+		onDemandRunnerIndexDefault+"_prefix",
 		true,
 		"",
 	)
@@ -198,15 +198,15 @@ func (s *State) ondemandRunnerDefaultRefs(
 		return nil, err
 	}
 
-	var result []*pb.Ref_OndemandRunnerConfig
+	var result []*pb.Ref_OnDemandRunnerConfig
 	for {
 		next := iter.Next()
 		if next == nil {
 			break
 		}
-		idx := next.(*ondemandRunnerIndexRecord)
+		idx := next.(*onDemandRunnerIndexRecord)
 
-		result = append(result, &pb.Ref_OndemandRunnerConfig{
+		result = append(result, &pb.Ref_OnDemandRunnerConfig{
 			Id: idx.Id,
 		})
 	}
@@ -214,13 +214,13 @@ func (s *State) ondemandRunnerDefaultRefs(
 	return result, nil
 }
 
-func (s *State) ondemandRunnerDelete(
+func (s *State) onDemandRunnerDelete(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
-	ref *pb.Ref_OndemandRunnerConfig,
+	ref *pb.Ref_OnDemandRunnerConfig,
 ) error {
 	// Get the ondemandRunner. If it doesn't exist then we're successful.
-	_, err := s.ondemandRunnerGet(dbTxn, memTxn, ref)
+	_, err := s.onDemandRunnerGet(dbTxn, memTxn, ref)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			return nil
@@ -230,39 +230,39 @@ func (s *State) ondemandRunnerDelete(
 	}
 
 	// Delete from bolt
-	id := s.ondemandRunnerIdByRef(ref)
-	if err := dbTxn.Bucket(ondemandRunnerBucket).Delete(id); err != nil {
+	id := s.onDemandRunnerIdByRef(ref)
+	if err := dbTxn.Bucket(onDemandRunnerBucket).Delete(id); err != nil {
 		return err
 	}
 
 	// Delete from memdb
-	if err := memTxn.Delete(ondemandRunnerIndexTableName, &ondemandRunnerIndexRecord{Id: string(id)}); err != nil {
+	if err := memTxn.Delete(onDemandRunnerIndexTableName, &onDemandRunnerIndexRecord{Id: string(id)}); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// ondemandRunnerIndexSet writes an index record for a single ondemandRunner.
-func (s *State) ondemandRunnerIndexSet(txn *memdb.Txn, id []byte, value *pb.OndemandRunnerConfig) error {
-	record := &ondemandRunnerIndexRecord{
+// onDemandRunnerIndexSet writes an index record for a single ondemandRunner.
+func (s *State) onDemandRunnerIndexSet(txn *memdb.Txn, id []byte, value *pb.OnDemandRunnerConfig) error {
+	record := &onDemandRunnerIndexRecord{
 		Id:      string(id),
 		Default: value.Default,
 	}
 
 	// Insert the index
-	return txn.Insert(ondemandRunnerIndexTableName, record)
+	return txn.Insert(onDemandRunnerIndexTableName, record)
 }
 
-// ondemandRunnerIndexInit initializes the ondemandRunner index from persisted data.
-func (s *State) ondemandRunnerIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
-	bucket := dbTxn.Bucket(ondemandRunnerBucket)
+// onDemandRunnerIndexInit initializes the ondemandRunner index from persisted data.
+func (s *State) onDemandRunnerIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
+	bucket := dbTxn.Bucket(onDemandRunnerBucket)
 	return bucket.ForEach(func(k, v []byte) error {
-		var value pb.OndemandRunnerConfig
+		var value pb.OnDemandRunnerConfig
 		if err := proto.Unmarshal(v, &value); err != nil {
 			return err
 		}
-		if err := s.ondemandRunnerIndexSet(memTxn, k, &value); err != nil {
+		if err := s.onDemandRunnerIndexSet(memTxn, k, &value); err != nil {
 			return err
 		}
 
@@ -270,20 +270,20 @@ func (s *State) ondemandRunnerIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error
 	})
 }
 
-func (s *State) ondemandRunnerId(p *pb.OndemandRunnerConfig) []byte {
+func (s *State) onDemandRunnerId(p *pb.OnDemandRunnerConfig) []byte {
 	return []byte(strings.ToLower(p.Id))
 }
 
-func (s *State) ondemandRunnerIdByRef(ref *pb.Ref_OndemandRunnerConfig) []byte {
+func (s *State) onDemandRunnerIdByRef(ref *pb.Ref_OnDemandRunnerConfig) []byte {
 	return []byte(strings.ToLower(ref.Id))
 }
 
-func ondemandRunnerIndexSchema() *memdb.TableSchema {
+func onDemandRunnerIndexSchema() *memdb.TableSchema {
 	return &memdb.TableSchema{
-		Name: ondemandRunnerIndexTableName,
+		Name: onDemandRunnerIndexTableName,
 		Indexes: map[string]*memdb.IndexSchema{
-			ondemandRunnerIndexId: {
-				Name:         ondemandRunnerIndexId,
+			onDemandRunnerIndexId: {
+				Name:         onDemandRunnerIndexId,
 				AllowMissing: false,
 				Unique:       true,
 				Indexer: &memdb.StringFieldIndex{
@@ -291,8 +291,8 @@ func ondemandRunnerIndexSchema() *memdb.TableSchema {
 					Lowercase: true,
 				},
 			},
-			ondemandRunnerIndexDefault: {
-				Name:         ondemandRunnerIndexDefault,
+			onDemandRunnerIndexDefault: {
+				Name:         onDemandRunnerIndexDefault,
 				AllowMissing: true,
 				Unique:       false,
 				Indexer: &memdb.CompoundIndex{
@@ -312,20 +312,20 @@ func ondemandRunnerIndexSchema() *memdb.TableSchema {
 }
 
 const (
-	ondemandRunnerIndexTableName = "ondemandRunner-index"
-	ondemandRunnerIndexId        = "id"
-	ondemandRunnerIndexDefault   = "default"
+	onDemandRunnerIndexTableName = "ondemandRunner-index"
+	onDemandRunnerIndexId        = "id"
+	onDemandRunnerIndexDefault   = "default"
 
-	ondemandRunnerWaypointHclMaxSize = 5 * 1024 // 5 MB
+	onDemandRunnerWaypointHclMaxSize = 5 * 1024 // 5 MB
 )
 
-type ondemandRunnerIndexRecord struct {
+type onDemandRunnerIndexRecord struct {
 	Id      string
 	Default bool
 }
 
 // Copy should be called prior to any modifications to an existing record.
-func (idx *ondemandRunnerIndexRecord) Copy() *ondemandRunnerIndexRecord {
+func (idx *onDemandRunnerIndexRecord) Copy() *onDemandRunnerIndexRecord {
 	// A shallow copy is good enough since we only modify top-level fields.
 	copy := *idx
 	return &copy

@@ -17,7 +17,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type OndemandRunnerConfigApplyCommand struct {
+type OnDemandRunnerConfigApplyCommand struct {
 	*baseCommand
 
 	flagId           string
@@ -28,7 +28,7 @@ type OndemandRunnerConfigApplyCommand struct {
 	flagDefault      bool
 }
 
-func (c *OndemandRunnerConfigApplyCommand) Run(args []string) int {
+func (c *OnDemandRunnerConfigApplyCommand) Run(args []string) int {
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	flagSet := c.Flags()
 	if err := c.Init(
@@ -53,15 +53,15 @@ func (c *OndemandRunnerConfigApplyCommand) Run(args []string) int {
 	}()
 
 	var (
-		od      *pb.OndemandRunnerConfig
+		od      *pb.OnDemandRunnerConfig
 		updated bool
 	)
 
 	if c.flagId != "" {
 		s = sg.Add("Checking for an existing ondemand runner config: %s", c.flagId)
 		// Check for an existing project of the same name.
-		resp, err := c.project.Client().GetOndemandRunnerConfig(ctx, &pb.GetOndemandRunnerConfigRequest{
-			Config: &pb.Ref_OndemandRunnerConfig{
+		resp, err := c.project.Client().GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
+			Config: &pb.Ref_OnDemandRunnerConfig{
 				Id: c.flagId,
 			},
 		})
@@ -84,7 +84,7 @@ func (c *OndemandRunnerConfigApplyCommand) Run(args []string) int {
 		updated = true
 	} else {
 		s = sg.Add("Creating new ondemand runner config")
-		od = &pb.OndemandRunnerConfig{}
+		od = &pb.OnDemandRunnerConfig{}
 	}
 
 	// If we were specified a file then we're going to load that up.
@@ -162,7 +162,7 @@ func (c *OndemandRunnerConfigApplyCommand) Run(args []string) int {
 	od.PluginType = c.flagPluginType
 
 	// Upsert
-	_, err := c.project.Client().UpsertOndemandRunnerConfig(ctx, &pb.UpsertOndemandRunnerConfigRequest{
+	_, err := c.project.Client().UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: od,
 	})
 	if err != nil {
@@ -174,16 +174,16 @@ func (c *OndemandRunnerConfigApplyCommand) Run(args []string) int {
 	}
 
 	if updated {
-		s.Update("Ondemand Runner configuration updated")
+		s.Update("On-Demand Runner configuration updated")
 	} else {
-		s.Update("Ondemand Runner configuration created")
+		s.Update("On-Demand Runner configuration created")
 	}
 	s.Done()
 
 	return 0
 }
 
-func (c *OndemandRunnerConfigApplyCommand) Flags() *flag.Sets {
+func (c *OnDemandRunnerConfigApplyCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(sets *flag.Sets) {
 		f := sets.NewSet("Command Options")
 
@@ -234,19 +234,19 @@ func (c *OndemandRunnerConfigApplyCommand) Flags() *flag.Sets {
 	})
 }
 
-func (c *OndemandRunnerConfigApplyCommand) AutocompleteArgs() complete.Predictor {
+func (c *OnDemandRunnerConfigApplyCommand) AutocompleteArgs() complete.Predictor {
 	return complete.PredictNothing
 }
 
-func (c *OndemandRunnerConfigApplyCommand) AutocompleteFlags() complete.Flags {
+func (c *OnDemandRunnerConfigApplyCommand) AutocompleteFlags() complete.Flags {
 	return c.Flags().Completions()
 }
 
-func (c *OndemandRunnerConfigApplyCommand) Synopsis() string {
+func (c *OnDemandRunnerConfigApplyCommand) Synopsis() string {
 	return "Create or update an ondemand runner configuration."
 }
 
-func (c *OndemandRunnerConfigApplyCommand) Help() string {
+func (c *OnDemandRunnerConfigApplyCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint runner on-demand set [OPTIONS]
 
