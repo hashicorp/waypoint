@@ -187,6 +187,11 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 
 		for {
 			err := runner.Accept(ctx)
+			if err == nil && c.flagODR {
+				log.Debug("handled our one job in ODR mode, exiting")
+				return
+			}
+
 			if err != nil {
 				if err == runnerpkg.ErrClosed {
 					return
@@ -208,9 +213,6 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 					log.Warn("server unavailable, sleeping before retry")
 					time.Sleep(2 * time.Second)
 				}
-			} else if c.flagODR {
-				log.Debug("handled our one job in ODR mode, exiting")
-				return
 			}
 		}
 	}()

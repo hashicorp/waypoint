@@ -265,7 +265,6 @@ RUN mkdir /tmp/cache /tmp/layers && \
 		"--context=dir:///" + dir,
 	}
 
-	// NOTE(mitchellh): we can probably use the img Go pkg directly one day.
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 
 	// Command output should go to the step

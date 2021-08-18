@@ -155,29 +155,8 @@ func (op *buildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ 
 	// If there is a registry defined and it implements RegistryAccess...
 	if op.Registry != nil {
 		if ra, ok := op.Registry.Value.(component.RegistryAccess); ok {
-			fn := ra.AccessInfoFunc()
-
-			// ... and AccessInfoFunc returns non-nil (meaning the plugin boundary detected
-			// that the plugin actually implements the interface).
-			if fn != nil {
-				var err error
-
-				af, ok := fn.(*argmapper.Func)
-				if !ok {
-					af, err = argmapper.NewFunc(fn)
-					if err != nil {
-						return nil, err
-					}
-				}
-
-				// ... then we call it to generate the resulting value
-				res := af.Call(argmapper.Typed(ctx, log, app.UI))
-				if err := res.Err(); err != nil {
-					return nil, err
-				}
-
-				raw := res.Out(0)
-
+			raw, err := app.callDynamicFunc(ctx, log, nil, op.Component, ra.AccessInfoFunc())
+			if err == nil {
 				args = append(args, argmapper.Typed(raw))
 
 				if pm, ok := raw.(interface {
