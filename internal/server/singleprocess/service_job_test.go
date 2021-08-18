@@ -458,7 +458,6 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	type Req = pb.QueueJobRequest
 
 	odr := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
-		Id:           "od_test",
 		PluginType:   "magic-carpet",
 		PluginConfig: []byte("foo = 1"),
 		EnvironmentVariables: map[string]string{
@@ -466,9 +465,11 @@ func TestServiceQueueJob_odr(t *testing.T) {
 		},
 	})
 
-	_, err = client.UpsertOnDemandRunnerConfig(context.Background(), &pb.UpsertOnDemandRunnerConfigRequest{
+	cfgResp, err := client.UpsertOnDemandRunnerConfig(context.Background(), &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: odr,
 	})
+
+	odr = cfgResp.Config
 
 	log.Info("test odr", "id", odr.Id)
 
@@ -618,7 +619,6 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 	type Req = pb.QueueJobRequest
 
 	odr := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
-		Id:           "od_test",
 		PluginType:   "magic-carpet",
 		PluginConfig: []byte("foo = 1"),
 		EnvironmentVariables: map[string]string{
@@ -627,9 +627,11 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 		Default: true,
 	})
 
-	_, err = client.UpsertOnDemandRunnerConfig(context.Background(), &pb.UpsertOnDemandRunnerConfigRequest{
+	cfgResp, err := client.UpsertOnDemandRunnerConfig(context.Background(), &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: odr,
 	})
+
+	odr = cfgResp.Config
 
 	log.Info("test odr", "id", odr.Id)
 
