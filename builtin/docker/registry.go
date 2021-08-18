@@ -28,8 +28,9 @@ func (r *Registry) AccessInfoFunc() interface{} {
 // Push pushes an image to the registry.
 func (r *Registry) AccessInfo() (*AccessInfo, error) {
 	ai := &AccessInfo{
-		Image: r.config.Image,
-		Tag:   r.config.Tag,
+		Image:    r.config.Image,
+		Tag:      r.config.Tag,
+		Insecure: r.config.Insecure,
 	}
 
 	if r.config.EncodedAuth != "" {
