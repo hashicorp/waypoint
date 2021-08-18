@@ -457,7 +457,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	// Simplify writing tests
 	type Req = pb.QueueJobRequest
 
-	odr := serverptypes.TestOndemandRunner(t, &pb.OndemandRunner{
+	odr := serverptypes.TestOndemandRunnerConfig(t, &pb.OndemandRunnerConfig{
 		Id:           "od_test",
 		PluginType:   "magic-carpet",
 		PluginConfig: []byte("foo = 1"),
@@ -466,8 +466,8 @@ func TestServiceQueueJob_odr(t *testing.T) {
 		},
 	})
 
-	_, err = client.UpsertOndemandRunner(context.Background(), &pb.UpsertOndemandRunnerRequest{
-		OndemandRunner: odr,
+	_, err = client.UpsertOndemandRunnerConfig(context.Background(), &pb.UpsertOndemandRunnerConfigRequest{
+		Config: odr,
 	})
 
 	log.Info("test odr", "id", odr.Id)
@@ -475,7 +475,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	// Update the project to include ondemand runner
 	proj := serverptypes.TestProject(t, &pb.Project{
 		Name: "proj",
-		OndemandRunner: &pb.Ref_OndemandRunner{
+		OndemandRunner: &pb.Ref_OndemandRunnerConfig{
 			Id: odr.Id,
 		},
 	})
@@ -617,7 +617,7 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 	// Simplify writing tests
 	type Req = pb.QueueJobRequest
 
-	odr := serverptypes.TestOndemandRunner(t, &pb.OndemandRunner{
+	odr := serverptypes.TestOndemandRunnerConfig(t, &pb.OndemandRunnerConfig{
 		Id:           "od_test",
 		PluginType:   "magic-carpet",
 		PluginConfig: []byte("foo = 1"),
@@ -627,8 +627,8 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 		Default: true,
 	})
 
-	_, err = client.UpsertOndemandRunner(context.Background(), &pb.UpsertOndemandRunnerRequest{
-		OndemandRunner: odr,
+	_, err = client.UpsertOndemandRunnerConfig(context.Background(), &pb.UpsertOndemandRunnerConfigRequest{
+		Config: odr,
 	})
 
 	log.Info("test odr", "id", odr.Id)
@@ -636,7 +636,7 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 	// Update the project to include ondemand runner
 	proj := serverptypes.TestProject(t, &pb.Project{
 		Name: "proj",
-		// Note, not setting OndemandRunner here. This is the difference between
+		// Note, not setting OndemandRunnerConfig here. This is the difference between
 		// this test and the previous one.
 	})
 

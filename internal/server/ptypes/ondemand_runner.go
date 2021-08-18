@@ -15,13 +15,13 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// TestOndemandRunner returns a valid project for tests.
-func TestOndemandRunner(t testing.T, src *pb.OndemandRunnerConfig) *pb.OndemandRunnerConfig {
+// TestOndemandRunnerConfig returns a valid project for tests.
+func TestOndemandRunnerConfig(t testing.T, src *pb.OndemandRunnerConfig) *pb.OndemandRunnerConfig {
 	t.Helper()
 
 	if src == nil {
 		src = &pb.OndemandRunnerConfig{
-			Id: "od_test",
+			PluginType: "docker",
 		}
 	}
 

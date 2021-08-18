@@ -1,6 +1,7 @@
 package state
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,7 +12,7 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
-func TestOndemandRunner(t *testing.T) {
+func TestOndemandRunnerConfig(t *testing.T) {
 	t.Run("Get returns not found error if not exist", func(t *testing.T) {
 		require := require.New(t)
 
@@ -19,7 +20,7 @@ func TestOndemandRunner(t *testing.T) {
 		defer s.Close()
 
 		// Set
-		_, err := s.OndemandRunnerGet(&pb.Ref_OndemandRunner{
+		_, err := s.OndemandRunnerConfigGet(&pb.Ref_OndemandRunnerConfig{
 			Id: "foo",
 		})
 		require.Error(err)
@@ -33,16 +34,17 @@ func TestOndemandRunner(t *testing.T) {
 		defer s.Close()
 
 		// Set
-		err := s.OndemandRunnerPut(serverptypes.TestOndemandRunner(t, &pb.OndemandRunner{
-			Id:     "foo",
+		rec := serverptypes.TestOndemandRunnerConfig(t, &pb.OndemandRunnerConfig{
 			OciUrl: "h/w:s",
-		}))
+		})
+
+		err := s.OndemandRunnerConfigPut(rec)
 		require.NoError(err)
 
 		// Get exact
 		{
-			resp, err := s.OndemandRunnerGet(&pb.Ref_OndemandRunner{
-				Id: "foo",
+			resp, err := s.OndemandRunnerConfigGet(&pb.Ref_OndemandRunnerConfig{
+				Id: rec.Id,
 			})
 			require.NoError(err)
 			require.NotNil(resp)
@@ -50,8 +52,8 @@ func TestOndemandRunner(t *testing.T) {
 
 		// Get case insensitive
 		{
-			resp, err := s.OndemandRunnerGet(&pb.Ref_OndemandRunner{
-				Id: "Foo",
+			resp, err := s.OndemandRunnerConfigGet(&pb.Ref_OndemandRunnerConfig{
+				Id: strings.ToUpper(rec.Id),
 			})
 			require.NoError(err)
 			require.NotNil(resp)
@@ -59,7 +61,7 @@ func TestOndemandRunner(t *testing.T) {
 
 		// List
 		{
-			resp, err := s.OndemandRunnerList()
+			resp, err := s.OndemandRunnerConfigList()
 			require.NoError(err)
 			require.Len(resp, 1)
 		}
@@ -72,30 +74,30 @@ func TestOndemandRunner(t *testing.T) {
 		defer s.Close()
 
 		// Set
-		err := s.OndemandRunnerPut(serverptypes.TestOndemandRunner(t, &pb.OndemandRunner{
-			Id: "AbCdE",
-		}))
+		rec := serverptypes.TestOndemandRunnerConfig(t, &pb.OndemandRunnerConfig{})
+
+		err := s.OndemandRunnerConfigPut(rec)
 		require.NoError(err)
 
 		// Read
-		resp, err := s.OndemandRunnerGet(&pb.Ref_OndemandRunner{
-			Id: "AbCdE",
+		resp, err := s.OndemandRunnerConfigGet(&pb.Ref_OndemandRunnerConfig{
+			Id: rec.Id,
 		})
 		require.NoError(err)
 		require.NotNil(resp)
 
 		// Delete
 		{
-			err := s.OndemandRunnerDelete(&pb.Ref_OndemandRunner{
-				Id: "AbCdE",
+			err := s.OndemandRunnerConfigDelete(&pb.Ref_OndemandRunnerConfig{
+				Id: rec.Id,
 			})
 			require.NoError(err)
 		}
 
 		// Read
 		{
-			_, err := s.OndemandRunnerGet(&pb.Ref_OndemandRunner{
-				Id: "AbCdE",
+			_, err := s.OndemandRunnerConfigGet(&pb.Ref_OndemandRunnerConfig{
+				Id: rec.Id,
 			})
 			require.Error(err)
 			require.Equal(codes.NotFound, status.Code(err))
@@ -103,7 +105,7 @@ func TestOndemandRunner(t *testing.T) {
 
 		// List
 		{
-			resp, err := s.OndemandRunnerList()
+			resp, err := s.OndemandRunnerConfigList()
 			require.NoError(err)
 			require.Len(resp, 0)
 		}

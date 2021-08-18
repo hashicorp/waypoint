@@ -27,16 +27,22 @@ func (s *State) OndemandRunnerConfigPut(o *pb.OndemandRunnerConfig) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
-	if o.Id == "" {
-		id, err := ulid()
-		if err != nil {
-			return err
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		if o.Id != "" {
+			var err error
+			_, err = s.ondemandRunnerGet(dbTxn, memTxn, &pb.Ref_OndemandRunnerConfig{Id: o.Id})
+			if err != nil {
+				return err
+			}
+		} else {
+			id, err := ulid()
+			if err != nil {
+				return err
+			}
+
+			o.Id = id
 		}
 
-		o.Id = id
-	}
-
-	err := s.db.Update(func(dbTxn *bolt.Tx) error {
 		return s.ondemandRunnerPut(dbTxn, memTxn, o)
 	})
 	if err == nil {
