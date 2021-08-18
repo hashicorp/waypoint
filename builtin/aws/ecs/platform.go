@@ -1340,7 +1340,7 @@ func destroyALB(
 			if err != nil {
 				return err
 			}
-		} else if len(def) > 1 && def[0].ForwardConfig != nil {
+		} else if len(def) > 0 && def[0].ForwardConfig != nil && len(def[0].ForwardConfig.TargetGroups) > 1 {
 			// Multiple target groups means we can keep the listener
 			var active bool
 
