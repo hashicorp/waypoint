@@ -1,0 +1,45 @@
+---
+layout: commands
+page_title: 'Commands: Runner on-demand set'
+sidebar_title: 'runner on-demand set'
+description: 'Create or update an ondemand runner configuration.'
+---
+
+# Waypoint Runner on-demand set
+
+Command: `waypoint runner on-demand set`
+
+Create or update an ondemand runner configuration.
+
+@include "commands/runner-on-demand-set_desc.mdx"
+
+## Usage
+
+Usage: `waypoint runner on-demand set [OPTIONS]`
+
+Create or update an ondemand runner configuration.
+
+This will register a new ondemand runner config with the given options. If
+a ondemand runner config with the same id already exists, this will update the
+existing runner config using the fields that are set.
+
+Waypoint will use an ondemand runner configuration to spawn containers for
+various kinds of work as needed on the platform requested during any given
+lifecycle operation.
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-id=<string>` - The id of an existing ondemand runner to update.
+- `-oci-url=<string>` - The url for the OCI image to launch for the ondemand runner.
+- `-env-vars=<string>` - Environment variable to expose to the ondemand runner. Typically used to introduce configuration for the plugins that the runner will execute.
+- `-plugin-type=<string>` - The type of the plugin to launch for the ondemand runner, such as aws-ecs, kubernetes, etc.
+- `-project-config=<string>` - Path to an hcl file that contains the configuration for the plugin. This is only necessary when the plugin's defaults need to be adjusted for the environment the plugin will launch the ondemand runner in.
+- `-default` - Indicates that this ondemand runner should be used by any project that doesn't otherwise specify its own ondemand runner.
+
+@include "commands/runner-on-demand-set_more.mdx"

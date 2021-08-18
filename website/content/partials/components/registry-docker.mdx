@@ -55,6 +55,15 @@ WARNING: be very careful to not leak the authentication information by hardcodin
 - Type: **string**
 - **Optional**
 
+#### insecure
+
+Access the registry via http rather than https.
+
+This indicates that the registry should be accessed via http rather than https. Not recommended for production usage.
+
+- Type: **bool**
+- **Optional**
+
 #### local
 
 If set, the image will only be tagged locally and not pushed to a remote repository.
