@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
-	"github.com/hashicorp/waypoint/internal/serverclient"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 // TODO: test
@@ -166,11 +166,12 @@ func (s *service) queueJobReqToJob(
 		}
 	}
 
-	_, anyTarget := job.TargetRunner.Target.(*pb.Ref_Runner_Any)
-
 	var od *pb.Ref_OndemandRunnerConfig
 
-	if anyTarget {
+	// If the job can be run any any runner, then we attempt to see if we should spawn
+	// on on-demand runner for it. We only consider jobs for any runner because ones
+	// that are targeted can not target on-demand runners, because they don't yet exist.
+	if _, anyTarget := job.TargetRunner.Target.(*pb.Ref_Runner_Any); anyTarget {
 		od = project.OndemandRunner
 		if od == nil {
 			ods, err := s.state.OndemandRunnerConfigDefault()
@@ -283,19 +284,16 @@ func (s *service) launchOndemandRunner(
 		return "", err
 	}
 
-	envVars := map[string]string{
-		"WAYPOINT_RUNNER_ID":        runnerId,
-		serverclient.EnvServerAddr:  addr.Addr,
-		serverclient.EnvServerToken: token,
+	scfg := serverconfig.Client{
+		Address:       addr.Addr,
+		Tls:           addr.Tls,
+		TlsSkipVerify: addr.TlsSkipVerify,
+		RequireAuth:   true,
+		AuthToken:     token,
 	}
 
-	if addr.Tls {
-		envVars[serverclient.EnvServerTls] = "1"
-	}
-
-	if addr.TlsSkipVerify {
-		envVars[serverclient.EnvServerTlsSkipVerify] = "1"
-	}
+	envVars := scfg.EnvMap()
+	envVars["WAYPOINT_RUNNER_ID"] = runnerId
 
 	for k, v := range od.EnvironmentVariables {
 		envVars[k] = v
@@ -329,8 +327,8 @@ func (s *service) launchOndemandRunner(
 	}
 	job.Id = id
 
-	// Validate expiry if we have one
-	job.ExpireTime = nil
+	// We're going to wait up to 60s for the job be picked up. No reason it won't be
+	// picked up immediately.
 	dur, err := time.ParseDuration("60s")
 	if err != nil {
 		return "", status.Errorf(codes.FailedPrecondition,
