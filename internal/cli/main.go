@@ -572,6 +572,13 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
+		"runner on-demand inspect": func() (cli.Command, error) {
+			return &OnDemandRunnerInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"runner list": func() (cli.Command, error) {
 			return &OnDemandRunnerConfigListCommand{
 				baseCommand: baseCommand,
