@@ -136,6 +136,8 @@ func (b *Builder) BuildODR(
 			auth = ociregistry.BasicAuth(user, pass)
 		case *docker.AccessInfo_Header:
 			auth = sv.Header
+		case *docker.AccessInfo_UserPass_:
+			auth = ociregistry.BasicAuth(sv.UserPass.Username, sv.UserPass.Password)
 		}
 	}
 

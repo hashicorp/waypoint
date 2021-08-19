@@ -53,6 +53,8 @@ func (b *Builder) buildWithKaniko(
 			auth = ociregistry.BasicAuth(user, pass)
 		case *AccessInfo_Header:
 			auth = sv.Header
+		case *AccessInfo_UserPass_:
+			auth = ociregistry.BasicAuth(sv.UserPass.Username, sv.UserPass.Password)
 		}
 	}
 

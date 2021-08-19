@@ -80,8 +80,21 @@ message AccessInfo {
     // encoded is the docker standard encoded authentication data. This is base64 encoded
     // json that contains username and passwword fields that are used for authentication.
     string encoded = 4;
+
+    // user_pass specifies a username and password to use to authenticate with the registry.
+    // The registry plugin will transform this information to the proper format as needed.
+    UserPass user_pass = 6;
+
   }
 
   // insecure indicates if the repository defined by image should be access via http or https.
   bool insecure = 5;
+
+  message UserPass {
+    // The username to authenticate against the registry with
+    string username = 1;
+
+    // The password assocated with the above username
+    string password = 2;
+  }
 }

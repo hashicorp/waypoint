@@ -37,6 +37,13 @@ func (r *Registry) AccessInfo() (*AccessInfo, error) {
 		ai.Auth = &AccessInfo_Encoded{
 			Encoded: r.config.EncodedAuth,
 		}
+	} else if r.config.Password != "" {
+		ai.Auth = &AccessInfo_UserPass_{
+			UserPass: &AccessInfo_UserPass{
+				Username: r.config.Username,
+				Password: r.config.Password,
+			},
+		}
 	}
 
 	return ai, nil
@@ -124,6 +131,12 @@ type Config struct {
 
 	// Insecure indicates if the registry should be accessed via http rather than https
 	Insecure bool `hcl:"insecure,optional"`
+
+	// Username is the username to use for authentication on the registry.
+	Username string `hcl:"username,optional"`
+
+	// Password is the authentication information assocated with username.
+	Password string `hcl:"password,optional"`
 }
 
 func (r *Registry) Documentation() (*docs.Documentation, error) {
@@ -191,6 +204,24 @@ build {
 		docs.Summary(
 			"This indicates that the registry should be accessed via http rather than https.",
 			"Not recommended for production usage.",
+		),
+	)
+
+	doc.SetField(
+		"username",
+		"username to authenticate with the registry",
+		docs.Summary(
+			"This optional conflicts with encoded_auth and thusly only one can be used at a time.",
+			"If both are used, encoded_auth takes precedence.",
+		),
+	)
+
+	doc.SetField(
+		"password",
+		"password associated with username on the registry",
+		docs.Summary(
+			"This optional conflicts with encoded_auth and thusly only one can be used at a time.",
+			"If both are used, encoded_auth takes precedence.",
 		),
 	)
 
