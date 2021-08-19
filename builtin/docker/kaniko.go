@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/assets"
 	"github.com/hashicorp/waypoint/internal/ociregistry"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -78,6 +79,11 @@ func (b *Builder) buildWithKaniko(
 	}
 
 	refPath := reference.Path(ref)
+
+	err = os.Negotiate()
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to negoate with upstream")
+	}
 
 	if !b.config.DisableCEB {
 		data, err := assets.Asset("ceb/ceb")

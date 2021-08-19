@@ -2,6 +2,7 @@ package ociregistry
 
 import (
 	"archive/tar"
+	"bufio"
 	"bytes"
 	"compress/gzip"
 	"crypto/rand"
@@ -24,6 +25,7 @@ import (
 	"github.com/oklog/ulid/v2"
 	"github.com/opencontainers/go-digest"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/pkg/errors"
 )
 
 type session struct {
@@ -152,6 +154,147 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	)
 
 	s.router.ServeHTTP(w, req)
+}
+
+func parseWWWAuthenticateHeader(hdr string) (string, string, []string, error) {
+	parts := strings.SplitN(hdr, " ", 2)
+	if len(parts) < 2 {
+		return "", "", nil, errors.Errorf("Invalidate WWW-Authenticate header: %s", hdr)
+	}
+
+	var (
+		realm string
+		qs    []string
+	)
+
+	ss := bufio.NewReader(strings.NewReader(parts[1]))
+
+	for {
+		buf, err := ss.Peek(1)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return "", "", nil, err
+		}
+
+		if buf[0] == ',' {
+			ss.Discard(1)
+		}
+
+		key, err := ss.ReadString('=')
+		if err != nil {
+			return "", "", nil, err
+		}
+
+		b, err := ss.ReadByte()
+		if err != nil {
+			return "", "", nil, err
+		}
+
+		if b != '"' {
+			return "", "", nil, errors.Errorf("bad WWW-Authenticate header: %s", hdr)
+		}
+
+		val, err := ss.ReadString('"')
+		if err != nil {
+			return "", "", nil, err
+		}
+
+		key = strings.TrimRight(key, "=")
+		val = strings.Trim(val, "\"=")
+
+		switch key {
+		case "realm":
+			realm = val
+
+		default:
+			qs = append(qs, key+"="+val)
+		}
+	}
+
+	return parts[0], realm, qs, nil
+}
+
+func (s *Server) procureToken(hdr string) error {
+	authType, realm, qs, err := parseWWWAuthenticateHeader(hdr)
+	if err != nil {
+		return err
+	}
+
+	url := realm
+	if len(qs) > 0 {
+		url += "?" + strings.Join(qs, "&")
+	}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Authorization", s.Auth)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return errors.Errorf("Unable to authenticate to registry '%s': %s", realm, resp.Status)
+	}
+
+	// Considered checking the Content-Type here but actually not going to so we're memory
+	// permissive about the data that we see, in case there is a janky registry out there.
+
+	var tokenBody struct {
+		Token string `json:"token"`
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(&tokenBody)
+	if err != nil {
+		return errors.Wrapf(err, "error decoding www-authenticate header")
+	}
+
+	s.Auth = fmt.Sprintf("%s %s", authType, tokenBody.Token)
+
+	return nil
+}
+
+func (s *Server) Negotiate() error {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v2/", s.Upstream), nil)
+	if err != nil {
+		return err
+	}
+
+	if s.Auth != "" {
+		req.Header.Add("Authorization", s.Auth)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return errors.Wrapf(err, "attempting to contact registry: %s", s.Upstream)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+		return nil
+	}
+
+	if resp.StatusCode == 401 {
+		// See if we have a WWW-Authenticate header and do the token dance
+		authLoc := resp.Header.Get("WWW-Authenticate")
+		if authLoc == "" {
+			return errors.Errorf("Unable to authenticate to registry: %s", s.Upstream)
+		}
+
+		return s.procureToken(authLoc)
+	}
+
+	return errors.Errorf("Unexpected status: %s", resp.Status)
 }
 
 // SetupEntrypointLayer should be called before the server is in use. This

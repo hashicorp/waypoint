@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -158,6 +159,11 @@ func (b *Builder) BuildODR(
 		ocis.Upstream = "http://" + host
 	} else {
 		ocis.Upstream = "https://" + host
+	}
+
+	err = ocis.Negotiate()
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to negoate with upstream")
 	}
 
 	refPath := reference.Path(ref)
