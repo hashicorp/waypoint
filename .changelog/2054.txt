@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/aws/ecs: fix destroy non-latest deployments in ECS
+```
