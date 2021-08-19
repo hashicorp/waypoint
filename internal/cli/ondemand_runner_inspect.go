@@ -77,7 +77,7 @@ func (c *OnDemandRunnerInspectCommand) Run(args []string) int {
 	}, terminal.WithInfoStyle())
 
 	if len(config.PluginConfig) > 0 {
-		c.ui.Output("Advanced Plugin Configuration:", terminal.WithHeaderStyle())
+		c.ui.Output("Additional Plugin Configuration:", terminal.WithHeaderStyle())
 
 		// We have to do the %s here in case the plugin config contains
 		// formatting chars we don't want to error.
