@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/jsonpb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -14,6 +14,8 @@ import (
 
 type OnDemandRunnerInspectCommand struct {
 	*baseCommand
+
+	flagJson bool
 }
 
 func (c *OnDemandRunnerInspectCommand) Run(args []string) int {
@@ -40,12 +42,62 @@ func (c *OnDemandRunnerInspectCommand) Run(args []string) int {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
-	fmt.Println(proto.MarshalTextString(resp.Config))
+
+	if c.flagJson {
+		var m jsonpb.Marshaler
+		m.Indent = "\t"
+		str, err := m.MarshalToString(resp.Config)
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+
+		fmt.Println(str)
+		return 0
+	}
+
+	config := resp.Config
+	c.ui.Output("On-Demand Runner Configuration:", terminal.WithHeaderStyle())
+	c.ui.NamedValues([]terminal.NamedValue{
+		{
+			Name: "ID", Value: config.Id,
+		},
+		{
+			Name: "Default", Value: config.Default,
+		},
+		{
+			Name: "OCI URL", Value: config.OciUrl,
+		},
+		{
+			Name: "Plugin Type", Value: config.PluginType,
+		},
+		{
+			Name: "Environment Variables", Value: config.EnvironmentVariables,
+		},
+	}, terminal.WithInfoStyle())
+
+	if len(config.PluginConfig) > 0 {
+		c.ui.Output("Advanced Plugin Configuration:", terminal.WithHeaderStyle())
+
+		// We have to do the %s here in case the plugin config contains
+		// formatting chars we don't want to error.
+		c.ui.Output("\n%s", string(config.PluginConfig))
+	}
+
 	return 0
 }
 
 func (c *OnDemandRunnerInspectCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(0, func(sets *flag.Sets) {
+		f := sets.NewSet("Command Options")
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "json",
+			Target: &c.flagJson,
+			Usage: "Output on-demand runner information as JSON. This includes " +
+				"more fields since this is the complete API structure.",
+		})
+	})
 }
 
 func (c *OnDemandRunnerInspectCommand) AutocompleteArgs() complete.Predictor {
