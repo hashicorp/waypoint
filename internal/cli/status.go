@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/waypoint/internal/version"
-
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -18,8 +16,10 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/clijob"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/version"
 )
 
 type StatusCommand struct {
@@ -500,7 +500,7 @@ func (c *StatusCommand) refreshAppStatusRemote(
 		deploySeq = deployment.Sequence
 	}
 
-	_, err = client.ExpediteStatusReport(c.Ctx, &pb.ExpediteStatusReportRequest{
+	statusResp, err := client.ExpediteStatusReport(c.Ctx, &pb.ExpediteStatusReportRequest{
 		Workspace: &pb.Ref_Workspace{
 			Workspace: workspace,
 		},
@@ -526,12 +526,11 @@ func (c *StatusCommand) refreshAppStatusRemote(
 		}
 		return err
 	}
-	//jobID := statusResp.JobId
+	jobID := statusResp.JobId
 
-	// TODO: get the job stream
-	//if err = clijob.WatchJobStream(jobID); err != nil {
-	//	return err
-	//}
+	if err = clijob.WatchJobStream(c.Ctx, c.Log, client, c.ui, jobID); err != nil {
+		return err
+	}
 
 	// Release
 	releaseResp, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
@@ -569,7 +568,7 @@ func (c *StatusCommand) refreshAppStatusRemote(
 			releaseSeq = release.Sequence
 		}
 
-		_, err = client.ExpediteStatusReport(c.Ctx, &pb.ExpediteStatusReportRequest{
+		statusResp, err = client.ExpediteStatusReport(c.Ctx, &pb.ExpediteStatusReportRequest{
 			Workspace: &pb.Ref_Workspace{
 				Workspace: workspace,
 			},
@@ -595,12 +594,11 @@ func (c *StatusCommand) refreshAppStatusRemote(
 			}
 			return err
 		}
-		//jobID := resp.JobId
+		jobID := statusResp.JobId
 
-		// TODO: get the job stream
-		//if err = clijob.WatchJobStream(jobID); err != nil {
-		//	return err
-		//}
+		if err = clijob.WatchJobStream(c.Ctx, c.Log, client, c.ui, jobID); err != nil {
+			return err
+		}
 	}
 
 	return nil
