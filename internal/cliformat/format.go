@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
+// FormatTableJson takes a waypoint-plugin-sdk.terminal Table and remaps it
+// into a json output.
 func FormatTableJson(t *terminal.Table) (string, error) {
 	tableData := formatJsonMap(t)
 
@@ -19,7 +21,9 @@ func FormatTableJson(t *terminal.Table) (string, error) {
 }
 
 // Takes a terminal Table and formats it into a map of key values to be used
-// for formatting a JSON output response
+// for formatting a JSON output response. It assumes any newline or comma separated
+// values in the value entry are multiple items that should be formatted
+// as a json array.
 func formatJsonMap(t *terminal.Table) []map[string]interface{} {
 	result := []map[string]interface{}{}
 	for _, row := range t.Rows {
