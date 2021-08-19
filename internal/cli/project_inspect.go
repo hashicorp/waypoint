@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"strconv"
 	"strings"
 
@@ -9,6 +8,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/cliformat"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -150,10 +150,11 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 			},
 		)
 
-		err = c.outputProjectJson(projectTbl)
+		data, err := cliformat.FormatTableJson(projectTbl)
 		if err != nil {
 			return err
 		}
+		c.ui.Output(data)
 	} else {
 		// Show project info in a flat list where each project option is its
 		// own row
@@ -204,46 +205,6 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 
 	}
 	return nil
-}
-
-func (c *ProjectInspectCommand) outputProjectJson(t *terminal.Table) error {
-	project := c.formatJsonMap(t)
-
-	data, err := json.MarshalIndent(project, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	c.ui.Output(string(data))
-
-	return nil
-}
-
-// Takes a terminal Table and formats it into a map of key values to be used
-// for formatting a JSON output response
-func (c *ProjectInspectCommand) formatJsonMap(t *terminal.Table) []map[string]interface{} {
-	result := []map[string]interface{}{}
-	for _, row := range t.Rows {
-		c := map[string]interface{}{}
-
-		for j, r := range row {
-			// Remove any whitespacess in key
-			header := strings.ReplaceAll(t.Headers[j], " ", "")
-			// Lower case header key
-			header = strings.ToLower(header)
-			if header == "applications" || header == "workspaces" {
-				// We join apps and ws on '\n' to format the original table, so
-				// undo that here and turn them back into a list for json
-				vals := strings.Split(r.Value, ", ")
-				c[header] = vals
-			} else {
-				c[header] = r.Value
-			}
-		}
-		result = append(result, c)
-	}
-
-	return result
 }
 
 func (c *ProjectInspectCommand) Flags() *flag.Sets {
