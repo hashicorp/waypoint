@@ -101,6 +101,7 @@ func (s *service) queueJobReqToJob(
 	ctx context.Context,
 	req *pb.QueueJobRequest,
 ) (*pb.Job, error) {
+	log := hclog.FromContext(ctx)
 	job := req.Job
 
 	// Validation
@@ -117,11 +118,8 @@ func (s *service) queueJobReqToJob(
 		return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 	}
 
-	log := hclog.FromContext(ctx)
-
-	log.Debug("checking job project", "project", job.Application.Project)
-
 	// Verify the project exists and use that to set the default data source
+	log.Debug("checking job project", "project", job.Application.Project)
 	project, err := s.state.ProjectGet(&pb.Ref_Project{Project: job.Application.Project})
 	if status.Code(err) == codes.NotFound {
 		return nil, status.Errorf(codes.NotFound,
@@ -166,11 +164,10 @@ func (s *service) queueJobReqToJob(
 		}
 	}
 
-	var od *pb.Ref_OnDemandRunnerConfig
-
 	// If the job can be run any any runner, then we attempt to see if we should spawn
 	// on on-demand runner for it. We only consider jobs for any runner because ones
 	// that are targeted can not target on-demand runners, because they don't yet exist.
+	var od *pb.Ref_OnDemandRunnerConfig
 	if _, anyTarget := job.TargetRunner.Target.(*pb.Ref_Runner_Any); anyTarget {
 		od = project.OndemandRunner
 		if od == nil {
@@ -185,8 +182,9 @@ func (s *service) queueJobReqToJob(
 			case 1:
 				od = ods[0]
 			default:
-				log.Debug("multiple default ondemand runners detected, choosing a random one")
 				od = ods[rand.Intn(len(ods))]
+				log.Debug("multiple default ondemand runners detected, chose a random one",
+					"runner-config-id", od.Id)
 			}
 		}
 	}
@@ -351,7 +349,7 @@ func (s *service) launchOnDemandRunner(
 		return "", err
 	}
 
-	log.Debug("queue'd task to start ondemand runner", "job-id", job.Id, "runner-id", runnerId)
+	log.Debug("queue'd task to start on-demand runner", "job-id", job.Id, "runner-id", runnerId)
 
 	return runnerId, nil
 }
