@@ -41,13 +41,18 @@ and the rest should be taken care of.
 ./setup-k8s.sh
 ```
 
+##### Env Var options
+
+- `WP_K8S_INGRESS` - setting this var will include ingress configuration for the
+setup k8s cluster.
+
 After this script runs, you should be ready to run a `waypoint install` for
 the kubernetes platform!
 
 #### Manual
 
 1) docker run -d --restart=always -p "127.0.0.1:5000:5000" --name "kind-registry"
-2) kind create cluster --config configs/cluster-config.yaml
+2) kind create cluster --config configs/cluster-config.yaml (or optionally with ingress `--config configs/cluster-ingress-config.yaml`)
 3) docker network connect "kind" "kind-registry"
 4) kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
 5) kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
@@ -66,6 +71,9 @@ the kubernetes platform!
   * Update the range inside the `configs/metallb-config.yaml` file. If your
   container IP Address was `172.18.0.4` for example, you might set the range to `172.18.0.20-172.18.0.50`.
 8) kubectl apply -f configs/metallb-config.yaml
+9) If ingress support is desired:
+	* kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
+	* kubectl patch daemonsets -n projectcontour envoy -p '{"spec":{"template":{"spec":{"nodeSelector":{"ingress-ready":"true"},"tolerations":[{"key":"node-role.kubernetes.io/master","operator":"Equal","effect":"NoSchedule"}]}}}}'
 
 ### Setup waypoint
 
