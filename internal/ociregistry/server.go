@@ -217,10 +217,10 @@ func parseWWWAuthenticateHeader(hdr string) (string, string, []string, error) {
 	return parts[0], realm, qs, nil
 }
 
-func (s *Server) procureToken(hdr string) error {
+func (s *Server) procureToken(hdr string) (string, error) {
 	authType, realm, qs, err := parseWWWAuthenticateHeader(hdr)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	url := realm
@@ -230,20 +230,20 @@ func (s *Server) procureToken(hdr string) error {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	req.Header.Set("Authorization", s.Auth)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return errors.Errorf("Unable to authenticate to registry '%s': %s", realm, resp.Status)
+		return "", errors.Errorf("Unable to authenticate to registry '%s': %s", realm, resp.Status)
 	}
 
 	// Considered checking the Content-Type here but actually not going to so we're memory
@@ -255,12 +255,10 @@ func (s *Server) procureToken(hdr string) error {
 
 	err = json.NewDecoder(resp.Body).Decode(&tokenBody)
 	if err != nil {
-		return errors.Wrapf(err, "error decoding www-authenticate header")
+		return "", errors.Wrapf(err, "error decoding www-authenticate header")
 	}
 
-	s.Auth = fmt.Sprintf("%s %s", authType, tokenBody.Token)
-
-	return nil
+	return fmt.Sprintf("%s %s", authType, tokenBody.Token), nil
 }
 
 func (s *Server) Negotiate() error {
@@ -273,7 +271,7 @@ func (s *Server) Negotiate() error {
 		req.Header.Add("Authorization", s.Auth)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := s.execRequest(req)
 	if err != nil {
 		return errors.Wrapf(err, "attempting to contact registry: %s", s.Upstream)
 	}
@@ -282,16 +280,6 @@ func (s *Server) Negotiate() error {
 
 	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 		return nil
-	}
-
-	if resp.StatusCode == 401 {
-		// See if we have a WWW-Authenticate header and do the token dance
-		authLoc := resp.Header.Get("WWW-Authenticate")
-		if authLoc == "" {
-			return errors.Errorf("Unable to authenticate to registry: %s", s.Upstream)
-		}
-
-		return s.procureToken(authLoc)
 	}
 
 	return errors.Errorf("Unexpected status: %s", resp.Status)
@@ -420,6 +408,31 @@ func (s *Server) outRequest(method, url string, r io.Reader) (*http.Request, err
 	return out, nil
 }
 
+func (s *Server) execRequest(req *http.Request) (*http.Response, error) {
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 401 {
+		return resp, nil
+	}
+
+	authLoc := resp.Header.Get("WWW-Authenticate")
+	if authLoc == "" {
+		return resp, nil
+	}
+
+	token, err := s.procureToken(authLoc)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", token)
+
+	return http.DefaultClient.Do(req)
+}
+
 func (s *Server) proxy(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -449,7 +462,7 @@ func (s *Server) proxy(w http.ResponseWriter, r *http.Request) {
 		out.Header[k] = v
 	}
 
-	resp, err := http.DefaultClient.Do(out)
+	resp, err := s.execRequest(out)
 	if err != nil {
 		s.Logger.Error("do error", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -511,7 +524,7 @@ func (s *Server) retrieveBlob(dig digest.Digest, name string) ([]byte, error) {
 
 	s.Logger.Info("retrieving blob", "method", req.Method, "url", req.URL.String())
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := s.execRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -532,7 +545,7 @@ func (s *Server) probeBlob(name string, dig digest.Digest) (bool, error) {
 		return false, err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := s.execRequest(req)
 	if err != nil {
 		return false, err
 	}
@@ -550,7 +563,7 @@ func (s *Server) writeBlob(name string, data []byte) (digest.Digest, error) {
 		return "", err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := s.execRequest(req)
 	if err != nil {
 		return "", err
 	}
@@ -574,7 +587,7 @@ func (s *Server) writeBlob(name string, data []byte) (digest.Digest, error) {
 		return "", err
 	}
 
-	resp, err = http.DefaultClient.Do(r2)
+	resp, err = s.execRequest(r2)
 	if err != nil {
 		return "", err
 	}
@@ -794,7 +807,7 @@ func (s *Server) listRepositories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := http.DefaultClient.Do(out)
+	resp, err := s.execRequest(out)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -956,7 +969,7 @@ func (s *Server) patchBlobUpload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		resp, err := http.DefaultClient.Do(req)
+		resp, err := s.execRequest(req)
 		if err != nil {
 			s.Logger.Error("error creating upstream location", "error", err)
 			http.Error(w, "error creating upstream request", http.StatusInternalServerError)
@@ -997,7 +1010,7 @@ func (s *Server) patchBlobUpload(w http.ResponseWriter, r *http.Request) {
 		out.Header[k] = v
 	}
 
-	resp, err := http.DefaultClient.Do(out)
+	resp, err := s.execRequest(out)
 	if err != nil {
 		s.Logger.Error("do error", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1099,7 +1112,7 @@ func (s *Server) updateBlobUpload(w http.ResponseWriter, r *http.Request) {
 			out.Header[k] = v
 		}
 
-		resp, err := http.DefaultClient.Do(out)
+		resp, err := s.execRequest(out)
 		if err != nil {
 			s.Logger.Error("do error", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
