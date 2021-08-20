@@ -27,8 +27,8 @@ import (
 	"github.com/hashicorp/waypoint/builtin/docker"
 	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
 	"github.com/hashicorp/waypoint/internal/assets"
-	"github.com/hashicorp/waypoint/internal/ociregistry"
 	"github.com/hashicorp/waypoint/internal/pkg/epinject"
+	"github.com/hashicorp/waypoint/internal/pkg/epinject/ociregistry"
 )
 
 const (
@@ -124,7 +124,7 @@ func (b *Builder) BuildODR(
 		Tag:   ai.Tag,
 	}
 
-	var auth string
+	var ocis ociregistry.Server
 
 	if ai.Auth != nil {
 		switch sv := ai.Auth.(type) {
@@ -133,11 +133,13 @@ func (b *Builder) BuildODR(
 			if err != nil {
 				return nil, err
 			}
-			auth = ociregistry.BasicAuth(user, pass)
+			ocis.AuthConfig.Username = user
+			ocis.AuthConfig.Password = pass
 		case *docker.AccessInfo_Header:
-			auth = sv.Header
+			ocis.AuthConfig.Auth = sv.Header
 		case *docker.AccessInfo_UserPass_:
-			auth = ociregistry.BasicAuth(sv.UserPass.Username, sv.UserPass.Password)
+			ocis.AuthConfig.Username = sv.UserPass.Username
+			ocis.AuthConfig.Password = sv.UserPass.Password
 		}
 	}
 
@@ -152,9 +154,7 @@ func (b *Builder) BuildODR(
 	host := reference.Domain(ref)
 	log.Trace("auth host", "host", host)
 
-	var ocis ociregistry.Server
 	ocis.DisableEntrypoint = b.config.DisableCEB
-	ocis.Auth = auth
 	ocis.Logger = log
 
 	if ai.Insecure {
@@ -163,7 +163,7 @@ func (b *Builder) BuildODR(
 		ocis.Upstream = "https://" + host
 	}
 
-	err = ocis.Negotiate()
+	err = ocis.Negotiate(target.Name())
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to negoate with upstream")
 	}

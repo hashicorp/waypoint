@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/assets"
-	"github.com/hashicorp/waypoint/internal/ociregistry"
+	"github.com/hashicorp/waypoint/internal/pkg/epinject/ociregistry"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -41,7 +41,9 @@ func (b *Builder) buildWithKaniko(
 		Location: &Image_Registry{Registry: &empty.Empty{}},
 	}
 
-	var auth string
+	var os ociregistry.Server
+	os.DisableEntrypoint = b.config.DisableCEB
+	os.Logger = log
 
 	if ai.Auth != nil {
 		switch sv := ai.Auth.(type) {
@@ -50,11 +52,13 @@ func (b *Builder) buildWithKaniko(
 			if err != nil {
 				return nil, err
 			}
-			auth = ociregistry.BasicAuth(user, pass)
+			os.AuthConfig.Username = user
+			os.AuthConfig.Password = pass
 		case *AccessInfo_Header:
-			auth = sv.Header
+			os.AuthConfig.Auth = sv.Header
 		case *AccessInfo_UserPass_:
-			auth = ociregistry.BasicAuth(sv.UserPass.Username, sv.UserPass.Password)
+			os.AuthConfig.Username = sv.UserPass.Username
+			os.AuthConfig.Password = sv.UserPass.Password
 		}
 	}
 
@@ -69,11 +73,6 @@ func (b *Builder) buildWithKaniko(
 	host := reference.Domain(ref)
 	log.Trace("auth host", "host", host)
 
-	var os ociregistry.Server
-	os.DisableEntrypoint = b.config.DisableCEB
-	os.Auth = auth
-	os.Logger = log
-
 	if ai.Insecure {
 		os.Upstream = "http://" + host
 	} else {
@@ -82,7 +81,7 @@ func (b *Builder) buildWithKaniko(
 
 	refPath := reference.Path(ref)
 
-	err = os.Negotiate()
+	err = os.Negotiate(target.Name())
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to negoate with upstream")
 	}

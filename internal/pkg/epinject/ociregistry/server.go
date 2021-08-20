@@ -2,9 +2,9 @@ package ociregistry
 
 import (
 	"archive/tar"
-	"bufio"
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
@@ -20,6 +20,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-hclog"
 	"github.com/oklog/ulid/v2"
@@ -42,11 +45,14 @@ type Server struct {
 	// Logger is the hclog Logger to log with.
 	Logger hclog.Logger
 
-	// Auth will be the Authorization header on any requests sent to the upstream
-	Auth string
+	// AuthConfig is used to authenticate with the target repository
+	AuthConfig authn.AuthConfig
 
 	// Indicates that the entrypoint should not be pulled into the image.
 	DisableEntrypoint bool
+
+	// client is set by Negotiate to contain a client that will auth correctly.
+	client *http.Client
 
 	routerOnce sync.Once
 	router     *mux.Router
@@ -111,6 +117,11 @@ var (
 )
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if s.client == nil {
+		http.Error(w, "server misconfigured, no client", http.StatusInternalServerError)
+		return
+	}
+
 	s.routerOnce.Do(func() {
 		r := mux.NewRouter()
 		g := r.PathPrefix(routePrefix).Subrouter()
@@ -156,129 +167,53 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	s.router.ServeHTTP(w, req)
 }
 
-func parseWWWAuthenticateHeader(hdr string) (string, string, []string, error) {
-	parts := strings.SplitN(hdr, " ", 2)
-	if len(parts) < 2 {
-		return "", "", nil, errors.Errorf("Invalidate WWW-Authenticate header: %s", hdr)
+func (s *Server) getClient(ctx context.Context, repoStr string) (*http.Client, error) {
+	// So the big deal with using transport from go-containerregistry is that it handles basic
+	// auth as well as the bearer token protocol used when the server returns WWW-Authenticate.
+	// Plus it's well tested.
+
+	repo, err := name.NewRepository(repoStr)
+	if err != nil {
+		return nil, err
 	}
 
-	var (
-		realm string
-		qs    []string
-	)
+	auth := authn.FromConfig(s.AuthConfig)
 
-	ss := bufio.NewReader(strings.NewReader(parts[1]))
-
-	for {
-		buf, err := ss.Peek(1)
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-
-			return "", "", nil, err
-		}
-
-		if buf[0] == ',' {
-			ss.Discard(1)
-		}
-
-		key, err := ss.ReadString('=')
-		if err != nil {
-			return "", "", nil, err
-		}
-
-		b, err := ss.ReadByte()
-		if err != nil {
-			return "", "", nil, err
-		}
-
-		if b != '"' {
-			return "", "", nil, errors.Errorf("bad WWW-Authenticate header: %s", hdr)
-		}
-
-		val, err := ss.ReadString('"')
-		if err != nil {
-			return "", "", nil, err
-		}
-
-		key = strings.TrimRight(key, "=")
-		val = strings.Trim(val, "\"=")
-
-		switch key {
-		case "realm":
-			realm = val
-
-		default:
-			qs = append(qs, key+"="+val)
-		}
+	scopes := []string{repo.Scope(transport.PushScope), repo.Scope(transport.PullScope)}
+	t, err := transport.NewWithContext(ctx, repo.Registry, auth, http.DefaultTransport, scopes)
+	if err != nil {
+		return nil, err
 	}
 
-	return parts[0], realm, qs, nil
+	client := &http.Client{Transport: t}
+
+	return client, nil
 }
 
-func (s *Server) procureToken(hdr string) (string, error) {
-	authType, realm, qs, err := parseWWWAuthenticateHeader(hdr)
+func (s *Server) Negotiate(repo string) error {
+	client, err := s.getClient(context.Background(), repo)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	url := realm
-	if len(qs) > 0 {
-		url += "?" + strings.Join(qs, "&")
-	}
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return "", err
-	}
-
-	req.Header.Set("Authorization", s.Auth)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return "", errors.Errorf("Unable to authenticate to registry '%s': %s", realm, resp.Status)
-	}
-
-	// Considered checking the Content-Type here but actually not going to so we're memory
-	// permissive about the data that we see, in case there is a janky registry out there.
-
-	var tokenBody struct {
-		Token string `json:"token"`
-	}
-
-	err = json.NewDecoder(resp.Body).Decode(&tokenBody)
-	if err != nil {
-		return "", errors.Wrapf(err, "error decoding www-authenticate header")
-	}
-
-	return fmt.Sprintf("%s %s", authType, tokenBody.Token), nil
-}
-
-func (s *Server) Negotiate() error {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v2/", s.Upstream), nil)
 	if err != nil {
 		return err
 	}
 
-	if s.Auth != "" {
-		req.Header.Add("Authorization", s.Auth)
-	}
+	s.Logger.Debug("sending ping request to /v2/ to test authentication")
 
-	resp, err := s.execRequest(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return errors.Wrapf(err, "attempting to contact registry: %s", s.Upstream)
 	}
 
 	defer resp.Body.Close()
 
+	s.Logger.Debug("response from ping", "status", resp.Status)
+
 	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+		s.client = client
 		return nil
 	}
 
@@ -401,36 +336,7 @@ func (s *Server) outRequest(method, url string, r io.Reader) (*http.Request, err
 		return nil, err
 	}
 
-	if s.Auth != "" {
-		out.Header.Set("Authorization", s.Auth)
-	}
-
 	return out, nil
-}
-
-func (s *Server) execRequest(req *http.Request) (*http.Response, error) {
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != 401 {
-		return resp, nil
-	}
-
-	authLoc := resp.Header.Get("WWW-Authenticate")
-	if authLoc == "" {
-		return resp, nil
-	}
-
-	token, err := s.procureToken(authLoc)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Authorization", token)
-
-	return http.DefaultClient.Do(req)
 }
 
 func (s *Server) proxy(w http.ResponseWriter, r *http.Request) {
@@ -462,7 +368,7 @@ func (s *Server) proxy(w http.ResponseWriter, r *http.Request) {
 		out.Header[k] = v
 	}
 
-	resp, err := s.execRequest(out)
+	resp, err := s.client.Do(out)
 	if err != nil {
 		s.Logger.Error("do error", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -524,7 +430,7 @@ func (s *Server) retrieveBlob(dig digest.Digest, name string) ([]byte, error) {
 
 	s.Logger.Info("retrieving blob", "method", req.Method, "url", req.URL.String())
 
-	resp, err := s.execRequest(req)
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -545,7 +451,7 @@ func (s *Server) probeBlob(name string, dig digest.Digest) (bool, error) {
 		return false, err
 	}
 
-	resp, err := s.execRequest(req)
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return false, err
 	}
@@ -563,7 +469,7 @@ func (s *Server) writeBlob(name string, data []byte) (digest.Digest, error) {
 		return "", err
 	}
 
-	resp, err := s.execRequest(req)
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -587,7 +493,7 @@ func (s *Server) writeBlob(name string, data []byte) (digest.Digest, error) {
 		return "", err
 	}
 
-	resp, err = s.execRequest(r2)
+	resp, err = s.client.Do(r2)
 	if err != nil {
 		return "", err
 	}
@@ -807,7 +713,7 @@ func (s *Server) listRepositories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := s.execRequest(out)
+	resp, err := s.client.Do(out)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -969,7 +875,7 @@ func (s *Server) patchBlobUpload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		resp, err := s.execRequest(req)
+		resp, err := s.client.Do(req)
 		if err != nil {
 			s.Logger.Error("error creating upstream location", "error", err)
 			http.Error(w, "error creating upstream request", http.StatusInternalServerError)
@@ -1010,7 +916,7 @@ func (s *Server) patchBlobUpload(w http.ResponseWriter, r *http.Request) {
 		out.Header[k] = v
 	}
 
-	resp, err := s.execRequest(out)
+	resp, err := s.client.Do(out)
 	if err != nil {
 		s.Logger.Error("do error", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1112,7 +1018,7 @@ func (s *Server) updateBlobUpload(w http.ResponseWriter, r *http.Request) {
 			out.Header[k] = v
 		}
 
-		resp, err := s.execRequest(out)
+		resp, err := s.client.Do(out)
 		if err != nil {
 			s.Logger.Error("do error", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
