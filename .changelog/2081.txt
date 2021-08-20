@@ -1,0 +1,4 @@
+```release-note:improvement
+cli/status: Include a way to refresh project application statuses for deployments
+and releases with a '-refresh' flag before showing the status view
+```
