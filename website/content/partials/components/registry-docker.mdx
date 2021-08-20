@@ -71,6 +71,24 @@ If set, the image will only be tagged locally and not pushed to a remote reposit
 - Type: **bool**
 - **Optional**
 
+#### password
+
+Password associated with username on the registry.
+
+This optional conflicts with encoded_auth and thusly only one can be used at a time. If both are used, encoded_auth takes precedence.
+
+- Type: **string**
+- **Optional**
+
+#### username
+
+Username to authenticate with the registry.
+
+This optional conflicts with encoded_auth and thusly only one can be used at a time. If both are used, encoded_auth takes precedence.
+
+- Type: **string**
+- **Optional**
+
 ### Output Attributes
 
 Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
