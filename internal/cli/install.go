@@ -459,11 +459,13 @@ func installRunner(
 	}
 	s.Done()
 
+	// If this installation platform supports an out-of-the-box ODR
+	// config then we set that up. This enables on-demand runners to
+	// work immediately.
 	if odc, ok := p.(serverinstall.OnDemandRunnerConfigProvider); ok {
-		s = sg.Add("Registering ondemand runner...")
+		s = sg.Add("Registering on-demand runner configuration...")
 
 		odr := odc.OnDemandRunnerConfig()
-
 		if odr != nil {
 			_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 				Config: odr,

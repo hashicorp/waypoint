@@ -299,12 +299,16 @@ service Waypoint {
   //----------------------------------------------------------------------
   // OnDemand Runner Config functions.
   //----------------------------------------------------------------------
+
+  // UpsertOnDemandRunnerConfig updates or inserts a on-demand runner
+  // configuration. This configuration can be used by projects for running
+  // operations on just-in-time launched runners.
   rpc UpsertOnDemandRunnerConfig(UpsertOnDemandRunnerConfigRequest) returns (UpsertOnDemandRunnerConfigResponse);
 
-  // GetOnDemandRunner returns the ondemand runner.
+  // GetOnDemandRunnerConfig returns the on-demand runner configuration.
   rpc GetOnDemandRunnerConfig(GetOnDemandRunnerConfigRequest) returns (GetOnDemandRunnerConfigResponse);
 
-  // ListOnDemandRunners returns a list of all the ondemand runners.
+  // ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
   rpc ListOnDemandRunnerConfigs(google.protobuf.Empty) returns (ListOnDemandRunnerConfigsResponse);
 
 
