@@ -36,6 +36,7 @@ type K8sInstaller struct {
 
 type k8sConfig struct {
 	serverImage        string            `hcl:"server_image,optional"`
+	odrImage           string            `hcl:"odr_image,optional"`
 	namespace          string            `hcl:"namespace,optional"`
 	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
 
@@ -999,6 +1000,15 @@ func (i *K8sInstaller) HasRunner(
 	return len(list.Items) > 0, nil
 }
 
+// OnDemandRunnerConfig implements OnDemandRunnerConfigProvider
+func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	return &pb.OnDemandRunnerConfig{
+		OciUrl:     i.config.odrImage,
+		PluginType: "kubernetes",
+		Default:    true,
+	}
+}
+
 // newDeployment takes in a k8sConfig and creates a new Waypoint Deployment for
 // deploying Waypoint runners.
 func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, error) {
@@ -1351,6 +1361,13 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-odr-image",
+		Target:  &i.config.odrImage,
+		Usage:   "Docker image for the Waypoint On-Demand Runners",
+		Default: defaultODRImage,
 	})
 
 	set.StringVar(&flag.StringVar{
