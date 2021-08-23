@@ -23,7 +23,7 @@ fi
 echo "Setting up kubernetes with kind and metallb..."
 echo
 
-if [ "${setupIngress}" != '' ]; then
+if [ -n "${setupIngress}" ]; then
   echo "Creating kind cluster with ingress controller..."
   echo
 cat <<EOF | kind create cluster --config=-
