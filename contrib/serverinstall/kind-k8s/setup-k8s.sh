@@ -119,7 +119,7 @@ sed s/%ADDR_RANGE%/$IPADDR_RANGE/g \
 echo "Applying metallb-config-set.yaml with ip address range applied..."
 kubectl apply -f configs/metallb-config-set.yaml
 
-if [ "${setupIngress}" != '' ]; then
+if [ -n "${setupIngress}" ]; then
 	echo
 	echo "Setting up Contour ingress controller..."
 	echo
