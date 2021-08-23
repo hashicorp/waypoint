@@ -183,6 +183,18 @@
     "path": "runner-agent"
   },
   {
+    "title": "runner list",
+    "path": "runner-list"
+  },
+  {
+    "title": "runner on-demand inspect",
+    "path": "runner-on-demand-inspect"
+  },
+  {
+    "title": "runner on-demand set",
+    "path": "runner-on-demand-set"
+  },
+  {
     "title": "server bootstrap",
     "path": "server-bootstrap"
   },
