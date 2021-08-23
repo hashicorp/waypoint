@@ -291,6 +291,12 @@ func Commands(
 			}, nil
 		},
 
+		"release list": func() (cli.Command, error) {
+			return &ReleaseListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"server": func() (cli.Command, error) {
 			return &helpCommand{
 				SynopsisText: helpText["server"][0],
