@@ -1,9 +1,9 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -15,8 +15,8 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
+	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
-	"github.com/hashicorp/waypoint/internal/clijob"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/version"
@@ -40,7 +40,7 @@ func (c *StatusCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(flagSet),
-		WithConfig(true), // optional config loading
+		WithOptionalApp(), // optional config loading, no hard requirement on an app target
 	); err != nil {
 		return 1
 	}
@@ -169,119 +169,61 @@ func (c *StatusCommand) RefreshApplicationStatus(projectTarget, appTarget string
 	// Determine project locality
 	// Do the Work (local or remote)
 	if c.flagAllProjects {
-		resp, err := client.ListProjects(c.Ctx, &empty.Empty{})
-		if err != nil {
-			c.ui.Output("Failed to retrieve all projects: "+clierrors.Humanize(err), terminal.WithErrorStyle())
-			return err
+		// error message that this is not supported
+		return nil
+	}
+
+	projectResp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{
+		Project: &pb.Ref_Project{
+			Project: projectTarget,
+		},
+	})
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			var serverAddress string
+			if c.serverCtx != nil {
+				serverAddress = c.serverCtx.Server.Address
+			}
+
+			c.ui.Output(wpProjectNotFound, projectTarget, serverAddress, terminal.WithErrorStyle())
 		}
-		allProjectsRef := resp.Projects
+		return err
+	}
+	project := projectResp.Project
 
-		for _, pRef := range allProjectsRef {
-			projectResp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{
-				Project: pRef,
-			})
-			if err != nil {
-				return err
-			}
-			project := projectResp.Project
+	workspace, err := c.getWorkspaceFromProject(projectResp)
+	if err != nil {
+		return err
+	}
 
-			workspace, err := c.getWorkspaceFromProject(projectResp)
-			if err != nil {
-				return err
+	if appTarget != "" {
+		// Single app refresh
+		var app *pb.Application
+		for _, a := range project.Applications {
+			if a.Name == appTarget {
+				app = a
+				break
 			}
+		}
+		if app == nil {
+			return fmt.Errorf("Did not find application %q in project %q", appTarget, projectTarget)
+		}
 
-			// local or remote project?
-			var remote bool
-			if project.DataSource != nil {
-				switch project.DataSource.Source.(type) {
-				case *pb.Job_DataSource_Local:
-					remote = false
-				case *pb.Job_DataSource_Git:
-					remote = true
-				default:
-					remote = false
-				}
-			}
+		appList := []*pb.Application{app}
 
-			if !remote {
-				c.ui.Output("Cannot refresh every project's status without command being "+
-					"invoked inside project directory due to project being a local data source. "+
-					"Will attempt to refresh all project statuses anyway, but expect errors.",
-					terminal.WithWarningStyle())
-			}
-
-			if err = c.doRefresh(project, project.Applications, workspace, remote); err != nil {
-				c.ui.Output("Failed to refresh all statuses on project %q:"+clierrors.Humanize(err),
-					project.Name, terminal.WithErrorStyle())
-				return err
-			}
+		if err = c.doRefresh(project, appList, workspace); err != nil {
+			c.ui.Output("Failed to refresh app %q status in project %q: %s",
+				app.Name,
+				project.Name,
+				clierrors.Humanize(err), terminal.WithErrorStyle())
+			return err
 		}
 	} else {
-		projectResp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{
-			Project: &pb.Ref_Project{
-				Project: projectTarget,
-			},
-		})
-		if err != nil {
-			if status.Code(err) == codes.NotFound {
-				var serverAddress string
-				if c.serverCtx != nil {
-					serverAddress = c.serverCtx.Server.Address
-				}
-
-				c.ui.Output(wpProjectNotFound, projectTarget, serverAddress, terminal.WithErrorStyle())
-			}
+		if err = c.doRefresh(project, project.Applications, workspace); err != nil {
+			c.ui.Output("Failed to refresh app statuses in project %q: %s",
+				project.Name,
+				clierrors.Humanize(err), terminal.WithErrorStyle())
 			return err
-		}
-		project := projectResp.Project
-
-		// local or remote project?
-		var remote bool
-		if project.DataSource != nil {
-			switch project.DataSource.Source.(type) {
-			case *pb.Job_DataSource_Local:
-				remote = false
-			case *pb.Job_DataSource_Git:
-				remote = true
-			default:
-				remote = false
-			}
-		}
-
-		workspace, err := c.getWorkspaceFromProject(projectResp)
-		if err != nil {
-			return err
-		}
-
-		if appTarget != "" {
-			// Single app refresh
-			var app *pb.Application
-			for _, a := range project.Applications {
-				if a.Name == appTarget {
-					app = a
-					break
-				}
-			}
-			if app == nil {
-				return fmt.Errorf("Did not find application %q in project %q", appTarget, projectTarget)
-			}
-
-			appList := []*pb.Application{app}
-
-			if err = c.doRefresh(project, appList, workspace, remote); err != nil {
-				c.ui.Output("Failed to refresh app %q status in project %q: %s",
-					app.Name,
-					project.Name,
-					clierrors.Humanize(err), terminal.WithErrorStyle())
-				return err
-			}
-		} else {
-			if err = c.doRefresh(project, project.Applications, workspace, remote); err != nil {
-				c.ui.Output("Failed to refresh app statuses in project %q: %s",
-					project.Name,
-					clierrors.Humanize(err), terminal.WithErrorStyle())
-				return err
-			}
 		}
 	}
 
@@ -294,7 +236,6 @@ func (c *StatusCommand) doRefresh(
 	project *pb.Project,
 	appList []*pb.Application,
 	workspace string,
-	remote bool,
 ) error {
 	sg := c.ui.StepGroup()
 	defer sg.Wait()
@@ -305,36 +246,19 @@ func (c *StatusCommand) doRefresh(
 		s.Update("Refreshing status for app %q in project %q. Refreshing could take a while...",
 			app.Name, project.Name)
 
-		if remote {
-			err := c.refreshAppStatusRemote(project, app, workspace)
-			if err != nil {
-				s.Update("Failed to refresh app status remotely\n")
-				s.Status(terminal.StatusError)
-				s.Done()
+		err := c.refreshAppStatus(project, app, workspace)
+		if err != nil {
+			s.Update("Failed to refresh app status\n")
+			s.Status(terminal.StatusError)
+			s.Done()
 
-				c.ui.Output(
-					"Error attempting to refresh application %q: %s",
-					app.Name,
-					clierrors.Humanize(err),
-					terminal.WithErrorStyle(),
-				)
-				return err
-			}
-		} else {
-			err := c.refreshAppStatusLocal(project, app, workspace)
-			if err != nil {
-				s.Update("Failed to refresh app status locally\n")
-				s.Status(terminal.StatusError)
-				s.Done()
-
-				c.ui.Output(
-					"Error attempting to refresh application %q: %s",
-					app.Name,
-					clierrors.Humanize(err),
-					terminal.WithErrorStyle(),
-				)
-				return err
-			}
+			c.ui.Output(
+				"Error attempting to refresh application %q: %s",
+				app.Name,
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
 		}
 	}
 
@@ -345,245 +269,41 @@ func (c *StatusCommand) doRefresh(
 	return nil
 }
 
-// refreshAppStatusLocal takes a project and a single application and uses
+// refreshAppStatus takes a project and a single application and uses
 // the local runner to execute a StatusReport refresh function by getting
 // the latest Deployment or Release and using the application client to
 // refresh the apps Status Report.
-func (c *StatusCommand) refreshAppStatusLocal(
+func (c *StatusCommand) refreshAppStatus(
 	project *pb.Project,
 	app *pb.Application,
 	workspace string,
 ) error {
-	// Get our API client
-	client := c.project.Client()
-
-	// Get Latest Deployment and Release
-
-	// Deployments
-	deploymentsResp, err := client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
-		Application: &pb.Ref_Application{
+	if c.refApp == nil {
+		// We must setup app ref so DoApp has the context for which app to execute
+		// its operations on. WithOptionalApp does not setup this ref for us.
+		c.refApp = &pb.Ref_Application{
 			Application: app.Name,
 			Project:     project.Name,
-		},
-		Workspace: &pb.Ref_Workspace{
-			Workspace: workspace,
-		},
-		Order: &pb.OperationOrder{
-			Order: pb.OperationOrder_COMPLETE_TIME,
-			Limit: 1,
-		},
-	})
-	if err != nil {
-		if s, ok := status.FromError(err); ok {
-			if s.Code() == codes.Unimplemented {
-				return c.errAPIUnimplemented(err)
-			}
 		}
-		return err
 	}
+	err := c.DoApp(c.Ctx, func(ctx context.Context, appClient *clientpkg.App) error {
+		// Get our API client
+		client := c.project.Client()
 
-	var deployment *pb.Deployment
-	if deploymentsResp.Deployments != nil && len(deploymentsResp.Deployments) > 0 {
-		deployment = deploymentsResp.Deployments[0].Deployment
-	} else {
-		c.ui.Output("No deployments in project %q for app %q to refresh a status on!",
-			project.Name,
-			app.Name,
-			terminal.WithWarningStyle())
-		// We probably don't have a release either, so return early
-		return nil
-	}
+		// Get Latest Deployment and Release
 
-	// Get our app client
-	appClient := c.project.App(app.Name)
-
-	_, err = appClient.StatusReport(c.Ctx, &pb.Job_StatusReportOp{
-		Target: &pb.Job_StatusReportOp_Deployment{
-			Deployment: deployment,
-		},
-	})
-	if err != nil {
-		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return err
-	}
-
-	// Releases
-	releaseResp, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
-		Application: &pb.Ref_Application{
-			Application: app.Name,
-			Project:     project.Name,
-		},
-		Workspace: &pb.Ref_Workspace{
-			Workspace: workspace,
-		},
-		Order: &pb.OperationOrder{
-			Order: pb.OperationOrder_COMPLETE_TIME,
-			Limit: 1,
-		},
-	})
-	if err != nil {
-		if s, ok := status.FromError(err); ok {
-			if s.Code() == codes.Unimplemented {
-				return c.errAPIUnimplemented(err)
-			}
-		}
-		return err
-	}
-
-	var release *pb.Release
-	if releaseResp.Releases != nil && len(releaseResp.Releases) > 0 {
-		release = releaseResp.Releases[0].Release
-	}
-
-	if release != nil && !release.Unimplemented {
-		_, err = appClient.StatusReport(c.Ctx, &pb.Job_StatusReportOp{
-			Target: &pb.Job_StatusReportOp_Release{
-				Release: release,
+		// Deployments
+		deploymentsResp, err := client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
+			Application: &pb.Ref_Application{
+				Application: app.Name,
+				Project:     project.Name,
 			},
-		})
-		if err != nil {
-			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return err
-		}
-	}
-
-	return nil
-}
-
-// refreshAppStatusRemote takes a single project and application and uses a
-// remote runner through the Waypoint Server API to queue and start a
-// status report refresh job. It takes the queued job id and hooks into the
-// job stream to be displayed on the terinal while the status report refresh
-// happens.
-func (c *StatusCommand) refreshAppStatusRemote(
-	project *pb.Project,
-	app *pb.Application,
-	workspace string,
-) error {
-	// Get our API client
-	client := c.project.Client()
-
-	// Get Latest Deployment and Release
-
-	// Deployment
-	deploymentsResp, err := client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
-		Application: &pb.Ref_Application{
-			Application: app.Name,
-			Project:     project.Name,
-		},
-		Workspace: &pb.Ref_Workspace{
-			Workspace: workspace,
-		},
-		Order: &pb.OperationOrder{
-			Order: pb.OperationOrder_COMPLETE_TIME,
-			Limit: 1,
-		},
-	})
-	if err != nil {
-		if s, ok := status.FromError(err); ok {
-			if s.Code() == codes.Unimplemented {
-				return c.errAPIUnimplemented(err)
-			}
-		}
-		return err
-	}
-
-	var deployment *pb.Deployment
-	if deploymentsResp.Deployments != nil && len(deploymentsResp.Deployments) > 0 {
-		deployment = deploymentsResp.Deployments[0].Deployment
-	}
-
-	var deploySeq uint64
-	if v, err := strconv.ParseInt(deployment.Id, 10, 64); err == nil {
-		deploySeq = uint64(v)
-	} else {
-		deploySeq = deployment.Sequence
-	}
-
-	statusResp, err := client.ExpediteStatusReport(c.Ctx, &pb.ExpediteStatusReportRequest{
-		Workspace: &pb.Ref_Workspace{
-			Workspace: workspace,
-		},
-		Target: &pb.ExpediteStatusReportRequest_Deployment{
-			Deployment: &pb.Ref_Operation{
-				Target: &pb.Ref_Operation_Sequence{
-					Sequence: &pb.Ref_OperationSeq{
-						Application: &pb.Ref_Application{
-							Application: app.Name,
-							Project:     project.Name,
-						},
-						Number: deploySeq,
-					},
-				},
-			},
-		},
-	})
-	if err != nil {
-		if s, ok := status.FromError(err); ok {
-			if s.Code() == codes.Unimplemented {
-				return c.errAPIUnimplemented(err)
-			}
-		}
-		return err
-	}
-	jobID := statusResp.JobId
-
-	if err = clijob.WatchJobStream(c.Ctx, c.Log, client, c.ui, jobID); err != nil {
-		return err
-	}
-
-	// Release
-	releaseResp, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
-		Application: &pb.Ref_Application{
-			Application: app.Name,
-			Project:     project.Name,
-		},
-		Workspace: &pb.Ref_Workspace{
-			Workspace: workspace,
-		},
-		Order: &pb.OperationOrder{
-			Order: pb.OperationOrder_COMPLETE_TIME,
-			Limit: 1,
-		},
-	})
-	if err != nil {
-		if s, ok := status.FromError(err); ok {
-			if s.Code() == codes.Unimplemented {
-				return c.errAPIUnimplemented(err)
-			}
-		}
-		return err
-	}
-
-	var release *pb.Release
-	if releaseResp.Releases != nil && len(releaseResp.Releases) > 0 {
-		release = releaseResp.Releases[0].Release
-	}
-
-	if release != nil && !release.Unimplemented {
-		var releaseSeq uint64
-		if v, err := strconv.ParseInt(release.Id, 10, 64); err == nil {
-			releaseSeq = uint64(v)
-		} else {
-			releaseSeq = release.Sequence
-		}
-
-		statusResp, err = client.ExpediteStatusReport(c.Ctx, &pb.ExpediteStatusReportRequest{
 			Workspace: &pb.Ref_Workspace{
 				Workspace: workspace,
 			},
-			Target: &pb.ExpediteStatusReportRequest_Release{
-				Release: &pb.Ref_Operation{
-					Target: &pb.Ref_Operation_Sequence{
-						Sequence: &pb.Ref_OperationSeq{
-							Application: &pb.Ref_Application{
-								Application: app.Name,
-								Project:     project.Name,
-							},
-							Number: releaseSeq,
-						},
-					},
-				},
+			Order: &pb.OperationOrder{
+				Order: pb.OperationOrder_COMPLETE_TIME,
+				Limit: 1,
 			},
 		})
 		if err != nil {
@@ -594,11 +314,77 @@ func (c *StatusCommand) refreshAppStatusRemote(
 			}
 			return err
 		}
-		jobID := statusResp.JobId
 
-		if err = clijob.WatchJobStream(c.Ctx, c.Log, client, c.ui, jobID); err != nil {
+		var deployment *pb.Deployment
+		if deploymentsResp.Deployments != nil && len(deploymentsResp.Deployments) > 0 {
+			deployment = deploymentsResp.Deployments[0].Deployment
+		} else {
+			c.ui.Output("No deployments in project %q for app %q to refresh a status on!",
+				project.Name,
+				app.Name,
+				terminal.WithWarningStyle())
+			// We probably don't have a release either, so return early
+			return nil
+		}
+
+		_, err = appClient.StatusReport(c.Ctx, &pb.Job_StatusReportOp{
+			Target: &pb.Job_StatusReportOp_Deployment{
+				Deployment: deployment,
+			},
+		})
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return err
 		}
+
+		// Releases
+		releaseResp, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
+			Application: &pb.Ref_Application{
+				Application: app.Name,
+				Project:     project.Name,
+			},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: workspace,
+			},
+			Order: &pb.OperationOrder{
+				Order: pb.OperationOrder_COMPLETE_TIME,
+				Limit: 1,
+			},
+		})
+		if err != nil {
+			if s, ok := status.FromError(err); ok {
+				if s.Code() == codes.Unimplemented {
+					return c.errAPIUnimplemented(err)
+				}
+			}
+			return err
+		}
+
+		var release *pb.Release
+		if releaseResp.Releases != nil && len(releaseResp.Releases) > 0 {
+			release = releaseResp.Releases[0].Release
+		}
+
+		if release != nil && !release.Unimplemented {
+			_, err = appClient.StatusReport(c.Ctx, &pb.Job_StatusReportOp{
+				Target: &pb.Job_StatusReportOp_Release{
+					Release: release,
+				},
+			})
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		if err != ErrSentinel {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		}
+
+		return err
 	}
 
 	return nil
