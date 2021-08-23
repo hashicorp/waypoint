@@ -160,7 +160,7 @@ func (c *StatusCommand) Run(args []string) int {
 // a list of applications to refresh the status on. If all projects are requested
 // to be refreshed, the CLI will do its best to honor the request. However if
 // a project is local and the CLI was not invoked inside that project dir, the
-// CLI won't be able to refresh that projects application statuses.
+// CLI won't be able to refresh that project's application statuses.
 func (c *StatusCommand) RefreshApplicationStatus(projectTarget, appTarget string) error {
 	// Get our API client
 	client := c.project.Client()
@@ -171,7 +171,7 @@ func (c *StatusCommand) RefreshApplicationStatus(projectTarget, appTarget string
 	if c.flagAllProjects {
 		resp, err := client.ListProjects(c.Ctx, &empty.Empty{})
 		if err != nil {
-			c.ui.Output("Failed to retrieve all projects:"+clierrors.Humanize(err), terminal.WithErrorStyle())
+			c.ui.Output("Failed to retrieve all projects: "+clierrors.Humanize(err), terminal.WithErrorStyle())
 			return err
 		}
 		allProjectsRef := resp.Projects
@@ -204,7 +204,7 @@ func (c *StatusCommand) RefreshApplicationStatus(projectTarget, appTarget string
 			}
 
 			if !remote {
-				c.ui.Output("Cannot refresh every projects status without command being "+
+				c.ui.Output("Cannot refresh every project's status without command being "+
 					"invoked inside project directory due to project being a local data source. "+
 					"Will attempt to refresh all project statuses anyway, but expect errors.",
 					terminal.WithWarningStyle())
@@ -1541,7 +1541,7 @@ Usage: waypoint status [options] [project]
   managed by Waypoint.
 
   When the '-refresh' flag is included, this command will attempt to regenerate
-  every requested applications status report on-demand for both local and remote
+  every requested application's status report on-demand for both local and remote
   data sourced projects.
 
 ` + c.Flags().Help())
