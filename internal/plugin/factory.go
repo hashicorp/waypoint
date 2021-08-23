@@ -16,6 +16,11 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/internal-shared/pluginclient"
 )
 
+// Indicates that the process is running inside an ondemand runner. This information
+// is passed to the plugins so they can configure themselves specially for this
+// unique context.
+var InsideODR bool
+
 // exePath contains the value of os.Executable. We cache the value because
 // we use it a lot and subsequent calls perform syscalls.
 var exePath string
@@ -47,7 +52,7 @@ func Factory(cmd *exec.Cmd, typ component.Type) interface{} {
 		// fields on it.
 		cmdCopy := *cmd
 
-		config := pluginclient.ClientConfig(log)
+		config := pluginclient.ClientConfig(log, InsideODR)
 		config.Cmd = &cmdCopy
 		config.Logger = log
 
@@ -110,7 +115,7 @@ func BuiltinFactory(name string, typ component.Type) interface{} {
 // running, and implements Instance against it.
 func ReattachPluginFactory(reattach *plugin.ReattachConfig, typ component.Type) interface{} {
 	return func(log hclog.Logger) (interface{}, error) {
-		config := pluginclient.ClientConfig(log)
+		config := pluginclient.ClientConfig(log, InsideODR)
 		config.Logger = log
 		config.Reattach = reattach
 

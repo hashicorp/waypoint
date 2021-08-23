@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"fmt"
 
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -80,6 +81,10 @@ type TaskLauncherConfig struct {
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+
+	// Keep containers around after the task finishes. This allows the ability to debug
+	// the containers and see their logs with the native docker tools.
+	DebugContainers bool `hcl:"debug_containers,optional"`
 }
 
 func (b *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -190,7 +195,12 @@ func (b *TaskLauncher) setupImage(
 		}
 	}
 
-	img = makeImageCanonical(img)
+	named, err := reference.ParseNormalizedNamed(img)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "unable to parse image name: %s", img)
+	}
+
+	img = named.Name()
 
 	out, err := cli.ImagePull(context.Background(), img, types.ImagePullOptions{})
 	if err != nil {
@@ -298,6 +308,11 @@ func (b *TaskLauncher) StartTask(
 		env = append(env, k+"="+v)
 	}
 
+	// This is here to help kaniko detect that this is a docker container.
+	// See https://github.com/GoogleContainerTools/kaniko/blob/7e3954ac734534ce5ce68ad6300a2d3143d82f40/vendor/github.com/genuinetools/bpfd/proc/proc.go#L138
+	// for more info.
+	env = append(env, "container=docker")
+
 	log.Debug(
 		"spawn docker container for task",
 		"oci-url", tli.OciUrl,
@@ -322,8 +337,11 @@ func (b *TaskLauncher) StartTask(
 			Image: tli.OciUrl,
 		},
 		&container.HostConfig{
-			Binds:      b.config.Binds,
-			AutoRemove: true,
+			Binds: append(
+				[]string{"/var/run/docker.sock:/var/run/docker.sock"},
+				b.config.Binds...,
+			),
+			AutoRemove: !b.config.DebugContainers,
 
 			Resources: container.Resources{
 				CPUShares: b.config.Resources.CpuShares,

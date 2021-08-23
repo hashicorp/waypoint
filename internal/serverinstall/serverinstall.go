@@ -100,6 +100,12 @@ type InstallRunnerOpts struct {
 	AdvertiseClient *serverconfig.Client
 }
 
+// An optional interface that the installer can implement to request
+// an ondemand runner be registered.
+type OnDemandRunnerConfigProvider interface {
+	OnDemandRunnerConfig() *pb.OnDemandRunnerConfig
+}
+
 var Platforms = map[string]Installer{
 	"ecs":        &ECSInstaller{},
 	"kubernetes": &K8sInstaller{},
@@ -112,6 +118,7 @@ const (
 	runnerName = "waypoint-runner"
 
 	defaultServerImage = "hashicorp/waypoint:latest"
+	defaultODRImage    = "hashicorp/waypoint:latest-odr"
 )
 
 // Default server ports to use

@@ -297,6 +297,22 @@ service Waypoint {
   rpc WaypointHclFmt(WaypointHclFmtRequest) returns (WaypointHclFmtResponse);
 
   //----------------------------------------------------------------------
+  // OnDemand Runner Config functions.
+  //----------------------------------------------------------------------
+
+  // UpsertOnDemandRunnerConfig updates or inserts a on-demand runner
+  // configuration. This configuration can be used by projects for running
+  // operations on just-in-time launched runners.
+  rpc UpsertOnDemandRunnerConfig(UpsertOnDemandRunnerConfigRequest) returns (UpsertOnDemandRunnerConfigResponse);
+
+  // GetOnDemandRunnerConfig returns the on-demand runner configuration.
+  rpc GetOnDemandRunnerConfig(GetOnDemandRunnerConfigRequest) returns (GetOnDemandRunnerConfigResponse);
+
+  // ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
+  rpc ListOnDemandRunnerConfigs(google.protobuf.Empty) returns (ListOnDemandRunnerConfigsResponse);
+
+
+  //----------------------------------------------------------------------
   // Internal metadata endpoints. The endpoints below are expected to be
   // called for internal bookkeeping only. They should be avoided for general
   // API clients since they can be used to damage internal state.
@@ -524,7 +540,6 @@ message Variable {
     HclPos start = 2;
     HclPos end = 3;
   }
-
 }
 
 message Project {
@@ -585,6 +600,10 @@ message Project {
   // Each polling event is tracked as a separate job. You can query the
   // poll operations and their success/failure by using the ListJobs API.
   AppStatusPoll status_report_poll = 10;
+
+  // ondemand_runner, if set, indicates the configuation on the ondemand runner
+  // that should be used for the operations of this project.
+  Ref.OnDemandRunnerConfig ondemand_runner = 11;
 
   enum Format {
     HCL = 0; // We assume HCL by default
@@ -791,7 +810,6 @@ message Ref {
     string username = 1;
   }
 
-
   // AuthMethod references an auth method.
   message AuthMethod {
     string name = 1;
@@ -800,6 +818,12 @@ message Ref {
   // DeclaredResource references a declared resource.
   message DeclaredResource {
     string name = 1;
+  }
+
+  // OnDemandRunner references an OnDemandRunner value to be used for contextual
+  // operation.
+  message OnDemandRunnerConfig {
+    string id = 1;
   }
 }
 
@@ -2394,6 +2418,60 @@ message Artifact {
 }
 
 /********************************************************************
+* OnDemand Runners
+********************************************************************/
+message OnDemandRunnerConfig {
+  // id is the unique ID of the runner config
+  string id = 1;
+
+  // oci_url is the OCI image that will be used to boot the ondemand runner.
+  string oci_url = 2;
+
+  // environment_variables is any env vars that should be exposed to the
+  // ondemand runner. This does not need to include any WAYPOINT specific
+  // variables, those are automatically added.
+  map<string, string> environment_variables = 3;
+
+  // plugin type is used to launch the plugin to start the batch task.
+  string plugin_type = 4;
+
+  // plugin config is the configuration for the plugin that is created. It
+  // is usually HCL and is decoded like the other plugins, and is plugin
+  // specific.
+  bytes plugin_config = 5;
+
+  // config format specifies the format of plugin_config
+  Project.Format config_format = 6;
+
+  // Indicates if this entry is the default for any new projects.
+  bool default = 7;
+}
+
+message UpsertOnDemandRunnerConfigRequest {
+  // ondemand_runner to upsert. If the id is empty, then this is an insert,
+  // otherwise this is an update operation.
+  OnDemandRunnerConfig config = 1;
+}
+
+message UpsertOnDemandRunnerConfigResponse {
+  // The resulting ondemand runner value. It should replace the one that was
+  // sent in the request.
+  OnDemandRunnerConfig config = 1;
+}
+
+message GetOnDemandRunnerConfigRequest {
+  Ref.OnDemandRunnerConfig config = 1;
+}
+
+message GetOnDemandRunnerConfigResponse {
+  OnDemandRunnerConfig config = 1;
+}
+
+message ListOnDemandRunnerConfigsResponse {
+  repeated OnDemandRunnerConfig configs = 1;
+}
+
+/********************************************************************
 * Registry
 ********************************************************************/
 
@@ -3664,7 +3742,7 @@ message DecodeTokenResponse {
 }
 
 message LoginTokenRequest {
-  // How long the token should be valid until from the time the request
+  // How long the token should be valid from the time the request
   // is made. If this is empty then the login token never expires on its own.
   string duration = 1;
 

@@ -121,13 +121,58 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	// Wait for an assignment
 	log.Info("waiting for job assignment")
 
+	var (
+		acceptTimer *time.Timer
+		timerMu     sync.Mutex
+		accepted    bool
+		canceled    bool
+	)
+
+	if r.acceptTimeout != 0 {
+		acceptTimer = time.AfterFunc(r.acceptTimeout, func() {
+			timerMu.Lock()
+			defer timerMu.Unlock()
+
+			// If we raced to this point and timed out BUT the job was accepted, don't cancel
+			// the context.
+			if accepted {
+				return
+			}
+
+			canceled = true
+			log.Error("runner timed out waiting for a job", "timeout", r.acceptTimeout.String())
+			r.runningCancel()
+		})
+	}
+
 	// NOTE: if r.runningCtx is canceled, because the runner has finished closing,
 	// any job sent won't be acked, but the server will see an error on waiting
 	// for us to ack the job, and auto-nack it.
 	resp, err := client.Recv()
 	if err != nil {
+		if canceled {
+			return ErrTimeout
+		}
+
 		return err
 	}
+
+	timerMu.Lock()
+
+	if canceled {
+		log.Error("Got an event but fired the timeout timer, regrettably dropping event")
+		timerMu.Unlock()
+		return ErrTimeout
+	}
+
+	accepted = true
+
+	// Be sure to stop the timer so that we don't cancel the context after this point.
+	if acceptTimer != nil {
+		acceptTimer.Stop()
+	}
+
+	timerMu.Unlock()
 
 	// We received an assignment!
 	assignment, ok := resp.Event.(*pb.RunnerJobStreamResponse_Assignment)

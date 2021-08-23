@@ -40,10 +40,12 @@ require (
 	github.com/gofrs/flock v0.8.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.6
+	github.com/google/go-containerregistry v0.5.1
 	github.com/google/go-jsonnet v0.17.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/handlers v1.4.2
+	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/aws-sdk-go-base v0.7.0
 	github.com/hashicorp/cap v0.1.1
 	github.com/hashicorp/go-argmapper v0.2.1
@@ -63,12 +65,11 @@ require (
 	github.com/hashicorp/vault/api v1.0.5-0.20200519221902-385fac77e20f
 	github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210817131509-1e7f79e18447
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210823183656-8c106ca88254
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/kevinburke/go-bindata v3.22.0+incompatible
-	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kr/text v0.2.0
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.13 // indirect
@@ -92,6 +93,7 @@ require (
 	github.com/oklog/ulid v1.3.1
 	github.com/oklog/ulid/v2 v2.0.2
 	github.com/olekukonko/tablewriter v0.0.4
+	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete v1.2.3

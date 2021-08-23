@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -17,7 +18,10 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-var ErrClosed = errors.New("runner is closed")
+var (
+	ErrClosed  = errors.New("runner is closed")
+	ErrTimeout = errors.New("runner timed out waiting for a job")
+)
 
 // Runners in Waypoint execute operations. These can be local (the CLI)
 // or they can be remote (triggered by some webhook). In either case, they
@@ -64,6 +68,8 @@ type Runner struct {
 	config      *pb.RunnerConfig
 	originalEnv []*pb.ConfigVar
 
+	acceptTimeout time.Duration
+
 	// noopCh is used in tests only. This will cause any noop operations
 	// to block until this channel is closed.
 	noopCh <-chan struct{}
@@ -74,18 +80,9 @@ type Runner struct {
 // You must call Start to start the runner and register with the Waypoint
 // server. See the Runner struct docs for more details.
 func New(opts ...Option) (*Runner, error) {
-	// Create our ID
-	id, err := server.Id()
-	if err != nil {
-		return nil, status.Errorf(codes.Internal,
-			"failed to generate unique ID: %s", err)
-	}
-
 	// Our default runner
 	runner := &Runner{
-		id:     id,
 		logger: hclog.L(),
-		runner: &pb.Runner{Id: id},
 		factories: map[component.Type]*factory.Factory{
 			component.MapperType:         plugin.BaseFactories[component.MapperType],
 			component.BuilderType:        plugin.BaseFactories[component.BuilderType],
@@ -108,6 +105,23 @@ func New(opts ...Option) (*Runner, error) {
 		}
 	}
 
+	// If the options didn't populate id, then we do so now.
+	if runner.id == "" {
+		// Create our ID
+		id, err := server.Id()
+		if err != nil {
+			return nil, status.Errorf(codes.Internal,
+				"failed to generate unique ID: %s", err)
+		}
+
+		runner.id = id
+	}
+
+	runner.runner = &pb.Runner{
+		Id:       runner.id,
+		ByIdOnly: cfg.byIdOnly,
+	}
+
 	// Setup our runner components list
 	for t, f := range runner.factories {
 		for _, n := range f.Registered() {
@@ -117,6 +131,8 @@ func New(opts ...Option) (*Runner, error) {
 			})
 		}
 	}
+
+	runner.logger.Debug("Created runner", "id", runner.id)
 
 	return runner, nil
 }
@@ -205,7 +221,9 @@ func (r *Runner) Close() error {
 	return nil
 }
 
-type config struct{}
+type config struct {
+	byIdOnly bool
+}
 
 type Option func(*Runner, *config) error
 
@@ -252,7 +270,7 @@ func WithLocal(ui terminal.UI) Option {
 // ID may be assigned.
 func ByIdOnly() Option {
 	return func(r *Runner, cfg *config) error {
-		r.runner.ByIdOnly = true
+		cfg.byIdOnly = true
 		return nil
 	}
 }
@@ -260,6 +278,24 @@ func ByIdOnly() Option {
 func WithDynamicConfig(set bool) Option {
 	return func(r *Runner, cfg *config) error {
 		r.enableDynConfig = set
+		return nil
+	}
+}
+
+// WithId sets the id of the runner directly. This isused when the when the server
+// is expecting the runner to use a certain ID, such as when used via ondemand runners.
+func WithId(id string) Option {
+	return func(r *Runner, cfg *config) error {
+		r.id = id
+		return nil
+	}
+}
+
+// WithAcceptTimeout sets a maximum amount of time to wait for a job before returning
+// that one was not accepted.
+func WithAcceptTimeout(dur time.Duration) Option {
+	return func(r *Runner, cfg *config) error {
+		r.acceptTimeout = dur
 		return nil
 	}
 }

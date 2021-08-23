@@ -52,16 +52,18 @@ format: # format go code
 	gofmt -s -w ./
 
 .PHONY: docker/server
-docker/server:
+docker/server: docker/server-only docker/odr
+
+.PHONY: docker/server-only
+docker/server-only:
 	DOCKER_BUILDKIT=1 docker build \
 					-t waypoint:dev \
 					.
 
-.PHONY: docker/evanphx
-docker/evanphx:
-	DOCKER_BUILDKIT=1 docker build -f hack/Dockerfile.evanphx \
-					--ssh default \
-					-t waypoint:latest \
+.PHONY: docker/odr
+docker/odr:
+	DOCKER_BUILDKIT=1 docker build --target odr \
+					-t waypoint:dev-odr \
 					.
 
 # expected to be invoked by make gen/changelog LAST_RELEASE=gitref THIS_RELEASE=gitref

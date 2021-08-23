@@ -165,7 +165,7 @@ app "test" {
 		use "test" {}
 
 		registry {
-		  use "foo" {}
+		  use "test" {}
 		}
 	}
 

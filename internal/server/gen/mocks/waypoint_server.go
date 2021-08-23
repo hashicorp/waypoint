@@ -629,6 +629,29 @@ func (_m *WaypointServer) GetOIDCAuthURL(_a0 context.Context, _a1 *gen.GetOIDCAu
 	return r0, r1
 }
 
+// GetOnDemandRunnerConfig provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetOnDemandRunnerConfig(_a0 context.Context, _a1 *gen.GetOnDemandRunnerConfigRequest) (*gen.GetOnDemandRunnerConfigResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetOnDemandRunnerConfigResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetOnDemandRunnerConfigRequest) *gen.GetOnDemandRunnerConfigResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetOnDemandRunnerConfigResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetOnDemandRunnerConfigRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetProject provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetProject(_a0 context.Context, _a1 *gen.GetProjectRequest) (*gen.GetProjectResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -961,6 +984,29 @@ func (_m *WaypointServer) ListOIDCAuthMethods(_a0 context.Context, _a1 *emptypb.
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*gen.ListOIDCAuthMethodsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListOnDemandRunnerConfigs provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListOnDemandRunnerConfigs(_a0 context.Context, _a1 *emptypb.Empty) (*gen.ListOnDemandRunnerConfigsResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListOnDemandRunnerConfigsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty) *gen.ListOnDemandRunnerConfigsResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListOnDemandRunnerConfigsResponse)
 		}
 	}
 
@@ -1436,6 +1482,29 @@ func (_m *WaypointServer) UpsertDeployment(_a0 context.Context, _a1 *gen.UpsertD
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertDeploymentRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpsertOnDemandRunnerConfig provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UpsertOnDemandRunnerConfig(_a0 context.Context, _a1 *gen.UpsertOnDemandRunnerConfigRequest) (*gen.UpsertOnDemandRunnerConfigResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UpsertOnDemandRunnerConfigResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertOnDemandRunnerConfigRequest) *gen.UpsertOnDemandRunnerConfigResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertOnDemandRunnerConfigResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertOnDemandRunnerConfigRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

@@ -9,4 +9,5 @@ message DockerImage {
   string image = 1;
   string tag = 2;
   map<string, string> build_labels = 3;
+  bool remote = 4;
 }

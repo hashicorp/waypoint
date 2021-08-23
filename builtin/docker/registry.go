@@ -21,6 +21,34 @@ func (r *Registry) Config() (interface{}, error) {
 	return &r.config, nil
 }
 
+func (r *Registry) AccessInfoFunc() interface{} {
+	return r.AccessInfo
+}
+
+// Push pushes an image to the registry.
+func (r *Registry) AccessInfo() (*AccessInfo, error) {
+	ai := &AccessInfo{
+		Image:    r.config.Image,
+		Tag:      r.config.Tag,
+		Insecure: r.config.Insecure,
+	}
+
+	if r.config.EncodedAuth != "" {
+		ai.Auth = &AccessInfo_Encoded{
+			Encoded: r.config.EncodedAuth,
+		}
+	} else if r.config.Password != "" {
+		ai.Auth = &AccessInfo_UserPass_{
+			UserPass: &AccessInfo_UserPass{
+				Username: r.config.Username,
+				Password: r.config.Password,
+			},
+		}
+	}
+
+	return ai, nil
+}
+
 // PushFunc implements component.Registry
 func (r *Registry) PushFunc() interface{} {
 	return r.Push
@@ -44,10 +72,15 @@ func (r *Registry) Push(
 	// Depending on whethere the image is, we diverge at this point.
 	switch img.Location.(type) {
 	case *Image_Registry:
-		// We can't push an image that isn't pulled locally in some form.
-		return nil, status.Errorf(codes.FailedPrecondition,
-			"Input image is not pulled locally and therefore can't be pushed. "+
-				"Please pull the image or use a builder that pulls the image first.")
+		if img.Image != r.config.Image || img.Tag != r.config.Tag {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"Input image is not pulled locally and therefore can't be pushed. "+
+					"Please pull the image or use a builder that pulls the image first.")
+		}
+
+		// This indicates that the builder used the AccessInfo and published the image
+		// directly. Ergo we don't need to do anyhting and can just return the image as is.
+		return img, nil
 
 	case *Image_Img:
 		// If the image is already in img, we have to use `img push`.
@@ -95,6 +128,15 @@ type Config struct {
 
 	// The docker specific encoded authentication string to use to talk to the registry.
 	EncodedAuth string `hcl:"encoded_auth,optional"`
+
+	// Insecure indicates if the registry should be accessed via http rather than https
+	Insecure bool `hcl:"insecure,optional"`
+
+	// Username is the username to use for authentication on the registry.
+	Username string `hcl:"username,optional"`
+
+	// Password is the authentication information assocated with username.
+	Password string `hcl:"password,optional"`
 }
 
 func (r *Registry) Documentation() (*docs.Documentation, error) {
@@ -153,6 +195,33 @@ build {
 			"WARNING: be very careful to not leak the authentication information",
 			"by hardcoding it here. Use a helper function like `file()` to read",
 			"the information from a file not stored in VCS",
+		),
+	)
+
+	doc.SetField(
+		"insecure",
+		"access the registry via http rather than https",
+		docs.Summary(
+			"This indicates that the registry should be accessed via http rather than https.",
+			"Not recommended for production usage.",
+		),
+	)
+
+	doc.SetField(
+		"username",
+		"username to authenticate with the registry",
+		docs.Summary(
+			"This optional conflicts with encoded_auth and thusly only one can be used at a time.",
+			"If both are used, encoded_auth takes precedence.",
+		),
+	)
+
+	doc.SetField(
+		"password",
+		"password associated with username on the registry",
+		docs.Summary(
+			"This optional conflicts with encoded_auth and thusly only one can be used at a time.",
+			"If both are used, encoded_auth takes precedence.",
 		),
 	)
 

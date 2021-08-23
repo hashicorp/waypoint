@@ -555,9 +555,32 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"user token": func() (cli.Command, error) {
 			return &UserTokenCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner on-demand": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["on-demand-runner"][0],
+				HelpText:     helpText["on-demand-runner"][1],
+			}, nil
+		},
+
+		"runner on-demand set": func() (cli.Command, error) {
+			return &OnDemandRunnerConfigApplyCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"runner on-demand inspect": func() (cli.Command, error) {
+			return &OnDemandRunnerInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"runner list": func() (cli.Command, error) {
+			return &OnDemandRunnerConfigListCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
@@ -897,6 +920,15 @@ about the currently logged in user, generate new access, and invite new
 users directly into the Waypoint server.
 
 If you are looking to log in to Waypoint, use "waypoint login".
+`,
+	},
+	"on-demand-runner": {
+		"On-Demand Runner configuration",
+		`
+List and edit On-Demand Runner configuration.
+
+Each on-demand runner confiuration entry represents the ability to spawn
+runners when needed using the configured plugin.
 `,
 	},
 }
