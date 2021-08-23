@@ -52,7 +52,7 @@ func (c *genericConfig) sortVars(ctx *hcl.EvalContext) ([]*analyzedPair, error) 
 	// https://www.geeksforgeeks.org/topological-sorting-indegree-based-solution/
 	//
 	// degrees tracks how many times a variable is referenced.
-	// pairMap maps a variable's name to it's data.
+	// pairMap maps a variable's name to its data.
 	degrees := map[string]int{}
 	pairMap := map[string]*analyzedPair{}
 

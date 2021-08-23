@@ -27,7 +27,7 @@ export default class WorkspaceProjectsProjectSettings extends Route {
     ];
   }
 
-  async model() {
+  async model(): Promise<Project.AsObject | undefined> {
     // Setup the project request
     let ref = new Ref.Project();
     let params = this.paramsFor('workspace.projects.project') as ProjectModelParams;

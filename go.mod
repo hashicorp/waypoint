@@ -65,12 +65,11 @@ require (
 	github.com/hashicorp/vault/api v1.0.5-0.20200519221902-385fac77e20f
 	github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210816175125-bf337a0c1b4c
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210823183656-8c106ca88254
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/kevinburke/go-bindata v3.22.0+incompatible
-	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kr/text v0.2.0
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.13 // indirect
@@ -100,7 +99,6 @@ require (
 	github.com/posener/complete v1.2.3
 	github.com/r3labs/diff v1.1.0
 	github.com/rs/cors v1.7.0 // indirect
-	github.com/ryboe/q v1.0.13 // indirect
 	github.com/sabhiram/go-gitignore v0.0.0-20201211210132-54b8a0bf510f // indirect
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966

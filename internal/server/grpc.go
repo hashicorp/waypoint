@@ -75,7 +75,7 @@ func newGrpcServer(opts *options) (*grpcServer, error) {
 func (s *grpcServer) start() error {
 	// Register the reflection service. This makes using tools like grpcurl
 	// easier. It makes it slightly easier for malicious users to know about
-	// the service but I think they'd figure out its a waypoint server
+	// the service but I think they'd figure out it's a waypoint server
 	// easy enough.
 	reflection.Register(s.server)
 

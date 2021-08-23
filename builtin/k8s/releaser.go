@@ -85,8 +85,6 @@ func (r *Releaser) resourceServiceStatus(
 	}
 
 	serviceResource := sdk.StatusReport_Resource{
-		Platform:            platformName,
-		Type:                "service",
 		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_ROUTER,
 	}
 	sr.Resources = append(sr.Resources, &serviceResource)

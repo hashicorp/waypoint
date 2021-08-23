@@ -495,7 +495,7 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 // CLI flags are specified after positional arguments. Since we use the
 // stdlib flag package, this is not allowed. However, we can detect this
 // scenario, and notify a user. We can't easily automatically fix it because
-// its hard to tell positional vs intentional flags.
+// it's hard to tell positional vs intentional flags.
 func checkFlagsAfterArgs(args []string, set *flag.Sets) error {
 	if len(args) == 0 {
 		return nil

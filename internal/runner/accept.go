@@ -20,7 +20,7 @@ import (
 var heartbeatDuration = 5 * time.Second
 
 // AcceptMany will accept jobs and execute them on after another as they are accepted.
-// This is meant to be run in a goroutine and reports it's own errors via r's logger.
+// This is meant to be run in a goroutine and reports its own errors via r's logger.
 func (r *Runner) AcceptMany(ctx context.Context) {
 	for {
 		if err := r.Accept(ctx); err != nil {

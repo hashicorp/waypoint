@@ -373,10 +373,10 @@ func (s *service) EntrypointExecStream(
 				sawExit = true
 			}
 
-			// Send the event along. We if the reciever is gone (ie it's context is Done())
+			// Send the event along. We if the reciever is gone (ie its context is Done())
 			// then we don't bother. We don't depend on server.Context() here because
 			// that is done within server.Recv() and we want to allow it to returned buffered
-			// messages even if it's internal context is Done().
+			// messages even if its internal context is Done().
 			select {
 			case exec.EntrypointEventCh <- req:
 			// ok

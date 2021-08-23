@@ -92,7 +92,7 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 
 	c.ui.Output("")
 
-	// Set our log output higher if its not already so that it begins showing.
+	// Set our log output higher if it's not already so that it begins showing.
 	if !log.IsInfo() {
 		log.SetLevel(hclog.Info)
 	}

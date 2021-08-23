@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/internal-shared/protomappers"
 )
 
-// PluginRequest describes a plugin that should be setup to have it's functions
+// PluginRequest describes a plugin that should be setup to have its functions
 // invoked. Config is used to identify the plugin by name, and Type is used to identify
 // which one of the plugin types should be addressed within the plugin process.
 type PluginRequest struct {

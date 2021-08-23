@@ -1098,7 +1098,7 @@ their current state, run ‘waypoint status -app=APP-NAME PROJECT-NAME’.
 `)
 
 	wpStatusAppSuccessMsg = strings.TrimSpace(`
-The application and its declared resources listed above represents its current state known
+The application and its resources listed above represents its current state known
 in the Waypoint server.
 `)
 

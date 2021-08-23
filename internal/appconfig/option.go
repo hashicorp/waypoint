@@ -44,7 +44,7 @@ type FileContent struct {
 type UpdatedConfig struct {
 	// Indicates that EnvVars is what the application should be using. This is an
 	// explicit flag because EnvVars might be reset to nil, meaning the application
-	// should remove all it's configuration
+	// should remove all its configuration
 	UpdatedEnv bool
 
 	// This is the list of env vars in key=value format that the application should

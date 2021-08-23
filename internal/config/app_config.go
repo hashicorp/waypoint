@@ -87,7 +87,7 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 		// Decode the value
 		val, diags := pair.Pair.Value.Value(ctx)
 		if diags.HasErrors() {
-			// Ok, we can't read it's value right now. Let's do a partial evaluation then.
+			// Ok, we can't read its value right now. Let's do a partial evaluation then.
 			str, err := partial.EvalExpression(ctx, pair.Pair.Value)
 			if err != nil {
 				return nil, err

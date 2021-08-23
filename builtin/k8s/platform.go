@@ -147,7 +147,6 @@ func (p *Platform) resourceDeploymentStatus(
 	// Get deployment status
 
 	deploymentResource := sdk.StatusReport_Resource{
-		Platform:            platformName,
 		Type:                "deployment",
 		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
 	}
@@ -276,7 +275,6 @@ func (p *Platform) resourceDeploymentStatus(
 			ParentResourceId:    deploymentResource.Id,
 			Health:              health,
 			HealthMessage:       healthMessage,
-			Platform:            platformName,
 			CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE,
 			StateJson:           string(podJson),
 			CreatedTime:         timestamppb.New(pod.CreationTimestamp.Time),
@@ -837,7 +835,7 @@ func (p *Platform) Status(
 		}
 	}
 
-	resources, err := rm.StatusAll(ctx, log, sg, ui)
+	result, err := rm.StatusReport(ctx, log, sg, ui)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "resource manager failed to generate resource statuses: %s", err)
 	}
@@ -847,52 +845,6 @@ func (p *Platform) Status(
 	st := ui.Status()
 	defer st.Close()
 	st.Update("Determining overall container health...")
-
-	// Create our status report
-	result := sdk.StatusReport{
-		External:      true,
-		GeneratedTime: timestamppb.Now(),
-		Resources:     resources,
-	}
-
-	// Figure out our overall status based on our resource list. If all pods are in the same state, the
-	// status report state will match. If pods are in mixes states, we'll return a PARTIAL health
-	// and a detailed health message.
-
-	// Create a map of how many pods are in each status
-	healths := make(map[sdk.StatusReport_Health]int)
-	for _, r := range resources {
-		if r.Type != "pod" {
-			// We only use pod healths to determine overall status
-			continue
-		}
-		healths[r.Health]++
-	}
-
-	var overallHealth sdk.StatusReport_Health
-	var overallHealthMessage string
-	for podHealth, countHealthStatuses := range healths {
-		if len(healths) == 1 {
-			// If we only have one kind of health type, we can generate the uniform health status
-			overallHealth = podHealth
-			overallHealthMessage = fmt.Sprintf("All %d pods are reporting %s", countHealthStatuses, podHealth.String())
-			break
-		}
-		// We have more than one distinct health type, we have some kind of partial status
-		overallHealth = sdk.StatusReport_PARTIAL
-
-		// Quick pluralization
-		noun := "pod"
-		if countHealthStatuses > 1 {
-			noun = noun + "s"
-		}
-
-		overallHealthMessage = overallHealthMessage + fmt.Sprintf("%d %s %s, ", countHealthStatuses, noun, podHealth)
-	}
-	overallHealthMessage = strings.TrimSuffix(overallHealthMessage, ", ")
-
-	result.Health = overallHealth
-	result.HealthMessage = overallHealthMessage
 
 	log.Debug("status report complete")
 
@@ -921,7 +873,7 @@ func (p *Platform) Status(
 		}
 	}
 
-	return &result, nil
+	return result, nil
 }
 
 // Config is the configuration structure for the Platform.

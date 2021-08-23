@@ -269,7 +269,7 @@ goes back to the buffer and gets the current chunk list the buffer points to.
 In the diagram above, the purple reader points to the current chunk list
 and is almost caught up with the writer. The blue reader points to a past
 chunk list that is no longer in use by the writer. If the writer completes
-it's full chunk list before the blue reader catches up, then the blue
+its full chunk list before the blue reader catches up, then the blue
 reader may "skip" a chunk list. This is acceptable to have predictable
 memory usage and avoid poorly behaved readers from inflating memory usage
 on the system.
@@ -481,7 +481,7 @@ to execute Waypoint-specific business logic.
 
 Package server implements the Waypoint server and associated helper packages.
 This contains the main API implementation and persistent storage implementation.
-This package is so important and so large that its useful to dive into the 
+This package is so important and so large that it's useful to dive into the 
 sub-packages:
 
 #### `internal/server/ptypes`
