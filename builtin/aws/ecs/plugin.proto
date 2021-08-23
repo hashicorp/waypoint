@@ -4,6 +4,8 @@ package ecs;
 
 option go_package = "waypoint/builtin/aws/ecs";
 
+import "google/protobuf/any.proto";
+
 message Deployment {
   string url = 1;
   string task_arn = 2;
@@ -11,9 +13,108 @@ message Deployment {
   string target_group_arn = 4;
   string load_balancer_arn = 5;
   string cluster = 6;
+  google.protobuf.Any resource_state = 7;
 }
 
 message Release {
   string url = 1;
   string load_balancer_arn = 2;
 }
+
+// Resource contains the internal resource states.
+// TODO(izaak): Audit these - make sure we're using all of it.
+message Resource {
+  message Cluster {
+    string name = 1;
+    string arn = 2;
+  }
+
+  message ExecutionRole {
+    string name = 1;
+    string arn = 2;
+
+    // Indicates if an execution role was created by waypoint, and should be destroyed by waypoint
+    bool managed = 3;
+  }
+
+  message TaskRole {
+    string name = 1;
+    string arn = 2;
+  }
+
+  message Service {
+    string name = 1;
+    string arn = 2;
+    string cluster = 3;
+  }
+
+  message TargetGroup {
+    string name = 1;
+    string arn = 2;
+    int64 port = 3;
+  }
+
+  message LogGroup {
+    string name = 1;
+    string arn = 2;
+  }
+
+  message SecurityGroup {
+    string name = 1;
+    string id = 2;
+
+    // Indicates if a security group was created by waypoint, and should be destroyed by waypoint
+    bool managed = 3;
+  }
+
+  // To be attached directly to the ECS tasks
+  message InternalSecurityGroups {
+    repeated SecurityGroup security_groups = 1;
+  }
+
+  // To be attached to the ALB
+  message ExternalSecurityGroups {
+    repeated SecurityGroup security_groups = 1;
+  }
+
+  message Subnets {
+    repeated Subnet subnets = 1;
+    message Subnet {
+      string id = 1;
+    }
+
+    // Currently, the subnet resource is responsible for discovering which VPC we;re running in,
+    // because we determine it by describing either the default subnets or the user-specified subnets.
+    string vpc_id = 2;
+  }
+
+  message Alb {
+    string name = 1;
+    string arn = 2;
+    string dns_name = 3;
+    string canonical_hosted_zone_id = 4;
+
+    // Indicates if an ALB was created by waypoint, and should be destroyed by waypoint
+    bool managed = 5;
+
+    message Listener {
+      string arn = 1;
+      TargetGroup target_group = 2;
+
+      // Indicates if an ALB was created by waypoint, and should be destroyed by waypoint
+      bool managed = 4;
+    }
+  }
+
+  message TaskDefinition{
+    string arn = 2;
+    string runtime = 3;
+  }
+
+  message Route53Record {
+    string name = 1;
+    string zone_id = 2;
+  }
+}
+
+
