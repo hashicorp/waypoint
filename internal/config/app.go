@@ -46,6 +46,13 @@ type hclApp struct {
 	Remain hcl.Body `hcl:",remain"`
 }
 
+// hclLabeled is used to partially decode only the labels from a
+// structure that supports it.
+type hclLabeled struct {
+	Labels map[string]string `hcl:"labels,optional"`
+	Remain hcl.Body          `hcl:",remain"`
+}
+
 // Apps returns the names of all the apps.
 func (c *Config) Apps() []string {
 	var result []string
@@ -255,4 +262,74 @@ func (c *App) ReleaseUse() string {
 	}
 
 	return c.ReleaseRaw.Use.Type
+}
+
+// BuildLabels returns the labels for this stage.
+func (c *App) BuildLabels(ctx *hcl.EvalContext) (map[string]string, error) {
+	if c.BuildRaw == nil {
+		return nil, nil
+	}
+
+	ctx = appendContext(c.ctx, ctx)
+	return labels(ctx, c.BuildRaw.Body)
+}
+
+// RegistryLabels returns the labels for this stage.
+func (c *App) RegistryLabels(ctx *hcl.EvalContext) (map[string]string, error) {
+	if c.BuildRaw == nil || c.BuildRaw.Registry == nil {
+		return nil, nil
+	}
+
+	ctx = appendContext(c.ctx, ctx)
+
+	// Get both build and registry labels
+	allLabels, err := labels(ctx, c.BuildRaw.Body)
+	if err != nil {
+		return nil, err
+	}
+	registryLabels, err := labels(ctx, c.BuildRaw.Registry.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Merge em
+	for k, v := range registryLabels {
+		allLabels[k] = v
+	}
+
+	return allLabels, nil
+}
+
+// DeployLabels returns the labels for this stage.
+func (c *App) DeployLabels(ctx *hcl.EvalContext) (map[string]string, error) {
+	if c.DeployRaw == nil {
+		return nil, nil
+	}
+
+	ctx = appendContext(c.ctx, ctx)
+	return labels(ctx, c.DeployRaw.Body)
+}
+
+// ReleaseLabels returns the labels for this stage.
+func (c *App) ReleaseLabels(ctx *hcl.EvalContext) (map[string]string, error) {
+	if c.ReleaseRaw == nil {
+		return nil, nil
+	}
+
+	ctx = appendContext(c.ctx, ctx)
+	return labels(ctx, c.ReleaseRaw.Body)
+}
+
+// labels reads the labels from the given body (if they are available),
+// merges them using lm, and returns the final merged set of labels. This
+// also returns a new EvalContext that has the `labels` HCL variable set.
+func labels(ctx *hcl.EvalContext, body hcl.Body) (map[string]string, error) {
+	// First decode into our structure that only reads labels.
+	var labeled hclLabeled
+	if diag := gohcl.DecodeBody(body, finalizeContext(ctx), &labeled); diag.HasErrors() {
+		return nil, diag
+	}
+
+	// Merge em
+	return labeled.Labels, nil
 }

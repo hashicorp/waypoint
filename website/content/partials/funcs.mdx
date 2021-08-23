@@ -390,6 +390,22 @@ reverse(list) dynamic
 
 reverse the order of the elements in the list
 
+## `selectorlookup`
+
+```hcl
+selectorlookup(map, selectormap, default) dynamic
+```
+
+applies a map of selectors to a map of labels. The value for the first matching selector is returned. If none match, the default is returned.
+
+## `selectormatch`
+
+```hcl
+selectormatch(map, selector) bool
+```
+
+applies a selector to a map and returns true if the selector matches
+
 ## `setintersection`
 
 ```hcl

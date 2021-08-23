@@ -365,6 +365,7 @@ func TestAppValidate(t *testing.T) {
 type testPluginBuildConfig struct {
 	config struct {
 		Foo string `hcl:"foo,attr"`
+		Bar string `hcl:"bar,optional"`
 	}
 }
 

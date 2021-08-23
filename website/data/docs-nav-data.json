@@ -143,6 +143,10 @@
             "path": "waypoint-hcl/variables/entrypoint"
           },
           {
+            "title": "<code>labels</code>",
+            "path": "waypoint-hcl/variables/labels"
+          },
+          {
             "title": "<code>path</code>",
             "path": "waypoint-hcl/variables/path"
           },
