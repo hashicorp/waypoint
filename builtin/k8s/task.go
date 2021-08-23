@@ -49,6 +49,10 @@ type TaskLauncherConfig struct {
 	// The name of the Kubernetes secret to use to pull images started by
 	// this task.
 	ImageSecret string `hcl:"image_secret,optional"`
+
+	// ServiceAccount is the name of the Kubernetes service account to apply to the
+	// application deployment. This is useful to apply Kubernetes RBAC to the pod.
+	ServiceAccount string `hcl:"service_account,optional"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -204,8 +208,9 @@ func (p *TaskLauncher) StartTask(
 		},
 
 		Spec: corev1.PodSpec{
-			Containers:       []corev1.Container{container},
-			ImagePullSecrets: pullSecrets,
+			ServiceAccountName: p.config.ServiceAccount,
+			Containers:         []corev1.Container{container},
+			ImagePullSecrets:   pullSecrets,
 		},
 	}, metav1.CreateOptions{})
 	if err != nil {
