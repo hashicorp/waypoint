@@ -34,6 +34,19 @@ func WithSingleApp() Option {
 	}
 }
 
+// WithOptionalApp configures the CLI to work with or without an explicit
+// project config locally. It also allows for operations on multiple apps
+// inside a project.
+func WithOptionalApp() Option {
+	return func(c *baseConfig) {
+		c.AppTargetRequired = false
+		c.AppOptional = true
+		c.Config = false
+		c.Client = true
+		c.ConfigOptional = true
+	}
+}
+
 // WithNoConfig configures the CLI to not expect any project configuration.
 // This will not read any configuration files.
 func WithNoConfig() Option {
@@ -87,6 +100,7 @@ type baseConfig struct {
 	Flags             *flag.Sets
 	Config            bool
 	ConfigOptional    bool
+	AppOptional       bool
 	Client            bool
 	AppTargetRequired bool
 	UI                terminal.UI
