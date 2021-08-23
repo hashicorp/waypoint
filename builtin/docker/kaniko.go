@@ -66,7 +66,7 @@ func (b *Builder) buildWithKaniko(
 	// image for this cause it may not contain a host. Luckily Docker has
 	// libs to normalize this all for us.
 	log.Trace("determining host for auth configuration", "image", target.Name())
-	ref, err := reference.ParseNormalizedNamed(target.Name())
+	ref, err := reference.ParseNormalizedNamed(target.Image)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "unable to parse image name: %s", err)
 	}
@@ -81,7 +81,7 @@ func (b *Builder) buildWithKaniko(
 
 	refPath := reference.Path(ref)
 
-	err = os.Negotiate(target.Name())
+	err = os.Negotiate(ref.Name())
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to negoate with upstream")
 	}
