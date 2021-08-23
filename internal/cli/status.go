@@ -1384,7 +1384,7 @@ waypoint status -app=APP-NAME %[1]s
 `)
 
 	wpProjectNotFound = strings.TrimSpace(`
-No project name %q was found for the server context %q. To see a list of
+No project named %q was found for the server context %q. To see a list of
 currently configured projects, run “waypoint project list”.
 
 If you want more information for a specific application, use the '-app' flag
