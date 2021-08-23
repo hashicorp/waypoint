@@ -169,7 +169,9 @@ func (c *StatusCommand) RefreshApplicationStatus(projectTarget, appTarget string
 	// Determine project locality
 	// Do the Work (local or remote)
 	if c.flagAllProjects {
-		// error message that this is not supported
+		c.ui.Output("This command does not support refreshing statuses for all "+
+			"defined projects in Waypoint. Use the project argument to narrow down "+
+			"which projects you hope to refresh a status on.", terminal.WithWarningStyle())
 		return nil
 	}
 
