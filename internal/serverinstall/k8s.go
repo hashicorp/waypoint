@@ -2,7 +2,7 @@ package serverinstall
 
 import (
 	"context"
-	json "encoding/json"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -1002,10 +1002,27 @@ func (i *K8sInstaller) HasRunner(
 
 // OnDemandRunnerConfig implements OnDemandRunnerConfigProvider
 func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	// Generate some configuration
+	cfgMap := map[string]interface{}{}
+	if v := i.config.imagePullSecret; v != "" {
+		cfgMap["image_secret"] = v
+	}
+
+	// Marshal our config
+	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
+	if err != nil {
+		// This shouldn't happen cause we control our input. If it does,
+		// just panic cause this will be in a `server install` CLI and
+		// we want the user to report a bug.
+		panic(err)
+	}
+
 	return &pb.OnDemandRunnerConfig{
-		OciUrl:     i.config.odrImage,
-		PluginType: "kubernetes",
-		Default:    true,
+		OciUrl:       i.config.odrImage,
+		PluginType:   "kubernetes",
+		Default:      true,
+		PluginConfig: cfgJson,
+		ConfigFormat: pb.Project_JSON,
 	}
 }
 

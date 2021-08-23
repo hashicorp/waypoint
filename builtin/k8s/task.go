@@ -45,6 +45,10 @@ type TaskLauncherConfig struct {
 	// a pod, we will use the service account authentication if available if
 	// this isn't set.
 	KubeconfigPath string `hcl:"kubeconfig,optional"`
+
+	// The name of the Kubernetes secret to use to pull images started by
+	// this task.
+	ImageSecret string `hcl:"image_secret,optional"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -108,6 +112,7 @@ func (p *TaskLauncher) StopTask(
 	podsClient := clientSet.CoreV1().Pods(ns)
 	err = podsClient.Delete(ctx, ti.Id, metav1.DeleteOptions{})
 	if errors.IsNotFound(err) {
+		// If it doesn't exist then that's fine, its already stopped then.
 		err = nil
 	}
 
@@ -176,6 +181,16 @@ func (p *TaskLauncher) StartTask(
 		Resources:       resourceRequirements,
 	}
 
+	// Determine our image pull secret
+	var pullSecrets []corev1.LocalObjectReference
+	if p.config.ImageSecret != "" {
+		pullSecrets = []corev1.LocalObjectReference{
+			{
+				Name: p.config.ImageSecret,
+			},
+		}
+	}
+
 	// Get our pods client and create our pod.
 	podsClient := clientSet.CoreV1().Pods(ns)
 	_, err = podsClient.Create(ctx, &corev1.Pod{
@@ -189,7 +204,8 @@ func (p *TaskLauncher) StartTask(
 		},
 
 		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{container},
+			Containers:       []corev1.Container{container},
+			ImagePullSecrets: pullSecrets,
 		},
 	}, metav1.CreateOptions{})
 	if err != nil {
