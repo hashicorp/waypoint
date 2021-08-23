@@ -60,6 +60,14 @@ When this is set, no ALB or Listener is created. Instead the application is conf
 - Type: **string**
 - **Optional**
 
+##### alb.subnets
+
+The VPC subnets to use for the ALB.
+
+- Type: **list of string**
+- **Optional**
+- Default: public subnets in the default VPC
+
 ##### alb.zone_id
 
 Route53 ZoneID to create a DNS record into.
@@ -68,14 +76,6 @@ Set along with alb.domain_name to have DNS automatically setup for the ALB.
 
 - Type: **string**
 - **Optional**
-
-##### alb.subnets
-
-The VPC subnets to use for the ALB.
-
-- Type: **list of string**
-- **Optional**
-- Default: public subnets in the default VPC
 
 #### logging (category)
 
