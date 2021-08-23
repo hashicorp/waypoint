@@ -308,6 +308,11 @@ func (b *TaskLauncher) StartTask(
 		env = append(env, k+"="+v)
 	}
 
+	// This is here to help kaniko detect that this is a docker container.
+	// See https://github.com/GoogleContainerTools/kaniko/blob/7e3954ac734534ce5ce68ad6300a2d3143d82f40/vendor/github.com/genuinetools/bpfd/proc/proc.go#L138
+	// for more info.
+	env = append(env, "container=docker")
+
 	log.Debug(
 		"spawn docker container for task",
 		"oci-url", tli.OciUrl,
