@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -133,9 +135,12 @@ func (p *Platform) ValidateAuth() error {
 	return nil
 }
 
+func (p *Platform) StatusFunc() interface{} {
+	return p.Status
+}
+
 // DefaultReleaserFunc implements component.PlatformReleaser
 func (p *Platform) DefaultReleaserFunc() interface{} {
-	// TODO(izaak): Switch this to the ALB releaser if possible?
 	return func() *Releaser { return &Releaser{p: p} }
 }
 
@@ -264,10 +269,217 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithDestroy(p.resourceServiceDestroy),
 
 			// TODO(izaak): implement
-			//resource.WithStatus(p.resourceServiceStatus),
+			resource.WithStatus(p.resourceServiceStatus),
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
 		)),
 	)
+}
+
+func (p *Platform) Status(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) (*sdk.StatusReport, error) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Gathering health report for ecs deployment...")
+	defer s.Abort()
+
+	rm := p.resourceManager(log, nil)
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if deployment.ResourceState == nil {
+		if err := p.loadResourceManagerState(ctx, rm, deployment, log, sg); err != nil {
+			return nil, status.Errorf(codes.FailedPrecondition, "failed recovering old state into resource manager: %s", err)
+		}
+	} else {
+		// Load our set state
+		if err := rm.LoadState(deployment.ResourceState); err != nil {
+			return nil, status.Errorf(codes.FailedPrecondition, "failed loading state into resource manager: %s", err)
+		}
+	}
+
+	result, err := rm.StatusReport(ctx, log, sg)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "resource manager failed to generate a status report: %s", err)
+	}
+
+	s.Update("Finished building report for ecs deployment")
+	s.Done()
+
+	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
+	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
+	st := ui.Status()
+	defer st.Close()
+
+	st.Update("Determining overall container health...")
+	if result.Health == sdk.StatusReport_READY {
+		st.Step(terminal.StatusOK, result.HealthMessage)
+	} else {
+		if result.Health == sdk.StatusReport_PARTIAL {
+			st.Step(terminal.StatusWarn, result.HealthMessage)
+		} else {
+			st.Step(terminal.StatusError, result.HealthMessage)
+		}
+
+		// Extra advisory wording to let user know that the deployment could be still starting up
+		// if the report was generated immediately after it was deployed or released.
+		st.Step(terminal.StatusWarn, mixedHealthWarn)
+	}
+
+	return result, nil
+}
+
+func (p *Platform) resourceServiceStatus(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	sess *session.Session,
+	log hclog.Logger,
+	state *Resource_Service,
+	sr *resource.StatusResponse,
+) error {
+	s := sg.Add("Determining status of ecs service %s", state.Name)
+	defer s.Abort()
+
+	ecsSvc := ecs.New(sess)
+
+	servicesResp, err := ecsSvc.DescribeServicesWithContext(ctx, &ecs.DescribeServicesInput{
+		Services: []*string{&state.Name},
+		Cluster:  &state.Cluster,
+	})
+	if _, ok := err.(*ecs.ClusterNotFoundException); ok {
+		sr.Resources = append(sr.Resources, &sdk.StatusReport_Resource{
+			Name:          state.Name,
+			Id:            state.Arn,
+			Health:        sdk.StatusReport_MISSING,
+			HealthMessage: fmt.Sprintf("Cluster named %q is missing", state.Cluster),
+		})
+		s.Done()
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("failed to describe service (ARN %q): %s", state.Arn, err)
+	}
+	if len(servicesResp.Services) == 0 {
+		sr.Resources = append(sr.Resources, &sdk.StatusReport_Resource{
+			Name:          state.Name,
+			Id:            state.Arn,
+			Health:        sdk.StatusReport_MISSING,
+			HealthMessage: fmt.Sprintf("service %s is missing", state.Name),
+		})
+		s.Done()
+		return nil
+	}
+
+	service := servicesResp.Services[0]
+
+	serviceResource := sdk.StatusReport_Resource{
+		Name:                *service.ServiceName,
+		Id:                  *service.ServiceArn,
+		CreatedTime:         timestamppb.New(*service.CreatedAt),
+		PlatformUrl:         fmt.Sprintf("https://console.aws.amazon.com/ecs/home?region=%s#/clusters/waypoint/services/%s", p.config.Region, state.Name),
+		Type:                "service",
+		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
+		HealthMessage:       fmt.Sprintf("service is %s", *service.Status),
+	}
+	sr.Resources = append(sr.Resources, &serviceResource)
+
+	if *service.Status == "ACTIVE" {
+		serviceResource.Health = sdk.StatusReport_READY
+	} else {
+		serviceResource.Health = sdk.StatusReport_DOWN
+		serviceResource.HealthMessage = fmt.Sprintf("service is %s", *service.Status)
+	}
+
+	serviceJson, err := json.Marshal(map[string]interface{}{"service": service})
+	if err != nil {
+		return fmt.Errorf("failed to marshal service %q (ARN %q) state to json: %s", *service.ServiceName, *service.ServiceArn, err)
+	}
+	serviceResource.StateJson = string(serviceJson)
+
+	taskArns, err := ecsSvc.ListTasksWithContext(ctx, &ecs.ListTasksInput{
+		ServiceName: &state.Name,
+		Cluster:     &state.Cluster,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to list tasks for service %q in cluster %q: %s", state.Name, state.Cluster, err)
+	}
+
+	// Insert missing tasks if necessary
+	missingCount := int(*service.DesiredCount) - len(taskArns.TaskArns)
+	log.Debug("There are missing tasks. The service may be just starting up.", "missing count", missingCount, "service name", state.Name, "cluster", state.Cluster)
+	for i := 0; i < missingCount; i++ {
+		sr.Resources = append(sr.Resources, &sdk.StatusReport_Resource{
+			Type:                "task",
+			Name:                "missing",
+			ParentResourceId:    *service.ServiceArn,
+			Health:              sdk.StatusReport_MISSING,
+			HealthMessage:       fmt.Sprintf("task is missing. The parent service %q may be just starting up at the time of this status check", state.Name),
+			CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE,
+		})
+	}
+
+	if len(taskArns.TaskArns) > 0 {
+		tasks, err := ecsSvc.DescribeTasksWithContext(ctx, &ecs.DescribeTasksInput{
+			Tasks:   taskArns.TaskArns,
+			Cluster: &state.Cluster,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to describe tasks for service %q in cluster %q: %s", state.Name, state.Cluster, err)
+		}
+
+		for _, task := range tasks.Tasks {
+			// Determine short task ID
+			splitArn := strings.Split(*task.TaskArn, "/")
+			taskId := splitArn[len(splitArn)-1]
+
+			taskResource := &sdk.StatusReport_Resource{
+				Type:                "task",
+				ParentResourceId:    *service.ServiceArn,
+				Id:                  *task.TaskArn,
+				CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE,
+				CreatedTime:         timestamppb.New(*task.CreatedAt),
+				PlatformUrl:         fmt.Sprintf("https://console.aws.amazon.com/ecs/home?region=%s#/clusters/waypoint/tasks/%s", p.config.Region, taskId),
+			}
+			sr.Resources = append(sr.Resources, taskResource)
+
+			switch strings.ToLower(*task.LastStatus) {
+			case "running":
+				taskResource.Health = sdk.StatusReport_READY
+			case "provisioning", "pending", "activating":
+				taskResource.Health = sdk.StatusReport_ALIVE
+			default:
+				taskResource.Health = sdk.StatusReport_DOWN
+			}
+
+			taskResource.HealthMessage = fmt.Sprintf("task is %s", *task.LastStatus)
+
+			// Find IP address if possible
+
+			var ipAddress string
+			for _, attachment := range task.Attachments {
+				for _, detail := range attachment.Details {
+					if *detail.Name == "privateIPv4Address" {
+						ipAddress = *detail.Value
+					}
+				}
+			}
+
+			stateJson, err := json.Marshal(map[string]interface{}{
+				"ipAddress": ipAddress,
+				"task":      task,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to marshal task (arn %q) state to json: %s", *task.TaskArn, err)
+			}
+			taskResource.StateJson = string(stateJson)
+		}
+	}
+	s.Done()
+	return nil
 }
 
 // resourceAlbListenerDestroy destroys the ALB listener associated with this deployment
@@ -294,10 +506,17 @@ func (p *Platform) resourceAlbListenerDestroy(
 
 	elbsrv := elbv2.New(sess)
 	s.Update("Describing ALB listener (ARN: %q)", state.Arn)
+
 	listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
 		ListenerArns: []*string{&state.Arn},
 	})
 	if err != nil {
+		// There doesn't seem to be an aws error to cast to for this code.
+		if strings.Contains(err.Error(), "ListenerNotFound") {
+			s.Update("Listener does not exist and must have been destroyed (ARN %q).", state.Arn)
+			s.Done()
+			return nil
+		}
 		return fmt.Errorf("failed to describe listener with ARN %q: %s", state.Arn, err)
 	}
 
@@ -321,12 +540,12 @@ func (p *Platform) resourceAlbListenerDestroy(
 		log.Debug("only 1 target group, deleting listener")
 
 		s.Update("Deleting ALB listener (ARN: %q)", state.Arn)
-		_, err = elbsrv.DeleteListener(&elbv2.DeleteListenerInput{
+		_, err = elbsrv.DeleteListenerWithContext(ctx, &elbv2.DeleteListenerInput{
 			ListenerArn: listener.ListenerArn,
 		})
 
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to delete ALB listener (ARN %q): %s", *listener.ListenerArn, err)
 		}
 		s.Update("Deleted ALB Listener")
 	} else if len(def) > 0 && def[0].ForwardConfig != nil && len(def[0].ForwardConfig.TargetGroups) > 1 {
@@ -350,8 +569,8 @@ func (p *Platform) resourceAlbListenerDestroy(
 
 		log.Debug("modifying listener to remove target group", "target-groups", len(tgs))
 
-		s.Update("Deregistering this deployment's target group from ALB listener", state.Arn)
-		_, err = elbsrv.ModifyListener(&elbv2.ModifyListenerInput{
+		s.Update("Deregistering this deployment's target group from ALB listener")
+		_, err = elbsrv.ModifyListenerWithContext(ctx, &elbv2.ModifyListenerInput{
 			ListenerArn: listener.ListenerArn,
 			Port:        listener.Port,
 			Protocol:    listener.Protocol,
@@ -364,10 +583,10 @@ func (p *Platform) resourceAlbListenerDestroy(
 				},
 			},
 		})
-
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to modify listener (ARN %q): %s", *listener.ListenerArn, err)
 		}
+		s.Update("Deregistered this deployment's target group from ALB listener")
 	}
 
 	s.Done()
@@ -435,6 +654,7 @@ func (p *Platform) resourceServiceDestroy(
 		return fmt.Errorf("failed to delete ECS cluster %s (ARN: %q): %s", state.Name, state.Arn, err)
 	}
 
+	s.Update("Deleted service %s", state.Name)
 	s.Done()
 	return nil
 }
@@ -1260,7 +1480,6 @@ func (p *Platform) resourceTaskDefinitionCreate(
 	return nil
 }
 
-// todo: comment
 func (p *Platform) resourceServiceCreate(
 	ctx context.Context,
 	sg terminal.StepGroup,
@@ -1384,7 +1603,6 @@ func (p *Platform) resourceServiceCreate(
 	return nil
 }
 
-// todo: comment
 func (p *Platform) resourceLogGroupCreate(
 	ctx context.Context,
 	sg terminal.StepGroup,
@@ -1436,7 +1654,6 @@ func (p *Platform) resourceLogGroupCreate(
 	return nil
 }
 
-// todo: comment
 func (p *Platform) resourceTaskRoleDiscover(
 	ctx context.Context,
 	sg terminal.StepGroup,
@@ -1463,7 +1680,6 @@ func (p *Platform) resourceTaskRoleDiscover(
 	svc := iam.New(sess)
 	getOut, err := svc.GetRoleWithContext(ctx, queryInput)
 	if err != nil {
-		// TODO(izaak): Is this enough, or do we need status output here?
 		return fmt.Errorf("requested task IAM role not found: %s", roleName)
 	}
 
@@ -1646,7 +1862,7 @@ func (p *Platform) resourceClusterStatus(
 		Clusters: []*string{aws.String(state.Name)},
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to describe cluster named %q (ARN: %q): %s", state.Name, state.Arn, err)
 	}
 
 	clusterResource := sdk.StatusReport_Resource{
@@ -1676,6 +1892,8 @@ func (p *Platform) resourceClusterStatus(
 				return fmt.Errorf("failed to marshal ecs cluster state json: %s", err)
 			}
 			clusterResource.StateJson = string(stateJson)
+
+			s.Done()
 			return nil
 		}
 	}
@@ -1717,7 +1935,7 @@ func (p *Platform) Deploy(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Initializing deployment")
+	s := sg.Add("Initializing deployment...")
 	defer s.Abort()
 
 	// Generate a common deployment ID to use in the resources we create.
@@ -1782,6 +2000,66 @@ func (p *Platform) Deploy(
 	return &result, nil
 }
 
+// Loads state from the old locations on the top-level Deployment struct into resource manager.
+// This is only necessary for backwards-compat with deployments created by waypoint pre-0.5.2.
+// Newer waypoint deployments will have the complete resource manager state stored in deployment.ResourceState
+func (p *Platform) loadResourceManagerState(
+	ctx context.Context,
+	rm *resource.Manager,
+	deployment *Deployment,
+	log hclog.Logger,
+	sg terminal.StepGroup,
+) error {
+	log.Debug("Missing deployment resource state - must be an old deployment. Recovering state.")
+	s := sg.Add("Gathering deployment resource state")
+	defer s.Abort()
+
+	rm.Resource("service").SetState(&Resource_Service{
+		Cluster: deployment.Cluster,
+		Arn:     deployment.ServiceArn,
+	})
+
+	targetGroupResource := Resource_TargetGroup{
+		Arn: deployment.TargetGroupArn,
+	}
+	rm.Resource("target group").SetState(&targetGroupResource)
+
+	// Restore state of ALB listener. Difficult because it may only be defined on the load balancer.
+	var listenerResource Resource_Alb_Listener
+	listenerResource.TargetGroup = &targetGroupResource
+	if p.config.ALB != nil && p.config.ALB.ListenerARN != "" {
+		listenerResource.Arn = p.config.ALB.ListenerARN
+		listenerResource.Managed = false
+		log.Debug("Using existing listener arn %s", listenerResource.Arn)
+	} else {
+		listenerResource.Managed = true
+		s.Update("Describing load balancer %s", deployment.LoadBalancerArn)
+		sess, err := p.getSession(log)
+		if err != nil {
+			return fmt.Errorf("failed to get aws session: %s", err)
+		}
+		elbsrv := elbv2.New(sess)
+
+		listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
+			LoadBalancerArn: &deployment.LoadBalancerArn,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to describe listeners for ALB %q: %s", deployment.LoadBalancerArn, err)
+		}
+		if len(listeners.Listeners) == 0 {
+			s.Update("No listeners found for ALB %q", deployment.LoadBalancerArn)
+		} else {
+			listenerResource.Arn = *listeners.Listeners[0].ListenerArn
+			s.Update("Found existing listener (ARN: %q)", listenerResource.Arn)
+		}
+	}
+	rm.Resource("alb listener").SetState(&listenerResource)
+
+	s.Update("Finished gathering resource state")
+	s.Done()
+	return nil
+}
+
 func (p *Platform) Destroy(
 	ctx context.Context,
 	log hclog.Logger,
@@ -1792,62 +2070,21 @@ func (p *Platform) Destroy(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
+	s := sg.Add("Destroying ecs deployment...")
+	defer s.Abort()
+
 	rm := p.resourceManager(log, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
 	if deployment.ResourceState == nil {
-		log.Debug("Missing deployment resource state - must be an old deployment. Recovering state.")
-		s := sg.Add("Gathering deployment resource state")
-		defer s.Abort()
-
-		rm.Resource("service").SetState(&Resource_Service{
-			Cluster: deployment.Cluster,
-			Arn:     deployment.ServiceArn,
-		})
-
-		targetGroupResource := Resource_TargetGroup{
-			Arn: deployment.TargetGroupArn,
+		if err := p.loadResourceManagerState(ctx, rm, deployment, log, sg); err != nil {
+			return status.Errorf(codes.FailedPrecondition, "failed recovering old state into resource manager: %s", err)
 		}
-		rm.Resource("target group").SetState(&targetGroupResource)
-
-		// Restore state of ALB listener. Difficult because it may only be defined on the load balancer.
-		var listenerResource Resource_Alb_Listener
-		listenerResource.TargetGroup = &targetGroupResource
-		if p.config.ALB != nil && p.config.ALB.ListenerARN != "" {
-			listenerResource.Arn = p.config.ALB.ListenerARN
-			listenerResource.Managed = false
-			log.Debug("Using existing listener arn %s", listenerResource.Arn)
-		} else {
-			listenerResource.Managed = true
-			s.Update("Describing load balancer %s", deployment.LoadBalancerArn)
-			sess, err := p.getSession(log)
-			if err != nil {
-				return status.Errorf(codes.FailedPrecondition, "failed to get aws session: %s", err)
-			}
-			elbsrv := elbv2.New(sess)
-
-			listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
-				LoadBalancerArn: &deployment.LoadBalancerArn,
-			})
-			if err != nil {
-				return status.Errorf(codes.FailedPrecondition, "failed to describe listeners for ALB %q: %s", deployment.LoadBalancerArn, err)
-			}
-			if len(listeners.Listeners) == 0 {
-				s.Update("No listeners found for ALB %q", deployment.LoadBalancerArn)
-			} else {
-				listenerResource.Arn = *listeners.Listeners[0].ListenerArn
-				s.Update("Found existing listener (ARN: %q)", listenerResource.Arn)
-			}
-		}
-		rm.Resource("alb listener").SetState(&listenerResource)
-
-		s.Update("Finished gathering resource state")
-		s.Done()
 	} else {
 		// Load our set state
 		if err := rm.LoadState(deployment.ResourceState); err != nil {
-			return err
+			return status.Errorf(codes.FailedPrecondition, "failed loading state into resource manager: %s", err)
 		}
 	}
 
@@ -1857,6 +2094,8 @@ func (p *Platform) Destroy(
 		return status.Errorf(codes.Internal, "failed to destroy all resources for deployment: %s", err)
 	}
 
+	s.Update("Finished destroying ECS deployment")
+	s.Done()
 	return nil
 }
 
@@ -2425,3 +2664,10 @@ deploy {
 
 	return doc, nil
 }
+
+var (
+	mixedHealthWarn = strings.TrimSpace(`
+Waypoint detected that the current deployment is not ready, however your application
+might be available or still starting up.
+`)
+)
