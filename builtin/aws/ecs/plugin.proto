@@ -101,7 +101,7 @@ message Resource {
       TargetGroup target_group = 2;
 
       // Indicates if an ALB was created by waypoint, and should be destroyed by waypoint
-      bool managed = 4;
+      bool managed = 3;
     }
   }
 
