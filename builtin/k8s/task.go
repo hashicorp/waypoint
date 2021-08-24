@@ -214,6 +214,7 @@ func (p *TaskLauncher) StartTask(
 		Name:            name,
 		Image:           tli.OciUrl,
 		ImagePullPolicy: pullPolicy,
+		Command:         tli.Entrypoint,
 		Args:            tli.Arguments,
 		Env:             env,
 		Resources:       resourceRequirements,
