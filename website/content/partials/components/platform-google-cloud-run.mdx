@@ -114,17 +114,23 @@ GCP project ID where the Cloud Run instance will be deployed.
 
 - Type: **string**
 
-#### vpc_access
+#### vpc_access (category)
 
-- Type: **cloudrun.VPCAccess**
+VPCAccess details.
 
-#### vpc_access.connector
+##### vpc_access.connector
 
 Set VPC Access Connector for the Cloud Run instance.
 
-#### vpc_access.egress
+- Type: **string**
+- **Optional**
+
+##### vpc_access.egress
 
 Set VPC egress. Supported values are 'all' and 'private-ranges-only'.
+
+- Type: **string**
+- **Optional**
 
 ### Optional Parameters
 

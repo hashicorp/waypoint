@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	run "google.golang.org/api/run/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
@@ -737,13 +737,18 @@ app "wpmini" {
 	)
 
 	doc.SetField(
-		"vpc_access.connector",
-		"Set VPC Access Connector for the Cloud Run instance.",
-	)
-
-	doc.SetField(
-		"vpc_access.egress",
-		"Set VPC egress. Supported values are 'all' and 'private-ranges-only'.",
+		"vpc_access",
+		"VPCAccess details",
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"connector",
+				"Set VPC Access Connector for the Cloud Run instance.",
+			)
+			doc.SetField(
+				"egress",
+				"Set VPC egress. Supported values are 'all' and 'private-ranges-only'.",
+			)
+		}),
 	)
 
 	return doc, nil
