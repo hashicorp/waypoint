@@ -172,7 +172,6 @@ func (x *Release) GetLoadBalancerArn() string {
 }
 
 // Resource contains the internal resource states.
-// TODO(izaak): Audit these - make sure we're using all of it.
 type Resource struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -732,7 +731,7 @@ type Resource_Subnets struct {
 	unknownFields protoimpl.UnknownFields
 
 	Subnets []*Resource_Subnets_Subnet `protobuf:"bytes,1,rep,name=subnets,proto3" json:"subnets,omitempty"`
-	// Currently, the subnet resource is responsible for discovering which VPC we;re running in,
+	// Currently, the subnet resource is responsible for discovering which VPC we're running in,
 	// because we determine it by describing either the default subnets or the user-specified subnets.
 	VpcId string `protobuf:"bytes,2,opt,name=vpc_id,json=vpcId,proto3" json:"vpc_id,omitempty"`
 }
