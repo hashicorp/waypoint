@@ -617,8 +617,6 @@ func (p *Platform) resourceServiceCreate(
 		log.Debug("using a shortened value for service name due to AWS's length limits", "serviceName", serviceName)
 	}
 
-	taskArn := taskDefinition.Arn
-
 	count := int64(p.config.Count)
 	if count == 0 {
 		count = 1
@@ -650,7 +648,7 @@ func (p *Platform) resourceServiceCreate(
 		DesiredCount:   aws.Int64(count),
 		LaunchType:     &taskDefinition.Runtime,
 		ServiceName:    aws.String(serviceName),
-		TaskDefinition: aws.String(taskArn),
+		TaskDefinition: aws.String(taskDefinition.Arn),
 		NetworkConfiguration: &ecs.NetworkConfiguration{
 			AwsvpcConfiguration: netCfg,
 		},
@@ -676,6 +674,7 @@ func (p *Platform) resourceServiceCreate(
 	// with loops like this.
 	var servOut *ecs.CreateServiceOutput
 	var err error
+OUTER:
 	for i := 0; i <= awsCreateRetries; i++ {
 		servOut, err = ecsSvc.CreateServiceWithContext(ctx, createServiceInput)
 		if err == nil {
@@ -688,7 +687,7 @@ func (p *Platform) resourceServiceCreate(
 			case "AccessDeniedException", "UnsupportedFeatureException",
 				"PlatformUnknownException",
 				"PlatformTaskDefinitionIncompatibilityException":
-				break
+				break OUTER
 			}
 		}
 
@@ -1429,6 +1428,7 @@ func (p *Platform) resourceTaskDefinitionCreate(
 	// too quickly. So we're forced to guard actions which reference other AWS services
 	// with loops like this.
 
+OUTER:
 	for i := 0; i <= awsCreateRetries; i++ {
 		taskOut, err = ecsSvc.RegisterTaskDefinitionWithContext(ctx, &registerTaskDefinitionInput)
 		if err == nil {
@@ -1436,10 +1436,10 @@ func (p *Platform) resourceTaskDefinitionCreate(
 		}
 
 		// if we encounter an unrecoverable error, exit now.
-		if aerr, ok := err.(awserr.Error); ok {
+		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == "ResourceConflictException" {
 			switch aerr.Code() {
 			case "ResourceConflictException":
-				break
+				break OUTER
 			}
 		}
 
