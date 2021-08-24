@@ -102,7 +102,7 @@ task {
 
 	doc.SetField(
 		"image_secret",
-		"name of the Kubernetes secrete to use for the image",
+		"name of the Kubernetes secret to use for the image",
 		docs.Summary(
 			"this references an existing secret, waypoint does not create this secret",
 		),
