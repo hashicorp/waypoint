@@ -193,7 +193,7 @@ func (p *TaskLauncher) StartTask(
 	}
 
 	// If the user is using the latest tag, then don't specify an overriding pull policy.
-	// This by default means kubernetes will always pull so that latest is useful.
+	// This by default means kubernetes will always pull so that latest is used.
 	pullPolicy := corev1.PullIfNotPresent
 	if v := p.config.PullPolicy; v != "" {
 		pullPolicy = corev1.PullPolicy(v)
