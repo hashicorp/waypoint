@@ -13,6 +13,8 @@ import (
 	"github.com/ghodss/yaml"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -36,9 +38,12 @@ type K8sInstaller struct {
 
 type k8sConfig struct {
 	serverImage        string            `hcl:"server_image,optional"`
-	odrImage           string            `hcl:"odr_image,optional"`
 	namespace          string            `hcl:"namespace,optional"`
 	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
+
+	odrImage              string `hcl:"odr_image,optional"`
+	odrServiceAccount     string `hcl:"odr_service_account,optional"`
+	odrServiceAccountInit bool   `hcl:"odr_service_account_init,optional"`
 
 	advertiseInternal bool   `hcl:"advertise_internal,optional"`
 	imagePullPolicy   string `hcl:"image_pull_policy,optional"`
@@ -163,6 +168,78 @@ func (i *K8sInstaller) Install(
 			terminal.WithErrorStyle(),
 		)
 		return nil, err
+	}
+
+	if i.config.odrServiceAccountInit {
+		s.Done()
+		s = sg.Add("Initializing service account for on-demand runners...")
+		if i.config.odrServiceAccount == "" {
+			i.config.odrServiceAccount = "waypoint-runner"
+		}
+
+		// Look for the service account. If it doesn't exist, we create it.
+		saClient := clientset.CoreV1().ServiceAccounts(i.config.namespace)
+		serviceAccount, err := saClient.Get(ctx, i.config.odrServiceAccount, metav1.GetOptions{})
+		if errors.IsNotFound(err) {
+			serviceAccount = nil
+			err = nil
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		// If the service doesn't exist, then we create it.
+		if serviceAccount == nil {
+			s.Update("Creating the on-demand runner service account...")
+			serviceAccount, err = newServiceAccount(i.config)
+			if err != nil {
+				return nil, err
+			}
+
+			if _, err := saClient.Create(ctx, serviceAccount, metav1.CreateOptions{}); err != nil {
+				return nil, err
+			}
+		}
+
+		// Setup the role
+		s.Update("Initializing role for on-demand runner...")
+		rolesClient := clientset.RbacV1().Roles(i.config.namespace)
+		role, err := newServiceAccountRole(i.config)
+		if err != nil {
+			return nil, err
+		}
+		_, err = rolesClient.Get(ctx, role.Name, metav1.GetOptions{})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, err
+		}
+		if err == nil {
+			if err := rolesClient.Delete(ctx, role.Name, metav1.DeleteOptions{}); err != nil {
+				return nil, err
+			}
+		}
+		if _, err := rolesClient.Create(ctx, role, metav1.CreateOptions{}); err != nil {
+			return nil, err
+		}
+
+		// Setup the role binding
+		s.Update("Initializing role binding for on-demand runner...")
+		rbClient := clientset.RbacV1().RoleBindings(i.config.namespace)
+		rb, err := newServiceAccountRoleBinding(i.config)
+		if err != nil {
+			return nil, err
+		}
+		_, err = rbClient.Get(ctx, rb.Name, metav1.GetOptions{})
+		if err != nil && !errors.IsNotFound(err) {
+			return nil, err
+		}
+		if err == nil {
+			if err := rbClient.Delete(ctx, rb.Name, metav1.DeleteOptions{}); err != nil {
+				return nil, err
+			}
+		}
+		if _, err := rbClient.Create(ctx, rb, metav1.CreateOptions{}); err != nil {
+			return nil, err
+		}
 	}
 
 	s.Update("Creating Kubernetes resources...")
@@ -1301,6 +1378,60 @@ func newService(c k8sConfig) (*apiv1.Service, error) {
 	}, nil
 }
 
+// newServiceAccount takes in a k8sConfig and creates the ServiceAccount
+// definition for the ODR.
+func newServiceAccount(c k8sConfig) (*apiv1.ServiceAccount, error) {
+	return &apiv1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      c.odrServiceAccount,
+			Namespace: c.namespace,
+		},
+	}, nil
+}
+
+// newServiceAccountRole creates the role necessary for the ODR service account.
+func newServiceAccountRole(c k8sConfig) (*rbacv1.Role, error) {
+	return &rbacv1.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "waypoint-runner",
+			Namespace: c.namespace,
+		},
+
+		Rules: []rbacv1.PolicyRule{
+			rbacv1.PolicyRule{
+				APIGroups: []string{""},
+				Resources: []string{"pods"},
+				Verbs:     []string{"create", "get", "list", "watch", "update", "patch", "delete", "deletecollection"},
+			},
+		},
+	}, nil
+}
+
+// newServiceAccountRoleBinding creates the role binding necessary to
+// map the ODR role to the service account.
+func newServiceAccountRoleBinding(c k8sConfig) (*rbacv1.RoleBinding, error) {
+	return &rbacv1.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "waypoint-runner-rolebinding",
+			Namespace: c.namespace,
+		},
+
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "Role",
+			Name:     "waypoint-runner",
+		},
+
+		Subjects: []rbacv1.Subject{
+			rbacv1.Subject{
+				Kind:      "ServiceAccount",
+				Name:      c.odrServiceAccount,
+				Namespace: c.namespace,
+			},
+		},
+	}, nil
+}
+
 func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	set.BoolVar(&flag.BoolVar{
 		Name:   "k8s-advertise-internal",
@@ -1385,6 +1516,20 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.config.odrImage,
 		Usage:   "Docker image for the Waypoint On-Demand Runners",
 		Default: defaultODRImage,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-odr-service-account",
+		Target: &i.config.odrServiceAccount,
+		Usage: "Service account to assign to the on-demand runner. If this is blank, " +
+			"a service account will be created automatically with the correct permissions.",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "k8s-odr-service-account-init",
+		Target:  &i.config.odrServiceAccountInit,
+		Usage:   "Create the service account if it does not exist.",
+		Default: true,
 	})
 
 	set.StringVar(&flag.StringVar{
