@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"time"
 
 	"github.com/docker/distribution/reference"
 	"github.com/hashicorp/go-hclog"
@@ -14,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -216,6 +218,57 @@ func (p *TaskLauncher) StartTask(
 	if err != nil {
 		return nil, err
 	}
+
+	// Wait on the Pod to start
+	var (
+		detectedError string
+		k8error       string
+		reportedError bool
+	)
+	log.Info("waiting for pod to become ready")
+	timeout := 5 * time.Minute
+	err = wait.PollImmediate(2*time.Second, timeout, func() (bool, error) {
+		pod, err := podsClient.Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		ready := true
+		for _, cs := range pod.Status.ContainerStatuses {
+			if cs.Ready {
+				continue
+			}
+
+			ready = false
+			if cs.State.Waiting != nil {
+				if cs.State.Waiting.Reason == "ImagePullBackOff" ||
+					cs.State.Waiting.Reason == "ErrImagePull" {
+					detectedError = "Pod unable to access Docker image"
+					k8error = cs.State.Waiting.Message
+				}
+			}
+		}
+		if ready {
+			return true, nil
+		}
+
+		if detectedError != "" && !reportedError {
+			log.Info("detected pods have an issue starting",
+				"detected", detectedError,
+				"kube_error", k8error,
+			)
+			reportedError = true
+		}
+
+		return false, nil
+	})
+	if err != nil {
+		if err == wait.ErrWaitTimeout {
+			err = fmt.Errorf("Pod was unable to start after timeout: %s", timeout)
+		}
+		return nil, err
+	}
+	log.Info("task pod is ready and running!")
 
 	return &Task{
 		Id: name,
