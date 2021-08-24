@@ -240,6 +240,10 @@ func (i *K8sInstaller) Install(
 		if _, err := rbClient.Create(ctx, rb, metav1.CreateOptions{}); err != nil {
 			return nil, err
 		}
+
+		s.Update("Service account for on-demand runner initialized!")
+		s.Done()
+		s = sg.Add("")
 	}
 
 	s.Update("Creating Kubernetes resources...")
@@ -1084,6 +1088,12 @@ func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	if v := i.config.imagePullSecret; v != "" {
 		cfgMap["image_secret"] = v
 	}
+	if v := i.config.odrServiceAccount; v != "" {
+		cfgMap["service_account"] = v
+	}
+	if v := i.config.imagePullPolicy; v != "" {
+		cfgMap["image_pull_policy"] = v
+	}
 
 	// Marshal our config
 	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
@@ -1172,6 +1182,7 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 					},
 				},
 				Spec: apiv1.PodSpec{
+					ServiceAccountName: c.odrServiceAccount,
 					ImagePullSecrets: []apiv1.LocalObjectReference{
 						{
 							Name: c.imagePullSecret,
@@ -1398,7 +1409,9 @@ func newServiceAccountRole(c k8sConfig) (*rbacv1.Role, error) {
 		},
 
 		Rules: []rbacv1.PolicyRule{
-			rbacv1.PolicyRule{
+			// The pods rule is required at a minimum for the runner to
+			// launch on-demand runner tasks.
+			{
 				APIGroups: []string{""},
 				Resources: []string{"pods"},
 				Verbs:     []string{"create", "get", "list", "watch", "update", "patch", "delete", "deletecollection"},
@@ -1423,7 +1436,7 @@ func newServiceAccountRoleBinding(c k8sConfig) (*rbacv1.RoleBinding, error) {
 		},
 
 		Subjects: []rbacv1.Subject{
-			rbacv1.Subject{
+			{
 				Kind:      "ServiceAccount",
 				Name:      c.odrServiceAccount,
 				Namespace: c.namespace,
