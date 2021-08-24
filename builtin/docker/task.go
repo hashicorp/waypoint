@@ -332,9 +332,10 @@ func (b *TaskLauncher) StartTask(
 	cc, err := cli.ContainerCreate(
 		ctx,
 		&container.Config{
-			Env:   env,
-			Cmd:   tli.Arguments,
-			Image: tli.OciUrl,
+			Env:        env,
+			Cmd:        tli.Arguments,
+			Entrypoint: tli.Entrypoint,
+			Image:      tli.OciUrl,
 		},
 		&container.HostConfig{
 			Binds: append(

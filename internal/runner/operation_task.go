@@ -43,10 +43,10 @@ func (r *Runner) executeStartTaskOp(
 	tli := &component.TaskLaunchInfo{}
 
 	sti := op.StartTask.Info
-
 	if sti != nil {
 		tli.OciUrl = sti.OciUrl
 		tli.EnvironmentVariables = sti.EnvironmentVariables
+		tli.Entrypoint = sti.Entrypoint
 		tli.Arguments = sti.Arguments
 	}
 
