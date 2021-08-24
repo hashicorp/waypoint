@@ -100,6 +100,28 @@ task {
 		"the kubectl context to use, as defined in the kubeconfig file",
 	)
 
+	doc.SetField(
+		"image_secret",
+		"name of the Kubernetes secrete to use for the image",
+		docs.Summary(
+			"this references an existing secret, waypoint does not create this secret",
+		),
+	)
+
+	doc.SetField(
+		"service_account",
+		"service account name to be added to the application pod",
+		docs.Summary(
+			"service account is the name of the Kubernetes service account to add to the pod.",
+			"This is useful to apply Kubernetes RBAC to the application.",
+		),
+	)
+
+	doc.SetField(
+		"image_pull_policy",
+		"pull policy to use for the task container image",
+	)
+
 	return doc, nil
 }
 
