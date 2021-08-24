@@ -179,6 +179,10 @@
     "path": "project-list"
   },
   {
+    "title": "release list",
+    "path": "release-list"
+  },
+  {
     "title": "runner agent",
     "path": "runner-agent"
   },
