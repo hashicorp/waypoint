@@ -1,0 +1,23 @@
+```release-note:improvement
+plugin/aws-ecs: More complete list of resources displayed in `waypoint deploy` logs
+```
+
+```release-note:improvement
+plugin/aws-ecs: Support for status reports, enabling `waypoint status` for ecs deployments
+```
+
+```release-note:improvement
+plugin/aws-ecs: Deployments delete their resources on failure.
+```
+
+```release-note:improvement
+plugin/aws-ecs: Improve security of ecs tasks by restricting ingress to the ALB
+```
+
+```release-note:bug
+plugin/aws-ecs: Fix panic when specifying a sidecar without a healthcheck
+```
+
+```release-note:improvement
+plugin/aws-ecs: Error messages contain additional context
+```
