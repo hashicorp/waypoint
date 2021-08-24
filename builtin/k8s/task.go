@@ -5,18 +5,18 @@ import (
 	"crypto/rand"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/docker/distribution/reference"
 	"github.com/hashicorp/go-hclog"
 	"github.com/oklog/ulid/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/utils/pointer"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -142,9 +142,9 @@ func (p *TaskLauncher) StopTask(
 		return err
 	}
 
-	// Get our pods client
-	podsClient := clientSet.CoreV1().Pods(ns)
-	err = podsClient.Delete(ctx, ti.Id, metav1.DeleteOptions{})
+	// Get our jobs client
+	jobsClient := clientSet.BatchV1().Jobs(ns)
+	err = jobsClient.Delete(ctx, ti.Id, metav1.DeleteOptions{})
 	if errors.IsNotFound(err) {
 		// If it doesn't exist then that's fine, its already stopped then.
 		err = nil
@@ -230,78 +230,40 @@ func (p *TaskLauncher) StartTask(
 		}
 	}
 
-	// Get our pods client and create our pod.
-	podsClient := clientSet.CoreV1().Pods(ns)
-	_, err = podsClient.Create(ctx, &corev1.Pod{
+	// Get our jobs client and create our job
+	jobsClient := clientSet.BatchV1().Jobs(ns)
+	_, err = jobsClient.Create(ctx, &batchv1.Job{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Pod",
+			APIVersion: "batch/v1",
+			Kind:       "Job",
 		},
 
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 
-		Spec: corev1.PodSpec{
-			ServiceAccountName: p.config.ServiceAccount,
-			Containers:         []corev1.Container{container},
-			ImagePullSecrets:   pullSecrets,
+		Spec: batchv1.JobSpec{
+			Parallelism:             pointer.Int32(1),
+			Completions:             pointer.Int32(1),
+			BackoffLimit:            pointer.Int32(3),
+			TTLSecondsAfterFinished: pointer.Int32(600),
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					ServiceAccountName: p.config.ServiceAccount,
+					Containers:         []corev1.Container{container},
+					ImagePullSecrets:   pullSecrets,
+					RestartPolicy:      corev1.RestartPolicyOnFailure,
+				},
+			},
 		},
 	}, metav1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	// Wait on the Pod to start
-	var (
-		detectedError string
-		k8error       string
-		reportedError bool
-	)
-	log.Info("waiting for pod to become ready")
-	timeout := 5 * time.Minute
-	err = wait.PollImmediate(2*time.Second, timeout, func() (bool, error) {
-		pod, err := podsClient.Get(ctx, name, metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-
-		ready := true
-		for _, cs := range pod.Status.ContainerStatuses {
-			if cs.Ready {
-				continue
-			}
-
-			ready = false
-			if cs.State.Waiting != nil {
-				if cs.State.Waiting.Reason == "ImagePullBackOff" ||
-					cs.State.Waiting.Reason == "ErrImagePull" {
-					detectedError = "Pod unable to access Docker image"
-					k8error = cs.State.Waiting.Message
-				}
-			}
-		}
-		if ready {
-			return true, nil
-		}
-
-		if detectedError != "" && !reportedError {
-			log.Info("detected pods have an issue starting",
-				"detected", detectedError,
-				"kube_error", k8error,
-			)
-			reportedError = true
-		}
-
-		return false, nil
-	})
-	if err != nil {
-		if err == wait.ErrWaitTimeout {
-			err = fmt.Errorf("Pod was unable to start after timeout: %s", timeout)
-		}
-		return nil, err
-	}
-	log.Info("task pod is ready and running!")
+	// NOTE(mitchellh): In the future, we can probably do some waiting
+	// here to check that the pods are successfully starting. This will
+	// result in a more immediate error message.
 
 	return &Task{
 		Id: name,
