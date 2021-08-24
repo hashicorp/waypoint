@@ -352,7 +352,9 @@ func (p *Platform) Status(
 		result.HealthMessage = fmt.Sprintf("Job %q is reporting unknown!", deployment.Name)
 	}
 
-	result.HealthMessage = *job.StatusDescription
+	if *job.StatusDescription != "" {
+		result.HealthMessage = *job.StatusDescription
+	}
 
 	result.GeneratedTime = ptypes.TimestampNow()
 
