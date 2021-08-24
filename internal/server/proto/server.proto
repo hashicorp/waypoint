@@ -1000,7 +1000,13 @@ message TaskLaunchInfo {
   // The environment variables that will be exposed to the task.
   map<string, string> environment_variables = 2;
 
-  // The arguments that will be passed to the new container on boot
+  // Entrypoint is the entrypoint override for the OCI image. If this
+  // is not set (null or length of zero) then the entrypoint should not
+  // be overridden.
+  repeated string entrypoint = 4;
+
+  // The arguments that will be passed to the new container on boot.
+  // These are arguments and should not overwrite the entrypoint.
   repeated string arguments = 3;
 }
 
