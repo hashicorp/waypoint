@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/docker/distribution/reference"
@@ -55,6 +56,11 @@ type TaskLauncherConfig struct {
 	// ServiceAccount is the name of the Kubernetes service account to apply to the
 	// application deployment. This is useful to apply Kubernetes RBAC to the pod.
 	ServiceAccount string `hcl:"service_account,optional"`
+
+	// Set an explicit pull policy for this task launching. By default
+	// we use "PullIfNotPresent" unless the image tag is "latest" when we
+	// use "Always".
+	PullPolicy string `hcl:"image_pull_policy,optional"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -142,7 +148,10 @@ func (p *TaskLauncher) StartTask(
 	if err != nil {
 		return nil, err
 	}
-	name := fmt.Sprintf("waypoint-task-%s", id.String())
+
+	// This must be lowercase because K8S enforces that resource names
+	// are lowercase.
+	name := strings.ToLower(fmt.Sprintf("waypoint-task-%s", id.String()))
 
 	// Parse our image to determine some details later.
 	named, err := reference.ParseNormalizedNamed(tli.OciUrl)
@@ -164,7 +173,9 @@ func (p *TaskLauncher) StartTask(
 	// If the user is using the latest tag, then don't specify an overriding pull policy.
 	// This by default means kubernetes will always pull so that latest is useful.
 	pullPolicy := corev1.PullIfNotPresent
-	if t, ok := named.(reference.Tagged); ok && t.Tag() == "latest" {
+	if v := p.config.PullPolicy; v != "" {
+		pullPolicy = corev1.PullPolicy(v)
+	} else if t, ok := named.(reference.Tagged); ok && t.Tag() == "latest" {
 		pullPolicy = ""
 	}
 
@@ -181,7 +192,6 @@ func (p *TaskLauncher) StartTask(
 		Name:            name,
 		Image:           tli.OciUrl,
 		ImagePullPolicy: pullPolicy,
-		Command:         []string{tli.Arguments[0]},
 		Args:            tli.Arguments,
 		Env:             env,
 		Resources:       resourceRequirements,
