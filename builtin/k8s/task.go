@@ -146,7 +146,7 @@ func (p *TaskLauncher) StopTask(
 	jobsClient := clientSet.BatchV1().Jobs(ns)
 	err = jobsClient.Delete(ctx, ti.Id, metav1.DeleteOptions{})
 	if errors.IsNotFound(err) {
-		// If it doesn't exist then that's fine, its already stopped then.
+		// If it doesn't exist then that's fine, it's already stopped then.
 		err = nil
 	}
 
