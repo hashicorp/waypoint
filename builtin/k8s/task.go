@@ -134,7 +134,7 @@ func (p *TaskLauncher) Config() (interface{}, error) {
 func (p *TaskLauncher) StopTask(
 	ctx context.Context,
 	log hclog.Logger,
-	ti *Task,
+	ti *TaskInfo,
 ) error {
 	// Get our client
 	clientSet, ns, _, err := clientset(p.config.KubeconfigPath, p.config.Context)
@@ -158,7 +158,7 @@ func (p *TaskLauncher) StartTask(
 	ctx context.Context,
 	log hclog.Logger,
 	tli *component.TaskLaunchInfo,
-) (*Task, error) {
+) (*TaskInfo, error) {
 	// Get our client
 	clientSet, ns, _, err := clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
@@ -265,7 +265,7 @@ func (p *TaskLauncher) StartTask(
 	// here to check that the pods are successfully starting. This will
 	// result in a more immediate error message.
 
-	return &Task{
+	return &TaskInfo{
 		Id: name,
 	}, nil
 }

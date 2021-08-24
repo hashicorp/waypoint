@@ -187,8 +187,8 @@ func (*Resource) Descriptor() ([]byte, []int) {
 	return file_waypoint_builtin_k8s_plugin_proto_rawDescGZIP(), []int{2}
 }
 
-// Task represents the state of the TaskLaunch implementation.
-type Task struct {
+// This represents the state of the TaskLaunch implementation.
+type TaskInfo struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -196,8 +196,8 @@ type Task struct {
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (x *Task) Reset() {
-	*x = Task{}
+func (x *TaskInfo) Reset() {
+	*x = TaskInfo{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_waypoint_builtin_k8s_plugin_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -205,13 +205,13 @@ func (x *Task) Reset() {
 	}
 }
 
-func (x *Task) String() string {
+func (x *TaskInfo) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Task) ProtoMessage() {}
+func (*TaskInfo) ProtoMessage() {}
 
-func (x *Task) ProtoReflect() protoreflect.Message {
+func (x *TaskInfo) ProtoReflect() protoreflect.Message {
 	mi := &file_waypoint_builtin_k8s_plugin_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -223,12 +223,12 @@ func (x *Task) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Task.ProtoReflect.Descriptor instead.
-func (*Task) Descriptor() ([]byte, []int) {
+// Deprecated: Use TaskInfo.ProtoReflect.Descriptor instead.
+func (*TaskInfo) Descriptor() ([]byte, []int) {
 	return file_waypoint_builtin_k8s_plugin_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *Task) GetId() string {
+func (x *TaskInfo) GetId() string {
 	if x != nil {
 		return x.Id
 	}
@@ -355,11 +355,11 @@ var file_waypoint_builtin_k8s_plugin_proto_rawDesc = []byte{
 	0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d,
 	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x1a, 0x1d, 0x0a,
 	0x07, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x16, 0x0a, 0x04,
-	0x54, 0x61, 0x73, 0x6b, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x02, 0x69, 0x64, 0x42, 0x16, 0x5a, 0x14, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74,
-	0x2f, 0x62, 0x75, 0x69, 0x6c, 0x74, 0x69, 0x6e, 0x2f, 0x6b, 0x38, 0x73, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x1a, 0x0a, 0x08,
+	0x54, 0x61, 0x73, 0x6b, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x42, 0x16, 0x5a, 0x14, 0x77, 0x61, 0x79, 0x70,
+	0x6f, 0x69, 0x6e, 0x74, 0x2f, 0x62, 0x75, 0x69, 0x6c, 0x74, 0x69, 0x6e, 0x2f, 0x6b, 0x38, 0x73,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -379,7 +379,7 @@ var file_waypoint_builtin_k8s_plugin_proto_goTypes = []interface{}{
 	(*Deployment)(nil),          // 0: k8s.Deployment
 	(*Release)(nil),             // 1: k8s.Release
 	(*Resource)(nil),            // 2: k8s.Resource
-	(*Task)(nil),                // 3: k8s.Task
+	(*TaskInfo)(nil),            // 3: k8s.TaskInfo
 	(*Resource_Deployment)(nil), // 4: k8s.Resource.Deployment
 	(*Resource_Service)(nil),    // 5: k8s.Resource.Service
 	(*anypb.Any)(nil),           // 6: google.protobuf.Any
@@ -437,7 +437,7 @@ func file_waypoint_builtin_k8s_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_k8s_plugin_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Task); i {
+			switch v := v.(*TaskInfo); i {
 			case 0:
 				return &v.state
 			case 1:

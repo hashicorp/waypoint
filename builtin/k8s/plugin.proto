@@ -29,7 +29,7 @@ message Resource {
   }
 }
 
-// Task represents the state of the TaskLaunch implementation.
-message Task {
+// This represents the state of the TaskLaunch implementation.
+message TaskInfo {
   string id = 1;
 }
