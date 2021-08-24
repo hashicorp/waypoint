@@ -133,6 +133,7 @@ func (p *Platform) ValidateAuth() error {
 	return nil
 }
 
+// StatusFunc implements component.Status
 func (p *Platform) StatusFunc() interface{} {
 	return p.Status
 }
