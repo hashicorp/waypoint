@@ -175,6 +175,10 @@
     "path": "plugin"
   },
   {
+    "title": "project inspect",
+    "path": "project-inspect"
+  },
+  {
     "title": "project list",
     "path": "project-list"
   },

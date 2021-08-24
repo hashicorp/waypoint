@@ -492,6 +492,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"project inspect": func() (cli.Command, error) {
+			return &ProjectInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"fmt": func() (cli.Command, error) {
 			return &FmtCommand{

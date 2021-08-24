@@ -1,0 +1,39 @@
+---
+layout: commands
+page_title: 'Commands: Project inspect'
+sidebar_title: 'project inspect'
+description: 'Inspect the details of a project.'
+---
+
+# Waypoint Project inspect
+
+Command: `waypoint project inspect`
+
+Inspect the details of a project.
+
+@include "commands/project-inspect_desc.mdx"
+
+## Usage
+
+Usage: `waypoint project inspect [project-name]`
+
+Inspect the details of a given project.
+
+Projects usually map to a single version control repository and contain
+exactly one "waypoint.hcl" configuration. A project may contain multiple
+applications.
+
+A project is registered via the web UI, "waypoint project apply",
+or "waypoint init".
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-json` - Output project information as JSON.
+
+@include "commands/project-inspect_more.mdx"
