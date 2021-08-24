@@ -201,26 +201,6 @@ func (i *K8sInstaller) Install(
 			}
 		}
 
-		// Setup the role
-		s.Update("Initializing role for on-demand runner...")
-		rolesClient := clientset.RbacV1().Roles(i.config.namespace)
-		role, err := newServiceAccountRole(i.config)
-		if err != nil {
-			return nil, err
-		}
-		_, err = rolesClient.Get(ctx, role.Name, metav1.GetOptions{})
-		if err != nil && !errors.IsNotFound(err) {
-			return nil, err
-		}
-		if err == nil {
-			if err := rolesClient.Delete(ctx, role.Name, metav1.DeleteOptions{}); err != nil {
-				return nil, err
-			}
-		}
-		if _, err := rolesClient.Create(ctx, role, metav1.CreateOptions{}); err != nil {
-			return nil, err
-		}
-
 		// Setup the role binding
 		s.Update("Initializing role binding for on-demand runner...")
 		rbClient := clientset.RbacV1().RoleBindings(i.config.namespace)
@@ -1400,26 +1380,6 @@ func newServiceAccount(c k8sConfig) (*apiv1.ServiceAccount, error) {
 	}, nil
 }
 
-// newServiceAccountRole creates the role necessary for the ODR service account.
-func newServiceAccountRole(c k8sConfig) (*rbacv1.Role, error) {
-	return &rbacv1.Role{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "waypoint-runner",
-			Namespace: c.namespace,
-		},
-
-		Rules: []rbacv1.PolicyRule{
-			// The pods rule is required at a minimum for the runner to
-			// launch on-demand runner tasks.
-			{
-				APIGroups: []string{""},
-				Resources: []string{"pods"},
-				Verbs:     []string{"create", "get", "list", "watch", "update", "patch", "delete", "deletecollection"},
-			},
-		},
-	}, nil
-}
-
 // newServiceAccountRoleBinding creates the role binding necessary to
 // map the ODR role to the service account.
 func newServiceAccountRoleBinding(c k8sConfig) (*rbacv1.RoleBinding, error) {
@@ -1429,10 +1389,13 @@ func newServiceAccountRoleBinding(c k8sConfig) (*rbacv1.RoleBinding, error) {
 			Namespace: c.namespace,
 		},
 
+		// Our default runner role is just the default "edit" role. This
+		// gives access to read/write most things in this namespace but
+		// disallows modifying roles and rolebindings.
 		RoleRef: rbacv1.RoleRef{
-			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "Role",
-			Name:     "waypoint-runner",
+			APIGroup: "",
+			Kind:     "ClusterRole",
+			Name:     "edit",
 		},
 
 		Subjects: []rbacv1.Subject{
@@ -1532,14 +1495,14 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:   "k8s-odr-service-account",
+		Name:   "k8s-runner-service-account",
 		Target: &i.config.odrServiceAccount,
 		Usage: "Service account to assign to the on-demand runner. If this is blank, " +
 			"a service account will be created automatically with the correct permissions.",
 	})
 
 	set.BoolVar(&flag.BoolVar{
-		Name:    "k8s-odr-service-account-init",
+		Name:    "k8s-runner-service-account-init",
 		Target:  &i.config.odrServiceAccountInit,
 		Usage:   "Create the service account if it does not exist.",
 		Default: true,
