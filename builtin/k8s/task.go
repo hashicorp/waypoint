@@ -104,7 +104,7 @@ task {
 		"image_secret",
 		"name of the Kubernetes secret to use for the image",
 		docs.Summary(
-			"this references an existing secret, waypoint does not create this secret",
+			"this references an existing secret; waypoint does not create this secret",
 		),
 	)
 
