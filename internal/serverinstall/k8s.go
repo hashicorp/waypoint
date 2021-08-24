@@ -173,9 +173,6 @@ func (i *K8sInstaller) Install(
 	if i.config.odrServiceAccountInit {
 		s.Done()
 		s = sg.Add("Initializing service account for on-demand runners...")
-		if i.config.odrServiceAccount == "" {
-			i.config.odrServiceAccount = "waypoint-runner"
-		}
 
 		// Look for the service account. If it doesn't exist, we create it.
 		saClient := clientset.CoreV1().ServiceAccounts(i.config.namespace)
@@ -1499,6 +1496,7 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 		Target: &i.config.odrServiceAccount,
 		Usage: "Service account to assign to the on-demand runner. If this is blank, " +
 			"a service account will be created automatically with the correct permissions.",
+		Default: "waypoint-runner",
 	})
 
 	set.BoolVar(&flag.BoolVar{
