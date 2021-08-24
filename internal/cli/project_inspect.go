@@ -130,11 +130,6 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 
 	fileChangeSignal := project.FileChangeSignal
 
-	var odrId string
-	if project.OndemandRunner != nil {
-		odrId = project.OndemandRunner.Id
-	}
-
 	// Show project info in a flat list where each project option is its
 	// own row
 	c.ui.Output("Project Info:", terminal.WithHeaderStyle())
@@ -179,9 +174,6 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 		},
 		{
 			Name: "File Change Signal", Value: fileChangeSignal,
-		},
-		{
-			Name: "On-Demand Runner Config Id", Value: odrId,
 		},
 	}, terminal.WithInfoStyle())
 
