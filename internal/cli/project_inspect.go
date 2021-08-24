@@ -4,11 +4,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
-	"github.com/hashicorp/waypoint/internal/cliformat"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -75,6 +75,20 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 	project := resp.Project
 	workspaces := resp.Workspaces
 
+	if c.flagJson {
+		// Note that this won't show keys with unset values in Project
+		var m jsonpb.Marshaler
+		m.Indent = "\t"
+		str, err := m.MarshalToString(project)
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return err
+		}
+
+		c.ui.Output(str)
+		return nil
+	}
+
 	var appNames []string
 	for _, app := range project.Applications {
 		appNames = append(appNames, app.Name)
@@ -116,94 +130,53 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 
 	fileChangeSignal := project.FileChangeSignal
 
-	if c.flagJson {
-		projectHeaders := []string{
-			"Project", "Applications", "Workspaces", "Remote Enabled", "Data Source",
-			"Git URL", "Git Ref", "Git Path", "Data Source Poll Enabled",
-			"Data Source Poll Interval", "App Status Poll Enabled", "App Status Poll Interval",
-			"File Change Signal",
-		}
+	// Show project info in a flat list where each project option is its
+	// own row
+	c.ui.Output("Project Info:", terminal.WithHeaderStyle())
 
-		projectTbl := terminal.NewTable(projectHeaders...)
+	// Unset value strings will be omitted automatically
+	c.ui.NamedValues([]terminal.NamedValue{
+		{
+			Name: "Project Name", Value: project.Name,
+		},
+		{
+			Name: "Applications", Value: strings.Join(appNames, ", "),
+		},
+		{
+			Name: "Workspaces", Value: strings.Join(workspaceNames, ", "),
+		},
+		{
+			Name: "Remote Enabled", Value: strconv.FormatBool(project.RemoteEnabled),
+		},
+		{
+			Name: "Data Source", Value: dataSource,
+		},
+		{
+			Name: "Git URL", Value: gitUrl,
+		},
+		{
+			Name: "Git Ref", Value: gitRef,
+		},
+		{
+			Name: "Git Path", Value: gitPath,
+		},
+		{
+			Name: "Data Source Poll Enabled", Value: strconv.FormatBool(datasourcePollEnabled),
+		},
+		{
+			Name: "Data Source Poll Interval", Value: datasourcePollInterval,
+		},
+		{
+			Name: "App Status Poll Enabled", Value: strconv.FormatBool(appPollEnabled),
+		},
+		{
+			Name: "App Status Poll Interval", Value: appPollInterval,
+		},
+		{
+			Name: "File Change Signal", Value: fileChangeSignal,
+		},
+	}, terminal.WithInfoStyle())
 
-		statusColor := ""
-		columns := []string{
-			project.Name,
-			strings.Join(appNames, ", "),
-			strings.Join(workspaceNames, ", "),
-			strconv.FormatBool(project.RemoteEnabled),
-			dataSource,
-			gitUrl,
-			gitRef,
-			gitPath,
-			strconv.FormatBool(datasourcePollEnabled),
-			datasourcePollInterval,
-			strconv.FormatBool(appPollEnabled),
-			appPollInterval,
-			fileChangeSignal,
-		}
-
-		projectTbl.Rich(
-			columns,
-			[]string{
-				statusColor,
-			},
-		)
-
-		data, err := cliformat.FormatTableJson(projectTbl)
-		if err != nil {
-			return err
-		}
-		c.ui.Output(data)
-	} else {
-		// Show project info in a flat list where each project option is its
-		// own row
-		c.ui.Output("Project Info:", terminal.WithHeaderStyle())
-
-		// Unset value strings will be omitted automatically
-		c.ui.NamedValues([]terminal.NamedValue{
-			{
-				Name: "Project Name", Value: project.Name,
-			},
-			{
-				Name: "Applications", Value: strings.Join(appNames, ", "),
-			},
-			{
-				Name: "Workspaces", Value: strings.Join(workspaceNames, ", "),
-			},
-			{
-				Name: "Remote Enabled", Value: strconv.FormatBool(project.RemoteEnabled),
-			},
-			{
-				Name: "Data Source", Value: dataSource,
-			},
-			{
-				Name: "Git URL", Value: gitUrl,
-			},
-			{
-				Name: "Git Ref", Value: gitRef,
-			},
-			{
-				Name: "Git Path", Value: gitPath,
-			},
-			{
-				Name: "Data Source Poll Enabled", Value: strconv.FormatBool(datasourcePollEnabled),
-			},
-			{
-				Name: "Data Source Poll Interval", Value: datasourcePollInterval,
-			},
-			{
-				Name: "App Status Poll Enabled", Value: strconv.FormatBool(appPollEnabled),
-			},
-			{
-				Name: "App Status Poll Interval", Value: appPollInterval,
-			},
-			{
-				Name: "File Change Signal", Value: fileChangeSignal,
-			},
-		}, terminal.WithInfoStyle())
-
-	}
 	return nil
 }
 
