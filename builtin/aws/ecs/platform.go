@@ -203,7 +203,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithPlatform(platformName),
 			resource.WithState(&Resource_LogGroup{}),
 			resource.WithCreate(p.resourceLogGroupCreate),
-			// TODO: implement destroy when we have better support for app-scoped resources
+			// TODO: implement destroy when we have better support for waypoint global resources
 			// TODO: implement status when we have a plan to not hit rate limits
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_OTHER),
 		)),
@@ -275,6 +275,92 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 	)
 }
 
+// DeploymentId is a unique ID to be consistently used throughout our deployment
+type DeploymentId string
+
+// ExternalIngressPort is the port that the ALB will listen for traffic on
+type ExternalIngressPort int64
+
+func (p *Platform) Deploy(
+	ctx context.Context,
+	log hclog.Logger,
+	src *component.Source,
+	img *docker.Image,
+	deployConfig *component.DeploymentConfig,
+	ui terminal.UI,
+	dcr *component.DeclaredResourcesResp,
+) (*Deployment, error) {
+	var result Deployment
+
+	// We'll update the user in real time
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Initializing deployment...")
+	defer s.Abort()
+
+	// Generate a common deployment ID to use in the resources we create.
+	// TODO: should include the sequence ID
+	ulid, err := component.Id()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate a ULID: %s", err)
+	}
+	deploymentId := DeploymentId(fmt.Sprintf("%s-%s", src.App, ulid))
+
+	// Set default port - it's used for multiple resources
+	if p.config.ServicePort != 0 {
+		log.Debug("Using configured service port %d", p.config.ServicePort)
+	} else {
+		log.Debug("Using the default service port %d", defaultServicePort)
+		p.config.ServicePort = int64(defaultServicePort)
+	}
+
+	// Set ALB ingress port - used for multiple resources
+	var externalIngressPort ExternalIngressPort
+	if p.config.ALB != nil && p.config.ALB.IngressPort != 0 {
+		log.Debug("Using configured ingress port %d", p.config.ServicePort)
+		externalIngressPort = ExternalIngressPort(p.config.ALB.IngressPort)
+	} else if p.config.ALB != nil && p.config.ALB.CertificateId != "" {
+		log.Debug("ALB config defined and cert configured, using ingress port 443")
+		externalIngressPort = ExternalIngressPort(443)
+	} else {
+		log.Debug("Defaulting external ingress port to 80")
+		externalIngressPort = ExternalIngressPort(80)
+	}
+
+	// Create our resource manager and create
+	rm := p.resourceManager(log, dcr)
+	if err := rm.CreateAll(
+		ctx, log, sg, ui, deploymentId, externalIngressPort,
+		src, img, deployConfig, &result,
+	); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create deployment resources: %s", err)
+	}
+
+	// Store our resource state
+	result.ResourceState = rm.State()
+
+	// Get other state required for older versions to destroy this deployment
+	srState := rm.Resource("service").State().(*Resource_Service)
+	result.ServiceArn = srState.Arn
+
+	tgState := rm.Resource("target group").State().(*Resource_TargetGroup)
+	result.TargetGroupArn = tgState.Arn
+
+	albState := rm.Resource("application load balancer").State().(*Resource_Alb)
+	result.LoadBalancerArn = albState.Arn
+
+	cState := rm.Resource("cluster").State().(*Resource_Cluster)
+	result.Cluster = cState.Name
+
+	tdState := rm.Resource("task definition").State().(*Resource_TaskDefinition)
+	result.TaskArn = tdState.Arn
+
+	s.Update("Deployment resources created")
+	s.Done()
+	return &result, nil
+}
+
 func (p *Platform) Status(
 	ctx context.Context,
 	log hclog.Logger,
@@ -331,6 +417,296 @@ func (p *Platform) Status(
 	}
 
 	return result, nil
+}
+
+func (p *Platform) Destroy(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) error {
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Destroying ecs deployment...")
+	defer s.Abort()
+
+	rm := p.resourceManager(log, nil)
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if deployment.ResourceState == nil {
+		if err := p.loadResourceManagerState(ctx, rm, deployment, log, sg); err != nil {
+			return status.Errorf(codes.FailedPrecondition, "failed recovering old state into resource manager: %s", err)
+		}
+	} else {
+		// Load our set state
+		if err := rm.LoadState(deployment.ResourceState); err != nil {
+			return status.Errorf(codes.FailedPrecondition, "failed loading state into resource manager: %s", err)
+		}
+	}
+
+	// Destroy
+	err := rm.DestroyAll(ctx, log, sg, ui)
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to destroy all resources for deployment: %s", err)
+	}
+
+	s.Update("Finished destroying ECS deployment")
+	s.Done()
+	return nil
+}
+
+func (p *Platform) resourceClusterCreate(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	log hclog.Logger,
+	sess *session.Session,
+	state *Resource_Cluster,
+) error {
+	s := sg.Add("Initiating cluster creation...")
+	defer s.Abort()
+
+	cluster := p.config.Cluster
+	if cluster == "" {
+		cluster = "waypoint"
+	}
+	state.Name = cluster
+
+	s.Update("Attempting to find existing cluster named %q", cluster)
+
+	ecsSvc := ecs.New(sess)
+	desc, err := ecsSvc.DescribeClustersWithContext(ctx, &ecs.DescribeClustersInput{
+		Clusters: []*string{aws.String(cluster)},
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, c := range desc.Clusters {
+		if *c.ClusterName == cluster {
+			if *c.Status == "PROVISIONING" {
+				s.Update("Existing ecs cluster %q is still provisioning - try again later.", cluster)
+			} else if *c.Status == "ACTIVE" {
+				s.Update("Using existing ECS cluster %s", cluster)
+				if c.ClusterArn != nil {
+					state.Arn = *c.ClusterArn
+				}
+				s.Done()
+				return nil
+			} else {
+				// Warn if we encounter waypoint clusters in other odd states (i.e. DEPROVISIONING, FAILED, etc.)
+				// I think it's ok to try to create a new cluster if one exists in a non-active non-provisioning state
+				log.Warn("Ignoring cluster named %q in state %q", cluster, *c.Status)
+			}
+		}
+	}
+
+	if p.config.EC2Cluster {
+		return fmt.Errorf("EC2 clusters can not be automatically created")
+	}
+
+	s.Update("No existing cluster found - creating new ECS cluster: %s", cluster)
+
+	c, err := ecsSvc.CreateClusterWithContext(ctx, &ecs.CreateClusterInput{
+		ClusterName: aws.String(cluster),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if c.Cluster != nil && c.Cluster.ClusterArn != nil {
+		state.Arn = *c.Cluster.ClusterArn
+	}
+
+	s.Update("Created ECS cluster: %s", cluster)
+	s.Done()
+	return nil
+}
+
+func (p *Platform) resourceClusterStatus(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	sess *session.Session,
+	state *Resource_Cluster,
+	sr *resource.StatusResponse,
+) error {
+	s := sg.Add("Checking status of the ecs cluster %q...", state.Name)
+	defer s.Abort()
+
+	ecsSvc := ecs.New(sess)
+	desc, err := ecsSvc.DescribeClustersWithContext(ctx, &ecs.DescribeClustersInput{
+		Clusters: []*string{aws.String(state.Name)},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to describe cluster named %q (ARN: %q): %s", state.Name, state.Arn, err)
+	}
+
+	clusterResource := sdk.StatusReport_Resource{
+		Name: state.Name,
+	}
+
+	sr.Resources = append(sr.Resources, &clusterResource)
+
+	for _, c := range desc.Clusters {
+		if *c.ClusterName == state.Name {
+			s.Update("Found existing ECS cluster: %s", state.Name)
+			clusterResource.Id = *c.ClusterArn
+			switch *c.Status {
+			case "ACTIVE":
+				clusterResource.Health = sdk.StatusReport_READY
+			case "PROVISIONING":
+				clusterResource.Health = sdk.StatusReport_ALIVE
+			case "DEPROVISIONING", "FAILED", "INACTIVE":
+				clusterResource.Health = sdk.StatusReport_DOWN
+			default:
+				clusterResource.Health = sdk.StatusReport_UNKNOWN
+			}
+			clusterResource.HealthMessage = *c.Status
+
+			stateJson, err := json.Marshal(c)
+			if err != nil {
+				return fmt.Errorf("failed to marshal ecs cluster state json: %s", err)
+			}
+			clusterResource.StateJson = string(stateJson)
+
+			s.Done()
+			return nil
+		}
+	}
+
+	// Failed to find ECS cluster
+	clusterResource.Health = sdk.StatusReport_MISSING
+	clusterResource.HealthMessage = fmt.Sprintf("No cluster named %q found (expected arn %q)", state.Name, state.Arn)
+
+	s.Update("Done checking ecs cluster status")
+	s.Done()
+	return nil
+}
+
+func (p *Platform) resourceServiceCreate(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	log hclog.Logger,
+	sess *session.Session,
+	src *component.Source,
+	deploymentId DeploymentId,
+	state *Resource_Service,
+
+	// Outputs of other resource creation processes
+	taskDefinition *Resource_TaskDefinition,
+	cluster *Resource_Cluster,
+	targetGroup *Resource_TargetGroup,
+	subnets *Resource_Subnets,
+	securityGroups *Resource_InternalSecurityGroups,
+
+	_ *Resource_Alb_Listener, // Necessary dependency. service creation will fail unless this exists and the target group has been added.
+) error {
+	s := sg.Add("Initiating ecs service creation")
+	defer s.Abort()
+
+	// Use the common deployment ID as our service name
+	serviceName := string(deploymentId)
+
+	// We have to clamp at a length of 32 because the Name field
+	// requires that the name is 32 characters or less.
+	if len(serviceName) > 32 {
+		serviceName = serviceName[:32]
+		log.Debug("using a shortened value for service name due to AWS's length limits", "serviceName", serviceName)
+	}
+
+	taskArn := taskDefinition.Arn
+
+	count := int64(p.config.Count)
+	if count == 0 {
+		count = 1
+	}
+
+	securityGroupIds := make([]*string, len(securityGroups.SecurityGroups))
+	for i, securityGroup := range securityGroups.SecurityGroups {
+		securityGroupIds[i] = &securityGroup.Id
+	}
+
+	subnetIds := make([]*string, len(subnets.Subnets))
+	for i, subnet := range subnets.Subnets {
+		subnetIds[i] = &subnet.Id
+	}
+
+	netCfg := &ecs.AwsVpcConfiguration{
+		Subnets:        subnetIds,
+		SecurityGroups: securityGroupIds,
+	}
+
+	if !p.config.EC2Cluster {
+		netCfg.AssignPublicIp = aws.String("ENABLED")
+	}
+
+	state.Cluster = cluster.Name
+
+	createServiceInput := &ecs.CreateServiceInput{
+		Cluster:        &cluster.Name,
+		DesiredCount:   aws.Int64(count),
+		LaunchType:     &taskDefinition.Runtime,
+		ServiceName:    aws.String(serviceName),
+		TaskDefinition: aws.String(taskArn),
+		NetworkConfiguration: &ecs.NetworkConfiguration{
+			AwsvpcConfiguration: netCfg,
+		},
+	}
+
+	if targetGroup.Arn != "" {
+		log.Debug("Creating ECS service with a load balancer")
+		createServiceInput.SetLoadBalancers([]*ecs.LoadBalancer{{
+			ContainerName:  aws.String(src.App),
+			ContainerPort:  aws.Int64(targetGroup.Port),
+			TargetGroupArn: &targetGroup.Arn,
+		}})
+	} else {
+		log.Debug("No target group specified - skipping load balancer config for ECS service")
+	}
+
+	s.Update("Creating ECS Service %s", serviceName)
+
+	ecsSvc := ecs.New(sess)
+	// AWS is eventually consistent so even though we probably created the resources that
+	// are referenced by the task definition, it can error out if we try to reference those resources
+	// too quickly. So we're forced to guard actions which reference other AWS services
+	// with loops like this.
+	var servOut *ecs.CreateServiceOutput
+	var err error
+	for i := 0; i <= awsCreateRetries; i++ {
+		servOut, err = ecsSvc.CreateServiceWithContext(ctx, createServiceInput)
+		if err == nil {
+			break
+		}
+
+		// if we encounter an unrecoverable error, exit now.
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "AccessDeniedException", "UnsupportedFeatureException",
+				"PlatformUnknownException",
+				"PlatformTaskDefinitionIncompatibilityException":
+				break
+			}
+		}
+
+		s.Update("Failed to register ecs service. Will retry in %d seconds (up to %d more times)\nError: %s", awsCreateRetryIntervalSeconds, awsCreateRetries-i, err)
+
+		// otherwise sleep and try again
+		time.Sleep(awsCreateRetryIntervalSeconds * time.Second)
+	}
+	if err != nil {
+		return fmt.Errorf("failed registering ecs service: %s", err)
+	}
+
+	state.Name = *servOut.Service.ServiceName
+	state.Arn = *servOut.Service.ServiceArn
+
+	s.Update("Created ECS Service %s", serviceName)
+	s.Done()
+	return nil
 }
 
 func (p *Platform) resourceServiceStatus(
@@ -438,6 +814,7 @@ func (p *Platform) resourceServiceStatus(
 
 			taskResource := &sdk.StatusReport_Resource{
 				Type:                "task",
+				Name:                taskId,
 				ParentResourceId:    *service.ServiceArn,
 				Id:                  *task.TaskArn,
 				CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE,
@@ -481,153 +858,6 @@ func (p *Platform) resourceServiceStatus(
 	s.Done()
 	return nil
 }
-
-// resourceAlbListenerDestroy destroys the ALB listener associated with this deployment
-// if it is under waypoint's management, and if the only target group it forwards to
-// is this deployment's target group.
-func (p *Platform) resourceAlbListenerDestroy(
-	ctx context.Context,
-	sg terminal.StepGroup,
-	sess *session.Session,
-	log hclog.Logger,
-	state *Resource_Alb_Listener,
-) error {
-	if !state.Managed {
-		log.Debug("Skipping destroy of unmanaged ALB listener with ARN %q", state.Arn)
-		return nil
-	}
-	if state.Arn == "" {
-		log.Debug("Missing alb listener ARN - it must not have been created successfully. Skipping delete.")
-		return nil
-	}
-
-	s := sg.Add("Initiating deletion of ALB Listener (ARN: %q)", state.Arn)
-	defer s.Abort()
-
-	elbsrv := elbv2.New(sess)
-	s.Update("Describing ALB listener (ARN: %q)", state.Arn)
-
-	listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
-		ListenerArns: []*string{&state.Arn},
-	})
-	if err != nil {
-		// There doesn't seem to be an aws error to cast to for this code.
-		if strings.Contains(err.Error(), "ListenerNotFound") {
-			s.Update("Listener does not exist and must have been destroyed (ARN %q).", state.Arn)
-			s.Done()
-			return nil
-		}
-		return fmt.Errorf("failed to describe listener with ARN %q: %s", state.Arn, err)
-	}
-
-	if len(listeners.Listeners) == 0 {
-		// Could happen if listener was deleted out-of-band
-		s.Update("ALB listener does not exist - not deleting (ARN: %q)", state.Arn)
-		s.Done()
-		return nil
-	}
-
-	listener := listeners.Listeners[0]
-
-	log.Debug("listener arn", "arn", *listener.ListenerArn)
-
-	def := listener.DefaultActions
-
-	var tgs []*elbv2.TargetGroupTuple
-
-	// If there is only 1 target group, delete the listener
-	if len(def) == 1 && len(def[0].ForwardConfig.TargetGroups) == 1 {
-		log.Debug("only 1 target group, deleting listener")
-
-		s.Update("Deleting ALB listener (ARN: %q)", state.Arn)
-		_, err = elbsrv.DeleteListenerWithContext(ctx, &elbv2.DeleteListenerInput{
-			ListenerArn: listener.ListenerArn,
-		})
-
-		if err != nil {
-			return fmt.Errorf("failed to delete ALB listener (ARN %q): %s", *listener.ListenerArn, err)
-		}
-		s.Update("Deleted ALB Listener")
-	} else if len(def) > 0 && def[0].ForwardConfig != nil && len(def[0].ForwardConfig.TargetGroups) > 1 {
-		// Multiple target groups means we can keep the listener
-		var active bool
-
-		for _, tg := range def[0].ForwardConfig.TargetGroups {
-			if *tg.TargetGroupArn != state.TargetGroup.Arn {
-				tgs = append(tgs, tg)
-				if *tg.Weight > 0 {
-					active = true
-				}
-			}
-		}
-
-		// If there are no target groups active, then we just activate the first
-		// one, otherwise we can't modify the listener.
-		if !active && len(tgs) > 0 {
-			tgs[0].Weight = aws.Int64(100)
-		}
-
-		log.Debug("modifying listener to remove target group", "target-groups", len(tgs))
-
-		s.Update("Deregistering this deployment's target group from ALB listener")
-		_, err = elbsrv.ModifyListenerWithContext(ctx, &elbv2.ModifyListenerInput{
-			ListenerArn: listener.ListenerArn,
-			Port:        listener.Port,
-			Protocol:    listener.Protocol,
-			DefaultActions: []*elbv2.Action{
-				{
-					ForwardConfig: &elbv2.ForwardActionConfig{
-						TargetGroups: tgs,
-					},
-					Type: aws.String("forward"),
-				},
-			},
-		})
-		if err != nil {
-			return fmt.Errorf("failed to modify listener (ARN %q): %s", *listener.ListenerArn, err)
-		}
-		s.Update("Deregistered this deployment's target group from ALB listener")
-	}
-
-	s.Done()
-	return nil
-}
-
-func (p *Platform) resourceTargetGroupDestroy(
-	ctx context.Context,
-	sg terminal.StepGroup,
-	sess *session.Session,
-	log hclog.Logger,
-	state *Resource_TargetGroup,
-) error {
-	if state.Arn == "" {
-		log.Debug("Missing target group ARN - it must not have been created successfully. Skipping delete.")
-		return nil
-	}
-
-	s := sg.Add("Deleting target group %s", state.Name)
-	defer s.Abort()
-
-	elbsrv := elbv2.New(sess)
-
-	// Destroying the listener earlier should have deregistered this target group, so it should be safe
-	// to just delete
-	_, err := elbsrv.DeleteTargetGroupWithContext(ctx, &elbv2.DeleteTargetGroupInput{
-		TargetGroupArn: &state.Arn,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to delete target group %s (ARN: %q): %s", state.Name, state.Arn, err)
-	}
-
-	s.Done()
-	return nil
-}
-
-// DeploymentId is a unique ID to be consistently used throughout our deployment
-type DeploymentId string
-
-// ExternalIngressPort is the port that the ALB will listen for traffic on
-type ExternalIngressPort int64
 
 func (p *Platform) resourceServiceDestroy(
 	ctx context.Context,
@@ -761,7 +991,8 @@ func (p *Platform) resourceAlbListenerCreate(
 
 			listener = lo.Listeners[0]
 
-			s.Update("Created ALB Listener %s", *listener.ListenerArn)
+			s.Update("Created ALB Listener")
+			log.Debug("Created ALB Listener", "arn", *listener.ListenerArn)
 		}
 	}
 	state.Arn = *listener.ListenerArn
@@ -805,190 +1036,111 @@ func (p *Platform) resourceAlbListenerCreate(
 	return nil
 }
 
-func (p *Platform) resourceAlbCreate(
+// resourceAlbListenerDestroy destroys the ALB listener associated with this deployment
+// if it is under waypoint's management, and if the only target group it forwards to
+// is this deployment's target group.
+func (p *Platform) resourceAlbListenerDestroy(
 	ctx context.Context,
 	sg terminal.StepGroup,
 	sess *session.Session,
 	log hclog.Logger,
-	src *component.Source,
-	securityGroups *Resource_ExternalSecurityGroups,
-	subnets *Resource_Subnets, // Required because we need to know which VPC we're in, and subnets discover it.
-	state *Resource_Alb,
+	state *Resource_Alb_Listener,
 ) error {
-	if p.config.DisableALB {
-		log.Debug("ALB disabled - skipping target group creation")
+	if !state.Managed {
+		log.Debug("Skipping destroy of unmanaged ALB listener with ARN %q", state.Arn)
+		return nil
+	}
+	if state.Arn == "" {
+		log.Debug("Missing alb listener ARN - it must not have been created successfully. Skipping delete.")
 		return nil
 	}
 
-	albConfig := p.config.ALB
-
-	if albConfig != nil && albConfig.ListenerARN != "" {
-		log.Debug("Existing ALB listener specified - no need to create or discover an ALB")
-		return nil
-	}
-
-	// If not using an existing listener, the load balancer is owned by waypoint
-	state.Managed = true
-
-	s := sg.Add("Initiating ALB creation")
+	s := sg.Add("Initiating deletion of ALB Listener (ARN: %q)", state.Arn)
 	defer s.Abort()
-
-	var certs []*elbv2.Certificate
-	if albConfig != nil && albConfig.CertificateId != "" {
-		certs = append(certs, &elbv2.Certificate{
-			CertificateArn: &albConfig.CertificateId,
-		})
-	}
 
 	elbsrv := elbv2.New(sess)
+	s.Update("Describing ALB listener (ARN: %q)", state.Arn)
 
-	lbName := "waypoint-ecs-" + src.App
-	state.Name = lbName
-
-	s.Update("Looking for an existing load balancer named %s", lbName)
-
-	var lb *elbv2.LoadBalancer
-	dlb, err := elbsrv.DescribeLoadBalancersWithContext(ctx, &elbv2.DescribeLoadBalancersInput{
-		Names: []*string{&lbName},
+	listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
+		ListenerArns: []*string{&state.Arn},
 	})
 	if err != nil {
-		// If the load balancer wasn't found, we'll create it.
-		if aerr, ok := err.(awserr.Error); ok && aerr.Code() != elbv2.ErrCodeLoadBalancerNotFoundException {
-			return fmt.Errorf("failed to describe load balancers with name %q: %s", lbName, err)
+		// There doesn't seem to be an aws error to cast to for this code.
+		if strings.Contains(err.Error(), "ListenerNotFound") {
+			s.Update("Listener does not exist and must have been destroyed (ARN %q).", state.Arn)
+			s.Done()
+			return nil
 		}
-		log.Debug("load balancer %s was not found - will create it.")
+		return fmt.Errorf("failed to describe listener with ARN %q: %s", state.Arn, err)
 	}
 
-	if dlb != nil && len(dlb.LoadBalancers) > 0 {
-		lb = dlb.LoadBalancers[0]
-		s.Update("Using existing ALB %s (%s, dns-name: %s)",
-			lbName, *lb.LoadBalancerArn, *lb.DNSName)
-	} else {
-		s.Update("Creating new ALB: %s", lbName)
-
-		scheme := elbv2.LoadBalancerSchemeEnumInternetFacing
-
-		if albConfig != nil && albConfig.InternalScheme != nil && *albConfig.InternalScheme {
-			log.Debug("Creating an internal scheme ALB")
-			scheme = elbv2.LoadBalancerSchemeEnumInternal
-		}
-
-		subnetIds := make([]*string, len(subnets.Subnets))
-		for i, subnet := range subnets.Subnets {
-			subnetIds[i] = &subnet.Id
-		}
-
-		securityGroupIds := make([]*string, len(securityGroups.SecurityGroups))
-		for i, securityGroup := range securityGroups.SecurityGroups {
-			securityGroupIds[i] = &securityGroup.Id
-		}
-
-		clb, err := elbsrv.CreateLoadBalancerWithContext(ctx, &elbv2.CreateLoadBalancerInput{
-			Name:           aws.String(lbName),
-			Subnets:        subnetIds,
-			SecurityGroups: securityGroupIds,
-			Scheme:         &scheme,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to create ALB %q: %s", lbName, err)
-		}
-
-		lb = clb.LoadBalancers[0]
-
-		s.Update("Created ALB: %s (dns-name: %s)", lbName, *lb.DNSName)
-	}
-	state.Arn = *lb.LoadBalancerArn
-
-	state.Arn = *lb.LoadBalancerArn
-	state.DnsName = *lb.DNSName
-	state.CanonicalHostedZoneId = *lb.CanonicalHostedZoneId
-
-	s.Update("Using Application Load Balancer %q", state.Name)
-	s.Done()
-	return nil
-}
-
-func (p *Platform) resourceRoute53RecordCreate(
-	ctx context.Context,
-	sg terminal.StepGroup,
-	sess *session.Session,
-	log hclog.Logger,
-	alb *Resource_Alb,
-	state *Resource_Route53Record,
-) error {
-	albConfig := p.config.ALB
-	if p.config.DisableALB || albConfig == nil || albConfig.ZoneId == "" || albConfig.FQDN == "" {
-		log.Debug("Not creating a route53 record")
+	if len(listeners.Listeners) == 0 {
+		// Could happen if listener was deleted out-of-band
+		s.Update("ALB listener does not exist - not deleting (ARN: %q)", state.Arn)
+		s.Done()
 		return nil
 	}
 
-	s := sg.Add("Route53 record is required - checking if one already exists")
-	defer s.Abort()
+	listener := listeners.Listeners[0]
 
-	r53 := route53.New(sess)
+	log.Debug("listener arn", "arn", *listener.ListenerArn)
 
-	records, err := r53.ListResourceRecordSetsWithContext(ctx, &route53.ListResourceRecordSetsInput{
-		HostedZoneId:    aws.String(albConfig.ZoneId),
-		StartRecordName: aws.String(albConfig.FQDN),
-		StartRecordType: aws.String(route53.RRTypeA),
-		MaxItems:        aws.String("1"),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to list resource records for alb %q: %s", state.Name, err)
-	}
+	def := listener.DefaultActions
 
-	fqdn := albConfig.FQDN
+	var tgs []*elbv2.TargetGroupTuple
 
-	// Add trailing period to match Route53 record name
-	if fqdn[len(fqdn)-1] != '.' {
-		fqdn += "."
-	}
+	// If there is only 1 target group, delete the listener
+	if len(def) == 1 && len(def[0].ForwardConfig.TargetGroups) == 1 {
+		log.Debug("only 1 target group, deleting listener")
 
-	var recordExists bool
+		s.Update("Deleting ALB listener (ARN: %q)", state.Arn)
+		_, err = elbsrv.DeleteListenerWithContext(ctx, &elbv2.DeleteListenerInput{
+			ListenerArn: listener.ListenerArn,
+		})
 
-	if len(records.ResourceRecordSets) > 0 {
-		record := records.ResourceRecordSets[0]
-		if aws.StringValue(record.Type) == route53.RRTypeA && aws.StringValue(record.Name) == fqdn {
-			s.Update("Found existing Route53 record: %s", aws.StringValue(record.Name))
-			log.Debug("found existing record, assuming it's correct")
-			recordExists = true
-		}
-	}
-
-	if !recordExists {
-		s.Update("Creating new Route53 record: %s (zone-id: %s)",
-			albConfig.FQDN, albConfig.ZoneId)
-
-		log.Debug("creating new route53 record", "zone-id", albConfig.ZoneId)
-		input := &route53.ChangeResourceRecordSetsInput{
-			ChangeBatch: &route53.ChangeBatch{
-				Changes: []*route53.Change{
-					{
-						Action: aws.String(route53.ChangeActionCreate),
-						ResourceRecordSet: &route53.ResourceRecordSet{
-							Name: aws.String(albConfig.FQDN),
-							Type: aws.String(route53.RRTypeA),
-							AliasTarget: &route53.AliasTarget{
-								DNSName:              &alb.DnsName,
-								EvaluateTargetHealth: aws.Bool(true),
-								HostedZoneId:         &alb.CanonicalHostedZoneId,
-							},
-						},
-					},
-				},
-				Comment: aws.String("managed by waypoint"),
-			},
-			HostedZoneId: aws.String(albConfig.ZoneId),
-		}
-
-		result, err := r53.ChangeResourceRecordSetsWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("failed to create route53 record %q: %s", albConfig.FQDN, err)
+			return fmt.Errorf("failed to delete ALB listener (ARN %q): %s", *listener.ListenerArn, err)
 		}
-		log.Debug("record created", "change-id", *result.ChangeInfo.Id)
+		s.Update("Deleted ALB Listener")
+	} else if len(def) > 0 && def[0].ForwardConfig != nil && len(def[0].ForwardConfig.TargetGroups) > 1 {
+		// Multiple target groups means we can keep the listener
+		var active bool
 
-		s.Update("Created Route53 record: %s (zone-id: %s)",
-			albConfig.FQDN, albConfig.ZoneId)
+		for _, tg := range def[0].ForwardConfig.TargetGroups {
+			if *tg.TargetGroupArn != state.TargetGroup.Arn {
+				tgs = append(tgs, tg)
+				if *tg.Weight > 0 {
+					active = true
+				}
+			}
+		}
+
+		// If there are no target groups active, then we just activate the first
+		// one, otherwise we can't modify the listener.
+		if !active && len(tgs) > 0 {
+			tgs[0].Weight = aws.Int64(100)
+		}
+
+		log.Debug("modifying listener to remove target group", "target-groups", len(tgs))
+
+		s.Update("Deregistering this deployment's target group from ALB listener")
+		_, err = elbsrv.ModifyListenerWithContext(ctx, &elbv2.ModifyListenerInput{
+			ListenerArn: listener.ListenerArn,
+			Port:        listener.Port,
+			Protocol:    listener.Protocol,
+			DefaultActions: []*elbv2.Action{
+				{
+					ForwardConfig: &elbv2.ForwardActionConfig{
+						TargetGroups: tgs,
+					},
+					Type: aws.String("forward"),
+				},
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to modify listener (ARN %q): %s", *listener.ListenerArn, err)
+		}
+		s.Update("Deregistered this deployment's target group from ALB listener")
 	}
 
 	s.Done()
@@ -1020,7 +1172,7 @@ func (p *Platform) resourceTargetGroupCreate(
 	// We have to clamp at a length of 32 because the Name field
 	// requires that the name is 32 characters or less.
 
-	// TODO(izaak): The random part of ULIDs seems to be near the end, so for long app names, we might not get unique names here.
+	// NOTE(izaak): The random part of ULIDs seems to be near the end, so for long app names, we might not get unique names here.
 	// Should use a different source of randomness than component ID
 	if len(targetGroupName) > 32 {
 		targetGroupName = targetGroupName[:32]
@@ -1057,205 +1209,34 @@ func (p *Platform) resourceTargetGroupCreate(
 	return nil
 }
 
-func (p *Platform) resourceSubnetsDiscover(
+func (p *Platform) resourceTargetGroupDestroy(
 	ctx context.Context,
 	sg terminal.StepGroup,
 	sess *session.Session,
-	state *Resource_Subnets,
+	log hclog.Logger,
+	state *Resource_TargetGroup,
 ) error {
-	s := sg.Add("Discovering which subnets to use")
-	defer s.Abort()
-
-	var subnets []*string
-	var err error
-	if len(p.config.Subnets) == 0 {
-		s.Update("Using default subnets for Service networking")
-		subnets, state.VpcId, err = defaultSubnets(ctx, sess)
-		if err != nil {
-			return fmt.Errorf("failed to determine default subnets: %s", err)
-		}
-	} else {
-		s.Update("Using defined subnets for Service networking")
-		subnets = make([]*string, len(p.config.Subnets))
-		for i := range p.config.Subnets {
-			subnets[i] = &p.config.Subnets[i]
-		}
-
-		// We need to determine the vpc id via the API if we were given subnet IDs.
-		ec2srv := ec2.New(sess)
-
-		subnetInfo, err := ec2srv.DescribeSubnetsWithContext(ctx, &ec2.DescribeSubnetsInput{
-			SubnetIds: subnets,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to describe subnets %q: %s", strings.Join(p.config.Subnets, ", "), err)
-		}
-		if len(subnetInfo.Subnets) == 0 {
-			return fmt.Errorf("failed to find any subnets with IDs %q", strings.Join(p.config.Subnets, ", "))
-		}
-
-		state.VpcId = *subnetInfo.Subnets[0].VpcId
-	}
-	for _, subnet := range subnets {
-		state.Subnets = append(state.Subnets, &Resource_Subnets_Subnet{Id: *subnet})
-	}
-
-	s.Done()
-	return nil
-}
-
-func (p *Platform) resourceExternalSecurityGroupsCreate(
-	ctx context.Context,
-	sg terminal.StepGroup,
-	sess *session.Session,
-	src *component.Source,
-	subnets *Resource_Subnets, // Required because we need to know which VPC we're in, and subnets discover it.
-	externalIngressPort ExternalIngressPort,
-	state *Resource_ExternalSecurityGroups,
-) error {
-	name := fmt.Sprintf("%s-inbound", src.App)
-	s := sg.Add("Initiating creation of external security group named %s", name)
-	defer s.Abort()
-
-	protocol := "tcp"
-	cidr := "0.0.0.0/0"
-	cidrDescription := "all traffic"
-	port := int64(externalIngressPort)
-	perms := []*ec2.IpPermission{{
-		IpProtocol: &protocol,
-		FromPort:   &port,
-		ToPort:     &port,
-		IpRanges: []*ec2.IpRange{{
-			CidrIp:      &cidr,
-			Description: &cidrDescription,
-		}},
-	}}
-
-	securityGroup, err := upsertSecurityGroup(ctx, sess, s, name, subnets.VpcId, perms)
-	if err != nil {
-		return fmt.Errorf("failed to upsert security group %q: %s", name, err)
-	}
-
-	state.SecurityGroups = append(state.SecurityGroups, securityGroup)
-	s.Update("Using external security group %s", securityGroup.Name)
-
-	s.Done()
-	return nil
-}
-
-func (p *Platform) resourceInternalSecurityGroupsCreate(
-	ctx context.Context,
-	sg terminal.StepGroup,
-	sess *session.Session,
-	src *component.Source,
-	subnets *Resource_Subnets, // Required because we need to know which VPC we're in, and subnets discover it.
-	extSecurityGroup *Resource_ExternalSecurityGroups,
-	state *Resource_InternalSecurityGroups,
-) error {
-	s := sg.Add("Initiating security group creation...")
-	defer s.Abort()
-
-	if p.config.SecurityGroupIDs != nil {
-		s.Update("Using specified security group IDs")
-		for _, sgId := range p.config.SecurityGroupIDs {
-			state.SecurityGroups = append(state.SecurityGroups, &Resource_SecurityGroup{Id: *sgId, Managed: false})
-		}
-		s.Done()
+	if state.Arn == "" {
+		log.Debug("Missing target group ARN - it must not have been created successfully. Skipping delete.")
 		return nil
 	}
 
-	name := fmt.Sprintf("%s-inbound-internal", src.App)
+	s := sg.Add("Deleting target group %s", state.Name)
+	defer s.Abort()
 
-	s.Update("No security groups specified - checking for existing security group named %q", name)
+	elbsrv := elbv2.New(sess)
 
-	if extSecurityGroup == nil || len(extSecurityGroup.SecurityGroups) == 0 || extSecurityGroup.SecurityGroups[0] == nil {
-		return fmt.Errorf("cannot create internal security group without a reference to the external security group ID")
-	}
-
-	extSgId := extSecurityGroup.SecurityGroups[0].Id
-
-	protocol := "tcp"
-	perms := []*ec2.IpPermission{{
-		IpProtocol: &protocol,
-		FromPort:   &p.config.ServicePort,
-		ToPort:     &p.config.ServicePort,
-		UserIdGroupPairs: []*ec2.UserIdGroupPair{{
-			GroupId: &extSgId,
-		}},
-	}}
-
-	securityGroup, err := upsertSecurityGroup(ctx, sess, s, name, subnets.VpcId, perms)
+	// Destroying the listener earlier should have deregistered this target group, so it should be safe
+	// to just delete
+	_, err := elbsrv.DeleteTargetGroupWithContext(ctx, &elbv2.DeleteTargetGroupInput{
+		TargetGroupArn: &state.Arn,
+	})
 	if err != nil {
-		return fmt.Errorf("failed to upsert security group %q: %s", name, err)
+		return fmt.Errorf("failed to delete target group %s (ARN: %q): %s", state.Name, state.Arn, err)
 	}
-
-	state.SecurityGroups = append(state.SecurityGroups, securityGroup)
-	s.Update("Using internal security group %s", securityGroup.Name)
 
 	s.Done()
 	return nil
-}
-
-// Finds a security group by name, and creates one if it does not exist.
-func upsertSecurityGroup(
-	ctx context.Context,
-	sess *session.Session,
-	s terminal.Step,
-
-	name string,
-	vpcId string,
-	perms []*ec2.IpPermission,
-) (*Resource_SecurityGroup, error) {
-	ec2srv := ec2.New(sess)
-
-	s.Update("Looking for existing security group named %q", name)
-	dsg, err := ec2srv.DescribeSecurityGroupsWithContext(ctx, &ec2.DescribeSecurityGroupsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("group-name"),
-				Values: []*string{aws.String(name)},
-			},
-		},
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to describe security groups named %q: %s", name, err)
-	}
-
-	// We only upsert security groups that we manage
-	sg := &Resource_SecurityGroup{Managed: true}
-
-	if len(dsg.SecurityGroups) != 0 {
-		sg.Id = *dsg.SecurityGroups[0].GroupId
-		sg.Name = *dsg.SecurityGroups[0].GroupName
-		s.Update("Using existing security group with ID %s", sg.Id)
-	} else {
-		s.Update("Creating new security group named %s", name)
-
-		out, err := ec2srv.CreateSecurityGroupWithContext(ctx, &ec2.CreateSecurityGroupInput{
-			Description: aws.String("created by waypoint"),
-			GroupName:   aws.String(name),
-			VpcId:       &vpcId,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to create security group %q: %s", name, err)
-		}
-
-		sg.Id = *out.GroupId
-		sg.Name = name
-
-		s.Update("Authorizing ingress on newly created security group %s", name)
-		_, err = ec2srv.AuthorizeSecurityGroupIngressWithContext(ctx, &ec2.AuthorizeSecurityGroupIngressInput{
-			GroupId:       &sg.Id,
-			IpPermissions: perms,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to authorize ingress to security group %q: %s", sg.Name, err)
-		}
-
-		s.Update("Created and configured security group %s", name)
-	}
-
-	return sg, nil
 }
 
 func (p *Platform) resourceTaskDefinitionCreate(
@@ -1480,127 +1461,395 @@ func (p *Platform) resourceTaskDefinitionCreate(
 	return nil
 }
 
-func (p *Platform) resourceServiceCreate(
+func (p *Platform) resourceAlbCreate(
 	ctx context.Context,
 	sg terminal.StepGroup,
-	log hclog.Logger,
 	sess *session.Session,
+	log hclog.Logger,
 	src *component.Source,
-	deploymentId DeploymentId,
-	state *Resource_Service,
-
-	// Outputs of other resource creation processes
-	taskDefinition *Resource_TaskDefinition,
-	cluster *Resource_Cluster,
-	targetGroup *Resource_TargetGroup,
-	subnets *Resource_Subnets,
-	securityGroups *Resource_InternalSecurityGroups,
-
-	_ *Resource_Alb_Listener, // Necessary dependency. service creation will fail unless this exists and the target group has been added.
+	securityGroups *Resource_ExternalSecurityGroups,
+	subnets *Resource_Subnets, // Required because we need to know which VPC we're in, and subnets discover it.
+	state *Resource_Alb,
 ) error {
-	s := sg.Add("Initiating ecs service creation")
+	if p.config.DisableALB {
+		log.Debug("ALB disabled - skipping target group creation")
+		return nil
+	}
+
+	albConfig := p.config.ALB
+
+	if albConfig != nil && albConfig.ListenerARN != "" {
+		log.Debug("Existing ALB listener specified - no need to create or discover an ALB")
+		return nil
+	}
+
+	// If not using an existing listener, the load balancer is owned by waypoint
+	state.Managed = true
+
+	s := sg.Add("Initiating ALB creation")
 	defer s.Abort()
 
-	// Use the common deployment ID as our service name
-	serviceName := string(deploymentId)
-
-	// We have to clamp at a length of 32 because the Name field
-	// requires that the name is 32 characters or less.
-	if len(serviceName) > 32 {
-		serviceName = serviceName[:32]
-		log.Debug("using a shortened value for service name due to AWS's length limits", "serviceName", serviceName)
+	var certs []*elbv2.Certificate
+	if albConfig != nil && albConfig.CertificateId != "" {
+		certs = append(certs, &elbv2.Certificate{
+			CertificateArn: &albConfig.CertificateId,
+		})
 	}
 
-	taskArn := taskDefinition.Arn
+	elbsrv := elbv2.New(sess)
 
-	count := int64(p.config.Count)
-	if count == 0 {
-		count = 1
-	}
+	lbName := "waypoint-ecs-" + src.App
+	state.Name = lbName
 
-	securityGroupIds := make([]*string, len(securityGroups.SecurityGroups))
-	for i, securityGroup := range securityGroups.SecurityGroups {
-		securityGroupIds[i] = &securityGroup.Id
-	}
+	s.Update("Looking for an existing load balancer named %s", lbName)
 
-	subnetIds := make([]*string, len(subnets.Subnets))
-	for i, subnet := range subnets.Subnets {
-		subnetIds[i] = &subnet.Id
-	}
-
-	netCfg := &ecs.AwsVpcConfiguration{
-		Subnets:        subnetIds,
-		SecurityGroups: securityGroupIds,
-	}
-
-	if !p.config.EC2Cluster {
-		netCfg.AssignPublicIp = aws.String("ENABLED")
-	}
-
-	state.Cluster = cluster.Name
-
-	createServiceInput := &ecs.CreateServiceInput{
-		Cluster:        &cluster.Name,
-		DesiredCount:   aws.Int64(count),
-		LaunchType:     &taskDefinition.Runtime,
-		ServiceName:    aws.String(serviceName),
-		TaskDefinition: aws.String(taskArn),
-		NetworkConfiguration: &ecs.NetworkConfiguration{
-			AwsvpcConfiguration: netCfg,
-		},
-	}
-
-	if targetGroup.Arn != "" {
-		log.Debug("Creating ECS service with a load balancer")
-		createServiceInput.SetLoadBalancers([]*ecs.LoadBalancer{{
-			ContainerName:  aws.String(src.App),
-			ContainerPort:  aws.Int64(targetGroup.Port),
-			TargetGroupArn: &targetGroup.Arn,
-		}})
-	} else {
-		log.Debug("No target group specified - skipping load balancer config for ECS service")
-	}
-
-	s.Update("Creating ECS Service %s", serviceName)
-
-	ecsSvc := ecs.New(sess)
-	// AWS is eventually consistent so even though we probably created the resources that
-	// are referenced by the task definition, it can error out if we try to reference those resources
-	// too quickly. So we're forced to guard actions which reference other AWS services
-	// with loops like this.
-	var servOut *ecs.CreateServiceOutput
-	var err error
-	for i := 0; i <= awsCreateRetries; i++ {
-		servOut, err = ecsSvc.CreateServiceWithContext(ctx, createServiceInput)
-		if err == nil {
-			break
-		}
-
-		// if we encounter an unrecoverable error, exit now.
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case "AccessDeniedException", "UnsupportedFeatureException",
-				"PlatformUnknownException",
-				"PlatformTaskDefinitionIncompatibilityException":
-				break
-			}
-		}
-
-		s.Update("Failed to register ecs service. Will retry in %d seconds (up to %d more times)\nError: %s", awsCreateRetryIntervalSeconds, awsCreateRetries-i, err)
-
-		// otherwise sleep and try again
-		time.Sleep(awsCreateRetryIntervalSeconds * time.Second)
-	}
+	var lb *elbv2.LoadBalancer
+	dlb, err := elbsrv.DescribeLoadBalancersWithContext(ctx, &elbv2.DescribeLoadBalancersInput{
+		Names: []*string{&lbName},
+	})
 	if err != nil {
-		return fmt.Errorf("failed registering ecs service: %s", err)
+		// If the load balancer wasn't found, we'll create it.
+		if aerr, ok := err.(awserr.Error); ok && aerr.Code() != elbv2.ErrCodeLoadBalancerNotFoundException {
+			return fmt.Errorf("failed to describe load balancers with name %q: %s", lbName, err)
+		}
+		log.Debug("load balancer %s was not found - will create it.")
 	}
 
-	state.Name = *servOut.Service.ServiceName
-	state.Arn = *servOut.Service.ServiceArn
+	if dlb != nil && len(dlb.LoadBalancers) > 0 {
+		lb = dlb.LoadBalancers[0]
+		s.Update("Using existing ALB %s (%s, dns-name: %s)",
+			lbName, *lb.LoadBalancerArn, *lb.DNSName)
+	} else {
+		s.Update("Creating new ALB: %s", lbName)
 
-	s.Update("Created ECS Service %s", serviceName)
+		scheme := elbv2.LoadBalancerSchemeEnumInternetFacing
+
+		if albConfig != nil && albConfig.InternalScheme != nil && *albConfig.InternalScheme {
+			log.Debug("Creating an internal scheme ALB")
+			scheme = elbv2.LoadBalancerSchemeEnumInternal
+		}
+
+		subnetIds := make([]*string, len(subnets.Subnets))
+		for i, subnet := range subnets.Subnets {
+			subnetIds[i] = &subnet.Id
+		}
+
+		securityGroupIds := make([]*string, len(securityGroups.SecurityGroups))
+		for i, securityGroup := range securityGroups.SecurityGroups {
+			securityGroupIds[i] = &securityGroup.Id
+		}
+
+		clb, err := elbsrv.CreateLoadBalancerWithContext(ctx, &elbv2.CreateLoadBalancerInput{
+			Name:           aws.String(lbName),
+			Subnets:        subnetIds,
+			SecurityGroups: securityGroupIds,
+			Scheme:         &scheme,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create ALB %q: %s", lbName, err)
+		}
+
+		lb = clb.LoadBalancers[0]
+
+		s.Update("Created ALB: %s (dns-name: %s)", lbName, *lb.DNSName)
+	}
+	state.Arn = *lb.LoadBalancerArn
+
+	state.Arn = *lb.LoadBalancerArn
+	state.DnsName = *lb.DNSName
+	state.CanonicalHostedZoneId = *lb.CanonicalHostedZoneId
+
+	s.Update("Using Application Load Balancer %q", state.Name)
 	s.Done()
 	return nil
+}
+
+func (p *Platform) resourceRoute53RecordCreate(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	sess *session.Session,
+	log hclog.Logger,
+	alb *Resource_Alb,
+	state *Resource_Route53Record,
+) error {
+	albConfig := p.config.ALB
+	if p.config.DisableALB || albConfig == nil || albConfig.ZoneId == "" || albConfig.FQDN == "" {
+		log.Debug("Not creating a route53 record")
+		return nil
+	}
+
+	s := sg.Add("Route53 record is required - checking if one already exists")
+	defer s.Abort()
+
+	r53 := route53.New(sess)
+
+	records, err := r53.ListResourceRecordSetsWithContext(ctx, &route53.ListResourceRecordSetsInput{
+		HostedZoneId:    aws.String(albConfig.ZoneId),
+		StartRecordName: aws.String(albConfig.FQDN),
+		StartRecordType: aws.String(route53.RRTypeA),
+		MaxItems:        aws.String("1"),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to list resource records for alb %q: %s", state.Name, err)
+	}
+
+	fqdn := albConfig.FQDN
+
+	// Add trailing period to match Route53 record name
+	if fqdn[len(fqdn)-1] != '.' {
+		fqdn += "."
+	}
+
+	var recordExists bool
+
+	if len(records.ResourceRecordSets) > 0 {
+		record := records.ResourceRecordSets[0]
+		if aws.StringValue(record.Type) == route53.RRTypeA && aws.StringValue(record.Name) == fqdn {
+			s.Update("Found existing Route53 record: %s", aws.StringValue(record.Name))
+			log.Debug("found existing record, assuming it's correct")
+			recordExists = true
+		}
+	}
+
+	if !recordExists {
+		s.Update("Creating new Route53 record: %s (zone-id: %s)",
+			albConfig.FQDN, albConfig.ZoneId)
+
+		log.Debug("creating new route53 record", "zone-id", albConfig.ZoneId)
+		input := &route53.ChangeResourceRecordSetsInput{
+			ChangeBatch: &route53.ChangeBatch{
+				Changes: []*route53.Change{
+					{
+						Action: aws.String(route53.ChangeActionCreate),
+						ResourceRecordSet: &route53.ResourceRecordSet{
+							Name: aws.String(albConfig.FQDN),
+							Type: aws.String(route53.RRTypeA),
+							AliasTarget: &route53.AliasTarget{
+								DNSName:              &alb.DnsName,
+								EvaluateTargetHealth: aws.Bool(true),
+								HostedZoneId:         &alb.CanonicalHostedZoneId,
+							},
+						},
+					},
+				},
+				Comment: aws.String("managed by waypoint"),
+			},
+			HostedZoneId: aws.String(albConfig.ZoneId),
+		}
+
+		result, err := r53.ChangeResourceRecordSetsWithContext(ctx, input)
+		if err != nil {
+			return fmt.Errorf("failed to create route53 record %q: %s", albConfig.FQDN, err)
+		}
+		log.Debug("record created", "change-id", *result.ChangeInfo.Id)
+
+		s.Update("Created Route53 record: %s (zone-id: %s)",
+			albConfig.FQDN, albConfig.ZoneId)
+	}
+
+	s.Done()
+	return nil
+}
+
+func (p *Platform) resourceSubnetsDiscover(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	sess *session.Session,
+	state *Resource_Subnets,
+) error {
+	s := sg.Add("Discovering which subnets to use")
+	defer s.Abort()
+
+	var subnets []*string
+	var err error
+	if len(p.config.Subnets) == 0 {
+		s.Update("Using default subnets for Service networking")
+		subnets, state.VpcId, err = defaultSubnets(ctx, sess)
+		if err != nil {
+			return fmt.Errorf("failed to determine default subnets: %s", err)
+		}
+	} else {
+		s.Update("Using defined subnets for Service networking")
+		subnets = make([]*string, len(p.config.Subnets))
+		for i := range p.config.Subnets {
+			subnets[i] = &p.config.Subnets[i]
+		}
+
+		// We need to determine the vpc id via the API if we were given subnet IDs.
+		ec2srv := ec2.New(sess)
+
+		subnetInfo, err := ec2srv.DescribeSubnetsWithContext(ctx, &ec2.DescribeSubnetsInput{
+			SubnetIds: subnets,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to describe subnets %q: %s", strings.Join(p.config.Subnets, ", "), err)
+		}
+		if len(subnetInfo.Subnets) == 0 {
+			return fmt.Errorf("failed to find any subnets with IDs %q", strings.Join(p.config.Subnets, ", "))
+		}
+
+		state.VpcId = *subnetInfo.Subnets[0].VpcId
+	}
+	for _, subnet := range subnets {
+		state.Subnets = append(state.Subnets, &Resource_Subnets_Subnet{Id: *subnet})
+	}
+
+	s.Done()
+	return nil
+}
+
+func (p *Platform) resourceExternalSecurityGroupsCreate(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	sess *session.Session,
+	src *component.Source,
+	subnets *Resource_Subnets, // Required because we need to know which VPC we're in, and subnets discover it.
+	externalIngressPort ExternalIngressPort,
+	state *Resource_ExternalSecurityGroups,
+) error {
+	name := fmt.Sprintf("%s-inbound", src.App)
+	s := sg.Add("Initiating creation of external security group named %s", name)
+	defer s.Abort()
+
+	protocol := "tcp"
+	cidr := "0.0.0.0/0"
+	cidrDescription := "all traffic"
+	port := int64(externalIngressPort)
+	perms := []*ec2.IpPermission{{
+		IpProtocol: &protocol,
+		FromPort:   &port,
+		ToPort:     &port,
+		IpRanges: []*ec2.IpRange{{
+			CidrIp:      &cidr,
+			Description: &cidrDescription,
+		}},
+	}}
+
+	securityGroup, err := upsertSecurityGroup(ctx, sess, s, name, subnets.VpcId, perms)
+	if err != nil {
+		return fmt.Errorf("failed to upsert security group %q: %s", name, err)
+	}
+
+	state.SecurityGroups = append(state.SecurityGroups, securityGroup)
+	s.Update("Using external security group %s", securityGroup.Name)
+
+	s.Done()
+	return nil
+}
+
+func (p *Platform) resourceInternalSecurityGroupsCreate(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	sess *session.Session,
+	src *component.Source,
+	subnets *Resource_Subnets, // Required because we need to know which VPC we're in, and subnets discover it.
+	extSecurityGroup *Resource_ExternalSecurityGroups,
+	state *Resource_InternalSecurityGroups,
+) error {
+	s := sg.Add("Initiating security group creation...")
+	defer s.Abort()
+
+	if p.config.SecurityGroupIDs != nil {
+		s.Update("Using specified security group IDs")
+		for _, sgId := range p.config.SecurityGroupIDs {
+			state.SecurityGroups = append(state.SecurityGroups, &Resource_SecurityGroup{Id: *sgId, Managed: false})
+		}
+		s.Done()
+		return nil
+	}
+
+	name := fmt.Sprintf("%s-inbound-internal", src.App)
+
+	s.Update("No security groups specified - checking for existing security group named %q", name)
+
+	if extSecurityGroup == nil || len(extSecurityGroup.SecurityGroups) == 0 || extSecurityGroup.SecurityGroups[0] == nil {
+		return fmt.Errorf("cannot create internal security group without a reference to the external security group ID")
+	}
+
+	extSgId := extSecurityGroup.SecurityGroups[0].Id
+
+	protocol := "tcp"
+	perms := []*ec2.IpPermission{{
+		IpProtocol: &protocol,
+		FromPort:   &p.config.ServicePort,
+		ToPort:     &p.config.ServicePort,
+		UserIdGroupPairs: []*ec2.UserIdGroupPair{{
+			GroupId: &extSgId,
+		}},
+	}}
+
+	securityGroup, err := upsertSecurityGroup(ctx, sess, s, name, subnets.VpcId, perms)
+	if err != nil {
+		return fmt.Errorf("failed to upsert security group %q: %s", name, err)
+	}
+
+	state.SecurityGroups = append(state.SecurityGroups, securityGroup)
+	s.Update("Using internal security group %s", securityGroup.Name)
+
+	s.Done()
+	return nil
+}
+
+// Finds a security group by name, and creates one if it does not exist.
+func upsertSecurityGroup(
+	ctx context.Context,
+	sess *session.Session,
+	s terminal.Step,
+
+	name string,
+	vpcId string,
+	perms []*ec2.IpPermission,
+) (*Resource_SecurityGroup, error) {
+	ec2srv := ec2.New(sess)
+
+	s.Update("Looking for existing security group named %q", name)
+	dsg, err := ec2srv.DescribeSecurityGroupsWithContext(ctx, &ec2.DescribeSecurityGroupsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("group-name"),
+				Values: []*string{aws.String(name)},
+			},
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to describe security groups named %q: %s", name, err)
+	}
+
+	// We only upsert security groups that we manage
+	sg := &Resource_SecurityGroup{Managed: true}
+
+	if len(dsg.SecurityGroups) != 0 {
+		sg.Id = *dsg.SecurityGroups[0].GroupId
+		sg.Name = *dsg.SecurityGroups[0].GroupName
+		s.Update("Using existing security group with ID %s", sg.Id)
+	} else {
+		s.Update("Creating new security group named %s", name)
+
+		out, err := ec2srv.CreateSecurityGroupWithContext(ctx, &ec2.CreateSecurityGroupInput{
+			Description: aws.String("created by waypoint"),
+			GroupName:   aws.String(name),
+			VpcId:       &vpcId,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create security group %q: %s", name, err)
+		}
+
+		sg.Id = *out.GroupId
+		sg.Name = name
+
+		s.Update("Authorizing ingress on newly created security group %s", name)
+		_, err = ec2srv.AuthorizeSecurityGroupIngressWithContext(ctx, &ec2.AuthorizeSecurityGroupIngressInput{
+			GroupId:       &sg.Id,
+			IpPermissions: perms,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to authorize ingress to security group %q: %s", sg.Name, err)
+		}
+
+		s.Update("Created and configured security group %s", name)
+	}
+
+	return sg, nil
 }
 
 func (p *Platform) resourceLogGroupCreate(
@@ -1691,7 +1940,6 @@ func (p *Platform) resourceTaskRoleDiscover(
 	return nil
 }
 
-// todo: comment
 func (p *Platform) resourceExecutionRoleCreate(
 	ctx context.Context,
 	sg terminal.StepGroup,
@@ -1729,7 +1977,7 @@ func (p *Platform) resourceExecutionRoleCreate(
 
 	getOut, err := svc.GetRoleWithContext(ctx, queryInput)
 	if err == nil {
-		s.Update("Using existing IAM role %q", *getOut.Role.RoleName)
+		s.Update("Using existing execution IAM role %q", *getOut.Role.RoleName)
 
 		// NOTE(izaak): We're verifying that the role exists, but not that it has the correct policy attached.
 		// It's possible that we failed on that step earlier. We could call AttachRolePolicy every time, but
@@ -1775,138 +2023,6 @@ func (p *Platform) resourceExecutionRoleCreate(
 	return nil
 }
 
-// TODO: comment
-func (p *Platform) resourceClusterCreate(
-	ctx context.Context,
-	sg terminal.StepGroup,
-	log hclog.Logger,
-	sess *session.Session,
-	state *Resource_Cluster,
-) error {
-	s := sg.Add("Initiating cluster creation...")
-	defer s.Abort()
-
-	cluster := p.config.Cluster
-	if cluster == "" {
-		cluster = "waypoint"
-	}
-	state.Name = cluster
-
-	s.Update("Attempting to find existing cluster named %q", cluster)
-
-	ecsSvc := ecs.New(sess)
-	desc, err := ecsSvc.DescribeClustersWithContext(ctx, &ecs.DescribeClustersInput{
-		Clusters: []*string{aws.String(cluster)},
-	})
-	if err != nil {
-		return err
-	}
-
-	for _, c := range desc.Clusters {
-		if *c.ClusterName == cluster {
-			if *c.Status == "PROVISIONING" {
-				s.Update("Existing ecs cluster %q is still provisioning - try again later.", cluster)
-				// TODO: This case should be rare, but it might be nice to automatically wait here and poll until the cluster is ready.
-			} else if *c.Status == "ACTIVE" {
-				s.Update("Using existing ECS cluster %s", cluster)
-				if c.ClusterArn != nil {
-					state.Arn = *c.ClusterArn
-				}
-				s.Done()
-				return nil
-			} else {
-				// Warn if we encounter waypoint clusters in other odd states (i.e. DEPROVISIONING, FAILED, etc.)
-				// I think it's ok to try to create a new cluster if one exists in a non-active non-provisioning state
-				log.Warn("Ignoring cluster named %q in state %q", cluster, *c.Status)
-			}
-		}
-	}
-
-	if p.config.EC2Cluster {
-		return fmt.Errorf("EC2 clusters can not be automatically created")
-	}
-
-	s.Update("No existing cluster found - creating new ECS cluster: %s", cluster)
-
-	c, err := ecsSvc.CreateClusterWithContext(ctx, &ecs.CreateClusterInput{
-		ClusterName: aws.String(cluster),
-	})
-
-	if err != nil {
-		return err
-	}
-
-	if c.Cluster != nil && c.Cluster.ClusterArn != nil {
-		state.Arn = *c.Cluster.ClusterArn
-	}
-
-	// TODO(izaak): Do we need to block here until the cluster is in ACTIVE state?
-
-	s.Update("Created ECS cluster: %s", cluster)
-	s.Done()
-	return nil
-}
-
-func (p *Platform) resourceClusterStatus(
-	ctx context.Context,
-	sg terminal.StepGroup,
-	sess *session.Session,
-	state *Resource_Cluster,
-	sr *resource.StatusResponse,
-) error {
-	s := sg.Add("Checking status of the ecs cluster %q...", state.Name)
-	defer s.Abort()
-
-	ecsSvc := ecs.New(sess)
-	desc, err := ecsSvc.DescribeClustersWithContext(ctx, &ecs.DescribeClustersInput{
-		Clusters: []*string{aws.String(state.Name)},
-	})
-	if err != nil {
-		return fmt.Errorf("failed to describe cluster named %q (ARN: %q): %s", state.Name, state.Arn, err)
-	}
-
-	clusterResource := sdk.StatusReport_Resource{
-		Name: state.Name,
-	}
-
-	sr.Resources = append(sr.Resources, &clusterResource)
-
-	for _, c := range desc.Clusters {
-		if *c.ClusterName == state.Name {
-			s.Update("Found existing ECS cluster: %s", state.Name)
-			clusterResource.Id = *c.ClusterArn
-			switch *c.Status {
-			case "ACTIVE":
-				clusterResource.Health = sdk.StatusReport_READY
-			case "PROVISIONING":
-				clusterResource.Health = sdk.StatusReport_ALIVE
-			case "DEPROVISIONING", "FAILED", "INACTIVE":
-				clusterResource.Health = sdk.StatusReport_DOWN
-			default:
-				clusterResource.Health = sdk.StatusReport_UNKNOWN
-			}
-			clusterResource.HealthMessage = *c.Status
-
-			stateJson, err := json.Marshal(c)
-			if err != nil {
-				return fmt.Errorf("failed to marshal ecs cluster state json: %s", err)
-			}
-			clusterResource.StateJson = string(stateJson)
-
-			s.Done()
-			return nil
-		}
-	}
-
-	// Failed to find ECS cluster
-	clusterResource.Health = sdk.StatusReport_MISSING
-	clusterResource.HealthMessage = fmt.Sprintf("No cluster named %q found (expected arn %q)", state.Name, state.Arn)
-
-	s.Update("Done checking ecs cluster status")
-	s.Done()
-	return nil
-}
-
 // getSession is a value provider for resource manager and provides a client
 // for use by resources to interact with AWS
 func (p *Platform) getSession(log hclog.Logger) (*session.Session, error) {
@@ -1918,86 +2034,6 @@ func (p *Platform) getSession(log hclog.Logger) (*session.Session, error) {
 		return nil, status.Error(codes.FailedPrecondition, fmt.Sprintf("failed to create aws session: %s", err))
 	}
 	return sess, nil
-}
-
-func (p *Platform) Deploy(
-	ctx context.Context,
-	log hclog.Logger,
-	src *component.Source,
-	img *docker.Image,
-	deployConfig *component.DeploymentConfig,
-	ui terminal.UI,
-	dcr *component.DeclaredResourcesResp,
-) (*Deployment, error) {
-	var result Deployment
-
-	// We'll update the user in real time
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
-	s := sg.Add("Initializing deployment...")
-	defer s.Abort()
-
-	// Generate a common deployment ID to use in the resources we create.
-	// TODO: should include the sequence ID
-	ulid, err := component.Id()
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate a ULID: %s", err)
-	}
-	deploymentId := DeploymentId(fmt.Sprintf("%s-%s", src.App, ulid))
-
-	// Set default port - it's used for multiple resources
-	if p.config.ServicePort != 0 {
-		log.Debug("Using configured service port %d", p.config.ServicePort)
-	} else {
-		log.Debug("Using the default service port %d", defaultServicePort)
-		p.config.ServicePort = int64(defaultServicePort)
-	}
-
-	// Set ALB ingress port - used for multiple resources
-	var externalIngressPort ExternalIngressPort
-	if p.config.ALB != nil && p.config.ALB.IngressPort != 0 {
-		log.Debug("Using configured ingress port %d", p.config.ServicePort)
-		externalIngressPort = ExternalIngressPort(p.config.ALB.IngressPort)
-	} else if p.config.ALB != nil && p.config.ALB.CertificateId != "" {
-		log.Debug("ALB config defined and cert configured, using ingress port 443")
-		externalIngressPort = ExternalIngressPort(443)
-	} else {
-		log.Debug("Defaulting external ingress port to 80")
-		externalIngressPort = ExternalIngressPort(80)
-	}
-
-	// Create our resource manager and create
-	rm := p.resourceManager(log, dcr)
-	if err := rm.CreateAll(
-		ctx, log, sg, ui, deploymentId, externalIngressPort,
-		src, img, deployConfig, &result,
-	); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create deployment resources: %s", err)
-	}
-
-	// Store our resource state
-	result.ResourceState = rm.State()
-
-	// Get other state required for older versions to destroy this deployment
-	srState := rm.Resource("service").State().(*Resource_Service)
-	result.ServiceArn = srState.Arn
-
-	tgState := rm.Resource("target group").State().(*Resource_TargetGroup)
-	result.TargetGroupArn = tgState.Arn
-
-	albState := rm.Resource("application load balancer").State().(*Resource_Alb)
-	result.LoadBalancerArn = albState.Arn
-
-	cState := rm.Resource("cluster").State().(*Resource_Cluster)
-	result.Cluster = cState.Name
-
-	tdState := rm.Resource("task definition").State().(*Resource_TaskDefinition)
-	result.TaskArn = tdState.Arn
-
-	s.Update("Deployment resources created")
-	s.Done()
-	return &result, nil
 }
 
 // Loads state from the old locations on the top-level Deployment struct into resource manager.
@@ -2056,45 +2092,6 @@ func (p *Platform) loadResourceManagerState(
 	rm.Resource("alb listener").SetState(&listenerResource)
 
 	s.Update("Finished gathering resource state")
-	s.Done()
-	return nil
-}
-
-func (p *Platform) Destroy(
-	ctx context.Context,
-	log hclog.Logger,
-	deployment *Deployment,
-	ui terminal.UI,
-) error {
-
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
-	s := sg.Add("Destroying ecs deployment...")
-	defer s.Abort()
-
-	rm := p.resourceManager(log, nil)
-
-	// If we don't have resource state, this state is from an older version
-	// and we need to manually recreate it.
-	if deployment.ResourceState == nil {
-		if err := p.loadResourceManagerState(ctx, rm, deployment, log, sg); err != nil {
-			return status.Errorf(codes.FailedPrecondition, "failed recovering old state into resource manager: %s", err)
-		}
-	} else {
-		// Load our set state
-		if err := rm.LoadState(deployment.ResourceState); err != nil {
-			return status.Errorf(codes.FailedPrecondition, "failed loading state into resource manager: %s", err)
-		}
-	}
-
-	// Destroy
-	err := rm.DestroyAll(ctx, log, sg, ui)
-	if err != nil {
-		return status.Errorf(codes.Internal, "failed to destroy all resources for deployment: %s", err)
-	}
-
-	s.Update("Finished destroying ECS deployment")
 	s.Done()
 	return nil
 }
