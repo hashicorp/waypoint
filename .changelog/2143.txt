@@ -1,0 +1,3 @@
+```release-note:improvement
+core: easier to understand error messages when using incompatible plugins
+```
