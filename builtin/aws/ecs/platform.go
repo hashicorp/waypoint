@@ -830,7 +830,7 @@ func (p *Platform) resourceServiceStatus(
 				taskResource.Health = sdk.StatusReport_DOWN
 			}
 
-			taskResource.HealthMessage = fmt.Sprintf("task is %s", *task.LastStatus)
+			taskResource.HealthMessage = fmt.Sprintf("task is %q", *task.LastStatus)
 
 			// Find IP address if possible
 
