@@ -5,7 +5,7 @@ import ApiService from 'waypoint/services/api';
 export default class Exec extends Route {
   @service api!: ApiService;
 
-  async model() {
+  async model(): Promise<void> {
     // todo(pearkes): construct GetExecStreamRequest
   }
 }
