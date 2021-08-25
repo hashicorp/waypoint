@@ -130,3 +130,7 @@ message Resource {
 }
 
 
+// This represents the state of the TaskLaunch implementation.
+message TaskInfo {
+  string id = 1;
+}

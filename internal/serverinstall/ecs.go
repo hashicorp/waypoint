@@ -2,6 +2,7 @@ package serverinstall
 
 import (
 	"context"
+	json "encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
+	"github.com/ryboe/q"
 )
 
 const (
@@ -74,6 +76,11 @@ type ecsConfig struct {
 	CPU string `hcl:"cpu,optional"`
 	// Memory configures the default amount of memory for the task
 	Memory string `hcl:"memory,optional"`
+
+	// On-Demand Runner configuration
+	OdrImage             string `hcl:"odr_image,optional"`
+	OdrExecutionRoleName string `hcl:"odr_execution_role_name,optional"`
+	// odrServiceAccountInit bool   `hcl:"odr_service_account_init,optional"`
 }
 
 // Install is a method of ECSInstaller and implements the Installer interface to
@@ -82,6 +89,14 @@ func (i *ECSInstaller) Install(
 	ctx context.Context,
 	opts *InstallOpts,
 ) (*InstallResults, error) {
+	if i.config.OdrImage == "" {
+		var err error
+		i.config.OdrImage, err = defaultODRImage(i.config.ServerImage)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	ui := opts.UI
 	log := opts.Log
 
@@ -1095,7 +1110,7 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-execution-role-name",
 		Target:  &i.config.ExecutionRoleName,
-		Usage:   "Configures the Execution role name to use.",
+		Usage:   "Configures the IAM Execution role name to use.",
 		Default: "waypoint-server-execution-role",
 	})
 	set.StringVar(&flag.StringVar{
@@ -1110,13 +1125,32 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 		Usage:   "Configures the requested CPU amount for the Waypoint server task in ECS.",
 		Default: "512",
 	})
-
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-mem",
 		Target:  &i.config.Memory,
 		Usage:   "Configures the requested memory amount for the Waypoint server task in ECS.",
 		Default: "1024",
 	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "ecs-odr-image",
+		Target: &i.config.OdrImage,
+		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
+			"default to the server image with the name (not label) suffixed with '-odr'.",
+	})
+	set.StringVar(&flag.StringVar{
+		Name:   "ecs-runner-service-account",
+		Target: &i.config.OdrExecutionRoleName,
+		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
+			"an IAM execution role will be created automatically with the correct permissions.",
+		Default: "waypoint-runner",
+	})
+	// set.BoolVar(&flag.BoolVar{
+	// 	Name:    "ecs-runner-service-account-init",
+	// 	Target:  &i.config.OdrServiceAccountInit,
+	// 	Usage:   "Create the service account if it does not exist.",
+	// 	Default: true,
+	// })
 }
 
 func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
@@ -1144,13 +1178,32 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 		Usage:   "Configures the requested CPU amount for the Waypoint server task in ECS.",
 		Default: "512",
 	})
-
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-mem",
 		Target:  &i.config.Memory,
 		Usage:   "Configures the requested memory amount for the Waypoint server task in ECS.",
 		Default: "1024",
 	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "ecs-odr-image",
+		Target: &i.config.OdrImage,
+		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
+			"default to the server image with the name (not label) suffixed with '-odr'.",
+	})
+	set.StringVar(&flag.StringVar{
+		Name:   "ecs-runner-service-account",
+		Target: &i.config.OdrExecutionRoleName,
+		Usage: "Service account to assign to the on-demand runner. If this is blank, " +
+			"a service account will be created automatically with the correct permissions.",
+		Default: "waypoint-runner",
+	})
+	// set.BoolVar(&flag.BoolVar{
+	// 	Name:    "ecs-runner-service-account-init",
+	// 	Target:  &i.config.odrServiceAccountInit,
+	// 	Usage:   "Create the service account if it does not exist.",
+	// 	Default: true,
+	// })
 }
 
 func (i *ECSInstaller) UninstallFlags(set *flag.Set) {
@@ -1642,6 +1695,10 @@ type Logging struct {
 	MaxBufferSize    string `hcl:"max_buffer_size,optional"`
 }
 
+// TODO Setup Server Execution Role
+// TODO Setup Runner Execution Role
+// setupExecutionRole
+
 func (i *ECSInstaller) SetupExecutionRole(
 	ctx context.Context,
 	ui terminal.UI,
@@ -1653,8 +1710,21 @@ func (i *ECSInstaller) SetupExecutionRole(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Setting up execution role...")
+	s := sg.Add("Setting up an IAM execution role...")
 	defer func() { s.Abort() }()
+
+	q.Q("-> ODR execution role check in setup ex role")
+	if i.config.OdrExecutionRoleName != "" {
+		s.Done()
+		s = sg.Add("Initializing ODR Execution Role for on-demand runners...")
+		q.Q("-> adding ODR execution role: ", i.config.OdrExecutionRoleName)
+		// err := i.initServiceAccount(ctx, clientset, s)
+		s.Abort()
+		// if err != nil {
+		// 	return nil, err
+		// }
+		s = sg.Add("")
+	}
 
 	svc := iam.New(sess)
 
@@ -1714,7 +1784,7 @@ func (i *ECSInstaller) SetupExecutionRole(
 		return "", err
 	}
 
-	log.Debug("attached execution role policy")
+	log.Debug("attached IAM execution role policy")
 
 	s.Update("Created IAM role: %s", roleName)
 	s.Done()
@@ -1725,7 +1795,7 @@ const rolePolicy = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-		  "Sid": "",
+      "Sid": "",
       "Effect": "Allow",
       "Principal": {
         "Service": "ecs-tasks.amazonaws.com"
@@ -2222,4 +2292,40 @@ func createService(serviceInput *ecs.CreateServiceInput, ecsSvc *ecs.ECS) (*ecs.
 		return nil, err
 	}
 	return servOut.Service, nil
+}
+
+// OnDemandRunnerConfig implements OnDemandRunnerConfigProvider
+func (i *ECSInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	q.Q("-> on demand")
+	// Generate some configuration
+	cfgMap := map[string]interface{}{}
+	if v := i.config.OdrExecutionRoleName; v != "" {
+		cfgMap["odr_execution_role_name"] = v
+	}
+
+	// if v := i.config.imagePullSecret; v != "" {
+	// 	cfgMap["image_secret"] = v
+	// }
+	// if v := i.config.imagePullPolicy; v != "" {
+	// 	cfgMap["image_pull_policy"] = v
+	// }
+
+	// Marshal our config
+	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
+	if err != nil {
+		// This shouldn't happen cause we control our input. If it does,
+		// just panic cause this will be in a `server install` CLI and
+		// we want the user to report a bug.
+		q.Q("-> on demand panic")
+		panic(err)
+	}
+
+	q.Q("-> return on demand")
+	return &pb.OnDemandRunnerConfig{
+		OciUrl:       i.config.OdrImage,
+		PluginType:   "ecs",
+		Default:      true,
+		PluginConfig: cfgJson,
+		ConfigFormat: pb.Project_JSON,
+	}
 }

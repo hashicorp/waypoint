@@ -210,6 +210,54 @@ func (*Resource) Descriptor() ([]byte, []int) {
 	return file_waypoint_builtin_aws_ecs_plugin_proto_rawDescGZIP(), []int{2}
 }
 
+// This represents the state of the TaskLaunch implementation.
+type TaskInfo struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (x *TaskInfo) Reset() {
+	*x = TaskInfo{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *TaskInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TaskInfo) ProtoMessage() {}
+
+func (x *TaskInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TaskInfo.ProtoReflect.Descriptor instead.
+func (*TaskInfo) Descriptor() ([]byte, []int) {
+	return file_waypoint_builtin_aws_ecs_plugin_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *TaskInfo) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
 type Resource_Cluster struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -222,7 +270,7 @@ type Resource_Cluster struct {
 func (x *Resource_Cluster) Reset() {
 	*x = Resource_Cluster{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[3]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -235,7 +283,7 @@ func (x *Resource_Cluster) String() string {
 func (*Resource_Cluster) ProtoMessage() {}
 
 func (x *Resource_Cluster) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[3]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -279,7 +327,7 @@ type Resource_ExecutionRole struct {
 func (x *Resource_ExecutionRole) Reset() {
 	*x = Resource_ExecutionRole{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[4]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -292,7 +340,7 @@ func (x *Resource_ExecutionRole) String() string {
 func (*Resource_ExecutionRole) ProtoMessage() {}
 
 func (x *Resource_ExecutionRole) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[4]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -343,7 +391,7 @@ type Resource_TaskRole struct {
 func (x *Resource_TaskRole) Reset() {
 	*x = Resource_TaskRole{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[5]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -356,7 +404,7 @@ func (x *Resource_TaskRole) String() string {
 func (*Resource_TaskRole) ProtoMessage() {}
 
 func (x *Resource_TaskRole) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[5]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -406,7 +454,7 @@ type Resource_Service struct {
 func (x *Resource_Service) Reset() {
 	*x = Resource_Service{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[6]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -419,7 +467,7 @@ func (x *Resource_Service) String() string {
 func (*Resource_Service) ProtoMessage() {}
 
 func (x *Resource_Service) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[6]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -469,7 +517,7 @@ type Resource_TargetGroup struct {
 func (x *Resource_TargetGroup) Reset() {
 	*x = Resource_TargetGroup{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[7]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -482,7 +530,7 @@ func (x *Resource_TargetGroup) String() string {
 func (*Resource_TargetGroup) ProtoMessage() {}
 
 func (x *Resource_TargetGroup) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[7]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -531,7 +579,7 @@ type Resource_LogGroup struct {
 func (x *Resource_LogGroup) Reset() {
 	*x = Resource_LogGroup{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[8]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -544,7 +592,7 @@ func (x *Resource_LogGroup) String() string {
 func (*Resource_LogGroup) ProtoMessage() {}
 
 func (x *Resource_LogGroup) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[8]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -588,7 +636,7 @@ type Resource_SecurityGroup struct {
 func (x *Resource_SecurityGroup) Reset() {
 	*x = Resource_SecurityGroup{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[9]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -601,7 +649,7 @@ func (x *Resource_SecurityGroup) String() string {
 func (*Resource_SecurityGroup) ProtoMessage() {}
 
 func (x *Resource_SecurityGroup) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[9]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -650,7 +698,7 @@ type Resource_InternalSecurityGroups struct {
 func (x *Resource_InternalSecurityGroups) Reset() {
 	*x = Resource_InternalSecurityGroups{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[10]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -663,7 +711,7 @@ func (x *Resource_InternalSecurityGroups) String() string {
 func (*Resource_InternalSecurityGroups) ProtoMessage() {}
 
 func (x *Resource_InternalSecurityGroups) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[10]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -698,7 +746,7 @@ type Resource_ExternalSecurityGroups struct {
 func (x *Resource_ExternalSecurityGroups) Reset() {
 	*x = Resource_ExternalSecurityGroups{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[11]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -711,7 +759,7 @@ func (x *Resource_ExternalSecurityGroups) String() string {
 func (*Resource_ExternalSecurityGroups) ProtoMessage() {}
 
 func (x *Resource_ExternalSecurityGroups) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[11]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -746,7 +794,7 @@ type Resource_AlbSubnets struct {
 func (x *Resource_AlbSubnets) Reset() {
 	*x = Resource_AlbSubnets{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[12]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -759,7 +807,7 @@ func (x *Resource_AlbSubnets) String() string {
 func (*Resource_AlbSubnets) ProtoMessage() {}
 
 func (x *Resource_AlbSubnets) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[12]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -794,7 +842,7 @@ type Resource_ServiceSubnets struct {
 func (x *Resource_ServiceSubnets) Reset() {
 	*x = Resource_ServiceSubnets{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[13]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -807,7 +855,7 @@ func (x *Resource_ServiceSubnets) String() string {
 func (*Resource_ServiceSubnets) ProtoMessage() {}
 
 func (x *Resource_ServiceSubnets) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[13]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -844,7 +892,7 @@ type Resource_Subnets struct {
 func (x *Resource_Subnets) Reset() {
 	*x = Resource_Subnets{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[14]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -857,7 +905,7 @@ func (x *Resource_Subnets) String() string {
 func (*Resource_Subnets) ProtoMessage() {}
 
 func (x *Resource_Subnets) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[14]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -903,7 +951,7 @@ type Resource_Alb struct {
 func (x *Resource_Alb) Reset() {
 	*x = Resource_Alb{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[15]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -916,7 +964,7 @@ func (x *Resource_Alb) String() string {
 func (*Resource_Alb) ProtoMessage() {}
 
 func (x *Resource_Alb) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[15]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -979,7 +1027,7 @@ type Resource_TaskDefinition struct {
 func (x *Resource_TaskDefinition) Reset() {
 	*x = Resource_TaskDefinition{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[16]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -992,7 +1040,7 @@ func (x *Resource_TaskDefinition) String() string {
 func (*Resource_TaskDefinition) ProtoMessage() {}
 
 func (x *Resource_TaskDefinition) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[16]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1034,7 +1082,7 @@ type Resource_Route53Record struct {
 func (x *Resource_Route53Record) Reset() {
 	*x = Resource_Route53Record{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[17]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1047,7 +1095,7 @@ func (x *Resource_Route53Record) String() string {
 func (*Resource_Route53Record) ProtoMessage() {}
 
 func (x *Resource_Route53Record) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[17]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1088,7 +1136,7 @@ type Resource_Subnets_Subnet struct {
 func (x *Resource_Subnets_Subnet) Reset() {
 	*x = Resource_Subnets_Subnet{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[18]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1101,7 +1149,7 @@ func (x *Resource_Subnets_Subnet) String() string {
 func (*Resource_Subnets_Subnet) ProtoMessage() {}
 
 func (x *Resource_Subnets_Subnet) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[18]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1138,7 +1186,7 @@ type Resource_Alb_Listener struct {
 func (x *Resource_Alb_Listener) Reset() {
 	*x = Resource_Alb_Listener{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[19]
+		mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1151,7 +1199,7 @@ func (x *Resource_Alb_Listener) String() string {
 func (*Resource_Alb_Listener) ProtoMessage() {}
 
 func (x *Resource_Alb_Listener) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[19]
+	mi := &file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1299,10 +1347,11 @@ var file_waypoint_builtin_aws_ecs_plugin_proto_rawDesc = []byte{
 	0x1a, 0x3c, 0x0a, 0x0d, 0x52, 0x6f, 0x75, 0x74, 0x65, 0x35, 0x33, 0x52, 0x65, 0x63, 0x6f, 0x72,
 	0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x7a, 0x6f, 0x6e, 0x65, 0x5f, 0x69, 0x64,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x7a, 0x6f, 0x6e, 0x65, 0x49, 0x64, 0x42, 0x1a,
-	0x5a, 0x18, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2f, 0x62, 0x75, 0x69, 0x6c, 0x74,
-	0x69, 0x6e, 0x2f, 0x61, 0x77, 0x73, 0x2f, 0x65, 0x63, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x7a, 0x6f, 0x6e, 0x65, 0x49, 0x64, 0x22, 0x1a,
+	0x0a, 0x08, 0x54, 0x61, 0x73, 0x6b, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x42, 0x1a, 0x5a, 0x18, 0x77, 0x61,
+	0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2f, 0x62, 0x75, 0x69, 0x6c, 0x74, 0x69, 0x6e, 0x2f, 0x61,
+	0x77, 0x73, 0x2f, 0x65, 0x63, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1317,38 +1366,39 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_rawDescGZIP() []byte {
 	return file_waypoint_builtin_aws_ecs_plugin_proto_rawDescData
 }
 
-var file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_waypoint_builtin_aws_ecs_plugin_proto_goTypes = []interface{}{
 	(*Deployment)(nil),                      // 0: ecs.Deployment
 	(*Release)(nil),                         // 1: ecs.Release
 	(*Resource)(nil),                        // 2: ecs.Resource
-	(*Resource_Cluster)(nil),                // 3: ecs.Resource.Cluster
-	(*Resource_ExecutionRole)(nil),          // 4: ecs.Resource.ExecutionRole
-	(*Resource_TaskRole)(nil),               // 5: ecs.Resource.TaskRole
-	(*Resource_Service)(nil),                // 6: ecs.Resource.Service
-	(*Resource_TargetGroup)(nil),            // 7: ecs.Resource.TargetGroup
-	(*Resource_LogGroup)(nil),               // 8: ecs.Resource.LogGroup
-	(*Resource_SecurityGroup)(nil),          // 9: ecs.Resource.SecurityGroup
-	(*Resource_InternalSecurityGroups)(nil), // 10: ecs.Resource.InternalSecurityGroups
-	(*Resource_ExternalSecurityGroups)(nil), // 11: ecs.Resource.ExternalSecurityGroups
-	(*Resource_AlbSubnets)(nil),             // 12: ecs.Resource.AlbSubnets
-	(*Resource_ServiceSubnets)(nil),         // 13: ecs.Resource.ServiceSubnets
-	(*Resource_Subnets)(nil),                // 14: ecs.Resource.Subnets
-	(*Resource_Alb)(nil),                    // 15: ecs.Resource.Alb
-	(*Resource_TaskDefinition)(nil),         // 16: ecs.Resource.TaskDefinition
-	(*Resource_Route53Record)(nil),          // 17: ecs.Resource.Route53Record
-	(*Resource_Subnets_Subnet)(nil),         // 18: ecs.Resource.Subnets.Subnet
-	(*Resource_Alb_Listener)(nil),           // 19: ecs.Resource.Alb.Listener
-	(*anypb.Any)(nil),                       // 20: google.protobuf.Any
+	(*TaskInfo)(nil),                        // 3: ecs.TaskInfo
+	(*Resource_Cluster)(nil),                // 4: ecs.Resource.Cluster
+	(*Resource_ExecutionRole)(nil),          // 5: ecs.Resource.ExecutionRole
+	(*Resource_TaskRole)(nil),               // 6: ecs.Resource.TaskRole
+	(*Resource_Service)(nil),                // 7: ecs.Resource.Service
+	(*Resource_TargetGroup)(nil),            // 8: ecs.Resource.TargetGroup
+	(*Resource_LogGroup)(nil),               // 9: ecs.Resource.LogGroup
+	(*Resource_SecurityGroup)(nil),          // 10: ecs.Resource.SecurityGroup
+	(*Resource_InternalSecurityGroups)(nil), // 11: ecs.Resource.InternalSecurityGroups
+	(*Resource_ExternalSecurityGroups)(nil), // 12: ecs.Resource.ExternalSecurityGroups
+	(*Resource_AlbSubnets)(nil),             // 13: ecs.Resource.AlbSubnets
+	(*Resource_ServiceSubnets)(nil),         // 14: ecs.Resource.ServiceSubnets
+	(*Resource_Subnets)(nil),                // 15: ecs.Resource.Subnets
+	(*Resource_Alb)(nil),                    // 16: ecs.Resource.Alb
+	(*Resource_TaskDefinition)(nil),         // 17: ecs.Resource.TaskDefinition
+	(*Resource_Route53Record)(nil),          // 18: ecs.Resource.Route53Record
+	(*Resource_Subnets_Subnet)(nil),         // 19: ecs.Resource.Subnets.Subnet
+	(*Resource_Alb_Listener)(nil),           // 20: ecs.Resource.Alb.Listener
+	(*anypb.Any)(nil),                       // 21: google.protobuf.Any
 }
 var file_waypoint_builtin_aws_ecs_plugin_proto_depIdxs = []int32{
-	20, // 0: ecs.Deployment.resource_state:type_name -> google.protobuf.Any
-	9,  // 1: ecs.Resource.InternalSecurityGroups.security_groups:type_name -> ecs.Resource.SecurityGroup
-	9,  // 2: ecs.Resource.ExternalSecurityGroups.security_groups:type_name -> ecs.Resource.SecurityGroup
-	14, // 3: ecs.Resource.AlbSubnets.subnets:type_name -> ecs.Resource.Subnets
-	14, // 4: ecs.Resource.ServiceSubnets.subnets:type_name -> ecs.Resource.Subnets
-	18, // 5: ecs.Resource.Subnets.subnets:type_name -> ecs.Resource.Subnets.Subnet
-	7,  // 6: ecs.Resource.Alb.Listener.target_group:type_name -> ecs.Resource.TargetGroup
+	21, // 0: ecs.Deployment.resource_state:type_name -> google.protobuf.Any
+	10, // 1: ecs.Resource.InternalSecurityGroups.security_groups:type_name -> ecs.Resource.SecurityGroup
+	10, // 2: ecs.Resource.ExternalSecurityGroups.security_groups:type_name -> ecs.Resource.SecurityGroup
+	15, // 3: ecs.Resource.AlbSubnets.subnets:type_name -> ecs.Resource.Subnets
+	15, // 4: ecs.Resource.ServiceSubnets.subnets:type_name -> ecs.Resource.Subnets
+	19, // 5: ecs.Resource.Subnets.subnets:type_name -> ecs.Resource.Subnets.Subnet
+	8,  // 6: ecs.Resource.Alb.Listener.target_group:type_name -> ecs.Resource.TargetGroup
 	7,  // [7:7] is the sub-list for method output_type
 	7,  // [7:7] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name
@@ -1399,7 +1449,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_Cluster); i {
+			switch v := v.(*TaskInfo); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1411,7 +1461,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_ExecutionRole); i {
+			switch v := v.(*Resource_Cluster); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1423,7 +1473,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_TaskRole); i {
+			switch v := v.(*Resource_ExecutionRole); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1435,7 +1485,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_Service); i {
+			switch v := v.(*Resource_TaskRole); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1447,7 +1497,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_TargetGroup); i {
+			switch v := v.(*Resource_Service); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1459,7 +1509,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_LogGroup); i {
+			switch v := v.(*Resource_TargetGroup); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1471,7 +1521,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_SecurityGroup); i {
+			switch v := v.(*Resource_LogGroup); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1483,7 +1533,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_InternalSecurityGroups); i {
+			switch v := v.(*Resource_SecurityGroup); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1495,7 +1545,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_ExternalSecurityGroups); i {
+			switch v := v.(*Resource_InternalSecurityGroups); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1507,7 +1557,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_AlbSubnets); i {
+			switch v := v.(*Resource_ExternalSecurityGroups); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1519,7 +1569,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_ServiceSubnets); i {
+			switch v := v.(*Resource_AlbSubnets); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1531,7 +1581,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_Subnets); i {
+			switch v := v.(*Resource_ServiceSubnets); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1543,7 +1593,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_Alb); i {
+			switch v := v.(*Resource_Subnets); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1555,7 +1605,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_TaskDefinition); i {
+			switch v := v.(*Resource_Alb); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1567,7 +1617,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_Route53Record); i {
+			switch v := v.(*Resource_TaskDefinition); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1579,7 +1629,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Resource_Subnets_Subnet); i {
+			switch v := v.(*Resource_Route53Record); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1591,6 +1641,18 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Resource_Subnets_Subnet); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_waypoint_builtin_aws_ecs_plugin_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Resource_Alb_Listener); i {
 			case 0:
 				return &v.state
@@ -1609,7 +1671,7 @@ func file_waypoint_builtin_aws_ecs_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_waypoint_builtin_aws_ecs_plugin_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
