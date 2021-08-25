@@ -400,7 +400,7 @@ func (p *Platform) Status(
 	st := ui.Status()
 	defer st.Close()
 
-	st.Update("Determining overall container health...")
+	st.Update("Determining overall health for ecs deployment...")
 	if result.Health == sdk.StatusReport_READY {
 		st.Step(terminal.StatusOK, result.HealthMessage)
 	} else {
