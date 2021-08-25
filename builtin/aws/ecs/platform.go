@@ -1066,6 +1066,7 @@ func (p *Platform) resourceAlbListenerDestroy(
 		// There doesn't seem to be an aws error to cast to for this code.
 		if strings.Contains(err.Error(), "ListenerNotFound") {
 			s.Update("Listener does not exist and must have been destroyed (ARN %q).", state.Arn)
+			s.Status(terminal.StatusWarn)
 			s.Done()
 			return nil
 		}
