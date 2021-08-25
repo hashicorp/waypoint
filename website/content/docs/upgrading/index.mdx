@@ -15,9 +15,6 @@ with `waypoint install`. Consider backing up `data.db` with
 `docker cp waypoint-server:/data/data.db ./data.db`,
 `kubectl cp waypoint-server-0:/data/data.db ./data.db` or similar.
 
-~> **Note:** If you are currently running Waypoint before 0.2.0, you will not
-be able to take snapshots prior to upgrading your server.
-
 Waypoint is designed to be flexible and resilient when upgrading from
 one version to the next. We've carefully thought out an upgrade process
 so you can predict what will be involved when upgrading Waypoint.
