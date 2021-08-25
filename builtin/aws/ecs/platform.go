@@ -1444,6 +1444,7 @@ OUTER:
 		}
 
 		s.Update("Failed to register ecs task definition. Will retry in %d seconds (up to %d more times)\nError: %s", awsCreateRetryIntervalSeconds, awsCreateRetries-i, err)
+		s.Status(terminal.StatusWarn)
 
 		// otherwise sleep and try again
 		time.Sleep(awsCreateRetryIntervalSeconds * time.Second)
