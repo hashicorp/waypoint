@@ -77,6 +77,9 @@ you do not need to accept any terms.
 - `-k8s-pull-secret=<string>` - Secret to use to access the Waypoint server image on Kubernetes.
 - `-k8s-secret-file=<string>` - Use the Kubernetes Secret in the given path to access the Waypoint server image.
 - `-k8s-server-image=<string>` - Docker image for the Waypoint server.
+- `-k8s-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners
+- `-k8s-runner-service-account=<string>` - Service account to assign to the on-demand runner. If this is blank, a service account will be created automatically with the correct permissions.
+- `-k8s-runner-service-account-init` - Create the service account if it does not exist.
 - `-k8s-storageclassname=<string>` - Name of the StorageClass required by the volume claim to install the Waypoint server image to.
 - `-k8s-storage-request=<string>` - Configures the requested persistent volume size for the Waypoint server in Kubernetes.
 

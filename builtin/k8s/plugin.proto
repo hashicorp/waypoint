@@ -28,3 +28,8 @@ message Resource {
     string name = 1;
   }
 }
+
+// This represents the state of the TaskLaunch implementation.
+message TaskInfo {
+  string id = 1;
+}
