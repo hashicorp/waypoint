@@ -277,9 +277,7 @@ export default class ApiService extends Service {
     }
 
     // Application list settings
-    let appList = project.applicationsList.map((app: Application.AsObject) => {
-      return new Application(app);
-    });
+    let appList = project.applicationsList.map(applicationFromObject);
     ref.setApplicationsList(appList);
 
     // Input variable settings
@@ -305,4 +303,19 @@ declare module '@ember/service' {
   interface Registry {
     api: ApiService;
   }
+}
+
+function applicationFromObject(object: Application.AsObject): Application {
+  let result = new Application();
+
+  result.setName(object.name);
+  result.setFileChangeSignal(object.fileChangeSignal);
+
+  if (object.project) {
+    let ref = new Ref.Project();
+    ref.setProject(object.project.project);
+    result.setProject(ref);
+  }
+
+  return result;
 }
