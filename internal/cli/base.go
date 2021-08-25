@@ -240,6 +240,48 @@ func (c *baseCommand) Init(opts ...Option) error {
 		}
 	}
 
+	// Some CLIs don't explicitly need an app, but sometimes need to load a config
+	// and setup the project client with the proper project refs.
+	if baseCfg.AppOptional {
+		// If we have args, attempt to extract there first.
+		if len(c.args) > 0 {
+			match := reAppTarget.FindStringSubmatch(c.args[0])
+			if match != nil {
+				// Set our refs
+				c.refProject = &pb.Ref_Project{Project: match[1]}
+				c.refApp = &pb.Ref_Application{
+					Project:     match[1],
+					Application: match[2],
+				}
+
+				// Shift the args
+				c.args = c.args[1:]
+
+				// Explicitly set remote
+				c.flagRemote = true
+			} else {
+				// Assume the target is just project
+				p := c.args[0]
+				c.refProject = &pb.Ref_Project{Project: p}
+				// We don't explicitly set the app because there was none requested,
+				// and we might or might not be working on an app later.
+
+				// Shift the args
+				c.args = c.args[1:]
+
+				// Explicitly set remote
+				c.flagRemote = true
+			}
+		}
+
+		// If we didn't get our ref, then we need to load config
+		if c.refApp == nil && c.refProject == nil {
+			// We look at both app and project for the case where no target was specified
+			// i.e. already in a project directory
+			baseCfg.Config = true
+		}
+	}
+
 	// If we're loading the config, then get it.
 	if baseCfg.Config {
 		cfg, err := c.initConfig("", baseCfg.ConfigOptional)
@@ -288,16 +330,18 @@ func (c *baseCommand) Init(opts ...Option) error {
 	}
 
 	// Validate remote vs. local operations.
-	if c.flagRemote && c.refApp == nil {
-		if c.cfg == nil || c.cfg.Runner == nil || !c.cfg.Runner.Enabled {
-			err := errors.New(
-				"The `-remote` flag was specified but remote operations are not supported\n" +
-					"for this project.\n\n" +
-					"Remote operations must be manually enabled by using setting the 'runner.enabled'\n" +
-					"setting in your Waypoint configuration file. Please see the documentation\n" +
-					"on this setting for more information.")
-			c.logError(c.Log, "", err)
-			return err
+	if !baseCfg.AppOptional {
+		if c.flagRemote && c.refApp == nil {
+			if c.cfg == nil || c.cfg.Runner == nil || !c.cfg.Runner.Enabled {
+				err := errors.New(
+					"The `-remote` flag was specified but remote operations are not supported\n" +
+						"for this project.\n\n" +
+						"Remote operations must be manually enabled by using setting the 'runner.enabled'\n" +
+						"setting in your Waypoint configuration file. Please see the documentation\n" +
+						"on this setting for more information.")
+				c.logError(c.Log, "", err)
+				return err
+			}
 		}
 	}
 

@@ -2,14 +2,14 @@
 layout: commands
 page_title: 'Commands: Status'
 sidebar_title: 'status'
-description: 'List statuses.'
+description: 'List and refresh application statuses.'
 ---
 
 # Waypoint Status
 
 Command: `waypoint status`
 
-List statuses.
+List and refresh application statuses.
 
 @include "commands/status_desc.mdx"
 
@@ -17,7 +17,12 @@ List statuses.
 
 Usage: `waypoint status [options] [project]`
 
-View the current status of projects and applications managed by Waypoint.
+View the current status of projects, applications, and their resources
+managed by Waypoint.
+
+When the '-refresh' flag is included, this command will attempt to regenerate
+every requested application's status report on-demand for both local and remote
+data sourced projects.
 
 #### Global Options
 
@@ -30,5 +35,6 @@ View the current status of projects and applications managed by Waypoint.
 - `-verbose` (`-V`) - Display more details.
 - `-json` - Output the status information as JSON.
 - `-all-projects` - Output status about every project in a workspace.
+- `-refresh` - Refresh application status for the requested app or apps in a project.
 
 @include "commands/status_more.mdx"
