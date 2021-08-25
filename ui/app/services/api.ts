@@ -237,8 +237,8 @@ export default class ApiService extends Service {
       // Git authentication settings
       if (authCase === 4) {
         let gitBasic = new Job.Git.Basic();
-        gitBasic.setUsername(projGit.basic!.username);
-        gitBasic.setPassword(projGit.basic!.password);
+        gitBasic.setUsername(projGit.basic?.username ?? '');
+        gitBasic.setPassword(projGit.basic?.password ?? '');
         git.setBasic(gitBasic);
         git.clearSsh();
       }
@@ -246,9 +246,9 @@ export default class ApiService extends Service {
       // SSH authentication settings
       if (authCase === 5) {
         let gitSSH = new Job.Git.SSH();
-        gitSSH.setPrivateKeyPem(projGit.ssh!.privateKeyPem);
-        gitSSH.setUser(projGit.ssh!.user);
-        gitSSH.setPassword(projGit.ssh!.password);
+        gitSSH.setPrivateKeyPem(projGit.ssh?.privateKeyPem ?? '');
+        gitSSH.setUser(projGit.ssh?.user ?? '');
+        gitSSH.setPassword(projGit.ssh?.password ?? '');
         git.setSsh(gitSSH);
         git.clearBasic();
       }
@@ -277,9 +277,7 @@ export default class ApiService extends Service {
     }
 
     // Application list settings
-    let appList = project.applicationsList.map((app: Application.AsObject) => {
-      return new Application(app);
-    });
+    let appList = project.applicationsList.map(applicationFromObject);
     ref.setApplicationsList(appList);
 
     // Input variable settings
@@ -305,4 +303,19 @@ declare module '@ember/service' {
   interface Registry {
     api: ApiService;
   }
+}
+
+function applicationFromObject(object: Application.AsObject): Application {
+  let result = new Application();
+
+  result.setName(object.name);
+  result.setFileChangeSignal(object.fileChangeSignal);
+
+  if (object.project) {
+    let ref = new Ref.Project();
+    ref.setProject(object.project.project);
+    result.setProject(ref);
+  }
+
+  return result;
 }
