@@ -285,6 +285,7 @@ jobs:
           name: "Docker: Push image (waypoint)"
           command: |
             docker push docker.pkg.github.com/hashicorp/waypoint/alpha
+      - notify_main_failure
 
   # build frontend yarn cache
   frontend-cache:
