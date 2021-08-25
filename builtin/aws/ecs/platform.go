@@ -1076,6 +1076,7 @@ func (p *Platform) resourceAlbListenerDestroy(
 	if len(listeners.Listeners) == 0 {
 		// Could happen if listener was deleted out-of-band
 		s.Update("ALB listener does not exist - not deleting (ARN: %q)", state.Arn)
+		s.Status(terminal.StatusWarn)
 		s.Done()
 		return nil
 	}
