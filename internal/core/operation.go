@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -126,6 +128,44 @@ func (a *App) doOperation(
 	if doErr == nil {
 		log.Debug("running local operation")
 		result, doErr = op.Do(ctx, log, a, msg)
+
+		// If we got an argmapper error, we transfor it into something a
+		// bit more readable for the average Waypoint user.
+		if err, ok := doErr.(*argmapper.ErrArgumentUnsatisfied); ok && err != nil {
+			// Log the full error
+			log.Warn("argmapper unsatified error received", "error", doErr)
+
+			// Build our list of missing arguments
+			missing := new(bytes.Buffer)
+			for _, v := range err.Args {
+				s := v.String()
+
+				// If this is an any type with a subtype, then we just use
+				// the subtype. The subtype wording confuses people so just
+				// note the direct type.
+				if v.Type == anyType && v.Subtype != "" {
+					s = v.Subtype
+				}
+
+				fmt.Fprintf(missing, "    - %s\n", s)
+			}
+
+			doErr = fmt.Errorf(
+				"There was an error while executing a Waypoint plugin for "+
+					"this operation!\n\n"+
+					"One or more required arguments for the plugin was not satisfied. "+
+					"This is usually due to a missing or incompatible set of plugins. "+
+					"For example, only certain build plugins are only compatible with certain "+
+					"registries, and so on. Please inspect the missing argument, the set of "+
+					"plugins you are using, and the documentation to determine if your "+
+					"plugin combination is valid.\n\n"+
+					"Plugin function: %s\n\n"+
+					"==> Missing arguments:\n\n%s",
+				err.Func.Name(),
+				missing.String(),
+			)
+		}
+
 		if doErr == nil {
 			// Set our labels if we can
 			msgUpdateLabels(a, op.Labels(a), msg, result)
@@ -290,3 +330,6 @@ func msgField(msg proto.Message, f string) reflect.Value {
 	// Get the Id field
 	return val.FieldByName(f)
 }
+
+// anyType is used to compare types.
+var anyType = reflect.TypeOf((*any.Any)(nil))
