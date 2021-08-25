@@ -765,7 +765,7 @@ func (p *Platform) resourceServiceStatus(
 		serviceResource.Health = sdk.StatusReport_READY
 	} else {
 		serviceResource.Health = sdk.StatusReport_DOWN
-		serviceResource.HealthMessage = fmt.Sprintf("service is %s", *service.Status)
+		serviceResource.HealthMessage = fmt.Sprintf("service is %q", *service.Status)
 	}
 
 	serviceJson, err := json.Marshal(map[string]interface{}{"service": service})
