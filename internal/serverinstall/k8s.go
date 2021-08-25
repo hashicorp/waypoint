@@ -173,53 +173,11 @@ func (i *K8sInstaller) Install(
 	if i.config.odrServiceAccountInit {
 		s.Done()
 		s = sg.Add("Initializing service account for on-demand runners...")
-
-		// Look for the service account. If it doesn't exist, we create it.
-		saClient := clientset.CoreV1().ServiceAccounts(i.config.namespace)
-		serviceAccount, err := saClient.Get(ctx, i.config.odrServiceAccount, metav1.GetOptions{})
-		if errors.IsNotFound(err) {
-			serviceAccount = nil
-			err = nil
-		}
+		err := i.initServiceAccount(ctx, clientset, s)
+		s.Abort()
 		if err != nil {
 			return nil, err
 		}
-
-		// If the service doesn't exist, then we create it.
-		if serviceAccount == nil {
-			s.Update("Creating the on-demand runner service account...")
-			serviceAccount, err = newServiceAccount(i.config)
-			if err != nil {
-				return nil, err
-			}
-
-			if _, err := saClient.Create(ctx, serviceAccount, metav1.CreateOptions{}); err != nil {
-				return nil, err
-			}
-		}
-
-		// Setup the role binding
-		s.Update("Initializing role binding for on-demand runner...")
-		rbClient := clientset.RbacV1().RoleBindings(i.config.namespace)
-		rb, err := newServiceAccountRoleBinding(i.config)
-		if err != nil {
-			return nil, err
-		}
-		_, err = rbClient.Get(ctx, rb.Name, metav1.GetOptions{})
-		if err != nil && !errors.IsNotFound(err) {
-			return nil, err
-		}
-		if err == nil {
-			if err := rbClient.Delete(ctx, rb.Name, metav1.DeleteOptions{}); err != nil {
-				return nil, err
-			}
-		}
-		if _, err := rbClient.Create(ctx, rb, metav1.CreateOptions{}); err != nil {
-			return nil, err
-		}
-
-		s.Update("Service account for on-demand runner initialized!")
-		s.Done()
 		s = sg.Add("")
 	}
 
@@ -428,6 +386,15 @@ func (i *K8sInstaller) Upgrade(
 	}
 
 	s.Done()
+
+	if i.config.odrServiceAccountInit {
+		s = sg.Add("Initializing service account for on-demand runners...")
+		err := i.initServiceAccount(ctx, clientset, s)
+		s.Abort()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	statefulSetClient := clientset.AppsV1().StatefulSets(i.config.namespace)
 	waypointStatefulSet, err := statefulSetClient.Get(ctx, serverName, metav1.GetOptions{})
@@ -1558,6 +1525,28 @@ func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
 	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-odr-image",
+		Target:  &i.config.odrImage,
+		Usage:   "Docker image for the Waypoint On-Demand Runners",
+		Default: defaultODRImage,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-runner-service-account",
+		Target: &i.config.odrServiceAccount,
+		Usage: "Service account to assign to the on-demand runner. If this is blank, " +
+			"a service account will be created automatically with the correct permissions.",
+		Default: "waypoint-runner",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "k8s-runner-service-account-init",
+		Target:  &i.config.odrServiceAccountInit,
+		Usage:   "Create the service account if it does not exist.",
+		Default: true,
+	})
 }
 
 func (i *K8sInstaller) UninstallFlags(set *flag.Set) {
@@ -1631,6 +1620,66 @@ func (i *K8sInstaller) newClient() (*kubernetes.Clientset, error) {
 	}
 
 	return clientset, nil
+}
+
+func (i *K8sInstaller) initServiceAccount(
+	ctx context.Context,
+	clientset *kubernetes.Clientset,
+	s terminal.Step,
+) error {
+	if !i.config.odrServiceAccountInit {
+		return nil
+	}
+
+	s.Update("Initializing service account for on-demand runners...")
+
+	// Look for the service account. If it doesn't exist, we create it.
+	saClient := clientset.CoreV1().ServiceAccounts(i.config.namespace)
+	serviceAccount, err := saClient.Get(ctx, i.config.odrServiceAccount, metav1.GetOptions{})
+	if errors.IsNotFound(err) {
+		serviceAccount = nil
+		err = nil
+	}
+	if err != nil {
+		return err
+	}
+
+	// If the service doesn't exist, then we create it.
+	if serviceAccount == nil {
+		s.Update("Creating the on-demand runner service account...")
+		serviceAccount, err = newServiceAccount(i.config)
+		if err != nil {
+			return err
+		}
+
+		if _, err := saClient.Create(ctx, serviceAccount, metav1.CreateOptions{}); err != nil {
+			return err
+		}
+	}
+
+	// Setup the role binding
+	s.Update("Initializing role binding for on-demand runner...")
+	rbClient := clientset.RbacV1().RoleBindings(i.config.namespace)
+	rb, err := newServiceAccountRoleBinding(i.config)
+	if err != nil {
+		return err
+	}
+	_, err = rbClient.Get(ctx, rb.Name, metav1.GetOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+	if err == nil {
+		if err := rbClient.Delete(ctx, rb.Name, metav1.DeleteOptions{}); err != nil {
+			return err
+		}
+	}
+	if _, err := rbClient.Create(ctx, rb, metav1.CreateOptions{}); err != nil {
+		return err
+	}
+
+	s.Update("Service account for on-demand runner initialized!")
+	s.Done()
+	return nil
 }
 
 var warnK8SKind = strings.TrimSpace(`
