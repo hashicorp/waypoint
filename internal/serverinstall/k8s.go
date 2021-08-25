@@ -67,6 +67,14 @@ func (i *K8sInstaller) Install(
 	ctx context.Context,
 	opts *InstallOpts,
 ) (*InstallResults, error) {
+	if i.config.odrImage == "" {
+		var err error
+		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	ui := opts.UI
 	log := opts.Log
 
@@ -353,6 +361,14 @@ func (i *K8sInstaller) Upgrade(
 	ctx context.Context, opts *InstallOpts, serverCfg serverconfig.Client) (
 	*InstallResults, error,
 ) {
+	if i.config.odrImage == "" {
+		var err error
+		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	ui := opts.UI
 	log := opts.Log
 
@@ -1452,10 +1468,9 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:    "k8s-odr-image",
-		Target:  &i.config.odrImage,
-		Usage:   "Docker image for the Waypoint On-Demand Runners",
-		Default: defaultODRImage,
+		Name:   "k8s-odr-image",
+		Target: &i.config.odrImage,
+		Usage:  "Docker image for the Waypoint On-Demand Runners",
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -1527,10 +1542,9 @@ func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:    "k8s-odr-image",
-		Target:  &i.config.odrImage,
-		Usage:   "Docker image for the Waypoint On-Demand Runners",
-		Default: defaultODRImage,
+		Name:   "k8s-odr-image",
+		Target: &i.config.odrImage,
+		Usage:  "Docker image for the Waypoint On-Demand Runners",
 	})
 
 	set.StringVar(&flag.StringVar{
