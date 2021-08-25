@@ -55,7 +55,7 @@ func (p *Platform) ConfigSet(config interface{}) error {
 	c, ok := config.(*Config)
 	if !ok {
 		// this should never happen
-		return fmt.Errorf("invalid configuration, expected *cloudrun.Config, got %T", config)
+		return status.Errorf(codes.FailedPrecondition, "invalid configuration, expected *ecs.Config, got %T", config)
 	}
 
 	if c.ALB != nil {
