@@ -300,11 +300,9 @@ func (p *Platform) Deploy(
 				return err
 			}
 
-			if p.config.TaskRoleName != "" {
-				taskRole, err = p.SetupTaskRole(ctx, s, log, sess, src)
-				if err != nil {
-					return err
-				}
+			taskRole, err = p.SetupTaskRole(ctx, s, log, sess, src)
+			if err != nil {
+				return err
 			}
 
 			logGroup, err = p.SetupLogs(ctx, s, log, sess)
@@ -435,6 +433,16 @@ func (p *Platform) SetupTaskRole(ctx context.Context, s LifecycleStatus, L hclog
 
 	roleName := p.config.TaskRoleName
 
+	if roleName == "" {
+		roleName = app.App + "-task-role"
+	}
+
+	// role names have to be 64 characters or less, and the client side doesn't validate this.
+	if len(roleName) > 64 {
+		roleName = roleName[:64]
+		L.Debug("using a shortened value for role name due to AWS's length limits", "roleName", roleName)
+	}
+
 	L.Debug("attempting to retrieve existing role", "role-name", roleName)
 
 	queryInput := &iam.GetRoleInput{
@@ -442,13 +450,81 @@ func (p *Platform) SetupTaskRole(ctx context.Context, s LifecycleStatus, L hclog
 	}
 
 	getOut, err := svc.GetRole(queryInput)
+	if err == nil {
+		if p.config.TaskRolePolicy != "" {
+			policyOut, err := svc.GetPolicy(
+				&iam.GetPolicyInput{
+					PolicyArn: &p.config.TaskRolePolicy,
+				},
+			)
+
+			if err != nil {
+				L.Debug("policy not found", "arn", p.config.TaskRolePolicy)
+				return *getOut.Role.Arn, nil
+			}
+
+			_, err = svc.GetRolePolicy(
+				&iam.GetRolePolicyInput{
+					PolicyName: policyOut.Policy.PolicyName,
+					RoleName:   &roleName,
+				},
+			)
+
+			if err == nil {
+				return *getOut.Role.Arn, nil
+			} else {
+				aInput := &iam.AttachRolePolicyInput{
+					RoleName:  aws.String(roleName),
+					PolicyArn: &p.config.TaskRolePolicy,
+				}
+
+				_, err = svc.AttachRolePolicy(aInput)
+				if err != nil {
+					return "", err
+				}
+
+				L.Debug("attached task role policy")
+			}
+		}
+
+		s.Status("Found task IAM role to use: %s", roleName)
+		return *getOut.Role.Arn, nil
+	}
+
+	L.Debug("creating new role")
+	s.Status("Creating IAM role: %s", roleName)
+
+	input := &iam.CreateRoleInput{
+		AssumeRolePolicyDocument: aws.String(rolePolicy),
+		Path:                     aws.String("/"),
+		RoleName:                 aws.String(roleName),
+	}
+
+	result, err := svc.CreateRole(input)
 	if err != nil {
-		s.Status("IAM role not found: %s", roleName)
 		return "", err
 	}
 
-	s.Status("Found task IAM role to use: %s", roleName)
-	return *getOut.Role.Arn, nil
+	roleArn := *result.Role.Arn
+
+	L.Debug("created new role", "arn", roleArn)
+
+	if p.config.TaskRolePolicy != "" {
+		aInput := &iam.AttachRolePolicyInput{
+			RoleName:  aws.String(roleName),
+			PolicyArn: &p.config.TaskRolePolicy,
+		}
+
+		_, err = svc.AttachRolePolicy(aInput)
+		if err != nil {
+			return "", err
+		}
+
+		L.Debug("attached task role policy")
+	}
+
+	s.Update("Created IAM role: %s", roleName)
+	return roleArn, nil
 }
 
 func (p *Platform) SetupExecutionRole(ctx context.Context, s LifecycleStatus, L hclog.Logger, sess *session.Session, app *component.Source) (string, error) {
@@ -1523,6 +1599,9 @@ type Config struct {
 	// Name of the execution task IAM Role to associate with the ECS Service
 	ExecutionRoleName string `hcl:"execution_role_name,optional"`
 
+	// IAM Policy ARN for attaching to task role
+	TaskRolePolicy string `hcl:"task_role_policy_arn,optional"`
+
 	// Name of the task IAM role to associate with the ECS service
 	TaskRoleName string `hcl:"task_role_name,optional"`
 
@@ -1626,6 +1705,11 @@ deploy {
 	doc.SetField(
 		"task_role_name",
 		"the name of the task IAM role to assign",
+	)
+
+	doc.SetField(
+		"task_role_policy",
+		"IAM Policy ARN for attaching to task role",
 	)
 
 	doc.SetField(
