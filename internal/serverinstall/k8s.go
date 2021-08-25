@@ -180,9 +180,7 @@ func (i *K8sInstaller) Install(
 
 	if i.config.odrServiceAccountInit {
 		s.Done()
-		s = sg.Add("Initializing service account for on-demand runners...")
-		err := i.initServiceAccount(ctx, clientset, s)
-		s.Abort()
+		err := i.initServiceAccount(ctx, clientset, sg)
 		if err != nil {
 			return nil, err
 		}
@@ -404,9 +402,7 @@ func (i *K8sInstaller) Upgrade(
 	s.Done()
 
 	if i.config.odrServiceAccountInit {
-		s = sg.Add("Initializing service account for on-demand runners...")
-		err := i.initServiceAccount(ctx, clientset, s)
-		s.Abort()
+		err := i.initServiceAccount(ctx, clientset, sg)
 		if err != nil {
 			return nil, err
 		}
@@ -1639,13 +1635,14 @@ func (i *K8sInstaller) newClient() (*kubernetes.Clientset, error) {
 func (i *K8sInstaller) initServiceAccount(
 	ctx context.Context,
 	clientset *kubernetes.Clientset,
-	s terminal.Step,
+	sg terminal.StepGroup,
 ) error {
 	if !i.config.odrServiceAccountInit {
 		return nil
 	}
 
-	s.Update("Initializing service account for on-demand runners...")
+	s := sg.Add("Initializing service account for on-demand runners...")
+	defer s.Abort()
 
 	// Look for the service account. If it doesn't exist, we create it.
 	saClient := clientset.CoreV1().ServiceAccounts(i.config.namespace)
