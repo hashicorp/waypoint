@@ -601,7 +601,7 @@ func (s *Server) updateManifest(w http.ResponseWriter, r *http.Request) {
 	})
 
 	config.Config.Entrypoint = append([]string{"/waypoint-entrypoint"}, config.Config.Entrypoint...)
-	s.Logger.Debug("injected entrypoint", config.Config.Entrypoint)
+	s.Logger.Debug("injected entrypoint", "value", config.Config.Entrypoint)
 
 	newConfig, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
@@ -615,6 +615,7 @@ func (s *Server) updateManifest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	man.Config.Size = int64(len(newConfig))
 	man.Config.Digest = id
 
 	mediaType := v1.MediaTypeImageLayerGzip
