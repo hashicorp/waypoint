@@ -265,7 +265,7 @@ jobs:
           command: |
             echo "$GH_DOCKER_PASS" | docker login docker.pkg.github.com --username $GH_DOCKER_USER --password-stdin
       - run:
-          name: "Docker: Build image"
+          name: "Docker: Build image (waypoint)"
           command: |
             docker build \
               --progress=plain \
@@ -273,9 +273,22 @@ jobs:
               -t docker.pkg.github.com/hashicorp/waypoint/alpha:$GIT_COMMIT \
               .
       - run:
-          name: "Docker: Push image"
+          name: "Docker: Build image (waypoint-odr)"
+          command: |
+            docker build \
+              --target odr \
+              --progress=plain \
+              -t docker.pkg.github.com/hashicorp/waypoint/alpha-odr:latest \
+              -t docker.pkg.github.com/hashicorp/waypoint/alpha-odr:$GIT_COMMIT \
+              .
+      - run:
+          name: "Docker: Push image (waypoint)"
           command: |
             docker push docker.pkg.github.com/hashicorp/waypoint/alpha
+      - run:
+          name: "Docker: Push image (waypoint-odr)"
+          command: |
+            docker push docker.pkg.github.com/hashicorp/waypoint/alpha-odr
       - notify_main_failure
 
   # build frontend yarn cache

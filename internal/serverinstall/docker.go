@@ -46,8 +46,15 @@ func (i *DockerInstaller) Install(
 	ctx context.Context,
 	opts *InstallOpts,
 ) (*InstallResults, error) {
-	ui := opts.UI
+	if i.config.odrImage == "" {
+		var err error
+		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		if err != nil {
+			return nil, err
+		}
+	}
 
+	ui := opts.UI
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -279,8 +286,15 @@ func (i *DockerInstaller) Upgrade(
 	ctx context.Context, opts *InstallOpts, serverCfg serverconfig.Client) (
 	*InstallResults, error,
 ) {
-	ui := opts.UI
+	if i.config.odrImage == "" {
+		var err error
+		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		if err != nil {
+			return nil, err
+		}
+	}
 
+	ui := opts.UI
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -793,10 +807,10 @@ func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:    "docker-odr-image",
-		Target:  &i.config.odrImage,
-		Usage:   "Docker image for the Waypoint On-Demand Runners",
-		Default: defaultODRImage,
+		Name:   "docker-odr-image",
+		Target: &i.config.odrImage,
+		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
+			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
 }
 
@@ -809,10 +823,10 @@ func (i *DockerInstaller) UpgradeFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:    "docker-odr-image",
-		Target:  &i.config.odrImage,
-		Usage:   "Docker image for the Waypoint On-Demand Runners",
-		Default: defaultODRImage,
+		Name:   "docker-odr-image",
+		Target: &i.config.odrImage,
+		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
+			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
 }
 
