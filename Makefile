@@ -63,7 +63,7 @@ docker/server-only:
 .PHONY: docker/odr
 docker/odr:
 	DOCKER_BUILDKIT=1 docker build --target odr \
-					-t waypoint:dev-odr \
+					-t waypoint-odr:dev \
 					.
 
 # expected to be invoked by make gen/changelog LAST_RELEASE=gitref THIS_RELEASE=gitref
