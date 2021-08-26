@@ -75,6 +75,7 @@ When the upgrade command is executed, Waypoint does the following:
     requested version shortly after running the Waypoint upgrade command.
   - `nomad` - This platform will update the waypoint server job with the server
     image requested.
+  - `ecs` - This platform will locate the existing cluster, update task definitions, and upgrade the image to the latest.
 - Verifies that waypoint CLI can still connected and speak to Waypoint server
 
 If you wish to use the automated upgrade command line approach, follow the
