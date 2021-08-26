@@ -456,7 +456,7 @@ func (p *Platform) resourceServiceDestroy(
 	if cs.Status == "True" {
 		st.Step(
 			terminal.StatusWarn,
-			fmt.Sprintf("Cannot destroy deployment with revision %q, as revision is actively receiving traffic.", rn),
+			fmt.Sprintf(" Cannot destroy deployment with revision %q, as revision is actively receiving traffic. Disregard if destroying workspace.", rn),
 		)
 		return nil
 	}
