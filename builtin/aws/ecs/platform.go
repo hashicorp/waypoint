@@ -2127,6 +2127,7 @@ func defaultSubnets(ctx context.Context, sess *session.Session) (names []*string
 	return subnets, "", nil
 }
 
+// A policy required for ECS roles - roles must be assumable by ECS tasks.
 const rolePolicy = `{
   "Version": "2012-10-17",
   "Statement": [
@@ -2141,6 +2142,9 @@ const rolePolicy = `{
   ]
 }`
 
+// The valid combinations of fargate cpu/memory resources. This will need to be updated
+// over time as aws changes allowed combinations. It would be nice to get this from
+// aws at runtime instead of hard-coding it in the future.
 var fargateResources = map[int][]int{
 	512:  {256},
 	1024: {256, 512},
@@ -2153,6 +2157,7 @@ var fargateResources = map[int][]int{
 	8192: {1024},
 }
 
+// Builds logging options for use in an ECS task definition.
 func buildLoggingOptions(
 	lo *Logging,
 	region string,
