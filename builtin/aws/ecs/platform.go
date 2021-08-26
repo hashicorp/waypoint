@@ -433,6 +433,10 @@ func (p *Platform) SetupTaskRole(ctx context.Context, s LifecycleStatus, L hclog
 
 	roleName := p.config.TaskRoleName
 
+	if roleName == "" && p.config.TaskRolePolicyArns == nil {
+		return "", nil
+	}
+
 	if roleName == "" {
 		roleName = app.App + "-task-role"
 	}
@@ -449,79 +453,67 @@ func (p *Platform) SetupTaskRole(ctx context.Context, s LifecycleStatus, L hclog
 		RoleName: aws.String(roleName),
 	}
 
-	getOut, err := svc.GetRole(queryInput)
-	if err == nil {
-		if p.config.TaskRolePolicy != "" {
-			policyOut, err := svc.GetPolicy(
-				&iam.GetPolicyInput{
-					PolicyArn: &p.config.TaskRolePolicy,
-				},
-			)
+	var roleArn string
 
-			if err != nil {
-				L.Debug("policy not found", "arn", p.config.TaskRolePolicy)
-				return *getOut.Role.Arn, nil
-			}
+	getOut, err := svc.GetRoleWithContext(ctx, queryInput)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "NoSuchEntity":
+				L.Debug("creating new role")
+				s.Status("Creating IAM role: %s", roleName)
 
-			_, err = svc.GetRolePolicy(
-				&iam.GetRolePolicyInput{
-					PolicyName: policyOut.Policy.PolicyName,
-					RoleName:   &roleName,
-				},
-			)
-
-			if err == nil {
-				return *getOut.Role.Arn, nil
-			} else {
-				aInput := &iam.AttachRolePolicyInput{
-					RoleName:  aws.String(roleName),
-					PolicyArn: &p.config.TaskRolePolicy,
+				input := &iam.CreateRoleInput{
+					AssumeRolePolicyDocument: aws.String(rolePolicy),
+					Path:                     aws.String("/"),
+					RoleName:                 aws.String(roleName),
 				}
 
-				_, err = svc.AttachRolePolicy(aInput)
+				result, err := svc.CreateRoleWithContext(ctx, input)
 				if err != nil {
 					return "", err
 				}
 
-				L.Debug("attached task role policy")
+				roleArn = *result.Role.Arn
+			default:
+				return "", err
 			}
+		} else {
+			return "", err
 		}
-
-		s.Status("Found task IAM role to use: %s", roleName)
-		return *getOut.Role.Arn, nil
+	} else {
+		roleArn = *getOut.Role.Arn
 	}
 
-	L.Debug("creating new role")
-	s.Status("Creating IAM role: %s", roleName)
+	listOut, err := svc.ListAttachedRolePoliciesWithContext(ctx, &iam.ListAttachedRolePoliciesInput{
+		RoleName: &roleName,
+	})
 
-	input := &iam.CreateRoleInput{
-		AssumeRolePolicyDocument: aws.String(rolePolicy),
-		Path:                     aws.String("/"),
-		RoleName:                 aws.String(roleName),
-	}
-
-	result, err := svc.CreateRole(input)
 	if err != nil {
 		return "", err
 	}
 
-	roleArn := *result.Role.Arn
-
-	L.Debug("created new role", "arn", roleArn)
-
-	if p.config.TaskRolePolicy != "" {
-		aInput := &iam.AttachRolePolicyInput{
-			RoleName:  aws.String(roleName),
-			PolicyArn: &p.config.TaskRolePolicy,
+	for _, aPolicy := range p.config.TaskRolePolicyArns {
+		found := false
+		for _, policy := range listOut.AttachedPolicies {
+			if aPolicy == *policy.PolicyArn {
+				found = true
+				break
+			}
 		}
 
-		_, err = svc.AttachRolePolicy(aInput)
-		if err != nil {
-			return "", err
+		if !found {
+			_, err = svc.AttachRolePolicyWithContext(ctx, &iam.AttachRolePolicyInput{
+				PolicyArn: &aPolicy,
+				RoleName:  &roleName,
+			})
+			if err != nil {
+				return "", err
+			}
 		}
-
-		L.Debug("attached task role policy")
 	}
+
+	L.Debug("attached task role policy")
 
 	s.Update("Created IAM role: %s", roleName)
 	return roleArn, nil
@@ -1599,8 +1591,8 @@ type Config struct {
 	// Name of the execution task IAM Role to associate with the ECS Service
 	ExecutionRoleName string `hcl:"execution_role_name,optional"`
 
-	// IAM Policy ARN for attaching to task role
-	TaskRolePolicy string `hcl:"task_role_policy_arn,optional"`
+	// IAM Policy ARNs for attaching to task role
+	TaskRolePolicyArns []string `hcl:"task_role_policy_arns,optional"`
 
 	// Name of the task IAM role to associate with the ECS service
 	TaskRoleName string `hcl:"task_role_name,optional"`
@@ -1704,12 +1696,20 @@ deploy {
 
 	doc.SetField(
 		"task_role_name",
-		"the name of the task IAM role to assign",
+		"the name of the task IAM role to assign.",
+		docs.Summary(
+			"If no role exists and a one or more task role policies are requested,",
+			"a role with this name will be created.",
+		),
 	)
 
 	doc.SetField(
-		"task_role_policy",
-		"IAM Policy ARN for attaching to task role",
+		"task_role_policy_arns",
+		"IAM Policy arns for attaching to the task role.",
+		docs.Summary(
+			"If no task role name is specified a task role with a default name",
+			"will be created for this app, and these policies will be attached.",
+		),
 	)
 
 	doc.SetField(

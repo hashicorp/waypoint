@@ -319,14 +319,18 @@ The VPC subnets to use for the application.
 
 The name of the task IAM role to assign.
 
+If no role exists and a one or more task role policies are requested, a role with this name will be created.
+
 - Type: **string**
 - **Optional**
 
-#### task_role_policy
+#### task_role_policy_arns
 
-IAM Policy ARN for attaching to task role.
+IAM Policy arns for attaching to the task role.
 
-- Type: **string**
+If no task role name is specified a task role with a default name will be created for this app, and these policies will be attached.
+
+- Type: **list of string**
 - **Optional**
 
 ### Output Attributes
