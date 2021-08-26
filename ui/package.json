@@ -35,6 +35,7 @@
     "@hashicorp/structure-icons": "^1.9.0-0",
     "@percy/cli": "^1.0.0-beta.58",
     "@percy/ember": "^3.0.0",
+    "@types/codemirror": "^5.60.2",
     "@types/ember": "^3.16.0",
     "@types/ember-qunit": "^3.4.9",
     "@types/ember__test-helpers": "^1.7.0",
@@ -125,7 +126,8 @@
     "google-protobuf": "^3.12.2",
     "grpc-web": "./lib/grpc-web",
     "waypoint-client": "./lib/waypoint-client",
-    "waypoint-pb": "./lib/waypoint-pb"
+    "waypoint-pb": "./lib/waypoint-pb",
+    "codemirror": "^5.62.2"
   },
   "ember-addon": {}
 }

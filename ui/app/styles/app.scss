@@ -8,6 +8,9 @@
 
 @use 'utilities/focus-ring';
 
+@import 'node_modules/codemirror/lib/codemirror';
+@import 'node_modules/codemirror/theme/monokai';
+
 @import 'mixins/index';
 
 @import './variables';
@@ -21,6 +24,7 @@
 @import './components/navigation/breadcrumbs';
 @import './components/button';
 @import './components/card';
+@import './components/code-editor-field.scss';
 @import './components/cli-hint';
 @import './components/copyable-code';
 @import './components/empty-state';

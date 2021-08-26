@@ -200,12 +200,8 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
   }
 
   @action
-  setWaypointHcl(e: Event): void {
-    if (!(e.target instanceof HTMLInputElement)) {
-      return;
-    }
-
-    this.project.waypointHcl = btoa(e.target.value);
+  setWaypointHcl(value: string): void {
+    this.project.waypointHcl = btoa(value);
   }
 
   @action
