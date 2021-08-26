@@ -22,18 +22,9 @@ module('Acceptance (Percy) | navigating the app', function (hooks) {
   setupMirage(hooks);
   login();
 
-  // test('login page', async function () {});
-
   test('empty projects list', async function (assert) {
     await visit('/default');
     await percySnapshot('Empty projects list');
     assert.ok(true);
-  });
-
-  test('visiting deployments page', async function (assert) {
-    percyScenario(this.server);
-    await page.visit();
-    await percySnapshot('Deployments page');
-    assert.equal(page.list.length, 3);
   });
 });
