@@ -5,7 +5,7 @@ import { setupMirage } from 'ember-cli-mirage/test-support';
 import percySnapshot from '@percy/ember';
 import login from '../helpers/login';
 
-module('Acceptance (Percy) | navigating the app', function (hooks) {
+module('Acceptance | Percy', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
   login();
