@@ -16,17 +16,13 @@ export default class ActionsInvite extends Component {
   @tracked hintIsVisible = false;
   @tracked copySuccess = false;
 
-  constructor(owner: any, args: any) {
-    super(owner, args);
-  }
-
-  selectContents(element: any) {
+  selectContents(element: HTMLInputElement): void {
     element.focus();
     element.select();
   }
 
   @action
-  onSuccess() {
+  onSuccess(): void {
     this.copySuccess = true;
 
     later(() => {
@@ -35,7 +31,7 @@ export default class ActionsInvite extends Component {
   }
 
   @action
-  async createToken() {
+  async createToken(): Promise<void> {
     let req = new InviteTokenRequest();
     req.setDuration('12h');
     let resp = await this.api.client.generateInviteToken(req, this.api.WithMeta());
@@ -49,7 +45,7 @@ export default class ActionsInvite extends Component {
   }
 
   @action
-  async toggleHint() {
+  async toggleHint(): Promise<boolean> {
     // Create a token if one doesn't exist
     if (this.token == '') await this.createToken();
 
