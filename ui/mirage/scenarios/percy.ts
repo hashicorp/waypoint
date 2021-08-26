@@ -1,5 +1,4 @@
 import { Server } from 'ember-cli-mirage';
-import login from '../helpers/login';
 
 export default function (server: Server): void {
   let project1 = server.create('project', { name: 'microchip' });
@@ -12,5 +11,4 @@ export default function (server: Server): void {
   // builds
   server.createList('deployment', 3, 'docker', '5-minutes-old-success', { application: application1 });
   // releases (2 done, 1 ongoing) (or 1 success, 1 failed, 1 ongoing)
-  login();
 }
