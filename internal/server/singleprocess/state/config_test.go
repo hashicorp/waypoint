@@ -22,7 +22,7 @@ func TestConfig(t *testing.T) {
 
 		// Create a build
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Project{
+			UnusedScope: &pb.ConfigVar_Project{
 				Project: &pb.Ref_Project{
 					Project: "foo",
 				},
@@ -81,7 +81,7 @@ func TestConfig(t *testing.T) {
 		// Create a build
 		require.NoError(s.ConfigSet(
 			&pb.ConfigVar{
-				Scope: &pb.ConfigVar_Project{
+				UnusedScope: &pb.ConfigVar_Project{
 					Project: &pb.Ref_Project{
 						Project: "foo",
 					},
@@ -91,7 +91,7 @@ func TestConfig(t *testing.T) {
 				Value: &pb.ConfigVar_Static{Static: "value"},
 			},
 			&pb.ConfigVar{
-				Scope: &pb.ConfigVar_Project{
+				UnusedScope: &pb.ConfigVar_Project{
 					Project: &pb.Ref_Project{
 						Project: "foo",
 					},
@@ -101,7 +101,7 @@ func TestConfig(t *testing.T) {
 				Value: &pb.ConfigVar_Static{Static: "project"},
 			},
 			&pb.ConfigVar{
-				Scope: &pb.ConfigVar_Application{
+				UnusedScope: &pb.ConfigVar_Application{
 					Application: &pb.Ref_Application{
 						Project:     "foo",
 						Application: "bar",
@@ -155,7 +155,7 @@ func TestConfig(t *testing.T) {
 
 		// Create a var
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Project{
+			UnusedScope: &pb.ConfigVar_Project{
 				Project: &pb.Ref_Project{
 					Project: "foo",
 				},
@@ -180,7 +180,7 @@ func TestConfig(t *testing.T) {
 
 		// Delete it
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Project{
+			UnusedScope: &pb.ConfigVar_Project{
 				Project: &pb.Ref_Project{
 					Project: "foo",
 				},
@@ -212,7 +212,7 @@ func TestConfig(t *testing.T) {
 
 		// Create a var
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Project{
+			UnusedScope: &pb.ConfigVar_Project{
 				Project: &pb.Ref_Project{
 					Project: "foo",
 				},
@@ -237,7 +237,7 @@ func TestConfig(t *testing.T) {
 
 		// Delete it
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Project{
+			UnusedScope: &pb.ConfigVar_Project{
 				Project: &pb.Ref_Project{
 					Project: "foo",
 				},
@@ -272,7 +272,7 @@ func TestConfig(t *testing.T) {
 
 		// Create a var
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Project{
+			UnusedScope: &pb.ConfigVar_Project{
 				Project: &pb.Ref_Project{
 					Project: "foo",
 				},
@@ -297,7 +297,7 @@ func TestConfig(t *testing.T) {
 
 		// Delete it
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Project{
+			UnusedScope: &pb.ConfigVar_Project{
 				Project: &pb.Ref_Project{
 					Project: "foo",
 				},
@@ -330,7 +330,7 @@ func TestConfig(t *testing.T) {
 
 		// Create the config
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Runner{
+			UnusedScope: &pb.ConfigVar_Runner{
 				Runner: &pb.Ref_Runner{
 					Target: &pb.Ref_Runner_Any{
 						Any: &pb.Ref_RunnerAny{},
@@ -344,7 +344,7 @@ func TestConfig(t *testing.T) {
 
 		// Create a var that shouldn't match
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Project{
+			UnusedScope: &pb.ConfigVar_Project{
 				Project: &pb.Ref_Project{
 					Project: "foo",
 				},
@@ -402,7 +402,7 @@ func TestConfig(t *testing.T) {
 
 		// Create the config
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Runner{
+			UnusedScope: &pb.ConfigVar_Runner{
 				Runner: &pb.Ref_Runner{
 					Target: &pb.Ref_Runner_Id{
 						Id: &pb.Ref_RunnerId{
@@ -418,7 +418,7 @@ func TestConfig(t *testing.T) {
 
 		// Create a var that shouldn't match
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Project{
+			UnusedScope: &pb.ConfigVar_Project{
 				Project: &pb.Ref_Project{
 					Project: "foo",
 				},
@@ -463,7 +463,7 @@ func TestConfig(t *testing.T) {
 
 		// Create the config
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Runner{
+			UnusedScope: &pb.ConfigVar_Runner{
 				Runner: &pb.Ref_Runner{
 					Target: &pb.Ref_Runner_Any{
 						Any: &pb.Ref_RunnerAny{},
@@ -476,7 +476,7 @@ func TestConfig(t *testing.T) {
 		}))
 
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Runner{
+			UnusedScope: &pb.ConfigVar_Runner{
 				Runner: &pb.Ref_Runner{
 					Target: &pb.Ref_Runner_Id{
 						Id: &pb.Ref_RunnerId{
@@ -513,7 +513,7 @@ func TestConfig(t *testing.T) {
 
 		// Create the config
 		err := s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Runner{
+			UnusedScope: &pb.ConfigVar_Runner{
 				Runner: &pb.Ref_Runner{
 					Target: &pb.Ref_Runner_Any{
 						Any: &pb.Ref_RunnerAny{},
@@ -557,7 +557,7 @@ func TestConfigWatch(t *testing.T) {
 
 		// Create a config
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
-			Scope: &pb.ConfigVar_Project{
+			UnusedScope: &pb.ConfigVar_Project{
 				Project: &pb.Ref_Project{
 					Project: "foo",
 				},

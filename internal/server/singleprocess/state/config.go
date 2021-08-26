@@ -3,9 +3,11 @@ package state
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-memdb"
+	"github.com/mitchellh/hashstructure/v2"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,8 +24,17 @@ func init() {
 	schemas = append(schemas, configIndexSchema)
 }
 
-// ConfigSet writes a configuration variable to the data store.
+// ConfigSet writes a configuration variable to the data store. Deletes
+// are always ordered before writes so that you can't delete a new value
+// in a single ConfigSet (you should never want to do this).
 func (s *State) ConfigSet(vs ...*pb.ConfigVar) error {
+	// Sort the variables so that deletes are handled before writes.
+	// TODO: test this
+	sort.Slice(vs, func(i, j int) bool {
+		// i < j if i is a delete request.
+		return isConfigVarDelete(vs[i])
+	})
+
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -69,6 +80,7 @@ func (s *State) configSet(
 	memTxn *memdb.Txn,
 	value *pb.ConfigVar,
 ) error {
+	s.configVarNormalize(value)
 	id := s.configVarId(value)
 
 	// Get the global bucket and write the value to it.
@@ -80,7 +92,7 @@ func (s *State) configSet(
 		}
 	} else {
 		// If this is a runner, we don't support dynamic values currently.
-		if _, ok := value.Scope.(*pb.ConfigVar_Runner); ok {
+		if value.Target.Runner != nil {
 			if _, ok := value.Value.(*pb.ConfigVar_Static); !ok {
 				return status.Errorf(codes.FailedPrecondition,
 					"runner-scoped configuration must be static")
@@ -291,17 +303,16 @@ func (s *State) configGetRunner(
 // configIndexSet writes an index record for a single config var.
 func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) error {
 	var project, application string
-	var runner *pb.Ref_Runner
-	switch scope := value.Scope.(type) {
-	case *pb.ConfigVar_Application:
+	switch scope := value.Target.AppScope.(type) {
+	case *pb.ConfigVar_Target_Application:
 		project = scope.Application.Project
 		application = scope.Application.Application
 
-	case *pb.ConfigVar_Project:
+	case *pb.ConfigVar_Target_Project:
 		project = scope.Project.Project
 
-	case *pb.ConfigVar_Runner:
-		runner = scope.Runner
+	case *pb.ConfigVar_Target_Global:
+		// Global scope set nothing
 
 	default:
 		panic("unknown scope")
@@ -312,8 +323,8 @@ func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) e
 		Project:     project,
 		Application: application,
 		Name:        value.Name,
-		Runner:      runner != nil,
-		RunnerRef:   runner,
+		Runner:      value.Target.Runner != nil,
+		RunnerRef:   value.Target.Runner,
 	}
 
 	// If we have no value, we delete from the memdb index
@@ -342,38 +353,56 @@ func (s *State) configIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 }
 
 func (s *State) configVarId(v *pb.ConfigVar) []byte {
-	switch scope := v.Scope.(type) {
-	case *pb.ConfigVar_Application:
-		return []byte(fmt.Sprintf("%s/%s/%s",
-			scope.Application.Project,
-			scope.Application.Application,
-			v.Name,
-		))
+	// It is very important the variable is normalized before we get the ID.
+	s.configVarNormalize(v)
 
-	case *pb.ConfigVar_Project:
-		return []byte(fmt.Sprintf("%s/%s/%s",
-			scope.Project.Project,
-			"",
-			v.Name,
-		))
+	// Hash the ConfigVar Target to get a unique ID for this variable.
+	// This works because hashstructure ignores unexported fields.
+	hash, err := hashstructure.Hash(v.Target, hashstructure.FormatV2, nil)
+	if err != nil {
+		// This should never happen so we panic so we can report a bug.
+		// This _may_ crash the server which is not ideal, but we usually
+		// do per-request recover() and this usually isn't in a goroutine.
+		// And again, it shouldn't happen.
+		panic(err)
+	}
 
-	case *pb.ConfigVar_Runner:
-		var t string
-		switch scope.Runner.Target.(type) {
-		case *pb.Ref_Runner_Id:
-			t = "by-id"
+	return []byte(strings.ToLower(fmt.Sprintf("%s:%d/%s", configIdPrefix, hash, v.Name)))
+}
 
-		case *pb.Ref_Runner_Any:
-			t = "any"
+// configVarNormalize takes a ConfigVar and "normalizes" it by applying
+// transforms to ensure config vars have the same structure. For example,
+// this auto-upgrades older fields in the protobuf.
+//
+// This is safe to call multiple times.
+func (s *State) configVarNormalize(v *pb.ConfigVar) {
+	// UnusedScope is from WP 0.5 and earlier (and was named "scope" then).
+	// We upgrade it to target. If its set we always overwrite the target.
+	if v.UnusedScope != nil {
+		v.Target = &pb.ConfigVar_Target{}
 
-		default:
-			panic(fmt.Sprintf("unknown runner target scope: %T", scope.Runner.Target))
+		switch scope := v.UnusedScope.(type) {
+		case *pb.ConfigVar_Application:
+			v.Target.AppScope = &pb.ConfigVar_Target_Application{
+				Application: scope.Application,
+			}
+
+		case *pb.ConfigVar_Project:
+			v.Target.AppScope = &pb.ConfigVar_Target_Project{
+				Project: scope.Project,
+			}
+
+		case *pb.ConfigVar_Runner:
+			// In WP 0.5 and earlier, a scope of runner implied a global
+			// runner variable no matter where the runner lived.
+			v.Target.AppScope = &pb.ConfigVar_Target_Global{
+				Global: &pb.Ref_Global{},
+			}
+			v.Target.Runner = scope.Runner
 		}
 
-		return []byte(fmt.Sprintf("runner/%s/%s", t, v.Name))
-
-	default:
-		panic("unknown scope")
+		// Set our scope to nil so that we don't try to use it.
+		v.UnusedScope = nil
 	}
 }
 
@@ -461,6 +490,10 @@ const (
 	configIndexProjectIndexName     = "project"
 	configIndexApplicationIndexName = "application"
 	configIndexRunnerIndexName      = "runner"
+
+	// configIdPrefix prefixes our ID so that we can change the
+	// ID hashing in the future if we want to.
+	configIdPrefix = "v2:"
 )
 
 type configIndexRecord struct {
