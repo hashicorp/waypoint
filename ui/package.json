@@ -127,7 +127,8 @@
     "google-protobuf": "^3.12.2",
     "grpc-web": "./lib/grpc-web",
     "waypoint-client": "./lib/waypoint-client",
-    "waypoint-pb": "./lib/waypoint-pb"
+    "waypoint-pb": "./lib/waypoint-pb",
+    "xterm": "^4.13.0"
   },
   "ember-addon": {}
 }
