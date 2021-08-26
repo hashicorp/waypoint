@@ -89,6 +89,7 @@ if you've made API changes in `/internal/server` and want to use those on the fr
 - `make gen/ts`
 
 You'll need to re-install the new files to your `node_modules` directory by running:
+
 ```
 yarn add ./lib/waypoint-client ./lib/waypoint-pb
 ```
@@ -102,11 +103,31 @@ Make use of the many generators for code, try `ember help generate` for more det
 - `ember test`
 - `ember test --server`
 
+(See “Percy” section for other ways of running the test suite)
+
 ### Linting
 
 - `npm run lint:hbs`
 - `npm run lint:js`
 - `npm run lint:js -- --fix`
+
+### Percy
+
+We use [Percy](https://percy.io) for visual regression testing.
+
+All the Percy snapshotting happens in [percy-test.ts](./tests/acceptance/percy-test.ts). The aim is to have a test for every significant state in this file. We keep it all in one file, rather than weaving Percy snapshotting through the rest of the test suite. We think this makes it more maintainable.
+
+We are incrementally adding Percy tests, so it’s rather minimal at the moment. If you’d like to add a Percy test, please go ahead.
+
+To run tests with Percy enabled (that is, Percy ready to receive snapshots), run the following:
+
+```sh
+yarn ember:test:percy
+```
+
+This is exactly the same command we run in CI. You will need to set the env var `PERCY_TOKEN` with a valid Percy token.
+
+If you need access to our Percy account, please ask someone from @hashicorp/waypoint-frontend.
 
 ### Building
 
