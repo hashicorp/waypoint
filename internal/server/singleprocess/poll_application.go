@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
+	"github.com/mitchellh/copystructure"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -67,33 +68,42 @@ func (a *applicationPoll) PollJob(
 	var jobList []*pb.QueueJobRequest
 
 	for _, app := range project.Applications {
-		job, err := a.buildPollJob(log, app)
+		jobs, err := a.buildPollJobs(log, app)
 		if err != nil {
 			return nil, err
 		}
 
-		jobList = append(jobList, job)
+		jobList = append(jobList, jobs...)
 	}
 
 	return jobList, nil
 }
 
-// buildPollJob will generate a job to queue a project on.
-// When determining what to generate a report on, either a Deployment or Release,
-// this job assumes that the _Release_ was the last operation taken on the application.
-// If there's a release, this job will queue a status report genreation on that.
-// Otherwise if there's just a deployment, it returns a job to generate a
-// status report on the deployment.
-func (a *applicationPoll) buildPollJob(
+// buildPollJobs will generate jobs to poll the latest deploy and release operations for a project.
+func (a *applicationPoll) buildPollJobs(
 	log hclog.Logger,
 	appl interface{},
-) (*pb.QueueJobRequest, error) {
+) ([]*pb.QueueJobRequest, error) {
 	app, ok := appl.(*pb.Application)
 	if !ok || app == nil {
 		log.Error("could not generate poll job for application, incorrect type passed in")
 		return nil, status.Error(codes.FailedPrecondition, "incorrect type passed into Application PollJob")
 	}
 	log = log.Named(app.Name)
+
+	// App polling needs the parent project to obtain its datasource
+	project, err := a.state.ProjectGet(&pb.Ref_Project{Project: app.Project.Project})
+	if err != nil {
+		return nil, err
+	}
+
+	// Application status polling requires a remote data source, otherwise a status report
+	// cannot be generated without a project and its hcl context. This returns
+	// an error so we fail early instead of queueing an already broken job
+	if project.DataSource == nil {
+		log.Debug("cannot build an application poll job without a remote data source configured.")
+		return nil, status.Error(codes.FailedPrecondition, "application status polling requires a remote data source")
+	}
 
 	// Determine the latest deployment or release to poll for a status report
 	appRef := &pb.Ref_Application{
@@ -104,75 +114,44 @@ func (a *applicationPoll) buildPollJob(
 	log.Trace("looking at latest deployment and release to generate status report on")
 	latestDeployment, err := a.state.DeploymentLatest(appRef, &pb.Ref_Workspace{Workspace: a.workspace})
 	if err != nil {
-		return nil, err
+		// If the deployment isn't found, it's ok
+		s, ok := status.FromError(err)
+		if !ok || s.Code() != codes.NotFound {
+			return nil, err
+		}
 	}
 	latestRelease, err := a.state.ReleaseLatest(appRef, &pb.Ref_Workspace{Workspace: a.workspace})
+	if err != nil {
+		// If the release isn't found, it's ok.
+		s, ok := status.FromError(err)
+		if !ok || s.Code() != codes.NotFound {
+			return nil, err
+		}
+	}
 	// Some platforms don't release, so we shouldn't error here if we at least got a deployment
-	if err != nil && latestDeployment == nil {
+	if latestRelease == nil && latestDeployment == nil {
 		log.Warn("no deployment or release found, cannot generate a poll job")
 		return nil, nil
 	}
 
-	statusReportJob := &pb.Job_StatusReport{
-		StatusReport: &pb.Job_StatusReportOp{},
-	}
-
-	log.Trace("Determining which target to generate a status report on")
-
-	// Default to poll on the "latest" lifecycle operation, so if there's a
-	// release, queue up a status on release. If the latest is deploy, then queue that.
-	if latestRelease != nil && !latestRelease.Unimplemented {
-		log.Trace("using latest release as a status report target")
-		statusReportJob.StatusReport.Target = &pb.Job_StatusReportOp_Release{
-			Release: latestRelease,
-		}
-	} else if latestDeployment.Deployment != nil {
-		log.Trace("using latest deployment as a status report target")
-		statusReportJob.StatusReport.Target = &pb.Job_StatusReportOp_Deployment{
-			Deployment: latestDeployment,
-		}
-	} else {
-		// Unclear if we'll even reach this. DeploymentLatest and ReleaseLatest will
-		// return an error if there's no deployment or release given an app name.
-		log.Debug("no release or deploy target to run a status report poll against.")
-		return nil, nil
-	}
-
-	// App polling needs the parent project to obtain its datasource
-	project, err := a.state.ProjectGet(&pb.Ref_Project{Project: app.Project.Project})
-	if err != nil {
-		return nil, err
-	}
-
-	// Application polling requires a remote data source, otherwise a status report
-	// cannot be generated without a project and its hcl context. This returns
-	// an error so we fail early instead of queueing an already broken job
-	if project.DataSource == nil {
-		log.Debug("cannot poll a job without a remote data source configured.")
-		return nil, status.Error(codes.FailedPrecondition, "application polling requires a remote data source")
-	}
-
-	log.Trace("building queue job request for generating status report")
-	jobRequest := &pb.QueueJobRequest{
+	baseJob := &pb.QueueJobRequest{
 		Job: &pb.Job{
-			// SingletonId so that we only have one poll operation at
-			// any time queued per application.
-			SingletonId: fmt.Sprintf("appl-poll/%s", app.Name),
-
 			Application: &pb.Ref_Application{
 				Application: app.Name,
 				Project:     app.Project.Project,
 			},
 
 			// Application polling requires a data source to be configured for the project
-			// Otherwise a status report can't properly eval the projects hcl context
+			// Otherwise a status report can't properly eval the project's hcl context
 			// needed to query the deploy or release
 			DataSource: project.DataSource,
 
 			Workspace: &pb.Ref_Workspace{Workspace: a.workspace},
 
 			// Generate a status report
-			Operation: statusReportJob,
+			Operation: &pb.Job_StatusReport{
+				StatusReport: &pb.Job_StatusReportOp{},
+			},
 
 			// Any runner is fine for polling.
 			TargetRunner: &pb.Ref_Runner{
@@ -184,8 +163,57 @@ func (a *applicationPoll) buildPollJob(
 
 		// TODO define timeout interval based on projects app poll interval
 	}
+	var jobs []*pb.QueueJobRequest
 
-	return jobRequest, nil
+	log.Trace("Determining which target to generate a status report on")
+
+	// Default to poll on the "latest" lifecycle operation, so if there's a
+	// deploy, queue up a status on deploy. If there is latest is release, then queue that too.
+	if latestDeployment.Deployment != nil {
+		baseJobCopy, err := copystructure.Copy(baseJob)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to generate a job to poll deployment status: %s", err)
+		}
+		deploymentJob := baseJobCopy.(*pb.QueueJobRequest)
+		deploymentJob.Job.Operation = &pb.Job_StatusReport{
+			StatusReport: &pb.Job_StatusReportOp{
+				Target: &pb.Job_StatusReportOp_Deployment{
+					Deployment: latestDeployment,
+				},
+			},
+		}
+		// SingletonId so that we only have one poll operation at
+		// any time queued per app/operation.
+		deploymentJob.Job.SingletonId = appStatusPollSingletonId(app.Name, appStatusPollOperationTypeDeployment)
+
+		jobs = append(jobs, deploymentJob)
+	}
+	if latestRelease != nil && !latestRelease.Unimplemented {
+		baseJobCopy, err := copystructure.Copy(baseJob)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to generate a job to poll release status: %s", err)
+		}
+		releaseJob := baseJobCopy.(*pb.QueueJobRequest)
+		releaseJob.Job.Operation = &pb.Job_StatusReport{
+			StatusReport: &pb.Job_StatusReportOp{
+				Target: &pb.Job_StatusReportOp_Release{
+					Release: latestRelease,
+				},
+			},
+		}
+		// SingletonId so that we only have one poll operation at
+		// any time queued per app/operation.
+		releaseJob.Job.SingletonId = appStatusPollSingletonId(app.Name, appStatusPollOperationTypeRelease)
+
+		jobs = append(jobs, releaseJob)
+	}
+	if len(jobs) == 0 {
+		// Unclear if we'll even reach this. DeploymentLatest and ReleaseLatest will
+		// return an error if there's no deployment or release given an app name.
+		log.Debug("no release or deploy target to run a status report poll against.")
+	}
+
+	return jobs, nil
 }
 
 // Complete will mark the job that was queued as complete, if it
@@ -207,4 +235,18 @@ func (a *applicationPoll) Complete(
 		return err
 	}
 	return nil
+}
+
+// The name of an operation type that status polling is possible for
+type appStatusPollOperationType string
+
+const (
+	appStatusPollOperationTypeDeployment appStatusPollOperationType = "deployment"
+	appStatusPollOperationTypeRelease    appStatusPollOperationType = "release"
+)
+
+// appStatusPollSingletonId generates an application status polling job singleton ID
+// for the given app and operation type.
+func appStatusPollSingletonId(appName string, operationType appStatusPollOperationType) string {
+	return fmt.Sprintf("app-status-poll/%s/%s", appName, operationType)
 }

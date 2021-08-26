@@ -1,0 +1,3 @@
+```release-note:improvement
+core: App status polling will always queue status reports refresh jobs for latest deployment and release if present
+```

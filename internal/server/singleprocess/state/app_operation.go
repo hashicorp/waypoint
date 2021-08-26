@@ -358,7 +358,7 @@ func (op *appOperation) Latest(
 		}
 	}
 
-	return nil, status.Errorf(codes.NotFound, "No application named %q is available!", ref.Application)
+	return nil, status.Errorf(codes.NotFound, "No application named %q is available, or application has no successful operations", ref.Application)
 }
 
 // get reads the value from the database. This populates any computed fields
