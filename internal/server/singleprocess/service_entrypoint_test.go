@@ -222,8 +222,10 @@ func TestServiceEntrypointConfig(t *testing.T) {
 			_, err := client.SetConfig(ctx, &pb.ConfigSetRequest{
 				Variables: []*pb.ConfigVar{
 					{
-						Scope: &pb.ConfigVar_Application{
-							Application: dep.Application,
+						Target: &pb.ConfigVar_Target{
+							AppScope: &pb.ConfigVar_Target_Application{
+								Application: dep.Application,
+							},
 						},
 
 						Name:  "DATABASE_URL",
@@ -258,8 +260,10 @@ func TestServiceEntrypointConfig(t *testing.T) {
 			_, err := client.SetConfig(ctx, &pb.ConfigSetRequest{
 				Variables: []*pb.ConfigVar{
 					{
-						Scope: &pb.ConfigVar_Application{
-							Application: dep.Application,
+						Target: &pb.ConfigVar_Target{
+							AppScope: &pb.ConfigVar_Target_Application{
+								Application: dep.Application,
+							},
 						},
 
 						Name: "DATABASE_URL",

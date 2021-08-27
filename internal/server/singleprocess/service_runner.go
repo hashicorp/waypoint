@@ -119,11 +119,12 @@ func (s *service) RunnerConfig(
 
 		// Get our config vars
 		vars, err := s.state.ConfigGetWatch(&pb.ConfigGetRequest{
-			Scope: &pb.ConfigGetRequest_Runner{
-				Runner: &pb.Ref_RunnerId{
-					Id: record.Id,
-				},
+			Runner: &pb.Ref_RunnerId{
+				Id: record.Id,
 			},
+
+			// TODO(mitchellh): we need to set additional filters here
+			// if we're an on-demand runner for an app.
 		}, ws)
 		if err != nil {
 			return err
