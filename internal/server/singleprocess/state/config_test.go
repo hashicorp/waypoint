@@ -97,6 +97,75 @@ func TestConfig(t *testing.T) {
 		}
 	})
 
+	t.Run("deletes before writes", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a config
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			UnusedScope: &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{
+					Project: "foo",
+				},
+			},
+
+			Name:  "foo",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
+		}, &pb.ConfigVar{
+			UnusedScope: &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{
+					Project: "foo",
+				},
+			},
+
+			Name: "foo",
+			Value: &pb.ConfigVar_Unset{
+				Unset: &empty.Empty{},
+			},
+		}))
+
+		{
+			// Get it exactly
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Project{
+					Project: &pb.Ref_Project{Project: "foo"},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+		}
+
+		{
+			// Get it via a prefix match
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Project{
+					Project: &pb.Ref_Project{Project: "foo"},
+				},
+
+				Prefix: "",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+		}
+
+		{
+			// non-matching prefix
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Project{
+					Project: &pb.Ref_Project{Project: "foo"},
+				},
+
+				Prefix: "bar",
+			})
+			require.NoError(err)
+			require.Empty(vs)
+		}
+	})
+
 	t.Run("merging", func(t *testing.T) {
 		require := require.New(t)
 

@@ -41,7 +41,6 @@ func init() {
 // in a single ConfigSet (you should never want to do this).
 func (s *State) ConfigSet(vs ...*pb.ConfigVar) error {
 	// Sort the variables so that deletes are handled before writes.
-	// TODO: test this
 	sort.Slice(vs, func(i, j int) bool {
 		// i < j if i is a delete request.
 		return isConfigVarDelete(vs[i])
@@ -464,7 +463,13 @@ func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) e
 
 	// If we have no value, we delete from the memdb index
 	if isConfigVarDelete(value) {
-		return txn.Delete(configIndexTableName, record)
+		err := txn.Delete(configIndexTableName, record)
+		if errors.Is(err, memdb.ErrNotFound) {
+			// If it doesn't exist that is okay
+			err = nil
+		}
+
+		return err
 	}
 
 	// Insert the index
