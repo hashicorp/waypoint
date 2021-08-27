@@ -20,7 +20,7 @@ func TestConfig(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
-		// Create a build
+		// Create a config
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
 			UnusedScope: &pb.ConfigVar_Project{
 				Project: &pb.Ref_Project{
@@ -29,6 +29,26 @@ func TestConfig(t *testing.T) {
 			},
 
 			Name:  "foo",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
+		}))
+
+		// Create a runner config, we should never get this
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Project{
+					Project: &pb.Ref_Project{
+						Project: "foo",
+					},
+				},
+
+				Runner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Any{
+						Any: &pb.Ref_RunnerAny{},
+					},
+				},
+			},
+
+			Name:  "bar",
 			Value: &pb.ConfigVar_Static{Static: "bar"},
 		}))
 

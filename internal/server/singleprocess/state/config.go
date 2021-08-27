@@ -134,6 +134,7 @@ func (s *State) configGetMerged(
 
 	// mergeSet is the set of variables we'll merge and resolve.
 	mergeSet := [][]*pb.ConfigVar{globalVars}
+	merge := true
 
 	switch scope := req.Scope.(type) {
 	case *pb.ConfigGetRequest_Project:
@@ -143,8 +144,11 @@ func (s *State) configGetMerged(
 			return nil, err
 		}
 
-		// Project scope never resolves so we just return it as is.
-		return append(globalVars, projectVars...), nil
+		// Project scope never resolves so we just return it as is. We
+		// set the "merge = false" flag to notify that we don't want to do
+		// resolution.
+		mergeSet = append(mergeSet, projectVars)
+		merge = false
 
 	case *pb.ConfigGetRequest_Application:
 		// Application scope, we have to get the project scope first
@@ -193,6 +197,20 @@ func (s *State) configGetMerged(
 		}
 
 		mergeSet = newMergeSet
+	} else {
+		// If runner isn't set, then we want to ensure we're not getting
+		// any runner env vars.
+		for _, set := range mergeSet {
+			for i, v := range set {
+				if v == nil {
+					continue
+				}
+
+				if v.Target.Runner != nil {
+					set[i] = nil
+				}
+			}
+		}
 	}
 
 	// Filter based on the workspace if we have it set.
@@ -248,6 +266,20 @@ func (s *State) configGetMerged(
 				set[i] = nil
 			}
 		}
+	}
+
+	// If we aren't merging, then we're done. We just flatten the list.
+	if !merge {
+		var result []*pb.ConfigVar
+		for _, set := range mergeSet {
+			for _, v := range set {
+				if v != nil {
+					result = append(result, v)
+				}
+			}
+		}
+		sort.Sort(serversort.ConfigName(result))
+		return result, nil
 	}
 
 	// Merge our merge set
