@@ -302,7 +302,7 @@ func (p *Platform) Deploy(
 	// TODO: should include the sequence ID
 	ulid, err := component.Id()
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate a ULID: %s", err)
+		return nil, status.Errorf(codes.Internal, "failed to generate a ULID: %s", err)
 	}
 	deploymentId := DeploymentId(fmt.Sprintf("%s-%s", src.App, ulid))
 
@@ -333,7 +333,7 @@ func (p *Platform) Deploy(
 		ctx, log, sg, ui, deploymentId, externalIngressPort,
 		src, img, deployConfig, &result,
 	); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create deployment resources: %s", err)
+		return nil, status.Errorf(status.Convert(err).Code(), "failed to create deployment resources: %s", err)
 	}
 
 	// Store our resource state
@@ -378,18 +378,18 @@ func (p *Platform) Status(
 	// and we need to manually recreate it.
 	if deployment.ResourceState == nil {
 		if err := p.loadResourceManagerState(ctx, rm, deployment, log, sg); err != nil {
-			return nil, status.Errorf(codes.FailedPrecondition, "failed recovering old state into resource manager: %s", err)
+			return nil, status.Errorf(codes.Internal, "failed recovering old state into resource manager: %s", err)
 		}
 	} else {
 		// Load our set state
 		if err := rm.LoadState(deployment.ResourceState); err != nil {
-			return nil, status.Errorf(codes.FailedPrecondition, "failed loading state into resource manager: %s", err)
+			return nil, status.Errorf(codes.Internal, "failed loading state into resource manager: %s", err)
 		}
 	}
 
 	result, err := rm.StatusReport(ctx, log, sg)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "resource manager failed to generate a status report: %s", err)
+		return nil, status.Errorf(status.Convert(err).Code(), "resource manager failed to generate a status report: %s", err)
 	}
 
 	s.Update("Finished building report for ecs deployment")
@@ -437,19 +437,19 @@ func (p *Platform) Destroy(
 	// and we need to manually recreate it.
 	if deployment.ResourceState == nil {
 		if err := p.loadResourceManagerState(ctx, rm, deployment, log, sg); err != nil {
-			return status.Errorf(codes.FailedPrecondition, "failed recovering old state into resource manager: %s", err)
+			return status.Errorf(codes.Internal, "failed recovering old state into resource manager: %s", err)
 		}
 	} else {
 		// Load our set state
 		if err := rm.LoadState(deployment.ResourceState); err != nil {
-			return status.Errorf(codes.FailedPrecondition, "failed loading state into resource manager: %s", err)
+			return status.Errorf(codes.Internal, "failed loading state into resource manager: %s", err)
 		}
 	}
 
 	// Destroy
 	err := rm.DestroyAll(ctx, log, sg, ui)
 	if err != nil {
-		return status.Errorf(codes.Internal, "failed to destroy all resources for deployment: %s", err)
+		return status.Errorf(status.Convert(err).Code(), "failed to destroy all resources for deployment: %s", err)
 	}
 
 	s.Update("Finished destroying ECS deployment")
@@ -503,7 +503,7 @@ func (p *Platform) resourceClusterCreate(
 	}
 
 	if p.config.EC2Cluster {
-		return fmt.Errorf("EC2 clusters can not be automatically created")
+		return status.Errorf(codes.FailedPrecondition, "EC2 clusters can not be automatically created")
 	}
 
 	s.Update("No existing cluster found - creating new ECS cluster: %s", cluster)
@@ -540,7 +540,7 @@ func (p *Platform) resourceClusterStatus(
 		Clusters: []*string{aws.String(state.Name)},
 	})
 	if err != nil {
-		return fmt.Errorf("failed to describe cluster named %q (ARN: %q): %s", state.Name, state.Arn, err)
+		return status.Errorf(codes.Internal, "failed to describe cluster named %q (ARN: %q): %s", state.Name, state.Arn, err)
 	}
 
 	clusterResource := sdk.StatusReport_Resource{
@@ -567,7 +567,7 @@ func (p *Platform) resourceClusterStatus(
 
 			stateJson, err := json.Marshal(c)
 			if err != nil {
-				return fmt.Errorf("failed to marshal ecs cluster state json: %s", err)
+				return status.Errorf(codes.Internal, "failed to marshal ecs cluster state json: %s", err)
 			}
 			clusterResource.StateJson = string(stateJson)
 
@@ -680,7 +680,7 @@ OUTER:
 			break
 		}
 
-		// if we encounter an unrecoverable error, exit now.
+		// if we encounter an unrecoverable error, exit and skip this loop
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case "AccessDeniedException", "UnsupportedFeatureException",
@@ -696,7 +696,7 @@ OUTER:
 		time.Sleep(awsCreateRetryIntervalSeconds * time.Second)
 	}
 	if err != nil {
-		return fmt.Errorf("failed registering ecs service: %s", err)
+		return status.Errorf(codes.Internal, "failed registering ecs service: %s", err)
 	}
 
 	state.Name = *servOut.Service.ServiceName
@@ -735,7 +735,7 @@ func (p *Platform) resourceServiceStatus(
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("failed to describe service (ARN %q): %s", state.Arn, err)
+		return status.Errorf(codes.Internal, "failed to describe service (ARN %q): %s", state.Arn, err)
 	}
 	if len(servicesResp.Services) == 0 {
 		sr.Resources = append(sr.Resources, &sdk.StatusReport_Resource{
@@ -770,7 +770,7 @@ func (p *Platform) resourceServiceStatus(
 
 	serviceJson, err := json.Marshal(map[string]interface{}{"service": service})
 	if err != nil {
-		return fmt.Errorf("failed to marshal service %q (ARN %q) state to json: %s", *service.ServiceName, *service.ServiceArn, err)
+		return status.Errorf(codes.Internal, "failed to marshal service %q (ARN %q) state to json: %s", *service.ServiceName, *service.ServiceArn, err)
 	}
 	serviceResource.StateJson = string(serviceJson)
 
@@ -779,7 +779,7 @@ func (p *Platform) resourceServiceStatus(
 		Cluster:     &state.Cluster,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to list tasks for service %q in cluster %q: %s", state.Name, state.Cluster, err)
+		return status.Errorf(codes.Internal, "failed to list tasks for service %q in cluster %q: %s", state.Name, state.Cluster, err)
 	}
 
 	// Insert missing tasks if necessary
@@ -802,7 +802,7 @@ func (p *Platform) resourceServiceStatus(
 			Cluster: &state.Cluster,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to describe tasks for service %q in cluster %q: %s", state.Name, state.Cluster, err)
+			return status.Errorf(codes.Internal, "failed to describe tasks for service %q in cluster %q: %s", state.Name, state.Cluster, err)
 		}
 
 		for _, task := range tasks.Tasks {
@@ -848,7 +848,7 @@ func (p *Platform) resourceServiceStatus(
 				"task":      task,
 			})
 			if err != nil {
-				return fmt.Errorf("failed to marshal task (arn %q) state to json: %s", *task.TaskArn, err)
+				return status.Errorf(codes.Internal, "failed to marshal task (arn %q) state to json: %s", *task.TaskArn, err)
 			}
 			taskResource.StateJson = string(stateJson)
 		}
@@ -879,7 +879,7 @@ func (p *Platform) resourceServiceDestroy(
 		Service: &state.Arn,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to delete ECS cluster %s (ARN: %q): %s", state.Name, state.Arn, err)
+		return status.Errorf(codes.Internal, "failed to delete ECS cluster %s (ARN: %q): %s", state.Name, state.Arn, err)
 	}
 
 	s.Update("Deleted service %s", state.Name)
@@ -938,7 +938,7 @@ func (p *Platform) resourceAlbListenerCreate(
 			ListenerArns: []*string{aws.String(albConfig.ListenerARN)},
 		})
 		if err != nil {
-			return fmt.Errorf("failed to describe requested listener ARN %q: %s", albConfig.ListenerARN, err)
+			return status.Errorf(codes.Internal, "failed to describe requested listener ARN %q: %s", albConfig.ListenerARN, err)
 		}
 
 		listener = out.Listeners[0]
@@ -948,7 +948,7 @@ func (p *Platform) resourceAlbListenerCreate(
 		state.Managed = true
 
 		if alb == nil || alb.Arn == "" {
-			return fmt.Errorf("cannot create ALB listener - no existing ALB defined.")
+			return status.Errorf(codes.InvalidArgument, "cannot create ALB listener - no existing ALB defined.")
 		}
 
 		s.Update("No ALB listener specified - looking for listeners for ALB %q", alb.Name)
@@ -956,7 +956,7 @@ func (p *Platform) resourceAlbListenerCreate(
 			LoadBalancerArn: &alb.Arn,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to describe listeners for alb (ARN %q): %s", alb.Arn, err)
+			return status.Errorf(codes.Internal, "failed to describe listeners for alb (ARN %q): %s", alb.Arn, err)
 		}
 
 		if len(listeners.Listeners) > 0 {
@@ -984,7 +984,7 @@ func (p *Platform) resourceAlbListenerCreate(
 				},
 			})
 			if err != nil {
-				return fmt.Errorf("failed to create listener: %s", err)
+				return status.Errorf(codes.Internal, "failed to create listener: %s", err)
 			}
 
 			listener = lo.Listeners[0]
@@ -1024,7 +1024,7 @@ func (p *Platform) resourceAlbListenerCreate(
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("failed to introduce new target group to existing ALB listener: %s", err)
+			return status.Errorf(codes.Internal, "failed to introduce new target group to existing ALB listener: %s", err)
 		}
 
 		s.Update("Modified ALB Listener to introduce target group")
@@ -1070,7 +1070,7 @@ func (p *Platform) resourceAlbListenerDestroy(
 			s.Done()
 			return nil
 		}
-		return fmt.Errorf("failed to describe listener with ARN %q: %s", state.Arn, err)
+		return status.Errorf(codes.Internal, "failed to describe listener with ARN %q: %s", state.Arn, err)
 	}
 
 	if len(listeners.Listeners) == 0 {
@@ -1099,7 +1099,7 @@ func (p *Platform) resourceAlbListenerDestroy(
 		})
 
 		if err != nil {
-			return fmt.Errorf("failed to delete ALB listener (ARN %q): %s", *listener.ListenerArn, err)
+			return status.Errorf(codes.Internal, "failed to delete ALB listener (ARN %q): %s", *listener.ListenerArn, err)
 		}
 		s.Update("Deleted ALB Listener")
 	} else if len(def) > 0 && def[0].ForwardConfig != nil && len(def[0].ForwardConfig.TargetGroups) > 1 {
@@ -1138,7 +1138,7 @@ func (p *Platform) resourceAlbListenerDestroy(
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("failed to modify listener (ARN %q): %s", *listener.ListenerArn, err)
+			return status.Errorf(codes.Internal, "failed to modify listener (ARN %q): %s", *listener.ListenerArn, err)
 		}
 		s.Update("Deregistered this deployment's target group from ALB listener")
 	}
@@ -1180,7 +1180,7 @@ func (p *Platform) resourceTargetGroupCreate(
 	}
 
 	if subnets.VpcId == "" {
-		return status.Error(codes.FailedPrecondition, "subnets failed to discover a VPC ID - cannot create target group")
+		return status.Error(codes.Internal, "subnets failed to discover a VPC ID - cannot create target group")
 	}
 
 	state.Port = p.config.ServicePort
@@ -1193,11 +1193,8 @@ func (p *Platform) resourceTargetGroupCreate(
 		TargetType:         aws.String("ip"),
 		VpcId:              &subnets.VpcId,
 	})
-	if err != nil {
-		return fmt.Errorf("failed to create target group: %s", err)
-	}
-	if len(ctg.TargetGroups) == 0 {
-		return fmt.Errorf("failed to create target group")
+	if err != nil || ctg == nil || len(ctg.TargetGroups) == 0 {
+		return status.Errorf(codes.Internal, "failed to create target group: %s", err)
 	}
 
 	state.Name = *ctg.TargetGroups[0].TargetGroupName
@@ -1232,7 +1229,7 @@ func (p *Platform) resourceTargetGroupDestroy(
 		TargetGroupArn: &state.Arn,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to delete target group %s (ARN: %q): %s", state.Name, state.Arn, err)
+		return status.Errorf(codes.Internal, "failed to delete target group %s (ARN: %q): %s", state.Name, state.Arn, err)
 	}
 
 	s.Done()
@@ -1436,7 +1433,7 @@ OUTER:
 			break
 		}
 
-		// if we encounter an unrecoverable error, exit now.
+		// if we encounter an unrecoverable error, exit and skip this loop
 		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == "ResourceConflictException" {
 			switch aerr.Code() {
 			case "ResourceConflictException":
@@ -1451,7 +1448,7 @@ OUTER:
 		time.Sleep(awsCreateRetryIntervalSeconds * time.Second)
 	}
 	if err != nil {
-		return fmt.Errorf("failed registering ecs task definition: %s", err)
+		return status.Errorf(codes.Internal, "failed registering ecs task definition: %s", err)
 	}
 
 	s.Update("Registered Task definition: %s", family)
@@ -1512,7 +1509,7 @@ func (p *Platform) resourceAlbCreate(
 	if err != nil {
 		// If the load balancer wasn't found, we'll create it.
 		if aerr, ok := err.(awserr.Error); ok && aerr.Code() != elbv2.ErrCodeLoadBalancerNotFoundException {
-			return fmt.Errorf("failed to describe load balancers with name %q: %s", lbName, err)
+			return status.Errorf(codes.Internal, "failed to describe load balancers with name %q: %s", lbName, err)
 		}
 		log.Debug("load balancer %s was not found - will create it.")
 	}
@@ -1548,7 +1545,7 @@ func (p *Platform) resourceAlbCreate(
 			Scheme:         &scheme,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to create ALB %q: %s", lbName, err)
+			return status.Errorf(codes.Internal, "failed to create ALB %q: %s", lbName, err)
 		}
 
 		lb = clb.LoadBalancers[0]
@@ -1592,7 +1589,7 @@ func (p *Platform) resourceRoute53RecordCreate(
 		MaxItems:        aws.String("1"),
 	})
 	if err != nil {
-		return fmt.Errorf("failed to list resource records for alb %q: %s", state.Name, err)
+		return status.Errorf(codes.Internal, "failed to list resource records for alb %q: %s", state.Name, err)
 	}
 
 	fqdn := albConfig.FQDN
@@ -1641,7 +1638,7 @@ func (p *Platform) resourceRoute53RecordCreate(
 
 		result, err := r53.ChangeResourceRecordSetsWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("failed to create route53 record %q: %s", albConfig.FQDN, err)
+			return status.Errorf(codes.Internal, "failed to create route53 record %q: %s", albConfig.FQDN, err)
 		}
 		log.Debug("record created", "change-id", *result.ChangeInfo.Id)
 
@@ -1668,7 +1665,7 @@ func (p *Platform) resourceSubnetsDiscover(
 		s.Update("Using default subnets for Service networking")
 		subnets, state.VpcId, err = defaultSubnets(ctx, sess)
 		if err != nil {
-			return fmt.Errorf("failed to determine default subnets: %s", err)
+			return status.Errorf(codes.Internal, "failed to determine default subnets: %s", err)
 		}
 	} else {
 		s.Update("Using defined subnets for Service networking")
@@ -1684,10 +1681,10 @@ func (p *Platform) resourceSubnetsDiscover(
 			SubnetIds: subnets,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to describe subnets %q: %s", strings.Join(p.config.Subnets, ", "), err)
+			return status.Errorf(codes.Internal, "failed to describe subnets %q: %s", strings.Join(p.config.Subnets, ", "), err)
 		}
 		if len(subnetInfo.Subnets) == 0 {
-			return fmt.Errorf("failed to find any subnets with IDs %q", strings.Join(p.config.Subnets, ", "))
+			return status.Errorf(codes.Internal, "failed to find any subnets with IDs %q", strings.Join(p.config.Subnets, ", "))
 		}
 
 		state.VpcId = *subnetInfo.Subnets[0].VpcId
@@ -1729,7 +1726,7 @@ func (p *Platform) resourceExternalSecurityGroupsCreate(
 
 	securityGroup, err := upsertSecurityGroup(ctx, sess, s, name, subnets.VpcId, perms)
 	if err != nil {
-		return fmt.Errorf("failed to upsert security group %q: %s", name, err)
+		return status.Errorf(codes.Internal, "failed to upsert security group %q: %s", name, err)
 	}
 
 	state.SecurityGroups = append(state.SecurityGroups, securityGroup)
@@ -1765,7 +1762,7 @@ func (p *Platform) resourceInternalSecurityGroupsCreate(
 	s.Update("No security groups specified - checking for existing security group named %q", name)
 
 	if extSecurityGroup == nil || len(extSecurityGroup.SecurityGroups) == 0 || extSecurityGroup.SecurityGroups[0] == nil {
-		return fmt.Errorf("cannot create internal security group without a reference to the external security group ID")
+		return status.Errorf(codes.Internal, "cannot create internal security group without a reference to the external security group ID")
 	}
 
 	extSgId := extSecurityGroup.SecurityGroups[0].Id
@@ -1782,7 +1779,7 @@ func (p *Platform) resourceInternalSecurityGroupsCreate(
 
 	securityGroup, err := upsertSecurityGroup(ctx, sess, s, name, subnets.VpcId, perms)
 	if err != nil {
-		return fmt.Errorf("failed to upsert security group %q: %s", name, err)
+		return status.Errorf(codes.Internal, "failed to upsert security group %q: %s", name, err)
 	}
 
 	state.SecurityGroups = append(state.SecurityGroups, securityGroup)
@@ -1814,7 +1811,7 @@ func upsertSecurityGroup(
 		},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to describe security groups named %q: %s", name, err)
+		return nil, status.Errorf(codes.Internal, "failed to describe security groups named %q: %s", name, err)
 	}
 
 	// We only upsert security groups that we manage
@@ -1833,7 +1830,7 @@ func upsertSecurityGroup(
 			VpcId:       &vpcId,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to create security group %q: %s", name, err)
+			return nil, status.Errorf(codes.Internal, "failed to create security group %q: %s", name, err)
 		}
 
 		sg.Id = *out.GroupId
@@ -1845,7 +1842,7 @@ func upsertSecurityGroup(
 			IpPermissions: perms,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to authorize ingress to security group %q: %s", sg.Name, err)
+			return nil, status.Errorf(codes.Internal, "failed to authorize ingress to security group %q: %s", sg.Name, err)
 		}
 
 		s.Update("Created and configured security group %s", name)
@@ -1876,7 +1873,7 @@ func (p *Platform) resourceLogGroupCreate(
 		LogGroupNamePrefix: aws.String(logGroup),
 	})
 	if err != nil {
-		return fmt.Errorf("failed to describe log groups: %s", err)
+		return status.Errorf(codes.Internal, "failed to describe log groups: %s", err)
 	}
 
 	if len(groups.LogGroups) == 1 {
@@ -1894,7 +1891,7 @@ func (p *Platform) resourceLogGroupCreate(
 		LogGroupName: aws.String(logGroup),
 	})
 	if err != nil {
-		return fmt.Errorf("failed creating log group %s: %s", logGroup, err)
+		return status.Errorf(codes.Internal, "failed creating log group %s: %s", logGroup, err)
 	}
 
 	//NOTE(izaak): CreateLogGroup doesn't return the log group ARN.
@@ -1931,7 +1928,10 @@ func (p *Platform) resourceTaskRoleDiscover(
 	svc := iam.New(sess)
 	getOut, err := svc.GetRoleWithContext(ctx, queryInput)
 	if err != nil {
-		return fmt.Errorf("requested task IAM role not found: %s", roleName)
+		// NOTE(izaak): I could see this being FailedPrecondition too - you could interpret this as "you failed to
+		// create the role before invoking this api" instead of "you told us to use a role that doesn't exist".
+		// I think "NotFound" is only appropriate if the endpoint or main resource is not found, but it's also a bit unclear.
+		return status.Errorf(codes.InvalidArgument, "requested task IAM role not found: %s", roleName)
 	}
 
 	s.Update("Found existing task IAM role: %s", roleName)
@@ -1992,7 +1992,7 @@ func (p *Platform) resourceExecutionRoleCreate(
 	// NOTE(izaak): the error returned here is an awserr.requestError, which cannot be cast to the public awserr.Error.
 	// So we're forced to do this.
 	if !strings.Contains(strings.ToLower(err.Error()), "status code: 404") {
-		return fmt.Errorf("failed to get role with name %q: %s", roleName, err)
+		return status.Errorf(codes.Internal, "failed to get role with name %q: %s", roleName, err)
 	}
 
 	s.Update("No existing execution role found: creating IAM role %q", roleName)
@@ -2005,7 +2005,7 @@ func (p *Platform) resourceExecutionRoleCreate(
 
 	result, err := svc.CreateRoleWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("failed creating execution role %q: %s", roleName, err)
+		return status.Errorf(codes.Internal, "failed creating execution role %q: %s", roleName, err)
 	}
 	state.Arn = *result.Role.Arn
 
@@ -2017,7 +2017,7 @@ func (p *Platform) resourceExecutionRoleCreate(
 
 	_, err = svc.AttachRolePolicyWithContext(ctx, aInput)
 	if err != nil {
-		return fmt.Errorf("failed to attach policy %q to role %q: %s", executionRolePolicyArn, roleName, err)
+		return status.Errorf(codes.Internal, "failed to attach policy %q to role %q: %s", executionRolePolicyArn, roleName, err)
 	}
 
 	s.Update("Created execution IAM role: %s", roleName)
@@ -2033,7 +2033,7 @@ func (p *Platform) getSession(log hclog.Logger) (*session.Session, error) {
 		Logger: log,
 	})
 	if err != nil {
-		return nil, status.Error(codes.FailedPrecondition, fmt.Sprintf("failed to create aws session: %s", err))
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to create aws session: %s", err))
 	}
 	return sess, nil
 }
@@ -2074,7 +2074,7 @@ func (p *Platform) loadResourceManagerState(
 		s.Update("Describing load balancer %s", deployment.LoadBalancerArn)
 		sess, err := p.getSession(log)
 		if err != nil {
-			return fmt.Errorf("failed to get aws session: %s", err)
+			return status.Errorf(codes.Internal, "failed to get aws session: %s", err)
 		}
 		elbsrv := elbv2.New(sess)
 
@@ -2082,7 +2082,7 @@ func (p *Platform) loadResourceManagerState(
 			LoadBalancerArn: &deployment.LoadBalancerArn,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to describe listeners for ALB %q: %s", deployment.LoadBalancerArn, err)
+			return status.Errorf(codes.Internal, "failed to describe listeners for ALB %q: %s", deployment.LoadBalancerArn, err)
 		}
 		if len(listeners.Listeners) == 0 {
 			s.Update("No listeners found for ALB %q", deployment.LoadBalancerArn)
