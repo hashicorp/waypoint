@@ -9,7 +9,7 @@ description: |-
 
 <Placement groups={[['runner']]} />
 
-The `runner` stanza configures a project for [remote operations](/docs/remote),
+The `runner` stanza configures a project for [remote operations](/docs/runner),
 including configuring how to source a project's source code from Git and
 configuring polling.
 
@@ -31,7 +31,7 @@ runner {
 }
 ```
 
-The above example enables [remote operations](/docs/remote) and configures
+The above example enables [remote operations](/docs/runner) and configures
 the project to clone data from a GitHub repository.
 
 -> **Note: these settings are usually configured via the CLI or UI.** We
@@ -70,7 +70,7 @@ The `runner` stanza has no required parameters.
 ### Optional
 
 - `enabled` `(boolean: false)` - This must be set to true to enable
-  [remote operations](/docs/remote) from the CLI. This only affects
+  [remote operations](/docs/runner) from the CLI. This only affects
   the CLI. Remote operations triggered via Git polling or directly via the
   API are still allowed.
 
