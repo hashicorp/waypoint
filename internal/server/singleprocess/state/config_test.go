@@ -505,6 +505,81 @@ func TestConfig(t *testing.T) {
 		}
 	})
 
+	t.Run("runner configs scoped to an app", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create the config
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Runner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Any{
+						Any: &pb.Ref_RunnerAny{},
+					},
+				},
+			},
+
+			Name:  "foo",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
+		}))
+
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Global{
+					Global: &pb.Ref_Global{},
+				},
+
+				Runner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Id{
+						Id: &pb.Ref_RunnerId{
+							Id: "R_A",
+						},
+					},
+				},
+			},
+
+			Name:  "bar",
+			Value: &pb.ConfigVar_Static{Static: "baz"},
+		}))
+
+		{
+			// Get it exactly.
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Runner: &pb.Ref_RunnerId{Id: "R_A"},
+			})
+			require.NoError(err)
+			require.Len(vs, 2)
+			require.Equal("bar", vs[0].Name)
+			require.Equal("foo", vs[1].Name)
+		}
+
+		{
+			// Get it for a global runner scope.
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Runner: &pb.Ref_RunnerId{Id: "R_A"},
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+			require.Equal("bar", vs[0].Name)
+		}
+	})
+
 	t.Run("runner dynamic config not allowed", func(t *testing.T) {
 		require := require.New(t)
 
