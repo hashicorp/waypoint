@@ -742,7 +742,7 @@ func (p *Platform) resourceServiceStatus(
 			Name:          state.Name,
 			Id:            state.Arn,
 			Health:        sdk.StatusReport_MISSING,
-			HealthMessage: fmt.Sprintf("service %s is missing", state.Name),
+			HealthMessage: fmt.Sprintf("service %q is missing", state.Name),
 		})
 		s.Done()
 		return nil
