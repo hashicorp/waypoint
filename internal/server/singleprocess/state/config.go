@@ -1,6 +1,7 @@
 package state
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -8,10 +9,13 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-memdb"
 	"github.com/mitchellh/hashstructure/v2"
+	"github.com/mitchellh/pointerstructure"
+	"github.com/zclconf/go-cty/cty"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/config/funcs"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serversort "github.com/hashicorp/waypoint/internal/server/sort"
 )
@@ -191,10 +195,70 @@ func (s *State) configGetMerged(
 		mergeSet = newMergeSet
 	}
 
+	// Filter based on the workspace if we have it set.
+	if req.Workspace != nil {
+		for _, set := range mergeSet {
+			for i, v := range set {
+				if v == nil {
+					continue
+				}
+
+				if v.Target.Workspace != nil &&
+					!strings.EqualFold(v.Target.Workspace.Workspace, req.Workspace.Workspace) {
+					set[i] = nil
+				}
+			}
+		}
+	}
+
+	// Filter by labels
+	ctyMap := cty.MapValEmpty(cty.String)
+	if len(req.Labels) > 0 {
+		mapValues := map[string]cty.Value{}
+		for k, v := range req.Labels {
+			mapValues[k] = cty.StringVal(v)
+		}
+		ctyMap = cty.MapVal(mapValues)
+	}
+
+	for _, set := range mergeSet {
+		for i, v := range set {
+			if v == nil {
+				continue
+			}
+
+			// If there is no selector, ignore.
+			if v.Target.LabelSelector == "" {
+				continue
+			}
+
+			// Use our selectormatch HCL function for equal logic
+			result, err := funcs.SelectorMatch(ctyMap, cty.StringVal(v.Target.LabelSelector))
+			if errors.Is(err, pointerstructure.ErrNotFound) {
+				// this means that the label selector contains a label
+				// that isn't set, this means we do not match.
+				err = nil
+				result = cty.BoolVal(false)
+			}
+			if err != nil {
+				return nil, err
+			}
+
+			if result.False() {
+				set[i] = nil
+			}
+		}
+	}
+
 	// Merge our merge set
 	merged := make(map[string]*pb.ConfigVar)
 	for _, set := range mergeSet {
 		for _, v := range set {
+			// Ignore nil since those are filtered out values.
+			if v == nil {
+				continue
+			}
+
 			merged[v.Name] = v
 		}
 	}

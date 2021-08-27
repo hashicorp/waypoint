@@ -605,6 +605,150 @@ func TestConfig(t *testing.T) {
 		require.Error(err)
 		require.Equal(codes.FailedPrecondition, status.Code(err))
 	})
+
+	t.Run("workspace matching", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Workspace: &pb.Ref_Workspace{Workspace: "dev"},
+			},
+
+			Name:  "foo",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
+		}))
+
+		{
+			// No workspace set
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+		}
+
+		{
+			// Matching workspace
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Workspace: &pb.Ref_Workspace{Workspace: "dev"},
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+		}
+
+		{
+			// Non-Matching workspace
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Workspace: &pb.Ref_Workspace{Workspace: "devno"},
+			})
+			require.NoError(err)
+			require.Len(vs, 0)
+		}
+	})
+
+	t.Run("label matching", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				LabelSelector: "env == dev",
+			},
+
+			Name:  "foo",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
+		}))
+
+		{
+			// No labels set
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 0)
+		}
+
+		{
+			// Matching labels
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Labels: map[string]string{"env": "dev"},
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+		}
+
+		{
+			// Non-Matching workspace
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Labels: map[string]string{"env": "devno"},
+			})
+			require.NoError(err)
+			require.Len(vs, 0)
+		}
+	})
 }
 
 func TestConfigWatch(t *testing.T) {
