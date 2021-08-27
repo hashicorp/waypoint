@@ -440,7 +440,7 @@ func (s *State) configIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 	// upgrade over all the items in this bucket.
 	oldBucket := dbTxn.Bucket(configBucketOld)
 	if oldBucket != nil {
-		return oldBucket.ForEach(func(k, v []byte) error {
+		err := oldBucket.ForEach(func(k, v []byte) error {
 			var value pb.ConfigVar
 			if err := proto.Unmarshal(v, &value); err != nil {
 				return err
@@ -454,6 +454,9 @@ func (s *State) configIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 
 			return nil
 		})
+		if err != nil {
+			return err
+		}
 
 		// Delete the old bucket. We shouldn't fail since we just verified
 		// this key exists and it is a bucket.
