@@ -66,5 +66,9 @@ module.exports = function (defaults) {
   // modules that you would like to import into your application
   // please specify an object with the list of modules as keys
   // along with the exports of each module as its value.
+
+  // xterm.js styles https://xtermjs.org/
+  app.import('node_modules/xterm/css/xterm.css');
+
   return app.toTree();
 };
