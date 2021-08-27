@@ -3265,7 +3265,7 @@ message LogBatch {
 ********************************************************************/
 
 // ConfigVars represent configuration variables for applications and runners.
-// Configuration variables can be exposed via env vars, files, and more and
+// Configuration variables can be exposed via env vars, files, and more. They
 // are a way to inject configuration into a Waypoint-managed process.
 //
 // Note that config vars are different from input variables. Input variables
