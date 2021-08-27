@@ -109,7 +109,7 @@ func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
 	if app.Config != nil {
 		app.Config.ctx = ctx
 		app.Config.scopeFunc = func(cv *pb.ConfigVar) {
-			cv.Scope = &pb.ConfigVar_Application{
+			cv.Target.AppScope = &pb.ConfigVar_Target_Application{
 				Application: app.Ref(),
 			}
 		}

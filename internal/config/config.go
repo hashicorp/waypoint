@@ -142,7 +142,7 @@ func Load(path string, opts *LoadOptions) (*Config, error) {
 	if cfg.Config != nil {
 		cfg.Config.ctx = ctx
 		cfg.Config.scopeFunc = func(cv *pb.ConfigVar) {
-			cv.Scope = &pb.ConfigVar_Project{
+			cv.Target.AppScope = &pb.ConfigVar_Target_Project{
 				Project: &pb.Ref_Project{Project: cfg.Project},
 			}
 		}
