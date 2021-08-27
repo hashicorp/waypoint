@@ -3697,9 +3697,7 @@ type Job struct {
 	// Ergo, this is optional.
 	DataSource          *Job_DataSource   `protobuf:"bytes,6,opt,name=data_source,json=dataSource,proto3" json:"data_source,omitempty"`
 	DataSourceOverrides map[string]string `protobuf:"bytes,7,rep,name=data_source_overrides,json=dataSourceOverrides,proto3" json:"data_source_overrides,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// NOTE: Variables are WIP and experimental; currently
-	// these are not used, and don't do anything
-	// WIP: variables store the key/value pairs of parsed variables; the parse
+	// variables store the key/value pairs of parsed variables; the parse
 	// prior to running a job only verifies syntax correctness. Verifying type
 	// checks and the presence of required values will both need to be done
 	// in the job's validation
