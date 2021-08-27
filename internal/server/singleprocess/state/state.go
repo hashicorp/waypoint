@@ -24,7 +24,8 @@ var (
 	dbBuckets [][]byte
 
 	// dbIndexers is the list of functions to call to initialize the
-	// in-memory indexes from the persisted db.
+	// in-memory indexes from the persisted db. These can also be used to
+	// upgrade data if there are upgrades necessary.
 	dbIndexers []indexFn
 
 	// pruneFns is the list of prune functions to call for appOperation types
@@ -92,10 +93,12 @@ func New(log hclog.Logger, db *bolt.DB) (*State, error) {
 	s.indexers = make(map[uintptr]struct{})
 	defer func() { s.indexers = nil }()
 
-	// Initialize our in-memory indexes
+	// Initialize our in-memory indexes. We also make this a write transaction
+	// for the DB because we allow the indexers to update their own data for
+	// upgrades and so on.
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
-	err = s.db.View(func(dbTxn *bolt.Tx) error {
+	err = s.db.Update(func(dbTxn *bolt.Tx) error {
 		for _, indexer := range dbIndexers {
 			// TODO: this should use callIndexer but it's broken as it prevents the multiple op indexers
 			// from properly running.

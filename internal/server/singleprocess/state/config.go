@@ -16,7 +16,15 @@ import (
 	serversort "github.com/hashicorp/waypoint/internal/server/sort"
 )
 
-var configBucket = []byte("config")
+var (
+	configBucket = []byte("config_v2")
+
+	// configBucketOld is the name of the config bucket in WP versions
+	// 0.5 and earlier. We changed the bucket name so that we can safely
+	// upgrade the data. We should not use the "config" bucket name again
+	// unless we are sure we've migrated all data.
+	configBucketOld = []byte("config")
+)
 
 func init() {
 	dbBuckets = append(dbBuckets, configBucket)
@@ -338,6 +346,32 @@ func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) e
 
 // configIndexInit initializes the config index from persisted data.
 func (s *State) configIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
+	// If we have the old (WP 0.5 and earlier) bucket, then perform an
+	// upgrade over all the items in this bucket.
+	oldBucket := dbTxn.Bucket(configBucketOld)
+	if oldBucket != nil {
+		return oldBucket.ForEach(func(k, v []byte) error {
+			var value pb.ConfigVar
+			if err := proto.Unmarshal(v, &value); err != nil {
+				return err
+			}
+
+			// configSet normalizes the old to new format and writes it
+			// into our new bucket.
+			if err := s.configSet(dbTxn, memTxn, &value); err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		// Delete the old bucket. We shouldn't fail since we just verified
+		// this key exists and it is a bucket.
+		if err := dbTxn.DeleteBucket(configBucketOld); err != nil {
+			return err
+		}
+	}
+
 	bucket := dbTxn.Bucket(configBucket)
 	return bucket.ForEach(func(k, v []byte) error {
 		var value pb.ConfigVar
