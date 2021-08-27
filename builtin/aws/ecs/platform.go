@@ -757,7 +757,7 @@ func (p *Platform) resourceServiceStatus(
 		PlatformUrl:         fmt.Sprintf("https://console.aws.amazon.com/ecs/home?region=%s#/clusters/waypoint/services/%s", p.config.Region, state.Name),
 		Type:                "service",
 		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
-		HealthMessage:       fmt.Sprintf("service is %s", *service.Status),
+		HealthMessage:       fmt.Sprintf("service is %q", *service.Status),
 	}
 	sr.Resources = append(sr.Resources, &serviceResource)
 
