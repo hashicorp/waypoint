@@ -3358,7 +3358,7 @@ message ConfigVar {
 
     // workspace, if set, will limit this config variable to a specific
     // workspace. This is in addition to the app scoping above. For example,
-    // if you specific project scoping above, and set this too, then only
+    // if you specify project scoping above, and set this too, then only
     // matching projects in the matching workspace will have this config var
     // set.
     Ref.Workspace workspace = 4;
