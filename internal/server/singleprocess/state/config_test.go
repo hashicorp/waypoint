@@ -369,9 +369,7 @@ func TestConfig(t *testing.T) {
 		{
 			// Get it exactly.
 			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
-				Scope: &pb.ConfigGetRequest_Runner{
-					Runner: &pb.Ref_RunnerId{Id: "R_A"},
-				},
+				Runner: &pb.Ref_RunnerId{Id: "R_A"},
 
 				Prefix: "foo",
 			})
@@ -382,9 +380,7 @@ func TestConfig(t *testing.T) {
 		{
 			// Get it via a prefix match
 			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
-				Scope: &pb.ConfigGetRequest_Runner{
-					Runner: &pb.Ref_RunnerId{Id: "R_A"},
-				},
+				Runner: &pb.Ref_RunnerId{Id: "R_A"},
 
 				Prefix: "",
 			})
@@ -395,9 +391,7 @@ func TestConfig(t *testing.T) {
 		{
 			// non-matching prefix
 			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
-				Scope: &pb.ConfigGetRequest_Runner{
-					Runner: &pb.Ref_RunnerId{Id: "R_A"},
-				},
+				Runner: &pb.Ref_RunnerId{Id: "R_A"},
 
 				Prefix: "bar",
 			})
@@ -443,9 +437,7 @@ func TestConfig(t *testing.T) {
 		{
 			// Get it exactly.
 			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
-				Scope: &pb.ConfigGetRequest_Runner{
-					Runner: &pb.Ref_RunnerId{Id: "R_A"},
-				},
+				Runner: &pb.Ref_RunnerId{Id: "R_A"},
 
 				Prefix: "foo",
 			})
@@ -456,9 +448,7 @@ func TestConfig(t *testing.T) {
 		{
 			// Doesn't match
 			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
-				Scope: &pb.ConfigGetRequest_Runner{
-					Runner: &pb.Ref_RunnerId{Id: "R_B"},
-				},
+				Runner: &pb.Ref_RunnerId{Id: "R_B"},
 
 				Prefix: "foo",
 			})
@@ -505,9 +495,7 @@ func TestConfig(t *testing.T) {
 		{
 			// Get it exactly.
 			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
-				Scope: &pb.ConfigGetRequest_Runner{
-					Runner: &pb.Ref_RunnerId{Id: "R_A"},
-				},
+				Runner: &pb.Ref_RunnerId{Id: "R_A"},
 
 				Prefix: "foo",
 			})

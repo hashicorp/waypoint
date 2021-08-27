@@ -160,15 +160,35 @@ func (s *State) configGetMerged(
 		// Build our merge set
 		mergeSet = append(mergeSet, projectVars, appVars)
 
-	case *pb.ConfigGetRequest_Runner:
-		var err error
-		mergeSet, err = s.configGetRunner(dbTxn, memTxn, ws, scope.Runner, req.Prefix)
-		if err != nil {
-			return nil, err
-		}
+	case nil:
+		// For nil scope we just look at the global variables.
+		//
+		// Note this is IMPORTANT for backwards compatbility, since when we
+		// introduced app-scoped runner vars, we pulled the "runner" out of the
+		// oneof, allowing old clients to send a nil scope. So we must handle
+		// this case so long as WP 0.5 and earlier clients exist, at least.
 
 	default:
 		panic("unknown scope")
+	}
+
+	// If we have a runner set, then we want to filter all our config vars
+	// by runner. This is more complex than that though, because tighter
+	// scoped runner refs should overwrite weaker scoped (i.e. ID-ref overwrites
+	// Any-ref). So we have to split our merge set from <X, Y> to
+	// <X_any, X_id, Y_any, Y_id> so it merges properly later.
+	if req.Runner != nil {
+		var newMergeSet [][]*pb.ConfigVar
+		for _, set := range mergeSet {
+			splitSets, err := s.configRunnerSet(set, req.Runner)
+			if err != nil {
+				return nil, err
+			}
+
+			newMergeSet = append(newMergeSet, splitSets...)
+		}
+
+		mergeSet = newMergeSet
 	}
 
 	// Merge our merge set
@@ -269,27 +289,12 @@ func (s *State) configGetExact(
 	return result, nil
 }
 
-// configGetRunner gets the config vars for a runner.
-func (s *State) configGetRunner(
-	dbTxn *bolt.Tx,
-	memTxn *memdb.Txn,
-	ws memdb.WatchSet,
+// configRunnerSet splits a set of config vars into a merge set depending
+// on priority to match a runner.
+func (s *State) configRunnerSet(
+	set []*pb.ConfigVar,
 	req *pb.Ref_RunnerId,
-	prefix string,
 ) ([][]*pb.ConfigVar, error) {
-	iter, err := memTxn.Get(
-		configIndexTableName,
-		configIndexRunnerIndexName+"_prefix",
-		true,
-		prefix,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add to our watch set
-	ws.Add(iter.WatchCh())
-
 	// Results go into two buckets
 	result := make([][]*pb.ConfigVar, 2)
 	const (
@@ -298,16 +303,14 @@ func (s *State) configGetRunner(
 	)
 
 	// Go through the iterator and accumulate the results
-	b := dbTxn.Bucket(configBucket)
-	for {
-		current := iter.Next()
-		if current == nil {
-			break
+	for _, current := range set {
+		if current.Target.Runner == nil {
+			// We are not a config for a runner.
+			continue
 		}
-		record := current.(*configIndexRecord)
 
 		idx := -1
-		switch ref := record.RunnerRef.Target.(type) {
+		switch ref := current.Target.Runner.Target.(type) {
 		case *pb.Ref_Runner_Any:
 			idx = idxAny
 
@@ -320,15 +323,10 @@ func (s *State) configGetRunner(
 			}
 
 		default:
-			return nil, fmt.Errorf("config has unknown target type: %T", record.RunnerRef.Target)
+			return nil, fmt.Errorf("config has unknown target type: %T", current.Target.Runner.Target)
 		}
 
-		var value pb.ConfigVar
-		if err := dbGet(b, []byte(record.Id), &value); err != nil {
-			return nil, err
-		}
-
-		result[idx] = append(result[idx], &value)
+		result[idx] = append(result[idx], current)
 	}
 
 	return result, nil
