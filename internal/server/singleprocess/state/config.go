@@ -122,11 +122,25 @@ func (s *State) configGetMerged(
 	ws memdb.WatchSet,
 	req *pb.ConfigGetRequest,
 ) ([]*pb.ConfigVar, error) {
-	var mergeSet [][]*pb.ConfigVar
+	// Always get our global values
+	globalVars, err := s.configGetExact(dbTxn, memTxn, ws, &pb.Ref_Global{}, req.Prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	// mergeSet is the set of variables we'll merge and resolve.
+	mergeSet := [][]*pb.ConfigVar{globalVars}
+
 	switch scope := req.Scope.(type) {
 	case *pb.ConfigGetRequest_Project:
-		// For project scope, we just return the project scoped values.
-		return s.configGetExact(dbTxn, memTxn, ws, scope.Project, req.Prefix)
+		// Project scope, grab our project scope vars and only those
+		projectVars, err := s.configGetExact(dbTxn, memTxn, ws, scope.Project, req.Prefix)
+		if err != nil {
+			return nil, err
+		}
+
+		// Project scope never resolves so we just return it as is.
+		return append(globalVars, projectVars...), nil
 
 	case *pb.ConfigGetRequest_Application:
 		// Application scope, we have to get the project scope first
@@ -190,6 +204,18 @@ func (s *State) configGetExact(
 	// scope and use the proper index to get the iterator here.
 	var iter memdb.ResultIterator
 	switch ref := ref.(type) {
+	case *pb.Ref_Global:
+		var err error
+		iter, err = memTxn.Get(
+			configIndexTableName,
+			configIndexGlobalIndexName+"_prefix",
+			true,
+			prefix,
+		)
+		if err != nil {
+			return nil, err
+		}
+
 	case *pb.Ref_Application:
 		var err error
 		iter, err = memTxn.Get(
@@ -311,6 +337,7 @@ func (s *State) configGetRunner(
 // configIndexSet writes an index record for a single config var.
 func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) error {
 	var project, application string
+	global := false
 	switch scope := value.Target.AppScope.(type) {
 	case *pb.ConfigVar_Target_Application:
 		project = scope.Application.Project
@@ -320,7 +347,7 @@ func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) e
 		project = scope.Project.Project
 
 	case *pb.ConfigVar_Target_Global:
-		// Global scope set nothing
+		global = true
 
 	default:
 		panic("unknown scope")
@@ -333,6 +360,7 @@ func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) e
 		Name:        value.Name,
 		Runner:      value.Target.Runner != nil,
 		RunnerRef:   value.Target.Runner,
+		Global:      global,
 	}
 
 	// If we have no value, we delete from the memdb index
@@ -497,6 +525,24 @@ func configIndexSchema() *memdb.TableSchema {
 				},
 			},
 
+			configIndexGlobalIndexName: {
+				Name:         configIndexGlobalIndexName,
+				AllowMissing: true,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.BoolFieldIndex{
+							Field: "Global",
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Name",
+							Lowercase: true,
+						},
+					},
+				},
+			},
+
 			configIndexRunnerIndexName: {
 				Name:         configIndexRunnerIndexName,
 				AllowMissing: true,
@@ -524,6 +570,7 @@ const (
 	configIndexProjectIndexName     = "project"
 	configIndexApplicationIndexName = "application"
 	configIndexRunnerIndexName      = "runner"
+	configIndexGlobalIndexName      = "global"
 
 	// configIdPrefix prefixes our ID so that we can change the
 	// ID hashing in the future if we want to.
@@ -537,6 +584,7 @@ type configIndexRecord struct {
 	Name        string
 	Runner      bool // true if this is a runner config
 	RunnerRef   *pb.Ref_Runner
+	Global      bool
 }
 
 // isConfigVarDelete returns true if the config var represents a deletion.

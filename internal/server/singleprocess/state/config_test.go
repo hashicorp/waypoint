@@ -78,8 +78,18 @@ func TestConfig(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
-		// Create a build
+		// Create vars
 		require.NoError(s.ConfigSet(
+			&pb.ConfigVar{
+				Target: &pb.ConfigVar_Target{
+					AppScope: &pb.ConfigVar_Target_Global{
+						Global: &pb.Ref_Global{},
+					},
+				},
+
+				Name:  "global",
+				Value: &pb.ConfigVar_Static{Static: "value"},
+			},
 			&pb.ConfigVar{
 				UnusedScope: &pb.ConfigVar_Project{
 					Project: &pb.Ref_Project{
@@ -87,7 +97,7 @@ func TestConfig(t *testing.T) {
 					},
 				},
 
-				Name:  "global",
+				Name:  "project",
 				Value: &pb.ConfigVar_Static{Static: "value"},
 			},
 			&pb.ConfigVar{
@@ -124,13 +134,15 @@ func TestConfig(t *testing.T) {
 				},
 			})
 			require.NoError(err)
-			require.Len(vs, 2)
+			require.Len(vs, 3)
 
 			// They are sorted, so check on them
 			require.Equal("global", vs[0].Name)
 			require.Equal("value", vs[0].Value.(*pb.ConfigVar_Static).Static)
 			require.Equal("hello", vs[1].Name)
 			require.Equal("app", vs[1].Value.(*pb.ConfigVar_Static).Static)
+			require.Equal("project", vs[2].Name)
+			require.Equal("value", vs[2].Value.(*pb.ConfigVar_Static).Static)
 		}
 
 		{
@@ -143,7 +155,7 @@ func TestConfig(t *testing.T) {
 				},
 			})
 			require.NoError(err)
-			require.Len(vs, 3)
+			require.Len(vs, 4)
 		}
 	})
 
