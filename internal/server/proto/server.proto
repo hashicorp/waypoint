@@ -3391,12 +3391,31 @@ message ConfigSetRequest {
 message ConfigSetResponse {}
 
 message ConfigGetRequest {
-  // scope is the scoping for this config variable.
+  // scope is the scoping for this config variable. This describes the
+  // target environment requesting configuration. For runners, this may still
+  // be set if you are an on-demand runner requesting variables that may be
+  // set for runners only in a specific project/app.
   oneof scope {
     Ref.Application application = 2;
+
+    // For project scope, for historical reason, we return all matching
+    // config vars (for all apps). We do not merge by name or perform
+    // resolution logic. This is how this has always behaved.
     Ref.Project project = 3;
-    Ref.RunnerId runner = 4;
   }
+
+  // Runner is specified if the requesting environment is a runner environment.
+  Ref.RunnerId runner = 4;
+
+  // Workspace that the target environment is in. This will limit configuration
+  // values to those that are only for this workspace. If this isn't set, all
+  // configuration values will be returned.
+  Ref.Workspace workspace = 5;
+
+  // Labels that are set in the target environment. This will limit the
+  // configuration values to those which have label selectors that match (or
+  // those that just ignore labels).
+  map<string, string> labels = 6;
 
   // Get all configuration entries under the given prefix. When empty,
   // returns all config variables.
