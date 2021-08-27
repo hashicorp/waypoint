@@ -1315,9 +1315,7 @@ message Job {
   DataSource data_source = 6;
   map<string, string> data_source_overrides = 7;
 
-  // NOTE: Variables are WIP and experimental; currently
-  // these are not used, and don't do anything
-  // WIP: variables store the key/value pairs of parsed variables; the parse
+  // variables store the key/value pairs of parsed variables; the parse
   // prior to running a job only verifies syntax correctness. Verifying type
   // checks and the presence of required values will both need to be done
   // in the job's validation

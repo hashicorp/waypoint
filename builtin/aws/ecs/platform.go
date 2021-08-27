@@ -48,7 +48,7 @@ func (p *Platform) ConfigSet(config interface{}) error {
 		alb := c.ALB
 		err := utils.Error(validation.ValidateStruct(alb,
 			validation.Field(&alb.CertificateId,
-				validation.Empty.When(alb.ListenerARN != "").Error("certificate can not be used with listener_arn"),
+				validation.Empty.When(alb.ListenerARN != "").Error("certificate cannot be used with listener_arn"),
 			),
 			validation.Field(&alb.ZoneId,
 				validation.Empty.When(alb.ListenerARN != ""),
@@ -59,7 +59,7 @@ func (p *Platform) ConfigSet(config interface{}) error {
 				validation.Required.When(alb.ZoneId != "").Error("fqdn only valid with zone_id"),
 			),
 			validation.Field(&alb.InternalScheme,
-				validation.Nil.When(alb.ListenerARN != "").Error("internal can not be used with listener_arn"),
+				validation.Nil.When(alb.ListenerARN != "").Error("internal cannot be used with listener_arn"),
 			),
 			validation.Field(&alb.ListenerARN,
 				validation.Empty.When(alb.CertificateId != "" || alb.ZoneId != "" || alb.FQDN != "").Error("listener_arn can not be used with other options"),
