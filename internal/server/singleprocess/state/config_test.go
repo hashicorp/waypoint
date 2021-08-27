@@ -14,6 +14,11 @@ import (
 )
 
 func TestConfig(t *testing.T) {
+	// NOTE(mitchellh): A lot of the tests below use the "UnusedScope"
+	// field. This is done on purpose because I wanted to retain tests
+	// from our old format to ensure that we have backwards compatibility.
+	// New functionality uses the new format.
+
 	t.Run("basic put and get", func(t *testing.T) {
 		require := require.New(t)
 
