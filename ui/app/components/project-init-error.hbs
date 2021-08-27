@@ -1,0 +1,16 @@
+<p>
+  <Pds::Icon @type="alert-triangle" />
+  Failed to initialize project from
+  <code class="code-block">{{@project.dataSource.git.url}}</code>
+</p>
+
+<div class="project-init-error__message">
+  <div class="project-init-error__message__heading">Error</div>
+  {{! TODO(jgwhite): Use real log-display component in <ProjectInitError> }}
+  <code>{{@project.latestInitJob.error.message}}</code>
+</div>
+
+<p>
+  For more help getting started, refer to the
+  <ExternalLink href="https://waypointproject.io/docs/getting-started">Waypoint documentation</ExternalLink>
+</p>
