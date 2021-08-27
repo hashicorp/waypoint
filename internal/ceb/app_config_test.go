@@ -71,8 +71,10 @@ func TestConfig_envVarChange(t *testing.T) {
 	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
 		Variables: []*pb.ConfigVar{
 			{
-				Scope: &pb.ConfigVar_Application{
-					Application: deployment.Application,
+				Target: &pb.ConfigVar_Target{
+					AppScope: &pb.ConfigVar_Target_Application{
+						Application: deployment.Application,
+					},
 				},
 				Name:  "TEST_VALUE",
 				Value: &pb.ConfigVar_Static{Static: "hello"},
@@ -93,8 +95,10 @@ func TestConfig_envVarChange(t *testing.T) {
 	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
 		Variables: []*pb.ConfigVar{
 			{
-				Scope: &pb.ConfigVar_Application{
-					Application: deployment.Application,
+				Target: &pb.ConfigVar_Target{
+					AppScope: &pb.ConfigVar_Target_Application{
+						Application: deployment.Application,
+					},
 				},
 				Name:  "TEST_VALUE",
 				Value: &pb.ConfigVar_Static{Static: "hello"},
@@ -168,8 +172,10 @@ func TestConfig_fileChange(t *testing.T) {
 	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
 		Variables: []*pb.ConfigVar{
 			{
-				Scope: &pb.ConfigVar_Application{
-					Application: deployment.Application,
+				Target: &pb.ConfigVar_Target{
+					AppScope: &pb.ConfigVar_Target_Application{
+						Application: deployment.Application,
+					},
 				},
 				Name:       fooPath,
 				NameIsPath: true,
@@ -191,8 +197,10 @@ func TestConfig_fileChange(t *testing.T) {
 	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
 		Variables: []*pb.ConfigVar{
 			{
-				Scope: &pb.ConfigVar_Application{
-					Application: deployment.Application,
+				Target: &pb.ConfigVar_Target{
+					AppScope: &pb.ConfigVar_Target_Application{
+						Application: deployment.Application,
+					},
 				},
 				Name:       fooPath,
 				NameIsPath: true,
@@ -268,8 +276,10 @@ func TestConfig_dynamicSuccess(t *testing.T) {
 	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
 		Variables: []*pb.ConfigVar{
 			{
-				Scope: &pb.ConfigVar_Application{
-					Application: deployment.Application,
+				Target: &pb.ConfigVar_Target{
+					AppScope: &pb.ConfigVar_Target_Application{
+						Application: deployment.Application,
+					},
 				},
 				Name: "TEST_VALUE",
 				Value: &pb.ConfigVar_Dynamic{
@@ -315,8 +325,10 @@ func TestConfig_dynamicSuccess(t *testing.T) {
 	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
 		Variables: []*pb.ConfigVar{
 			{
-				Scope: &pb.ConfigVar_Application{
-					Application: deployment.Application,
+				Target: &pb.ConfigVar_Target{
+					AppScope: &pb.ConfigVar_Target_Application{
+						Application: deployment.Application,
+					},
 				},
 				Name: "TEST_VALUE",
 				Value: &pb.ConfigVar_Unset{
@@ -415,8 +427,10 @@ func TestConfig_dynamicConfigurable(t *testing.T) {
 	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
 		Variables: []*pb.ConfigVar{
 			{
-				Scope: &pb.ConfigVar_Application{
-					Application: deployment.Application,
+				Target: &pb.ConfigVar_Target{
+					AppScope: &pb.ConfigVar_Target_Application{
+						Application: deployment.Application,
+					},
 				},
 				Name: "TEST_VALUE",
 				Value: &pb.ConfigVar_Dynamic{
@@ -468,8 +482,10 @@ func TestConfig_dynamicConfigurable(t *testing.T) {
 	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
 		Variables: []*pb.ConfigVar{
 			{
-				Scope: &pb.ConfigVar_Application{
-					Application: deployment.Application,
+				Target: &pb.ConfigVar_Target{
+					AppScope: &pb.ConfigVar_Target_Application{
+						Application: deployment.Application,
+					},
 				},
 				Name: "TEST_VALUE",
 				Value: &pb.ConfigVar_Unset{
