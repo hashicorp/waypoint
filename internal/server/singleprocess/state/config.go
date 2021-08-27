@@ -180,6 +180,11 @@ func (s *State) configGetMerged(
 		panic("unknown scope")
 	}
 
+	// Sort all of our merge sets by the resolution rules
+	for _, set := range mergeSet {
+		sort.Sort(serversort.ConfigResolution(set))
+	}
+
 	// If we have a runner set, then we want to filter all our config vars
 	// by runner. This is more complex than that though, because tighter
 	// scoped runner refs should overwrite weaker scoped (i.e. ID-ref overwrites
