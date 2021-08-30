@@ -58,7 +58,7 @@ func (c *OnDemandRunnerConfigApplyCommand) Run(args []string) int {
 	)
 
 	if c.flagId != "" {
-		s = sg.Add("Checking for an existing ondemand runner config: %s", c.flagId)
+		s = sg.Add("Checking for an existing on-demand runner config: %s", c.flagId)
 		// Check for an existing project of the same name.
 		resp, err := c.project.Client().GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
 			Config: &pb.Ref_OnDemandRunnerConfig{
@@ -83,7 +83,7 @@ func (c *OnDemandRunnerConfigApplyCommand) Run(args []string) int {
 		s.Update("Updating ondemand runner config %q...", od.Id)
 		updated = true
 	} else {
-		s = sg.Add("Creating new ondemand runner config")
+		s = sg.Add("Creating new on-demand runner config")
 		od = &pb.OnDemandRunnerConfig{}
 	}
 
@@ -167,7 +167,7 @@ func (c *OnDemandRunnerConfigApplyCommand) Run(args []string) int {
 	})
 	if err != nil {
 		c.ui.Output(
-			"Error upserting ondemand runner config: %s", clierrors.Humanize(err),
+			"Error upserting on-demand runner config: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 		return 1
@@ -191,20 +191,20 @@ func (c *OnDemandRunnerConfigApplyCommand) Flags() *flag.Sets {
 			Name:    "id",
 			Target:  &c.flagId,
 			Default: "",
-			Usage:   "The id of an existing ondemand runner to update.",
+			Usage:   "The id of an existing on-demand runner to update.",
 		})
 
 		f.StringVar(&flag.StringVar{
 			Name:    "oci-url",
 			Target:  &c.flagOCIUrl,
 			Default: "hashicorp/waypoint:stable",
-			Usage:   "The url for the OCI image to launch for the ondemand runner.",
+			Usage:   "The url for the OCI image to launch for the on-demand runner.",
 		})
 
 		f.StringSliceVar(&flag.StringSliceVar{
 			Name:   "env-vars",
 			Target: &c.flagEnvVars,
-			Usage: "Environment variable to expose to the ondemand runner. Typically used to " +
+			Usage: "Environment variable to expose to the on-demand runner. Typically used to " +
 				"introduce configuration for the plugins that the runner will execute.",
 		})
 
@@ -212,7 +212,7 @@ func (c *OnDemandRunnerConfigApplyCommand) Flags() *flag.Sets {
 			Name:    "plugin-type",
 			Target:  &c.flagPluginType,
 			Default: "",
-			Usage:   "The type of the plugin to launch for the ondemand runner, such as aws-ecs, kubernetes, etc.",
+			Usage:   "The type of the plugin to launch for the on-demand runner, such as aws-ecs, kubernetes, etc.",
 		})
 
 		f.StringVar(&flag.StringVar{
@@ -221,15 +221,15 @@ func (c *OnDemandRunnerConfigApplyCommand) Flags() *flag.Sets {
 			Default: "",
 			Usage: "Path to an hcl file that contains the configuration for the plugin. " +
 				"This is only necessary when the plugin's defaults need to be adjusted for " +
-				"the environment the plugin will launch the ondemand runner in.",
+				"the environment the plugin will launch the on-demand runner in.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
 			Name:    "default",
 			Target:  &c.flagDefault,
 			Default: false,
-			Usage: "Indicates that this ondemand runner should be used by any project that doesn't " +
-				"otherwise specify its own ondemand runner.",
+			Usage: "Indicates that this on-demand runner should be used by any project that doesn't " +
+				"otherwise specify its own on-demand runner.",
 		})
 	})
 }
@@ -243,20 +243,20 @@ func (c *OnDemandRunnerConfigApplyCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *OnDemandRunnerConfigApplyCommand) Synopsis() string {
-	return "Create or update an ondemand runner configuration."
+	return "Create or update an on-demand runner configuration."
 }
 
 func (c *OnDemandRunnerConfigApplyCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint runner on-demand set [OPTIONS]
 
-  Create or update an ondemand runner configuration.
+  Create or update an on-demand runner configuration.
 
-  This will register a new ondemand runner config with the given options. If
-  a ondemand runner config with the same id already exists, this will update the
+  This will register a new on-demand runner config with the given options. If
+  a on-demand runner config with the same id already exists, this will update the
   existing runner config using the fields that are set.
   
-  Waypoint will use an ondemand runner configuration to spawn containers for
+  Waypoint will use an on-demand runner configuration to spawn containers for
   various kinds of work as needed on the platform requested during any given
   lifecycle operation.
 
