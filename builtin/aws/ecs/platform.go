@@ -959,7 +959,7 @@ func (p *Platform) resourceAlbListenerCreate(
 
 		if len(listeners.Listeners) > 0 {
 			listener = listeners.Listeners[0]
-			s.Update("Using existing ALB Listener (ARN: %q)", listener.ListenerArn)
+			s.Update("Using existing ALB Listener (ARN: %q)", *listener.ListenerArn)
 		} else {
 			s.Update("Creating new ALB Listener")
 			newListener = true
