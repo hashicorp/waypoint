@@ -21,6 +21,7 @@
     "module": "es6",
     "experimentalDecorators": true,
     "paths": {
+      "ember-cli-flash/*": ["node_modules/ember-cli-flash/index.d.ts"],
       "waypoint/tests/*": ["tests/*"],
       "waypoint/*": ["app/*"],
       // Ensure that types from libraries are included
