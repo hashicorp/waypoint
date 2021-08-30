@@ -66,13 +66,11 @@ func (c *ConfigGetCommand) Run(args []string) int {
 	}
 	switch {
 	case c.flagRunner:
-		req.Scope = &pb.ConfigGetRequest_Runner{
-			Runner: &pb.Ref_RunnerId{
-				// Specifying a non-existent ID will return the runner
-				// vars set for all since none will match this ID (since
-				// we use ULIDs).
-				Id: "-",
-			},
+		req.Runner = &pb.Ref_RunnerId{
+			// Specifying a non-existent ID will return the runner
+			// vars set for all since none will match this ID (since
+			// we use ULIDs).
+			Id: "-",
 		}
 
 	case c.flagApp != "":
@@ -154,7 +152,7 @@ func (c *ConfigGetCommand) Run(args []string) int {
 	table := terminal.NewTable("Scope", "Name", "Value")
 	for _, v := range resp.Variables {
 		var app string
-		if scope, ok := v.Scope.(*pb.ConfigVar_Application); ok {
+		if scope, ok := v.Target.AppScope.(*pb.ConfigVar_Target_Application); ok {
 			app = scope.Application.Application
 		}
 

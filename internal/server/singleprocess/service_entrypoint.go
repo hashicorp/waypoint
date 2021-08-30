@@ -112,6 +112,8 @@ func (s *service) EntrypointConfig(
 			Scope: &pb.ConfigGetRequest_Application{
 				Application: deployment.Application,
 			},
+			Workspace: deployment.Workspace,
+			Labels:    deployment.Labels,
 		}, ws)
 		if err != nil {
 			return err

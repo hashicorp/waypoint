@@ -79,6 +79,7 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 
 		// Start building our var
 		var newVar pb.ConfigVar
+		newVar.Target = &pb.ConfigVar_Target{}
 		c.scopeFunc(&newVar)
 		newVar.Name = key
 		newVar.Internal = pair.Internal

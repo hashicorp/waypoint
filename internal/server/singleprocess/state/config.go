@@ -1,20 +1,34 @@
 package state
 
 import (
+	"errors"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-memdb"
+	"github.com/mitchellh/hashstructure/v2"
+	"github.com/mitchellh/pointerstructure"
+	"github.com/zclconf/go-cty/cty"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/config/funcs"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serversort "github.com/hashicorp/waypoint/internal/server/sort"
 )
 
-var configBucket = []byte("config")
+var (
+	configBucket = []byte("config_v2")
+
+	// configBucketOld is the name of the config bucket in WP versions
+	// 0.5 and earlier. We changed the bucket name so that we can safely
+	// upgrade the data. We should not use the "config" bucket name again
+	// unless we are sure we've migrated all data.
+	configBucketOld = []byte("config")
+)
 
 func init() {
 	dbBuckets = append(dbBuckets, configBucket)
@@ -22,8 +36,16 @@ func init() {
 	schemas = append(schemas, configIndexSchema)
 }
 
-// ConfigSet writes a configuration variable to the data store.
+// ConfigSet writes a configuration variable to the data store. Deletes
+// are always ordered before writes so that you can't delete a new value
+// in a single ConfigSet (you should never want to do this).
 func (s *State) ConfigSet(vs ...*pb.ConfigVar) error {
+	// Sort the variables so that deletes are handled before writes.
+	sort.Slice(vs, func(i, j int) bool {
+		// i < j if i is a delete request.
+		return isConfigVarDelete(vs[i])
+	})
+
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -69,6 +91,7 @@ func (s *State) configSet(
 	memTxn *memdb.Txn,
 	value *pb.ConfigVar,
 ) error {
+	s.configVarNormalize(value)
 	id := s.configVarId(value)
 
 	// Get the global bucket and write the value to it.
@@ -80,7 +103,7 @@ func (s *State) configSet(
 		}
 	} else {
 		// If this is a runner, we don't support dynamic values currently.
-		if _, ok := value.Scope.(*pb.ConfigVar_Runner); ok {
+		if value.Target.Runner != nil {
 			if _, ok := value.Value.(*pb.ConfigVar_Static); !ok {
 				return status.Errorf(codes.FailedPrecondition,
 					"runner-scoped configuration must be static")
@@ -102,11 +125,29 @@ func (s *State) configGetMerged(
 	ws memdb.WatchSet,
 	req *pb.ConfigGetRequest,
 ) ([]*pb.ConfigVar, error) {
-	var mergeSet [][]*pb.ConfigVar
+	// Always get our global values
+	globalVars, err := s.configGetExact(dbTxn, memTxn, ws, &pb.Ref_Global{}, req.Prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	// mergeSet is the set of variables we'll merge and resolve.
+	mergeSet := [][]*pb.ConfigVar{globalVars}
+	merge := true
+
 	switch scope := req.Scope.(type) {
 	case *pb.ConfigGetRequest_Project:
-		// For project scope, we just return the project scoped values.
-		return s.configGetExact(dbTxn, memTxn, ws, scope.Project, req.Prefix)
+		// Project scope, grab our project scope vars and only those
+		projectVars, err := s.configGetExact(dbTxn, memTxn, ws, scope.Project, req.Prefix)
+		if err != nil {
+			return nil, err
+		}
+
+		// Project scope never resolves so we just return it as is. We
+		// set the "merge = false" flag to notify that we don't want to do
+		// resolution.
+		mergeSet = append(mergeSet, projectVars)
+		merge = false
 
 	case *pb.ConfigGetRequest_Application:
 		// Application scope, we have to get the project scope first
@@ -126,21 +167,134 @@ func (s *State) configGetMerged(
 		// Build our merge set
 		mergeSet = append(mergeSet, projectVars, appVars)
 
-	case *pb.ConfigGetRequest_Runner:
-		var err error
-		mergeSet, err = s.configGetRunner(dbTxn, memTxn, ws, scope.Runner, req.Prefix)
-		if err != nil {
-			return nil, err
-		}
+	case nil:
+		// For nil scope we just look at the global variables.
+		//
+		// Note this is IMPORTANT for backwards compatbility, since when we
+		// introduced app-scoped runner vars, we pulled the "runner" out of the
+		// oneof, allowing old clients to send a nil scope. So we must handle
+		// this case so long as WP 0.5 and earlier clients exist, at least.
 
 	default:
 		panic("unknown scope")
+	}
+
+	// Sort all of our merge sets by the resolution rules
+	for _, set := range mergeSet {
+		sort.Sort(serversort.ConfigResolution(set))
+	}
+
+	// If we have a runner set, then we want to filter all our config vars
+	// by runner. This is more complex than that though, because tighter
+	// scoped runner refs should overwrite weaker scoped (i.e. ID-ref overwrites
+	// Any-ref). So we have to split our merge set from <X, Y> to
+	// <X_any, X_id, Y_any, Y_id> so it merges properly later.
+	if req.Runner != nil {
+		var newMergeSet [][]*pb.ConfigVar
+		for _, set := range mergeSet {
+			splitSets, err := s.configRunnerSet(set, req.Runner)
+			if err != nil {
+				return nil, err
+			}
+
+			newMergeSet = append(newMergeSet, splitSets...)
+		}
+
+		mergeSet = newMergeSet
+	} else {
+		// If runner isn't set, then we want to ensure we're not getting
+		// any runner env vars.
+		for _, set := range mergeSet {
+			for i, v := range set {
+				if v == nil {
+					continue
+				}
+
+				if v.Target.Runner != nil {
+					set[i] = nil
+				}
+			}
+		}
+	}
+
+	// Filter based on the workspace if we have it set.
+	if req.Workspace != nil {
+		for _, set := range mergeSet {
+			for i, v := range set {
+				if v == nil {
+					continue
+				}
+
+				if v.Target.Workspace != nil &&
+					!strings.EqualFold(v.Target.Workspace.Workspace, req.Workspace.Workspace) {
+					set[i] = nil
+				}
+			}
+		}
+	}
+
+	// Filter by labels
+	ctyMap := cty.MapValEmpty(cty.String)
+	if len(req.Labels) > 0 {
+		mapValues := map[string]cty.Value{}
+		for k, v := range req.Labels {
+			mapValues[k] = cty.StringVal(v)
+		}
+		ctyMap = cty.MapVal(mapValues)
+	}
+
+	for _, set := range mergeSet {
+		for i, v := range set {
+			if v == nil {
+				continue
+			}
+
+			// If there is no selector, ignore.
+			if v.Target.LabelSelector == "" {
+				continue
+			}
+
+			// Use our selectormatch HCL function for equal logic
+			result, err := funcs.SelectorMatch(ctyMap, cty.StringVal(v.Target.LabelSelector))
+			if errors.Is(err, pointerstructure.ErrNotFound) {
+				// this means that the label selector contains a label
+				// that isn't set, this means we do not match.
+				err = nil
+				result = cty.BoolVal(false)
+			}
+			if err != nil {
+				return nil, err
+			}
+
+			if result.False() {
+				set[i] = nil
+			}
+		}
+	}
+
+	// If we aren't merging, then we're done. We just flatten the list.
+	if !merge {
+		var result []*pb.ConfigVar
+		for _, set := range mergeSet {
+			for _, v := range set {
+				if v != nil {
+					result = append(result, v)
+				}
+			}
+		}
+		sort.Sort(serversort.ConfigName(result))
+		return result, nil
 	}
 
 	// Merge our merge set
 	merged := make(map[string]*pb.ConfigVar)
 	for _, set := range mergeSet {
 		for _, v := range set {
+			// Ignore nil since those are filtered out values.
+			if v == nil {
+				continue
+			}
+
 			merged[v.Name] = v
 		}
 	}
@@ -170,6 +324,18 @@ func (s *State) configGetExact(
 	// scope and use the proper index to get the iterator here.
 	var iter memdb.ResultIterator
 	switch ref := ref.(type) {
+	case *pb.Ref_Global:
+		var err error
+		iter, err = memTxn.Get(
+			configIndexTableName,
+			configIndexGlobalIndexName+"_prefix",
+			true,
+			prefix,
+		)
+		if err != nil {
+			return nil, err
+		}
+
 	case *pb.Ref_Application:
 		var err error
 		iter, err = memTxn.Get(
@@ -223,27 +389,12 @@ func (s *State) configGetExact(
 	return result, nil
 }
 
-// configGetRunner gets the config vars for a runner.
-func (s *State) configGetRunner(
-	dbTxn *bolt.Tx,
-	memTxn *memdb.Txn,
-	ws memdb.WatchSet,
+// configRunnerSet splits a set of config vars into a merge set depending
+// on priority to match a runner.
+func (s *State) configRunnerSet(
+	set []*pb.ConfigVar,
 	req *pb.Ref_RunnerId,
-	prefix string,
 ) ([][]*pb.ConfigVar, error) {
-	iter, err := memTxn.Get(
-		configIndexTableName,
-		configIndexRunnerIndexName+"_prefix",
-		true,
-		prefix,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add to our watch set
-	ws.Add(iter.WatchCh())
-
 	// Results go into two buckets
 	result := make([][]*pb.ConfigVar, 2)
 	const (
@@ -252,16 +403,14 @@ func (s *State) configGetRunner(
 	)
 
 	// Go through the iterator and accumulate the results
-	b := dbTxn.Bucket(configBucket)
-	for {
-		current := iter.Next()
-		if current == nil {
-			break
+	for _, current := range set {
+		if current.Target.Runner == nil {
+			// We are not a config for a runner.
+			continue
 		}
-		record := current.(*configIndexRecord)
 
 		idx := -1
-		switch ref := record.RunnerRef.Target.(type) {
+		switch ref := current.Target.Runner.Target.(type) {
 		case *pb.Ref_Runner_Any:
 			idx = idxAny
 
@@ -274,15 +423,10 @@ func (s *State) configGetRunner(
 			}
 
 		default:
-			return nil, fmt.Errorf("config has unknown target type: %T", record.RunnerRef.Target)
+			return nil, fmt.Errorf("config has unknown target type: %T", current.Target.Runner.Target)
 		}
 
-		var value pb.ConfigVar
-		if err := dbGet(b, []byte(record.Id), &value); err != nil {
-			return nil, err
-		}
-
-		result[idx] = append(result[idx], &value)
+		result[idx] = append(result[idx], current)
 	}
 
 	return result, nil
@@ -291,17 +435,17 @@ func (s *State) configGetRunner(
 // configIndexSet writes an index record for a single config var.
 func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) error {
 	var project, application string
-	var runner *pb.Ref_Runner
-	switch scope := value.Scope.(type) {
-	case *pb.ConfigVar_Application:
+	global := false
+	switch scope := value.Target.AppScope.(type) {
+	case *pb.ConfigVar_Target_Application:
 		project = scope.Application.Project
 		application = scope.Application.Application
 
-	case *pb.ConfigVar_Project:
+	case *pb.ConfigVar_Target_Project:
 		project = scope.Project.Project
 
-	case *pb.ConfigVar_Runner:
-		runner = scope.Runner
+	case *pb.ConfigVar_Target_Global:
+		global = true
 
 	default:
 		panic("unknown scope")
@@ -312,13 +456,20 @@ func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) e
 		Project:     project,
 		Application: application,
 		Name:        value.Name,
-		Runner:      runner != nil,
-		RunnerRef:   runner,
+		Runner:      value.Target.Runner != nil,
+		RunnerRef:   value.Target.Runner,
+		Global:      global,
 	}
 
 	// If we have no value, we delete from the memdb index
 	if isConfigVarDelete(value) {
-		return txn.Delete(configIndexTableName, record)
+		err := txn.Delete(configIndexTableName, record)
+		if errors.Is(err, memdb.ErrNotFound) {
+			// If it doesn't exist that is okay
+			err = nil
+		}
+
+		return err
 	}
 
 	// Insert the index
@@ -327,6 +478,35 @@ func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) e
 
 // configIndexInit initializes the config index from persisted data.
 func (s *State) configIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
+	// If we have the old (WP 0.5 and earlier) bucket, then perform an
+	// upgrade over all the items in this bucket.
+	oldBucket := dbTxn.Bucket(configBucketOld)
+	if oldBucket != nil {
+		err := oldBucket.ForEach(func(k, v []byte) error {
+			var value pb.ConfigVar
+			if err := proto.Unmarshal(v, &value); err != nil {
+				return err
+			}
+
+			// configSet normalizes the old to new format and writes it
+			// into our new bucket.
+			if err := s.configSet(dbTxn, memTxn, &value); err != nil {
+				return err
+			}
+
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+
+		// Delete the old bucket. We shouldn't fail since we just verified
+		// this key exists and it is a bucket.
+		if err := dbTxn.DeleteBucket(configBucketOld); err != nil {
+			return err
+		}
+	}
+
 	bucket := dbTxn.Bucket(configBucket)
 	return bucket.ForEach(func(k, v []byte) error {
 		var value pb.ConfigVar
@@ -342,38 +522,56 @@ func (s *State) configIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 }
 
 func (s *State) configVarId(v *pb.ConfigVar) []byte {
-	switch scope := v.Scope.(type) {
-	case *pb.ConfigVar_Application:
-		return []byte(fmt.Sprintf("%s/%s/%s",
-			scope.Application.Project,
-			scope.Application.Application,
-			v.Name,
-		))
+	// It is very important the variable is normalized before we get the ID.
+	s.configVarNormalize(v)
 
-	case *pb.ConfigVar_Project:
-		return []byte(fmt.Sprintf("%s/%s/%s",
-			scope.Project.Project,
-			"",
-			v.Name,
-		))
+	// Hash the ConfigVar Target to get a unique ID for this variable.
+	// This works because hashstructure ignores unexported fields.
+	hash, err := hashstructure.Hash(v.Target, hashstructure.FormatV2, nil)
+	if err != nil {
+		// This should never happen so we panic so we can report a bug.
+		// This _may_ crash the server which is not ideal, but we usually
+		// do per-request recover() and this usually isn't in a goroutine.
+		// And again, it shouldn't happen.
+		panic(err)
+	}
 
-	case *pb.ConfigVar_Runner:
-		var t string
-		switch scope.Runner.Target.(type) {
-		case *pb.Ref_Runner_Id:
-			t = "by-id"
+	return []byte(strings.ToLower(fmt.Sprintf("%s:%d/%s", configIdPrefix, hash, v.Name)))
+}
 
-		case *pb.Ref_Runner_Any:
-			t = "any"
+// configVarNormalize takes a ConfigVar and "normalizes" it by applying
+// transforms to ensure config vars have the same structure. For example,
+// this auto-upgrades older fields in the protobuf.
+//
+// This is safe to call multiple times.
+func (s *State) configVarNormalize(v *pb.ConfigVar) {
+	// UnusedScope is from WP 0.5 and earlier (and was named "scope" then).
+	// We upgrade it to target. If its set we always overwrite the target.
+	if v.UnusedScope != nil {
+		v.Target = &pb.ConfigVar_Target{}
 
-		default:
-			panic(fmt.Sprintf("unknown runner target scope: %T", scope.Runner.Target))
+		switch scope := v.UnusedScope.(type) {
+		case *pb.ConfigVar_Application:
+			v.Target.AppScope = &pb.ConfigVar_Target_Application{
+				Application: scope.Application,
+			}
+
+		case *pb.ConfigVar_Project:
+			v.Target.AppScope = &pb.ConfigVar_Target_Project{
+				Project: scope.Project,
+			}
+
+		case *pb.ConfigVar_Runner:
+			// In WP 0.5 and earlier, a scope of runner implied a global
+			// runner variable no matter where the runner lived.
+			v.Target.AppScope = &pb.ConfigVar_Target_Global{
+				Global: &pb.Ref_Global{},
+			}
+			v.Target.Runner = scope.Runner
 		}
 
-		return []byte(fmt.Sprintf("runner/%s/%s", t, v.Name))
-
-	default:
-		panic("unknown scope")
+		// Set our scope to nil so that we don't try to use it.
+		v.UnusedScope = nil
 	}
 }
 
@@ -434,6 +632,24 @@ func configIndexSchema() *memdb.TableSchema {
 				},
 			},
 
+			configIndexGlobalIndexName: {
+				Name:         configIndexGlobalIndexName,
+				AllowMissing: true,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.BoolFieldIndex{
+							Field: "Global",
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Name",
+							Lowercase: true,
+						},
+					},
+				},
+			},
+
 			configIndexRunnerIndexName: {
 				Name:         configIndexRunnerIndexName,
 				AllowMissing: true,
@@ -461,6 +677,11 @@ const (
 	configIndexProjectIndexName     = "project"
 	configIndexApplicationIndexName = "application"
 	configIndexRunnerIndexName      = "runner"
+	configIndexGlobalIndexName      = "global"
+
+	// configIdPrefix prefixes our ID so that we can change the
+	// ID hashing in the future if we want to.
+	configIdPrefix = "v2:"
 )
 
 type configIndexRecord struct {
@@ -470,6 +691,7 @@ type configIndexRecord struct {
 	Name        string
 	Runner      bool // true if this is a runner config
 	RunnerRef   *pb.Ref_Runner
+	Global      bool
 }
 
 // isConfigVarDelete returns true if the config var represents a deletion.

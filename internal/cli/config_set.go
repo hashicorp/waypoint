@@ -80,7 +80,8 @@ func (c *ConfigSetCommand) Run(args []string) int {
 		}
 
 		configVar := &pb.ConfigVar{
-			Name: arg[:idx],
+			Target: &pb.ConfigVar_Target{},
+			Name:   arg[:idx],
 			Value: &pb.ConfigVar_Static{
 				Static: arg[idx+1:],
 			},
@@ -88,21 +89,22 @@ func (c *ConfigSetCommand) Run(args []string) int {
 
 		switch {
 		case c.flagRunner:
-			configVar.Scope = &pb.ConfigVar_Runner{
-				Runner: &pb.Ref_Runner{
-					Target: &pb.Ref_Runner_Any{
-						Any: &pb.Ref_RunnerAny{},
-					},
+			configVar.Target.AppScope = &pb.ConfigVar_Target_Global{
+				Global: &pb.Ref_Global{},
+			}
+			configVar.Target.Runner = &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Any{
+					Any: &pb.Ref_RunnerAny{},
 				},
 			}
 
 		case c.flagApp == "":
-			configVar.Scope = &pb.ConfigVar_Project{
+			configVar.Target.AppScope = &pb.ConfigVar_Target_Project{
 				Project: c.project.Ref(),
 			}
 
 		default:
-			configVar.Scope = &pb.ConfigVar_Application{
+			configVar.Target.AppScope = &pb.ConfigVar_Target_Application{
 				Application: &pb.Ref_Application{
 					Project:     c.project.Ref().Project,
 					Application: c.flagApp,

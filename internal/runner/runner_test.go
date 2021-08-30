@@ -56,7 +56,11 @@ func TestRunnerStart_config(t *testing.T) {
 		client := singleprocess.TestServer(t)
 
 		cfgVar := &pb.ConfigVar{
-			Scope: &pb.ConfigVar_Runner{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Global{
+					Global: &pb.Ref_Global{},
+				},
+
 				Runner: &pb.Ref_Runner{
 					Target: &pb.Ref_Runner_Any{
 						Any: &pb.Ref_RunnerAny{},
@@ -102,7 +106,11 @@ func TestRunnerStart_config(t *testing.T) {
 		client := singleprocess.TestServer(t)
 
 		cfgVar := &pb.ConfigVar{
-			Scope: &pb.ConfigVar_Runner{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Global{
+					Global: &pb.Ref_Global{},
+				},
+
 				Runner: &pb.Ref_Runner{
 					Target: &pb.Ref_Runner_Any{
 						Any: &pb.Ref_RunnerAny{},
