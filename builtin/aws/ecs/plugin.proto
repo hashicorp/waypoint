@@ -39,6 +39,9 @@ message Resource {
   message TaskRole {
     string name = 1;
     string arn = 2;
+
+    // Indicates if the role was created by waypoint, and should be destroyed by waypoint
+    bool managed = 3;
   }
 
   message Service {
