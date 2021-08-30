@@ -36,7 +36,7 @@ type RunnerAgentCommand struct {
 	// generates an random.
 	flagId string
 
-	// This indicates that the runner is an ondemand runner. This information
+	// This indicates that the runner is an on-demand runner. This information
 	// is made available to the plugins so they can alter their behavior for
 	// this unique context.
 	flagODR bool
@@ -85,7 +85,7 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	})
 	c.ui.Output("Runner logs:", terminal.WithHeaderStyle())
 	if c.flagODR {
-		c.ui.Output("Operating as an Ondemand Runner")
+		c.ui.Output("Operating as an On-demand Runner")
 	} else {
 		c.ui.Output("Operating as a static Runner")
 	}
@@ -270,7 +270,7 @@ func (c *RunnerAgentCommand) Flags() *flag.Sets {
 		f.BoolVar(&flag.BoolVar{
 			Name:   "odr",
 			Target: &c.flagODR,
-			Usage:  "Indicates to the runner it's operating as an ondemand runner.",
+			Usage:  "Indicates to the runner it's operating as an on-demand runner.",
 		})
 	})
 }
