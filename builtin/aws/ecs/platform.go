@@ -172,8 +172,8 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithType("IAM role"),
 			resource.WithPlatform(platformName),
 			resource.WithState(&Resource_TaskRole{}),
-			resource.WithCreate(p.resourceTaskRoleDiscover),
-			// We never create the task role, and therefore never destroy it
+			resource.WithCreate(p.resourceTaskRoleCreate),
+			// TODO: implement destroy when we have better support for app-scoped resources
 			// TODO: implement status when we have a plan to not hit rate limits
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_POLICY),
 		)),
@@ -266,8 +266,6 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithState(&Resource_Service{}),
 			resource.WithCreate(p.resourceServiceCreate),
 			resource.WithDestroy(p.resourceServiceDestroy),
-
-			// TODO(izaak): implement
 			resource.WithStatus(p.resourceServiceStatus),
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
 		)),
@@ -1902,22 +1900,34 @@ func (p *Platform) resourceLogGroupCreate(
 	return nil
 }
 
-func (p *Platform) resourceTaskRoleDiscover(
+func (p *Platform) resourceTaskRoleCreate(
 	ctx context.Context,
 	sg terminal.StepGroup,
 	log hclog.Logger,
+	src *component.Source,
 	sess *session.Session,
 	state *Resource_TaskRole,
 ) error {
-	if p.config.TaskRoleName == "" {
-		log.Debug("No task role name specified - skipping role lookup.")
+	roleName := p.config.TaskRoleName
+
+	if roleName == "" && len(p.config.TaskRolePolicyArns) == 0 {
+		log.Debug("No task role name or task role policies specified - skipping task role creation")
 		return nil
 	}
 
 	s := sg.Add("Initiating task role creation...")
 	defer s.Abort()
 
-	roleName := p.config.TaskRoleName
+	if roleName == "" {
+		roleName = src.App + "-task-role"
+	}
+	state.Name = roleName
+
+	// role names have to be 64 characters or less, and the client side doesn't validate this.
+	if len(roleName) > 64 {
+		roleName = roleName[:64]
+		log.Debug("using a shortened value for role name due to AWS's length limits", "roleName", roleName)
+	}
 
 	s.Update("Attempting to find an existing role named %q", roleName)
 
@@ -1926,18 +1936,68 @@ func (p *Platform) resourceTaskRoleDiscover(
 	}
 
 	svc := iam.New(sess)
+
+	roleFound := true
 	getOut, err := svc.GetRoleWithContext(ctx, queryInput)
 	if err != nil {
-		// NOTE(izaak): I could see this being FailedPrecondition too - you could interpret this as "you failed to
-		// create the role before invoking this api" instead of "you told us to use a role that doesn't exist".
-		// I think "NotFound" is only appropriate if the endpoint or main resource is not found, but it's also a bit unclear.
-		return status.Errorf(codes.InvalidArgument, "requested task IAM role not found: %s", roleName)
+		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == "NoSuchEntity" {
+			roleFound = false
+		} else {
+			return status.Errorf(codes.Internal, "failed creating execution role %q: %s", roleName, err)
+		}
 	}
 
-	s.Update("Found existing task IAM role: %s", roleName)
+	if roleFound {
+		s.Update("Found existing task IAM role: %s", *getOut.Role.RoleName)
+		state.Arn = *getOut.Role.Arn
+	} else {
+		s.Update("No existing task role found - creating role %s", roleName)
 
-	state.Name = roleName
-	state.Arn = *getOut.Role.Arn
+		input := &iam.CreateRoleInput{
+			AssumeRolePolicyDocument: aws.String(rolePolicy),
+			Path:                     aws.String("/"),
+			RoleName:                 aws.String(roleName),
+		}
+
+		result, err := svc.CreateRoleWithContext(ctx, input)
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed creating execution role %q: %s", roleName, err)
+		}
+		state.Arn = *result.Role.Arn
+	}
+
+	if len(p.config.TaskRolePolicyArns) > 0 {
+		s.Update("Task role policies specified - checking the existing policies on the task role %s", roleName)
+		listOut, err := svc.ListAttachedRolePoliciesWithContext(ctx, &iam.ListAttachedRolePoliciesInput{
+			RoleName: &roleName,
+		})
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to list attached role policies on role (ARN: %q): %s", roleName, err)
+		}
+
+		for _, policyArn := range p.config.TaskRolePolicyArns {
+			alreadyAttached := false
+			for _, policy := range listOut.AttachedPolicies {
+				if policyArn == *policy.PolicyArn {
+					log.Debug("Requested policy arn is already attached to role", "policy arn", policyArn, "role name", roleName)
+					alreadyAttached = true
+					break
+				}
+			}
+
+			if !alreadyAttached {
+				s.Update("Attaching the following policy to role %s: %q", roleName, policyArn)
+				_, err = svc.AttachRolePolicyWithContext(ctx, &iam.AttachRolePolicyInput{
+					PolicyArn: &policyArn,
+					RoleName:  &roleName,
+				})
+				if err != nil {
+					return status.Errorf(codes.Internal, "failed to attach policy (ARN: %q) to role (name: %q)", policyArn, roleName, err)
+				}
+			}
+		}
+		s.Update("All requested policies are attached to role %s", roleName)
+	}
 	s.Done()
 	return nil
 }
