@@ -164,6 +164,16 @@ func (c *OnDemandRunnerConfigApplyCommand) Run(args []string) int {
 		}
 	}
 
+	if c.flagPluginType == "" {
+		c.ui.Output(
+			"Flag '-plugin-type' must be set to a valid plugin type like 'docker' or 'kubernetes'.\n\n%s",
+			c.Help(),
+			terminal.WithErrorStyle(),
+		)
+
+		return 1
+	}
+
 	od.PluginType = c.flagPluginType
 
 	// Upsert
