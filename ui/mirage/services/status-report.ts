@@ -36,6 +36,6 @@ export function expediteStatusReport(schema: any, { requestBody }: Request): Res
   // let requestMsg = decode(ExpediteStatusReportRequest, requestBody);
   // let ref = requestMsg.getRef();
   let result = new ExpediteStatusReportResponse();
-  result.setId('JOB_ID');
+  result.setJobId('JOB_ID');
   return this.serialize(result, 'application');
 }
