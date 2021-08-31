@@ -167,7 +167,16 @@ func (op *buildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ 
 					// ... which we make available to build plugin.
 					args = append(args, plugin.ArgNamedAny("access_info", any))
 					log.Debug("injected access info")
+				} else {
+					log.Debug(">>>")
+					log.Debug("not a typed any")
+					log.Debug("<<<")
 				}
+
+			} else {
+				log.Debug(">>>")
+				log.Debug("error with calldynamicfunc: ", "error", err)
+				log.Debug("<<<")
 			}
 		}
 	}

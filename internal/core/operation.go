@@ -151,7 +151,7 @@ func (a *App) doOperation(
 			}
 
 			doErr = fmt.Errorf(
-				"There was an error while executing a Waypoint plugin for "+
+				"there was an error while executing a Waypoint plugin for "+
 					"this operation!\n\n"+
 					"One or more required arguments for the plugin was not satisfied. "+
 					"This is usually due to a missing or incompatible set of plugins. "+

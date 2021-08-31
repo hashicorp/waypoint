@@ -49,7 +49,8 @@ const (
 )
 
 type ECSInstaller struct {
-	config ecsConfig
+	config  ecsConfig
+	netInfo *networkInformation
 }
 
 type ecsConfig struct {
@@ -80,7 +81,7 @@ type ecsConfig struct {
 	// On-Demand Runner configuration
 	OdrImage             string `hcl:"odr_image,optional"`
 	OdrExecutionRoleName string `hcl:"odr_execution_role_name,optional"`
-	// odrServiceAccountInit bool   `hcl:"odr_service_account_init,optional"`
+	OdrTaskRoleName      string `hcl:"odr_task_role_name,optional"`
 }
 
 // Install is a method of ECSInstaller and implements the Installer interface to
@@ -257,9 +258,11 @@ func (i *ECSInstaller) Launch(
 		PortMappings: []*ecs.PortMapping{
 			{
 				ContainerPort: aws.Int64(int64(httpPort)),
+				HostPort:      aws.Int64(int64(httpPort)),
 			},
 			{
 				ContainerPort: aws.Int64(int64(grpcPort)),
+				HostPort:      aws.Int64(int64(grpcPort)),
 			},
 		},
 		LogConfiguration: &ecs.LogConfiguration{
@@ -309,7 +312,7 @@ func (i *ECSInstaller) Launch(
 	}
 
 	ecsSvc := ecs.New(sess)
-	taskDef, err := registerTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
+	taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +322,7 @@ func (i *ECSInstaller) Launch(
 	taskDefArn := *taskDef.TaskDefinitionArn
 
 	// Create the service
-	s.Update("Creating server Service...")
+	s.Update("Creating server service...")
 	log.Debug("creating service", "arn", *taskDef.TaskDefinitionArn)
 
 	createServiceInput := &ecs.CreateServiceInput{
@@ -328,7 +331,8 @@ func (i *ECSInstaller) Launch(
 		LaunchType:                    aws.String(defaultTaskRuntime),
 		ServiceName:                   aws.String(serverName),
 		TaskDefinition:                aws.String(taskDefArn),
-		HealthCheckGracePeriodSeconds: aws.Int64(int64(600)),
+		EnableECSManagedTags:          aws.Bool(true),
+		HealthCheckGracePeriodSeconds: aws.Int64(int64(10)),
 		NetworkConfiguration: &ecs.NetworkConfiguration{
 			AwsvpcConfiguration: &ecs.AwsVpcConfiguration{
 				Subnets:        netInfo.subnets,
@@ -491,16 +495,20 @@ func (i *ECSInstaller) Upgrade(
 	}
 	// assume upgrade to latest
 	if *containerDef.Image == defaultServerImage {
+		s.Done()
+		// s.Update("Updating container definition in-place")
+		s = sg.Add("-----Updating container definition in-place")
 		// we can just update/force-deploy the service
-		_, err := ecsSvc.UpdateService(&ecs.UpdateServiceInput{
+		_, err = ecsSvc.UpdateService(&ecs.UpdateServiceInput{
 			ForceNewDeployment:            aws.Bool(true),
 			Cluster:                       &clusterArn,
 			Service:                       serverSvc.ServiceName,
-			HealthCheckGracePeriodSeconds: aws.Int64(int64(600)),
+			HealthCheckGracePeriodSeconds: aws.Int64(int64(10)),
 		})
 		if err != nil {
 			return nil, err
 		}
+		s.Update("Waiting for service to be stable...")
 		err = ecsSvc.WaitUntilServicesStable(&ecs.DescribeServicesInput{
 			Cluster:  &clusterArn,
 			Services: []*string{serverSvc.ServiceName},
@@ -509,6 +517,9 @@ func (i *ECSInstaller) Upgrade(
 			return nil, err
 		}
 	} else {
+		s.Done()
+		// s.Update("Updating container definition")
+		s = sg.Add("----Updating container definition")
 		containerDef.Image = &upgradeImg
 		// update task definition
 
@@ -517,6 +528,7 @@ func (i *ECSInstaller) Upgrade(
 			ContainerDefinitions:    taskDef.ContainerDefinitions,
 			Cpu:                     taskDef.Cpu,
 			ExecutionRoleArn:        taskDef.ExecutionRoleArn,
+			TaskRoleArn:             aws.String("arn:aws:iam::797645259670:role/waypoint-runner"),
 			Family:                  taskDef.Family,
 			Memory:                  taskDef.Memory,
 			NetworkMode:             aws.String("awsvpc"),
@@ -526,7 +538,7 @@ func (i *ECSInstaller) Upgrade(
 		}
 
 		ecsSvc := ecs.New(sess)
-		taskDef, err := registerTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
+		taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
 		if err != nil {
 			return nil, err
 		}
@@ -539,6 +551,7 @@ func (i *ECSInstaller) Upgrade(
 		if err != nil {
 			return nil, err
 		}
+		s.Update("Waiting for service to be stable...")
 		err = ecsSvc.WaitUntilServicesStable(&ecs.DescribeServicesInput{
 			Cluster:  &clusterArn,
 			Services: []*string{serverSvc.ServiceName},
@@ -547,6 +560,9 @@ func (i *ECSInstaller) Upgrade(
 			return nil, err
 		}
 	}
+
+	s.Done()
+	s = sg.Add("Updating context...")
 
 	var contextConfig clicontext.Config
 	var advertiseAddr pb.ServerConfig_AdvertiseAddr
@@ -754,12 +770,13 @@ func deleteNLBResources(
 				}
 			}
 
-			_, err = elbSvc.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
-				LoadBalancerArn: r.ResourceArn,
-			})
-			if err != nil {
-				return err
-			}
+			// TODO restore this
+			// _, err = elbSvc.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
+			// 	LoadBalancerArn: r.ResourceArn,
+			// })
+			// if err != nil {
+			// 	return err
+			// }
 		}
 	}
 
@@ -1138,19 +1155,22 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
 			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
+
 	set.StringVar(&flag.StringVar{
-		Name:   "ecs-runner-service-account",
+		Name:   "ecs-runner-execution-role",
 		Target: &i.config.OdrExecutionRoleName,
 		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
 			"an IAM execution role will be created automatically with the correct permissions.",
 		Default: "waypoint-runner",
 	})
-	// set.BoolVar(&flag.BoolVar{
-	// 	Name:    "ecs-runner-service-account-init",
-	// 	Target:  &i.config.OdrServiceAccountInit,
-	// 	Usage:   "Create the service account if it does not exist.",
-	// 	Default: true,
-	// })
+
+	set.StringVar(&flag.StringVar{
+		Name:   "ecs-runner-task-role",
+		Target: &i.config.OdrTaskRoleName,
+		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
+			"an IAM execution role will be created automatically with the correct permissions.",
+		Default: "waypoint-runner",
+	})
 }
 
 func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
@@ -1192,18 +1212,20 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
 	set.StringVar(&flag.StringVar{
-		Name:   "ecs-runner-service-account",
+		Name:   "ecs-runner-execution-role",
 		Target: &i.config.OdrExecutionRoleName,
-		Usage: "Service account to assign to the on-demand runner. If this is blank, " +
-			"a service account will be created automatically with the correct permissions.",
+		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
+			"an IAM execution role will be created automatically with the correct permissions.",
 		Default: "waypoint-runner",
 	})
-	// set.BoolVar(&flag.BoolVar{
-	// 	Name:    "ecs-runner-service-account-init",
-	// 	Target:  &i.config.odrServiceAccountInit,
-	// 	Usage:   "Create the service account if it does not exist.",
-	// 	Default: true,
-	// })
+
+	set.StringVar(&flag.StringVar{
+		Name:   "ecs-runner-task-role",
+		Target: &i.config.OdrTaskRoleName,
+		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
+			"an IAM execution role will be created automatically with the correct permissions.",
+		Default: "waypoint-runner",
+	})
 }
 
 func (i *ECSInstaller) UninstallFlags(set *flag.Set) {
@@ -1287,11 +1309,13 @@ func (i *ECSInstaller) SetupNetworking(
 	}
 	s.Update("Networking setup")
 	s.Done()
-	return &networkInformation{
+	ni := networkInformation{
 		vpcID:   vpcID,
 		subnets: subnets,
 		sgID:    sgID,
-	}, nil
+	}
+	i.netInfo = &ni
+	return &ni, nil
 }
 
 func (i *ECSInstaller) SetupCluster(
@@ -1713,12 +1737,12 @@ func (i *ECSInstaller) SetupExecutionRole(
 	s := sg.Add("Setting up an IAM execution role...")
 	defer func() { s.Abort() }()
 
-	q.Q("-> ODR execution role check in setup ex role")
 	if i.config.OdrExecutionRoleName != "" {
 		s.Done()
 		s = sg.Add("Initializing ODR Execution Role for on-demand runners...")
-		q.Q("-> adding ODR execution role: ", i.config.OdrExecutionRoleName)
 		// err := i.initServiceAccount(ctx, clientset, s)
+		// TODO actually do something here
+		s.Done()
 		s.Abort()
 		// if err != nil {
 		// 	return nil, err
@@ -1785,6 +1809,16 @@ func (i *ECSInstaller) SetupExecutionRole(
 	}
 
 	log.Debug("attached IAM execution role policy")
+
+	aInput = &iam.AttachRolePolicyInput{
+		RoleName:  aws.String(roleName),
+		PolicyArn: aws.String("arn:aws:iam::aws:policy/service-role/AmazonECS_FullAccess"),
+	}
+
+	_, err = svc.AttachRolePolicy(aInput)
+	if err != nil {
+		return "", err
+	}
 
 	s.Update("Created IAM role: %s", roleName)
 	s.Done()
@@ -1862,6 +1896,33 @@ func createNLB(
 
 	httpTgArn := htgGPRC.TargetGroups[0].TargetGroupArn
 	grpcTgArn := ctgGPRC.TargetGroups[0].TargetGroupArn
+
+	out, err := elbsrv.ModifyTargetGroupAttributes(&elbv2.ModifyTargetGroupAttributesInput{
+		TargetGroupArn: grpcTgArn,
+		Attributes: []*elbv2.TargetGroupAttribute{
+			{
+				Key:   aws.String("deregistration_delay.timeout_seconds"),
+				Value: aws.String("10"),
+			},
+		},
+	})
+	if err != nil {
+		q.Q("--> error modifying tg:", err)
+	}
+	q.Q("=-> modify grpc out:", out)
+	out, err = elbsrv.ModifyTargetGroupAttributes(&elbv2.ModifyTargetGroupAttributesInput{
+		TargetGroupArn: httpTgArn,
+		Attributes: []*elbv2.TargetGroupAttribute{
+			{
+				Key:   aws.String("deregistration_delay.timeout_seconds"),
+				Value: aws.String("10"),
+			},
+		},
+	})
+	if err != nil {
+		q.Q("--> error modifying tg:", err)
+	}
+	q.Q("=-> modify tg http out:", out)
 
 	// Create the load balancer OR modify the existing one to have this new target
 	// group but with a weight of 0
@@ -2061,39 +2122,6 @@ func (i *ECSInstaller) subnetInfo(
 	return subnets, vpcID, nil
 }
 
-func registerTaskDefinition(def *ecs.RegisterTaskDefinitionInput, ecsSvc *ecs.ECS) (*ecs.TaskDefinition, error) {
-	// AWS is eventually consistent so even though we probably created the
-	// resources that are referenced by the task definition, it can error out if
-	// we try to reference those resources too quickly. So we're forced to guard
-	// actions which reference other AWS services with loops like this.
-	var taskOut *ecs.RegisterTaskDefinitionOutput
-	var err error
-	for i := 0; i < 30; i++ {
-		taskOut, err = ecsSvc.RegisterTaskDefinition(def)
-		if err == nil {
-			break
-		}
-
-		// if we encounter an unrecoverable error, exit now.
-		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Code() == "ResourceConflictException" || aerr.Code() == "ClientException" {
-				return nil, err
-			}
-		}
-
-		// otherwise sleep and try again
-		time.Sleep(2 * time.Second)
-	}
-
-	// the above loop could expire and never get a valid task definition, so
-	// guard against a nil taskOut here
-	if taskOut == nil {
-		return nil, fmt.Errorf("error registering task definition, last error: %w", err)
-	}
-
-	return taskOut.TaskDefinition, nil
-}
-
 func (i *ECSInstaller) LaunchRunner(
 	ctx context.Context,
 	ui terminal.UI,
@@ -2148,6 +2176,7 @@ func (i *ECSInstaller) LaunchRunner(
 		PortMappings: []*ecs.PortMapping{
 			{
 				ContainerPort: aws.Int64(int64(grpcPort)),
+				HostPort:      aws.Int64(int64(grpcPort)),
 			},
 		},
 		Environment: envs,
@@ -2167,6 +2196,8 @@ func (i *ECSInstaller) LaunchRunner(
 		Memory:           aws.String(i.config.Memory),
 		Family:           aws.String(runnerName),
 
+		TaskRoleArn: aws.String("arn:aws:iam::797645259670:role/waypoint-runner"),
+
 		NetworkMode:             aws.String("awsvpc"),
 		RequiresCompatibilities: []*string{aws.String(defaultTaskRuntime)},
 		Tags: []*ecs.Tag{
@@ -2178,7 +2209,7 @@ func (i *ECSInstaller) LaunchRunner(
 	}
 
 	ecsSvc := ecs.New(sess)
-	taskDef, err := registerTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
+	taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
 	if err != nil {
 		return nil, err
 	}
@@ -2228,11 +2259,15 @@ func (i *ECSInstaller) LaunchRunner(
 	subnets := service.NetworkConfiguration.AwsvpcConfiguration.Subnets
 
 	createServiceInput := &ecs.CreateServiceInput{
-		Cluster:        clusterArn,
-		DesiredCount:   aws.Int64(1),
-		LaunchType:     aws.String(defaultTaskRuntime),
-		ServiceName:    aws.String(runnerName),
-		TaskDefinition: aws.String(taskDefArn),
+		DeploymentController: &ecs.DeploymentController{
+			Type: aws.String("ECS"),
+		},
+		Cluster:              clusterArn,
+		DesiredCount:         aws.Int64(1),
+		LaunchType:           aws.String(defaultTaskRuntime),
+		ServiceName:          aws.String(runnerName),
+		EnableECSManagedTags: aws.Bool(true),
+		TaskDefinition:       aws.String(taskDefArn),
 		NetworkConfiguration: &ecs.NetworkConfiguration{
 			AwsvpcConfiguration: &ecs.AwsVpcConfiguration{
 				Subnets:        subnets,
@@ -2296,19 +2331,27 @@ func createService(serviceInput *ecs.CreateServiceInput, ecsSvc *ecs.ECS) (*ecs.
 
 // OnDemandRunnerConfig implements OnDemandRunnerConfigProvider
 func (i *ECSInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
-	q.Q("-> on demand")
-	// Generate some configuration
-	cfgMap := map[string]interface{}{}
-	if v := i.config.OdrExecutionRoleName; v != "" {
-		cfgMap["odr_execution_role_name"] = v
+	// Generate some configuration. Some of the OnDemand configurations have
+	// defaults so we should be fine to directly use them
+	cfgMap := map[string]interface{}{
+		"log_group":               defaultRunnerLogGroup,
+		"odr_execution_role_name": i.config.ExecutionRoleName,
+		"odr_task_role_name":      i.config.OdrTaskRoleName,
+		"cluster":                 i.config.Cluster,
 	}
 
-	// if v := i.config.imagePullSecret; v != "" {
-	// 	cfgMap["image_secret"] = v
-	// }
-	// if v := i.config.imagePullPolicy; v != "" {
-	// 	cfgMap["image_pull_policy"] = v
-	// }
+	if v := i.config.Region; v != "" {
+		cfgMap["region"] = v
+	}
+
+	if i.netInfo != nil {
+		var subnets []string
+		for _, s := range i.netInfo.subnets {
+			subnets = append(subnets, *s)
+		}
+		cfgMap["subnets"] = strings.Join(subnets, ",")
+		cfgMap["security_group_id"] = i.netInfo.sgID
+	}
 
 	// Marshal our config
 	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
@@ -2316,14 +2359,12 @@ func (i *ECSInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		// This shouldn't happen cause we control our input. If it does,
 		// just panic cause this will be in a `server install` CLI and
 		// we want the user to report a bug.
-		q.Q("-> on demand panic")
 		panic(err)
 	}
 
-	q.Q("-> return on demand")
 	return &pb.OnDemandRunnerConfig{
 		OciUrl:       i.config.OdrImage,
-		PluginType:   "ecs",
+		PluginType:   "aws-ecs",
 		Default:      true,
 		PluginConfig: cfgJson,
 		ConfigFormat: pb.Project_JSON,

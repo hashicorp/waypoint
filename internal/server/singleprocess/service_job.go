@@ -92,7 +92,6 @@ func (s *service) queueJobMulti(
 	}
 
 	return resp, nil
-
 }
 
 // queueJobReqToJob converts a QueueJobRequest to a job to queue, but
@@ -297,7 +296,7 @@ func (s *service) launchOnDemandRunner(
 		envVars[k] = v
 	}
 
-	args := []string{"runner", "agent", "-vv", "-id", runnerId, "-odr"}
+	args := []string{"runner", "agent", "-vvv", "-id", runnerId, "-odr"}
 
 	job := &pb.Job{
 		Workspace:   source.Workspace,

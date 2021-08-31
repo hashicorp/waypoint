@@ -99,6 +99,7 @@ require (
 	github.com/posener/complete v1.2.3
 	github.com/r3labs/diff v1.1.0
 	github.com/rs/cors v1.7.0 // indirect
+	github.com/ryboe/q v1.0.14 // indirect
 	github.com/sabhiram/go-gitignore v0.0.0-20201211210132-54b8a0bf510f // indirect
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
