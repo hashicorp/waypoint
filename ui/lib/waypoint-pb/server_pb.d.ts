@@ -6,6 +6,214 @@ import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/t
 import * as google_rpc_status_pb from 'api-common-protos/google/rpc/status_pb';
 
 
+export class UI extends jspb.Message {
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UI.AsObject;
+  static toObject(includeInstance: boolean, msg: UI): UI.AsObject;
+  static serializeBinaryToWriter(message: UI, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UI;
+  static deserializeBinaryFromReader(message: UI, reader: jspb.BinaryReader): UI;
+}
+
+export namespace UI {
+  export type AsObject = {
+  }
+
+  export class ListDeploymentsRequest extends jspb.Message {
+    getApplication(): Ref.Application | undefined;
+    setApplication(value?: Ref.Application): ListDeploymentsRequest;
+    hasApplication(): boolean;
+    clearApplication(): ListDeploymentsRequest;
+
+    getWorkspace(): Ref.Workspace | undefined;
+    setWorkspace(value?: Ref.Workspace): ListDeploymentsRequest;
+    hasWorkspace(): boolean;
+    clearWorkspace(): ListDeploymentsRequest;
+
+    getOrder(): OperationOrder | undefined;
+    setOrder(value?: OperationOrder): ListDeploymentsRequest;
+    hasOrder(): boolean;
+    clearOrder(): ListDeploymentsRequest;
+
+    getStatusList(): Array<StatusFilter>;
+    setStatusList(value: Array<StatusFilter>): ListDeploymentsRequest;
+    clearStatusList(): ListDeploymentsRequest;
+    addStatus(value?: StatusFilter, index?: number): StatusFilter;
+
+    getPhysicalState(): Operation.PhysicalState;
+    setPhysicalState(value: Operation.PhysicalState): ListDeploymentsRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ListDeploymentsRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ListDeploymentsRequest): ListDeploymentsRequest.AsObject;
+    static serializeBinaryToWriter(message: ListDeploymentsRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ListDeploymentsRequest;
+    static deserializeBinaryFromReader(message: ListDeploymentsRequest, reader: jspb.BinaryReader): ListDeploymentsRequest;
+  }
+
+  export namespace ListDeploymentsRequest {
+    export type AsObject = {
+      application?: Ref.Application.AsObject,
+      workspace?: Ref.Workspace.AsObject,
+      order?: OperationOrder.AsObject,
+      statusList: Array<StatusFilter.AsObject>,
+      physicalState: Operation.PhysicalState,
+    }
+  }
+
+
+  export class ListDeploymentsResponse extends jspb.Message {
+    getDeploymentsList(): Array<UI.DeploymentBundle>;
+    setDeploymentsList(value: Array<UI.DeploymentBundle>): ListDeploymentsResponse;
+    clearDeploymentsList(): ListDeploymentsResponse;
+    addDeployments(value?: UI.DeploymentBundle, index?: number): UI.DeploymentBundle;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ListDeploymentsResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: ListDeploymentsResponse): ListDeploymentsResponse.AsObject;
+    static serializeBinaryToWriter(message: ListDeploymentsResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ListDeploymentsResponse;
+    static deserializeBinaryFromReader(message: ListDeploymentsResponse, reader: jspb.BinaryReader): ListDeploymentsResponse;
+  }
+
+  export namespace ListDeploymentsResponse {
+    export type AsObject = {
+      deploymentsList: Array<UI.DeploymentBundle.AsObject>,
+    }
+  }
+
+
+  export class DeploymentBundle extends jspb.Message {
+    getDeployment(): Deployment | undefined;
+    setDeployment(value?: Deployment): DeploymentBundle;
+    hasDeployment(): boolean;
+    clearDeployment(): DeploymentBundle;
+
+    getArtifact(): PushedArtifact | undefined;
+    setArtifact(value?: PushedArtifact): DeploymentBundle;
+    hasArtifact(): boolean;
+    clearArtifact(): DeploymentBundle;
+
+    getBuild(): Build | undefined;
+    setBuild(value?: Build): DeploymentBundle;
+    hasBuild(): boolean;
+    clearBuild(): DeploymentBundle;
+
+    getDeployUrl(): string;
+    setDeployUrl(value: string): DeploymentBundle;
+
+    getJobDataSourceRef(): Job.DataSource.Ref | undefined;
+    setJobDataSourceRef(value?: Job.DataSource.Ref): DeploymentBundle;
+    hasJobDataSourceRef(): boolean;
+    clearJobDataSourceRef(): DeploymentBundle;
+
+    getLatestStatusReport(): StatusReport | undefined;
+    setLatestStatusReport(value?: StatusReport): DeploymentBundle;
+    hasLatestStatusReport(): boolean;
+    clearLatestStatusReport(): DeploymentBundle;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): DeploymentBundle.AsObject;
+    static toObject(includeInstance: boolean, msg: DeploymentBundle): DeploymentBundle.AsObject;
+    static serializeBinaryToWriter(message: DeploymentBundle, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): DeploymentBundle;
+    static deserializeBinaryFromReader(message: DeploymentBundle, reader: jspb.BinaryReader): DeploymentBundle;
+  }
+
+  export namespace DeploymentBundle {
+    export type AsObject = {
+      deployment?: Deployment.AsObject,
+      artifact?: PushedArtifact.AsObject,
+      build?: Build.AsObject,
+      deployUrl: string,
+      jobDataSourceRef?: Job.DataSource.Ref.AsObject,
+      latestStatusReport?: StatusReport.AsObject,
+    }
+  }
+
+
+  export class ListReleasesRequest extends jspb.Message {
+    getApplication(): Ref.Application | undefined;
+    setApplication(value?: Ref.Application): ListReleasesRequest;
+    hasApplication(): boolean;
+    clearApplication(): ListReleasesRequest;
+
+    getWorkspace(): Ref.Workspace | undefined;
+    setWorkspace(value?: Ref.Workspace): ListReleasesRequest;
+    hasWorkspace(): boolean;
+    clearWorkspace(): ListReleasesRequest;
+
+    getOrder(): OperationOrder | undefined;
+    setOrder(value?: OperationOrder): ListReleasesRequest;
+    hasOrder(): boolean;
+    clearOrder(): ListReleasesRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ListReleasesRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ListReleasesRequest): ListReleasesRequest.AsObject;
+    static serializeBinaryToWriter(message: ListReleasesRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ListReleasesRequest;
+    static deserializeBinaryFromReader(message: ListReleasesRequest, reader: jspb.BinaryReader): ListReleasesRequest;
+  }
+
+  export namespace ListReleasesRequest {
+    export type AsObject = {
+      application?: Ref.Application.AsObject,
+      workspace?: Ref.Workspace.AsObject,
+      order?: OperationOrder.AsObject,
+    }
+  }
+
+
+  export class ListReleasesResponse extends jspb.Message {
+    getReleasesList(): Array<UI.ReleaseBundle>;
+    setReleasesList(value: Array<UI.ReleaseBundle>): ListReleasesResponse;
+    clearReleasesList(): ListReleasesResponse;
+    addReleases(value?: UI.ReleaseBundle, index?: number): UI.ReleaseBundle;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ListReleasesResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: ListReleasesResponse): ListReleasesResponse.AsObject;
+    static serializeBinaryToWriter(message: ListReleasesResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ListReleasesResponse;
+    static deserializeBinaryFromReader(message: ListReleasesResponse, reader: jspb.BinaryReader): ListReleasesResponse;
+  }
+
+  export namespace ListReleasesResponse {
+    export type AsObject = {
+      releasesList: Array<UI.ReleaseBundle.AsObject>,
+    }
+  }
+
+
+  export class ReleaseBundle extends jspb.Message {
+    getRelease(): Release | undefined;
+    setRelease(value?: Release): ReleaseBundle;
+    hasRelease(): boolean;
+    clearRelease(): ReleaseBundle;
+
+    getLatestStatusReport(): StatusReport | undefined;
+    setLatestStatusReport(value?: StatusReport): ReleaseBundle;
+    hasLatestStatusReport(): boolean;
+    clearLatestStatusReport(): ReleaseBundle;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ReleaseBundle.AsObject;
+    static toObject(includeInstance: boolean, msg: ReleaseBundle): ReleaseBundle.AsObject;
+    static serializeBinaryToWriter(message: ReleaseBundle, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ReleaseBundle;
+    static deserializeBinaryFromReader(message: ReleaseBundle, reader: jspb.BinaryReader): ReleaseBundle;
+  }
+
+  export namespace ReleaseBundle {
+    export type AsObject = {
+      release?: Release.AsObject,
+      latestStatusReport?: StatusReport.AsObject,
+    }
+  }
+
+}
+
 export class GetVersionInfoResponse extends jspb.Message {
   getInfo(): VersionInfo | undefined;
   setInfo(value?: VersionInfo): GetVersionInfoResponse;
@@ -938,8 +1146,8 @@ export namespace Ref {
 
 
   export class DeclaredResource extends jspb.Message {
-    getId(): string;
-    setId(value: string): DeclaredResource;
+    getName(): string;
+    setName(value: string): DeclaredResource;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): DeclaredResource.AsObject;
@@ -951,7 +1159,7 @@ export namespace Ref {
 
   export namespace DeclaredResource {
     export type AsObject = {
-      id: string,
+      name: string,
     }
   }
 
@@ -1156,11 +1364,11 @@ export namespace Generation {
 }
 
 export class DeclaredResource extends jspb.Message {
-  getId(): string;
-  setId(value: string): DeclaredResource;
-
   getName(): string;
   setName(value: string): DeclaredResource;
+
+  getType(): string;
+  setType(value: string): DeclaredResource;
 
   getPlatform(): string;
   setPlatform(value: string): DeclaredResource;
@@ -1186,8 +1394,8 @@ export class DeclaredResource extends jspb.Message {
 
 export namespace DeclaredResource {
   export type AsObject = {
-    id: string,
     name: string,
+    type: string,
     platform: string,
     state?: google_protobuf_any_pb.Any.AsObject,
     stateJson: string,
@@ -6266,6 +6474,18 @@ export class ListStatusReportsRequest extends jspb.Message {
   hasWorkspace(): boolean;
   clearWorkspace(): ListStatusReportsRequest;
 
+  getDeployment(): Ref.Operation | undefined;
+  setDeployment(value?: Ref.Operation): ListStatusReportsRequest;
+  hasDeployment(): boolean;
+  clearDeployment(): ListStatusReportsRequest;
+
+  getRelease(): Ref.Operation | undefined;
+  setRelease(value?: Ref.Operation): ListStatusReportsRequest;
+  hasRelease(): boolean;
+  clearRelease(): ListStatusReportsRequest;
+
+  getTargetCase(): ListStatusReportsRequest.TargetCase;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ListStatusReportsRequest.AsObject;
   static toObject(includeInstance: boolean, msg: ListStatusReportsRequest): ListStatusReportsRequest.AsObject;
@@ -6280,6 +6500,14 @@ export namespace ListStatusReportsRequest {
     order?: OperationOrder.AsObject,
     application?: Ref.Application.AsObject,
     workspace?: Ref.Workspace.AsObject,
+    deployment?: Ref.Operation.AsObject,
+    release?: Ref.Operation.AsObject,
+  }
+
+  export enum TargetCase { 
+    TARGET_NOT_SET = 0,
+    DEPLOYMENT = 5,
+    RELEASE = 6,
   }
 }
 
@@ -6416,11 +6644,6 @@ export class StatusReport extends jspb.Message {
   hasHealth(): boolean;
   clearHealth(): StatusReport;
 
-  getResourcesHealthList(): Array<StatusReport.Health>;
-  setResourcesHealthList(value: Array<StatusReport.Health>): StatusReport;
-  clearResourcesHealthList(): StatusReport;
-  addResourcesHealth(value?: StatusReport.Health, index?: number): StatusReport.Health;
-
   getGeneratedTime(): google_protobuf_timestamp_pb.Timestamp | undefined;
   setGeneratedTime(value?: google_protobuf_timestamp_pb.Timestamp): StatusReport;
   hasGeneratedTime(): boolean;
@@ -6433,6 +6656,11 @@ export class StatusReport extends jspb.Message {
   setResourcesList(value: Array<StatusReport.Resource>): StatusReport;
   clearResourcesList(): StatusReport;
   addResources(value?: StatusReport.Resource, index?: number): StatusReport.Resource;
+
+  getDeprecatedResourcesHealthList(): Array<StatusReport.Health>;
+  setDeprecatedResourcesHealthList(value: Array<StatusReport.Health>): StatusReport;
+  clearDeprecatedResourcesHealthList(): StatusReport;
+  addDeprecatedResourcesHealth(value?: StatusReport.Health, index?: number): StatusReport.Health;
 
   getTargetIdCase(): StatusReport.TargetIdCase;
 
@@ -6454,10 +6682,10 @@ export namespace StatusReport {
     id: string,
     statusReport?: google_protobuf_any_pb.Any.AsObject,
     health?: StatusReport.Health.AsObject,
-    resourcesHealthList: Array<StatusReport.Health.AsObject>,
     generatedTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     external: boolean,
     resourcesList: Array<StatusReport.Resource.AsObject>,
+    deprecatedResourcesHealthList: Array<StatusReport.Health.AsObject>,
   }
 
   export class Resource extends jspb.Message {
@@ -6495,13 +6723,16 @@ export namespace StatusReport {
     getStateJson(): string;
     setStateJson(value: string): Resource;
 
-    getHealth(): StatusReport.Health | undefined;
-    setHealth(value?: StatusReport.Health): Resource;
-    hasHealth(): boolean;
-    clearHealth(): Resource;
+    getHealth(): StatusReport.Resource.Health;
+    setHealth(value: StatusReport.Resource.Health): Resource;
 
     getHealthMessage(): string;
     setHealthMessage(value: string): Resource;
+
+    getDeprecatedHealth(): StatusReport.Health | undefined;
+    setDeprecatedHealth(value?: StatusReport.Health): Resource;
+    hasDeprecatedHealth(): boolean;
+    clearDeprecatedHealth(): Resource;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Resource.AsObject;
@@ -6523,8 +6754,18 @@ export namespace StatusReport {
       categoryDisplayHint: ResourceCategoryDisplayHint,
       createdTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
       stateJson: string,
-      health?: StatusReport.Health.AsObject,
+      health: StatusReport.Resource.Health,
       healthMessage: string,
+      deprecatedHealth?: StatusReport.Health.AsObject,
+    }
+
+    export enum Health { 
+      UNKNOWN = 0,
+      ALIVE = 1,
+      READY = 2,
+      DOWN = 3,
+      MISSING = 5,
+      PARTIAL = 4,
     }
   }
 
@@ -6536,11 +6777,11 @@ export namespace StatusReport {
     getHealthMessage(): string;
     setHealthMessage(value: string): Health;
 
-    getName(): string;
-    setName(value: string): Health;
+    getDeprecatedName(): string;
+    setDeprecatedName(value: string): Health;
 
-    getId(): string;
-    setId(value: string): Health;
+    getDeprecatedId(): string;
+    setDeprecatedId(value: string): Health;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Health.AsObject;
@@ -6554,8 +6795,8 @@ export namespace StatusReport {
     export type AsObject = {
       healthStatus: string,
       healthMessage: string,
-      name: string,
-      id: string,
+      deprecatedName: string,
+      deprecatedId: string,
     }
   }
 
