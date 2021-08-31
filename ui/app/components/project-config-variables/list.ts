@@ -71,6 +71,10 @@ export default class ProjectConfigVariablesListComponent extends Component<Proje
       newVar.setInternal(variable.internal);
     }
 
+    if (variable.nameIsPath) {
+      newVar.setNameIsPath(variable.nameIsPath);
+    }
+
     if (deleteVariable) {
       newVar.setUnset(new Empty());
     }

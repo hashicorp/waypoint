@@ -86,6 +86,10 @@ form:
     variable_name_placeholder: 'var_key'
     variable_value: 'Value'
     variable_value_placeholder: 'var_value'
+    nameIsPath:
+      label: "Use variable name as file path"
+    internal:
+      label: "Internal value"
     button_submit: 'Save variable'
     button_cancel: 'Cancel'
 

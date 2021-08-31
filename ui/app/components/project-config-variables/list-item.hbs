@@ -34,7 +34,49 @@
               />
             </div>
           </div>
+          <hr/>
+          <div class="pds-formField">
+            <div class="pds-formFieldToggle">
+              <XToggle
+                @showLabels={{true}}
+                @name="name-is-path"
+                @value={{this.variable.nameIsPath}}
+                @size="small"
+                @onToggle={{fn (mut this.variable.nameIsPath)}} as |toggle|>
+                <toggle.switch
+                  @showLabels={{false}}
+                  @name="name-path"
+                  />
+                <toggle.label for="name-is-path">
+                  <span class="pds-toggleLabel">
+                    {{t "form.config_variables_settings.nameIsPath.label"}}
+                  </span>
+                </toggle.label>
+              </XToggle>
+            </div>
+          </div>
+          <div class="pds-formField">
+            <div class="pds-formFieldToggle">
+              <XToggle
+                @showLabels={{true}}
+                @name="internal"
+                @value={{this.variable.internal}}
+                @size="small"
+                @onToggle={{fn (mut this.variable.internal)}} as |toggle|>
+                <toggle.switch
+                  @showLabels={{false}}
+                  @name="internal"
+                  />
+                <toggle.label for="internal">
+                  <span class="pds-toggleLabel">
+                    {{t "form.config_variables_settings.internal.label"}}
+                  </span>
+                </toggle.label>
+              </XToggle>
+            </div>
+          </div>
         </fieldset>
+        <hr/>
         <div class="card-footer">
           <Pds::ButtonSet>
             <Pds::Button
@@ -75,14 +117,12 @@
           </D.Trigger>
           <D.Dialog >
             <section>
-
-                <Pds::Button
-                  data-test-config-variables-dropdown-edit
-                  @variant="secondary"
-                  {{on "click" (fn this.editVariable this.variable)}}>
-                  Edit
-                </Pds::Button>
-
+              <Pds::Button
+                data-test-config-variables-dropdown-edit
+                @variant="secondary"
+                {{on "click" (fn this.editVariable this.variable)}}>
+                Edit
+              </Pds::Button>
               <Pds::Button
                 data-test-config-variables-dropdown-delete
                 @variant="warning"
