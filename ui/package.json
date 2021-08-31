@@ -48,6 +48,7 @@
     "anser": "^2.0.0",
     "babel-eslint": "^10.1.0",
     "broccoli-asset-rev": "^3.0.0",
+    "codemirror": "^5.62.2",
     "date-fns": "^2.15.0",
     "ember-a11y-testing": "^4.0.7",
     "ember-auto-import": "^1.10.1",
@@ -126,8 +127,7 @@
     "google-protobuf": "^3.12.2",
     "grpc-web": "./lib/grpc-web",
     "waypoint-client": "./lib/waypoint-client",
-    "waypoint-pb": "./lib/waypoint-pb",
-    "codemirror": "^5.62.2"
+    "waypoint-pb": "./lib/waypoint-pb"
   },
   "ember-addon": {}
 }
