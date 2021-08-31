@@ -6,7 +6,7 @@ import ApiService from 'waypoint/services/api';
 import FlashMessagesService from 'waypoint/services/flash-messages';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
-import { Project } from 'waypoint-pb';
+import { Project, Job } from 'waypoint-pb';
 import parseUrl from 'parse-url';
 
 const FORMAT = {
@@ -57,7 +57,7 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
   @tracked authCase: number;
   @tracked serverHcl: boolean;
 
-  constructor(owner: any, args: any) {
+  constructor(owner: unknown, args: ProjectSettingsArgs) {
     super(owner, args);
     this.project = JSON.parse(JSON.stringify(DEFAULT_PROJECT_MODEL)) as Project.AsObject; // to ensure we're doing a deep copy
     let { project } = this.args;
@@ -78,23 +78,23 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
     }
   }
 
-  get dataSource() {
+  get dataSource(): Job.DataSource.AsObject | undefined {
     return this.project.dataSource;
   }
 
-  get authSSH() {
+  get authSSH(): boolean {
     return this.authCase === 5;
   }
 
-  get authBasic() {
+  get authBasic(): boolean {
     return this.authCase === 4;
   }
 
-  get authNotSet() {
+  get authNotSet(): boolean {
     return this.authCase === 0;
   }
 
-  get git() {
+  get git(): Job.Git.AsObject | undefined {
     return this.dataSource?.git;
   }
 
@@ -106,8 +106,8 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
     return atob((this.git?.ssh?.privateKeyPem as string) || '');
   }
 
-  validateGitUrl() {
-    let gitUrl = parseUrl(this.project.dataSource.git.url);
+  validateGitUrl(): boolean {
+    let gitUrl = parseUrl(this.project.dataSource?.git?.url);
     // If basic auth, match https url
     if (this.authBasic || this.authNotSet) {
       if (gitUrl.protocol !== 'https') {
@@ -125,7 +125,7 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
     return true;
   }
 
-  populateExistingFields(projectFromArgs, currentModel) {
+  populateExistingFields(projectFromArgs: Project.AsObject, currentModel: Project.AsObject): void {
     for (let [key, value] of Object.entries(projectFromArgs)) {
       if (isEmpty(value)) {
         currentModel[key] = DEFAULT_PROJECT_MODEL[key];
@@ -147,25 +147,42 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
   }
 
   @action
-  setAuthCase(val: any) {
+  setAuthCase(val: number): void {
     this.authCase = val;
   }
 
   @action
-  setBasicAuth(path: string, e: any) {
-    if (!this.git?.basic) {
+  setBasicAuth(path: string, e: Event): void {
+    if (!this.git) {
+      return;
+    }
+
+    if (!isFormField(e.target)) {
+      return;
+    }
+
+    if (!this.git.basic) {
       this.git.basic = {
         username: '',
         password: '',
       };
     }
+
     this.git.basic[path] = e.target.value;
   }
 
   @action
-  setSshAuth(path: string, e: any) {
-    if (!this.project.dataSource?.git?.ssh) {
-      this.project.dataSource.git.ssh = {
+  setSshAuth(path: string, e: Event): void {
+    if (!this.git) {
+      return;
+    }
+
+    if (!isFormField(e.target)) {
+      return;
+    }
+
+    if (!this.git.ssh) {
+      this.git.ssh = {
         user: '',
         password: '',
         privateKeyPem: '',
@@ -173,22 +190,28 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
     }
 
     let value = e.target.value;
+
     // if private key, encode input to base 64
     if (path === 'privateKeyPem') {
       value = btoa(value);
     }
 
-    this.project.dataSource.git.ssh[path] = value;
+    this.git.ssh[path] = value;
   }
 
   @action
-  setWaypointHcl(e: any) {
+  setWaypointHcl(e: Event): void {
+    if (!(e.target instanceof HTMLInputElement)) {
+      return;
+    }
+
     this.project.waypointHcl = btoa(e.target.value);
   }
 
   @action
-  async saveSettings(e: Event) {
+  async saveSettings(e: Event): Promise<void> {
     e.preventDefault();
+
     if (!this.validateGitUrl()) {
       return;
     }
@@ -205,4 +228,12 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
       this.flashMessages.error('Failed to save Settings', { content: err.message, sticky: true });
     }
   }
+}
+
+interface FormField {
+  value: string;
+}
+
+function isFormField(element: unknown): element is FormField {
+  return typeof (element as FormField).value === 'string';
 }
