@@ -14,7 +14,7 @@ interface ProjectSettingsArgs {
 export default class ProjectInputVariablesListComponent extends Component<ProjectSettingsArgs> {
   @service api!: ApiService;
   @service router!: RouterService;
-  @service flashMessages: PdsFlashMessages;
+  @service flashMessages!: PdsFlashMessages;
   @tracked project: Project.AsObject;
   @tracked variablesList: Array<Variable.AsObject>;
   @tracked isCreating: boolean;
@@ -66,7 +66,7 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
         this.variablesList
       );
 
-      this.project = resp;
+      this.project = resp as Project.AsObject;
       this.flashMessages.success('Settings saved');
       this.activeVariable = null;
       this.isCreating = false;
