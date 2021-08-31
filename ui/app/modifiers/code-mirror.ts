@@ -7,38 +7,39 @@ import 'codemirror/addon/edit/matchbrackets';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/selection/active-line';
 import 'codemirror/addon/mode/simple';
+import CodeMirror from 'waypoint/services/code-mirror';
 
 interface Args {
   positional: never;
   named: {
     value: string;
     onInput: Function;
-    options: Array<string>;
+    options: Object;
   };
 }
 
 export default class CodeMirrorModifier extends Modifier<Args> {
   _editor!: codemirror.Editor;
 
-  get cmService() {
+  get cmService(): CodeMirror {
     return getOwner(this).lookup('service:code-mirror');
   }
 
-  didInstall() {
+  didInstall(): void {
     this._setup();
   }
 
-  willRemove() {
+  willRemove(): void {
     this._cleanup();
   }
 
-  _onChange(editor) {
+  _onChange(editor): void {
     let newVal = editor.getValue();
     this.args.named.onInput(newVal);
     this.args.named.value = newVal;
   }
 
-  _setup() {
+  _setup(): void {
     if (!this.element) {
       throw new Error('CodeMirror modifier has no element');
     }
@@ -50,9 +51,21 @@ export default class CodeMirrorModifier extends Modifier<Args> {
       this.element.id = guidFor(this.element);
     }
 
+    const _PRESET_DEFAULTS = {
+      theme: 'monokai',
+      lineNumbers: true,
+      cursorBlinkRate: 500,
+      matchBrackets: true,
+      autoCloseBrackets: true,
+      styleActiveLine: true,
+    };
+
     let editor = codemirror(
       this.element,
-      Object.assign({ value: this.args.named.value ? this.args.named.value : '' }, this.args.named.options)
+      Object.assign(
+        { value: this.args.named.value ? this.args.named.value : '' },
+        this.args.named.options ? this.args.named.options : _PRESET_DEFAULTS
+      )
     );
 
     editor.on('change', (editor) => {
@@ -65,18 +78,9 @@ export default class CodeMirrorModifier extends Modifier<Args> {
 
     this._editor = editor;
     this._editor.setOption('mode', 'waypointHCL');
-
-    if (!this.args.named.options) {
-      this._editor.setOption('theme', 'monokai');
-      this._editor.setOption('lineNumbers', true);
-      this._editor.setOption('cursorBlinkRate', 500);
-      this._editor.setOption('matchBrackets', true);
-      this._editor.setOption('autoCloseBrackets', true);
-      this._editor.setOption('styleActiveLine', true);
-    }
   }
 
-  _cleanup() {
+  _cleanup(): void {
     if (this.cmService) {
       this.cmService.unregisterInstance(this.element.id);
     }
