@@ -47,7 +47,7 @@ module('Integration | Modifier | code-mirror', function (hooks) {
 
   test('it renders user-specified options', async function (assert) {
     this.set('value', '');
-    this.set('onInput', (value: string) => {});
+    this.set('onInput', () => {});
     this.set('options', {
       lineNumbers: false,
     });
