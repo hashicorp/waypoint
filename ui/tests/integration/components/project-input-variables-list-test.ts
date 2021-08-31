@@ -2,6 +2,7 @@ import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
 import { render } from '@ember/test-helpers';
+import { TestContext } from 'ember-test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import { create, collection, clickable, isPresent, fillable, text } from 'ember-cli-page-object';
 
@@ -25,6 +26,11 @@ const page = create({
 module('Integration | Component | project-input-variables-list', function (hooks) {
   setupRenderingTest(hooks);
   setupMirage(hooks);
+
+  hooks.beforeEach(function (this: TestContext) {
+    // We have to register any types we expect to use in this component
+    this.owner.lookup('service:flash-messages').registerTypes(['success', 'error']);
+  });
 
   test('it renders', async function (assert) {
     let dbproj = await this.server.create('project', 'with-input-variables', { name: 'Proj1' });
