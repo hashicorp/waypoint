@@ -30,7 +30,7 @@ export default class ProjectInputVariablesListComponent extends Component<Variab
     this.variable = variable;
     this.isEditing = isEditing;
     this.isCreating = isCreating;
-    this.storeInitialVariable();
+    this.initialVariable = JSON.parse(JSON.stringify(this.variable));
   }
 
   get isHcl(): boolean {
