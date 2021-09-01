@@ -1,10 +1,18 @@
-## unreleased
-
-FEATURES:
+## 0.5.1 (August 19, 2021)
 
 IMPROVEMENTS:
 
+* cli/status: Display '(unknown)' when the time a status report was generated is
+not known [[GH-2047](https://github.com/hashicorp/waypoint/issues/2047)]
+* cli/uninstall: Remove hard requirement on platform flag, attempt to read server
+platform from server context. Platform flag overrides anything set in a server
+platform context [[GH-2052](https://github.com/hashicorp/waypoint/issues/2052)]
+
 BUG FIXES:
+
+* plugin/aws/alb: Always set the generated time for a status report [[GH-2048](https://github.com/hashicorp/waypoint/issues/2048)]
+* plugin/aws/ecs: Fix destroy non-latest deployments in ECS [[GH-2054](https://github.com/hashicorp/waypoint/issues/2054)]
+* ui: Prevent deletion of git/input variable settings when saving the other [[GH-2057](https://github.com/hashicorp/waypoint/issues/2057)]
 
 
 ## 0.5.0 (August 12, 2021)
