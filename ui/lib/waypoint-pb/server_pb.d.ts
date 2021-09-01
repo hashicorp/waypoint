@@ -19,6 +19,54 @@ export namespace UI {
   export type AsObject = {
   }
 
+  export class GetProjectRequest extends jspb.Message {
+    getProject(): Ref.Project | undefined;
+    setProject(value?: Ref.Project): GetProjectRequest;
+    hasProject(): boolean;
+    clearProject(): GetProjectRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): GetProjectRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: GetProjectRequest): GetProjectRequest.AsObject;
+    static serializeBinaryToWriter(message: GetProjectRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): GetProjectRequest;
+    static deserializeBinaryFromReader(message: GetProjectRequest, reader: jspb.BinaryReader): GetProjectRequest;
+  }
+
+  export namespace GetProjectRequest {
+    export type AsObject = {
+      project?: Ref.Project.AsObject,
+    }
+  }
+
+
+  export class GetProjectResponse extends jspb.Message {
+    getProject(): Project | undefined;
+    setProject(value?: Project): GetProjectResponse;
+    hasProject(): boolean;
+    clearProject(): GetProjectResponse;
+
+    getLatestInitJob(): Job | undefined;
+    setLatestInitJob(value?: Job): GetProjectResponse;
+    hasLatestInitJob(): boolean;
+    clearLatestInitJob(): GetProjectResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): GetProjectResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: GetProjectResponse): GetProjectResponse.AsObject;
+    static serializeBinaryToWriter(message: GetProjectResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): GetProjectResponse;
+    static deserializeBinaryFromReader(message: GetProjectResponse, reader: jspb.BinaryReader): GetProjectResponse;
+  }
+
+  export namespace GetProjectResponse {
+    export type AsObject = {
+      project?: Project.AsObject,
+      latestInitJob?: Job.AsObject,
+    }
+  }
+
+
   export class ListDeploymentsRequest extends jspb.Message {
     getApplication(): Ref.Application | undefined;
     setApplication(value?: Ref.Application): ListDeploymentsRequest;

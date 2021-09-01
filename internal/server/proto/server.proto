@@ -343,6 +343,9 @@ service Waypoint {
   // a combination of calls to non-UI endpoints.
   //----------------------------------------------------------------------
 
+  // Get a given project with useful related records.
+  rpc UI_GetProject(UI.GetProjectRequest) returns (UI.GetProjectResponse);
+
   // List deployments for a given application.
   rpc UI_ListDeployments(UI.ListDeploymentsRequest) returns (UI.ListDeploymentsResponse);
 
@@ -354,6 +357,15 @@ service Waypoint {
 * UI
 ********************************************************************/
 message UI {
+  message GetProjectRequest {
+    Ref.Project project = 1;
+  }
+
+  message GetProjectResponse {
+    Project project = 1;
+    Job latest_init_job = 2;
+  }
+
 
   message ListDeploymentsRequest {
     // Application that the deployments belong to.
