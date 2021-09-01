@@ -10,6 +10,7 @@ const page = create({
   variablesList: collection('[data-test-config-variables-list-item]', {
     dropdown: clickable('[data-test-config-variables-dropdown]'),
     dropdownEdit: clickable('[data-test-config-variables-dropdown-edit]'),
+    hasDropDown: isPresent('[data-test-config-variables-dropdown]'),
     hasDropDownEdit: isPresent('[data-test-config-variables-dropdown-edit]'),
     dropdownDelete: clickable('[data-test-config-variables-dropdown-delete]'),
     varName: text('[data-test-config-variables-var-name]'),
@@ -93,8 +94,7 @@ module('Integration | Component | project-config-variables-list', function (hook
     assert.equal(page.variablesList.length, 4, 'the list contains all variables');
     await page.variablesList.objectAt(0).dropdown();
     assert.ok(page.variablesList.objectAt(0).hasDropDownEdit, 'Static Variable is editable');
-    await page.variablesList.objectAt(3).dropdown();
-    assert.notOk(page.variablesList.objectAt(3).hasDropDownEdit, 'Dynamic Variable is not editable');
+    assert.notOk(page.variablesList.objectAt(3).hasDropDown, 'Dynamic Variable is not editable or deletable');
   });
   // test('internal variables', async function (assert) {});
   // test('nameIsPath works', async function (assert) {});

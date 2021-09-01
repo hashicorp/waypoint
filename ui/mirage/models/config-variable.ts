@@ -10,6 +10,8 @@ export default Model.extend({
     // TODO: result.setProject();
     result.setName(this.name);
     result.setStatic(this.pb_static);
+    result.setInternal(this.internal);
+    result.setNameIsPath(this.nameIsPath);
     if (this.dynamic) {
       let dynamicVal = new ConfigVar.DynamicVal();
       dynamicVal.setFrom(this.dynamic.from);
