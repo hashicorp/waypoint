@@ -1,0 +1,6 @@
+```release-note:improvement
+core: Automatically remotely init projects with a Git data source
+```
+```release-note:improvement
+ui: Display project remote initialization state
+```
