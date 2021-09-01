@@ -120,7 +120,7 @@ func TestJobCreate_singleton(t *testing.T) {
 
 		// Assign and complete A
 		{
-			job, err := s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"}, true)
+			job, err := s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
 			require.NoError(err)
 			require.NotNil(job)
 			require.Equal("A", job.Id)
@@ -180,7 +180,7 @@ func TestJobCreate_singleton(t *testing.T) {
 
 		// Assign and complete A
 		{
-			job, err := s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"}, true)
+			job, err := s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
 			require.NoError(err)
 			require.NotNil(job)
 
@@ -237,7 +237,7 @@ func TestJobAssign(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -249,13 +249,13 @@ func TestJobAssign(t *testing.T) {
 		// Should block if requesting another since none exist
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		job, err = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"}, true)
+		job, err = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
 		require.Error(err)
 		require.Nil(job)
 		require.Equal(ctx.Err(), err)
 
 		// Should not block if requested
-		job, err = s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, false)
+		job, err = s.JobPeekForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.Nil(job)
 	})
@@ -276,7 +276,7 @@ func TestJobAssign(t *testing.T) {
 
 		// Assign it, we should get this build
 		{
-			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 			require.NoError(err)
 			require.NotNil(job)
 			require.Equal("A", job.Id)
@@ -291,7 +291,7 @@ func TestJobAssign(t *testing.T) {
 			doneCh := make(chan struct{})
 			go func() {
 				defer close(doneCh)
-				job, jerr = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"}, true)
+				job, jerr = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
 			}()
 
 			// We should be blocking
@@ -352,7 +352,7 @@ func TestJobAssign(t *testing.T) {
 
 		// Assign it, we should get this build
 		{
-			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 			require.NoError(err)
 			require.NotNil(job)
 			require.Equal("A", job.Id)
@@ -367,7 +367,7 @@ func TestJobAssign(t *testing.T) {
 			doneCh := make(chan struct{})
 			go func() {
 				defer close(doneCh)
-				job, jerr = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"}, true)
+				job, jerr = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
 			}()
 
 			// We should be blocking
@@ -430,7 +430,7 @@ func TestJobAssign(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job1, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job1, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job1)
 		require.Equal("A", job1.Id)
@@ -444,7 +444,7 @@ func TestJobAssign(t *testing.T) {
 			doneCh := make(chan struct{})
 			go func() {
 				defer close(doneCh)
-				job, jerr = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"}, true)
+				job, jerr = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
 			}()
 
 			// We should be blocking
@@ -492,7 +492,7 @@ func TestJobAssign(t *testing.T) {
 
 		// Assign it, we should get build A then B
 		{
-			job, err := s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"}, true)
+			job, err := s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
 			require.NoError(err)
 			require.NotNil(job)
 			require.Equal("A", job.Id)
@@ -501,7 +501,7 @@ func TestJobAssign(t *testing.T) {
 			require.NoError(s.JobComplete(job.Id, nil, nil))
 		}
 		{
-			job, err := s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"}, true)
+			job, err := s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
 			require.NoError(err)
 			require.NotNil(job)
 			require.Equal("B", job.Id)
@@ -540,7 +540,7 @@ func TestJobAssign(t *testing.T) {
 		// Assign for R_B, which should get B since it won't match the earlier
 		// assignment target.
 		{
-			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_B"}, true)
+			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_B"})
 			require.NoError(err)
 			require.NotNil(job)
 			require.Equal("B", job.Id)
@@ -551,7 +551,7 @@ func TestJobAssign(t *testing.T) {
 
 		// Assign for R_A, which should get A since it matches the target.
 		{
-			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 			require.NoError(err)
 			require.NotNil(job)
 			require.Equal("A", job.Id)
@@ -588,7 +588,7 @@ func TestJobAssign(t *testing.T) {
 			doneCh := make(chan struct{})
 			go func() {
 				defer close(doneCh)
-				s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"}, true)
+				s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
 			}()
 
 			// We should be blocking
@@ -617,7 +617,7 @@ func TestJobAssign(t *testing.T) {
 		// Should block because none direct assign
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		job, err := s.JobAssignForRunner(ctx, r, true)
+		job, err := s.JobAssignForRunner(ctx, r)
 		require.Error(err)
 		require.Nil(job)
 		require.Equal(ctx.Err(), err)
@@ -635,7 +635,7 @@ func TestJobAssign(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err = s.JobAssignForRunner(context.Background(), r, true)
+		job, err = s.JobAssignForRunner(context.Background(), r)
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("B", job.Id)
@@ -655,7 +655,7 @@ func TestJobAck(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -685,7 +685,7 @@ func TestJobAck(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -720,7 +720,7 @@ func TestJobAck(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -752,7 +752,7 @@ func TestJobComplete(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -787,7 +787,7 @@ func TestJobComplete(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -962,7 +962,7 @@ func TestJobCancel(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -990,7 +990,7 @@ func TestJobCancel(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -1019,7 +1019,7 @@ func TestJobCancel(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -1063,7 +1063,7 @@ func TestJobCancel(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -1105,7 +1105,7 @@ func TestJobHeartbeat(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -1141,7 +1141,7 @@ func TestJobHeartbeat(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -1204,7 +1204,7 @@ func TestJobHeartbeat(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -1275,7 +1275,7 @@ func TestJobHeartbeat(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -1341,7 +1341,7 @@ func TestJobUpdateRef(t *testing.T) {
 		})))
 
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"}, true)
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
