@@ -56,7 +56,6 @@ func (s *service) RunnerGetDeploymentConfig(
 	}, nil
 }
 
-// TODO: test
 func (s *service) RunnerConfig(
 	srv pb.Waypoint_RunnerConfigServer,
 ) error {
