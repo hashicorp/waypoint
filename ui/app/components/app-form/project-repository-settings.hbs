@@ -220,8 +220,8 @@
             spellcheck="false"
             rows="14"
             value={{this.decodedWaypointHcl}}
-            required={{this.this.serverHcl}}
-            {{on "input" (fn this.setWaypointHcl)}}
+            required={{this.serverHcl}}
+            {{on "input" (this.setWaypointHcl)}}
           />
         </div>
       {{else}}
