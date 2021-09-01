@@ -877,6 +877,11 @@ func (p *Platform) resourceServiceDestroy(
 		Service: &state.Arn,
 	})
 	if err != nil {
+		if awserr, ok := err.(awserr.Error); ok && awserr.Code() == "ServiceNotFoundException" {
+			s.Update("Service does not exist - it must have already been deleted. (ARN: %q)", state.Arn)
+			s.Done()
+			return nil
+		}
 		return status.Errorf(codes.Internal, "failed to delete ECS cluster %s (ARN: %q): %s", state.Name, state.Arn, err)
 	}
 
@@ -1227,6 +1232,7 @@ func (p *Platform) resourceTargetGroupDestroy(
 		TargetGroupArn: &state.Arn,
 	})
 	if err != nil {
+		// This doesn't seem to return an error if the target group does not exist.
 		return status.Errorf(codes.Internal, "failed to delete target group %s (ARN: %q): %s", state.Name, state.Arn, err)
 	}
 
