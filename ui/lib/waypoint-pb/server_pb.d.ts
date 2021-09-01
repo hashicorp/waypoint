@@ -2216,6 +2216,11 @@ export class Job extends jspb.Message {
   hasStopTask(): boolean;
   clearStopTask(): Job;
 
+  getInit(): Job.InitOp | undefined;
+  setInit(value?: Job.InitOp): Job;
+  hasInit(): boolean;
+  clearInit(): Job;
+
   getState(): Job.State;
   setState(value: Job.State): Job;
 
@@ -2308,6 +2313,7 @@ export namespace Job {
     statusReport?: Job.StatusReportOp.AsObject,
     startTask?: Job.StartTaskLaunchOp.AsObject,
     stopTask?: Job.StopTaskLaunchOp.AsObject,
+    init?: Job.InitOp.AsObject,
     state: Job.State,
     assignedRunner?: Ref.RunnerId.AsObject,
     queueTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
@@ -2387,6 +2393,11 @@ export namespace Job {
     hasStartTask(): boolean;
     clearStartTask(): Result;
 
+    getInit(): Job.InitResult | undefined;
+    setInit(value?: Job.InitResult): Result;
+    hasInit(): boolean;
+    clearInit(): Result;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Result.AsObject;
     static toObject(includeInstance: boolean, msg: Result): Result.AsObject;
@@ -2410,6 +2421,7 @@ export namespace Job {
       poll?: Job.PollResult.AsObject,
       statusReport?: Job.StatusReportResult.AsObject,
       startTask?: Job.StartTaskResult.AsObject,
+      init?: Job.InitResult.AsObject,
     }
   }
 
@@ -3404,6 +3416,36 @@ export namespace Job {
   }
 
 
+  export class InitOp extends jspb.Message {
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): InitOp.AsObject;
+    static toObject(includeInstance: boolean, msg: InitOp): InitOp.AsObject;
+    static serializeBinaryToWriter(message: InitOp, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): InitOp;
+    static deserializeBinaryFromReader(message: InitOp, reader: jspb.BinaryReader): InitOp;
+  }
+
+  export namespace InitOp {
+    export type AsObject = {
+    }
+  }
+
+
+  export class InitResult extends jspb.Message {
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): InitResult.AsObject;
+    static toObject(includeInstance: boolean, msg: InitResult): InitResult.AsObject;
+    static serializeBinaryToWriter(message: InitResult, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): InitResult;
+    static deserializeBinaryFromReader(message: InitResult, reader: jspb.BinaryReader): InitResult;
+  }
+
+  export namespace InitResult {
+    export type AsObject = {
+    }
+  }
+
+
   export class QueueProjectOp extends jspb.Message {
     getJobTemplate(): Job | undefined;
     setJobTemplate(value?: Job): QueueProjectOp;
@@ -3500,6 +3542,7 @@ export namespace Job {
     STATUS_REPORT = 65,
     START_TASK = 66,
     STOP_TASK = 67,
+    INIT = 68,
   }
 }
 
@@ -4216,6 +4259,9 @@ export class Runner extends jspb.Message {
   getByIdOnly(): boolean;
   setByIdOnly(value: boolean): Runner;
 
+  getOdr(): boolean;
+  setOdr(value: boolean): Runner;
+
   getComponentsList(): Array<Component>;
   setComponentsList(value: Array<Component>): Runner;
   clearComponentsList(): Runner;
@@ -4233,6 +4279,7 @@ export namespace Runner {
   export type AsObject = {
     id: string,
     byIdOnly: boolean,
+    odr: boolean,
     componentsList: Array<Component.AsObject>,
   }
 }
@@ -4311,6 +4358,11 @@ export class RunnerConfig extends jspb.Message {
   clearConfigVarsList(): RunnerConfig;
   addConfigVars(value?: ConfigVar, index?: number): ConfigVar;
 
+  getConfigSourcesList(): Array<ConfigSource>;
+  setConfigSourcesList(value: Array<ConfigSource>): RunnerConfig;
+  clearConfigSourcesList(): RunnerConfig;
+  addConfigSources(value?: ConfigSource, index?: number): ConfigSource;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): RunnerConfig.AsObject;
   static toObject(includeInstance: boolean, msg: RunnerConfig): RunnerConfig.AsObject;
@@ -4322,6 +4374,7 @@ export class RunnerConfig extends jspb.Message {
 export namespace RunnerConfig {
   export type AsObject = {
     configVarsList: Array<ConfigVar.AsObject>,
+    configSourcesList: Array<ConfigSource.AsObject>,
   }
 }
 
