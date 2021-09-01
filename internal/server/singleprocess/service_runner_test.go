@@ -112,7 +112,7 @@ func TestServiceRunnerConfig_odrScopedConfig(t *testing.T) {
 	{
 		resp, err := client.SetConfig(ctx, &pb.ConfigSetRequest{Variables: []*pb.ConfigVar{
 			// Global non-runner, should NOT appear
-			&pb.ConfigVar{
+			{
 				Target: &pb.ConfigVar_Target{
 					AppScope: &pb.ConfigVar_Target_Global{
 						Global: &pb.Ref_Global{},
@@ -124,7 +124,7 @@ func TestServiceRunnerConfig_odrScopedConfig(t *testing.T) {
 			},
 
 			// Global runner
-			&pb.ConfigVar{
+			{
 				Target: &pb.ConfigVar_Target{
 					AppScope: &pb.ConfigVar_Target_Global{
 						Global: &pb.Ref_Global{},
@@ -142,7 +142,7 @@ func TestServiceRunnerConfig_odrScopedConfig(t *testing.T) {
 			},
 
 			// Project-scoped
-			&pb.ConfigVar{
+			{
 				Target: &pb.ConfigVar_Target{
 					AppScope: &pb.ConfigVar_Target_Project{
 						Project: &pb.Ref_Project{
@@ -161,7 +161,7 @@ func TestServiceRunnerConfig_odrScopedConfig(t *testing.T) {
 				Name:  "pNo",
 				Value: &pb.ConfigVar_Static{Static: "value"},
 			},
-			&pb.ConfigVar{
+			{
 				Target: &pb.ConfigVar_Target{
 					AppScope: &pb.ConfigVar_Target_Project{
 						Project: &pb.Ref_Project{
