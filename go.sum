@@ -815,7 +815,6 @@ github.com/hashicorp/errwrap v0.0.0-20141028054710-7554cd9344ce/go.mod h1:YH+1FK
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY2I=
 github.com/hashicorp/errwrap v1.1.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
-github.com/hashicorp/go-argmapper v0.2.1/go.mod h1:WA3PocIo+40wf4ko3dRdL3DEgxIQB4qaqp+jVccLV1I=
 github.com/hashicorp/go-argmapper v0.2.3 h1:6+SvCTqd6aw+LMjyDVOUc6ANGXUYL65KPQs9I/ccH7E=
 github.com/hashicorp/go-argmapper v0.2.3/go.mod h1:WA3PocIo+40wf4ko3dRdL3DEgxIQB4qaqp+jVccLV1I=
 github.com/hashicorp/go-bexpr v0.1.10 h1:9kuI5PFotCboP3dkDYFr/wi0gg0QVbSNz5oFRpxn4uE=
@@ -913,8 +912,8 @@ github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef h1:YKouRHFf
 github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef/go.mod h1:cAGI4nVnEfAyMeqt9oB+Mase8DNn3qA/LDNHURiwssY=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9 h1:i9hzlv2SpmaNcQ8ZLGn01fp2Gqyejj0juVs7rYDgecE=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9/go.mod h1:ObgQSWSX9rsNofh16kctm6XxLW2QW1Ay6/9ris6T6DU=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210825204217-1a7f266544f8 h1:a4+rEwxpZbimrmMjPeaHQinxn7sripCZOSqoCIFWmSo=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210825204217-1a7f266544f8/go.mod h1:iq4+z9qAUubEa4I/wP8dw2XPhmur5lBcrr9O08ZfL0s=
+github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210901131310-99045552ce97 h1:LEQUPfA54OnVh2TDIA2J+5QFps8GlRYI+Q3v1kr3IW8=
+github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210901131310-99045552ce97/go.mod h1:pJSjBDgumtkMumNuLh4wDYiRk/acWo5tzyUEFCC4ugQ=
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20190923154419-df201c70410d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
