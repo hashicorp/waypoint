@@ -9,7 +9,7 @@ module('Integration | Modifier | code-mirror', function (hooks) {
   test('it renders', async function (assert) {
     let valueToChange = 'initial value in editor';
     this.set('value', valueToChange);
-    this.set('onInput', () => {});
+    this.set('onInput', () => null);
 
     await render(
       hbs`<div
@@ -40,6 +40,7 @@ module('Integration | Modifier | code-mirror', function (hooks) {
     let newValue = 'second value';
     await fillIn(textArea, newValue);
 
+    /* eslint-disable ember/no-get */
     assert.equal(this.get('value'), newValue);
     assert.dom('.CodeMirror-code').doesNotContainText(firstValue);
     assert.dom('.CodeMirror-code').matchesText(newValue);
@@ -47,9 +48,10 @@ module('Integration | Modifier | code-mirror', function (hooks) {
 
   test('it renders user-specified options', async function (assert) {
     this.set('value', '');
-    this.set('onInput', () => {});
+    this.set('onInput', () => null);
     this.set('options', {
       lineNumbers: false,
+      theme: 'default',
     });
 
     await render(hbs`<div {{code-mirror value=this.value onInput=this.onInput}}/>`); // without options
