@@ -119,7 +119,7 @@ func (s *service) RunnerConfig(
 	var job *pb.Job
 	if record.Odr {
 		// Get a job assignment for this runner, non-blocking
-		sjob, err := s.state.JobAssignForRunner(ctx, record, false)
+		sjob, err := s.state.JobPeekForRunner(ctx, record)
 		if err != nil {
 			return err
 		}
@@ -127,12 +127,6 @@ func (s *service) RunnerConfig(
 			return status.Errorf(codes.FailedPrecondition,
 				"no pending job for this on-demand runner. A pending job "+
 					"must be registered prior to registering the runner.")
-		}
-
-		// Nack the job cause we're not going to take it ourselves,
-		// the runner will later with JobStream.
-		if _, err := s.state.JobAck(sjob.Id, false); err != nil {
-			return err
 		}
 
 		// Set our job
@@ -217,7 +211,7 @@ func (s *service) RunnerJobStream(
 	}
 
 	// Get a job assignment for this runner
-	job, err := s.state.JobAssignForRunner(ctx, runner, true)
+	job, err := s.state.JobAssignForRunner(ctx, runner)
 	if err != nil {
 		return err
 	}
