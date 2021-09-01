@@ -23,6 +23,15 @@ func (s *service) UpsertProject(
 		return nil, err
 	}
 
+	if result.DataSource != nil && result.DataSource.GetGit() != nil {
+		// The project is connected to a data source so let’s
+		// try to queue some remote init operations to ensure the
+		// application list is populated and ready to work with.
+
+		// TODO: error handling
+		queueInitOps(s, ctx, result)
+	}
+
 	return &pb.UpsertProjectResponse{Project: result}, nil
 }
 
@@ -93,4 +102,39 @@ func (s *service) UpsertApplication(
 	}
 
 	return &pb.UpsertApplicationResponse{Application: app}, nil
+}
+
+func queueInitOps(s *service, ctx context.Context, project *pb.Project) error {
+	workspaces, err := s.state.WorkspaceList()
+
+	if err != nil {
+		return err
+	}
+
+	if len(workspaces) == 0 {
+		workspaces = append(workspaces, &pb.Workspace{Name: "default"})
+	}
+
+	for _, workspace := range workspaces {
+		_, err := s.QueueJob(ctx, &pb.QueueJobRequest{
+			Job: &pb.Job{
+				Application: &pb.Ref_Application{
+					Project: project.Name,
+				},
+				Workspace: &pb.Ref_Workspace{
+					Workspace: workspace.Name,
+				},
+				Operation: &pb.Job_Init{},
+				TargetRunner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Any{},
+				},
+			},
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
