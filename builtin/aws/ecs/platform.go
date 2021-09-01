@@ -1998,7 +1998,7 @@ func (p *Platform) resourceTaskRoleCreate(
 					RoleName:  &roleName,
 				})
 				if err != nil {
-					return status.Errorf(codes.Internal, "failed to attach policy (ARN: %q) to role (name: %q)", policyArn, roleName, err)
+					return status.Errorf(codes.Internal, "failed to attach policy (ARN: %q) to role (name: %q): %s", policyArn, roleName, err)
 				}
 			}
 		}
