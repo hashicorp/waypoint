@@ -27,4 +27,7 @@ message Resource {
   message Service {
     string name = 1;
   }
+  message Ingress {
+    string name = 1;
+  }
 }

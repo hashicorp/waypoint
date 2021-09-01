@@ -281,6 +281,53 @@ func (x *Resource_Service) GetName() string {
 	return ""
 }
 
+type Resource_Ingress struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (x *Resource_Ingress) Reset() {
+	*x = Resource_Ingress{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_waypoint_builtin_k8s_plugin_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Resource_Ingress) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Resource_Ingress) ProtoMessage() {}
+
+func (x *Resource_Ingress) ProtoReflect() protoreflect.Message {
+	mi := &file_waypoint_builtin_k8s_plugin_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Resource_Ingress.ProtoReflect.Descriptor instead.
+func (*Resource_Ingress) Descriptor() ([]byte, []int) {
+	return file_waypoint_builtin_k8s_plugin_proto_rawDescGZIP(), []int{2, 2}
+}
+
+func (x *Resource_Ingress) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
 var File_waypoint_builtin_k8s_plugin_proto protoreflect.FileDescriptor
 
 var file_waypoint_builtin_k8s_plugin_proto_rawDesc = []byte{
@@ -303,13 +350,15 @@ var file_waypoint_builtin_k8s_plugin_proto_rawDesc = []byte{
 	0x74, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f,
 	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79,
 	0x52, 0x0d, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x53, 0x74, 0x61, 0x74, 0x65, 0x22,
-	0x4b, 0x0a, 0x08, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x1a, 0x20, 0x0a, 0x0a, 0x44,
+	0x6a, 0x0a, 0x08, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x1a, 0x20, 0x0a, 0x0a, 0x44,
 	0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d,
 	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x1a, 0x1d, 0x0a,
 	0x07, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x42, 0x16, 0x5a, 0x14,
-	0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2f, 0x62, 0x75, 0x69, 0x6c, 0x74, 0x69, 0x6e,
-	0x2f, 0x6b, 0x38, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x1a, 0x1d, 0x0a, 0x07,
+	0x49, 0x6e, 0x67, 0x72, 0x65, 0x73, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x42, 0x16, 0x5a, 0x14, 0x77,
+	0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2f, 0x62, 0x75, 0x69, 0x6c, 0x74, 0x69, 0x6e, 0x2f,
+	0x6b, 0x38, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -324,18 +373,19 @@ func file_waypoint_builtin_k8s_plugin_proto_rawDescGZIP() []byte {
 	return file_waypoint_builtin_k8s_plugin_proto_rawDescData
 }
 
-var file_waypoint_builtin_k8s_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_waypoint_builtin_k8s_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_waypoint_builtin_k8s_plugin_proto_goTypes = []interface{}{
 	(*Deployment)(nil),          // 0: k8s.Deployment
 	(*Release)(nil),             // 1: k8s.Release
 	(*Resource)(nil),            // 2: k8s.Resource
 	(*Resource_Deployment)(nil), // 3: k8s.Resource.Deployment
 	(*Resource_Service)(nil),    // 4: k8s.Resource.Service
-	(*anypb.Any)(nil),           // 5: google.protobuf.Any
+	(*Resource_Ingress)(nil),    // 5: k8s.Resource.Ingress
+	(*anypb.Any)(nil),           // 6: google.protobuf.Any
 }
 var file_waypoint_builtin_k8s_plugin_proto_depIdxs = []int32{
-	5, // 0: k8s.Deployment.resource_state:type_name -> google.protobuf.Any
-	5, // 1: k8s.Release.resource_state:type_name -> google.protobuf.Any
+	6, // 0: k8s.Deployment.resource_state:type_name -> google.protobuf.Any
+	6, // 1: k8s.Release.resource_state:type_name -> google.protobuf.Any
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
@@ -409,6 +459,18 @@ func file_waypoint_builtin_k8s_plugin_proto_init() {
 				return nil
 			}
 		}
+		file_waypoint_builtin_k8s_plugin_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Resource_Ingress); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -416,7 +478,7 @@ func file_waypoint_builtin_k8s_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_waypoint_builtin_k8s_plugin_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
