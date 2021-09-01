@@ -292,9 +292,21 @@ func (s *State) JobById(id string, ws memdb.WatchSet) (*Job, error) {
 //
 // If ctx is provided and assignment has to block waiting for new jobs,
 // this will cancel when the context is done.
-func (s *State) JobAssignForRunner(ctx context.Context, r *pb.Runner) (*Job, error) {
+//
+// If block is true then this will block waiting for a job and the returned
+// job will never be nil if the error is nil. If block is false then this may
+// return a nil job if none is available immediately.
+func (s *State) JobAssignForRunner(ctx context.Context, r *pb.Runner, block bool) (*Job, error) {
+	var txn *memdb.Txn
+
 RETRY_ASSIGN:
-	txn := s.inmem.Txn(false)
+	// If our transaction is not nil that means this is a repeated time around.
+	// If we aren't blocking, return now.
+	if txn != nil && !block {
+		return nil, nil
+	}
+
+	txn = s.inmem.Txn(false)
 	defer txn.Abort()
 
 	// Turn our runner into a runner record so we can more efficiently assign
@@ -346,9 +358,11 @@ RETRY_ASSIGN:
 	// If we have a watch channel set that means we didn't find any
 	// results and we need to retry after waiting for changes.
 	if len(candidates) == 0 {
-		ws.WatchCtx(ctx)
-		if err := ctx.Err(); err != nil {
-			return nil, err
+		if block {
+			ws.WatchCtx(ctx)
+			if err := ctx.Err(); err != nil {
+				return nil, err
+			}
 		}
 
 		goto RETRY_ASSIGN
