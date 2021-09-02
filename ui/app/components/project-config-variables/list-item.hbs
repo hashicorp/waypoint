@@ -39,6 +39,7 @@
           <div class="pds-formField">
             <div class="pds-formFieldToggle">
               <XToggle
+
                 @showLabels={{true}}
                 @name="name-is-path"
                 @value={{this.variable.nameIsPath}}
@@ -47,9 +48,11 @@
                 <toggle.switch
                   @showLabels={{false}}
                   @name="name-path"
-                  data-test-config-variables-name-is-path-toggle
                   />
-                <toggle.label for="name-is-path">
+                <toggle.label
+                  data-test-config-variables-name-is-path-toggle
+                  for="name-is-path"
+                  @value={{not this.variable.nameIsPath}}>
                   <span class="pds-toggleLabel">
                     {{t "form.config_variables_settings.nameIsPath.label"}}
                   </span>
@@ -68,9 +71,11 @@
                 <toggle.switch
                   @showLabels={{false}}
                   @name="internal"
-                  data-test-config-variables-internal-toggle
                   />
-                <toggle.label for="internal">
+                <toggle.label
+                  data-test-config-variables-internal-toggle
+                  for="internal"
+                  @value={{not this.variable.internal}}>
                   <span class="pds-toggleLabel">
                     {{t "form.config_variables_settings.internal.label"}}
                   </span>

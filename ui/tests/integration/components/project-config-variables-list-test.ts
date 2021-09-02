@@ -1,7 +1,7 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
-import { render, pauseTest } from '@ember/test-helpers';
+import { render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import { create, collection, clickable, isPresent, fillable, text } from 'ember-cli-page-object';
 
@@ -74,9 +74,19 @@ module('Integration | Component | project-config-variables-list', function (hook
     await page.createButton();
     await page.varName('var_name');
     await page.varStatic('foozbarz');
+    await page.varNameIsPath();
+    await page.varInternal();
     await page.saveButton();
     assert.notOk(page.hasForm, 'Create Variable: the form disappears after creation');
     assert.equal(page.variablesList.length, 4, 'Create Variable: the list has the new variable');
+    assert.equal(page.variablesList.objectAt(0).varName, 'var_name', 'Var name is correct');
+    assert.equal(page.variablesList.objectAt(0).varValue, 'foozbarz', 'Var value is correct');
+    assert.equal(
+      page.variablesList.objectAt(0).varNameIsPath,
+      'true',
+      'name is path is set correctly is correct'
+    );
+    assert.equal(page.variablesList.objectAt(0).varInternal, 'true', 'internal is set correctly is correct');
   });
 
   test('only static variables are editable', async function (assert) {
