@@ -300,11 +300,9 @@ func (p *Platform) Deploy(
 				return err
 			}
 
-			if p.config.TaskRoleName != "" {
-				taskRole, err = p.SetupTaskRole(ctx, s, log, sess, src)
-				if err != nil {
-					return err
-				}
+			taskRole, err = p.SetupTaskRole(ctx, s, log, sess, src)
+			if err != nil {
+				return err
 			}
 
 			logGroup, err = p.SetupLogs(ctx, s, log, sess)
@@ -435,20 +433,90 @@ func (p *Platform) SetupTaskRole(ctx context.Context, s LifecycleStatus, L hclog
 
 	roleName := p.config.TaskRoleName
 
+	if roleName == "" && p.config.TaskRolePolicyArns == nil {
+		return "", nil
+	}
+
+	if roleName == "" {
+		roleName = app.App + "-task-role"
+	}
+
+	// role names have to be 64 characters or less, and the client side doesn't validate this.
+	if len(roleName) > 64 {
+		roleName = roleName[:64]
+		L.Debug("using a shortened value for role name due to AWS's length limits", "roleName", roleName)
+	}
+
 	L.Debug("attempting to retrieve existing role", "role-name", roleName)
 
 	queryInput := &iam.GetRoleInput{
 		RoleName: aws.String(roleName),
 	}
 
-	getOut, err := svc.GetRole(queryInput)
+	var roleArn string
+
+	getOut, err := svc.GetRoleWithContext(ctx, queryInput)
 	if err != nil {
-		s.Status("IAM role not found: %s", roleName)
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "NoSuchEntity":
+				L.Debug("creating new role")
+				s.Status("Creating IAM role: %s", roleName)
+
+				input := &iam.CreateRoleInput{
+					AssumeRolePolicyDocument: aws.String(rolePolicy),
+					Path:                     aws.String("/"),
+					RoleName:                 aws.String(roleName),
+				}
+
+				result, err := svc.CreateRoleWithContext(ctx, input)
+				if err != nil {
+					return "", err
+				}
+
+				roleArn = *result.Role.Arn
+			default:
+				return "", err
+			}
+		} else {
+			return "", err
+		}
+	} else {
+		roleArn = *getOut.Role.Arn
+	}
+
+	listOut, err := svc.ListAttachedRolePoliciesWithContext(ctx, &iam.ListAttachedRolePoliciesInput{
+		RoleName: &roleName,
+	})
+
+	if err != nil {
 		return "", err
 	}
 
-	s.Status("Found task IAM role to use: %s", roleName)
-	return *getOut.Role.Arn, nil
+	for _, aPolicy := range p.config.TaskRolePolicyArns {
+		found := false
+		for _, policy := range listOut.AttachedPolicies {
+			if aPolicy == *policy.PolicyArn {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			_, err = svc.AttachRolePolicyWithContext(ctx, &iam.AttachRolePolicyInput{
+				PolicyArn: &aPolicy,
+				RoleName:  &roleName,
+			})
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+
+	L.Debug("attached task role policy")
+
+	s.Update("Created IAM role: %s", roleName)
+	return roleArn, nil
 }
 
 func (p *Platform) SetupExecutionRole(ctx context.Context, s LifecycleStatus, L hclog.Logger, sess *session.Session, app *component.Source) (string, error) {
@@ -1523,6 +1591,9 @@ type Config struct {
 	// Name of the execution task IAM Role to associate with the ECS Service
 	ExecutionRoleName string `hcl:"execution_role_name,optional"`
 
+	// IAM Policy ARNs for attaching to task role
+	TaskRolePolicyArns []string `hcl:"task_role_policy_arns,optional"`
+
 	// Name of the task IAM role to associate with the ECS service
 	TaskRoleName string `hcl:"task_role_name,optional"`
 
@@ -1625,7 +1696,20 @@ deploy {
 
 	doc.SetField(
 		"task_role_name",
-		"the name of the task IAM role to assign",
+		"the name of the task IAM role to assign.",
+		docs.Summary(
+			"If no role exists and a one or more task role policies are requested,",
+			"a role with this name will be created.",
+		),
+	)
+
+	doc.SetField(
+		"task_role_policy_arns",
+		"IAM Policy arns for attaching to the task role.",
+		docs.Summary(
+			"If no task role name is specified a task role with a default name",
+			"will be created for this app, and these policies will be attached.",
+		),
 	)
 
 	doc.SetField(

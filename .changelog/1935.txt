@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/aws: add ability to pass IAM Policy ARNs for attaching to task role
+```
