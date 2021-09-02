@@ -1,11 +1,10 @@
 import Modifier from 'ember-modifier';
 import codemirror from 'codemirror';
 
-import waypointHclMode from './utils/waypointHclMode';
+import './utils/register-waypoint-hcl-mode';
 import 'codemirror/addon/edit/matchbrackets';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/selection/active-line';
-import 'codemirror/addon/mode/simple';
 
 const _PRESET_DEFAULTS: codemirror.EditorConfiguration = {
   theme: 'monokai',
@@ -20,12 +19,9 @@ interface Args {
   named: {
     value: string;
     onInput: (value: string) => void;
-    options: Record<string, unknown>;
+    options?: Record<string, unknown>;
   };
 }
-
-// call to create the CodeMirror waypoint HCL mode for syntax highlighting
-waypointHclMode();
 export default class CodeMirrorModifier extends Modifier<Args> {
   _editor!: codemirror.Editor;
 
