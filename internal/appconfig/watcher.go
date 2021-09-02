@@ -61,6 +61,11 @@ type Watcher struct {
 	// config sourcing.
 	plugins map[string]*plugin.Instance
 
+	// originalEnv is a set of original environment variables. If an
+	// env var is unset but is available here, then we use this original value
+	// instead.
+	originalEnv []string
+
 	// inSourceCh and inVarCh are the channels that are used to send
 	// updated sets of configuration sources and variables to the watch loop.
 	inSourceCh chan []*pb.ConfigSource
@@ -460,7 +465,9 @@ func (w *Watcher) watcher(
 			// If we didn't send the env previously OR the new env is different
 			// than the old env, then we send these env vars.
 			if !prevEnvSent || !reflect.DeepEqual(prevEnv, newEnv) {
+				newEnv, deletedEnv := calculateDeletedEnv(newEnv, prevEnv, w.originalEnv)
 				uc.EnvVars = newEnv
+				uc.DeletedEnvVars = deletedEnv
 				uc.UpdatedEnv = true
 			}
 
@@ -920,4 +927,50 @@ func expandStaticVars(
 	}
 
 	return envVars, files
+}
+
+// calcluateDeletedEnv calculates the env vars that are deleted. This also
+// can take a list of original env vars and use that to update the new env
+// to include original values for unset. If you only want to know what is unset,
+// then set originalEnv to nil.
+func calculateDeletedEnv(newEnv, prevEnv, originalEnv []string) ([]string, []string) {
+	newMap := envListToMap(newEnv)
+	prevMap := envListToMap(prevEnv)
+	origMap := envListToMap(originalEnv)
+
+	// deleted is the list of env var keys that are full unset
+	var deleted []string
+
+	// Find all the values that are removed from the new map.
+	for k := range prevMap {
+		// If we have it in the new map, then we still have it. Not deleted.
+		if _, ok := newMap[k]; ok {
+			continue
+		}
+
+		// If we have it in the original, then use that value.
+		if v, ok := origMap[k]; ok {
+			newEnv = append(newEnv, k+"="+v)
+			continue
+		}
+
+		// It is deleted.
+		deleted = append(deleted, k)
+	}
+
+	return newEnv, deleted
+}
+
+func envListToMap(v []string) map[string]string {
+	result := map[string]string{}
+	for _, str := range v {
+		idx := strings.Index(str, "=")
+		if idx == -1 {
+			continue
+		}
+
+		result[str[:idx]] = str[idx+1:]
+	}
+
+	return result
 }
