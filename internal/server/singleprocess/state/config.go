@@ -12,8 +12,6 @@ import (
 	"github.com/mitchellh/pointerstructure"
 	"github.com/zclconf/go-cty/cty"
 	bolt "go.etcd.io/bbolt"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/config/funcs"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -102,14 +100,6 @@ func (s *State) configSet(
 			return err
 		}
 	} else {
-		// If this is a runner, we don't support dynamic values currently.
-		if value.Target.Runner != nil {
-			if _, ok := value.Value.(*pb.ConfigVar_Static); !ok {
-				return status.Errorf(codes.FailedPrecondition,
-					"runner-scoped configuration must be static")
-			}
-		}
-
 		if err := dbPut(b, id, value); err != nil {
 			return err
 		}
