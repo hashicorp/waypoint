@@ -15,12 +15,16 @@ const page = create({
     dropdownDelete: clickable('[data-test-config-variables-dropdown-delete]'),
     varName: text('[data-test-config-variables-var-name]'),
     varValue: text('[data-test-config-variables-var-value]'),
+    varNameIsPath: text('[data-test-config-variables-var-name-is-path]'),
+    varInternal: text('[data-test-config-variables-var-internal]'),
   }),
   createButton: clickable('[data-test-config-variables-add-variable]'),
   cancelButton: clickable('[data-test-config-variables-edit-cancel]'),
   saveButton: clickable('[data-test-config-variables-edit-save]'),
   varName: fillable('[data-test-config-variables-var-name]'),
   varStatic: fillable('[data-test-config-variables-var-static]'),
+  varNameIsPath: clickable('[data-test-config-variables-name-is-path-toggle]'),
+  varInternal: clickable('[data-test-config-variables-internal-toggle]'),
 });
 
 module('Integration | Component | project-config-variables-list', function (hooks) {

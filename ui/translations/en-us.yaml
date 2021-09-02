@@ -85,6 +85,8 @@ form:
     variable_name: 'Key'
     variable_name_placeholder: 'var_key'
     variable_value: 'Value'
+    variable_internal: 'Internal'
+    variable_nameIsPath: 'Name as path'
     variable_value_placeholder: 'var_value'
     nameIsPath:
       label: "Use variable name as file path"

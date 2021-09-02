@@ -6,35 +6,36 @@
           <h4>{{t "form.config_variables_settings.title"}}</h4>
         </div>
         <fieldset class="pds-formFieldSet">
-          <div class="pds-formField">
-            <label for="config-variable-name" class="pds-fieldName">
-              {{t "form.config_variables_settings.variable_name"}}
-            </label>
-            <Pds::Input
-              @type="text"
-              data-test-config-variables-var-name
-              id="config-variable-name"
-              placeholder={{t "form.config_variables_settings.variable_name_placeholder"}}
-              value={{this.variable.name}}
-              {{on "input" (pick "target.value" (set this "variable.name"))}}
-            />
-          </div>
-          <div class="pds-formField">
-            <label for="config-variable-value" class="pds-fieldName">
-              {{t "form.config_variables_settings.variable_value"}}
-            </label>
-            <div class="pds-formField__input-inline-toggle">
+          <div>
+            <div class="pds-formField">
+              <label for="config-variable-name" class="pds-fieldName">
+                {{t "form.config_variables_settings.variable_name"}}
+              </label>
               <Pds::Input
                 @type="text"
-                id="config-variable-value"
-                data-test-config-variables-var-static
-                placeholder={{t "form.config_variables_settings.variable_value_placeholder"}}
-                value={{this.variable.pb_static}}
-                {{on "input" (pick "target.value" (set this "variable.pb_static"))}}
+                data-test-config-variables-var-name
+                id="config-variable-name"
+                placeholder={{t "form.config_variables_settings.variable_name_placeholder"}}
+                value={{this.variable.name}}
+                {{on "input" (pick "target.value" (set this "variable.name"))}}
               />
             </div>
+            <div class="pds-formField">
+              <label for="config-variable-value" class="pds-fieldName">
+                {{t "form.config_variables_settings.variable_value"}}
+              </label>
+              <div class="pds-formField__input-inline-toggle">
+                <Pds::Input
+                  @type="text"
+                  id="config-variable-value"
+                  data-test-config-variables-var-static
+                  placeholder={{t "form.config_variables_settings.variable_value_placeholder"}}
+                  value={{this.variable.pb_static}}
+                  {{on "input" (pick "target.value" (set this "variable.pb_static"))}}
+                />
+              </div>
+            </div>
           </div>
-          <hr/>
           <div class="pds-formField">
             <div class="pds-formFieldToggle">
               <XToggle
@@ -46,6 +47,7 @@
                 <toggle.switch
                   @showLabels={{false}}
                   @name="name-path"
+                  data-test-config-variables-name-is-path-toggle
                   />
                 <toggle.label for="name-is-path">
                   <span class="pds-toggleLabel">
@@ -66,6 +68,7 @@
                 <toggle.switch
                   @showLabels={{false}}
                   @name="internal"
+                  data-test-config-variables-internal-toggle
                   />
                 <toggle.label for="internal">
                   <span class="pds-toggleLabel">
@@ -108,6 +111,8 @@
           <pre><code>dynamic via {{this.variable.dynamic.from}}</code></pre>
         {{/if}}
       </span>
+      <span class="variables--list-item-internal" data-test-config-variables-var-internal><pre><code>{{this.variable.internal}}</code></pre></span>
+      <span class="variables--list-item-name-is-path" data-test-config-variables-var-name-is-path><pre><code>{{this.variable.nameIsPath}}</code></pre></span>
       {{#if this.isEditable}}
         <Pds::Dropdown @align="right" as |D|>
           <D.Trigger
