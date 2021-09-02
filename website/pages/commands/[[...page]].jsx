@@ -8,6 +8,7 @@ import {
 const NAV_DATA_FILE = 'data/commands-nav-data.json'
 const CONTENT_DIR = 'content/commands'
 const basePath = 'commands'
+const product = { slug: productSlug, name: productName }
 
 export default function DocsLayout(props) {
   return (
@@ -23,6 +24,8 @@ export async function getStaticPaths() {
   return {
     fallback: false,
     paths: await generateStaticPaths({
+      basePath,
+      product,
       navDataFile: NAV_DATA_FILE,
       localContentDir: CONTENT_DIR,
     }),
@@ -32,10 +35,12 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }) {
   return {
     props: await generateStaticProps({
+      basePath,
+      product,
       navDataFile: NAV_DATA_FILE,
       localContentDir: CONTENT_DIR,
-      product: { name: productName, slug: productSlug },
       params,
     }),
+    revalidate: 10,
   }
 }

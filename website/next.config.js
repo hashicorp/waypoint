@@ -24,11 +24,7 @@ if (process.env.VERCEL_GIT_COMMIT_REF == 'main') {
 
 module.exports = withHashicorp({
   defaultLayout: true,
-  transpileModules: [
-    'is-absolute-url',
-    '@hashicorp/react-.*',
-    '@hashicorp/versioned-docs',
-  ],
+  transpileModules: ['is-absolute-url'],
 })({
   redirects() {
     return redirects
@@ -42,5 +38,6 @@ module.exports = withHashicorp({
     SEGMENT_WRITE_KEY: '9mlIVayJbNtJW2EOdAFKHNKcdLAgEDlV',
     BUGSNAG_CLIENT_KEY: '98922c3298fff145a2d154ad2e6d4e6a',
     BUGSNAG_SERVER_KEY: '45f0129bdbe991d7fdcd0338a1a4f1d7',
+    ENABLE_REMOTE_CONTENT: true,
   },
 })

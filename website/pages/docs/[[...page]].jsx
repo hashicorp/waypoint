@@ -10,6 +10,7 @@ import NestedNode from 'components/nested-node'
 const NAV_DATA_FILE = 'data/docs-nav-data.json'
 const CONTENT_DIR = 'content/docs'
 const basePath = 'docs'
+const product = { slug: productSlug, name: productName }
 const additionalComponents = { Placement, NestedNode }
 
 export default function DocsLayout(props) {
@@ -27,6 +28,8 @@ export async function getStaticPaths() {
   return {
     fallback: false,
     paths: await generateStaticPaths({
+      basePath,
+      product,
       navDataFile: NAV_DATA_FILE,
       localContentDir: CONTENT_DIR,
     }),
@@ -36,11 +39,13 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }) {
   return {
     props: await generateStaticProps({
+      basePath,
+      product,
       navDataFile: NAV_DATA_FILE,
       localContentDir: CONTENT_DIR,
-      product: { name: productName, slug: productSlug },
       params,
       additionalComponents,
     }),
+    revalidate: 10,
   }
 }
