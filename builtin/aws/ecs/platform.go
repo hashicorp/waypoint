@@ -1711,7 +1711,7 @@ func getSubnetsResource(
 	s.Update("Describing subnets")
 	desc, err := svc.DescribeSubnetsWithContext(ctx, describeSubnetsInput)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to describe subnets", err)
+		return nil, status.Errorf(codes.Internal, "failed to describe subnets: %s", err)
 	}
 
 	if len(desc.Subnets) == 0 {
