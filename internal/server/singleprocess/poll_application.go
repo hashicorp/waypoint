@@ -113,20 +113,14 @@ func (a *applicationPoll) buildPollJobs(
 
 	log.Trace("looking at latest deployment and release to generate status report on")
 	latestDeployment, err := a.state.DeploymentLatest(appRef, &pb.Ref_Workspace{Workspace: a.workspace})
-	if err != nil {
+	if err != nil && status.Code(err) != codes.NotFound {
 		// If the deployment isn't found, it's ok
-		s, ok := status.FromError(err)
-		if !ok && s.Code() != codes.NotFound {
-			return nil, err
-		}
+		return nil, err
 	}
 	latestRelease, err := a.state.ReleaseLatest(appRef, &pb.Ref_Workspace{Workspace: a.workspace})
-	if err != nil {
+	if err != nil && status.Code(err) != codes.NotFound {
 		// If the release isn't found, it's ok.
-		s, ok := status.FromError(err)
-		if !ok && s.Code() != codes.NotFound {
-			return nil, err
-		}
+		return nil, err
 	}
 	// Some platforms don't release, so we shouldn't error here if we at least got a deployment
 	if latestRelease == nil && latestDeployment == nil {
