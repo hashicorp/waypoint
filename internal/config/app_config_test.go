@@ -98,6 +98,40 @@ func TestConfigVars(t *testing.T) {
 				}
 			},
 		},
+
+		{
+			"workspace.hcl",
+			"",
+			func(t *testing.T, c *Config) {
+				require := require.New(t)
+
+				vars, err := c.Config.ConfigVars()
+				require.NoError(err)
+				require.Len(vars, 3)
+
+				{
+					v := vars[0]
+					require.Equal("direct", v.Name)
+					require.False(v.NameIsPath)
+					require.False(v.Internal)
+					require.Equal("V", v.Value.(*pb.ConfigVar_Static).Static)
+				}
+				{
+					v := vars[1]
+					require.Equal("extra", v.Name)
+					require.False(v.NameIsPath)
+					require.False(v.Internal)
+					require.Equal("v: V", v.Value.(*pb.ConfigVar_Static).Static)
+				}
+				{
+					v := vars[2]
+					require.Equal("value", v.Name)
+					require.False(v.NameIsPath)
+					require.True(v.Internal)
+					require.Equal("V", v.Value.(*pb.ConfigVar_Static).Static)
+				}
+			},
+		},
 	}
 
 	for _, tt := range cases {

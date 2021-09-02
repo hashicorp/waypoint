@@ -35,8 +35,24 @@ type genericConfig struct {
 	// Indicates a signal to send the application when config files change.
 	FileChangeSignal string `hcl:"file_change_signal,optional"`
 
+	// WorkspaceScoped are workspace-scoped config variables.
+	WorkspaceScoped []*scopedConfig `hcl:"workspace,block"`
+
 	ctx       *hcl.EvalContext    // ctx is the context to use when evaluating
 	scopeFunc func(*pb.ConfigVar) // scopeFunc should set the scope for the config var
+}
+
+// scopedConfig is used for the `workspace` and `label`-scoped config blocks
+// within genericConfig as a way to further scope configuration.
+type scopedConfig struct {
+	// Scope is the label for the block. This is reused for both workspace
+	// and label scoped variables so this could be either of those.
+	Scope string `hcl:",label"`
+
+	// Same as genericConfig, see there for docs.
+	InternalRaw hcl.Expression `hcl:"internal,optional"`
+	EnvRaw      hcl.Expression `hcl:"env,optional"`
+	FileRaw     hcl.Expression `hcl:"file,optional"`
 }
 
 func (c *genericConfig) ConfigVars() ([]*pb.ConfigVar, error) {
@@ -70,7 +86,7 @@ func (c *genericConfig) configVars() ([]*pb.ConfigVar, error) {
 
 	// sortVars performs a topological sort of the variables via references, so
 	// the pairs can be evaluated top to bottom safely.
-	pairs, err := c.sortVars(ctx)
+	pairs, err := c.sortTopLevelVars(ctx)
 	if err != nil {
 		return nil, err
 	}

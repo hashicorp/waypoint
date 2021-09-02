@@ -54,7 +54,26 @@ func (v *VariableLoopError) Error() string {
 // sortVars performs a topological sort on EnvRaw and InternalRaw. The sort
 // yields the pairs in most referenced to least referenced order. Meaning
 // that the if pair X references pair R, then R will be before X in the slice.
-func (c *genericConfig) sortVars(ctx *hcl.EvalContext) ([]*analyzedPair, error) {
+func (c *genericConfig) sortTopLevelVars(ctx *hcl.EvalContext) ([]*analyzedPair, error) {
+	return sortVars(ctx, []sortVarMap{
+		{Expr: c.EnvRaw, Prefix: "config.env."},
+		{Expr: c.InternalRaw, Prefix: "config.internal.", Internal: true},
+		{Expr: c.FileRaw, Prefix: "config.file.", Path: true},
+	})
+}
+
+// sortVarMap is used as an input to sortVars to specify a map of variables.
+type sortVarMap struct {
+	Expr     hcl.Expression // HCL map of vars
+	Prefix   string         // HCL prefix of the reference to this.
+	Internal bool           // True if an internal var
+	Path     bool           // True if a file var
+}
+
+// sortVars performs a topological sort on the given input maps and
+// yields the pairs in most referenced to least referenced order. Meaning
+// that the if pair X references pair R, then R will be before X in the slice.
+func sortVars(ctx *hcl.EvalContext, maps []sortVarMap) ([]*analyzedPair, error) {
 	// The algorithm used to perform the sort is Kahn's topological sorting algorithm.
 	// https://www.geeksforgeeks.org/topological-sorting-indegree-based-solution/
 	//
@@ -63,19 +82,8 @@ func (c *genericConfig) sortVars(ctx *hcl.EvalContext) ([]*analyzedPair, error) 
 	degrees := map[string]int{}
 	pairMap := map[string]*analyzedPair{}
 
-	maps := []struct {
-		expr     hcl.Expression
-		prefix   string
-		internal bool
-		path     bool
-	}{
-		{expr: c.EnvRaw, prefix: "config.env."},
-		{expr: c.InternalRaw, prefix: "config.internal.", internal: true},
-		{expr: c.FileRaw, prefix: "config.file.", path: true},
-	}
-
 	for _, m := range maps {
-		pairs, diags := hcl.ExprMap(m.expr)
+		pairs, diags := hcl.ExprMap(m.Expr)
 		if diags.HasErrors() {
 			continue
 		}
@@ -102,7 +110,7 @@ func (c *genericConfig) sortVars(ctx *hcl.EvalContext) ([]*analyzedPair, error) 
 			// We track the references using the "traversal" name, for instance
 			// config.env.blah. So we need to create this long name as the referenced
 			// name.
-			pubName := m.prefix + key
+			pubName := m.Prefix + key
 
 			var refs []string
 			for _, ref := range pair.Value.Variables() {
@@ -121,8 +129,8 @@ func (c *genericConfig) sortVars(ctx *hcl.EvalContext) ([]*analyzedPair, error) 
 				Pair:     pair,
 				Name:     key,
 				Refs:     refs,
-				Internal: m.internal,
-				Path:     m.path,
+				Internal: m.Internal,
+				Path:     m.Path,
 			}
 		}
 	}
