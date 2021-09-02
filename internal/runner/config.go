@@ -47,9 +47,7 @@ func (r *Runner) watchConfig(ctx context.Context, ch <-chan *pb.RunnerConfig) {
 		appconfig.WithNotify(appCfgCh),
 		appconfig.WithRefreshInterval(appConfigRefreshPeriod),
 		appconfig.WithOriginalEnv(os.Environ()),
-
-		// TODO: config plugins
-		// appconfig.WithPlugins(r.configPlugins),
+		appconfig.WithPlugins(r.configPlugins),
 	)
 	if err != nil {
 		log.Error("error starting app config watcher", "err", err)

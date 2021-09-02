@@ -88,6 +88,12 @@ type Runner struct {
 
 	acceptTimeout time.Duration
 
+	// configPlugins is the mapping of config source type to launched plugin.
+	// Note this is not currently configurable and we just statically set
+	// this to `plugin.ConfigSourcers`. Everything is set up so that
+	// in the future it can be configurable though.
+	configPlugins map[string]*plugin.Instance
+
 	// noopCh is used in tests only. This will cause any noop operations
 	// to block until this channel is closed.
 	noopCh <-chan struct{}
@@ -114,6 +120,9 @@ func New(opts ...Option) (*Runner, error) {
 
 	runner.runningCond = sync.NewCond(new(sync.Mutex))
 	runner.runningCtx, runner.runningCancel = context.WithCancel(context.Background())
+
+	// Setup our default config sourcers.
+	runner.configPlugins = plugin.ConfigSourcers
 
 	// Build our config
 	var cfg config
