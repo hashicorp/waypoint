@@ -42,12 +42,12 @@ func (c *genericConfig) ConfigVars() ([]*pb.ConfigVar, error) {
 		return nil, nil
 	}
 
-	return c.envVars()
+	return c.configVars()
 }
 
-var hclEscaper = strings.NewReplacer("${", "$${", "%{", "%%{")
-
-func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
+// configVars collects all of the configured values into a set of
+// ConfigVar values that can be sent to the API server.
+func (c *genericConfig) configVars() ([]*pb.ConfigVar, error) {
 	ctx := c.ctx
 	ctx = appendContext(ctx, &hcl.EvalContext{
 		Functions: map[string]function.Function{
@@ -172,6 +172,9 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 }
 
 var (
+	// hclEscaper is used to escape HCL in our config values.
+	hclEscaper = strings.NewReplacer("${", "$${", "%{", "%%{")
+
 	typeDynamicConfig = cty.Capsule("configval",
 		reflect.TypeOf((*pb.ConfigVar_DynamicVal)(nil)).Elem())
 

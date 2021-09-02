@@ -27,11 +27,18 @@ func renderTraversal(t hcl.Traversal) (string, error) {
 // Captures the information about a variable calculated during sort to be used
 // without recalculation by the caller.
 type analyzedPair struct {
-	Pair     hcl.KeyValuePair
-	Name     string
+	Pair hcl.KeyValuePair
+	Refs []string
+
+	// Name is the name of the key, which is either an env var name,
+	// file path, or internal var name.
+	Name string
+
+	// Internal is true if this is an internal var (in the `internal =` map)
 	Internal bool
-	Refs     []string
-	Path     bool
+
+	// Path is true if this is a file config, not an env var config.
+	Path bool
 }
 
 // VariableLoopError is returned when, in the course of sorting the variables,
