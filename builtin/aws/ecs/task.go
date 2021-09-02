@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/oklog/ulid"
-	"github.com/ryboe/q"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -45,10 +44,10 @@ type TaskLauncherConfig struct {
 	// Region is the AWS region we're operating in, e.g. us-west-2, us-east-1
 	Region string `hcl:"region,optional"`
 
-	// OdrExecutionRoleName is the name of the AWS IAM role to apply to the
+	// ExecutionRoleName is the name of the AWS IAM role to apply to the
 	// task's Execution Role. This is generally the same as the Server Execution
 	// Role.
-	OdrExecutionRoleName string `hcl:"odr_execution_role_name,optional"`
+	ExecutionRoleName string `hcl:"execution_role_name,optional"`
 
 	// TaskRoleArn is the name of the AWS IAM role to apply to the task. This
 	// role determins the privilages the ODR builder has, and must have the correct
@@ -125,10 +124,6 @@ func (p *TaskLauncher) StartTask(
 	log hclog.Logger,
 	tli *component.TaskLaunchInfo,
 ) (*TaskInfo, error) {
-	q.Q("===================")
-	q.Q("=> starting task")
-	q.Q("===================")
-
 	// Generate an ID for our pod name.
 	id, err := ulid.New(ulid.Now(), rand.Reader)
 	if err != nil {
@@ -182,26 +177,18 @@ func (p *TaskLauncher) StartTask(
 		},
 	}
 
-	exRoleArn, err := roleArn(p.config.OdrExecutionRoleName, sess)
+	exRoleArn, err := roleArn(p.config.ExecutionRoleName, sess)
 	if err != nil {
-		q.Q(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-		q.Q("=> => ex roleArn err: ", err)
-		q.Q("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 		return nil, err
 	}
-	q.Q(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-	q.Q("ex roleArn: ", exRoleArn)
-	q.Q("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+
 	taskRoleArn, err := roleArn(p.config.OdrTaskRoleName, sess)
 	if err != nil {
-		q.Q(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-		q.Q("=> => task roleArn err: ", err)
-		q.Q("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 		return nil, err
 	}
-	q.Q(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-	q.Q("task roleArn: ", taskRoleArn)
-	q.Q("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+	if taskRoleArn == "" {
+		return nil, fmt.Errorf("no role arn found for (%s)", p.config.OdrTaskRoleName)
+	}
 
 	registerTaskDefinitionInput := ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions:    []*ecs.ContainerDefinition{&def},
@@ -211,13 +198,7 @@ func (p *TaskLauncher) StartTask(
 		Memory:                  aws.String("2048"),
 		Family:                  aws.String("waypoint-runner"),
 		NetworkMode:             aws.String("awsvpc"),
-		RequiresCompatibilities: []*string{aws.String("waypoint-runner")},
-		// Tags: []*ecs.Tag{
-		// 	{
-		// 		Key:   aws.String(defaultRunnerTagName),
-		// 		Value: aws.String(defaultRunnerTagValue),
-		// 	},
-		// },
+		RequiresCompatibilities: []*string{aws.String("FARGATE")},
 	}
 
 	taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
@@ -225,8 +206,9 @@ func (p *TaskLauncher) StartTask(
 		return nil, err
 	}
 
-	// registerTaskDefinition() above ensures taskDef here is non-nil, if the
-	// error returned is nil
+	if taskDef.TaskDefinitionArn == nil {
+		return nil, fmt.Errorf("empty task definition after registering waypoint-runner task")
+	}
 	taskDefArn := *taskDef.TaskDefinitionArn
 
 	subnetStrings := strings.Split(p.config.Subnets, ",")
@@ -247,9 +229,6 @@ func (p *TaskLauncher) StartTask(
 		},
 	})
 	if err != nil {
-		q.Q(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-		q.Q("=> => run task err: ", err)
-		q.Q("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 		return nil, err
 	}
 
@@ -260,7 +239,6 @@ func (p *TaskLauncher) StartTask(
 
 func roleArn(name string, sess *session.Session) (string, error) {
 	iamSvc := iam.New(sess)
-	// get the Task Role ARN
 	input := &iam.GetRoleInput{
 		RoleName: &name,
 	}

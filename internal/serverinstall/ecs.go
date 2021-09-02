@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
-	"github.com/ryboe/q"
 )
 
 const (
@@ -79,9 +78,9 @@ type ecsConfig struct {
 	Memory string `hcl:"memory,optional"`
 
 	// On-Demand Runner configuration
-	OdrImage             string `hcl:"odr_image,optional"`
-	OdrExecutionRoleName string `hcl:"odr_execution_role_name,optional"`
-	OdrTaskRoleName      string `hcl:"odr_task_role_name,optional"`
+	OdrImage string `hcl:"odr_image,optional"`
+	// OdrExecutionRoleName string `hcl:"odr_execution_role_name,optional"`
+	OdrTaskRoleName string `hcl:"odr_task_role_name,optional"`
 }
 
 // Install is a method of ECSInstaller and implements the Installer interface to
@@ -528,7 +527,6 @@ func (i *ECSInstaller) Upgrade(
 			ContainerDefinitions:    taskDef.ContainerDefinitions,
 			Cpu:                     taskDef.Cpu,
 			ExecutionRoleArn:        taskDef.ExecutionRoleArn,
-			TaskRoleArn:             aws.String("arn:aws:iam::797645259670:role/waypoint-runner"),
 			Family:                  taskDef.Family,
 			Memory:                  taskDef.Memory,
 			NetworkMode:             aws.String("awsvpc"),
@@ -976,6 +974,7 @@ func (i *ECSInstaller) InstallRunner(
 	var (
 		logGroup      string
 		executionRole string
+		taskRole      string
 		runSvcArn     *string
 	)
 	lf := &Lifecycle{
@@ -987,7 +986,13 @@ func (i *ECSInstaller) InstallRunner(
 			if err != nil {
 				return err
 			}
+
 			executionRole, err = i.SetupExecutionRole(ctx, ui, log, sess)
+			if err != nil {
+				return err
+			}
+
+			taskRole, err = i.SetupTaskRole(ctx, ui, log, sess)
 			if err != nil {
 				return err
 			}
@@ -1005,6 +1010,7 @@ func (i *ECSInstaller) InstallRunner(
 				ctx, ui, log, sess,
 				opts.AdvertiseClient.Env(),
 				executionRole,
+				taskRole,
 				logGroup,
 			)
 			return err
@@ -1156,19 +1162,19 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
 
-	set.StringVar(&flag.StringVar{
-		Name:   "ecs-runner-execution-role",
-		Target: &i.config.OdrExecutionRoleName,
-		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
-			"an IAM execution role will be created automatically with the correct permissions.",
-		Default: "waypoint-runner",
-	})
+	// set.StringVar(&flag.StringVar{
+	// 	Name:   "ecs-runner-execution-role",
+	// 	Target: &i.config.OdrExecutionRoleName,
+	// 	Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
+	// 		"an IAM role will be created automatically with the correct permissions.",
+	// 	Default: "waypoint-runner",
+	// })
 
 	set.StringVar(&flag.StringVar{
 		Name:   "ecs-runner-task-role",
 		Target: &i.config.OdrTaskRoleName,
 		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
-			"an IAM execution role will be created automatically with the correct permissions.",
+			"an IAM role will be created automatically with the correct permissions.",
 		Default: "waypoint-runner",
 	})
 }
@@ -1211,19 +1217,19 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
 			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
-	set.StringVar(&flag.StringVar{
-		Name:   "ecs-runner-execution-role",
-		Target: &i.config.OdrExecutionRoleName,
-		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
-			"an IAM execution role will be created automatically with the correct permissions.",
-		Default: "waypoint-runner",
-	})
+	// set.StringVar(&flag.StringVar{
+	// 	Name:   "ecs-runner-execution-role",
+	// 	Target: &i.config.OdrExecutionRoleName,
+	// 	Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
+	// 		"an IAM role will be created automatically with the correct permissions.",
+	// 	Default: "waypoint-runner",
+	// })
 
 	set.StringVar(&flag.StringVar{
 		Name:   "ecs-runner-task-role",
 		Target: &i.config.OdrTaskRoleName,
-		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
-			"an IAM execution role will be created automatically with the correct permissions.",
+		Usage: "IAM Task Role to assign to the on-demand runner. If this is blank, " +
+			"an IAM role will be created automatically with the correct permissions.",
 		Default: "waypoint-runner",
 	})
 }
@@ -1737,18 +1743,18 @@ func (i *ECSInstaller) SetupExecutionRole(
 	s := sg.Add("Setting up an IAM execution role...")
 	defer func() { s.Abort() }()
 
-	if i.config.OdrExecutionRoleName != "" {
-		s.Done()
-		s = sg.Add("Initializing ODR Execution Role for on-demand runners...")
-		// err := i.initServiceAccount(ctx, clientset, s)
-		// TODO actually do something here
-		s.Done()
-		s.Abort()
-		// if err != nil {
-		// 	return nil, err
-		// }
-		s = sg.Add("")
-	}
+	// if i.config.OdrTaskRoleName != "" {
+	// 	s.Done()
+	// 	s = sg.Add("Initializing ODR Execution Role for on-demand runners...")
+	// 	// err := i.initServiceAccount(ctx, clientset, s)
+	// 	// TODO actually do something here
+	// 	s.Done()
+	// 	s.Abort()
+	// 	// if err != nil {
+	// 	// 	return nil, err
+	// 	// }
+	// 	s = sg.Add("")
+	// }
 
 	svc := iam.New(sess)
 
@@ -1796,7 +1802,7 @@ func (i *ECSInstaller) SetupExecutionRole(
 
 	roleArn := *result.Role.Arn
 
-	log.Debug("created new role", "arn", roleArn)
+	log.Debug("created new execution role", "arn", roleArn)
 
 	aInput := &iam.AttachRolePolicyInput{
 		RoleName:  aws.String(roleName),
@@ -1810,17 +1816,7 @@ func (i *ECSInstaller) SetupExecutionRole(
 
 	log.Debug("attached IAM execution role policy")
 
-	aInput = &iam.AttachRolePolicyInput{
-		RoleName:  aws.String(roleName),
-		PolicyArn: aws.String("arn:aws:iam::aws:policy/service-role/AmazonECS_FullAccess"),
-	}
-
-	_, err = svc.AttachRolePolicy(aInput)
-	if err != nil {
-		return "", err
-	}
-
-	s.Update("Created IAM role: %s", roleName)
+	s.Update("Created IAM execution role: %s", roleName)
 	s.Done()
 	return roleArn, nil
 }
@@ -1838,6 +1834,156 @@ const rolePolicy = `{
     }
   ]
 }`
+
+const odrRolePolicy = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:CreateSecurityGroup",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets",
+        "ecr:BatchGetImage",
+        "ecr:CompleteLayerUpload",
+        "ecr:DescribeImages",
+        "ecr:DescribeRepositories",
+        "ecr:GetAuthorizationToken",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:GetRepositoryPolicy",
+        "ecr:InitiateLayerUpload",
+        "ecr:ListImages",
+        "ecr:ListTagsForResource",
+        "ecr:PutImage",
+        "ecr:PutImageTagMutability",
+        "ecr:ReplicateImage",
+        "ecr:TagResource",
+        "ecr:UntagResource",
+        "ecr:UploadLayerPart",
+        "ecs:CreateCluster",
+        "ecs:CreateService",
+        "ecs:DeleteService",
+        "ecs:DescribeClusters",
+        "ecs:RegisterTaskDefinition",
+        "ecs:RunTask",
+        "elasticloadbalancing:CreateListener",
+        "elasticloadbalancing:CreateLoadBalancer",
+        "elasticloadbalancing:CreateRule",
+        "elasticloadbalancing:CreateTargetGroup",
+        "elasticloadbalancing:DeleteListener",
+        "elasticloadbalancing:DeleteLoadBalancer",
+        "elasticloadbalancing:DeleteRule",
+        "elasticloadbalancing:DeleteTargetGroup",
+        "elasticloadbalancing:DescribeListeners",
+        "elasticloadbalancing:DescribeLoadBalancers",
+        "elasticloadbalancing:DescribeRules",
+        "elasticloadbalancing:DescribeTargetGroups",
+        "elasticloadbalancing:ModifyListener",
+        "iam:AttachRolePolicy",
+        "iam:CreateRole",
+        "iam:GetRole",
+        "iam:ListAttachedRolePolicies",
+        "iam:PassRole",
+        "logs:CreateLogGroup",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "route53:ChangeResourceRecordSets",
+        "route53:ListResourceRecordSets"
+      ],
+      "Resource": "*"
+    }
+  ]
+}`
+
+func (i *ECSInstaller) SetupTaskRole(
+	ctx context.Context,
+	ui terminal.UI,
+	log hclog.Logger,
+	sess *session.Session,
+) (string, error) {
+	// TaskRoleArn: aws.String("arn:aws:iam::797645259670:role/waypoint-runner"),
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Setting up an IAM task role for ODR runners...")
+	defer func() { s.Abort() }()
+
+	svc := iam.New(sess)
+
+	roleName := i.config.OdrTaskRoleName
+
+	// role names have to be 64 characters or less, and the client side doesn't
+	// validate this.
+	if len(roleName) > 64 {
+		roleName = roleName[:64]
+		log.Debug("using a shortened value for role name due to AWS's length limits", "roleName", roleName)
+	}
+
+	log.Debug("attempting to retrieve existing role", "role-name", roleName)
+
+	queryInput := &iam.GetRoleInput{
+		RoleName: aws.String(roleName),
+	}
+
+	getOut, err := svc.GetRole(queryInput)
+	if err == nil {
+		s.Update("Found existing IAM role to use: %s", roleName)
+		s.Done()
+		return *getOut.Role.Arn, nil
+	}
+
+	log.Debug("creating new role")
+	s.Update("Creating IAM task role: %s", roleName)
+
+	input := &iam.CreateRoleInput{
+		AssumeRolePolicyDocument: aws.String(rolePolicy),
+		Path:                     aws.String("/"),
+		RoleName:                 aws.String(roleName),
+		Tags: []*iam.Tag{
+			{
+				Key:   aws.String(defaultRunnerTagName),
+				Value: aws.String(defaultRunnerTagValue),
+			},
+		},
+	}
+
+	result, err := svc.CreateRole(input)
+	if err != nil {
+		return "", err
+	}
+
+	roleArn := *result.Role.Arn
+
+	log.Debug("created new task role", "arn", roleArn)
+
+	aInput := &iam.AttachRolePolicyInput{
+		RoleName:  aws.String(roleName),
+		PolicyArn: aws.String("arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"),
+	}
+
+	_, err = svc.AttachRolePolicy(aInput)
+	if err != nil {
+		return "", err
+	}
+
+	log.Debug("attached IAM task role policy")
+
+	// ODR specific policies
+	_, err = svc.PutRolePolicy(&iam.PutRolePolicyInput{
+		RoleName:       aws.String(roleName),
+		PolicyDocument: aws.String(odrRolePolicy),
+		PolicyName:     aws.String("waypoint-odr-policy"),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	s.Update("Created IAM task role: %s", roleName)
+	s.Done()
+	return roleArn, nil
+}
 
 // creates a network load balancer for grpc and http
 func createNLB(
@@ -1897,36 +2043,25 @@ func createNLB(
 	httpTgArn := htgGPRC.TargetGroups[0].TargetGroupArn
 	grpcTgArn := ctgGPRC.TargetGroups[0].TargetGroupArn
 
-	out, err := elbsrv.ModifyTargetGroupAttributes(&elbv2.ModifyTargetGroupAttributesInput{
-		TargetGroupArn: grpcTgArn,
-		Attributes: []*elbv2.TargetGroupAttribute{
-			{
-				Key:   aws.String("deregistration_delay.timeout_seconds"),
-				Value: aws.String("10"),
+	for _, tgn := range []*string{httpTgArn, grpcTgArn} {
+		_, err = elbsrv.ModifyTargetGroupAttributes(&elbv2.ModifyTargetGroupAttributesInput{
+			TargetGroupArn: tgn,
+			Attributes: []*elbv2.TargetGroupAttribute{
+				{
+					Key:   aws.String("deregistration_delay.timeout_seconds"),
+					Value: aws.String("10"),
+				},
 			},
-		},
-	})
-	if err != nil {
-		q.Q("--> error modifying tg:", err)
+		})
+		if err != nil {
+			// this is an optimization, so we won't error out if this
+			// modification fails
+			log.Debug("error modifying target group", "error", err)
+		}
 	}
-	q.Q("=-> modify grpc out:", out)
-	out, err = elbsrv.ModifyTargetGroupAttributes(&elbv2.ModifyTargetGroupAttributesInput{
-		TargetGroupArn: httpTgArn,
-		Attributes: []*elbv2.TargetGroupAttribute{
-			{
-				Key:   aws.String("deregistration_delay.timeout_seconds"),
-				Value: aws.String("10"),
-			},
-		},
-	})
-	if err != nil {
-		q.Q("--> error modifying tg:", err)
-	}
-	q.Q("=-> modify tg http out:", out)
 
 	// Create the load balancer OR modify the existing one to have this new target
 	// group but with a weight of 0
-
 	htgs := []*elbv2.TargetGroupTuple{
 		{
 			TargetGroupArn: httpTgArn,
@@ -2128,7 +2263,7 @@ func (i *ECSInstaller) LaunchRunner(
 	log hclog.Logger,
 	sess *session.Session,
 	env []string,
-	executionRoleArn, logGroup string,
+	executionRoleArn, taskRoleArn, logGroup string,
 ) (*string, error) {
 
 	sg := ui.StepGroup()
@@ -2196,7 +2331,7 @@ func (i *ECSInstaller) LaunchRunner(
 		Memory:           aws.String(i.config.Memory),
 		Family:           aws.String(runnerName),
 
-		TaskRoleArn: aws.String("arn:aws:iam::797645259670:role/waypoint-runner"),
+		TaskRoleArn: &taskRoleArn,
 
 		NetworkMode:             aws.String("awsvpc"),
 		RequiresCompatibilities: []*string{aws.String(defaultTaskRuntime)},
@@ -2334,14 +2469,11 @@ func (i *ECSInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	// Generate some configuration. Some of the OnDemand configurations have
 	// defaults so we should be fine to directly use them
 	cfgMap := map[string]interface{}{
-		"log_group":               defaultRunnerLogGroup,
-		"odr_execution_role_name": i.config.ExecutionRoleName,
-		"odr_task_role_name":      i.config.OdrTaskRoleName,
-		"cluster":                 i.config.Cluster,
-	}
-
-	if v := i.config.Region; v != "" {
-		cfgMap["region"] = v
+		"log_group":           defaultRunnerLogGroup,
+		"execution_role_name": i.config.ExecutionRoleName,
+		"odr_task_role_name":  i.config.OdrTaskRoleName,
+		"cluster":             i.config.Cluster,
+		"region":              i.config.Region,
 	}
 
 	if i.netInfo != nil {

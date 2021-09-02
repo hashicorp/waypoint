@@ -1390,8 +1390,6 @@ github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f/go.mod h1:sm1tb
 github.com/ryanuber/columnize v2.1.0+incompatible/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
 github.com/ryanuber/go-glob v1.0.0 h1:iQh3xXAumdQ+4Ufa5b25cRpC5TYKlno6hsv6Cb3pkBk=
 github.com/ryanuber/go-glob v1.0.0/go.mod h1:807d1WSdnB0XRJzKNil9Om6lcp/3a0v4qIHxIXzX/Yc=
-github.com/ryboe/q v1.0.14 h1:sjSjEXz86Dn9vLHaosaLXj6iNoljfKuUeSCSkiNkvJs=
-github.com/ryboe/q v1.0.14/go.mod h1:yHEXUGvMyyQipX7WljCYWgzDuY6iOg0+VTSn5QZ2Pxk=
 github.com/sabhiram/go-gitignore v0.0.0-20201211074657-223ce5d391b0/go.mod h1:b18R55ulyQ/h3RaWyloPyER7fWQVZvimKKhnI5OfrJQ=
 github.com/sabhiram/go-gitignore v0.0.0-20201211210132-54b8a0bf510f h1:8P2MkG70G76gnZBOPGwmMIgwBb/rESQuwsJ7K8ds4NE=
 github.com/sabhiram/go-gitignore v0.0.0-20201211210132-54b8a0bf510f/go.mod h1:+ePHsJ1keEjQtpvf9HHw0f4ZeJ0TLRsxhunSI2hYJSs=

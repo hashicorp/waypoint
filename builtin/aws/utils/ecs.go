@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ecs"
 )
 
@@ -17,26 +16,26 @@ func RegisterTaskDefinition(def *ecs.RegisterTaskDefinitionInput, ecsSvc *ecs.EC
 	var err error
 	for i := 0; i < 30; i++ {
 		taskOut, err = ecsSvc.RegisterTaskDefinition(def)
-		if err == nil {
-			break
+		if err != nil {
+			return nil, err
 		}
 
-		// if we encounter an unrecoverable error, exit now.
-		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Code() == "ResourceConflictException" || aerr.Code() == "ClientException" {
-				return nil, err
-			}
+		if taskOut != nil && taskOut.TaskDefinition != nil {
+			break
 		}
 
 		// otherwise sleep and try again
 		time.Sleep(2 * time.Second)
 	}
 
-	// the above loop could expire and never get a valid task definition, so
-	// guard against a nil taskOut here
-	if taskOut == nil {
+	// The above loop could expire and never get a valid task definition, so
+	// guard against a nil taskOut here. It's possible that the
+	// response from RegisterTaskDefinition returns an error and a non-nil
+	// RegisterTaskDefinitionOutput struct, so we need to verify that both the
+	// output struct and its included TaskDefinition are both non-nil before
+	// assuming success.
+	if taskOut == nil || taskOut.TaskDefinition == nil {
 		return nil, fmt.Errorf("error registering task definition, last error: %w", err)
 	}
-
 	return taskOut.TaskDefinition, nil
 }
