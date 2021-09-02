@@ -167,6 +167,24 @@ func (s *service) RunnerConfig(
 		}
 		config.ConfigVars = vars
 
+		// Get the config sources we need for our vars. We only do this if
+		// at least one var has a dynamic value.
+		if varContainsDynamic(vars) {
+			// NOTE(mitchellh): For now we query all the types and always send it
+			// all down. In the future we may want to consider filtering this
+			// by only the types we actually need above.
+			sources, err := s.state.ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
+				Scope: &pb.GetConfigSourceRequest_Global{
+					Global: &pb.Ref_Global{},
+				},
+			}, ws)
+			if err != nil {
+				return err
+			}
+
+			config.ConfigSources = sources
+		}
+
 		// Send new config
 		if err := srv.Send(&pb.RunnerConfigResponse{
 			Config: config,

@@ -2070,6 +2070,12 @@ message RunnerConfig {
   // with specific configuration without fear that the server will override
   // them.
   repeated ConfigVar config_vars = 1;
+
+  // The configuration for any config sources that may be used in the
+  // config vars sent down. The server may send down extra configs that
+  // aren't used so consumers should filter these based on what env vars
+  // are actually in use.
+  repeated ConfigSource config_sources = 2;
 }
 
 message RunnerJobStreamRequest {
