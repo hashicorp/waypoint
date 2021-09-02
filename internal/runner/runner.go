@@ -23,6 +23,13 @@ var (
 	ErrTimeout = errors.New("runner timed out waiting for a job")
 )
 
+const (
+	// envLogLevel is the env var to set with the log level. This
+	// env var matches the Waypoint CLI on purpose. This can be set on
+	// the runner process OR via app config (`waypoint config`).
+	envLogLevel = "WAYPOINT_LOG_LEVEL"
+)
+
 // Runners in Waypoint execute operations. These can be local (the CLI)
 // or they can be remote (triggered by some webhook). In either case, they
 // share this same underlying implementation.
@@ -64,6 +71,17 @@ type Runner struct {
 
 	enableDynConfig bool
 
+	// stateCond and its associated locker are used to protect all the
+	// state-prefixed fields. These state fields can be watched using this
+	// cond for state changes in the runner. Anyone waiting on stateCond should
+	// also verify the context didn't cancel. The stateCond will be broadcasted
+	// when the root context cancels.
+	stateCond       *sync.Cond
+	stateConfig     bool // config stream is connected
+	stateConfigOnce bool // true once we process config once, success or error
+	stateJobReady   bool // ready to start accepting jobs
+	stateExit       bool // true when exiting
+
 	// config is the current runner config.
 	config      *pb.RunnerConfig
 	originalEnv []*pb.ConfigVar
@@ -91,6 +109,7 @@ func New(opts ...Option) (*Runner, error) {
 			component.ReleaseManagerType: plugin.BaseFactories[component.ReleaseManagerType],
 			component.TaskLauncherType:   plugin.BaseFactories[component.TaskLauncherType],
 		},
+		stateCond: sync.NewCond(&sync.Mutex{}),
 	}
 
 	runner.runningCond = sync.NewCond(new(sync.Mutex))
@@ -172,24 +191,18 @@ func (r *Runner) Start() error {
 		return err
 	}
 
-	// Wait for an initial config as confirmation we're registered.
-	log.Trace("runner connected, waiting for initial config")
-	resp, err := client.Recv()
-	if err != nil {
-		return err
-	}
-
-	// Handle the first config so our initial setup is done
-	r.handleConfig(resp.Config)
-
-	// Start the watcher
+	// Start the watcher and the gorotuine that receives configs
 	ch := make(chan *pb.RunnerConfig)
-	go r.watchConfig(ch)
-
-	// Start the goroutine that waits for all other configs
+	go r.watchConfig(r.runningCtx, ch)
 	go r.recvConfig(r.runningCtx, client, ch)
 
-	log.Info("runner registered with server")
+	// Wait for the initial configuration to be set
+	log.Debug("runner registered, waiting for first config processing")
+	if r.waitState(&r.stateConfigOnce, true) {
+		return status.Errorf(codes.Internal, "early exit while waiting for first config processing")
+	}
+
+	log.Info("runner registered with server and ready")
 	return nil
 }
 
@@ -220,6 +233,28 @@ func (r *Runner) Close() error {
 	}
 
 	return nil
+}
+
+// waitState waits for the given state boolean to go true. This boolean
+// must be a pointer to a state field on runner. This will also return if
+// stateExit flips true. The return value notes whether we should exit.
+func (r *Runner) waitState(state *bool, v bool) (exit bool) {
+	r.stateCond.L.Lock()
+	defer r.stateCond.L.Unlock()
+	for *state != v && !r.stateExit {
+		r.stateCond.Wait()
+	}
+
+	return r.stateExit
+}
+
+// setState sets the value of a state var on the runner struct and broadcasts
+// the condition variable.
+func (r *Runner) setState(state *bool, v bool) {
+	r.stateCond.L.Lock()
+	defer r.stateCond.L.Unlock()
+	*state = v
+	r.stateCond.Broadcast()
 }
 
 type config struct {

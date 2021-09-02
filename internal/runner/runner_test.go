@@ -87,7 +87,7 @@ func TestRunnerStart_config(t *testing.T) {
 		// Should be set
 		require.Eventually(func() bool {
 			return os.Getenv(cfgVar.Name) == cfgVar.Value.(*pb.ConfigVar_Static).Static
-		}, 1000*time.Millisecond, 50*time.Millisecond)
+		}, 2000*time.Millisecond, 50*time.Millisecond)
 
 		// Unset
 		cfgVar.Value = &pb.ConfigVar_Static{Static: ""}
@@ -97,7 +97,7 @@ func TestRunnerStart_config(t *testing.T) {
 		// Should be unset
 		require.Eventually(func() bool {
 			return os.Getenv(cfgVar.Name) == ""
-		}, 1000*time.Millisecond, 50*time.Millisecond)
+		}, 2000*time.Millisecond, 50*time.Millisecond)
 	})
 
 	t.Run("unset with original env", func(t *testing.T) {
@@ -138,7 +138,7 @@ func TestRunnerStart_config(t *testing.T) {
 		// Should be set
 		require.Eventually(func() bool {
 			return os.Getenv(cfgVar.Name) == cfgVar.Value.(*pb.ConfigVar_Static).Static
-		}, 1000*time.Millisecond, 50*time.Millisecond)
+		}, 2000*time.Millisecond, 50*time.Millisecond)
 
 		// Unset
 		cfgVar.Value = &pb.ConfigVar_Static{Static: ""}
@@ -148,6 +148,6 @@ func TestRunnerStart_config(t *testing.T) {
 		// Should be unset back to original value
 		require.Eventually(func() bool {
 			return os.Getenv(cfgVar.Name) == "ORIGINAL"
-		}, 1000*time.Millisecond, 50*time.Millisecond)
+		}, 2000*time.Millisecond, 50*time.Millisecond)
 	})
 }
