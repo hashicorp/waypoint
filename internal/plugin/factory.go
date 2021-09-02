@@ -47,7 +47,7 @@ func Factory(cmd *exec.Cmd, typ component.Type) interface{} {
 		// fields on it.
 		cmdCopy := *cmd
 
-		config := pluginclient.ClientConfig(log)
+		config := pluginclient.ClientConfig(log, false)
 		config.Cmd = &cmdCopy
 		config.Logger = log
 
@@ -110,7 +110,7 @@ func BuiltinFactory(name string, typ component.Type) interface{} {
 // running, and implements Instance against it.
 func ReattachPluginFactory(reattach *plugin.ReattachConfig, typ component.Type) interface{} {
 	return func(log hclog.Logger) (interface{}, error) {
-		config := pluginclient.ClientConfig(log)
+		config := pluginclient.ClientConfig(log, false)
 		config.Logger = log
 		config.Reattach = reattach
 
