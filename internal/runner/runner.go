@@ -120,6 +120,7 @@ func New(opts ...Option) (*Runner, error) {
 	runner.runner = &pb.Runner{
 		Id:       runner.id,
 		ByIdOnly: cfg.byIdOnly,
+		Odr:      cfg.odr,
 	}
 
 	// Setup our runner components list
@@ -223,6 +224,7 @@ func (r *Runner) Close() error {
 
 type config struct {
 	byIdOnly bool
+	odr      bool
 }
 
 type Option func(*Runner, *config) error
@@ -271,6 +273,15 @@ func WithLocal(ui terminal.UI) Option {
 func ByIdOnly() Option {
 	return func(r *Runner, cfg *config) error {
 		cfg.byIdOnly = true
+		return nil
+	}
+}
+
+// WithODR configures this runner to be an on-demand runner. This
+// will flag this to the server on registration.
+func WithODR() Option {
+	return func(r *Runner, cfg *config) error {
+		cfg.odr = true
 		return nil
 	}
 }

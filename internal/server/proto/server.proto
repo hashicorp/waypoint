@@ -2032,6 +2032,17 @@ message Runner {
   // jobs from being assigned to them.
   bool by_id_only = 2;
 
+  // odr is true if this runner is an on-demand runner. For ODRs, we expect
+  // they will accept exactly one job and then exit. This is used by the
+  // server to change some other behavior:
+  //
+  //   * The server will give ODRs project/app-scoped config if it exists.
+  //   * The server will never assign more than one job to this runner.
+  //     This is also enforced in the runner client-side but the server also
+  //     does this out of caution.
+  //
+  bool odr = 4;
+
   // Components are the list of components that the runner supports. This
   // is used to match jobs to this runner.
   repeated Component components = 3;

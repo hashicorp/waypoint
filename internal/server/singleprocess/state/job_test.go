@@ -253,6 +253,11 @@ func TestJobAssign(t *testing.T) {
 		require.Error(err)
 		require.Nil(job)
 		require.Equal(ctx.Err(), err)
+
+		// Should not block if requested
+		job, err = s.JobPeekForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.Nil(job)
 	})
 
 	t.Run("blocking on any", func(t *testing.T) {

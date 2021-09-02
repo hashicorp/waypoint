@@ -56,7 +56,6 @@ func (s *service) RunnerGetDeploymentConfig(
 	}, nil
 }
 
-// TODO: test
 func (s *service) RunnerConfig(
 	srv pb.Waypoint_RunnerConfigServer,
 ) error {
@@ -110,6 +109,35 @@ func (s *service) RunnerConfig(
 		}
 	}()
 
+	// If this is an ODR runner, then we query the job it is waiting for
+	// in order to build up other information about this runner such as the
+	// project/app scope, workspace, etc.
+	//
+	// It is REQUIRED that an ODR has its target job queued BEFORE the
+	// ODR is launched. If we can't find a job, we error and exit which
+	// will also exit the runner.
+	var job *pb.Job
+	if record.Odr {
+		// Get a job assignment for this runner, non-blocking
+		sjob, err := s.state.JobPeekForRunner(ctx, record)
+		if err != nil {
+			return err
+		}
+		if sjob == nil {
+			return status.Errorf(codes.FailedPrecondition,
+				"no pending job for this on-demand runner. A pending job "+
+					"must be registered prior to registering the runner.")
+		}
+
+		// Set our job
+		job = sjob.Job
+
+		log.Debug("runner is scoped for config",
+			"application", job.Application,
+			"workspace", job.Workspace,
+			"labels", job.Labels)
+	}
+
 	// Build our config in a loop.
 	for {
 		ws := memdb.NewWatchSet()
@@ -117,15 +145,23 @@ func (s *service) RunnerConfig(
 		// Build our config
 		config := &pb.RunnerConfig{}
 
-		// Get our config vars
-		vars, err := s.state.ConfigGetWatch(&pb.ConfigGetRequest{
+		// Build our config var request. This is always runner-scoped, but
+		// if we're ODR then job should be non-nil and we set the proper
+		// project/app, workspace, labels, etc.
+		configReq := &pb.ConfigGetRequest{
 			Runner: &pb.Ref_RunnerId{
 				Id: record.Id,
 			},
+		}
+		if job != nil {
+			configReq.Scope = &pb.ConfigGetRequest_Application{
+				Application: job.Application,
+			}
+			configReq.Workspace = job.Workspace
+			configReq.Labels = job.Labels
+		}
 
-			// TODO(mitchellh): we need to set additional filters here
-			// if we're an on-demand runner for an app.
-		}, ws)
+		vars, err := s.state.ConfigGetWatch(configReq, ws)
 		if err != nil {
 			return err
 		}

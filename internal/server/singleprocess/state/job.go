@@ -283,6 +283,15 @@ func (s *State) JobById(id string, ws memdb.WatchSet) (*Job, error) {
 	return result, err
 }
 
+// JobPeekForRunner effectively simulates JobAssignForRunner with two changes:
+// (1) jobs are not actually assigned (they remain queued) and (2) this will
+// not block if a job isn't available. If a job isn't available, this will
+// return (nil, nil).
+func (s *State) JobPeekForRunner(ctx context.Context, r *pb.Runner) (*Job, error) {
+	// The false,false here will (1) not block and (2) not assign
+	return s.jobAssignForRunner(ctx, r, false, false)
+}
+
 // JobAssignForRunner will wait for and assign a job to a specific runner.
 // This will automatically evaluate any conditions that the runner and/or
 // job may have on assignability.
@@ -293,8 +302,20 @@ func (s *State) JobById(id string, ws memdb.WatchSet) (*Job, error) {
 // If ctx is provided and assignment has to block waiting for new jobs,
 // this will cancel when the context is done.
 func (s *State) JobAssignForRunner(ctx context.Context, r *pb.Runner) (*Job, error) {
+	return s.jobAssignForRunner(ctx, r, true, true)
+}
+
+func (s *State) jobAssignForRunner(ctx context.Context, r *pb.Runner, block, assign bool) (*Job, error) {
+	var txn *memdb.Txn
+
 RETRY_ASSIGN:
-	txn := s.inmem.Txn(false)
+	// If our transaction is not nil that means this is a repeated time around.
+	// If we aren't blocking, return now.
+	if txn != nil && !block {
+		return nil, nil
+	}
+
+	txn = s.inmem.Txn(false)
 	defer txn.Abort()
 
 	// Turn our runner into a runner record so we can more efficiently assign
@@ -346,9 +367,11 @@ RETRY_ASSIGN:
 	// If we have a watch channel set that means we didn't find any
 	// results and we need to retry after waiting for changes.
 	if len(candidates) == 0 {
-		ws.WatchCtx(ctx)
-		if err := ctx.Err(); err != nil {
-			return nil, err
+		if block {
+			ws.WatchCtx(ctx)
+			if err := ctx.Err(); err != nil {
+				return nil, err
+			}
 		}
 
 		goto RETRY_ASSIGN
@@ -393,6 +416,20 @@ RETRY_ASSIGN:
 			continue
 		} else if err != nil {
 			return nil, err
+		}
+
+		// If we've been requested to not assign, then we found our result.
+		if !assign {
+			var pbjob *pb.Job
+			err = s.db.View(func(dbTxn *bolt.Tx) error {
+				pbjob, err = s.jobById(dbTxn, job.Id)
+				return err
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			return job.Job(pbjob), nil
 		}
 
 		// We're now modifying this job, so perform a copy
