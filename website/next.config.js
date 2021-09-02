@@ -40,4 +40,7 @@ module.exports = withHashicorp({
     BUGSNAG_SERVER_KEY: '45f0129bdbe991d7fdcd0338a1a4f1d7',
     ENABLE_REMOTE_CONTENT: true,
   },
+  images: {
+    disableStaticImages: true,
+  },
 })
