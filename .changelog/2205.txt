@@ -1,0 +1,8 @@
+```release-note:improvement
+plugin/aws-ecs: Allow configuration of alb subnets independently of service subnets
+```
+
+```release-note:improvement
+plugin/aws-ecs: Allow public ip assignment for tasks to be disabled
+```
+
