@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/pkg/partial"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serversort "github.com/hashicorp/waypoint/internal/server/sort"
 )
 
 // genericConfig represents the `config` stanza that can be placed
@@ -167,6 +169,11 @@ func (c *genericConfig) configVars() ([]*pb.ConfigVar, error) {
 
 		result = append(result, &newVar)
 	}
+
+	// Sort our results by name. This helps with deterministic behavior
+	// in API calls, user output, etc. without forcing all callers to worry
+	// about sorting.
+	sort.Sort(serversort.ConfigName(result))
 
 	return result, nil
 }
