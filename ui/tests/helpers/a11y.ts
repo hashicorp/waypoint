@@ -13,7 +13,7 @@ type OptionsWithContext = RunOptions & ContextObject;
 // for more:
 // https://github.com/dequelabs/axe-core/blob/develop/doc/API.md#include-exclude-object
 const include = [['#ember-testing-container']];
-const exclude = [['.pds-logomark'], ['.pds-tabNav'], ['.card-header']];
+const exclude = [['.pds-logomark'], ['.pds-tabNav'], ['.card-header'], ['.x-toggle-btn']];
 
 export function setup(): void {
   setupGlobalA11yHooks(() => true);
