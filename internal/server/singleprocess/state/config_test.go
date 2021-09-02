@@ -674,32 +674,6 @@ func TestConfig(t *testing.T) {
 		}
 	})
 
-	t.Run("runner dynamic config not allowed", func(t *testing.T) {
-		require := require.New(t)
-
-		s := TestState(t)
-		defer s.Close()
-
-		// Create the config
-		err := s.ConfigSet(&pb.ConfigVar{
-			UnusedScope: &pb.ConfigVar_Runner{
-				Runner: &pb.Ref_Runner{
-					Target: &pb.Ref_Runner_Any{
-						Any: &pb.Ref_RunnerAny{},
-					},
-				},
-			},
-
-			Name: "foo",
-			Value: &pb.ConfigVar_Dynamic{
-				Dynamic: &pb.ConfigVar_DynamicVal{},
-			},
-		})
-
-		require.Error(err)
-		require.Equal(codes.FailedPrecondition, status.Code(err))
-	})
-
 	t.Run("workspace matching", func(t *testing.T) {
 		require := require.New(t)
 
