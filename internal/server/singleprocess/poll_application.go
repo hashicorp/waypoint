@@ -116,7 +116,7 @@ func (a *applicationPoll) buildPollJobs(
 	if err != nil {
 		// If the deployment isn't found, it's ok
 		s, ok := status.FromError(err)
-		if !ok || s.Code() != codes.NotFound {
+		if !ok && s.Code() != codes.NotFound {
 			return nil, err
 		}
 	}
@@ -124,7 +124,7 @@ func (a *applicationPoll) buildPollJobs(
 	if err != nil {
 		// If the release isn't found, it's ok.
 		s, ok := status.FromError(err)
-		if !ok || s.Code() != codes.NotFound {
+		if !ok && s.Code() != codes.NotFound {
 			return nil, err
 		}
 	}
