@@ -69,6 +69,14 @@ When this is set, no ALB or Listener is created. Instead the application is conf
 - Type: **string**
 - **Optional**
 
+##### alb.subnets
+
+The VPC subnets to use for the alb.
+
+- Type: **list of string**
+- **Optional**
+- Default: public subnets in the default VPC
+
 ##### alb.zone_id
 
 Route53 ZoneID to create a DNS record into.
@@ -193,6 +201,13 @@ Environment variables to expose to this container.
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### assign_public_ip
+
+Assign a public ip address to ecs tasks. Defaults to true. Ignored if using an ec2 cluster.
+
+- Type: **bool**
+- **Optional**
+
 #### cluster
 
 The name of the ECS cluster to deploy into.
@@ -274,7 +289,7 @@ Secret key/values to pass to the ECS container.
 
 Security Group IDs of existing security groups to use for the ECS service's network access.
 
-List of existing group IDs to use for ECS the ECS service's network access.
+List of existing group IDs to use for ECS the ECS service's network access. If none are specified, waypoint will create one. If DisableALB is false (the default), waypoint will only allow ingress from the ALB's security group.
 
 - Type: **list of string**
 - **Optional**
@@ -296,7 +311,9 @@ Static environment variables to make available.
 
 #### subnets
 
-The VPC subnets to use for the application.
+The VPC subnets to use for the service.
+
+You may set a list of private subnets here to prevent your tasks from being directly exposed publicly.
 
 - Type: **list of string**
 - **Optional**
