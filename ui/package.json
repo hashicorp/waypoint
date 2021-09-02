@@ -119,6 +119,7 @@
     "edition": "octane"
   },
   "dependencies": {
+    "@hashicorp/ember-flight-icons": "^0.0.2-beta",
     "@types/google-protobuf": "^3.7.2",
     "api-common-protos": "./lib/api-common-protos",
     "ember-cli-typescript-blueprints": "^3.0.0",
