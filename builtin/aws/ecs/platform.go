@@ -646,7 +646,16 @@ func (p *Platform) resourceServiceCreate(
 	}
 
 	if !p.config.EC2Cluster {
-		netCfg.AssignPublicIp = aws.String("ENABLED")
+		if p.config.AssignPublicIp == nil {
+			log.Debug("AssignPublicIp config value not defined - defaulting to true.")
+			p.config.AssignPublicIp = aws.Bool(true)
+		}
+
+		if *p.config.AssignPublicIp {
+			netCfg.AssignPublicIp = aws.String("ENABLED")
+		} else {
+			netCfg.AssignPublicIp = aws.String("DISABLED")
+		}
 	}
 
 	state.Cluster = cluster.Name
@@ -2433,14 +2442,16 @@ type Config struct {
 	// The environment variables to pass to the main container
 	Environment map[string]string `hcl:"static_environment,optional"`
 
-	// The secrets to pass to to the main container
+	// The secrets to pass to the main container
 	Secrets map[string]string `hcl:"secrets,optional"`
 
-	// Assign each task a public IP. Default false.
-	// TODO to access ECR you need a nat gateway or a public address and so if you
-	// set this to false in the default subnets, ECS can't pull the image. Leaving
-	// it disabled until we figure out how to handle that onramp case.
-	AssignPublicIp bool `hcl:"assign_public_ip,optional"`
+	// Assign each task a public IP. Default true.
+	// Note: If private subnets have been specified for ECS tasks, and
+	// no NAT gateway is configured, ECS will be unable to pull your image
+	// from ECR and your services will be unable to start.
+	// NOTE(izaak): If this is not set, we can probably set it to true if
+	// the ecs subnet's route table has a nat gw default route, and true if they don't.
+	AssignPublicIp *bool `hcl:"assign_public_ip,optional"`
 
 	// Port that your service is running on within the actual container.
 	// Defaults to port 3000.
@@ -2784,6 +2795,11 @@ deploy {
 		"service_port",
 		"the TCP port that the application is listening on",
 		docs.Default("3000"),
+	)
+
+	doc.SetField(
+		"assign_public_ip",
+		"assign a public ip address to ecs tasks. Defaults to true. Ignored if using an ec2 cluster.",
 	)
 
 	return doc, nil
