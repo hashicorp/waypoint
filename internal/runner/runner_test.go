@@ -2,7 +2,9 @@ package runner
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -148,6 +150,56 @@ func TestRunnerStart_config(t *testing.T) {
 		// Should be unset back to original value
 		require.Eventually(func() bool {
 			return os.Getenv(cfgVar.Name) == "ORIGINAL"
+		}, 2000*time.Millisecond, 50*time.Millisecond)
+	})
+
+	t.Run("files", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+		client := singleprocess.TestServer(t)
+
+		// Create a temp dir with a filepath in it
+		td, err := ioutil.TempDir("", "waypoint")
+		require.NoError(err)
+		defer os.RemoveAll(td)
+		name := filepath.Join(td, "config")
+
+		cfgVar := &pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Global{
+					Global: &pb.Ref_Global{},
+				},
+
+				Runner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Any{
+						Any: &pb.Ref_RunnerAny{},
+					},
+				},
+			},
+
+			Name:       name,
+			NameIsPath: true,
+			Value:      &pb.ConfigVar_Static{Static: "1234567890"},
+		}
+
+		// Initialize our runner
+		runner := TestRunner(t, WithClient(client))
+		defer runner.Close()
+		require.NoError(runner.Start())
+
+		// Verify it does not exist
+		_, err = os.Stat(name)
+		require.Error(err)
+		require.True(os.IsNotExist(err))
+
+		// Set some config
+		_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{Variables: []*pb.ConfigVar{cfgVar}})
+		require.NoError(err)
+
+		// Should be set
+		require.Eventually(func() bool {
+			data, err := ioutil.ReadFile(name)
+			return err == nil && cfgVar.Value.(*pb.ConfigVar_Static).Static == string(data)
 		}, 2000*time.Millisecond, 50*time.Millisecond)
 	})
 }
