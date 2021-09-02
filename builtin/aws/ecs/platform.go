@@ -2552,7 +2552,7 @@ deploy {
 		"security_group_ids",
 		"Security Group IDs of existing security groups to use for the ECS service's network access",
 		docs.Summary(
-			"list of existing group IDs to use for ECS the ECS service's network access.",
+			"list of existing group IDs to use for the ECS service's network access.",
 			"If none are specified, waypoint will create one. If DisableALB is false (the default), waypoint",
 			"will only allow ingress from the ALB's security group",
 		),
@@ -2652,7 +2652,7 @@ deploy {
 			)
 			doc.SetField(
 				"subnets",
-				"the VPC subnets to use for the alb",
+				"the VPC subnets to use for the ALB",
 				docs.Default("public subnets in the default VPC"),
 			)
 		}),
@@ -2799,7 +2799,8 @@ deploy {
 
 	doc.SetField(
 		"assign_public_ip",
-		"assign a public ip address to ecs tasks. Defaults to true. Ignored if using an ec2 cluster.",
+		"assign a public ip address to tasks. Defaults to true. Ignored if using an ec2 cluster.",
+		docs.Default("true"),
 	)
 
 	return doc, nil
