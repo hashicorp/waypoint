@@ -1,0 +1,7 @@
+```release-note:feature
+core: runner configuration can now write to files
+```
+
+```release-note:feature
+core: runner configuration can use dynamic configuration sources
+```
