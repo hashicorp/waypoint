@@ -26,7 +26,7 @@ export default function DocsLayout(props) {
 
 export async function getStaticPaths() {
   return {
-    fallback: false,
+    fallback: 'blocking',
     paths: await generateStaticPaths({
       basePath,
       product,
