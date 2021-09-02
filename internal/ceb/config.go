@@ -197,6 +197,11 @@ func (ceb *CEB) watchConfig(
 			newCmd := ceb.copyCmd(ceb.childCmdBase)
 			newCmd.Env = append(newCmd.Env, appCfg.EnvVars...)
 
+			// Note: we purposely do not process appCfg.DeletedEnvVars since
+			// our env vars are only used for _new_ child command executions
+			// so if they're deleted, they simply won't be present anymore
+			// in the next invocations.
+
 			// Restart
 			log.Info("env vars changed, sending new child command")
 			select {
