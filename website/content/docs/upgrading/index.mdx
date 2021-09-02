@@ -115,7 +115,7 @@ in the future.
 2. Check the help text from running `waypoint server upgrade -help`.
 
 3. Ensure you are in the right server context before upgrading. This can be
-   verified through `waypoint context`.
+   verified through `waypoint context verify`.
 
 4. When ready, run the upgrade command for your given platform. For example:
 
@@ -125,6 +125,8 @@ waypoint server upgrade -platform=kubernetes -auto-approve
 
 This will automatically save a snapshot of the server in your current directory
 prior to upgrading.
+
+If the server was installed with a remote runner, Waypoint will uninstall the existing runner and install a new one with the new version.
 
 ### Client Upgrade
 
