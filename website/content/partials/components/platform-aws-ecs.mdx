@@ -42,6 +42,15 @@ Set along with zone_id to have DNS automatically setup for the ALB. this value s
 - Type: **string**
 - **Optional**
 
+##### alb.ingress_port
+
+Internet-facing traffic port. Defaults to 80 if 'certificate' is unset, 443 if set.
+
+Used to set the ALB listener port, and the ALB security group ingress port.
+
+- Type: **int64**
+- **Optional**
+
 ##### alb.internal
 
 Whether or not the created ALB should be internal.
@@ -208,33 +217,11 @@ On Fargate, possible values for this are configured by the amount of memory the 
 1024MB: 256, 512
 2048MB: 256, 512, 1024
 3072MB: 512, 1024
-4096MB: 512, 1024, 2048
-5120MB: 1024, 2048
-6144MB: 1024, 2048
-7168MB: 1024, 2048
-8192MB: 1024, 2048, 4096
-9216MB: 2048, 4096
-10240MB: 2048, 4096
-11264MB: 2048, 4096
-12288MB: 2048, 4096
-13312MB: 2048, 4096
-14336MB: 2048, 4096
-15360MB: 2048, 4096
-16384MB: 4096
-17408MB: 4096
-18432MB: 4096
-19456MB: 4096
-20480MB: 4096
-21504MB: 4096
-22528MB: 4096
-23552MB: 4096
-24576MB: 4096
-25600MB: 4096
-26624MB: 4096
-27648MB: 4096
-28672MB: 4096
-29696MB: 4096
-30720MB: 4096.
+4096MB: 512, 1024
+5120MB: 1024
+6144MB: 1024
+7168MB: 1024
+8192MB: 1024.
 
 - Type: **int**
 - **Optional**
@@ -344,6 +331,10 @@ Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoi
 #### load_balancer_arn
 
 - Type: **string**
+
+#### resource_state
+
+- Type: **anypb.Any**
 
 #### service_arn
 
