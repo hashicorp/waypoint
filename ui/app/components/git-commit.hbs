@@ -1,7 +1,7 @@
 {{#if @commit}}
   <span class="git-commit" title="Triggered by commit: {{@commit}}">
     <CopyButton @clipboardText={{@commit}}>
-      <Pds::Icon @type="git-commit"/><span class="git-commit__sha">{{truncate-commit @commit}}</span>
+      <FlightIcon @name="git-commit" /><span class="git-commit__sha">{{truncate-commit @commit}}</span>
     </CopyButton>
   </span>
 {{/if}}

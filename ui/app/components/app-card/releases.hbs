@@ -5,7 +5,7 @@
   {{#if @releases.length}}
     <Card::Header>
       <h4>
-        <Pds::Icon @type="public-default" class="icon" />
+        <FlightIcon @name="globe" class="icon" />
         <span>Latest release</span>
       </h4>
       <LinkTo @route="workspace.projects.project.app.releases">
@@ -16,7 +16,7 @@
     <AppCard::Release @model={{@releases.[0] }} />
   {{else}}
     <p>
-      <Pds::Icon @type="public-default" class="icon" />
+      <FlightIcon @name="globe" class="icon" />
       <span>There are no releases to display yet</span>
     </p>
   {{/if}}

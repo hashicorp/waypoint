@@ -3,7 +3,7 @@
     <div class="output-scroll-y">
       {{#unless this.isFollowingLogs}}
         <button class="follow-logs" type="button" {{on "click" this.followLogs}}>
-          <Pds::Icon @type="arrow-down" class="icon" />
+          <FlightIcon @name="arrow-down" class="icon" />
           {{#if (gt this.badgeCount 0)}}
             <div class="badge">{{this.badgeCount}}</div>
           {{/if}}

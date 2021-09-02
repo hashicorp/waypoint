@@ -55,7 +55,7 @@
 <Pds::TabNav>
   <LinkTo @route="workspace.projects.project.app.logs"
     @models={{array @model.application.project @model.application.application }}>
-    <Pds::Icon @type="page-outline" class="icon" />
+    <FlightIcon @name="outline" class="icon" />
     {{t "nav.logs"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.builds"
@@ -65,12 +65,12 @@
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.deployments"
     @models={{array @model.application.project @model.application.application }}>
-    <Pds::Icon @type="upload" class="icon" />
+    <FlightIcon @name="upload" class="icon" />
     {{t "nav.deployments"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.releases"
     @models={{array @model.application.project @model.application.application }}>
-    <Pds::Icon @type="public-default" class="icon" />
+    <FlightIcon @name="globe" class="icon" />
     {{t "nav.releases"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.exec"

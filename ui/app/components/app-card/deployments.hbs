@@ -5,7 +5,7 @@
   {{#if @deployments.length}}
     <Card::Header>
       <h4>
-        <Pds::Icon @type="upload" class="icon" />
+        <FlightIcon @name="upload" class="icon" />
         <span>Latest deployment</span>
       </h4>
       <LinkTo @route="workspace.projects.project.app.deployments">
@@ -16,7 +16,7 @@
     <AppCard::Deployment @model={{@deployments.[0] }} />
   {{else}}
     <p>
-      <Pds::Icon @type="upload" class="icon" />
+      <FlightIcon @name="upload" class="icon" />
       <span>There are no deployments to display yet</span>
     </p>
   {{/if}}
