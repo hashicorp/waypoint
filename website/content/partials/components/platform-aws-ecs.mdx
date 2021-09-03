@@ -205,6 +205,8 @@ These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this
 
 Assign a public ip address to tasks. Defaults to true. Ignored if using an ec2 cluster.
 
+If this is set to false, deployments will fail unless tasks are able to egress to the container registry by some other means (i.e. a subnet default route to a NAT gateway).
+
 - Type: **bool**
 - **Optional**
 - Default: true
