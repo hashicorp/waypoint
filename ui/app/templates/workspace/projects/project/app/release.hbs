@@ -5,6 +5,7 @@
     {{! TODO(jgwhite): Make this a real <h1> }}
     <h2 aria-level="1"><b class="badge badge--version">v{{@model.sequence}}</b></h2>
     <small>
+      {{! TODO(sabrinako): Change this section, since there is no docker release}}
       <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
       <span>Released on <b>{{component-name @model.component.name}}</b>
         {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
@@ -37,6 +38,12 @@
         </LinkTo>
       </small>
     </div>
+  {{/if}}
+  {{#if @model.unimplemented}}
+    <small>
+      <Pds::Icon @type="alert-triangle"/>
+      Release stage undefined
+    </small>
   {{/if}}
 </StatusReportBar>
 
