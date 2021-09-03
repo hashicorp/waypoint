@@ -1,0 +1,21 @@
+.monitorAppHealth {
+  composes: g-grid-container from global;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-column-gap: 32px;
+  padding-top: 150px;
+  padding-bottom: 150px;
+
+  & img {
+    max-width: 100%;
+  }
+}
+
+.media {
+  grid-column: 1 / 7;
+}
+
+.content {
+  grid-column: 8 / -1;
+  align-self: center;
+}

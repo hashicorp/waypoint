@@ -1,0 +1,23 @@
+.extendPlugins {
+  padding-top: 150px;
+  padding-bottom: 150px;
+  composes: g-grid-container from global;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-column-gap: 32px;
+}
+
+.content {
+  grid-column: 1 / 6;
+}
+
+.contentBlocks {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-column-gap: 32px;
+
+  & > * {
+    margin-top: 0 !important;
+  }
+}

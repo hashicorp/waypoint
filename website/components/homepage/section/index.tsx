@@ -15,7 +15,6 @@ function Section({ className, id, children }: SectionProps) {
     </section>
   )
 }
-
 function SectionHeading({ children }) {
   return <h2 className={s.sectionHeading}>{children}</h2>
 }

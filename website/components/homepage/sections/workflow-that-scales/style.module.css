@@ -1,0 +1,26 @@
+.workflowThatScales {
+  padding-top: 150px;
+  padding-bottom: 150px;
+  composes: g-grid-container from global;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-column-gap: 32px;
+}
+
+.heading {
+  grid-column: 1 / 5;
+}
+
+.description {
+  grid-column: 6 / 10;
+}
+
+.media {
+  margin-top: 50px;
+  grid-column: 2 / 11;
+  grid-row: 2;
+
+  & img {
+    max-width: 100%;
+  }
+}

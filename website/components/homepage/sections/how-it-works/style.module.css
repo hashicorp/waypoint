@@ -1,0 +1,54 @@
+.howItWorks {
+  position: relative;
+  padding-top: 164px;
+  padding-bottom: 50px;
+  background-image: url('./img/background.svg');
+  background-repeat: no-repeat;
+  background-position: top right;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--waypoint-secondary);
+    opacity: 0.5;
+    z-index: -1;
+    border-radius: 3px;
+  }
+
+  & img {
+    max-width: 100%;
+  }
+
+  & ol {
+    margin: 100px 0 0;
+    padding: 0;
+    list-style: none;
+
+    & > li {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-column-gap: 32px;
+
+      & + li {
+        margin-top: 132px;
+      }
+
+      & > :first-child {
+        grid-column: 1 / 6;
+      }
+
+      & > :last-child {
+        grid-column: 7 / -1;
+      }
+    }
+  }
+}
+
+.inner {
+  composes: g-grid-container from global;
+}
