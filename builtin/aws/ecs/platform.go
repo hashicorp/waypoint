@@ -2801,6 +2801,10 @@ deploy {
 		"assign_public_ip",
 		"assign a public ip address to tasks. Defaults to true. Ignored if using an ec2 cluster.",
 		docs.Default("true"),
+		docs.Summary(
+			"If this is set to false, deployments will fail unless tasks are able to egress to the",
+			"container registry by some other means (i.e. a subnet default route to a NAT gateway).",
+		),
 	)
 
 	return doc, nil
