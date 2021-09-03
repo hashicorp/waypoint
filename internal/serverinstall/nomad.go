@@ -37,6 +37,10 @@ type nomadConfig struct {
 	serverResourcesMemory string `hcl:"server_resources_memory,optional"`
 	runnerResourcesCPU    string `hcl:"runner_resources_cpu,optional"`
 	runnerResourcesMemory string `hcl:"runner_resources_memory,optional"`
+
+	volumeType string `hcl:"volume_type,optional"`
+	hostVolume string `hcl:"host_volume,optional"`
+	//csiVolumeProvider string `hcl:"csi_volume_provider"`
 }
 
 var (
@@ -661,12 +665,16 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 			},
 		},
 	}
-	// Preserve disk, otherwise upgrades will destroy previous allocation and the
-	// disk along with it
-	tg.EphemeralDisk = &api.EphemeralDisk{
-		Sticky:  &[]bool{true}[0],
-		Migrate: &[]bool{true}[0],
+
+	// Preserve disk, otherwise upgrades will destroy previous allocation and the disk along with it
+	tg.Volumes = map[string]*api.VolumeRequest{
+		"waypoint-server": {
+			Type:     "host",
+			ReadOnly: false,
+			Source:   "potato",
+		},
 	}
+
 	job.AddTaskGroup(tg)
 
 	ras := []string{"server", "run", "-accept-tos", "-vv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)}
@@ -675,11 +683,23 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	task.Config = map[string]interface{}{
 		"image":          c.serverImage,
 		"ports":          []string{"server", "ui"},
-		"args":           ras,
+		"args":           []string{"server", "run", "-accept-tos", "-vvv", "-db=/var/lib/waypoint/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
 		"auth_soft_fail": c.authSoftFail,
 	}
 	task.Env = map[string]string{
 		"PORT": defaultGrpcPort,
+	}
+
+	readOnly := false
+	volume := "waypoint-server"
+	destination := "/var/lib/waypoint"
+
+	task.VolumeMounts = []*api.VolumeMount{
+		{
+			Volume:      &volume,
+			Destination: &destination,
+			ReadOnly:    &readOnly,
+		},
 	}
 
 	cpu := defaultResourcesCPU
@@ -890,6 +910,18 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Target: &i.config.consulServiceBackendTags,
 		Usage:  "Tags for the Waypoint backend service generated in Consul.",
 	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-volume-type",
+		Target: &i.config.volumeType,
+		Usage:  "Nomad volume type for the Waypoint server.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-host-volume",
+		Target: &i.config.hostVolume,
+		Usage:  "Nomad host volume name.",
+	})
 }
 
 func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
@@ -968,6 +1000,18 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-volume-type",
+		Target: &i.config.volumeType,
+		Usage:  "Nomad volume type for the Waypoint server.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-host-volume",
+		Target: &i.config.hostVolume,
+		Usage:  "Nomad host volume name.",
 	})
 }
 
