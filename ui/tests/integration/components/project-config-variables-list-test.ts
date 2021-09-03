@@ -1,7 +1,7 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
-import { render } from '@ember/test-helpers';
+import { render, settled } from '@ember/test-helpers';
 import { TestContext } from 'ember-test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import { create, collection, clickable, isPresent, fillable, text } from 'ember-cli-page-object';
@@ -55,8 +55,8 @@ module('Integration | Component | project-config-variables-list', function (hook
 
   test('adding and deleting variables works', async function (assert) {
     let dbproj = await this.server.create('project', { name: 'Proj1' });
+    let dbVariablesList = this.server.createList('config-variable', 3, 'random', { project: dbproj });
     let proj = dbproj.toProtobuf().toObject();
-    let dbVariablesList = this.server.createList('config-variable', 3, 'random');
     let varList = dbVariablesList.map((v) => {
       return v.toProtobuf().toObject();
     });
@@ -83,23 +83,20 @@ module('Integration | Component | project-config-variables-list', function (hook
     await page.varNameIsPath();
     await page.varInternal();
     await page.saveButton();
+    await settled(); // TODO(jgwhite): Figure out why we need this
     assert.notOk(page.hasForm, 'Create Variable: the form disappears after creation');
     assert.equal(page.variablesList.length, 4, 'Create Variable: the list has the new variable');
-    assert.equal(page.variablesList.objectAt(0).varName, 'var_name', 'Var name is correct');
-    assert.equal(page.variablesList.objectAt(0).varValue, 'foozbarz', 'Var value is correct');
-    assert.equal(
-      page.variablesList.objectAt(0).varNameIsPath,
-      'true',
-      'name is path is set correctly is correct'
-    );
-    assert.equal(page.variablesList.objectAt(0).varInternal, 'true', 'internal is set correctly is correct');
+    assert.equal(page.variablesList.objectAt(3).varName, 'var_name', 'Var name is correct');
+    assert.equal(page.variablesList.objectAt(3).varValue, 'foozbarz', 'Var value is correct');
+    assert.equal(page.variablesList.objectAt(3).varNameIsPath, 'true', 'name is path is correct');
+    assert.equal(page.variablesList.objectAt(3).varInternal, 'true', 'internal is set correctly is correct');
   });
 
   test('only static variables are editable', async function (assert) {
     let dbproj = await this.server.create('project', { name: 'Proj1' });
     let proj = dbproj.toProtobuf().toObject();
-    let dbVariablesList = this.server.createList('config-variable', 3, 'random');
-    let dynamicVar = this.server.create('config-variable', 'dynamic');
+    let dbVariablesList = this.server.createList('config-variable', 3, 'random', { project: dbproj });
+    let dynamicVar = this.server.create('config-variable', 'dynamic', { project: dbproj });
     dbVariablesList.push(dynamicVar);
     let varList = dbVariablesList.map((v) => {
       return v.toProtobuf().toObject();
