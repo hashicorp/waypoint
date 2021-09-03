@@ -480,8 +480,8 @@ waypoint server restore [snapshot-name]
 
 Where 'snapshot-name' is the name of the snapshot taken prior to the upgrade.
 
-More information can be found by runninng 'waypoint server restore -help' or
-following the server maintenence guide for backups and restores:
+More information can be found by running 'waypoint server restore -help' or
+following the server maintenance guide for backups and restores:
 https://www.waypointproject.io/docs/server/run/maintenance#backup-restore
 `)
 	addrSuccess = strings.TrimSpace(`

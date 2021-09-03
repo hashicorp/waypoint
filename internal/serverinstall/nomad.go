@@ -669,9 +669,9 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	// Preserve disk, otherwise upgrades will destroy previous allocation and the disk along with it
 	tg.Volumes = map[string]*api.VolumeRequest{
 		"waypoint-server": {
-			Type:     "host",
+			Type:     c.volumeType,
 			ReadOnly: false,
-			Source:   "potato",
+			Source:   c.hostVolume,
 		},
 	}
 
