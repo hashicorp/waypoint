@@ -6,13 +6,69 @@ Manipulates the Kubernetes Service activate Deployments.
 
 ### Required Parameters
 
-This plugin has no required parameters.
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### ingress (category)
+
+Configuration to set up an ingress resource to route traffic to the given application from an ingress controller.
+
+##### ingress.annotations
+
+Annotations to be applied to the ingress resource.
+
+- Type: **map of string to string**
+- **Optional**
+
+##### ingress.default
+
+Sets the ingress resource to be the default backend for any traffic that doesn't match existing ingress rule paths.
+
+- Type: **bool**
+- **Optional**
+- Default: false
+
+##### ingress.host
+
+If set, will configure the ingress resource to have the ingress controller route traffic for any inbound requests that match this host. IP addresses are not allowed, nor are ':' delimiters. Wildcards are allowed to a certain extent. For more details check out the Kubernetes documentation.
+
+- Type: **string**
+- **Optional**
+
+##### ingress.path
+
+The route rule that should be used to route requests to this ingress resource. A path must begin with a '/'.
+
+- Type: **string**
+- **Optional**
+- Default: /
+
+##### ingress.path_type
+
+Defines the kind of rule the path will be for the ingress controller. Valid path types are 'Exact', 'Prefix', and 'ImplementationSpecific'.
+
+- Type: **string**
+- **Optional**
+- Default: Prefix
+
+##### ingress.tls (category)
+
+A stanza of TLS configuration options for traffic to the ingress resource.
+
+###### ingress.tls.hosts
+
+A list of hosts included in the TLS certificate.
+
+###### ingress.tls.secret_name
+
+The Kubernetes secret name that should be used to look up or store TLS configs.
 
 ### Optional Parameters
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### annotations
+
+Annotations to be applied to the kube service.
 
 - Type: **map of string to string**
 - **Optional**
