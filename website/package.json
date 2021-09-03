@@ -23,7 +23,7 @@
     "@hashicorp/react-subnav": "^8.4.0",
     "@hashicorp/react-tabs": "^6.0.1",
     "@hashicorp/react-vertical-text-block-list": "^6.0.3",
-    "next": "10.0.6",
+    "next": "11.1.1",
     "next-mdx-remote": "3.0.1",
     "nuka-carousel": "4.7.5",
     "react": "16.13.1",
