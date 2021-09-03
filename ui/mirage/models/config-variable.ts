@@ -7,7 +7,7 @@ export default Model.extend({
   toProtobuf(): ConfigVar {
     let result = new ConfigVar();
 
-    // TODO: result.setProject();
+    result.setProject(this.project?.toProtobufRef());
     result.setName(this.name);
     result.setStatic(this.pb_static);
     result.setInternal(this.internal);
