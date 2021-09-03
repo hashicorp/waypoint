@@ -48,7 +48,10 @@ const (
 )
 
 type ECSInstaller struct {
-	config  ecsConfig
+	config ecsConfig
+	// netInfo stores information needed to setup on-demand runners between
+	// installation and on demand runner setup, so that we don't need to query
+	// AWS again to re-establish all the information.
 	netInfo *networkInformation
 }
 
@@ -89,13 +92,6 @@ func (i *ECSInstaller) Install(
 	ctx context.Context,
 	opts *InstallOpts,
 ) (*InstallResults, error) {
-	if i.config.OdrImage == "" {
-		var err error
-		i.config.OdrImage, err = defaultODRImage(i.config.ServerImage)
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	ui := opts.UI
 	log := opts.Log
@@ -257,11 +253,9 @@ func (i *ECSInstaller) Launch(
 		PortMappings: []*ecs.PortMapping{
 			{
 				ContainerPort: aws.Int64(int64(httpPort)),
-				HostPort:      aws.Int64(int64(httpPort)),
 			},
 			{
 				ContainerPort: aws.Int64(int64(grpcPort)),
-				HostPort:      aws.Int64(int64(grpcPort)),
 			},
 		},
 		LogConfiguration: &ecs.LogConfiguration{
@@ -331,7 +325,7 @@ func (i *ECSInstaller) Launch(
 		ServiceName:                   aws.String(serverName),
 		TaskDefinition:                aws.String(taskDefArn),
 		EnableECSManagedTags:          aws.Bool(true),
-		HealthCheckGracePeriodSeconds: aws.Int64(int64(10)),
+		HealthCheckGracePeriodSeconds: aws.Int64(int64(600)),
 		NetworkConfiguration: &ecs.NetworkConfiguration{
 			AwsvpcConfiguration: &ecs.AwsVpcConfiguration{
 				Subnets:        netInfo.subnets,
@@ -492,33 +486,23 @@ func (i *ECSInstaller) Upgrade(
 	if i.config.ServerImage != "" {
 		upgradeImg = i.config.ServerImage
 	}
+
+	s.Done()
+	s = sg.Add("Updating task definition")
+	defer func() { s.Abort() }()
 	// assume upgrade to latest
 	if *containerDef.Image == defaultServerImage {
-		s.Done()
-		// s.Update("Updating container definition in-place")
-		s = sg.Add("-----Updating container definition in-place")
 		// we can just update/force-deploy the service
-		_, err = ecsSvc.UpdateService(&ecs.UpdateServiceInput{
+		_, err := ecsSvc.UpdateService(&ecs.UpdateServiceInput{
 			ForceNewDeployment:            aws.Bool(true),
 			Cluster:                       &clusterArn,
 			Service:                       serverSvc.ServiceName,
-			HealthCheckGracePeriodSeconds: aws.Int64(int64(10)),
-		})
-		if err != nil {
-			return nil, err
-		}
-		s.Update("Waiting for service to be stable...")
-		err = ecsSvc.WaitUntilServicesStable(&ecs.DescribeServicesInput{
-			Cluster:  &clusterArn,
-			Services: []*string{serverSvc.ServiceName},
+			HealthCheckGracePeriodSeconds: aws.Int64(int64(600)),
 		})
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		s.Done()
-		// s.Update("Updating container definition")
-		s = sg.Add("----Updating container definition")
 		containerDef.Image = &upgradeImg
 		// update task definition
 
@@ -549,14 +533,15 @@ func (i *ECSInstaller) Upgrade(
 		if err != nil {
 			return nil, err
 		}
-		s.Update("Waiting for service to be stable...")
-		err = ecsSvc.WaitUntilServicesStable(&ecs.DescribeServicesInput{
-			Cluster:  &clusterArn,
-			Services: []*string{serverSvc.ServiceName},
-		})
-		if err != nil {
-			return nil, err
-		}
+	}
+
+	s.Update("Waiting until service is stable")
+	err = ecsSvc.WaitUntilServicesStable(&ecs.DescribeServicesInput{
+		Cluster:  &clusterArn,
+		Services: []*string{serverSvc.ServiceName},
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	s.Done()
@@ -768,13 +753,12 @@ func deleteNLBResources(
 				}
 			}
 
-			// TODO restore this
-			// _, err = elbSvc.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
-			// 	LoadBalancerArn: r.ResourceArn,
-			// })
-			// if err != nil {
-			// 	return err
-			// }
+			_, err = elbSvc.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
+				LoadBalancerArn: r.ResourceArn,
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -971,6 +955,14 @@ func (i *ECSInstaller) InstallRunner(
 		return err
 	}
 
+	if i.config.OdrImage == "" {
+		var err error
+		i.config.OdrImage, err = defaultODRImage(i.config.ServerImage)
+		if err != nil {
+			return err
+		}
+	}
+
 	var (
 		logGroup      string
 		executionRole string
@@ -1162,14 +1154,6 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
 
-	// set.StringVar(&flag.StringVar{
-	// 	Name:   "ecs-runner-execution-role",
-	// 	Target: &i.config.OdrExecutionRoleName,
-	// 	Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
-	// 		"an IAM role will be created automatically with the correct permissions.",
-	// 	Default: "waypoint-runner",
-	// })
-
 	set.StringVar(&flag.StringVar{
 		Name:   "ecs-runner-task-role",
 		Target: &i.config.OdrTaskRoleName,
@@ -1217,13 +1201,6 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
 			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
-	// set.StringVar(&flag.StringVar{
-	// 	Name:   "ecs-runner-execution-role",
-	// 	Target: &i.config.OdrExecutionRoleName,
-	// 	Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
-	// 		"an IAM role will be created automatically with the correct permissions.",
-	// 	Default: "waypoint-runner",
-	// })
 
 	set.StringVar(&flag.StringVar{
 		Name:   "ecs-runner-task-role",
@@ -1725,10 +1702,6 @@ type Logging struct {
 	MaxBufferSize    string `hcl:"max_buffer_size,optional"`
 }
 
-// TODO Setup Server Execution Role
-// TODO Setup Runner Execution Role
-// setupExecutionRole
-
 func (i *ECSInstaller) SetupExecutionRole(
 	ctx context.Context,
 	ui terminal.UI,
@@ -1742,19 +1715,6 @@ func (i *ECSInstaller) SetupExecutionRole(
 
 	s := sg.Add("Setting up an IAM execution role...")
 	defer func() { s.Abort() }()
-
-	// if i.config.OdrTaskRoleName != "" {
-	// 	s.Done()
-	// 	s = sg.Add("Initializing ODR Execution Role for on-demand runners...")
-	// 	// err := i.initServiceAccount(ctx, clientset, s)
-	// 	// TODO actually do something here
-	// 	s.Done()
-	// 	s.Abort()
-	// 	// if err != nil {
-	// 	// 	return nil, err
-	// 	// }
-	// 	s = sg.Add("")
-	// }
 
 	svc := iam.New(sess)
 
@@ -1902,8 +1862,6 @@ func (i *ECSInstaller) SetupTaskRole(
 	log hclog.Logger,
 	sess *session.Session,
 ) (string, error) {
-	// TaskRoleArn: aws.String("arn:aws:iam::797645259670:role/waypoint-runner"),
-
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -2042,23 +2000,6 @@ func createNLB(
 
 	httpTgArn := htgGPRC.TargetGroups[0].TargetGroupArn
 	grpcTgArn := ctgGPRC.TargetGroups[0].TargetGroupArn
-
-	for _, tgn := range []*string{httpTgArn, grpcTgArn} {
-		_, err = elbsrv.ModifyTargetGroupAttributes(&elbv2.ModifyTargetGroupAttributesInput{
-			TargetGroupArn: tgn,
-			Attributes: []*elbv2.TargetGroupAttribute{
-				{
-					Key:   aws.String("deregistration_delay.timeout_seconds"),
-					Value: aws.String("10"),
-				},
-			},
-		})
-		if err != nil {
-			// this is an optimization, so we won't error out if this
-			// modification fails
-			log.Debug("error modifying target group", "error", err)
-		}
-	}
 
 	// Create the load balancer OR modify the existing one to have this new target
 	// group but with a weight of 0
@@ -2394,9 +2335,6 @@ func (i *ECSInstaller) LaunchRunner(
 	subnets := service.NetworkConfiguration.AwsvpcConfiguration.Subnets
 
 	createServiceInput := &ecs.CreateServiceInput{
-		DeploymentController: &ecs.DeploymentController{
-			Type: aws.String("ECS"),
-		},
 		Cluster:              clusterArn,
 		DesiredCount:         aws.Int64(1),
 		LaunchType:           aws.String(defaultTaskRuntime),
