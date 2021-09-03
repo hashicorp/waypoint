@@ -1,0 +1,14 @@
+.section {
+  display: block;
+}
+
+.sectionHeading {
+  margin: 0;
+  composes: g-type-display-1 from global;
+}
+
+.sectionDescription {
+  margin: 0;
+  composes: g-type-body-small from global;
+  color: var(--gray-3);
+}
