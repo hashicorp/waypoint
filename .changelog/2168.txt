@@ -1,0 +1,3 @@
+```release-note:improvement
+ui: improve the input field for server-side HCL file on the settings page
+```
