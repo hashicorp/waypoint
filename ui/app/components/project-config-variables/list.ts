@@ -20,7 +20,7 @@ export default class ProjectConfigVariablesListComponent extends Component<Proje
   @tracked isCreating: boolean;
   @tracked activeVariable;
 
-  constructor(owner: any, args: any) {
+  constructor(owner: unknown, args: ProjectConfigArgs) {
     super(owner, args);
     let { variablesList, project } = args;
     this.variablesList = variablesList;
@@ -30,19 +30,19 @@ export default class ProjectConfigVariablesListComponent extends Component<Proje
   }
 
   @action
-  cancelCreate(variable) {
+  cancelCreate(): void {
     this.variablesList.splice(0, 1);
     this.variablesList = [...this.variablesList];
     this.isCreating = false;
   }
 
   @action
-  async deleteVariable(variable: ConfigVar.AsObject) {
+  async deleteVariable(variable: ConfigVar.AsObject): Promise<void> {
     await this.saveVariableSettings(variable, true);
   }
 
   @action
-  addVariable() {
+  addVariable(): void {
     this.isCreating = true;
     let newVar = new ConfigVar();
     let newVarObj = newVar.toObject();

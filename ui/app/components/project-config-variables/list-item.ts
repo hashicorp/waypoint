@@ -1,7 +1,7 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
-import { ConfigSetRequest, ConfigVar, Project } from 'waypoint-pb';
+import { ConfigVar, Project } from 'waypoint-pb';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 
@@ -11,6 +11,7 @@ interface VariableArgs {
   isCreating: boolean;
   saveVariableSettings: (variable: ConfigVar.AsObject, deleteVariable?: boolean) => Promise<Project.AsObject>;
   deleteVariable: (variable: ConfigVar.AsObject) => Promise<void>;
+  cancelCreate: () => void;
 }
 
 export default class ProjectConfigVariablesListItemComponent extends Component<VariableArgs> {
@@ -22,7 +23,7 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
   @tracked isCreating: boolean;
   @tracked isEditing: boolean;
 
-  constructor(owner: any, args: VariableArgs) {
+  constructor(owner: unknown, args: VariableArgs) {
     super(owner, args);
     let { variable, isEditing, isCreating } = args;
     this.variable = variable;
@@ -36,44 +37,43 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
     return !this.variable.dynamic;
   }
 
-  storeInitialVariable() {
+  storeInitialVariable(): void {
     this.initialVariable = JSON.parse(JSON.stringify(this.variable));
   }
 
   @action
-  async deleteVariable(variable) {
+  async deleteVariable(variable: ConfigVar.AsObject): Promise<void> {
     await this.args.deleteVariable(variable);
   }
 
   @action
-  editVariable() {
+  editVariable(): void {
     this.isEditing = true;
     this.storeInitialVariable();
   }
 
   @action
-  async saveVariable(e) {
+  async saveVariable(e): Promise<void> {
     e.preventDefault();
     if (this.variable.name === '' || this.variable.pb_static === '') {
       return this.flashMessages.error('Variable keys or values can not be empty');
     }
-    let savedVars = await this.args.saveVariableSettings(this.variable, false);
+    await this.args.saveVariableSettings(this.variable, false);
     this.isCreating = false;
     this.isEditing = false;
   }
 
   @action
-  cancelCreate() {
+  cancelCreate(): void {
     this.isCreating = false;
     this.isEditing = false;
-    this.args.cancelCreate(this.variable);
+    this.args.cancelCreate();
   }
 
   @action
-  cancelEdit() {
+  cancelEdit(): void {
     this.isCreating = false;
     this.isEditing = false;
     this.variable = this.initialVariable;
   }
-
 }
