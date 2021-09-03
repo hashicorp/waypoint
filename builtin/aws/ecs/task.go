@@ -35,8 +35,8 @@ func (p *TaskLauncher) StopTaskFunc() interface{} {
 }
 
 // TaskLauncherConfig is the configuration structure for the task plugin. At
-// this time most of these are simply copied from what the Waypoint Server
-// installation is using.
+// this time all these are simply copied from what the Waypoint Server
+// installation is using, with the only exception being the OdrTaskRoleName.
 type TaskLauncherConfig struct {
 	// Cluster is the ECS we're operating in
 	Cluster string `hcl:"cluster,optional"`
@@ -44,9 +44,9 @@ type TaskLauncherConfig struct {
 	// Region is the AWS region we're operating in, e.g. us-west-2, us-east-1
 	Region string `hcl:"region,optional"`
 
-	// ExecutionRoleName is the name of the AWS IAM role to apply to the
-	// task's Execution Role. This is generally the same as the Server Execution
-	// Role.
+	// ExecutionRoleName is the name of the AWS IAM role to apply to the task's
+	// Execution Role. At this time we reuse the same Role as the Server
+	// Execution Role.
 	ExecutionRoleName string `hcl:"execution_role_name,optional"`
 
 	// TaskRoleArn is the name of the AWS IAM role to apply to the task. This
@@ -78,19 +78,10 @@ func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
 Launch an ECS task for on-demand tasks from the Waypoint server.
 
 This will use the standard AWS environment variables and IAM Role information to
-source authentication information for AWS. If this is running within ECS
-itself (typical for a ECS-based installation), it will use the task's
-IAM Task Role.
+source authentication information for AWS, using the configured task role.
+If no task role name is specified, Waypoint will create one with the required
+permissions.
 `)
-
-	doc.SetField(
-		"odr_execution_role_name",
-		"Execution role name to be used for the execution role in the task",
-		docs.Summary(
-			"Execution role is the name of the AWS IAM Execution Role to use "+
-				"as the execution role for the task.",
-		),
-	)
 
 	doc.SetField(
 		"odr_task_role_name",
@@ -118,19 +109,20 @@ func (p *TaskLauncher) StopTask(
 	return nil
 }
 
-// StartTask creates a docker container for the task.
+// StartTask runs an ECS Task to perform the requested job.
 func (p *TaskLauncher) StartTask(
 	ctx context.Context,
 	log hclog.Logger,
 	tli *component.TaskLaunchInfo,
 ) (*TaskInfo, error) {
-	// Generate an ID for our pod name.
+	// Generate an ID for our task name.
 	id, err := ulid.New(ulid.Now(), rand.Reader)
 	if err != nil {
 		return nil, err
 	}
 
-	// tli.Arguments represent the command inputs, e.x:
+	// Arguments here represent the command inputs used when executing the
+	// waypoint runner, e.x:
 	//   "runner, agent, -vvv, -id, <some id>, -odr"
 	cmd := aws.StringSlice(tli.Arguments)
 
@@ -186,9 +178,6 @@ func (p *TaskLauncher) StartTask(
 	if err != nil {
 		return nil, err
 	}
-	if taskRoleArn == "" {
-		return nil, fmt.Errorf("no role arn found for (%s)", p.config.OdrTaskRoleName)
-	}
 
 	registerTaskDefinitionInput := ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions:    []*ecs.ContainerDefinition{&def},
@@ -198,7 +187,7 @@ func (p *TaskLauncher) StartTask(
 		Memory:                  aws.String("2048"),
 		Family:                  aws.String("waypoint-runner"),
 		NetworkMode:             aws.String("awsvpc"),
-		RequiresCompatibilities: []*string{aws.String("FARGATE")},
+		RequiresCompatibilities: []*string{aws.String(ecs.LaunchTypeFargate)},
 	}
 
 	taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
@@ -206,16 +195,13 @@ func (p *TaskLauncher) StartTask(
 		return nil, err
 	}
 
-	if taskDef.TaskDefinitionArn == nil {
-		return nil, fmt.Errorf("empty task definition after registering waypoint-runner task")
-	}
 	taskDefArn := *taskDef.TaskDefinitionArn
 
 	subnetStrings := strings.Split(p.config.Subnets, ",")
 	subnets := aws.StringSlice(subnetStrings)
 
-	_, err = ecsSvc.RunTask(&ecs.RunTaskInput{
-		LaunchType:           aws.String("FARGATE"),
+	if _, err := ecsSvc.RunTask(&ecs.RunTaskInput{
+		LaunchType:           aws.String(ecs.LaunchTypeFargate),
 		Cluster:              &p.config.Cluster,
 		Count:                aws.Int64(1),
 		TaskDefinition:       &taskDefArn,
@@ -224,11 +210,12 @@ func (p *TaskLauncher) StartTask(
 			AwsvpcConfiguration: &ecs.AwsVpcConfiguration{
 				Subnets:        subnets,
 				SecurityGroups: []*string{&p.config.SecurityGroupId},
+				// without a public IP we cannot reach out to ECR or other
+				// registries
 				AssignPublicIp: aws.String("ENABLED"),
 			},
 		},
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
 
