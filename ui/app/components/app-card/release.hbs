@@ -14,11 +14,16 @@
   </:meta-primary>
 
   <:meta-secondary>
+  {{#if @model.unimplemented}}
+    <Pds::Icon @type="alert-triangle"/>
+    Release stage not defined
+  {{else}}
     <Pds::Icon
       @type={{icon-for-component @model.component.name}}
       class="icon app-card__component-icon"
     />
     <StatusReportIndicator @statusReport={{@model.statusReport}} />
+  {{/if}}
   </:meta-secondary>
 
   <:actions>
