@@ -338,15 +338,15 @@ func EvaluateVariables(
 		case *pb.Variable_Str:
 			value := sv.Str
 			expr = &hclsyntax.LiteralValueExpr{Val: cty.StringVal(value)}
-		
+
 		case *pb.Variable_Bool:
 			value := sv.Bool
 			expr = &hclsyntax.LiteralValueExpr{Val: cty.BoolVal(value)}
-	
+
 		case *pb.Variable_Num:
 			value := sv.Num
 			expr = &hclsyntax.LiteralValueExpr{Val: cty.NumberIntVal(value)}
-	
+
 		default:
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
