@@ -114,8 +114,10 @@ in the future.
 
 2. Check the help text from running `waypoint server upgrade -help`.
 
-3. Ensure you are in the right server context before upgrading. This can be
-   verified through `waypoint context verify`.
+3. Ensure you are in the right server context before upgrading.
+   Check current context with `waypoint context inspect`. If this is not the intended context to upgrade,
+   run `waypoint context list` and choose the right one with `waypoint context use <name>`.
+   The upgrade automatically runs `waypoint context verify`.
 
 4. When ready, run the upgrade command for your given platform. For example:
 
