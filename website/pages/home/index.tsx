@@ -1,3 +1,4 @@
+import Hero from 'components/homepage/hero'
 import NumberedBlock from 'components/homepage/numbered-block'
 import MediaObject from 'components/homepage/media-object'
 import Section, {
@@ -9,6 +10,7 @@ import s from './style.module.css'
 export default function HomePage() {
   return (
     <>
+      <Hero />
       <Section className={s.sectionHowItWorks} id="how-it-works">
         <SectionHeading>How it works</SectionHeading>
         <NumberedBlock index="1" heading="Configure your app for Waypoint">

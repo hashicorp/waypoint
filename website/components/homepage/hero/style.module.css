@@ -1,0 +1,37 @@
+.hero {
+  padding-top: 124px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+.heroHeading {
+  margin: 0;
+  max-width: 786px;
+  font-size: 53px;
+  line-height: 56px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+
+  & > em {
+    font-style: normal;
+    font-weight: 600;
+    color: var(--waypoint);
+  }
+}
+
+.heroDescription {
+  position: relative;
+  margin: 20px 0 0;
+  max-width: 520px;
+  composes: g-type-body-small from global;
+  color: var(--gray-3);
+  z-index: 10;
+}
+
+.heroGraphic {
+  margin-top: -150px;
+  transform: translateX(32px);
+}
