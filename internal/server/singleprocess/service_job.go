@@ -296,7 +296,7 @@ func (s *service) launchOnDemandRunner(
 		envVars[k] = v
 	}
 
-	args := []string{"runner", "agent", "-vvv", "-id", runnerId, "-odr"}
+	args := []string{"runner", "agent", "-vv", "-id", runnerId, "-odr"}
 
 	job := &pb.Job{
 		Workspace:   source.Workspace,
