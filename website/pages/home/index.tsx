@@ -4,11 +4,12 @@ import Section, {
   SectionHeading,
   SectionDescription,
 } from 'components/homepage/section'
+import s from './style.module.css'
 
 export default function HomePage() {
   return (
     <>
-      <Section>
+      <Section className={s.sectionHowItWorks} id="how-it-works">
         <SectionHeading>How it works</SectionHeading>
         <NumberedBlock index="1" heading="Configure your app for Waypoint">
           <MediaObject

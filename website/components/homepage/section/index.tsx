@@ -1,7 +1,19 @@
+import React from 'react'
+import classNames from 'classnames'
 import s from './style.module.css'
 
-function Section({ children }) {
-  return <section className={s.section}>{children}</section>
+interface SectionProps {
+  className?: string
+  id?: string
+  children: React.ReactNode
+}
+
+function Section({ className, id, children }: SectionProps) {
+  return (
+    <section className={classNames(s.section, className)} id={id}>
+      {children}
+    </section>
+  )
 }
 
 function SectionHeading({ children }) {
