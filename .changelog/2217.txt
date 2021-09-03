@@ -1,0 +1,3 @@
+```release-note:bug
+internal/config: Fix parsing of complex HCL types in `-var-file`
+```
