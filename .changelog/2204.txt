@@ -1,0 +1,3 @@
+```release-note:bug
+server/singleprocess: Stop returning error when polling an app with no deployment or release
+```
