@@ -10,8 +10,8 @@ export default Factory.extend({
   dynamic: trait({
     name: () => faker.hacker.noun(),
     dynamic: {
-      from: () => 'my-config-map',
-      configMap: () => [['my-config-map', 'port']],
+      from: () => 'kubernetes',
+      configMap: () => [['name', 'my-config-map'], ['key', 'port']],
     }
   }),
 });
