@@ -5,6 +5,7 @@ import { action } from '@ember/object';
 import ApiService from 'waypoint/services/api';
 import { inject as service } from '@ember/service';
 import { GetLogStreamRequest, LogBatch } from 'waypoint-pb';
+import { Status } from 'grpc-web';
 import { formatRFC3339 } from 'date-fns';
 
 interface LogStreamArgs {
@@ -18,13 +19,13 @@ export default class LogStream extends Component<LogStreamArgs> {
   @tracked isFollowingLogs = true;
   @tracked badgeCount = 0;
 
-  constructor(owner: any, args: any) {
+  constructor(owner: unknown, args: LogStreamArgs) {
     super(owner, args);
     this.lines = [];
     this.start();
   }
 
-  addLine(line: string) {
+  addLine(line: string): void {
     this.lines = [...this.lines, line];
     if (this.isFollowingLogs === false) {
       this.badgeCount = this.badgeCount + 1;
@@ -32,32 +33,46 @@ export default class LogStream extends Component<LogStreamArgs> {
   }
 
   @action
-  followLogs(element: any) {
-    let scrollableElement = element.target
-      ? element.target.closest('.output-scroll-y')
-      : element.closest('.output-scroll-y');
+  followLogs(element: HTMLElement | Event): void {
+    if (element instanceof Event) {
+      if (element.target instanceof HTMLElement) {
+        element = element.target;
+      } else {
+        return;
+      }
+    }
+
+    let scrollableElement = element.closest('.output-scroll-y');
+
+    if (!scrollableElement) {
+      return;
+    }
 
     scrollableElement.scroll(0, scrollableElement.scrollHeight);
     this.badgeCount = 0;
   }
 
   @action
-  updateScroll(element: any) {
+  updateScroll(element: HTMLElement): void {
     if (this.isFollowingLogs === true) {
       element.scrollIntoView(false);
       this.badgeCount = 0;
     }
   }
 
-  async start() {
+  async start(): Promise<void> {
     let onData = (response: LogBatch) => {
       response.getLinesList().forEach((entry) => {
-        let prefix = formatRFC3339(entry.getTimestamp()!.toDate());
+        let ts = entry.getTimestamp();
+        if (!ts) {
+          return;
+        }
+        let prefix = formatRFC3339(ts.toDate());
         this.addLine(`${prefix}: ${entry.getLine()}`);
       });
     };
 
-    let onStatus = (status: any) => {
+    let onStatus = (status: Status) => {
       this.addLine(status.details);
     };
 
