@@ -1,20 +1,22 @@
 import Component from '@glimmer/component';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { tracked } from '@glimmer/tracking';
+import { LoginTokenRequest } from 'waypoint-pb';
 
-export default class ContextCreate extends Component {
+type Args = Record<string, never>;
+
+export default class ContextCreate extends Component<Args> {
   @service api!: ApiService;
   @tracked token = '';
 
-  constructor(owner: any, args: any) {
+  constructor(owner: unknown, args: Args) {
     super(owner, args);
     this.createToken();
   }
 
-  async createToken() {
-    let resp = await this.api.client.generateLoginToken(new Empty(), this.api.WithMeta());
+  async createToken(): Promise<void> {
+    let resp = await this.api.client.generateLoginToken(new LoginTokenRequest(), this.api.WithMeta());
     this.token = resp.getToken();
   }
 
