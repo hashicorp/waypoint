@@ -113,6 +113,8 @@
     "sass": "^1.26.10",
     "typescript": "^4.4.2",
     "ua-parser-js": "^0.7.24",
+    "xterm": "^4.13.0",
+    "xterm-addon-fit": "^0.5.0",
     "webpack-bundle-analyzer": "^3.8.0"
   },
   "engines": {
@@ -128,8 +130,7 @@
     "google-protobuf": "^3.12.2",
     "grpc-web": "./lib/grpc-web",
     "waypoint-client": "./lib/waypoint-client",
-    "waypoint-pb": "./lib/waypoint-pb",
-    "xterm": "^4.13.0"
+    "waypoint-pb": "./lib/waypoint-pb"
   },
   "ember-addon": {}
 }
