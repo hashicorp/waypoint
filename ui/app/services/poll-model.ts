@@ -35,10 +35,6 @@ export default class PollModelService extends Service {
     taskFor(this.poll).cancelAll();
   }
 
-  expedite(): void {
-    this.route?.refresh();
-  }
-
   @task({
     restartable: true,
     maxConcurrency: 1,
