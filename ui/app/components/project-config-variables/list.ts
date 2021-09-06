@@ -5,6 +5,7 @@ import { ConfigSetRequest, ConfigGetRequest, ConfigVar, Project, Ref } from 'way
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
+import FlashMessagesService from 'waypoint/services/flash-messages';
 
 interface ProjectConfigArgs {
   variablesList: ConfigVar.AsObject[];
@@ -13,7 +14,7 @@ interface ProjectConfigArgs {
 
 export default class ProjectConfigVariablesListComponent extends Component<ProjectConfigArgs> {
   @service api!: ApiService;
-  @service flashMessages;
+  @service flashMessages!: FlashMessagesService;
 
   @tracked variablesList: Array<ConfigVar.AsObject>;
   @tracked project: Project.AsObject;
@@ -51,7 +52,7 @@ export default class ProjectConfigVariablesListComponent extends Component<Proje
   }
 
   @action
-  async saveVariableSettings(variable: ConfigVar.AsObject, deleteVariable?: boolean): Promise<any | void> {
+  async saveVariableSettings(variable: ConfigVar.AsObject, deleteVariable?: boolean): Promise<void> {
     let req = new ConfigSetRequest();
 
     let projectRef = new Ref.Project();

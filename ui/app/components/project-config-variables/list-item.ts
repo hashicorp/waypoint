@@ -4,6 +4,7 @@ import { action } from '@ember/object';
 import { ConfigVar, Project } from 'waypoint-pb';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
+import FlashMessagesService from 'waypoint/services/flash-messages';
 
 interface VariableArgs {
   variable: ConfigVar.AsObject;
@@ -16,9 +17,9 @@ interface VariableArgs {
 
 export default class ProjectConfigVariablesListItemComponent extends Component<VariableArgs> {
   @service api!: ApiService;
-  @service flashMessages;
+  @service flashMessages!: FlashMessagesService;
 
-  initialVariable: ConfigVar.AsObject;
+  initialVariable!: ConfigVar.AsObject;
   @tracked variable: ConfigVar.AsObject;
   @tracked isCreating: boolean;
   @tracked isEditing: boolean;
@@ -53,7 +54,7 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
   }
 
   @action
-  async saveVariable(e): Promise<void> {
+  async saveVariable(e: Event): Promise<void> {
     e.preventDefault();
     if (this.variable.name === '' || this.variable.pb_static === '') {
       return this.flashMessages.error('Variable keys or values can not be empty');
