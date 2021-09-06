@@ -7,7 +7,7 @@ export default class CopyableCode extends Component {
   @tracked copySuccess = false;
 
   @action
-  onSuccess() {
+  onSuccess(): void {
     this.copySuccess = true;
 
     later(() => {
