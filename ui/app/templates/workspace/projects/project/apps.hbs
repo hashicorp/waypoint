@@ -32,19 +32,7 @@
   )}}
     {{! Remote init is UNKNOWN, QUEUED, WAITING, RUNNING, or SUCCESS }}
     <EmptyState>
-      <p>
-        <Spinner @size="20" />
-        Initializing project from
-        <code class="code-block">{{@model.dataSource.git.url}}</code>
-      </p>
-      <p>
-        Initialization taking a long time? Try running
-        <CopyableCode @ref="empty-init" @inline="true">
-          <code id="empty-init">waypoint init</code>
-        </CopyableCode>
-        from the CLI
-      </p>
-      <p>For more help getting started, refer to the <ExternalLink href="https://waypointproject.io/docs/getting-started">Waypoint documentation</ExternalLink></p>
+      <ProjectInitRunning @project={{@model}} />
     </EmptyState>
   {{else if (eq @model.latestInitJob.state 4)}}
     {{! Remote init is ERROR }}

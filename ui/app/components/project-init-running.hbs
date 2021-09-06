@@ -1,0 +1,21 @@
+<p>
+  <Spinner @size="20" />
+  {{t "project-init-running.title.prefix"}}
+  <code class="code-block">{{@project.dataSource.git.url}}</code>
+</p>
+
+<p>
+  {{t "project-init-running.cli.prefix"}}
+  <CopyableCode @ref="empty-init" @inline="true">
+    {{!-- template-lint-disable no-bare-strings --}}
+    <code id="empty-init">waypoint init</code>
+  </CopyableCode>
+  {{t "project-init-running.cli.suffix"}}
+</p>
+
+<p>
+  {{t "project-init-running.more-help.prefix"}}
+  <ExternalLink href="https://waypointproject.io/docs/getting-started">
+    {{t "project-init-running.more-help.link-label"}}
+  </ExternalLink>
+</p>
