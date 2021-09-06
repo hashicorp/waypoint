@@ -716,6 +716,7 @@ func (p *Platform) resourceDeploymentCreate(
 // Destroy deletes the K8S deployment.
 func (p *Platform) resourceDeploymentDestroy(
 	ctx context.Context,
+	log hclog.Logger,
 	state *Resource_Deployment,
 	sg terminal.StepGroup,
 	csinfo *clientsetInfo,
@@ -734,7 +735,12 @@ func (p *Platform) resourceDeploymentDestroy(
 	step = sg.Add("Deleting deployment...")
 	deployclient := csinfo.Clientset.AppsV1().Deployments(ns)
 	if err := deployclient.Delete(ctx, state.Name, metav1.DeleteOptions{}); err != nil {
-		return err
+		if errors.IsNotFound(err) {
+			log.Info("Deployment %s already gone...", state.Name)
+			err = nil
+		} else {
+			return err
+		}
 	}
 	step.Done()
 
