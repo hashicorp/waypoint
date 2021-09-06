@@ -15,15 +15,3 @@ declare module 'ember-a11y-testing/test-support/audit' {
     axeOptions?: Record<string, unknown>
   ): Promise<void>;
 }
-
-declare module '@ember/routing/router-service' {
-  import Route from '@ember/routing/route';
-
-  type Transition = ReturnType<Route['transitionTo']>;
-
-  export default class RouterService {
-    // This method comes from ember-router-service-refresh-polyfill,
-    // which does not provide its own type declarations.
-    refresh(pivotRouteName?: string): Transition;
-  }
-}
