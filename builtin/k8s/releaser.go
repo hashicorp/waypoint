@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"strconv"
 	"strings"
 	"time"
@@ -64,6 +65,13 @@ func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithCreate(r.resourceServiceCreate),
 			resource.WithDestroy(r.resourceServiceDestroy),
 			resource.WithStatus(r.resourceServiceStatus),
+		)),
+		resource.WithResource(resource.NewResource(
+			resource.WithName("ingress"),
+			resource.WithState(&Resource_Ingress{}),
+			resource.WithCreate(r.resourceIngressCreate),
+			resource.WithDestroy(r.resourceIngressDestroy),
+			resource.WithStatus(r.resourceIngressStatus),
 		)),
 	)
 }
@@ -132,16 +140,75 @@ func (r *Releaser) resourceServiceStatus(
 	return nil
 }
 
-func (r *Releaser) resourceServiceCreate(
+func (r *Releaser) resourceIngressStatus(
 	ctx context.Context,
 	log hclog.Logger,
-	target *Deployment,
-
-	result *Release,
-	state *Resource_Service,
-	csinfo *clientsetInfo,
 	sg terminal.StepGroup,
+	state *Resource_Ingress,
+	clientset *clientsetInfo,
+	sr *resource.StatusResponse,
 ) error {
+	s := sg.Add("Checking status of Kubernetes ingress resource [ %s ]...", state.Name)
+	defer s.Abort()
+
+	namespace := r.config.Namespace
+	if namespace == "" {
+		namespace = clientset.Namespace
+	}
+
+	ingressResource := sdk.StatusReport_Resource{
+		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_ROUTER,
+	}
+	sr.Resources = append(sr.Resources, &ingressResource)
+
+	ingressResp, err := clientset.Clientset.NetworkingV1beta1().Ingresses(namespace).Get(ctx, state.Name, metav1.GetOptions{})
+	if ingressResp == nil {
+		return status.Errorf(codes.FailedPrecondition, "kubernetes ingress response cannot be empty")
+	} else if err != nil {
+		if !errors.IsNotFound(err) {
+			return err
+		} else {
+			ingressResource.Name = state.Name
+			ingressResource.Health = sdk.StatusReport_MISSING
+			ingressResource.HealthMessage = sdk.StatusReport_MISSING.String()
+
+			// Continue on with the rest of our resources
+		}
+	} else {
+		// We found the ingress, and can use it to populate our resource
+		var host string
+		var ip string
+		for _, lb := range ingressResp.Status.LoadBalancer.Ingress {
+			if lb.Hostname != "" {
+				host = lb.Hostname
+				ip = lb.IP
+				break
+			}
+		}
+
+		ingressJson, err := json.Marshal(map[string]interface{}{
+			"ingress":   ingressResp,
+			"host": host,
+			"ip": ip,
+		})
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to marshal k8s ingress definition to json: %s", err)
+		}
+
+		ingressResource.Id = fmt.Sprintf("%s", ingressResp.UID)
+		ingressResource.Name = ingressResp.Name
+		ingressResource.CreatedTime = timestamppb.New(ingressResp.CreationTimestamp.Time)
+		ingressResource.Health = sdk.StatusReport_READY // If we found the ingress, then it's ready. It doesn't have any other conditions.
+		ingressResource.HealthMessage = "exists"
+		ingressResource.StateJson = string(ingressJson)
+	}
+
+	s.Update("Finished building report for Kubernetes ingress resource")
+	s.Done()
+	return nil
+}
+
+func (r *Releaser) resourceServiceCreate(ctx context.Context, log hclog.Logger, target *Deployment, result *Release, state *Resource_Service, csinfo *clientsetInfo, sg terminal.StepGroup) (error) {
 	step := sg.Add("Initializing Kubernetes client...")
 	defer func() { step.Abort() }() // Defer in func in case more steps are added to this func in the future
 	// Prepare our namespace and override if set.
@@ -153,7 +220,7 @@ func (r *Releaser) resourceServiceCreate(
 	step.Update("Kubernetes client connected to %s with namespace %s", csinfo.Config.Host, ns)
 	step.Done()
 
-	step = sg.Add("Preparing service...")
+	step = sg.Add("Preparing service [%s]...", result.ServiceName)
 
 	clientSet := csinfo.Clientset
 	serviceclient := clientSet.CoreV1().Services(ns)
@@ -314,6 +381,111 @@ func (r *Releaser) resourceServiceCreate(
 	return nil
 }
 
+func (r *Releaser) resourceIngressCreate(ctx context.Context, log hclog.Logger, target *Deployment, result *Release, state *Resource_Ingress, csinfo *clientsetInfo, sg terminal.StepGroup) (error) {
+	if !r.config.Ingress.Enabled {
+		return nil
+	}
+	step := sg.Add("Initializing Kubernetes client...")
+	defer func() { step.Abort() }() // Defer in func in case more steps are added to this func in the future
+	// Prepare our namespace and override if set.
+	ns := csinfo.Namespace
+	if r.config.Namespace != "" {
+		ns = r.config.Namespace
+	}
+
+	step.Update("Kubernetes client connected to %s with namespace %s", csinfo.Config.Host, ns)
+	step.Done()
+
+	step = sg.Add("Preparing ingress [%s]...", result.IngressName)
+
+	clientSet := csinfo.Clientset
+	ingressClient := clientSet.NetworkingV1beta1().Ingresses(ns)
+
+	// Determine if we have an Ingress that we manage already
+	create := false
+	ingress, err := ingressClient.Get(ctx, result.IngressName, metav1.GetOptions{})
+	if errors.IsNotFound(err) {
+		ingress = result.newIngress(result.IngressName)
+		create = true
+		err = nil
+	}
+	if err != nil {
+		log.Warn("error from k8s api: %v", err)
+		return err
+	}
+
+	// set the ingress name in state, at this point we've either created it or
+	// it already existed
+	state.Name = result.IngressName
+
+	// Update the spec
+	ingress.Annotations = r.config.Annotations
+	ingress.Spec.Rules = []networkingv1beta1.IngressRule{
+		{
+			Host: r.config.Ingress.Host,
+		},
+	}
+	ingress.Spec.Backend = &networkingv1beta1.IngressBackend{
+		ServiceName: result.ServiceName,
+		ServicePort: intstr.FromInt(80), // TODO: get configured port from service
+		Resource:    nil,
+	}
+	// TODO: this should be configurable
+	ingress.Spec.TLS = []networkingv1beta1.IngressTLS{
+		{
+			Hosts: []string{r.config.Ingress.Host},
+			SecretName: fmt.Sprintf("tls-%s", result.IngressName),
+		},
+	}
+
+	// Create/update
+	if create {
+		step.Update("Creating ingress...")
+		ingress, err = ingressClient.Create(ctx, ingress, metav1.CreateOptions{})
+	} else {
+		step.Update("Updating ingress...")
+		ingress, err = ingressClient.Update(ctx, ingress, metav1.UpdateOptions{})
+	}
+	if err != nil {
+		return err
+	}
+
+	step.Done()
+	step = sg.Add("Waiting for ingress to become ready...")
+
+	// Wait on the IP
+	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		ingress, err = ingressClient.Get(ctx, result.IngressName, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		return len(ingress.Status.LoadBalancer.Ingress)> 0, nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	step.Update("Ingress is ready!")
+	step.Done()
+
+	ingCfg := r.config.Ingress
+	proto := "http"
+	// detect if TLS is configured
+	// TODO: TLS may be enabled at the ingress controller level (e.g. nginx ingress using ACM certificate)
+	for _, tls := range ingress.Spec.TLS {
+		for _, host := range tls.Hosts {
+			if host == ingCfg.Host {
+				proto = "https"
+			}
+		}
+	}
+	result.Url = proto + "://" + ingCfg.Host
+
+	return nil
+}
+
 func (r *Releaser) resourceServiceDestroy(
 	ctx context.Context,
 	state *Resource_Service,
@@ -343,6 +515,36 @@ func (r *Releaser) resourceServiceDestroy(
 	return nil
 }
 
+func (r *Releaser) resourceIngressDestroy(
+	ctx context.Context,
+	state *Resource_Ingress,
+	sg terminal.StepGroup,
+	csinfo *clientsetInfo,
+) error {
+	step := sg.Add("Initializing Kubernetes client...")
+	defer step.Abort()
+
+	// Prepare our namespace and override if set.
+	ns := csinfo.Namespace
+	if r.config.Namespace != "" {
+		ns = r.config.Namespace
+	}
+
+	clientSet := csinfo.Clientset
+	ingressClient := clientSet.NetworkingV1beta1().Ingresses(ns)
+	step.Update("Kubernetes client connected to %s with namespace %s", csinfo.Config.Host, ns)
+	step.Done()
+
+	step = sg.Add("Deleting ingress...")
+	if err := ingressClient.Delete(ctx, state.Name, metav1.DeleteOptions{}); err != nil {
+		return err
+	}
+
+	step.Done()
+	return nil
+}
+
+
 // getClientset is a value provider for our resource manager and provides
 // the connection information used by resources to interact with Kubernetes.
 func (r *Releaser) getClientset() (*clientsetInfo, error) {
@@ -370,6 +572,7 @@ func (r *Releaser) Release(
 ) (*Release, error) {
 	var result Release
 	result.ServiceName = src.App
+	result.IngressName = src.App
 
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -408,6 +611,9 @@ func (r *Releaser) Destroy(
 		rm.Resource("service").SetState(&Resource_Service{
 			Name: release.ServiceName,
 		})
+		rm.Resource("ingress").SetState(&Resource_Ingress{
+			Name: release.IngressName,
+		})
 	} else {
 		// Load our set state
 		if err := rm.LoadState(release.ResourceState); err != nil {
@@ -435,6 +641,9 @@ func (r *Releaser) Status(
 	if release.ResourceState == nil {
 		rm.Resource("service").SetState(&Resource_Service{
 			Name: release.ServiceName,
+		})
+		rm.Resource("ingress").SetState(&Resource_Ingress{
+			Name: release.IngressName,
 		})
 	} else {
 		// Load our set state
@@ -509,6 +718,8 @@ type ReleaserConfig struct {
 	// Context specifies the kube context to use.
 	Context string `hcl:"context,optional"`
 
+	Ingress ReleaserIngressConfig `hcl:"ingress,block"`
+
 	// Load Balancer sets whether or not the service will be a load
 	// balancer type service
 	LoadBalancer bool `hcl:"load_balancer,optional"`
@@ -532,6 +743,17 @@ type ReleaserConfig struct {
 	Namespace string `hcl:"namespace,optional"`
 }
 
+type ReleaserIngressConfig struct {
+	//Name string `json:"name"`
+
+	// Enabled sets whether Waypoint creates an Ingress
+	// resource for the release
+	Enabled bool `hcl:"enabled,optional"`
+
+	// Host is the fully qualified domain name of a network host, as defined by RFC 3986.
+	Host string `hcl:"host,optional"`
+}
+
 func (r *Releaser) Documentation() (*docs.Documentation, error) {
 	doc, err := docs.New(docs.FromConfig(&ReleaserConfig{}))
 	if err != nil {
@@ -550,6 +772,14 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 	doc.SetField(
 		"context",
 		"the kubectl context to use, as defined in the kubeconfig file",
+	)
+
+	doc.SetField(
+		"ingress",
+		"indicates if a Kubernetes Ingress should be created",
+		docs.Summary(
+			"should an Ingress be created for the release",
+		),
 	)
 
 	doc.SetField(
