@@ -2,4 +2,5 @@
 
 module.exports = {
   extends: 'recommended',
+  ignore: ['node_modules/**'],
 };
