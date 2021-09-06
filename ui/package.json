@@ -76,6 +76,7 @@
     "ember-concurrency-async": "^0.3.1",
     "ember-concurrency-decorators": "^2.0.1",
     "ember-concurrency-ts": "^0.2.0",
+    "ember-did-resize-modifier": "^1.0.0",
     "ember-export-application-global": "^2.0.1",
     "ember-fetch": "^8.0.2",
     "ember-in-viewport": "^3.8.0",
