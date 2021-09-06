@@ -16,6 +16,10 @@ func (r *Runner) executeInitOp(
 ) (*pb.Job_Result, error) {
 	client := project.Client()
 
+	// This operation upserts apps defined in the project’s waypoint.hcl
+	// into the server’s database. This is important for projects that use
+	// the GitOps flow without polling, as otherwise the project appears
+	// empty and a manual CLI init step is required.
 	for _, name := range project.Apps() {
 		_, err := client.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
 			Project: project.Ref(),
