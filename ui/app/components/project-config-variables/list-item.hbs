@@ -120,7 +120,7 @@
           <D.Trigger
             data-test-config-variables-dropdown
             @variant="ghost">
-            Actions
+            {{t "form.config_variables_settings.variable_dropdown.trigger"}}
           </D.Trigger>
           <D.Dialog >
             <section>
@@ -128,13 +128,13 @@
                 data-test-config-variables-dropdown-edit
                 @variant="secondary"
                 {{on "click" (fn this.editVariable this.variable)}}>
-                Edit
+                {{t "form.config_variables_settings.variable_dropdown.edit"}}
               </Pds::Button>
               <Pds::Button
                 data-test-config-variables-dropdown-delete
                 @variant="warning"
                 {{on "click" (fn this.deleteVariable this.variable)}}>
-                Delete
+                {{t "form.config_variables_settings.variable_dropdown.delete"}}
               </Pds::Button>
             </section>
           </D.Dialog>

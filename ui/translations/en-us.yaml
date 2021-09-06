@@ -88,6 +88,10 @@ form:
     variable_internal: 'Internal'
     variable_nameIsPath: 'Name as path'
     variable_value_placeholder: 'var_value'
+    variable_dropdown:
+      trigger: 'Actions'
+      edit: 'Edit'
+      delete: 'Delete'
     nameIsPath:
       label: "Use variable name as file path"
     internal:
