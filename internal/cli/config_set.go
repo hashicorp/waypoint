@@ -16,10 +16,12 @@ import (
 type ConfigSetCommand struct {
 	*baseCommand
 
-	flagGlobal  bool
-	flagRunner  bool
-	flagProject string
-	flagScope   string
+	flagGlobal         bool
+	flagRunner         bool
+	flagProject        string
+	flagScope          string
+	flagWorkspaceScope string
+	flagLabelScope     string
 }
 
 func (c *ConfigSetCommand) Run(args []string) int {
@@ -137,6 +139,18 @@ func (c *ConfigSetCommand) Run(args []string) int {
 			}
 		}
 
+		// If we have a workspace flag set, set that.
+		if v := c.flagWorkspaceScope; v != "" {
+			configVar.Target.Workspace = &pb.Ref_Workspace{
+				Workspace: v,
+			}
+		}
+
+		// If we have a label flag set, set that.
+		if v := c.flagLabelScope; v != "" {
+			configVar.Target.LabelSelector = v
+		}
+
 		req.Variables = append(req.Variables, configVar)
 	}
 
@@ -168,6 +182,24 @@ func (c *ConfigSetCommand) Flags() *flag.Sets {
 			Usage: "The name of the project for 'project' or 'app' scopes specified " +
 				"with -scope. This is not required if scope is global or there is " +
 				"a local waypoint.hcl file.",
+			Default: "",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "workspace-scope",
+			Target: &c.flagWorkspaceScope,
+			Usage: "Specify that the configuration is only available within a " +
+				"specific workspace. This configuration will only be set for " +
+				"deployments or operations (if -runner if set) when the workspace " +
+				"matches this.",
+			Default: "",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "label-scope",
+			Target: &c.flagLabelScope,
+			Usage: "If set, configuration will only be set if the deployment " +
+				"or operation (if -runner is set) has a matching label set.",
 			Default: "",
 		})
 
