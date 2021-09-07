@@ -769,9 +769,9 @@ Waypoint will search for artifacts to pass to the deployment phase.
 	},
 
 	"auth-method": {
-		"Auth Method Management",
+		"Auth method management",
 		`
-Auth Method Management
+Auth method management
 
 The auth-method commands can be used to manage how users can authenticate
 into the Waypoint server. For day-to-day Waypoint users, you likely want
