@@ -16,7 +16,10 @@ import (
 type ConfigSetCommand struct {
 	*baseCommand
 
-	flagRunner bool
+	flagGlobal  bool
+	flagRunner  bool
+	flagProject string
+	flagScope   string
 }
 
 func (c *ConfigSetCommand) Run(args []string) int {
@@ -30,15 +33,20 @@ func (c *ConfigSetCommand) Run(args []string) int {
 	}
 
 	// We parse our flags twice in this command because we need to
-	// determine if we're setting runner config or not. If we're setting
-	// runner config, we don't need any Waypoint config.
+	// determine if we're loading a config or not.
 	//
 	// NOTE we specifically ignore errors here because if we have errors
 	// they'll happen again on Init and Init will output to the CLI.
-	if err := c.Flags().Parse(args); err == nil && c.flagRunner {
-		initOpts = append(initOpts,
-			WithNoConfig(), // no waypoint.hcl
-		)
+	if err := c.Flags().Parse(args); err == nil {
+		// If we're global scoped OR we have a project explicitly set
+		// then we do not need a config. If we're not global scoped and
+		// we do not have a project explicitly set, we need a config because
+		// we need a way to load that project name.
+		if c.flagScope == "global" || c.flagProject != "" {
+			initOpts = append(initOpts,
+				WithNoConfig(), // no waypoint.hcl
+			)
+		}
 	}
 
 	// Initialize. If we fail, we just exit since Init handles the UI.
@@ -67,6 +75,12 @@ func (c *ConfigSetCommand) Run(args []string) int {
 		}
 	}
 
+	// Pre-calculate our project ref since we reuse this.
+	projectRef := &pb.Ref_Project{Project: c.flagProject}
+	if c.flagProject == "" && c.project != nil {
+		projectRef = c.project.Ref()
+	}
+
 	// Get our API client
 	client := c.project.Client()
 
@@ -79,6 +93,7 @@ func (c *ConfigSetCommand) Run(args []string) int {
 			return 1
 		}
 
+		// Build our initial config var
 		configVar := &pb.ConfigVar{
 			Target: &pb.ConfigVar_Target{},
 			Name:   arg[:idx],
@@ -87,27 +102,37 @@ func (c *ConfigSetCommand) Run(args []string) int {
 			},
 		}
 
-		switch {
-		case c.flagRunner:
+		// Depending on the scoping set our target
+		switch c.flagScope {
+		case "global":
 			configVar.Target.AppScope = &pb.ConfigVar_Target_Global{
 				Global: &pb.Ref_Global{},
 			}
-			configVar.Target.Runner = &pb.Ref_Runner{
-				Target: &pb.Ref_Runner_Any{
-					Any: &pb.Ref_RunnerAny{},
+
+		case "project":
+			configVar.Target.AppScope = &pb.ConfigVar_Target_Project{
+				Project: projectRef,
+			}
+
+		case "app":
+			configVar.Target.AppScope = &pb.ConfigVar_Target_Application{
+				Application: &pb.Ref_Application{
+					Project:     projectRef.Project,
+					Application: c.flagApp,
 				},
 			}
 
-		case c.flagApp == "":
-			configVar.Target.AppScope = &pb.ConfigVar_Target_Project{
-				Project: c.project.Ref(),
-			}
-
 		default:
-			configVar.Target.AppScope = &pb.ConfigVar_Target_Application{
-				Application: &pb.Ref_Application{
-					Project:     c.project.Ref().Project,
-					Application: c.flagApp,
+			err := fmt.Errorf("-scope needs to be one of 'global', 'project', or 'app'")
+			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+
+		// If we're targeting a runner, set that
+		if c.flagRunner {
+			configVar.Target.Runner = &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Any{
+					Any: &pb.Ref_RunnerAny{},
 				},
 			}
 		}
@@ -128,13 +153,33 @@ func (c *ConfigSetCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 
+		f.StringVar(&flag.StringVar{
+			Name:   "scope",
+			Target: &c.flagScope,
+			Usage: "The scope for this configuration. The configuration will only " +
+				"appear within this scope. This can be one of 'global', 'project', or" +
+				"'app'.",
+			Default: "project",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "project",
+			Target: &c.flagProject,
+			Usage: "The name of the project for 'project' or 'app' scopes specified " +
+				"with -scope. This is not required if scope is global or there is " +
+				"a local waypoint.hcl file.",
+			Default: "",
+		})
+
 		f.BoolVar(&flag.BoolVar{
 			Name:   "runner",
 			Target: &c.flagRunner,
 			Usage: "Expose this configuration on runners. This can be used " +
 				"to set things such as credentials to cloud platforms " +
 				"for remote runners. This configuration will not be exposed " +
-				"to deployed applications.",
+				"to deployed applications. If this is specified in the context " +
+				"of a project, this will apply only to runners operating on jobs " +
+				"for the specific project or application.",
 			Default: false,
 		})
 	})
