@@ -41,8 +41,57 @@ type genericConfig struct {
 	// LabelScoped are label-selector-scoped config variables.
 	LabelScoped []*scopedConfig `hcl:"label,block"`
 
+	// Runner are runner-scoped configurations.
+	Runner *runnerConfig `hcl:"runner,block"`
+
 	ctx       *hcl.EvalContext    // ctx is the context to use when evaluating
 	scopeFunc func(*pb.ConfigVar) // scopeFunc should set the scope for the config var
+}
+
+// runnerConfig is used for the `runner` blocks within `config`.
+type runnerConfig struct {
+	// Same as genericConfig, see there for docs.
+	InternalRaw     hcl.Expression  `hcl:"internal,optional"`
+	EnvRaw          hcl.Expression  `hcl:"env,optional"`
+	FileRaw         hcl.Expression  `hcl:"file,optional"`
+	WorkspaceScoped []*scopedConfig `hcl:"workspace,block"`
+	LabelScoped     []*scopedConfig `hcl:"label,block"`
+}
+
+func (c *runnerConfig) configVars(
+	ctx *hcl.EvalContext,
+	scopeFunc func(*pb.ConfigVar),
+) ([]*pb.ConfigVar, error) {
+	if c == nil {
+		return nil, nil
+	}
+
+	// Setup our scope function
+	runnerScopeFunc := func(v *pb.ConfigVar) {
+		// Inherit our parent scope.
+		scopeFunc(v)
+
+		// Add that we target runners
+		v.Target.Runner = &pb.Ref_Runner{
+			Target: &pb.Ref_Runner_Any{
+				Any: &pb.Ref_RunnerAny{},
+			},
+		}
+	}
+
+	// Build a generic config since we're most similar to that and that
+	// lets us share logic across the config var functions without
+	// copy and pasting.
+	generic := &genericConfig{
+		InternalRaw:     c.InternalRaw,
+		EnvRaw:          c.EnvRaw,
+		FileRaw:         c.FileRaw,
+		WorkspaceScoped: c.WorkspaceScoped,
+		LabelScoped:     c.LabelScoped,
+		scopeFunc:       runnerScopeFunc,
+	}
+
+	return generic.configVars(ctx)
 }
 
 // scopedConfig is used for the `workspace` and `label`-scoped config blocks
@@ -80,6 +129,9 @@ func (s *scopedConfig) configVars(
 	return configVars(ctx, pairs, scopeFunc)
 }
 
+// ConfigVars returns the set of config vars that can be sent to the API server.
+// This will include all the scoped config vars such as workspaces, labels,
+// and runners.
 func (c *genericConfig) ConfigVars() ([]*pb.ConfigVar, error) {
 	if c == nil {
 		return nil, nil
@@ -94,6 +146,12 @@ func (c *genericConfig) ConfigVars() ([]*pb.ConfigVar, error) {
 	})
 	ctx = finalizeContext(ctx)
 
+	return c.configVars(ctx)
+}
+
+func (c *genericConfig) configVars(
+	ctx *hcl.EvalContext,
+) ([]*pb.ConfigVar, error) {
 	// We copy ourselves to a scopedConfig so we can share the configVars
 	// function. Otherwise, the two functions are nearly identical.
 	rootScope := &scopedConfig{
@@ -104,6 +162,16 @@ func (c *genericConfig) ConfigVars() ([]*pb.ConfigVar, error) {
 	result, err := rootScope.configVars(ctx, c.scopeFunc)
 	if err != nil {
 		return nil, err
+	}
+
+	// Do runners
+	if c.Runner != nil {
+		next, err := c.Runner.configVars(ctx, c.scopeFunc)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, next...)
 	}
 
 	// Build up our workspace-scoped configs.

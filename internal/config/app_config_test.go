@@ -175,6 +175,39 @@ func TestConfigVars(t *testing.T) {
 				}
 			},
 		},
+
+		{
+			"runner.hcl",
+			"",
+			func(t *testing.T, c *Config) {
+				require := require.New(t)
+
+				vars, err := c.Config.ConfigVars()
+				require.NoError(err)
+				require.Len(vars, 2)
+
+				{
+					v := vars[0]
+					require.Equal("bar", v.Name)
+					require.False(v.NameIsPath)
+					require.False(v.Internal)
+					require.Equal("baz", v.Value.(*pb.ConfigVar_Static).Static)
+
+					require.NotNil(v.Target.Runner)
+					_, ok := v.Target.Runner.Target.(*pb.Ref_Runner_Any)
+					require.True(ok)
+				}
+				{
+					v := vars[1]
+					require.Equal("foo", v.Name)
+					require.False(v.NameIsPath)
+					require.False(v.Internal)
+					require.Equal("bar", v.Value.(*pb.ConfigVar_Static).Static)
+					require.Nil(v.Target.Workspace)
+					require.Nil(v.Target.Runner)
+				}
+			},
+		},
 	}
 
 	for _, tt := range cases {
