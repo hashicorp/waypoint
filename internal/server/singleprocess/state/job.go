@@ -389,7 +389,10 @@ RETRY_ASSIGN:
 	// Write locks are exclusive so this will ensure we're the only one
 	// writing at a time. This lets us be sure we're the only one "assigning"
 	// a job candidate.
-	txn = s.inmem.Txn(true)
+	//
+	// Note: we only grab a write lock if we're assigning. If we're not
+	// assigning then we grab a read lock.
+	txn = s.inmem.Txn(assign)
 	for _, job := range candidates {
 		// Get the job
 		raw, err := txn.First(jobTableName, jobIdIndexName, job.Id)
@@ -420,6 +423,9 @@ RETRY_ASSIGN:
 
 		// If we've been requested to not assign, then we found our result.
 		if !assign {
+			// We're no longer going to use the memdb txn
+			txn.Abort()
+
 			var pbjob *pb.Job
 			err = s.db.View(func(dbTxn *bolt.Tx) error {
 				pbjob, err = s.jobById(dbTxn, job.Id)
