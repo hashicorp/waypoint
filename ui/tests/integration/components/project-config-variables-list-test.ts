@@ -113,6 +113,4 @@ module('Integration | Component | project-config-variables-list', function (hook
     assert.ok(page.variablesList.objectAt(0).hasDropDownEdit, 'Static Variable is editable');
     assert.notOk(page.variablesList.objectAt(3).hasDropDown, 'Dynamic Variable is not editable or deletable');
   });
-  // test('internal variables', async function (assert) {});
-  // test('nameIsPath works', async function (assert) {});
 });
