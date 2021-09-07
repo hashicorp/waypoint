@@ -149,11 +149,18 @@ func (c *ConfigGetCommand) Run(args []string) int {
 		return 0
 	}
 
-	table := terminal.NewTable("Scope", "Name", "Value")
+	table := terminal.NewTable("Scope", "Name", "Value", "Workspace", "Labels")
 	for _, v := range resp.Variables {
-		var app string
-		if scope, ok := v.Target.AppScope.(*pb.ConfigVar_Target_Application); ok {
-			app = scope.Application.Application
+		scope := "<unknown>"
+		switch appscope := v.Target.AppScope.(type) {
+		case *pb.ConfigVar_Target_Global:
+			scope = "global"
+
+		case *pb.ConfigVar_Target_Project:
+			scope = "project"
+
+		case *pb.ConfigVar_Target_Application:
+			scope = "app: " + appscope.Application.Application
 		}
 
 		value := ""
@@ -165,10 +172,17 @@ func (c *ConfigGetCommand) Run(args []string) int {
 			value = fmt.Sprintf("<dynamic via %s>", v.Dynamic.From)
 		}
 
+		ws := ""
+		if v.Target.Workspace != nil {
+			ws = v.Target.Workspace.Workspace
+		}
+
 		table.Rich([]string{
-			app,
+			scope,
 			v.Name,
 			value,
+			ws,
+			v.Target.LabelSelector,
 		}, []string{
 			"",
 			terminal.Green,
