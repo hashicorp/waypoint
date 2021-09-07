@@ -98,7 +98,7 @@ in place of `waypoint`.
 
 ## Making Changes to Waypoint
 
->Note: See "Issue Lifecycle" for more info on recognizing when issues are already
+>Note: See [Issue Lifecycle](#issue-lifecycle) for more info on recognizing when issues are already
 a work-in-progress
 
 Run `make tools` to install the list of tools in ./tools/tools.go.
