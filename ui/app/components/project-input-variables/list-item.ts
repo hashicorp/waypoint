@@ -16,10 +16,11 @@ interface VariableArgs {
   deleteVariable: (variable: Variable.AsObject) => Promise<void>;
 }
 
-export default class ProjectInputVariablesListComponent extends Component<VariableArgs> {
-  initialVariable: Variable.AsObject;
+export default class ProjectInputVariablesListItemComponent extends Component<VariableArgs> {
   @service api!: ApiService;
   @service flashMessages;
+
+  initialVariable: Variable.AsObject;
   @tracked variable: Variable.AsObject;
   @tracked isCreating: boolean;
   @tracked isEditing: boolean;

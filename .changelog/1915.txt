@@ -1,0 +1,3 @@
+```release-note:feature
+ui: Allow config variables to be managed in the browser UI
+```

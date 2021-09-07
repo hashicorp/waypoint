@@ -165,7 +165,7 @@
               @offLabel='git sync off'
               @name="Git Sync"
               />
-            <toggle.label for="git-sync-enabled">
+            <toggle.label for="git-sync-enabled" @value={{not this.project.dataSourcePoll.enabled}}>
               <span class="pds-toggleLabel">
                 {{t "form.project_git_settings.git_sync_description_label"}}
               </span>

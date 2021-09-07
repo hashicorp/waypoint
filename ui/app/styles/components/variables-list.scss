@@ -1,0 +1,39 @@
+.variables-list {
+  margin-bottom: scale.$lg-1;
+  .variables--list-item {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgb(var(--border));
+    padding: scale.$sm-1;
+    &.variables--list-item__header {
+      color: rgb(var(--text-muted));
+      .variables--list-item-value, .variables--list-item-name-is-path, .variables--list-item-internal {
+        font-weight: bold;
+      }
+    }
+  }
+  .variables--list-item-name {
+    width: 30%;
+    font-weight: bold;
+  }
+  .variables--list-item-value {
+    width: 30%;
+    margin-right: auto;
+  }
+  .variables--list-item-name-is-path {
+    width: 15%;
+    margin-right: auto;
+  }
+  .variables--list-item-internal {
+    width: 15%;
+    margin-right: auto;
+  }
+  .variables--list-item-actions {
+    width: 114px;
+  }
+
+  .pds-emptyState {
+    padding: scale.$lg-1 0;
+    text-align: center;
+  }
+}

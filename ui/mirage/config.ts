@@ -14,6 +14,7 @@ import * as statusReport from './services/status-report';
 import * as job from './services/job';
 import * as log from './services/log';
 import * as pushedArtifact from './services/pushed-artifact';
+import * as config from './services/config';
 
 export default function (this: Server): void {
   this.namespace = 'hashicorp.waypoint.Waypoint';
@@ -51,6 +52,8 @@ export default function (this: Server): void {
   this.post('/GetLogStream', log.stream);
   this.post('/ListPushedArtifacts', pushedArtifact.list);
   this.post('/ExpediteStatusReport', statusReport.expediteStatusReport);
+  this.post('/GetConfig', config.get);
+  this.post('/SetConfig', config.set);
 
   if (!Ember.testing) {
     // Pass through all other requests
