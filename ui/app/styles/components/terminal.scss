@@ -1,0 +1,13 @@
+.xterm-pane {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  padding: scale.$sm-2 scale.$sm-2 scale.$sm-2 scale.$sm-1;
+  background: rgb(var(--panel));
+  border: 1px solid;
+  border-color: rgb(var(--border));
+  border-radius: 2px;
+  min-height: 488px;
+  margin-bottom: 0;
+}

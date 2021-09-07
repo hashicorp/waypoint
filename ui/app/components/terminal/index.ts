@@ -52,8 +52,5 @@ export default class LogTerminal extends Component {
 
   didResize(e: Event): void {
     this.fitAddon.fit();
-    if (this.terminal.resized) {
-      this.terminal.resized(e);
-    }
   }
 }
