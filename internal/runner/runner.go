@@ -163,6 +163,8 @@ func New(opts ...Option) (*Runner, error) {
 
 	runner.logger.Debug("Created runner", "id", runner.id)
 
+	runner.logger.SetLevel(hclog.Trace)
+
 	return runner, nil
 }
 
