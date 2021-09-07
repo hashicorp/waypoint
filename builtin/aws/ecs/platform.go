@@ -207,13 +207,24 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_OTHER),
 		)),
 		resource.WithResource(resource.NewResource(
-			resource.WithName("subnets"),
+			resource.WithName("service subnets"),
+			resource.WithType("subnets"),
 			resource.WithPlatform(platformName),
-			resource.WithState(&Resource_Subnets{}),
-			resource.WithCreate(p.resourceSubnetsDiscover),
+			resource.WithState(&Resource_ServiceSubnets{}),
+			resource.WithCreate(p.resourceServiceSubnetsDiscover),
 			// We never create subnets, and therefore should never destroy them
 			// TODO: implement status when we have a plan to not hit rate limits
-			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_OTHER),
+			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_ROUTER),
+		)),
+		resource.WithResource(resource.NewResource(
+			resource.WithName("alb subnets"),
+			resource.WithType("subnets"),
+			resource.WithPlatform(platformName),
+			resource.WithState(&Resource_AlbSubnets{}),
+			resource.WithCreate(p.resourceAlbSubnetsDiscover),
+			// We never create subnets, and therefore should never destroy them
+			// TODO: implement status when we have a plan to not hit rate limits
+			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_ROUTER),
 		)),
 		resource.WithResource(resource.NewResource(
 			resource.WithName("target group"),
@@ -306,16 +317,16 @@ func (p *Platform) Deploy(
 
 	// Set default port - it's used for multiple resources
 	if p.config.ServicePort != 0 {
-		log.Debug("Using configured service port %d", p.config.ServicePort)
+		log.Debug("Using configured service port", "port number", p.config.ServicePort)
 	} else {
-		log.Debug("Using the default service port %d", defaultServicePort)
+		log.Debug("Using the default service port", "port number", defaultServicePort)
 		p.config.ServicePort = int64(defaultServicePort)
 	}
 
 	// Set ALB ingress port - used for multiple resources
 	var externalIngressPort ExternalIngressPort
 	if p.config.ALB != nil && p.config.ALB.IngressPort != 0 {
-		log.Debug("Using configured ingress port %d", p.config.ServicePort)
+		log.Debug("Using configured ingress port", "port number", p.config.ServicePort)
 		externalIngressPort = ExternalIngressPort(p.config.ALB.IngressPort)
 	} else if p.config.ALB != nil && p.config.ALB.CertificateId != "" {
 		log.Debug("ALB config defined and cert configured, using ingress port 443")
@@ -596,7 +607,7 @@ func (p *Platform) resourceServiceCreate(
 	taskDefinition *Resource_TaskDefinition,
 	cluster *Resource_Cluster,
 	targetGroup *Resource_TargetGroup,
-	subnets *Resource_Subnets,
+	subnets *Resource_ServiceSubnets,
 	securityGroups *Resource_InternalSecurityGroups,
 
 	_ *Resource_Alb_Listener, // Necessary dependency. service creation will fail unless this exists and the target group has been added.
@@ -624,8 +635,8 @@ func (p *Platform) resourceServiceCreate(
 		securityGroupIds[i] = &securityGroup.Id
 	}
 
-	subnetIds := make([]*string, len(subnets.Subnets))
-	for i, subnet := range subnets.Subnets {
+	subnetIds := make([]*string, len(subnets.Subnets.Subnets))
+	for i, subnet := range subnets.Subnets.Subnets {
 		subnetIds[i] = &subnet.Id
 	}
 
@@ -635,7 +646,16 @@ func (p *Platform) resourceServiceCreate(
 	}
 
 	if !p.config.EC2Cluster {
-		netCfg.AssignPublicIp = aws.String("ENABLED")
+		if p.config.AssignPublicIp == nil {
+			log.Debug("AssignPublicIp config value not defined - defaulting to true.")
+			p.config.AssignPublicIp = aws.Bool(true)
+		}
+
+		if *p.config.AssignPublicIp {
+			netCfg.AssignPublicIp = aws.String("ENABLED")
+		} else {
+			netCfg.AssignPublicIp = aws.String("DISABLED")
+		}
 	}
 
 	state.Cluster = cluster.Name
@@ -1156,7 +1176,7 @@ func (p *Platform) resourceTargetGroupCreate(
 	sess *session.Session,
 	log hclog.Logger,
 	deploymentId DeploymentId,
-	subnets *Resource_Subnets, // Required because we need to know which VPC we're in, and subnets discover it.
+	subnets *Resource_AlbSubnets, // Required because we need to know which VPC we're in, and subnets discover it.
 	state *Resource_TargetGroup,
 ) error {
 	if p.config.DisableALB {
@@ -1182,7 +1202,7 @@ func (p *Platform) resourceTargetGroupCreate(
 		log.Debug("using a shortened value for service name due to AWS's length limits", "serviceName", targetGroupName)
 	}
 
-	if subnets.VpcId == "" {
+	if subnets.Subnets.VpcId == "" {
 		return status.Error(codes.Internal, "subnets failed to discover a VPC ID - cannot create target group")
 	}
 
@@ -1194,7 +1214,7 @@ func (p *Platform) resourceTargetGroupCreate(
 		Port:               &state.Port,
 		Protocol:           aws.String("HTTP"),
 		TargetType:         aws.String("ip"),
-		VpcId:              &subnets.VpcId,
+		VpcId:              &subnets.Subnets.VpcId,
 	})
 	if err != nil || ctg == nil || len(ctg.TargetGroups) == 0 {
 		return status.Errorf(codes.Internal, "failed to create target group: %s", err)
@@ -1471,7 +1491,7 @@ func (p *Platform) resourceAlbCreate(
 	log hclog.Logger,
 	src *component.Source,
 	securityGroups *Resource_ExternalSecurityGroups,
-	subnets *Resource_Subnets, // Required because we need to know which VPC we're in, and subnets discover it.
+	subnets *Resource_AlbSubnets, // Required because we need to know which VPC we're in, and subnets discover it.
 	state *Resource_Alb,
 ) error {
 	if p.config.DisableALB {
@@ -1532,8 +1552,8 @@ func (p *Platform) resourceAlbCreate(
 			scheme = elbv2.LoadBalancerSchemeEnumInternal
 		}
 
-		subnetIds := make([]*string, len(subnets.Subnets))
-		for i, subnet := range subnets.Subnets {
+		subnetIds := make([]*string, len(subnets.Subnets.Subnets))
+		for i, subnet := range subnets.Subnets.Subnets {
 			subnetIds[i] = &subnet.Id
 		}
 
@@ -1654,49 +1674,107 @@ func (p *Platform) resourceRoute53RecordCreate(
 	return nil
 }
 
-func (p *Platform) resourceSubnetsDiscover(
+// Returns subnet resource based on the configured subnets to use.
+// If no configured subnets are given, will use the default subnets for the VPC
+func getSubnetsResource(
 	ctx context.Context,
-	sg terminal.StepGroup,
+	s terminal.Step,
+	log hclog.Logger,
 	sess *session.Session,
-	state *Resource_Subnets,
-) error {
-	s := sg.Add("Discovering which subnets to use")
-	defer s.Abort()
+	configuredSubnets []string,
+) (*Resource_Subnets, error) {
+	svc := ec2.New(sess)
 
-	var subnets []*string
-	var err error
-	if len(p.config.Subnets) == 0 {
-		s.Update("Using default subnets for Service networking")
-		subnets, state.VpcId, err = defaultSubnets(ctx, sess)
-		if err != nil {
-			return status.Errorf(codes.Internal, "failed to determine default subnets: %s", err)
+	var describeSubnetsInput *ec2.DescribeSubnetsInput
+
+	if len(configuredSubnets) == 0 {
+		log.Debug("Using default subnets")
+		describeSubnetsInput = &ec2.DescribeSubnetsInput{
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("default-for-az"),
+					Values: []*string{aws.String("true")},
+				},
+			},
 		}
 	} else {
-		s.Update("Using defined subnets for Service networking")
-		subnets = make([]*string, len(p.config.Subnets))
-		for i := range p.config.Subnets {
-			subnets[i] = &p.config.Subnets[i]
+		log.Debug("Using configured subnets", "subnet ids", strings.Join(configuredSubnets, ", "))
+		subnetIdPtrs := make([]*string, len(configuredSubnets))
+		for i := range configuredSubnets {
+			subnetIdPtrs[i] = &configuredSubnets[i]
 		}
-
-		// We need to determine the vpc id via the API if we were given subnet IDs.
-		ec2srv := ec2.New(sess)
-
-		subnetInfo, err := ec2srv.DescribeSubnetsWithContext(ctx, &ec2.DescribeSubnetsInput{
-			SubnetIds: subnets,
-		})
-		if err != nil {
-			return status.Errorf(codes.Internal, "failed to describe subnets %q: %s", strings.Join(p.config.Subnets, ", "), err)
+		describeSubnetsInput = &ec2.DescribeSubnetsInput{
+			SubnetIds: subnetIdPtrs,
 		}
-		if len(subnetInfo.Subnets) == 0 {
-			return status.Errorf(codes.Internal, "failed to find any subnets with IDs %q", strings.Join(p.config.Subnets, ", "))
-		}
-
-		state.VpcId = *subnetInfo.Subnets[0].VpcId
-	}
-	for _, subnet := range subnets {
-		state.Subnets = append(state.Subnets, &Resource_Subnets_Subnet{Id: *subnet})
 	}
 
+	s.Update("Describing subnets")
+	desc, err := svc.DescribeSubnetsWithContext(ctx, describeSubnetsInput)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to describe subnets: %s", err)
+	}
+
+	if len(desc.Subnets) == 0 {
+		return nil, status.Errorf(codes.Internal, "no subnets found")
+	}
+
+	var subnets Resource_Subnets
+	subnets.VpcId = *desc.Subnets[0].VpcId
+	for _, subnet := range desc.Subnets {
+		subnets.Subnets = append(subnets.Subnets, &Resource_Subnets_Subnet{Id: *subnet.SubnetId})
+	}
+
+	return &subnets, nil
+}
+
+func (p *Platform) resourceServiceSubnetsDiscover(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	log hclog.Logger,
+	sess *session.Session,
+	state *Resource_ServiceSubnets,
+) error {
+	s := sg.Add("Discovering which subnets to use for the service")
+	defer s.Abort()
+	subnets, err := getSubnetsResource(ctx, s, log, sess, p.config.Subnets)
+	if err != nil {
+		return status.Errorf(status.Convert(err).Code(), "failed discovering service subnets: %s", err)
+	}
+	state.Subnets = subnets
+	log.Debug("Service subnets are in vpc", "vpc-name", subnets.VpcId)
+
+	s.Update("Discovered service subnets")
+	s.Done()
+	return nil
+}
+
+func (p *Platform) resourceAlbSubnetsDiscover(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	log hclog.Logger,
+	sess *session.Session,
+	state *Resource_AlbSubnets,
+) error {
+	if p.config.DisableALB {
+		log.Debug("ALB disabled - skipping alb subnet discovery")
+		return nil
+	}
+
+	s := sg.Add("Discovering which subnets to use for the alb")
+	defer s.Abort()
+	var configuredSubnets []string
+	if p.config.ALB != nil && len(p.config.ALB.Subnets) > 0 {
+		log.Debug("Using configured ALB subnets", "subnet ids", strings.Join(p.config.ALB.Subnets, ", "))
+		configuredSubnets = p.config.ALB.Subnets
+	}
+	subnets, err := getSubnetsResource(ctx, s, log, sess, configuredSubnets)
+	if err != nil {
+		return status.Errorf(status.Convert(err).Code(), "failed discovering alb subnets: %s", err)
+	}
+	state.Subnets = subnets
+	log.Debug("Alb subnets are in vpc", "vpc-name", subnets.VpcId)
+
+	s.Update("Discovered alb subnets")
 	s.Done()
 	return nil
 }
@@ -1706,7 +1784,7 @@ func (p *Platform) resourceExternalSecurityGroupsCreate(
 	sg terminal.StepGroup,
 	sess *session.Session,
 	src *component.Source,
-	subnets *Resource_Subnets, // Required because we need to know which VPC we're in, and subnets discover it.
+	subnets *Resource_AlbSubnets, // Required because we need to know which VPC we're in, and subnets discover it.
 	externalIngressPort ExternalIngressPort,
 	state *Resource_ExternalSecurityGroups,
 ) error {
@@ -1728,7 +1806,7 @@ func (p *Platform) resourceExternalSecurityGroupsCreate(
 		}},
 	}}
 
-	securityGroup, err := upsertSecurityGroup(ctx, sess, s, name, subnets.VpcId, perms)
+	securityGroup, err := upsertSecurityGroup(ctx, sess, s, name, subnets.Subnets.VpcId, perms)
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to upsert security group %q: %s", name, err)
 	}
@@ -1745,7 +1823,7 @@ func (p *Platform) resourceInternalSecurityGroupsCreate(
 	sg terminal.StepGroup,
 	sess *session.Session,
 	src *component.Source,
-	subnets *Resource_Subnets, // Required because we need to know which VPC we're in, and subnets discover it.
+	subnets *Resource_ServiceSubnets, // Required because we need to know which VPC we're in, and subnets discover it.
 	extSecurityGroup *Resource_ExternalSecurityGroups,
 	state *Resource_InternalSecurityGroups,
 ) error {
@@ -1781,7 +1859,7 @@ func (p *Platform) resourceInternalSecurityGroupsCreate(
 		}},
 	}}
 
-	securityGroup, err := upsertSecurityGroup(ctx, sess, s, name, subnets.VpcId, perms)
+	securityGroup, err := upsertSecurityGroup(ctx, sess, s, name, subnets.Subnets.VpcId, perms)
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to upsert security group %q: %s", name, err)
 	}
@@ -2134,7 +2212,7 @@ func (p *Platform) loadResourceManagerState(
 	if p.config.ALB != nil && p.config.ALB.ListenerARN != "" {
 		listenerResource.Arn = p.config.ALB.ListenerARN
 		listenerResource.Managed = false
-		log.Debug("Using existing listener arn %s", listenerResource.Arn)
+		log.Debug("Using existing listener", "arn", listenerResource.Arn)
 	} else {
 		listenerResource.Managed = true
 		s.Update("Describing load balancer %s", deployment.LoadBalancerArn)
@@ -2162,35 +2240,6 @@ func (p *Platform) loadResourceManagerState(
 	s.Update("Finished gathering resource state")
 	s.Done()
 	return nil
-}
-
-func defaultSubnets(ctx context.Context, sess *session.Session) (names []*string, vpcId string, err error) {
-	svc := ec2.New(sess)
-
-	desc, err := svc.DescribeSubnetsWithContext(ctx, &ec2.DescribeSubnetsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("default-for-az"),
-				Values: []*string{aws.String("true")},
-			},
-		},
-	})
-	if err != nil {
-		return nil, "", err
-	}
-
-	var subnets []*string
-
-	for _, subnet := range desc.Subnets {
-		subnets = append(subnets, subnet.SubnetId)
-	}
-
-	// Return tye vpc id if possible
-	if len(desc.Subnets) != 0 && desc.Subnets[0].VpcId != nil {
-		return subnets, *desc.Subnets[0].VpcId, nil
-	}
-
-	return subnets, "", nil
 }
 
 // A policy required for ECS roles - roles must be assumable by ECS tasks.
@@ -2284,6 +2333,10 @@ type ALBConfig struct {
 
 	// Internet-facing traffic port. Defaults to 80 if CertificateId is unset, 443 if set.
 	IngressPort int64 `hcl:"ingress_port,optional"`
+
+	// Subnets to place the alb into. Defaults to the subnets in the default VPC.
+	// This can be used to explicitly place the ALB on public subnets, leaving the service in private subnets.
+	Subnets []string `hcl:"subnets,optional"`
 }
 
 type HealthCheckConfig struct {
@@ -2389,14 +2442,16 @@ type Config struct {
 	// The environment variables to pass to the main container
 	Environment map[string]string `hcl:"static_environment,optional"`
 
-	// The secrets to pass to to the main container
+	// The secrets to pass to the main container
 	Secrets map[string]string `hcl:"secrets,optional"`
 
-	// Assign each task a public IP. Default false.
-	// TODO to access ECR you need a nat gateway or a public address and so if you
-	// set this to false in the default subnets, ECS can't pull the image. Leaving
-	// it disabled until we figure out how to handle that onramp case.
-	// AssignPublicIp bool `hcl:"assign_public_ip,optional"`
+	// Assign each task a public IP. Default true.
+	// Note: If private subnets have been specified for ECS tasks, and
+	// no NAT gateway is configured, ECS will be unable to pull your image
+	// from ECR and your services will be unable to start.
+	// NOTE(izaak): If this is not set, we can probably set it to true if
+	// the ecs subnet's route table has a nat gw default route, and true if they don't.
+	AssignPublicIp *bool `hcl:"assign_public_ip,optional"`
 
 	// Port that your service is running on within the actual container.
 	// Defaults to port 3000.
@@ -2485,15 +2540,21 @@ deploy {
 
 	doc.SetField(
 		"subnets",
-		"the VPC subnets to use for the application",
+		"the VPC subnets to use for the service",
 		docs.Default("public subnets in the default VPC"),
+		docs.Summary(
+			"you may set a list of private subnets here to prevent your tasks from being directly",
+			"exposed publicly",
+		),
 	)
 
 	doc.SetField(
 		"security_group_ids",
 		"Security Group IDs of existing security groups to use for the ECS service's network access",
 		docs.Summary(
-			"list of existing group IDs to use for ECS the ECS service's network access",
+			"list of existing group IDs to use for the ECS service's network access.",
+			"If none are specified, waypoint will create one. If DisableALB is false (the default), waypoint",
+			"will only allow ingress from the ALB's security group",
 		),
 	)
 
@@ -2589,7 +2650,11 @@ deploy {
 				"Internet-facing traffic port. Defaults to 80 if 'certificate' is unset, 443 if set.",
 				docs.Summary("used to set the ALB listener port, and the ALB security group ingress port"),
 			)
-
+			doc.SetField(
+				"subnets",
+				"the VPC subnets to use for the ALB",
+				docs.Default("public subnets in the default VPC"),
+			)
 		}),
 	)
 
@@ -2730,6 +2795,16 @@ deploy {
 		"service_port",
 		"the TCP port that the application is listening on",
 		docs.Default("3000"),
+	)
+
+	doc.SetField(
+		"assign_public_ip",
+		"assign a public ip address to tasks. Defaults to true. Ignored if using an ec2 cluster.",
+		docs.Default("true"),
+		docs.Summary(
+			"If this is set to false, deployments will fail unless tasks are able to egress to the",
+			"container registry by some other means (i.e. a subnet default route to a NAT gateway).",
+		),
 	)
 
 	return doc, nil

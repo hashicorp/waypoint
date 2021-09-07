@@ -79,6 +79,16 @@ message Resource {
     repeated SecurityGroup security_groups = 1;
   }
 
+  // Container for subnets used for the ALB and target group
+  message AlbSubnets {
+    Subnets subnets = 1;
+  }
+
+  // Container for subnets used for the ecs service
+  message ServiceSubnets {
+    Subnets subnets = 1;
+  }
+
   message Subnets {
     repeated Subnet subnets = 1;
     message Subnet {
