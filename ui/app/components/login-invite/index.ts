@@ -20,7 +20,7 @@ export default class InviteLoginForm extends Component<InviteLoginFormArgs> {
   @tracked inviteToken = '';
   @tracked cli = false;
 
-  constructor(owner: any, args: any) {
+  constructor(owner: unknown, args: InviteLoginFormArgs) {
     super(owner, args);
 
     let { cli, inviteToken } = this.args;
@@ -34,7 +34,7 @@ export default class InviteLoginForm extends Component<InviteLoginFormArgs> {
   }
 
   @action
-  async login(event?: Event) {
+  async login(event?: Event): Promise<void> {
     event?.preventDefault();
 
     let req = new ConvertInviteTokenRequest();
@@ -47,9 +47,9 @@ export default class InviteLoginForm extends Component<InviteLoginFormArgs> {
     // from the CLI
     if (this.cli) {
       // todo: down the road with more workspaces we'll have to something more sophisticated
-      return this.router.transitionTo('workspace', 'default', { queryParams: { cli: 'true' } });
+      this.router.transitionTo('workspace', 'default', { queryParams: { cli: 'true' } });
     } else {
-      return this.router.transitionTo('onboarding');
+      this.router.transitionTo('onboarding');
     }
   }
 }
