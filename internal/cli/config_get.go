@@ -15,9 +15,11 @@ import (
 type ConfigGetCommand struct {
 	*baseCommand
 
-	json       bool
-	raw        bool
-	flagRunner bool
+	json        bool
+	raw         bool
+	flagProject string
+	flagRunner  bool
+	flagLabels  map[string]string
 }
 
 func (c *ConfigGetCommand) Run(args []string) int {
@@ -31,20 +33,27 @@ func (c *ConfigGetCommand) Run(args []string) int {
 	}
 
 	// We parse our flags twice in this command because we need to
-	// determine if we're setting runner config or not. If we're setting
-	// runner config, we don't need any Waypoint config.
+	// determine if we're loading a config or not.
 	//
 	// NOTE we specifically ignore errors here because if we have errors
 	// they'll happen again on Init and Init will output to the CLI.
-	if err := c.Flags().Parse(args); err == nil && c.flagRunner {
-		initOpts = append(initOpts,
-			WithNoConfig(), // no waypoint.hcl
-		)
+	if err := c.Flags().Parse(args); err == nil {
+		if c.flagProject != "" {
+			initOpts = append(initOpts,
+				WithNoConfig(), // no waypoint.hcl
+			)
+		}
 	}
 
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	if err := c.Init(initOpts...); err != nil {
 		return 1
+	}
+
+	// Pre-calculate our project ref since we reuse this.
+	projectRef := &pb.Ref_Project{Project: c.flagProject}
+	if c.flagProject == "" && c.project != nil {
+		projectRef = c.project.Ref()
 	}
 
 	// Get our API client
@@ -63,17 +72,10 @@ func (c *ConfigGetCommand) Run(args []string) int {
 
 	req := &pb.ConfigGetRequest{
 		Prefix: prefix,
+		Scope:  &pb.ConfigGetRequest_Project{Project: projectRef},
 	}
-	switch {
-	case c.flagRunner:
-		req.Runner = &pb.Ref_RunnerId{
-			// Specifying a non-existent ID will return the runner
-			// vars set for all since none will match this ID (since
-			// we use ULIDs).
-			Id: "-",
-		}
 
-	case c.flagApp != "":
+	if c.flagApp != "" {
 		req.Scope = &pb.ConfigGetRequest_Application{
 			Application: &pb.Ref_Application{
 				Project:     c.project.Ref().Project,
@@ -81,8 +83,18 @@ func (c *ConfigGetCommand) Run(args []string) int {
 			},
 		}
 
-	default:
-		req.Scope = &pb.ConfigGetRequest_Project{Project: c.project.Ref()}
+		// The workspace and label flags only apply if the application is set.
+		req.Workspace = c.refWorkspace
+		req.Labels = c.flagLabels
+	}
+
+	if c.flagRunner {
+		req.Runner = &pb.Ref_RunnerId{
+			// Specifying a non-existent ID will return the runner
+			// vars set for all since none will match this ID (since
+			// we use ULIDs).
+			Id: "-",
+		}
 	}
 
 	resp, err := client.GetConfig(c.Ctx, req)
@@ -218,6 +230,21 @@ func (c *ConfigGetCommand) Flags() *flag.Sets {
 				"This only includes configuration set with the -runner flag.",
 			Default: false,
 		})
+
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "label",
+			Target: &c.flagLabels,
+			Usage:  "Labels to set for this operation. Can be specified multiple times.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "project",
+			Target: &c.flagProject,
+			Usage: "The name of the project for 'project' or 'app' scopes specified " +
+				"with -scope. This is not required if scope is global or there is " +
+				"a local waypoint.hcl file.",
+			Default: "",
+		})
 	})
 }
 
@@ -240,8 +267,25 @@ Usage: waypoint config get [prefix]
   Retrieve and print all config variables previously configured that have
   the given prefix. If no prefix is given, all variables are returned.
 
-  By specifying the "-app" flag you can look at config variables for
-  a specific application rather than the project.
+  The output of this command depends on whether an exact application is
+  specified or not. If no app is specified with "-app", this will list
+  all POSSIBLE config vars that could be set for an application. It is
+  the list of "possible" variables because some are dependent on the application
+  name, workspace, or labels.
+
+  By specifying the "-app" flag you can look at config variables that
+  would be resolved for a specific application. This will never show duplicate
+  variables and will show the full resolved list of variables that will be
+  set for a specific application. This will default to a workspace of "default"
+  and empty labels.
+
+  To further simulate what config variables an application would receive,
+  you may specify the "-workspace" flag or the "-label" flag (repeatedly)
+  to set the label context.
+
+  The "-runner" flag can be specified to show the list of variables that
+  would be set for a runner. All of the above filtering applies to runners,
+  as well.
 
 ` + c.Flags().Help())
 }
