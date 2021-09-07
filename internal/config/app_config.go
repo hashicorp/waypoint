@@ -55,17 +55,34 @@ type scopedConfig struct {
 	FileRaw     hcl.Expression `hcl:"file,optional"`
 }
 
+// configVars returns the set of ConfigVars ready to be sent to the API server.
+//
+// scopeFunc must be provided to set the proper scoping on the rendered
+// variables since this struct on its own doesn't know.
+func (s *scopedConfig) configVars(
+	ctx *hcl.EvalContext,
+	scopeFunc func(*pb.ConfigVar),
+) ([]*pb.ConfigVar, error) {
+	// sortVars performs a topological sort of the variables via references, so
+	// the pairs can be evaluated top to bottom safely.
+	pairs, err := sortVars(ctx, []sortVarMap{
+		{Expr: s.EnvRaw, Prefix: "config.env."},
+		{Expr: s.InternalRaw, Prefix: "config.internal.", Internal: true},
+		{Expr: s.FileRaw, Prefix: "config.file.", Path: true},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return configVars(ctx, pairs, scopeFunc)
+}
+
 func (c *genericConfig) ConfigVars() ([]*pb.ConfigVar, error) {
 	if c == nil {
 		return nil, nil
 	}
 
-	return c.configVars()
-}
-
-// configVars collects all of the configured values into a set of
-// ConfigVar values that can be sent to the API server.
-func (c *genericConfig) configVars() ([]*pb.ConfigVar, error) {
+	// Build our evaluation context for the config vars
 	ctx := c.ctx
 	ctx = appendContext(ctx, &hcl.EvalContext{
 		Functions: map[string]function.Function{
@@ -74,6 +91,56 @@ func (c *genericConfig) configVars() ([]*pb.ConfigVar, error) {
 	})
 	ctx = finalizeContext(ctx)
 
+	// We copy ourselves to a scopedConfig so we can share the configVars
+	// function. Otherwise, the two functions are nearly identical.
+	rootScope := &scopedConfig{
+		InternalRaw: c.InternalRaw,
+		EnvRaw:      c.EnvRaw,
+		FileRaw:     c.FileRaw,
+	}
+	result, err := rootScope.configVars(ctx, c.scopeFunc)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build up our workspace-scoped configs.
+	for _, wsScope := range c.WorkspaceScoped {
+		next, err := wsScope.configVars(ctx, func(v *pb.ConfigVar) {
+			// Always apply our root scope so that if this is a workspace-scoped
+			// var WITHIN an app-scoped genericConfig, then it gets that target
+			// too.
+			c.scopeFunc(v)
+
+			// Apply our own filters.
+			v.Target.Workspace = &pb.Ref_Workspace{Workspace: wsScope.Scope}
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, next...)
+	}
+
+	// Sort our results by name. This helps with deterministic behavior
+	// in API calls, user output, etc. without forcing all callers to worry
+	// about sorting.
+	sort.Sort(serversort.ConfigName(result))
+
+	return result, nil
+}
+
+// configVars returns the "rendered" list of config vars that are ready to
+// be sent to the API server. As inputs, this requires the topologically
+// sorted set of config vars (from sortVars) so that ordering is already
+// pre-determined.
+//
+// The scopeFunc can be used to modify the config var and set proper
+// targeting and other values. This is called before the value is set.
+func configVars(
+	ctx *hcl.EvalContext,
+	sortedVars []*analyzedPair,
+	scopeFunc func(*pb.ConfigVar),
+) ([]*pb.ConfigVar, error) {
 	// We're going to build up the variables as we go along using these 4 maps.
 	ctx.Variables = map[string]cty.Value{}
 
@@ -84,24 +151,17 @@ func (c *genericConfig) configVars() ([]*pb.ConfigVar, error) {
 		config   = map[string]cty.Value{}
 	)
 
-	// sortVars performs a topological sort of the variables via references, so
-	// the pairs can be evaluated top to bottom safely.
-	pairs, err := c.sortTopLevelVars(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	var result []*pb.ConfigVar
-	for _, pair := range pairs {
+	for _, pair := range sortedVars {
 		key := pair.Name
 
 		// Start building our var
 		var newVar pb.ConfigVar
 		newVar.Target = &pb.ConfigVar_Target{}
-		c.scopeFunc(&newVar)
 		newVar.Name = key
 		newVar.Internal = pair.Internal
 		newVar.NameIsPath = pair.Path
+		scopeFunc(&newVar)
 
 		// Decode the value
 		val, diags := pair.Pair.Value.Value(ctx)
@@ -185,11 +245,6 @@ func (c *genericConfig) configVars() ([]*pb.ConfigVar, error) {
 
 		result = append(result, &newVar)
 	}
-
-	// Sort our results by name. This helps with deterministic behavior
-	// in API calls, user output, etc. without forcing all callers to worry
-	// about sorting.
-	sort.Sort(serversort.ConfigName(result))
 
 	return result, nil
 }
