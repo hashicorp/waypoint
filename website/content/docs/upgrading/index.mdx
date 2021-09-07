@@ -7,21 +7,6 @@ description: |-
 
 # Upgrading Waypoint
 
-~> **Note:** As of Waypoint 0.2.1, `waypoint install` and `waypoint server install`
-do support an upgrade. If you choose not to use the automated upgrade command,
-another way to upgrade to the latest server is to [remove the existing
-server](/docs/troubleshooting#remove-the-waypoint-server) and then reinstall
-with `waypoint install`. Consider backing up `data.db` with
-`docker cp waypoint-server:/data/data.db ./data.db`,
-`kubectl cp waypoint-server-0:/data/data.db ./data.db` or similar.
-
-~> **Note:** Upgrading on a k8s cluster requires using the flag
-`-k8s-pull-policy=Always` when rerunning `waypoint install`. There is a known
-issue that will be resolved in 0.2.1.
-
-~> **Note:** If you are currently running Waypoint before 0.2.0, you will not
-be able to take snapshots prior to upgrading your server.
-
 Waypoint is designed to be flexible and resilient when upgrading from
 one version to the next. We've carefully thought out an upgrade process
 so you can predict what will be involved when upgrading Waypoint.
@@ -48,15 +33,9 @@ Please see our [compatibility promise](/docs/upgrading/compatibility)
 for details on how to determine compatibility. This page will focus on
 how to upgrade components in both compatible and incompatible scenarios.
 
-#### URL Service
-
-If you are upgrading from Waypoint server version `0.2.0` and older, Waypoint
-will register a new URL for your deployments after upgrading. Going forward,
-as of `0.2.1`, this should no longer be an issue when upgrading Waypoint server.
-
 ### Server Upgrade Command
 
-As of 0.2.1, Waypoint provides a command for users to upgrade the
+Waypoint provides a command for users to upgrade the
 Waypoint server in place. For each platform, Waypoint attempts to
 update the server image in place to latest by default, or to the server image
 specified via a flag passed in to the upgrade command.
@@ -97,9 +76,13 @@ client, and entrypoints in any order for a standard, backwards compatible upgrad
 1. Check any upgrade notes for the version you're upgrading to and verify
    there are no issues that will affect your upgrade.
 
-2. Shut down the previous server version A.
+2. [Take a snapshot of the server](https://www.waypointproject.io/commands/server-snapshot)
 
-3. Start the new server version B.
+3. Shut down the previous server version A.
+
+4. Start the new server version B.
+
+5. [Restore the server snapshot](https://www.waypointproject.io/commands/server-restore)
 
 -> **Note:** There is no way today to avoid a small amount of downtime
 when upgrading from version A to version B. In practice this should be
