@@ -21,29 +21,31 @@ $ waypoint
 Usage: waypoint [-version] [-help] [-autocomplete-(un)install] <command> [args]
 
 Common commands:
-    build        Build a new versioned artifact from source.
-    deploy       Deploy a pushed artifact.
-    release      Release a deployment.
-    up           Perform the build, deploy, and release steps for the app.
+    build        Build a new versioned artifact from source
+    deploy       Deploy a pushed artifact
+    release      Release a deployment
+    up           Perform the build, deploy, and release steps for the app
 
 Other commands:
-    artifact
-    config
-    context
-    deployment
+    artifact        Artifact and build management
+    auth-method     Auth method management
+    config          Application configuration management
+    context         Server access configurations
+    deployment      Deployment creation and management
     destroy         Delete all the resources created for an app
-    docs            Show documentation for components.
-    exec            Execute a command in the context of a running application instance.
-    hostname
-    init            Initialize and validate a project.
-    install         Output Kubernetes configurations to run a self-hosted server.
-    logs            Show log output from the current application deployment.
-    push            Push a build's artifact to a registry
-    runner
-    server          Run the builtin server.
-    token
-    ui              Request a new invite token.
-    version         Prints the version of this Waypoint CLI.
+    docs            Show documentation for components
+    exec            Execute a command in the context of a running application instance
+    fmt             Rewrite waypoint.hcl configuration to a canonical format
+    hostname        Application URLs
+    init            Initialize and validate a project
+    install         Install the Waypoint server to Kubernetes, Nomad, or Docker
+    logs            Show log output from the current application deployment
+    project         Project management
+    runner          Runner management
+    server          Server management
+    ui              Open the web UI
+    user            User information and management
+    version         Prints the version of this Waypoint CLI
 ```
 
 To get help for any specific command, pass the -h flag to the relevant subcommand.
