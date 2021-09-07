@@ -55,19 +55,22 @@ issue. Stale issues will be closed.
 ### Issue Lifecycle
 
 1. The issue is reported.
-
-2. The issue is verified and categorized by a Waypoint maintainer.
+1. The issue is verified and categorized by a Waypoint maintainer.
    Categorization is done via tags. For example, bugs are tagged as "bug".
-
-3. Unless it is critical, the issue is left for a period of time (sometimes many
+1. Unless it is critical, the issue is left for a period of time (sometimes many
    weeks or months), giving outside contributors a chance to address the issue
    and our internal teams time to plan for inclusion in a release.
-
-4. The issue is addressed in a pull request or commit. The issue will be
+1. Once someone commits to addressing the issue, it is put in the target milestone
+   (e.g. `0.5.x`) and assigned to the person who has committed to the work.
+   1. If you'd like to work on an open issue, please double-check first that no
+   one else is currently working on it.
+   1. It's also best to give a quick overview of how you plan to solve the issue
+   in a comment. That way people have a chance to inform you of any potential
+   hurdles or unknown complications you may run into.
+1. The issue is addressed in a pull request or commit. The issue will be
    referenced in the commit message so that the code that fixes it is clearly
    linked.
-
-5. The issue is closed.
+1. The issue is closed.
 
 ## Building Waypoint
 
@@ -94,6 +97,9 @@ waypoint install -platform=docker -accept-tos -docker-server-image=waypoint:dev
 in place of `waypoint`.
 
 ## Making Changes to Waypoint
+
+>Note: See [Issue Lifecycle](#issue-lifecycle) for more info on recognizing when issues are already
+a work-in-progress
 
 Run `make tools` to install the list of tools in ./tools/tools.go.
 >Note: If notice you have a large set of diffs due to upgrading the version of 
