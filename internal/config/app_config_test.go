@@ -127,6 +127,54 @@ func TestConfigVars(t *testing.T) {
 				}
 			},
 		},
+
+		{
+			"app_labels.hcl",
+			"",
+			func(t *testing.T, c *Config) {
+				require := require.New(t)
+
+				// Root level vars should be empty
+				{
+					vars, err := c.Config.ConfigVars()
+					require.NoError(err)
+					require.Len(vars, 0)
+				}
+
+				// Get our app
+				app, err := c.App("api", nil)
+				require.NoError(err)
+
+				vars, err := app.Config.ConfigVars()
+				require.NoError(err)
+				require.Len(vars, 2)
+
+				{
+					v := vars[0]
+					require.Equal("bar", v.Name)
+					require.False(v.NameIsPath)
+					require.False(v.Internal)
+					require.Equal("baz", v.Value.(*pb.ConfigVar_Static).Static)
+					require.Equal("dev", v.Target.Workspace.Workspace)
+
+					s, ok := v.Target.AppScope.(*pb.ConfigVar_Target_Application)
+					require.True(ok)
+					require.Equal("api", s.Application.Application)
+				}
+				{
+					v := vars[1]
+					require.Equal("foo", v.Name)
+					require.False(v.NameIsPath)
+					require.False(v.Internal)
+					require.Equal("bar", v.Value.(*pb.ConfigVar_Static).Static)
+					require.Nil(v.Target.Workspace)
+
+					s, ok := v.Target.AppScope.(*pb.ConfigVar_Target_Application)
+					require.True(ok)
+					require.Equal("api", s.Application.Application)
+				}
+			},
+		},
 	}
 
 	for _, tt := range cases {
