@@ -3,6 +3,8 @@ package serverinstall
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"strconv"
 	"strings"
 	"time"
@@ -38,9 +40,9 @@ type nomadConfig struct {
 	runnerResourcesCPU    string `hcl:"runner_resources_cpu,optional"`
 	runnerResourcesMemory string `hcl:"runner_resources_memory,optional"`
 
-	volumeType string `hcl:"volume_type,optional"`
-	hostVolume string `hcl:"host_volume,optional"`
-	//csiVolumeProvider string `hcl:"csi_volume_provider"`
+	volumeType        string `hcl:"volume_type,optional"`
+	hostVolume        string `hcl:"host_volume,optional"`
+	csiVolumeProvider string `hcl:"csi_volume_provider"`
 }
 
 var (
@@ -135,6 +137,31 @@ func (i *NomadInstaller) Install(
 			AdvertiseAddr: &addr,
 			HTTPAddr:      httpAddr,
 		}, nil
+	}
+
+	if strings.ToLower(i.config.volumeType) == "csi" {
+		s.Update("Creating persistent volume")
+		// do the thing
+		vol := api.CSIVolume{
+			ID:             "waypoint",
+			Name:           "waypoint",
+			AccessMode:     "single-node-writer",
+			AttachmentMode: "file-system",
+			MountOptions: &api.CSIMountOptions{
+				FSType:     "xfs",
+				MountFlags: []string{"noatime"},
+			},
+			RequestedCapacityMin: 1073741824,
+			RequestedCapacityMax: 1073741824,
+			PluginID:             i.config.csiVolumeProvider,
+		}
+
+		if strings.ToLower(i.config.volumeType) == "csi" {
+			_, _, err = client.CSIVolumes().Create(&vol, &api.WriteOptions{})
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "Failed creating Nomad persistent volume ID %s: %s", vol.ID, err)
+			}
+		}
 	}
 
 	s.Update("Installing Waypoint server to Nomad")
@@ -291,10 +318,14 @@ EVAL:
 		// evaluations ID from eval, because if the upgrade job is identical to what is
 		// currently running, we won't get back a list of allocations, which will
 		// fail the upgrade with no allocations running
+		s.Update("Getting allocations for nomad server job")
 		allocs, qmeta, err := client.Jobs().Allocations(serverName, false, qopts)
+		s.Update("Got allocations for server install job")
+
 		if err != nil {
 			return nil, err
 		}
+
 		qopts.WaitIndex = qmeta.LastIndex
 		if len(allocs) == 0 {
 			return nil, fmt.Errorf("no allocations found after evaluation completed")
@@ -667,12 +698,21 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	}
 
 	// Preserve disk, otherwise upgrades will destroy previous allocation and the disk along with it
+	volumeRequest := api.VolumeRequest{
+		Type:     c.volumeType,
+		ReadOnly: false,
+	}
+
+	if strings.ToLower(c.volumeType) == "csi" {
+		volumeRequest.Source = c.csiVolumeProvider
+		volumeRequest.AccessMode = "single-node-writer"
+		volumeRequest.AttachmentMode = "file-system"
+	} else {
+		volumeRequest.Source = c.hostVolume
+	}
+
 	tg.Volumes = map[string]*api.VolumeRequest{
-		"waypoint-server": {
-			Type:     c.volumeType,
-			ReadOnly: false,
-			Source:   c.hostVolume,
-		},
+		"waypoint-server": &volumeRequest,
 	}
 
 	job.AddTaskGroup(tg)
