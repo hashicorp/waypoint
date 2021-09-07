@@ -1,3 +1,4 @@
+import InlineSvg from '@hashicorp/react-inline-svg'
 import MediaObject from 'components/homepage/media-object'
 import Section, {
   SectionHeading,
@@ -29,6 +30,9 @@ export default function SectionExtendPlugins() {
             description="Learn to extend Waypoint for your project’s needs"
           />
         </div>
+      </div>
+      <div className={s.media}>
+        <InlineSvg src={require('./plugins.svg?include')} />
       </div>
     </Section>
   )

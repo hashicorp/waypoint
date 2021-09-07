@@ -9,6 +9,7 @@
 
 .content {
   grid-column: 1 / 6;
+  align-self: center;
 }
 
 .contentBlocks {
@@ -20,4 +21,8 @@
   & > * {
     margin-top: 0 !important;
   }
+}
+
+.media {
+  grid-column: 6 / -1;
 }
