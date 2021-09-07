@@ -38,6 +38,9 @@ type genericConfig struct {
 	// WorkspaceScoped are workspace-scoped config variables.
 	WorkspaceScoped []*scopedConfig `hcl:"workspace,block"`
 
+	// LabelScoped are label-selector-scoped config variables.
+	LabelScoped []*scopedConfig `hcl:"label,block"`
+
 	ctx       *hcl.EvalContext    // ctx is the context to use when evaluating
 	scopeFunc func(*pb.ConfigVar) // scopeFunc should set the scope for the config var
 }
@@ -113,6 +116,24 @@ func (c *genericConfig) ConfigVars() ([]*pb.ConfigVar, error) {
 
 			// Apply our own filters.
 			v.Target.Workspace = &pb.Ref_Workspace{Workspace: wsScope.Scope}
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, next...)
+	}
+
+	// Build up our label-scoped configs.
+	for _, scoped := range c.LabelScoped {
+		next, err := scoped.configVars(ctx, func(v *pb.ConfigVar) {
+			// Always apply our root scope so that if this is a label-scoped
+			// var WITHIN an app-scoped genericConfig, then it gets that target
+			// too.
+			c.scopeFunc(v)
+
+			// Apply our own filters.
+			v.Target.LabelSelector = scoped.Scope
 		})
 		if err != nil {
 			return nil, err
