@@ -371,23 +371,24 @@ func (r *Releaser) resourceIngressCreate(
 	sg terminal.StepGroup,
 ) error {
 	// Preflight config checks
-	if r.config.IngressConfig != nil {
-		if r.config.LoadBalancer {
-			return status.Error(codes.FailedPrecondition, "A LoadBalancer service type is not "+
-				"compatible with an Ingress config. Please pick one or the other for your release")
-		}
-		if r.config.NodePort != 0 {
-			return status.Error(codes.FailedPrecondition, "A NodePort service type is not "+
-				"compatible with an Ingress config. Please pick one or the other for your release")
-		}
-
-		if r.config.IngressConfig.ClassName != "http" {
-			return status.Error(codes.FailedPrecondition, "An ingress stanza must be "+
-				"of type \"http\".")
-		}
-	} else {
-		// No ingress config was set, we're not configuring an ingress resource
+	if r.config.IngressConfig == nil {
+		// No ingress config, we're not going to configure one
 		return nil
+	}
+
+	if r.config.LoadBalancer {
+		return status.Error(codes.FailedPrecondition, "A LoadBalancer service type is not "+
+			"compatible with an Ingress config. Please pick one or the other for your release")
+	}
+
+	if r.config.NodePort != 0 {
+		return status.Error(codes.FailedPrecondition, "A NodePort service type is not "+
+			"compatible with an Ingress config. Please pick one or the other for your release")
+	}
+
+	if r.config.IngressConfig.ClassName != "http" {
+		return status.Error(codes.FailedPrecondition, "An ingress stanza must be "+
+			"of type \"http\".")
 	}
 
 	// Prepare our namespace and override if set.
