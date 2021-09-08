@@ -1,6 +1,7 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
+import { Status } from 'grpc-web';
 
 import ApiService from 'waypoint/services/api';
 import { inject as service } from '@ember/service';
@@ -10,10 +11,12 @@ interface OperationLogsArgs {
   jobId: string;
 }
 
+type LogLine = Record<string, unknown>;
+
 export default class OperationLogs extends Component<OperationLogsArgs> {
   @service api!: ApiService;
 
-  @tracked logLines: object[];
+  @tracked logLines: LogLine[];
   @tracked isFollowingLogs = true;
   @tracked badgeCount = 0;
 
@@ -32,13 +35,13 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
   typeStepGroup = 'step-group';
   typeStatus = 'status';
 
-  constructor(owner: any, args: any) {
+  constructor(owner: unknown, args: OperationLogsArgs) {
     super(owner, args);
     this.logLines = [];
     this.start();
   }
 
-  addLogLine(t: string, logLine: object) {
+  addLogLine(t: string, logLine: LogLine): void {
     this.logLines = [...this.logLines, { type: t, logLine: logLine }];
     if (this.isFollowingLogs === false) {
       this.badgeCount = this.badgeCount + 1;
@@ -46,23 +49,33 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
   }
 
   @action
-  followLogs(element: any) {
-    let scrollableElement = element.target
-      ? element.target.closest('.output-scroll-y')
-      : element.closest('.output-scroll-y');
+  followLogs(element: HTMLElement | Event): void {
+    if (element instanceof Event) {
+      if (element.target instanceof HTMLElement) {
+        element = element.target;
+      } else {
+        return;
+      }
+    }
+
+    let scrollableElement = element.closest('.output-scroll-y');
+
+    if (!scrollableElement) {
+      return;
+    }
 
     scrollableElement.scroll(0, scrollableElement.scrollHeight);
   }
 
   @action
-  updateScroll(element: any) {
+  updateScroll(element: HTMLElement): void {
     if (this.isFollowingLogs === true) {
       element.scrollIntoView(false);
       this.badgeCount = 0;
     }
   }
 
-  async start() {
+  async start(): Promise<void> {
     let onData = (response: GetJobStreamResponse) => {
       let event = response.getEventCase();
 
@@ -103,7 +116,7 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
       }
     };
 
-    let onStatus = (status: any) => {
+    let onStatus = (status: Status) => {
       if (status.details) {
         this.addLogLine(this.typeStatus, { msg: status.details });
       }
