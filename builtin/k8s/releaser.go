@@ -947,7 +947,6 @@ type IngressConfig struct {
 	// matches a route like `/foo`, the ingress controller would see that this
 	// resource is configured for that rule, and would route traffic to this
 	// ingress resources service backend.
-	// maybe not, each path looks to represent a different service backend in kubectl
 	Path string `hcl:"path,optional"`
 
 	// TlsConfig is an optional config that users can set to enable HTTPS traffic
