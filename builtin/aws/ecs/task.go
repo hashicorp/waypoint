@@ -49,10 +49,10 @@ type TaskLauncherConfig struct {
 	// Execution Role.
 	ExecutionRoleName string `hcl:"execution_role_name,optional"`
 
-	// TaskRoleArn is the name of the AWS IAM role to apply to the task. This
-	// role determins the privilages the ODR builder has, and must have the correct
+	// TaskRoleName is the name of the AWS IAM role to apply to the task. This
+	// role determines the privileges the ODR builder has, and must have the correct
 	// policies in place to work with the provided registries.
-	OdrTaskRoleName string `hcl:"odr_task_role_name,optional"`
+	TaskRoleName string `hcl:"task_role_name,optional"`
 
 	// Subnets are the list of subnets for the cluster. These will match the
 	// subnets used for the Cluster
@@ -86,9 +86,11 @@ permissions.
 	doc.SetField(
 		"odr_task_role_name",
 		"Task role name to be used for the task role in the On-Demand Runner task",
-		docs.Summary(
-			"Task role name to be used for the task role in the On-Demand Runner task.",
-			"This role must have the correct IAM policies to complete it's task.",
+		docs.Summary(`
+This role must have the correct IAM policies to complete it's task.
+If this IAM role does not already exist, a role will be created with the correct
+permissions"
+`,
 		),
 	)
 
@@ -100,7 +102,8 @@ func (p *TaskLauncher) Config() (interface{}, error) {
 	return &p.config, nil
 }
 
-// StopTask signals to docker to stop the container created previously
+// StopTask signals to docker to stop the container created previously. This
+// method is currently unimplemented.
 func (p *TaskLauncher) StopTask(
 	ctx context.Context,
 	log hclog.Logger,
@@ -174,7 +177,7 @@ func (p *TaskLauncher) StartTask(
 		return nil, err
 	}
 
-	taskRoleArn, err := roleArn(p.config.OdrTaskRoleName, sess)
+	taskRoleArn, err := roleArn(p.config.TaskRoleName, sess)
 	if err != nil {
 		return nil, err
 	}

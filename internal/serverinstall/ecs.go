@@ -83,7 +83,7 @@ type ecsConfig struct {
 	// On-Demand Runner configuration
 	OdrImage string `hcl:"odr_image,optional"`
 	// OdrExecutionRoleName string `hcl:"odr_execution_role_name,optional"`
-	OdrTaskRoleName string `hcl:"odr_task_role_name,optional"`
+	TaskRoleName string `hcl:"odr_task_role_name,optional"`
 }
 
 // Install is a method of ECSInstaller and implements the Installer interface to
@@ -1155,8 +1155,8 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:   "ecs-runner-task-role",
-		Target: &i.config.OdrTaskRoleName,
+		Name:   "ecs-task-role-name",
+		Target: &i.config.TaskRoleName,
 		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
 			"an IAM role will be created automatically with the correct permissions.",
 		Default: "waypoint-runner",
@@ -1203,9 +1203,9 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:   "ecs-runner-task-role",
-		Target: &i.config.OdrTaskRoleName,
-		Usage: "IAM Task Role to assign to the on-demand runner. If this is blank, " +
+		Name:   "ecs-task-role-name",
+		Target: &i.config.TaskRoleName,
+		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
 			"an IAM role will be created automatically with the correct permissions.",
 		Default: "waypoint-runner",
 	})
@@ -1872,7 +1872,7 @@ func (i *ECSInstaller) SetupTaskRole(
 
 	svc := iam.New(sess)
 
-	roleName := i.config.OdrTaskRoleName
+	roleName := i.config.TaskRoleName
 
 	// role names have to be 64 characters or less, and the client side doesn't
 	// validate this.
@@ -2269,13 +2269,11 @@ func (i *ECSInstaller) LaunchRunner(
 	registerTaskDefinitionInput := ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: []*ecs.ContainerDefinition{&def},
 
-		ExecutionRoleArn: aws.String(executionRoleArn),
-		Cpu:              aws.String(i.config.CPU),
-		Memory:           aws.String(i.config.Memory),
-		Family:           aws.String(runnerName),
-
-		TaskRoleArn: &taskRoleArn,
-
+		ExecutionRoleArn:        aws.String(executionRoleArn),
+		Cpu:                     aws.String(i.config.CPU),
+		Memory:                  aws.String(i.config.Memory),
+		Family:                  aws.String(runnerName),
+		TaskRoleArn:             &taskRoleArn,
 		NetworkMode:             aws.String("awsvpc"),
 		RequiresCompatibilities: []*string{aws.String(defaultTaskRuntime)},
 		Tags: []*ecs.Tag{
@@ -2411,7 +2409,7 @@ func (i *ECSInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	cfgMap := map[string]interface{}{
 		"log_group":           defaultRunnerLogGroup,
 		"execution_role_name": i.config.ExecutionRoleName,
-		"odr_task_role_name":  i.config.OdrTaskRoleName,
+		"task_role_name":      i.config.TaskRoleName,
 		"cluster":             i.config.Cluster,
 		"region":              i.config.Region,
 	}
