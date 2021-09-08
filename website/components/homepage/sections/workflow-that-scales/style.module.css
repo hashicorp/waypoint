@@ -8,17 +8,28 @@
 }
 
 .heading {
-  grid-column: 1 / 5;
+  grid-column: 1 / -1;
+
+  @media (--medium-up) {
+    grid-column: 1 / 5;
+  }
 }
 
 .description {
-  grid-column: 6 / 10;
+  grid-column: 1 / -1;
+
+  @media (--medium-up) {
+    grid-column: 6 / 10;
+  }
 }
 
 .media {
   margin-top: 50px;
-  grid-column: 2 / 11;
-  grid-row: 2;
+  grid-column: 1 / -1;
+
+  @media (--medium-up) {
+    grid-column: 2 / 11;
+  }
 
   & img {
     max-width: 100%;

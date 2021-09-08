@@ -39,11 +39,21 @@
       }
 
       & > :first-child {
-        grid-column: 1 / 6;
+        grid-column: 1 / -1;
+
+        @media (--medium-up) {
+          grid-column: 1 / 6;
+        }
       }
 
       & > :last-child {
-        grid-column: 7 / -1;
+        margin-top: 50px;
+        grid-column: 1 / -1;
+
+        @media (--medium-up) {
+          margin-top: 0;
+          grid-column: 7 / -1;
+        }
       }
     }
   }

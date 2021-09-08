@@ -8,8 +8,12 @@
 }
 
 .content {
-  grid-column: 1 / 6;
+  grid-column: 1 / -1;
   align-self: center;
+
+  @media (--medium-up) {
+    grid-column: 1 / 6;
+  }
 }
 
 .contentBlocks {
@@ -25,7 +29,13 @@
 
 .media {
   position: relative;
-  grid-column: 6 / -1;
+  margin-top: 50px;
+  grid-column: 1 / -1;
+
+  @media (--medium-up) {
+    margin-top: 0;
+    grid-column: 6 / -1;
+  }
 
   &::after {
     content: '';
