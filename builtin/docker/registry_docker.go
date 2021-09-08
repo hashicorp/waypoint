@@ -61,58 +61,11 @@ func (r *Registry) pushWithDocker(
 		return status.Errorf(codes.Internal, "unable to parse image name: %s", err)
 	}
 
-	encodedAuth := r.config.EncodedAuth
-
-	// If there was no explicit encoded auth but there is a password, make the username+password
-	// into an encoded auth string.
-	if encodedAuth == "" && r.config.Password != "" {
-		var authConfig types.AuthConfig
-
-		authConfig.Username = r.config.Username
-		authConfig.Password = r.config.Password
-
-		buf, err := json.Marshal(authConfig)
-		if err != nil {
-			return status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
-		}
-		encodedAuth = base64.URLEncoding.EncodeToString(buf)
+	encodedAuth, err := r.findAuth(ref, cli, ctx, log)
+	if err != nil {
+		return status.Errorf(codes.Internal, "unable to extract registry credentials: %s", err)
 	}
 
-	// No auth info configured, try to read some from the docker config files for the user.
-	if encodedAuth == "" {
-		// Resolve the Repository name from fqn to RepositoryInfo
-		repoInfo, err := registry.ParseRepositoryInfo(ref)
-		if err != nil {
-			return status.Errorf(codes.Internal, "unable to parse repository info from image name: %s", err)
-		}
-
-		var server string
-
-		if repoInfo.Index.Official {
-			info, err := cli.Info(ctx)
-			if err != nil || info.IndexServerAddress == "" {
-				server = registry.IndexServer
-			} else {
-				server = info.IndexServerAddress
-			}
-		} else {
-			server = repoInfo.Index.Name
-		}
-
-		var errBuf bytes.Buffer
-		cf := config.LoadDefaultConfigFile(&errBuf)
-		if errBuf.Len() > 0 {
-			// NOTE(mitchellh): I don't know why we ignore this, but we always have.
-			log.Warn("error loading Docker config file", "err", err)
-		}
-
-		authConfig, _ := cf.GetAuthConfig(server)
-		buf, err := json.Marshal(authConfig)
-		if err != nil {
-			return status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
-		}
-		encodedAuth = base64.URLEncoding.EncodeToString(buf)
-	}
 
 	step = sg.Add("Pushing Docker image...")
 
@@ -139,4 +92,65 @@ func (r *Registry) pushWithDocker(
 
 	step.Done()
 	return nil
+}
+
+func (r *Registry) findAuth(
+	ref reference.Named,
+	cli *client.Client,
+	ctx context.Context,
+	log hclog.Logger,
+) (string, error) {
+	encodedAuth := r.config.EncodedAuth
+
+	// If there was no explicit encoded auth but there is a password, make the username+password
+	// into an encoded auth string.
+	if encodedAuth == "" && r.config.Password != "" {
+		var authConfig types.AuthConfig
+
+		authConfig.Username = r.config.Username
+		authConfig.Password = r.config.Password
+
+		buf, err := json.Marshal(authConfig)
+		if err != nil {
+			return "", status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
+		}
+		encodedAuth = base64.URLEncoding.EncodeToString(buf)
+	}
+
+	// No auth info configured, try to read some from the docker config files for the user.
+	if encodedAuth == "" {
+		// Resolve the Repository name from fqn to RepositoryInfo
+		repoInfo, err := registry.ParseRepositoryInfo(ref)
+		if err != nil {
+			return "", status.Errorf(codes.Internal, "unable to parse repository info from image name: %s", err)
+		}
+
+		var server string
+
+		if repoInfo.Index.Official {
+			info, err := cli.Info(ctx)
+			if err != nil || info.IndexServerAddress == "" {
+				server = registry.IndexServer
+			} else {
+				server = info.IndexServerAddress
+			}
+		} else {
+			server = repoInfo.Index.Name
+		}
+
+		var errBuf bytes.Buffer
+		cf := config.LoadDefaultConfigFile(&errBuf)
+		if errBuf.Len() > 0 {
+			// NOTE(mitchellh): I don't know why we ignore this, but we always have.
+			log.Warn("error loading Docker config file", "err", err)
+		}
+
+		authConfig, _ := cf.GetAuthConfig(server)
+		buf, err := json.Marshal(authConfig)
+		if err != nil {
+			return "", status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
+		}
+		encodedAuth = base64.URLEncoding.EncodeToString(buf)
+	}
+	return encodedAuth, nil
 }

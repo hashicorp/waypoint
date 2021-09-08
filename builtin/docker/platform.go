@@ -406,7 +406,7 @@ func (p *Platform) resourceContainerCreate(
 	netState *Resource_Network,
 ) error {
 	// Pull the image
-	err := p.pullImage(cli, log, ui, img, p.config.ForcePull)
+	err := p.pullImage(cli, ctx, log, ui, img, p.config.ForcePull)
 	if err != nil {
 		return status.Errorf(codes.FailedPrecondition,
 			"unable to pull image from Docker registry: %s", err)
@@ -687,7 +687,7 @@ func (p *Platform) getDockerClient(ctx context.Context) (*client.Client, error) 
 	return cli, nil
 }
 
-func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.UI, img *Image, force bool) error {
+func (p *Platform) pullImage(cli *client.Client, ctx context.Context, log hclog.Logger, ui terminal.UI, img *Image, force bool) error {
 	in := fmt.Sprintf("%s:%s", img.Image, img.Tag)
 	args := filters.NewArgs()
 	args.Add("reference", in)
@@ -718,10 +718,6 @@ func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.U
 
 	ipo := types.ImagePullOptions{}
 
-	if p.config.EncodedAuth != "" {
-		ipo.RegistryAuth = p.config.EncodedAuth
-	}
-	
 	// if the username and password is not null make an authenticated
 	// image pull
 	/*
@@ -736,6 +732,14 @@ func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.U
 	}
 
 	in = named.Name()
+
+	dockerReg := &Registry{}
+	creds, err := dockerReg.findAuth(named, cli, ctx, log)
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to get docker auth: %s", err)
+	}
+
+	ipo.RegistryAuth = creds
 
 	log.Debug("pulling image", "image", in)
 
@@ -816,9 +820,6 @@ type PlatformConfig struct {
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
-
-	// Same as encoded_auth for registry config
-	EncodedAuth string `hcl:"encoded_auth,optional"`
 }
 
 type ClientConfig struct {
@@ -955,15 +956,6 @@ deploy {
 			"`DOCKER_API_VERSION` to set the version of the API to reach, leave empty for latest.",
 			"`DOCKER_CERT_PATH` to load the TLS certificates from.",
 			"`DOCKER_TLS_VERIFY` to enable or disable TLS verification, off by default.",
-		),
-	)
-
-	doc.SetField(
-		"encoded_auth",
-		"authentication information for pulling images",
-		docs.Summary(
-			"Similar to `encoded_auth` field for registry -",
-			"base64-encoded JSON with fields `username` and `password`.",
 		),
 	)
 
