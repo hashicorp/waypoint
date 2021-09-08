@@ -371,11 +371,11 @@ func (r *Releaser) resourceIngressCreate(
 	// Preflight config checks
 	if r.config.IngressConfig != nil {
 		if r.config.LoadBalancer {
-			return status.Error(codes.FailedPrecondition, "A LoadBalancer type is not "+
+			return status.Error(codes.FailedPrecondition, "A LoadBalancer service type is not "+
 				"compatible with an Ingress config. Please pick one or the other for your release")
 		}
 		if r.config.NodePort != 0 {
-			return status.Error(codes.FailedPrecondition, "A NodePort type is not "+
+			return status.Error(codes.FailedPrecondition, "A NodePort service type is not "+
 				"compatible with an Ingress config. Please pick one or the other for your release")
 		}
 
@@ -1038,6 +1038,12 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 		"ingress",
 		"Configuration to set up an ingress resource to route traffic to the given "+
 			"application from an ingress controller",
+		docs.Summary(
+			"An ingress resource can be created on release that will route traffic "+
+				"to the Kubernetes service. Note that before this happens, the Kubernetes "+
+				"cluster must already be configured with an Ingress controller. Otherwise "+
+				"there won't be a way for inbound traffic to be routed to the ingress resource.",
+		),
 		docs.SubFields(func(doc *docs.SubFieldDoc) {
 			doc.SetField(
 				"annotations",
