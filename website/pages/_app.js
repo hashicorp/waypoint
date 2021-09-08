@@ -45,7 +45,60 @@ export default function App({ Component, pageProps }) {
       <div className="content">
         <Component {...pageProps} />
       </div>
-      <Footer openConsentManager={openConsentManager} />
+      <Footer
+        openConsentManager={openConsentManager}
+        heading="Using Waypoint"
+        description="The best way to understand what Waypoint can enable for your
+        projects is to give it a try. It’s as simple as `waypoint up`"
+        cards={[
+          {
+            link:
+              'https://learn.hashicorp.com/tutorials/waypoint/get-started-intro',
+            img: '/img/intro-to-waypoint.png',
+            eyebrow: 'Tutorial',
+            title: 'Introduction to Waypoint',
+            description:
+              'Waypoint enables you to publish any application to any platform with a single file and a single command',
+          },
+          {
+            link:
+              'https://learn.hashicorp.com/tutorials/waypoint/get-started-install?in=waypoint/get-started-docker',
+            img: '/img/installing-waypoint.png',
+            eyebrow: 'Tutorial',
+            title: 'Installing Waypoint',
+            description:
+              'Install the Waypoint binary locally on Mac, Linux, or Windows, manually or using a package manager. (Homebrew)',
+          },
+        ]}
+        ctaLinks={[
+          {
+            text: 'Waypoint tutorials',
+            url: 'https://learn.hashicorp.com/waypoint',
+          },
+          {
+            text: 'Waypoint documentation',
+            url: '/docs',
+          },
+        ]}
+        navLinks={[
+          {
+            text: 'Documentation',
+            url: '/docs',
+          },
+          {
+            text: 'API Reference',
+            url: '/',
+          },
+          {
+            text: 'Tutorials',
+            url: 'https://learn.hashicorp.com/waypoint',
+          },
+          {
+            text: 'Integrations',
+            url: '/',
+          },
+        ]}
+      />
       <ConsentManager />
     </ErrorBoundary>
   )
