@@ -3,6 +3,7 @@ package singleprocess
 import (
 	"context"
 	"math/rand"
+	"reflect"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -447,6 +448,7 @@ func (s *service) GetJobStream(
 
 	// Enter the event loop
 	var lastState pb.Job_State
+	var lastJob *pb.Job
 	var eventsCh <-chan []*pb.GetJobStreamResponse_Terminal_Event
 	for {
 		select {
@@ -493,6 +495,25 @@ func (s *service) GetJobStream(
 				}
 
 				downloadSent = true
+			}
+
+			// If our job changed then we send down a job change notification.
+			// We use reflect.DeepEqual here which isn't super exact but errors
+			// on the side of false positives rather than false negatives so
+			// at worst it'll send down a few more noisy job updates rather than
+			// miss any. Because of this, we use it for simplicity.
+			if lastJob == nil || !reflect.DeepEqual(lastJob, job.Job) {
+				lastJob = job.Job
+
+				if err := server.Send(&pb.GetJobStreamResponse{
+					Event: &pb.GetJobStreamResponse_Job{
+						Job: &pb.GetJobStreamResponse_JobChange{
+							Job: job.Job,
+						},
+					},
+				}); err != nil {
+					return err
+				}
 			}
 
 			// If we haven't initialized output streaming and the output buffer
