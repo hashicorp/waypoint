@@ -5134,6 +5134,9 @@ type RunnerJobStreamRequest_ConfigLoad_ struct {
 	// The config_load event is sent after the Waypoint configuration
 	// (waypoint.hcl) is loaded. This includes information about the loaded
 	// configuration that the frontends can use.
+	//
+	// This can be sent multiple times to update the configuration information
+	// for a job.
 	ConfigLoad *RunnerJobStreamRequest_ConfigLoad `protobuf:"bytes,8,opt,name=config_load,json=configLoad,proto3,oneof"`
 }
 

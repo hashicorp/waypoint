@@ -2178,6 +2178,9 @@ message RunnerJobStreamRequest {
     // The config_load event is sent after the Waypoint configuration
     // (waypoint.hcl) is loaded. This includes information about the loaded
     // configuration that the frontends can use.
+    //
+    // This can be sent multiple times to update the configuration information
+    // for a job.
     ConfigLoad config_load = 8;
 
     // heartbeat that the job is still running.
