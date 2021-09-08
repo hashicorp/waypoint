@@ -4,7 +4,6 @@ export default [
     url: '/',
     type: 'inbound',
   },
-  'divider',
   {
     text: 'Tutorials',
     url: 'https://learn.hashicorp.com/waypoint',
