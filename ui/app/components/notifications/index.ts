@@ -1,5 +1,6 @@
 import Component from '@glimmer/component';
 import { inject as service } from '@ember/service';
+import FlashMessagesService from 'waypoint/services/flash-messages';
 
 /**
  *
@@ -16,5 +17,5 @@ import { inject as service } from '@ember/service';
  */
 
 export default class NotificationsComponent extends Component {
-  @service flashMessages!: any;
+  @service flashMessages!: FlashMessagesService;
 }
