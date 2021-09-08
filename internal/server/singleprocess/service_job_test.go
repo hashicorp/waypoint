@@ -242,6 +242,28 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 		require.NotNil(event)
 		require.NotNil(event.Download.DataSourceRef)
 
+		// We should also receive a job update
+		jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Job)(nil))
+	}
+
+	// Send the config info event.
+	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_ConfigLoad_{
+			ConfigLoad: &pb.RunnerJobStreamRequest_ConfigLoad{
+				Config: &pb.Job_Config{
+					Source: pb.Job_Config_SERVER,
+				},
+			},
+		},
+	}))
+
+	// Wait for a job change event
+	{
+		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Job)(nil))
+		event := resp.Event.(*pb.GetJobStreamResponse_Job)
+		require.NotNil(event)
+		require.Equal(pb.Job_Config_SERVER, event.Job.Job.Config.Source)
+
 	}
 
 	// Complete the job
