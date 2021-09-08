@@ -5,10 +5,10 @@
 </h3>
 
 <ul data-test-deployment-list class="list">
-  {{#each this.deploymentsByGeneration key="generationID" as |group|}}
-    {{#each group.deployments key="id" as |deployment|}}
-      {{#if (or this.isShowingDestroyed (not-eq deployment.state 4))}}
-        <AppItem::Deployment @deployment={{deployment}} @latest={{group.deployments.[0]}} />
+  {{#each this.deploymentBundlesByGeneration key="generationID" as |group|}}
+    {{#each group.deploymentBundles key="id" as |bundle|}}
+      {{#if (or this.isShowingDestroyed (not-eq bundle.deployment.state 4))}}
+        <AppItem::Deployment @bundle={{bundle}} @latest={{group.deploymentBundles.[0]}} />
       {{/if}}
     {{/each}}
   {{else}}

@@ -10,7 +10,6 @@ import {
   Job,
   ListBuildsRequest,
   ListBuildsResponse,
-  ListDeploymentsRequest,
   ListDeploymentsResponse,
   ListPushedArtifactsRequest,
   ListReleasesRequest,
@@ -25,6 +24,7 @@ import {
   StatusReport,
   UpsertProjectRequest,
   Variable,
+  UI,
 } from 'waypoint-pb';
 import { Metadata } from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
@@ -62,8 +62,11 @@ export default class ApiService extends Service {
     }
   }
 
-  async listDeployments(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<Deployment.AsObject[]> {
-    let req = new ListDeploymentsRequest();
+  async listDeployments(
+    wsRef: Ref.Workspace,
+    appRef: Ref.Application
+  ): Promise<UI.DeploymentBundle.AsObject[]> {
+    let req = new UI.ListDeploymentsRequest();
     req.setWorkspace(wsRef);
     req.setApplication(appRef);
 
@@ -71,7 +74,7 @@ export default class ApiService extends Service {
     order.setDesc(true);
     req.setOrder(order);
 
-    let resp: ListDeploymentsResponse = await this.client.listDeployments(req, this.WithMeta());
+    let resp: UI.ListDeploymentsResponse = await this.client.uI_ListDeployments(req, this.WithMeta());
 
     return resp.getDeploymentsList().map((d) => d.toObject());
   }

@@ -1,41 +1,41 @@
 <li
   class="app-item
-  {{if (not-eq @deployment.sequence @latest.sequence) "app-item--previous"}}
-  {{if (eq @deployment.state 4) "app-item--destroyed"}}"
+  {{if (not-eq @bundle.deployment.sequence @latest.deployment.sequence) "app-item--previous"}}
+  {{if (eq @bundle.deployment.state 4) "app-item--destroyed"}}"
 >
-  <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @deployment.sequence}}>
+  <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @bundle.deployment.sequence}}>
     <p>
-      <b class="badge badge--version">v{{@deployment.sequence}}</b>
+      <b class="badge badge--version">v{{@bundle.deployment.sequence}}</b>
     </p>
     <small class="app-item__meta__secondary">
-      <Pds::Icon @type={{icon-for-component @deployment.component.name}} class="icon" />
-      <span>{{t (concat "page.deployments.status_prefix." @deployment.status.state)}}
-        <b>{{component-name @deployment.component.name}}</b>
-        {{#if (eq @deployment.status.state 1)}}
-        (Started {{date-format-distance-to-now @deployment.status.startTime.seconds }})
+      <Pds::Icon @type={{icon-for-component @bundle.deployment.component.name}} class="icon" />
+      <span>{{t (concat "page.deployments.status_prefix." @bundle.deployment.status.state)}}
+        <b>{{component-name @bundle.deployment.component.name}}</b>
+        {{#if (eq @bundle.deployment.status.state 1)}}
+        (Started {{date-format-distance-to-now @bundle.deployment.status.startTime.seconds }})
         {{else}}
-        {{date-format-distance-to-now @deployment.status.completeTime.seconds }}
+        {{date-format-distance-to-now @bundle.deployment.status.completeTime.seconds }}
         {{/if}}
       </span>
     </small>
-    {{#if (eq @deployment.state 4)}}
+    {{#if (eq @bundle.deployment.state 4)}}
       <b data-test-destroyed-badge class="badge badge--destroyed">
         <Pds::Icon @type="trash" class="icon" />&nbsp; {{t "page.deployments.destroyed_label"}}
       </b>
     {{/if}}
   </LinkTo>
-  {{#if (and (not-eq @deployment.state 4) @deployment.statusReport)}}
-    <StatusReportIndicator @statusReport={{@deployment.statusReport}} />
+  {{#if (and (not-eq @bundle.deployment.state 4) @bundle.deployment.statusReport)}}
+    <StatusReportIndicator @statusReport={{@bundle.deployment.statusReport}} />
   {{/if}}
-  {{#if (not-eq @latest.id @deployment.id)}}
+  {{#if (not-eq @latest.deployment.id @bundle.deployment.id)}}
   <small class="replacement-info">
-    {{t "page.deployments.replaced_label"}}<b class="badge badge--version">v{{@latest.sequence}}</b>
+    {{t "page.deployments.replaced_label"}}<b class="badge badge--version">v{{@latest.deployment.sequence}}</b>
   </small>
-  {{else if (and @deployment.preload.deployUrl (not-eq @deployment.state 4))}}
+  {{else if (and @bundle.deployment.preload.deployUrl (not-eq @bundle.deployment.state 4))}}
     <ExternalLink data-test-external-deployment-button
-      href={{enforce-protocol @deployment.preload.deployUrl}}
+      href={{enforce-protocol @bundle.deployment.preload.deployUrl}}
       class="button button--secondary button--external-link">
-      <span>{{@deployment.preload.deployUrl}}</span>
+      <span>{{@bundle.deployment.preload.deployUrl}}</span>
       <Pds::Icon @type="exit" class="icon" />
     </ExternalLink>
   {{/if}}

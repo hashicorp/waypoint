@@ -1,31 +1,31 @@
 <AppCard
-  data-test-app-card-deployment={{@model.sequence}}
+  data-test-app-card-deployment={{@model.deployment.sequence}}
 >
   <:meta-primary>
     <LinkTo
       @route="workspace.projects.project.app.deployment"
-      @models={{array @model.sequence}}
+      @models={{array @model.deployment.sequence}}
       class="app-card__sequence-link"
     >
-      <b class="badge badge--version">v{{@model.sequence}}</b>
+      <b class="badge badge--version">v{{@model.deployment.sequence}}</b>
     </LinkTo>
-    <OperationStatusIndicator @status={{@model.status}} />
-    <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
+    <OperationStatusIndicator @status={{@model.deployment.status}} />
+    <GitCommit @commit={{@model.jobDataSourceRef.git.commit}}/>
   </:meta-primary>
 
   <:meta-secondary>
     <Pds::Icon
-      @type={{icon-for-component @model.component.name}}
+      @type={{icon-for-component @model.deployment.component.name}}
       class="icon app-card__component-icon"
     />
-    <StatusReportIndicator @statusReport={{@model.statusReport}} />
+    <StatusReportIndicator @statusReport={{@model.latestStatusReport}} />
   </:meta-secondary>
 
   <:actions>
-    {{#if @model.preload.deployUrl}}
+    {{#if @model.deployUrl}}
       <ExternalLink
-        href={{enforce-protocol @model.preload.deployUrl}}
-        title="Visit {{enforce-protocol @model.preload.deployUrl}}"
+        href={{enforce-protocol @model.deployUrl}}
+        title="Visit {{enforce-protocol @model.deployUrl}}"
         class="button button--secondary button--external-link app-card__launch-link"
       >
         <Pds::Icon @type="exit" class="icon" />

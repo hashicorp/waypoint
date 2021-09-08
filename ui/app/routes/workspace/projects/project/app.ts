@@ -1,7 +1,7 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { Ref, Deployment, Build, Release, Project, StatusReport, PushedArtifact } from 'waypoint-pb';
+import { Ref, Build, Release, Project, StatusReport, PushedArtifact, UI } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
 import { hash } from 'rsvp';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
@@ -12,7 +12,7 @@ export interface Params {
 
 export interface Model {
   application: Ref.Application.AsObject;
-  deployments: (Deployment.AsObject & WithStatusReport)[];
+  deployments: UI.DeploymentBundle.AsObject[];
   releases: (Release.AsObject & WithStatusReport)[];
   builds: (Build.AsObject & WithPushedArtifact)[];
   pushedArtifacts: PushedArtifact.AsObject[];
@@ -66,7 +66,6 @@ export default class App extends Route {
   }
 
   afterModel(model: Model): void {
-    injectStatusReports(model);
     injectPushedArtifacts(model);
     this.pollModel.setup(this);
   }
@@ -79,9 +78,9 @@ function injectStatusReports(model: Model): void {
     let statusTime = statusReport.generatedTime?.seconds || 0;
     if (statusReport.deploymentId) {
       let deployment = deployments.find((d) => d.id === statusReport.deploymentId);
-      let deploymentTime = deployment?.statusReport?.generatedTime?.seconds || 0;
+      let deploymentTime = deployment?.latestStatusReport?.generatedTime?.seconds || 0;
       if (deployment && statusTime >= deploymentTime) {
-        deployment.statusReport = statusReport;
+        deployment.latestStatusReport = statusReport;
       }
     } else if (statusReport.releaseId) {
       let release = releases.find((d) => d.id === statusReport.releaseId);

@@ -10,11 +10,11 @@
     </div>
   {{/if}}
 
-  {{#if @model.build}}
+  {{#if this.deployment.build}}
     <div class="item">
       <small>
-        Build <a href="#"><b class="badge badge--version">#{{@model.build.sequence}}</b>
-          <code>{{@model.build.id}}</code></a>
+        Build <a href="#"><b class="badge badge--version">#{{this.deployment.build.sequence}}</b>
+          <code>{{this.deployment.build.id}}</code></a>
       </small>
     </div>
   {{/if}}

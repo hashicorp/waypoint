@@ -12,15 +12,12 @@ import {
   GetJobStreamRequest,
   GetJobStreamResponse,
   Job,
+  UI,
 } from 'waypoint-pb';
 
 interface StatusReportBarArgs {
-  model: Deployment.AsObject & WithStatusReport;
+  model: UI.DeploymentBundle.AsObject;
   artifactType: string;
-}
-
-interface WithStatusReport {
-  statusReport?: StatusReport.AsObject;
 }
 
 export default class StatusReportBar extends Component<StatusReportBarArgs> {
@@ -36,12 +33,12 @@ export default class StatusReportBar extends Component<StatusReportBarArgs> {
     return this.args.artifactType;
   }
 
-  get model() {
-    return this.args.model;
+  get deployment() {
+    return this.args.model.deployment;
   }
 
   get statusReport() {
-    return this.model.statusReport;
+    return this.args.model.latestStatusReport;
   }
 
   @action
@@ -49,10 +46,10 @@ export default class StatusReportBar extends Component<StatusReportBarArgs> {
     e.preventDefault();
 
     let ref = new Ref.Operation();
-    ref.setId(this.args.model.id);
+    ref.setId(this.deployment?.id ?? 'unknown');
 
     let workspace = new Ref.Workspace();
-    let wkspName = this.args.model.workspace?.workspace || 'default';
+    let wkspName = this.deployment?.workspace?.workspace || 'default';
     workspace.setWorkspace(wkspName);
 
     let req = new ExpediteStatusReportRequest();

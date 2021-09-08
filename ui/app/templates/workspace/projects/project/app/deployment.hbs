@@ -1,32 +1,80 @@
-{{page-title (concat "Deployment" " v" @model.sequence)}}
+{{page-title (concat "Deployment" " v" @model.deployment.sequence)}}
 
 <PageHeader @iconName="upload">
   <div class="title">
-    <h1><b class="badge badge--version">v{{@model.sequence}}</b></h1>
+    <h1><b class="badge badge--version">v{{@model.deployment.sequence}}</b></h1>
     <small>
-      <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
-      <span>Deployed by <b>{{component-name @model.component.name}}</b>
-        {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
+      <Pds::Icon @type={{icon-for-component @model.deployment.component.name}} class="icon" />
+      <span>Deployed by <b>{{component-name @model.deployment.component.name}}</b>
+        {{date-format-distance-to-now @model.deployment.status.startTime.seconds }}</span>
     </small>
-    {{#if @model.preload.jobDataSourceRef.git.commit}}
+    {{#if @model.jobDataSourceRef.git.commit}}
       <small>
-        <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
+        <GitCommit @commit={{@model.jobDataSourceRef.git.commit}}/>
       </small>
     {{/if}}
   </div>
   <div class="actions">
     <div class="button-group">
       <ExternalLink
-        href={{enforce-protocol @model.preload.deployUrl}}
+        href={{enforce-protocol @model.deployUrl}}
         class="button button--secondary button--external-link">
-        <span>{{lowercase @model.preload.deployUrl}}</span>
+        <span>{{lowercase @model.deployUrl}}</span>
         <Pds::Icon @type="exit" class="icon" />
       </ExternalLink>
-      <Actions::Release @sequence={{@model.sequence}} />
+      <Actions::Release @sequence={{@model.deployment.sequence}} />
     </div>
   </div>
 </PageHeader>
 
 <StatusReportBar @model={{@model}} @artifactType="Deployment"/>
 
-<OperationLogs @jobId={{@model.jobId}} />
+<Pds::Divider />
+
+<h2>Resources</h2>
+
+<table style="table-layout: fixed; width: 100%; margin-bottom: 1rem">
+  <caption style="text-align: left">Resources created by <b>this deployment</b></caption>
+
+  <thead>
+    <tr>
+      <td>Name</td>
+      <td>Type</td>
+      <td>Age</td>
+      <td>Status</td>
+    </tr>
+  </thead>
+
+  <tbody>
+    {{#each @model.latestStatusReport.resourcesList key="id" as |resource|}}
+      <tr>
+        <td>{{resource.name}}</td>
+        <td><Pds::Icon @type={{icon-for-component resource.platform}} /> {{resource.type}}</td>
+        <td>{{date-format-distance-to-now resource.createdTime.seconds}}</td>
+        <td>
+          <StatusReportIndicator
+            @statusReport={{hash
+              health=(hash
+                healthMessage=resource.healthMessage
+                healthStatus=(or
+                  (and (eq resource.health 0) "UNKNOWN")
+                  (and (eq resource.health 1) "ALIVE")
+                  (and (eq resource.health 2) "READY")
+                  (and (eq resource.health 3) "DOWN")
+                  (and (eq resource.health 4) "PARTIAL")
+                  (and (eq resource.health 5) "MISSING")
+                )
+              )
+            }}
+          />
+      </td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<Pds::Divider />
+
+<h2>Operation Logs</h2>
+
+<OperationLogs @jobId={{@model.deployment.jobId}} />
