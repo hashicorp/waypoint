@@ -4,9 +4,7 @@
 @use 'pds/utils/layout' as Layout;
 @use 'pds/tokens/font';
 @use 'pds/core/typography/config' as Typography;
-@use 'utilities/animations';
-
-@use 'utilities/focus-ring';
+@use 'utilities/index';
 
 @import 'node_modules/codemirror/lib/codemirror';
 @import 'node_modules/codemirror/theme/monokai';
@@ -16,35 +14,6 @@
 @import './variables';
 @import './layout';
 
-@import './components/app-card';
-@import './components/app-card-item';
-@import './components/app-item';
-@import './pages/auth-page';
-@import './components/badge';
-@import './components/navigation/breadcrumbs';
-@import './components/button';
-@import './components/card';
-@import './components/code-editor-field.scss';
-@import './components/cli-hint';
-@import './components/copyable-code';
-@import './components/empty-state';
-@import './components/flash';
-@import './components/git-commit';
-@import './components/navigation/footer';
-@import './components/navigation/header';
-@import './components/icon-tile';
-@import './components/input';
-@import './components/spinner';
-@import './pages/login';
-@import './components/notifications';
-@import './pages/onboarding';
-@import './components/operation-status-indicator';
-@import './components/output-pane';
-@import './components/project-init-error';
-@import './components/navigation/page-header';
-@import './components/status-report-indicator';
-@import './components/structure/pds-form';
-@import './components/structure/pds-tabnav';
-@import './components/tooltip';
-@import './components/variables-list';
-@import './components/x-toggle';
+@import 'components/index';
+
+@import 'pages/index';
