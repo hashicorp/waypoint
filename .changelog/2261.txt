@@ -1,0 +1,4 @@
+```release-note:improvement
+plugin/k8s: Add new ability to release by creating an ingress resource to route
+traffic to a service backend from an ingress controller.
+```
