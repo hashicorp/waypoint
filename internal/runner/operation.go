@@ -120,6 +120,9 @@ func (r *Runner) executeJob(
 		},
 	})
 	clientMutex.Unlock()
+	if err != nil {
+		return nil, err
+	}
 
 	// If we have a project specified on the job, override the configuration
 	// project with that. This allows the same Waypoint configuration to
