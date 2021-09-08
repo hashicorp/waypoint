@@ -636,6 +636,11 @@ func (r *Releaser) resourceIngressStatus(
 	clientset *clientsetInfo,
 	sr *resource.StatusResponse,
 ) error {
+	if state.Name == "" {
+		log.Debug("no state found for ingress resource, cannot build status report")
+		return nil
+	}
+
 	s := sg.Add("Checking status of Kubernetes ingress resource %q...", state.Name)
 	defer s.Abort()
 
