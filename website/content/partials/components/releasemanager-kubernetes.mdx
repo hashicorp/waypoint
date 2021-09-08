@@ -12,6 +12,8 @@ These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this
 
 Configuration to set up an ingress resource to route traffic to the given application from an ingress controller.
 
+An ingress resource can be created on release that will route traffic to the Kubernetes service. Note that before this happens, the Kubernetes cluster must already be configured with an Ingress controller. Otherwise there won't be a way for inbound traffic to be routed to the ingress resource.
+
 ##### ingress.annotations
 
 Annotations to be applied to the ingress resource.
