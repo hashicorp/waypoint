@@ -58,10 +58,12 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
   @tracked project: Project.AsObject;
   @tracked authCase: number;
   @tracked serverHcl: boolean;
+  defaultProject: Project.AsObject;
 
   constructor(owner: unknown, args: ProjectSettingsArgs) {
     super(owner, args);
-    this.project = JSON.parse(JSON.stringify(DEFAULT_PROJECT_MODEL)) as Project.AsObject; // to ensure we're doing a deep copy
+    this.defaultProject = JSON.parse(JSON.stringify(DEFAULT_PROJECT_MODEL)) as Project.AsObject; // to ensure we're doing a deep copy
+    this.project = this.defaultProject;
     let { project } = this.args;
     this.populateExistingFields(project, this.project);
     this.authCase = 4;
@@ -130,7 +132,7 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
   populateExistingFields(projectFromArgs: Project.AsObject, currentModel: Project.AsObject): void {
     for (let [key, value] of Object.entries(projectFromArgs)) {
       if (isEmpty(value)) {
-        currentModel[key] = DEFAULT_PROJECT_MODEL[key];
+        currentModel[key] = this.defaultProject[key];
         continue;
       }
 
