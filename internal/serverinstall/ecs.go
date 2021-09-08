@@ -1824,6 +1824,7 @@ const odrRolePolicy = `{
         "ecs:CreateCluster",
         "ecs:CreateService",
         "ecs:DeleteService",
+        "ecs:DescribeServices",
         "ecs:DescribeClusters",
         "ecs:RegisterTaskDefinition",
         "ecs:RunTask",
