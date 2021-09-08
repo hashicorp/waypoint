@@ -76,3 +76,7 @@
     grid-column: 8 / -1;
   }
 }
+
+.contentMediaObject {
+  margin-top: 32px;
+}

@@ -15,11 +15,13 @@ export default function SectionMonitorAppHealth() {
           matter where you deploy to. View Logs, Builds, Releasese and even run
           Exec commands from the Waypoint UI
         </SectionDescription>
-        <MediaObject
-          icon={require('../icons/eye.svg?include')}
-          heading="A single pane of glass"
-          description="View all deployments, regardless of target from one location"
-        />
+        <div className={s.contentMediaObject}>
+          <MediaObject
+            icon={require('../icons/eye.svg?include')}
+            heading="A single pane of glass"
+            description="View all deployments, regardless of target from one location"
+          />
+        </div>
       </div>
     </Section>
   )
