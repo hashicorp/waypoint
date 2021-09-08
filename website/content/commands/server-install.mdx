@@ -63,6 +63,8 @@ you do not need to accept any terms.
 - `-ecs-server-image=<string>` - Docker image for the Waypoint server.
 - `-ecs-cpu=<string>` - Configures the requested CPU amount for the Waypoint server task in ECS.
 - `-ecs-mem=<string>` - Configures the requested memory amount for the Waypoint server task in ECS.
+- `-ecs-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners. This will default to the server image with the name (not label) suffixed with '-odr'.
+- `-ecs-task-role-name=<string>` - Configures the IAM Task Role for both the default runner, and all the On-Demand Runners. If this is blank, a IAM Role will be created automatically with the correct permissions.
 
 #### kubernetes Options
 
