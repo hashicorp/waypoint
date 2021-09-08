@@ -40,6 +40,7 @@ export default function (this: Server): void {
   this.post('/UpsertProject', project.update);
   this.post('/ListProjects', project.list);
   this.post('/GetProject', project.get);
+  this.post('/UI_GetProject', project.uiGet);
   this.post('/ConvertInviteToken', token.create);
   this.post('/GenerateInviteToken', inviteToken.create);
   this.post('/GenerateLoginToken', token.create);

@@ -184,3 +184,22 @@ build_status:
     state-1: Pushing to # RUNNING
     state-2: Pushed to # SUCCESS
     state-3: Failed to push to # ERROR
+
+project-init-running:
+  title:
+    prefix: Initializing project from
+  cli:
+    prefix: Initialization taking a long time? Try running
+    suffix: from the CLI
+  more-help:
+    prefix: For more help getting started, refer to the
+    link-label: Waypoint documentation
+
+project-init-error:
+  title:
+    prefix: Failed to initialize project from
+  error-message:
+    title: Error
+  more-help:
+    prefix: For more help getting started, refer to the
+    link-label: Waypoint documentation

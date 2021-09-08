@@ -37,6 +37,7 @@ $button-shadow: 0 3px 2px rgba(var(--shadow), 0.2);
   --warning-border: #{dehex(color.$yellow-100)};
   --info: #{dehex(color.$blue-050)};
   --info-text: #{dehex(color.$blue-500)};
+  --spinner-stroke: #{dehex(color.$black)};
 }
 
 @media (prefers-color-scheme: dark) {
@@ -69,5 +70,6 @@ $button-shadow: 0 3px 2px rgba(var(--shadow), 0.2);
     --pds-color: #{dehex(color.$white)};
     --pds-input-backgroundColor: #{dehex(color.$ui-cool-gray-900)};
     --pds-input-color: #{dehex(color.$white)};
+    --spinner-stroke: #{dehex(color.$white)};
   }
 }

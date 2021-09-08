@@ -1,3 +1,4 @@
+import Ember from 'ember';
 import Component from '@glimmer/component';
 import { inject as service } from '@ember/service';
 import RouterService from '@ember/routing/router-service';
@@ -8,6 +9,7 @@ import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { Project, Job } from 'waypoint-pb';
 import parseUrl from 'parse-url';
+import { later } from '@ember/runloop';
 
 const FORMAT = {
   HCL: 0,
@@ -219,6 +221,16 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
     try {
       await this.api.upsertProject(this.project, this.authCase);
       this.flashMessages.success('Settings saved');
+
+      // Refresh project route to get the latest state of the InitOp (if any)
+      this.router.refresh('workspace.projects.project');
+
+      if (!Ember.testing) {
+        // Optimistically refresh again a few seconds later, by which time
+        // the InitOp is likely to have completed
+        later(this.router, 'refresh', 'workspace.projects.project', 3000);
+      }
+
       this.router.transitionTo('workspace.projects.project', this.project.name);
     } catch (err) {
       this.flashMessages.error('Failed to save Settings', { content: err.message, sticky: true });

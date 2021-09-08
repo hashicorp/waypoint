@@ -343,6 +343,9 @@ service Waypoint {
   // a combination of calls to non-UI endpoints.
   //----------------------------------------------------------------------
 
+  // Get a given project with useful related records.
+  rpc UI_GetProject(UI.GetProjectRequest) returns (UI.GetProjectResponse);
+
   // List deployments for a given application.
   rpc UI_ListDeployments(UI.ListDeploymentsRequest) returns (UI.ListDeploymentsResponse);
 
@@ -354,6 +357,15 @@ service Waypoint {
 * UI
 ********************************************************************/
 message UI {
+  message GetProjectRequest {
+    Ref.Project project = 1;
+  }
+
+  message GetProjectResponse {
+    Project project = 1;
+    Job latest_init_job = 2;
+  }
+
 
   message ListDeploymentsRequest {
     // Application that the deployments belong to.
@@ -1270,7 +1282,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 68 to 99; // future operation range
+  reserved 69 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -1342,6 +1354,7 @@ message Job {
     StatusReportOp status_report = 65;
     StartTaskLaunchOp start_task = 66;
     StopTaskLaunchOp stop_task = 67;
+    InitOp init = 68;
   }
 
   //-----------------------------------------------------------------
@@ -1410,6 +1423,7 @@ message Job {
     PollResult poll = 11;
     StatusReportResult status_report = 12;
     StartTaskResult start_task = 13;
+    InitResult init = 14;
   }
 
   message DataSource {
@@ -1785,6 +1799,18 @@ message Job {
     // didn't find new data.
     Job.DataSource.Ref old_ref = 2;
     Job.DataSource.Ref new_ref = 3;
+  }
+
+  // InitOp triggers an init action for a project (the equivalent of `waypoint
+  // init`). The job will fail if there is no data source configured for the
+  // project. As with `waypoint init`, this operation is idempotent.
+  message InitOp {
+  }
+
+  message InitResult {
+    // NOTE(jgwhite): In the future I think we may want to communicate what
+    // entities were created during the init operation. At the time of writing,
+    // there is no pressing reason to add this data.
   }
 
   // QueueProjectOp queues a job for all applications in a project. The

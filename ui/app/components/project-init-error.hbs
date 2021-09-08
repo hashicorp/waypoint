@@ -1,0 +1,18 @@
+<p>
+  <Pds::Icon @type="alert-triangle" />
+  {{t "project-init-error.title.prefix"}}
+  <code class="code-block">{{@project.dataSource.git.url}}</code>
+</p>
+
+<div class="project-init-error__message">
+  <div class="project-init-error__message__heading">{{t "project-init-error.error-message.title"}}</div>
+  {{! TODO(jgwhite): Use real log-display component in <ProjectInitError> }}
+  <code>{{@project.latestInitJob.error.message}}</code>
+</div>
+
+<p>
+  {{t "project-init-error.more-help.prefix"}}
+  <ExternalLink href="https://waypointproject.io/docs/getting-started">
+    {{t "project-init-error.more-help.link-label"}}
+  </ExternalLink>
+</p>
