@@ -85,7 +85,7 @@ func (r *Releaser) resourceServiceStatus(
 	clientset *clientsetInfo,
 	sr *resource.StatusResponse,
 ) error {
-	s := sg.Add("Checking status of Kubernetes service resource...")
+	s := sg.Add("Checking status of Kubernetes service resource %q...", state.Name)
 	defer s.Abort()
 
 	namespace := r.config.Namespace
@@ -105,6 +105,11 @@ func (r *Releaser) resourceServiceStatus(
 		if !errors.IsNotFound(err) {
 			return err
 		} else {
+			s.Update("No service resource was found")
+			s.Status(terminal.StatusError)
+			s.Done()
+			s = sg.Add("")
+
 			serviceResource.Name = state.Name
 			serviceResource.Health = sdk.StatusReport_MISSING
 			serviceResource.HealthMessage = sdk.StatusReport_MISSING.String()
@@ -131,7 +136,8 @@ func (r *Releaser) resourceServiceStatus(
 		serviceResource.Id = fmt.Sprintf("%s", serviceResp.UID)
 		serviceResource.Name = serviceResp.Name
 		serviceResource.CreatedTime = timestamppb.New(serviceResp.CreationTimestamp.Time)
-		serviceResource.Health = sdk.StatusReport_READY // If we found the service, then it's ready. It doesn't have any other conditions.
+		// If we found the service, then it's ready. It doesn't have any other conditions.
+		serviceResource.Health = sdk.StatusReport_READY
 		serviceResource.HealthMessage = fmt.Sprintf("Service %q exists and is ready", serviceResource.Name)
 		serviceResource.StateJson = string(serviceJson)
 	}
@@ -628,13 +634,7 @@ func (r *Releaser) resourceIngressStatus(
 	clientset *clientsetInfo,
 	sr *resource.StatusResponse,
 ) error {
-	if state.Name == "" {
-		log.Debug("skipping ingress status, no resource state found")
-		// we didn't create an ingress resource, so no use building a report for it
-		return nil
-	}
-
-	s := sg.Add("Checking status of Kubernetes ingress resource...")
+	s := sg.Add("Checking status of Kubernetes ingress resource %q...", state.Name)
 	defer s.Abort()
 
 	namespace := r.config.Namespace
@@ -642,7 +642,66 @@ func (r *Releaser) resourceIngressStatus(
 		namespace = clientset.Namespace
 	}
 
-	// TODO: write me
+	ingressResource := sdk.StatusReport_Resource{
+		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_ROUTER,
+	}
+	sr.Resources = append(sr.Resources, &ingressResource)
+
+	ingressClient := clientset.Clientset.NetworkingV1().Ingresses(namespace)
+	ingressResp, err := ingressClient.Get(ctx, state.Name, metav1.GetOptions{})
+	if ingressResp == nil {
+		return status.Errorf(codes.FailedPrecondition,
+			"kubernetes ingress resource response returned nothing for %q", state.Name)
+	} else if err != nil {
+		if !errors.IsNotFound(err) {
+			return err
+		} else {
+			s.Update("No ingress resource named %q was found", state.Name)
+			s.Status(terminal.StatusError)
+			s.Done()
+			s = sg.Add("")
+
+			ingressResource.Name = state.Name
+			ingressResource.Health = sdk.StatusReport_MISSING
+			ingressResource.HealthMessage = sdk.StatusReport_MISSING.String()
+		}
+	} else {
+		// An ingress resource exists
+		s.Update("Building status report for ingress resource %q...", state.Name)
+
+		lbIngress := ingressResp.Status.LoadBalancer.Ingress[0]
+
+		var ipAddress string
+		if lbIngress.IP != "" {
+			ipAddress = lbIngress.IP
+		}
+		var hostname string
+		if lbIngress.Hostname != "" {
+			hostname = lbIngress.Hostname
+		}
+		// we only configure 1 rule, so grab the first service resource
+		serviceBackend := ingressResp.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.Service
+
+		ingressJson, err := json.Marshal(map[string]interface{}{
+			"ingress":        ingressResp,
+			"ipAddress":      ipAddress,
+			"hostname":       hostname,
+			"serviceBackend": serviceBackend,
+		})
+		if err != nil {
+			return status.Errorf(codes.Internal,
+				"failed to marshal ingress resource definition to json: %s", err)
+		}
+
+		ingressResource.Id = fmt.Sprintf("%s", ingressResp.UID)
+		ingressResource.Name = ingressResp.Name
+		ingressResource.CreatedTime = timestamppb.New(ingressResp.CreationTimestamp.Time)
+		// If we found the ingress resource, then it's ready. It doesn't have any
+		// other conditions.
+		ingressResource.Health = sdk.StatusReport_READY
+		ingressResource.HealthMessage = fmt.Sprintf("Ingress resource %q exists and is ready", ingressResource.Name)
+		ingressResource.StateJson = string(ingressJson)
+	}
 
 	s.Update("Finished building report for Kubernetes ingress resource")
 	s.Done()
