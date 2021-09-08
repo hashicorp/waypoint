@@ -1828,6 +1828,7 @@ const odrRolePolicy = `{
         "ecs:DescribeClusters",
         "ecs:RegisterTaskDefinition",
         "ecs:RunTask",
+        "ecs:ListTask",
         "elasticloadbalancing:CreateListener",
         "elasticloadbalancing:CreateLoadBalancer",
         "elasticloadbalancing:CreateRule",
