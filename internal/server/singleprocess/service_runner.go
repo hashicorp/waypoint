@@ -461,6 +461,12 @@ func (s *service) handleJobStreamRequest(
 			Project: job.Application.Project,
 		}, job.Workspace, event.Download.DataSourceRef)
 
+	case *pb.RunnerJobStreamRequest_ConfigLoad_:
+		return s.state.JobUpdate(job.Id, func(jobpb *pb.Job) error {
+			jobpb.Config = event.ConfigLoad.Config
+			return nil
+		})
+
 	case *pb.RunnerJobStreamRequest_Terminal:
 		// This shouldn't happen but we want to protect against it to prevent
 		// a panic.

@@ -574,6 +574,17 @@ func (s *State) JobAck(id string, ack bool) (*Job, error) {
 // JobUpdateRef sets the data_source_ref field for a job. This job can be
 // in any state.
 func (s *State) JobUpdateRef(id string, ref *pb.Job_DataSource_Ref) error {
+	return s.JobUpdate(id, func(jobpb *pb.Job) error {
+		jobpb.DataSourceRef = ref
+		return nil
+	})
+}
+
+// JobUpdate calls the given callback to update fields on the job data.
+// The callback is called in the context of a database write lock so it
+// should NOT compute anything and should be fast. The callback can return
+// an error to abort the transaction.
+func (s *State) JobUpdate(id string, cb func(jobpb *pb.Job) error) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -588,8 +599,7 @@ func (s *State) JobUpdateRef(id string, ref *pb.Job_DataSource_Ref) error {
 	job := raw.(*jobIndex)
 
 	_, err = s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
-		jobpb.DataSourceRef = ref
-		return nil
+		return cb(jobpb)
 	})
 	if err != nil {
 		return err
