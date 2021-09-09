@@ -13,6 +13,10 @@ func (s *service) GetAuthMethod(
 	ctx context.Context,
 	req *pb.GetAuthMethodRequest,
 ) (*pb.GetAuthMethodResponse, error) {
+	if err := serverptypes.ValidateGetAuthMethodRequest(req); err != nil {
+		return nil, err
+	}
+
 	value, err := s.state.AuthMethodGet(req.AuthMethod)
 	if err != nil {
 		return nil, err

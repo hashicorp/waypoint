@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"go/token"
 
-	"github.com/go-ozzo/ozzo-validation/v4"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/hashicorp/go-bexpr"
 	"github.com/imdario/mergo"
@@ -85,6 +85,13 @@ func ValidateUpsertAuthMethodRequest(v *pb.UpsertAuthMethodRequest) error {
 
 // ValidateDeleteAuthMethodRequest
 func ValidateDeleteAuthMethodRequest(v *pb.DeleteAuthMethodRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.AuthMethod, validation.Required),
+	))
+}
+
+// ValidateGetAuthMethodRequest
+func ValidateGetAuthMethodRequest(v *pb.GetAuthMethodRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
 		validation.Field(&v.AuthMethod, validation.Required),
 	))
