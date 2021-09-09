@@ -87,7 +87,7 @@ permissions.
 		"odr_task_role_name",
 		"Task role name to be used for the task role in the On-Demand Runner task",
 		docs.Summary(`
-This role must have the correct IAM policies to complete it's task.
+This role must have the correct IAM policies to complete its task.
 If this IAM role does not already exist, a role will be created with the correct
 permissions"
 `,
