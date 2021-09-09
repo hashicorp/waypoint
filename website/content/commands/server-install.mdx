@@ -59,12 +59,12 @@ you do not need to accept any terms.
 - `-ecs-cluster=<string>` - Configures the Cluster to install into.
 - `-ecs-region=<string>` - Configures which AWS region to install into.
 - `-ecs-subnets=<string>` - Subnets to install server into.
-- `-ecs-execution-role-name=<string>` - Configures the Execution role name to use.
+- `-ecs-execution-role-name=<string>` - Configures the IAM Execution role name to use.
 - `-ecs-server-image=<string>` - Docker image for the Waypoint server.
 - `-ecs-cpu=<string>` - Configures the requested CPU amount for the Waypoint server task in ECS.
 - `-ecs-mem=<string>` - Configures the requested memory amount for the Waypoint server task in ECS.
 - `-ecs-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners. This will default to the server image with the name (not label) suffixed with '-odr'.
-- `-ecs-task-role-name=<string>` - Configures the IAM Task Role for both the default runner, and all the On-Demand Runners. If this is blank, a IAM Role will be created automatically with the correct permissions.
+- `-ecs-task-role-name=<string>` - IAM Execution Role to assign to the on-demand runner. If this is blank, an IAM role will be created automatically with the correct permissions.
 
 #### kubernetes Options
 
