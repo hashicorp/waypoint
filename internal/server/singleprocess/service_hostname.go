@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 const (
@@ -24,6 +25,10 @@ func (s *service) CreateHostname(
 	ctx context.Context,
 	req *pb.CreateHostnameRequest,
 ) (*pb.CreateHostnameResponse, error) {
+	if err := ptypes.ValidateCreateHostnameRequest(req); err != nil {
+		return nil, err
+	}
+
 	urlClient := s.urlClient()
 	if urlClient == nil {
 		return nil, status.Errorf(codes.FailedPrecondition,
