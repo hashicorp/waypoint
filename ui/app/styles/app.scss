@@ -9,11 +9,11 @@
 @import 'node_modules/codemirror/lib/codemirror';
 @import 'node_modules/codemirror/theme/monokai';
 
-@import 'mixins/index';
+@import 'mixins';
 
 @import './variables';
 @import './layout';
 
-@import 'components/index';
+@import 'components';
 
-@import 'pages/index';
+@import 'pages';
