@@ -1,0 +1,23 @@
+.root {
+  composes: g-grid-container from global;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: 32px;
+  row-gap: 50px;
+}
+
+.content {
+  grid-column: 1 / -1;
+
+  @media (--medium-up) {
+    grid-column: 1 / 6;
+  }
+}
+
+.media {
+  grid-column: 1 / -1;
+
+  @media (--medium-up) {
+    grid-column: 7 / -1;
+  }
+}

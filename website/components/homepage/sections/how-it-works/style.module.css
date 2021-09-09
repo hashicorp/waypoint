@@ -30,35 +30,14 @@
 
     & > li {
       width: 100%;
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      grid-column-gap: 32px;
 
       & + li {
         margin-top: 132px;
-      }
-
-      & > :first-child {
-        grid-column: 1 / -1;
-
-        @media (--medium-up) {
-          grid-column: 1 / 6;
-        }
-      }
-
-      & > :last-child {
-        margin-top: 50px;
-        grid-column: 1 / -1;
-
-        @media (--medium-up) {
-          margin-top: 0;
-          grid-column: 7 / -1;
-        }
       }
     }
   }
 }
 
-.inner {
+.container {
   composes: g-grid-container from global;
 }
