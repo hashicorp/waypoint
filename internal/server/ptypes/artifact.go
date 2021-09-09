@@ -10,31 +10,33 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// TestBuild returns a valid user for tests.
-func TestBuild(t testing.T, src *pb.Build) *pb.Build {
+// TestArtifact returns a valid user for tests.
+func TestArtifact(t testing.T, src *pb.PushedArtifact) *pb.PushedArtifact {
 	t.Helper()
 
 	if src == nil {
-		src = &pb.Build{}
+		src = &pb.PushedArtifact{}
 	}
 
-	require.NoError(t, mergo.Merge(src, &pb.Build{
+	require.NoError(t, mergo.Merge(src, &pb.PushedArtifact{
 		Id: "test",
 	}))
 
 	return src
 }
 
-// ValidateBuild validates the user structure.
-func ValidateBuild(v *pb.Build) error {
+// ValidatePushedArtifact validates the user structure.
+func ValidatePushedArtifact(v *pb.PushedArtifact) error {
 	return validationext.Error(validation.ValidateStruct(v,
-		ValidateBuildRules(v)...,
+		ValidatePushedArtifactRules(v)...,
 	))
 }
 
-// ValidateBuildRules
-func ValidateBuildRules(v *pb.Build) []*validation.FieldRules {
+// ValidatePushedArtifactRules
+func ValidatePushedArtifactRules(v *pb.PushedArtifact) []*validation.FieldRules {
 	return []*validation.FieldRules{
+		validation.Field(&v.Artifact, validation.Required),
+
 		validationext.StructField(&v.Application, func() []*validation.FieldRules {
 			return []*validation.FieldRules{
 				validation.Field(&v.Application.Application, validation.Required),
@@ -50,18 +52,15 @@ func ValidateBuildRules(v *pb.Build) []*validation.FieldRules {
 	}
 }
 
-// ValidateGetBuildRequest
-func ValidateGetBuildRequest(v *pb.GetBuildRequest) error {
+// ValidateUpsertArtifactRequest
+func ValidateUpsertPushedArtifactRequest(v *pb.UpsertPushedArtifactRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
-		validation.Field(&v.Ref, validation.Required),
-		validationext.StructField(&v.Ref, func() []*validation.FieldRules {
-			return ValidateRefOperationRules(v.Ref)
-		}),
+		validation.Field(&v.Artifact, validation.Required),
 	))
 }
 
-// ValidateListBuildsRequest
-func ValidateListBuildsRequest(v *pb.ListBuildsRequest) error {
+// ValidateListPushedArtifactsRequest
+func ValidateListPushedArtifactsRequest(v *pb.ListPushedArtifactsRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
 		validationext.StructField(&v.Application, func() []*validation.FieldRules {
 			return []*validation.FieldRules{
@@ -71,19 +70,19 @@ func ValidateListBuildsRequest(v *pb.ListBuildsRequest) error {
 		})))
 }
 
-// ValidateGetLatestBuildRequest
-func ValidateGetLatestBuildRequest(v *pb.GetLatestBuildRequest) error {
+// ValidateGetLatestPushedArtifactRequest
+func ValidateGetLatestPushedArtifactRequest(v *pb.GetLatestPushedArtifactRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
 		validation.Field(&v.Application, validation.Required),
 	))
 }
 
-// ValidateUpsertBuildRequest
-func ValidateUpsertBuildRequest(v *pb.UpsertBuildRequest) error {
+// ValidateGetPushedArtifactRequest
+func ValidateGetPushedArtifactRequest(v *pb.GetPushedArtifactRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
-		validation.Field(&v.Build, validation.Required),
-		validationext.StructField(&v.Build, func() []*validation.FieldRules {
-			return ValidateBuildRules(v.Build)
+		validation.Field(&v.Ref, validation.Required),
+		validationext.StructField(&v.Ref, func() []*validation.FieldRules {
+			return ValidateRefOperationRules(v.Ref)
 		}),
 	))
 }
