@@ -1,0 +1,4 @@
+```release-note:bug
+server: Adds API validation to ensure server doesn't panic when given an empty
+request body
+```
