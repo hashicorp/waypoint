@@ -16,7 +16,7 @@
                 data-test-config-variables-var-name
                 id="config-variable-name"
                 placeholder={{t "form.config_variables_settings.variable_name_placeholder"}}
-                value={{this.variable.name}}
+                value={{this.changeset.name}}
                 {{on "input" (pick "target.value" (set this "variable.name"))}}
               />
             </div>
@@ -30,7 +30,7 @@
                   id="config-variable-value"
                   data-test-config-variables-var-static
                   placeholder={{t "form.config_variables_settings.variable_value_placeholder"}}
-                  value={{this.variable.pb_static}}
+                  value={{this.changeset.pb_static}}
                   {{on "input" (pick "target.value" (set this "variable.pb_static"))}}
                 />
               </div>
@@ -40,9 +40,9 @@
             <div class="pds-formFieldToggle">
               <XToggle
                 @showLabels={{true}}
-                @value={{this.variable.nameIsPath}}
+                @value={{this.changeset.nameIsPath}}
                 @size="small"
-                @onToggle={{fn (mut this.variable.nameIsPath)}} as |toggle|>
+                @onToggle={{fn (mut this.changeset.nameIsPath)}} as |toggle|>
                 <toggle.switch
                   @showLabels={{false}}
                   @name="name-is-path"
@@ -50,7 +50,7 @@
                 <toggle.label
                   data-test-config-variables-name-is-path-toggle
                   for="name-is-path"
-                  @value={{not this.variable.nameIsPath}}>
+                  @value={{not this.changeset.nameIsPath}}>
                   <span class="pds-toggleLabel">
                     {{t "form.config_variables_settings.nameIsPath.label"}}
                   </span>
@@ -62,9 +62,9 @@
             <div class="pds-formFieldToggle">
               <XToggle
                 @showLabels={{true}}
-                @value={{this.variable.internal}}
+                @value={{this.changeset.internal}}
                 @size="small"
-                @onToggle={{fn (mut this.variable.internal)}} as |toggle|>
+                @onToggle={{fn (mut this.changeset.internal)}} as |toggle|>
                 <toggle.switch
                   @showLabels={{false}}
                   @name="internal"
@@ -72,7 +72,7 @@
                 <toggle.label
                   data-test-config-variables-internal-toggle
                   for="internal"
-                  @value={{not this.variable.internal}}>
+                  @value={{not this.changeset.internal}}>
                   <span class="pds-toggleLabel">
                     {{t "form.config_variables_settings.internal.label"}}
                   </span>
@@ -104,17 +104,17 @@
     </form>
   {{else}}
     <div class="variables--list-item">
-      <span class="variables--list-item-name" data-test-config-variables-var-name>{{this.variable.name}}</span>
+      <span class="variables--list-item-name" data-test-config-variables-var-name>{{this.changeset.name}}</span>
       <span class="variables--list-item-value" data-test-config-variables-var-value>
-        {{#if this.variable.pb_static}}
-          <pre><code>{{this.variable.pb_static}}</code></pre>
+        {{#if this.changeset.pb_static}}
+          <pre><code>{{this.changeset.pb_static}}</code></pre>
         {{/if}}
-        {{#if this.variable.dynamic.from}}
-          <pre><code>dynamic via {{this.variable.dynamic.from}}</code></pre>
+        {{#if this.changeset.dynamic.from}}
+          <pre><code>dynamic via {{this.changeset.dynamic.from}}</code></pre>
         {{/if}}
       </span>
-      <span class="variables--list-item-internal" data-test-config-variables-var-internal><pre><code>{{this.variable.internal}}</code></pre></span>
-      <span class="variables--list-item-name-is-path" data-test-config-variables-var-name-is-path><pre><code>{{this.variable.nameIsPath}}</code></pre></span>
+      <span class="variables--list-item-internal" data-test-config-variables-var-internal><pre><code>{{this.changeset.internal}}</code></pre></span>
+      <span class="variables--list-item-name-is-path" data-test-config-variables-var-name-is-path><pre><code>{{this.changeset.nameIsPath}}</code></pre></span>
       {{#if this.isEditable}}
         <Pds::Dropdown @align="right" as |D|>
           <D.Trigger
@@ -127,13 +127,13 @@
               <Pds::Button
                 data-test-config-variables-dropdown-edit
                 @variant="secondary"
-                {{on "click" (fn this.editVariable this.variable)}}>
+                {{on "click" (fn this.editVariable this.changeset)}}>
                 {{t "form.config_variables_settings.variable_dropdown.edit"}}
               </Pds::Button>
               <Pds::Button
                 data-test-config-variables-dropdown-delete
                 @variant="warning"
-                {{on "click" (fn this.deleteVariable this.variable)}}>
+                {{on "click" (fn this.deleteVariable this.changeset)}}>
                 {{t "form.config_variables_settings.variable_dropdown.delete"}}
               </Pds::Button>
             </section>
