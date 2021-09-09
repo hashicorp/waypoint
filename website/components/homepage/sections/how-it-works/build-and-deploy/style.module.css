@@ -21,3 +21,183 @@
     grid-column: 7 / -1;
   }
 }
+
+.terminalContainer {
+  margin-right: 20%;
+}
+
+.terminal {
+  margin: 0;
+  padding: 14px 24px;
+  background: linear-gradient(95.19deg, #343536 7.32%, #000 108.94%);
+  box-shadow: 0 83.4693px 66.7755px rgba(0, 129, 150, 0.07),
+    0 34.8715px 27.8972px rgba(0, 129, 150, 0.08),
+    0 18.644px 14.9152px rgba(0, 129, 150, 0.02),
+    0 10.4517px 8.36132px rgba(0, 0, 0, 0.035),
+    0 5.5508px 4.44064px rgba(0, 129, 150, 0.12),
+    0 2.30981px 1.84785px rgba(0, 0, 0, 0.0196802);
+  border-radius: 6.67755px;
+  color: var(--white);
+}
+
+.terminalLine {
+  display: block;
+  line-height: 2;
+}
+
+.terminalTilde {
+  color: var(--packer-link-on-dark);
+}
+
+.terminalToken {
+  color: #c93a75;
+}
+
+.terminalNote {
+  display: inline-block;
+  color: #70c2b6;
+  opacity: 0;
+  transition: opacity ease-in-out 0.2s;
+}
+
+.note {
+  position: relative;
+  margin: 8px 0 0;
+  composes: g-type-body-small from global;
+  color: var(--gray-1);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity ease-in-out 0.5s;
+  transition-delay: 0.5s;
+}
+
+.deploymentContainer {
+  margin-top: 8px;
+  display: flex;
+
+  & .note {
+    transition-delay: 1.6s;
+  }
+}
+
+.arrow {
+  flex-shrink: 0;
+  margin-right: 20px;
+  opacity: 0;
+  transition: opacity ease-in 0.2s;
+  transition-delay: 0.85s;
+
+  & :global(.arrowLine) {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  & :global(.arrowPoint) {
+    opacity: 0;
+    transform: translateX(-50px);
+    transition: 0.5s;
+    transition-delay: 1.3s;
+  }
+}
+
+.deploymentWrapper {
+  margin-top: 60px;
+  flex-grow: 1;
+}
+
+.deployment {
+  padding: 30px 24px;
+  background: linear-gradient(122.36deg, #fff 16.51%, #f7f7f7 111.81%);
+  box-shadow: 0 83.4693px 66.7755px rgba(0, 129, 150, 0.07),
+    0 34.8715px 27.8972px rgba(0, 129, 150, 0.08),
+    0 18.644px 14.9152px rgba(0, 129, 150, 0.02),
+    0 10.4517px 8.36132px rgba(0, 0, 0, 0.035),
+    0 5.5508px 4.44064px rgba(0, 129, 150, 0.12),
+    0 2.30981px 1.84785px rgba(0, 0, 0, 0.0196802);
+  border-radius: 6.67755px;
+  transition: 0.5s;
+  transition-delay: 1.3s;
+  opacity: 0;
+  transform: translateX(100px);
+}
+
+.deploymentHeading {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 18.6542px;
+}
+
+.deploymentHeadingBranch {
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  padding: 2px 4px;
+  background-color: #ededed;
+  border-radius: 3.39167px;
+  font-weight: 700;
+
+  & svg {
+    margin-right: 6px;
+    display: block;
+    vertical-align: middle;
+  }
+}
+
+.deploymentCommit {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  color: #405465;
+  font-size: 13.5667px;
+
+  & img {
+    flex-shrink: 0;
+    display: block;
+    vertical-align: middle;
+    margin: 0 5px;
+  }
+}
+
+.active {
+  & .terminalNote {
+    opacity: 1;
+  }
+
+  & .terminalContainer .note {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  & .arrow {
+    opacity: 1;
+
+    & :global(.arrowLine) {
+      animation: draw;
+      animation-duration: 1s;
+      animation-fill-mode: forwards;
+      animation-delay: 0.85s;
+    }
+
+    & :global(.arrowPoint) {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  & .deployment {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  & .deploymentContainer .note {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 2;
+  }
+}
