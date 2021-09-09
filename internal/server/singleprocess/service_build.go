@@ -16,6 +16,10 @@ func (s *service) UpsertBuild(
 	ctx context.Context,
 	req *pb.UpsertBuildRequest,
 ) (*pb.UpsertBuildResponse, error) {
+	if err := serverptypes.ValidateUpsertBuildRequest(req); err != nil {
+		return nil, err
+	}
+
 	result := req.Build
 
 	// If we have no ID, then we're inserting and need to generate an ID.
