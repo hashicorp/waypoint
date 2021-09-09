@@ -74,18 +74,8 @@ func ValidateListBuildsRequest(v *pb.ListBuildsRequest) error {
 // ValidateGetLatestBuildRequest
 func ValidateGetLatestBuildRequest(v *pb.GetLatestBuildRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
-		validationext.StructField(&v.Application, func() []*validation.FieldRules {
-			return []*validation.FieldRules{
-				validation.Field(&v.Application.Application, validation.Required),
-				validation.Field(&v.Application.Project, validation.Required),
-			}
-		}),
-
-		validationext.StructField(&v.Workspace, func() []*validation.FieldRules {
-			return []*validation.FieldRules{
-				validation.Field(&v.Workspace.Workspace, validation.Required),
-			}
-		}),
+		validation.Field(&v.Application, validation.Required),
+		validation.Field(&v.Workspace, validation.Required),
 	))
 }
 
