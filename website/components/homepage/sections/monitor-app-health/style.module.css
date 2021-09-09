@@ -5,10 +5,6 @@
   grid-column-gap: 32px;
   padding-top: 150px;
   padding-bottom: 150px;
-
-  & img {
-    max-width: 100%;
-  }
 }
 
 .media {

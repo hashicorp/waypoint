@@ -1,12 +1,27 @@
+import InlineSvg from '@hashicorp/react-inline-svg'
+import classNames from 'classnames'
+import { useInView } from 'react-intersection-observer'
 import MediaObject from 'components/homepage/media-object'
-import Section, { SectionHeading, SectionDescription } from '../../section'
+import Section, {
+  SectionHeading,
+  SectionDescription,
+} from 'components/homepage/section'
 import s from './style.module.css'
 
 export default function SectionMonitorAppHealth() {
+  const { ref, inView } = useInView({
+    threshold: 0.85,
+    triggerOnce: true,
+  })
   return (
     <Section className={s.monitorAppHealth}>
-      <div className={s.media}>
-        <img src={require('./img/monitor-app-health.png')} alt="" />
+      <div
+        className={classNames(s.media, {
+          [s.visible]: inView,
+        })}
+        ref={ref}
+      >
+        <InlineSvg src={require('./graphic.svg?include')} />
       </div>
       <div className={s.content}>
         <SectionHeading>Monitor app health on any cloud</SectionHeading>
