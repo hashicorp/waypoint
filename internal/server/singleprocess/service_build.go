@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
@@ -41,6 +42,10 @@ func (s *service) ListBuilds(
 	ctx context.Context,
 	req *pb.ListBuildsRequest,
 ) (*pb.ListBuildsResponse, error) {
+	if err := serverptypes.ValidateListBuildsRequest(req); err != nil {
+		return nil, err
+	}
+
 	result, err := s.state.BuildList(req.Application,
 		state.ListWithWorkspace(req.Workspace),
 		state.ListWithOrder(req.Order),
@@ -56,6 +61,10 @@ func (s *service) GetLatestBuild(
 	ctx context.Context,
 	req *pb.GetLatestBuildRequest,
 ) (*pb.Build, error) {
+	if err := serverptypes.ValidateGetLatestBuildRequest(req); err != nil {
+		return nil, err
+	}
+
 	return s.state.BuildLatest(req.Application, req.Workspace)
 }
 
@@ -64,5 +73,9 @@ func (s *service) GetBuild(
 	ctx context.Context,
 	req *pb.GetBuildRequest,
 ) (*pb.Build, error) {
+	if err := serverptypes.ValidateGetBuildRequest(req); err != nil {
+		return nil, err
+	}
+
 	return s.state.BuildGet(req.Ref)
 }
