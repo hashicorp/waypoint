@@ -9,7 +9,6 @@ import (
 // ValidateCreateHostnameRequest
 func ValidateCreateHostnameRequest(v *pb.CreateHostnameRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
-		validation.Field(&v.Hostname, validation.Required),
 		validation.Field(&v.Target, validation.Required),
 	))
 }
