@@ -115,7 +115,7 @@
     "webpack-bundle-analyzer": "^3.8.0"
   },
   "engines": {
-    "node": "12"
+    "node": "14.*"
   },
   "ember": {
     "edition": "octane"

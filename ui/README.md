@@ -7,8 +7,8 @@ A short introduction of this app could easily go here.
 
 You will need the following things properly installed on your computer.
 
-- [Node.js v12](https://nodejs.org/)
-  - The current codebase has been tested to run well with `node` version 12 so it is _**strongly recommended**_ that you use this version
+- [Node.js v14](https://nodejs.org/)
+  - The current codebase has been tested to run well with `node` version 14 so it is _**strongly recommended**_ that you use this version
   - You can use node version managers to manage all of your node versions, for example [nvm](https://github.com/nvm-sh/nvm), [n](https://github.com/tj/n), etc.
 - [Yarn](https://classic.yarnpkg.com/en/docs/install)
 - [Ember CLI](https://ember-cli.com/)
