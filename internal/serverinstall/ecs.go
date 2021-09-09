@@ -1795,6 +1795,14 @@ const rolePolicy = `{
   ]
 }`
 
+// odrRolePolicy represents the minimum policies required for an On-Demand
+// Runner task to successfully build and deploy a Waypoint application to ECS.
+// We chose to enumerate the minimum policies to avoid being over privileged.
+// This list may not be exhaustive or complete to deploy to all platforms (EC2,
+// Lambda), but represent a reasonable minimum. To add additional policies,
+// users can create their own role and use it as the Task Role with the
+// -ecs-task-role-name server installation flag, using these policies as a
+// starting point.
 const odrRolePolicy = `{
   "Version": "2012-10-17",
   "Statement": [
