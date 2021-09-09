@@ -88,6 +88,13 @@ func ValidateGetProjectRequest(v *pb.GetProjectRequest) error {
 	))
 }
 
+// ValidateGetProjectRequest
+func ValidateUIGetProjectRequest(v *pb.UI_GetProjectRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Project, validation.Required),
+	))
+}
+
 func isWaypointHcl(p *pb.Project) validation.Rule {
 	return validation.By(func(_ interface{}) error {
 		if len(p.WaypointHcl) == 0 {

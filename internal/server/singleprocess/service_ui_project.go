@@ -5,12 +5,17 @@ import (
 	"sort"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 func (s *service) UI_GetProject(
 	ctx context.Context,
 	req *pb.UI_GetProjectRequest,
 ) (*pb.UI_GetProjectResponse, error) {
+	if err := serverptypes.ValidateUIGetProjectRequest(req); err != nil {
+		return nil, err
+	}
+
 	project, err := s.state.ProjectGet(req.Project)
 
 	if err != nil {
