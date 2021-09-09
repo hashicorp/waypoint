@@ -31,6 +31,10 @@ func (s *service) GetProject(
 	ctx context.Context,
 	req *pb.GetProjectRequest,
 ) (*pb.GetProjectResponse, error) {
+	if err := serverptypes.ValidateGetProjectRequest(req); err != nil {
+		return nil, err
+	}
+
 	result, err := s.state.ProjectGet(req.Project)
 	if err != nil {
 		return nil, err
@@ -66,6 +70,10 @@ func (s *service) UpsertApplication(
 	ctx context.Context,
 	req *pb.UpsertApplicationRequest,
 ) (*pb.UpsertApplicationResponse, error) {
+	if err := serverptypes.ValidateUpsertApplicationRequest(req); err != nil {
+		return nil, err
+	}
+
 	// Get the project
 	praw, err := s.state.ProjectGet(req.Project)
 	if err != nil {
