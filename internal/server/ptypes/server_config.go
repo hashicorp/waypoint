@@ -1,7 +1,7 @@
 package ptypes
 
 import (
-	"github.com/go-ozzo/ozzo-validation/v4"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
@@ -28,6 +28,7 @@ func TestServerConfig(t testing.T, src *pb.ServerConfig) *pb.ServerConfig {
 }
 
 // ValidateServerConfig validates the server config structure.
+// TODO: This still panics if the server config is nil
 func ValidateServerConfig(c *pb.ServerConfig) error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.AdvertiseAddrs, validation.Required, validation.Length(1, 1)),
