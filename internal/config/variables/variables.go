@@ -1,6 +1,7 @@
 package variables
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/hcl/v2/ext/typeexpr"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	hcljson "github.com/hashicorp/hcl/v2/json"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/zclconf/go-cty/cty"
@@ -332,15 +334,19 @@ func EvaluateVariables(
 			value := sv.Hcl
 			fakeFilename := fmt.Sprintf("<value for var.%s from source %q>", pbv.Name, source)
 			expr, diags = hclsyntax.ParseExpression([]byte(value), fakeFilename, hcl.Pos{Line: 1, Column: 1})
+
 		case *pb.Variable_Str:
 			value := sv.Str
 			expr = &hclsyntax.LiteralValueExpr{Val: cty.StringVal(value)}
+
 		case *pb.Variable_Bool:
 			value := sv.Bool
 			expr = &hclsyntax.LiteralValueExpr{Val: cty.BoolVal(value)}
+
 		case *pb.Variable_Num:
 			value := sv.Num
 			expr = &hclsyntax.LiteralValueExpr{Val: cty.NumberIntVal(value)}
+
 		default:
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
@@ -491,10 +497,12 @@ func parseFileValues(filename string, source string) ([]*pb.Variable, hcl.Diagno
 			}
 			v.Value = &pb.Variable_Num{Num: num}
 		default:
-			// if it's not a primitive/simple type, we set as hcl here to be later
-			// evaluated as hcl; any errors at evaluating the hcl type will
+			// if it's not a primitive/simple type, we set as bytes here to be later
+			// parsed as an hcl expression; any errors at evaluating the hcl type will
 			// be handled at that time
-			v.Value = &pb.Variable_Hcl{Hcl: val.AsString()}
+			bv := hclwrite.TokensForValue(val).Bytes()
+			buf := bytes.NewBuffer(bv)
+			v.Value = &pb.Variable_Hcl{Hcl: buf.String()}
 		}
 
 		// Set source
