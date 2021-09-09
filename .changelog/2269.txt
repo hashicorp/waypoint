@@ -1,0 +1,4 @@
+```release-note:bug
+server: Validate GetDeployment request has a valid request body to avoid a server
+panic.
+```
