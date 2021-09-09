@@ -332,6 +332,7 @@ func (p *Platform) resourceDeploymentCreate(
 		// nothing defined, set up the defaults
 		p.config.Ports = make([]map[string]string, 1)
 		p.config.Ports[0] = map[string]string{"port": strconv.Itoa(DefaultServicePort), "name": "http"}
+
 	} else if p.config.ServicePort > 0 && p.config.Ports == nil {
 		// old ServicePort var is used, so set it up in our Ports map to be used
 		p.config.Ports = make([]map[string]string, 1)
@@ -374,7 +375,7 @@ func (p *Platform) resourceDeploymentCreate(
 	deployment.Spec.Template.Labels[labelId] = result.Id
 
 	// Version label duplicates "labelId" to support services like Istio that
-	// expect pods to be labled with 'version'
+	// expect pods to be labeled with 'version'
 	deployment.Spec.Template.Labels["version"] = result.Id
 
 	// Apply user defined labels
@@ -424,8 +425,15 @@ func (p *Platform) resourceDeploymentCreate(
 
 	containerPorts := make([]corev1.ContainerPort, len(p.config.Ports))
 	for i, cp := range p.config.Ports {
-		hostPort, _ := strconv.ParseInt(cp["host_port"], 10, 32)
-		port, _ := strconv.ParseInt(cp["port"], 10, 32)
+		port, err := strconv.ParseInt(cp["host_port"], 10, 32)
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, "failed to parse config: port %s cannot be parsed: %s", err)
+		}
+
+		hostPort, err := strconv.ParseInt(cp["port"], 10, 32)
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, "failed to parse config: hostPort %s cannot be parsed: %s", err)
+		}
 
 		containerPorts[i] = corev1.ContainerPort{
 			Name:          cp["name"],
@@ -876,6 +884,14 @@ func (p *Platform) Status(
 	return result, nil
 }
 
+// TODO(izaak): test
+type Port struct {
+	Name     string `hcl:"name"`
+	Port     string `hcl:"port"`
+	HostPort string `hcl:"host_port,optional"`
+	HostIp   string `hcl:"host_ip,optional"`
+}
+
 // Config is the configuration structure for the Platform.
 type Config struct {
 	// Annotations are added to the pod spec of the deployed application.  This is
@@ -908,7 +924,7 @@ type Config struct {
 
 	// A full resource of options to define ports for your service running on the container
 	// Defaults to port 3000.
-	Ports []map[string]string `hcl:"ports,optional"`
+	Ports []map[string]string `hcl:"ports,block"`
 
 	// If set, this is the HTTP path to request to test that the application
 	// is up and running. Without this, we only test that a connection can be
@@ -923,7 +939,7 @@ type Config struct {
 	Resources map[string]string `hcl:"resources,optional"`
 
 	// An array of paths to directories that will be mounted as EmptyDirVolumes in the pod
-	// to store temporary data.
+	// to store temporary data. Will be mounted into every container.
 	ScratchSpace []string `hcl:"scratch_path,optional"`
 
 	// ServiceAccount is the name of the Kubernetes service account to apply to the
@@ -936,7 +952,7 @@ type Config struct {
 	ServicePort uint `hcl:"service_port,optional"`
 
 	// Environment variables that are meant to configure the application in a static
-	// way. This might be control an image that has mulitple modes of operation,
+	// way. This might be control an image that has multiple modes of operation,
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
@@ -949,6 +965,27 @@ type Config struct {
 type Pod struct {
 	SecurityContext *PodSecurityContext `hcl:"security_context,block"`
 	Container       *Container          `hcl:"container,block"`
+	Sidecars        []*SidecarContainer `hcl:"sidecars,optional"`
+}
+
+type SidecarContainer struct {
+	Name            string
+	Image           string
+	ImagePullPolicy string
+	Ports           []*Port // TODO(izaak): should we make this []map[string]string for consistency? If not, does this need to be a slice of pointers?
+	// Probe details for describing a health check to be performed against a container.
+
+	// If set, this is the HTTP path to request to test that the application
+	// is up and running. Without this, we only test that a connection can be
+	// made to the port.
+	ProbePath string `hcl:"probe_path,optional"`
+
+	Probe *Probe `hcl:"probe,block"`
+
+	Resources     map[string]string // TODO(izaak): Why isn't this a normal type?
+	Command       *[]string         `hcl:"command"`
+	Args          *[]string         `hcl:"args"`
+	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 }
 
 // Container describes the commands and arguments for a container config
