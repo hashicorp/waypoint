@@ -171,7 +171,7 @@ func (c *ConfigSetCommand) Flags() *flag.Sets {
 			Name:   "scope",
 			Target: &c.flagScope,
 			Usage: "The scope for this configuration. The configuration will only " +
-				"appear within this scope. This can be one of 'global', 'project', or" +
+				"appear within this scope. This can be one of 'global', 'project', or " +
 				"'app'.",
 			Default: "project",
 		})
