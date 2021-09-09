@@ -63,7 +63,6 @@ func ValidateUpsertStatusReportRequest(v *pb.UpsertStatusReportRequest) error {
 // ValidateListStatusReportsRequest
 func ValidateListStatusReportsRequest(v *pb.ListStatusReportsRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
-		validation.Field(&v.Target, validation.Required),
 		validationext.StructField(&v.Application, func() []*validation.FieldRules {
 			return []*validation.FieldRules{
 				validation.Field(&v.Application.Application, validation.Required),
