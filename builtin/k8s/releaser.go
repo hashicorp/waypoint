@@ -477,11 +477,11 @@ func (r *Releaser) resourceIngressCreate(
 	var pathType networkingv1.PathType
 	switch r.config.IngressConfig.PathType {
 	case "Exact":
-		pathType = "Exact"
+		pathType = networkingv1.PathTypeExact
 	case "Prefix":
-		pathType = "Prefix"
+		pathType = networkingv1.PathTypePrefix
 	case "ImplementationSpecific":
-		pathType = "ImplementationSpecific"
+		pathType = networkingv1.PathTypeImplementationSpecific
 	default:
 		if r.config.IngressConfig.PathType != "" {
 			return status.Errorf(codes.FailedPrecondition,
@@ -490,11 +490,11 @@ func (r *Releaser) resourceIngressCreate(
 		}
 
 		// Default Path Type if nothing is configured in an ingress releaser
-		pathType = "Prefix"
+		pathType = networkingv1.PathTypePrefix
 	}
 
 	// Set the default path to '/' if not set and path type is Prefix
-	if pathType == "Prefix" && r.config.IngressConfig.Path == "" {
+	if pathType == networkingv1.PathTypePrefix && r.config.IngressConfig.Path == "" {
 		r.config.IngressConfig.Path = "/"
 	}
 
