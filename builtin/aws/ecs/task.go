@@ -109,6 +109,7 @@ func (p *TaskLauncher) StopTask(
 	log hclog.Logger,
 	ti *TaskInfo,
 ) error {
+	log.Warn("the StopTask method is not currently implemented for ECS tasks")
 	return nil
 }
 
