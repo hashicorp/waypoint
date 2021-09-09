@@ -35,10 +35,6 @@ func ValidateBuild(v *pb.Build) error {
 // ValidateBuildRules
 func ValidateBuildRules(v *pb.Build) []*validation.FieldRules {
 	return []*validation.FieldRules{
-		validation.Field(&v.Id, validation.Required),
-
-		validation.Field(&v.Sequence, validation.When(v.Id == "", validation.Required).Else(validation.Nil)),
-
 		validationext.StructField(&v.Application, func() []*validation.FieldRules {
 			return []*validation.FieldRules{
 				validation.Field(&v.Application.Application, validation.Required),
@@ -89,6 +85,16 @@ func ValidateGetLatestBuildRequest(v *pb.GetLatestBuildRequest) error {
 			return []*validation.FieldRules{
 				validation.Field(&v.Workspace.Workspace, validation.Required),
 			}
+		}),
+	))
+}
+
+// ValidateUpsertBuildRequest
+func ValidateUpsertBuildRequest(v *pb.UpsertBuildRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Build, validation.Required),
+		validationext.StructField(&v.Build, func() []*validation.FieldRules {
+			return ValidateBuildRules(v.Build)
 		}),
 	))
 }
