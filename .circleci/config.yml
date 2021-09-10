@@ -444,9 +444,6 @@ workflows:
       - ember-build-tests:
           requires:
             - frontend-cache
-      - ember-test:
-          requires:
-            - ember-build-tests
 
   # website:
   #   jobs:
