@@ -1,13 +1,15 @@
 .workflowThatScales {
+  --columns: 1;
+
   padding-top: 150px;
   padding-bottom: 150px;
   composes: g-grid-container from global;
   display: grid;
-  grid-template-columns: repeat(1, 1fr);
+  grid-template-columns: repeat(var(--columns), 1fr);
   grid-column-gap: 32px;
 
   @media (--medium-up) {
-    grid-template-columns: repeat(12, 1fr);
+    --columns: 12;
   }
 }
 
