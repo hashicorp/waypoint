@@ -23,6 +23,23 @@ func (s *service) UpsertProject(
 		return nil, err
 	}
 
+	if projectNeedsRemoteInit(result) {
+		// The project is connected to a data source but doesn’t use
+		// automatic polling, so let’s queue some remote init operations
+		// to ensure the application list is populated.
+
+		// TODO(jgwhite): only queue init ops if the relevant fields have *changed*
+
+		err := queueInitOps(s, ctx, result)
+
+		if err != nil {
+			// An error here indicates a failure to enqueue an
+			// InitOp, not a failure during the operation itself,
+			// which happen out-of-band.
+			return nil, err
+		}
+	}
+
 	return &pb.UpsertProjectResponse{Project: result}, nil
 }
 
@@ -93,4 +110,55 @@ func (s *service) UpsertApplication(
 	}
 
 	return &pb.UpsertApplicationResponse{Application: app}, nil
+}
+
+func queueInitOps(s *service, ctx context.Context, project *pb.Project) error {
+	workspaces, err := s.state.WorkspaceList()
+
+	if err != nil {
+		return err
+	}
+
+	if len(workspaces) == 0 {
+		workspaces = append(workspaces, &pb.Workspace{Name: "default"})
+	}
+
+	for _, workspace := range workspaces {
+		_, err := s.QueueJob(ctx, &pb.QueueJobRequest{
+			Job: &pb.Job{
+				Application: &pb.Ref_Application{
+					Project: project.Name,
+				},
+				Workspace: &pb.Ref_Workspace{
+					Workspace: workspace.Name,
+				},
+				Operation: &pb.Job_Init{},
+				TargetRunner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Any{},
+				},
+			},
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func projectNeedsRemoteInit(project *pb.Project) bool {
+	if project.DataSource == nil {
+		return false
+	}
+
+	if project.DataSource.GetGit() == nil {
+		return false
+	}
+
+	if project.DataSourcePoll != nil && project.DataSourcePoll.Enabled {
+		return false
+	}
+
+	return true
 }

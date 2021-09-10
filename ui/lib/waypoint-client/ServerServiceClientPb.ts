@@ -2672,6 +2672,46 @@ export class WaypointClient {
     this.methodInfoUpsertStatusReport);
   }
 
+  methodInfoUI_GetProject = new grpcWeb.AbstractClientBase.MethodInfo(
+    internal_server_proto_server_pb.UI.GetProjectResponse,
+    (request: internal_server_proto_server_pb.UI.GetProjectRequest) => {
+      return request.serializeBinary();
+    },
+    internal_server_proto_server_pb.UI.GetProjectResponse.deserializeBinary
+  );
+
+  uI_GetProject(
+    request: internal_server_proto_server_pb.UI.GetProjectRequest,
+    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UI.GetProjectResponse>;
+
+  uI_GetProject(
+    request: internal_server_proto_server_pb.UI.GetProjectRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.UI.GetProjectResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UI.GetProjectResponse>;
+
+  uI_GetProject(
+    request: internal_server_proto_server_pb.UI.GetProjectRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.UI.GetProjectResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/UI_GetProject',
+        request,
+        metadata || {},
+        this.methodInfoUI_GetProject,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/UI_GetProject',
+    request,
+    metadata || {},
+    this.methodInfoUI_GetProject);
+  }
+
   methodInfoUI_ListDeployments = new grpcWeb.AbstractClientBase.MethodInfo(
     internal_server_proto_server_pb.UI.ListDeploymentsResponse,
     (request: internal_server_proto_server_pb.UI.ListDeploymentsRequest) => {

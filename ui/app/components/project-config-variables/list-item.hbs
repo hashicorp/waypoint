@@ -1,0 +1,145 @@
+<li data-test-config-variables-list-item>
+  {{#if (or this.isEditing this.isCreating)}}
+    <form class="pds-form" data-test-config-variables-form {{on "submit" this.saveVariable}}>
+      <div part="fields" class="card">
+        <div class="card-header">
+          <h4>{{t "form.config_variables_settings.title"}}</h4>
+        </div>
+        <fieldset class="pds-formFieldSet">
+          <div>
+            <div class="pds-formField">
+              <label for="config-variable-name" class="pds-fieldName">
+                {{t "form.config_variables_settings.variable_name"}}
+              </label>
+              <Pds::Input
+                @type="text"
+                data-test-config-variables-var-name
+                id="config-variable-name"
+                placeholder={{t "form.config_variables_settings.variable_name_placeholder"}}
+                value={{this.variable.name}}
+                {{on "input" (pick "target.value" (set this "variable.name"))}}
+              />
+            </div>
+            <div class="pds-formField">
+              <label for="config-variable-value" class="pds-fieldName">
+                {{t "form.config_variables_settings.variable_value"}}
+              </label>
+              <div class="pds-formField">
+                <Pds::Input
+                  @type="text"
+                  id="config-variable-value"
+                  data-test-config-variables-var-static
+                  placeholder={{t "form.config_variables_settings.variable_value_placeholder"}}
+                  value={{this.variable.pb_static}}
+                  {{on "input" (pick "target.value" (set this "variable.pb_static"))}}
+                />
+              </div>
+            </div>
+          </div>
+          <div class="pds-formField">
+            <div class="pds-formFieldToggle">
+              <XToggle
+                @showLabels={{true}}
+                @value={{this.variable.nameIsPath}}
+                @size="small"
+                @onToggle={{fn (mut this.variable.nameIsPath)}} as |toggle|>
+                <toggle.switch
+                  @showLabels={{false}}
+                  @name="name-is-path"
+                  />
+                <toggle.label
+                  data-test-config-variables-name-is-path-toggle
+                  for="name-is-path"
+                  @value={{not this.variable.nameIsPath}}>
+                  <span class="pds-toggleLabel">
+                    {{t "form.config_variables_settings.nameIsPath.label"}}
+                  </span>
+                </toggle.label>
+              </XToggle>
+            </div>
+          </div>
+          <div class="pds-formField">
+            <div class="pds-formFieldToggle">
+              <XToggle
+                @showLabels={{true}}
+                @value={{this.variable.internal}}
+                @size="small"
+                @onToggle={{fn (mut this.variable.internal)}} as |toggle|>
+                <toggle.switch
+                  @showLabels={{false}}
+                  @name="internal"
+                  />
+                <toggle.label
+                  data-test-config-variables-internal-toggle
+                  for="internal"
+                  @value={{not this.variable.internal}}>
+                  <span class="pds-toggleLabel">
+                    {{t "form.config_variables_settings.internal.label"}}
+                  </span>
+                </toggle.label>
+              </XToggle>
+            </div>
+          </div>
+        </fieldset>
+        <hr/>
+        <div class="card-footer">
+          <Pds::ButtonSet>
+            <Pds::Button
+              data-test-config-variables-edit-save
+              @variant="primary"
+              @type="submit">
+              {{t "form.config_variables_settings.button_submit"}}
+            </Pds::Button>
+            <Pds::Button
+              data-test-config-variables-edit-cancel
+              @variant="secondary"
+              {{on "click"
+                (if this.isCreating this.cancelCreate this.cancelEdit)
+              }}>
+              {{t "form.config_variables_settings.button_cancel"}}
+            </Pds::Button>
+          </Pds::ButtonSet>
+        </div>
+      </div>
+    </form>
+  {{else}}
+    <div class="variables--list-item">
+      <span class="variables--list-item-name" data-test-config-variables-var-name>{{this.variable.name}}</span>
+      <span class="variables--list-item-value" data-test-config-variables-var-value>
+        {{#if this.variable.pb_static}}
+          <pre><code>{{this.variable.pb_static}}</code></pre>
+        {{/if}}
+        {{#if this.variable.dynamic.from}}
+          <pre><code>dynamic via {{this.variable.dynamic.from}}</code></pre>
+        {{/if}}
+      </span>
+      <span class="variables--list-item-internal" data-test-config-variables-var-internal><pre><code>{{this.variable.internal}}</code></pre></span>
+      <span class="variables--list-item-name-is-path" data-test-config-variables-var-name-is-path><pre><code>{{this.variable.nameIsPath}}</code></pre></span>
+      {{#if this.isEditable}}
+        <Pds::Dropdown @align="right" as |D|>
+          <D.Trigger
+            data-test-config-variables-dropdown
+            @variant="ghost">
+            {{t "form.config_variables_settings.variable_dropdown.trigger"}}
+          </D.Trigger>
+          <D.Dialog >
+            <section>
+              <Pds::Button
+                data-test-config-variables-dropdown-edit
+                @variant="secondary"
+                {{on "click" (fn this.editVariable this.variable)}}>
+                {{t "form.config_variables_settings.variable_dropdown.edit"}}
+              </Pds::Button>
+              <Pds::Button
+                data-test-config-variables-dropdown-delete
+                @variant="warning"
+                {{on "click" (fn this.deleteVariable this.variable)}}>
+                {{t "form.config_variables_settings.variable_dropdown.delete"}}
+              </Pds::Button>
+            </section>
+          </D.Dialog>
+        </Pds::Dropdown>
+      {{/if}}
+    </div>
+  {{/if}}
+</li>

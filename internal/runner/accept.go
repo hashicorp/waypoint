@@ -453,7 +453,7 @@ func (r *Runner) prepareAndExecuteJob(
 		if err == nil {
 			// Execute the job. We have to close the UI right afterwards to
 			// ensure that no more output is written to the client.
-			result, err = r.executeJob(ctx, log, ui, job, wd)
+			result, err = r.executeJob(ctx, log, ui, job, wd, sendMutex, client)
 		}
 	}
 

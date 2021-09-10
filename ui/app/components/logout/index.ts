@@ -9,8 +9,8 @@ export default class Logout extends Component {
   @service router!: RouterService;
 
   @action
-  async logout() {
+  async logout(): Promise<void> {
     await this.session.removeToken();
-    return this.router.transitionTo('auth');
+    this.router.transitionTo('auth');
   }
 }

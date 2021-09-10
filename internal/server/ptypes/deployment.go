@@ -3,6 +3,8 @@ package ptypes
 import (
 	"strconv"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/hashicorp/waypoint/internal/pkg/validationext"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -21,4 +23,14 @@ func (v *Deployment) URLFragment() string {
 	}
 
 	return "v" + strconv.FormatUint(seq, 10)
+}
+
+// ValidateGetDeploymentRequest
+func ValidateGetDeploymentRequest(v *pb.GetDeploymentRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Ref, validation.Required),
+		validationext.StructField(&v.Ref, func() []*validation.FieldRules {
+			return ValidateRefOperationRules(v.Ref)
+		}),
+	))
 }

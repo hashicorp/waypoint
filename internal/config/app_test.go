@@ -192,7 +192,7 @@ func TestConfigApp_compare(t *testing.T) {
 
 				// test the static value
 				require.Len(vars, 4)
-				static, ok := vars[3].Value.(*pb.ConfigVar_Static)
+				static, ok := vars[0].Value.(*pb.ConfigVar_Static)
 				require.True(ok)
 				require.Equal("extra: ${config.env.static}", static.Static)
 

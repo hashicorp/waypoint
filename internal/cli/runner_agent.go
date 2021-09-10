@@ -133,6 +133,7 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 
 	if c.flagODR {
 		options = append(options,
+			runnerpkg.WithODR(),
 			runnerpkg.ByIdOnly(),
 			runnerpkg.WithAcceptTimeout(defaultRunnerODRAcceptTimeout),
 		)

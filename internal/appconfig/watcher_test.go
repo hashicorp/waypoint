@@ -86,6 +86,7 @@ func TestWatcher_static(t *testing.T) {
 	env, iter, err = w.Next(ctx, iter)
 	require.NoError(err)
 	require.Equal(env.EnvVars, []string{"VALUE2=goodbye", "VALUE3=hello"})
+	require.Equal(env.DeletedEnvVars, []string{"TEST_VALUE"})
 }
 
 func TestWatcher_staticChange(t *testing.T) {
@@ -124,6 +125,44 @@ func TestWatcher_staticChange(t *testing.T) {
 	env, iter, err = w.Next(ctx, iter)
 	require.NoError(err)
 	require.Equal(env.EnvVars, []string{"TEST_VALUE=goodbye"})
+	require.Empty(env.DeletedEnvVars)
+}
+
+func TestWatcher_staticOriginalEnv(t *testing.T) {
+	t.Parallel()
+	require := require.New(t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	w, err := NewWatcher(
+		WithRefreshInterval(10*time.Millisecond),
+		WithOriginalEnv([]string{"TEST_VALUE=original"}),
+	)
+	require.NoError(err)
+	defer w.Close()
+
+	// Update with some static vars
+	w.UpdateVars(ctx, []*pb.ConfigVar{
+		{
+			Name:  "TEST_VALUE",
+			Value: &pb.ConfigVar_Static{Static: "hello"},
+		},
+	})
+
+	// We should get the static vars back
+	env, iter, err := w.Next(ctx, 0)
+	require.NoError(err)
+	require.Equal(env.EnvVars, []string{"TEST_VALUE=hello"})
+
+	// Unset our vars
+	w.UpdateVars(ctx, []*pb.ConfigVar{})
+
+	// We should get the static vars back
+	env, iter, err = w.Next(ctx, iter)
+	require.NoError(err)
+	require.Equal(env.EnvVars, []string{"TEST_VALUE=original"})
+	require.Empty(env.DeletedEnvVars)
 }
 
 // Test that we read dynamic config variables.

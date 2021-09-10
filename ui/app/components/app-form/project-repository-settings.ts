@@ -1,3 +1,4 @@
+import Ember from 'ember';
 import Component from '@glimmer/component';
 import { inject as service } from '@ember/service';
 import RouterService from '@ember/routing/router-service';
@@ -8,6 +9,7 @@ import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { Project, Job } from 'waypoint-pb';
 import parseUrl from 'parse-url';
+import { later } from '@ember/runloop';
 
 const FORMAT = {
   HCL: 0,
@@ -56,10 +58,12 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
   @tracked project: Project.AsObject;
   @tracked authCase: number;
   @tracked serverHcl: boolean;
+  defaultProject: Project.AsObject;
 
   constructor(owner: unknown, args: ProjectSettingsArgs) {
     super(owner, args);
-    this.project = JSON.parse(JSON.stringify(DEFAULT_PROJECT_MODEL)) as Project.AsObject; // to ensure we're doing a deep copy
+    this.defaultProject = JSON.parse(JSON.stringify(DEFAULT_PROJECT_MODEL)) as Project.AsObject; // to ensure we're doing a deep copy
+    this.project = this.defaultProject;
     let { project } = this.args;
     this.populateExistingFields(project, this.project);
     this.authCase = 4;
@@ -128,7 +132,7 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
   populateExistingFields(projectFromArgs: Project.AsObject, currentModel: Project.AsObject): void {
     for (let [key, value] of Object.entries(projectFromArgs)) {
       if (isEmpty(value)) {
-        currentModel[key] = DEFAULT_PROJECT_MODEL[key];
+        currentModel[key] = this.defaultProject[key];
         continue;
       }
 
@@ -200,12 +204,8 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
   }
 
   @action
-  setWaypointHcl(e: Event): void {
-    if (!(e.target instanceof HTMLInputElement)) {
-      return;
-    }
-
-    this.project.waypointHcl = btoa(e.target.value);
+  setWaypointHcl(value: string): void {
+    this.project.waypointHcl = btoa(value);
   }
 
   @action
@@ -223,6 +223,16 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
     try {
       await this.api.upsertProject(this.project, this.authCase);
       this.flashMessages.success('Settings saved');
+
+      // Refresh project route to get the latest state of the InitOp (if any)
+      this.router.refresh('workspace.projects.project');
+
+      if (!Ember.testing) {
+        // Optimistically refresh again a few seconds later, by which time
+        // the InitOp is likely to have completed
+        later(this.router, 'refresh', 'workspace.projects.project', 3000);
+      }
+
       this.router.transitionTo('workspace.projects.project', this.project.name);
     } catch (err) {
       this.flashMessages.error('Failed to save Settings', { content: err.message, sticky: true });

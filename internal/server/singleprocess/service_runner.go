@@ -56,7 +56,6 @@ func (s *service) RunnerGetDeploymentConfig(
 	}, nil
 }
 
-// TODO: test
 func (s *service) RunnerConfig(
 	srv pb.Waypoint_RunnerConfigServer,
 ) error {
@@ -110,6 +109,35 @@ func (s *service) RunnerConfig(
 		}
 	}()
 
+	// If this is an ODR runner, then we query the job it is waiting for
+	// in order to build up other information about this runner such as the
+	// project/app scope, workspace, etc.
+	//
+	// It is REQUIRED that an ODR has its target job queued BEFORE the
+	// ODR is launched. If we can't find a job, we error and exit which
+	// will also exit the runner.
+	var job *pb.Job
+	if record.Odr {
+		// Get a job assignment for this runner, non-blocking
+		sjob, err := s.state.JobPeekForRunner(ctx, record)
+		if err != nil {
+			return err
+		}
+		if sjob == nil {
+			return status.Errorf(codes.FailedPrecondition,
+				"no pending job for this on-demand runner. A pending job "+
+					"must be registered prior to registering the runner.")
+		}
+
+		// Set our job
+		job = sjob.Job
+
+		log.Debug("runner is scoped for config",
+			"application", job.Application,
+			"workspace", job.Workspace,
+			"labels", job.Labels)
+	}
+
 	// Build our config in a loop.
 	for {
 		ws := memdb.NewWatchSet()
@@ -117,19 +145,45 @@ func (s *service) RunnerConfig(
 		// Build our config
 		config := &pb.RunnerConfig{}
 
-		// Get our config vars
-		vars, err := s.state.ConfigGetWatch(&pb.ConfigGetRequest{
+		// Build our config var request. This is always runner-scoped, but
+		// if we're ODR then job should be non-nil and we set the proper
+		// project/app, workspace, labels, etc.
+		configReq := &pb.ConfigGetRequest{
 			Runner: &pb.Ref_RunnerId{
 				Id: record.Id,
 			},
+		}
+		if job != nil {
+			configReq.Scope = &pb.ConfigGetRequest_Application{
+				Application: job.Application,
+			}
+			configReq.Workspace = job.Workspace
+			configReq.Labels = job.Labels
+		}
 
-			// TODO(mitchellh): we need to set additional filters here
-			// if we're an on-demand runner for an app.
-		}, ws)
+		vars, err := s.state.ConfigGetWatch(configReq, ws)
 		if err != nil {
 			return err
 		}
 		config.ConfigVars = vars
+
+		// Get the config sources we need for our vars. We only do this if
+		// at least one var has a dynamic value.
+		if varContainsDynamic(vars) {
+			// NOTE(mitchellh): For now we query all the types and always send it
+			// all down. In the future we may want to consider filtering this
+			// by only the types we actually need above.
+			sources, err := s.state.ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
+				Scope: &pb.GetConfigSourceRequest_Global{
+					Global: &pb.Ref_Global{},
+				},
+			}, ws)
+			if err != nil {
+				return err
+			}
+
+			config.ConfigSources = sources
+		}
 
 		// Send new config
 		if err := srv.Send(&pb.RunnerConfigResponse{
@@ -406,6 +460,12 @@ func (s *service) handleJobStreamRequest(
 		return s.state.ProjectUpdateDataRef(&pb.Ref_Project{
 			Project: job.Application.Project,
 		}, job.Workspace, event.Download.DataSourceRef)
+
+	case *pb.RunnerJobStreamRequest_ConfigLoad_:
+		return s.state.JobUpdate(job.Id, func(jobpb *pb.Job) error {
+			jobpb.Config = event.ConfigLoad.Config
+			return nil
+		})
 
 	case *pb.RunnerJobStreamRequest_Terminal:
 		// This shouldn't happen but we want to protect against it to prevent

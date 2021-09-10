@@ -1,0 +1,19 @@
+.codemirror-container {
+  width: 100%;
+}
+
+.CodeMirror {
+  overflow: scroll;
+  max-width: 100%;
+  display: flex;
+  flex: 1;
+  font-family: ui-monospace, 'Menlo', monospace;
+}
+
+.CodeMirror-scroll {
+  width: 100%;
+}
+
+.CodeMirror-sizer {
+  border-right-width: 0px !important;
+}

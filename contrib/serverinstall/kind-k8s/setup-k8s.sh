@@ -44,9 +44,11 @@ cat <<EOF | kind create cluster --config=-
     extraPortMappings:
     - containerPort: 80
       hostPort: 80
+      listenAddress: "0.0.0.0"
       protocol: TCP
     - containerPort: 443
       hostPort: 443
+      listenAddress: "0.0.0.0"
       protocol: TCP
 EOF
 
@@ -120,12 +122,15 @@ echo "Applying metallb-config-set.yaml with ip address range applied..."
 kubectl apply -f configs/metallb-config-set.yaml
 
 if [ -n "${setupIngress}" ]; then
-	echo
-	echo "Setting up Contour ingress controller..."
-	echo
+  echo
+  echo "Setting up NGINX ingress controller..."
+  echo
 
-	kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
-	kubectl patch daemonsets -n projectcontour envoy -p '{"spec":{"template":{"spec":{"nodeSelector":{"ingress-ready":"true"},"tolerations":[{"key":"node-role.kubernetes.io/master","operator":"Equal","effect":"NoSchedule"}]}}}}'
+  kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+
+  # NOTE: uncomment this if you wish to use contour
+  #kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
+  #kubectl patch daemonsets -n projectcontour envoy -p '{"spec":{"template":{"spec":{"nodeSelector":{"ingress-ready":"true"},"tolerations":[{"key":"node-role.kubernetes.io/master","operator":"Equal","effect":"NoSchedule"}]}}}}'
 fi
 
 echo

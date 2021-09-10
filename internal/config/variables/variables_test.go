@@ -73,7 +73,7 @@ func TestVariables_DecodeVariableBlock(t *testing.T) {
 	}
 }
 
-func TestVariables_readFileValues(t *testing.T) {
+func TestVariables_parseFileValues(t *testing.T) {
 	cases := []struct {
 		file     string
 		expected []*pb.Variable
@@ -85,12 +85,23 @@ func TestVariables_readFileValues(t *testing.T) {
 				{
 					Name:   "art",
 					Value:  &pb.Variable_Str{Str: "gdbee"},
-					Source: &pb.Variable_Vcs{},
+					Source: &pb.Variable_File_{},
 				},
 				{
 					Name:   "mug",
 					Value:  &pb.Variable_Str{Str: "yeti"},
-					Source: &pb.Variable_Vcs{},
+					Source: &pb.Variable_File_{},
+				},
+			},
+			err: "",
+		},
+		{
+			file: "complex.wpvars",
+			expected: []*pb.Variable{
+				{
+					Name:   "testlist",
+					Value:  &pb.Variable_Hcl{Hcl: "[\"waffles\", \"more waffles\"]"},
+					Source: &pb.Variable_File_{},
 				},
 			},
 			err: "",
@@ -113,7 +124,7 @@ func TestVariables_readFileValues(t *testing.T) {
 			require := require.New(t)
 
 			fp := filepath.Join("testdata", tt.file)
-			fv, diags := parseFileValues(fp, "vcs")
+			fv, diags := parseFileValues(fp, "file")
 
 			if tt.err != "" {
 				require.Contains(diags.Error(), tt.err)
@@ -121,7 +132,7 @@ func TestVariables_readFileValues(t *testing.T) {
 			}
 
 			require.False(diags.HasErrors())
-			require.Equal(len(fv), len(tt.expected))
+			require.Equal(len(tt.expected), len(fv))
 			for _, v := range tt.expected {
 				require.Contains(fv, v)
 			}
@@ -388,7 +399,7 @@ func TestVariables_SetJobInputVariables(t *testing.T) {
 			vars, diags := LoadVariableValues(tt.cliArgs, tt.files)
 			require.False(diags.HasErrors())
 
-			require.Equal(len(vars), len(tt.expected))
+			require.Equal(len(tt.expected), len(vars))
 			for _, v := range tt.expected {
 				require.Contains(vars, v)
 			}

@@ -7,8 +7,6 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-memdb"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -672,32 +670,6 @@ func TestConfig(t *testing.T) {
 			require.Len(vs, 1)
 			require.Equal("bar", vs[0].Name)
 		}
-	})
-
-	t.Run("runner dynamic config not allowed", func(t *testing.T) {
-		require := require.New(t)
-
-		s := TestState(t)
-		defer s.Close()
-
-		// Create the config
-		err := s.ConfigSet(&pb.ConfigVar{
-			UnusedScope: &pb.ConfigVar_Runner{
-				Runner: &pb.Ref_Runner{
-					Target: &pb.Ref_Runner_Any{
-						Any: &pb.Ref_RunnerAny{},
-					},
-				},
-			},
-
-			Name: "foo",
-			Value: &pb.ConfigVar_Dynamic{
-				Dynamic: &pb.ConfigVar_DynamicVal{},
-			},
-		})
-
-		require.Error(err)
-		require.Equal(codes.FailedPrecondition, status.Code(err))
 	})
 
 	t.Run("workspace matching", func(t *testing.T) {

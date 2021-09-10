@@ -77,6 +77,27 @@ form:
     variable_value_placeholder: 'var_value'
     button_submit: 'Save variable'
     button_cancel: 'Cancel'
+  config_variables_settings:
+    empty_state_heading: 'No configuration variables'
+    empty_state_content: 'Configuration variables can be modified here as well as in the CLI.'
+    title: 'Config variable'
+    button_apply: 'Add variable'
+    variable_name: 'Key'
+    variable_name_placeholder: 'var_key'
+    variable_value: 'Value'
+    variable_internal: 'Internal'
+    variable_nameIsPath: 'Name as path'
+    variable_value_placeholder: 'var_value'
+    variable_dropdown:
+      trigger: 'Actions'
+      edit: 'Edit'
+      delete: 'Delete'
+    nameIsPath:
+      label: "Use variable name as file path"
+    internal:
+      label: "Internal value"
+    button_submit: 'Save variable'
+    button_cancel: 'Cancel'
 
 
 
@@ -163,3 +184,22 @@ build_status:
     state-1: Pushing to # RUNNING
     state-2: Pushed to # SUCCESS
     state-3: Failed to push to # ERROR
+
+project-init-running:
+  title:
+    prefix: Initializing project from
+  cli:
+    prefix: Initialization taking a long time? Try running
+    suffix: from the CLI
+  more-help:
+    prefix: For more help getting started, refer to the
+    link-label: Waypoint documentation
+
+project-init-error:
+  title:
+    prefix: Failed to initialize project from
+  error-message:
+    title: Error
+  more-help:
+    prefix: For more help getting started, refer to the
+    link-label: Waypoint documentation

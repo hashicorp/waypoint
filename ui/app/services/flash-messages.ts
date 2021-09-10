@@ -7,18 +7,19 @@ type FlashFunction = (
   message: FlashFunctionParams[0],
   // This allows the “throw any property you like on the flash object”
   // behavior of ember-cli-flash to type check.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  options?: FlashFunctionParams[1] & Record<string, any>
+  options?: FlashFunctionParams[1] & Record<string, unknown>
 ) => ReturnType<BaseFlashFunction>;
 
 class PdsFlashMessages extends FlashMessages {
   // This is the one custom convenience method we register in
   // config/environment.js.
   //
-  // The superclass will dynamically initialize this method when the
-  // service is created (thus the extra exclamation to reassure
-  // TypeScript).
-  error!: FlashFunction;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  error(..._args: Parameters<FlashFunction>): FlashMessages {
+    // This is a stub implementation. The superclass will dynamically add the
+    // real implementation at runtime.
+    return this;
+  }
 }
 
 export default PdsFlashMessages;

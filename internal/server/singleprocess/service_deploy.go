@@ -117,6 +117,10 @@ func (s *service) GetDeployment(
 	ctx context.Context,
 	req *pb.GetDeploymentRequest,
 ) (*pb.Deployment, error) {
+	if err := ptypes.ValidateGetDeploymentRequest(req); err != nil {
+		return nil, err
+	}
+
 	d, err := s.state.DeploymentGet(req.Ref)
 	if err != nil {
 		return nil, err

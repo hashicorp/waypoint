@@ -1,0 +1,3 @@
+```release-note:bug
+ui: fix leaky project repository settings being reused when creating a new project
+```

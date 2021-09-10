@@ -343,6 +343,9 @@ service Waypoint {
   // a combination of calls to non-UI endpoints.
   //----------------------------------------------------------------------
 
+  // Get a given project with useful related records.
+  rpc UI_GetProject(UI.GetProjectRequest) returns (UI.GetProjectResponse);
+
   // List deployments for a given application.
   rpc UI_ListDeployments(UI.ListDeploymentsRequest) returns (UI.ListDeploymentsResponse);
 
@@ -354,6 +357,15 @@ service Waypoint {
 * UI
 ********************************************************************/
 message UI {
+  message GetProjectRequest {
+    Ref.Project project = 1;
+  }
+
+  message GetProjectResponse {
+    Project project = 1;
+    Job latest_init_job = 2;
+  }
+
 
   message ListDeploymentsRequest {
     // Application that the deployments belong to.
@@ -1270,7 +1282,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 68 to 99; // future operation range
+  reserved 69 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -1342,6 +1354,7 @@ message Job {
     StatusReportOp status_report = 65;
     StartTaskLaunchOp start_task = 66;
     StopTaskLaunchOp stop_task = 67;
+    InitOp init = 68;
   }
 
   //-----------------------------------------------------------------
@@ -1367,6 +1380,13 @@ message Job {
   // the ref that should be downloaded. That level of configuration should be
   // exposed via the data_source parameter itself.
   DataSource.Ref data_source_ref = 110;
+
+  // Config is information about the Waypoint configuration (waypoint.hcl)
+  // for this job. This is only available once the configuration is loaded.
+  // If this is nil and the job is RUNNING, then it may not be loaded yet.
+  // API users can wait on the Job event on the JobStream to listen for
+  // job updates.
+  Config config = 111;
 
   // error is set if state == ERROR
   google.rpc.Status error = 106;
@@ -1410,6 +1430,26 @@ message Job {
     PollResult poll = 11;
     StatusReportResult status_report = 12;
     StartTaskResult start_task = 13;
+    InitResult init = 14;
+  }
+
+  message Config {
+    // Source is the location where the configuration was loaded from.
+    Source source = 1;
+
+    // Source is the location where the configuration was loaded from.
+    enum Source {
+      // Unknown should never be set, but represents a zero value.
+      UNKNOWN = 0;
+
+      // File is when the waypoint.hcl was loaded from a file either
+      // on disk (local actions) or the attached repository (GitOps).
+      FILE = 1;
+
+      // Server is when the waypoint.hcl was loaded from the server
+      // from being written directly in the project settings.
+      SERVER = 2;
+    }
   }
 
   message DataSource {
@@ -1787,6 +1827,18 @@ message Job {
     Job.DataSource.Ref new_ref = 3;
   }
 
+  // InitOp triggers an init action for a project (the equivalent of `waypoint
+  // init`). The job will fail if there is no data source configured for the
+  // project. As with `waypoint init`, this operation is idempotent.
+  message InitOp {
+  }
+
+  message InitResult {
+    // NOTE(jgwhite): In the future I think we may want to communicate what
+    // entities were created during the init operation. At the time of writing,
+    // there is no pressing reason to add this data.
+  }
+
   // QueueProjectOp queues a job for all applications in a project. The
   // applications queued may not directly align with what can be found in
   // ListProjects because the application list will be based on the config
@@ -1874,6 +1926,14 @@ message GetJobStreamResponse {
     // may be the same but the job is different.
     State state = 2;
 
+    // Job is sent whenever the job information changes. This is similar to
+    // state but is sent when ANY field in the Job structure changes. This
+    // can be used to listen for any updates to fields.
+    //
+    // The updated job is also sent when the state changes. In that case,
+    // both "state" and "job" will trigger.
+    JobChange job = 7;
+
     // terminal output. On initial connection, the server may send buffered
     // historical terminal data so there isn't a race between queueing a job
     // and getting its first byte output. You can determine this based on the
@@ -1915,6 +1975,11 @@ message GetJobStreamResponse {
 
     // canceling is true if the job was requested to be canceled.
     bool canceling = 4;
+  }
+
+  message JobChange {
+    // The full updated job.
+    Job job = 1;
   }
 
   message Download {
@@ -2032,6 +2097,17 @@ message Runner {
   // jobs from being assigned to them.
   bool by_id_only = 2;
 
+  // odr is true if this runner is an on-demand runner. For ODRs, we expect
+  // they will accept exactly one job and then exit. This is used by the
+  // server to change some other behavior:
+  //
+  //   * The server will give ODRs project/app-scoped config if it exists.
+  //   * The server will never assign more than one job to this runner.
+  //     This is also enforced in the runner client-side but the server also
+  //     does this out of caution.
+  //
+  bool odr = 4;
+
   // Components are the list of components that the runner supports. This
   // is used to match jobs to this runner.
   repeated Component components = 3;
@@ -2059,6 +2135,12 @@ message RunnerConfig {
   // with specific configuration without fear that the server will override
   // them.
   repeated ConfigVar config_vars = 1;
+
+  // The configuration for any config sources that may be used in the
+  // config vars sent down. The server may send down extra configs that
+  // aren't used so consumers should filter these based on what env vars
+  // are actually in use.
+  repeated ConfigSource config_sources = 2;
 }
 
 message RunnerJobStreamRequest {
@@ -2093,6 +2175,14 @@ message RunnerJobStreamRequest {
     // download details will not be available.
     GetJobStreamResponse.Download download = 7;
 
+    // The config_load event is sent after the Waypoint configuration
+    // (waypoint.hcl) is loaded. This includes information about the loaded
+    // configuration that the frontends can use.
+    //
+    // This can be sent multiple times to update the configuration information
+    // for a job.
+    ConfigLoad config_load = 8;
+
     // heartbeat that the job is still running.
     Heartbeat heartbeat = 6;
   }
@@ -2112,6 +2202,11 @@ message RunnerJobStreamRequest {
   }
 
   message Heartbeat {}
+
+  message ConfigLoad {
+    // Config is the configuration information for the loaded config.
+    Job.Config config = 1;
+  }
 }
 
 message RunnerJobStreamResponse {
