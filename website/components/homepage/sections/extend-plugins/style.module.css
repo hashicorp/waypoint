@@ -1,6 +1,10 @@
 .extendPlugins {
   padding-top: 150px;
   padding-bottom: 150px;
+  overflow-x: hidden;
+}
+
+.inner {
   composes: g-grid-container from global;
   display: grid;
   grid-template-columns: repeat(12, 1fr);
