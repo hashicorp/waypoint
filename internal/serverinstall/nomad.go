@@ -143,9 +143,8 @@ func (i *NomadInstaller) Install(
 		s.Update("Creating persistent volume")
 
 		vol := api.CSIVolume{
-
-			ID:   "waypoint19",
-			Name: "waypoint19",
+			ID:   "waypoint1001",
+			Name: "waypoint1001",
 			RequestedCapabilities: []*api.CSIVolumeCapability{
 				{
 					AccessMode:     "single-node-writer",
@@ -707,7 +706,7 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	}
 
 	if strings.ToLower(c.volumeType) == "csi" {
-		volumeRequest.Source = "waypoint19"
+		volumeRequest.Source = "waypoint1001"
 		volumeRequest.AccessMode = "single-node-writer"
 		volumeRequest.AttachmentMode = "file-system"
 	} else {
@@ -726,18 +725,17 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	task.Config = map[string]interface{}{
 		"image":          c.serverImage,
 		"ports":          []string{"server", "ui"},
-		"args":           []string{"server", "run", "-accept-tos", "-vvv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
+		"args":           ras
 		"auth_soft_fail": c.authSoftFail,
 	}
 	task.Env = map[string]string{
 		"PORT": defaultGrpcPort,
 	}
-
+	
 	readOnly := false
 	volume := "waypoint-server"
 	destination := "/data"
-
-	task.VolumeMounts = []*api.VolumeMount{
+	volumeMounts := []*api.VolumeMount{
 		{
 			Volume:      &volume,
 			Destination: &destination,
@@ -747,6 +745,40 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 
 	cpu := defaultResourcesCPU
 	mem := defaultResourcesMemory
+
+	preTask := api.NewTask("pre_task", "docker")
+	// Observed WP user and group IDs in the published container, update if those ever change
+	waypointUserID := 100
+	waypointGroupID := 1000
+	preTask.Config = map[string]interface{}{
+		// TODO(xx): pin busybox image
+		"image":   "busybox:latest",
+		"command": "sh",
+		"args":    []string{"-c", fmt.Sprintf("chown -R %d:%d /data/", waypointUserID, waypointGroupID)},
+	}
+	preTask.VolumeMounts = volumeMounts
+	preTask.Resources = &api.Resources{
+		// TODO(xx): make pointer vars for smaller cpu and mem
+		CPU:      &cpu,
+		MemoryMB: &mem,
+	}
+	preTask.Lifecycle = &api.TaskLifecycle{
+		Hook:    "prestart",
+		Sidecar: false,
+	}
+	tg.AddTask(preTask)
+
+	task := api.NewTask("server", "docker")
+	task.Config = map[string]interface{}{
+		"image":          c.serverImage,
+		"ports":          []string{"server", "ui"},
+		"args":           []string{"server", "run", "-accept-tos", "-vvv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
+		"auth_soft_fail": c.authSoftFail,
+	}
+	task.Env = map[string]string{
+		"PORT": defaultGrpcPort,
+	}
+	task.VolumeMounts = volumeMounts
 
 	if c.serverResourcesCPU != "" {
 		cpu, _ = strconv.Atoi(c.serverResourcesCPU)
