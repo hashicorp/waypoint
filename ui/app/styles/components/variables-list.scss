@@ -19,6 +19,15 @@
   .variables--list-item-value {
     width: 30%;
     margin-right: auto;
+    & > pre {
+      line-height: initial;
+      & > code {
+        max-width: 320px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+    }
   }
   .variables--list-item-name-is-path {
     width: 15%;
