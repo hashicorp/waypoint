@@ -84,6 +84,16 @@ permissions.
 `)
 
 	doc.SetField(
+		"odr_image",
+		"Docker image for the Waypoint On-Demand Runners",
+		docs.Summary(`
+		Docker image for the Waypoint On-Demand Runners. This will
+default to the server image with the name (not label) suffixed with '-odr'."
+`,
+		),
+	)
+
+	doc.SetField(
 		"task_role_name",
 		"Task role name to be used for the task role in the On-Demand Runner task",
 		docs.Summary(`
