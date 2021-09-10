@@ -271,7 +271,7 @@ func (r *Releaser) resourceServiceCreate(
 		step.Update("Creating service...")
 		service, err = serviceclient.Create(ctx, service, metav1.CreateOptions{})
 	} else {
-		step.Update("Updating service...")
+		step.Update("Updating existing service...")
 		service, err = serviceclient.Update(ctx, service, metav1.UpdateOptions{})
 	}
 	if err != nil {
@@ -472,26 +472,10 @@ func (r *Releaser) resourceIngressCreate(
 		},
 	}
 
-	// NOTE, the k8s go api doesn't seem to like being set directly from the
-	// string config in our releaser, so we manually set it with this switch
-	var pathType networkingv1.PathType
-	switch r.config.IngressConfig.PathType {
-	case "Exact":
-		pathType = networkingv1.PathTypeExact
-	case "Prefix":
-		pathType = networkingv1.PathTypePrefix
-	case "ImplementationSpecific":
-		pathType = networkingv1.PathTypeImplementationSpecific
-	default:
-		if r.config.IngressConfig.PathType != "" {
-			return status.Errorf(codes.FailedPrecondition,
-				"Invalid PathType given for ingress resource: %q",
-				r.config.IngressConfig.PathType)
-		}
-
-		// Default Path Type if nothing is configured in an ingress releaser
-		pathType = networkingv1.PathTypePrefix
+	if r.config.IngressConfig.PathType == "" {
+		r.config.IngressConfig.PathType = "Prefix"
 	}
+	pathType := networkingv1.PathType(r.config.IngressConfig.PathType)
 
 	// Set the default path to '/' if not set and path type is Prefix
 	if pathType == networkingv1.PathTypePrefix && r.config.IngressConfig.Path == "" {
@@ -537,7 +521,8 @@ func (r *Releaser) resourceIngressCreate(
 		return err
 	}
 
-	step.Update("Waiting for ingress resource to become ready...")
+	step.Done()
+	step = sg.Add("Waiting for ingress resource to become ready...")
 
 	// Wait on load balancer
 	var ingress *networkingv1.Ingress
