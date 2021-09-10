@@ -38,18 +38,6 @@
       transform-origin: center right;
       transform-box: fill-box;
     }
-
-    & :global(.latest-build-checkmark) {
-      & rect {
-        fill: #9bbbfc;
-        transition: fill ease-in-out 0.3s;
-      }
-
-      & path {
-        fill: #1563ff;
-        transition: fill ease-in-out 0.3s;
-      }
-    }
   }
 
   &.visible {
@@ -57,15 +45,14 @@
       transform: scale(1.3);
       filter: drop-shadow(0 10.4517px 8.36132px rgba(0, 129, 150, 0.1));
     }
+  }
+}
 
-    & :global(.latest-build-checkmark) {
-      & rect {
-        fill: #c6e9c9;
-      }
+.logos {
+  margin-top: 32px;
+  padding-left: 100px;
 
-      & path {
-        fill: #2eb039;
-      }
-    }
+  & svg {
+    max-width: 100%;
   }
 }

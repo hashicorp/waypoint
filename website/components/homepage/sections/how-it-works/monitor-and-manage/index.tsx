@@ -22,6 +22,7 @@ export default function MonitorAndManage() {
               description="No matter where your developers are deploying to, monitor the activity through Waypoint’s aggregated logs and activity UI."
             />
           </NumberedBlock>
+          <InlineSvg className={s.logos} src={require('./logos.svg?include')} />
         </div>
       </div>
       <div

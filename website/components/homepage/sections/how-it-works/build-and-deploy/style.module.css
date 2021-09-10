@@ -23,7 +23,7 @@
 }
 
 .terminalContainer {
-  margin-right: 20%;
+  max-width: 400px;
 }
 
 .terminal {
@@ -87,6 +87,10 @@
   transition: opacity ease-in 0.2s;
   transition-delay: 0.85s;
 
+  @media (--large) {
+    margin-left: 20px;
+  }
+
   & :global(.arrowLine) {
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
@@ -94,7 +98,7 @@
 
   & :global(.arrowPoint) {
     opacity: 0;
-    transform: translateX(-50px);
+    transform: translateX(-20px);
     transition: 0.5s;
     transition-delay: 1.3s;
   }
@@ -102,7 +106,6 @@
 
 .deploymentWrapper {
   margin-top: 60px;
-  flex-grow: 1;
 }
 
 .deployment {
@@ -123,13 +126,20 @@
 
 .deploymentHeading {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   font-weight: 600;
-  font-size: 18.6542px;
+
+  @media (--large) {
+    font-size: 18.6542px;
+  }
+
+  & > span {
+    margin-right: 10px;
+  }
 }
 
 .deploymentHeadingBranch {
-  margin-left: 10px;
   display: flex;
   align-items: center;
   padding: 2px 4px;
