@@ -318,13 +318,13 @@ jobs:
     docker:
       - image: *EMBER_IMAGE
     environment:
-      JOBS: 1 # limit parallelism for broccoli-babel-transpiler
+      JOBS: 2 # limit parallelism for broccoli-babel-transpiler
     steps:
       - checkout
       - md5uilib
       - restore_cache:
           key: *YARN_CACHE_KEY
-      - run: cd ui && DEBUG=ember-cli:* yarn build:test
+      - run: cd ui && DEBUG=ember-cli-typescript:* yarn build:test
 
       # saves the build to a workspace to be passed to a downstream job
       - persist_to_workspace:
