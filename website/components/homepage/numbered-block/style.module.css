@@ -1,12 +1,16 @@
 .numberedBlock {
   padding-top: 24px;
   border-top: 1px solid #62d4dc;
-  display: flex;
+
+  @media (min-width: 500px) {
+    display: flex;
+  }
 }
 
 .numberedBlockIndex {
   margin-top: 6px;
   margin-right: 20px;
+  margin-bottom: 20px;
 }
 
 .numberedBlockHeading {

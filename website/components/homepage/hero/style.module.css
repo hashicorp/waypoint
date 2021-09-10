@@ -8,23 +8,27 @@
 }
 
 .heroInner {
-  --columns: 12;
-
   display: grid;
-  grid-template-columns: repeat(var(--columns), 1fr);
+  grid-template-columns: minmax(0, 1fr);
   grid-column-gap: 32px;
   composes: g-grid-container from global;
+
+  @media (--medium-up) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
 }
 
 .heroHeading {
   margin: 0;
-  font-size: 53px;
-  line-height: 56px;
+  font-size: 32px;
+  line-height: 36px;
   font-weight: 400;
   letter-spacing: -0.02em;
   grid-column: 1 / -1;
 
   @media (--medium-up) {
+    font-size: 53px;
+    line-height: 56px;
     grid-column: 2 / span 10;
   }
 

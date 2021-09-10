@@ -12,7 +12,11 @@
 .contentInner {
   composes: g-grid-container from global;
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+
+  @media (--medium-up) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
 
   & > * {
     grid-column: 1 / -1;
@@ -50,7 +54,11 @@
 
 .logos {
   margin-top: 32px;
-  padding-left: 100px;
+  padding-left: 40px;
+
+  @media (min-width: 500px) {
+    padding-left: 100px;
+  }
 
   & svg {
     max-width: 100%;

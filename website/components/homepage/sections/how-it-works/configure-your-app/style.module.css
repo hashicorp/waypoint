@@ -1,9 +1,13 @@
 .root {
   composes: g-grid-container from global;
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   column-gap: 32px;
   row-gap: 50px;
+
+  @media (--medium-up) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
 }
 
 .content {

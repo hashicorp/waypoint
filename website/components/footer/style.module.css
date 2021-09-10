@@ -10,8 +10,12 @@
 .inner {
   composes: g-grid-container from global;
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   grid-column-gap: 32px;
+
+  @media (--medium-up) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
 }
 
 .content {
@@ -52,11 +56,11 @@
   margin-top: 47px;
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(1, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 32px;
 
   @media (min-width: 550px) {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   @media (--medium-up) {
