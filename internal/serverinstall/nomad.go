@@ -681,7 +681,7 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 	task.Config = map[string]interface{}{
 		"image":          c.serverImage,
 		"ports":          []string{"server", "ui"},
-		"args":           []string{"server", "run", "-accept-tos", "-vvv", "-db=/var/lib/waypoint/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
+		"args":           []string{"server", "run", "-accept-tos", "-vvv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
 		"auth_soft_fail": c.authSoftFail,
 	}
 	task.Env = map[string]string{
@@ -690,7 +690,7 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 
 	readOnly := false
 	volume := "waypoint-server"
-	destination := "/var/lib/waypoint"
+	destination := "/data"
 
 	task.VolumeMounts = []*api.VolumeMount{
 		{
