@@ -141,26 +141,29 @@ func (i *NomadInstaller) Install(
 
 	if strings.ToLower(i.config.volumeType) == "csi" {
 		s.Update("Creating persistent volume")
-		// do the thing
+
 		vol := api.CSIVolume{
-			ID:             "waypoint",
-			Name:           "waypoint",
-			AccessMode:     "single-node-writer",
-			AttachmentMode: "file-system",
+
+			ID:   "waypoint19",
+			Name: "waypoint19",
+			RequestedCapabilities: []*api.CSIVolumeCapability{
+				{
+					AccessMode:     "single-node-writer",
+					AttachmentMode: "file-system",
+				},
+			},
 			MountOptions: &api.CSIMountOptions{
 				FSType:     "xfs",
 				MountFlags: []string{"noatime"},
 			},
 			RequestedCapacityMin: 1073741824,
-			RequestedCapacityMax: 1073741824,
+			RequestedCapacityMax: 2147483648,
 			PluginID:             i.config.csiVolumeProvider,
 		}
 
-		if strings.ToLower(i.config.volumeType) == "csi" {
-			_, _, err = client.CSIVolumes().Create(&vol, &api.WriteOptions{})
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "Failed creating Nomad persistent volume ID %s: %s", vol.ID, err)
-			}
+		_, _, err = client.CSIVolumes().Create(&vol, &api.WriteOptions{})
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "Failed creating Nomad persistent volume ID %s: %s", vol.ID, err)
 		}
 	}
 
@@ -704,7 +707,7 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	}
 
 	if strings.ToLower(c.volumeType) == "csi" {
-		volumeRequest.Source = c.csiVolumeProvider
+		volumeRequest.Source = "waypoint19"
 		volumeRequest.AccessMode = "single-node-writer"
 		volumeRequest.AttachmentMode = "file-system"
 	} else {
@@ -723,7 +726,7 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	task.Config = map[string]interface{}{
 		"image":          c.serverImage,
 		"ports":          []string{"server", "ui"},
-		"args":           []string{"server", "run", "-accept-tos", "-vvv", "-db=/var/lib/waypoint/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
+		"args":           []string{"server", "run", "-accept-tos", "-vvv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
 		"auth_soft_fail": c.authSoftFail,
 	}
 	task.Env = map[string]string{
@@ -732,7 +735,7 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 
 	readOnly := false
 	volume := "waypoint-server"
-	destination := "/var/lib/waypoint"
+	destination := "/data"
 
 	task.VolumeMounts = []*api.VolumeMount{
 		{
@@ -961,6 +964,12 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Name:   "nomad-host-volume",
 		Target: &i.config.hostVolume,
 		Usage:  "Nomad host volume name.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-csi-volume-provider",
+		Target: &i.config.csiVolumeProvider,
+		Usage:  "Nomad CSI volume provider.",
 	})
 }
 
