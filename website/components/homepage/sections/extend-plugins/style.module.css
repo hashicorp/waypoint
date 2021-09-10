@@ -82,7 +82,7 @@
     opacity: 0;
     transform: translateY(-20px);
     transition: all ease-in-out 0.5s;
-    transition-delay: 1s;
+    transition-delay: 0.75s;
   }
 
   &.visible {
