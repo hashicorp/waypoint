@@ -34,6 +34,10 @@
 
       & + li {
         margin-top: 132px;
+
+        @media (--medium-up) {
+          margin-top: 164px;
+        }
       }
     }
   }
