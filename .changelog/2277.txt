@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/docker: support SSH hosts for entrypoint injection
+```
