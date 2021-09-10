@@ -60,4 +60,45 @@
     transform: rotate(19.95deg);
     z-index: -1;
   }
+
+  & :global(.plugin) {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all ease-in-out 0.5s;
+  }
+
+  & :global(.plugin:nth-child(odd)) {
+    transition-delay: 0.25s;
+  }
+
+  & :global(.yourPlugin) {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all ease-in-out 0.5s;
+    transition-delay: 0.75s;
+  }
+
+  & :global(.yourPluginShadow) {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all ease-in-out 0.5s;
+    transition-delay: 1s;
+  }
+
+  &.visible {
+    & :global(.plugin) {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    & :global(.yourPlugin) {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    & :global(.yourPluginShadow) {
+      transform: translateY(0);
+      opacity: 0.5;
+    }
+  }
 }

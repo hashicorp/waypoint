@@ -1,3 +1,5 @@
+import { useInView } from 'react-intersection-observer'
+import classNames from 'classnames'
 import InlineSvg from '@hashicorp/react-inline-svg'
 import MediaObject from 'components/homepage/media-object'
 import Section, {
@@ -7,6 +9,11 @@ import Section, {
 import s from './style.module.css'
 
 export default function SectionExtendPlugins() {
+  const { ref, inView } = useInView({
+    threshold: 0.8,
+    triggerOnce: true,
+    delay: 0.5,
+  })
   return (
     <Section className={s.extendPlugins}>
       <div className={s.inner}>
@@ -32,7 +39,12 @@ export default function SectionExtendPlugins() {
             />
           </div>
         </div>
-        <div className={s.media}>
+        <div
+          className={classNames(s.media, {
+            [s.visible]: inView,
+          })}
+          ref={ref}
+        >
           <InlineSvg src={require('./plugins.svg?include')} />
         </div>
       </div>
