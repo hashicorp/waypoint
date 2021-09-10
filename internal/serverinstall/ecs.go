@@ -83,7 +83,7 @@ type ecsConfig struct {
 	// On-Demand Runner configuration
 	OdrImage string `hcl:"odr_image,optional"`
 	// OdrExecutionRoleName string `hcl:"odr_execution_role_name,optional"`
-	TaskRoleName string `hcl:"odr_task_role_name,optional"`
+	TaskRoleName string `hcl:"task_role_name,optional"`
 }
 
 // Install is a method of ECSInstaller and implements the Installer interface to

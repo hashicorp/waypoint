@@ -36,7 +36,7 @@ func (p *TaskLauncher) StopTaskFunc() interface{} {
 
 // TaskLauncherConfig is the configuration structure for the task plugin. At
 // this time all these are simply copied from what the Waypoint Server
-// installation is using, with the only exception being the OdrTaskRoleName.
+// installation is using, with the only exception being the TaskRoleName.
 type TaskLauncherConfig struct {
 	// Cluster is the ECS we're operating in
 	Cluster string `hcl:"cluster,optional"`
@@ -84,7 +84,7 @@ permissions.
 `)
 
 	doc.SetField(
-		"odr_task_role_name",
+		"task_role_name",
 		"Task role name to be used for the task role in the On-Demand Runner task",
 		docs.Summary(`
 This role must have the correct IAM policies to complete its task.
