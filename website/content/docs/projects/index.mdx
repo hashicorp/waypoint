@@ -113,3 +113,11 @@ applications inside a single project. For monorepo users, a project MUST
 represent exactly one repository, but it does not have to represent a
 _unique_ repository, so monorepo users may create multiple projects pointing
 to the same repository.
+
+One simple example of this one-to-many pattern is the [waypoint-examples](https://github.com/hashicorp/waypoint-examples/)
+repository. The repository contains many waypoint projects, and each project
+in a sub-dir of the `waypoint-examples` repo maps to this single repository.
+
+Support for this is seen in the gitops workflow, where a user specifies
+the parent repo to map to the project and can optionally specify
+a [Git source path](https://www.waypointproject.io/commands/project-apply#git-path).
