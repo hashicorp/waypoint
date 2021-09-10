@@ -76,6 +76,12 @@ type Config struct {
 
 	// CEBConfig configures the entrypoint binary for deployments
 	CEBConfig *CEBConfig `hcl:"entrypoint_config,block"`
+
+	// Disable the embedded web interface. The default is false.
+	DisableUI bool `hcl:"disable_ui,optional"`
+
+	// Required to be true
+	AcceptTOS bool `hcl:"accept_tos,attr"`
 }
 
 // CEBConfig is specific configuration for the entrypoint binaries

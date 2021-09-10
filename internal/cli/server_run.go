@@ -51,23 +51,15 @@ Terms of Service: https://waypointproject.io/terms
 Please rerun this command using the "-accept-tos" flag to accept the terms above.
 `
 
-const acceptTOSHelp = `Pass to accept the Terms of Service and Privacy Policy to use the Waypoint URL Service. This is required if the URL service is enabled and you're using the HashiCorp-provided URL service rather than self-hosting. See the privacy policy at https://hashicorp.com/privacy and the ToS at https://waypointproject.io/terms`
+const acceptTOSHelp = `Pass to accept the Terms of Service and Privacy Policy to use the Waypoint URL Service. This is required if the URL service is enabled and you're using the HashiCorp-provided URL service rather than self-hosting. See the privacy policy at https://hashicorp.com/privacy and the ToS at https://waypointproject.io/terms.`
 
 const DefaultURLControlAddress = "https://control.hzn.network"
 
 type ServerRunCommand struct {
 	*baseCommand
 
-	config        serverconfig.Config
-	flagDisableUI bool
-	flagURLInmem  bool
-
-	flagAdvertiseAddr          string
-	flagAdvertiseTLSEnabled    bool
-	flagAdvertiseTLSSkipVerify bool
-	flagAcceptTOS              bool
-	flagTLSCertFile            string
-	flagTLSKeyFile             string
+ 	config       serverconfig.Config
+	flagURLInmem bool
 }
 
 func (c *ServerRunCommand) Run(args []string) int {
@@ -86,7 +78,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 
 	if c.config.URL.Enabled &&
 		c.config.URL.ControlAddress == DefaultURLControlAddress &&
-		!c.flagAcceptTOS {
+		!c.flagServerRun.AcceptTOS {
 		c.ui.Output(strings.TrimSpace(tosStatement), terminal.WithErrorStyle())
 		return 1
 	}
@@ -145,9 +137,9 @@ func (c *ServerRunCommand) Run(args []string) int {
 
 	// Set any server config
 	c.config.CEBConfig = &serverconfig.CEBConfig{
-		Addr:          c.flagAdvertiseAddr,
-		TLSEnabled:    c.flagAdvertiseTLSEnabled,
-		TLSSkipVerify: c.flagAdvertiseTLSSkipVerify,
+		Addr:          c.flagServerRun.CEBConfig.Addr,
+		TLSEnabled:    c.flagServerRun.CEBConfig.TLSEnabled,
+		TLSSkipVerify: c.flagServerRun.CEBConfig.TLSSkipVerify,
 	}
 
 	// Create our server
@@ -155,7 +147,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 		singleprocess.WithDB(db),
 		singleprocess.WithConfig(&c.config),
 		singleprocess.WithLogger(log.Named("singleprocess")),
-		singleprocess.WithAcceptURLTerms(c.flagAcceptTOS),
+		singleprocess.WithAcceptURLTerms(c.flagServerRun.AcceptTOS),
 	)
 	if c, ok := impl.(io.Closer); ok {
 		defer c.Close()
@@ -204,7 +196,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 	}
 
 	ui := true
-	if !c.flagDisableUI {
+	if !c.flagServerRun.DisableUI {
 		options = append(options, server.WithBrowserUI(true))
 	} else {
 		ui = false
@@ -297,133 +289,16 @@ This command will bootstrap the server and setup a CLI context.
 }
 
 func (c *ServerRunCommand) Flags() *flag.Sets {
-	return c.flagSet(0, func(set *flag.Sets) {
-		if c.config.URL == nil {
-			c.config.URL = &serverconfig.URL{}
-		}
-
+	// the base server config flags are set in cli/base.go to be shared with
+	// the `server run` command; we pull those in via the `flagSetServerRun` arg
+	return c.flagSet(flagSetServerRun, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
-		f.StringVar(&flag.StringVar{
-			Name:    "db",
-			Target:  &c.config.DBPath,
-			Usage:   "Path to the database file.",
-			Default: "",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "listen-grpc",
-			Target:  &c.config.GRPC.Addr,
-			Usage:   "Address to bind to for gRPC connections.",
-			Default: "127.0.0.1:9701",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "listen-http",
-			Target:  &c.config.HTTP.Addr,
-			Usage:   "Address to bind to for HTTP connections. Required for the UI.",
-			Default: "127.0.0.1:9702",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:   "tls-cert-file",
-			Target: &c.flagTLSCertFile,
-			Usage: "Path to a PEM-encoded certificate file for TLS. If this " +
-				"isn't set, a self-signed certificate will be generated. This file " +
-				"will be read once at startup and will not be monitored for changes.",
-			Default: "",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:   "tls-key-file",
-			Target: &c.flagTLSKeyFile,
-			Usage: "Path to a PEM-encoded private key file for the TLS certificate " +
-				"specified with -tls-cert-file. This is required if -tls-cert-file " +
-				"is set.",
-			Default: "",
-		})
-
-		f.BoolVar(&flag.BoolVar{
-			Name:    "disable-ui",
-			Target:  &c.flagDisableUI,
-			Usage:   "Disable the embedded web interface",
-			Default: false,
-		})
-
-		f.BoolVar(&flag.BoolVar{
-			Name:    "url-enabled",
-			Target:  &c.config.URL.Enabled,
-			Usage:   "Enable the URL service.",
-			Default: true,
-		})
-
 		f.BoolVar(&flag.BoolVar{
 			Name:    "url-inmem",
 			Target:  &c.flagURLInmem,
 			Usage:   "Run an in-memory URL service for dev purposes.",
 			Default: false,
 			Hidden:  true,
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "url-api-addr",
-			Target:  &c.config.URL.APIAddress,
-			Usage:   "Address to Waypoint URL service API",
-			Default: "api.waypoint.run:443",
-		})
-
-		f.BoolVar(&flag.BoolVar{
-			Name:    "url-api-insecure",
-			Target:  &c.config.URL.APIInsecure,
-			Usage:   "True if TLS is not enabled for the Waypoint URL service API",
-			Default: false,
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "url-control-addr",
-			Target:  &c.config.URL.ControlAddress,
-			Usage:   "Address to Waypoint URL service control API",
-			Default: DefaultURLControlAddress,
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "url-control-token",
-			Target:  &c.config.URL.APIToken,
-			Usage:   "Token for the Waypoint URL server control API.",
-			Default: "",
-		})
-
-		f.BoolVar(&flag.BoolVar{
-			Name:    "url-auto-app-hostname",
-			Target:  &c.config.URL.AutomaticAppHostname,
-			Usage:   "Whether apps automatically get a hostname on deploy.",
-			Default: true,
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:   "advertise-addr",
-			Target: &c.flagAdvertiseAddr,
-			Usage: "Address to advertise for the server. This is used by the entrypoints\n" +
-				"binaries to communicate back to the server. If this is blank, then\n" +
-				"the entrypoints will not communicate to the server. Features such as\n" +
-				"logs, exec, etc. will not work.",
-		})
-		f.BoolVar(&flag.BoolVar{
-			Name:    "advertise-tls",
-			Target:  &c.flagAdvertiseTLSEnabled,
-			Usage:   "If true, the advertised address should be connected to with TLS.",
-			Default: true,
-		})
-		f.BoolVar(&flag.BoolVar{
-			Name:    "advertise-tls-skip-verify",
-			Target:  &c.flagAdvertiseTLSSkipVerify,
-			Usage:   "Do not verify the TLS certificate presented by the server.",
-			Default: false,
-		})
-		f.BoolVar(&flag.BoolVar{
-			Name:    "accept-tos",
-			Target:  &c.flagAcceptTOS,
-			Usage:   acceptTOSHelp,
-			Default: false,
 		})
 	})
 }
@@ -472,8 +347,8 @@ func (c *ServerRunCommand) listenerForConfig(log hclog.Logger, cfg *serverconfig
 	certFile := cfg.TLSCertFile
 	keyFile := cfg.TLSKeyFile
 	if certFile == "" {
-		certFile = c.flagTLSCertFile
-		keyFile = c.flagTLSKeyFile
+		certFile = c.flagServerRun.HTTP.TLSCertFile
+		keyFile = c.flagServerRun.HTTP.TLSKeyFile
 	}
 
 	var certPEM, keyPEM []byte

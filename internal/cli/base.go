@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 // baseCommand is embedded in all commands to provide common logic and data.
@@ -101,6 +102,9 @@ type baseCommand struct {
 
 	// flagConnection contains manual flag-based connection info.
 	flagConnection clicontext.Config
+
+	// flagServerRun contains flag-based server run info.
+	flagServerRun serverconfig.Config
 
 	// args that were present after parsing flags
 	args []string
@@ -527,6 +531,134 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 		})
 	}
 
+	if bit&flagSetServerRun != 0 {
+		if c.flagServerRun.URL == nil {
+			c.flagServerRun.URL = &serverconfig.URL{}
+		}
+		if c.flagServerRun.CEBConfig == nil {
+			c.flagServerRun.CEBConfig = &serverconfig.CEBConfig{}
+		}
+		f := set.NewSet("Config Options")
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "accept-tos",
+			Target:  &c.flagServerRun.AcceptTOS,
+			Usage:   acceptTOSHelp,
+			Default: false,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "advertise-addr",
+			Target: &c.flagServerRun.CEBConfig.Addr,
+			Usage: "Address to advertise for the server. This is used by the entrypoints\n" +
+				"binaries to communicate back to the server. If this is blank, then\n" +
+				"the entrypoints will not communicate to the server. Features such as\n" +
+				"logs, exec, etc. will not work.",
+			Default: "",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "advertise-tls",
+			Target:  &c.flagServerRun.CEBConfig.TLSEnabled,
+			Usage:   "If true, the advertised address should be connected to with TLS.",
+			Default: true,
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "advertise-tls-skip-verify",
+			Target:  &c.flagServerRun.CEBConfig.TLSSkipVerify,
+			Usage:   "If true, do not verify the TLS certificate presented by the server.",
+			Default: true,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "db",
+			Target:  &c.flagServerRun.DBPath,
+			Usage:   "Path to the database file.",
+			Default: "data.db",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "disable-ui",
+			Target:  &c.flagServerRun.DisableUI,
+			Usage:   "Disable the embedded web interface.",
+			Default: false,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "listen-grpc",
+			Target:  &c.flagServerRun.GRPC.Addr,
+			Usage:   "Address to bind to for gRPC connections.",
+			Default: "127.0.0.1:9701",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "listen-http",
+			Target:  &c.flagServerRun.HTTP.Addr,
+			Usage:   "Address to bind to for HTTP connections. Required for the UI.",
+			Default: "127.0.0.1:9702",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "tls-cert-file",
+			Target: &c.flagServerRun.HTTP.TLSCertFile,
+			Usage: "Path to a PEM-encoded certificate file for TLS. If this " +
+				"isn't set, a self-signed certificate will be generated. This file " +
+				"will be read once at startup and will not be monitored for changes.",
+			Default: "",
+		})
+		f.StringVar(&flag.StringVar{
+			Name:   "tls-key-file",
+			Target: &c.flagServerRun.HTTP.TLSKeyFile,
+			Usage: "Path to a PEM-encoded private key file for the TLS certificate " +
+				"specified with -tls-cert-file. This is required if -tls-cert-file " +
+				"is set.",
+			Default: "",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "url-auto-app-hostname",
+			Target:  &c.flagServerRun.URL.AutomaticAppHostname,
+			Usage:   "Whether apps automatically get a hostname on deploy.",
+			Default: true,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "url-api-addr",
+			Target:  &c.flagServerRun.URL.APIAddress,
+			Usage:   "Address to Waypoint URL service API.",
+			Default: "api.waypoint.run:443",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "url-api-insecure",
+			Target:  &c.flagServerRun.URL.APIInsecure,
+			Usage:   "True if TLS is not enabled for the Waypoint URL service API.",
+			Default: false,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "url-control-addr",
+			Target:  &c.flagServerRun.URL.ControlAddress,
+			Usage:   "Address to Waypoint URL service control API",
+			Default: DefaultURLControlAddress,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "url-control-token",
+			Target:  &c.flagServerRun.URL.APIToken,
+			Usage:   "Token for the Waypoint URL server control API.",
+			Default: "",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "url-enabled",
+			Target:  &c.flagServerRun.URL.Enabled,
+			Usage:   "Enable the URL service.",
+			Default: true,
+		})
+	}
+
 	if f != nil {
 		// Configure our values
 		f(set)
@@ -615,6 +747,7 @@ const (
 	flagSetNone       flagSetBit = 1 << iota
 	flagSetOperation             // shared flags for operations (build, deploy, etc)
 	flagSetConnection            // shared flags for server connections
+	flagSetServerRun             // shared flags for server run
 )
 
 var (

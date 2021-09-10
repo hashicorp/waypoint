@@ -31,8 +31,7 @@ type InstallCommand struct {
 	contextName    string
 	contextDefault bool
 
-	flagAcceptTOS bool
-	flagRunner    bool
+	flagRunner bool
 }
 
 func (c *InstallCommand) Run(args []string) int {
@@ -50,7 +49,7 @@ func (c *InstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	if !c.flagAcceptTOS {
+	if !c.flagServerRun.AcceptTOS {
 		c.ui.Output(strings.TrimSpace(tosStatement), terminal.WithErrorStyle())
 		return 1
 	}
@@ -84,8 +83,9 @@ func (c *InstallCommand) Run(args []string) int {
 	}
 
 	result, err := p.Install(ctx, &serverinstall.InstallOpts{
-		Log: log,
-		UI:  c.ui,
+		Log:          log,
+		UI:           c.ui,
+		ServerConfig: &c.flagServerRun,
 	})
 	if err != nil {
 		c.ui.Output(
@@ -299,15 +299,10 @@ func (c *InstallCommand) Run(args []string) int {
 }
 
 func (c *InstallCommand) Flags() *flag.Sets {
-	return c.flagSet(0, func(set *flag.Sets) {
+	// the base server config flags are set in cli/base.go to be shared with
+	// the `server run` command; we pull those in via the `flagSetServerRun` arg
+	return c.flagSet(flagSetServerRun, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
-		f.BoolVar(&flag.BoolVar{
-			Name:    "accept-tos",
-			Target:  &c.flagAcceptTOS,
-			Usage:   acceptTOSHelp,
-			Default: false,
-		})
-
 		f.StringVar(&flag.StringVar{
 			Name:    "context-create",
 			Target:  &c.contextName,
