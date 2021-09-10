@@ -1206,7 +1206,7 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 		Name:   "ecs-task-role-name",
 		Target: &i.config.TaskRoleName,
 		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
-			"an IAM role will be created automatically with the correct permissions.",
+			"an IAM role will be created automatically with the default permissions.",
 		Default: "waypoint-runner",
 	})
 }
