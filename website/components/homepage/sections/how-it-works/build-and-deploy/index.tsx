@@ -17,7 +17,7 @@ export default function BuildAndDeploy() {
       <div className={s.content}>
         <NumberedBlock index="2" heading="Build and deploy">
           <MediaObject
-            icon={require('../../icons/file-plus.svg?include')}
+            icon={require('components/homepage/icons/file-plus.svg?include')}
             heading="One simple command"
             description="Perform the build, deploy, and release steps for the app all from one simple command. Or instrument your Waypoint deployments through Remote or Git operations"
           />

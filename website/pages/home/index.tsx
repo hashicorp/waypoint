@@ -1,4 +1,5 @@
 import Hero from 'components/homepage/hero'
+import Intro from 'components/homepage/intro'
 import SectionHowItWorks from 'components/homepage/sections/how-it-works'
 import SectionMonitorAppHealth from 'components/homepage/sections/monitor-app-health'
 import SectionExtendPlugins from 'components/homepage/sections/extend-plugins'
@@ -9,6 +10,7 @@ export default function HomePage() {
   return (
     <div className={s.homePage}>
       <Hero />
+      <Intro />
       <SectionHowItWorks />
       <SectionMonitorAppHealth />
       <SectionExtendPlugins />

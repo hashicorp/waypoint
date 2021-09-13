@@ -17,7 +17,7 @@ export default function MonitorAndManage() {
         <div className={s.contentInner}>
           <NumberedBlock index="3" heading="Monitor and manage in one place">
             <MediaObject
-              icon={require('../../icons/sliders.svg?include')}
+              icon={require('components/homepage/icons/sliders.svg?include')}
               heading="One place for all your deployments"
               description="No matter where your developers are deploying to, monitor the activity through Waypoint’s aggregated logs and activity UI."
             />

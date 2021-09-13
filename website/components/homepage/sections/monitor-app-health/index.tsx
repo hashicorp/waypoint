@@ -32,7 +32,7 @@ export default function SectionMonitorAppHealth() {
         </SectionDescription>
         <div className={s.contentMediaObject}>
           <MediaObject
-            icon={require('../icons/eye.svg?include')}
+            icon={require('components/homepage/icons/eye.svg?include')}
             heading="A single pane of glass"
             description="View all deployments, regardless of target from one location"
           />

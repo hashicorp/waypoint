@@ -27,13 +27,13 @@ export default function SectionExtendPlugins() {
           <div className={s.contentBlocks}>
             <MediaObject
               stacked={true}
-              icon={require('../icons/box.svg?include')}
+              icon={require('components/homepage/icons/box.svg?include')}
               heading="Available Plugins"
               description="View a list of existing HashiCorp maintained plugins"
             />
             <MediaObject
               stacked={true}
-              icon={require('../icons/code-union.svg?include')}
+              icon={require('components/homepage/icons/code-union.svg?include')}
               heading="Creating Waypoint Plugins"
               description="Learn to extend Waypoint for your project’s needs"
             />

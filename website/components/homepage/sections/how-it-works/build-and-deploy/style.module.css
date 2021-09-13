@@ -44,6 +44,7 @@
     0 2.30981px 1.84785px rgba(0, 0, 0, 0.0196802);
   border-radius: 6.67755px;
   color: var(--white);
+  composes: g-type-code from global;
 }
 
 .terminalLine {

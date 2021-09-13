@@ -8,12 +8,12 @@ export default function ConfigureYourApp() {
       <div className={s.content}>
         <NumberedBlock index="1" heading="Configure your app for Waypoint">
           <MediaObject
-            icon={require('../../icons/edit-pencil.svg?include')}
+            icon={require('components/homepage/icons/edit-pencil.svg?include')}
             heading="Writing waypoint.hcl files"
             description="Your waypoint.hcl file defines how Waypoint builds, deploys, and releases a project."
           />
           <MediaObject
-            icon={require('../../icons/layout.svg?include')}
+            icon={require('components/homepage/icons/layout.svg?include')}
             heading="Sample Waypoint files"
             description="View sample waypoint.hcl files to see how straight-forward it is to configure your deployments"
           />
