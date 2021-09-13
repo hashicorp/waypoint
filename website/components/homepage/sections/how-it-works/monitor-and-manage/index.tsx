@@ -9,6 +9,7 @@ export default function MonitorAndManage() {
   const { ref, inView } = useInView({
     threshold: 0.5,
     triggerOnce: true,
+    delay: 200,
   })
   return (
     <div className={s.root}>
