@@ -25,11 +25,11 @@ module('Integration | Modifier | code-mirror', function (hooks) {
     this.set('value', undefined);
     this.set('onInput', undefined);
 
-    await render(
-      hbs`<div
-      {{code-mirror value=this.value onInput=this.onInput}}
-    />`
-    );
+    await render(hbs`
+      <div
+        {{code-mirror value=this.value onInput=this.onInput}}
+      />
+    `);
     assert.dom('.CodeMirror').exists();
   });
 
