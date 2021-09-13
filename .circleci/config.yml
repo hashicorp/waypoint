@@ -326,6 +326,11 @@ jobs:
           key: *YARN_CACHE_KEY
       - run: cd ui && yarn build:test
 
+      # Emits the maximum memory usage by the container up to this point
+      - run:
+          command: cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes
+          when: always
+
       # saves the build to a workspace to be passed to a downstream job
       - persist_to_workspace:
           root: ui
