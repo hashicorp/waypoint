@@ -88,7 +88,7 @@ func ValidateGetProjectRequest(v *pb.GetProjectRequest) error {
 	))
 }
 
-// ValidateGetProjectRequest
+// ValidateUIGetProjectRequest
 func ValidateUIGetProjectRequest(v *pb.UI_GetProjectRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
 		validation.Field(&v.Project, validation.Required),
