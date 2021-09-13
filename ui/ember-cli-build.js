@@ -1,11 +1,13 @@
 'use strict';
-
+let environment = process.env.EMBER_ENV || 'development';
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 
 module.exports = function (defaults) {
+  // Disable sourceMaps except in dev
+  let sourceMapsEnabled = environment === 'development' ? 'inline' : false;
   let app = new EmberApp(defaults, {
     babel: {
-      sourceMaps: 'inline',
+      sourceMaps: sourceMapsEnabled,
     },
     'ember-cli-favicon': {
       enabled: true,
