@@ -10,7 +10,6 @@ import s from './style.module.css'
 
 export default function SectionMonitorAppHealth() {
   const { ref, inView } = useInView({
-    threshold: 0.85,
     triggerOnce: true,
   })
   return (

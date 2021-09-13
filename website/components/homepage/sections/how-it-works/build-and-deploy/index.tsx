@@ -10,7 +10,6 @@ import s from './style.module.css'
 export default function BuildAndDeploy() {
   const [typeFinished, setTypeFinished] = useState(false)
   const { ref, inView } = useInView({
-    threshold: 1,
     triggerOnce: true,
   })
   return (

@@ -10,9 +10,7 @@ import s from './style.module.css'
 
 export default function SectionExtendPlugins() {
   const { ref, inView } = useInView({
-    threshold: 0.8,
     triggerOnce: true,
-    delay: 0.5,
   })
   return (
     <Section className={s.extendPlugins}>

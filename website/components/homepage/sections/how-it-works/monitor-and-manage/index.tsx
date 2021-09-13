@@ -7,9 +7,8 @@ import s from './style.module.css'
 
 export default function MonitorAndManage() {
   const { ref, inView } = useInView({
-    threshold: 1,
+    threshold: 0.5,
     triggerOnce: true,
-    delay: 1000,
   })
   return (
     <div className={s.root}>
