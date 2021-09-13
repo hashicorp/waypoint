@@ -3,3 +3,4 @@ node_modules
 .next
 out
 .env*.local
+temp-docs-preview
