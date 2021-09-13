@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
@@ -16,6 +17,10 @@ func (s *service) UpsertStatusReport(
 	ctx context.Context,
 	req *pb.UpsertStatusReportRequest,
 ) (*pb.UpsertStatusReportResponse, error) {
+	if err := serverptypes.ValidateUpsertStatusReportRequest(req); err != nil {
+		return nil, err
+	}
+
 	result := req.StatusReport
 
 	// If we have no ID, then we're inserting and need to generate an ID.
@@ -42,6 +47,10 @@ func (s *service) ListStatusReports(
 	ctx context.Context,
 	req *pb.ListStatusReportsRequest,
 ) (*pb.ListStatusReportsResponse, error) {
+	if err := serverptypes.ValidateListStatusReportsRequest(req); err != nil {
+		return nil, err
+	}
+
 	result, err := s.state.StatusReportList(req.Application,
 		state.ListWithStatusFilter(req.Status...),
 		state.ListWithOrder(req.Order),
@@ -83,6 +92,10 @@ func (s *service) GetLatestStatusReport(
 	ctx context.Context,
 	req *pb.GetLatestStatusReportRequest,
 ) (*pb.StatusReport, error) {
+	if err := serverptypes.ValidateGetLatestStatusReportRequest(req); err != nil {
+		return nil, err
+	}
+
 	r, err := s.state.StatusReportLatest(req.Application, req.Workspace)
 	if err != nil {
 		return nil, err
@@ -96,6 +109,10 @@ func (s *service) GetStatusReport(
 	ctx context.Context,
 	req *pb.GetStatusReportRequest,
 ) (*pb.StatusReport, error) {
+	if err := serverptypes.ValidateGetStatusReportRequest(req); err != nil {
+		return nil, err
+	}
+
 	r, err := s.state.StatusReportGet(req.Ref)
 	if err != nil {
 		return nil, err

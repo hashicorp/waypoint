@@ -9,7 +9,6 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
-// TODO: test
 func (s *service) UpsertOnDemandRunnerConfig(
 	ctx context.Context,
 	req *pb.UpsertOnDemandRunnerConfigRequest,
@@ -26,11 +25,14 @@ func (s *service) UpsertOnDemandRunnerConfig(
 	return &pb.UpsertOnDemandRunnerConfigResponse{Config: result}, nil
 }
 
-// TODO: test
 func (s *service) GetOnDemandRunnerConfig(
 	ctx context.Context,
 	req *pb.GetOnDemandRunnerConfigRequest,
 ) (*pb.GetOnDemandRunnerConfigResponse, error) {
+	if err := serverptypes.ValidateGetOnDemandRunnerConfigRequest(req); err != nil {
+		return nil, err
+	}
+
 	result, err := s.state.OnDemandRunnerConfigGet(req.Config)
 	if err != nil {
 		return nil, err
@@ -41,7 +43,6 @@ func (s *service) GetOnDemandRunnerConfig(
 	}, nil
 }
 
-// TODO: test
 func (s *service) ListOnDemandRunnerConfigs(
 	ctx context.Context,
 	req *empty.Empty,

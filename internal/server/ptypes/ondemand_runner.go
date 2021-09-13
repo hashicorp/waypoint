@@ -61,6 +61,13 @@ func ValidateUpsertOnDemandRunnerConfigRequest(v *pb.UpsertOnDemandRunnerConfigR
 	))
 }
 
+// ValidateGetOnDemandRunnerConfigRequest
+func ValidateGetOnDemandRunnerConfigRequest(v *pb.GetOnDemandRunnerConfigRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Config, validation.Required),
+	))
+}
+
 func isPluginHcl(p *pb.OnDemandRunnerConfig) validation.Rule {
 	return validation.By(func(_ interface{}) error {
 		if len(p.PluginConfig) == 0 {
