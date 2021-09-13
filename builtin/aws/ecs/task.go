@@ -63,6 +63,10 @@ type TaskLauncherConfig struct {
 
 	// LogGroup is the CloudWatch log group name to use.
 	LogGroup string `hcl:"log_group,optional"`
+
+	// ODR Resource configuration
+	OdrMemory string `hcl:"odr_memory,optional"`
+	OdrCPU    string `hcl:"odr_cpu,optional"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -101,6 +105,92 @@ This role must have the correct IAM policies to complete its task.
 If this IAM role does not already exist, a role will be created with the correct
 permissions"
 `,
+		),
+	)
+
+	doc.SetField(
+		"cluster",
+		"Cluster name to place On-Demand runner tasks in",
+		docs.Summary(
+			"ECS Cluster to place On-Demand runners in. This defaults to the cluster",
+			"used by the waypoint server",
+		),
+	)
+
+	doc.SetField(
+		"region",
+		"AWS Region to use",
+		docs.Summary(
+			"AWS region to use. Defaults to the region used for the Waypoint Server.",
+		),
+	)
+
+	doc.SetField(
+		"execution_role_name",
+		"The name of the AWS IAM role to apply to the task's Execution Role",
+		docs.Summary(
+			"ExecutionRoleName is the name of the AWS IAM role to apply to the task's",
+			"Execution Role. At this time we reuse the same Role as the waypoint",
+			"server Execution Role.",
+		),
+	)
+
+	doc.SetField(
+		"task_role_name",
+		"The name of the AWS IAM role to apply to the task's Task Role",
+		docs.Summary(
+			"TaskRoleName is the name of the AWS IAM role to apply to the task.",
+			"This role determines the privileges the ODR builder. If no role",
+			"name is given, an IAM role will be created with the required",
+			"policies",
+		),
+	)
+
+	doc.SetField(
+		"subnets",
+		"List of subnets to place the On-Demand Runner task in.",
+		docs.Summary(
+			"List of subnets to place the On-Demand Runner task in. This defaults",
+			"to the list of subnets configured for the waypoint server and ",
+			"must be either identical or a subset of the subnets used by the ",
+			"waypoint server",
+		),
+	)
+
+	doc.SetField(
+		"security_group_id",
+		"Security Group ID to place the On-Demand Runner task in",
+		docs.Summary(
+			"Security Group ID to place the On-Demand Runner task in. This defaults ",
+			"to the security group used for the waypoint server",
+		),
+	)
+
+	doc.SetField(
+		"log_group",
+		"Cloud Watch Log Group to use for On-Demand Runners",
+		docs.Summary(
+			"Cloud Watch Log Group to use for On-Demand Runners. Defaults to the ",
+			"log group used for runners (waypoint-runner).",
+		),
+	)
+
+	doc.SetField(
+		"odr_cpu",
+		"CPU to use for the On-Demand runners.",
+		docs.Summary(
+			"Configure the CPU for the On-Demand runners. The default is 512. ",
+			"See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html ",
+			"for valid values",
+		),
+	)
+	doc.SetField(
+		"odr_memory",
+		"Memory to use for the On-Demand runners.",
+		docs.Summary(
+			"Configure the memory for the On-Demand runners. The default is 1024. ",
+			"See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html ",
+			"for valid values",
 		),
 	)
 
@@ -197,8 +287,8 @@ func (p *TaskLauncher) StartTask(
 		ContainerDefinitions:    []*ecs.ContainerDefinition{&def},
 		ExecutionRoleArn:        &exRoleArn,
 		TaskRoleArn:             &taskRoleArn,
-		Cpu:                     aws.String("1024"),
-		Memory:                  aws.String("2048"),
+		Cpu:                     aws.String(p.config.OdrCPU),
+		Memory:                  aws.String(p.config.OdrMemory),
 		Family:                  aws.String("waypoint-runner"),
 		NetworkMode:             aws.String("awsvpc"),
 		RequiresCompatibilities: []*string{aws.String(ecs.LaunchTypeFargate)},

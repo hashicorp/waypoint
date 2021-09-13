@@ -80,10 +80,17 @@ type ecsConfig struct {
 	// Memory configures the default amount of memory for the task
 	Memory string `hcl:"memory,optional"`
 
-	// On-Demand Runner configuration
-	OdrImage string `hcl:"odr_image,optional"`
 	// OdrExecutionRoleName string `hcl:"odr_execution_role_name,optional"`
 	TaskRoleName string `hcl:"task_role_name,optional"`
+
+	// On-Demand Runner docker image. Defaults to hashicorp/waypoint-odr
+	OdrImage string `hcl:"odr_image,optional"`
+
+	// On-Demand Runner
+	OdrCPU string `hcl:"odr_cpu,optional"`
+
+	// On-Demand Runner
+	OdrMemory string `hcl:"odr_memory,optional"`
 }
 
 // Install is a method of ECSInstaller and implements the Installer interface to
@@ -1146,6 +1153,13 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 		Usage:   "Configures the requested memory amount for the Waypoint server task in ECS.",
 		Default: "1024",
 	})
+	set.StringVar(&flag.StringVar{
+		Name:   "ecs-task-role-name",
+		Target: &i.config.TaskRoleName,
+		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
+			"an IAM role will be created automatically with the default permissions.",
+		Default: "waypoint-runner",
+	})
 
 	set.StringVar(&flag.StringVar{
 		Name:   "ecs-odr-image",
@@ -1153,13 +1167,17 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
 			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
-
 	set.StringVar(&flag.StringVar{
-		Name:   "ecs-task-role-name",
-		Target: &i.config.TaskRoleName,
-		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
-			"an IAM role will be created automatically with the default permissions.",
-		Default: "waypoint-runner",
+		Name:    "ecs-odr-mem",
+		Target:  &i.config.OdrMemory,
+		Usage:   "Configures the requested memory amount for the Waypoint On-Demand runner in ECS.",
+		Default: "1024",
+	})
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-odr-cpu",
+		Target:  &i.config.OdrCPU,
+		Usage:   "Configures the requested CPU amount for the Waypoint On-Demand runner in ECS.",
+		Default: "512",
 	})
 }
 
@@ -1208,6 +1226,19 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
 			"an IAM role will be created automatically with the default permissions.",
 		Default: "waypoint-runner",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-odr-mem",
+		Target:  &i.config.OdrMemory,
+		Usage:   "Configures the requested memory amount for the Waypoint On-Demand runner in ECS.",
+		Default: "1024",
+	})
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-odr-cpu",
+		Target:  &i.config.OdrCPU,
+		Usage:   "Configures the requested CPU amount for the Waypoint On-Demand runner in ECS.",
+		Default: "512",
 	})
 }
 
@@ -2420,6 +2451,8 @@ func (i *ECSInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		"task_role_name":      i.config.TaskRoleName,
 		"cluster":             i.config.Cluster,
 		"region":              i.config.Region,
+		"odr_cpu":             i.config.OdrCPU,
+		"odr_memory":          i.config.OdrMemory,
 	}
 
 	if i.netInfo != nil {
