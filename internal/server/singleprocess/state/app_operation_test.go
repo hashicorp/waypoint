@@ -175,6 +175,15 @@ func TestAppOperation(t *testing.T) {
 		b := raw.(*pb.Build)
 		require.Equal(strconv.FormatInt(latest.Unix(), 10), b.Id)
 
+		// Try getting the latest prior to the latest using a filter
+		raw, err = op.LatestFilter(s, ref, nil, func(raw interface{}) (bool, error) {
+			cand := raw.(*pb.Build)
+			return cand.Sequence == b.Sequence-1, nil
+		})
+		require.NoError(err)
+		b2 := raw.(*pb.Build)
+		require.Equal(b2.Sequence, b.Sequence-1)
+
 		// Try listing
 		builds, err := op.List(s, &listOperationsOptions{
 			Application: ref,

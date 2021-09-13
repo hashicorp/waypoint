@@ -3221,8 +3221,6 @@ message StatusReport {
   // Copied from the plugin generated raw SDK status report for convenient API access.
   Health health = 8;
 
-
-
   // the time when this report was generated
   // Copied from the plugin generated raw SDK status report for convenient API access.
   google.protobuf.Timestamp generated_time = 10;
