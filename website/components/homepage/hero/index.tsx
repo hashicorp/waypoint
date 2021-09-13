@@ -1,6 +1,15 @@
+import { useEffect, useState } from 'react'
+import classNames from 'classnames'
+import InlineSvg from '@hashicorp/react-inline-svg'
 import s from './style.module.css'
 
 export default function Hero() {
+  const [loaded, setLoaded] = useState(false)
+  useEffect(() => {
+    setTimeout(() => {
+      setLoaded(true)
+    }, 250)
+  }, [])
   return (
     <header className={s.hero}>
       <div className={s.heroInner}>
@@ -14,8 +23,16 @@ export default function Hero() {
           underlying infrastructure.
         </p>
       </div>
-      <div className={s.heroGraphic}>
-        <img src={require('./hero-graphic.png')} width={1685} alt="" />
+      <div
+        className={classNames(s.heroGraphic, {
+          [s.visible]: loaded,
+        })}
+      >
+        <InlineSvg className={s.heroMask} src={require('./mask.svg?include')} />
+        <InlineSvg
+          className={s.heroLogos}
+          src={require('./logos.svg?include')}
+        />
       </div>
     </header>
   )

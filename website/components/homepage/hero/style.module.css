@@ -63,10 +63,48 @@
 }
 
 .heroGraphic {
+  position: relative;
+  overflow: hidden;
   margin-top: -150px;
-  transform: translateX(32px);
+  display: grid;
+  background-image: linear-gradient(
+    92.28deg,
+    rgba(89, 220, 228, 0.8) 0.25%,
+    rgba(99, 208, 255, 0.5) 95.01%
+  );
+  z-index: -1;
 
-  & > img {
-    max-width: none !important;
+  & > * {
+    grid-area: 1 / 1;
+  }
+
+  & svg {
+    vertical-align: top;
+  }
+
+  & :global(.circle) {
+    transform: scale(0.25) rotate(0deg);
+    opacity: 0;
+    transform-origin: center;
+    transform-box: fill-box;
+    transition: all ease-in-out 0.75s;
+
+    &:nth-of-type(even) {
+      transform: scale(0.25) rotate(0deg);
+      transition-delay: 0.5s;
+    }
+  }
+
+  &.visible {
+    & :global(.circle) {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+  }
+}
+
+@keyframes rotate-bg {
+  to {
+    transform: rotate(360deg);
   }
 }
