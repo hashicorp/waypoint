@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
-	"github.com/go-ozzo/ozzo-validation/v4"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
@@ -50,6 +50,7 @@ func TestJobNew(t testing.T, src *pb.Job) *pb.Job {
 }
 
 // ValidateJob validates the job structure.
+// TODO: This still fails if the job passed in to be validated is nil
 func ValidateJob(job *pb.Job) error {
 	return validationext.Error(validation.ValidateStruct(job,
 		validation.Field(&job.Id, validation.By(isEmpty)),

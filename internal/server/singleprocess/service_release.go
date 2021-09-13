@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
@@ -15,6 +16,10 @@ func (s *service) UpsertRelease(
 	ctx context.Context,
 	req *pb.UpsertReleaseRequest,
 ) (*pb.UpsertReleaseResponse, error) {
+	if err := ptypes.ValidateUpsertReleaseRequest(req); err != nil {
+		return nil, err
+	}
+
 	result := req.Release
 
 	// If we have no ID, then we're inserting and need to generate an ID.
@@ -66,6 +71,10 @@ func (s *service) GetLatestRelease(
 	ctx context.Context,
 	req *pb.GetLatestReleaseRequest,
 ) (*pb.Release, error) {
+	if err := ptypes.ValidateGetLatestReleaseRequest(req); err != nil {
+		return nil, err
+	}
+
 	r, err := s.state.ReleaseLatest(req.Application, req.Workspace)
 	if err != nil {
 		return nil, err
@@ -83,6 +92,10 @@ func (s *service) GetRelease(
 	ctx context.Context,
 	req *pb.GetReleaseRequest,
 ) (*pb.Release, error) {
+	if err := ptypes.ValidateGetReleaseRequest(req); err != nil {
+		return nil, err
+	}
+
 	r, err := s.state.ReleaseGet(req.Ref)
 	if err != nil {
 		return nil, err
