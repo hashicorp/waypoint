@@ -36,6 +36,7 @@ export default function (this: Server): void {
   this.post('/ListBuilds', build.list);
   this.post('/GetBuild', build.get);
   this.post('/ListDeployments', deployment.list);
+  this.post('/UI_ListDeployments', deployment.uiList);
   this.post('/GetDeployment', deployment.get);
   this.post('/UpsertProject', project.update);
   this.post('/ListProjects', project.list);

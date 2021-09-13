@@ -1,4 +1,4 @@
-import { GetDeploymentRequest, ListDeploymentsRequest, ListDeploymentsResponse } from 'waypoint-pb';
+import { GetDeploymentRequest, ListDeploymentsRequest, ListDeploymentsResponse, UI } from 'waypoint-pb';
 import { Request, Response } from 'ember-cli-mirage';
 import { decode } from '../helpers/protobufs';
 
@@ -18,6 +18,29 @@ export function list(schema: any, { requestBody }: Request): Response {
   deploymentProtobufs.sort((a, b) => b.getSequence() - a.getSequence());
 
   resp.setDeploymentsList(deploymentProtobufs);
+
+  return this.serialize(resp, 'application');
+}
+
+export function uiList(schema: any, { requestBody }: Request): Response {
+  let requestMsg = decode(UI.ListDeploymentsRequest, requestBody);
+  let projectName = requestMsg.getApplication().getProject();
+  let appName = requestMsg.getApplication().getApplication();
+  let workspaceName = requestMsg.getWorkspace().getWorkspace();
+  let project = schema.projects.findBy({ name: projectName });
+  let application = schema.applications.findBy({ name: appName, projectId: project?.id });
+  let workspace = schema.workspaces.findBy({ name: workspaceName });
+  let deployments = schema.deployments.where({ applicationId: application?.id, workspaceId: workspace?.id });
+  let bundles: UI.DeploymentBundle[] = deployments.models.map((d) => {
+    let bundle = new UI.DeploymentBundle();
+    bundle.setDeployment(d.toProtobuf());
+    return bundle;
+  });
+  let resp = new UI.ListDeploymentsResponse();
+
+  bundles.sort((a, b) => b.getDeployment().getSequence() - a.getDeployment().getSequence());
+
+  resp.setDeploymentsList(bundles);
 
   return this.serialize(resp, 'application');
 }
