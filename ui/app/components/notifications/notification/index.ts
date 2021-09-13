@@ -1,6 +1,5 @@
 import Component from '@glimmer/component';
 import { action } from '@ember/object';
-import FlashObject from 'ember-cli-flash/flash/object';
 
 /**
  *
@@ -42,20 +41,12 @@ import FlashObject from 'ember-cli-flash/flash/object';
  *
  */
 
-interface ExtendedFlashObject extends FlashObject {
-  content?: string;
-  actionText?: string;
-  onAction?: (close: Event) => void;
-}
-
-type Args = {
-  flash: ExtendedFlashObject;
-};
-
-export default class NotificationsNotificationComponent extends Component<Args> {
+export default class NotificationsNotificationComponent extends Component {
   @action
-  onAction(close: Event): void {
-    if (typeof this.args.flash.onAction === 'function') {
+  onAction(close: Event) {
+    let { onAction } = this.args.flash;
+
+    if (onAction && typeof onAction == 'function') {
       this.args.flash.onAction(close);
     }
   }
