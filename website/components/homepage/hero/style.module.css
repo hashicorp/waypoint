@@ -22,6 +22,7 @@
 
 .heroHeading {
   margin: 0;
+  font-family: var(--font-display);
   font-size: 32px;
   line-height: 36px;
   font-weight: 400;
@@ -40,7 +41,7 @@
 
   & > em {
     font-style: normal;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--waypoint);
   }
 }
@@ -83,22 +84,31 @@
   }
 
   & :global(.circle) {
-    transform: scale(0.25) rotate(0deg);
+    transform: scale(0.25);
     opacity: 0;
     transform-origin: center;
     transform-box: fill-box;
     transition: all ease-in-out 0.75s;
 
     &:nth-of-type(even) {
-      transform: scale(0.25) rotate(0deg);
+      transform: scale(0.25);
       transition-delay: 0.5s;
     }
   }
 
   &.visible {
     & :global(.circle) {
-      transform: scale(1) rotate(0deg);
+      transform: scale(1);
       opacity: 1;
+    }
+
+    /* Custom sizing for the logos */
+    & :global(.circleEcs) {
+      transform: scale(0.85);
+    }
+
+    & :global(.circleKubernetes) {
+      transform: scale(0.72);
     }
   }
 }
