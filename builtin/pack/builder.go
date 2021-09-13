@@ -450,7 +450,6 @@ func (b *Builder) Build(
 
 			return ep, nil
 		})
-
 		if err != nil {
 			return nil, err
 		}

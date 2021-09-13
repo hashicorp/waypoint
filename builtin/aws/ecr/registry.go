@@ -46,7 +46,6 @@ type ecrInfo struct {
 func (r *Registry) setupRepo(
 	ctx context.Context,
 	log hclog.Logger,
-	img *docker.Image,
 	ui terminal.UI,
 	sg terminal.StepGroup,
 	src *component.Source,
@@ -124,7 +123,6 @@ func (r *Registry) setupRepo(
 				},
 			},
 		})
-
 		if err != nil {
 			return nil, fmt.Errorf("Unable to create repository: %w", err)
 		}
@@ -154,14 +152,13 @@ func (r *Registry) setupRepo(
 func (r *Registry) AccessInfo(
 	ctx context.Context,
 	log hclog.Logger,
-	img *docker.Image,
 	ui terminal.UI,
 	src *component.Source,
 ) (*docker.AccessInfo, error) {
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	info, err := r.setupRepo(ctx, log, img, ui, sg, src)
+	info, err := r.setupRepo(ctx, log, ui, sg, src)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +189,7 @@ func (r *Registry) Push(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	info, err := r.setupRepo(ctx, log, img, ui, sg, src)
+	info, err := r.setupRepo(ctx, log, ui, sg, src)
 	if err != nil {
 		return nil, err
 	}
@@ -299,6 +296,4 @@ registry {
 	return doc, nil
 }
 
-var (
-	_ component.Documented = (*Registry)(nil)
-)
+var _ component.Documented = (*Registry)(nil)

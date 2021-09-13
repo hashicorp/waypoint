@@ -93,7 +93,6 @@ func (s *service) queueJobMulti(
 	}
 
 	return resp, nil
-
 }
 
 // queueJobReqToJob converts a QueueJobRequest to a job to queue, but
