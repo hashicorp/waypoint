@@ -21,6 +21,18 @@ module('Integration | Modifier | code-mirror', function (hooks) {
     assert.dom('.CodeMirror').containsText(valueToChange);
   });
 
+  test('it renders even with undefined value/onInput', async function (assert) {
+    this.set('value', undefined);
+    this.set('onInput', undefined);
+
+    await render(
+      hbs`<div
+      {{code-mirror value=this.value onInput=this.onInput}}
+    />`
+    );
+    assert.dom('.CodeMirror').exists();
+  });
+
   test('it calls onInput when new text added', async function (assert) {
     this.set('value', '');
     this.set('onInput', (value: string) => this.set('value', value));
