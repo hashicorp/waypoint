@@ -1,4 +1,3 @@
-import InlineSvg from '@hashicorp/react-inline-svg'
 import classNames from 'classnames'
 import { useInView } from 'react-intersection-observer'
 import MediaObject from 'components/homepage/media-object'
@@ -6,6 +5,7 @@ import Section, {
   SectionHeading,
   SectionDescription,
 } from 'components/homepage/section'
+import Graphic from './graphic'
 import s from './style.module.css'
 
 export default function SectionMonitorAppHealth() {
@@ -20,7 +20,7 @@ export default function SectionMonitorAppHealth() {
         })}
         ref={ref}
       >
-        <InlineSvg src={require('./graphic.svg?include')} />
+        <Graphic />
       </div>
       <div className={s.content}>
         <SectionHeading>Monitor app health on any cloud</SectionHeading>
