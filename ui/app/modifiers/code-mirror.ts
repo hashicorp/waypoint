@@ -17,7 +17,7 @@ const _PRESET_DEFAULTS: codemirror.EditorConfiguration = {
 interface Args {
   positional: never;
   named: {
-    value: string;
+    value?: string;
     onInput: (value: string) => void;
     options?: Record<string, unknown>;
   };
@@ -42,7 +42,7 @@ export default class CodeMirrorModifier extends Modifier<Args> {
     let editor = codemirror(this.element, {
       ..._PRESET_DEFAULTS,
       ...this.args.named.options,
-      value: this.args.named.value,
+      value: this.args.named.value ? this.args.named.value : '',
     });
 
     editor.on('change', (editor) => {
