@@ -96,7 +96,40 @@ func (s *service) GetLatestStatusReport(
 		return nil, err
 	}
 
-	r, err := s.state.StatusReportLatest(req.Application, req.Workspace)
+	filter := func(r *pb.StatusReport) (bool, error) {
+		switch target := req.Target.(type) {
+		case *pb.GetLatestStatusReportRequest_Any:
+			return true, nil
+
+		case *pb.GetLatestStatusReportRequest_DeploymentAny:
+			_, ok := r.TargetId.(*pb.StatusReport_DeploymentId)
+			return ok, nil
+
+		case *pb.GetLatestStatusReportRequest_ReleaseAny:
+			_, ok := r.TargetId.(*pb.StatusReport_ReleaseId)
+			return ok, nil
+
+		case *pb.GetLatestStatusReportRequest_DeploymentId:
+			id, ok := r.TargetId.(*pb.StatusReport_DeploymentId)
+			return ok && id.DeploymentId == target.DeploymentId, nil
+
+		case *pb.GetLatestStatusReportRequest_ReleaseId:
+			id, ok := r.TargetId.(*pb.StatusReport_ReleaseId)
+			return ok && id.ReleaseId == target.ReleaseId, nil
+
+		case nil:
+			// Nil is allowed for backwards compatibility before we had
+			// Target and is equal to Any.
+			return true, nil
+
+		default:
+			// This shouldn't happen for valid proto clients.
+			return false, status.Errorf(codes.FailedPrecondition,
+				"invalid target type for request")
+		}
+	}
+
+	r, err := s.state.StatusReportLatest(req.Application, req.Workspace, filter)
 	if err != nil {
 		return nil, err
 	}

@@ -53,8 +53,16 @@ func (s *State) StatusReportList(
 func (s *State) StatusReportLatest(
 	ref *pb.Ref_Application,
 	ws *pb.Ref_Workspace,
+	filter func(*pb.StatusReport) (bool, error),
 ) (*pb.StatusReport, error) {
-	result, err := statusReportOp.Latest(s, ref, ws)
+	result, err := statusReportOp.LatestFilter(s, ref, ws, func(v interface{}) (bool, error) {
+		// If we have no filter, always true
+		if filter == nil {
+			return true, nil
+		}
+
+		return filter(v.(*pb.StatusReport))
+	})
 	if result == nil || err != nil {
 		return nil, err
 	}
