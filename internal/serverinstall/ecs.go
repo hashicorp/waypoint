@@ -131,6 +131,21 @@ func (i *ECSInstaller) Install(
 		return nil, err
 	}
 
+	// we need to validate the given ODR mem/cpu at install time to verify the
+	// ODR will be able to launch without adjusting the configuration
+	// post-install
+	odrMem, err := strconv.Atoi(i.config.OdrMemory)
+	if err != nil {
+		return nil, err
+	}
+	odrCpu, err := strconv.Atoi(i.config.OdrCPU)
+	if err != nil {
+		return nil, err
+	}
+	if err := utils.ValidateEcsMemCPUPair(odrMem, odrCpu); err != nil {
+		return nil, err
+	}
+
 	lf := &Lifecycle{
 		Init: func(ui terminal.UI) error {
 			sess, err = utils.GetSession(&utils.SessionConfig{
@@ -312,7 +327,7 @@ func (i *ECSInstaller) Launch(
 	}
 
 	ecsSvc := ecs.New(sess)
-	taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
+	taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc, log)
 	if err != nil {
 		return nil, err
 	}
@@ -527,7 +542,7 @@ func (i *ECSInstaller) Upgrade(
 		}
 
 		ecsSvc := ecs.New(sess)
-		taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
+		taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc, log)
 		if err != nil {
 			return nil, err
 		}
@@ -2324,7 +2339,7 @@ func (i *ECSInstaller) LaunchRunner(
 	}
 
 	ecsSvc := ecs.New(sess)
-	taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
+	taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc, log)
 	if err != nil {
 		return nil, err
 	}

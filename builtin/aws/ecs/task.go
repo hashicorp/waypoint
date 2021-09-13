@@ -294,7 +294,7 @@ func (p *TaskLauncher) StartTask(
 		RequiresCompatibilities: []*string{aws.String(ecs.LaunchTypeFargate)},
 	}
 
-	taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
+	taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc, log)
 	if err != nil {
 		return nil, err
 	}

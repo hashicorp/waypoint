@@ -5,9 +5,14 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/go-hclog"
 )
 
-func RegisterTaskDefinition(def *ecs.RegisterTaskDefinitionInput, ecsSvc *ecs.ECS) (*ecs.TaskDefinition, error) {
+func RegisterTaskDefinition(
+	def *ecs.RegisterTaskDefinitionInput,
+	ecsSvc *ecs.ECS,
+	log hclog.Logger,
+) (*ecs.TaskDefinition, error) {
 	// AWS is eventually consistent so even though we probably created the
 	// resources that are referenced by the task definition, it can error out if
 	// we try to reference those resources too quickly. So we're forced to guard
@@ -24,6 +29,7 @@ func RegisterTaskDefinition(def *ecs.RegisterTaskDefinitionInput, ecsSvc *ecs.EC
 			break
 		}
 
+		log.Debug("error registering task definition, retrying", "error", err)
 		// otherwise sleep and try again
 		time.Sleep(2 * time.Second)
 	}
