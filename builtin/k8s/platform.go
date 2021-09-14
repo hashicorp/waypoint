@@ -757,8 +757,10 @@ func (p *Platform) Deploy(
 	if err != nil {
 		return nil, err
 	}
+
+	seq := deployConfig.Sequence
 	result.Id = id
-	result.Name = strings.ToLower(fmt.Sprintf("%s-%s", src.App, id))
+	result.Name = strings.ToLower(fmt.Sprintf("%s-v%d", src.App, seq))
 
 	// We'll update the user in real time
 	sg := ui.StepGroup()

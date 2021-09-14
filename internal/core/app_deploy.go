@@ -144,11 +144,15 @@ type deployOperation struct {
 	// id is populated with the deployment id on Upsert
 	id string
 
+	// sequence is the monotonically incrementing version number of
+	// the deployment
+	sequence uint64
+
 	// cebToken is the token to set for the deployment to auth
 	cebToken string
 
 	// result is either a component.Deployment or component.DeploymentWithUrl
-	result interface{}
+	result   interface{}
 }
 
 func (op *deployOperation) Close() error {
@@ -272,6 +276,7 @@ func (op *deployOperation) Upsert(
 	if op.id == "" {
 		// Set our internal ID for the Do step
 		op.id = resp.Deployment.Id
+		op.sequence = resp.Deployment.Sequence
 
 		// We need to get our token that we'll give this deployment
 		resp, err := client.GenerateInviteToken(ctx, &pb.InviteTokenRequest{
@@ -297,6 +302,7 @@ func (op *deployOperation) Upsert(
 	// Set the new values on our deployment config
 	dconfig := *op.DeploymentConfig
 	dconfig.Id = op.id
+	dconfig.Sequence = op.sequence
 	dconfig.EntrypointInviteToken = op.cebToken
 	op.DeploymentConfig = &dconfig
 
