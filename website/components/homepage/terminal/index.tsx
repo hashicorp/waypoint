@@ -26,7 +26,7 @@ function Terminal({ tabs, children }: TerminalProps): JSX.Element {
       if (tabIndex >= tabs.length - 1) {
         setTabIndex(0)
       } else {
-        setTabIndex(tabIndex + 1)
+        setTabIndex((prevTabIndex) => prevTabIndex + 1)
       }
     },
     isHovering || !inView ? null : 5000
