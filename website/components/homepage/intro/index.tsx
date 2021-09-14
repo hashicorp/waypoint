@@ -7,7 +7,7 @@ export default function Intro() {
     <div className={s.intro}>
       <div className={s.column}>
         <h2 className={s.heading}>
-          Easy for <em>developers</em>
+          Simple <em>developer experience</em>
         </h2>
         <p className={s.description}>
           Waypoint enables developers to deploy, manage, and observe their
@@ -42,11 +42,11 @@ export default function Intro() {
       </div>
       <div className={s.column}>
         <h2 className={s.heading}>
-          Powerful for <em>platform operators</em>
+          Powerful for <em>operators</em>
         </h2>
         <p className={s.description}>
           Waypoint enables operators to create PaaS workflows of Kubernetes,
-          ECS, serverless applications
+          ECS, serverless applications.
         </p>
         <div className={s.terminal}>
           <Terminal
