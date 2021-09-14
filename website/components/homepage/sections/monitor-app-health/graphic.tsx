@@ -139,7 +139,7 @@ export default function Graphic() {
           fill="#4294FF"
         />
         <path fill="#F2F2F3" d="M86.402 275.72h430v1h-430z" />
-        <g clip-path="url(#version-badge)">
+        <g clipPath="url(#version-badge)">
           <path
             d="M86.402 303.398c0-6.697 5.43-12.127 12.127-12.127h30.299c6.697 0 12.126 5.43 12.126 12.127 0 6.698-5.429 12.127-12.126 12.127H98.529c-6.697 0-12.127-5.429-12.127-12.127z"
             fill="#F0F5FF"
@@ -214,8 +214,8 @@ export default function Graphic() {
         y2="434.902"
         gradientUnits="userSpaceOnUse"
       >
-        <stop stop-color="#D3FDDB" />
-        <stop offset="1" stop-color="#62D4DC" />
+        <stop stopColor="#D3FDDB" />
+        <stop offset="1" stopColor="#62D4DC" />
       </linearGradient>
 
       <linearGradient
@@ -226,14 +226,14 @@ export default function Graphic() {
         y2="462.372"
         gradientUnits="userSpaceOnUse"
       >
-        <stop stop-color="white" />
-        <stop offset="1" stop-color="#F7F7F7" />
+        <stop stopColor="white" />
+        <stop offset="1" stopColor="#F7F7F7" />
       </linearGradient>
 
       <filter
         id="drop-shadow"
         filterUnits="userSpaceOnUse"
-        color-interpolation-filters="sRGB"
+        colorInterpolationFilters="sRGB"
       >
         <feFlood floodOpacity="0" result="BackgroundImageFix" />
         <feColorMatrix
