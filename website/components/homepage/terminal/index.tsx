@@ -14,9 +14,11 @@ interface TerminalProps {
 }
 
 function Terminal({ tabs, children }: TerminalProps): JSX.Element {
-  const [tabIndex, setTabIndex] = React.useState(1)
+  const [tabIndex, setTabIndex] = React.useState(0)
   const [isHovering, setIsHovering] = React.useState(false)
-  const { ref, inView } = useInView()
+  const { ref, inView } = useInView({
+    threshold: 1,
+  })
   const handleTabsChange = (index) => {
     setTabIndex(index)
   }
