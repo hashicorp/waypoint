@@ -18,6 +18,31 @@ deploy "kubernetes" {
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### autoscale (category)
+
+Sets up a horizontal pod autoscaler to scale deployments automatically.
+
+##### autoscale.cpu_percent
+
+The target CPU percent utilization before the horizontal pod autoscaler scales up a deployments replicas.
+
+- Type: **int32**
+- **Optional**
+
+##### autoscale.max_replicas
+
+The maximum amount of pods to scale to for a deployment.
+
+- Type: **int32**
+- **Optional**
+
+##### autoscale.min_replicas
+
+The minimum amount of pods to have for a deployment.
+
+- Type: **int32**
+- **Optional**
+
 #### pod (category)
 
 The configuration for a pod.
