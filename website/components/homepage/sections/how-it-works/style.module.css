@@ -6,6 +6,13 @@
   background-repeat: no-repeat;
   background-position: top right;
   overflow: hidden;
+  width: 100%;
+  max-width: 1488px;
+  margin: auto;
+
+  @media (--medium-up) {
+    width: calc(100% - 48px);
+  }
 
   &::before {
     content: '';
