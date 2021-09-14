@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecs"
@@ -263,6 +264,15 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_ROUTER),
 		)),
 		resource.WithResource(resource.NewResource(
+			resource.WithName("acm certificate"),
+			resource.WithPlatform(platformName),
+			resource.WithState(&Resource_AcmCertificate{}),
+			resource.WithCreate(p.resourceAcmCertificateCreate),
+			// TODO: implement destroy when we have better support for app-scoped resources.
+			// TODO: implement status when we have a plan to not hit rate limits
+			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_ROUTER),
+		)),
+		resource.WithResource(resource.NewResource(
 			resource.WithName("task definition"),
 			resource.WithPlatform(platformName),
 			resource.WithState(&Resource_TaskDefinition{}),
@@ -328,7 +338,7 @@ func (p *Platform) Deploy(
 	if p.config.ALB != nil && p.config.ALB.IngressPort != 0 {
 		log.Debug("Using configured ingress port", "port number", p.config.ServicePort)
 		externalIngressPort = ExternalIngressPort(p.config.ALB.IngressPort)
-	} else if p.config.ALB != nil && p.config.ALB.CertificateId != "" {
+	} else if p.config.ALB != nil && (p.config.ALB.CertificateId != "" || p.config.ALB.CreateAcmCertificate) {
 		log.Debug("ALB config defined and cert configured, using ingress port 443")
 		externalIngressPort = ExternalIngressPort(443)
 	} else {
@@ -1674,6 +1684,187 @@ func (p *Platform) resourceRoute53RecordCreate(
 	return nil
 }
 
+func (p *Platform) resourceAcmCertificateCreate(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	sess *session.Session,
+	src *component.Source,
+	log hclog.Logger,
+	r53record *Resource_Route53Record,
+	listener *Resource_Alb_Listener,
+	alb *Resource_Alb,
+	state *Resource_AcmCertificate,
+) error {
+	albConfig := p.config.ALB
+
+	if !albConfig.CreateAcmCertificate || albConfig.CertificateId != "" {
+		log.Debug("Not creating a ACM certificate")
+		return nil
+	}
+
+	s := sg.Add("Route53 record is required - checking if one already exists")
+	defer s.Abort()
+
+	acmSvc := acm.New(sess)
+
+	lc, err := acmSvc.ListCertificatesWithContext(ctx, &acm.ListCertificatesInput{})
+
+	if err != nil {
+		return nil
+	}
+
+	for _, certSummary := range lc.CertificateSummaryList {
+		if *certSummary.DomainName == albConfig.FQDN {
+			state.Arn = *certSummary.CertificateArn
+		}
+	}
+
+	if state.Arn == "" {
+		s.Update("Creating new certificate: %s (zone-id: %s)",
+			albConfig.FQDN, albConfig.ZoneId)
+
+		log.Debug("Creating new certificate: %s (zone-id: %s)",
+			albConfig.FQDN, albConfig.ZoneId)
+
+		response, err := acmSvc.RequestCertificateWithContext(
+			ctx,
+			&acm.RequestCertificateInput{
+				DomainName:       aws.String(albConfig.FQDN),
+				ValidationMethod: aws.String(acm.ValidationMethodDns),
+			},
+		)
+
+		if err != nil {
+			return err
+		}
+		state.Arn = *response.CertificateArn
+	}
+
+	var domainValidation acm.DomainValidation
+
+	for i := 0; i < 5; i++ {
+		resp, err := acmSvc.DescribeCertificateWithContext(ctx, &acm.DescribeCertificateInput{
+			CertificateArn: &state.Arn,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if resp.Certificate.DomainValidationOptions[0].ResourceRecord != nil {
+			domainValidation = *resp.Certificate.DomainValidationOptions[0]
+			break
+		} else {
+			time.Sleep(5 * time.Second)
+		}
+	}
+
+	s.Update("Creating dns record: %s (zone-id: %s)",
+		albConfig.FQDN, albConfig.ZoneId)
+
+	log.Debug("Creating dns record: %s (zone-id: %s)",
+		albConfig.FQDN, albConfig.ZoneId)
+
+	if *(domainValidation.ValidationStatus) == "PENDING_VALIDATION" {
+		dns := domainValidation.ResourceRecord
+
+		r53Svc := route53.New(sess)
+
+		records, err := r53Svc.ListResourceRecordSetsWithContext(ctx, &route53.ListResourceRecordSetsInput{
+			HostedZoneId: aws.String(albConfig.ZoneId),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		recordExists := false
+
+		for _, recordSet := range records.ResourceRecordSets {
+			if *recordSet.Name == *dns.Name && *recordSet.Type == *dns.Type {
+				recordExists = true
+			}
+		}
+
+		if !recordExists {
+			input := route53.ChangeResourceRecordSetsInput{
+				HostedZoneId: &albConfig.ZoneId,
+				ChangeBatch: &route53.ChangeBatch{
+					Comment: aws.String("created by waypoint"),
+					Changes: []*route53.Change{
+						{
+							Action: aws.String("CREATE"),
+							ResourceRecordSet: &route53.ResourceRecordSet{
+								Name: dns.Name,
+								Type: dns.Type,
+								TTL:  aws.Int64(60),
+							},
+						},
+					},
+				},
+			}
+
+			if dns.Value != nil {
+				input.ChangeBatch.Changes[0].ResourceRecordSet.ResourceRecords = []*route53.ResourceRecord{
+					{
+						Value: dns.Value,
+					},
+				}
+			}
+
+			_, err := r53Svc.ChangeResourceRecordSetsWithContext(ctx, &input)
+
+			if err != nil {
+				return err
+			}
+		}
+
+		s.Update("Wait until certificate validated")
+
+		log.Debug("Wait until certificate validated")
+
+		err = acmSvc.WaitUntilCertificateValidatedWithContext(
+			ctx,
+			&acm.DescribeCertificateInput{
+				CertificateArn: &state.Arn,
+			},
+		)
+
+		if err != nil {
+			return err
+		}
+
+		s.Update("Certificate validated")
+
+		log.Debug("Certificate validated")
+
+	}
+
+	_, err = elbv2.New(sess).ModifyListenerWithContext(ctx, &elbv2.ModifyListenerInput{
+		ListenerArn: &listener.Arn,
+		Port:        aws.Int64(443),
+		Protocol:    aws.String("HTTPS"),
+		Certificates: []*elbv2.Certificate{
+			{
+				CertificateArn: &state.Arn,
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	s.Update("Modified ALB Listener to certificate")
+
+	if err != nil {
+		return err
+	}
+
+	s.Done()
+
+	return nil
+}
+
 // Returns subnet resource based on the configured subnets to use.
 // If no configured subnets are given, will use the default subnets for the VPC
 func getSubnetsResource(
@@ -2314,6 +2505,9 @@ func buildLoggingOptions(
 }
 
 type ALBConfig struct {
+	// If set to true, do create a certificate
+	CreateAcmCertificate bool `hcl:"create_acm_certificate,optional"`
+
 	// Certificate ARN to attach to the load balancer
 	CertificateId string `hcl:"certificate,optional"`
 
@@ -2602,6 +2796,11 @@ deploy {
 		"alb",
 		"Provides additional configuration for using an ALB with ECS",
 		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"create_acm_certificate",
+				"do create a certificate",
+			)
+
 			doc.SetField(
 				"certificate",
 				"the ARN of an AWS Certificate Manager cert to associate with the ALB",
