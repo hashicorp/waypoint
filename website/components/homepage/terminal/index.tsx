@@ -97,23 +97,24 @@ function TerminalToken({
 export default Terminal
 export { TerminalLine, TerminalToken }
 
-// https://overreacted.io/making-setinterval-declarative-with-react-hooks/
-function useInterval(callback, delay) {
-  const savedCallback = useRef()
+// https://usehooks-typescript.com/react-hook/use-interval
+function useInterval(callback: () => void, delay: number | null) {
+  const savedCallback = useRef(callback)
 
-  // Remember the latest function.
+  // Remember the latest callback if it changes.
   useEffect(() => {
     savedCallback.current = callback
   }, [callback])
 
   // Set up the interval.
   useEffect(() => {
-    function tick() {
-      savedCallback.current()
+    // Don't schedule if no delay is specified.
+    if (delay === null) {
+      return
     }
-    if (delay !== null) {
-      let id = setInterval(tick, delay)
-      return () => clearInterval(id)
-    }
+
+    const id = setInterval(() => savedCallback.current(), delay)
+
+    return () => clearInterval(id)
   }, [delay])
 }
