@@ -2,3 +2,5 @@ ui/lib/* linguist-generated
 
 # Used for testing to have git repositories within our git repo.
 **/DOTgit/** linguist-generated
+
+website/* linguist-vendored
