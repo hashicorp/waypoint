@@ -43,7 +43,10 @@ Router.map(function () {
           this.route('build', { path: '/build/seq/:sequence' });
           this.route('deployments');
           this.route('deployment-id', { path: '/deployment/:deployment_id' });
-          this.route('deployment', { path: '/deployment/seq/:sequence' });
+          this.route('deployment', { path: '/deployment/seq/:sequence' }, function () {
+            this.route('operation-logs');
+            this.route('resources');
+          });
           this.route('releases');
           this.route('release-id', { path: '/release/:release_id' });
           this.route('release', { path: '/release/seq/:sequence' });

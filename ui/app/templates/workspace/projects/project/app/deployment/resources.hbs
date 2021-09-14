@@ -1,0 +1,43 @@
+{{page-title "Resources"}}
+
+<h2>Resources</h2>
+
+<table style="table-layout: fixed; width: 100%; margin-bottom: 1rem">
+  <caption style="text-align: left">Resources created by <b>this deployment</b></caption>
+
+  <thead>
+    <tr>
+      <td>Name</td>
+      <td>Type</td>
+      <td>Age</td>
+      <td>Status</td>
+    </tr>
+  </thead>
+
+  <tbody>
+    {{#each @model.latestStatusReport.resourcesList key="id" as |resource|}}
+      <tr>
+        <td>{{resource.name}}</td>
+        <td><Pds::Icon @type={{icon-for-component resource.platform}} /> {{resource.type}}</td>
+        <td>{{date-format-distance-to-now resource.createdTime.seconds}}</td>
+        <td>
+          <StatusReportIndicator
+            @statusReport={{hash
+              health=(hash
+                healthMessage=resource.healthMessage
+                healthStatus=(or
+                  (and (eq resource.health 0) "UNKNOWN")
+                  (and (eq resource.health 1) "ALIVE")
+                  (and (eq resource.health 2) "READY")
+                  (and (eq resource.health 3) "DOWN")
+                  (and (eq resource.health 4) "PARTIAL")
+                  (and (eq resource.health 5) "MISSING")
+                )
+              )
+            }}
+          />
+      </td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
