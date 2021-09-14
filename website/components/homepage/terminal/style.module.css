@@ -53,7 +53,7 @@
 
   & > * {
     grid-area: 1 / 1;
-    transition: opacity ease-in-out 0.2s;
+    transition: opacity ease-in-out 0.3s;
   }
 
   & > [hidden] {

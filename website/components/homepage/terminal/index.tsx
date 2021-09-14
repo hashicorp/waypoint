@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
+import { useInView } from 'react-intersection-observer'
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from '@reach/tabs'
 import classNames from 'classnames'
 import s from './style.module.css'
@@ -13,10 +14,32 @@ interface TerminalProps {
 }
 
 function Terminal({ tabs, children }: TerminalProps): JSX.Element {
+  const [tabIndex, setTabIndex] = React.useState(1)
+  const [isHovering, setIsHovering] = React.useState(false)
+  const { ref, inView } = useInView()
+  const handleTabsChange = (index) => {
+    setTabIndex(index)
+  }
+  useInterval(
+    () => {
+      if (!tabs) return
+      if (tabIndex >= tabs.length - 1) {
+        setTabIndex(0)
+      } else {
+        setTabIndex(tabIndex + 1)
+      }
+    },
+    isHovering || !inView ? null : 5000
+  )
   return (
-    <div className={s.terminal}>
+    <div
+      ref={ref}
+      className={s.terminal}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
       {tabs ? (
-        <Tabs>
+        <Tabs index={tabIndex} onChange={handleTabsChange}>
           <div className={s.terminalHeader}>
             <TabList className={s.terminalTabList}>
               {tabs.map((tab, idx) => (
@@ -73,3 +96,24 @@ function TerminalToken({
 
 export default Terminal
 export { TerminalLine, TerminalToken }
+
+// https://overreacted.io/making-setinterval-declarative-with-react-hooks/
+function useInterval(callback, delay) {
+  const savedCallback = useRef()
+
+  // Remember the latest function.
+  useEffect(() => {
+    savedCallback.current = callback
+  }, [callback])
+
+  // Set up the interval.
+  useEffect(() => {
+    function tick() {
+      savedCallback.current()
+    }
+    if (delay !== null) {
+      let id = setInterval(tick, delay)
+      return () => clearInterval(id)
+    }
+  }, [delay])
+}
