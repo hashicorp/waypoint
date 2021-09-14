@@ -21,6 +21,10 @@ message Release {
 
 // Resource contains the internal resource states.
 message Resource {
+  message Autoscale {
+    // represents a horizontal pod autoscaler, if requested to be created
+    string name = 1;
+  }
   message Deployment {
     string name = 1;
   }
