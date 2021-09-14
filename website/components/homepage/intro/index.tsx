@@ -31,12 +31,12 @@ export default function Intro() {
         </div>
         <MediaObject
           icon={require('../icons/eye.svg?include')}
-          heading="Application-centric Abstraction"
+          heading="Application-centric abstraction"
           description="Specify the deployment needs with a simple and consistent abstraction without the underlying complexity."
         />
         <MediaObject
           icon={require('../icons/eye.svg?include')}
-          heading="End-to-End Deployment Workflow"
+          heading="End-to-end deployment workflow"
           description="Build a complete end-to-end workflow with distinct build, deploy, release steps."
         />
       </div>
@@ -68,12 +68,12 @@ export default function Intro() {
         </div>
         <MediaObject
           icon={require('../icons/eye.svg?include')}
-          heading="Build-Deploy-Release Extensibility"
+          heading="Build-deploy-release extensibility"
           description="Enable a pluggable framework, integrated with CI/CD pipelines, monitoring tools, and any other ecosystem tools. "
         />
         <MediaObject
           icon={require('../icons/eye.svg?include')}
-          heading="PaaS Experience for Developers"
+          heading="PaaS experience for developers"
           description="Provide a consistent abstraction and unified workflow to scale across multiple platforms and clouds"
         />
       </div>

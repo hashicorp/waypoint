@@ -27,14 +27,22 @@ export default function SectionExtendPlugins() {
             <MediaObject
               stacked={true}
               icon={require('components/homepage/icons/box.svg?include')}
-              heading="Available Plugins"
+              heading="Available plugins"
               description="View a list of existing HashiCorp maintained plugins"
+              link={{
+                url: '/',
+                text: 'Plugins',
+              }}
             />
             <MediaObject
               stacked={true}
               icon={require('components/homepage/icons/code-union.svg?include')}
-              heading="Creating Waypoint Plugins"
+              heading="Creating Waypoint plugins"
               description="Learn to extend Waypoint for your project’s needs"
+              link={{
+                url: '/',
+                text: 'Create',
+              }}
             />
           </div>
         </div>
