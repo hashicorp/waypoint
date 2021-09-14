@@ -85,8 +85,8 @@ func (c *InstallCommand) Run(args []string) int {
 	}
 
 	result, err := p.Install(ctx, &serverinstall.InstallOpts{
-		Log:         log,
-		UI:          c.ui,
+		Log:            log,
+		UI:             c.ui,
 		ServerRunFlags: c.flagServerRun,
 	})
 	if err != nil {
