@@ -5,7 +5,7 @@ import Section, {
   SectionHeading,
   SectionDescription,
 } from 'components/homepage/section'
-import Graphic from './graphic'
+import GraphicSvg from './graphic'
 import s from './style.module.css'
 
 export default function SectionMonitorAppHealth() {
@@ -21,7 +21,7 @@ export default function SectionMonitorAppHealth() {
         })}
         ref={ref}
       >
-        <Graphic />
+        <GraphicSvg />
       </div>
       <div className={s.content}>
         <SectionHeading>Monitor app health on any cloud</SectionHeading>

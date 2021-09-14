@@ -1,4 +1,4 @@
-export default function Graphic() {
+export default function GraphicSvg() {
   return (
     <svg viewBox="0 0 582 582" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path

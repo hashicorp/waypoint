@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import classNames from 'classnames'
-import InlineSvg from '@hashicorp/react-inline-svg'
 import Mask from './Mask'
 import Logos from './Logos'
 import s from './style.module.css'
