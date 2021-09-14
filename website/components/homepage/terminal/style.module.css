@@ -34,6 +34,7 @@
     color: #fff;
     font: inherit;
     cursor: pointer;
+    transition: color ease-in-out 0.3s;
 
     &[aria-selected='true'] {
       color: var(--waypoint);
