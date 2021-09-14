@@ -317,9 +317,9 @@ jobs:
   ember-build-tests:
     docker:
       - image: *EMBER_IMAGE
-    resource_class: medium+
+    resource_class: large
     environment:
-      JOBS: 2 # limit parallelism for broccoli-babel-transpiler
+      JOBS: 1 # limit parallelism for broccoli-babel-transpiler
     steps:
       - checkout
       - md5uilib
