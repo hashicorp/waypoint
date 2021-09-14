@@ -33,6 +33,7 @@ type InstallCommand struct {
 
 	flagAcceptTOS bool
 	flagRunner    bool
+	flagServerRun string
 }
 
 func (c *InstallCommand) Run(args []string) int {
@@ -84,8 +85,9 @@ func (c *InstallCommand) Run(args []string) int {
 	}
 
 	result, err := p.Install(ctx, &serverinstall.InstallOpts{
-		Log: log,
-		UI:  c.ui,
+		Log:         log,
+		UI:          c.ui,
+		ServerRunFlags: c.flagServerRun,
 	})
 	if err != nil {
 		c.ui.Output(
@@ -333,9 +335,15 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		f.BoolVar(&flag.BoolVar{
 			Name:    "runner",
 			Target:  &c.flagRunner,
-			Usage:   "Install a runner in addition to the server",
+			Usage:   "Install a runner in addition to the server.",
 			Default: true,
 			Hidden:  true,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "run-flags",
+			Target: &c.flagServerRun,
+			Usage:  "Include flag values for the installer to supply to the server run command.",
 		})
 
 		// Add platforms in alphabetical order. A consistent order is important for repeatable doc generation.

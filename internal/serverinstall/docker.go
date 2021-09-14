@@ -226,7 +226,7 @@ func (i *DockerInstaller) Install(
 		Image:        i.config.serverImage,
 		ExposedPorts: nat.PortSet{npGRPC: struct{}{}, npHTTP: struct{}{}},
 		Env:          []string{"PORT=" + grpcPort},
-		Cmd:          []string{"server", "run", "-accept-tos", "-vv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", grpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", httpPort)},
+		Cmd:          []string{"server", "run", "-accept-tos", "-vv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", grpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", httpPort), opts.ServerRunFlags},
 	}
 
 	bindings := nat.PortMap{}

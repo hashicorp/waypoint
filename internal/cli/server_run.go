@@ -367,21 +367,21 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "url-api-addr",
 			Target:  &c.config.URL.APIAddress,
-			Usage:   "Address to Waypoint URL service API",
+			Usage:   "Address to Waypoint URL service API.",
 			Default: "api.waypoint.run:443",
 		})
 
 		f.BoolVar(&flag.BoolVar{
 			Name:    "url-api-insecure",
 			Target:  &c.config.URL.APIInsecure,
-			Usage:   "True if TLS is not enabled for the Waypoint URL service API",
+			Usage:   "True if TLS is not enabled for the Waypoint URL service API.",
 			Default: false,
 		})
 
 		f.StringVar(&flag.StringVar{
 			Name:    "url-control-addr",
 			Target:  &c.config.URL.ControlAddress,
-			Usage:   "Address to Waypoint URL service control API",
+			Usage:   "Address to Waypoint URL service control API.",
 			Default: DefaultURLControlAddress,
 		})
 
