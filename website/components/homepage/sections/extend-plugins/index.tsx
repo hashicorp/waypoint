@@ -1,11 +1,11 @@
 import { useInView } from 'react-intersection-observer'
 import classNames from 'classnames'
-import InlineSvg from '@hashicorp/react-inline-svg'
 import MediaObject from 'components/homepage/media-object'
 import Section, {
   SectionHeading,
   SectionDescription,
 } from 'components/homepage/section'
+import PluginsSvg from './plugins'
 import s from './style.module.css'
 
 export default function SectionExtendPlugins() {
@@ -45,7 +45,7 @@ export default function SectionExtendPlugins() {
           })}
           ref={ref}
         >
-          <InlineSvg src={require('./plugins.svg?include')} />
+          <PluginsSvg />
         </div>
       </div>
     </Section>

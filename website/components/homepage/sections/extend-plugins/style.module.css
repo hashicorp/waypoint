@@ -46,19 +46,11 @@
     grid-column: 6 / -1;
   }
 
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 9999px;
-    background: #62d4dc;
-    opacity: 0.2;
-    filter: blur(304px);
-    transform: rotate(19.95deg);
-    z-index: -1;
+  & svg {
+    background-image: url('./background.svg');
+    background-size: 120%;
+    background-position: center;
+    background-repeat: no-repeat;
   }
 
   & :global(.plugin) {

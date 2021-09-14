@@ -92,14 +92,13 @@
   }
 
   & :global(.circle) {
-    transform: scale(0.25);
+    transform: scale(0);
     opacity: 0;
     transform-origin: center;
     transform-box: fill-box;
     transition: all ease-in-out 0.75s;
 
     &:nth-of-type(even) {
-      transform: scale(0.25);
       transition-delay: 0.5s;
     }
   }
