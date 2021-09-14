@@ -128,7 +128,7 @@
   transition: 0.5s;
   transition-delay: 1.3s;
   opacity: 0;
-  transform: translateX(100px);
+  transform: translateX(50px);
 }
 
 .deploymentHeading {
