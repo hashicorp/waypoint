@@ -29,13 +29,15 @@
 
 <StatusReportBar @model={{@model}} @artifactType="Deployment"/>
 
-<Pds::Divider />
-
 <Pds::TabNav>
-  <LinkTo @route="workspace.projects.project.app.deployment.operation-logs">Operation Logs</LinkTo>
-  <LinkTo @route="workspace.projects.project.app.deployment.resources">Resources</LinkTo>
+  <LinkTo @route="workspace.projects.project.app.deployment.operation-logs">
+    <Pds::Icon @type="page-outline" class="icon" />
+    Operation Logs
+  </LinkTo>
+  <LinkTo @route="workspace.projects.project.app.deployment.resources">
+    <Pds::Icon @type="database" class="icon" />
+    Resources
+  </LinkTo>
 </Pds::TabNav>
-
-<Pds::Divider />
 
 {{outlet}}

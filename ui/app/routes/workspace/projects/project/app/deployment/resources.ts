@@ -7,6 +7,7 @@ export default class extends Route {
       {
         label: 'Resources',
         route: 'workspace.projects.project.app.deployment.resources',
+        icon: 'database',
       },
     ];
   }

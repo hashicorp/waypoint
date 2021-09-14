@@ -7,6 +7,7 @@ export default class extends Route {
       {
         label: 'Operation Logs',
         route: 'workspace.projects.project.app.deployment.operation-logs',
+        icon: 'page-outline',
       },
     ];
   }

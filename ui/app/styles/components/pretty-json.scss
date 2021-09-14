@@ -1,0 +1,10 @@
+.pretty-json {
+  position: relative;
+  z-index: 1;
+
+  .CodeMirror {
+    height: auto;
+    overflow: hidden;
+    font-size: scale.$sm--1;
+  }
+}

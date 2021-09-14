@@ -3,9 +3,7 @@
 {{#if (and
   (not-eq this.target.currentRouteName 'workspace.projects.project.app.build')
   (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployment')
-  (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployment.index')
-  (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployment.operation-logs')
-  (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployment.resources')
+  (not (includes this.target.currentRouteName 'workspace.projects.project.app.deployment.'))
   (not-eq this.target.currentRouteName 'workspace.projects.project.app.release')
 )}}
 <PageHeader @iconName="git-repository">

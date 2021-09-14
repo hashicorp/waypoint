@@ -1,0 +1,16 @@
+{{page-title @model.name}}
+
+<LinkTo
+  @route="workspace.projects.project.app.deployment.resources"
+>
+  <Pds::Icon @type="arrow-left" />
+  All resources
+</LinkTo>
+
+<h2 style="margin: 1rem 0; font-size: 16px; line-height: 17px; font-weight: 600">
+  <Pds::Icon @type={{icon-for-component @model.platform}} />
+  {{@model.type}}:
+  {{@model.name}}
+</h2>
+
+<PrettyJson @json={{@model.stateJson}} />

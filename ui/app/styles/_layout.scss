@@ -80,6 +80,7 @@ ul.list {
   align-items: center;
   justify-content: space-between;
   padding: scale.$base 0;
+  padding-left: scale.$base;
   border-top: 1px solid rgb(var(--border));
   color: rgb(var(--text-muted));
   @include Typography.Interface(M);
