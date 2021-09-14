@@ -363,6 +363,14 @@ func TestJobAssign(t *testing.T) {
 			require.Equal("A", job.Id)
 		}
 
+		// Peeking still returns blocked jobs. We do this because otherwise
+		// its possible for peek to return empty when there is an eligible job,
+		// its just waiting.
+		job, err := s.JobPeekForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("B", job.Id)
+
 		// Get the next value in a goroutine
 		{
 			ctx, cancel := context.WithCancel(context.Background())
