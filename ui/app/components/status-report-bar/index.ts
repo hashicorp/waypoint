@@ -3,7 +3,7 @@ import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import ApiService from 'waypoint/services/api';
-import FlashMessagesService from 'waypoint/services/flash-messages';
+import FlashMessagesService from 'waypoint/services/pds-flash-messages';
 import {
   Deployment,
   Ref,

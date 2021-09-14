@@ -5,7 +5,7 @@ import { ConfigSetRequest, ConfigGetRequest, ConfigVar, Project, Ref } from 'way
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import FlashMessagesService from 'waypoint/services/flash-messages';
+import FlashMessagesService from 'waypoint/services/pds-flash-messages';
 
 interface ProjectConfigArgs {
   variablesList: ConfigVar.AsObject[];

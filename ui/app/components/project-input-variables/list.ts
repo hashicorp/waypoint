@@ -5,7 +5,7 @@ import { Project, Variable } from 'waypoint-pb';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import RouterService from '@ember/routing/router-service';
-import PdsFlashMessages from 'waypoint/services/flash-messages';
+import FlashMessagesService from 'waypoint/services/pds-flash-messages';
 
 interface ProjectSettingsArgs {
   project: Project.AsObject;
@@ -14,7 +14,7 @@ interface ProjectSettingsArgs {
 export default class ProjectInputVariablesListComponent extends Component<ProjectSettingsArgs> {
   @service api!: ApiService;
   @service router!: RouterService;
-  @service flashMessages!: PdsFlashMessages;
+  @service flashMessages!: FlashMessagesService;
   @tracked project: Project.AsObject;
   @tracked variablesList: Array<Variable.AsObject>;
   @tracked isCreating: boolean;

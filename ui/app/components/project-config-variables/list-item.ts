@@ -4,7 +4,7 @@ import { action } from '@ember/object';
 import { ConfigVar, Project } from 'waypoint-pb';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import FlashMessagesService from 'waypoint/services/flash-messages';
+import FlashMessagesService from 'waypoint/services/pds-flash-messages';
 
 interface VariableArgs {
   variable: ConfigVar.AsObject;

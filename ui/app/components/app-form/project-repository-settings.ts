@@ -4,7 +4,7 @@ import { inject as service } from '@ember/service';
 import RouterService from '@ember/routing/router-service';
 import { isEmpty } from '@ember/utils';
 import ApiService from 'waypoint/services/api';
-import FlashMessagesService from 'waypoint/services/flash-messages';
+import FlashMessagesService from 'waypoint/services/pds-flash-messages';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { Project, Job } from 'waypoint-pb';
