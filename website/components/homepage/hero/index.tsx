@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import classNames from 'classnames'
 import InlineSvg from '@hashicorp/react-inline-svg'
+import Mask from './Mask'
+import Logos from './Logos'
 import s from './style.module.css'
 
 export default function Hero() {
@@ -28,11 +30,12 @@ export default function Hero() {
           [s.visible]: loaded,
         })}
       >
-        <InlineSvg className={s.heroMask} src={require('./mask.svg?include')} />
-        <InlineSvg
-          className={s.heroLogos}
-          src={require('./logos.svg?include')}
-        />
+        <div className={s.heroMask}>
+          <Mask />
+        </div>
+        <div className={s.heroLogos}>
+          <Logos />
+        </div>
       </div>
     </header>
   )
