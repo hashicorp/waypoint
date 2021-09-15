@@ -2,5 +2,21 @@ node_modules
 .DS_Store
 .next
 out
-.env*.local
+
+# todo, remove
 temp-docs-preview
+
+# preview
+components
+pages
+public
+.env*.local
+.env.consul
+.env.waypoint
+tsconfig.json
+next-env.d.ts
+next.config.js
+npm-shrinkwrap.json
+package.json
+prettier.config.js
+
