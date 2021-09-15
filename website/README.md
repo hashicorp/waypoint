@@ -10,6 +10,14 @@ To preview the docs and download pages:
 npx @hashicorp/docs-preview@docs-preview
 ```
 
+To clean up after preview:
+
+**Note: deletes all ignored files.**
+
+```
+git clean -Xdf
+```
+
 ---
 
 <!--
