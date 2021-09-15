@@ -53,7 +53,7 @@ interface ProjectSettingsArgs {
 export default class AppFormProjectRepositorySettings extends Component<ProjectSettingsArgs> {
   // normal class body definition here
   @service api!: ApiService;
-  @service flashMessages!: FlashMessagesService;
+  @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
   @service router!: RouterService;
   @tracked project: Project.AsObject;
   @tracked authCase: number;

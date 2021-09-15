@@ -17,5 +17,5 @@ import FlashMessagesService from 'waypoint/services/pds-flash-messages';
  */
 
 export default class NotificationsComponent extends Component {
-  @service flashMessages!: FlashMessagesService;
+  @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
 }

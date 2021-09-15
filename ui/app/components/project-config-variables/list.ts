@@ -14,7 +14,7 @@ interface ProjectConfigArgs {
 
 export default class ProjectConfigVariablesListComponent extends Component<ProjectConfigArgs> {
   @service api!: ApiService;
-  @service flashMessages!: FlashMessagesService;
+  @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
 
   @tracked variablesList: Array<ConfigVar.AsObject>;
   @tracked project: Project.AsObject;

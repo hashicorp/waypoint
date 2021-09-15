@@ -14,7 +14,7 @@ interface ProjectSettingsArgs {
 export default class ProjectInputVariablesListComponent extends Component<ProjectSettingsArgs> {
   @service api!: ApiService;
   @service router!: RouterService;
-  @service flashMessages!: FlashMessagesService;
+  @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
   @tracked project: Project.AsObject;
   @tracked variablesList: Array<Variable.AsObject>;
   @tracked isCreating: boolean;

@@ -25,7 +25,7 @@ interface WithStatusReport {
 
 export default class StatusReportBar extends Component<StatusReportBarArgs> {
   @service api!: ApiService;
-  @service flashMessages!: FlashMessagesService;
+  @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
   @tracked isRefreshRunning = false;
 
   constructor(owner: any, args: any) {

@@ -7,7 +7,7 @@ import { Project, UpsertProjectRequest } from 'waypoint-pb';
 import FlashMessagesService from 'waypoint/services/pds-flash-messages';
 export default class WorkspaceProjectsNew extends Controller {
   @service api!: ApiService;
-  @service flashMessages!: FlashMessagesService;
+  @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
 
   @tracked createGit = false;
 
