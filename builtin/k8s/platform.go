@@ -955,24 +955,25 @@ func (p *Platform) resourceAutoscalerStatus(
 	} else if autoscalerResp == nil {
 		return status.Errorf(codes.FailedPrecondition,
 			"kubernetes horizontal pod autoscaler response cannot be empty")
+	} else {
+
+		hpaResource.Name = state.Name
+		hpaResource.Id = fmt.Sprintf("%s", autoscalerResp.ObjectMeta.UID)
+		hpaResource.CreatedTime = timestamppb.New(autoscalerResp.ObjectMeta.CreationTimestamp.Time)
+		// the existence of the resource means it's ready. It has no other status
+		hpaResource.Health = sdk.StatusReport_READY
+		hpaResource.HealthMessage = "The HPA resource is ready"
+
+		hpaStateJson, err := json.Marshal(map[string]interface{}{
+			"horizontalPodAutoscaler": hpaResource,
+		})
+		if err != nil {
+			return status.Errorf(codes.FailedPrecondition,
+				"failed to marshal horizontal pod autoscaler to json: %s", err)
+		}
+
+		hpaResource.StateJson = string(hpaStateJson)
 	}
-
-	hpaResource.Name = state.Name
-	hpaResource.Id = fmt.Sprintf("%s", autoscalerResp.ObjectMeta.UID)
-	hpaResource.CreatedTime = timestamppb.New(autoscalerResp.ObjectMeta.CreationTimestamp.Time)
-	// the existence of the resource means it's ready. It has no other status
-	hpaResource.Health = sdk.StatusReport_READY
-	hpaResource.HealthMessage = "The HPA resource is ready"
-
-	hpaStateJson, err := json.Marshal(map[string]interface{}{
-		"horizontalPodAutoscaler": hpaResource,
-	})
-	if err != nil {
-		return status.Errorf(codes.FailedPrecondition,
-			"failed to marshal horizontal pod autoscaler to json: %s", err)
-	}
-
-	hpaResource.StateJson = string(hpaStateJson)
 
 	s.Update("Finished building report for Kubernetes horizontal pod autoscaler")
 	s.Done()
