@@ -22,6 +22,8 @@ These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this
 
 Sets up a horizontal pod autoscaler to scale deployments automatically.
 
+This configuration will automatically set up and associate the current deployment with a horizontal pod autoscaler in Kuberentes. Note that for this to work, you must also define resource limits and requests for a deployment otherwise the metrics-server will not be able to properly determine a deployments target CPU utilization.
+
 ##### autoscale.cpu_percent
 
 The target CPU percent utilization before the horizontal pod autoscaler scales up a deployments replicas.

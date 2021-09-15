@@ -399,6 +399,12 @@ func (p *Platform) resourceDeploymentCreate(
 		pullPolicy = ""
 	}
 
+	if p.config.AutoscaleConfig != nil && len(p.config.Resources) == 0 {
+		ui.Output("For autoscaling in Kubernetes to work, a deployment must specify "+
+			"resource limits and requests. Otherwise the metrics-server will not properly be able "+
+			"to scale your deployment.", terminal.WithWarningStyle())
+	}
+
 	// Get container resource limits and requests
 	var resourceLimits = make(map[corev1.ResourceName]k8sresource.Quantity)
 	var resourceRequests = make(map[corev1.ResourceName]k8sresource.Quantity)
@@ -1247,6 +1253,11 @@ deploy "kubernetes" {
 	doc.SetField(
 		"autoscale",
 		"sets up a horizontal pod autoscaler to scale deployments automatically",
+		docs.Summary("This configuration will automatically set up and associate the "+
+			"current deployment with a horizontal pod autoscaler in Kuberentes. Note that "+
+			"for this to work, you must also define resource limits and requests for a deployment "+
+			"otherwise the metrics-server will not be able to properly determine a deployments "+
+			"target CPU utilization"),
 		docs.SubFields(func(doc *docs.SubFieldDoc) {
 			doc.SetField(
 				"min_replicas",
