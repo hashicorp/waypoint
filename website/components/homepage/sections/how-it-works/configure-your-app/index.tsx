@@ -20,10 +20,7 @@ export default function ConfigureYourApp() {
         </NumberedBlock>
       </div>
       <div className={s.media}>
-        <img
-          src={require('../img/configure-your-app-for-waypoint.png')}
-          alt=""
-        />
+        <img src={require('../configure-your-app-for-waypoint.png')} alt="" />
       </div>
     </div>
   )
