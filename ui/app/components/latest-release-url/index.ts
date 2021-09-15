@@ -9,12 +9,12 @@ interface LatestReleaseUrlArgs {
 export default class LatestReleaseUrl extends Component<LatestReleaseUrlArgs> {
   @tracked releases!: Release.AsObject[];
 
-  constructor(owner: any, args: any) {
+  constructor(owner: unknown, args: LatestReleaseUrlArgs) {
     super(owner, args);
     this.load();
   }
 
-  async load() {
+  async load(): Promise<void> {
     this.releases = await this.args.releases;
   }
 
