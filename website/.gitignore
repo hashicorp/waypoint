@@ -1,15 +1,15 @@
 node_modules
 .DS_Store
+
+# preview output
 .next
 out
-
-# todo, remove
-temp-docs-preview
 
 # preview
 components
 pages
 public
+# As per Next.js conventions (https://nextjs.org/docs/basic-features/environment-variables#default-environment-variables)
 .env*.local
 .env.consul
 .env.waypoint
@@ -21,3 +21,4 @@ package.json
 prettier.config.js
 .eslintrc.js
 .stylelintrc.js
+vercel.json
