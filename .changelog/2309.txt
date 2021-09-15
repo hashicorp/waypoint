@@ -1,0 +1,4 @@
+```release-note:improvement
+plugin/k8s: Introduce a new config option `autoscale`, which creates a horizontal
+pod autoscaler for each deployment.
+```
