@@ -134,3 +134,6 @@ require (
 
 // v0.3.11 panics for some reason on our tests
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.9
+
+// temporary until PR is merged
+replace github.com/hashicorp/waypoint-plugin-sdk => github.com/sl1pm4t/waypoint-plugin-sdk v0.0.0-20210914072340-bd8e2aac4058

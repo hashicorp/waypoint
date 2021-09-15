@@ -152,7 +152,7 @@ type deployOperation struct {
 	cebToken string
 
 	// result is either a component.Deployment or component.DeploymentWithUrl
-	result   interface{}
+	result interface{}
 }
 
 func (op *deployOperation) Close() error {
