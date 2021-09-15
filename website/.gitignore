@@ -19,4 +19,5 @@ next.config.js
 npm-shrinkwrap.json
 package.json
 prettier.config.js
-
+.eslintrc.js
+.stylelintrc.js
