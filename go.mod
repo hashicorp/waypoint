@@ -65,7 +65,7 @@ require (
 	github.com/hashicorp/vault/api v1.0.5-0.20200519221902-385fac77e20f
 	github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210901131310-99045552ce97
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210914072340-bd8e2aac4058
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/jinzhu/now v1.1.1 // indirect
@@ -134,6 +134,3 @@ require (
 
 // v0.3.11 panics for some reason on our tests
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.9
-
-// temporary until PR is merged
-replace github.com/hashicorp/waypoint-plugin-sdk => github.com/sl1pm4t/waypoint-plugin-sdk v0.0.0-20210914072340-bd8e2aac4058
