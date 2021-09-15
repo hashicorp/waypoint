@@ -2,6 +2,16 @@
 
 This subdirectory contains the entire source for the [Waypoint Website](https://waypointproject.io/). This is a [NextJS](https://nextjs.org/) project, which builds a static site from these source files.
 
+---
+
+To preview the docs and download pages:
+
+```
+npx @hashicorp/docs-preview@docs-preview
+```
+
+---
+
 <!--
   This readme file contains several blocks of generated text, to make it easier to share common information
   across documentation website readmes. To generate these blocks from their source, run `npm run generate:readme`
@@ -13,14 +23,26 @@ This subdirectory contains the entire source for the [Waypoint Website](https://
 
 ## Table of Contents
 
-- [Contributions](#contributions-welcome)
-- [Running the Site Locally](#running-the-site-locally)
-- [Editing Markdown Content](#editing-markdown-content)
-- [Editing Navigation Sidebars](#editing-navigation-sidebars)
-- [Changing the Release Version](#changing-the-release-version)
-- [Redirects](#redirects)
-- [Browser Support](#browser-support)
-- [Deployment](#deployment)
+- [Waypoint Documentation Website](#waypoint-documentation-website)
+  - [Table of Contents](#table-of-contents)
+  - [Contributions Welcome!](#contributions-welcome)
+  - [Running the Site Locally](#running-the-site-locally)
+  - [Editing Markdown Content](#editing-markdown-content)
+    - [Creating New Pages](#creating-new-pages)
+    - [Markdown Enhancements](#markdown-enhancements)
+    - [Custom Components](#custom-components)
+      - [Tabs](#tabs)
+      - [Enterprise Alert](#enterprise-alert)
+      - [Other Components](#other-components)
+    - [Syntax Highlighting](#syntax-highlighting)
+  - [Editing Navigation Sidebars](#editing-navigation-sidebars)
+    - [Index-less Categories](#index-less-categories)
+    - [Custom or External Links](#custom-or-external-links)
+  - [Changing the Release Version](#changing-the-release-version)
+    - [Displaying a Prerelease](#displaying-a-prerelease)
+  - [Redirects](#redirects)
+  - [Browser Support](#browser-support)
+  - [Deployment](#deployment)
 
 <!-- BEGIN: contributions -->
 <!-- Generated text, do not edit directly -->
@@ -57,7 +79,7 @@ This file can be standard Markdown and also supports [YAML frontmatter](https://
 
 ```yaml
 ---
-title: 'My Title'
+title: "My Title"
 description: "A thorough, yet succinct description of the page's contents"
 ---
 
@@ -374,9 +396,9 @@ To add a prerelease, an extra `prerelease` property can be added to the componen
   downloads={downloadData}
   community="/resources"
   prerelease={{
-    type: 'release candidate', // the type of prerelease: beta, release candidate, etc.
-    name: 'v1.0.0', // the name displayed in text on the website
-    version: '1.0.0-rc1', // the actual version tag that was pushed to releases.hashicorp.com
+    type: "release candidate", // the type of prerelease: beta, release candidate, etc.
+    name: "v1.0.0", // the name displayed in text on the website
+    version: "1.0.0-rc1", // the actual version tag that was pushed to releases.hashicorp.com
   }}
 />
 ```
