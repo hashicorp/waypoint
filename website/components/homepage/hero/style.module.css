@@ -28,6 +28,8 @@
   font-weight: 400;
   letter-spacing: -0.02em;
   grid-column: 1 / -1;
+  max-width: 625px;
+  justify-self: center;
 
   @media (--medium-up) {
     font-size: 53px;
