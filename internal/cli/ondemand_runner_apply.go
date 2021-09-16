@@ -231,7 +231,7 @@ func (c *OnDemandRunnerConfigApplyCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "project-config",
+			Name:    "plugin-config",
 			Target:  &c.flagPluginConfig,
 			Default: "",
 			Usage: "Path to an hcl file that contains the configuration for the plugin. " +
@@ -270,7 +270,7 @@ Usage: waypoint runner on-demand set [OPTIONS]
   This will register a new on-demand runner config with the given options. If
   a on-demand runner config with the same id already exists, this will update the
   existing runner config using the fields that are set.
-  
+
   Waypoint will use an on-demand runner configuration to spawn containers for
   various kinds of work as needed on the platform requested during any given
   lifecycle operation.
