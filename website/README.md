@@ -6,16 +6,15 @@ This subdirectory contains the entire source for the [Waypoint Website](https://
 
 To preview the docs and download pages:
 
-```
-npx @hashicorp/docs-preview@docs-preview
+```sh
+./start
 ```
 
 To clean up after preview:
 
-**Note: deletes all ignored files.**
-
-```
-git clean -Xdf
+```sh
+# WARNING: deletes all .gitignored files
+./clean
 ```
 
 ---
