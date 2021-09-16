@@ -23,3 +23,10 @@ class PdsFlashMessages extends FlashMessages {
 }
 
 export default PdsFlashMessages;
+
+// DO NOT DELETE: this is how TypeScript knows how to look up your services.
+declare module '@ember/service' {
+  interface Registry {
+    pdsFlashMessages: PdsFlashMessages;
+  }
+}

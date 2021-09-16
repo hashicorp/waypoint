@@ -4,7 +4,7 @@ import { inject as service } from '@ember/service';
 import RouterService from '@ember/routing/router-service';
 import { isEmpty } from '@ember/utils';
 import ApiService from 'waypoint/services/api';
-import FlashMessagesService from 'waypoint/services/flash-messages';
+import FlashMessagesService from 'waypoint/services/pds-flash-messages';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { Project, Job } from 'waypoint-pb';
@@ -53,7 +53,7 @@ interface ProjectSettingsArgs {
 export default class AppFormProjectRepositorySettings extends Component<ProjectSettingsArgs> {
   // normal class body definition here
   @service api!: ApiService;
-  @service flashMessages!: FlashMessagesService;
+  @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
   @service router!: RouterService;
   @tracked project: Project.AsObject;
   @tracked authCase: number;

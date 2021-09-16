@@ -18,7 +18,7 @@ interface VariableArgs {
 
 export default class ProjectInputVariablesListItemComponent extends Component<VariableArgs> {
   @service api!: ApiService;
-  @service flashMessages;
+  @service('pdsFlashMessages') flashMessages;
 
   initialVariable: Variable.AsObject;
   @tracked variable: Variable.AsObject;

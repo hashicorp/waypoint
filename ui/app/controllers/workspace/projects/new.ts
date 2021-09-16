@@ -4,10 +4,10 @@ import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import ApiService from 'waypoint/services/api';
 import { Project, UpsertProjectRequest } from 'waypoint-pb';
-import FlashMessagesService from 'waypoint/services/flash-messages';
+import FlashMessagesService from 'waypoint/services/pds-flash-messages';
 export default class WorkspaceProjectsNew extends Controller {
   @service api!: ApiService;
-  @service flashMessages!: FlashMessagesService;
+  @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
 
   @tracked createGit = false;
 
