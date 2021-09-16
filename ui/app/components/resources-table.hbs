@@ -1,0 +1,55 @@
+<div class="resources-table">
+  <table>
+    <caption>{{yield to="caption"}}</caption>
+
+    <colgroup>
+      <col class="w-2/5">
+      <col>
+      <col>
+      <col>
+    </colgroup>
+
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Age</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {{#each @resources key="id" as |resource|}}
+        <tr>
+          <th scope="row">
+            <LinkTo
+              @route="workspace.projects.project.app.deployment.resources.resource"
+              @model={{resource.id}}
+            >
+              {{resource.name}}
+            </LinkTo>
+          </th>
+          <td><Pds::Icon @type={{icon-for-component resource.platform}} /> {{resource.type}}</td>
+          <td>{{date-format-distance-to-now resource.createdTime.seconds}}</td>
+          <td>
+            <StatusReportIndicator
+              @statusReport={{hash
+                health=(hash
+                  healthMessage=resource.healthMessage
+                  healthStatus=(or
+                    (and (eq resource.health 0) "UNKNOWN")
+                    (and (eq resource.health 1) "ALIVE")
+                    (and (eq resource.health 2) "READY")
+                    (and (eq resource.health 3) "DOWN")
+                    (and (eq resource.health 4) "PARTIAL")
+                    (and (eq resource.health 5) "MISSING")
+                  )
+                )
+              }}
+            />
+          </td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>

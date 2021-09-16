@@ -1,0 +1,48 @@
+.resources-table {
+  background: rgb(var(--panel));
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+  line-height: 17px;
+  color: rgb(var(--text-muted));
+
+  table {
+    background: rgb(var(--background));
+    border-radius: 5px;
+    border-spacing: 0;
+    border: 1px solid rgb(var(--border));
+    overflow: hidden;
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  caption {
+    font-weight: normal;
+    text-align: left;
+    margin-bottom: 10px;
+  }
+
+  thead {
+    font-weight: normal;
+    th {
+      font-weight: normal;
+    }
+  }
+
+  th,
+  td {
+    padding: 8px 10px;
+    text-align: left;
+  }
+
+  tbody {
+    th,
+    td {
+      border-top: 1px solid rgb(var(--border));
+    }
+  }
+
+  .w-2\/5 {
+    width: 40%;
+  }
+}
