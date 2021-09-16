@@ -58,6 +58,11 @@
   padding: 6px 16px;
   display: inline-flex;
   align-items: center;
+  flex-direction: column;
+
+  @media (min-width: 500px) {
+    flex-direction: row;
+  }
 
   /* --waypoint-secondary at 50% opacity */
   background-color: #ebfcfd;
@@ -69,7 +74,13 @@
   }
 
   & span:not(:last-of-type) {
-    margin-right: 6px;
+    margin-bottom: 6px;
+    margin-right: 0;
+
+    @media (min-width: 500px) {
+      margin-bottom: 0;
+      margin-right: 6px;
+    }
   }
 
   & svg {
