@@ -1,6 +1,5 @@
 <div class="xterm-pane"
-  {{!-- Todo: investigate other strategy than using (action )--}}
-  {{did-insert (action this.didInsertNode)}}
-  {{will-destroy (action this.willDestroyNode)}}
-  {{did-resize (action this.didResize)}}>
+  {{did-insert this.didInsertNode}}
+  {{will-destroy this.willDestroyNode}}
+  {{did-resize this.didResize}}>
 </div>
