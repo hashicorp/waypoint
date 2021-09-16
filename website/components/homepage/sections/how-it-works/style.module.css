@@ -5,26 +5,17 @@
   background-image: url('./background.svg');
   background-repeat: no-repeat;
   background-position: top right;
+
+  /* --waypoint-secondary at 50% opacity */
+  background-color: #ebfcfd;
   overflow: hidden;
   width: 100%;
   max-width: 1488px;
   margin: auto;
+  border-radius: 3px;
 
   @media (--medium-up) {
     width: calc(100% - 48px);
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--waypoint-secondary);
-    opacity: 0.5;
-    z-index: -1;
-    border-radius: 3px;
   }
 
   & img {

@@ -13,11 +13,7 @@ export default function HomePage(): JSX.Element {
   return (
     <div className={s.homePage}>
       <Hero
-        heading={
-          <>
-            Easy application deployment for <em>Kubernetes</em> and <em>ECS</em>
-          </>
-        }
+        heading={<>Get the PaaS experience on your platform</>}
         description="Waypoint is an application deployment tool for Kubernetes, ECS, and
         many other platforms. It allows developers to deploy, manage, and
         observe their applications through a consistent abstraction of the
