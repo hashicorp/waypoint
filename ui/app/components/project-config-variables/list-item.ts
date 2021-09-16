@@ -13,7 +13,7 @@ interface VariableArgs {
   variable: ConfigVar.AsObject;
   isEditing: boolean;
   isCreating: boolean;
-  saveVariableSettings: (variable: ConfigVar.AsObject, deleteVariable?: boolean) => Promise<Project.AsObject>;
+  saveVariableSettings: (variable: BufferedChangeset, deleteVariable?: boolean) => Promise<Project.AsObject>;
   deleteVariable: (variable: ConfigVar.AsObject) => Promise<void>;
   cancelCreate: () => void;
 }
@@ -61,16 +61,15 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
   @action
   async saveVariable(e: Event): Promise<void> {
     e.preventDefault();
-    if (this.variable.name === '' || this.variable.pb_static === '') {
+    if (this.changeset.name === '' || this.changeset.pb_static === '') {
       this.flashMessages.error('Variable keys or values can not be empty');
       return;
     }
-    if (this.initialVariable.name !== this.variable.name) {
-      await this.args.saveVariableSettings(this.variable, false);
-      await this.args.deleteVariable(this.initialVariable);
-      this.storeInitialVariable();
+    if (this.variable.name !== this.changeset.name) {
+      await this.args.saveVariableSettings(this.changeset, false);
+      await this.args.deleteVariable(this.variable);
     } else {
-      await this.args.saveVariableSettings(this.variable, false);
+      await this.args.saveVariableSettings(this.changeset, false);
     }
     this.isCreating = false;
     this.isEditing = false;
