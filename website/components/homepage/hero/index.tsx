@@ -4,7 +4,12 @@ import Mask from './Mask'
 import Logos from './Logos'
 import s from './style.module.css'
 
-export default function Hero() {
+interface HeroProps {
+  heading: React.ReactNode
+  description: string
+}
+
+export default function Hero({ heading, description }: HeroProps): JSX.Element {
   const [loaded, setLoaded] = useState(false)
   useEffect(() => {
     setTimeout(() => {
@@ -14,15 +19,8 @@ export default function Hero() {
   return (
     <header className={s.hero}>
       <div className={s.heroInner}>
-        <h1 className={s.heroHeading}>
-          Easy application deployment for <em>Kubernetes</em> and <em>ECS</em>
-        </h1>
-        <p className={s.heroDescription}>
-          Waypoint is an application deployment tool for Kubernetes, ECS, and
-          many other platforms. It allows developers to deploy, manage, and
-          observe their applications through a consistent abstraction of the
-          underlying infrastructure.
-        </p>
+        <h1 className={s.heroHeading}>{heading}</h1>
+        <p className={s.heroDescription}>{description}</p>
       </div>
       <div
         className={classNames(s.heroGraphic, {

@@ -20,8 +20,23 @@
   }
 }
 
+.contentExtra {
+  padding-left: 40px;
+}
+
+.logos {
+  margin-top: 32px;
+  margin-bottom: 18px;
+  max-width: 395px;
+
+  & svg {
+    max-width: 100%;
+  }
+}
+
 .media {
   grid-column: 1 / -1;
+  align-self: center;
 
   @media (--medium-up) {
     grid-column: 7 / -1;

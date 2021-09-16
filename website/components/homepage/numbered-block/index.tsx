@@ -18,13 +18,13 @@ export default function NumberedBlock({
 }: NumberedBlockProps) {
   return (
     <div className={classNames(s.numberedBlock, className)}>
-      <div className={s.numberedBlockIndex}>
-        <GradientBox>{index}</GradientBox>
-      </div>
-      <div className={s.numberedBlockBody}>
+      <header className={s.numberedBlockHeader}>
+        <div className={s.numberedBlockIndex}>
+          <GradientBox>{index}</GradientBox>
+        </div>
         <h2 className={s.numberedBlockHeading}>{heading}</h2>
-        {children}
-      </div>
+      </header>
+      <div className={s.numberedBlockBody}>{children}</div>
     </div>
   )
 }

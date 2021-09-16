@@ -20,6 +20,16 @@
   }
 }
 
+.logos {
+  margin-top: 32px;
+  max-width: 154px;
+  padding-left: 40px;
+
+  & svg {
+    max-width: 100%;
+  }
+}
+
 .media {
   grid-column: 1 / -1;
 

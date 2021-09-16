@@ -3,11 +3,19 @@ import { useInView } from 'react-intersection-observer'
 import Typical from 'react-typical'
 import InlineSvg from '@hashicorp/react-inline-svg'
 import NumberedBlock from 'components/homepage/numbered-block'
-import MediaObject from 'components/homepage/media-object'
+import Features, { FeaturesProps } from 'components/homepage/features'
 import classNames from 'classnames'
 import s from './style.module.css'
 
-export default function BuildAndDeploy() {
+interface BuildAndDeployProps {
+  heading: string
+  features: FeaturesProps
+}
+
+export default function BuildAndDeploy({
+  heading,
+  features,
+}: BuildAndDeployProps): JSX.Element {
   const [typeFinished, setTypeFinished] = useState(false)
   const { ref, inView } = useInView({
     triggerOnce: true,
@@ -15,12 +23,9 @@ export default function BuildAndDeploy() {
   return (
     <div className={s.root}>
       <div className={s.content}>
-        <NumberedBlock index="2" heading="Build and deploy">
-          <MediaObject
-            icon={require('components/homepage/icons/file-plus.svg?include')}
-            heading="One simple command"
-            description="Perform the build, deploy, and release steps for the app all from one simple command. Or instrument your Waypoint deployments through Remote or Git operations"
-          />
+        <NumberedBlock index="2" heading={heading}>
+          <Features items={features} />
+          <InlineSvg className={s.logos} src={require('./logos.svg?include')} />
         </NumberedBlock>
       </div>
 
@@ -66,7 +71,7 @@ export default function BuildAndDeploy() {
                 <div className={s.deploymentHeading}>
                   <span>Deploy from</span>
                   <div className={s.deploymentHeadingBranch}>
-                    <InlineSvg src={require('./github.svg?include')} />{' '}
+                    <InlineSvg src={require('./github-repo.svg?include')} />{' '}
                     hashicorp/tech-blog
                   </div>
                 </div>

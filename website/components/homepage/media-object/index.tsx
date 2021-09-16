@@ -1,8 +1,9 @@
 import classNames from 'classnames'
+import Button from '@hashicorp/react-button'
 import InlineSvg from '@hashicorp/react-inline-svg'
 import s from './style.module.css'
 
-interface MediaObjectProps {
+export interface MediaObjectProps {
   icon: string
   heading: string
   description: string
@@ -19,7 +20,7 @@ export default function MediaObject({
   description,
   link,
   stacked = false,
-}: MediaObjectProps) {
+}: MediaObjectProps): JSX.Element {
   return (
     <div
       className={classNames(s.mediaObject, {
@@ -34,31 +35,17 @@ export default function MediaObject({
         <p className={s.mediaObjectDescription}>{description}</p>
         {link && (
           <div className={s.mediaObjectAnchor}>
-            <a className={s.mediaObjectAnchorLink} href={link.url}>
-              {link.text}
-            </a>
-            <RightArrowIcon />
+            <Button
+              url={link.url}
+              title={link.text}
+              theme={{
+                variant: 'tertiary-neutral',
+              }}
+              linkType="inbound"
+            />
           </div>
         )}
       </div>
     </div>
-  )
-}
-
-function RightArrowIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M3.334 10h13.333M11.666 5l5 5-5 5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-    </svg>
   )
 }

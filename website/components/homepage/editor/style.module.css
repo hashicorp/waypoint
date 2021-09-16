@@ -1,0 +1,23 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(122.36deg, #fff 16.51%, #f7f7f7 111.81%);
+  box-shadow: 0 83.4693px 66.7755px rgba(0, 129, 150, 0.07),
+    0 34.8715px 27.8972px rgba(0, 129, 150, 0.08),
+    0 18.644px 14.9152px rgba(0, 129, 150, 0.02),
+    0 10.4517px 8.36132px rgba(0, 0, 0, 0.035),
+    0 5.5508px 4.44064px rgba(0, 129, 150, 0.12),
+    0 2.30981px 1.84785px rgba(0, 0, 0, 0.0196802);
+  border-radius: 6.67755px;
+  overflow: hidden;
+
+  & :global(.g-code-block) {
+    background: linear-gradient(122.36deg, #fff 16.51%, #f7f7f7 111.81%);
+  }
+}
+
+.editorNote {
+  margin: 8px 0 0;
+  composes: g-type-body-small from global;
+  color: var(--gray-1);
+}

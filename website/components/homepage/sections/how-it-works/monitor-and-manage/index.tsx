@@ -2,10 +2,18 @@ import { useInView } from 'react-intersection-observer'
 import InlineSvg from '@hashicorp/react-inline-svg'
 import classNames from 'classnames'
 import NumberedBlock from 'components/homepage/numbered-block'
-import MediaObject from 'components/homepage/media-object'
+import Features, { FeaturesProps } from 'components/homepage/features'
 import s from './style.module.css'
 
-export default function MonitorAndManage() {
+interface MonitorAndManageProps {
+  heading: string
+  features: FeaturesProps
+}
+
+export default function MonitorAndManage({
+  heading,
+  features,
+}: MonitorAndManageProps): JSX.Element {
   const { ref, inView } = useInView({
     threshold: 0.5,
     triggerOnce: true,
@@ -15,14 +23,13 @@ export default function MonitorAndManage() {
     <div className={s.root}>
       <div className={s.content}>
         <div className={s.contentInner}>
-          <NumberedBlock index="3" heading="Monitor and manage in one place">
-            <MediaObject
-              icon={require('components/homepage/icons/sliders.svg?include')}
-              heading="One place for all your deployments"
-              description="No matter where your developers are deploying to, monitor the activity through Waypoint’s aggregated logs and activity UI."
+          <NumberedBlock index="3" heading={heading}>
+            <Features items={features} />
+            <InlineSvg
+              className={s.logos}
+              src={require('./logos.svg?include')}
             />
           </NumberedBlock>
-          <InlineSvg className={s.logos} src={require('./logos.svg?include')} />
         </div>
       </div>
       <div

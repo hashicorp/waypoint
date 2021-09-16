@@ -1,5 +1,4 @@
 .root {
-  padding-top: 100px;
   display: grid;
   row-gap: 50px;
 
@@ -58,10 +57,7 @@
 .logos {
   margin-top: 32px;
   padding-left: 40px;
-
-  @media (min-width: 500px) {
-    padding-left: 100px;
-  }
+  max-width: 338px;
 
   & svg {
     max-width: 100%;

@@ -1,26 +1,46 @@
+import Features, { FeaturesProps } from 'components/homepage/features'
+import InlineSvg from '@hashicorp/react-inline-svg'
+import Button from '@hashicorp/react-button'
 import NumberedBlock from 'components/homepage/numbered-block'
-import MediaObject from 'components/homepage/media-object'
+import Editor from 'components/homepage/editor'
 import s from './style.module.css'
 
-export default function ConfigureYourApp() {
+interface ConfigureYourAppProps {
+  heading: string
+  features: FeaturesProps
+  code: string
+  codeNote: string
+}
+
+export default function ConfigureYourApp({
+  heading,
+  features,
+  code,
+  codeNote,
+}: ConfigureYourAppProps): JSX.Element {
   return (
     <div className={s.root}>
       <div className={s.content}>
-        <NumberedBlock index="1" heading="Configure your app for Waypoint">
-          <MediaObject
-            icon={require('components/homepage/icons/edit-pencil.svg?include')}
-            heading="Writing waypoint.hcl files"
-            description="Your waypoint.hcl file defines how Waypoint builds, deploys, and releases a project."
-          />
-          <MediaObject
-            icon={require('components/homepage/icons/layout.svg?include')}
-            heading="Sample Waypoint files"
-            description="View sample waypoint.hcl files to see how straight-forward it is to configure your deployments"
-          />
+        <NumberedBlock index="1" heading={heading}>
+          <Features items={features} />
+          <div className={s.contentExtra}>
+            <InlineSvg
+              className={s.logos}
+              src={require('./logos.svg?include')}
+            />
+            <Button
+              url="https://github.com/hashicorp/waypoint-examples"
+              title="View Waypoint examples on Github"
+              theme={{
+                variant: 'tertiary-neutral',
+              }}
+              linkType="inbound"
+            />
+          </div>
         </NumberedBlock>
       </div>
       <div className={s.media}>
-        <img src={require('./configure-your-app-for-waypoint.png')} alt="" />
+        <Editor code={code} note={codeNote} />
       </div>
     </div>
   )

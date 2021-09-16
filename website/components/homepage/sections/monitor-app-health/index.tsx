@@ -1,14 +1,24 @@
 import classNames from 'classnames'
 import { useInView } from 'react-intersection-observer'
-import MediaObject from 'components/homepage/media-object'
 import Section, {
   SectionHeading,
   SectionDescription,
 } from 'components/homepage/section'
 import GraphicSvg from './graphic'
+import Features, { FeaturesProps } from 'components/homepage/features'
 import s from './style.module.css'
 
-export default function SectionMonitorAppHealth() {
+interface SectionMonitorAppHealthProps {
+  heading: string
+  description: string
+  features: FeaturesProps
+}
+
+export default function SectionMonitorAppHealth({
+  heading,
+  description,
+  features,
+}: SectionMonitorAppHealthProps): JSX.Element {
   const { ref, inView } = useInView({
     threshold: 0.5,
     triggerOnce: true,
@@ -24,18 +34,10 @@ export default function SectionMonitorAppHealth() {
         <GraphicSvg />
       </div>
       <div className={s.content}>
-        <SectionHeading>Monitor app health on any cloud</SectionHeading>
-        <SectionDescription>
-          One place to monitor the entire lifecycle of your applications, no
-          matter where you deploy to. View Logs, Builds, Releasese and even run
-          Exec commands from the Waypoint UI
-        </SectionDescription>
+        <SectionHeading>{heading}</SectionHeading>
+        <SectionDescription>{description}</SectionDescription>
         <div className={s.contentMediaObject}>
-          <MediaObject
-            icon={require('components/homepage/icons/eye.svg?include')}
-            heading="A single pane of glass"
-            description="View all deployments, regardless of target from one location"
-          />
+          <Features items={features} />
         </div>
       </div>
     </Section>

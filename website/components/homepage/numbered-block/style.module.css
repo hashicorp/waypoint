@@ -1,8 +1,10 @@
 .numberedBlock {
   padding-top: 24px;
   border-top: 1px solid #62d4dc;
+}
 
-  @media (min-width: 500px) {
+.numberedBlockHeader {
+  @media (--large) {
     display: flex;
   }
 }
@@ -17,4 +19,10 @@
   margin-top: 0;
   margin-bottom: 50px;
   composes: g-type-display-2 from global;
+}
+
+.numberedBlockBody {
+  @media (--large) {
+    padding-left: 60px;
+  }
 }
