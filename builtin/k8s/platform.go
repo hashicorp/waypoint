@@ -810,6 +810,9 @@ func (p *Platform) resourceAutoscalerCreate(
 			"the horizontal pod autoscaler.",
 			metricsServerLabel,
 			terminal.WithWarningStyle())
+		ui.Output("If you have not yet setup a metrics-server inside your Kubernetes cluster, "+
+			"please refer to the metrics-server project documentation for properly "+
+			"installing one.", terminal.WithWarningStyle())
 		ui.Output("Waypoint will continue to configure horizontal pod autoscaler ...",
 			terminal.WithWarningStyle())
 	}
