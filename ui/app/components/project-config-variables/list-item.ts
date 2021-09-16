@@ -34,7 +34,10 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
     this.variable = variable;
     this.isEditing = isEditing;
     this.isCreating = isCreating;
-    this.storeInitialVariable();
+
+    if (this.isCreating || this.isEditing) {
+      this.changeset = Changeset(this.variable);
+    }
   }
 
   get isEditable(): boolean {
