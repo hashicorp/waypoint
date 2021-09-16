@@ -82,10 +82,10 @@
   margin: 8px 0 0;
   composes: g-type-body-small from global;
   color: var(--gray-1);
-  z-index: -1;
   opacity: 0;
   transition: opacity ease-in-out 0.5s;
   transition-delay: 0.5s;
+  z-index: 10;
 }
 
 .deploymentContainer {
