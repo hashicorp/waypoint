@@ -18,7 +18,7 @@ func TestConfigFromURL(t *testing.T) {
 			"foo.com",
 			Config{
 				Server: serverconfig.Client{
-					Address:       "foo.com",
+					Address:       "foo.com:" + serverconfig.DefaultGRPCPort,
 					Tls:           true,
 					TlsSkipVerify: true,
 				},
@@ -42,7 +42,7 @@ func TestConfigFromURL(t *testing.T) {
 			"127.1.2.3",
 			Config{
 				Server: serverconfig.Client{
-					Address:       "127.1.2.3",
+					Address:       "127.1.2.3:" + serverconfig.DefaultGRPCPort,
 					Tls:           true,
 					TlsSkipVerify: true,
 				},

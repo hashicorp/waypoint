@@ -4,6 +4,13 @@ import (
 	"strconv"
 )
 
+const (
+	// Default ports. These are strings because we generally are working with
+	// strings for the ports since they're part of the address string.
+	DefaultGRPCPort = "9701"
+	DefaultHTTPPort = "9702"
+)
+
 // Client configures a client to connect to a server.
 type Client struct {
 	Address string `hcl:"address,attr" json:"address"`
