@@ -1401,7 +1401,8 @@ deploy "kubernetes" {
 	doc.SetField(
 		"cpu",
 		"cpu resource configuration",
-		docs.Summary("CPU Resource configuration"),
+		docs.Summary("CPU lets you define resource limits and requests for a pod in "+
+			"a deployment."),
 		docs.SubFields(func(doc *docs.SubFieldDoc) {
 			doc.SetField(
 				"request",
@@ -1418,7 +1419,8 @@ deploy "kubernetes" {
 	doc.SetField(
 		"memory",
 		"memory resource configuration",
-		docs.Summary("Memory Resource configuration"),
+		docs.Summary("Memory lets you define resource limits and requests for a pod in "+
+			"a deployment."),
 		docs.SubFields(func(doc *docs.SubFieldDoc) {
 			doc.SetField(
 				"request",
