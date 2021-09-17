@@ -916,7 +916,7 @@ func (p *Platform) resourceAutoscalerCreate(
 		return err
 	}
 
-	s.Update("Horizontal Pod Autoscaller has been %s", action)
+	s.Update("Horizontal Pod Autoscaler has been %s", action)
 	s.Done()
 
 	return nil
