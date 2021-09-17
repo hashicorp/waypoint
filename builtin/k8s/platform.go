@@ -1211,12 +1211,10 @@ type Config struct {
 	// such as memory and cpu.
 	Resources map[string]string `hcl:"resources,optional"`
 
-	// Optionally define various cpu resources for kubernetes pod containers
-	// such as memory and cpu.
+	// Optionally define various cpu resource limits and requests for kubernetes pod containers
 	CPU *ResourceConfig `hcl:"cpu,block"`
 
-	// Optionally define various memory resources for kubernetes pod containers
-	// such as memory and cpu.
+	// Optionally define various memory resource limits and requests for kubernetes pod containers
 	Memory *ResourceConfig `hcl:"memory,block"`
 
 	// An array of paths to directories that will be mounted as EmptyDirVolumes in the pod
