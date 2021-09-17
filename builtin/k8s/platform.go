@@ -797,13 +797,12 @@ func (p *Platform) resourceAutoscalerCreate(
 		LabelSelector: metricsServerLabel,
 	})
 	if err != nil {
-		s.Update("Failed to list pods in attempt to detect existing metrics-server in cluster")
-		s.Status(terminal.StatusError)
-		s.Done()
-		return err
+		// we don't return the error, this was mostly to provide a helpful warning
+		log.Debug("receieved error while listing pods in attempt to detect existing metrics-server: %s", err)
+		err = nil
 	}
 
-	if len(metricsPods.Items) == 0 {
+	if metricsPods != nil && len(metricsPods.Items) == 0 {
 		ui.Output("There were no pods recognized in the cluster as a metrics-server "+
 			"with the label '%s'. This means your autoscaler might "+
 			"not be functional until a metrics-server exists and can provide metrics to "+
