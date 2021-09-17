@@ -2,3 +2,8 @@
 plugin/k8s: Introduce a new config option `autoscale`, which creates a horizontal
 pod autoscaler for each deployment.
 ```
+
+```release-note:improvement
+plugin/k8s: Introduce a new config option `cpu` and `memory` for defining
+resource limits and requests for a pod in a deployment.
+```
