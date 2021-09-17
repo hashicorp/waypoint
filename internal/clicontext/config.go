@@ -66,7 +66,7 @@ func (c *Config) FromURL(v string) error {
 		// If no port is specified, default to port 9701 which is our default
 		// gRPC port for Waypoint installations.
 		if idx := strings.IndexByte(u.Host, ':'); idx < 0 {
-			c.Server.Address += ":9701"
+			c.Server.Address += ":" + serverconfig.DefaultGRPCPort
 		}
 	}
 

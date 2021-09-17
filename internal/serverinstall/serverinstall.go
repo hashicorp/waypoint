@@ -125,8 +125,9 @@ const (
 
 // Default server ports to use
 var (
-	defaultGrpcPort = "9701"
-	defaultHttpPort = "9702"
+	// todo: remove these and just use the serverconfig constants.
+	defaultGrpcPort = serverconfig.DefaultGRPCPort
+	defaultHttpPort = serverconfig.DefaultHTTPPort
 )
 
 // defaultODRImage returns the default Waypoint ODR image based on the
