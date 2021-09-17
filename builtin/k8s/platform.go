@@ -399,15 +399,49 @@ func (p *Platform) resourceDeploymentCreate(
 		pullPolicy = ""
 	}
 
-	if p.config.AutoscaleConfig != nil && len(p.config.Resources) == 0 {
-		ui.Output("For autoscaling in Kubernetes to work, a deployment must specify "+
-			"resource limits and requests. Otherwise the metrics-server will not properly be able "+
-			"to scale your deployment.", terminal.WithWarningStyle())
-	}
-
 	// Get container resource limits and requests
 	var resourceLimits = make(map[corev1.ResourceName]k8sresource.Quantity)
 	var resourceRequests = make(map[corev1.ResourceName]k8sresource.Quantity)
+
+	if p.config.CPU != nil {
+		if p.config.CPU.Requested != "" {
+			q, err := k8sresource.ParseQuantity(p.config.CPU.Requested)
+			if err != nil {
+				return err
+			}
+
+			resourceRequests[corev1.ResourceCPU] = q
+		}
+
+		if p.config.CPU.Limit != "" {
+			q, err := k8sresource.ParseQuantity(p.config.CPU.Limit)
+			if err != nil {
+				return err
+			}
+
+			resourceLimits[corev1.ResourceCPU] = q
+		}
+	}
+
+	if p.config.Memory != nil {
+		if p.config.Memory.Requested != "" {
+			q, err := k8sresource.ParseQuantity(p.config.Memory.Requested)
+			if err != nil {
+				return err
+			}
+
+			resourceRequests[corev1.ResourceMemory] = q
+		}
+
+		if p.config.Memory.Limit != "" {
+			q, err := k8sresource.ParseQuantity(p.config.Memory.Limit)
+			if err != nil {
+				return err
+			}
+
+			resourceLimits[corev1.ResourceMemory] = q
+		}
+	}
 
 	for k, v := range p.config.Resources {
 		if strings.HasPrefix(k, "limits_") {
@@ -431,6 +465,15 @@ func (p *Platform) resourceDeploymentCreate(
 		} else {
 			log.Warn("ignoring unrecognized k8s resources key: %q", k)
 		}
+	}
+
+	_, cpuLimit := resourceLimits[corev1.ResourceCPU]
+	_, cpuRequest := resourceRequests[corev1.ResourceCPU]
+
+	if p.config.AutoscaleConfig != nil && !(cpuLimit || cpuRequest) {
+		ui.Output("For autoscaling in Kubernetes to work, a deployment must specify "+
+			"cpu resource limits and requests. Otherwise the metrics-server will not properly be able "+
+			"to scale your deployment.", terminal.WithWarningStyle())
 	}
 
 	resourceRequirements := corev1.ResourceRequirements{
@@ -967,7 +1010,7 @@ func (p *Platform) resourceAutoscalerStatus(
 		hpaResource.HealthMessage = "The HPA resource is ready"
 
 		hpaStateJson, err := json.Marshal(map[string]interface{}{
-			"horizontalPodAutoscaler": hpaResource,
+			"horizontalPodAutoscaler": &hpaResource,
 		})
 		if err != nil {
 			return status.Errorf(codes.FailedPrecondition,
@@ -1168,6 +1211,14 @@ type Config struct {
 	// such as memory and cpu.
 	Resources map[string]string `hcl:"resources,optional"`
 
+	// Optionally define various cpu resources for kubernetes pod containers
+	// such as memory and cpu.
+	CPU *ResourceConfig `hcl:"cpu,block"`
+
+	// Optionally define various memory resources for kubernetes pod containers
+	// such as memory and cpu.
+	Memory *ResourceConfig `hcl:"cpu,block"`
+
 	// An array of paths to directories that will be mounted as EmptyDirVolumes in the pod
 	// to store temporary data.
 	ScratchSpace []string `hcl:"scratch_path,optional"`
@@ -1189,6 +1240,13 @@ type Config struct {
 
 	// Pod describes the configuration for the pod
 	Pod *Pod `hcl:"pod,block"`
+}
+
+// ResourceConfig describes the request and limit of a resource. Used for
+// cpu and memory resource configuration.
+type ResourceConfig struct {
+	Requested string `hcl:"request,optional"`
+	Limit     string `hcl:"limit,optional"`
 }
 
 // AutoscaleConfig describes the possible configuration for creating a
@@ -1343,11 +1401,46 @@ deploy "kubernetes" {
 	)
 
 	doc.SetField(
+		"cpu",
+		"cpu resource configuration",
+		docs.Summary("CPU Resource configuration"),
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"request",
+				"how much cpu to give the pod in cpu cores. Supports m to inidicate milli-cores",
+			)
+
+			doc.SetField(
+				"limit",
+				"maximum amount of cpu to give the pod. Supports m to inidicate milli-cores",
+			)
+		}),
+	)
+
+	doc.SetField(
+		"memory",
+		"memory resource configuration",
+		docs.Summary("Memory Resource configuration"),
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"request",
+				"how much memory to give the pod in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+			)
+
+			doc.SetField(
+				"limit",
+				"maximum amount of memory to give the pod. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+			)
+		}),
+	)
+
+	doc.SetField(
 		"resources",
 		"a map of resource limits and requests to apply to a pod on deploy",
 		docs.Summary(
-			"resource limits and requests for a pod. limits and requests options "+
-				"must start with either 'limits\\_' or 'requests\\_'. Any other options "+
+			"resource limits and requests for a pod. This exists to allow any possible "+
+				"resources. For cpu and memory, use those relevent settings instead. "+
+				"Keys must start with either 'limits\\_' or 'requests\\_'. Any other options "+
 				"will be ignored.",
 		),
 	)
