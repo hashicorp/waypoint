@@ -147,7 +147,7 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 	_, err = client.SetServerConfig(ctx, &pb.SetServerConfigRequest{
 		Config: &pb.ServerConfig{
 			AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{
-				&pb.ServerConfig_AdvertiseAddr{
+				{
 					Addr:          advertiseAddr,
 					Tls:           c.flagAdvertiseTLS,
 					TlsSkipVerify: c.flagAdvertiseTLSSkipVerify,
