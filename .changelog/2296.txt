@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/k8s: Use sequence number in k8s deployment name for improved traceability to waypoint deployments.
+```
