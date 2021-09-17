@@ -841,7 +841,7 @@ func (p *Platform) resourceAutoscalerCreate(
 	})
 	if err != nil {
 		// we don't return the error, this was mostly to provide a helpful warning
-		log.Debug("receieved error while listing pods in attempt to detect existing metrics-server: %s", err)
+		log.Info("receieved error while listing pods in attempt to detect existing metrics-server: %s", err)
 		err = nil
 	}
 
