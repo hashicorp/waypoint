@@ -302,12 +302,21 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 	return result, nil
 }
 
-// Latest gets the latest operation that was completed successfully.
-func (op *appOperation) Latest(
+// LatestFilter gets the latest operation that was completed successfully
+// and matches the given filter. This works by iterating over the operations
+// in most-recently-completed order, so if you specify a filter that rarely is
+// true, this may require effectively a table scan.
+func (op *appOperation) LatestFilter(
 	s *State,
 	ref *pb.Ref_Application,
 	ws *pb.Ref_Workspace,
+	filter func(interface{}) (bool, error),
 ) (interface{}, error) {
+	// If we have no filter, create a filter that always returns true.
+	if filter == nil {
+		filter = func(interface{}) (bool, error) { return true, nil }
+	}
+
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -352,13 +361,31 @@ func (op *appOperation) Latest(
 		}
 
 		// State must be success.
-		switch st.(*pb.Status).State {
-		case pb.Status_SUCCESS:
+		if st.(*pb.Status).State != pb.Status_SUCCESS {
+			continue
+		}
+
+		// If we have no filter, return it
+		filterResult, err := filter(v)
+		if err != nil {
+			return nil, err
+		}
+
+		if filterResult {
 			return v, nil
 		}
 	}
 
 	return nil, status.Errorf(codes.NotFound, "No application named %q is available, or application has no successful operations", ref.Application)
+}
+
+// Latest gets the latest operation that was completed successfully.
+func (op *appOperation) Latest(
+	s *State,
+	ref *pb.Ref_Application,
+	ws *pb.Ref_Workspace,
+) (interface{}, error) {
+	return op.LatestFilter(s, ref, ws, nil)
 }
 
 // get reads the value from the database. This populates any computed fields

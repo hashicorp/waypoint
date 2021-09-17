@@ -115,7 +115,17 @@ func TestAppDeploymentStatusReport(t *testing.T) {
 		deploy := resp.Deployment
 
 		statusReportTs := timestamppb.Now()
-		mock.Status.On("StatusFunc").Return(func(context.Context) (*sdk.StatusReport, error) {
+		expectLast := false
+		mock.Status.On("StatusFunc").Return(func(
+			ctx context.Context,
+			last *sdk.StatusReport,
+		) (*sdk.StatusReport, error) {
+			if !expectLast {
+				require.Nil(last, "no last status report")
+			} else {
+				require.NotNil(last, "should have last status report")
+			}
+
 			return &sdk.StatusReport{
 				GeneratedTime: statusReportTs,
 			}, nil
@@ -136,6 +146,11 @@ func TestAppDeploymentStatusReport(t *testing.T) {
 		// Verify that the status report timestamp made it into the server resp
 		require.NotNil(srResp.GeneratedTime)
 		require.True(srResp.GeneratedTime.AsTime().Equal(statusReportTs.AsTime()))
+
+		// Second report to verify we get the last one.
+		expectLast = true
+		_, err = app.DeploymentStatusReport(context.Background(), deploy)
+		require.NoError(err)
 	})
 }
 

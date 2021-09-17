@@ -3124,6 +3124,15 @@ message GetLatestStatusReportRequest {
 
   // workspace for the report, any workspace if empty
   Ref.Workspace workspace = 2;
+
+  // Target of the report, will be any if this is not set.
+  oneof target {
+    google.protobuf.Empty any = 3;
+    google.protobuf.Empty deployment_any = 4;
+    string deployment_id = 5;
+    google.protobuf.Empty release_any = 6;
+    string release_id = 7;
+  }
 }
 
 message ListStatusReportsRequest {
@@ -3220,8 +3229,6 @@ message StatusReport {
   // The overall health of the deployment or release as reported by the plugin.
   // Copied from the plugin generated raw SDK status report for convenient API access.
   Health health = 8;
-
-
 
   // the time when this report was generated
   // Copied from the plugin generated raw SDK status report for convenient API access.
