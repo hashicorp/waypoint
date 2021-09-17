@@ -1217,7 +1217,7 @@ type Config struct {
 
 	// Optionally define various memory resources for kubernetes pod containers
 	// such as memory and cpu.
-	Memory *ResourceConfig `hcl:"cpu,block"`
+	Memory *ResourceConfig `hcl:"memory,block"`
 
 	// An array of paths to directories that will be mounted as EmptyDirVolumes in the pod
 	// to store temporary data.
