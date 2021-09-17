@@ -137,7 +137,7 @@ export default function HomePage(): JSX.Element {
             heading: 'Available plugins',
             description: 'View a list of existing HashiCorp maintained plugins',
             link: {
-              url: '/',
+              url: '/plugins',
               text: 'Plugins',
             },
           },
@@ -146,7 +146,7 @@ export default function HomePage(): JSX.Element {
             heading: 'Creating Waypoint plugins',
             description: 'Learn to extend Waypoint for your project’s needs',
             link: {
-              url: '/',
+              url: '/docs/extending-waypoint/creating-plugins',
               text: 'Create',
             },
           },
