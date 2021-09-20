@@ -1,0 +1,3 @@
+```release-note:feature
+cli: Allow raw string of `server run` flags to be provided to `install` cmd
+```
