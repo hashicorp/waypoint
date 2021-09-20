@@ -340,12 +340,6 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Hidden:  true,
 		})
 
-		f.StringVar(&flag.StringVar{
-			Name:   "run-flags",
-			Target: &c.flagServerRun,
-			Usage:  "Flag values for the installer to supply to the server run command.",
-		})
-
 		// Add platforms in alphabetical order. A consistent order is important for repeatable doc generation.
 		i := 0
 		sortedPlatformNames := make([]string, len(serverinstall.Platforms))

@@ -418,12 +418,6 @@ func (c *ServerUpgradeCommand) Flags() *flag.Sets {
 			Usage:   "Enable or disable taking a snapshot of Waypoint server prior to upgrades.",
 		})
 
-		f.StringVar(&flag.StringVar{
-			Name:   "run-flags",
-			Target: &c.flagServerRun,
-			Usage:  "Flag values for the installer to supply to the server run command.",
-		})
-
 		// Add platforms in alphabetical order. A consistent order is important for repeatable doc generation.
 		i := 0
 		sortedPlatformNames := make([]string, len(serverinstall.Platforms))
