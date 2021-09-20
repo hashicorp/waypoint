@@ -26,11 +26,12 @@ import (
 type ServerUpgradeCommand struct {
 	*baseCommand
 
-	platform     string
-	contextName  string
-	snapshotName string
-	flagSnapshot bool
-	confirm      bool
+	platform      string
+	contextName   string
+	snapshotName  string
+	flagSnapshot  bool
+	confirm       bool
+	flagServerRun string
 }
 
 func (c *ServerUpgradeCommand) Run(args []string) int {
@@ -215,8 +216,9 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		initServerVersion, terminal.WithInfoStyle())
 
 	installOpts := &serverinstall.InstallOpts{
-		Log: log,
-		UI:  c.ui,
+		Log:            log,
+		UI:             c.ui,
+		ServerRunFlags: c.flagServerRun,
 	}
 
 	// Upgrade in place
@@ -414,6 +416,12 @@ func (c *ServerUpgradeCommand) Flags() *flag.Sets {
 			Target:  &c.flagSnapshot,
 			Default: true,
 			Usage:   "Enable or disable taking a snapshot of Waypoint server prior to upgrades.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "run-flags",
+			Target: &c.flagServerRun,
+			Usage:  "Include flag values for the installer to supply to the server run command.",
 		})
 
 		// Add platforms in alphabetical order. A consistent order is important for repeatable doc generation.
