@@ -261,7 +261,7 @@ func (i *ECSInstaller) Launch(
 		aws.String("server"),
 		aws.String("run"),
 		aws.String("-accept-tos"),
-		aws.String("-vvv"),
+		aws.String("-vv"),
 		aws.String("-db=/waypoint-data/data.db"),
 		aws.String(fmt.Sprintf("-listen-grpc=0.0.0.0:%d", grpcPort)),
 		aws.String(fmt.Sprintf("-listen-http=0.0.0.0:%d", httpPort)),
@@ -2300,7 +2300,7 @@ func (i *ECSInstaller) LaunchRunner(
 		Command: []*string{
 			aws.String("runner"),
 			aws.String("agent"),
-			aws.String("-vvv"),
+			aws.String("-vv"),
 			aws.String("-liveness-tcp-addr=:1234"),
 		},
 		Name:  aws.String("waypoint-runner"),

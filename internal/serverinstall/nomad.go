@@ -673,7 +673,7 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 	task.Config = map[string]interface{}{
 		"image":          c.serverImage,
 		"ports":          []string{"server", "ui"},
-		"args":           []string{"server", "run", "-accept-tos", "-vvv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
+		"args":           []string{"server", "run", "-accept-tos", "-vv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
 		"auth_soft_fail": c.authSoftFail,
 	}
 	task.Env = map[string]string{
@@ -721,7 +721,7 @@ func waypointRunnerNomadJob(c nomadConfig, opts *InstallRunnerOpts) *api.Job {
 		"args": []string{
 			"runner",
 			"agent",
-			"-vvv",
+			"-vv",
 		},
 		"auth_soft_fail": c.authSoftFail,
 	}

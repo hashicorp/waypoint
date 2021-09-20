@@ -1155,7 +1155,7 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 							Args: []string{
 								"runner",
 								"agent",
-								"-vvv",
+								"-vv",
 								"-liveness-tcp-addr=:" + strconv.Itoa(livenessPort),
 							},
 							LivenessProbe: &apiv1.Probe{
@@ -1267,7 +1267,7 @@ func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 								"server",
 								"run",
 								"-accept-tos",
-								"-vvv",
+								"-vv",
 								"-db=/data/data.db",
 								"-listen-grpc=0.0.0.0:9701",
 								"-listen-http=0.0.0.0:9702",
