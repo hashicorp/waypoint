@@ -41,6 +41,7 @@ type K8SBootstrapCommand struct {
 
 func (c *K8SBootstrapCommand) Run(args []string) int {
 	ctx := c.Ctx
+	log := c.Log
 
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	if err := c.Init(
@@ -48,6 +49,10 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 		WithFlags(c.Flags()),
 		WithNoConfig(),
 		WithNoAutoServer(),
+
+		// Don't initialize the client because this is called before
+		// the client is ready.
+		WithClient(false),
 	); err != nil {
 		return 1
 	}
@@ -100,9 +105,26 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 	// The advertise addr always needs the gRPC port. For our Helm chart
 	// this isn't configurable so this is always correct.
 	advertiseAddr += ":" + serverconfig.DefaultGRPCPort
+	log.Info("service ready", "advertise_addr", advertiseAddr)
+
+	// The service is ready so we should also be ready to connect. We
+	// set a slightly longer timeout on the initial connection in case the
+	// service came up quicker than Waypoint itself. A more robust check would
+	// be checking the pods for readiness.
+	log.Info("initializing server connection")
+	proj, err := c.initClient(ctx, serverclient.Timeout(120*time.Second))
+	if err != nil {
+		c.ui.Output(
+			"Error reconnecting with token: %s",
+			clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
 
 	// Waypoint bootstrap
-	client := c.project.Client()
+	log.Info("bootstrapping the server")
+	client := proj.Client()
 	resp, err := client.BootstrapToken(ctx, &empty.Empty{})
 	if status.Code(err) == codes.PermissionDenied {
 		// This is not an error, since our Helm chart will run this
@@ -119,6 +141,7 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 		return 1
 	}
 	bootstrapTokenB64 := base64.StdEncoding.EncodeToString([]byte(resp.Token))
+	log.Info("bootstrapping complete")
 
 	// Set our token. We just do this as an env var because that's the easiest
 	// way to get this to trigger. Env will override all other token sources.
@@ -132,7 +155,8 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 	}
 
 	// Reconnect
-	proj, err := c.initClient(ctx)
+	log.Info("reconnecting to the server with the bootstrap token")
+	proj, err = c.initClient(ctx)
 	if err != nil {
 		c.ui.Output(
 			"Error reconnecting with token: %s",
@@ -144,6 +168,7 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 	client = proj.Client()
 
 	// Set our server configuration
+	log.Info("setting server configuration")
 	_, err = client.SetServerConfig(ctx, &pb.SetServerConfigRequest{
 		Config: &pb.ServerConfig{
 			AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{
@@ -156,8 +181,17 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 			Platform: "kubernetes",
 		},
 	})
+	if err != nil {
+		c.ui.Output(
+			"Error setting server configuration: %s",
+			clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
 
 	// Get our runner token
+	log.Info("generating login token for runner")
 	tokenResp, err := client.GenerateLoginToken(c.Ctx, &pb.LoginTokenRequest{
 		Duration: "", // Never expire for the static runner
 	})
@@ -168,8 +202,9 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 	runnerTokenB64 := base64.StdEncoding.EncodeToString([]byte(tokenResp.Token))
 
 	// Persist our root token
+	log.Info("persisting root token", "secret", c.flagRootTokenSecret)
 	_, err = secretClient.Patch(ctx, c.flagRootTokenSecret, types.JSONPatchType, []byte(
-		fmt.Sprintf(`{"data":{"token":"%s"}}`, bootstrapTokenB64)),
+		fmt.Sprintf(`[{"op":"replace", "path": "/data/token", "value": "%s"}]`, bootstrapTokenB64)),
 		metav1.PatchOptions{})
 	if err != nil {
 		c.ui.Output(
@@ -181,8 +216,9 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 	}
 
 	// Persist our runner token
+	log.Info("persisting runner token", "secret", c.flagRunnerTokenSecret)
 	_, err = secretClient.Patch(ctx, c.flagRunnerTokenSecret, types.JSONPatchType, []byte(
-		fmt.Sprintf(`{"data":{"token":"%s"}}`, runnerTokenB64)),
+		fmt.Sprintf(`[{"op":"replace", "path": "/data/token", "value": "%s"}]`, runnerTokenB64)),
 		metav1.PatchOptions{})
 	if err != nil {
 		c.ui.Output(
@@ -194,6 +230,7 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 	}
 
 	// Configure our on-demand runner
+	log.Info("storing on-demand runner configuration for Kubernetes")
 	_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: &pb.OnDemandRunnerConfig{
 			OciUrl:     c.flagODRImage,
@@ -207,6 +244,7 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 		},
 	})
 
+	log.Info("bootstrap complete")
 	return 0
 }
 
