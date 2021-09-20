@@ -20,7 +20,7 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
   @tracked isCreating: boolean;
   @tracked activeVariable;
 
-  constructor(owner: any, args: any) {
+  constructor(owner: unknown, args: ProjectSettingsArgs) {
     super(owner, args);
     let { project } = args;
     this.project = project;
@@ -30,7 +30,7 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
   }
 
   @action
-  addVariable() {
+  addVariable(): void {
     this.isCreating = true;
     let newVar = new Variable();
     // Seems like setServer (with empty arguments?) is required to make it a server variable
@@ -41,13 +41,13 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
   }
 
   @action
-  async deleteVariable(variable) {
+  async deleteVariable(variable: Variable.AsObject): Promise<void> {
     this.variablesList = this.variablesList.filter((v) => v.name !== variable.name);
     await this.saveVariableSettings();
   }
 
   @action
-  cancelCreate() {
+  cancelCreate(): void {
     this.activeVariable = null;
     this.isCreating = false;
   }
