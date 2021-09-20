@@ -21,7 +21,7 @@
     </small>
   </div>
   <div class="actions">
-    {{#if @model.project.remoteEnabled}}
+    {{#if (project-is-remote-uppable @model.project)}}
       <UpButton @application={{@model.application}} />
     {{else}}
       {{#if @model.releases.length}}
