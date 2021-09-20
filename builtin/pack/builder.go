@@ -165,7 +165,7 @@ func (b *Builder) BuildODR(
 
 	err = ocis.Negotiate(ref.Name())
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to negoate with upstream")
+		return nil, errors.Wrapf(err, "unable to negotiate with upstream")
 	}
 
 	refPath := reference.Path(ref)
