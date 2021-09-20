@@ -83,7 +83,7 @@ func (b *Builder) buildWithKaniko(
 
 	err = os.Negotiate(ref.Name())
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to negoate with upstream")
+		return nil, errors.Wrapf(err, "unable to negotiate with upstream")
 	}
 
 	if !b.config.DisableCEB {
