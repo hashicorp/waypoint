@@ -421,7 +421,7 @@ func (c *ServerUpgradeCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:   "run-flags",
 			Target: &c.flagServerRun,
-			Usage:  "Include flag values for the installer to supply to the server run command.",
+			Usage:  "Flag values for the installer to supply to the server run command.",
 		})
 
 		// Add platforms in alphabetical order. A consistent order is important for repeatable doc generation.
