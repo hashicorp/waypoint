@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	v1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
@@ -106,6 +107,15 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithCreate(p.resourceDeploymentCreate),
 			resource.WithDestroy(p.resourceDeploymentDestroy),
 			resource.WithStatus(p.resourceDeploymentStatus),
+			resource.WithPlatform(platformName),
+			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
+		)),
+		resource.WithResource(resource.NewResource(
+			resource.WithName("autoscaler"),
+			resource.WithState(&Resource_Autoscale{}),
+			resource.WithCreate(p.resourceAutoscalerCreate),
+			resource.WithDestroy(p.resourceAutoscalerDestroy),
+			resource.WithStatus(p.resourceAutoscalerStatus),
 			resource.WithPlatform(platformName),
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
 		)),
@@ -393,6 +403,46 @@ func (p *Platform) resourceDeploymentCreate(
 	var resourceLimits = make(map[corev1.ResourceName]k8sresource.Quantity)
 	var resourceRequests = make(map[corev1.ResourceName]k8sresource.Quantity)
 
+	if p.config.CPU != nil {
+		if p.config.CPU.Requested != "" {
+			q, err := k8sresource.ParseQuantity(p.config.CPU.Requested)
+			if err != nil {
+				return err
+			}
+
+			resourceRequests[corev1.ResourceCPU] = q
+		}
+
+		if p.config.CPU.Limit != "" {
+			q, err := k8sresource.ParseQuantity(p.config.CPU.Limit)
+			if err != nil {
+				return err
+			}
+
+			resourceLimits[corev1.ResourceCPU] = q
+		}
+	}
+
+	if p.config.Memory != nil {
+		if p.config.Memory.Requested != "" {
+			q, err := k8sresource.ParseQuantity(p.config.Memory.Requested)
+			if err != nil {
+				return err
+			}
+
+			resourceRequests[corev1.ResourceMemory] = q
+		}
+
+		if p.config.Memory.Limit != "" {
+			q, err := k8sresource.ParseQuantity(p.config.Memory.Limit)
+			if err != nil {
+				return err
+			}
+
+			resourceLimits[corev1.ResourceMemory] = q
+		}
+	}
+
 	for k, v := range p.config.Resources {
 		if strings.HasPrefix(k, "limits_") {
 			limitKey := strings.Split(k, "_")
@@ -415,6 +465,15 @@ func (p *Platform) resourceDeploymentCreate(
 		} else {
 			log.Warn("ignoring unrecognized k8s resources key: %q", k)
 		}
+	}
+
+	_, cpuLimit := resourceLimits[corev1.ResourceCPU]
+	_, cpuRequest := resourceRequests[corev1.ResourceCPU]
+
+	if p.config.AutoscaleConfig != nil && !(cpuLimit || cpuRequest) {
+		ui.Output("For autoscaling in Kubernetes to work, a deployment must specify "+
+			"cpu resource limits and requests. Otherwise the metrics-server will not properly be able "+
+			"to scale your deployment.", terminal.WithWarningStyle())
 	}
 
 	resourceRequirements := corev1.ResourceRequirements{
@@ -736,8 +795,233 @@ func (p *Platform) resourceDeploymentDestroy(
 	if err := deployclient.Delete(ctx, state.Name, metav1.DeleteOptions{}); err != nil {
 		return err
 	}
+
+	step.Update("Deployment deleted")
 	step.Done()
 
+	return nil
+}
+
+// resourceAutoscalerCreate creates the Kubernetes deployment.
+func (p *Platform) resourceAutoscalerCreate(
+	ctx context.Context,
+	log hclog.Logger,
+	src *component.Source,
+	img *docker.Image,
+	deployConfig *component.DeploymentConfig,
+	ui terminal.UI,
+
+	result *Deployment,
+	deployState *Resource_Deployment, // a deployment must exist before creating an autoscaler
+	state *Resource_Autoscale,
+	csinfo *clientsetInfo,
+	sg terminal.StepGroup,
+) error {
+	if p.config.AutoscaleConfig == nil {
+		log.Trace("no autoscale config detected, will not create one")
+		return nil
+	}
+
+	// Prepare our namespace and override if set.
+	ns := csinfo.Namespace
+	if p.config.Namespace != "" {
+		ns = p.config.Namespace
+	}
+
+	s := sg.Add("Preparing horizontal pod autoscaler...")
+	defer func() { s.Abort() }() // Defer in func in case more steps are added to this func in the future
+
+	clientSet := csinfo.Clientset
+	autoscaleClient := clientSet.AutoscalingV1().HorizontalPodAutoscalers(ns)
+
+	// Attempt to detect an existing metrics-server and display warning if none found
+	metricsServerLabel := "k8s-app=metrics-server"
+	metricsPods, err := clientSet.CoreV1().Pods("").List(ctx, metav1.ListOptions{
+		LabelSelector: metricsServerLabel,
+	})
+	if err != nil {
+		// we don't return the error, this was mostly to provide a helpful warning
+		log.Info("receieved error while listing pods in attempt to detect existing metrics-server: %s", err)
+		err = nil
+	}
+
+	if metricsPods != nil && len(metricsPods.Items) == 0 {
+		ui.Output("There were no pods recognized in the cluster as a metrics-server "+
+			"with the label '%s'. This means your autoscaler might "+
+			"not be functional until a metrics-server exists and can provide metrics to "+
+			"the horizontal pod autoscaler.",
+			metricsServerLabel,
+			terminal.WithWarningStyle())
+		ui.Output("If you have not yet setup a metrics-server inside your Kubernetes cluster, "+
+			"please refer to the metrics-server project documentation for properly "+
+			"installing one: https://github.com/kubernetes-sigs/metrics-server", terminal.WithWarningStyle())
+		ui.Output("Waypoint will continue to configure horizontal pod autoscaler ...",
+			terminal.WithWarningStyle())
+	}
+
+	state.Name = deployState.Name
+
+	var autoscaler *autoscalingv1.HorizontalPodAutoscaler
+	create := false
+	autoscaler, err = autoscaleClient.Get(ctx, state.Name, metav1.GetOptions{})
+	if errors.IsNotFound(err) {
+		log.Debug("no horizontal pod autoscaler found, will create one")
+
+		err = nil
+		create = true
+
+		autoscaler = &autoscalingv1.HorizontalPodAutoscaler{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: state.Name,
+			},
+			Spec: autoscalingv1.HorizontalPodAutoscalerSpec{
+				ScaleTargetRef: autoscalingv1.CrossVersionObjectReference{
+					APIVersion: "apps/v1",
+					Kind:       "Deployment",
+					Name:       state.Name,
+				},
+			},
+		}
+	}
+	if err != nil {
+		return err
+	}
+
+	if p.config.AutoscaleConfig.MaxReplicas == 0 {
+		return status.Error(codes.FailedPrecondition,
+			"No max replica config value set for autoscale")
+	}
+
+	// Cannot be smaller than min replicas, but k8s will return a good error
+	// message if it is when we go to create an HPA
+	autoscaler.Spec.MaxReplicas = p.config.AutoscaleConfig.MaxReplicas
+
+	if p.config.AutoscaleConfig.MinReplicas > 0 {
+		autoscaler.Spec.MinReplicas = &p.config.AutoscaleConfig.MinReplicas
+	}
+
+	if p.config.AutoscaleConfig.TargetCPU >= 0 {
+		autoscaler.Spec.TargetCPUUtilizationPercentage = &p.config.AutoscaleConfig.TargetCPU
+	}
+
+	// create it
+	action := "created"
+	if create {
+		_, err = autoscaleClient.Create(ctx, autoscaler, metav1.CreateOptions{})
+	} else {
+		_, err = autoscaleClient.Update(ctx, autoscaler, metav1.UpdateOptions{})
+		action = "updated"
+	}
+	if err != nil {
+		return err
+	}
+
+	s.Update("Horizontal Pod Autoscaler has been %s", action)
+	s.Done()
+
+	return nil
+}
+
+// resourceAutoscalerDestroy deletes the K8S horizontal pod autoscaler
+func (p *Platform) resourceAutoscalerDestroy(
+	ctx context.Context,
+	state *Resource_Autoscale,
+	sg terminal.StepGroup,
+	csinfo *clientsetInfo,
+) error {
+	if p.config.AutoscaleConfig == nil && state.Name == "" {
+		// No autoscale config, so don't destroy one
+		return nil
+	}
+
+	// Prepare our namespace and override if set.
+	ns := csinfo.Namespace
+	if p.config.Namespace != "" {
+		ns = p.config.Namespace
+	}
+
+	s := sg.Add("Deleting horizontal pod autoscaler...")
+	defer func() { s.Abort() }()
+
+	clientSet := csinfo.Clientset
+	autoscaleClient := clientSet.AutoscalingV1().HorizontalPodAutoscalers(ns)
+
+	if err := autoscaleClient.Delete(ctx, state.Name, metav1.DeleteOptions{}); err != nil {
+		return err
+	}
+
+	s.Update("Horizontal Pod Autoscaler deleted")
+	s.Done()
+	return nil
+}
+
+// resourceAutoscalerStatus gets information about the autoscaler for a status report
+func (p *Platform) resourceAutoscalerStatus(
+	ctx context.Context,
+	log hclog.Logger,
+	sg terminal.StepGroup,
+	state *Resource_Autoscale,
+	clientsetInfo *clientsetInfo,
+	sr *resource.StatusResponse,
+) error {
+	if p.config.AutoscaleConfig == nil && state.Name == "" {
+		// No autoscale config, so don't take the status of one
+		return nil
+	}
+
+	// Prepare our namespace and override if set.
+	ns := clientsetInfo.Namespace
+	if p.config.Namespace != "" {
+		ns = p.config.Namespace
+	}
+
+	s := sg.Add("Checking status of Kubernetes horizontal pod autoscaler %q...", state.Name)
+	defer s.Abort()
+
+	clientSet := clientsetInfo.Clientset
+	autoscaleClient := clientSet.AutoscalingV1().HorizontalPodAutoscalers(ns)
+
+	hpaResource := sdk.StatusReport_Resource{
+		Type:                "horizontal pod autoscaler",
+		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
+	}
+	sr.Resources = append(sr.Resources, &hpaResource)
+
+	autoscalerResp, err := autoscaleClient.Get(ctx, state.Name, metav1.GetOptions{})
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return status.Errorf(codes.FailedPrecondition,
+				"error getting kubernetes horizontal pod autoscaler %s: %s", state.Name, err)
+		} else {
+			hpaResource.Name = state.Name
+			hpaResource.Health = sdk.StatusReport_MISSING
+			hpaResource.HealthMessage = sdk.StatusReport_MISSING.String()
+		}
+	} else if autoscalerResp == nil {
+		return status.Errorf(codes.FailedPrecondition,
+			"kubernetes horizontal pod autoscaler response cannot be empty")
+	} else {
+
+		hpaResource.Name = state.Name
+		hpaResource.Id = fmt.Sprintf("%s", autoscalerResp.ObjectMeta.UID)
+		hpaResource.CreatedTime = timestamppb.New(autoscalerResp.ObjectMeta.CreationTimestamp.Time)
+		// the existence of the resource means it's ready. It has no other status
+		hpaResource.Health = sdk.StatusReport_READY
+		hpaResource.HealthMessage = "The HPA resource is ready"
+
+		hpaStateJson, err := json.Marshal(map[string]interface{}{
+			"horizontalPodAutoscaler": &hpaResource,
+		})
+		if err != nil {
+			return status.Errorf(codes.FailedPrecondition,
+				"failed to marshal horizontal pod autoscaler to json: %s", err)
+		}
+
+		hpaResource.StateJson = string(hpaStateJson)
+	}
+
+	s.Update("Finished building report for Kubernetes horizontal pod autoscaler")
+	s.Done()
 	return nil
 }
 
@@ -885,6 +1169,11 @@ type Config struct {
 	// pod events.
 	Annotations map[string]string `hcl:"annotations,optional"`
 
+	// AutoscaleConfig will create a horizontal pod autoscaler for a given
+	// deployment and scale the replica pods up or down based on a given
+	// load metric, such as CPU utilization
+	AutoscaleConfig *AutoscaleConfig `hcl:"autoscale,block"`
+
 	// Context specifies the kube context to use.
 	Context string `hcl:"context,optional"`
 
@@ -924,6 +1213,12 @@ type Config struct {
 	// such as memory and cpu.
 	Resources map[string]string `hcl:"resources,optional"`
 
+	// Optionally define various cpu resource limits and requests for kubernetes pod containers
+	CPU *ResourceConfig `hcl:"cpu,block"`
+
+	// Optionally define various memory resource limits and requests for kubernetes pod containers
+	Memory *ResourceConfig `hcl:"memory,block"`
+
 	// An array of paths to directories that will be mounted as EmptyDirVolumes in the pod
 	// to store temporary data.
 	ScratchSpace []string `hcl:"scratch_path,optional"`
@@ -945,6 +1240,23 @@ type Config struct {
 
 	// Pod describes the configuration for the pod
 	Pod *Pod `hcl:"pod,block"`
+}
+
+// ResourceConfig describes the request and limit of a resource. Used for
+// cpu and memory resource configuration.
+type ResourceConfig struct {
+	Requested string `hcl:"request,optional"`
+	Limit     string `hcl:"limit,optional"`
+}
+
+// AutoscaleConfig describes the possible configuration for creating a
+// horizontal pod autoscaler
+type AutoscaleConfig struct {
+	MinReplicas int32 `hcl:"min_replicas,optional"`
+	MaxReplicas int32 `hcl:"max_replicas,optional"`
+	// TargetCPU will determine the max load before the autoscaler will increase
+	// a replica
+	TargetCPU int32 `hcl:"cpu_percent,optional"`
 }
 
 // Pod describes the configuration for the pod
@@ -998,6 +1310,33 @@ deploy "kubernetes" {
 	probe_path = "/_healthz"
 }
 `)
+
+	doc.SetField(
+		"autoscale",
+		"sets up a horizontal pod autoscaler to scale deployments automatically",
+		docs.Summary("This configuration will automatically set up and associate the "+
+			"current deployment with a horizontal pod autoscaler in Kuberentes. Note that "+
+			"for this to work, you must also define resource limits and requests for a deployment "+
+			"otherwise the metrics-server will not be able to properly determine a deployments "+
+			"target CPU utilization"),
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"min_replicas",
+				"The minimum amount of pods to have for a deployment",
+			)
+
+			doc.SetField(
+				"max_replicas",
+				"The maximum amount of pods to scale to for a deployment",
+			)
+
+			doc.SetField(
+				"cpu_percent",
+				"The target CPU percent utilization before the horizontal pod autoscaler "+
+					"scales up a deployments replicas",
+			)
+		}),
+	)
 
 	doc.SetField(
 		"pod",
@@ -1062,11 +1401,48 @@ deploy "kubernetes" {
 	)
 
 	doc.SetField(
+		"cpu",
+		"cpu resource configuration",
+		docs.Summary("CPU lets you define resource limits and requests for a pod in "+
+			"a deployment."),
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"request",
+				"how much cpu to give the pod in cpu cores. Supports m to inidicate milli-cores",
+			)
+
+			doc.SetField(
+				"limit",
+				"maximum amount of cpu to give the pod. Supports m to inidicate milli-cores",
+			)
+		}),
+	)
+
+	doc.SetField(
+		"memory",
+		"memory resource configuration",
+		docs.Summary("Memory lets you define resource limits and requests for a pod in "+
+			"a deployment."),
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"request",
+				"how much memory to give the pod in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+			)
+
+			doc.SetField(
+				"limit",
+				"maximum amount of memory to give the pod. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+			)
+		}),
+	)
+
+	doc.SetField(
 		"resources",
 		"a map of resource limits and requests to apply to a pod on deploy",
 		docs.Summary(
-			"resource limits and requests for a pod. limits and requests options "+
-				"must start with either 'limits\\_' or 'requests\\_'. Any other options "+
+			"resource limits and requests for a pod. This exists to allow any possible "+
+				"resources. For cpu and memory, use those relevent settings instead. "+
+				"Keys must start with either 'limits\\_' or 'requests\\_'. Any other options "+
 				"will be ignored.",
 		),
 	)

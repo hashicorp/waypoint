@@ -18,6 +18,73 @@ deploy "kubernetes" {
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### autoscale (category)
+
+Sets up a horizontal pod autoscaler to scale deployments automatically.
+
+This configuration will automatically set up and associate the current deployment with a horizontal pod autoscaler in Kuberentes. Note that for this to work, you must also define resource limits and requests for a deployment otherwise the metrics-server will not be able to properly determine a deployments target CPU utilization.
+
+##### autoscale.cpu_percent
+
+The target CPU percent utilization before the horizontal pod autoscaler scales up a deployments replicas.
+
+- Type: **int32**
+- **Optional**
+
+##### autoscale.max_replicas
+
+The maximum amount of pods to scale to for a deployment.
+
+- Type: **int32**
+- **Optional**
+
+##### autoscale.min_replicas
+
+The minimum amount of pods to have for a deployment.
+
+- Type: **int32**
+- **Optional**
+
+#### cpu (category)
+
+Cpu resource configuration.
+
+CPU lets you define resource limits and requests for a pod in a deployment.
+
+##### cpu.limit
+
+Maximum amount of cpu to give the pod. Supports m to inidicate milli-cores.
+
+- Type: **string**
+- **Optional**
+
+##### cpu.request
+
+How much cpu to give the pod in cpu cores. Supports m to inidicate milli-cores.
+
+- Type: **string**
+- **Optional**
+
+#### memory (category)
+
+Memory resource configuration.
+
+Memory lets you define resource limits and requests for a pod in a deployment.
+
+##### memory.limit
+
+Maximum amount of memory to give the pod. Supports k for kilobytes, m for megabytes, and g for gigabytes.
+
+- Type: **string**
+- **Optional**
+
+##### memory.request
+
+How much memory to give the pod in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes.
+
+- Type: **string**
+- **Optional**
+
 #### pod (category)
 
 The configuration for a pod.
@@ -173,7 +240,7 @@ If the replica count is maintained outside waypoint, for instance by a pod autos
 
 A map of resource limits and requests to apply to a pod on deploy.
 
-Resource limits and requests for a pod. limits and requests options must start with either 'limits\_' or 'requests\_'. Any other options will be ignored.
+Resource limits and requests for a pod. This exists to allow any possible resources. For cpu and memory, use those relevent settings instead. Keys must start with either 'limits\_' or 'requests\_'. Any other options will be ignored.
 
 - Type: **map of string to string**
 - **Optional**
