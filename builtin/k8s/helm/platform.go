@@ -107,7 +107,7 @@ func (p *Platform) Deploy(
 		client.DisableHooks = false
 		client.Wait = true
 		client.WaitForJobs = false
-		client.Devel = false
+		client.Devel = p.config.Devel
 		client.DependencyUpdate = false
 		client.Timeout = 300 * time.Second
 		client.Namespace = chartNS
@@ -143,7 +143,7 @@ func (p *Platform) Deploy(
 	client.DisableHooks = false
 	client.Wait = true
 	client.WaitForJobs = false
-	client.Devel = false
+	client.Devel = p.config.Devel
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
 	client.Namespace = chartNS
@@ -214,7 +214,7 @@ type Config struct {
 	Repository string   `hcl:"repository,optional"`
 	Chart      string   `hcl:"chart,attr"`
 	Version    string   `hcl:"version,optional"`
-	Devel      bool     `hcl:"devel,bool"`
+	Devel      bool     `hcl:"devel,optional"`
 	Values     []string `hcl:"values,optional"`
 	Set        []*struct {
 		Name  string `hcl:"name,attr"`
