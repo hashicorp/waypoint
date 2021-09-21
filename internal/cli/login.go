@@ -510,7 +510,7 @@ for one of two reasons. First, the Waypoint server may not be bootstrapped.
 After installing Waypoint on Kubernetes, it takes a few minutes for Waypoint
 to bootstrap itself.
 
-If Waypoint is already bootstrapped, its possible the server administrator
+If Waypoint is already bootstrapped, it's possible the server administrator
 already deleted the secret. Future users should not use this authentication
 method and should instead ask another Waypoint user to generate an invite token
 for them.
