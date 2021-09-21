@@ -3,6 +3,7 @@ import InlineSvg from '@hashicorp/react-inline-svg'
 import classNames from 'classnames'
 import NumberedBlock from 'components/homepage/numbered-block'
 import Features, { FeaturesProps } from 'components/homepage/features'
+import usePrefersReducedMotion from 'lib/hooks/usePrefersReducedMotion'
 import s from './style.module.css'
 
 interface MonitorAndManageProps {
@@ -14,6 +15,7 @@ export default function MonitorAndManage({
   heading,
   features,
 }: MonitorAndManageProps): JSX.Element {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const { ref, inView } = useInView({
     threshold: 0.5,
     triggerOnce: true,
@@ -35,7 +37,7 @@ export default function MonitorAndManage({
       <div
         ref={ref}
         className={classNames(s.media, {
-          [s.visible]: inView,
+          [s.visible]: inView || prefersReducedMotion,
         })}
       >
         <InlineSvg src={require('./graphic.svg?include')} />

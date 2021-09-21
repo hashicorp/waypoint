@@ -4,6 +4,7 @@ import Typical from 'react-typical'
 import InlineSvg from '@hashicorp/react-inline-svg'
 import NumberedBlock from 'components/homepage/numbered-block'
 import Features, { FeaturesProps } from 'components/homepage/features'
+import usePrefersReducedMotion from 'lib/hooks/usePrefersReducedMotion'
 import classNames from 'classnames'
 import s from './style.module.css'
 
@@ -16,6 +17,7 @@ export default function BuildAndDeploy({
   heading,
   features,
 }: BuildAndDeployProps): JSX.Element {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [typeFinished, setTypeFinished] = useState(false)
   const { ref, inView } = useInView({
     triggerOnce: true,
@@ -30,7 +32,12 @@ export default function BuildAndDeploy({
       </div>
 
       <div className={s.media}>
-        <div ref={ref} className={classNames({ [s.active]: typeFinished })}>
+        <div
+          ref={ref}
+          className={classNames({
+            [s.active]: typeFinished || prefersReducedMotion,
+          })}
+        >
           <div className={s.terminalContainer}>
             <pre className={s.terminal}>
               <code>
@@ -39,17 +46,19 @@ export default function BuildAndDeploy({
                 </span>
                 <span className={s.terminalLine}>
                   <span className={s.terminalToken}>❯</span>{' '}
-                  {inView && (
-                    <Typical
-                      steps={[
-                        100,
-                        'waypoint up',
-                        500,
-                        () => setTypeFinished(true),
-                      ]}
-                      wrapper="span"
-                    />
-                  )}
+                  {prefersReducedMotion
+                    ? 'waypoint up'
+                    : inView && (
+                        <Typical
+                          steps={[
+                            100,
+                            'waypoint up',
+                            500,
+                            () => setTypeFinished(true),
+                          ]}
+                          wrapper="span"
+                        />
+                      )}
                 </span>
                 <span className={s.terminalLine}>
                   <span className={s.terminalNote}>

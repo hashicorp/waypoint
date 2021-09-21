@@ -6,6 +6,7 @@ import Section, {
 } from 'components/homepage/section'
 import GraphicSvg from './graphic'
 import Features, { FeaturesProps } from 'components/homepage/features'
+import usePrefersReducedMotion from 'lib/hooks/usePrefersReducedMotion'
 import s from './style.module.css'
 
 interface SectionMonitorAppHealthProps {
@@ -19,6 +20,7 @@ export default function SectionMonitorAppHealth({
   description,
   features,
 }: SectionMonitorAppHealthProps): JSX.Element {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const { ref, inView } = useInView({
     threshold: 0.5,
     triggerOnce: true,
@@ -27,7 +29,7 @@ export default function SectionMonitorAppHealth({
     <Section className={s.monitorAppHealth}>
       <div
         className={classNames(s.media, {
-          [s.visible]: inView,
+          [s.visible]: inView || prefersReducedMotion,
         })}
         ref={ref}
       >

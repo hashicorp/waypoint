@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import classNames from 'classnames'
 import Mask from './Mask'
 import Logos from './Logos'
+import usePrefersReducedMotion from 'lib/hooks/usePrefersReducedMotion'
 import s from './style.module.css'
 
 interface HeroProps {
@@ -10,8 +11,13 @@ interface HeroProps {
 }
 
 export default function Hero({ heading, description }: HeroProps): JSX.Element {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [loaded, setLoaded] = useState(false)
   useEffect(() => {
+    if (prefersReducedMotion) {
+      setLoaded(true)
+      return
+    }
     setTimeout(() => {
       setLoaded(true)
     }, 250)

@@ -6,6 +6,7 @@ import Section, {
 } from 'components/homepage/section'
 import PluginsSvg from './plugins'
 import Features, { FeaturesProps } from 'components/homepage/features'
+import usePrefersReducedMotion from 'lib/hooks/usePrefersReducedMotion'
 import s from './style.module.css'
 
 interface SectionExtendPluginsProps {
@@ -19,6 +20,7 @@ export default function SectionExtendPlugins({
   description,
   features,
 }: SectionExtendPluginsProps): JSX.Element {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const { ref, inView } = useInView({
     threshold: 0.5,
     triggerOnce: true,
@@ -42,7 +44,7 @@ export default function SectionExtendPlugins({
         </div>
         <div
           className={classNames(s.media, {
-            [s.visible]: inView,
+            [s.visible]: inView || prefersReducedMotion,
           })}
           ref={ref}
         >
