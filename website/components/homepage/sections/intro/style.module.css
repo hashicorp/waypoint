@@ -34,7 +34,7 @@
 
   & em {
     font-style: normal;
-    color: var(--waypoint);
+    color: var(--waypoint-link);
   }
 }
 
