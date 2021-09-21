@@ -10,6 +10,7 @@ import (
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/release"
 
 	"github.com/hashicorp/waypoint/builtin/k8s"
 )
@@ -83,6 +84,19 @@ func getChart(name string, cpo *action.ChartPathOptions, settings *cli.EnvSettin
 	}
 
 	return c, path, nil
+}
+
+func getRelease(cfg *action.Configuration, name string) (*release.Release, error) {
+	res, err := action.NewGet(cfg).Run(name)
+	if err != nil {
+		if strings.Contains(err.Error(), "release: not found") {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return res, nil
 }
 
 // resolveChartName returns the proper repository and name values that

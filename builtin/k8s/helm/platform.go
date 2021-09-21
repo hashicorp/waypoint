@@ -58,6 +58,15 @@ func (p *Platform) Deploy(
 	if err != nil {
 		return nil, err
 	}
+	s.Done()
+
+	// We need to look up the previous release if it exists because
+	// if it does then we are upgrading.
+	s = sg.Add("Checking for previous release...")
+	prevRel, err := getRelease(actionConfig, p.config.Name)
+	if err != nil {
+		return nil, err
+	}
 
 	s.Update("Loading Helm chart...")
 	cpo, chartName, err := p.chartPathOptions()
@@ -82,11 +91,52 @@ func (p *Platform) Deploy(
 		chartNS = v
 	}
 
-	// Initialize our installation settings. These defaults are safe defaults
-	// and are mostly taken from the Terraform provider.
-	client := action.NewInstall(actionConfig)
+	// From here on out, we will always return a partial deployment if we error.
+	result := &Deployment{Release: p.config.Name}
+
+	// If we have no previous release, install.
+	if prevRel == nil {
+		// Initialize our installation settings. These defaults are safe defaults
+		// and are mostly taken from the Terraform provider.
+		client := action.NewInstall(actionConfig)
+		client.ChartPathOptions = *cpo
+		client.ClientOnly = false
+		client.DryRun = false
+		client.DisableHooks = false
+		client.Wait = true
+		client.WaitForJobs = false
+		client.Devel = false
+		client.DependencyUpdate = false
+		client.Timeout = 300 * time.Second
+		client.Namespace = chartNS
+		client.ReleaseName = p.config.Name
+		client.GenerateName = false
+		client.NameTemplate = ""
+		client.OutputDir = ""
+		client.Atomic = false
+		client.SkipCRDs = false
+		client.SubNotes = true
+		client.DisableOpenAPIValidation = false
+		client.Replace = false
+		client.Description = ""
+		client.CreateNamespace = true
+
+		s.Update("Installing Chart...")
+		rel, err := client.Run(c, nil)
+		if err != nil {
+			return result, err
+		}
+		s.Done()
+
+		// Ensure our release name matches
+		result.Release = rel.Name
+
+		return result, nil
+	}
+
+	// We have a previous release, upgrade.
+	client := action.NewUpgrade(actionConfig)
 	client.ChartPathOptions = *cpo
-	client.ClientOnly = false
 	client.DryRun = false
 	client.DisableHooks = false
 	client.Wait = true
@@ -95,23 +145,20 @@ func (p *Platform) Deploy(
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
 	client.Namespace = chartNS
-	client.ReleaseName = p.config.Name
-	client.GenerateName = false
-	client.NameTemplate = ""
-	client.OutputDir = ""
 	client.Atomic = false
 	client.SkipCRDs = false
 	client.SubNotes = true
 	client.DisableOpenAPIValidation = false
-	client.Replace = false
 	client.Description = ""
-	client.CreateNamespace = true
+	client.ResetValues = false
+	client.ReuseValues = false
+	client.Recreate = false
+	client.MaxHistory = 0
+	client.CleanupOnFail = false
+	client.Force = false
 
-	// From here on out, we will always return a partial deployment if we error.
-	result := &Deployment{Release: client.ReleaseName}
-
-	s.Update("Installing Chart...")
-	rel, err := client.Run(c, nil)
+	s.Update("Upgrading release...")
+	rel, err := client.Run(prevRel.Name, c, nil)
 	if err != nil {
 		return result, err
 	}
