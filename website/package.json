@@ -6,7 +6,8 @@
     "generate:readme": "next-hashicorp markdown-blocks README.md",
     "format": "next-hashicorp format content/**/* data/**/*",
     "lint": "next-hashicorp lint content/**/* data/**/*",
-    "vercel-build": "echo 'hello world!' && mkdir out && touch out/index.html && echo \"<h1>Hello waypoint!</h1>\" >> out/index.html"
+    "vercel-build": "echo 'hello world!' && mkdir out && touch out/index.html && echo \"<h1>Hello Waypoint preview!</h1>\" >> out/index.html",
+    "vercel-build-todo": "npx --yes @hashicorp/docs-preview@docs-preview build && cp ./docs-preview/out/. ./out/",
   },
   "devDependencies": {
     "@hashicorp/platform-cli": "^1.2.0"
