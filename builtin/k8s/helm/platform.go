@@ -284,6 +284,21 @@ deploy {
 }
 `)
 
+	doc.Example(`
+// Configuring an image to match the build. This assumes the chart
+// has a value named "deployment.image".
+deploy {
+  use "helm" {
+    chart = "${path.app}/chart"
+
+    set {
+      name  = "deployment.image"
+      value = artifact.name
+    }
+  }
+}
+`)
+
 	doc.SetField(
 		"name",
 		"Name of the Helm release.",
