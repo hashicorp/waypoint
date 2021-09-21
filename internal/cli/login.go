@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"sort"
@@ -151,6 +150,8 @@ func (c *LoginCommand) Run(args []string) int {
 		"address", newContext.Server.Address,
 		"tls", newContext.Server.Tls,
 		"tls_skip_verify", newContext.Server.TlsSkipVerify,
+		"token", newContext.Server.AuthToken,
+		"require_auth", newContext.Server.RequireAuth,
 	)
 
 	// Validate the connection
@@ -338,13 +339,7 @@ func (c *LoginCommand) loginK8S(ctx context.Context) (string, int) {
 		return "", 1
 	}
 
-	token, err := base64.StdEncoding.DecodeString(string(tokenB64))
-	if err != nil {
-		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return "", 1
-	}
-
-	return string(token), 0
+	return string(tokenB64), 0
 }
 
 func (c *LoginCommand) k8sServerAddr(ctx context.Context) (string, error) {
