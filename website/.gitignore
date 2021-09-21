@@ -1,0 +1,4 @@
+docs-preview
+node_modules
+.DS_Store
+prettier.config.js
