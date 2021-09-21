@@ -632,26 +632,38 @@ func logger(args []string) ([]string, hclog.Logger, io.Writer, error) {
 	// Process arguments looking for `-v` flags to control the log level.
 	// This overrides whatever the env var set.
 	var outArgs []string
+	// We use this to track if flags are given after a --, indicating they should
+	// be passed through to a secondary command; currently, this is largely to
+	// ensure that the `-v(vv)` flags are passed through to be parsed later;
+	// otherwise we'd swallow them in the below case statement
+	hasDoubleHypen := false
 	for _, arg := range args {
 		if len(arg) != 0 && arg[0] != '-' {
 			outArgs = append(outArgs, arg)
 			continue
 		}
+		if arg == "--" {
+			hasDoubleHypen = true
+		}
 
-		switch arg {
-		case "-v":
-			if level == hclog.NoLevel || level > hclog.Info {
-				level = hclog.Info
+		if !hasDoubleHypen {
+			switch arg {
+			case "-v":
+				if level == hclog.NoLevel || level > hclog.Info {
+					level = hclog.Info
+				}
+			case "-vv":
+				if level == hclog.NoLevel || level > hclog.Debug {
+					level = hclog.Debug
+				}
+			case "-vvv":
+				if level == hclog.NoLevel || level > hclog.Trace {
+					level = hclog.Trace
+				}
+			default:
+				outArgs = append(outArgs, arg)
 			}
-		case "-vv":
-			if level == hclog.NoLevel || level > hclog.Debug {
-				level = hclog.Debug
-			}
-		case "-vvv":
-			if level == hclog.NoLevel || level > hclog.Trace {
-				level = hclog.Trace
-			}
-		default:
+		} else {
 			outArgs = append(outArgs, arg)
 		}
 	}

@@ -64,7 +64,7 @@ type Installer interface {
 type InstallOpts struct {
 	Log            hclog.Logger
 	UI             terminal.UI
-	ServerRunFlags string
+	ServerRunFlags []string
 }
 
 // InstallResults are the results expected for a successful Installer.Install.

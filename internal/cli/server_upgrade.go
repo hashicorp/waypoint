@@ -26,12 +26,11 @@ import (
 type ServerUpgradeCommand struct {
 	*baseCommand
 
-	platform      string
-	contextName   string
-	snapshotName  string
-	flagSnapshot  bool
-	confirm       bool
-	flagServerRun string
+	platform     string
+	contextName  string
+	snapshotName string
+	flagSnapshot bool
+	confirm      bool
 }
 
 func (c *ServerUpgradeCommand) Run(args []string) int {
@@ -218,7 +217,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	installOpts := &serverinstall.InstallOpts{
 		Log:            log,
 		UI:             c.ui,
-		ServerRunFlags: c.flagServerRun,
+		ServerRunFlags: c.args,
 	}
 
 	// Upgrade in place

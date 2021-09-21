@@ -615,7 +615,7 @@ EVAL:
 
 // waypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
 // Nomad API
-func waypointNomadJob(c nomadConfig, rawRunFlags string) *api.Job {
+func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	job := api.NewServiceJob(serverName, serverName, c.region, 50)
 	job.Namespace = &c.namespace
 	job.Datacenters = c.datacenters
@@ -669,11 +669,13 @@ func waypointNomadJob(c nomadConfig, rawRunFlags string) *api.Job {
 	}
 	job.AddTaskGroup(tg)
 
+	ras := []string{"server", "run", "-accept-tos", "-vv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)}
+	ras = append(ras, rawRunFlags...)
 	task := api.NewTask("server", "docker")
 	task.Config = map[string]interface{}{
 		"image":          c.serverImage,
 		"ports":          []string{"server", "ui"},
-		"args":           []string{"server", "run", "-accept-tos", "-vv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort), rawRunFlags},
+		"args":           ras,
 		"auth_soft_fail": c.authSoftFail,
 	}
 	task.Env = map[string]string{
