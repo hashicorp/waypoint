@@ -109,12 +109,17 @@ message Resource {
     // Indicates if an ALB was created by waypoint, and should be destroyed by waypoint
     bool managed = 5;
 
+
     message Listener {
       string arn = 1;
       TargetGroup target_group = 2;
 
       // Indicates if an ALB was created by waypoint, and should be destroyed by waypoint
       bool managed = 3;
+    }
+   
+    message RedirectListener {
+      string arn = 1;
     }
   }
 

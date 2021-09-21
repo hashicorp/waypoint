@@ -280,6 +280,14 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithStatus(p.resourceServiceStatus),
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
 		)),
+		resource.WithResource(resource.NewResource(
+			resource.WithName("redirect listener"),
+			resource.WithPlatform(platformName),
+			resource.WithState(&Resource_Alb_RedirectListener{}),
+			resource.WithCreate(p.resourceAlbRedirectListenerCreate),
+			resource.WithDestroy(p.resourceAlbRedirectListenerDestroy),
+			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
+		)),
 	)
 }
 
@@ -910,6 +918,78 @@ func (p *Platform) resourceServiceDestroy(
 	return nil
 }
 
+func (p *Platform) resourceAlbRedirectListenerCreate(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	sess *session.Session,
+	log hclog.Logger,
+	alb *Resource_Alb,
+	externalIngressPort ExternalIngressPort,
+
+	state *Resource_Alb_RedirectListener,
+) error {
+
+	s := sg.Add("Initiating ALB Redirect Listener creation")
+	defer s.Abort()
+
+	var HTTPListener *elbv2.Listener
+
+	if externalIngressPort == 443 {
+		elbsrv := elbv2.New(sess)
+
+		listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
+			LoadBalancerArn: &alb.Arn,
+		})
+
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to create redirect listener: %s", err)
+		}
+
+		for _, listener := range listeners.Listeners {
+			if *listener.Protocol == "HTTP" {
+				HTTPListener = listener
+			}
+		}
+
+		if HTTPListener != nil && *HTTPListener.DefaultActions[0].Type == "forward" {
+			s.Update("HTTP listener use for forwarding. Please destroy previus deployment or try again deploy app for create redirect listener")
+		} else {
+			s.Update("Creating redirect listener")
+
+			out, err := elbsrv.CreateListenerWithContext(ctx, &elbv2.CreateListenerInput{
+				LoadBalancerArn: &alb.Arn,
+				Port:            aws.Int64(int64(80)),
+				Protocol:        aws.String("HTTP"),
+				DefaultActions: []*elbv2.Action{
+					{
+						RedirectConfig: &elbv2.RedirectActionConfig{
+							Host:       &p.config.ALB.FQDN,
+							Path:       aws.String("/"),
+							Port:       aws.String("443"),
+							Protocol:   aws.String("HTTPS"),
+							StatusCode: aws.String("HTTP_302"),
+						},
+						Type: aws.String("redirect"),
+					},
+				},
+			})
+
+			if err != nil {
+				return status.Errorf(codes.Internal, "failed to create redirect listener: %s", err)
+			}
+
+			s.Update("Create redirect listener")
+
+			state.Arn = *out.Listeners[0].ListenerArn
+		}
+
+	}
+
+	s.Done()
+
+	return nil
+}
+
 func (p *Platform) resourceAlbListenerCreate(
 	ctx context.Context,
 	sg terminal.StepGroup,
@@ -982,8 +1062,15 @@ func (p *Platform) resourceAlbListenerCreate(
 			return status.Errorf(codes.Internal, "failed to describe listeners for alb (ARN %q): %s", alb.Arn, err)
 		}
 
-		if len(listeners.Listeners) > 0 {
+		if len(listeners.Listeners) == 1 {
 			listener = listeners.Listeners[0]
+			s.Update("Using existing ALB Listener (ARN: %q)", *listener.ListenerArn)
+		} else if len(listeners.Listeners) > 1 {
+			for _, l := range listeners.Listeners {
+				if *l.Protocol == protocol {
+					listener = l
+				}
+			}
 			s.Update("Using existing ALB Listener (ARN: %q)", *listener.ListenerArn)
 		} else {
 			s.Update("Creating new ALB Listener")
@@ -1021,6 +1108,10 @@ func (p *Platform) resourceAlbListenerCreate(
 	if !newListener {
 		def := listener.DefaultActions
 
+		if *def[0].Type == "redirect" {
+			tgs[0].Weight = aws.Int64(100)
+		}
+
 		if len(def) > 0 && def[0].ForwardConfig != nil {
 			for _, tg := range def[0].ForwardConfig.TargetGroups {
 				if *tg.Weight > 0 {
@@ -1054,6 +1145,71 @@ func (p *Platform) resourceAlbListenerCreate(
 	}
 
 	s.Done()
+	return nil
+}
+
+func (p *Platform) resourceAlbRedirectListenerDestroy(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	sess *session.Session,
+	log hclog.Logger,
+	state *Resource_Alb_RedirectListener,
+) error {
+	if state.Arn == "" {
+		log.Debug("Missing alb redirect listener ARN - it must not have been created successfully. Skipping delete.")
+		return nil
+	}
+
+	s := sg.Add("Initiating deletion of ALB Redirect Listener (ARN: %q)", state.Arn)
+	defer s.Abort()
+
+	elbsrv := elbv2.New(sess)
+	s.Update("Describing redirect ALB listener (ARN: %q)", state.Arn)
+
+	listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
+		ListenerArns: []*string{&state.Arn},
+	})
+	if err != nil {
+		// There doesn't seem to be an aws error to cast to for this code.
+		if strings.Contains(err.Error(), "ListenerNotFound") {
+			s.Update("Redirect listener does not exist and must have been destroyed (ARN %q).", state.Arn)
+			s.Status(terminal.StatusWarn)
+			s.Done()
+			return nil
+		}
+		return status.Errorf(codes.Internal, "failed to describe listener with ARN %q: %s", state.Arn, err)
+	}
+
+	if len(listeners.Listeners) == 0 {
+		// Could happen if listener was deleted out-of-band
+		s.Update("Redirect ALB listener does not exist - not deleting (ARN: %q)", state.Arn)
+		s.Status(terminal.StatusWarn)
+		s.Done()
+		return nil
+	}
+
+	listener := listeners.Listeners[0]
+
+	log.Debug("redirect listener arn", "arn", *listener.ListenerArn)
+
+	def := listener.DefaultActions
+
+	if *def[0].Type == "redirect" {
+		s.Update("Deleting redirect ALB listener (ARN: %q)", state.Arn)
+		_, err = elbsrv.DeleteListenerWithContext(ctx, &elbv2.DeleteListenerInput{
+			ListenerArn: listener.ListenerArn,
+		})
+
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to delete redirect ALB listener (ARN %q): %s", *listener.ListenerArn, err)
+		}
+		s.Update("Deleted redirect ALB Listener")
+	} else {
+		s.Update("Redirect ALB listener use for forwarding (ARN: %q)", state.Arn)
+	}
+
+	s.Done()
+
 	return nil
 }
 
