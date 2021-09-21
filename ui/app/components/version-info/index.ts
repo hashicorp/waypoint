@@ -5,16 +5,18 @@ import ApiService from 'waypoint/services/api';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { VersionInfo as info } from 'waypoint-pb';
 
-export default class VersionInfo extends Component {
+type Args = Record<string, never>;
+
+export default class VersionInfo extends Component<Args> {
   @service api!: ApiService;
   @tracked versionInfo: info.AsObject | undefined;
 
-  constructor(owner: any, args: any) {
+  constructor(owner: unknown, args: Args) {
     super(owner, args);
     this.getVersionInfo();
   }
 
-  async getVersionInfo() {
+  async getVersionInfo(): Promise<void> {
     let resp = await this.api.client.getVersionInfo(new Empty(), this.api.WithMeta());
     let versionInfo = resp?.getInfo();
 
