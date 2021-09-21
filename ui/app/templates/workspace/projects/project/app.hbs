@@ -22,7 +22,7 @@
   </div>
   <div class="actions">
     {{#if (project-is-remote-uppable @model.project)}}
-      <UpButton @application={{@model.application}} />
+      <Actions::Up @application={{@model.application}} />
     {{else}}
       {{#if @model.releases.length}}
       <LatestReleaseUrl @releases={{@model.releases}}></LatestReleaseUrl>

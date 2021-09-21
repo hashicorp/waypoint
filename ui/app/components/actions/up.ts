@@ -1,24 +1,25 @@
-import Component from '@glimmer/component';
-import { inject as service } from '@ember/service';
-import ApiService from 'waypoint/services/api';
-import PollModelService from 'waypoint/services/poll-model';
 import {
-  Ref,
+  GetJobRequest,
+  GetJobStreamResponse,
   Job,
   QueueJobRequest,
   QueueJobResponse,
-  GetJobRequest,
-  GetJobStreamResponse,
+  Ref,
 } from 'waypoint-pb';
-import { task } from 'ember-concurrency-decorators';
+
+import ApiService from 'waypoint/services/api';
+import Component from '@glimmer/component';
+import PollModelService from 'waypoint/services/poll-model';
 import { perform } from 'ember-concurrency-ts';
+import { inject as service } from '@ember/service';
+import { task } from 'ember-concurrency-decorators';
 import { tracked } from '@glimmer/tracking';
 
-interface UpButtonArgs {
+interface ActionsUpArgs {
   application: Ref.Application.AsObject;
 }
 
-export default class UpButton extends Component<UpButtonArgs> {
+export default class ActionsUp extends Component<ActionsUpArgs> {
   @service api!: ApiService;
   @service pollModel!: PollModelService;
 
