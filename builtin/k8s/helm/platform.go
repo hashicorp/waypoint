@@ -2,13 +2,13 @@ package helm
 
 import (
 	"context"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"helm.sh/helm/v3/pkg/action"
 )
 
 // Platform is the Platform implementation
@@ -49,16 +49,78 @@ func (p *Platform) Deploy(
 	defer func() { s.Abort() }()
 
 	s.Update("Initializing Helm...")
+	settings, err := p.settingsInit()
+	if err != nil {
+		return nil, err
+	}
+
 	actionConfig, err := p.actionInit(log)
 	if err != nil {
 		return nil, err
 	}
-	if err := cmd.Run(); err != nil {
+
+	s.Update("Loading Helm chart...")
+	cpo, chartName, err := p.chartPathOptions()
+	if err != nil {
 		return nil, err
+	}
+
+	c, _, err := getChart(chartName, cpo, settings)
+	if err != nil {
+		return nil, err
+	}
+	s.Update("Loaded Chart: %s (version: %s)", c.Metadata.Name, c.Metadata.Version)
+	s.Done()
+
+	s = sg.Add("")
+
+	// TODO: chart dependencies here
+	// TODO: values
+
+	chartNS := ""
+	if v := p.config.Namespace; v != "" {
+		chartNS = v
+	}
+
+	// Initialize our installation settings. These defaults are safe defaults
+	// and are mostly taken from the Terraform provider.
+	client := action.NewInstall(actionConfig)
+	client.ChartPathOptions = *cpo
+	client.ClientOnly = false
+	client.DryRun = false
+	client.DisableHooks = false
+	client.Wait = true
+	client.WaitForJobs = false
+	client.Devel = false
+	client.DependencyUpdate = false
+	client.Timeout = 300 * time.Second
+	client.Namespace = chartNS
+	client.ReleaseName = p.config.Name
+	client.GenerateName = false
+	client.NameTemplate = ""
+	client.OutputDir = ""
+	client.Atomic = false
+	client.SkipCRDs = false
+	client.SubNotes = true
+	client.DisableOpenAPIValidation = false
+	client.Replace = false
+	client.Description = ""
+	client.CreateNamespace = true
+
+	// From here on out, we will always return a partial deployment if we error.
+	result := &Deployment{Release: client.ReleaseName}
+
+	s.Update("Installing Chart...")
+	rel, err := client.Run(c, nil)
+	if err != nil {
+		return result, err
 	}
 	s.Done()
 
-	return deployment, nil
+	// Ensure our release name matches
+	result.Release = rel.Name
+
+	return result, nil
 }
 
 // Destroy
@@ -70,21 +132,16 @@ func (p *Platform) Destroy(
 ) error {
 	sg := ui.StepGroup()
 	defer sg.Wait()
-	s := sg.Add("Executing kubectl to destroy...")
+	s := sg.Add("Uninstalling Helm release...")
 	defer func() { s.Abort() }()
 
-	if deployment.PruneLabel == "" {
-		s.Update("No prune label on deployment. Not destroying.")
-		s.Done()
-		return nil
-	}
-
-	// Apply it
-	cmd, err := p.cmd(ctx, s, "delete", "all", "-l", deployment.PruneLabel)
+	actionConfig, err := p.actionInit(log)
 	if err != nil {
 		return err
 	}
-	if err := cmd.Run(); err != nil {
+
+	_, err = action.NewUninstall(actionConfig).Run(deployment.Release)
+	if err != nil {
 		return err
 	}
 
@@ -96,9 +153,8 @@ func (p *Platform) Destroy(
 func (p *Platform) Generation(
 	ctx context.Context,
 ) ([]byte, error) {
-	// Static generation since we will always use the `prune_label` to
-	// automatically delete unused resources.
-	return []byte("kubernetes-apply"), nil
+	// The generation is the release name.
+	return []byte(p.config.Name), nil
 }
 
 // Config is the configuration structure for the Platform.
@@ -109,13 +165,15 @@ type Config struct {
 	Repository string   `hcl:"repository,optional"`
 	Chart      string   `hcl:"chart,attr"`
 	Version    string   `hcl:"version,optional"`
+	Devel      bool     `hcl:"devel,bool"`
 	Values     []string `hcl:"values,optional"`
 	Set        []*struct {
 		Name  string `hcl:"name,attr"`
 		Value string `hcl:"value,attr"`
 		Type  string `hcl:"type,optional"`
 	} `hcl:"set,block`
-	Driver string `hcl:"driver,optional"`
+	Driver    string `hcl:"driver,optional"`
+	Namespace string `hcl:"namespace,optional"`
 
 	KubeconfigPath string `hcl:"kubeconfig,optional"`
 	Context        string `hcl:"context,optional"`
@@ -202,6 +260,15 @@ deploy {
 	)
 
 	doc.SetField(
+		"devel",
+		"True to considered non-released chart versions for installation.",
+		docs.Summary(
+			"This is equivalent to the `--devel` flag to `helm install`.",
+		),
+		docs.Default("false"),
+	)
+
+	doc.SetField(
 		"values",
 		"Values in raw YAML to configure the Helm chart.",
 		docs.Summary(
@@ -229,6 +296,15 @@ deploy {
 			"be set on the runners.",
 		),
 		docs.Default("secret"),
+	)
+
+	doc.SetField(
+		"namespace",
+		"Namespace to deploy the Helm chart.",
+		docs.Summary(
+			"This will be created if it does not exist. This defaults to the ",
+			"current namespace of the auth settings.",
+		),
 	)
 
 	doc.SetField(
