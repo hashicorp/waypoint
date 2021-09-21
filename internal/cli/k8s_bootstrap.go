@@ -3,9 +3,7 @@ package cli
 import (
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -15,12 +13,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/pkg/k8sauth"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
@@ -58,7 +55,7 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 	}
 
 	// Get our Kubernetes client
-	clientset, ns, _, err := clientsetInCluster()
+	clientset, ns, _, err := k8sauth.ClientsetInCluster()
 	if err != nil {
 		c.ui.Output(
 			"Error initializing Kubernetes client: %s",
@@ -340,27 +337,4 @@ Usage: waypoint k8s bootstrap [options]
   should be no concern of data loss in the event of a bootstrap failure.
 
 ` + c.Flags().Help())
-}
-
-// clientsetInCluster returns a K8S clientset and configured namespace for
-// in-cluster usage.
-func clientsetInCluster() (*kubernetes.Clientset, string, *rest.Config, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, "", nil, err
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, "", nil, err
-	}
-
-	ns := "default"
-	if data, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace"); err == nil {
-		if v := strings.TrimSpace(string(data)); len(v) > 0 {
-			ns = v
-		}
-	}
-
-	return clientset, ns, config, nil
 }
