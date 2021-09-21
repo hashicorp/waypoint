@@ -465,6 +465,11 @@ Usage: waypoint login [server address]
   other forms such as OIDC. You can use "-token" to specify a login or
   invite token and configure the CLI to access the server.
 
+  The "-from-kubernetes" flag can be used after a fresh Waypoint installation
+  on Kubernetes to log in using the bootstrap token. This requires local
+  Kubernetes connection configuration via a KUBECONFIG environment variable
+  or file.
+
 ` + c.Flags().Help())
 }
 
