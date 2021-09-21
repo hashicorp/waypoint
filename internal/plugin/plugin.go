@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/google/cloudrun"
 	"github.com/hashicorp/waypoint/builtin/k8s"
 	k8sapply "github.com/hashicorp/waypoint/builtin/k8s/apply"
+	k8shelm "github.com/hashicorp/waypoint/builtin/k8s/helm"
 	"github.com/hashicorp/waypoint/builtin/nomad"
 	"github.com/hashicorp/waypoint/builtin/nomad/jobspec"
 	"github.com/hashicorp/waypoint/builtin/pack"
@@ -40,6 +41,7 @@ var (
 		"azure-container-instance": aci.Options,
 		"kubernetes":               k8s.Options,
 		"kubernetes-apply":         k8sapply.Options,
+		"helm":                     k8shelm.Options,
 		"aws-ecs":                  ecs.Options,
 		"aws-ecr":                  ecr.Options,
 		"nomad":                    nomad.Options,
