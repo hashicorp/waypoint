@@ -1,0 +1,3 @@
+```release-note:improvement
+ui: Gitops users not using Git polling can run "Up" from the browser
+```
