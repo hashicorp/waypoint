@@ -56,14 +56,6 @@ If you're installing a local chart, this is the path to the chart. If you're ins
 
 - Type: **string**
 
-#### devel
-
-True to considered non-released chart versions for installation.
-
-This is equivalent to the `--devel` flag to `helm install`.
-
-- Type: **bool**
-
 #### name
 
 Name of the Helm release.
@@ -90,6 +82,16 @@ The kubectl context to use, as defined in the kubeconfig file.
 
 - Type: **string**
 - **Optional**
+
+#### devel
+
+True to considered non-released chart versions for installation.
+
+This is equivalent to the `--devel` flag to `helm install`.
+
+- Type: **bool**
+- **Optional**
+- Default: false
 
 #### driver
 
