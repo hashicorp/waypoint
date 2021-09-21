@@ -49,6 +49,7 @@ var (
 	// hiddenCommands are not shown in CLI help output.
 	hiddenCommands = map[string]struct{}{
 		"plugin": {},
+		"k8s":    {},
 
 		// Deprecated:
 		"token": {}, // replaced by "user"
@@ -592,6 +593,12 @@ func Commands(
 
 		"runner list": func() (cli.Command, error) {
 			return &OnDemandRunnerConfigListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"k8s bootstrap": func() (cli.Command, error) {
+			return &K8SBootstrapCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},

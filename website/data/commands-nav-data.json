@@ -239,18 +239,6 @@
     "path": "status"
   },
   {
-    "title": "token exchange",
-    "path": "token-exchange"
-  },
-  {
-    "title": "token invite",
-    "path": "token-invite"
-  },
-  {
-    "title": "token new",
-    "path": "token-new"
-  },
-  {
     "title": "user inspect",
     "path": "user-inspect"
   },
@@ -269,5 +257,24 @@
   {
     "title": "version",
     "path": "version"
+  },
+  {
+    "divider": true
+  },
+  {
+    "title": "k8s bootstrap",
+    "path": "k8s-bootstrap"
+  },
+  {
+    "title": "token exchange",
+    "path": "token-exchange"
+  },
+  {
+    "title": "token invite",
+    "path": "token-invite"
+  },
+  {
+    "title": "token new",
+    "path": "token-new"
   }
 ]
