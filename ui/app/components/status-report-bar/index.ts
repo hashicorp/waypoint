@@ -28,24 +28,24 @@ export default class StatusReportBar extends Component<StatusReportBarArgs> {
   @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
   @tracked isRefreshRunning = false;
 
-  constructor(owner: any, args: any) {
+  constructor(owner: unknown, args: StatusReportBarArgs) {
     super(owner, args);
   }
 
-  get artifactType() {
+  get artifactType(): StatusReportBarArgs['artifactType'] {
     return this.args.artifactType;
   }
 
-  get model() {
+  get model(): StatusReportBarArgs['model'] {
     return this.args.model;
   }
 
-  get statusReport() {
+  get statusReport(): StatusReportBarArgs['model']['statusReport'] {
     return this.model.statusReport;
   }
 
   @action
-  async refreshHealthCheck(e: Event) {
+  async refreshHealthCheck(e: Event): Promise<void> {
     e.preventDefault();
 
     let ref = new Ref.Operation();
