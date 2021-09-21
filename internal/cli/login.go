@@ -38,6 +38,7 @@ type LoginCommand struct {
 
 func (c *LoginCommand) Run(args []string) int {
 	ctx := c.Ctx
+	log := c.Log
 
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	if err := c.Init(
@@ -77,6 +78,8 @@ func (c *LoginCommand) Run(args []string) int {
 	// If we are using K8S and we don't have an address set, then
 	// look it up using the service.
 	if c.flagK8S && c.flagConnection.Server.Address == "" {
+		log.Debug("-from-k8s with no address, detecting from Kubernetes service",
+			"service", c.flagK8SService)
 		addr, err := c.k8sServerAddr(ctx)
 		if err != nil {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -89,6 +92,12 @@ func (c *LoginCommand) Run(args []string) int {
 		// chart. We will add a way to detect TLS settings later.
 		c.flagConnection.Server.Tls = true
 		c.flagConnection.Server.TlsSkipVerify = true
+
+		log.Debug("-from-kubernetes detected connection info",
+			"address", addr,
+			"tls", c.flagConnection.Server.Tls,
+			"tls_skip_verify", c.flagConnection.Server.TlsSkipVerify,
+		)
 	}
 
 	// Manually initialize our client. We have to do this because we have
@@ -108,12 +117,15 @@ func (c *LoginCommand) Run(args []string) int {
 	var authFunc func(context.Context) (string, int)
 	switch {
 	case c.flagK8S:
+		log.Info("login method", "method", "kubernetes")
 		authFunc = c.loginK8S
 
 	case c.flagToken != "":
+		log.Info("login method", "method", "token")
 		authFunc = c.loginToken
 
 	default:
+		log.Info("login method", "method", "OIDC")
 		authFunc = c.loginOIDC
 	}
 
@@ -135,6 +147,21 @@ func (c *LoginCommand) Run(args []string) int {
 	}
 	newContext.Server.AuthToken = token
 	newContext.Server.RequireAuth = true
+	log.Debug("final login connection info",
+		"address", newContext.Server.Address,
+		"tls", newContext.Server.Tls,
+		"tls_skip_verify", newContext.Server.TlsSkipVerify,
+	)
+
+	// Validate the connection
+	_, err = c.initClient(ctx, serverclient.FromContextConfig(&newContext))
+	if err != nil {
+		c.ui.Output(fmt.Sprintf(
+			strings.TrimSpace(errTokenValidation),
+			clierrors.Humanize(err),
+		), terminal.WithErrorStyle())
+		return 1
+	}
 
 	// If the default context matches the server address, then we overwrite
 	// that one. This prevents constant context sprawl as we reauth.
@@ -487,6 +514,14 @@ If Waypoint is already bootstrapped, its possible the server administrator
 already deleted the secret. Future users should not use this authentication
 method and should instead ask another Waypoint user to generate an invite token
 for them.
+`
+
+	errTokenValidation = `
+Error while validating the login token. This generally shouldn't happen.
+Waypoint performs a final verification that the login is valid and this failed.
+Please see the error message below:
+
+%s
 `
 
 	outVisitURL = `
