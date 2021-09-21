@@ -4,7 +4,6 @@
   {{/if}}
   <Pds::Button
     @variant="primary"
-    @compact={{true}}
     disabled={{this.up.isRunning}}
     {{on "click" (perform this.up @application)}}
   >

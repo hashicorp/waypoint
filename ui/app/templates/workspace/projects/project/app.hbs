@@ -21,7 +21,7 @@
     </small>
   </div>
   <div class="actions">
-    {{#if (project-is-remote-uppable @model.project)}}
+    {{#if (and (project-is-remote-uppable @model.project) (not @model.releases.length))}}
       <Actions::Up @application={{@model.application}} />
     {{else}}
       {{#if @model.releases.length}}
