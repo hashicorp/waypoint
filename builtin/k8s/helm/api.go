@@ -11,6 +11,8 @@ import (
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/strvals"
+	"sigs.k8s.io/yaml"
 
 	"github.com/hashicorp/waypoint/builtin/k8s"
 )
@@ -72,6 +74,46 @@ func (p *Platform) chartPathOptions() (*action.ChartPathOptions, string, error) 
 	}, chartName, nil
 }
 
+func (p *Platform) chartValues() (map[string]interface{}, error) {
+	base := map[string]interface{}{}
+
+	// First merge all our values from YAML documents.
+	for _, values := range p.config.Values {
+		if values == "" {
+			continue
+		}
+
+		currentMap := map[string]interface{}{}
+		if err := yaml.Unmarshal([]byte(values), &currentMap); err != nil {
+			return nil, fmt.Errorf("---> %v %s", err, values)
+		}
+
+		base = mergeMaps(base, currentMap)
+	}
+
+	// Next get all our set configs
+	for _, set := range p.config.Set {
+		name := set.Name
+		value := set.Value
+		valueType := set.Type
+
+		switch valueType {
+		case "auto", "":
+			if err := strvals.ParseInto(fmt.Sprintf("%s=%s", name, value), base); err != nil {
+				return nil, fmt.Errorf("failed parsing key %q with value %s, %s", name, value, err)
+			}
+		case "string":
+			if err := strvals.ParseIntoString(fmt.Sprintf("%s=%s", name, value), base); err != nil {
+				return nil, fmt.Errorf("failed parsing key %q with value %s, %s", name, value, err)
+			}
+		default:
+			return nil, fmt.Errorf("unexpected type: %s", valueType)
+		}
+	}
+
+	return base, nil
+}
+
 func getChart(name string, cpo *action.ChartPathOptions, settings *cli.EnvSettings) (*chart.Chart, string, error) {
 	path, err := cpo.LocateChart(name, settings)
 	if err != nil {
@@ -112,4 +154,25 @@ func resolveChartName(repository, name string) (string, string, error) {
 	}
 
 	return "", name, nil
+}
+
+// Merges source and destination map, preferring values from the source map
+// Taken from github.com/helm/pkg/cli/values/options.go
+func mergeMaps(a, b map[string]interface{}) map[string]interface{} {
+	out := make(map[string]interface{}, len(a))
+	for k, v := range a {
+		out[k] = v
+	}
+	for k, v := range b {
+		if v, ok := v.(map[string]interface{}); ok {
+			if bv, ok := out[k]; ok {
+				if bv, ok := bv.(map[string]interface{}); ok {
+					out[k] = mergeMaps(bv, v)
+					continue
+				}
+			}
+		}
+		out[k] = v
+	}
+	return out
 }

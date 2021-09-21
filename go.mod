@@ -116,6 +116,7 @@ require (
 	k8s.io/apimachinery v0.22.1
 	k8s.io/client-go v0.22.1
 	k8s.io/utils v0.0.0-20210820185131-d34e5cb4466e
+	sigs.k8s.io/yaml v1.2.0
 )
 
 // NOTE(mitchellh): I'm keeping these commented and in here because during

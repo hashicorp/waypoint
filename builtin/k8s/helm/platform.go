@@ -84,7 +84,12 @@ func (p *Platform) Deploy(
 	s = sg.Add("")
 
 	// TODO: chart dependencies here
-	// TODO: values
+
+	// Parse our values
+	values, err := p.chartValues()
+	if err != nil {
+		return nil, err
+	}
 
 	chartNS := ""
 	if v := p.config.Namespace; v != "" {
@@ -122,7 +127,7 @@ func (p *Platform) Deploy(
 		client.CreateNamespace = true
 
 		s.Update("Installing Chart...")
-		rel, err := client.Run(c, nil)
+		rel, err := client.Run(c, values)
 		if err != nil {
 			return result, err
 		}
@@ -158,7 +163,7 @@ func (p *Platform) Deploy(
 	client.Force = false
 
 	s.Update("Upgrading release...")
-	rel, err := client.Run(prevRel.Name, c, nil)
+	rel, err := client.Run(prevRel.Name, c, values)
 	if err != nil {
 		return result, err
 	}
