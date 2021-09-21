@@ -89,6 +89,7 @@ func (c *baseCommand) initClient(
 		serverclient.FromContext(c.contextStorage, ""),
 		serverclient.FromEnv(),
 		serverclient.FromContextConfig(flagConnection),
+		serverclient.Logger(c.Log.Named("serverclient")),
 	}, connectOpts...)
 	c.clientContext, err = serverclient.ContextConfig(connectOpts...)
 	if err != nil {
