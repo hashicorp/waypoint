@@ -220,7 +220,7 @@ type Config struct {
 		Name  string `hcl:"name,attr"`
 		Value string `hcl:"value,attr"`
 		Type  string `hcl:"type,optional"`
-	} `hcl:"set,block`
+	} `hcl:"set,block"`
 	Driver    string `hcl:"driver,optional"`
 	Namespace string `hcl:"namespace,optional"`
 
