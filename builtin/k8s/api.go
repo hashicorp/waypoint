@@ -19,12 +19,12 @@ type clientsetInfo struct {
 	Config    *rest.Config
 }
 
-// clientset returns a K8S clientset and configured namespace. This will
+// Clientset returns a K8S clientset and configured namespace. This will
 // attempt to use in-cluster auth if available if kubeconfig is not explicitly
 // specified. Otherwise, this will fall back to out of cluster auth.
-func clientset(kubeconfig, context string) (*kubernetes.Clientset, string, *rest.Config, error) {
+func Clientset(kubeconfig, context string) (*kubernetes.Clientset, string, *rest.Config, error) {
 	if kubeconfig == "" {
-		cs, ns, c, err := clientsetInCluster()
+		cs, ns, c, err := ClientsetInCluster()
 		if err == nil {
 			return cs, ns, c, nil
 		}
@@ -37,11 +37,11 @@ func clientset(kubeconfig, context string) (*kubernetes.Clientset, string, *rest
 		}
 	}
 
-	return clientsetOutOfCluster(kubeconfig, context)
+	return ClientsetOutOfCluster(kubeconfig, context)
 }
 
-// clientsetOutOfCluster loads a Kubernetes clientset using only a kubeconfig.
-func clientsetOutOfCluster(kubeconfig, context string) (*kubernetes.Clientset, string, *rest.Config, error) {
+// ClientsetOutOfCluster loads a Kubernetes clientset using only a kubeconfig.
+func ClientsetOutOfCluster(kubeconfig, context string) (*kubernetes.Clientset, string, *rest.Config, error) {
 	loader := clientcmd.NewDefaultClientConfigLoadingRules()
 
 	// Path to the kube config file
@@ -79,9 +79,9 @@ func clientsetOutOfCluster(kubeconfig, context string) (*kubernetes.Clientset, s
 	return clientset, ns, clientconfig, nil
 }
 
-// clientsetInCluster returns a K8S clientset and configured namespace for
+// ClientsetInCluster returns a K8S clientset and configured namespace for
 // in-cluster usage.
-func clientsetInCluster() (*kubernetes.Clientset, string, *rest.Config, error) {
+func ClientsetInCluster() (*kubernetes.Clientset, string, *rest.Config, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, "", nil, err
