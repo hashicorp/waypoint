@@ -80,10 +80,7 @@ func (p *Platform) Deploy(
 	}
 	s.Update("Loaded Chart: %s (version: %s)", c.Metadata.Name, c.Metadata.Version)
 	s.Done()
-
 	s = sg.Add("")
-
-	// TODO: chart dependencies here
 
 	// Parse our values
 	values, err := p.chartValues()
