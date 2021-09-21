@@ -1273,7 +1273,7 @@ func newStatefulSet(c k8sConfig, rawRunFlags []string) (*appsv1.StatefulSet, err
 								},
 							},
 							Command: []string{serviceName},
-							Args: ras,
+							Args:    ras,
 							Ports: []apiv1.ContainerPort{
 								{
 									Name:          "grpc",
