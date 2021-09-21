@@ -1179,6 +1179,8 @@ func (c *StatusCommand) getWorkspaceFromProject(pr *pb.GetProjectResponse) (stri
 	var workspace string
 
 	if len(pr.Workspaces) != 0 {
+		// TODO (clint): verify this is fine with the removal of default
+		// workspace flag setting
 		if c.flagWorkspace != "" {
 			for _, ws := range pr.Workspaces {
 				if ws.Workspace.Workspace == c.flagWorkspace {
