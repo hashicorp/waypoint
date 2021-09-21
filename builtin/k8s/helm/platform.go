@@ -2,6 +2,7 @@ package helm
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -191,7 +192,13 @@ func (p *Platform) Destroy(
 
 	_, err = action.NewUninstall(actionConfig).Run(deployment.Release)
 	if err != nil {
-		return err
+		if strings.Contains(err.Error(), "release: not found") {
+			err = nil
+		}
+
+		if err != nil {
+			return err
+		}
 	}
 
 	s.Done()
