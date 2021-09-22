@@ -9,7 +9,7 @@ export default config;
  */
 declare const config: {
   apiAddress: string;
-  environment: any;
+  environment: string;
   modulePrefix: string;
   podModulePrefix: string;
   locationType: string;

@@ -1,6 +1,6 @@
 import { helper } from '@ember/component/helper';
 
-export function enforceProtocol(params/*, hash*/) {
+export function enforceProtocol(params: [string] /*, hash*/): string {
   let str = params[0];
 
   let isHttps = str.startsWith('https://');
