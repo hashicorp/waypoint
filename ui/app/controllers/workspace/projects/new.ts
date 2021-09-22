@@ -12,7 +12,7 @@ export default class WorkspaceProjectsNew extends Controller {
   @tracked createGit = false;
 
   @action
-  async saveProject(e: Event) {
+  async saveProject(e: Event): Promise<void> {
     e.preventDefault();
     let project = this.model;
     let ref = new Project();
