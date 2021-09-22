@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/mitchellh/mapstructure"
@@ -35,6 +36,16 @@ type Resource struct {
 	// a "json" tag so this lets you unmarshal into a richer official
 	// Kubernetes structure directly.
 	RawJSON []byte
+}
+
+// FullKind returns the Kind of this resource with the APIVersion as a prefix.
+// This will not prefix core types (such as Secret).
+func (r *Resource) FullKind() string {
+	if r.APIVersion == "" {
+		return r.Kind
+	}
+
+	return fmt.Sprintf("%s/%s", r.APIVersion, r.Kind)
 }
 
 // Parse parses multi-document YAML contents into a manifest.
