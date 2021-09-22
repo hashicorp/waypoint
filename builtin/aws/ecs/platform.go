@@ -978,7 +978,7 @@ func (p *Platform) resourceAlbRedirectListenerCreate(
 				return status.Errorf(codes.Internal, "failed to create redirect listener: %s", err)
 			}
 
-			s.Update("Create redirect listener")
+			s.Update("Redirect listener is created")
 
 			state.Arn = *out.Listeners[0].ListenerArn
 		}
@@ -1203,7 +1203,7 @@ func (p *Platform) resourceAlbRedirectListenerDestroy(
 		if err != nil {
 			return status.Errorf(codes.Internal, "failed to delete redirect ALB listener (ARN %q): %s", *listener.ListenerArn, err)
 		}
-		s.Update("Deleted redirect ALB Listener")
+		s.Update("Redirect ALB Listener is deleted")
 	} else {
 		s.Update("Redirect ALB listener use for forwarding (ARN: %q)", state.Arn)
 	}
