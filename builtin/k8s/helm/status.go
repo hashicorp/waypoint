@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"helm.sh/helm/v3/pkg/release"
 
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
@@ -81,6 +82,14 @@ func (p *Platform) Status(
 
 		report.HealthMessage = fmt.Sprintf(
 			"%s: %s", rel.Info.Status, rel.Info.Description)
+	}
+
+	// For our resources, set a created time to the FirstDeployed of
+	// this release if there is none. This lets us have SOMETHING.
+	for _, r := range report.Resources {
+		if r.CreatedTime == nil {
+			r.CreatedTime = timestamppb.New(rel.Info.FirstDeployed.Time)
+		}
 	}
 
 	return report, nil
