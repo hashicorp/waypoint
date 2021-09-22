@@ -1,15 +1,19 @@
 {
   "scripts": {
-    "start": "npx --yes @hashicorp/docs-preview@docs-preview",
+    "start": "npx --yes @hashicorp/docs-preview@docs-preview local",
     "dev": "npm run start",
     "clean": "rm -rf ./docs-preview",
     "generate:readme": "next-hashicorp markdown-blocks README.md",
     "format": "next-hashicorp format content/**/* data/**/*",
     "lint": "next-hashicorp lint content/**/* data/**/*",
     "vercel-build-basic-test": "echo 'hello world!' && mkdir out && touch out/index.html && echo \"<h1>Hello Waypoint preview!</h1>\" >> out/index.html",
-    "vercel-build": "npx --yes @hashicorp/docs-preview@docs-preview build && cp -R ./docs-preview/out/. ./out"
+    "vercel-build": "npm --version && npx --yes @hashicorp/docs-preview@docs-preview build && cp -R ./docs-preview/out/. ./out"
   },
   "devDependencies": {
     "@hashicorp/platform-cli": "^1.2.0"
+  },
+  "engines": {
+    "npm": ">=7.0.0",
+    "node": ">=10.0.0"
   }
 }
