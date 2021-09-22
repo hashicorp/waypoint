@@ -1,0 +1,3 @@
+```release-note:feature
+cli: Allow `install` cmd to support pass-through flags to `server run`
+```

@@ -639,10 +639,18 @@ func logger(args []string) ([]string, hclog.Logger, io.Writer, error) {
 	// Process arguments looking for `-v` flags to control the log level.
 	// This overrides whatever the env var set.
 	var outArgs []string
-	for _, arg := range args {
+	for i, arg := range args {
 		if len(arg) != 0 && arg[0] != '-' {
 			outArgs = append(outArgs, arg)
 			continue
+		}
+
+		// If we hit a break indicating pass-through flags, we add them all to
+		// outArgs and just exit, since we don't want to process any secondary
+		//  `-v` flags at this time.
+		if arg == "--" {
+			outArgs = append(outArgs, args[i:]...)
+			break
 		}
 
 		switch arg {

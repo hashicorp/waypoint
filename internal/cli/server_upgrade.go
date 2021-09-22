@@ -215,8 +215,9 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		initServerVersion, terminal.WithInfoStyle())
 
 	installOpts := &serverinstall.InstallOpts{
-		Log: log,
-		UI:  c.ui,
+		Log:            log,
+		UI:             c.ui,
+		ServerRunFlags: c.args,
 	}
 
 	// Upgrade in place

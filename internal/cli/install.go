@@ -83,9 +83,19 @@ func (c *InstallCommand) Run(args []string) int {
 		return 1
 	}
 
+	// collect any args after a `--` break to pass forward as secondary flags
+	var secondaryArgs []string
+	for i, f := range args {
+		if f == "--" {
+			secondaryArgs = args[(i + 1):]
+			break
+		}
+	}
+
 	result, err := p.Install(ctx, &serverinstall.InstallOpts{
-		Log: log,
-		UI:  c.ui,
+		Log:            log,
+		UI:             c.ui,
+		ServerRunFlags: secondaryArgs,
 	})
 	if err != nil {
 		c.ui.Output(
@@ -333,7 +343,7 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		f.BoolVar(&flag.BoolVar{
 			Name:    "runner",
 			Target:  &c.flagRunner,
-			Usage:   "Install a runner in addition to the server",
+			Usage:   "Install a runner in addition to the server.",
 			Default: true,
 			Hidden:  true,
 		})
@@ -388,6 +398,14 @@ Alias: waypoint install
   flag. This only applies to the Waypoint URL service. You may disable the
   URL service by manually running the server. If you disable the URL service,
   you do not need to accept any terms.
+
+  To further customize the server installation, you may pass advanced flag options
+  specified in the documentation for the 'server run' command. To set these values,
+  include a '--' after the full argument list for 'install', followed by these
+  advanced flag options. As an example, to set the server log level to trace
+  and disable the UI, the command would be:
+
+    waypoint install -platform=docker -accept-tos -- -vvv -disable-ui
 
 ` + c.Flags().Help())
 }

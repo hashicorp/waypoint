@@ -134,7 +134,7 @@ func (i *NomadInstaller) Install(
 	}
 
 	s.Update("Installing Waypoint server to Nomad")
-	allocID, err := i.runJob(ctx, s, client, waypointNomadJob(i.config))
+	allocID, err := i.runJob(ctx, s, client, waypointNomadJob(i.config, opts.ServerRunFlags))
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +246,7 @@ func (i *NomadInstaller) Upgrade(
 	}
 
 	s = sg.Add("Upgrading Waypoint server on Nomad to %q", i.config.serverImage)
-	job := waypointNomadJob(i.config)
+	job := waypointNomadJob(i.config, opts.ServerRunFlags)
 	jobOpts := &api.RegisterOptions{
 		PolicyOverride: i.config.policyOverride,
 	}
@@ -615,7 +615,7 @@ EVAL:
 
 // waypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
 // Nomad API
-func waypointNomadJob(c nomadConfig) *api.Job {
+func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	job := api.NewServiceJob(serverName, serverName, c.region, 50)
 	job.Namespace = &c.namespace
 	job.Datacenters = c.datacenters
@@ -669,11 +669,13 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 	}
 	job.AddTaskGroup(tg)
 
+	ras := []string{"server", "run", "-accept-tos", "-vv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)}
+	ras = append(ras, rawRunFlags...)
 	task := api.NewTask("server", "docker")
 	task.Config = map[string]interface{}{
 		"image":          c.serverImage,
 		"ports":          []string{"server", "ui"},
-		"args":           []string{"server", "run", "-accept-tos", "-vv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
+		"args":           ras,
 		"auth_soft_fail": c.authSoftFail,
 	}
 	task.Env = map[string]string{

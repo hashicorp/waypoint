@@ -217,6 +217,8 @@ func (i *DockerInstaller) Install(
 
 	s.Update("Installing Waypoint server to docker")
 
+	cmd := []string{"server", "run", "-accept-tos", "-vv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", grpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", httpPort)}
+	cmd = append(cmd, opts.ServerRunFlags...)
 	cfg := container.Config{
 		AttachStdout: true,
 		AttachStderr: true,
@@ -226,7 +228,7 @@ func (i *DockerInstaller) Install(
 		Image:        i.config.serverImage,
 		ExposedPorts: nat.PortSet{npGRPC: struct{}{}, npHTTP: struct{}{}},
 		Env:          []string{"PORT=" + grpcPort},
-		Cmd:          []string{"server", "run", "-accept-tos", "-vv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", grpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", httpPort)},
+		Cmd:          cmd,
 	}
 
 	bindings := nat.PortMap{}
@@ -425,6 +427,9 @@ func (i *DockerInstaller) Upgrade(
 	if err != nil {
 		return nil, err
 	}
+
+	cmd := []string{"server", "run", "-accept-tos", "-vv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", grpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", httpPort)}
+	cmd = append(cmd, opts.ServerRunFlags...)
 	cfg := container.Config{
 		AttachStdout: true,
 		AttachStderr: true,
@@ -434,7 +439,7 @@ func (i *DockerInstaller) Upgrade(
 		Image:        i.config.serverImage,
 		ExposedPorts: nat.PortSet{npGRPC: struct{}{}, npHTTP: struct{}{}},
 		Env:          []string{"PORT=" + grpcPort},
-		Cmd:          []string{"server", "run", "-accept-tos", "-vv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", grpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", httpPort)},
+		Cmd:          cmd,
 	}
 
 	bindings := nat.PortMap{}

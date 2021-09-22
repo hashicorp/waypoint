@@ -36,6 +36,14 @@ flag. This only applies to the Waypoint URL service. You may disable the
 URL service by manually running the server. If you disable the URL service,
 you do not need to accept any terms.
 
+To further customize the server installation, you may pass advanced flag options
+specified in the documentation for the 'server run' command. To set these values,
+include a '--' after the full argument list for 'install', followed by these
+advanced flag options. As an example, to set the server log level to trace
+and disable the UI, the command would be:
+
+    waypoint install -platform=docker -accept-tos -- -vvv -disable-ui
+
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.

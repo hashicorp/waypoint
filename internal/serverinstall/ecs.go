@@ -180,7 +180,7 @@ func (i *ECSInstaller) Install(
 		},
 
 		Run: func(ui terminal.UI) error {
-			server, err = i.Launch(ctx, log, ui, sess, efsInfo, netInfo, executionRole, cluster, serverLogGroup)
+			server, err = i.Launch(ctx, log, ui, sess, efsInfo, netInfo, executionRole, cluster, serverLogGroup, opts.ServerRunFlags)
 			return err
 		},
 
@@ -224,7 +224,7 @@ func (i *ECSInstaller) Launch(
 	sess *session.Session,
 	efsInfo *efsInformation,
 	netInfo *networkInformation,
-	executionRoleArn, clusterName, logGroup string,
+	executionRoleArn, clusterName, logGroup string, rawRunFlags []string,
 ) (*ecsServer, error) {
 
 	sg := ui.StepGroup()
@@ -265,6 +265,9 @@ func (i *ECSInstaller) Launch(
 		aws.String("-db=/waypoint-data/data.db"),
 		aws.String(fmt.Sprintf("-listen-grpc=0.0.0.0:%d", grpcPort)),
 		aws.String(fmt.Sprintf("-listen-http=0.0.0.0:%d", httpPort)),
+	}
+	for _, f := range rawRunFlags {
+		cmd = append(cmd, aws.String(f))
 	}
 
 	def := ecs.ContainerDefinition{

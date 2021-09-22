@@ -15,8 +15,18 @@ It is a single command to get up and running with Waypoint.
 
 You can also run and configure the server manually using the
 [`waypoint server run`](/commands/server-run) command. This is meant for more advanced
-users who want to run Waypoint in a platform that the `install` command doesn't support
-or to fine-tune the configuration of the server.
+users who want to run Waypoint in a platform that the `install` command doesn't support.
+
+It is possible to fine-tune the configuration of the server when using the `waypoint install` command.
+To further customize the server installation, you may pass advanced flag options
+specified in the documentation for the [`waypoint server run`](/commands/server-run)
+command. To set these values, include a `--` after the full argument list for
+`install`, followed by these advanced flag options. As an example, to set the
+server log level to trace and disable the UI, you can use the below command.
+
+```shell-session
+  waypoint install -platform=docker -accept-tos -- -vvv -disable-ui
+```
 
 -> **Note:** Only _one_ Waypoint server needs to be installed and run
 for any group of people using Waypoint together. If you are a day-to-day

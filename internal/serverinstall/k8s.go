@@ -160,7 +160,7 @@ func (i *K8sInstaller) Install(
 	}
 
 	// Decode our configuration
-	statefulset, err := newStatefulSet(i.config)
+	statefulset, err := newStatefulSet(i.config, opts.ServerRunFlags)
 	if err != nil {
 		ui.Output(
 			"Error generating statefulset configuration: %s", clierrors.Humanize(err),
@@ -1181,7 +1181,7 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 
 // newStatefulSet takes in a k8sConfig and creates a new Waypoint Statefulset
 // for deployment in Kubernetes.
-func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
+func newStatefulSet(c k8sConfig, rawRunFlags []string) (*appsv1.StatefulSet, error) {
 	cpuRequest, err := resource.ParseQuantity(c.cpuRequest)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse cpu request resource %s: %s", c.cpuRequest, err)
@@ -1222,6 +1222,16 @@ func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 		volumeClaimTemplates[0].Spec.StorageClassName = &c.storageClassName
 	}
 
+	ras := []string{
+		"server",
+		"run",
+		"-accept-tos",
+		"-vv",
+		"-db=/data/data.db",
+		"-listen-grpc=0.0.0.0:9701",
+		"-listen-http=0.0.0.0:9702",
+	}
+	ras = append(ras, rawRunFlags...)
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serverName,
@@ -1263,15 +1273,7 @@ func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 								},
 							},
 							Command: []string{serviceName},
-							Args: []string{
-								"server",
-								"run",
-								"-accept-tos",
-								"-vv",
-								"-db=/data/data.db",
-								"-listen-grpc=0.0.0.0:9701",
-								"-listen-http=0.0.0.0:9702",
-							},
+							Args:    ras,
 							Ports: []apiv1.ContainerPort{
 								{
 									Name:          "grpc",
