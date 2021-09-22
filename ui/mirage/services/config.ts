@@ -18,13 +18,30 @@ export function get(schema: any, { requestBody }: Request): Response {
   return this.serialize(response, 'application');
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
 export function set(schema: any, { requestBody }: Request): Response {
+  // This implementation faithfully recreates the behavior that leads to
+  // https://github.com/hashicorp/waypoint/issues/2339.
+  // If core changes, we should update this implementation too.
+
   let requestMsg = decode(ConfigSetRequest, requestBody);
   let vars = requestMsg.toObject().variablesList;
-  vars.forEach((v) => {
-    let projName = v.project?.project;
-    v.project = schema.projects.findBy({ name: projName });
-    schema.configVariables.create(v);
+
+  vars.forEach((attrs) => {
+    let project = schema.projects.findBy({ name: attrs.project?.project });
+    let configVar = schema.configVariables.findOrCreateBy({ projectId: project.id, name: attrs.name });
+
+    if (attrs.unset !== undefined) {
+      configVar.destroy();
+    } else {
+      configVar.update({
+        name: attrs.name,
+        pb_static: attrs.pb_static,
+        dynamic: attrs.dynamic,
+        internal: attrs.internal,
+        nameIsPath: attrs.nameIsPath,
+      });
+    }
   });
 
   let response = new ConfigSetResponse();
