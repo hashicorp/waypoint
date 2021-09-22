@@ -2,7 +2,12 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { ConfigGetRequest, ConfigGetResponse, Ref } from 'waypoint-pb';
-import { Params as ProjectRouteParams } from 'waypoint/routes/workspace/projects/project';
+import {
+  Model as ProjectRouteModel,
+  Params as ProjectRouteParams,
+} from 'waypoint/routes/workspace/projects/project';
+import ConfigVariablesController from 'waypoint/controllers/workspace/projects/project/settings/config-variables';
+
 export default class WorkspaceProjectsProjectSettingsConfigVariables extends Route {
   @service api!: ApiService;
 
@@ -17,9 +22,11 @@ export default class WorkspaceProjectsProjectSettingsConfigVariables extends Rou
     return config?.toObject();
   }
 
-  setupController(controller, model, transition) {
-    super.setupController(controller, model, transition);
-    let project = this.modelFor('workspace.projects.project');
+  setupController(...args: Parameters<Route['setupController']>): void {
+    super.setupController(...args);
+
+    let controller = args[0] as ConfigVariablesController;
+    let project = this.modelFor('workspace.projects.project') as ProjectRouteModel;
 
     controller.project = project;
   }
