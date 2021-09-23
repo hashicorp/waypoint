@@ -49,8 +49,8 @@ module.exports = function (defaults) {
         {
           package: 'waypoint-pb',
           semverRange: '*',
-        }
-      ]
+        },
+      ],
     },
   });
 
