@@ -2,8 +2,9 @@ import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
 import { render, clearRender, fillIn } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
+import { Project } from 'waypoint-pb';
 
-module('Integration | Component | app-form/project-settings', function (hooks) {
+module('Integration | Component | app-form/project-repository-settings', function (hooks) {
   setupRenderingTest(hooks);
 
   test('second new project does not have previous input', async function (assert) {
@@ -14,7 +15,7 @@ module('Integration | Component | app-form/project-settings', function (hooks) {
     await fillIn('#git-source-password', 'password');
     await clearRender();
 
-    this.set('project2', {});
+    this.set('project2', new Project().toObject());
     await render(hbs`<AppForm::ProjectRepositorySettings @project={{this.project2}} />`);
 
     assert.dom('#git-source-url').hasValue('');

@@ -16,44 +16,45 @@ interface VariableArgs {
   deleteVariable: (variable: Variable.AsObject) => Promise<void>;
 }
 
-export default class ProjectInputVariablesListComponent extends Component<VariableArgs> {
-  initialVariable: Variable.AsObject;
+export default class ProjectInputVariablesListItemComponent extends Component<VariableArgs> {
   @service api!: ApiService;
-  @service flashMessages;
+  @service('pdsFlashMessages') flashMessages;
+
+  initialVariable: Variable.AsObject;
   @tracked variable: Variable.AsObject;
   @tracked isCreating: boolean;
   @tracked isEditing: boolean;
 
-  constructor(owner: any, args: VariableArgs) {
+  constructor(owner: unknown, args: VariableArgs) {
     super(owner, args);
     let { variable, isEditing, isCreating } = args;
     this.variable = variable;
     this.isEditing = isEditing;
     this.isCreating = isCreating;
-    this.storeInitialVariable();
+    this.initialVariable = JSON.parse(JSON.stringify(this.variable));
   }
 
   get isHcl(): boolean {
     return !!this.variable.hcl;
   }
 
-  storeInitialVariable() {
+  storeInitialVariable(): void {
     this.initialVariable = JSON.parse(JSON.stringify(this.variable));
   }
 
   @action
-  async deleteVariable(variable) {
+  async deleteVariable(variable: Variable.AsObject): Promise<void> {
     await this.args.deleteVariable(variable);
   }
 
   @action
-  editVariable() {
+  editVariable(): void {
     this.isEditing = true;
     this.storeInitialVariable();
   }
 
   @action
-  async saveVariable(e) {
+  async saveVariable(e: Event): Promise<void> {
     e.preventDefault();
     // Validate non-empty var name & value
     if (
@@ -75,21 +76,21 @@ export default class ProjectInputVariablesListComponent extends Component<Variab
   }
 
   @action
-  cancelCreate() {
+  cancelCreate(): void {
     this.isCreating = false;
     this.isEditing = false;
     this.deleteVariable(this.variable);
   }
 
   @action
-  cancelEdit() {
+  cancelEdit(): void {
     this.isCreating = false;
     this.isEditing = false;
     this.variable = this.initialVariable;
   }
 
   @action
-  toggleHcl(variable) {
+  toggleHcl(variable: Variable.AsObject): void {
     if (this.isHcl) {
       this.variable.str = variable.hcl;
       this.variable.hcl = '';

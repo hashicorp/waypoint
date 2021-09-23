@@ -1,13 +1,14 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { Ref, GetProjectRequest } from 'waypoint-pb';
+import { UI, Project, Ref, Job } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
-interface ProjectModelParams {
-  project_id: string;
-}
+export type Params = { project_id: string };
+export type Model = Project.AsObject & {
+  latestInitJob?: Job.AsObject;
+};
 
 export default class ProjectDetail extends Route {
   @service api!: ApiService;
@@ -20,20 +21,32 @@ export default class ProjectDetail extends Route {
     },
   ];
 
-  async model(params: ProjectModelParams) {
+  async model(params: Params): Promise<Model> {
     // Setup the project request
     let ref = new Ref.Project();
     ref.setProject(params.project_id);
-    let req = new GetProjectRequest();
+    let req = new UI.GetProjectRequest();
     req.setProject(ref);
 
-    let resp = await this.api.client.getProject(req, this.api.WithMeta());
+    let resp = await this.api.client.uI_GetProject(req, this.api.WithMeta());
     let project = resp.getProject();
 
-    return project?.toObject();
+    if (!project) {
+      // In reality the API will return an error in this circumstance
+      // but the types don’t tell us that.
+      throw new Error(`Project ${params.project_id} not found`);
+    }
+
+    let result = project.toObject() as Model;
+
+    // TODO(jgwhite): It’d be better not to sneak this onto the project,
+    // but changing the model type of this route is way more disruptive.
+    result.latestInitJob = resp.getLatestInitJob()?.toObject();
+
+    return result;
   }
 
-  afterModel() {
+  afterModel(): void {
     this.pollModel.setup(this);
   }
 }

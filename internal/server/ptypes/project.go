@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/go-ozzo/ozzo-validation/v4"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	hcljson "github.com/hashicorp/hcl/v2/json"
@@ -78,6 +78,20 @@ func ValidateUpsertProjectRequest(v *pb.UpsertProjectRequest) error {
 		validationext.StructField(&v.Project, func() []*validation.FieldRules {
 			return ValidateProjectRules(v.Project)
 		}),
+	))
+}
+
+// ValidateGetProjectRequest
+func ValidateGetProjectRequest(v *pb.GetProjectRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Project, validation.Required),
+	))
+}
+
+// ValidateUIGetProjectRequest
+func ValidateUIGetProjectRequest(v *pb.UI_GetProjectRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Project, validation.Required),
 	))
 }
 

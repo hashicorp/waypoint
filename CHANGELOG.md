@@ -1,10 +1,46 @@
-## unreleased
+## 0.5.2 (September 09, 2021)
 
 FEATURES:
 
+* cli: Add a new command for inspecting project information, `waypoint project inspect`. [[GH-2055](https://github.com/hashicorp/waypoint/issues/2055)]
+
 IMPROVEMENTS:
 
+* cli/status: Include a way to refresh project application statuses for deployments and releases with a '-refresh' flag before showing the status view [[GH-2081](https://github.com/hashicorp/waypoint/issues/2081)]
+* cli: Add functionality to list releases with `waypoint release list` command [[GH-2082](https://github.com/hashicorp/waypoint/issues/2082)]
+* core: App status polling will always queue status reports refresh jobs for latest deployment and release if present [[GH-2039](https://github.com/hashicorp/waypoint/issues/2039)]
+* plugin/aws-ecs: Allow configuration of ALB subnets independently of service subnets [[GH-2205](https://github.com/hashicorp/waypoint/issues/2205)]
+* plugin/aws-ecs: Allow public ip assignment for tasks to be disabled [[GH-2205](https://github.com/hashicorp/waypoint/issues/2205)]
+* plugin/aws-ecs: Deployments delete their resources on failure. [[GH-2098](https://github.com/hashicorp/waypoint/issues/2098)]
+* plugin/aws-ecs: Error messages contain additional context [[GH-2098](https://github.com/hashicorp/waypoint/issues/2098)]
+* plugin/aws-ecs: Improve security of ECS tasks by restricting ingress to the ALB [[GH-2098](https://github.com/hashicorp/waypoint/issues/2098)]
+* plugin/aws-ecs: More complete list of resources displayed in `waypoint deploy` logs [[GH-2098](https://github.com/hashicorp/waypoint/issues/2098)]
+* plugin/aws-ecs: Support for status reports, enabling `waypoint status` for ECS deployments [[GH-2098](https://github.com/hashicorp/waypoint/issues/2098)]
+* plugin/aws: Add ability to pass IAM policy ARNs for attaching to task role [[GH-1935](https://github.com/hashicorp/waypoint/issues/1935)]
+
 BUG FIXES:
+
+* internal/config: Fix parsing of complex HCL types in `-var-file` [[GH-2217](https://github.com/hashicorp/waypoint/issues/2217)]
+* plugin/aws-ecs: Fix panic when specifying a sidecar without a health check [[GH-2098](https://github.com/hashicorp/waypoint/issues/2098)]
+* plugin/nomad: Only use non-empty job.StatusDescription for HealthMessage [[GH-2093](https://github.com/hashicorp/waypoint/issues/2093)]
+* server/singleprocess: Stop returning error when polling an app with no deployment or release [[GH-2204](https://github.com/hashicorp/waypoint/issues/2204)]
+* ui: Fix leaky project repository settings being reused when creating a new project [[GH-2250](https://github.com/hashicorp/waypoint/issues/2250)]
+
+## 0.5.1 (August 19, 2021)
+
+IMPROVEMENTS:
+
+* cli/status: Display '(unknown)' when the time a status report was generated is
+not known [[GH-2047](https://github.com/hashicorp/waypoint/issues/2047)]
+* cli/uninstall: Remove hard requirement on platform flag, attempt to read server
+platform from server context. Platform flag overrides anything set in a server
+platform context [[GH-2052](https://github.com/hashicorp/waypoint/issues/2052)]
+
+BUG FIXES:
+
+* plugin/aws/alb: Always set the generated time for a status report [[GH-2048](https://github.com/hashicorp/waypoint/issues/2048)]
+* plugin/aws/ecs: Fix destroy non-latest deployments in ECS [[GH-2054](https://github.com/hashicorp/waypoint/issues/2054)]
+* ui: Prevent deletion of git/input variable settings when saving the other [[GH-2057](https://github.com/hashicorp/waypoint/issues/2057)]
 
 
 ## 0.5.0 (August 12, 2021)

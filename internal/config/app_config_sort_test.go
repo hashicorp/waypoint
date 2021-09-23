@@ -30,7 +30,7 @@ func TestSortVars(t *testing.T) {
 
 		var ctx hcl.EvalContext
 
-		pairs, err := c.sortVars(&ctx)
+		pairs, err := c.sortTopLevelVars(&ctx)
 		require.NoError(t, err)
 
 		require.Len(t, pairs, 3)
@@ -55,7 +55,7 @@ func TestSortVars(t *testing.T) {
 		c.FileRaw = &hclsyntax.AnonSymbolExpr{}
 		var ctx hcl.EvalContext
 
-		pairs, err := c.sortVars(&ctx)
+		pairs, err := c.sortTopLevelVars(&ctx)
 		require.NoError(t, err)
 
 		require.Len(t, pairs, 4)
@@ -81,7 +81,7 @@ func TestSortVars(t *testing.T) {
 		c.FileRaw = &hclsyntax.AnonSymbolExpr{}
 		var ctx hcl.EvalContext
 
-		pairs, err := c.sortVars(&ctx)
+		pairs, err := c.sortTopLevelVars(&ctx)
 		require.NoError(t, err)
 
 		require.Len(t, pairs, 4)
@@ -107,7 +107,7 @@ func TestSortVars(t *testing.T) {
 		c.FileRaw = &hclsyntax.AnonSymbolExpr{}
 		var ctx hcl.EvalContext
 
-		_, err := c.sortVars(&ctx)
+		_, err := c.sortTopLevelVars(&ctx)
 		require.Error(t, err)
 
 		lve := err.(*VariableLoopError)

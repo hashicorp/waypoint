@@ -175,12 +175,32 @@
     "path": "plugin"
   },
   {
+    "title": "project inspect",
+    "path": "project-inspect"
+  },
+  {
     "title": "project list",
     "path": "project-list"
   },
   {
+    "title": "release list",
+    "path": "release-list"
+  },
+  {
     "title": "runner agent",
     "path": "runner-agent"
+  },
+  {
+    "title": "runner list",
+    "path": "runner-list"
+  },
+  {
+    "title": "runner on-demand inspect",
+    "path": "runner-on-demand-inspect"
+  },
+  {
+    "title": "runner on-demand set",
+    "path": "runner-on-demand-set"
   },
   {
     "title": "server bootstrap",
@@ -219,18 +239,6 @@
     "path": "status"
   },
   {
-    "title": "token exchange",
-    "path": "token-exchange"
-  },
-  {
-    "title": "token invite",
-    "path": "token-invite"
-  },
-  {
-    "title": "token new",
-    "path": "token-new"
-  },
-  {
     "title": "user inspect",
     "path": "user-inspect"
   },
@@ -249,5 +257,24 @@
   {
     "title": "version",
     "path": "version"
+  },
+  {
+    "divider": true
+  },
+  {
+    "title": "k8s bootstrap",
+    "path": "k8s-bootstrap"
+  },
+  {
+    "title": "token exchange",
+    "path": "token-exchange"
+  },
+  {
+    "title": "token invite",
+    "path": "token-invite"
+  },
+  {
+    "title": "token new",
+    "path": "token-new"
   }
 ]

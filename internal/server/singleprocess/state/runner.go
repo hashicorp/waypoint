@@ -75,7 +75,7 @@ func (s *State) RunnerById(id string) (*pb.Runner, error) {
 		return nil, err
 	}
 	if raw == nil {
-		return nil, status.Errorf(codes.NotFound, "runner ID not found")
+		return nil, status.Errorf(codes.NotFound, "runner ID not found: %s", id)
 	}
 
 	return raw.(*runnerRecord).Runner, nil

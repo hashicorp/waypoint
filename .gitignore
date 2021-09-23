@@ -13,4 +13,7 @@ tmp/
 # Default Waypoint database file
 data.db
 
-.vscode
+# .vscode - We intentionally commit .vscode in order to share project-specific settings
+
+
+.idea

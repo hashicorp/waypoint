@@ -71,7 +71,10 @@ func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
 //
 // If ctx is nil, c.Ctx will be used. If ctx is non-nil, that context will be
 // used and c.Ctx will be ignored.
-func (c *baseCommand) initClient(ctx context.Context) (*clientpkg.Project, error) {
+func (c *baseCommand) initClient(
+	ctx context.Context,
+	connectOpts ...serverclient.ConnectOption,
+) (*clientpkg.Project, error) {
 	// We use our flag-based connection info if the user set an addr.
 	var flagConnection *clicontext.Config
 	if v := c.flagConnection; v.Server.Address != "" {
@@ -82,11 +85,12 @@ func (c *baseCommand) initClient(ctx context.Context) (*clientpkg.Project, error
 	// the following precedence: (1) context (2) env (3) flags where the
 	// later values override the former.
 	var err error
-	connectOpts := []serverclient.ConnectOption{
+	connectOpts = append([]serverclient.ConnectOption{
 		serverclient.FromContext(c.contextStorage, ""),
 		serverclient.FromEnv(),
 		serverclient.FromContextConfig(flagConnection),
-	}
+		serverclient.Logger(c.Log.Named("serverclient")),
+	}, connectOpts...)
 	c.clientContext, err = serverclient.ContextConfig(connectOpts...)
 	if err != nil {
 		return nil, err

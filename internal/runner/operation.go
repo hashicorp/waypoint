@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
@@ -37,6 +38,8 @@ func (r *Runner) executeJob(
 	ui terminal.UI,
 	job *pb.Job,
 	wd string,
+	clientMutex *sync.Mutex,
+	client pb.Waypoint_RunnerJobStreamClient,
 ) (*pb.Job_Result, error) {
 	// NOTE(mitchellh; krantzinator): For now, we query the project directly here
 	// since we use it only in case of a missing local waypoint.hcl, and to
@@ -51,8 +54,13 @@ func (r *Runner) executeJob(
 		return nil, err
 	}
 
+	// We're going to slowly accumulate configuration info that we use to
+	// update our job later.
+	var configInfo pb.Job_Config
+
 	// Eventually we'll need to extract the data source. For now we're
 	// just building for local exec so it is the working directory.
+	configInfo.Source = pb.Job_Config_FILE
 	path, err := configpkg.FindPath(wd, "", false)
 	if err != nil {
 		return nil, err
@@ -77,6 +85,8 @@ func (r *Runner) executeJob(
 				return nil, status.Errorf(codes.Internal,
 					"Failed to write waypoint.hcl from server: %s", err)
 			}
+
+			configInfo.Source = pb.Job_Config_SERVER
 		} else {
 			log.Trace("waypoint.hcl not found in server data")
 		}
@@ -95,6 +105,21 @@ func (r *Runner) executeJob(
 		Pwd:       filepath.Dir(path),
 		Workspace: job.Workspace.Workspace,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Send our first update so we know where the configuration came from.
+	log.Trace("sending initial config load information back to server")
+	clientMutex.Lock()
+	err = client.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_ConfigLoad_{
+			ConfigLoad: &pb.RunnerJobStreamRequest_ConfigLoad{
+				Config: &configInfo,
+			},
+		},
+	})
+	clientMutex.Unlock()
 	if err != nil {
 		return nil, err
 	}
@@ -227,6 +252,9 @@ func (r *Runner) executeJob(
 
 	case *pb.Job_StatusReport:
 		return r.executeStatusReportOp(ctx, log, job, project)
+
+	case *pb.Job_Init:
+		return r.executeInitOp(ctx, log, project)
 
 	default:
 		return nil, status.Errorf(codes.Aborted, "unknown operation %T", job.Operation)

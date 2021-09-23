@@ -30,20 +30,26 @@ func (r *Registry) Config() (interface{}, error) {
 	return &r.config, nil
 }
 
+func (r *Registry) AccessInfoFunc() interface{} {
+	return r.AccessInfo
+}
+
 // PushFunc implements component.Registry
 func (r *Registry) PushFunc() interface{} {
 	return r.Push
 }
 
-// Push pushes an image to the registry.
-func (r *Registry) Push(
+type ecrInfo struct {
+	repo, token string
+}
+
+func (r *Registry) setupRepo(
 	ctx context.Context,
 	log hclog.Logger,
-	img *docker.Image,
 	ui terminal.UI,
+	sg terminal.StepGroup,
 	src *component.Source,
-) (*Image, error) {
-
+) (*ecrInfo, error) {
 	// If there is no region setup.  Try and load it from environment variables.
 	if r.config.Region == "" {
 		r.config.Region = os.Getenv("AWS_REGION")
@@ -58,9 +64,6 @@ func (r *Registry) Push(
 			codes.FailedPrecondition,
 			"Please set your aws region in the deployment config, or set the environment variable 'AWS_REGION' or 'AWS_DEFAULT_REGION'")
 	}
-
-	sg := ui.StepGroup()
-	defer sg.Wait()
 
 	step := sg.Add("Connecting to AWS")
 	defer func() { step.Abort() }()
@@ -120,7 +123,6 @@ func (r *Registry) Push(
 				},
 			},
 		})
-
 		if err != nil {
 			return nil, fmt.Errorf("Unable to create repository: %w", err)
 		}
@@ -132,18 +134,73 @@ func (r *Registry) Push(
 		repo = repOut.Repositories[0]
 	}
 
-	// Use the authorization token to create the base64 package that
-	// Docker requires to perform authentication.
 	uptoken := *gat.AuthorizationData[0].AuthorizationToken
 	data, err := base64.StdEncoding.DecodeString(uptoken)
 	if err != nil {
 		return nil, err
 	}
 
+	info := &ecrInfo{
+		repo:  *repo.RepositoryUri,
+		token: string(data[4:]),
+	}
+
+	return info, nil
+}
+
+// AccessInfo returns information on how to access the registry
+func (r *Registry) AccessInfo(
+	ctx context.Context,
+	log hclog.Logger,
+	ui terminal.UI,
+	src *component.Source,
+) (*docker.AccessInfo, error) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	info, err := r.setupRepo(ctx, log, ui, sg, src)
+	if err != nil {
+		return nil, err
+	}
+
+	ai := &docker.AccessInfo{
+		Image: info.repo,
+		Tag:   r.config.Tag,
+
+		Auth: &docker.AccessInfo_UserPass_{
+			UserPass: &docker.AccessInfo_UserPass{
+				Username: "AWS",
+				Password: info.token,
+			},
+		},
+	}
+
+	return ai, nil
+}
+
+// Push pushes an image to the registry.
+func (r *Registry) Push(
+	ctx context.Context,
+	log hclog.Logger,
+	img *docker.Image,
+	ui terminal.UI,
+	src *component.Source,
+) (*Image, error) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	info, err := r.setupRepo(ctx, log, ui, sg, src)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use the authorization token to create the base64 package that
+	// Docker requires to perform authentication.
 	authInfo := map[string]string{
 		"username": "AWS",
-		"password": string(data[4:]),
+		"password": info.token,
 	}
+
 	authData, err := json.Marshal(authInfo)
 	if err != nil {
 		return nil, err
@@ -161,7 +218,7 @@ func (r *Registry) Push(
 	}
 	dockerConfig := raw.(*docker.Config)
 	dockerConfig.EncodedAuth = encodedAuth
-	dockerConfig.Image = *repo.RepositoryUri
+	dockerConfig.Image = info.repo
 	dockerConfig.Tag = r.config.Tag
 
 	// Build
@@ -239,6 +296,4 @@ registry {
 	return doc, nil
 }
 
-var (
-	_ component.Documented = (*Registry)(nil)
-)
+var _ component.Documented = (*Registry)(nil)

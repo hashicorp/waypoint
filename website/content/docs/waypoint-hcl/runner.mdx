@@ -9,8 +9,8 @@ description: |-
 
 <Placement groups={[['runner']]} />
 
-The `runner` stanza configures a project for [remote operations](/docs/remote),
-including configuring how to source a project source code from Git and
+The `runner` stanza configures a project for [remote operations](/docs/runner),
+including configuring how to source a project's source code from Git and
 configuring polling.
 
 **The settings in this stanza only take effect when `waypoint init -update`
@@ -26,18 +26,18 @@ runner {
 
   data_source "git" {
     url  = "https://github.com/hashicorp/waypoint-examples.git"
-    path = "docker/node-js"
+    path = "docker/nodejs"
   }
 }
 ```
 
-The above example enables [remote operations](/docs/remote) and configures
+The above example enables [remote operations](/docs/runner) and configures
 the project to clone data from a GitHub repository.
 
 -> **Note: these settings are usually configured via the CLI or UI.** We
 recommend configuring things such as data sources in the CLI or UI to avoid
 tying your `waypoint.hcl` to a specific repository or putting secrets such
-as Git auth information your `waypoint.hcl` file. See
+as Git auth information in your `waypoint.hcl` file. See
 [CLI or UI configuration](#cli-or-ui-configuration) for more details.
 
 ## CLI or UI Configuration
@@ -70,7 +70,7 @@ The `runner` stanza has no required parameters.
 ### Optional
 
 - `enabled` `(boolean: false)` - This must be set to true to enable
-  [remote operations](/docs/remote) from the CLI. This only affects
+  [remote operations](/docs/runner) from the CLI. This only affects
   the CLI. Remote operations triggered via Git polling or directly via the
   API are still allowed.
 
@@ -94,8 +94,8 @@ other data source types.
 
 #### Git
 
-- `url` `(string)` - The URL for the Git repository. This can be any supported
-  URL by `git clone`. For example: `https://github.com/hashicorp/waypoint-examples.git`
+- `url` `(string)` - The URL for the Git repository. This can be any URL supported
+  by `git clone`. For example: `https://github.com/hashicorp/waypoint-examples.git`
   or `git@github.com:hashicorp/waypoint-examples.git`.
 
 ### Optional Parameters

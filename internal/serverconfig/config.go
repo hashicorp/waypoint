@@ -4,6 +4,13 @@ import (
 	"strconv"
 )
 
+const (
+	// Default ports. These are strings because we generally are working with
+	// strings for the ports since they're part of the address string.
+	DefaultGRPCPort = "9701"
+	DefaultHTTPPort = "9702"
+)
+
 // Client configures a client to connect to a server.
 type Client struct {
 	Address string `hcl:"address,attr" json:"address"`
@@ -32,17 +39,29 @@ type Client struct {
 	Platform string `hcl:"platform,optional" json:"platform,omitempty"`
 }
 
-// Env returns a slice of environment variables in key=value settings
+// EnvMap returns a map of environment variables settings
 // that will authenticate to the server without a context set.
-func (c *Client) Env() []string {
-	result := []string{
-		"WAYPOINT_SERVER_ADDR=" + c.Address,
-		"WAYPOINT_SERVER_TLS=" + strconv.FormatBool(c.Tls),
-		"WAYPOINT_SERVER_TLS_SKIP_VERIFY=" + strconv.FormatBool(c.TlsSkipVerify),
+func (c *Client) EnvMap() map[string]string {
+	result := map[string]string{
+		"WAYPOINT_SERVER_ADDR":            c.Address,
+		"WAYPOINT_SERVER_TLS":             strconv.FormatBool(c.Tls),
+		"WAYPOINT_SERVER_TLS_SKIP_VERIFY": strconv.FormatBool(c.TlsSkipVerify),
 	}
 
 	if c.RequireAuth {
-		result = append(result, "WAYPOINT_SERVER_TOKEN="+c.AuthToken)
+		result["WAYPOINT_SERVER_TOKEN"] = c.AuthToken
+	}
+
+	return result
+}
+
+// Env returns a slice of environment variables in key=value settings
+// that will authenticate to the server without a context set.
+func (c *Client) Env() []string {
+	var result []string
+
+	for k, v := range c.EnvMap() {
+		result = append(result, k+"="+v)
 	}
 
 	return result

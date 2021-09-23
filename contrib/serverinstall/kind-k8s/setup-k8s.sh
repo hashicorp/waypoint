@@ -1,5 +1,12 @@
 #!/bin/bash
+
+# NOTE(briancain): This script uses 'kind' to automatically bring up a local
+# kubernetes cluster. It includes optional support for configuring an
+# Ingress controller node.
+
 set -o errexit
+
+setupIngress=$WP_K8S_INGRESS
 
 echo "Setting up local docker registry..."
 echo
@@ -16,16 +23,48 @@ fi
 echo "Setting up kubernetes with kind and metallb..."
 echo
 
-echo "Creating kind cluster with cluster-config.yaml..."
-echo
+if [ -n "${setupIngress}" ]; then
+  echo "Creating kind cluster with ingress controller..."
+  echo
 cat <<EOF | kind create cluster --config=-
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-containerdConfigPatches:
-- |-
-  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:${reg_port}"]
-      endpoint = ["http://${reg_name}:${reg_port}"]
+  kind: Cluster
+  apiVersion: kind.x-k8s.io/v1alpha4
+  containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:${reg_port}"]
+        endpoint = ["http://${reg_name}:${reg_port}"]
+  nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+    - |
+      kind: InitConfiguration
+      nodeRegistration:
+        kubeletExtraArgs:
+          node-labels: "ingress-ready=true"
+    extraPortMappings:
+    - containerPort: 80
+      hostPort: 80
+      listenAddress: "0.0.0.0"
+      protocol: TCP
+    - containerPort: 443
+      hostPort: 443
+      listenAddress: "0.0.0.0"
+      protocol: TCP
 EOF
+
+else
+  echo "Creating kind cluster with cluster-config.yaml..."
+  echo
+cat <<EOF | kind create cluster --config=-
+  kind: Cluster
+  apiVersion: kind.x-k8s.io/v1alpha4
+  containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:${reg_port}"]
+        endpoint = ["http://${reg_name}:${reg_port}"]
+EOF
+
+fi
 
 echo "Connecting registry to cluster network..."
 echo
@@ -46,9 +85,10 @@ data:
     help: "https://kind.sigs.k8s.io/docs/user/local-registry/"
 EOF
 
+echo
 echo "Applying metallb namespace..."
 echo
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.10.1/manifests/namespace.yaml
 
 echo "Create secret for metallb-system node..."
 echo
@@ -56,7 +96,7 @@ kubectl create secret generic -n metallb-system memberlist --from-literal=secret
 
 echo "Applying metallb manifest..."
 echo
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.10.1/manifests/metallb.yaml
 
 echo
 echo
@@ -66,7 +106,12 @@ IPADDR=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{en
 
 echo "IP Address of networked container is ${IPADDR}"
 echo
-read -p "Enter a range to define for metallb IP Addresses based on this container (like 172.18.0.20-172.18.0.50):`echo $'\n> '` " IPADDR_RANGE
+
+echo "Automatically picking an IP range based on networked contianer IP..."
+
+IPADDR_RANGE="$(awk -F"." '{print $1"."$2"."$3".20"}'<<<$IPADDR)-$(awk -F"." '{print $1"."$2"."$3".50"}'<<<$IPADDR)"
+
+#read -p "Enter a range to define for metallb IP Addresses based on this container (like 172.18.0.20-172.18.0.50):`echo $'\n> '` " IPADDR_RANGE
 echo "IP Address range is ${IPADDR_RANGE}"
 echo
 
@@ -76,5 +121,18 @@ sed s/%ADDR_RANGE%/$IPADDR_RANGE/g \
 echo "Applying metallb-config-set.yaml with ip address range applied..."
 kubectl apply -f configs/metallb-config-set.yaml
 
+if [ -n "${setupIngress}" ]; then
+  echo
+  echo "Setting up NGINX ingress controller..."
+  echo
+
+  kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+
+  # NOTE: uncomment this if you wish to use contour
+  #kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
+  #kubectl patch daemonsets -n projectcontour envoy -p '{"spec":{"template":{"spec":{"nodeSelector":{"ingress-ready":"true"},"tolerations":[{"key":"node-role.kubernetes.io/master","operator":"Equal","effect":"NoSchedule"}]}}}}'
+fi
+
+echo
 echo "Done! You should be ready to 'waypoint install -platform=kubernetes -accept-tos' on a local kubernetes!"
 exit 0

@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
@@ -16,6 +17,10 @@ func (s *service) UpsertStatusReport(
 	ctx context.Context,
 	req *pb.UpsertStatusReportRequest,
 ) (*pb.UpsertStatusReportResponse, error) {
+	if err := serverptypes.ValidateUpsertStatusReportRequest(req); err != nil {
+		return nil, err
+	}
+
 	result := req.StatusReport
 
 	// If we have no ID, then we're inserting and need to generate an ID.
@@ -42,6 +47,10 @@ func (s *service) ListStatusReports(
 	ctx context.Context,
 	req *pb.ListStatusReportsRequest,
 ) (*pb.ListStatusReportsResponse, error) {
+	if err := serverptypes.ValidateListStatusReportsRequest(req); err != nil {
+		return nil, err
+	}
+
 	result, err := s.state.StatusReportList(req.Application,
 		state.ListWithStatusFilter(req.Status...),
 		state.ListWithOrder(req.Order),
@@ -83,7 +92,44 @@ func (s *service) GetLatestStatusReport(
 	ctx context.Context,
 	req *pb.GetLatestStatusReportRequest,
 ) (*pb.StatusReport, error) {
-	r, err := s.state.StatusReportLatest(req.Application, req.Workspace)
+	if err := serverptypes.ValidateGetLatestStatusReportRequest(req); err != nil {
+		return nil, err
+	}
+
+	filter := func(r *pb.StatusReport) (bool, error) {
+		switch target := req.Target.(type) {
+		case *pb.GetLatestStatusReportRequest_Any:
+			return true, nil
+
+		case *pb.GetLatestStatusReportRequest_DeploymentAny:
+			_, ok := r.TargetId.(*pb.StatusReport_DeploymentId)
+			return ok, nil
+
+		case *pb.GetLatestStatusReportRequest_ReleaseAny:
+			_, ok := r.TargetId.(*pb.StatusReport_ReleaseId)
+			return ok, nil
+
+		case *pb.GetLatestStatusReportRequest_DeploymentId:
+			id, ok := r.TargetId.(*pb.StatusReport_DeploymentId)
+			return ok && id.DeploymentId == target.DeploymentId, nil
+
+		case *pb.GetLatestStatusReportRequest_ReleaseId:
+			id, ok := r.TargetId.(*pb.StatusReport_ReleaseId)
+			return ok && id.ReleaseId == target.ReleaseId, nil
+
+		case nil:
+			// Nil is allowed for backwards compatibility before we had
+			// Target and is equal to Any.
+			return true, nil
+
+		default:
+			// This shouldn't happen for valid proto clients.
+			return false, status.Errorf(codes.FailedPrecondition,
+				"invalid target type for request")
+		}
+	}
+
+	r, err := s.state.StatusReportLatest(req.Application, req.Workspace, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -96,6 +142,10 @@ func (s *service) GetStatusReport(
 	ctx context.Context,
 	req *pb.GetStatusReportRequest,
 ) (*pb.StatusReport, error) {
+	if err := serverptypes.ValidateGetStatusReportRequest(req); err != nil {
+		return nil, err
+	}
+
 	r, err := s.state.StatusReportGet(req.Ref)
 	if err != nil {
 		return nil, err

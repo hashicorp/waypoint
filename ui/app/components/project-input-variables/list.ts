@@ -5,7 +5,7 @@ import { Project, Variable } from 'waypoint-pb';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import RouterService from '@ember/routing/router-service';
-import PdsFlashMessages from 'waypoint/services/flash-messages';
+import FlashMessagesService from 'waypoint/services/pds-flash-messages';
 
 interface ProjectSettingsArgs {
   project: Project.AsObject;
@@ -14,13 +14,13 @@ interface ProjectSettingsArgs {
 export default class ProjectInputVariablesListComponent extends Component<ProjectSettingsArgs> {
   @service api!: ApiService;
   @service router!: RouterService;
-  @service flashMessages: PdsFlashMessages;
+  @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
   @tracked project: Project.AsObject;
   @tracked variablesList: Array<Variable.AsObject>;
   @tracked isCreating: boolean;
   @tracked activeVariable;
 
-  constructor(owner: any, args: any) {
+  constructor(owner: unknown, args: ProjectSettingsArgs) {
     super(owner, args);
     let { project } = args;
     this.project = project;
@@ -30,7 +30,7 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
   }
 
   @action
-  addVariable() {
+  addVariable(): void {
     this.isCreating = true;
     let newVar = new Variable();
     // Seems like setServer (with empty arguments?) is required to make it a server variable
@@ -41,13 +41,13 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
   }
 
   @action
-  async deleteVariable(variable) {
+  async deleteVariable(variable: Variable.AsObject): Promise<void> {
     this.variablesList = this.variablesList.filter((v) => v.name !== variable.name);
     await this.saveVariableSettings();
   }
 
   @action
-  cancelCreate() {
+  cancelCreate(): void {
     this.activeVariable = null;
     this.isCreating = false;
   }
@@ -66,7 +66,7 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
         this.variablesList
       );
 
-      this.project = resp;
+      this.project = resp as Project.AsObject;
       this.flashMessages.success('Settings saved');
       this.activeVariable = null;
       this.isCreating = false;

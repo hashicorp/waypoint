@@ -2,7 +2,7 @@ package serverinstall
 
 import (
 	"context"
-	json "encoding/json"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -13,6 +13,8 @@ import (
 	"github.com/ghodss/yaml"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -39,6 +41,10 @@ type k8sConfig struct {
 	namespace          string            `hcl:"namespace,optional"`
 	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
 
+	odrImage              string `hcl:"odr_image,optional"`
+	odrServiceAccount     string `hcl:"odr_service_account,optional"`
+	odrServiceAccountInit bool   `hcl:"odr_service_account_init,optional"`
+
 	advertiseInternal bool   `hcl:"advertise_internal,optional"`
 	imagePullPolicy   string `hcl:"image_pull_policy,optional"`
 	k8sContext        string `hcl:"k8s_context,optional"`
@@ -61,6 +67,14 @@ func (i *K8sInstaller) Install(
 	ctx context.Context,
 	opts *InstallOpts,
 ) (*InstallResults, error) {
+	if i.config.odrImage == "" {
+		var err error
+		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	ui := opts.UI
 	log := opts.Log
 
@@ -146,7 +160,7 @@ func (i *K8sInstaller) Install(
 	}
 
 	// Decode our configuration
-	statefulset, err := newStatefulSet(i.config)
+	statefulset, err := newStatefulSet(i.config, opts.ServerRunFlags)
 	if err != nil {
 		ui.Output(
 			"Error generating statefulset configuration: %s", clierrors.Humanize(err),
@@ -162,6 +176,15 @@ func (i *K8sInstaller) Install(
 			terminal.WithErrorStyle(),
 		)
 		return nil, err
+	}
+
+	if i.config.odrServiceAccountInit {
+		s.Done()
+		err := i.initServiceAccount(ctx, clientset, sg)
+		if err != nil {
+			return nil, err
+		}
+		s = sg.Add("")
 	}
 
 	s.Update("Creating Kubernetes resources...")
@@ -336,6 +359,14 @@ func (i *K8sInstaller) Upgrade(
 	ctx context.Context, opts *InstallOpts, serverCfg serverconfig.Client) (
 	*InstallResults, error,
 ) {
+	if i.config.odrImage == "" {
+		var err error
+		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	ui := opts.UI
 	log := opts.Log
 
@@ -369,6 +400,13 @@ func (i *K8sInstaller) Upgrade(
 	}
 
 	s.Done()
+
+	if i.config.odrServiceAccountInit {
+		err := i.initServiceAccount(ctx, clientset, sg)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	statefulSetClient := clientset.AppsV1().StatefulSets(i.config.namespace)
 	waypointStatefulSet, err := statefulSetClient.Get(ctx, serverName, metav1.GetOptions{})
@@ -999,6 +1037,38 @@ func (i *K8sInstaller) HasRunner(
 	return len(list.Items) > 0, nil
 }
 
+// OnDemandRunnerConfig implements OnDemandRunnerConfigProvider
+func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	// Generate some configuration
+	cfgMap := map[string]interface{}{}
+	if v := i.config.imagePullSecret; v != "" {
+		cfgMap["image_secret"] = v
+	}
+	if v := i.config.odrServiceAccount; v != "" {
+		cfgMap["service_account"] = v
+	}
+	if v := i.config.imagePullPolicy; v != "" {
+		cfgMap["image_pull_policy"] = v
+	}
+
+	// Marshal our config
+	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
+	if err != nil {
+		// This shouldn't happen cause we control our input. If it does,
+		// just panic cause this will be in a `server install` CLI and
+		// we want the user to report a bug.
+		panic(err)
+	}
+
+	return &pb.OnDemandRunnerConfig{
+		OciUrl:       i.config.odrImage,
+		PluginType:   "kubernetes",
+		Default:      true,
+		PluginConfig: cfgJson,
+		ConfigFormat: pb.Project_JSON,
+	}
+}
+
 // newDeployment takes in a k8sConfig and creates a new Waypoint Deployment for
 // deploying Waypoint runners.
 func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, error) {
@@ -1068,6 +1138,7 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 					},
 				},
 				Spec: apiv1.PodSpec{
+					ServiceAccountName: c.odrServiceAccount,
 					ImagePullSecrets: []apiv1.LocalObjectReference{
 						{
 							Name: c.imagePullSecret,
@@ -1084,7 +1155,7 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 							Args: []string{
 								"runner",
 								"agent",
-								"-vvv",
+								"-vv",
 								"-liveness-tcp-addr=:" + strconv.Itoa(livenessPort),
 							},
 							LivenessProbe: &apiv1.Probe{
@@ -1110,7 +1181,7 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 
 // newStatefulSet takes in a k8sConfig and creates a new Waypoint Statefulset
 // for deployment in Kubernetes.
-func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
+func newStatefulSet(c k8sConfig, rawRunFlags []string) (*appsv1.StatefulSet, error) {
 	cpuRequest, err := resource.ParseQuantity(c.cpuRequest)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse cpu request resource %s: %s", c.cpuRequest, err)
@@ -1151,6 +1222,16 @@ func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 		volumeClaimTemplates[0].Spec.StorageClassName = &c.storageClassName
 	}
 
+	ras := []string{
+		"server",
+		"run",
+		"-accept-tos",
+		"-vv",
+		"-db=/data/data.db",
+		"-listen-grpc=0.0.0.0:9701",
+		"-listen-http=0.0.0.0:9702",
+	}
+	ras = append(ras, rawRunFlags...)
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serverName,
@@ -1192,15 +1273,7 @@ func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 								},
 							},
 							Command: []string{serviceName},
-							Args: []string{
-								"server",
-								"run",
-								"-accept-tos",
-								"-vvv",
-								"-db=/data/data.db",
-								"-listen-grpc=0.0.0.0:9701",
-								"-listen-http=0.0.0.0:9702",
-							},
+							Args:    ras,
 							Ports: []apiv1.ContainerPort{
 								{
 									Name:          "grpc",
@@ -1270,6 +1343,45 @@ func newService(c k8sConfig) (*apiv1.Service, error) {
 				"app": serverName,
 			},
 			Type: apiv1.ServiceTypeLoadBalancer,
+		},
+	}, nil
+}
+
+// newServiceAccount takes in a k8sConfig and creates the ServiceAccount
+// definition for the ODR.
+func newServiceAccount(c k8sConfig) (*apiv1.ServiceAccount, error) {
+	return &apiv1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      c.odrServiceAccount,
+			Namespace: c.namespace,
+		},
+	}, nil
+}
+
+// newServiceAccountRoleBinding creates the role binding necessary to
+// map the ODR role to the service account.
+func newServiceAccountRoleBinding(c k8sConfig) (*rbacv1.RoleBinding, error) {
+	return &rbacv1.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "waypoint-runner-rolebinding",
+			Namespace: c.namespace,
+		},
+
+		// Our default runner role is just the default "edit" role. This
+		// gives access to read/write most things in this namespace but
+		// disallows modifying roles and rolebindings.
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "",
+			Kind:     "ClusterRole",
+			Name:     "edit",
+		},
+
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      c.odrServiceAccount,
+				Namespace: c.namespace,
+			},
 		},
 	}, nil
 }
@@ -1354,6 +1466,27 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
+		Name:   "k8s-odr-image",
+		Target: &i.config.odrImage,
+		Usage:  "Docker image for the Waypoint On-Demand Runners",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-runner-service-account",
+		Target: &i.config.odrServiceAccount,
+		Usage: "Service account to assign to the on-demand runner. If this is blank, " +
+			"a service account will be created automatically with the correct permissions.",
+		Default: "waypoint-runner",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "k8s-runner-service-account-init",
+		Target:  &i.config.odrServiceAccountInit,
+		Usage:   "Create the service account if it does not exist.",
+		Default: true,
+	})
+
+	set.StringVar(&flag.StringVar{
 		Name:   "k8s-storageclassname",
 		Target: &i.config.storageClassName,
 		Usage:  "Name of the StorageClass required by the volume claim to install the Waypoint server image to.",
@@ -1404,6 +1537,27 @@ func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-odr-image",
+		Target: &i.config.odrImage,
+		Usage:  "Docker image for the Waypoint On-Demand Runners",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-runner-service-account",
+		Target: &i.config.odrServiceAccount,
+		Usage: "Service account to assign to the on-demand runner. If this is blank, " +
+			"a service account will be created automatically with the correct permissions.",
+		Default: "waypoint-runner",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "k8s-runner-service-account-init",
+		Target:  &i.config.odrServiceAccountInit,
+		Usage:   "Create the service account if it does not exist.",
+		Default: true,
 	})
 }
 
@@ -1478,6 +1632,67 @@ func (i *K8sInstaller) newClient() (*kubernetes.Clientset, error) {
 	}
 
 	return clientset, nil
+}
+
+func (i *K8sInstaller) initServiceAccount(
+	ctx context.Context,
+	clientset *kubernetes.Clientset,
+	sg terminal.StepGroup,
+) error {
+	if !i.config.odrServiceAccountInit {
+		return nil
+	}
+
+	s := sg.Add("Initializing service account for on-demand runners...")
+	defer s.Abort()
+
+	// Look for the service account. If it doesn't exist, we create it.
+	saClient := clientset.CoreV1().ServiceAccounts(i.config.namespace)
+	serviceAccount, err := saClient.Get(ctx, i.config.odrServiceAccount, metav1.GetOptions{})
+	if errors.IsNotFound(err) {
+		serviceAccount = nil
+		err = nil
+	}
+	if err != nil {
+		return err
+	}
+
+	// If the service doesn't exist, then we create it.
+	if serviceAccount == nil {
+		s.Update("Creating the on-demand runner service account...")
+		serviceAccount, err = newServiceAccount(i.config)
+		if err != nil {
+			return err
+		}
+
+		if _, err := saClient.Create(ctx, serviceAccount, metav1.CreateOptions{}); err != nil {
+			return err
+		}
+	}
+
+	// Setup the role binding
+	s.Update("Initializing role binding for on-demand runner...")
+	rbClient := clientset.RbacV1().RoleBindings(i.config.namespace)
+	rb, err := newServiceAccountRoleBinding(i.config)
+	if err != nil {
+		return err
+	}
+	_, err = rbClient.Get(ctx, rb.Name, metav1.GetOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+	if err == nil {
+		if err := rbClient.Delete(ctx, rb.Name, metav1.DeleteOptions{}); err != nil {
+			return err
+		}
+	}
+	if _, err := rbClient.Create(ctx, rb, metav1.CreateOptions{}); err != nil {
+		return err
+	}
+
+	s.Update("Service account for on-demand runner initialized!")
+	s.Done()
+	return nil
 }
 
 var warnK8SKind = strings.TrimSpace(`

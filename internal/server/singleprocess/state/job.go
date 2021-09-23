@@ -283,6 +283,15 @@ func (s *State) JobById(id string, ws memdb.WatchSet) (*Job, error) {
 	return result, err
 }
 
+// JobPeekForRunner effectively simulates JobAssignForRunner with two changes:
+// (1) jobs are not actually assigned (they remain queued) and (2) this will
+// not block if a job isn't available. If a job isn't available, this will
+// return (nil, nil).
+func (s *State) JobPeekForRunner(ctx context.Context, r *pb.Runner) (*Job, error) {
+	// The false,false here will (1) not block and (2) not assign
+	return s.jobAssignForRunner(ctx, r, false, false)
+}
+
 // JobAssignForRunner will wait for and assign a job to a specific runner.
 // This will automatically evaluate any conditions that the runner and/or
 // job may have on assignability.
@@ -293,15 +302,27 @@ func (s *State) JobById(id string, ws memdb.WatchSet) (*Job, error) {
 // If ctx is provided and assignment has to block waiting for new jobs,
 // this will cancel when the context is done.
 func (s *State) JobAssignForRunner(ctx context.Context, r *pb.Runner) (*Job, error) {
+	return s.jobAssignForRunner(ctx, r, true, true)
+}
+
+func (s *State) jobAssignForRunner(ctx context.Context, r *pb.Runner, block, assign bool) (*Job, error) {
+	var txn *memdb.Txn
+
 RETRY_ASSIGN:
-	txn := s.inmem.Txn(false)
+	// If our transaction is not nil that means this is a repeated time around.
+	// If we aren't blocking, return now.
+	if txn != nil && !block {
+		return nil, nil
+	}
+
+	txn = s.inmem.Txn(false)
 	defer txn.Abort()
 
 	// Turn our runner into a runner record so we can more efficiently assign
 	runnerRec := newRunnerRecord(r)
 
 	// candidateQuery finds candidate jobs to assign.
-	type candidateFunc func(*memdb.Txn, memdb.WatchSet, *runnerRecord) (*jobIndex, error)
+	type candidateFunc func(*memdb.Txn, memdb.WatchSet, *runnerRecord, bool) (*jobIndex, error)
 	candidateQuery := []candidateFunc{
 		s.jobCandidateById,
 		s.jobCandidateAny,
@@ -318,7 +339,7 @@ RETRY_ASSIGN:
 	var candidates []*jobIndex
 	ws := memdb.NewWatchSet()
 	for _, f := range candidateQuery {
-		job, err := f(txn, ws, runnerRec)
+		job, err := f(txn, ws, runnerRec, assign)
 		if err != nil {
 			return nil, err
 		}
@@ -346,9 +367,11 @@ RETRY_ASSIGN:
 	// If we have a watch channel set that means we didn't find any
 	// results and we need to retry after waiting for changes.
 	if len(candidates) == 0 {
-		ws.WatchCtx(ctx)
-		if err := ctx.Err(); err != nil {
-			return nil, err
+		if block {
+			ws.WatchCtx(ctx)
+			if err := ctx.Err(); err != nil {
+				return nil, err
+			}
 		}
 
 		goto RETRY_ASSIGN
@@ -366,7 +389,10 @@ RETRY_ASSIGN:
 	// Write locks are exclusive so this will ensure we're the only one
 	// writing at a time. This lets us be sure we're the only one "assigning"
 	// a job candidate.
-	txn = s.inmem.Txn(true)
+	//
+	// Note: we only grab a write lock if we're assigning. If we're not
+	// assigning then we grab a read lock.
+	txn = s.inmem.Txn(assign)
 	for _, job := range candidates {
 		// Get the job
 		raw, err := txn.First(jobTableName, jobIdIndexName, job.Id)
@@ -385,6 +411,28 @@ RETRY_ASSIGN:
 		job := raw.(*jobIndex)
 		if job == nil || job.State != pb.Job_QUEUED {
 			continue
+		}
+
+		// If we've been requested to not assign, then we found our result.
+		//
+		// Importantly we do this above the blocked check below. This is tested.
+		// We want to check this before checking if the job is blocked because
+		// it is possible for all jobs to be blocked and therefore peek to return
+		// nil. We want to return any job that could possibly be next.
+		if !assign {
+			// We're no longer going to use the memdb txn
+			txn.Abort()
+
+			var pbjob *pb.Job
+			err = s.db.View(func(dbTxn *bolt.Tx) error {
+				pbjob, err = s.jobById(dbTxn, job.Id)
+				return err
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			return job.Job(pbjob), nil
 		}
 
 		// We also need to recheck that we aren't blocked. If we're blocked
@@ -531,6 +579,17 @@ func (s *State) JobAck(id string, ack bool) (*Job, error) {
 // JobUpdateRef sets the data_source_ref field for a job. This job can be
 // in any state.
 func (s *State) JobUpdateRef(id string, ref *pb.Job_DataSource_Ref) error {
+	return s.JobUpdate(id, func(jobpb *pb.Job) error {
+		jobpb.DataSourceRef = ref
+		return nil
+	})
+}
+
+// JobUpdate calls the given callback to update fields on the job data.
+// The callback is called in the context of a database write lock so it
+// should NOT compute anything and should be fast. The callback can return
+// an error to abort the transaction.
+func (s *State) JobUpdate(id string, cb func(jobpb *pb.Job) error) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -545,8 +604,7 @@ func (s *State) JobUpdateRef(id string, ref *pb.Job_DataSource_Ref) error {
 	job := raw.(*jobIndex)
 
 	_, err = s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
-		jobpb.DataSourceRef = ref
-		return nil
+		return cb(jobpb)
 	})
 	if err != nil {
 		return err
@@ -1098,7 +1156,9 @@ func (s *State) jobReadAndUpdate(id string, f func(*pb.Job) error) (*pb.Job, err
 
 // jobCandidateById returns the most promising candidate job to assign
 // that is targeting a specific runner by ID.
-func (s *State) jobCandidateById(memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerRecord) (*jobIndex, error) {
+func (s *State) jobCandidateById(
+	memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerRecord, assign bool,
+) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
 		jobTargetIdIndexName,
@@ -1124,7 +1184,7 @@ func (s *State) jobCandidateById(memTxn *memdb.Txn, ws memdb.WatchSet, r *runner
 		// If this job is blocked, it is not a candidate.
 		if blocked, err := s.jobIsBlocked(memTxn, job, ws); err != nil {
 			return nil, err
-		} else if blocked {
+		} else if blocked && assign {
 			continue
 		}
 
@@ -1135,7 +1195,9 @@ func (s *State) jobCandidateById(memTxn *memdb.Txn, ws memdb.WatchSet, r *runner
 }
 
 // jobCandidateAny returns the first candidate job that targets any runner.
-func (s *State) jobCandidateAny(memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerRecord) (*jobIndex, error) {
+func (s *State) jobCandidateAny(
+	memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerRecord, assign bool,
+) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
 		jobQueueTimeIndexName,
@@ -1160,7 +1222,7 @@ func (s *State) jobCandidateAny(memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerR
 		// If this job is blocked, it is not a candidate.
 		if blocked, err := s.jobIsBlocked(memTxn, job, ws); err != nil {
 			return nil, err
-		} else if blocked {
+		} else if blocked && assign {
 			continue
 		}
 

@@ -59,3 +59,42 @@ message Resource {
 message TaskInfo {
   string id = 1;
 }
+
+message AccessInfo {
+  // image is the OCI compatible descriptor for the location of the image. Typically it
+  // is in the form `repo/name`, where repo is a host name (perhaps with a port), and
+  // name may also contain / use to identify subdivision on the host.
+  string image = 1;
+
+  // tag is the OCI compatible tag that the resulting data will be stored at within
+  // the repository defined by image.
+  string tag = 2;
+
+  // auth indicates how to authenticate with the repository defined by image.
+  oneof auth {
+
+    // header is the value of the Authentication header that is sent to the repository.
+    // This allows for repositories that use bearer tokens or other sorts of authentication.
+    string header = 3;
+
+    // encoded is the docker standard encoded authentication data. This is base64 encoded
+    // json that contains username and passwword fields that are used for authentication.
+    string encoded = 4;
+
+    // user_pass specifies a username and password to use to authenticate with the registry.
+    // The registry plugin will transform this information to the proper format as needed.
+    UserPass user_pass = 6;
+
+  }
+
+  // insecure indicates if the repository defined by image should be access via http or https.
+  bool insecure = 5;
+
+  message UserPass {
+    // The username to authenticate against the registry with
+    string username = 1;
+
+    // The password assocated with the above username
+    string password = 2;
+  }
+}

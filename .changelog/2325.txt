@@ -1,0 +1,3 @@
+```release-note:improvement
+cli: Use default log level of debug instead of trace on server install
+```

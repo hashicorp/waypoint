@@ -165,7 +165,7 @@
               @offLabel='git sync off'
               @name="Git Sync"
               />
-            <toggle.label for="git-sync-enabled">
+            <toggle.label for="git-sync-enabled" @value={{not this.project.dataSourcePoll.enabled}}>
               <span class="pds-toggleLabel">
                 {{t "form.project_git_settings.git_sync_description_label"}}
               </span>
@@ -213,15 +213,11 @@
           <Pds::HelpText>
             <p>{{t "form.project_git_settings.hcl_content_helptext"}}</p>
           </Pds::HelpText>
-          <Pds::Textarea
+          <CodeEditorField
             id="project-hcl-content"
-            placeholder=""
-            class="pds-textarea__codeInput"
-            spellcheck="false"
-            rows="14"
-            value={{this.decodedWaypointHcl}}
-            required={{this.this.serverHcl}}
-            {{on "input" (fn this.setWaypointHcl)}}
+            @value={{this.decodedWaypointHcl}}
+            @onInput={{this.setWaypointHcl}}
+            @required={{this.serverHcl}}
           />
         </div>
       {{else}}

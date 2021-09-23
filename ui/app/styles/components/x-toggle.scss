@@ -17,3 +17,10 @@
 .x-toggle:checked + label > .x-toggle-light.x-toggle-btn {
   background-color: rgb(var(--toggle-color-on));
 }
+
+.x-toggle-component label {
+  &.off-label, &.on-label {
+    padding-right: 0;
+    padding-left: 0;
+  }
+}

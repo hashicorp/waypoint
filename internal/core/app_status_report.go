@@ -9,6 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	newproto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/hashicorp/go-argmapper"
@@ -38,6 +39,22 @@ func (a *App) DeploymentStatusReport(
 		return nil, err
 	}
 
+	// Get the previous status report (if any)
+	lastResp, err := a.client.GetLatestStatusReport(ctx, &pb.GetLatestStatusReportRequest{
+		Application: a.ref,
+		Workspace:   a.workspace,
+		Target: &pb.GetLatestStatusReportRequest_DeploymentId{
+			DeploymentId: deployTarget.Id,
+		},
+	})
+	if status.Code(err) == codes.NotFound {
+		err = nil
+		lastResp = nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	c, err := a.createStatusReporter(ctx, hclCtx, component.PlatformType)
 	if status.Code(err) == codes.Unimplemented {
 		a.logger.Debug("status report is not implemented in plugin, cannot report on status")
@@ -57,7 +74,7 @@ func (a *App) DeploymentStatusReport(
 	}
 	defer c.Close()
 
-	return a.statusReport(ctx, "deploy_statusreport", c, deployTarget)
+	return a.statusReport(ctx, "deploy_statusreport", c, deployTarget, lastResp)
 }
 
 func (a *App) ReleaseStatusReport(
@@ -73,6 +90,22 @@ func (a *App) ReleaseStatusReport(
 	// Load variables from deploy
 	hclCtx := evalCtx.NewChild()
 	if _, err := a.deployEvalContext(ctx, hclCtx); err != nil {
+		return nil, err
+	}
+
+	// Get the previous status report (if any)
+	lastResp, err := a.client.GetLatestStatusReport(ctx, &pb.GetLatestStatusReportRequest{
+		Application: a.ref,
+		Workspace:   a.workspace,
+		Target: &pb.GetLatestStatusReportRequest_ReleaseId{
+			ReleaseId: releaseTarget.Id,
+		},
+	})
+	if status.Code(err) == codes.NotFound {
+		err = nil
+		lastResp = nil
+	}
+	if err != nil {
 		return nil, err
 	}
 
@@ -95,7 +128,7 @@ func (a *App) ReleaseStatusReport(
 	}
 	defer c.Close()
 
-	return a.statusReport(ctx, "release_statusreport", c, releaseTarget)
+	return a.statusReport(ctx, "release_statusreport", c, releaseTarget, lastResp)
 }
 
 // A generic status report func that takes an already setup component and a
@@ -105,6 +138,7 @@ func (a *App) statusReport(
 	loggerName string,
 	component *Component,
 	target interface{},
+	last *pb.StatusReport,
 ) (*pb.StatusReport, error) {
 	if loggerName == "" {
 		loggerName = "statusreport"
@@ -113,6 +147,7 @@ func (a *App) statusReport(
 	_, msg, err := a.doOperation(ctx, a.logger.Named(loggerName), &statusReportOperation{
 		Component: component,
 		Target:    target,
+		Last:      last,
 	})
 	if err != nil {
 		return nil, err
@@ -233,7 +268,8 @@ func (a *App) createStatusReporter(
 
 type statusReportOperation struct {
 	Component *Component
-	Target    interface{} // Target to run a Status Report against
+	Target    interface{}      // Target to run a Status Report against
+	Last      *pb.StatusReport // The last status report
 
 	result *sdk.StatusReport
 }
@@ -367,6 +403,17 @@ func (op *statusReportOperation) argsStatusReport() ([]argmapper.Arg, error) {
 		return nil, status.Errorf(codes.FailedPrecondition, "unsupported status report target given")
 	}
 
+	// Get our last status report. This can be nil if this is the first report.
+	var last *sdk.StatusReport
+	if op.Last != nil {
+		var err error
+		last, err = serverToSDKStatusReport(op.Last)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args = append(args, argmapper.Named("last_report", last))
+
 	return args, nil
 }
 
@@ -376,6 +423,15 @@ func (op *statusReportOperation) StatusPtr(msg proto.Message) **pb.Status {
 
 func (op *statusReportOperation) ValuePtr(msg proto.Message) **any.Any {
 	return &(msg.(*pb.StatusReport).StatusReport)
+}
+
+// serverToSDKStatusReport converts a pb.StatusReport to an SDK one.
+func serverToSDKStatusReport(from *pb.StatusReport) (*sdk.StatusReport, error) {
+	// We embed the status report in the message so we just unmarshal
+	// the original.
+	var result sdk.StatusReport
+	return &result, anypb.UnmarshalTo(
+		from.StatusReport, &result, newproto.UnmarshalOptions{})
 }
 
 var _ operation = (*statusReportOperation)(nil)

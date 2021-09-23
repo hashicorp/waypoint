@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
@@ -34,6 +35,7 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 	// Defaults
 	var cfg connectConfig
 	cfg.Timeout = 5 * time.Second
+	cfg.Log = hclog.NewNullLogger()
 
 	// Set config
 	for _, opt := range opts {
@@ -79,8 +81,9 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		))
 	}
 
+	var token string
 	if cfg.Auth {
-		token := cfg.Token
+		token = cfg.Token
 		if v := os.Getenv(EnvServerToken); v != "" {
 			token = v
 		}
@@ -91,6 +94,14 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 
 		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(StaticToken(token)))
 	}
+
+	cfg.Log.Debug("connection information",
+		"address", cfg.Addr,
+		"tls", cfg.Tls,
+		"tls_skip_verify", cfg.TlsSkipVerify,
+		"send_auth", cfg.Auth,
+		"has_token", token != "",
+	)
 
 	// Connect to this server
 	return grpc.DialContext(ctx, cfg.Addr, grpcOpts...)
@@ -127,6 +138,7 @@ type connectConfig struct {
 	Token         string
 	Optional      bool // See Optional func
 	Timeout       time.Duration
+	Log           hclog.Logger
 }
 
 // FromEnv sources the connection information from the environment
@@ -233,6 +245,14 @@ func Optional() ConnectOption {
 func Timeout(t time.Duration) ConnectOption {
 	return func(c *connectConfig) error {
 		c.Timeout = t
+		return nil
+	}
+}
+
+// Logger is the logger to use.
+func Logger(v hclog.Logger) ConnectOption {
+	return func(c *connectConfig) error {
+		c.Log = v
 		return nil
 	}
 }

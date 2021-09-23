@@ -23,15 +23,34 @@
     </LinkTo>
   </Card>
 {{else}}
-  <EmptyState>
-    <p>There are no applications in this project yet</p>
-    <p>To create your first application, run
-      <CopyableCode @ref="empty-init" @inline="true">
-        <code id="empty-init">waypoint init</code>
-      </CopyableCode>
-      from the CLI</p>
-    <p>For more help getting started, refer to the <ExternalLink href="https://waypointproject.io/docs/getting-started">Waypoint documentation</ExternalLink></p>
-  </EmptyState>
+  {{#if (or
+    (eq @model.latestInitJob.state 0)
+    (eq @model.latestInitJob.state 1)
+    (eq @model.latestInitJob.state 2)
+    (eq @model.latestInitJob.state 3)
+    (eq @model.latestInitJob.state 5)
+  )}}
+    {{! Remote init is UNKNOWN, QUEUED, WAITING, RUNNING, or SUCCESS }}
+    <EmptyState>
+      <ProjectInitRunning @project={{@model}} />
+    </EmptyState>
+  {{else if (eq @model.latestInitJob.state 4)}}
+    {{! Remote init is ERROR }}
+    <EmptyState>
+      <ProjectInitError @project={{@model}} />
+    </EmptyState>
+  {{else}}
+    {{! Local init }}
+    <EmptyState>
+      <p>There are no applications in this project yet</p>
+      <p>To create your first application, run
+        <CopyableCode @ref="empty-init" @inline="true">
+          <code id="empty-init">waypoint init</code>
+        </CopyableCode>
+        from the CLI</p>
+      <p>For more help getting started, refer to the <ExternalLink href="https://waypointproject.io/docs/getting-started">Waypoint documentation</ExternalLink></p>
+    </EmptyState>
+  {{/if}}
 {{/each}}
 
 {{outlet}}

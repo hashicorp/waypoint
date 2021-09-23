@@ -31,9 +31,23 @@ func (r *Registry) pushWithImg(
 
 	step = sg.Add("Preparing Docker configuration...")
 	env := os.Environ()
-	if path, err := TempDockerConfig(log, target, r.config.EncodedAuth); err != nil {
+
+	var (
+		path string
+		err  error
+	)
+
+	if r.config.EncodedAuth != "" {
+		path, err = TempDockerConfig(log, target, r.config.EncodedAuth)
+	} else if r.config.Password != "" {
+		path, err = TempDockerConfigWithPassword(log, target, r.config.Username, r.config.Password)
+	}
+
+	if err != nil {
 		return err
-	} else if path != "" {
+	}
+
+	if path != "" {
 		defer os.RemoveAll(path)
 		env = append(env, "DOCKER_CONFIG="+path)
 	}

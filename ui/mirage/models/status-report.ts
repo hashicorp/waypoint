@@ -26,7 +26,7 @@ export default Model.extend({
     result.setId(this.id);
     // TODO: result.setStatusReport(value?: google_protobuf_any_pb.Any)
     result.setHealth(this.health?.toProtobuf());
-    result.setResourcesHealthList(this.resourcesHealthList.models.map((h) => h.toProtobuf()));
+    result.setDeprecatedResourcesHealthList(this.resourcesHealthList.models.map((h) => h.toProtobuf()));
 
     return result;
   },

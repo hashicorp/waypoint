@@ -28,6 +28,7 @@ type DockerInstaller struct {
 
 type dockerConfig struct {
 	serverImage string `hcl:"server_image,optional"`
+	odrImage    string `hcl:"odr_image,optional"`
 }
 
 var (
@@ -45,8 +46,15 @@ func (i *DockerInstaller) Install(
 	ctx context.Context,
 	opts *InstallOpts,
 ) (*InstallResults, error) {
-	ui := opts.UI
+	if i.config.odrImage == "" {
+		var err error
+		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		if err != nil {
+			return nil, err
+		}
+	}
 
+	ui := opts.UI
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -209,6 +217,8 @@ func (i *DockerInstaller) Install(
 
 	s.Update("Installing Waypoint server to docker")
 
+	cmd := []string{"server", "run", "-accept-tos", "-vv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", grpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", httpPort)}
+	cmd = append(cmd, opts.ServerRunFlags...)
 	cfg := container.Config{
 		AttachStdout: true,
 		AttachStderr: true,
@@ -218,7 +228,7 @@ func (i *DockerInstaller) Install(
 		Image:        i.config.serverImage,
 		ExposedPorts: nat.PortSet{npGRPC: struct{}{}, npHTTP: struct{}{}},
 		Env:          []string{"PORT=" + grpcPort},
-		Cmd:          []string{"server", "run", "-accept-tos", "-vvv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", grpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", httpPort)},
+		Cmd:          cmd,
 	}
 
 	bindings := nat.PortMap{}
@@ -278,8 +288,15 @@ func (i *DockerInstaller) Upgrade(
 	ctx context.Context, opts *InstallOpts, serverCfg serverconfig.Client) (
 	*InstallResults, error,
 ) {
-	ui := opts.UI
+	if i.config.odrImage == "" {
+		var err error
+		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		if err != nil {
+			return nil, err
+		}
+	}
 
+	ui := opts.UI
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -410,6 +427,9 @@ func (i *DockerInstaller) Upgrade(
 	if err != nil {
 		return nil, err
 	}
+
+	cmd := []string{"server", "run", "-accept-tos", "-vv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", grpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", httpPort)}
+	cmd = append(cmd, opts.ServerRunFlags...)
 	cfg := container.Config{
 		AttachStdout: true,
 		AttachStderr: true,
@@ -419,7 +439,7 @@ func (i *DockerInstaller) Upgrade(
 		Image:        i.config.serverImage,
 		ExposedPorts: nat.PortSet{npGRPC: struct{}{}, npHTTP: struct{}{}},
 		Env:          []string{"PORT=" + grpcPort},
-		Cmd:          []string{"server", "run", "-accept-tos", "-vvv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", grpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", httpPort)},
+		Cmd:          cmd,
 	}
 
 	bindings := nat.PortMap{}
@@ -645,13 +665,17 @@ func (i *DockerInstaller) InstallRunner(
 		AttachStdin:  true,
 		OpenStdin:    true,
 		StdinOnce:    true,
+		User:         "root",
 		Image:        i.config.serverImage,
 		Env:          opts.AdvertiseClient.Env(),
-		Cmd:          []string{"runner", "agent", "-vvv"},
+		Cmd:          []string{"runner", "agent", "-vv"},
 		Labels: map[string]string{
 			"waypoint-type": "runner",
 		},
 	}, &container.HostConfig{
+		Privileged: true,
+		CapAdd:     []string{"CAP_DAC_OVERRIDE"},
+		Binds:      []string{"/var/run/docker.sock:/var/run/docker.sock"},
 		// These security options are required for the runner so that
 		// Docker daemonless image building works properly.
 		SecurityOpt: []string{
@@ -676,6 +700,14 @@ func (i *DockerInstaller) InstallRunner(
 	s.Done()
 
 	return nil
+}
+
+func (i *DockerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	return &pb.OnDemandRunnerConfig{
+		OciUrl:     i.config.odrImage,
+		PluginType: "docker",
+		Default:    true,
+	}
 }
 
 // UninstallRunner implements Installer.
@@ -778,6 +810,13 @@ func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
 	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "docker-odr-image",
+		Target: &i.config.odrImage,
+		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
+			"default to the server image with the name (not label) suffixed with '-odr'.",
+	})
 }
 
 func (i *DockerInstaller) UpgradeFlags(set *flag.Set) {
@@ -786,6 +825,13 @@ func (i *DockerInstaller) UpgradeFlags(set *flag.Set) {
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "docker-odr-image",
+		Target: &i.config.odrImage,
+		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
+			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
 }
 

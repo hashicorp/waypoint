@@ -49,6 +49,7 @@ var (
 	// hiddenCommands are not shown in CLI help output.
 	hiddenCommands = map[string]struct{}{
 		"plugin": {},
+		"k8s":    {},
 
 		// Deprecated:
 		"token": {}, // replaced by "user"
@@ -291,6 +292,12 @@ func Commands(
 			}, nil
 		},
 
+		"release list": func() (cli.Command, error) {
+			return &ReleaseListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"server": func() (cli.Command, error) {
 			return &helpCommand{
 				SynopsisText: helpText["server"][0],
@@ -486,6 +493,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"project inspect": func() (cli.Command, error) {
+			return &ProjectInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"fmt": func() (cli.Command, error) {
 			return &FmtCommand{
@@ -555,9 +567,38 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"user token": func() (cli.Command, error) {
 			return &UserTokenCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner on-demand": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["on-demand-runner"][0],
+				HelpText:     helpText["on-demand-runner"][1],
+			}, nil
+		},
+
+		"runner on-demand set": func() (cli.Command, error) {
+			return &OnDemandRunnerConfigApplyCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"runner on-demand inspect": func() (cli.Command, error) {
+			return &OnDemandRunnerInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"runner list": func() (cli.Command, error) {
+			return &OnDemandRunnerConfigListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"k8s bootstrap": func() (cli.Command, error) {
+			return &K8SBootstrapCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
@@ -598,10 +639,18 @@ func logger(args []string) ([]string, hclog.Logger, io.Writer, error) {
 	// Process arguments looking for `-v` flags to control the log level.
 	// This overrides whatever the env var set.
 	var outArgs []string
-	for _, arg := range args {
+	for i, arg := range args {
 		if len(arg) != 0 && arg[0] != '-' {
 			outArgs = append(outArgs, arg)
 			continue
+		}
+
+		// If we hit a break indicating pass-through flags, we add them all to
+		// outArgs and just exit, since we don't want to process any secondary
+		//  `-v` flags at this time.
+		if arg == "--" {
+			outArgs = append(outArgs, args[i:]...)
+			break
 		}
 
 		switch arg {
@@ -769,9 +818,9 @@ Waypoint will search for artifacts to pass to the deployment phase.
 	},
 
 	"auth-method": {
-		"Auth Method Management",
+		"Auth method management",
 		`
-Auth Method Management
+Auth method management
 
 The auth-method commands can be used to manage how users can authenticate
 into the Waypoint server. For day-to-day Waypoint users, you likely want
@@ -897,6 +946,15 @@ about the currently logged in user, generate new access, and invite new
 users directly into the Waypoint server.
 
 If you are looking to log in to Waypoint, use "waypoint login".
+`,
+	},
+	"on-demand-runner": {
+		"On-Demand Runner configuration",
+		`
+List and edit On-Demand Runner configuration.
+
+Each on-demand runner confiuration entry represents the ability to spawn
+runners when needed using the configured plugin.
 `,
 	},
 }

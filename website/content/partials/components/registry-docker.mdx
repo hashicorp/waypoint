@@ -55,11 +55,38 @@ WARNING: be very careful to not leak the authentication information by hardcodin
 - Type: **string**
 - **Optional**
 
+#### insecure
+
+Access the registry via http rather than https.
+
+This indicates that the registry should be accessed via http rather than https. Not recommended for production usage.
+
+- Type: **bool**
+- **Optional**
+
 #### local
 
 If set, the image will only be tagged locally and not pushed to a remote repository.
 
 - Type: **bool**
+- **Optional**
+
+#### password
+
+Password associated with username on the registry.
+
+This optional conflicts with encoded_auth and thusly only one can be used at a time. If both are used, encoded_auth takes precedence.
+
+- Type: **string**
+- **Optional**
+
+#### username
+
+Username to authenticate with the registry.
+
+This optional conflicts with encoded_auth and thusly only one can be used at a time. If both are used, encoded_auth takes precedence.
+
+- Type: **string**
 - **Optional**
 
 ### Output Attributes

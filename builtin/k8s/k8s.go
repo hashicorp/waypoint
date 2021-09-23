@@ -12,5 +12,5 @@ const platformName = "kubernetes"
 // Options are the SDK options to use for instantiation for
 // the Kubernetes plugin.
 var Options = []sdk.Option{
-	sdk.WithComponents(&Platform{}, &Releaser{}, &ConfigSourcer{}),
+	sdk.WithComponents(&Platform{}, &Releaser{}, &ConfigSourcer{}, &TaskLauncher{}),
 }

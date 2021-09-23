@@ -3,7 +3,7 @@ import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import ApiService from 'waypoint/services/api';
-import FlashMessagesService from 'waypoint/services/flash-messages';
+import FlashMessagesService from 'waypoint/services/pds-flash-messages';
 import {
   Deployment,
   Ref,
@@ -25,27 +25,27 @@ interface WithStatusReport {
 
 export default class StatusReportBar extends Component<StatusReportBarArgs> {
   @service api!: ApiService;
-  @service flashMessages!: FlashMessagesService;
+  @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
   @tracked isRefreshRunning = false;
 
-  constructor(owner: any, args: any) {
+  constructor(owner: unknown, args: StatusReportBarArgs) {
     super(owner, args);
   }
 
-  get artifactType() {
+  get artifactType(): StatusReportBarArgs['artifactType'] {
     return this.args.artifactType;
   }
 
-  get model() {
+  get model(): StatusReportBarArgs['model'] {
     return this.args.model;
   }
 
-  get statusReport() {
+  get statusReport(): StatusReportBarArgs['model']['statusReport'] {
     return this.model.statusReport;
   }
 
   @action
-  async refreshHealthCheck(e: Event) {
+  async refreshHealthCheck(e: Event): Promise<void> {
     e.preventDefault();
 
     let ref = new Ref.Operation();

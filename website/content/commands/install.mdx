@@ -36,6 +36,14 @@ flag. This only applies to the Waypoint URL service. You may disable the
 URL service by manually running the server. If you disable the URL service,
 you do not need to accept any terms.
 
+To further customize the server installation, you may pass advanced flag options
+specified in the documentation for the 'server run' command. To set these values,
+include a '--' after the full argument list for 'install', followed by these
+advanced flag options. As an example, to set the server log level to trace
+and disable the UI, the command would be:
+
+    waypoint install -platform=docker -accept-tos -- -vvv -disable-ui
+
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.
@@ -52,16 +60,21 @@ you do not need to accept any terms.
 #### docker Options
 
 - `-docker-server-image=<string>` - Docker image for the Waypoint server.
+- `-docker-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners. This will default to the server image with the name (not label) suffixed with '-odr'.
 
 #### ecs Options
 
 - `-ecs-cluster=<string>` - Configures the Cluster to install into.
 - `-ecs-region=<string>` - Configures which AWS region to install into.
 - `-ecs-subnets=<string>` - Subnets to install server into.
-- `-ecs-execution-role-name=<string>` - Configures the Execution role name to use.
+- `-ecs-execution-role-name=<string>` - Configures the IAM Execution role name to use.
 - `-ecs-server-image=<string>` - Docker image for the Waypoint server.
 - `-ecs-cpu=<string>` - Configures the requested CPU amount for the Waypoint server task in ECS.
 - `-ecs-mem=<string>` - Configures the requested memory amount for the Waypoint server task in ECS.
+- `-ecs-task-role-name=<string>` - IAM Execution Role to assign to the on-demand runner. If this is blank, an IAM role will be created automatically with the default permissions.
+- `-ecs-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners. This will default to the server image with the name (not label) suffixed with '-odr'.
+- `-ecs-odr-mem=<string>` - Configures the requested memory amount for the Waypoint On-Demand runner in ECS.
+- `-ecs-odr-cpu=<string>` - Configures the requested CPU amount for the Waypoint On-Demand runner in ECS.
 
 #### kubernetes Options
 
@@ -76,6 +89,9 @@ you do not need to accept any terms.
 - `-k8s-pull-secret=<string>` - Secret to use to access the Waypoint server image on Kubernetes.
 - `-k8s-secret-file=<string>` - Use the Kubernetes Secret in the given path to access the Waypoint server image.
 - `-k8s-server-image=<string>` - Docker image for the Waypoint server.
+- `-k8s-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners
+- `-k8s-runner-service-account=<string>` - Service account to assign to the on-demand runner. If this is blank, a service account will be created automatically with the correct permissions.
+- `-k8s-runner-service-account-init` - Create the service account if it does not exist.
 - `-k8s-storageclassname=<string>` - Name of the StorageClass required by the volume claim to install the Waypoint server image to.
 - `-k8s-storage-request=<string>` - Configures the requested persistent volume size for the Waypoint server in Kubernetes.
 

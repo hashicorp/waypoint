@@ -2,6 +2,7 @@ package serverinstall
 
 import (
 	"context"
+	json "encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -48,6 +49,10 @@ const (
 
 type ECSInstaller struct {
 	config ecsConfig
+	// netInfo stores information needed to setup on-demand runners between
+	// installation and on demand runner setup, so that we don't need to query
+	// AWS again to re-establish all the information.
+	netInfo *networkInformation
 }
 
 type ecsConfig struct {
@@ -74,6 +79,18 @@ type ecsConfig struct {
 	CPU string `hcl:"cpu,optional"`
 	// Memory configures the default amount of memory for the task
 	Memory string `hcl:"memory,optional"`
+
+	// OdrExecutionRoleName string `hcl:"odr_execution_role_name,optional"`
+	TaskRoleName string `hcl:"task_role_name,optional"`
+
+	// On-Demand Runner docker image. Defaults to hashicorp/waypoint-odr
+	OdrImage string `hcl:"odr_image,optional"`
+
+	// On-Demand Runner
+	OdrCPU string `hcl:"odr_cpu,optional"`
+
+	// On-Demand Runner
+	OdrMemory string `hcl:"odr_memory,optional"`
 }
 
 // Install is a method of ECSInstaller and implements the Installer interface to
@@ -82,6 +99,7 @@ func (i *ECSInstaller) Install(
 	ctx context.Context,
 	opts *InstallOpts,
 ) (*InstallResults, error) {
+
 	ui := opts.UI
 	log := opts.Log
 
@@ -110,6 +128,21 @@ func (i *ECSInstaller) Install(
 	}
 
 	if err := utils.ValidateEcsMemCPUPair(mem, cpu); err != nil {
+		return nil, err
+	}
+
+	// we need to validate the given ODR mem/cpu at install time to verify the
+	// ODR will be able to launch without adjusting the configuration
+	// post-install
+	odrMem, err := strconv.Atoi(i.config.OdrMemory)
+	if err != nil {
+		return nil, err
+	}
+	odrCpu, err := strconv.Atoi(i.config.OdrCPU)
+	if err != nil {
+		return nil, err
+	}
+	if err := utils.ValidateEcsMemCPUPair(odrMem, odrCpu); err != nil {
 		return nil, err
 	}
 
@@ -147,7 +180,7 @@ func (i *ECSInstaller) Install(
 		},
 
 		Run: func(ui terminal.UI) error {
-			server, err = i.Launch(ctx, log, ui, sess, efsInfo, netInfo, executionRole, cluster, serverLogGroup)
+			server, err = i.Launch(ctx, log, ui, sess, efsInfo, netInfo, executionRole, cluster, serverLogGroup, opts.ServerRunFlags)
 			return err
 		},
 
@@ -191,7 +224,7 @@ func (i *ECSInstaller) Launch(
 	sess *session.Session,
 	efsInfo *efsInformation,
 	netInfo *networkInformation,
-	executionRoleArn, clusterName, logGroup string,
+	executionRoleArn, clusterName, logGroup string, rawRunFlags []string,
 ) (*ecsServer, error) {
 
 	sg := ui.StepGroup()
@@ -228,10 +261,13 @@ func (i *ECSInstaller) Launch(
 		aws.String("server"),
 		aws.String("run"),
 		aws.String("-accept-tos"),
-		aws.String("-vvv"),
+		aws.String("-vv"),
 		aws.String("-db=/waypoint-data/data.db"),
 		aws.String(fmt.Sprintf("-listen-grpc=0.0.0.0:%d", grpcPort)),
 		aws.String(fmt.Sprintf("-listen-http=0.0.0.0:%d", httpPort)),
+	}
+	for _, f := range rawRunFlags {
+		cmd = append(cmd, aws.String(f))
 	}
 
 	def := ecs.ContainerDefinition{
@@ -294,7 +330,7 @@ func (i *ECSInstaller) Launch(
 	}
 
 	ecsSvc := ecs.New(sess)
-	taskDef, err := registerTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
+	taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc, log)
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +340,7 @@ func (i *ECSInstaller) Launch(
 	taskDefArn := *taskDef.TaskDefinitionArn
 
 	// Create the service
-	s.Update("Creating server Service...")
+	s.Update("Creating server service...")
 	log.Debug("creating service", "arn", *taskDef.TaskDefinitionArn)
 
 	createServiceInput := &ecs.CreateServiceInput{
@@ -313,6 +349,7 @@ func (i *ECSInstaller) Launch(
 		LaunchType:                    aws.String(defaultTaskRuntime),
 		ServiceName:                   aws.String(serverName),
 		TaskDefinition:                aws.String(taskDefArn),
+		EnableECSManagedTags:          aws.Bool(true),
 		HealthCheckGracePeriodSeconds: aws.Int64(int64(600)),
 		NetworkConfiguration: &ecs.NetworkConfiguration{
 			AwsvpcConfiguration: &ecs.AwsVpcConfiguration{
@@ -474,6 +511,10 @@ func (i *ECSInstaller) Upgrade(
 	if i.config.ServerImage != "" {
 		upgradeImg = i.config.ServerImage
 	}
+
+	s.Done()
+	s = sg.Add("Updating task definition")
+	defer func() { s.Abort() }()
 	// assume upgrade to latest
 	if *containerDef.Image == defaultServerImage {
 		// we can just update/force-deploy the service
@@ -482,13 +523,6 @@ func (i *ECSInstaller) Upgrade(
 			Cluster:                       &clusterArn,
 			Service:                       serverSvc.ServiceName,
 			HealthCheckGracePeriodSeconds: aws.Int64(int64(600)),
-		})
-		if err != nil {
-			return nil, err
-		}
-		err = ecsSvc.WaitUntilServicesStable(&ecs.DescribeServicesInput{
-			Cluster:  &clusterArn,
-			Services: []*string{serverSvc.ServiceName},
 		})
 		if err != nil {
 			return nil, err
@@ -511,7 +545,7 @@ func (i *ECSInstaller) Upgrade(
 		}
 
 		ecsSvc := ecs.New(sess)
-		taskDef, err := registerTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
+		taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc, log)
 		if err != nil {
 			return nil, err
 		}
@@ -524,14 +558,19 @@ func (i *ECSInstaller) Upgrade(
 		if err != nil {
 			return nil, err
 		}
-		err = ecsSvc.WaitUntilServicesStable(&ecs.DescribeServicesInput{
-			Cluster:  &clusterArn,
-			Services: []*string{serverSvc.ServiceName},
-		})
-		if err != nil {
-			return nil, err
-		}
 	}
+
+	s.Update("Waiting until service is stable")
+	err = ecsSvc.WaitUntilServicesStable(&ecs.DescribeServicesInput{
+		Cluster:  &clusterArn,
+		Services: []*string{serverSvc.ServiceName},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	s.Done()
+	s = sg.Add("Updating context...")
 
 	var contextConfig clicontext.Config
 	var advertiseAddr pb.ServerConfig_AdvertiseAddr
@@ -941,9 +980,18 @@ func (i *ECSInstaller) InstallRunner(
 		return err
 	}
 
+	if i.config.OdrImage == "" {
+		var err error
+		i.config.OdrImage, err = defaultODRImage(i.config.ServerImage)
+		if err != nil {
+			return err
+		}
+	}
+
 	var (
 		logGroup      string
 		executionRole string
+		taskRole      string
 		runSvcArn     *string
 	)
 	lf := &Lifecycle{
@@ -955,7 +1003,13 @@ func (i *ECSInstaller) InstallRunner(
 			if err != nil {
 				return err
 			}
+
 			executionRole, err = i.SetupExecutionRole(ctx, ui, log, sess)
+			if err != nil {
+				return err
+			}
+
+			taskRole, err = i.SetupTaskRole(ctx, ui, log, sess)
 			if err != nil {
 				return err
 			}
@@ -973,6 +1027,7 @@ func (i *ECSInstaller) InstallRunner(
 				ctx, ui, log, sess,
 				opts.AdvertiseClient.Env(),
 				executionRole,
+				taskRole,
 				logGroup,
 			)
 			return err
@@ -1095,7 +1150,7 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-execution-role-name",
 		Target:  &i.config.ExecutionRoleName,
-		Usage:   "Configures the Execution role name to use.",
+		Usage:   "Configures the IAM Execution role name to use.",
 		Default: "waypoint-server-execution-role",
 	})
 	set.StringVar(&flag.StringVar{
@@ -1110,12 +1165,37 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 		Usage:   "Configures the requested CPU amount for the Waypoint server task in ECS.",
 		Default: "512",
 	})
-
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-mem",
 		Target:  &i.config.Memory,
 		Usage:   "Configures the requested memory amount for the Waypoint server task in ECS.",
 		Default: "1024",
+	})
+	set.StringVar(&flag.StringVar{
+		Name:   "ecs-task-role-name",
+		Target: &i.config.TaskRoleName,
+		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
+			"an IAM role will be created automatically with the default permissions.",
+		Default: "waypoint-runner",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "ecs-odr-image",
+		Target: &i.config.OdrImage,
+		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
+			"default to the server image with the name (not label) suffixed with '-odr'.",
+	})
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-odr-mem",
+		Target:  &i.config.OdrMemory,
+		Usage:   "Configures the requested memory amount for the Waypoint On-Demand runner in ECS.",
+		Default: "1024",
+	})
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-odr-cpu",
+		Target:  &i.config.OdrCPU,
+		Usage:   "Configures the requested CPU amount for the Waypoint On-Demand runner in ECS.",
+		Default: "512",
 	})
 }
 
@@ -1144,12 +1224,39 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 		Usage:   "Configures the requested CPU amount for the Waypoint server task in ECS.",
 		Default: "512",
 	})
-
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-mem",
 		Target:  &i.config.Memory,
 		Usage:   "Configures the requested memory amount for the Waypoint server task in ECS.",
 		Default: "1024",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "ecs-odr-image",
+		Target: &i.config.OdrImage,
+		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
+			"default to the server image with the name (not label) suffixed with '-odr'.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "ecs-task-role-name",
+		Target: &i.config.TaskRoleName,
+		Usage: "IAM Execution Role to assign to the on-demand runner. If this is blank, " +
+			"an IAM role will be created automatically with the default permissions.",
+		Default: "waypoint-runner",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-odr-mem",
+		Target:  &i.config.OdrMemory,
+		Usage:   "Configures the requested memory amount for the Waypoint On-Demand runner in ECS.",
+		Default: "1024",
+	})
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-odr-cpu",
+		Target:  &i.config.OdrCPU,
+		Usage:   "Configures the requested CPU amount for the Waypoint On-Demand runner in ECS.",
+		Default: "512",
 	})
 }
 
@@ -1234,11 +1341,13 @@ func (i *ECSInstaller) SetupNetworking(
 	}
 	s.Update("Networking setup")
 	s.Done()
-	return &networkInformation{
+	ni := networkInformation{
 		vpcID:   vpcID,
 		subnets: subnets,
 		sgID:    sgID,
-	}, nil
+	}
+	i.netInfo = &ni
+	return &ni, nil
 }
 
 func (i *ECSInstaller) SetupCluster(
@@ -1653,7 +1762,7 @@ func (i *ECSInstaller) SetupExecutionRole(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Setting up execution role...")
+	s := sg.Add("Setting up an IAM execution role...")
 	defer func() { s.Abort() }()
 
 	svc := iam.New(sess)
@@ -1702,7 +1811,7 @@ func (i *ECSInstaller) SetupExecutionRole(
 
 	roleArn := *result.Role.Arn
 
-	log.Debug("created new role", "arn", roleArn)
+	log.Debug("created new execution role", "arn", roleArn)
 
 	aInput := &iam.AttachRolePolicyInput{
 		RoleName:  aws.String(roleName),
@@ -1714,9 +1823,9 @@ func (i *ECSInstaller) SetupExecutionRole(
 		return "", err
 	}
 
-	log.Debug("attached execution role policy")
+	log.Debug("attached IAM execution role policy")
 
-	s.Update("Created IAM role: %s", roleName)
+	s.Update("Created IAM execution role: %s", roleName)
 	s.Done()
 	return roleArn, nil
 }
@@ -1725,7 +1834,7 @@ const rolePolicy = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-		  "Sid": "",
+      "Sid": "",
       "Effect": "Allow",
       "Principal": {
         "Service": "ecs-tasks.amazonaws.com"
@@ -1734,6 +1843,164 @@ const rolePolicy = `{
     }
   ]
 }`
+
+// odrRolePolicy represents the minimum policies required for an On-Demand
+// Runner task to successfully build and deploy a Waypoint application to ECS.
+// We chose to enumerate the minimum policies to avoid being over privileged.
+// This list may not be exhaustive or complete to deploy to all platforms (EC2,
+// Lambda), but represent a reasonable minimum. To add additional policies,
+// users can create their own role and use it as the Task Role with the
+// -ecs-task-role-name server installation flag, using these policies as a
+// starting point.
+const odrRolePolicy = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:CreateSecurityGroup",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets",
+        "ecr:BatchGetImage",
+        "ecr:CompleteLayerUpload",
+        "ecr:DescribeImages",
+        "ecr:DescribeRepositories",
+        "ecr:GetAuthorizationToken",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:GetRepositoryPolicy",
+        "ecr:InitiateLayerUpload",
+        "ecr:ListImages",
+        "ecr:ListTagsForResource",
+        "ecr:PutImage",
+        "ecr:PutImageTagMutability",
+        "ecr:ReplicateImage",
+        "ecr:TagResource",
+        "ecr:UntagResource",
+        "ecr:UploadLayerPart",
+        "ecs:CreateCluster",
+        "ecs:CreateService",
+        "ecs:DeleteService",
+        "ecs:DescribeClusters",
+        "ecs:DescribeServices",
+        "ecs:ListTasks",
+        "ecs:RegisterTaskDefinition",
+        "ecs:RunTask",
+        "elasticloadbalancing:CreateListener",
+        "elasticloadbalancing:CreateLoadBalancer",
+        "elasticloadbalancing:CreateRule",
+        "elasticloadbalancing:CreateTargetGroup",
+        "elasticloadbalancing:DeleteListener",
+        "elasticloadbalancing:DeleteLoadBalancer",
+        "elasticloadbalancing:DeleteRule",
+        "elasticloadbalancing:DeleteTargetGroup",
+        "elasticloadbalancing:DescribeListeners",
+        "elasticloadbalancing:DescribeLoadBalancers",
+        "elasticloadbalancing:DescribeRules",
+        "elasticloadbalancing:DescribeTargetGroups",
+        "elasticloadbalancing:ModifyListener",
+        "iam:AttachRolePolicy",
+        "iam:CreateRole",
+        "iam:GetRole",
+        "iam:ListAttachedRolePolicies",
+        "iam:PassRole",
+        "logs:CreateLogGroup",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "route53:ChangeResourceRecordSets",
+        "route53:ListResourceRecordSets"
+      ],
+      "Resource": "*"
+    }
+  ]
+}`
+
+func (i *ECSInstaller) SetupTaskRole(
+	ctx context.Context,
+	ui terminal.UI,
+	log hclog.Logger,
+	sess *session.Session,
+) (string, error) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Setting up an IAM task role for ODR runners...")
+	defer func() { s.Abort() }()
+
+	svc := iam.New(sess)
+
+	roleName := i.config.TaskRoleName
+
+	// role names have to be 64 characters or less, and the client side doesn't
+	// validate this.
+	if len(roleName) > 64 {
+		roleName = roleName[:64]
+		log.Debug("using a shortened value for role name due to AWS's length limits", "roleName", roleName)
+	}
+
+	log.Debug("attempting to retrieve existing role", "role-name", roleName)
+
+	queryInput := &iam.GetRoleInput{
+		RoleName: aws.String(roleName),
+	}
+
+	getOut, err := svc.GetRole(queryInput)
+	if err == nil {
+		s.Update("Found existing IAM role to use: %s", roleName)
+		s.Done()
+		return *getOut.Role.Arn, nil
+	}
+
+	log.Debug("creating new role")
+	s.Update("Creating IAM task role: %s", roleName)
+
+	input := &iam.CreateRoleInput{
+		AssumeRolePolicyDocument: aws.String(rolePolicy),
+		Path:                     aws.String("/"),
+		RoleName:                 aws.String(roleName),
+		Tags: []*iam.Tag{
+			{
+				Key:   aws.String(defaultRunnerTagName),
+				Value: aws.String(defaultRunnerTagValue),
+			},
+		},
+	}
+
+	result, err := svc.CreateRole(input)
+	if err != nil {
+		return "", err
+	}
+
+	roleArn := *result.Role.Arn
+
+	log.Debug("created new task role", "arn", roleArn)
+
+	aInput := &iam.AttachRolePolicyInput{
+		RoleName:  aws.String(roleName),
+		PolicyArn: aws.String("arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"),
+	}
+
+	_, err = svc.AttachRolePolicy(aInput)
+	if err != nil {
+		return "", err
+	}
+
+	log.Debug("attached IAM task role policy")
+
+	// ODR specific policies
+	_, err = svc.PutRolePolicy(&iam.PutRolePolicyInput{
+		RoleName:       aws.String(roleName),
+		PolicyDocument: aws.String(odrRolePolicy),
+		PolicyName:     aws.String("waypoint-odr-policy"),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	s.Update("Created IAM task role: %s", roleName)
+	s.Done()
+	return roleArn, nil
+}
 
 // creates a network load balancer for grpc and http
 func createNLB(
@@ -1795,7 +2062,6 @@ func createNLB(
 
 	// Create the load balancer OR modify the existing one to have this new target
 	// group but with a weight of 0
-
 	htgs := []*elbv2.TargetGroupTuple{
 		{
 			TargetGroupArn: httpTgArn,
@@ -1991,46 +2257,13 @@ func (i *ECSInstaller) subnetInfo(
 	return subnets, vpcID, nil
 }
 
-func registerTaskDefinition(def *ecs.RegisterTaskDefinitionInput, ecsSvc *ecs.ECS) (*ecs.TaskDefinition, error) {
-	// AWS is eventually consistent so even though we probably created the
-	// resources that are referenced by the task definition, it can error out if
-	// we try to reference those resources too quickly. So we're forced to guard
-	// actions which reference other AWS services with loops like this.
-	var taskOut *ecs.RegisterTaskDefinitionOutput
-	var err error
-	for i := 0; i < 30; i++ {
-		taskOut, err = ecsSvc.RegisterTaskDefinition(def)
-		if err == nil {
-			break
-		}
-
-		// if we encounter an unrecoverable error, exit now.
-		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Code() == "ResourceConflictException" || aerr.Code() == "ClientException" {
-				return nil, err
-			}
-		}
-
-		// otherwise sleep and try again
-		time.Sleep(2 * time.Second)
-	}
-
-	// the above loop could expire and never get a valid task definition, so
-	// guard against a nil taskOut here
-	if taskOut == nil {
-		return nil, fmt.Errorf("error registering task definition, last error: %w", err)
-	}
-
-	return taskOut.TaskDefinition, nil
-}
-
 func (i *ECSInstaller) LaunchRunner(
 	ctx context.Context,
 	ui terminal.UI,
 	log hclog.Logger,
 	sess *session.Session,
 	env []string,
-	executionRoleArn, logGroup string,
+	executionRoleArn, taskRoleArn, logGroup string,
 ) (*string, error) {
 
 	sg := ui.StepGroup()
@@ -2070,7 +2303,7 @@ func (i *ECSInstaller) LaunchRunner(
 		Command: []*string{
 			aws.String("runner"),
 			aws.String("agent"),
-			aws.String("-vvv"),
+			aws.String("-vv"),
 			aws.String("-liveness-tcp-addr=:1234"),
 		},
 		Name:  aws.String("waypoint-runner"),
@@ -2078,6 +2311,7 @@ func (i *ECSInstaller) LaunchRunner(
 		PortMappings: []*ecs.PortMapping{
 			{
 				ContainerPort: aws.Int64(int64(grpcPort)),
+				HostPort:      aws.Int64(int64(grpcPort)),
 			},
 		},
 		Environment: envs,
@@ -2092,11 +2326,11 @@ func (i *ECSInstaller) LaunchRunner(
 	registerTaskDefinitionInput := ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: []*ecs.ContainerDefinition{&def},
 
-		ExecutionRoleArn: aws.String(executionRoleArn),
-		Cpu:              aws.String(i.config.CPU),
-		Memory:           aws.String(i.config.Memory),
-		Family:           aws.String(runnerName),
-
+		ExecutionRoleArn:        aws.String(executionRoleArn),
+		Cpu:                     aws.String(i.config.CPU),
+		Memory:                  aws.String(i.config.Memory),
+		Family:                  aws.String(runnerName),
+		TaskRoleArn:             &taskRoleArn,
 		NetworkMode:             aws.String("awsvpc"),
 		RequiresCompatibilities: []*string{aws.String(defaultTaskRuntime)},
 		Tags: []*ecs.Tag{
@@ -2108,7 +2342,7 @@ func (i *ECSInstaller) LaunchRunner(
 	}
 
 	ecsSvc := ecs.New(sess)
-	taskDef, err := registerTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
+	taskDef, err := utils.RegisterTaskDefinition(&registerTaskDefinitionInput, ecsSvc, log)
 	if err != nil {
 		return nil, err
 	}
@@ -2158,11 +2392,12 @@ func (i *ECSInstaller) LaunchRunner(
 	subnets := service.NetworkConfiguration.AwsvpcConfiguration.Subnets
 
 	createServiceInput := &ecs.CreateServiceInput{
-		Cluster:        clusterArn,
-		DesiredCount:   aws.Int64(1),
-		LaunchType:     aws.String(defaultTaskRuntime),
-		ServiceName:    aws.String(runnerName),
-		TaskDefinition: aws.String(taskDefArn),
+		Cluster:              clusterArn,
+		DesiredCount:         aws.Int64(1),
+		LaunchType:           aws.String(defaultTaskRuntime),
+		ServiceName:          aws.String(runnerName),
+		EnableECSManagedTags: aws.Bool(true),
+		TaskDefinition:       aws.String(taskDefArn),
 		NetworkConfiguration: &ecs.NetworkConfiguration{
 			AwsvpcConfiguration: &ecs.AwsVpcConfiguration{
 				Subnets:        subnets,
@@ -2222,4 +2457,45 @@ func createService(serviceInput *ecs.CreateServiceInput, ecsSvc *ecs.ECS) (*ecs.
 		return nil, err
 	}
 	return servOut.Service, nil
+}
+
+// OnDemandRunnerConfig implements OnDemandRunnerConfigProvider
+func (i *ECSInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	// Generate some configuration. Some of the OnDemand configurations have
+	// defaults so we should be fine to directly use them
+	cfgMap := map[string]interface{}{
+		"log_group":           defaultRunnerLogGroup,
+		"execution_role_name": i.config.ExecutionRoleName,
+		"task_role_name":      i.config.TaskRoleName,
+		"cluster":             i.config.Cluster,
+		"region":              i.config.Region,
+		"odr_cpu":             i.config.OdrCPU,
+		"odr_memory":          i.config.OdrMemory,
+	}
+
+	if i.netInfo != nil {
+		var subnets []string
+		for _, s := range i.netInfo.subnets {
+			subnets = append(subnets, *s)
+		}
+		cfgMap["subnets"] = strings.Join(subnets, ",")
+		cfgMap["security_group_id"] = i.netInfo.sgID
+	}
+
+	// Marshal our config
+	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
+	if err != nil {
+		// This shouldn't happen cause we control our input. If it does,
+		// just panic cause this will be in a `server install` CLI and
+		// we want the user to report a bug.
+		panic(err)
+	}
+
+	return &pb.OnDemandRunnerConfig{
+		OciUrl:       i.config.OdrImage,
+		PluginType:   "aws-ecs",
+		Default:      true,
+		PluginConfig: cfgJson,
+		ConfigFormat: pb.Project_JSON,
+	}
 }

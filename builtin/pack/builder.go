@@ -4,22 +4,36 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
+	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/buildpacks/pack"
 	"github.com/buildpacks/pack/logging"
 	"github.com/buildpacks/pack/project"
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/client"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/builtin/docker"
 	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
 	"github.com/hashicorp/waypoint/internal/assets"
 	"github.com/hashicorp/waypoint/internal/pkg/epinject"
+	"github.com/hashicorp/waypoint/internal/pkg/epinject/ociregistry"
+)
+
+const (
+	// This is legacy and comes from heroku, which cnb continued with.
+	DefaultProcessType = "web"
 )
 
 // Builder uses `pack` -- the frontend for CloudNative Buildpacks -- to build
@@ -31,6 +45,11 @@ type Builder struct {
 // BuildFunc implements component.Builder
 func (b *Builder) BuildFunc() interface{} {
 	return b.Build
+}
+
+// BuildFunc implements component.BuilderODR
+func (b *Builder) BuildODRFunc() interface{} {
+	return b.BuildODR
 }
 
 // Config is the configuration structure for the registry.
@@ -57,7 +76,7 @@ type BuilderConfig struct {
 	ProcessType string `hcl:"process_type,optional" default:"web"`
 }
 
-const DefaultBuilder = "heroku/buildpacks:18"
+const DefaultBuilder = "heroku/buildpacks:20"
 
 // Config implements Configurable
 func (b *Builder) Config() (interface{}, error) {
@@ -66,6 +85,214 @@ func (b *Builder) Config() (interface{}, error) {
 
 var skipBuildPacks = map[string]struct{}{
 	"heroku/procfile": {},
+}
+
+// Build
+func (b *Builder) BuildODR(
+	ctx context.Context,
+	ui terminal.UI,
+	jobInfo *component.JobInfo,
+	src *component.Source,
+	log hclog.Logger,
+	ai *docker.AccessInfo,
+) (*DockerImage, error) {
+	sg := ui.StepGroup()
+
+	builder := b.config.Builder
+	if builder == "" {
+		builder = DefaultBuilder
+	}
+
+	log.Info("executing the ODR version of pack")
+
+	// We don't even need to inspect Docker to verify we have the image.
+	// If `pack` succeeded we can assume that it created an image for us.
+	// return &DockerImage{
+	// Image: ai.Image,
+	// Tag:   ai.Tag,
+	// }, nil
+
+	step := sg.Add("Building Buildpack with kaniko...")
+	defer func() {
+		if step != nil {
+			step.Abort()
+		}
+	}()
+
+	target := &docker.Image{
+		Image: ai.Image,
+		Tag:   ai.Tag,
+	}
+
+	var ocis ociregistry.Server
+
+	if ai.Auth != nil {
+		switch sv := ai.Auth.(type) {
+		case *docker.AccessInfo_Encoded:
+			user, pass, err := docker.CredentialsFromConfig(sv.Encoded)
+			if err != nil {
+				return nil, err
+			}
+			ocis.AuthConfig.Username = user
+			ocis.AuthConfig.Password = pass
+		case *docker.AccessInfo_Header:
+			ocis.AuthConfig.Auth = sv.Header
+		case *docker.AccessInfo_UserPass_:
+			ocis.AuthConfig.Username = sv.UserPass.Username
+			ocis.AuthConfig.Password = sv.UserPass.Password
+		}
+	}
+
+	// Determine the host that we're setting auth for. We have to parse the
+	// image for this cause it may not contain a host. Luckily Docker has
+	// libs to normalize this all for us.
+	log.Trace("determining host for auth configuration", "image", target.Name())
+	ref, err := reference.ParseNormalizedNamed(target.Image)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "unable to parse image name: %s", err)
+	}
+	host := reference.Domain(ref)
+	log.Trace("auth host", "host", host)
+
+	ocis.DisableEntrypoint = b.config.DisableCEB
+	ocis.Logger = log
+
+	if ai.Insecure {
+		ocis.Upstream = "http://" + host
+	} else {
+		ocis.Upstream = "https://" + host
+	}
+
+	err = ocis.Negotiate(ref.Name())
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to negotiate with upstream")
+	}
+
+	refPath := reference.Path(ref)
+
+	if !b.config.DisableCEB {
+		data, err := assets.Asset("ceb/ceb")
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
+		}
+
+		step.Done()
+		step = sg.Add("Testing registry and uploading entrypoint layer")
+
+		err = ocis.SetupEntrypointLayer(refPath, data)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer: %s", err)
+		}
+	}
+
+	li, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		return nil, err
+	}
+
+	defer li.Close()
+	go http.Serve(li, &ocis)
+
+	port := li.Addr().(*net.TCPAddr).Port
+
+	localRef := fmt.Sprintf("localhost:%d/%s:%s", port, refPath, ai.Tag)
+
+	// The patterns are the same os docker's patterns, so we just populate .dockerignore
+	// which we know kaniko will honor.
+	if len(b.config.Ignore) > 0 {
+
+		// We open this in append mode to preserve what's there in before we add entries to it.
+		f, err := os.OpenFile(filepath.Join(src.Path, ".dockerignore"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			return nil, status.Errorf(codes.Unavailable, "unable to write dockerignore: %s", err)
+		}
+
+		fmt.Fprintln(f, "")
+
+		for _, pattern := range b.config.Ignore {
+			fmt.Fprintln(f, pattern)
+		}
+
+		f.Close()
+	}
+
+	f, err := os.Create("Dockerfile.kaniko")
+	if err != nil {
+		return nil, err
+	}
+
+	processType := b.config.ProcessType
+	if processType == "" {
+		processType = DefaultProcessType
+	}
+
+	// TODO: buildpacks. They require us downloading data remotely and writing out /cnb/order.toml
+	// to reference which buildpacks should be execute in which order.
+	if len(b.config.Buildpacks) != 0 {
+		return nil, status.Errorf(codes.Unavailable, "explicit buildpacks are not yet implemented")
+	}
+
+	fmt.Fprintf(f, `FROM %s
+
+ADD --chown=1000 . /app
+
+WORKDIR /app
+
+USER 1000
+
+RUN mkdir /tmp/cache /tmp/layers && \
+	mkdir -p /app/bin && \
+		/cnb/lifecycle/creator \
+			"-app=/app" \
+      "-cache-dir=/tmp/cache" \
+      "-gid=1000" \
+      "-layers=/tmp/layers" \
+      "-platform=/platform" \
+      "-previous-image=%s" \
+      "-uid=1000" \
+			"-process-type=%s" \
+      "%s"
+
+`, builder, localRef, processType, localRef)
+
+	err = f.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	dir := src.Path
+
+	step.Done()
+	step = sg.Add("Executing kaniko...")
+
+	// Start constructing our arg string for img
+	args := []string{
+		"/kaniko/executor",
+		"-f", "Dockerfile.kaniko",
+		"--no-push",
+		"--context=dir:///" + dir,
+	}
+
+	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
+
+	// Command output should go to the step
+	cmd.Stdout = step.TermOutput()
+	cmd.Stderr = cmd.Stdout
+
+	if err := cmd.Run(); err != nil {
+		return nil, err
+	}
+
+	step.Done()
+
+	step = sg.Add("Image pushed to '%s:%s'", ai.Image, ai.Tag)
+	step.Done()
+
+	return &DockerImage{
+		Image:  ai.Image,
+		Tag:    ai.Tag,
+		Remote: true,
+	}, nil
 }
 
 // Build
@@ -223,7 +450,6 @@ func (b *Builder) Build(
 
 			return ep, nil
 		})
-
 		if err != nil {
 			return nil, err
 		}
@@ -256,19 +482,13 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 	doc.Description(`
 Create a Docker image using CloudNative Buildpacks.
 
-**Pack requires access to a Docker daemon.** For remote builds, such as those
-triggered by [Git polling](/docs/projects/git), the
-[runner](/docs/runner) needs to have access to a Docker daemon such
-as exposing the Docker socket, enabling Docker-in-Docker, etc. Unfortunately,
-pack doesn't support dockerless builds. Configuring Docker access within
-a Docker container is outside the scope of these docs, please search the
-internet for "Docker in Docker" or other terms for more information.
+**This plugin must either be run via Docker or inside an ondemand runner.**
 `)
 
 	doc.Example(`
 build {
   use "pack" {
-	builder     = "heroku/buildpacks:18"
+	builder     = "heroku/buildpacks:20"
 	disable_entrypoint = false
   }
 }

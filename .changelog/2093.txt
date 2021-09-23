@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/nomad: only use non-empty job.StatusDescription for HealthMessage
+```

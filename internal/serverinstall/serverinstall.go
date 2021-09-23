@@ -2,8 +2,11 @@ package serverinstall
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/hashicorp/go-hclog"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -59,8 +62,9 @@ type Installer interface {
 
 // InstallOpts are the options sent to Installer.Install.
 type InstallOpts struct {
-	Log hclog.Logger
-	UI  terminal.UI
+	Log            hclog.Logger
+	UI             terminal.UI
+	ServerRunFlags []string
 }
 
 // InstallResults are the results expected for a successful Installer.Install.
@@ -100,6 +104,12 @@ type InstallRunnerOpts struct {
 	AdvertiseClient *serverconfig.Client
 }
 
+// An optional interface that the installer can implement to request
+// an ondemand runner be registered.
+type OnDemandRunnerConfigProvider interface {
+	OnDemandRunnerConfig() *pb.OnDemandRunnerConfig
+}
+
 var Platforms = map[string]Installer{
 	"ecs":        &ECSInstaller{},
 	"kubernetes": &K8sInstaller{},
@@ -116,6 +126,25 @@ const (
 
 // Default server ports to use
 var (
-	defaultGrpcPort = "9701"
-	defaultHttpPort = "9702"
+	// todo: remove these and just use the serverconfig constants.
+	defaultGrpcPort = serverconfig.DefaultGRPCPort
+	defaultHttpPort = serverconfig.DefaultHTTPPort
 )
+
+// defaultODRImage returns the default Waypoint ODR image based on the
+// supplied server image. We default the ODR image to the name of the server
+// image with the `-odr` suffix attached to it.
+func defaultODRImage(serverImage string) (string, error) {
+	// We COULD use the official Docker "reference" library here and I used to,
+	// but I stopped because it canonicalizes the name to add "docker.io/library"
+	// if it's a short name which forces the Docker daemon to pull. The BNF
+	// syntax of a docker image only allows for a single `:` so we can easily
+	// and safely do this ourselves with string arithmetic.
+	idx := strings.Index(serverImage, ":")
+	if idx < 0 {
+		return "", fmt.Errorf("server image doesn't have a tag specified. " +
+			"Please specify a tag, for example `waypoint:latest`.")
+	}
+
+	return fmt.Sprintf("%s-odr:%s", serverImage[0:idx], serverImage[idx+1:]), nil
+}

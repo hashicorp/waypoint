@@ -135,7 +135,7 @@ service Waypoint {
   // StartExecStream starts an exec session.
   rpc StartExecStream(stream ExecStreamRequest) returns (stream ExecStreamResponse);
 
-  // Set a single configuration item for the application.
+  // Set one or more configuration variables for applications or runners.
   rpc SetConfig(ConfigSetRequest) returns (ConfigSetResponse);
 
   // Retrieve merged configuration values for a specific scope. You can determine
@@ -297,6 +297,22 @@ service Waypoint {
   rpc WaypointHclFmt(WaypointHclFmtRequest) returns (WaypointHclFmtResponse);
 
   //----------------------------------------------------------------------
+  // OnDemand Runner Config functions.
+  //----------------------------------------------------------------------
+
+  // UpsertOnDemandRunnerConfig updates or inserts a on-demand runner
+  // configuration. This configuration can be used by projects for running
+  // operations on just-in-time launched runners.
+  rpc UpsertOnDemandRunnerConfig(UpsertOnDemandRunnerConfigRequest) returns (UpsertOnDemandRunnerConfigResponse);
+
+  // GetOnDemandRunnerConfig returns the on-demand runner configuration.
+  rpc GetOnDemandRunnerConfig(GetOnDemandRunnerConfigRequest) returns (GetOnDemandRunnerConfigResponse);
+
+  // ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
+  rpc ListOnDemandRunnerConfigs(google.protobuf.Empty) returns (ListOnDemandRunnerConfigsResponse);
+
+
+  //----------------------------------------------------------------------
   // Internal metadata endpoints. The endpoints below are expected to be
   // called for internal bookkeeping only. They should be avoided for general
   // API clients since they can be used to damage internal state.
@@ -327,6 +343,9 @@ service Waypoint {
   // a combination of calls to non-UI endpoints.
   //----------------------------------------------------------------------
 
+  // Get a given project with useful related records.
+  rpc UI_GetProject(UI.GetProjectRequest) returns (UI.GetProjectResponse);
+
   // List deployments for a given application.
   rpc UI_ListDeployments(UI.ListDeploymentsRequest) returns (UI.ListDeploymentsResponse);
 
@@ -338,6 +357,15 @@ service Waypoint {
 * UI
 ********************************************************************/
 message UI {
+  message GetProjectRequest {
+    Ref.Project project = 1;
+  }
+
+  message GetProjectResponse {
+    Project project = 1;
+    Job latest_init_job = 2;
+  }
+
 
   message ListDeploymentsRequest {
     // Application that the deployments belong to.
@@ -524,7 +552,6 @@ message Variable {
     HclPos start = 2;
     HclPos end = 3;
   }
-
 }
 
 message Project {
@@ -585,6 +612,10 @@ message Project {
   // Each polling event is tracked as a separate job. You can query the
   // poll operations and their success/failure by using the ListJobs API.
   AppStatusPoll status_report_poll = 10;
+
+  // ondemand_runner, if set, indicates the configuation on the ondemand runner
+  // that should be used for the operations of this project.
+  Ref.OnDemandRunnerConfig ondemand_runner = 11;
 
   enum Format {
     HCL = 0; // We assume HCL by default
@@ -791,7 +822,6 @@ message Ref {
     string username = 1;
   }
 
-
   // AuthMethod references an auth method.
   message AuthMethod {
     string name = 1;
@@ -800,6 +830,12 @@ message Ref {
   // DeclaredResource references a declared resource.
   message DeclaredResource {
     string name = 1;
+  }
+
+  // OnDemandRunner references an OnDemandRunner value to be used for contextual
+  // operation.
+  message OnDemandRunnerConfig {
+    string id = 1;
   }
 }
 
@@ -976,7 +1012,13 @@ message TaskLaunchInfo {
   // The environment variables that will be exposed to the task.
   map<string, string> environment_variables = 2;
 
-  // The arguments that will be passed to the new container on boot
+  // Entrypoint is the entrypoint override for the OCI image. If this
+  // is not set (null or length of zero) then the entrypoint should not
+  // be overridden.
+  repeated string entrypoint = 4;
+
+  // The arguments that will be passed to the new container on boot.
+  // These are arguments and should not overwrite the entrypoint.
   repeated string arguments = 3;
 }
 
@@ -1240,7 +1282,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 68 to 99; // future operation range
+  reserved 69 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -1285,9 +1327,7 @@ message Job {
   DataSource data_source = 6;
   map<string, string> data_source_overrides = 7;
 
-  // NOTE: Variables are WIP and experimental; currently
-  // these are not used, and don't do anything
-  // WIP: variables store the key/value pairs of parsed variables; the parse
+  // variables store the key/value pairs of parsed variables; the parse
   // prior to running a job only verifies syntax correctness. Verifying type
   // checks and the presence of required values will both need to be done
   // in the job's validation
@@ -1314,6 +1354,7 @@ message Job {
     StatusReportOp status_report = 65;
     StartTaskLaunchOp start_task = 66;
     StopTaskLaunchOp stop_task = 67;
+    InitOp init = 68;
   }
 
   //-----------------------------------------------------------------
@@ -1339,6 +1380,13 @@ message Job {
   // the ref that should be downloaded. That level of configuration should be
   // exposed via the data_source parameter itself.
   DataSource.Ref data_source_ref = 110;
+
+  // Config is information about the Waypoint configuration (waypoint.hcl)
+  // for this job. This is only available once the configuration is loaded.
+  // If this is nil and the job is RUNNING, then it may not be loaded yet.
+  // API users can wait on the Job event on the JobStream to listen for
+  // job updates.
+  Config config = 111;
 
   // error is set if state == ERROR
   google.rpc.Status error = 106;
@@ -1382,6 +1430,26 @@ message Job {
     PollResult poll = 11;
     StatusReportResult status_report = 12;
     StartTaskResult start_task = 13;
+    InitResult init = 14;
+  }
+
+  message Config {
+    // Source is the location where the configuration was loaded from.
+    Source source = 1;
+
+    // Source is the location where the configuration was loaded from.
+    enum Source {
+      // Unknown should never be set, but represents a zero value.
+      UNKNOWN = 0;
+
+      // File is when the waypoint.hcl was loaded from a file either
+      // on disk (local actions) or the attached repository (GitOps).
+      FILE = 1;
+
+      // Server is when the waypoint.hcl was loaded from the server
+      // from being written directly in the project settings.
+      SERVER = 2;
+    }
   }
 
   message DataSource {
@@ -1759,6 +1827,18 @@ message Job {
     Job.DataSource.Ref new_ref = 3;
   }
 
+  // InitOp triggers an init action for a project (the equivalent of `waypoint
+  // init`). The job will fail if there is no data source configured for the
+  // project. As with `waypoint init`, this operation is idempotent.
+  message InitOp {
+  }
+
+  message InitResult {
+    // NOTE(jgwhite): In the future I think we may want to communicate what
+    // entities were created during the init operation. At the time of writing,
+    // there is no pressing reason to add this data.
+  }
+
   // QueueProjectOp queues a job for all applications in a project. The
   // applications queued may not directly align with what can be found in
   // ListProjects because the application list will be based on the config
@@ -1846,6 +1926,14 @@ message GetJobStreamResponse {
     // may be the same but the job is different.
     State state = 2;
 
+    // Job is sent whenever the job information changes. This is similar to
+    // state but is sent when ANY field in the Job structure changes. This
+    // can be used to listen for any updates to fields.
+    //
+    // The updated job is also sent when the state changes. In that case,
+    // both "state" and "job" will trigger.
+    JobChange job = 7;
+
     // terminal output. On initial connection, the server may send buffered
     // historical terminal data so there isn't a race between queueing a job
     // and getting its first byte output. You can determine this based on the
@@ -1887,6 +1975,11 @@ message GetJobStreamResponse {
 
     // canceling is true if the job was requested to be canceled.
     bool canceling = 4;
+  }
+
+  message JobChange {
+    // The full updated job.
+    Job job = 1;
   }
 
   message Download {
@@ -2004,6 +2097,17 @@ message Runner {
   // jobs from being assigned to them.
   bool by_id_only = 2;
 
+  // odr is true if this runner is an on-demand runner. For ODRs, we expect
+  // they will accept exactly one job and then exit. This is used by the
+  // server to change some other behavior:
+  //
+  //   * The server will give ODRs project/app-scoped config if it exists.
+  //   * The server will never assign more than one job to this runner.
+  //     This is also enforced in the runner client-side but the server also
+  //     does this out of caution.
+  //
+  bool odr = 4;
+
   // Components are the list of components that the runner supports. This
   // is used to match jobs to this runner.
   repeated Component components = 3;
@@ -2031,6 +2135,12 @@ message RunnerConfig {
   // with specific configuration without fear that the server will override
   // them.
   repeated ConfigVar config_vars = 1;
+
+  // The configuration for any config sources that may be used in the
+  // config vars sent down. The server may send down extra configs that
+  // aren't used so consumers should filter these based on what env vars
+  // are actually in use.
+  repeated ConfigSource config_sources = 2;
 }
 
 message RunnerJobStreamRequest {
@@ -2065,6 +2175,14 @@ message RunnerJobStreamRequest {
     // download details will not be available.
     GetJobStreamResponse.Download download = 7;
 
+    // The config_load event is sent after the Waypoint configuration
+    // (waypoint.hcl) is loaded. This includes information about the loaded
+    // configuration that the frontends can use.
+    //
+    // This can be sent multiple times to update the configuration information
+    // for a job.
+    ConfigLoad config_load = 8;
+
     // heartbeat that the job is still running.
     Heartbeat heartbeat = 6;
   }
@@ -2084,6 +2202,11 @@ message RunnerJobStreamRequest {
   }
 
   message Heartbeat {}
+
+  message ConfigLoad {
+    // Config is the configuration information for the loaded config.
+    Job.Config config = 1;
+  }
 }
 
 message RunnerJobStreamResponse {
@@ -2391,6 +2514,60 @@ message Artifact {
   // The receiving end must have access to the component proto files to
   // know how to decode this.
   google.protobuf.Any artifact = 1;
+}
+
+/********************************************************************
+* OnDemand Runners
+********************************************************************/
+message OnDemandRunnerConfig {
+  // id is the unique ID of the runner config
+  string id = 1;
+
+  // oci_url is the OCI image that will be used to boot the ondemand runner.
+  string oci_url = 2;
+
+  // environment_variables is any env vars that should be exposed to the
+  // ondemand runner. This does not need to include any WAYPOINT specific
+  // variables, those are automatically added.
+  map<string, string> environment_variables = 3;
+
+  // plugin type is used to launch the plugin to start the batch task.
+  string plugin_type = 4;
+
+  // plugin config is the configuration for the plugin that is created. It
+  // is usually HCL and is decoded like the other plugins, and is plugin
+  // specific.
+  bytes plugin_config = 5;
+
+  // config format specifies the format of plugin_config
+  Project.Format config_format = 6;
+
+  // Indicates if this entry is the default for any new projects.
+  bool default = 7;
+}
+
+message UpsertOnDemandRunnerConfigRequest {
+  // ondemand_runner to upsert. If the id is empty, then this is an insert,
+  // otherwise this is an update operation.
+  OnDemandRunnerConfig config = 1;
+}
+
+message UpsertOnDemandRunnerConfigResponse {
+  // The resulting ondemand runner value. It should replace the one that was
+  // sent in the request.
+  OnDemandRunnerConfig config = 1;
+}
+
+message GetOnDemandRunnerConfigRequest {
+  Ref.OnDemandRunnerConfig config = 1;
+}
+
+message GetOnDemandRunnerConfigResponse {
+  OnDemandRunnerConfig config = 1;
+}
+
+message ListOnDemandRunnerConfigsResponse {
+  repeated OnDemandRunnerConfig configs = 1;
 }
 
 /********************************************************************
@@ -2947,6 +3124,15 @@ message GetLatestStatusReportRequest {
 
   // workspace for the report, any workspace if empty
   Ref.Workspace workspace = 2;
+
+  // Target of the report, will be any if this is not set.
+  oneof target {
+    google.protobuf.Empty any = 3;
+    google.protobuf.Empty deployment_any = 4;
+    string deployment_id = 5;
+    google.protobuf.Empty release_any = 6;
+    string release_id = 7;
+  }
 }
 
 message ListStatusReportsRequest {
@@ -3043,8 +3229,6 @@ message StatusReport {
   // The overall health of the deployment or release as reported by the plugin.
   // Copied from the plugin generated raw SDK status report for convenient API access.
   Health health = 8;
-
-
 
   // the time when this report was generated
   // Copied from the plugin generated raw SDK status report for convenient API access.
@@ -3180,16 +3364,31 @@ message LogBatch {
 * Config
 ********************************************************************/
 
+// ConfigVars represent configuration variables for applications and runners.
+// Configuration variables can be exposed via env vars, files, and more. They
+// are a way to inject configuration into a Waypoint-managed process.
+//
+// Note that config vars are different from input variables. Input variables
+// are a way to parameterize a Waypoint project/app. This is a different feature.
+//
+// == Conflict Resolution
+//
+// When two configuration variables share the same name and are both
+// valid for a given target environment (for example, config "foo" set for
+// both the project and app scope), the following rules are applied to determine
+// which variable value is used:
+//
+//   1. The most specific "scope" is used: app over project over global.
+//
+//   2. If scopes match, the variable with a label selector set is used.
+//
+//   3. If both have label selectors, the config variable with the longer
+//      label selector by string length is used. This is arbitrary but makes
+//      the process deterministic.
+//
 message ConfigVar {
-  // scope is the scoping for this config variable.
-  oneof scope {
-    Ref.Application application = 3;
-    Ref.Project project = 4;
-
-    // This specifies that the configuration variable is for runners only.
-    // You can use more complex runner targeting via this ref.
-    Ref.Runner runner = 5;
-  }
+  // Target is the target environment where this config var will take effect.
+  Target target = 10;
 
   // name is the name of the environment variable that this config var is setting
   string name = 1;
@@ -3214,6 +3413,19 @@ message ConfigVar {
   // field being the filename.
   bool name_is_path = 9;
 
+  // unused_scope is the pre-Waypoint 0.6 fields that are set for
+  // setting the scope. This is retained for backwards compatibility
+  // but should not be set. Any users of this field should switch to
+  // the `target` field.
+  oneof unused_scope {
+    // These fields used to have docs but removed since they shouldn't be
+    // used. If you're really trying to figure how to use these old fields,
+    // see a Waypoint 0.5 or earlier git checkout.
+    Ref.Application application = 3;
+    Ref.Project project = 4;
+    Ref.Runner runner = 5;
+  }
+
   // DynamicVal is the configuration for dynamic values for configuration.
   message DynamicVal {
     // from is the config source plugin to use
@@ -3224,21 +3436,86 @@ message ConfigVar {
     // source this may contain the path in the KV store to read the value.
     map<string, string> config = 2;
   }
+
+  // Target sets the target where this configuration variable will be set.
+  //
+  // This has multiple dimensions that filtering can be based on (app scope,
+  // runner, workspace, label selectors, etc.). Each of these is optional. If
+  // you specify any, they must ALL match.
+  //
+  // The simplest type of targeting is just for a project. For example, setting
+  // an environment variable that is present for all apps in a project, regardless
+  // of what workspace it may be in. For this, you'd just set `app_scope` to
+  // `project` and leave everything else empty.
+  message Target {
+    // app_scope is the project/app scope that this config variable will be set.
+    // If this is not set, global is assumed.
+    oneof app_scope {
+      Ref.Global global = 1;
+      Ref.Project project = 2;
+      Ref.Application application = 3;
+    }
+
+    // workspace, if set, will limit this config variable to a specific
+    // workspace. This is in addition to the app scoping above. For example,
+    // if you specify project scoping above, and set this too, then only
+    // matching projects in the matching workspace will have this config var
+    // set.
+    Ref.Workspace workspace = 4;
+
+    // Label selector specifies an additional filtering mechanism. If this is
+    // set, then the labels of the current environment must match for this
+    // config variable to be set. Labels are determined by the operation: the
+    // labels of the deploy, for example.
+    string label_selector = 5;
+
+    // If this is set, then this configuration value will be set on runners
+    // instead of deployed applications. This determines the runners that
+    // will get this config var. If this config var is for an application,
+    // leave this unset (null).
+    Ref.Runner runner = 6;
+  }
 }
 
 message ConfigSetRequest {
+  // The set of variables to set. Note that create vs update is determined
+  // based on if the targets match, so if you want to change the target of
+  // an existing config var you must send two items here: one with a matching
+  // target to UNSET it, and one with a new target to set it.
+  //
+  // Unsets are handled before sets so that a delete will not override a write.
+  // All config variables are updated atomically.
   repeated ConfigVar variables = 1;
 }
 
 message ConfigSetResponse {}
 
 message ConfigGetRequest {
-  // scope is the scoping for this config variable.
+  // scope is the scoping for this config variable. This describes the
+  // target environment requesting configuration. For runners, this may still
+  // be set if you are an on-demand runner requesting variables that may be
+  // set for runners only in a specific project/app.
   oneof scope {
     Ref.Application application = 2;
+
+    // For project scope, for historical reason, we return all matching
+    // config vars (for all apps). We do not merge by name or perform
+    // resolution logic. This is how this has always behaved.
     Ref.Project project = 3;
-    Ref.RunnerId runner = 4;
   }
+
+  // Runner is specified if the requesting environment is a runner environment.
+  Ref.RunnerId runner = 4;
+
+  // Workspace that the target environment is in. This will limit configuration
+  // values to those that are only for this workspace. If this isn't set, all
+  // configuration values will be returned.
+  Ref.Workspace workspace = 5;
+
+  // Labels that are set in the target environment. This will limit the
+  // configuration values to those which have label selectors that match (or
+  // those that just ignore labels).
+  map<string, string> labels = 6;
 
   // Get all configuration entries under the given prefix. When empty,
   // returns all config variables.
@@ -3664,7 +3941,7 @@ message DecodeTokenResponse {
 }
 
 message LoginTokenRequest {
-  // How long the token should be valid until from the time the request
+  // How long the token should be valid from the time the request
   // is made. If this is empty then the login token never expires on its own.
   string duration = 1;
 

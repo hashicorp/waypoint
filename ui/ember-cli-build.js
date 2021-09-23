@@ -41,6 +41,16 @@ module.exports = function (defaults) {
       // webpack: {
       //   plugins: [new (require('webpack-bundle-analyzer').BundleAnalyzerPlugin)()],
       // },
+      skipBabel: [
+        {
+          package: 'waypoint-client',
+          semverRange: '*',
+        },
+        {
+          package: 'waypoint-pb',
+          semverRange: '*',
+        },
+      ],
     },
   });
 

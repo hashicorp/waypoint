@@ -42,6 +42,15 @@ Set along with zone_id to have DNS automatically setup for the ALB. this value s
 - Type: **string**
 - **Optional**
 
+##### alb.ingress_port
+
+Internet-facing traffic port. Defaults to 80 if 'certificate' is unset, 443 if set.
+
+Used to set the ALB listener port, and the ALB security group ingress port.
+
+- Type: **int64**
+- **Optional**
+
 ##### alb.internal
 
 Whether or not the created ALB should be internal.
@@ -59,6 +68,14 @@ When this is set, no ALB or Listener is created. Instead the application is conf
 
 - Type: **string**
 - **Optional**
+
+##### alb.subnets
+
+The VPC subnets to use for the ALB.
+
+- Type: **list of string**
+- **Optional**
+- Default: public subnets in the default VPC
 
 ##### alb.zone_id
 
@@ -184,6 +201,16 @@ Environment variables to expose to this container.
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### assign_public_ip
+
+Assign a public ip address to tasks. Defaults to true. Ignored if using an ec2 cluster.
+
+If this is set to false, deployments will fail unless tasks are able to egress to the container registry by some other means (i.e. a subnet default route to a NAT gateway).
+
+- Type: **bool**
+- **Optional**
+- Default: true
+
 #### cluster
 
 The name of the ECS cluster to deploy into.
@@ -208,33 +235,11 @@ On Fargate, possible values for this are configured by the amount of memory the 
 1024MB: 256, 512
 2048MB: 256, 512, 1024
 3072MB: 512, 1024
-4096MB: 512, 1024, 2048
-5120MB: 1024, 2048
-6144MB: 1024, 2048
-7168MB: 1024, 2048
-8192MB: 1024, 2048, 4096
-9216MB: 2048, 4096
-10240MB: 2048, 4096
-11264MB: 2048, 4096
-12288MB: 2048, 4096
-13312MB: 2048, 4096
-14336MB: 2048, 4096
-15360MB: 2048, 4096
-16384MB: 4096
-17408MB: 4096
-18432MB: 4096
-19456MB: 4096
-20480MB: 4096
-21504MB: 4096
-22528MB: 4096
-23552MB: 4096
-24576MB: 4096
-25600MB: 4096
-26624MB: 4096
-27648MB: 4096
-28672MB: 4096
-29696MB: 4096
-30720MB: 4096.
+4096MB: 512, 1024
+5120MB: 1024
+6144MB: 1024
+7168MB: 1024
+8192MB: 1024.
 
 - Type: **int**
 - **Optional**
@@ -287,7 +292,7 @@ Secret key/values to pass to the ECS container.
 
 Security Group IDs of existing security groups to use for the ECS service's network access.
 
-List of existing group IDs to use for ECS the ECS service's network access.
+List of existing group IDs to use for the ECS service's network access. If none are specified, waypoint will create one. If DisableALB is false (the default), waypoint will only allow ingress from the ALB's security group.
 
 - Type: **list of string**
 - **Optional**
@@ -309,7 +314,9 @@ Static environment variables to make available.
 
 #### subnets
 
-The VPC subnets to use for the application.
+The VPC subnets to use for the service.
+
+You may set a list of private subnets here to prevent your tasks from being directly exposed publicly.
 
 - Type: **list of string**
 - **Optional**
@@ -319,7 +326,18 @@ The VPC subnets to use for the application.
 
 The name of the task IAM role to assign.
 
+If no role exists and a one or more task role policies are requested, a role with this name will be created.
+
 - Type: **string**
+- **Optional**
+
+#### task_role_policy_arns
+
+IAM Policy arns for attaching to the task role.
+
+If no task role name is specified a task role with a default name will be created for this app, and these policies will be attached.
+
+- Type: **list of string**
 - **Optional**
 
 ### Output Attributes
@@ -333,6 +351,10 @@ Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoi
 #### load_balancer_arn
 
 - Type: **string**
+
+#### resource_state
+
+- Type: **anypb.Any**
 
 #### service_arn
 

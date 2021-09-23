@@ -52,7 +52,8 @@ Router.map(function () {
         });
         this.route('settings', function () {
           this.route('repository', { path: '/' });
-          this.route('variables');
+          this.route('input-variables');
+          this.route('config-variables');
         });
       });
       this.route('new');

@@ -731,7 +731,7 @@ func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.U
 		return status.Errorf(codes.InvalidArgument, "unable to parse image name: %s", in)
 	}
 
-	in = named.Name()
+  in = named.Name()
 	log.Debug("pulling image", "image", in)
 
 	out, err := cli.ImagePull(context.Background(), in, ipo)

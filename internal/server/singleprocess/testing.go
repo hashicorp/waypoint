@@ -213,7 +213,6 @@ func TestRunner(t testing.T, client pb.WaypointClient, r *pb.Runner) (string, fu
 	t.Cleanup(func() { stream.CloseSend() })
 
 	// Register
-	require.NoError(err)
 	require.NoError(stream.Send(&pb.RunnerConfigRequest{
 		Event: &pb.RunnerConfigRequest_Open_{
 			Open: &pb.RunnerConfigRequest_Open{

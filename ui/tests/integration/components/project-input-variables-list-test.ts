@@ -2,6 +2,7 @@ import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
 import { render } from '@ember/test-helpers';
+import { TestContext } from 'ember-test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import { create, collection, clickable, isPresent, fillable, text } from 'ember-cli-page-object';
 
@@ -26,13 +27,18 @@ module('Integration | Component | project-input-variables-list', function (hooks
   setupRenderingTest(hooks);
   setupMirage(hooks);
 
+  hooks.beforeEach(function (this: TestContext) {
+    // We have to register any types we expect to use in this component
+    this.owner.lookup('service:flash-messages').registerTypes(['success', 'error']);
+  });
+
   test('it renders', async function (assert) {
     let dbproj = await this.server.create('project', 'with-input-variables', { name: 'Proj1' });
     let project = dbproj.toProtobuf();
     this.set('project', project.toObject());
 
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
-    assert.dom('.project-input-variables-list').exists('The list renders');
+    assert.dom('.variables-list').exists('The list renders');
     assert.equal(page.variablesList.length, 3, 'the list contains all variables');
     assert.notOk(page.variablesList.objectAt(0).isHcl, 'the list contains a string variable');
     assert.ok(page.variablesList.objectAt(2).isHcl, 'the list contains a hcl variable');
@@ -44,7 +50,7 @@ module('Integration | Component | project-input-variables-list', function (hooks
     this.set('project', project.toObject());
 
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
-    assert.dom('.project-input-variables-list').exists('The list renders');
+    assert.dom('.variables-list').exists('The list renders');
     assert.equal(page.variablesList.length, 3, 'the list contains all variables');
     await page.createButton();
     assert.ok(page.hasForm, 'Attempt to create: the form appears when the Add Variable button is clicked');
@@ -70,7 +76,7 @@ module('Integration | Component | project-input-variables-list', function (hooks
     this.set('project', project.toObject());
 
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
-    assert.dom('.project-input-variables-list').doesNotExist('the list is empty initially');
+    assert.dom('.variables-list').doesNotExist('the list is empty initially');
     assert.equal(page.variablesList.length, 0, 'the list contains no variables');
     await page.createButton();
     assert.ok(page.hasForm), 'Attempt to create: the form appears when the Add Variable button is clicked';

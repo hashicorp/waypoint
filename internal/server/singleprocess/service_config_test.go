@@ -28,10 +28,12 @@ func TestServiceConfig(t *testing.T) {
 	)
 
 	Var := &pb.ConfigVar{
-		Scope: &pb.ConfigVar_Application{
-			Application: &pb.Ref_Application{
-				Application: "foo",
-				Project:     "bar",
+		Target: &pb.ConfigVar_Target{
+			AppScope: &pb.ConfigVar_Target_Application{
+				Application: &pb.Ref_Application{
+					Application: "foo",
+					Project:     "bar",
+				},
 			},
 		},
 

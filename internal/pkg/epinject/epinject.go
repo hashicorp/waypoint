@@ -7,9 +7,11 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 
+	"github.com/docker/cli/cli/connhelper"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -19,7 +21,7 @@ import (
 )
 
 func dockerClient(ctx context.Context) (*client.Client, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := client.NewClientWithOpts(client.FromEnv, withConnectionHelper)
 	if err != nil {
 		return nil, err
 	}
@@ -144,4 +146,42 @@ func AlterEntrypoint(
 	}
 
 	return idr.ID, nil
+}
+
+// withConnectionHelper applies a Docker-specific connection helper (concept from the
+// Docker CLI) for a given daemon host. As an example, a connection helper makes it
+// possible to use the client given a DOCKER_HOST with an ssh scheme.
+func withConnectionHelper(c *client.Client) error {
+	host := c.DaemonHost()
+	helper, err := connhelper.GetConnectionHelper(host)
+	if err != nil {
+		return err
+	}
+
+	if helper == nil {
+		return nil
+	}
+	httpClient := &http.Client{
+		// No tls
+		// No proxy
+		Transport: &http.Transport{
+			DialContext: helper.Dialer,
+		},
+	}
+
+	opts := []client.Opt{
+		client.WithHTTPClient(httpClient),
+		client.WithHost(helper.Host),
+		client.WithDialContext(helper.Dialer),
+	}
+
+	// Apply options
+	for _, opt := range opts {
+		err := opt(c)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

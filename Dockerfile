@@ -65,6 +65,32 @@ RUN ./autogen.sh --disable-nls --disable-man --without-audit \
     && make \
     && cp src/newuidmap src/newgidmap /usr/bin
 
+# This is only used by ODR
+FROM docker.mirror.hashicorp.services/busybox:stable-musl as busybox
+RUN touch /tmp/.keep
+
+#--------------------------------------------------------------------
+# odr image
+#--------------------------------------------------------------------
+# This target is explicitly invoked from the command line, it's not used
+# by the non-odr stages.
+FROM gcr.io/kaniko-project/executor:latest as odr
+
+COPY --from=builder /tmp/wp-src/waypoint /kaniko/waypoint
+COPY --from=busybox /bin/busybox /kaniko/busybox
+COPY --from=busybox /tmp /kaniko/tmp
+
+# We add busybox and populate it with the tool links to make the image
+# easier to use (having a shell, basic tools, etc)
+RUN ["/kaniko/busybox", "mkdir", "/kaniko/bin"]
+RUN ["/kaniko/busybox", "--install", "-s", "/kaniko/bin"]
+
+# Need to add the dir with our tools in PATH
+ENV PATH $PATH:/kaniko/bin
+ENV TMPDIR /kaniko/tmp
+
+ENTRYPOINT ["/kaniko/waypoint"]
+
 #--------------------------------------------------------------------
 # final image
 #--------------------------------------------------------------------

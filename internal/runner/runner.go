@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -17,7 +18,17 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-var ErrClosed = errors.New("runner is closed")
+var (
+	ErrClosed  = errors.New("runner is closed")
+	ErrTimeout = errors.New("runner timed out waiting for a job")
+)
+
+const (
+	// envLogLevel is the env var to set with the log level. This
+	// env var matches the Waypoint CLI on purpose. This can be set on
+	// the runner process OR via app config (`waypoint config`).
+	envLogLevel = "WAYPOINT_LOG_LEVEL"
+)
 
 // Runners in Waypoint execute operations. These can be local (the CLI)
 // or they can be remote (triggered by some webhook). In either case, they
@@ -60,9 +71,28 @@ type Runner struct {
 
 	enableDynConfig bool
 
+	// stateCond and its associated locker are used to protect all the
+	// state-prefixed fields. These state fields can be watched using this
+	// cond for state changes in the runner. Anyone waiting on stateCond should
+	// also verify the context didn't cancel. The stateCond will be broadcasted
+	// when the root context cancels.
+	stateCond       *sync.Cond
+	stateConfig     bool // config stream is connected
+	stateConfigOnce bool // true once we process config once, success or error
+	stateJobReady   bool // ready to start accepting jobs
+	stateExit       bool // true when exiting
+
 	// config is the current runner config.
 	config      *pb.RunnerConfig
 	originalEnv []*pb.ConfigVar
+
+	acceptTimeout time.Duration
+
+	// configPlugins is the mapping of config source type to launched plugin.
+	// Note this is not currently configurable and we just statically set
+	// this to `plugin.ConfigSourcers`. Everything is set up so that
+	// in the future it can be configurable though.
+	configPlugins map[string]*plugin.Instance
 
 	// noopCh is used in tests only. This will cause any noop operations
 	// to block until this channel is closed.
@@ -74,18 +104,9 @@ type Runner struct {
 // You must call Start to start the runner and register with the Waypoint
 // server. See the Runner struct docs for more details.
 func New(opts ...Option) (*Runner, error) {
-	// Create our ID
-	id, err := server.Id()
-	if err != nil {
-		return nil, status.Errorf(codes.Internal,
-			"failed to generate unique ID: %s", err)
-	}
-
 	// Our default runner
 	runner := &Runner{
-		id:     id,
 		logger: hclog.L(),
-		runner: &pb.Runner{Id: id},
 		factories: map[component.Type]*factory.Factory{
 			component.MapperType:         plugin.BaseFactories[component.MapperType],
 			component.BuilderType:        plugin.BaseFactories[component.BuilderType],
@@ -94,10 +115,14 @@ func New(opts ...Option) (*Runner, error) {
 			component.ReleaseManagerType: plugin.BaseFactories[component.ReleaseManagerType],
 			component.TaskLauncherType:   plugin.BaseFactories[component.TaskLauncherType],
 		},
+		stateCond: sync.NewCond(&sync.Mutex{}),
 	}
 
 	runner.runningCond = sync.NewCond(new(sync.Mutex))
 	runner.runningCtx, runner.runningCancel = context.WithCancel(context.Background())
+
+	// Setup our default config sourcers.
+	runner.configPlugins = plugin.ConfigSourcers
 
 	// Build our config
 	var cfg config
@@ -106,6 +131,24 @@ func New(opts ...Option) (*Runner, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// If the options didn't populate id, then we do so now.
+	if runner.id == "" {
+		// Create our ID
+		id, err := server.Id()
+		if err != nil {
+			return nil, status.Errorf(codes.Internal,
+				"failed to generate unique ID: %s", err)
+		}
+
+		runner.id = id
+	}
+
+	runner.runner = &pb.Runner{
+		Id:       runner.id,
+		ByIdOnly: cfg.byIdOnly,
+		Odr:      cfg.odr,
 	}
 
 	// Setup our runner components list
@@ -117,6 +160,8 @@ func New(opts ...Option) (*Runner, error) {
 			})
 		}
 	}
+
+	runner.logger.Debug("Created runner", "id", runner.id)
 
 	return runner, nil
 }
@@ -155,24 +200,18 @@ func (r *Runner) Start() error {
 		return err
 	}
 
-	// Wait for an initial config as confirmation we're registered.
-	log.Trace("runner connected, waiting for initial config")
-	resp, err := client.Recv()
-	if err != nil {
-		return err
-	}
-
-	// Handle the first config so our initial setup is done
-	r.handleConfig(resp.Config)
-
-	// Start the watcher
+	// Start the watcher and the gorotuine that receives configs
 	ch := make(chan *pb.RunnerConfig)
-	go r.watchConfig(ch)
-
-	// Start the goroutine that waits for all other configs
+	go r.watchConfig(r.runningCtx, ch)
 	go r.recvConfig(r.runningCtx, client, ch)
 
-	log.Info("runner registered with server")
+	// Wait for the initial configuration to be set
+	log.Debug("runner registered, waiting for first config processing")
+	if r.waitState(&r.stateConfigOnce, true) {
+		return status.Errorf(codes.Internal, "early exit while waiting for first config processing")
+	}
+
+	log.Info("runner registered with server and ready")
 	return nil
 }
 
@@ -205,7 +244,32 @@ func (r *Runner) Close() error {
 	return nil
 }
 
-type config struct{}
+// waitState waits for the given state boolean to go true. This boolean
+// must be a pointer to a state field on runner. This will also return if
+// stateExit flips true. The return value notes whether we should exit.
+func (r *Runner) waitState(state *bool, v bool) (exit bool) {
+	r.stateCond.L.Lock()
+	defer r.stateCond.L.Unlock()
+	for *state != v && !r.stateExit {
+		r.stateCond.Wait()
+	}
+
+	return r.stateExit
+}
+
+// setState sets the value of a state var on the runner struct and broadcasts
+// the condition variable.
+func (r *Runner) setState(state *bool, v bool) {
+	r.stateCond.L.Lock()
+	defer r.stateCond.L.Unlock()
+	*state = v
+	r.stateCond.Broadcast()
+}
+
+type config struct {
+	byIdOnly bool
+	odr      bool
+}
 
 type Option func(*Runner, *config) error
 
@@ -252,7 +316,16 @@ func WithLocal(ui terminal.UI) Option {
 // ID may be assigned.
 func ByIdOnly() Option {
 	return func(r *Runner, cfg *config) error {
-		r.runner.ByIdOnly = true
+		cfg.byIdOnly = true
+		return nil
+	}
+}
+
+// WithODR configures this runner to be an on-demand runner. This
+// will flag this to the server on registration.
+func WithODR() Option {
+	return func(r *Runner, cfg *config) error {
+		cfg.odr = true
 		return nil
 	}
 }
@@ -260,6 +333,24 @@ func ByIdOnly() Option {
 func WithDynamicConfig(set bool) Option {
 	return func(r *Runner, cfg *config) error {
 		r.enableDynConfig = set
+		return nil
+	}
+}
+
+// WithId sets the id of the runner directly. This isused when the when the server
+// is expecting the runner to use a certain ID, such as when used via ondemand runners.
+func WithId(id string) Option {
+	return func(r *Runner, cfg *config) error {
+		r.id = id
+		return nil
+	}
+}
+
+// WithAcceptTimeout sets a maximum amount of time to wait for a job before returning
+// that one was not accepted.
+func WithAcceptTimeout(dur time.Duration) Option {
+	return func(r *Runner, cfg *config) error {
+		r.acceptTimeout = dur
 		return nil
 	}
 }

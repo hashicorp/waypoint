@@ -21,7 +21,8 @@
     "lint:js:fix": "eslint . --fix",
     "start": "ember serve",
     "test": "npm-run-all lint test:*",
-    "test:ember": "ember test"
+    "test:ember": "ember test",
+    "test:ember:percy": "percy exec ember test"
   },
   "devDependencies": {
     "@ember-decorators/component": "^6.1.1",
@@ -32,6 +33,9 @@
     "@glimmer/tracking": "^1.0.3",
     "@hashicorp/pds-ember": "^0.6.0",
     "@hashicorp/structure-icons": "^1.9.0-0",
+    "@percy/cli": "^1.0.0-beta.58",
+    "@percy/ember": "^3.0.0",
+    "@types/codemirror": "^5.60.2",
     "@types/ember": "^3.16.0",
     "@types/ember-qunit": "^3.4.9",
     "@types/ember__test-helpers": "^1.7.0",
@@ -39,11 +43,12 @@
     "@types/qunit": "^2.9.1",
     "@types/rsvp": "^4.0.3",
     "@types/ua-parser-js": "^0.7.33",
-    "@typescript-eslint/eslint-plugin": "^4.17.0",
-    "@typescript-eslint/parser": "^4.17.0",
+    "@typescript-eslint/eslint-plugin": "^4.31.1",
+    "@typescript-eslint/parser": "^4.31.1",
     "anser": "^2.0.0",
     "babel-eslint": "^10.1.0",
     "broccoli-asset-rev": "^3.0.0",
+    "codemirror": "^5.62.2",
     "date-fns": "^2.15.0",
     "ember-a11y-testing": "^4.0.7",
     "ember-auto-import": "^1.10.1",
@@ -105,7 +110,7 @@
     "qunit": "^2.13.0",
     "qunit-dom": "^1.6.0",
     "sass": "^1.26.10",
-    "typescript": "^3.9.6",
+    "typescript": "^4.4.2",
     "ua-parser-js": "^0.7.24",
     "webpack-bundle-analyzer": "^3.8.0"
   },

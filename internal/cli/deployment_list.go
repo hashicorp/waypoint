@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/waypoint/internal/version"
-
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
@@ -22,6 +20,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serversort "github.com/hashicorp/waypoint/internal/server/sort"
+	"github.com/hashicorp/waypoint/internal/version"
 )
 
 type DeploymentListCommand struct {

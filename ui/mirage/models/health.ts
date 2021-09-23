@@ -10,8 +10,6 @@ export default Model.extend({
 
     result.setHealthStatus(this.status);
     result.setHealthMessage(this.message);
-    result.setName(this.name);
-    result.setId(this.id);
 
     return result;
   },

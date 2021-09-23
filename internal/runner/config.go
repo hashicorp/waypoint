@@ -2,102 +2,193 @@ package runner
 
 import (
 	"context"
-	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-multierror"
+
+	"github.com/hashicorp/waypoint/internal/appconfig"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
+var (
+	// appConfigRefreshPeriod is the interval between checking for new
+	// config values. In a steady state, configuration NORMALLY doesn't
+	// change so this is set fairly high to avoid unnecessary load on
+	// dynamic config sources.
+	//
+	// NOTE(mitchellh): In the future, we'd like to build a way for
+	// config sources to edge-trigger when changes happen to prevent
+	// this refresh.
+	appConfigRefreshPeriod = 15 * time.Second
+)
+
 // watchConfig sits in a goroutine receiving the new configurations from the
 // server.
-func (r *Runner) watchConfig(ch <-chan *pb.RunnerConfig) {
-	for config := range ch {
-		r.handleConfig(config)
+func (r *Runner) watchConfig(ctx context.Context, ch <-chan *pb.RunnerConfig) {
+	log := r.logger.Named("watch_config")
+	defer log.Trace("exiting goroutine")
+
+	// If we exit, the job is no longer ready since we can't be sure we're
+	// processing our config.
+	defer r.setState(&r.stateJobReady, false)
+
+	// Start the app config watcher. This runs in its own goroutine so that
+	// stuff like dynamic config fetching doesn't block starting things like
+	// exec sessions.
+	appCfgCh := make(chan *appconfig.UpdatedConfig)
+	w, err := appconfig.NewWatcher(
+		appconfig.WithLogger(log),
+		appconfig.WithNotify(appCfgCh),
+		appconfig.WithRefreshInterval(appConfigRefreshPeriod),
+		appconfig.WithOriginalEnv(os.Environ()),
+		appconfig.WithPlugins(r.configPlugins),
+	)
+	if err != nil {
+		log.Error("error starting app config watcher", "err", err)
+		return
+	}
+	defer w.Close()
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Warn("exiting due to context ended")
+			return
+
+		case config := <-ch:
+			// Update our app config watcher with the latest vars and sources.
+			w.UpdateSources(ctx, config.ConfigSources)
+			w.UpdateVars(ctx, config.ConfigVars)
+
+		case appCfg := <-appCfgCh:
+			log.Trace("received new app config")
+
+			// This will keep track of our error setting config. For the CEB,
+			// app config is best effort: if it isn't set, we ignore. For the
+			// runner, we actually exit on config errors so that we don't accept
+			// any jobs.
+			var merr error
+
+			if appCfg.UpdatedFiles {
+				merr = r.writeFiles(log, appCfg)
+			}
+
+			if !appCfg.UpdatedEnv {
+				log.Trace("updated env did not include new env vars, skipping restart")
+				continue
+			}
+
+			// Process it for any keys that we handle differently (such as
+			// WAYPOINT_LOG_LEVEL)
+			r.processAppEnv(log, appCfg.EnvVars)
+
+			// Set our env vars
+			if err := r.setEnv(log, appCfg); err != nil {
+				merr = multierror.Append(merr, err)
+			}
+
+			// If we had no errors, then we note that we're ready to process a job.
+			if merr == nil {
+				r.setState(&r.stateJobReady, true)
+			}
+
+			// Note that we processed our config at least once. People can
+			// wait on this state to know that success or fail, one config
+			// was received.
+			r.setState(&r.stateConfigOnce, true)
+
+			// If we have an error, then we exit our loop. For runners,
+			// not being able to set config is a fatal error. We do this so
+			// that we don't run any jobs in a broken state.
+			if merr != nil {
+				log.Warn("error setting app config for runner", "err", merr)
+				return
+			}
+
+		}
 	}
 }
 
-// handleConfig handles the changes for a single config.
-//
-// This is NOT thread-safe, but it is safe to handle a configuration
-// change in parallel to any other operation.
-func (r *Runner) handleConfig(c *pb.RunnerConfig) {
-	old := r.config
-	r.config = c
+func (r *Runner) writeFiles(log hclog.Logger, env *appconfig.UpdatedConfig) error {
+	// If we have no files, then do nothing.
+	if len(env.Files) == 0 {
+		return nil
+	}
 
-	// Store our original environment as a set of config vars. This will
-	// let us replace any of these later if the runtime config gets unset.
-	if r.originalEnv == nil {
-		r.originalEnv = []*pb.ConfigVar{}
-		for _, str := range os.Environ() {
-			idx := strings.Index(str, "=")
-			if idx == -1 {
-				continue
-			}
-
-			r.originalEnv = append(r.originalEnv, &pb.ConfigVar{
-				Name:  str[:idx],
-				Value: &pb.ConfigVar_Static{Static: str[idx+1:]},
-			})
+	var result error
+	log.Debug("writing app config files to disk", "count", len(env.Files))
+	for _, fc := range env.Files {
+		err := ioutil.WriteFile(fc.Path, fc.Data, 0644)
+		if err != nil {
+			log.Error("error writing app config file", "error", err, "path", fc.Path)
+			result = multierror.Append(result, err)
+		} else {
+			log.Info("wrote app config file to disk", "path", fc.Path)
 		}
 	}
 
-	// Handle config var changes
-	{
-		// Setup our original env. This will ensure that we replace the
-		// variable if it becomes unset.
-		env := map[string]string{}
-		for _, v := range r.originalEnv {
-			env[v.Name] = v.Value.(*pb.ConfigVar_Static).Static
+	return result
+}
+
+// setEnv sets and unsets the proper env vars for an appconfig update bundle.
+func (r *Runner) setEnv(log hclog.Logger, appCfg *appconfig.UpdatedConfig) error {
+	var merr error
+
+	// Set our env vars
+	for _, str := range appCfg.EnvVars {
+		idx := strings.Index(str, "=")
+		if idx == -1 {
+			continue
 		}
 
-		if old != nil {
-			// Unset any previous config variables. We check if its in env
-			// already because if it is, it is an original value and we accept
-			// that. This lets unset runtime config get reset back to the
-			// original process start env.
-			for _, v := range old.ConfigVars {
-				if _, ok := env[v.Name]; !ok {
-					env[v.Name] = ""
-				}
-			}
+		log.Trace("setting env var", "key", str[:idx])
+		if err := os.Setenv(str[:idx], str[idx+1:]); err != nil {
+			merr = multierror.Append(merr, err)
+		}
+	}
+
+	// Unset our deleted values. We can do this after setting because
+	// appconfig guarantees that this does not contain anything in env vars.
+	for _, str := range appCfg.DeletedEnvVars {
+		log.Trace("unsetting env var", "key", str)
+		if err := os.Unsetenv(str); err != nil {
+			merr = multierror.Append(merr, err)
+		}
+	}
+
+	return merr
+}
+
+// processAppEnv takes a list of env vars meant for the app and handles
+// certain special cases (such as WAYPOINT_LOG_LEVEL) that also affect the
+// runner.
+func (r *Runner) processAppEnv(log hclog.Logger, env []string) {
+	// Check if we changed our log level. We change this on the
+	// root logger for the runner.
+	for _, pair := range env {
+		idx := strings.Index(pair, "=")
+		if idx == -1 {
+			// Shouldn't happen
+			continue
 		}
 
-		// Set the config variables
-		for _, v := range c.ConfigVars {
-			static, ok := v.Value.(*pb.ConfigVar_Static)
-			if !ok {
-				r.logger.Warn("unknown value type for config var, ignoring",
-					"type", fmt.Sprintf("%T", v.Value))
-				continue
-			}
-
-			env[v.Name] = static.Static
-		}
-
-		// Set them all
-		for k, v := range env {
-			// We ignore current value so that the log doesn't look messy
-			if os.Getenv(k) == v {
-				continue
-			}
-
-			// Unset if empty
-			if v == "" {
-				r.logger.Info("unsetting env var", "key", k)
-				if err := os.Unsetenv(k); err != nil {
-					r.logger.Warn("error unsetting config var", "key", k, "err", err)
-				}
-
-				continue
-			}
-
-			// Set
-			r.logger.Info("setting env var", "key", k)
-			if err := os.Setenv(k, v); err != nil {
-				r.logger.Warn("error setting config var", "key", k, "err", err)
+		key := pair[:idx]
+		if key == envLogLevel {
+			value := pair[idx+1:]
+			level := hclog.LevelFromString(value)
+			if level == hclog.NoLevel {
+				// We warn this
+				log.Warn("log level provided in env var is invalid", value)
+			} else {
+				// We set the log level on the root logger so it
+				// affects all runner logs.
+				r.logger.SetLevel(level)
 			}
 		}
 	}
@@ -110,7 +201,10 @@ func (r *Runner) recvConfig(
 ) {
 	log := r.logger.Named("config_recv")
 	defer log.Trace("exiting receive goroutine")
-	defer close(ch)
+
+	// On exit, we note that we're no longer connected to the config stream.
+	r.setState(&r.stateConfig, true)
+	defer r.setState(&r.stateConfig, false)
 
 	for {
 		// If the context is closed, exit

@@ -51,6 +51,12 @@ type UpdatedConfig struct {
 	// know about.
 	EnvVars []string
 
+	// DeletedEnvVars will be a list of keys that were unset during this change
+	// that was previously set. Note that if the watcher is running with
+	// the `WithOriginalEnv` configuration, then an unset config MIGHT not be
+	// here if it is replaced with the original value in EnvVars.
+	DeletedEnvVars []string
+
 	// Indicates that Files is what should be presented on disk. This is an explicit
 	// flag to match UpdatedEnv.
 	UpdatedFiles bool
@@ -99,6 +105,18 @@ func WithRefreshInterval(d time.Duration) Option {
 func WithDynamicEnabled(v bool) Option {
 	return func(w *Watcher) error {
 		w.dynamicEnabled = v
+		return nil
+	}
+}
+
+// WithOriginalEnv sets an "original" set of environment variables. When
+// an environment variable value is unset, it will use a value from here
+// if the key exists.
+//
+// The value of v is the same as os.Environ().
+func WithOriginalEnv(v []string) Option {
+	return func(w *Watcher) error {
+		w.originalEnv = v
 		return nil
 	}
 }

@@ -44,7 +44,12 @@ func (b *Builder) BuildFunc() interface{} {
 	return b.Build
 }
 
-// BuilderConfig is the configuration structure for the registry.
+// BuildFunc implements component.BuilderODR
+func (b *Builder) BuildODRFunc() interface{} {
+	return b.BuildODR
+}
+
+// BuilderConfig is the configuration structure for the builder
 type BuilderConfig struct {
 	// Control whether or not to inject the entrypoint binary into the resulting image
 	DisableCEB bool `hcl:"disable_entrypoint,optional"`
@@ -94,7 +99,7 @@ is not available and no remote Docker server environment variables are set.
 Dockerless builds require user namespaces to be enabled. This is a host-level
 setting that is often not enabled by default. For GKE, you must not use ContainerOS.
 For AKS (Azure) and EKS (AWS), you must use a custom AMI that has user namespaces
-enabled. Please search for your distro how to enable user namespaces, it is
+enabled. Please search for how to enable user namespaces for your distro; it is
 usually a single line configuration.
 `)
 
@@ -160,6 +165,68 @@ build {
 // Config implements Configurable
 func (b *Builder) Config() (interface{}, error) {
 	return &b.config, nil
+}
+
+// Build
+func (b *Builder) BuildODR(
+	ctx context.Context,
+	ui terminal.UI,
+	src *component.Source,
+	log hclog.Logger,
+	ai *AccessInfo,
+) (*Image, error) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	dockerfile := b.config.Dockerfile
+	if dockerfile == "" {
+		dockerfile = "Dockerfile"
+	}
+	if !filepath.IsAbs(dockerfile) {
+		dockerfile = filepath.Join(src.Path, dockerfile)
+	}
+
+	// If the dockerfile is outside of our build context, then we copy it
+	// into our build context.
+	relDockerfile, err := filepath.Rel(src.Path, dockerfile)
+	if err != nil || strings.HasPrefix(relDockerfile, "..") {
+		id, err := ulid.New(ulid.Now(), rand.Reader)
+		if err != nil {
+			return nil, err
+		}
+
+		newPath := filepath.Join(src.Path, fmt.Sprintf("Dockerfile-%s", id.String()))
+		if err := copyFile(dockerfile, newPath); err != nil {
+			return nil, err
+		}
+		defer os.Remove(newPath)
+
+		dockerfile = newPath
+	}
+
+	path := src.Path
+
+	if b.config.Context != "" {
+		path = b.config.Context
+	}
+
+	contextDir, relDockerfile, err := build.GetContextFromLocalDir(path, dockerfile)
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker context: %s", err)
+	}
+	log.Debug("loaded Docker context",
+		"context_dir", contextDir,
+		"dockerfile", relDockerfile,
+	)
+
+	log.Info("executing build via kaniko")
+
+	result, err := b.buildWithKaniko(ctx, ui, sg, log, relDockerfile, contextDir, b.config.BuildArgs, ai)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // Build

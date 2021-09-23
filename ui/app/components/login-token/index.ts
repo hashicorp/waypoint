@@ -11,10 +11,10 @@ export default class LoginForm extends Component {
   token = '';
 
   @action
-  async login(event?: Event) {
+  async login(event?: Event): Promise<void> {
     event?.preventDefault();
 
     await this.session.setToken(this.token);
-    return this.router.transitionTo('workspaces');
+    this.router.transitionTo('workspaces');
   }
 }

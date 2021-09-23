@@ -62,6 +62,12 @@ func (c *Config) FromURL(v string) error {
 	// Override
 	if u.Host != "" {
 		c.Server.Address = u.Host
+
+		// If no port is specified, default to port 9701 which is our default
+		// gRPC port for Waypoint installations.
+		if idx := strings.IndexByte(u.Host, ':'); idx < 0 {
+			c.Server.Address += ":" + serverconfig.DefaultGRPCPort
+		}
 	}
 
 	// Specifically http will override TLS

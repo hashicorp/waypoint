@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	runnerpkg "github.com/hashicorp/waypoint/internal/runner"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
@@ -30,7 +31,20 @@ type RunnerAgentCommand struct {
 	// Specifies an address to setup a noop TCP server on that can be
 	// used for liveness probes.
 	flagLivenessTCPAddr string
+
+	// The specific ID that the runner should use. When not set, the runner
+	// generates an random.
+	flagId string
+
+	// This indicates that the runner is an on-demand runner. This information
+	// is made available to the plugins so they can alter their behavior for
+	// this unique context.
+	flagODR bool
 }
+
+// This is how long a runner in ODR mode will wait for it's job assignment before
+// timing out.
+var defaultRunnerODRAcceptTimeout = 60 * time.Second
 
 func (c *RunnerAgentCommand) Run(args []string) int {
 	defer c.Close()
@@ -46,6 +60,8 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
+
+	plugin.InsideODR = c.flagODR
 
 	// Connect to the server
 	log.Info("sourcing credentials and connecting to the Waypoint server")
@@ -68,6 +84,12 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 		{Name: "Server address", Value: conn.Target()},
 	})
 	c.ui.Output("Runner logs:", terminal.WithHeaderStyle())
+	if c.flagODR {
+		c.ui.Output("Operating as an On-demand Runner")
+	} else {
+		c.ui.Output("Operating as a static Runner")
+	}
+
 	c.ui.Output("")
 
 	// Set our log output higher if it's not already so that it begins showing.
@@ -98,11 +120,26 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 
 	// Create our runner
 	log.Info("initializing the runner")
-	runner, err := runnerpkg.New(
+
+	options := []runnerpkg.Option{
 		runnerpkg.WithClient(client),
 		runnerpkg.WithLogger(log.Named("runner")),
 		runnerpkg.WithDynamicConfig(c.flagDynConfig),
-	)
+	}
+
+	if c.flagId != "" {
+		options = append(options, runnerpkg.WithId(c.flagId))
+	}
+
+	if c.flagODR {
+		options = append(options,
+			runnerpkg.WithODR(),
+			runnerpkg.ByIdOnly(),
+			runnerpkg.WithAcceptTimeout(defaultRunnerODRAcceptTimeout),
+		)
+	}
+
+	runner, err := runnerpkg.New(options...)
 	if err != nil {
 		c.ui.Output(
 			"Error initializing the runner: %s", err.Error(),
@@ -112,7 +149,7 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	}
 
 	// Start the runner
-	log.Info("starting runner")
+	log.Info("starting runner", "id", runner.Id())
 	if err := runner.Start(); err != nil {
 		log.Error("error starting runner", "err", err)
 		return 1
@@ -153,12 +190,24 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 
 	// Accept jobs in goroutine so that we can interrupt it.
 	ctx, cancel := context.WithCancel(ctx)
+
 	go func() {
 		defer cancel()
 
 		for {
-			if err := runner.Accept(ctx); err != nil {
+			err := runner.Accept(ctx)
+			if err == nil && c.flagODR {
+				log.Debug("handled our one job in ODR mode, exiting")
+				return
+			}
+
+			if err != nil {
 				if err == runnerpkg.ErrClosed {
+					return
+				}
+
+				if err == runnerpkg.ErrTimeout {
+					log.Error("timed out waiting for a job")
 					return
 				}
 
@@ -211,6 +260,18 @@ func (c *RunnerAgentCommand) Flags() *flag.Sets {
 			Usage: "If this is set, the runner will open a TCP listener on this " +
 				"address when it is running. This can be used as a liveness probe " +
 				"endpoint. The TCP server serves no other purpose.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "id",
+			Target: &c.flagId,
+			Usage:  "If this is set, the runner will use the specified id.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "odr",
+			Target: &c.flagODR,
+			Usage:  "Indicates to the runner it's operating as an on-demand runner.",
 		})
 	})
 }

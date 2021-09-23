@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
@@ -15,6 +16,10 @@ func (s *service) UpsertPushedArtifact(
 	ctx context.Context,
 	req *pb.UpsertPushedArtifactRequest,
 ) (*pb.UpsertPushedArtifactResponse, error) {
+	if err := serverptypes.ValidateUpsertPushedArtifactRequest(req); err != nil {
+		return nil, err
+	}
+
 	result := req.Artifact
 
 	// If we have no ID, then we're inserting and need to generate an ID.
@@ -41,6 +46,10 @@ func (s *service) ListPushedArtifacts(
 	ctx context.Context,
 	req *pb.ListPushedArtifactsRequest,
 ) (*pb.ListPushedArtifactsResponse, error) {
+	if err := serverptypes.ValidateListPushedArtifactsRequest(req); err != nil {
+		return nil, err
+	}
+
 	result, err := s.state.ArtifactList(req.Application,
 		state.ListWithStatusFilter(req.Status...),
 		state.ListWithOrder(req.Order),
@@ -74,6 +83,10 @@ func (s *service) GetLatestPushedArtifact(
 	ctx context.Context,
 	req *pb.GetLatestPushedArtifactRequest,
 ) (*pb.PushedArtifact, error) {
+	if err := serverptypes.ValidateGetLatestPushedArtifactRequest(req); err != nil {
+		return nil, err
+	}
+
 	return s.state.ArtifactLatest(req.Application, req.Workspace)
 }
 
@@ -82,5 +95,9 @@ func (s *service) GetPushedArtifact(
 	ctx context.Context,
 	req *pb.GetPushedArtifactRequest,
 ) (*pb.PushedArtifact, error) {
+	if err := serverptypes.ValidateGetPushedArtifactRequest(req); err != nil {
+		return nil, err
+	}
+
 	return s.state.ArtifactGet(req.Ref)
 }

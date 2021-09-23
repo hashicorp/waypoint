@@ -1,0 +1,9 @@
+```release-note:feature
+config: Specify configuration (env vars and files) for runners while executing
+operations related to a specific to that project or application.
+```
+
+```release-note:feature
+config: Specify configuration that is scoped to deployments in certain workspaces
+or label sets.
+```

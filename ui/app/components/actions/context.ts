@@ -6,7 +6,7 @@ export default class ActionsRelease extends Component {
   @tracked hintIsVisible = false;
 
   @action
-  toggleHint() {
+  toggleHint(): boolean {
     if (this.hintIsVisible === true) {
       return (this.hintIsVisible = false);
     } else {

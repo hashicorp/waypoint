@@ -1,10 +1,12 @@
 package ptypes
 
 import (
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 
+	"github.com/hashicorp/waypoint/internal/pkg/validationext"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -25,4 +27,12 @@ func TestApplication(t testing.T, src *pb.Application) *pb.Application {
 	}))
 
 	return src
+}
+
+// ValidateUpsertApplicationRequest
+func ValidateUpsertApplicationRequest(v *pb.UpsertApplicationRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Project, validation.Required),
+		validation.Field(&v.Name, validation.Required),
+	))
 }
