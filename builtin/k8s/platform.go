@@ -126,7 +126,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 // the connection information used by resources to interact with Kubernetes.
 func (p *Platform) getClientset() (*clientsetInfo, error) {
 	// Get our client
-	clientSet, ns, config, err := clientset(p.config.KubeconfigPath, p.config.Context)
+	clientSet, ns, config, err := Clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
 		return nil, err
 	}

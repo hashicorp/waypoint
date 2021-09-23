@@ -703,7 +703,7 @@ func (r *Releaser) resourceIngressStatus(
 // the connection information used by resources to interact with Kubernetes.
 func (r *Releaser) getClientset() (*clientsetInfo, error) {
 	// Get our client
-	clientSet, ns, config, err := clientset(r.config.KubeconfigPath, r.config.Context)
+	clientSet, ns, config, err := Clientset(r.config.KubeconfigPath, r.config.Context)
 	if err != nil {
 		return nil, err
 	}

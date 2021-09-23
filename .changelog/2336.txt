@@ -1,0 +1,3 @@
+```release-note:feature
+plugin/helm: A new plugin "helm" can deploy using Helm charts.
+```

@@ -137,7 +137,7 @@ func (p *TaskLauncher) StopTask(
 	ti *TaskInfo,
 ) error {
 	// Get our client
-	clientSet, ns, _, err := clientset(p.config.KubeconfigPath, p.config.Context)
+	clientSet, ns, _, err := Clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func (p *TaskLauncher) StartTask(
 	tli *component.TaskLaunchInfo,
 ) (*TaskInfo, error) {
 	// Get our client
-	clientSet, ns, _, err := clientset(p.config.KubeconfigPath, p.config.Context)
+	clientSet, ns, _, err := Clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
 		return nil, err
 	}

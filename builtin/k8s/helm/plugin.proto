@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package k8s_helm;
+
+option go_package = "waypoint/builtin/k8s/helm";
+
+message Deployment {
+  // Release is the Helm release name.
+  string release = 1;
+}
