@@ -27,6 +27,7 @@ import (
 	bolt "go.etcd.io/bbolt"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/pkg/cert"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
@@ -329,7 +330,7 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Target: &c.flagTLSCertFile,
 			Usage: "Path to a PEM-encoded certificate file for TLS. If this " +
 				"isn't set, a self-signed certificate will be generated. This file " +
-				"will be read once at startup and will not be monitored for changes.",
+				"will be monitored for changes and will automatically reload on change.",
 			Default: "",
 		})
 
@@ -338,7 +339,8 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Target: &c.flagTLSKeyFile,
 			Usage: "Path to a PEM-encoded private key file for the TLS certificate " +
 				"specified with -tls-cert-file. This is required if -tls-cert-file " +
-				"is set.",
+				"is set. This file will be monitored for changes and will automatically " +
+				"reload on change",
 			Default: "",
 		})
 
@@ -476,16 +478,17 @@ func (c *ServerRunCommand) listenerForConfig(log hclog.Logger, cfg *serverconfig
 		keyFile = c.flagTLSKeyFile
 	}
 
-	var certPEM, keyPEM []byte
+	var tlsConfig *tls.Config
 	if certFile != "" {
-		certPEM, err = ioutil.ReadFile(certFile)
+		w, err := cert.New(log, certFile, keyFile)
 		if err != nil {
 			return nil, err
 		}
-		keyPEM, err = ioutil.ReadFile(keyFile)
-		if err != nil {
-			return nil, err
-		}
+		tlsConfig = w.TLSConfig()
+
+		// NOTE(mitchellh): technically, the cert watcher wants to be closed
+		// to clean up some goroutines, but our listener lives for the duration
+		// of the process so we don't clean it up.
 
 		log.Info("TLS certs loaded from specified files",
 			"cert", certFile,
@@ -493,7 +496,7 @@ func (c *ServerRunCommand) listenerForConfig(log hclog.Logger, cfg *serverconfig
 	}
 
 	// If we don't have a cert then we self-sign.
-	if certPEM == nil {
+	if tlsConfig == nil {
 		log.Info("TLS cert wasn't specified, a self-signed certificate will be created")
 
 		priv, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
@@ -524,27 +527,30 @@ func (c *ServerRunCommand) listenerForConfig(log hclog.Logger, cfg *serverconfig
 		if err != nil {
 			return nil, err
 		}
-		certPEM = out.Bytes()
+		certPEM := out.Bytes()
 
 		// Write the key
 		out = bytes.Buffer{}
 		if err := pem.Encode(&out, pemBlockForKey(priv)); err != nil {
 			return nil, err
 		}
-		keyPEM = out.Bytes()
-	}
+		keyPEM := out.Bytes()
 
-	// Setup the TLS listener
-	cert, err := tls.X509KeyPair(certPEM, keyPEM)
-	if err != nil {
-		ln.Close()
-		return nil, err
+		// Setup the TLS listener
+		cert, err := tls.X509KeyPair(certPEM, keyPEM)
+		if err != nil {
+			ln.Close()
+			return nil, err
+		}
+
+		// Setup our TLS config
+		tlsConfig = &tls.Config{
+			Certificates: []tls.Certificate{cert},
+		}
 	}
 
 	log.Info("listener is wrapped with TLS")
-	return tls.NewListener(ln, &tls.Config{
-		Certificates: []tls.Certificate{cert},
-	}), nil
+	return tls.NewListener(ln, tlsConfig), nil
 }
 
 func publicKey(priv interface{}) interface{} {
