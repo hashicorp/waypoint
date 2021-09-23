@@ -10,7 +10,6 @@ const CONTENT_DIR = 'content/commands'
 const basePath = 'commands'
 
 export default function DocsLayout(props) {
-  console.log(process.env.ENABLE_VERSIONED_DOCS)
   return (
     <DocsPage
       product={{ name: productName, slug: productSlug }}
