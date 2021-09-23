@@ -74,6 +74,7 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
     } else {
       await this.args.saveVariableSettings(this.changeset, false);
     }
+    this.changeset?.execute();
     this.isCreating = false;
     this.isEditing = false;
   }
@@ -89,6 +90,7 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
   cancelEdit(): void {
     this.isCreating = false;
     this.isEditing = false;
-    this.variable = this.initialVariable;
+    this.changeset?.unexecute();
+    // this.variable = this.initialVariable;
   }
 }
