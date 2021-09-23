@@ -30,7 +30,6 @@ export async function getStaticPaths() {
     localContentDir: CONTENT_DIR,
     // new ----
     product: { name: productName, slug: productSlug },
-    currentVersion: 'latest',
     basePath,
   })
   return {
