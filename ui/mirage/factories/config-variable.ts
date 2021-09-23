@@ -11,7 +11,10 @@ export default Factory.extend({
     name: () => faker.hacker.noun(),
     dynamic: {
       from: () => 'kubernetes',
-      configMap: () => [['name', 'my-config-map'], ['key', 'port']],
-    }
+      configMap: () => [
+        ['name', 'my-config-map'],
+        ['key', 'port'],
+      ],
+    },
   }),
 });

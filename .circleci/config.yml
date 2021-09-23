@@ -443,6 +443,22 @@ jobs:
       - store_test_results:
           path: ui/test-results
 
+  # run frontend linters
+  frontend-lint:
+    docker:
+      - image: *EMBER_IMAGE
+    environment:
+      <<: *ENVIRONMENT
+    steps:
+      - checkout
+      - md5uilib
+      - restore_cache:
+          key: *YARN_CACHE_KEY
+      - run:
+          working_directory: ui
+          command: yarn lint
+      - notify_main_failure
+
 workflows:
   version: 2
   go-tests:
@@ -528,9 +544,11 @@ workflows:
   frontend:
     jobs:
       - frontend-cache
+      - frontend-lint
       - ember-build-tests:
           requires:
             - frontend-cache
+            - frontend-lint
       - ember-test:
           requires:
             - ember-build-tests
