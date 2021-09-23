@@ -3,7 +3,6 @@ import DocsPage from '@hashicorp/react-docs-page'
 import {
   generateStaticPaths,
   generateStaticProps,
-  stripVersionFromPathParams,
 } from '@hashicorp/react-docs-page/server'
 
 const NAV_DATA_FILE = 'data/commands-nav-data.json'
@@ -11,6 +10,7 @@ const CONTENT_DIR = 'content/commands'
 const basePath = 'commands'
 
 export default function DocsLayout(props) {
+  console.log(process.env.ENABLE_VERSIONED_DOCS)
   return (
     <DocsPage
       product={{ name: productName, slug: productSlug }}
@@ -21,31 +21,29 @@ export default function DocsLayout(props) {
 }
 
 export async function getStaticPaths() {
+  const paths = await generateStaticPaths({
+    navDataFile: NAV_DATA_FILE,
+    localContentDir: CONTENT_DIR,
+    // new ----
+    product: { name: productName, slug: productSlug },
+    currentVersion: 'latest',
+    basePath,
+  })
   return {
     fallback: true,
-    paths: await generateStaticPaths({
-      navDataFile: NAV_DATA_FILE,
-      localContentDir: CONTENT_DIR,
-      // new ----
-      product: { name: productName, slug: productSlug },
-      currentVersion: 'latest',
-      basePath,
-    }),
+    paths,
   }
 }
 
 export async function getStaticProps({ params }) {
-  const page = params.page ?? []
-  const [version] = stripVersionFromPathParams(page)
-
+  const props = await generateStaticProps({
+    navDataFile: NAV_DATA_FILE,
+    localContentDir: CONTENT_DIR,
+    product: { name: productName, slug: productSlug },
+    params,
+    basePath,
+  })
   return {
-    props: await generateStaticProps({
-      navDataFile: NAV_DATA_FILE,
-      localContentDir: CONTENT_DIR,
-      product: { name: productName, slug: productSlug },
-      params,
-      currentVersion: version,
-      basePath: 'commands',
-    }),
+    props,
   }
 }

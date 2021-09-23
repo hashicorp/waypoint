@@ -20,22 +20,29 @@ export default function DocsLayout(props) {
 }
 
 export async function getStaticPaths() {
+  const paths = await generateStaticPaths({
+    navDataFile: NAV_DATA_FILE,
+    localContentDir: CONTENT_DIR,
+    // new ----
+    product: { name: productName, slug: productSlug },
+    currentVersion: 'latest',
+    basePath,
+  })
   return {
-    fallback: false,
-    paths: await generateStaticPaths({
-      navDataFile: NAV_DATA_FILE,
-      localContentDir: CONTENT_DIR,
-    }),
+    fallback: true,
+    paths,
   }
 }
 
 export async function getStaticProps({ params }) {
+  const props = await generateStaticProps({
+    navDataFile: NAV_DATA_FILE,
+    localContentDir: CONTENT_DIR,
+    product: { name: productName, slug: productSlug },
+    params,
+    basePath,
+  })
   return {
-    props: await generateStaticProps({
-      navDataFile: NAV_DATA_FILE,
-      localContentDir: CONTENT_DIR,
-      product: { name: productName, slug: productSlug },
-      params,
-    }),
+    props,
   }
 }
