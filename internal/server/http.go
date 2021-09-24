@@ -43,13 +43,19 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 
 	// If the path has a grpc prefix we assume it's a GRPC gateway request,
 	// otherwise fall back to serving the UI from the filesystem
-	rootHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	var rootHandler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/grpc") {
 			grpcWrapped.ServeHTTP(w, r)
 		} else if opts.BrowserUIEnabled {
 			uifs.ServeHTTP(w, r)
 		}
 	})
+
+	// Wrap our handler to force TLS
+	rootHandler = forceTLSHandler(rootHandler)
+
+	// Wrap our handler to log
+	rootHandler = httpLogHandler(rootHandler, log)
 
 	// Create our http server
 	return &httpServer{
@@ -59,7 +65,7 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 		server: &http.Server{
 			ReadHeaderTimeout: 5 * time.Second,
 			IdleTimeout:       120 * time.Second,
-			Handler:           httpLogHandler(rootHandler, log),
+			Handler:           rootHandler,
 			BaseContext: func(net.Listener) context.Context {
 				return opts.Context
 			},
