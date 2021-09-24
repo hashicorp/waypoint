@@ -32,7 +32,25 @@ func (s ConfigResolution) Less(i, j int) bool {
 	}
 	ti, tj := s[i].Target, s[j].Target
 
-	// 1. The most specific "scope" is used: app over project over global.
+	// 1. If a workspace is set on one but not the other, the variable
+	//    with the workspace sorts higher than no workspace.
+	var wsi, wsj string
+	if v := ti.Workspace; v != nil {
+		wsi = v.Workspace
+	}
+	if v := tj.Workspace; v != nil {
+		wsj = v.Workspace
+	}
+
+	// This boolean statement can be confusing, but in english:
+	// if the workspace targets set are not equal and at least one is empty.
+	// We know both aren't empty (because they're not equal).
+	// This means that resolution rule #1 takes effect.
+	if wsi != wsj && (wsi == "" || wsj == "") {
+		return wsi == ""
+	}
+
+	// 2. The most specific "scope" is used: app over project over global.
 	// This only applies so long as the scope types do not match.
 	scopeI, scopeJ := reflect.TypeOf(ti.AppScope), reflect.TypeOf(tj.AppScope)
 	if scopeI != scopeJ {
@@ -40,8 +58,8 @@ func (s ConfigResolution) Less(i, j int) bool {
 		return wi < wj
 	}
 
-	// 2. If scopes match, the variable that has a label selector is used.
-	// The below also solves #3 which sorts based on length of label selector
+	// 3. If scopes match, the variable that has a label selector is used.
+	// The below also solves #4 which sorts based on length of label selector
 	// if they both have one.
 	return len(s[i].Target.LabelSelector) < len(s[j].Target.LabelSelector)
 }

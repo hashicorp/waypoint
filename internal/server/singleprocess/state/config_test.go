@@ -678,7 +678,7 @@ func TestConfig(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
-		// Create a build
+		// Create a config
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
 			Target: &pb.ConfigVar_Target{
 				AppScope: &pb.ConfigVar_Target_Application{
@@ -741,6 +741,148 @@ func TestConfig(t *testing.T) {
 			})
 			require.NoError(err)
 			require.Len(vs, 0)
+		}
+	})
+
+	t.Run("workspace set and not set", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a config that overrides based on workspace
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+			},
+
+			Name:  "foo",
+			Value: &pb.ConfigVar_Static{Static: "one"},
+		}))
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Workspace: &pb.Ref_Workspace{Workspace: "dev"},
+			},
+
+			Name:  "foo",
+			Value: &pb.ConfigVar_Static{Static: "two"},
+		}))
+
+		{
+			// Matching workspace
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Workspace: &pb.Ref_Workspace{Workspace: "dev"},
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+			require.Equal("two", vs[0].Value.(*pb.ConfigVar_Static).Static)
+		}
+
+		{
+			// Non-Matching workspace
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Workspace: &pb.Ref_Workspace{Workspace: "devno"},
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+			require.Equal("one", vs[0].Value.(*pb.ConfigVar_Static).Static)
+		}
+	})
+
+	t.Run("workspace conflict", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a config that overrides based on workspace
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Workspace: &pb.Ref_Workspace{Workspace: "staging"},
+			},
+
+			Name:  "foo",
+			Value: &pb.ConfigVar_Static{Static: "one"},
+		}))
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Workspace: &pb.Ref_Workspace{Workspace: "dev"},
+			},
+
+			Name:  "foo",
+			Value: &pb.ConfigVar_Static{Static: "two"},
+		}))
+
+		{
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Workspace: &pb.Ref_Workspace{Workspace: "dev"},
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+			require.Equal("two", vs[0].Value.(*pb.ConfigVar_Static).Static)
+		}
+
+		{
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Workspace: &pb.Ref_Workspace{Workspace: "staging"},
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+			require.Equal("one", vs[0].Value.(*pb.ConfigVar_Static).Static)
 		}
 	})
 
