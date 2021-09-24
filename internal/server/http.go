@@ -15,6 +15,7 @@ import (
 )
 
 type httpServer struct {
+	ln     net.Listener
 	opts   *options
 	log    hclog.Logger
 	server *http.Server
@@ -22,12 +23,8 @@ type httpServer struct {
 
 // newHttpServer initializes a new http server.
 // Uses grpc-web to wrap an existing grpc server.
-func newHttpServer(grpcServer *grpc.Server, opts *options) *httpServer {
-	log := opts.Logger.Named("http")
-	if opts.HTTPListener == nil {
-		log.Info("HTTP listener not specified, HTTP API is disabled")
-		return nil
-	}
+func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *httpServer {
+	log := opts.Logger.Named("http").With("ln", ln.Addr().String())
 
 	// Wrap the grpc server so that it is grpc-web compatible
 	grpcWrapped := grpcweb.WrapServer(grpcServer,
@@ -56,6 +53,7 @@ func newHttpServer(grpcServer *grpc.Server, opts *options) *httpServer {
 
 	// Create our http server
 	return &httpServer{
+		ln:   ln,
 		opts: opts,
 		log:  log,
 		server: &http.Server{
@@ -72,9 +70,8 @@ func newHttpServer(grpcServer *grpc.Server, opts *options) *httpServer {
 // start starts an http server
 func (s *httpServer) start() error {
 	// Serve traffic
-	ln := s.opts.HTTPListener
-	s.log.Info("starting HTTP server", "addr", ln.Addr().String())
-	return s.server.Serve(ln)
+	s.log.Info("starting HTTP server", "addr", s.ln.Addr().String())
+	return s.server.Serve(s.ln)
 }
 
 // close stops the grpc server, gracefully if possible. Should be called exactly once.
