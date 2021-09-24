@@ -6,7 +6,7 @@ import { Model as AppRouteModel } from '../app';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
 type Params = { sequence: string };
-type Model = Deployment.AsObject & WithStatusReport;
+export type Model = Deployment.AsObject & WithStatusReport;
 
 interface WithStatusReport {
   statusReport?: StatusReport.AsObject;
@@ -22,11 +22,6 @@ export default class DeploymentDetail extends Route {
         label: model.application?.application ?? 'unknown',
         icon: 'git-repository',
         route: 'workspace.projects.project.app',
-      },
-      {
-        label: 'Deployments',
-        icon: 'upload',
-        route: 'workspace.projects.project.app.deployments',
       },
     ];
   }

@@ -1,0 +1,12 @@
+.label-list {
+  --gap: #{scale.$sm--2};
+
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: calc(-1 * var(--gap));
+
+  .badge {
+    margin-right: var(--gap);
+    margin-bottom: var(--gap);
+  }
+}
