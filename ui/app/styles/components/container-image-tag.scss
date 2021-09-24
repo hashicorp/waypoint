@@ -1,0 +1,12 @@
+.container-badge {
+  display: flex;
+  align-items: center;
+
+  &-tag {
+    background: rgb(var(--tag-background));
+    color: rgb(var(--text-muted));
+    border-radius: 2px;
+    padding: 0 4px;
+    margin-left: 7px;
+  }
+}

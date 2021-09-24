@@ -17,6 +17,7 @@ $button-shadow: 0 3px 2px rgba(var(--shadow), 0.2);
   --text: #{dehex(color.$black)};
   --text-muted: #{dehex(color.$ui-cool-gray-600)};
   --text-subtle: #{dehex(color.$ui-cool-gray-400)};
+  --tag-background: #{dehex(color.$ui-gray-100)};
   --link: #{dehex(color.$blue-500)};
   --border: #{dehex(color.$ui-gray-200)};
   --outline: #{dehex(color.$ui-gray-300)};
