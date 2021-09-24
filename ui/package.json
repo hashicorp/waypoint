@@ -89,7 +89,7 @@
     "ember-resolver": "^8.0.2",
     "ember-router-service-refresh-polyfill": "^0.1.0",
     "ember-set-helper": "^2.0.0",
-    "ember-source": "~3.24.0",
+    "ember-source": "~3.24.5",
     "ember-svg-jar": "^2.2.3",
     "ember-template-lint": "^3.5.0",
     "ember-toggle": "^7.1.0",
