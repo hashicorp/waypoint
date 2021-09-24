@@ -419,7 +419,7 @@ func (c *LoginCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:   "-from-kubernetes-service",
+			Name:   "from-kubernetes-service",
 			Target: &c.flagK8SService,
 			Usage: "The name of the Kubernetes service to get the server address from " +
 				"when using the -from-kubernetes flag.",
@@ -427,7 +427,7 @@ func (c *LoginCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:   "-from-kubernetes-secret",
+			Name:   "from-kubernetes-secret",
 			Target: &c.flagK8STokenSecret,
 			Usage: "The name of the Kubernetes secret that has the Waypoint token " +
 				"when using the -from-kubernetes flag.",
