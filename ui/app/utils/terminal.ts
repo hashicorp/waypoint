@@ -10,7 +10,6 @@ export function createTerminal(options: TerminalOptions): Terminal {
   let terminalOptions: ITerminalOptions = {
     fontFamily: 'ui-monospace,Menlo,monospace',
     fontWeight: '400',
-    logLevel: 'debug',
     lineHeight: 1.4,
     fontSize: 12,
     fontWeightBold: '700',
