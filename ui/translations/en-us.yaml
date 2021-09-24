@@ -203,3 +203,7 @@ project-init-error:
   more-help:
     prefix: For more help getting started, refer to the
     link-label: Waypoint documentation
+
+section:
+  expand: Expand section
+  collapse: Collapse section

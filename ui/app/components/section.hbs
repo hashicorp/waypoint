@@ -1,0 +1,30 @@
+<section
+  class="
+    section
+    {{if this.expanded "section--expanded" "section--collapsed"}}
+  "
+>
+  <div class="section__header">
+    <h2 class="section__heading">
+      <Pds::Icon
+        @type={{if this.expanded "chevron-down" "chevron-right"}}
+      />
+      <span>
+        {{yield to="heading"}}
+      </span>
+    </h2>
+
+    <button
+      data-test-section-toggle
+      type="button"
+      class="section__toggle"
+      title={{if this.expanded (t "section.collapse") (t "section.expand")}}
+      aria-expanded={{if this.expanded "true" "false"}}
+      {{on "click" this.toggleExpanded}}
+    ></button>
+  </div>
+
+  {{#if this.expanded}}
+    {{yield to="body"}}
+  {{/if}}
+</section>
