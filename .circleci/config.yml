@@ -544,10 +544,11 @@ workflows:
   frontend:
     jobs:
       - frontend-cache
-      - frontend-lint
-      - ember-build-tests:
+      - frontend-lint:
           requires:
             - frontend-cache
+      - ember-build-tests:
+          requires:
             - frontend-lint
       - ember-test:
           requires:
