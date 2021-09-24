@@ -78,6 +78,13 @@ type Config struct {
 	// HTTP is the listening configuration for the HTTP service for grpc-web.
 	HTTP Listener `hcl:"http,block"`
 
+	// HTTPInsecure sets up a listener for HTTP that never has TLS enabled.
+	// This is generally not recommended but can make sense in certain
+	// environments. For example, within Kubernetes where TLS termination
+	// happens at a higher level you may want an additional insecure listener
+	// in addition to a secure listener.
+	HTTPInsecure Listener `hcl:"http_insecure,block"`
+
 	// URL configures a server to use a URL service.
 	URL *URL `hcl:"url,block"`
 
