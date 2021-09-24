@@ -1,4 +1,5 @@
 .xterm-wrapper {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -10,12 +11,51 @@
   border-radius: 2px;
   min-height: 488px;
   margin-bottom: 0;
+
+  .follow-logs {
+    position: absolute;
+    z-index: 100;
+    top: scale.$sm-2;
+    right: scale.$lg-1;
+    color: rgb(var(--text-muted));
+    background: rgb(var(--card));
+    box-shadow: $elevated-shadow;
+    border: none;
+    border-radius: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: scale.$lg-4;
+    padding: 0 scale.$sm-3;
+    cursor: pointer;
+
+    @media (prefers-color-scheme: dark) {
+      background: rgb(var(--button-secondary));
+      border: 1px solid;
+      border-color: rgb(var(--button-secondary-border));
+    }
+
+    .icon {
+      color: rgb(var(--link));
+      width: scale.$lg-1;
+      height: scale.$lg-1;
+      margin: 0 scale.$sm-4;
+      pointer-events: none;
+
+      @media (prefers-color-scheme: dark) {
+        color: rgb(var(--text));
+      }
+    }
+  }
 }
 .xterm-pane {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
   flex-shrink: 1;
+
+
+
   .xterm-viewport {
     scrollbar-width: thin;
     scrollbar-color: rgb(var(--outline)) rgb(var(--border));

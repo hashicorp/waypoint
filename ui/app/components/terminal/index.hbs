@@ -1,4 +1,9 @@
 <div class="xterm-wrapper">
+  {{#unless this.isFollowingLogs}}
+    <button class="follow-logs" type="button" {{on "click" this.followLogs}}>
+      <Pds::Icon @type="arrow-down" class="icon" />
+    </button>
+  {{/unless}}
   <div class="xterm-pane"
     {{did-insert this.didInsertNode}}
     {{will-destroy this.willDestroyNode}}
