@@ -58,7 +58,7 @@ export default class LogTerminal extends Component<TerminalComponentArgs> {
   }
 
   willDestroyNode = (): void => {
-    this.terminal.dispose();
+    this.terminal?.dispose();
     this.element.querySelector('.xterm-viewport')?.removeEventListener('scroll', this.viewPortdidScroll);
   };
 
