@@ -29,8 +29,10 @@ func httpLogHandler(handler http.Handler, log hclog.Logger) http.Handler {
 
 		// Extract the URL scheme honoring the X-Forwarded-Proto header set by
 		// proxies.
+		var forwarded bool
 		scheme := req.URL.Scheme
 		if forwardedProto := req.Header.Get("X-Forwarded-Proto"); forwardedProto != "" {
+			forwarded = true
 			scheme = forwardedProto
 		}
 
@@ -43,6 +45,7 @@ func httpLogHandler(handler http.Handler, log hclog.Logger) http.Handler {
 			"http.remote_addr", clientIP,
 			"http.response_size", params.Size,
 			"http.scheme", scheme,
+			"http.scheme_forwarded", forwarded,
 			"http.status_code", params.StatusCode,
 			"http.useragent", req.UserAgent(),
 			"http.version", req.Proto,
