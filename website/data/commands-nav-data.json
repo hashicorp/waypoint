@@ -131,6 +131,10 @@
     "path": "context-rename"
   },
   {
+    "title": "context set",
+    "path": "context-set"
+  },
+  {
     "title": "context use",
     "path": "context-use"
   },
