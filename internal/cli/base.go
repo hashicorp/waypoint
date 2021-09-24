@@ -27,7 +27,7 @@ import (
 
 const (
 	defaultWorkspace        = "default"
-	defaultWorkspaceEnvName = "WP_WORKSPACE"
+	defaultWorkspaceEnvName = "WAYPOINT_WORKSPACE"
 )
 
 // baseCommand is embedded in all commands to provide common logic and data.
@@ -623,7 +623,7 @@ func checkFlagsAfterArgs(args []string, set *flag.Sets) error {
 // precedence (last value wins):
 //
 // - value stored in the CLI context
-// - vaule from the environment variable WP_WORKSPACE
+// - value from the environment variable WAYPOINT_WORKSPACE
 // - value set in the CLI flag -workspace
 //
 // The default value is "default"
@@ -654,10 +654,9 @@ func (c *baseCommand) workspace() (string, error) {
 				return cfg.Workspace, nil
 			}
 		}
+		// default value
+		return defaultWorkspace, nil
 	}
-
-	// default value
-	return defaultWorkspace, nil
 }
 
 // flagSetBit is used with baseCommand.flagSet

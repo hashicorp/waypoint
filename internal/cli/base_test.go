@@ -103,7 +103,7 @@ func TestWorkspacePrecedence(t *testing.T) {
 		Expected         string
 	}{
 		{
-			"default no inpupts",
+			"default no inputs",
 			[]string{},
 			"",
 			"",
