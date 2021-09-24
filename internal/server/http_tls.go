@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"strings"
 )
 
 // Proto header to read for the forwarded proto
@@ -13,7 +14,7 @@ func forceTLSHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		scheme := r.URL.Scheme
 		if v := r.Header.Get(xForwardedProto); v != "" {
-			scheme = v
+			scheme = strings.ToLower(v)
 		}
 
 		if scheme != "https" {
