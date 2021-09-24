@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"errors"
+
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -30,24 +32,25 @@ func (c *ContextSetCommand) Run(args []string) int {
 		return 1
 	}
 
-	def, err := c.contextStorage.Default()
+	contextName, err := c.contextStorage.Default()
 	if err != nil {
-		// TODO log error
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
-	name := def
-	// If we still have no name, then we do nothing. We also accept
-	// "-" as a valid name that means "do nothing".
-	if name == "" || name == "-" {
+	if contextName == "" || contextName == "-" {
 		// TODO log error
+		c.ui.Output(
+			clierrors.Humanize(errors.New("no default context exists")),
+			terminal.WithErrorStyle(),
+		)
 		return 1
 	}
 
 	// Load it and set it.
-	cfg, err := c.contextStorage.Load(name)
+	cfg, err := c.contextStorage.Load(contextName)
 	if err != nil {
-		// TODO log error
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -55,12 +58,12 @@ func (c *ContextSetCommand) Run(args []string) int {
 	cfg.Workspace = c.flagWorkspace
 
 	// store updated context
-	if err := c.contextStorage.Set(name, cfg); err != nil {
+	if err := c.contextStorage.Set(contextName, cfg); err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
-	c.ui.Output("Context %q updated to use %s workspace.", name, cfg.Workspace, terminal.WithSuccessStyle())
+	c.ui.Output("Context %q updated to use %s workspace.", contextName, cfg.Workspace, terminal.WithSuccessStyle())
 	return 0
 }
 

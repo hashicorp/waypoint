@@ -25,7 +25,10 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
 )
 
-const defaultWorkspace = "default"
+const (
+	defaultWorkspace        = "default"
+	defaultWorkspaceEnvName = "WP_WORKSPACE"
+)
 
 // baseCommand is embedded in all commands to provide common logic and data.
 //
@@ -209,25 +212,14 @@ func (c *baseCommand) Init(opts ...Option) error {
 	}
 	c.contextStorage = contextStorage
 
-	/// load workspace
-
-	// compute the workspace based on available values, in this order of
-	// precedence:
-	// - value stored in the CLI context
-	// - vaule from the environment variable WP_WORKSPACE
-	// - value set in the CLI flag -workspace
-	//
-	// The default value is "default"
-	// TODO (clint): re-work as a switch
+	// load workspace from cli/env/storage
 	workspace, err := c.workspace()
 	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
 	}
 
-	// q.Q("+>=> final workspace value: ", workspace)
 	c.refWorkspace = &pb.Ref_Workspace{Workspace: workspace}
-
-	/// end load workpace
 
 	// Parse the configuration
 	c.cfg = &config.Config{}
@@ -480,8 +472,7 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:   "workspace",
 			Target: &c.flagWorkspace,
-			// Default: "default",
-			Usage: "Workspace to operate in.",
+			Usage:  "Workspace to operate in.",
 		})
 	}
 
@@ -628,10 +619,17 @@ func checkFlagsAfterArgs(args []string, set *flag.Sets) error {
 	return nil
 }
 
+// workspace computes the workspace based on available values, in this order of
+// precedence (last value wins):
 //
+// - value stored in the CLI context
+// - vaule from the environment variable WP_WORKSPACE
+// - value set in the CLI flag -workspace
+//
+// The default value is "default"
 func (c *baseCommand) workspace() (string, error) {
 	// load env for workspace
-	workspaceENV := os.Getenv("WP_WORKSPACE")
+	workspaceENV := os.Getenv(defaultWorkspaceEnvName)
 	switch {
 	case c.flagWorkspace != "":
 		return c.flagWorkspace, nil
@@ -641,30 +639,24 @@ func (c *baseCommand) workspace() (string, error) {
 		// attempt to load from CLI context storage
 		defaultName, err := c.contextStorage.Default()
 		if err != nil {
-			// TODO log error
 			return "", err
 		}
 
-		// TODO verify it's OK to not have a context at this point
-		// If we still have no name, then we do nothing. We also accept
-		// "-" as a valid name that means "do nothing".
+		// If we have no context name, then we just return the default
 		if defaultName != "" && defaultName != "-" {
-			// Load it and set it.
+			// Load the context and return the workspace value. If it's empty,
+			// we'll fall through and return the default
 			cfg, err := c.contextStorage.Load(defaultName)
 			if err != nil {
-				// TODO log error
 				return "", err
 			}
 			if cfg.Workspace != "" {
-				// q.Q("-> -> setting workspace from context:", cfg.Workspace)
 				return cfg.Workspace, nil
-				// } else {
-				// 	q.Q("-> -> context loaded, no workspace value")
 			}
 		}
 	}
+
 	// default value
-	// q.Q("=>=> returning default workspace")
 	return defaultWorkspace, nil
 }
 
