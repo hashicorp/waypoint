@@ -35,6 +35,8 @@ page:
       heading: Resources
       deployment-table-caption: Resources created by <b>this deployment</b>
       release-table-caption-prefix: Resources created by <b>Release</b>
+    overview:
+      heading: Overview
     logs:
       heading: Deployment Logs
   releases:
@@ -106,16 +108,11 @@ form:
       edit: 'Edit'
       delete: 'Delete'
     nameIsPath:
-      label: "Use variable name as file path"
+      label: 'Use variable name as file path'
     internal:
-      label: "Internal value"
+      label: 'Internal value'
     button_submit: 'Save variable'
     button_cancel: 'Cancel'
-
-
-
-
-
 
 auth:
   title: 'Welcome to Waypoint'

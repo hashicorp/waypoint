@@ -7,7 +7,8 @@
       <small>
         <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
         <span>Deployed by <b>{{component-name @model.component.name}}</b>
-          {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
+          {{date-format-distance-to-now @model.status.startTime.seconds }}
+        </span>
       </small>
       {{#if @model.preload.jobDataSourceRef.git.commit}}
         <small>
@@ -28,7 +29,12 @@
     </div>
   </PageHeader>
 
-  <StatusReportBar @model={{@model}} @artifactType="Deployment"/>
+  <Section>
+    <:heading>{{t "page.deployment.overview.heading"}}</:heading>
+    <:body>
+      <MetaTable @model={{@model}} @artifactType="Deployment" />
+    </:body>
+  </Section>
 
   {{#let
     @model.statusReport.resourcesList
@@ -83,4 +89,3 @@
 {{/if}}
 
 {{outlet}}
-
