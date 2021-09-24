@@ -1,13 +1,42 @@
-.xterm-pane {
+.xterm-wrapper {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
   flex-shrink: 1;
-  padding: scale.$sm-2 scale.$sm-2 scale.$sm-2 scale.$sm-1;
+  padding: scale.$sm-2 scale.$sm-2 scale.$sm-2 scale.$sm-2;
   background: rgb(var(--panel));
   border: 1px solid;
   border-color: rgb(var(--border));
   border-radius: 2px;
   min-height: 488px;
   margin-bottom: 0;
+}
+.xterm-pane {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  .xterm-viewport {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--outline)) rgb(var(--border));
+    &::-webkit-scrollbar {
+      width: scale.$sm-3;
+      height: scale.$sm-3;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgb(var(--border));
+      border-radius: scale.$sm-3;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgb(var(--outline));
+      border-radius: scale.$sm-3;
+    }
+
+    &::-webkit-scrollbar-button {
+      width: scale.$sm-3;
+      height: scale.$sm-3;
+    }
+  }
 }
