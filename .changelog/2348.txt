@@ -1,0 +1,3 @@
+```release-note:improvement
+core: HTTP requests from Kubernetes probes are logged at a trace level rather than info
+```
