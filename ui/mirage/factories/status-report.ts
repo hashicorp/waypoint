@@ -40,4 +40,10 @@ export default Factory.extend({
       server.create('health', 'partial', { statusReport });
     },
   }),
+
+  'with-resources': trait({
+    afterCreate(statusReport, server) {
+      server.create('resource', 'random-deployment', { statusReport });
+    },
+  }),
 });

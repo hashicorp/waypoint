@@ -1,6 +1,6 @@
 import { Model, belongsTo } from 'ember-cli-mirage';
 import { Status } from 'waypoint-pb';
-import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
+import { dateToTimestamp } from '../utils';
 
 export default Model.extend({
   owner: belongsTo({ polymorphic: true }),
@@ -18,11 +18,3 @@ export default Model.extend({
     return result;
   },
 });
-
-function dateToTimestamp(date: Date): Timestamp {
-  let result = new Timestamp();
-
-  result.setSeconds(Math.floor(date.valueOf() / 1000));
-
-  return result;
-}

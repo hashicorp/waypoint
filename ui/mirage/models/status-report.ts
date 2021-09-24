@@ -10,6 +10,7 @@ export default Model.extend({
   status: belongsTo({ inverse: 'owner' }),
   health: belongsTo({ inverse: 'statusReport' }),
   resourcesHealthList: hasMany('health', { inverse: 'statusReportList' }),
+  resources: hasMany(),
 
   toProtobuf(): StatusReport {
     let result = new StatusReport();
@@ -27,6 +28,8 @@ export default Model.extend({
     // TODO: result.setStatusReport(value?: google_protobuf_any_pb.Any)
     result.setHealth(this.health?.toProtobuf());
     result.setDeprecatedResourcesHealthList(this.resourcesHealthList.models.map((h) => h.toProtobuf()));
+
+    result.setResourcesList(this.resources.models.map((r) => r.toProtobuf()));
 
     return result;
   },
