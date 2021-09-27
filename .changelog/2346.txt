@@ -1,0 +1,4 @@
+```release-note:improvement
+core: server with custom TLS certificates will automatically reload and rotate
+the TLS certificates when they change on disk
+```
