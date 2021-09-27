@@ -4,9 +4,7 @@ import { GetJobStreamRequest, GetJobStreamResponse } from 'waypoint-pb';
 
 import ApiService from 'waypoint/services/api';
 import Component from '@glimmer/component';
-import { Status } from 'grpc-web';
 import { Terminal } from 'xterm';
-import { action } from '@ember/object';
 import { createTerminal } from 'waypoint/utils/terminal';
 import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
@@ -15,15 +13,10 @@ interface OperationLogsArgs {
   jobId: string;
 }
 
-type LogLine = Record<string, unknown>;
-
 export default class OperationLogs extends Component<OperationLogsArgs> {
   @service api!: ApiService;
 
   @tracked terminal!: Terminal;
-  @tracked logLines: LogLine[];
-  @tracked isFollowingLogs = true;
-  @tracked badgeCount = 0;
 
   // https://github.com/hashicorp/waypoint-plugin-sdk/blob/baf566811af680c5df138f9915d756f67d271b1a/terminal/ui.go#L126-L135
   headerStyle = 'header';
@@ -43,42 +36,7 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
   constructor(owner: unknown, args: OperationLogsArgs) {
     super(owner, args);
     this.terminal = createTerminal({ inputDisabled: true });
-    // this.logLines = [];
     this.startTerminalStream();
-  }
-
-  addLogLine(t: string, logLine: LogLine): void {
-    this.logLines = [...this.logLines, { type: t, logLine: logLine }];
-    if (this.isFollowingLogs === false) {
-      this.badgeCount = this.badgeCount + 1;
-    }
-  }
-
-  @action
-  followLogs(element: HTMLElement | Event): void {
-    if (element instanceof Event) {
-      if (element.target instanceof HTMLElement) {
-        element = element.target;
-      } else {
-        return;
-      }
-    }
-
-    let scrollableElement = element.closest('.output-scroll-y');
-
-    if (!scrollableElement) {
-      return;
-    }
-
-    scrollableElement.scroll(0, scrollableElement.scrollHeight);
-  }
-
-  @action
-  updateScroll(element: HTMLElement): void {
-    if (this.isFollowingLogs === true) {
-      element.scrollIntoView(false);
-      this.badgeCount = 0;
-    }
   }
 
   writeTerminalOutput(response: GetJobStreamResponse): void {
@@ -86,7 +44,7 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
     if (event == GetJobStreamResponse.EventCase.TERMINAL) {
       let terminalOutput = response.getTerminal();
       if (!terminalOutput) {
-        this.terminal.writeln('status', { msg: 'Logs are no longer available for this operation' });
+        this.terminal.writeln('Logs are no longer available for this operation');
       } else {
         terminalOutput.getEventsList().forEach((event) => {
           let line = event.getLine();
@@ -160,7 +118,7 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
 
   onStatus = (status: any): void => {
     if (status.details) {
-      this.terminal.writeln(status);
+      this.terminal.writeln(status.details);
     }
   };
 }
