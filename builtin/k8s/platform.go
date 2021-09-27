@@ -536,6 +536,8 @@ func (p *Platform) resourceDeploymentCreate(
 		Resources: resourceRequirements,
 	}
 
+	for _, sidecar := range p.config.Pod
+
 	if p.config.Pod != nil && p.config.Pod.Container != nil {
 		containerCfg := p.config.Pod.Container
 		if containerCfg.Command != nil {
@@ -1239,7 +1241,8 @@ type Config struct {
 
 	// A full resource of options to define ports for your service running on the container
 	// Defaults to port 3000.
-	Ports []map[string]string `hcl:"ports,optional"`
+	// Todo(XX): add in HCL parse logic to warn if defining ports the old way, & update docs
+	Ports []*Port `hcl:"ports,optional"`
 
 	// If set, this is the HTTP path to request to test that the application
 	// is up and running. Without this, we only test that a connection can be
@@ -1303,6 +1306,29 @@ type AutoscaleConfig struct {
 type Pod struct {
 	SecurityContext *PodSecurityContext `hcl:"security_context,block"`
 	Container       *Container          `hcl:"container,block"`
+	Sidecars        []*SidecarContainer `hcl:"sidecar,block"`
+}
+
+// SidecarContainer describes the configuration for the sidecar container
+type SidecarContainer struct {
+	Name          string            `hcl:"name"`
+	Image         string            `hcl:"image"`
+	Ports         []*Port           `hcl:"ports,optional"`
+	ProbePath     string            `hcl:"probe_path,optional"`
+	Probe         *Probe            `hcl:"probe,block"`
+	CPU           *ResourceConfig   `hcl:"cpu,block"`
+	Memory        *ResourceConfig   `hcl:"memory,block"`
+	Resources     map[string]string `hcl:"resources,optional"`
+	Command       *[]string         `hcl:"command"`
+	Args          *[]string         `hcl:"args"`
+	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+}
+
+type Port struct {
+	Name     string `hcl:"name"`
+	Port     string `hcl:"port"`
+	HostPort string `hcl:"host_port,optional"`
+	HostIP   string `hcl:"host_ip,optional"`
 }
 
 // Container describes the commands and arguments for a container config
