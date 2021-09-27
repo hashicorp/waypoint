@@ -16,6 +16,11 @@ export function createTerminal(options: TerminalOptions): Terminal {
     theme: terminalTheme.light,
   };
 
+  // Switch to dark theme if enabled
+  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    terminalOptions.theme = terminalTheme.dark;
+  }
+
   if (options.inputDisabled) {
     terminalOptions.disableStdin = true;
     terminalOptions.cursorBlink = false;
