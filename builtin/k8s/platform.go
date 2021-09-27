@@ -290,6 +290,71 @@ func (p *Platform) resourceDeploymentStatus(
 	return nil
 }
 
+func configureK8sContainer(
+	name string,
+	image string,
+	ports []*Port,
+) (*corev1.Container, error) {
+	// If the user is using the latest tag, then don't specify an overriding pull policy.
+	// This by default means kubernetes will always pull so that latest is useful.
+	splitImage := strings.Split(image, ":")
+	var pullPolicy corev1.PullPolicy
+	if len(splitImage) == 1 {
+		// If no tag is set, docker will default to "latest", and we always want to pull.
+		pullPolicy = corev1.PullAlways
+	} else if len(splitImage) == 2 {
+		tag := splitImage[1]
+		if tag == "latest" {
+			// Always pull a latest image, so the k8s workers don't use their local cache and ignore new changes.
+			pullPolicy = corev1.PullAlways
+		} else {
+			// A tag is present, we can use k8s worker caching
+			pullPolicy = corev1.PullIfNotPresent
+		}
+	} else {
+		return nil, status.Errorf(codes.InvalidArgument, "image %s is in an invalid format", config.Image)
+	}
+
+	var k8sPorts []corev1.ContainerPort
+	for _, port := range ports {
+		k8sPorts = append(k8sPorts, corev1.ContainerPort{
+			Name:     port.Name,
+			HostPort: int32(port.HostPort),
+			HostIP:   port.HostIP,
+			Protocol: corev1.Protocol(strings.TrimSpace(strings.ToUpper(port.Protocol))),
+		})
+	}
+
+	container := corev1.Container{
+		Name:            name,
+		Image:           image,
+		ImagePullPolicy: pullPolicy,
+		Ports:           k8sPorts,
+		LivenessProbe: &corev1.Probe{
+			Handler: corev1.Handler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromInt(defaultPort),
+				},
+			},
+			InitialDelaySeconds: initialDelaySeconds,
+			TimeoutSeconds:      timeoutSeconds,
+			FailureThreshold:    failureThreshold,
+		},
+		ReadinessProbe: &corev1.Probe{
+			Handler: corev1.Handler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromInt(defaultPort),
+				},
+			},
+			InitialDelaySeconds: initialDelaySeconds,
+			TimeoutSeconds:      timeoutSeconds,
+		},
+		Env:       env,
+		Resources: resourceRequirements,
+	}
+	return container
+}
+
 // resourceDeploymentCreate creates the Kubernetes deployment.
 func (p *Platform) resourceDeploymentCreate(
 	ctx context.Context,
@@ -347,6 +412,12 @@ func (p *Platform) resourceDeploymentCreate(
 			" 'ports' for configuring multiple container ports.")
 	}
 
+	appContainer := configureK8sContainer(
+		src.App,
+		fmt.Sprintf("%s:%s", img.Image,img.Tag),
+		ports: // TODO: use new fancy ports
+	)
+
 	// Build our env vars
 	env := []corev1.EnvVar{
 		{
@@ -385,13 +456,6 @@ func (p *Platform) resourceDeploymentCreate(
 	// Apply user defined labels
 	for k, v := range p.config.Labels {
 		deployment.Spec.Template.Labels[k] = v
-	}
-
-	// If the user is using the latest tag, then don't specify an overriding pull policy.
-	// This by default means kubernetes will always pull so that latest is useful.
-	pullPolicy := corev1.PullIfNotPresent
-	if img.Tag == "latest" {
-		pullPolicy = ""
 	}
 
 	// Get container resource limits and requests
@@ -511,7 +575,7 @@ func (p *Platform) resourceDeploymentCreate(
 	container := corev1.Container{
 		Name:            result.Name,
 		Image:           img.Name(),
-		ImagePullPolicy: pullPolicy,
+		ImagePullPolicy: "",
 		Ports:           containerPorts,
 		LivenessProbe: &corev1.Probe{
 			Handler: corev1.Handler{
@@ -536,7 +600,7 @@ func (p *Platform) resourceDeploymentCreate(
 		Resources: resourceRequirements,
 	}
 
-	for _, sidecar := range p.config.Pod
+	//for _, sidecar := range p.config.Pod
 
 	if p.config.Pod != nil && p.config.Pod.Container != nil {
 		containerCfg := p.config.Pod.Container
@@ -1242,7 +1306,8 @@ type Config struct {
 	// A full resource of options to define ports for your service running on the container
 	// Defaults to port 3000.
 	// Todo(XX): add in HCL parse logic to warn if defining ports the old way, & update docs
-	Ports []*Port `hcl:"ports,optional"`
+	//Ports []*Port `hcl:"ports,optional"`
+	Ports []map[string]string `hcl:"ports,optional"`
 
 	// If set, this is the HTTP path to request to test that the application
 	// is up and running. Without this, we only test that a connection can be
@@ -1319,16 +1384,17 @@ type SidecarContainer struct {
 	CPU           *ResourceConfig   `hcl:"cpu,block"`
 	Memory        *ResourceConfig   `hcl:"memory,block"`
 	Resources     map[string]string `hcl:"resources,optional"`
-	Command       *[]string         `hcl:"command"`
-	Args          *[]string         `hcl:"args"`
+	Command       *[]string         `hcl:"command,optional"`
+	Args          *[]string         `hcl:"args,optional"`
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 }
 
 type Port struct {
 	Name     string `hcl:"name"`
 	Port     string `hcl:"port"`
-	HostPort string `hcl:"host_port,optional"`
+	HostPort int    `hcl:"host_port,optional"`
 	HostIP   string `hcl:"host_ip,optional"`
+	Protocol string `hcl:"protocol,optional"`
 }
 
 // Container describes the commands and arguments for a container config
