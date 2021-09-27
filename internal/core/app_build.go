@@ -185,13 +185,13 @@ func (op *buildOperation) StatusPtr(msg proto.Message) **pb.Status {
 	return &(msg.(*pb.Build).Status)
 }
 
-func (op *buildOperation) ValuePtr(msg proto.Message) **any.Any {
+func (op *buildOperation) ValuePtr(msg proto.Message) (**any.Any, *string) {
 	v := msg.(*pb.Build)
 	if v.Artifact == nil {
 		v.Artifact = &pb.Artifact{}
 	}
 
-	return &v.Artifact.Artifact
+	return &v.Artifact.Artifact, &v.Artifact.ArtifactJson
 }
 
 var _ operation = (*buildOperation)(nil)
