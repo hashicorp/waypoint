@@ -13,6 +13,10 @@ const xForwardedProto = "X-Forwarded-Proto"
 func forceTLSHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		scheme := r.URL.Scheme
+		if r.TLS != nil {
+			// If we have an active TLS connection, consider this HTTPS
+			scheme = "https"
+		}
 		if v := r.Header.Get(xForwardedProto); v != "" {
 			scheme = strings.ToLower(v)
 		}

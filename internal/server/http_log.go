@@ -54,6 +54,7 @@ func httpLogHandler(handler http.Handler, log hclog.Logger) http.Handler {
 			"http.response_size", params.Size,
 			"http.scheme", scheme,
 			"http.scheme_forwarded", forwarded,
+			"http.tls", req.TLS != nil,
 			"http.status_code", params.StatusCode,
 			"http.useragent", req.UserAgent(),
 			"http.version", req.Proto,
