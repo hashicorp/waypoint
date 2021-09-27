@@ -135,6 +135,10 @@
     "path": "context-verify"
   },
   {
+    "title": "context set",
+    "path": "context-set"
+  },
+  {
     "title": "deployment deploy",
     "path": "deployment-deploy"
   },

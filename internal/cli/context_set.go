@@ -39,7 +39,6 @@ func (c *ContextSetCommand) Run(args []string) int {
 	}
 
 	if contextName == "" || contextName == "-" {
-		// TODO log error
 		c.ui.Output(
 			clierrors.Humanize(errors.New("no default context exists")),
 			terminal.WithErrorStyle(),

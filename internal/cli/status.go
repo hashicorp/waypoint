@@ -1179,18 +1179,20 @@ func (c *StatusCommand) getWorkspaceFromProject(pr *pb.GetProjectResponse) (stri
 	var workspace string
 
 	if len(pr.Workspaces) != 0 {
-		// TODO (clint): verify this is fine with the removal of default
-		// workspace flag setting
-		if c.flagWorkspace != "" {
+		wp, err := c.workspace()
+		if err != nil {
+			return "", err
+		}
+		if wp != "" {
 			for _, ws := range pr.Workspaces {
-				if ws.Workspace.Workspace == c.flagWorkspace {
+				if ws.Workspace.Workspace == wp {
 					workspace = ws.Workspace.Workspace
 					break
 				}
 			}
 
 			if workspace == "" {
-				return "", fmt.Errorf("Failed to find project in requested workspace %q", c.flagWorkspace)
+				return "", fmt.Errorf("Failed to find project in requested workspace %q", wp)
 			}
 		} else {
 			// No workspace flag specified, try the "first" one
