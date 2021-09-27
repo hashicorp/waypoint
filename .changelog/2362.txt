@@ -1,0 +1,4 @@
+```release-note:improvement
+config: input variables (`variable`) can now use an `env` key to specify
+alternate environment variable names to source variable values from
+```
