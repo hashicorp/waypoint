@@ -3240,6 +3240,7 @@ message StatusReport {
   // StatusReport is the raw SDK report object encoded directly from the plugin.
   // This message is a StatusReport proto that exists inside the SDK
   google.protobuf.Any status_report = 7;
+  string status_report_json = 13;
 
   // The overall health of the deployment or release as reported by the plugin.
   // Copied from the plugin generated raw SDK status report for convenient API access.
