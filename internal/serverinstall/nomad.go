@@ -140,11 +140,15 @@ func (i *NomadInstaller) Install(
 	}
 
 	if strings.ToLower(i.config.volumeType) == "csi" {
+		if !c.config.csiVolumeProvider {
+			return nil, fmt.Errorf("please include '-nomad-csi-volume-provider' flag")
+		}
+
 		s.Update("Creating persistent volume")
 
 		vol := api.CSIVolume{
-			ID:   "waypoint1001",
-			Name: "waypoint1001",
+			ID:   "waypoint",
+			Name: "waypoint",
 			RequestedCapabilities: []*api.CSIVolumeCapability{
 				{
 					AccessMode:     "single-node-writer",
@@ -164,6 +168,8 @@ func (i *NomadInstaller) Install(
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "Failed creating Nomad persistent volume ID %s: %s", vol.ID, err)
 		}
+	} else if strings.ToLower(i.config.volumeType) == "host" && i.config.hostVolume == "" {
+		return nil, fmt.Errorf("please include '-nomad-host-volume' flag")
 	}
 
 	s.Update("Installing Waypoint server to Nomad")
@@ -706,7 +712,7 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	}
 
 	if strings.ToLower(c.volumeType) == "csi" {
-		volumeRequest.Source = "waypoint1001"
+		volumeRequest.Source = "waypoint"
 		volumeRequest.AccessMode = "single-node-writer"
 		volumeRequest.AttachmentMode = "file-system"
 	} else {
