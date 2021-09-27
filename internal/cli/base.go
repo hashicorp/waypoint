@@ -226,16 +226,18 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	// If we have an app target requirement, we have to get it from the args
 	// or the config.
-	if baseCfg.AppTargetRequired {
+	if baseCfg.AppTargetRequired || baseCfg.ProjectTargetRequired {
 		// If we have args, attempt to extract there first.
 		if len(c.args) > 0 {
 			match := reAppTarget.FindStringSubmatch(c.args[0])
 			if match != nil {
 				// Set our refs
 				c.refProject = &pb.Ref_Project{Project: match[1]}
-				c.refApp = &pb.Ref_Application{
-					Project:     match[1],
-					Application: match[2],
+				if match[2] != "" {
+					c.refApp = &pb.Ref_Application{
+						Project:     match[1],
+						Application: match[2],
+					}
 				}
 
 				// Shift the args
@@ -369,6 +371,19 @@ func (c *baseCommand) Init(opts ...Option) error {
 			c.refApp = &pb.Ref_Application{
 				Project:     c.cfg.Project,
 				Application: c.cfg.Apps()[0],
+			}
+		}
+	}
+
+	if baseCfg.ProjectTargetRequired {
+		if c.refProject == nil {
+			if len(c.cfg.Project) == 0 {
+				c.ui.Output(errProjectMode, terminal.WithErrorStyle())
+				return ErrSentinel
+			}
+
+			c.refProject = &pb.Ref_Project{
+				Project: c.cfg.Project,
 			}
 		}
 	}
@@ -688,7 +703,11 @@ This command requires a single targeted app. You have multiple apps defined
 so you can specify the app to target using the "-app" flag.
 `)
 
-	reAppTarget = regexp.MustCompile(`^(?P<project>[-0-9A-Za-z_]+)/(?P<app>[-0-9A-Za-z_]+)$`)
+	errProjectMode = strings.TrimSpace(`
+This command requires a targeted project.`)
+
+	// matches either "project" or "project/app"
+	reAppTarget = regexp.MustCompile(`^(?P<project>[-0-9A-Za-z_]+)/?(?P<app>[-0-9A-Za-z_]+)?$`)
 
 	snapshotUnimplementedErr = strings.TrimSpace(`
 The current Waypoint server does not support snapshots. Rerunning the command
