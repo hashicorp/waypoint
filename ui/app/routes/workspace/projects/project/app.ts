@@ -11,6 +11,7 @@ export interface Params {
 }
 
 export interface Model {
+  project: Project.AsObject;
   application: Ref.Application.AsObject;
   deployments: (Deployment.AsObject & WithStatusReport)[];
   releases: (Release.AsObject & WithStatusReport)[];
