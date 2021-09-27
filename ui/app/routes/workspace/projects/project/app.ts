@@ -11,6 +11,7 @@ export interface Params {
 }
 
 export interface Model {
+  project: Project.AsObject;
   application: Ref.Application.AsObject;
   deployments: (Deployment.AsObject & WithStatusReport)[];
   releases: (Release.AsObject & WithStatusReport)[];
@@ -56,6 +57,7 @@ export default class App extends Route {
     appRef.setProject(proj.name);
 
     return hash({
+      project: proj,
       application: appRef.toObject(),
       deployments: this.api.listDeployments(wsRef, appRef),
       releases: this.api.listReleases(wsRef, appRef),

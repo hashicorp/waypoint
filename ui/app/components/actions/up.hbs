@@ -1,0 +1,12 @@
+<span class="up-button">
+  {{#if this.currentMessage}}
+    <code class="up-button__msg">{{this.currentMessage}}</code>
+  {{/if}}
+  <Pds::Button
+    @variant="primary"
+    disabled={{this.up.isRunning}}
+    {{on "click" (perform this.up @application)}}
+  >
+    Deploy &amp; Release
+  </Pds::Button>
+</span>

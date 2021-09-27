@@ -21,22 +21,26 @@
     </small>
   </div>
   <div class="actions">
-    {{#if @model.releases.length}}
-    <LatestReleaseUrl @releases={{@model.releases}}></LatestReleaseUrl>
+    {{#if (and (project-is-remote-uppable @model.project) (not @model.releases.length))}}
+      <Actions::Up @application={{@model.application}} />
     {{else}}
-    <div class="first-run-hint">
-      {{#if (and @model.builds.length @model.deployments.length)}}
-      <p>To create your first release from your latest deployment, run:</p>
-      <CopyableCode @ref="hint-release" @inline="true">
-        <code id="hint-release">waypoint release</code>
-      </CopyableCode>
+      {{#if @model.releases.length}}
+      <LatestReleaseUrl @releases={{@model.releases}}></LatestReleaseUrl>
       {{else}}
-      <p>To create your first release, run the following to create a build, deployment and release:</p>
-      <CopyableCode @ref="hint-release" @inline="true">
-        <code id="hint-release">waypoint up</code>
-      </CopyableCode>
+      <div class="first-run-hint">
+        {{#if (and @model.builds.length @model.deployments.length)}}
+        <p>To create your first release from your latest deployment, run:</p>
+        <CopyableCode @ref="hint-release" @inline="true">
+          <code id="hint-release">waypoint release</code>
+        </CopyableCode>
+        {{else}}
+        <p>To create your first release, run the following to create a build, deployment and release:</p>
+        <CopyableCode @ref="hint-release" @inline="true">
+          <code id="hint-release">waypoint up</code>
+        </CopyableCode>
+        {{/if}}
+      </div>
       {{/if}}
-    </div>
     {{/if}}
   </div>
 </PageHeader>
