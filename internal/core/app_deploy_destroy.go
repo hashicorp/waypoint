@@ -247,8 +247,8 @@ func (op *deployDestroyOperation) StatusPtr(msg proto.Message) **pb.Status {
 	return nil
 }
 
-func (op *deployDestroyOperation) ValuePtr(msg proto.Message) **any.Any {
-	return nil
+func (op *deployDestroyOperation) ValuePtr(msg proto.Message) (**any.Any, *string) {
+	return nil, nil
 }
 
 var _ operation = (*deployDestroyOperation)(nil)

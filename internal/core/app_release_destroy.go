@@ -266,8 +266,8 @@ func (op *releaseDestroyOperation) StatusPtr(msg proto.Message) **pb.Status {
 	return nil
 }
 
-func (op *releaseDestroyOperation) ValuePtr(msg proto.Message) **any.Any {
-	return nil
+func (op *releaseDestroyOperation) ValuePtr(msg proto.Message) (**any.Any, *string) {
+	return nil, nil
 }
 
 var _ operation = (*releaseDestroyOperation)(nil)

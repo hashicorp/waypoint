@@ -421,8 +421,8 @@ func (op *statusReportOperation) StatusPtr(msg proto.Message) **pb.Status {
 	return &(msg.(*pb.StatusReport).Status)
 }
 
-func (op *statusReportOperation) ValuePtr(msg proto.Message) **any.Any {
-	return &(msg.(*pb.StatusReport).StatusReport)
+func (op *statusReportOperation) ValuePtr(msg proto.Message) (**any.Any, *string) {
+	return &(msg.(*pb.StatusReport).StatusReport), &(msg.(*pb.StatusReport).StatusReportJson)
 }
 
 // serverToSDKStatusReport converts a pb.StatusReport to an SDK one.

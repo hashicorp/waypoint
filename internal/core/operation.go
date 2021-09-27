@@ -40,9 +40,11 @@ type operation interface {
 	Do(context.Context, hclog.Logger, *App, proto.Message) (interface{}, error)
 
 	// StatusPtr and ValuePtr return pointers to the fields in the message
-	// for the status and values respectively.
+	// for the status and values respectively. For ValuePtr, it returns both
+	// a pointer to store the raw message as well as a pointer to store the JSON
+	// of the message. The JSON pointer can be nil and it won't be stored.
 	StatusPtr(proto.Message) **pb.Status
-	ValuePtr(proto.Message) **any.Any
+	ValuePtr(proto.Message) (**any.Any, *string)
 
 	// Hooks are the hooks to execute as part of this operation keyed by "when"
 	Hooks(*App) map[string][]*config.Hook
@@ -102,10 +104,14 @@ func (a *App) doOperation(
 
 	// Get where we'll set the value. Similar to statusPtr, we set this
 	// to a local value if we get nil so that we can avoid nil checks.
-	valuePtr := op.ValuePtr(msg)
+	valuePtr, valueJsonPtr := op.ValuePtr(msg)
 	if valuePtr == nil {
 		var value *any.Any
 		valuePtr = &value
+	}
+	if valueJsonPtr == nil {
+		var valueJson string
+		valueJsonPtr = &valueJson
 	}
 
 	var doErr error
@@ -188,6 +194,17 @@ func (a *App) doOperation(
 				*valuePtr, err = component.ProtoAny(result)
 				if err != nil {
 					doErr = err
+				}
+			}
+
+			// If we can marshal as JSON, do it
+			*valueJsonPtr = ""
+			if m, ok := result.(json.Marshaler); ok {
+				raw, err := m.MarshalJSON()
+				if err != nil {
+					doErr = err
+				} else {
+					*valueJsonPtr = string(raw)
 				}
 			}
 		}

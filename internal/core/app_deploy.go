@@ -393,8 +393,8 @@ func (op *deployOperation) StatusPtr(msg proto.Message) **pb.Status {
 	return &(msg.(*pb.Deployment).Status)
 }
 
-func (op *deployOperation) ValuePtr(msg proto.Message) **any.Any {
-	return &(msg.(*pb.Deployment).Deployment)
+func (op *deployOperation) ValuePtr(msg proto.Message) (**any.Any, *string) {
+	return &(msg.(*pb.Deployment).Deployment), &(msg.(*pb.Deployment).DeploymentJson)
 }
 
 var _ operation = (*deployOperation)(nil)

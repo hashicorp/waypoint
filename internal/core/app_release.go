@@ -257,8 +257,8 @@ func (op *releaseOperation) StatusPtr(msg proto.Message) **pb.Status {
 	return &(msg.(*pb.Release).Status)
 }
 
-func (op *releaseOperation) ValuePtr(msg proto.Message) **any.Any {
-	return &(msg.(*pb.Release).Release)
+func (op *releaseOperation) ValuePtr(msg proto.Message) (**any.Any, *string) {
+	return &(msg.(*pb.Release).Release), &(msg.(*pb.Release).ReleaseJson)
 }
 
 var _ operation = (*releaseOperation)(nil)
