@@ -194,7 +194,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 	var httpInsecureLn net.Listener
 	if c.config.HTTPInsecure.Addr != "" {
 		c.config.HTTPInsecure.TLSDisable = true
-		httpInsecureLn, err := c.listenerForConfig(log.Named("http_insecure"), &c.config.HTTPInsecure)
+		httpInsecureLn, err = c.listenerForConfig(log.Named("http_insecure"), &c.config.HTTPInsecure)
 		if err != nil {
 			c.ui.Output(
 				"Error starting insecure HTTP listener: %s", err.Error(),
@@ -235,6 +235,10 @@ func (c *ServerRunCommand) Run(args []string) int {
 		{Name: "DB Path", Value: path},
 		{Name: "gRPC Address", Value: ln.Addr().String()},
 		{Name: "HTTP Address", Value: httpLn.Addr().String()},
+	}
+	if httpInsecureLn != nil {
+		values = append(values, terminal.NamedValue{
+			Name: "HTTP Address (Insecure)", Value: httpInsecureLn.Addr().String()})
 	}
 	if auth {
 		values = append(values, terminal.NamedValue{Name: "Auth Required", Value: "yes"})
