@@ -59,6 +59,9 @@ var (
 			{
 				Name: "description",
 			},
+			{
+				Name: "env",
+			},
 		},
 	}
 )
@@ -69,6 +72,10 @@ type Variable struct {
 
 	// The default value in the variable definition
 	Default *Value
+
+	// A list of environment variables that will be sourced to satisfy
+	// the value of this variable.
+	Env []string
 
 	// Cty Type of the variable. If the default value or a collected value is
 	// not of this type nor can be converted to this type an error diagnostic
@@ -95,6 +102,7 @@ type HclVariable struct {
 	Default     cty.Value      `hcl:"default,optional"`
 	Type        hcl.Expression `hcl:"type,optional"`
 	Description string         `hcl:"description,optional"`
+	Env         []string       `hcl:"env,optional"`
 }
 
 // Values are used to store values collected from various sources.
@@ -175,6 +183,14 @@ func decodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 			return nil, diags
 		}
 		v.Type = t
+	}
+
+	if attr, exists := content.Attributes["env"]; exists {
+		valDiags := gohcl.DecodeExpression(attr.Expr, nil, &v.Env)
+		diags = append(diags, valDiags...)
+		if diags.HasErrors() {
+			return nil, diags
+		}
 	}
 
 	if attr, exists := content.Attributes["default"]; exists {

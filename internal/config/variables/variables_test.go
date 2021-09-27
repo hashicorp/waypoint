@@ -63,7 +63,7 @@ func TestVariables_DecodeVariableBlock(t *testing.T) {
 			}
 
 			if tt.err == "" {
-				require.False(diags.HasErrors())
+				require.False(diags.HasErrors(), diags.Error())
 				return
 			}
 
