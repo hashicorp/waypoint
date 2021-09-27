@@ -171,7 +171,8 @@ func (op *buildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ 
 					log.Warn("unexpected response type from callDynamicFunc")
 				}
 			} else {
-				log.Warn("error calling dynamic func", "error", err)
+				log.Error("error calling dynamic func", "error", err)
+				return err
 			}
 		}
 	}
