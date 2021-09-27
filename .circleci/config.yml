@@ -6,6 +6,7 @@ references:
     go: &GOLANG_IMAGE docker.mirror.hashicorp.services/circleci/golang:1.16
     middleman: &MIDDLEMAN_IMAGE docker.mirror.hashicorp.services/hashicorp/middleman-hashicorp:0.3.44
     ember: &EMBER_IMAGE docker.mirror.hashicorp.services/circleci/node:12-browsers
+    website: &WEBSITE_IMAGE docker.mirror.hashicorp.services/node:14
 
   paths:
     test-results: &TEST_RESULTS_DIR /tmp/test-results
@@ -92,7 +93,7 @@ jobs:
 
   check-website-mdx:
     docker:
-      - image: *EMBER_IMAGE
+      - image: *WEBSITE_IMAGE
     environment:
       <<: *ENVIRONMENT
     steps:
@@ -101,7 +102,7 @@ jobs:
       - run:
           command: git status
       - run:
-          command: cd ./website; npm install
+          command: cd ./website; npm i -g npm@latest; npm install
       - run:
           command: cd ./website; npx --no-install next-hashicorp format
       - run: |
@@ -411,7 +412,7 @@ jobs:
 
   algolia-index:
     docker:
-      - image: docker.mirror.hashicorp.services/node:12
+      - image: *WEBSITE_IMAGE
     steps:
       - checkout
       - run:
