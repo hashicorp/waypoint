@@ -731,13 +731,13 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	task.Config = map[string]interface{}{
 		"image":          c.serverImage,
 		"ports":          []string{"server", "ui"},
-		"args":           ras
+		"args":           ras,
 		"auth_soft_fail": c.authSoftFail,
 	}
 	task.Env = map[string]string{
 		"PORT": defaultGrpcPort,
 	}
-	
+
 	readOnly := false
 	volume := "waypoint-server"
 	destination := "/data"
