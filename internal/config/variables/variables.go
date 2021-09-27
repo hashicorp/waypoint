@@ -294,6 +294,41 @@ func LoadVariableValues(vars map[string]string, files []string) ([]*pb.Variable,
 	return ret, diags
 }
 
+// LoadEnvValues loads the variable values from environment variables
+// specified via the `env` field on the `variable` stanza.
+func LoadEnvValues(vars map[string]*Variable) ([]*pb.Variable, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+	var ret []*pb.Variable
+
+	for _, variable := range vars {
+		// First we check for the WP_VAR_ value cause that always wins.
+		v := os.Getenv(varEnvPrefix + variable.Name)
+
+		// If we didn't find one and we have other sources, check those.
+		if v == "" && len(variable.Env) > 0 {
+			for _, env := range variable.Env {
+				v = os.Getenv(env)
+				if v != "" {
+					break
+				}
+			}
+		}
+
+		// If we still have no value, then we set nothing.
+		if v == "" {
+			continue
+		}
+
+		ret = append(ret, &pb.Variable{
+			Name:   variable.Name,
+			Value:  &pb.Variable_Str{Str: v},
+			Source: &pb.Variable_Env{},
+		})
+	}
+
+	return ret, diags
+}
+
 // EvaluateVariables evaluates the provided variable values and validates their
 // types per the type declared in the waypoint.hcl for that variable name.
 // The order in which values are evaluated corresponds to their precedence, with
