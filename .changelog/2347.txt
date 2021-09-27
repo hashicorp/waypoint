@@ -1,0 +1,4 @@
+```release-note:improvement
+cli: `server run` can now create a non-TLS HTTP listener. This listener
+redirects to HTTPS unless X-Forwarded-Proto is https.
+```

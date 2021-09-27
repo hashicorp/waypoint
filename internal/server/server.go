@@ -47,18 +47,19 @@ func Run(opts ...Option) error {
 		wg.Done()
 	}()
 
-	httpErrs := make(chan error, 1)
-	httpEnabled := cfg.HTTPListener != nil
-	var httpServer *httpServer
-	if httpEnabled {
+	var httpServers []*httpServer
+	httpErrs := make(chan error, len(cfg.HTTPListener))
+	for _, ln := range cfg.HTTPListener {
 		wg.Add(1)
-		httpServer = newHttpServer(grpcServer.server, &cfg)
+		httpServer := newHttpServer(grpcServer.server, ln, &cfg)
 		go func() {
 			err := httpServer.start()
 			httpErrs <- err
 			log.Debug("HTTP server has exited", "err", err)
 			wg.Done()
 		}()
+
+		httpServers = append(httpServers, httpServer)
 	}
 
 	ctx, cancel := context.WithCancel(cfg.Context)
@@ -68,7 +69,7 @@ func Run(opts ...Option) error {
 	select {
 	case err := <-gprcErrs:
 		// If the GRPC server errored, we can assume it's closed and shut down the http server if necessary
-		if httpEnabled {
+		for _, httpServer := range httpServers {
 			httpServer.close()
 		}
 		log.Error("failed running the grpc server", "err", err)
@@ -81,7 +82,7 @@ func Run(opts ...Option) error {
 	case <-cfg.Context.Done():
 		// Received an external shutdown signal, and should close everything.
 		// NOTE: must close HTTP server before GRPC server.
-		if httpEnabled {
+		for _, httpServer := range httpServers {
 			httpServer.close()
 		}
 		grpcServer.close()
@@ -112,7 +113,7 @@ type options struct {
 
 	// HTTPListener will setup the HTTP server. If this is nil, then
 	// the HTTP-based API will be disabled.
-	HTTPListener net.Listener
+	HTTPListener []net.Listener
 
 	// AuthChecker, if set, activates authentication checking on the server.
 	AuthChecker AuthChecker
@@ -142,8 +143,10 @@ func WithGRPC(ln net.Listener) Option {
 // WithHTTP sets the HTTP listener. This listener must be closed manually
 // by the caller. Prior to closing the listener, it is recommended that you
 // cancel the context set with WithContext and wait for Run to return.
+//
+// If this is called multiple times, multiple HTTP listeners are started.
 func WithHTTP(ln net.Listener) Option {
-	return func(opts *options) { opts.HTTPListener = ln }
+	return func(opts *options) { opts.HTTPListener = append(opts.HTTPListener, ln) }
 }
 
 // WithImpl sets the service implementation to serve.

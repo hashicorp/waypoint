@@ -191,12 +191,29 @@ func (c *ServerRunCommand) Run(args []string) int {
 	}
 	defer httpLn.Close()
 
+	var httpInsecureLn net.Listener
+	if c.config.HTTPInsecure.Addr != "" {
+		c.config.HTTPInsecure.TLSDisable = true
+		httpInsecureLn, err := c.listenerForConfig(log.Named("http_insecure"), &c.config.HTTPInsecure)
+		if err != nil {
+			c.ui.Output(
+				"Error starting insecure HTTP listener: %s", err.Error(),
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+		defer httpInsecureLn.Close()
+	}
+
 	options := []server.Option{
 		server.WithContext(c.Ctx),
 		server.WithLogger(log),
 		server.WithGRPC(ln),
 		server.WithHTTP(httpLn),
 		server.WithImpl(impl),
+	}
+	if httpInsecureLn != nil {
+		options = append(options, server.WithHTTP(httpInsecureLn))
 	}
 	auth := false
 	if ac, ok := impl.(server.AuthChecker); ok {
@@ -323,6 +340,15 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Target:  &c.config.HTTP.Addr,
 			Usage:   "Address to bind to for HTTP connections. Required for the UI.",
 			Default: "127.0.0.1:9702",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "listen-http-insecure",
+			Target: &c.config.HTTPInsecure.Addr,
+			Usage: "Address to bind to for insecure HTTP connections. " +
+				"This will not have TLS enabled. This will redirect users to the TLS " +
+				"port UNLESS there is an X-Forwarded-Proto header. This makes this port " +
+				"suitable for proxy backends.",
 		})
 
 		f.StringVar(&flag.StringVar{
