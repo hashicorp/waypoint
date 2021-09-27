@@ -34,9 +34,6 @@ page:
     resources:
       heading: Resources
       table-caption: Resources created by <b>this deployment</b>
-      empty-state:
-        summary: No resources available
-        detail: This deployment current has no associated resources
     logs:
       heading: Deployment Logs
   releases:

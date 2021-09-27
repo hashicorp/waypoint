@@ -29,6 +29,6 @@ module('Acceptance | deployment resource list', function (hooks) {
 
     await visit(`/default/${project.name}/app/${application.name}/deployment/seq/${deployment.sequence}`);
 
-    assert.dom('.empty-state').containsText('No resources available');
+    assert.dom('[data-test-resources-table]').doesNotExist();
   });
 });

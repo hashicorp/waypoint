@@ -30,23 +30,18 @@
 
   <StatusReportBar @model={{@model}} @artifactType="Deployment"/>
 
-  <Section>
-    <:heading>{{t "page.deployment.resources.heading"}}</:heading>
-    <:body>
-      {{#if @model.statusReport.resourcesList.length}}
+  {{#if @model.statusReport.resourcesList.length}}
+    <Section>
+      <:heading>{{t "page.deployment.resources.heading"}}</:heading>
+      <:body>
         <ResourcesTable @resources={{@model.statusReport.resourcesList}}>
           <:caption>
             {{t "page.deployment.resources.table-caption" htmlSafe=true}}
           </:caption>
         </ResourcesTable>
-      {{else}}
-        <EmptyState>
-          <p>{{t "page.deployment.resources.empty-state.summary"}}</p>
-          <p>{{t "page.deployment.resources.empty-state.detail"}}</p>
-        </EmptyState>
-      {{/if}}
-    </:body>
-  </Section>
+      </:body>
+    </Section>
+  {{/if}}
 
   <Section>
     <:heading>{{t "page.deployment.logs.heading"}}</:heading>
