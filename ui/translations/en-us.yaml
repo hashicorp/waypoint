@@ -214,7 +214,7 @@ resource-detail:
   overview:
     heading: Overview
     health: Health
-    age: Age
+    created: Created
     labels: Labels
     image: Image
   state-json:
