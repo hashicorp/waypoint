@@ -426,7 +426,6 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 	}
 
 	s.Update("Removing Waypoint server from Nomad...")
-
 	_, _, err = client.Jobs().Deregister(serverName, true, &api.WriteOptions{})
 	if err != nil {
 		ui.Output(
@@ -453,6 +452,19 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 	}
 
 	s.Update("Waypoint job and allocations purged")
+
+	vols, _, err := client.CSIVolumes().List(&api.QueryOptions{Prefix: "waypoint"})
+	for _, vol := range vols {
+		if vol.ID == "waypoint" {
+			s.Update("Destroying persistent CSI volume")
+			err = client.CSIVolumes().Deregister(vol.ID, false, &api.WriteOptions{})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	s.Update("Successfully destroyed persistent volumes")
 	s.Done()
 
 	return nil
