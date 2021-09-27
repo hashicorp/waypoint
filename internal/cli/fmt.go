@@ -77,6 +77,7 @@ func (c *FmtCommand) Run(args []string) int {
 			)
 			return 1
 		}
+		fmt.Println(c.args[0])
 	} else {
 		// We must use fmt here and not c.ui since c.ui may wordwrap and trim.
 		fmt.Print(string(out))
