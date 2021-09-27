@@ -35,21 +35,14 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }) {
-  try {
-    const props = await generateStaticProps({
-      navDataFile: NAV_DATA_FILE,
-      localContentDir: CONTENT_DIR,
-      product: { name: productName, slug: productSlug },
-      params,
-      basePath,
-    })
-    return {
-      props,
-    }
-  } catch (err) {
-    console.log('xxxxxxxxxxxxxxxxxxx')
-    console.log('Failed to generate static props:', params.page, err.message)
-    console.log('xxxxxxxxxxxxxxxxxxx')
-    return { notFound: true }
+  const props = await generateStaticProps({
+    navDataFile: NAV_DATA_FILE,
+    localContentDir: CONTENT_DIR,
+    product: { name: productName, slug: productSlug },
+    params,
+    basePath,
+  })
+  return {
+    props,
   }
 }
