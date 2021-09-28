@@ -140,7 +140,7 @@ func (i *NomadInstaller) Install(
 	}
 
 	if strings.ToLower(i.config.volumeType) == "csi" {
-		if !c.config.csiVolumeProvider {
+		if i.config.csiVolumeProvider == "" {
 			return nil, fmt.Errorf("please include '-nomad-csi-volume-provider' flag")
 		}
 
@@ -736,19 +736,6 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 
 	job.AddTaskGroup(tg)
 
-	ras := []string{"server", "run", "-accept-tos", "-vv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)}
-	ras = append(ras, rawRunFlags...)
-	task := api.NewTask("server", "docker")
-	task.Config = map[string]interface{}{
-		"image":          c.serverImage,
-		"ports":          []string{"server", "ui"},
-		"args":           ras,
-		"auth_soft_fail": c.authSoftFail,
-	}
-	task.Env = map[string]string{
-		"PORT": defaultGrpcPort,
-	}
-
 	readOnly := false
 	volume := "waypoint-server"
 	destination := "/data"
@@ -759,7 +746,6 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 			ReadOnly:    &readOnly,
 		},
 	}
-
 	cpu := defaultResourcesCPU
 	mem := defaultResourcesMemory
 
@@ -783,24 +769,27 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 		Hook:    "prestart",
 		Sidecar: false,
 	}
+
 	tg.AddTask(preTask)
 
+	ras := []string{"server", "run", "-accept-tos", "-vv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)}
+	ras = append(ras, rawRunFlags...)
 	task := api.NewTask("server", "docker")
 	task.Config = map[string]interface{}{
 		"image":          c.serverImage,
 		"ports":          []string{"server", "ui"},
-		"args":           []string{"server", "run", "-accept-tos", "-vvv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
+		"args":           ras,
 		"auth_soft_fail": c.authSoftFail,
 	}
 	task.Env = map[string]string{
 		"PORT": defaultGrpcPort,
 	}
+
 	task.VolumeMounts = volumeMounts
 
 	if c.serverResourcesCPU != "" {
 		cpu, _ = strconv.Atoi(c.serverResourcesCPU)
 	}
-
 	if c.serverResourcesMemory != "" {
 		mem, _ = strconv.Atoi(c.serverResourcesMemory)
 	}
@@ -846,7 +835,6 @@ func waypointRunnerNomadJob(c nomadConfig, opts *InstallRunnerOpts) *api.Job {
 	if c.runnerResourcesCPU != "" {
 		cpu, _ = strconv.Atoi(c.runnerResourcesCPU)
 	}
-
 	if c.runnerResourcesMemory != "" {
 		mem, _ = strconv.Atoi(c.runnerResourcesMemory)
 	}
