@@ -21,6 +21,10 @@ Set a config variable that will be available to deployments as an
 environment variable.
 
 This will scope the variable to the entire project by default.
+Specify the "-project" flag to set a config variable for a specific project.
+The "-project" flag is not required if scope is global or there is a local
+waypoint.hcl file.
+
 Specify the "-app" flag to set a config variable for a specific app.
 
 #### Global Options
@@ -28,11 +32,11 @@ Specify the "-app" flag to set a config variable for a specific app.
 - `-plain` - Plain output: no colors, no animation.
 - `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-workspace=<string>` - Workspace to operate in.
+- `-project=<string>` - Project to target.
 
 #### Command Options
 
 - `-scope=<string>` - The scope for this configuration. The configuration will only appear within this scope. This can be one of 'global', 'project', or 'app'.
-- `-project=<string>` - The name of the project for 'project' or 'app' scopes specified with -scope. This is not required if scope is global or there is a local waypoint.hcl file.
 - `-workspace-scope=<string>` - Specify that the configuration is only available within a specific workspace. This configuration will only be set for deployments or operations (if -runner if set) when the workspace matches this.
 - `-label-scope=<string>` - If set, configuration will only be set if the deployment or operation (if -runner is set) has a matching label set.
 - `-runner` - Expose this configuration on runners. This can be used to set things such as credentials to cloud platforms for remote runners. This configuration will not be exposed to deployed applications. If this is specified in the context of a project, this will apply only to runners operating on jobs for the specific project or application.

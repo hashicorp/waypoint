@@ -102,6 +102,9 @@ type baseCommand struct {
 	// flagApp is the app to target.
 	flagApp string
 
+	// flagProject is the project to target.
+	flagProject string
+
 	// flagWorkspace is the workspace to work in.
 	flagWorkspace string
 
@@ -488,6 +491,13 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 			Name:   "workspace",
 			Target: &c.flagWorkspace,
 			Usage:  "Workspace to operate in.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "project",
+			Target:  &c.flagProject,
+			Default: "",
+			Usage:   "Project to target.",
 		})
 	}
 

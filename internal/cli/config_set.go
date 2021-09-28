@@ -18,7 +18,6 @@ type ConfigSetCommand struct {
 
 	flagGlobal         bool
 	flagRunner         bool
-	flagProject        string
 	flagScope          string
 	flagWorkspaceScope string
 	flagLabelScope     string
@@ -177,15 +176,6 @@ func (c *ConfigSetCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:   "project",
-			Target: &c.flagProject,
-			Usage: "The name of the project for 'project' or 'app' scopes specified " +
-				"with -scope. This is not required if scope is global or there is " +
-				"a local waypoint.hcl file.",
-			Default: "",
-		})
-
-		f.StringVar(&flag.StringVar{
 			Name:   "workspace-scope",
 			Target: &c.flagWorkspaceScope,
 			Usage: "Specify that the configuration is only available within a " +
@@ -237,6 +227,10 @@ Usage: waypoint config set <name>=<value>
   environment variable.
 
   This will scope the variable to the entire project by default.
+  Specify the "-project" flag to set a config variable for a specific project.
+  The "-project" flag is not required if scope is global or there is a local
+  waypoint.hcl file.
+
   Specify the "-app" flag to set a config variable for a specific app.
 
 ` + c.Flags().Help())

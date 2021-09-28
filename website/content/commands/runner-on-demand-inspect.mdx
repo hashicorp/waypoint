@@ -1,0 +1,31 @@
+---
+layout: commands
+page_title: 'Commands: Runner on-demand inspect'
+sidebar_title: 'runner on-demand inspect'
+description: 'Show detailed information about a configured auth method'
+---
+
+# Waypoint Runner on-demand inspect
+
+Command: `waypoint runner on-demand inspect`
+
+Show detailed information about a configured auth method
+
+@include "commands/runner-on-demand-inspect_desc.mdx"
+
+## Usage
+
+Usage: `waypoint runner on-demand inspect NAME`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-project=<string>` - Project to target.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-json` - Output on-demand runner information as JSON. This includes more fields since this is the complete API structure.
+
+@include "commands/runner-on-demand-inspect_more.mdx"
