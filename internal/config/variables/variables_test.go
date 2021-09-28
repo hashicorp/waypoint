@@ -1,6 +1,7 @@
 package variables
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -63,7 +64,7 @@ func TestVariables_DecodeVariableBlock(t *testing.T) {
 			}
 
 			if tt.err == "" {
-				require.False(diags.HasErrors())
+				require.False(diags.HasErrors(), diags.Error())
 				return
 			}
 
@@ -403,6 +404,96 @@ func TestVariables_SetJobInputVariables(t *testing.T) {
 			for _, v := range tt.expected {
 				require.Contains(vars, v)
 			}
+		})
+	}
+}
+
+func TestLoadEnvValues(t *testing.T) {
+	cases := []struct {
+		name     string
+		vars     map[string]*Variable
+		env      map[string]string
+		expected map[string]string
+	}{
+		{
+			"WP_VAR_ always wins",
+			map[string]*Variable{
+				"foo": {
+					Name: "foo",
+					Env:  []string{"one", "two"},
+				},
+			},
+			map[string]string{"WP_VAR_foo": "x", "one": "1", "two": "2"},
+			map[string]string{"foo": "x"},
+		},
+
+		{
+			"first match takes priority",
+			map[string]*Variable{
+				"foo": {
+					Name: "foo",
+					Env:  []string{"one", "two"},
+				},
+			},
+			map[string]string{"one": "1", "two": "2"},
+			map[string]string{"foo": "1"},
+		},
+
+		{
+			"first match takes priority (second set)",
+			map[string]*Variable{
+				"foo": {
+					Name: "foo",
+					Env:  []string{"one", "two"},
+				},
+			},
+			map[string]string{"two": "2"},
+			map[string]string{"foo": "2"},
+		},
+
+		{
+			"none set",
+			map[string]*Variable{
+				"foo": {
+					Name: "foo",
+					Env:  []string{"one", "two"},
+				},
+			},
+			map[string]string{},
+			map[string]string{},
+		},
+
+		{
+			"env key not set",
+			map[string]*Variable{
+				"foo": {
+					Name: "foo",
+				},
+			},
+			map[string]string{"one": "1", "two": "2"},
+			map[string]string{},
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			require := require.New(t)
+
+			// Set our env vars
+			for k, v := range tt.env {
+				defer os.Setenv(k, os.Getenv(k))
+				require.NoError(os.Setenv(k, v))
+			}
+
+			actual, diags := LoadEnvValues(tt.vars)
+			require.False(diags.HasErrors(), diags.Error())
+
+			actualMap := map[string]string{}
+			for _, v := range actual {
+				actualMap[v.Name] = v.Value.(*pb.Variable_Str).Str
+			}
+
+			require.Equal(tt.expected, actualMap)
 		})
 	}
 }

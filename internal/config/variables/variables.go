@@ -59,6 +59,9 @@ var (
 			{
 				Name: "description",
 			},
+			{
+				Name: "env",
+			},
 		},
 	}
 )
@@ -69,6 +72,10 @@ type Variable struct {
 
 	// The default value in the variable definition
 	Default *Value
+
+	// A list of environment variables that will be sourced to satisfy
+	// the value of this variable.
+	Env []string
 
 	// Cty Type of the variable. If the default value or a collected value is
 	// not of this type nor can be converted to this type an error diagnostic
@@ -95,6 +102,7 @@ type HclVariable struct {
 	Default     cty.Value      `hcl:"default,optional"`
 	Type        hcl.Expression `hcl:"type,optional"`
 	Description string         `hcl:"description,optional"`
+	Env         []string       `hcl:"env,optional"`
 }
 
 // Values are used to store values collected from various sources.
@@ -175,6 +183,14 @@ func decodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 			return nil, diags
 		}
 		v.Type = t
+	}
+
+	if attr, exists := content.Attributes["env"]; exists {
+		valDiags := gohcl.DecodeExpression(attr.Expr, nil, &v.Env)
+		diags = append(diags, valDiags...)
+		if diags.HasErrors() {
+			return nil, diags
+		}
 	}
 
 	if attr, exists := content.Attributes["default"]; exists {
@@ -275,6 +291,41 @@ func LoadVariableValues(vars map[string]string, files []string) ([]*pb.Variable,
 			Source: &pb.Variable_Cli{},
 		})
 	}
+	return ret, diags
+}
+
+// LoadEnvValues loads the variable values from environment variables
+// specified via the `env` field on the `variable` stanza.
+func LoadEnvValues(vars map[string]*Variable) ([]*pb.Variable, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+	var ret []*pb.Variable
+
+	for _, variable := range vars {
+		// First we check for the WP_VAR_ value cause that always wins.
+		v := os.Getenv(varEnvPrefix + variable.Name)
+
+		// If we didn't find one and we have other sources, check those.
+		if v == "" && len(variable.Env) > 0 {
+			for _, env := range variable.Env {
+				v = os.Getenv(env)
+				if v != "" {
+					break
+				}
+			}
+		}
+
+		// If we still have no value, then we set nothing.
+		if v == "" {
+			continue
+		}
+
+		ret = append(ret, &pb.Variable{
+			Name:   variable.Name,
+			Value:  &pb.Variable_Str{Str: v},
+			Source: &pb.Variable_Env{},
+		})
+	}
+
 	return ret, diags
 }
 

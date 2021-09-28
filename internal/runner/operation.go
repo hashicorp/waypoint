@@ -149,6 +149,12 @@ func (r *Runner) executeJob(
 		return nil, err
 	}
 
+	// Load variable values from the environment.
+	envVars, diags := variables.LoadEnvValues(cfg.InputVariables)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+
 	// Here we'll load our values from auto vars files and the server/UI, and
 	// combine them with any values set on the job
 	// The order values are added to our final pbVars slice is the order
@@ -159,6 +165,7 @@ func (r *Runner) executeJob(
 	}
 
 	pbVars := resp.Project.GetVariables()
+	pbVars = append(pbVars, envVars...)
 	pbVars = append(pbVars, vcsVars...)
 	pbVars = append(pbVars, job.Variables...)
 
