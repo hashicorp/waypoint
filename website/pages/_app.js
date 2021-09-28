@@ -52,21 +52,21 @@ export default function App({ Component, pageProps }) {
         cards={[
           {
             link:
+              'https://learn.hashicorp.com/collections/waypoint/get-started-kubernetes',
+            img: '/img/get-started-kubernetes.png',
+            eyebrow: 'Tutorial',
+            title: 'Get Started - Kubernetes',
+            description:
+              'Build, deploy, and release applications to a Kubernetes cluster.',
+          },
+          {
+            link:
               'https://learn.hashicorp.com/tutorials/waypoint/get-started-intro',
             img: '/img/intro-to-waypoint.png',
             eyebrow: 'Tutorial',
             title: 'Introduction to Waypoint',
             description:
-              'Waypoint enables you to publish any application to any platform with a single file and a single command',
-          },
-          {
-            link:
-              'https://learn.hashicorp.com/tutorials/waypoint/get-started-install?in=waypoint/get-started-docker',
-            img: '/img/installing-waypoint.png',
-            eyebrow: 'Tutorial',
-            title: 'Installing Waypoint',
-            description:
-              'Install the Waypoint binary locally on Mac, Linux, or Windows, manually or using a package manager. (Homebrew)',
+              'Waypoint enables you to publish any application to any platform with a single file and a single command.',
           },
         ]}
         ctaLinks={[

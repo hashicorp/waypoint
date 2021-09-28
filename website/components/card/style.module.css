@@ -1,6 +1,8 @@
 .card {
   display: flex;
   background-color: var(--white);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .link {
