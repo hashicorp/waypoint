@@ -93,6 +93,10 @@ func (p *Platform) Deploy(
 	if v := p.config.Namespace; v != "" {
 		chartNS = v
 	}
+	if chartNS == "" {
+		// If all else fails, default the namespace to "default"
+		chartNS = "default"
+	}
 
 	// From here on out, we will always return a partial deployment if we error.
 	result := &Deployment{Release: p.config.Name}
