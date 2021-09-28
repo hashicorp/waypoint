@@ -2,7 +2,7 @@
 layout: docs
 page_title: Input Variables - Variables - waypoint.hcl
 description: |-
-  Input variables allow you to customize Waypoint configuration according to 
+  Input variables allow you to customize Waypoint configuration according to
   set parameters. This section documents input variable syntax, including how to
   define, reference, and use input variables.
 ---
@@ -29,6 +29,7 @@ blocks include:
 variable "port" {
   type    = number
   default = 8080
+  env     = ["PORT"]
 }
 
 variable "image_name" {
@@ -62,6 +63,7 @@ Waypoint CLI defines the following optional arguments for variable declarations:
 - [`default`][inpage-default] - A default value.
 - [`type`][inpage-type] - This specifies what value types are accepted for the variable.
 - [`description`][inpage-description] - This specifies the input variable's documentation.
+- [`env`][inpage-env] - Default value sourced from an environment variable.
 
 ### Default values
 
@@ -273,9 +275,26 @@ the root object properties corresponding to variable names:
 
 ### Environment Variables
 
-As a fallback for the other ways of defining variables, Waypoint searches
-the environment of its own process for environment variables named `WP_VAR_`
-followed by the name of a declared variable.
+[inpage-env]: #environment-variables
+
+If a variable specifies a value for the `env` field, environment variables
+of those names are searched to provide a value for the variable. The variables
+are searched in order, and the first non-empty environment variable is
+used. The special environment variable named `WP_VAR_<name>` (where `<name>`
+is the name of the variable) always works regardless of if `env` is set or not.
+
+For example, given the following variable:
+
+```hcl
+variable "port" {
+  type    = number
+  default = 8080
+  env     = ["PORT"]
+}
+```
+
+Waypoint will search for a value in `WP_VAR_port` followed by `PORT`.
+If neither are set, the default `8080` is used as specified in the stanza.
 
 This can be useful when running Waypoint in automation, or when running a
 sequence of Waypoint commands in succession with the same variables.
@@ -291,6 +310,11 @@ On operating systems where environment variable names are case-sensitive,
 Waypoint matches the variable name exactly as given in configuration, and
 so the required environment variable name will usually have a mix of upper
 and lower case letters as in the above example.
+
+-> **Note:** Environment variables specified with `env` are only loaded
+as default values on the Waypoint [runner](/docs/runner). For local operations
+this is the same machine as the CLI but for production use cases this might
+be a remote machine.
 
 ### Variables in the UI
 

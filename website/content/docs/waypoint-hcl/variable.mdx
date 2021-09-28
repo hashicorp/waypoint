@@ -35,6 +35,7 @@ variable "tag" {
 Supply a value to a specified `variable` with one of the following methods:
 
 - the [`default`][inpage-default] value in the definition block
+- an environment variable on the runner specified by `env` in the definition block
 - the parameter `-var key=value`
 - the parameter `-var-file=filename`, where `filename` is the name of a file
   with variable values
@@ -56,5 +57,9 @@ Supply a value to a specified `variable` with one of the following methods:
 
 - `description` `(string: "")` - A short summary documenting what the variable
   is and its purpose.
+
+- `env` `(list of string: [])` - Sets a set of environment variables to source
+  a default value from if a value is not set. The environment variables are read
+  only on the runner. See [environment variables](/docs/waypoint-hcl/variables/input#environment-variables) for more information.
 
 [expression]: /docs/waypoint-hcl/syntax/expressions#types-and-values 'Expressions: Types and Values'
