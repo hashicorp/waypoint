@@ -88,10 +88,11 @@ func (s *VCSGit) refPrettyFunc(args []cty.Value, retType cty.Type) (cty.Value, e
 	cmd := exec.Command("git", "diff", "--quiet")
 	cmd.Stdout = ioutil.Discard
 	cmd.Stderr = ioutil.Discard
+	cmd.Dir = s.Path
 	if err := cmd.Run(); err != nil {
-		// If git isn't available, don't worry about trying to calculate changes.
-		// more than likely, if git isn't available, then we're running in an env
-		// where changes aren't even possible anyway.
+		// If git isn't available, we fall back to using go-git. This can
+		// take a very long time and that is sad but we want to give consistent
+		// results from this func.
 		if errors.Is(err, exec.ErrNotFound) {
 			return cty.StringVal(result), nil
 		}
@@ -226,12 +227,6 @@ func (s *VCSGit) init() error {
 	}
 	if s.repo != nil {
 		return nil
-	}
-
-	// Check if `git` is installed. We'll use this sometimes.
-	if _, err := exec.LookPath("git"); err != nil {
-		s.initErr = fmt.Errorf("git was not found on the system and is required")
-		return s.initErr
 	}
 
 	// Open the repo
