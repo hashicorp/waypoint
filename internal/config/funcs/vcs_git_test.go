@@ -154,7 +154,7 @@ func TestVCSGit(t *testing.T) {
 
 				// If our expected value ends in _* then we do a prefix check
 				// instead. This is so we can test the dynamic parts of the timestamp.
-				if tt.Expected.Type() == cty.String {
+				if tt.Expected.Type() == cty.String && tt.Expected.IsKnown() {
 					expected := tt.Expected.AsString()
 					if strings.HasSuffix(expected, "_*") {
 						require.True(strings.HasPrefix(
