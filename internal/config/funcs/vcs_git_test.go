@@ -1,11 +1,14 @@
 package funcs
 
 import (
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/hashicorp/waypoint/internal/pkg/copy"
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
 )
@@ -82,29 +85,87 @@ func TestVCSGit(t *testing.T) {
 			cty.StringVal("https://github.com/hashicorp/example.git"),
 			"",
 		},
+
+		{
+			"refpretty with no changes",
+			"git-commits",
+			"",
+			(*VCSGit).refPrettyFunc,
+			nil,
+			cty.StringVal("380afd697abe993b89bfa08d8dd8724d6a513ba1"),
+			"",
+		},
+
+		{
+			"refpretty with changes",
+			"git-commits-changes",
+			"",
+			(*VCSGit).refPrettyFunc,
+			nil,
+			cty.StringVal("380afd697abe993b89bfa08d8dd8724d6a513ba1_CHANGES_*"),
+			"",
+		},
+
+		{
+			"refpretty with tags",
+			"git-tag",
+			"",
+			(*VCSGit).refPrettyFunc,
+			nil,
+			cty.StringVal("hello"),
+			"",
+		},
 	}
 
 	for _, tt := range cases {
-		t.Run(tt.Name, func(t *testing.T) {
-			require := require.New(t)
-
-			path := filepath.Join("testdata", tt.Fixture)
-			testGitFixture(t, path)
-			if tt.Subdir != "" {
-				path = filepath.Join(path, tt.Subdir)
+		for i := 0; i < 2; i++ {
+			gogit := i == 1
+			name := tt.Name
+			if gogit {
+				name += " (go-git)"
 			}
 
-			s := &VCSGit{Path: path}
-			result, err := tt.Func(s, tt.Args, cty.String)
-			if tt.Error != "" {
-				require.Error(err)
-				require.Contains(err.Error(), tt.Error)
-				return
-			}
+			t.Run(name, func(t *testing.T) {
+				require := require.New(t)
 
-			require.NoError(err)
-			require.True(tt.Expected.RawEquals(result), result.GoString())
-		})
+				td, err := ioutil.TempDir("", "git")
+				require.NoError(err)
+				defer os.RemoveAll(td)
+
+				// Copy our test fixture so we don't have any side effects
+				path := filepath.Join("testdata", tt.Fixture)
+				dstPath := filepath.Join(td, "fixture")
+				require.NoError(copy.CopyDir(path, dstPath))
+				path = dstPath
+
+				testGitFixture(t, path)
+				if tt.Subdir != "" {
+					path = filepath.Join(path, tt.Subdir)
+				}
+
+				s := &VCSGit{Path: path, GoGitOnly: gogit}
+				result, err := tt.Func(s, tt.Args, cty.String)
+				if tt.Error != "" {
+					require.Error(err)
+					require.Contains(err.Error(), tt.Error)
+					return
+				}
+				require.NoError(err)
+
+				// If our expected value ends in _* then we do a prefix check
+				// instead. This is so we can test the dynamic parts of the timestamp.
+				if tt.Expected.Type() == cty.String && tt.Expected.IsKnown() {
+					expected := tt.Expected.AsString()
+					if strings.HasSuffix(expected, "_*") {
+						require.True(strings.HasPrefix(
+							result.AsString(), expected[:len(expected)-1]))
+						return
+					}
+				}
+
+				require.True(tt.Expected.RawEquals(result), result.GoString())
+			})
+		}
 	}
 }
 

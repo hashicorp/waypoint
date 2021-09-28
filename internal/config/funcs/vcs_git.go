@@ -30,6 +30,10 @@ type VCSGit struct {
 	// a ".git" folder automatically.
 	Path string
 
+	// GoGitOnly forces go-git usage and disables all subprocessing to "git"
+	// even if it exists.
+	GoGitOnly bool
+
 	initErr error
 	repo    *git.Repository
 }
@@ -85,23 +89,46 @@ func (s *VCSGit) refPrettyFunc(args []cty.Value, retType cty.Type) (cty.Value, e
 	// To determine if there are changes we subprocess because go-git's Status
 	// function is really, really slow sadly. On the waypoint repo at the time
 	// of this commit, go-git took 12s on my machine vs. 50ms for `git`.
-	cmd := exec.Command("git", "diff", "--quiet")
-	cmd.Stdout = ioutil.Discard
-	cmd.Stderr = ioutil.Discard
-	if err := cmd.Run(); err != nil {
-		// If git isn't available, don't worry about trying to calculate changes.
-		// more than likely, if git isn't available, then we're running in an env
-		// where changes aren't even possible anyway.
+	goGitChanges := s.GoGitOnly
+	if !goGitChanges {
+		cmd := exec.Command("git", "diff", "--quiet")
+		cmd.Stdout = ioutil.Discard
+		cmd.Stderr = ioutil.Discard
+		cmd.Dir = s.Path
+		err := cmd.Run()
+
+		// If git isn't available, we fall back to using go-git. This can
+		// take a very long time and that is sad but we want to give consistent
+		// results from this func.
 		if errors.Is(err, exec.ErrNotFound) {
-			return cty.StringVal(result), nil
+			goGitChanges = true
 		}
 
-		exitError, ok := err.(*exec.ExitError)
-		if !ok {
-			return cty.UnknownVal(cty.String), fmt.Errorf("error executing git: %s", err)
+		if !goGitChanges && err != nil {
+			exitError, ok := err.(*exec.ExitError)
+			if !ok {
+				return cty.UnknownVal(cty.String), fmt.Errorf("error executing git: %s", err)
+			}
+
+			if exitError.ExitCode() != 0 {
+				result += fmt.Sprintf("_CHANGES_%d", time.Now().Unix())
+			}
+		}
+	}
+
+	// If we want to use go-git for change detection, then do that now.
+	if goGitChanges {
+		wt, err := s.repo.Worktree()
+		if err != nil {
+			return cty.UnknownVal(cty.String), err
 		}
 
-		if exitError.ExitCode() != 0 {
+		st, err := wt.Status()
+		if err != nil {
+			return cty.UnknownVal(cty.String), err
+		}
+
+		if !st.IsClean() {
 			result += fmt.Sprintf("_CHANGES_%d", time.Now().Unix())
 		}
 	}
@@ -226,12 +253,6 @@ func (s *VCSGit) init() error {
 	}
 	if s.repo != nil {
 		return nil
-	}
-
-	// Check if `git` is installed. We'll use this sometimes.
-	if _, err := exec.LookPath("git"); err != nil {
-		s.initErr = fmt.Errorf("git was not found on the system and is required")
-		return s.initErr
 	}
 
 	// Open the repo
