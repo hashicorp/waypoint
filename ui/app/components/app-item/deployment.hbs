@@ -25,7 +25,9 @@
     {{/if}}
   </LinkTo>
   {{#if (and (not-eq @deployment.state 4) @deployment.statusReport)}}
-    <StatusReportIndicator @statusReport={{@deployment.statusReport}} />
+    <small>
+      <StatusReportIndicator @statusReport={{@deployment.statusReport}} />
+    </small>
   {{/if}}
   {{#if (not-eq @latest.id @deployment.id)}}
   <small class="replacement-info">

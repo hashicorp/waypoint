@@ -1,0 +1,15 @@
+<StatusReportIndicator
+  @statusReport={{hash
+    health=(hash
+      healthMessage=@resource.healthMessage
+      healthStatus=(or
+        (and (eq @resource.health 0) "UNKNOWN")
+        (and (eq @resource.health 1) "ALIVE")
+        (and (eq @resource.health 2) "READY")
+        (and (eq @resource.health 3) "DOWN")
+        (and (eq @resource.health 4) "PARTIAL")
+        (and (eq @resource.health 5) "MISSING")
+      )
+    )
+  }}
+/>

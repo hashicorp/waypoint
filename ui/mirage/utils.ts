@@ -105,3 +105,11 @@ export function logRequestConsole(verb: string, path: string, request: FakeXMLHt
 
   console.groupEnd();
 }
+
+export function dateToTimestamp(date: Date): Timestamp {
+  let result = new Timestamp();
+
+  result.setSeconds(Math.floor(date.valueOf() / 1000));
+
+  return result;
+}

@@ -17,7 +17,9 @@
   </LinkTo>
 
   {{#if (and (not-eq @release.state 4) @release.statusReport)}}
-    <StatusReportIndicator @statusReport={{@release.statusReport}} />
+    <small>
+      <StatusReportIndicator @statusReport={{@release.statusReport}} />
+    </small>
   {{/if}}
 
   {{#if (and @isLatest @release.url)}}

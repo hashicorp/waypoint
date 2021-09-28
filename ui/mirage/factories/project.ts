@@ -41,25 +41,25 @@ export default Factory.extend({
           sequence: 4,
           application,
           build: builds[0],
-          statusReport: server.create('status-report', 'alive', { application }),
+          statusReport: server.create('status-report', 'alive', 'with-resources', { application }),
         }),
         server.create('deployment', 'random', 'minutes-old-success', {
           sequence: 3,
           application,
           build: builds[1],
-          statusReport: server.create('status-report', 'ready', { application }),
+          statusReport: server.create('status-report', 'ready', 'with-resources', { application }),
         }),
         server.create('deployment', 'random', 'hours-old-success', {
           sequence: 2,
           application,
           build: builds[2],
-          statusReport: server.create('status-report', 'partial', { application }),
+          statusReport: server.create('status-report', 'partial', 'with-resources', { application }),
         }),
         server.create('deployment', 'random', 'days-old-success', {
           sequence: 1,
           application,
           build: builds[3],
-          statusReport: server.create('status-report', 'down', { application }),
+          statusReport: server.create('status-report', 'down', 'with-resources', { application }),
         }),
       ];
 

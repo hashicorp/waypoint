@@ -1,0 +1,15 @@
+<div
+  data-test-json-viewer
+  class="json-viewer"
+>
+  {{#if this.parseResult.error}}
+    <Pds::ErrorMessage>{{this.parseResult.error.message}}</Pds::ErrorMessage>
+  {{else}}
+    <div
+      {{code-mirror
+        value=this.formattedJSON
+        options=this.codeMirrorOptions
+      }}
+    />
+  {{/if}}
+</div>

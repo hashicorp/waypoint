@@ -1,0 +1,42 @@
+<div
+  data-test-resources-table
+  class="resources-table"
+>
+  <table>
+    <caption>{{yield to="caption"}}</caption>
+
+    <colgroup>
+      <col class="w-2/5">
+      <col>
+      <col>
+      <col>
+    </colgroup>
+
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Age</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {{#each @resources key="id" as |resource|}}
+        <tr>
+          <th scope="row">
+            <LinkTo
+              @route="workspace.projects.project.app.deployment.resource"
+              @model={{resource.id}}
+            >
+              {{resource.name}}
+            </LinkTo>
+          </th>
+          <td><Pds::Icon @type={{icon-for-component resource.platform}} /> {{resource.type}}</td>
+          <td>{{date-format-distance-to-now resource.createdTime.seconds}}</td>
+          <td><ResourceHealthIndicator @resource={{resource}} /></td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>

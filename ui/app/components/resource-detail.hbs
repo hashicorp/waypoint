@@ -1,0 +1,48 @@
+<div
+  data-test-resource-detail={{@resource.id}}
+  class="resource-detail"
+>
+
+  <Section>
+    <:heading>{{t "resource-detail.overview.heading"}}</:heading>
+    <:body>
+      <table>
+        <tbody>
+          <tr>
+            <th scope="row">{{t "resource-detail.overview.health"}}</th>
+            <td>
+              <div class="resource-detail__flex">
+                <ResourceHealthIndicator @resource={{@resource}} />
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">{{t "resource-detail.overview.created"}}</th>
+            <td>{{date-format-distance-to-now @resource.createdTime.seconds}}</td>
+          </tr>
+          {{#if this.hasLabels}}
+            <tr>
+              <th scope="row">{{t "resource-detail.overview.labels"}}</th>
+              <td>
+                <LabelList @labels={{this.labels}} />
+              </td>
+            </tr>
+          {{/if}}
+          {{#if this.image}}
+            <tr>
+              <th scope="row">{{t "resource-detail.overview.image"}}</th>
+              <td><code>{{this.image}}</code></td>
+            </tr>
+          {{/if}}
+        </tbody>
+      </table>
+    </:body>
+  </Section>
+
+  <Section>
+    <:heading>{{t "resource-detail.state-json.heading"}}</:heading>
+    <:body>
+      <JsonViewer @json={{@resource.stateJson}} />
+    </:body>
+  </Section>
+</div>

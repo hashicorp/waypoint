@@ -1,0 +1,28 @@
+.resource-detail {
+  table {
+    text-align: left;
+    table-layout: fixed;
+    font-size: 14px;
+    line-height: 17px;
+    border-spacing: 0;
+    border-collapse: collapse;
+
+    th {
+      padding-right: scale.$lg--10;
+      color: rgb(var(--text-muted));
+      font-weight: normal;
+    }
+
+    th,
+    td {
+      padding-left: 0;
+      padding-top: scale.$sm--2;
+      padding-bottom: scale.$sm--2;
+      vertical-align: top;
+    }
+  }
+
+  &__flex {
+    display: flex;
+  }
+}

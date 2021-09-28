@@ -5,8 +5,10 @@ import './utils/register-waypoint-hcl-mode';
 import 'codemirror/addon/edit/matchbrackets';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/selection/active-line';
+import 'codemirror/mode/javascript/javascript';
 
 const _PRESET_DEFAULTS: codemirror.EditorConfiguration = {
+  mode: 'waypointHCL',
   theme: 'monokai',
   lineNumbers: true,
   cursorBlinkRate: 500,
@@ -18,8 +20,8 @@ interface Args {
   positional: never;
   named: {
     value?: string;
-    onInput: (value: string) => void;
-    options?: Record<string, unknown>;
+    onInput?: (value: string) => void;
+    options?: codemirror.EditorConfiguration;
   };
 }
 export default class CodeMirrorModifier extends Modifier<Args> {
@@ -29,9 +31,27 @@ export default class CodeMirrorModifier extends Modifier<Args> {
     this._setup();
   }
 
+  didUpdateArguments(): void {
+    let value = this.args.named.value ?? '';
+    let options = this.args.named.options;
+
+    if (value !== this._editor.getValue()) {
+      this._editor.setValue(value);
+    }
+
+    if (options) {
+      eachEntry(options, (key, value) => {
+        this._editor.setOption(key, value);
+      });
+    }
+  }
+
   _onChange(editor: codemirror.Editor): void {
     let newVal = editor.getValue();
-    this.args.named.onInput(newVal);
+
+    if (typeof this.args.named.onInput === 'function') {
+      this.args.named.onInput(newVal);
+    }
   }
 
   _setup(): void {
@@ -50,6 +70,12 @@ export default class CodeMirrorModifier extends Modifier<Args> {
     });
 
     this._editor = editor;
-    this._editor.setOption('mode', 'waypointHCL');
+  }
+}
+
+// Object.entries loses type information, so this is a workaround.
+function eachEntry<T>(object: T, callback: (key: keyof T, value: T[keyof T]) => void): void {
+  for (let key in object) {
+    callback(key, object[key]);
   }
 }

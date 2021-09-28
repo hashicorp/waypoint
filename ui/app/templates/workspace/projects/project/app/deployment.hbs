@@ -1,32 +1,55 @@
 {{page-title (concat "Deployment" " v" @model.sequence)}}
 
-<PageHeader @iconName="upload">
-  <div class="title">
-    <h1><b class="badge badge--version">v{{@model.sequence}}</b></h1>
-    <small>
-      <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
-      <span>Deployed by <b>{{component-name @model.component.name}}</b>
-        {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
-    </small>
-    {{#if @model.preload.jobDataSourceRef.git.commit}}
+{{#if (not-eq this.target.currentRouteName "workspace.projects.project.app.deployment.resource")}}
+  <PageHeader @iconName="upload">
+    <div class="title">
+      <h1><b class="badge badge--version">v{{@model.sequence}}</b></h1>
       <small>
-        <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
+        <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
+        <span>Deployed by <b>{{component-name @model.component.name}}</b>
+          {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
       </small>
-    {{/if}}
-  </div>
-  <div class="actions">
-    <div class="button-group">
-      <ExternalLink
-        href={{enforce-protocol @model.preload.deployUrl}}
-        class="button button--secondary button--external-link">
-        <span>{{lowercase @model.preload.deployUrl}}</span>
-        <Pds::Icon @type="exit" class="icon" />
-      </ExternalLink>
-      <Actions::Release @sequence={{@model.sequence}} />
+      {{#if @model.preload.jobDataSourceRef.git.commit}}
+        <small>
+          <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
+        </small>
+      {{/if}}
     </div>
-  </div>
-</PageHeader>
+    <div class="actions">
+      <div class="button-group">
+        <ExternalLink
+          href={{enforce-protocol @model.preload.deployUrl}}
+          class="button button--secondary button--external-link">
+          <span>{{lowercase @model.preload.deployUrl}}</span>
+          <Pds::Icon @type="exit" class="icon" />
+        </ExternalLink>
+        <Actions::Release @sequence={{@model.sequence}} />
+      </div>
+    </div>
+  </PageHeader>
 
-<StatusReportBar @model={{@model}} @artifactType="Deployment"/>
+  <StatusReportBar @model={{@model}} @artifactType="Deployment"/>
 
-<OperationLogs @jobId={{@model.jobId}} />
+  {{#if @model.statusReport.resourcesList.length}}
+    <Section>
+      <:heading>{{t "page.deployment.resources.heading"}}</:heading>
+      <:body>
+        <ResourcesTable @resources={{@model.statusReport.resourcesList}}>
+          <:caption>
+            {{t "page.deployment.resources.table-caption" htmlSafe=true}}
+          </:caption>
+        </ResourcesTable>
+      </:body>
+    </Section>
+  {{/if}}
+
+  <Section>
+    <:heading>{{t "page.deployment.logs.heading"}}</:heading>
+    <:body>
+      <OperationLogs @jobId={{@model.jobId}} />
+    </:body>
+  </Section>
+{{/if}}
+
+{{outlet}}
+

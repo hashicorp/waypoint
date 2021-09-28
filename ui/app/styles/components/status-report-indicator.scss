@@ -15,11 +15,7 @@
     background: color.$black;
     margin-right: scale.$sm--3;
   }
-
-  &__label {
-    @include Typography.Interface(S);
-  }
-
+  
   // Status: Unknown
 
   &--unknown &__badge {

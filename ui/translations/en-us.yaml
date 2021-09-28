@@ -30,6 +30,12 @@ page:
       1: 'Deploying by ' # RUNNING
       2: 'Deployed by ' # SUCCESS
       3: 'Failed to deploy by ' # ERROR
+  deployment:
+    resources:
+      heading: Resources
+      table-caption: Resources created by <b>this deployment</b>
+    logs:
+      heading: Deployment Logs
   releases:
     title: 'Releases'
 
@@ -203,3 +209,17 @@ project-init-error:
   more-help:
     prefix: For more help getting started, refer to the
     link-label: Waypoint documentation
+
+resource-detail:
+  overview:
+    heading: Overview
+    health: Health
+    created: Created
+    labels: Labels
+    image: Image
+  state-json:
+    heading: State JSON
+
+section:
+  expand: Expand section
+  collapse: Collapse section
