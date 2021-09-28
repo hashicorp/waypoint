@@ -29,11 +29,32 @@ export default function SectionIntro({
               <TerminalToken color="teal">~</TerminalToken>
             </TerminalLine>
             <TerminalLine>
-              <TerminalToken color="fushia">❯</TerminalToken> waypoint up
+              <TerminalToken color="fushia">$</TerminalToken> waypoint up
             </TerminalLine>
             <TerminalLine>
+              <TerminalToken color="fushia">»</TerminalToken>{' '}
+              <TerminalToken color="green">Deploying . . .</TerminalToken>
+            </TerminalLine>
+            <TerminalLine>
+              <TerminalToken color="fushia">✓</TerminalToken>{' '}
               <TerminalToken color="green">
-                Building tech-blog with Pack...
+                Kubernetes client connected to
+                https://kubernetes.example.com:6443
+              </TerminalToken>
+            </TerminalLine>
+            <TerminalLine>
+              <TerminalToken color="fushia">✓</TerminalToken>{' '}
+              <TerminalToken color="green">Created deployment</TerminalToken>
+            </TerminalLine>
+            <TerminalLine>
+              <TerminalToken color="fushia">✓</TerminalToken>{' '}
+              <TerminalToken color="green">
+                Deployment successfully rolled out! The deploy was successful! A
+                Waypoint deployment URL is shown below. This can be used
+                internally to check your deployment and is not meant for
+                external traffic. You can manage this hostname using
+                &quot;waypoint hostname&quot; Deployment URL:
+                https://immensely-guided-stag--v5.waypoint.run
               </TerminalToken>
             </TerminalLine>
           </Terminal>
@@ -50,19 +71,35 @@ export default function SectionIntro({
                 label: 'Build',
                 content: (
                   <>
-                    <TerminalLine>build &#123;</TerminalLine>
                     <TerminalLine>
-                      {'  '}use &quot;pack&quot; &#123;&#125;
+                      <TerminalToken color="green">build</TerminalToken> &#123;
+                    </TerminalLine>
+                    <TerminalLine>
+                      {'  '}use{' '}
+                      <TerminalToken color="green">
+                        &quot;pack&quot;
+                      </TerminalToken>{' '}
+                      &#123;&#125;
                     </TerminalLine>
                     <TerminalLine>{'  '}registry &#123;</TerminalLine>
                     <TerminalLine>
-                      {'    '}use &quot;docker&quot; &#123;
+                      {'    '}use{' '}
+                      <TerminalToken color="green">
+                        &quot;docker&quot;
+                      </TerminalToken>{' '}
+                      &#123;
                     </TerminalLine>
                     <TerminalLine>
-                      {'      '}image = &quot;nodejs-example&quot;
+                      {'      '}image ={' '}
+                      <TerminalToken color="green">
+                        &quot;nodejs-example&quot;
+                      </TerminalToken>
                     </TerminalLine>
                     <TerminalLine>
-                      {'      '}tag = &quot;latest&quot;
+                      {'      '}tag ={' '}
+                      <TerminalToken color="green">
+                        &quot;latest&quot;
+                      </TerminalToken>
                     </TerminalLine>
                     <TerminalLine>{'      '}local = true</TerminalLine>
                     <TerminalLine>{'    '}&#125;</TerminalLine>
@@ -75,9 +112,15 @@ export default function SectionIntro({
                 label: 'Deploy',
                 content: (
                   <>
-                    <TerminalLine>deploy &#123;</TerminalLine>
                     <TerminalLine>
-                      {'  '}use &quot;kubernetes&quot; &#123;
+                      <TerminalToken color="green">deploy</TerminalToken> &#123;
+                    </TerminalLine>
+                    <TerminalLine>
+                      {'  '}use{' '}
+                      <TerminalToken color="green">
+                        &quot;kubernetes&quot;
+                      </TerminalToken>{' '}
+                      &#123;
                     </TerminalLine>
                     <TerminalLine>
                       {'    '}probe_path = &quot;/&quot;
@@ -91,9 +134,16 @@ export default function SectionIntro({
                 label: 'Release',
                 content: (
                   <>
-                    <TerminalLine>release &#123;</TerminalLine>
                     <TerminalLine>
-                      {'  '}use &quot;kubernetes&quot; &#123;
+                      <TerminalToken color="green">release</TerminalToken>{' '}
+                      &#123;
+                    </TerminalLine>
+                    <TerminalLine>
+                      {'  '}use{' '}
+                      <TerminalToken color="green">
+                        &quot;kubernetes&quot;
+                      </TerminalToken>{' '}
+                      &#123;
                     </TerminalLine>
                     <TerminalLine>{'    '}load_balancer = true</TerminalLine>
                     <TerminalLine>{'    '}port = 3000</TerminalLine>
