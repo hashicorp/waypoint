@@ -28,7 +28,6 @@
   font-weight: 400;
   letter-spacing: -0.02em;
   grid-column: 1 / -1;
-  max-width: 625px;
   justify-self: center;
 
   @media (--medium-up) {
@@ -44,57 +43,12 @@
   & > em {
     font-style: normal;
     font-weight: 500;
-    color: var(--waypoint);
-  }
-}
-
-.heroCallout {
-  margin-top: 25px;
-  margin-bottom: 32px;
-  grid-column: 1 / -1;
-}
-
-.heroCalloutText {
-  margin: 0;
-  composes: g-type-body-small from global;
-  padding: 6px 16px;
-  display: inline-flex;
-  align-items: center;
-  flex-direction: column;
-
-  @media (min-width: 500px) {
-    flex-direction: row;
-  }
-
-  /* --waypoint-secondary at 50% opacity */
-  background-color: #ebfcfd;
-  border-radius: 8px;
-
-  & em {
-    font-style: normal;
-    font-weight: 600;
-  }
-
-  & span:not(:last-of-type) {
-    margin-bottom: 6px;
-    margin-right: 0;
-
-    @media (min-width: 500px) {
-      margin-bottom: 0;
-      margin-right: 6px;
-    }
-  }
-
-  & svg {
-    margin-right: 4px;
-    transform: translateY(-3px);
-    vertical-align: middle;
   }
 }
 
 .heroDescription {
   position: relative;
-  margin: 0;
+  margin: 32px 0 0;
   composes: g-type-body-small from global;
   color: var(--gray-3);
   z-index: 10;

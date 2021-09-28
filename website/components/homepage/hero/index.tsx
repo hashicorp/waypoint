@@ -26,19 +26,6 @@ export default function Hero({ heading, description }: HeroProps): JSX.Element {
     <header className={s.hero}>
       <div className={s.heroInner}>
         <h1 className={s.heroHeading}>{heading}</h1>
-        <div className={s.heroCallout}>
-          <p className={s.heroCalloutText}>
-            <span>Optimized for</span>
-            <span>
-              <KubernetesLogo />
-              <em>Kubernetes</em> and
-            </span>
-            <span>
-              <EcsLogo />
-              <em>Amazon ECS</em>
-            </span>
-          </p>
-        </div>
         <p className={s.heroDescription}>{description}</p>
       </div>
       <div
