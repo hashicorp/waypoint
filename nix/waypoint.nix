@@ -7,7 +7,7 @@
       pkgs.go
       pkgs.go-bindata
       pkgs.grpcurl
-      pkgs.nodejs-12_x
+      pkgs.nodejs-16_x
       pkgs.postgresql_12
       pkgs.protoc-gen-doc
 
