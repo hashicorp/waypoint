@@ -20,7 +20,7 @@ docs/add-version:
 # Removes a version from the version-manifest file, which drives display of past documentation versions on the site.
 docs/remove-version:
 	@echo "==> Removing version $(display) from the manifest..."
-	@if [ $(shell git diff --cached | wc -l) -ne 0 ]; then echo "⚠️  staged files found, please commit or unstage these files to add a version" && exit 1; fi
+	@if [ $(shell git diff --cached | wc -l) -ne 0 ]; then echo "⚠️  staged files found, please commit or unstage these files to remove a version" && exit 1; fi
 	@docker run \
 		--rm \
 		-it \
