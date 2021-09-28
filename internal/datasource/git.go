@@ -191,8 +191,9 @@ func (s *GitSource) Get(
 	})
 	if err != nil {
 		closer()
+
 		return "", nil, nil, status.Errorf(codes.Aborted,
-			"Git clone failed: %s", output.String())
+			"Git clone failed: %s\n\nOutput: %s", err, output.String())
 	}
 
 	// Checkout if we have a ref. If we don't have a ref we use the
