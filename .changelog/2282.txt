@@ -1,0 +1,3 @@
+```release-note:feature
+platform/nomad: Add persistent data volumes to nomad deploy
+```
