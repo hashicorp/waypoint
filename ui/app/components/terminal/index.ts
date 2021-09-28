@@ -42,7 +42,7 @@ export default class LogTerminal extends Component<TerminalComponentArgs> {
   }
 
   setIsFollowingLogs(): void {
-    let viewport = this.element.querySelector('.xterm-viewport');
+    let viewport = this.element.querySelector('.xterm-viewport') as HTMLElement;
     if (viewport) {
       this.isFollowingLogs = viewport?.scrollTop >= viewport?.scrollHeight - viewport?.offsetHeight;
     }

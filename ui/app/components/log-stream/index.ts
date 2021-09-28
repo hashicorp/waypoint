@@ -2,6 +2,7 @@ import { GetLogStreamRequest, LogBatch } from 'waypoint-pb';
 
 import ApiService from 'waypoint/services/api';
 import Component from '@glimmer/component';
+import { Status } from 'grpc-web';
 import { Terminal } from 'xterm';
 import { createTerminal } from 'waypoint/utils/terminal';
 import { formatRFC3339 } from 'date-fns';
@@ -16,7 +17,6 @@ export default class LogStream extends Component<LogStreamArgs> {
   @service api!: ApiService;
 
   @tracked terminal!: Terminal;
-
 
   constructor(owner: unknown, args: LogStreamArgs) {
     super(owner, args);
@@ -42,8 +42,8 @@ export default class LogStream extends Component<LogStreamArgs> {
     });
   };
 
-  onStatus = (status: any): void => {
-    if (status.details) {
+  onStatus = (status?: Status): void => {
+    if (status?.details) {
       this.terminal.writeln(status.details);
     }
   };

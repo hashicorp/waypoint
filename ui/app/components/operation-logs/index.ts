@@ -4,6 +4,7 @@ import { GetJobStreamRequest, GetJobStreamResponse } from 'waypoint-pb';
 
 import ApiService from 'waypoint/services/api';
 import Component from '@glimmer/component';
+import { Status } from 'grpc-web';
 import { Terminal } from 'xterm';
 import { createTerminal } from 'waypoint/utils/terminal';
 import { inject as service } from '@ember/service';
@@ -116,7 +117,7 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
     this.writeTerminalOutput(response);
   };
 
-  onStatus = (status: any): void => {
+  onStatus = (status: Status): void => {
     if (status.details) {
       this.terminal.writeln(status.details);
     }
