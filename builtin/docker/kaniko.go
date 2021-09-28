@@ -71,6 +71,12 @@ func (b *Builder) buildWithKaniko(
 		return nil, status.Errorf(codes.Internal, "unable to parse image name: %s", err)
 	}
 	host := reference.Domain(ref)
+	if host == "docker.io" {
+		// The normalized name parse above will turn short names like "foo/bar"
+		// into "docker.io/foo/bar" but the actual registry host for these
+		// is "index.docker.io".
+		host = "index.docker.io"
+	}
 	log.Trace("auth host", "host", host)
 
 	if ai.Insecure {
