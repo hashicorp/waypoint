@@ -27,7 +27,7 @@ export default function HomePage(): JSX.Element {
             </>
           ),
           description:
-            'Waypoint enables developers to deploy, manage, and observe their applications to Kubernetes, ECS, and many other platforms through a consistent abstraction.',
+            'Waypoint provides a simple and consistent abstraction for developers to easily build, deploy, and release applications.',
           features: [
             {
               icon: require('components/homepage/icons/layers.svg?include'),
@@ -38,8 +38,15 @@ export default function HomePage(): JSX.Element {
             {
               icon: require('components/homepage/icons/link.svg?include'),
               heading: 'End-to-end deployment workflow',
-              description:
-                'Build a complete end-to-end workflow with distinct build, deploy, release steps.',
+              description: (
+                <>
+                  Move and manage resources efficiently with distinct build,
+                  deploy, release steps.{' '}
+                  <a href="https://www.waypointproject.io/docs/lifecycle">
+                    Learn more
+                  </a>
+                </>
+              ),
             },
           ],
         }}
@@ -55,14 +62,21 @@ export default function HomePage(): JSX.Element {
             {
               icon: require('components/homepage/icons/maximize.svg?include'),
               heading: 'Build-deploy-release extensibility',
-              description:
-                'Enable a pluggable framework, integrated with CI/CD pipelines, monitoring tools, and any other ecosystem tools. ',
+              description: (
+                <>
+                  Enable a pluggable framework, integrated with CI/CD pipelines,
+                  monitoring tools, and any other ecosystem tools.{' '}
+                  <a href="https://www.waypointproject.io/docs/extending-waypoint">
+                    Learn more
+                  </a>
+                </>
+              ),
             },
             {
               icon: require('components/homepage/icons/sidebar.svg?include'),
               heading: 'PaaS experience for developers',
               description:
-                'Provide a consistent abstraction and unified workflow to scale across multiple platforms and clouds',
+                'Provide a consistent abstraction and unified workflow for any major platforms.',
             },
           ],
         }}
@@ -79,7 +93,7 @@ export default function HomePage(): JSX.Element {
             },
             {
               icon: require('components/homepage/icons/layout.svg?include'),
-              heading: 'Compatible with your apps',
+              heading: 'Sample Waypoint files',
               description:
                 'View sample waypoint.hcl files to see how straight-forward it is to configure your deployments',
             },
@@ -94,20 +108,20 @@ export default function HomePage(): JSX.Element {
           features={[
             {
               icon: require('components/homepage/icons/file-plus.svg?include'),
-              heading: 'One simple command',
+              heading: 'Manage all steps within Waypoint',
               description:
-                'Perform the build, deploy, and release steps for the app all from one simple command. Or instrument your Waypoint deployments through Remote or Git operations',
+                'Perform the build, deploy, and release steps for the app within waypoint. Or instrument your Waypoint deployments through Remote or Git operations.',
             },
           ]}
         />
         <MonitorAndManage
-          heading="Monitor and manage in one place"
+          heading="Manage your apps in one place"
           features={[
             {
               icon: require('components/homepage/icons/sliders.svg?include'),
-              heading: 'One place for all your deployments',
+              heading: 'Rich GUI for Waypoint',
               description:
-                'No matter where your developers are deploying to, monitor the activity through Waypoint’s aggregated logs and activity UI.',
+                'No matter where your developers are deploying to, view logs, builds, releases and even run exec commands from the Waypoint UI.',
             },
           ]}
         />
@@ -128,9 +142,7 @@ export default function HomePage(): JSX.Element {
       />
       <SectionExtendPlugins
         heading="Extend Waypoint with plugins"
-        description="Extend workflows via built-in plugins and an extensible interface.
-            Supports custom builders, deployment platforms, registries, release
-            managers, and more."
+        description="Extend workflows via built-in plugins and an extensible interface. Supports custom builders, deployment platforms, registries, release managers, and more."
         features={[
           {
             icon: require('components/homepage/icons/box.svg?include'),

@@ -6,7 +6,7 @@ import s from './style.module.css'
 export interface MediaObjectProps {
   icon: string
   heading: string
-  description: string
+  description: string | React.ReactNode
   link?: {
     url: string
     text: string

@@ -48,8 +48,7 @@ export default function App({ Component, pageProps }) {
       <Footer
         openConsentManager={openConsentManager}
         heading="Using Waypoint"
-        description="The best way to understand what Waypoint can enable for your
-        projects is to give it a try. It’s as simple as `waypoint up`"
+        description="The best way to understand what Waypoint can enable for your projects is to give it a try."
         cards={[
           {
             link:
