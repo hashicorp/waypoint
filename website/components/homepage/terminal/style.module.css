@@ -64,6 +64,7 @@
 }
 
 .terminalLine {
+  white-space: pre-wrap;
   display: block;
   line-height: 2;
 }

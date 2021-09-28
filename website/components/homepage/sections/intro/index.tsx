@@ -48,15 +48,59 @@ export default function SectionIntro({
             tabs={[
               {
                 label: 'Build',
-                content: <TerminalLine>Build</TerminalLine>,
+                content: (
+                  <>
+                    <TerminalLine>build &#123;</TerminalLine>
+                    <TerminalLine>
+                      {'  '}use &quot;pack&quot; &#123;&#125;
+                    </TerminalLine>
+                    <TerminalLine>{'  '}registry &#123;</TerminalLine>
+                    <TerminalLine>
+                      {'    '}use &quot;docker&quot; &#123;
+                    </TerminalLine>
+                    <TerminalLine>
+                      {'      '}image = &quot;nodejs-example&quot;
+                    </TerminalLine>
+                    <TerminalLine>
+                      {'      '}tag = &quot;latest&quot;
+                    </TerminalLine>
+                    <TerminalLine>{'      '}local = true</TerminalLine>
+                    <TerminalLine>{'    '}&#125;</TerminalLine>
+                    <TerminalLine>{'  '}&#125;</TerminalLine>
+                    <TerminalLine>&#125;</TerminalLine>
+                  </>
+                ),
               },
               {
                 label: 'Deploy',
-                content: <TerminalLine>Deploy</TerminalLine>,
+                content: (
+                  <>
+                    <TerminalLine>deploy &#123;</TerminalLine>
+                    <TerminalLine>
+                      {'  '}use &quot;kubernetes&quot; &#123;
+                    </TerminalLine>
+                    <TerminalLine>
+                      {'    '}probe_path = &quot;/&quot;
+                    </TerminalLine>
+                    <TerminalLine>{'  '}&#125;</TerminalLine>
+                    <TerminalLine>&#125;</TerminalLine>
+                  </>
+                ),
               },
               {
                 label: 'Release',
-                content: <TerminalLine>Release</TerminalLine>,
+                content: (
+                  <>
+                    <TerminalLine>release &#123;</TerminalLine>
+                    <TerminalLine>
+                      {'  '}use &quot;kubernetes&quot; &#123;
+                    </TerminalLine>
+                    <TerminalLine>{'    '}load_balancer = true</TerminalLine>
+                    <TerminalLine>{'    '}port = 3000</TerminalLine>
+                    <TerminalLine>{'  '}&#125;</TerminalLine>
+                    <TerminalLine>&#125;</TerminalLine>
+                  </>
+                ),
               },
             ]}
           />
