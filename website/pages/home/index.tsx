@@ -38,15 +38,12 @@ export default function HomePage(): JSX.Element {
             {
               icon: require('components/homepage/icons/link.svg?include'),
               heading: 'End-to-end deployment workflow',
-              description: (
-                <>
-                  Move and manage resources efficiently with distinct build,
-                  deploy, release steps.{' '}
-                  <a href="https://www.waypointproject.io/docs/lifecycle">
-                    Learn more
-                  </a>
-                </>
-              ),
+              description:
+                'Move and manage resources efficiently with distinct build, deploy, release steps.',
+              link: {
+                text: 'Learn more',
+                url: 'https://www.waypointproject.io/docs/lifecycle',
+              },
             },
           ],
         }}
@@ -62,15 +59,12 @@ export default function HomePage(): JSX.Element {
             {
               icon: require('components/homepage/icons/maximize.svg?include'),
               heading: 'Build-deploy-release extensibility',
-              description: (
-                <>
-                  Enable a pluggable framework, integrated with CI/CD pipelines,
-                  monitoring tools, and any other ecosystem tools.{' '}
-                  <a href="https://www.waypointproject.io/docs/extending-waypoint">
-                    Learn more
-                  </a>
-                </>
-              ),
+              description:
+                'Enable a pluggable framework, integrated with CI/CD pipelines, monitoring tools, and any other ecosystem tools.',
+              link: {
+                text: 'Learn more',
+                url: 'https://www.waypointproject.io/docs/extending-waypoint',
+              },
             },
             {
               icon: require('components/homepage/icons/sidebar.svg?include'),

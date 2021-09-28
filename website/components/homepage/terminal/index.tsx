@@ -14,7 +14,7 @@ interface TerminalProps {
 }
 
 function Terminal({ tabs, children }: TerminalProps): JSX.Element {
-  const [tabIndex, setTabIndex] = React.useState(0)
+  const [tabIndex, setTabIndex] = React.useState(2)
   const [isHovering, setIsHovering] = React.useState(false)
   const { ref, inView } = useInView({
     threshold: 1,
@@ -22,17 +22,17 @@ function Terminal({ tabs, children }: TerminalProps): JSX.Element {
   const handleTabsChange = (index) => {
     setTabIndex(index)
   }
-  useInterval(
-    () => {
-      if (!tabs) return
-      if (tabIndex >= tabs.length - 1) {
-        setTabIndex(0)
-      } else {
-        setTabIndex((prevTabIndex) => prevTabIndex + 1)
-      }
-    },
-    isHovering || !inView ? null : 5000
-  )
+  // useInterval(
+  //   () => {
+  //     if (!tabs) return
+  //     if (tabIndex >= tabs.length - 1) {
+  //       setTabIndex(0)
+  //     } else {
+  //       setTabIndex((prevTabIndex) => prevTabIndex + 1)
+  //     }
+  //   },
+  //   isHovering || !inView ? null : 5000
+  // )
   return (
     <div
       ref={ref}

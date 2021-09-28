@@ -29,32 +29,26 @@ export default function SectionIntro({
               <TerminalToken color="teal">~</TerminalToken>
             </TerminalLine>
             <TerminalLine>
-              <TerminalToken color="fushia">$</TerminalToken> waypoint up
+              <TerminalToken color="green">$ waypoint up</TerminalToken>
             </TerminalLine>
             <TerminalLine>
-              <TerminalToken color="fushia">»</TerminalToken>{' '}
-              <TerminalToken color="green">Deploying . . .</TerminalToken>
+              <TerminalToken color="white">» Deploying . . .</TerminalToken>
             </TerminalLine>
             <TerminalLine>
-              <TerminalToken color="fushia">✓</TerminalToken>{' '}
+              <TerminalToken color="white">✓</TerminalToken>{' '}
               <TerminalToken color="green">
                 Kubernetes client connected to
                 https://kubernetes.example.com:6443
               </TerminalToken>
             </TerminalLine>
             <TerminalLine>
-              <TerminalToken color="fushia">✓</TerminalToken>{' '}
+              <TerminalToken color="white">✓</TerminalToken>{' '}
               <TerminalToken color="green">Created deployment</TerminalToken>
             </TerminalLine>
             <TerminalLine>
-              <TerminalToken color="fushia">✓</TerminalToken>{' '}
+              <TerminalToken color="white">✓</TerminalToken>{' '}
               <TerminalToken color="green">
-                Deployment successfully rolled out! The deploy was successful! A
-                Waypoint deployment URL is shown below. This can be used
-                internally to check your deployment and is not meant for
-                external traffic. You can manage this hostname using
-                &quot;waypoint hostname&quot; Deployment URL:
-                https://immensely-guided-stag--v5.waypoint.run
+                Deployment successfully rolled out!
               </TerminalToken>
             </TerminalLine>
           </Terminal>
@@ -76,7 +70,7 @@ export default function SectionIntro({
                     </TerminalLine>
                     <TerminalLine>
                       {'  '}use{' '}
-                      <TerminalToken color="green">
+                      <TerminalToken color="teal">
                         &quot;pack&quot;
                       </TerminalToken>{' '}
                       &#123;&#125;
@@ -84,24 +78,29 @@ export default function SectionIntro({
                     <TerminalLine>{'  '}registry &#123;</TerminalLine>
                     <TerminalLine>
                       {'    '}use{' '}
-                      <TerminalToken color="green">
+                      <TerminalToken color="teal">
                         &quot;docker&quot;
                       </TerminalToken>{' '}
                       &#123;
                     </TerminalLine>
                     <TerminalLine>
-                      {'      '}image ={' '}
-                      <TerminalToken color="green">
+                      {'      '}
+                      <TerminalToken color="green">image</TerminalToken> ={' '}
+                      <TerminalToken color="teal">
                         &quot;nodejs-example&quot;
                       </TerminalToken>
                     </TerminalLine>
                     <TerminalLine>
-                      {'      '}tag ={' '}
-                      <TerminalToken color="green">
+                      {'      '}
+                      <TerminalToken color="green">tag</TerminalToken> ={' '}
+                      <TerminalToken color="teal">
                         &quot;latest&quot;
                       </TerminalToken>
                     </TerminalLine>
-                    <TerminalLine>{'      '}local = true</TerminalLine>
+                    <TerminalLine>
+                      {'      '}
+                      <TerminalToken color="green">local</TerminalToken> = true
+                    </TerminalLine>
                     <TerminalLine>{'    '}&#125;</TerminalLine>
                     <TerminalLine>{'  '}&#125;</TerminalLine>
                     <TerminalLine>&#125;</TerminalLine>
@@ -117,13 +116,17 @@ export default function SectionIntro({
                     </TerminalLine>
                     <TerminalLine>
                       {'  '}use{' '}
-                      <TerminalToken color="green">
+                      <TerminalToken color="teal">
                         &quot;kubernetes&quot;
                       </TerminalToken>{' '}
                       &#123;
                     </TerminalLine>
                     <TerminalLine>
-                      {'    '}probe_path = &quot;/&quot;
+                      {'    '}
+                      <TerminalToken color="green">
+                        probe_path
+                      </TerminalToken> ={' '}
+                      <TerminalToken color="teal">&quot;/&quot;</TerminalToken>
                     </TerminalLine>
                     <TerminalLine>{'  '}&#125;</TerminalLine>
                     <TerminalLine>&#125;</TerminalLine>
@@ -140,13 +143,22 @@ export default function SectionIntro({
                     </TerminalLine>
                     <TerminalLine>
                       {'  '}use{' '}
-                      <TerminalToken color="green">
+                      <TerminalToken color="teal">
                         &quot;kubernetes&quot;
                       </TerminalToken>{' '}
                       &#123;
                     </TerminalLine>
-                    <TerminalLine>{'    '}load_balancer = true</TerminalLine>
-                    <TerminalLine>{'    '}port = 3000</TerminalLine>
+                    <TerminalLine>
+                      {'    '}
+                      <TerminalToken color="green">
+                        load_balancer
+                      </TerminalToken>{' '}
+                      = true
+                    </TerminalLine>
+                    <TerminalLine>
+                      {'    '}
+                      <TerminalToken color="green">port</TerminalToken> = 3000
+                    </TerminalLine>
                     <TerminalLine>{'  '}&#125;</TerminalLine>
                     <TerminalLine>&#125;</TerminalLine>
                   </>
