@@ -461,10 +461,9 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 			if err != nil {
 				return err
 			}
+			s.Update("Successfully destroyed persistent volumes")
 		}
 	}
-
-	s.Update("Successfully destroyed persistent volumes")
 	s.Done()
 
 	return nil
