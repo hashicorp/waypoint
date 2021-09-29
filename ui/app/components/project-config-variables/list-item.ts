@@ -57,7 +57,6 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
   @action
   editVariable(): void {
     this.isEditing = true;
-    // this.storeInitialVariable();
     this.changeset = Changeset(this.variable);
   }
 
