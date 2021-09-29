@@ -34,7 +34,10 @@
     <Section>
       <:heading>{{t "page.deployment.resources.heading"}}</:heading>
       <:body>
-        <ResourcesTable @resources={{@model.statusReport.resourcesList}}>
+        <ResourcesTable
+          @resources={{@model.statusReport.resourcesList}}
+          @route="workspace.projects.project.app.deployment.resource"
+        >
           <:caption>
             {{t "page.deployment.resources.table-caption" htmlSafe=true}}
           </:caption>

@@ -26,8 +26,8 @@
         <tr>
           <th scope="row">
             <LinkTo
-              @route="workspace.projects.project.app.deployment.resource"
-              @model={{resource.id}}
+              @route={{@route}}
+              @models={{append (or @models (array)) resource.id}}
             >
               {{resource.name}}
             </LinkTo>
