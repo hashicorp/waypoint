@@ -2,10 +2,11 @@ import Component from '@glimmer/component';
 import { FitAddon } from 'xterm-addon-fit';
 import { Terminal } from 'xterm';
 import { action } from '@ember/object';
+import { assert } from '@ember/debug';
 import { tracked } from '@glimmer/tracking';
 
 interface TerminalComponentArgs {
-  terminal: Terminal;
+  terminal?: Terminal;
 }
 
 export default class LogTerminal extends Component<TerminalComponentArgs> {
@@ -17,6 +18,7 @@ export default class LogTerminal extends Component<TerminalComponentArgs> {
   constructor(owner: unknown, args: TerminalComponentArgs) {
     super(owner, args);
     let { terminal } = args;
+    assert('A terminal object must be passed to the component', !!terminal);
     this.terminal = terminal;
     this.isFollowingLogs = true;
   }

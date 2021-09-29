@@ -28,7 +28,7 @@
     "@ember-decorators/component": "^6.1.1",
     "@ember/optional-features": "^2.0.0",
     "@ember/render-modifiers": "^1.0.2",
-    "@ember/test-helpers": "^2.1.4",
+    "@ember/test-helpers": "^2.4.2",
     "@glimmer/component": "^1.0.3",
     "@glimmer/tracking": "^1.0.3",
     "@hashicorp/pds-ember": "^0.6.0",
