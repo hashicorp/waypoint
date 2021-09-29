@@ -8,24 +8,25 @@
   table {
     padding: 0.5rem 0;
     font-size: 0.875rem;
-    font-weight: 500;
 
     tr {
-      padding: 0.5rem 0;
-
+      td {
+        padding-bottom: 0.5rem;
+      }
       .status-indicator {
         display: flex;
         align-items: flex-end;
       }
 
       td:first-child {
+        font-weight: 500;
         color: rgb(var(--text-muted));
         width: 158px;
       }
     }
 
     button {
-      padding: 0 0.5rem;
+      padding: 0 0.25rem;
       height: inherit;
       display: flex;
       align-items: baseline;
