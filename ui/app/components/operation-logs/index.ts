@@ -14,25 +14,24 @@ interface OperationLogsArgs {
   jobId: string;
 }
 
+// Mappings for message styles
+// https://github.com/hashicorp/waypoint-plugin-sdk/blob/baf566811af680c5df138f9915d756f67d271b1a/terminal/ui.go#L126-L135
+const STYLE_TO_ANSI: Record<string, (msg: string) => string> = {
+  header: AnsiColors.bold,
+  error: AnsiColors.red,
+  'error-bold': AnsiColors.red.bold,
+  warning: AnsiColors.yellow,
+  'warning-bold': AnsiColors.yellow.bold,
+  info: AnsiColors.cyan,
+  success: AnsiColors.green,
+  'success-bold': AnsiColors.green.bold,
+  '': AnsiColors.bold,
+  default: (msg) => msg,
+};
 export default class OperationLogs extends Component<OperationLogsArgs> {
   @service api!: ApiService;
 
   @tracked terminal!: Terminal;
-
-  // https://github.com/hashicorp/waypoint-plugin-sdk/blob/baf566811af680c5df138f9915d756f67d271b1a/terminal/ui.go#L126-L135
-  headerStyle = 'header';
-  errorStyle = 'error';
-  errorBoldStyle = 'error-bold';
-  warningStyle = 'warning';
-  warningBoldStyle = 'warning-bold';
-  infoStyle = 'info';
-  successStyle = 'success';
-  successBoldStyle = 'success-bold';
-
-  typeLine = 'line';
-  typeStep = 'step';
-  typeStepGroup = 'step-group';
-  typeStatus = 'status';
 
   constructor(owner: unknown, args: OperationLogsArgs) {
     super(owner, args);
@@ -70,38 +69,8 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
 
   writeLine(line: GetJobStreamResponse.Terminal.Event.Line): void {
     let msg = line.getMsg();
-    switch (line.toObject().style) {
-      case 'header':
-        msg = AnsiColors.bold(msg);
-        break;
-      case 'error':
-        msg = AnsiColors.red(msg);
-        break;
-      case 'error-bold':
-        msg = AnsiColors.bold.red(msg);
-        break;
-      case 'warning':
-        msg = AnsiColors.yellow(msg);
-        break;
-      case 'warning-bold':
-        msg = AnsiColors.yellow.bold(msg);
-        break;
-      case 'info':
-        msg = AnsiColors.cyan(msg);
-        break;
-      case 'success':
-        msg = AnsiColors.green(msg);
-        break;
-      case 'success-bold':
-        msg = AnsiColors.green.bold(msg);
-        break;
-      case '':
-        msg = AnsiColors.bold(msg);
-        break;
-      default:
-        break;
-    }
-    this.terminal.writeln(msg);
+    let formattedMsg = (STYLE_TO_ANSI[line.toObject().style] || STYLE_TO_ANSI.default)(msg);
+    this.terminal.writeln(formattedMsg);
   }
 
   async startTerminalStream(): Promise<void> {
