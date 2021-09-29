@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -521,7 +520,7 @@ func (p *Platform) resourceDeploymentCreate(
 			"Failed to define app container: %s", err)
 	}
 
-	var sidecarContainers []*corev1.Container
+	var sidecarContainers []corev1.Container
 
 	for _, sidecarConfig := range p.config.Pod.Sidecars {
 		sidecarContainer, err := configureK8sContainer(
@@ -539,7 +538,7 @@ func (p *Platform) resourceDeploymentCreate(
 			return status.Errorf(status.Code(err),
 				"Failed to define sidecar container %s: %s", sidecarConfig.Name, err)
 		}
-		sidecarContainers = append(sidecarContainers, sidecarContainer)
+		sidecarContainers = append(sidecarContainers, *sidecarContainer)
 	}
 
 	// If no count is specified, presume that the user is managing the replica
@@ -577,7 +576,7 @@ func (p *Platform) resourceDeploymentCreate(
 
 	// Update the deployment with our spec
 	deployment.Spec.Template.Spec = corev1.PodSpec{
-		Containers: []corev1.Container{appContainer, sidecarContainers...},
+		Containers: append(sidecarContainers, *appContainer),
 	}
 
 	// Override the default TCP socket checks if we have a probe path
