@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 
-import { createTerminal } from 'waypoint/utils/terminal';
+import { createTerminal } from 'waypoint/utils/create-terminal';
 import hbs from 'htmlbars-inline-precompile';
 import { later } from '@ember/runloop';
 import { render } from '@ember/test-helpers';
