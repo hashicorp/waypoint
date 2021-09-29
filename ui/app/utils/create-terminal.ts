@@ -4,6 +4,7 @@ import terminalTheme from 'waypoint/utils/terminal-theme';
 
 interface TerminalOptions {
   inputDisabled: boolean;
+  domRendering?: boolean | undefined;
 }
 
 export function createTerminal(options: TerminalOptions): Terminal {
@@ -15,6 +16,11 @@ export function createTerminal(options: TerminalOptions): Terminal {
     fontWeightBold: '700',
     theme: terminalTheme.light,
   };
+
+  // This should be used for DOM rendering in tests only
+  if (options.domRendering === true) {
+    terminalOptions.rendererType = 'dom';
+  }
 
   // Switch to dark theme if enabled
   if (window.matchMedia('(prefers-color-scheme: dark)').matches) {

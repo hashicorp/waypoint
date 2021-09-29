@@ -10,7 +10,7 @@ interface TerminalComponentArgs {
 
 export default class LogTerminal extends Component<TerminalComponentArgs> {
   element!: HTMLElement;
-  terminal: Terminal;
+  terminal?: Terminal;
   fitAddon!: FitAddon;
   @tracked isFollowingLogs: boolean;
 
@@ -42,10 +42,7 @@ export default class LogTerminal extends Component<TerminalComponentArgs> {
   }
 
   setIsFollowingLogs(): void {
-    let viewport = this.element.querySelector('.xterm-viewport') as HTMLElement;
-    if (viewport) {
-      this.isFollowingLogs = viewport?.scrollTop >= viewport?.scrollHeight - viewport?.offsetHeight;
-    }
+    this.isFollowingLogs = this.isScrolledToBottom();
   }
 
   viewPortdidScroll = (): void => {
@@ -54,15 +51,25 @@ export default class LogTerminal extends Component<TerminalComponentArgs> {
 
   @action
   followLogs(): void {
-    this.terminal.scrollToBottom();
+    this.terminal?.scrollToBottom();
   }
 
   willDestroyNode = (): void => {
     this.terminal?.dispose();
+    delete this.terminal;
     this.element.querySelector('.xterm-viewport')?.removeEventListener('scroll', this.viewPortdidScroll);
   };
 
   didResize = (): void => {
     this.fitAddon.fit();
   };
+
+  isScrolledToBottom(): boolean {
+    let viewport = this.element.querySelector('.xterm-viewport') as HTMLElement;
+    if (viewport) {
+      return viewport?.scrollTop >= viewport?.scrollHeight - viewport?.offsetHeight;
+    } else {
+      return false;
+    }
+  }
 }
