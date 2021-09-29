@@ -124,6 +124,7 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	p.labels = opts.Config.Labels
 
 	// Set our final job info
+	p.jobInfo.Project = p.name
 	p.jobInfo.Workspace = p.workspace
 
 	// Initialize all the applications and load all their components.

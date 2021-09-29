@@ -69,12 +69,16 @@ func newApp(
 	p *Project,
 	cfg *config.App,
 ) (*App, error) {
+	// Copy the job info structure, a shallow copy is fine.
+	jobInfo := *p.jobInfo
+	jobInfo.App = cfg.Name
+
 	// Initialize
 	app := &App{
 		project: p,
 		client:  p.client,
 		source:  &component.Source{App: cfg.Name, Path: cfg.Path},
-		jobInfo: p.jobInfo,
+		jobInfo: &jobInfo,
 		logger:  p.logger.Named("app").Named(cfg.Name),
 		ref: &pb.Ref_Application{
 			Application: cfg.Name,
