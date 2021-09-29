@@ -20,7 +20,7 @@ export default Model.extend({
       // so we need to use the getter then modify the keys/values
       // https://developers.google.com/protocol-buffers/docs/reference/javascript-generated#map
       let configMap = dynamicVal.getConfigMap();
-      this.dynamic.configMap.forEach((value, key) => {
+      this.dynamic.configMap.forEach(([key, value]) => {
         configMap.set(key, value);
       });
       result.setDynamic(dynamicVal);
