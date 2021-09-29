@@ -295,9 +295,14 @@ func configureK8sContainer(
 	ports []*Port,
 	envVars map[string]string,
 	probe *Probe,
+	probePath string,
 	cpu *ResourceConfig,
 	memory *ResourceConfig,
 	resources map[string]string,
+	command *[]string,
+	args *[]string,
+	scratchSpace []string,
+	volumes []corev1.Volume,
 	log hclog.Logger,
 ) (*corev1.Container, error) {
 	// If the user is using the latest tag, then don't specify an overriding pull policy.
@@ -317,7 +322,7 @@ func configureK8sContainer(
 			pullPolicy = corev1.PullIfNotPresent
 		}
 	} else {
-		return nil, status.Errorf(codes.InvalidArgument, "image %s is in an invalid format", config.Image)
+		return nil, status.Errorf(codes.InvalidArgument, "image %s is in an invalid format", image)
 	}
 
 	var k8sPorts []corev1.ContainerPort
@@ -419,32 +424,62 @@ func configureK8sContainer(
 		Requests: resourceRequests,
 	}
 
+	var handler corev1.Handler
+	if probePath != "" {
+		handler = corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path: probePath,
+				Port: intstr.FromInt(defaultPort),
+			},
+		}
+	} else {
+		// If no probe path is defined, assume app will bind to default TCP port
+		// TODO: handle apps that aren't socket listeners
+		handler = corev1.Handler{
+			TCPSocket: &corev1.TCPSocketAction{
+				Port: intstr.FromInt(defaultPort),
+			},
+		}
+	}
+
+	var volumeMounts []corev1.VolumeMount
+	for idx, scratchSpaceLocation := range scratchSpace {
+		volumeMounts = append(
+			volumeMounts,
+			corev1.VolumeMount{
+				// We know all the volumes are identical
+				Name:      volumes[idx].Name,
+				MountPath: scratchSpaceLocation,
+			},
+		)
+	}
+
 	container := corev1.Container{
 		Name:            name,
 		Image:           image,
 		ImagePullPolicy: pullPolicy,
 		Ports:           k8sPorts,
 		LivenessProbe: &corev1.Probe{
-			Handler: corev1.Handler{
-				TCPSocket: &corev1.TCPSocketAction{
-					Port: intstr.FromInt(defaultPort),
-				},
-			},
+			Handler:             handler,
 			InitialDelaySeconds: initialDelaySeconds,
 			TimeoutSeconds:      timeoutSeconds,
 			FailureThreshold:    failureThreshold,
 		},
 		ReadinessProbe: &corev1.Probe{
-			Handler: corev1.Handler{
-				TCPSocket: &corev1.TCPSocketAction{
-					Port: intstr.FromInt(defaultPort),
-				},
-			},
+			Handler:             handler,
 			InitialDelaySeconds: initialDelaySeconds,
 			TimeoutSeconds:      timeoutSeconds,
 		},
-		Env:       k8sEnvVars,
-		Resources: resourceRequirements,
+		Env:          k8sEnvVars,
+		Resources:    resourceRequirements,
+		VolumeMounts: volumeMounts,
+	}
+
+	if command != nil {
+		container.Command = *command
+	}
+	if args != nil {
+		container.Args = *args
 	}
 
 	return &container, nil
@@ -504,15 +539,41 @@ func (p *Platform) resourceDeploymentCreate(
 			"to scale your deployment.", terminal.WithWarningStyle())
 	}
 
-	appContainer, err := configureK8sContainer(
-		src.App,
+	// Create scratch space volumes
+	for idx := range p.config.ScratchSpace {
+		scratchName := fmt.Sprintf("scratch-%d", idx)
+		deployment.Spec.Template.Spec.Volumes = append(
+			deployment.Spec.Template.Spec.Volumes,
+			corev1.Volume{
+				Name: scratchName,
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
+			},
+		)
+	}
+
+	// Configure containers
+	var command *[]string
+	var args *[]string
+	if p.config.Pod != nil && p.config.Pod.Container != nil {
+		command = p.config.Pod.Container.Command
+		args = p.config.Pod.Container.Args
+	}
+
+	appContainer, err := configureK8sContainer(src.App,
 		fmt.Sprintf("%s:%s", img.Image, img.Tag),
 		p.config.Ports,
 		p.config.StaticEnvVars,
 		p.config.Probe,
+		p.config.ProbePath,
 		p.config.CPU,
 		p.config.Memory,
 		p.config.Resources,
+		command,
+		args,
+		p.config.ScratchSpace,
+		deployment.Spec.Template.Spec.Volumes,
 		log,
 	)
 	if err != nil {
@@ -521,7 +582,6 @@ func (p *Platform) resourceDeploymentCreate(
 	}
 
 	var sidecarContainers []corev1.Container
-
 	for _, sidecarConfig := range p.config.Pod.Sidecars {
 		sidecarContainer, err := configureK8sContainer(
 			sidecarConfig.Name,
@@ -529,9 +589,14 @@ func (p *Platform) resourceDeploymentCreate(
 			sidecarConfig.Ports,
 			sidecarConfig.StaticEnvVars,
 			sidecarConfig.Probe,
+			sidecarConfig.ProbePath,
 			sidecarConfig.CPU,
 			sidecarConfig.Memory,
 			sidecarConfig.Resources,
+			sidecarConfig.Command,
+			sidecarConfig.Args,
+			p.config.ScratchSpace,
+			deployment.Spec.Template.Spec.Volumes,
 			log,
 		)
 		if err != nil {
@@ -539,6 +604,11 @@ func (p *Platform) resourceDeploymentCreate(
 				"Failed to define sidecar container %s: %s", sidecarConfig.Name, err)
 		}
 		sidecarContainers = append(sidecarContainers, *sidecarContainer)
+	}
+
+	// Update the deployment with our spec
+	deployment.Spec.Template.Spec = corev1.PodSpec{
+		Containers: append(sidecarContainers, *appContainer),
 	}
 
 	// If no count is specified, presume that the user is managing the replica
@@ -553,80 +623,12 @@ func (p *Platform) resourceDeploymentCreate(
 	deployment.Spec.Template.Labels[labelId] = result.Id
 
 	// Version label duplicates "labelId" to support services like Istio that
-	// expect pods to be labled with 'version'
+	// expect pods to be labeled with 'version'
 	deployment.Spec.Template.Labels["version"] = result.Id
 
 	// Apply user defined labels
 	for k, v := range p.config.Labels {
 		deployment.Spec.Template.Labels[k] = v
-	}
-
-	//for _, sidecar := range p.config.Pod
-
-	if p.config.Pod != nil && p.config.Pod.Container != nil {
-		containerCfg := p.config.Pod.Container
-		if containerCfg.Command != nil {
-			container.Command = *containerCfg.Command
-		}
-
-		if containerCfg.Args != nil {
-			container.Args = *containerCfg.Args
-		}
-	}
-
-	// Update the deployment with our spec
-	deployment.Spec.Template.Spec = corev1.PodSpec{
-		Containers: append(sidecarContainers, *appContainer),
-	}
-
-	// Override the default TCP socket checks if we have a probe path
-	if p.config.ProbePath != "" {
-		deployment.Spec.Template.Spec.Containers[0].LivenessProbe = &corev1.Probe{
-			Handler: corev1.Handler{
-				HTTPGet: &corev1.HTTPGetAction{
-					Path: p.config.ProbePath,
-					Port: intstr.FromInt(defaultPort),
-				},
-			},
-			InitialDelaySeconds: initialDelaySeconds,
-			TimeoutSeconds:      timeoutSeconds,
-			FailureThreshold:    failureThreshold,
-		}
-
-		deployment.Spec.Template.Spec.Containers[0].ReadinessProbe = &corev1.Probe{
-			Handler: corev1.Handler{
-				HTTPGet: &corev1.HTTPGetAction{
-					Path: p.config.ProbePath,
-					Port: intstr.FromInt(defaultPort),
-				},
-			},
-			InitialDelaySeconds: initialDelaySeconds,
-			TimeoutSeconds:      timeoutSeconds,
-			FailureThreshold:    failureThreshold,
-		}
-	}
-
-	if len(p.config.ScratchSpace) > 0 {
-		for idx, scratchSpaceLocation := range p.config.ScratchSpace {
-			scratchName := fmt.Sprintf("scratch-%d", idx)
-			deployment.Spec.Template.Spec.Volumes = append(
-				deployment.Spec.Template.Spec.Volumes,
-				corev1.Volume{
-					Name: scratchName,
-					VolumeSource: corev1.VolumeSource{
-						EmptyDir: &corev1.EmptyDirVolumeSource{},
-					},
-				},
-			)
-
-			deployment.Spec.Template.Spec.Containers[0].VolumeMounts = append(
-				deployment.Spec.Template.Spec.Containers[0].VolumeMounts,
-				corev1.VolumeMount{
-					Name:      scratchName,
-					MountPath: scratchSpaceLocation,
-				},
-			)
-		}
 	}
 
 	if p.config.Pod != nil {
@@ -644,11 +646,9 @@ func (p *Platform) resourceDeploymentCreate(
 	}
 
 	if p.config.ImageSecret != "" {
-		deployment.Spec.Template.Spec.ImagePullSecrets = []corev1.LocalObjectReference{
-			{
-				Name: p.config.ImageSecret,
-			},
-		}
+		deployment.Spec.Template.Spec.ImagePullSecrets = []corev1.LocalObjectReference{{
+			Name: p.config.ImageSecret,
+		}}
 	}
 
 	if deployment.Spec.Template.Annotations == nil {
