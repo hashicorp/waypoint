@@ -29,9 +29,9 @@ export default function PluginsSvg() {
           fill="#000"
         />
         <g
-          clip-path="url(#clip0)"
-          fill-rule="evenodd"
-          clip-rule="evenodd"
+          clipPath="url(#clip0)"
+          fillRule="evenodd"
+          clipRule="evenodd"
           fill="#7B42BC"
         >
           <path d="m236.74 181.092 12.121-1.877 8.875 5.124-12.123 1.875-8.873-5.122Z" />
@@ -117,7 +117,7 @@ export default function PluginsSvg() {
           d="M615.437 603.072c-.352.203-.314.554.086.785l.019.009c.054.032.117.071.166.097.238.128.463.202.705.307.508.231.929.422 1.251.64a.4.4 0 0 1 .129.314l.261.167a8.53 8.53 0 0 0-.971.769c-1.27 1.176-1.824 2.501-1.733 3.804-.12.013-.333.032-.397.037-.098.075-.177.162-.416.197-.481.051-1.011.045-1.651.038-.3-.007-.552-.032-.873-.02-.073.002-.179.01-.257.015a1.503 1.503 0 0 0-.615.157c-.202.109-.313.263-.278.426.062.288.561.496 1.115.463l.017-.002c.077-.004.173-.008.24-.013.319-.026.554-.081.844-.123.621-.081 1.136-.148 1.627-.154.204.005.409.103.503.142l.39-.01c.587 1.601 2.156 3.09 4.568 4.138l-.187.2c.022.094.069.235.009.32-.223.25-.553.486-.95.77-.192.131-.383.229-.561.382-.04.033-.09.083-.13.121l-.004.004-.007.007c-.283.271-.171.613.253.769.425.155 1.003.066 1.298-.2l.008-.007.008-.009c.041-.037.094-.083.127-.117.158-.16.229-.302.348-.459.267-.332.487-.608.777-.834.13-.088.381-.116.498-.135l.229-.188c2.661.799 5.635.97 8.356.584l.168.23c.152.04.347.099.425.18.203.26.337.582.481.943.062.171.08.319.178.498.024.042.067.104.094.148.194.301.726.469 1.195.377.472-.093.701-.414.512-.719v-.002l-.001-.001c-.027-.043-.059-.101-.087-.141-.121-.174-.271-.295-.412-.45-.264-.347-.625-.662-.676-.959-.014-.081.06-.158.138-.237l-.122-.238c2.057-.518 3.867-1.384 5.136-2.559.289-.268.54-.543.756-.825l.386.066c.146-.042.284-.1.527-.071.477.074.954.213 1.531.379.267.081.48.168.781.237.069.016.171.036.246.051.529.11 1.088-.023 1.249-.296.159-.27-.132-.578-.654-.69-.076-.015-.184-.039-.258-.053-.309-.056-.565-.066-.86-.102-.626-.083-1.146-.152-1.597-.27-.221-.068-.265-.163-.335-.25-.052-.002-.263-.064-.369-.09.7-1.63.303-3.36-1.045-4.843.095-.04.264-.107.32-.129.032-.092.035-.192.222-.283.39-.168.868-.295 1.444-.449.273-.069.519-.109.797-.2.058-.019.136-.051.201-.074l.016-.005.011-.004c.461-.171.616-.504.346-.749-.269-.246-.863-.31-1.331-.147-.067.025-.166.057-.229.082-.265.103-.434.213-.661.323-.493.23-.901.42-1.334.549-.186.046-.444.007-.557-.004l-.333.104c-.852-.646-1.914-1.217-3.171-1.676a17.873 17.873 0 0 0-4.01-.938l.019-.25c-.107-.073-.238-.138-.249-.281.01-.284.127-.581.268-.939.072-.168.169-.304.213-.488.01-.042.018-.102.025-.148.057-.32-.302-.608-.802-.644-.5-.035-.952.195-1.009.515-.008.045-.021.106-.026.148-.02.186.022.332.034.505.012.37.024.677-.065.954-.05.114-.256.204-.343.248l-.066.242c-2.86-.057-5.687.483-7.895 1.546a23.712 23.712 0 0 1-.306-.159c-.164.001-.333.019-.533-.068-.378-.186-.708-.43-1.108-.722-.183-.14-.31-.27-.531-.408-.051-.031-.13-.073-.187-.106-.399-.23-1.008-.252-1.359-.049Zm4.247 3.373 3.223 2.079-.006.011c.292.184.29.467-.012.641a1.082 1.082 0 0 1-.44.128l-.003.004-4.723.437c-.003-.974.449-1.957 1.402-2.839.174-.162.362-.315.559-.461Zm1.597-.922c1.631-.731 3.641-1.118 5.694-1.118l-.75 2.709-.014.003c-.061.244-.446.414-.876.384a1.165 1.165 0 0 1-.455-.121h-.004l-3.595-1.857Zm-3.277 5.531 4.787-.125.011.01c.426-.015.807.167.86.415.022.101-.015.199-.095.281l.008.008-2.261 2.396c-1.687-.785-2.817-1.843-3.31-2.985Zm11.243-6.489a14.27 14.27 0 0 1 2.868.708c.902.329 1.678.73 2.32 1.179l-4.171 1.313-.016-.006c-.369.12-.846.049-1.08-.163-.096-.087-.136-.185-.126-.279l-.008-.003.213-2.749Zm-3.665 4.956 1.025-.591 1.45.101.786.718-.468.792-1.376.271-1.243-.454-.174-.837Zm6.068-.29a.857.857 0 0 1 .139-.069l-.002-.007 3.889-1.584c.908 1.084 1.185 2.317.752 3.499l-4.463-1.09-.002-.006c-.399-.093-.609-.352-.471-.586a.474.474 0 0 1 .158-.157Zm-5.556 3.223c.257-.144.663-.171.985-.053a.662.662 0 0 1 .322.222l.022.002 1.87 2.55c-1.971.237-4.088.11-6.03-.425l2.718-2.227.013.001a.633.633 0 0 1 .1-.07Zm4.155-.808a.956.956 0 0 1 .319-.119c.167-.032.339-.032.497-.004l.012-.007 4.612.791a5.61 5.61 0 0 1-.463.481c-.952.882-2.275 1.545-3.783 1.966l-1.369-2.657.003-.002c-.088-.163-.015-.333.172-.449Z"
           fill="#fff"
           stroke="#fff"
-          stroke-width=".219"
+          strokeWidth=".219"
         />
         <path
           d="M611.362 600.841a1.773 1.773 0 0 0-.579.566l-5.447 9.14a1.015 1.015 0 0 0-.136.739c.051.25.199.491.433.704l9.039 8.249c.208.19.479.355.798.484.319.129.679.221 1.058.269.093.012.186.021.28.028l16.717 1.147c.432.03.87.003 1.279-.079.41-.081.782-.215 1.087-.392l11.808-6.819c.305-.177.538-.391.679-.627a1.02 1.02 0 0 0 .137-.739l-1.991-9.65c-.052-.249-.2-.49-.434-.704a2.775 2.775 0 0 0-.917-.53l-14.293-5.215a4.458 4.458 0 0 0-1.219-.25 4.906 4.906 0 0 0-1.28.078l-15.831 3.147a3.465 3.465 0 0 0-1.188.454Z"
@@ -127,7 +127,7 @@ export default function PluginsSvg() {
           d="M615.437 603.072c-.352.203-.314.554.086.785l.019.009c.054.032.117.071.166.097.238.128.463.202.705.307.508.231.929.422 1.251.64a.4.4 0 0 1 .129.314l.261.167a8.53 8.53 0 0 0-.971.769c-1.27 1.176-1.824 2.501-1.733 3.804-.12.013-.333.032-.397.037-.098.075-.177.162-.416.197-.481.051-1.011.045-1.651.038-.3-.007-.552-.032-.873-.02-.073.002-.179.01-.257.015a1.503 1.503 0 0 0-.615.157c-.202.109-.313.263-.278.426.062.288.561.496 1.115.463l.017-.002c.077-.004.173-.008.24-.013.319-.026.554-.081.844-.123.621-.081 1.136-.148 1.627-.154.204.005.409.103.503.142l.39-.01c.587 1.601 2.156 3.09 4.568 4.138l-.187.2c.022.094.069.235.009.32-.223.25-.553.486-.95.77-.192.131-.383.229-.561.382-.04.033-.09.083-.13.121l-.004.004-.007.007c-.283.271-.171.613.253.769.425.155 1.003.066 1.298-.2l.008-.007.008-.009c.041-.037.094-.083.127-.117.158-.16.229-.302.348-.459.267-.332.487-.608.777-.834.13-.088.381-.116.498-.135l.229-.188c2.661.799 5.635.97 8.356.584l.168.23c.152.04.347.099.425.18.203.26.337.582.481.943.062.171.08.319.178.498.024.042.067.104.094.148.194.301.726.469 1.195.377.472-.093.701-.414.512-.719v-.002l-.001-.001c-.027-.043-.059-.101-.087-.141-.121-.174-.271-.295-.412-.45-.264-.347-.625-.662-.676-.959-.014-.081.06-.158.138-.237l-.122-.238c2.057-.518 3.867-1.384 5.136-2.559.289-.268.54-.543.756-.825l.386.066c.146-.042.284-.1.527-.071.477.074.954.213 1.531.379.267.081.48.168.781.237.069.016.171.036.246.051.529.11 1.088-.023 1.249-.296.159-.27-.132-.578-.654-.69-.076-.015-.184-.039-.258-.053-.309-.056-.565-.066-.86-.102-.626-.083-1.146-.152-1.597-.27-.221-.068-.265-.163-.335-.25-.052-.002-.263-.064-.369-.09.7-1.63.303-3.36-1.045-4.843.095-.04.264-.107.32-.129.032-.092.035-.192.222-.283.39-.168.868-.295 1.444-.449.273-.069.519-.109.797-.2.058-.019.136-.051.201-.074l.016-.005.011-.004c.461-.171.616-.504.346-.749-.269-.246-.863-.31-1.331-.147-.067.025-.166.057-.229.082-.265.103-.434.213-.661.323-.493.23-.901.42-1.334.549-.186.046-.444.007-.557-.004l-.333.104c-.852-.646-1.914-1.217-3.171-1.676a17.873 17.873 0 0 0-4.01-.938l.019-.25c-.107-.073-.238-.138-.249-.281.01-.284.127-.581.268-.939.072-.168.169-.304.213-.488.01-.042.018-.102.025-.148.057-.32-.302-.608-.802-.644-.5-.035-.952.195-1.009.515-.008.045-.021.106-.026.148-.02.186.022.332.034.505.012.37.024.677-.065.954-.05.114-.256.204-.343.248l-.066.242c-2.86-.057-5.687.483-7.895 1.546a23.712 23.712 0 0 1-.306-.159c-.164.001-.333.019-.533-.068-.378-.186-.708-.43-1.108-.722-.183-.14-.31-.27-.531-.408-.051-.031-.13-.073-.187-.106-.399-.23-1.008-.252-1.359-.049Zm4.247 3.373 3.223 2.079-.006.011c.292.184.29.467-.012.641a1.082 1.082 0 0 1-.44.128l-.003.004-4.723.437c-.003-.974.449-1.957 1.402-2.839.174-.162.362-.315.559-.461Zm1.597-.922c1.631-.731 3.641-1.118 5.694-1.118l-.75 2.709-.014.003c-.061.244-.446.414-.876.384a1.165 1.165 0 0 1-.455-.121h-.004l-3.595-1.857Zm-3.277 5.531 4.787-.125.011.01c.426-.015.807.167.86.415.022.101-.015.199-.095.281l.008.008-2.261 2.396c-1.687-.785-2.817-1.843-3.31-2.985Zm11.243-6.489a14.27 14.27 0 0 1 2.868.708c.902.329 1.678.73 2.32 1.179l-4.171 1.313-.016-.006c-.369.12-.846.049-1.08-.163-.096-.087-.136-.185-.126-.279l-.008-.003.213-2.749Zm-3.665 4.956 1.025-.591 1.45.101.786.718-.468.792-1.376.271-1.243-.454-.174-.837Zm6.068-.29a.857.857 0 0 1 .139-.069l-.002-.007 3.889-1.584c.908 1.084 1.185 2.317.752 3.499l-4.463-1.09-.002-.006c-.399-.093-.609-.352-.471-.586a.474.474 0 0 1 .158-.157Zm-5.556 3.223c.257-.144.663-.171.985-.053a.662.662 0 0 1 .322.222l.022.002 1.87 2.55c-1.971.237-4.088.11-6.03-.425l2.718-2.227.013.001a.633.633 0 0 1 .1-.07Zm4.155-.808a.956.956 0 0 1 .319-.119c.167-.032.339-.032.497-.004l.012-.007 4.612.791a5.61 5.61 0 0 1-.463.481c-.952.882-2.275 1.545-3.783 1.966l-1.369-2.657.003-.002c-.088-.163-.015-.333.172-.449Z"
           fill="#fff"
           stroke="#fff"
-          stroke-width=".219"
+          strokeWidth=".219"
         />
       </g>
       <g className="plugin pluginNomad">
@@ -152,7 +152,7 @@ export default function PluginsSvg() {
           d="m122.087 115.822 6.684 3.859-11.867-.867-1.663.961 10.306 5.949 2.017-1.164-6.699-3.867 11.881.875 1.664-.96-10.306-5.95-2.017 1.164Zm17.982 1.756c2.297-1.326 2.268-3.281.045-4.564-2.238-1.292-5.61-1.3-7.907.026-2.296 1.325-2.296 3.28-.058 4.572 2.223 1.284 5.624 1.292 7.92-.034Zm-1.766-1.02c-1.252.723-3.018.672-4.255-.042-1.237-.714-1.325-1.734-.074-2.457 1.237-.714 3.018-.671 4.255.043 1.237.714 1.31 1.742.074 2.456Zm8.264-11.808c-1.192.688-1.531 1.461-1.398 2.099-1.163-.145-2.312.042-3.357.646-.987.569-1.266 1.258-1.119 1.904l-.883-.51-1.944 1.122 7.45 4.3 1.943-1.121-3.739-2.159c-1.311-.757-1.546-1.539-.501-2.142 1.001-.578 2.12-.391 3.224.246l4.02 2.321 1.958-1.131-3.799-2.193c-1.266-.731-1.516-1.487-.471-2.091 1.016-.586 2.135-.416 3.254.23l4.019 2.32 1.944-1.122-4.432-2.558c-2.076-1.198-4.387-1.19-6.169-.161Zm15.867-.083c1.045-.603 1.428-1.334 1.281-2.031l.913.527 1.958-1.131-7.45-4.3-1.958 1.13.898.519c-1.207-.085-2.459.144-3.504.748-2.061 1.189-2.017 3.085.25 4.394 2.253 1.3 5.551 1.334 7.612.144Zm-1.399-1.198c-1.222.705-3.003.68-4.299-.068-1.281-.74-1.31-1.76-.088-2.465 1.178-.68 3.018-.705 4.299.034 1.295.748 1.266 1.819.088 2.499Zm2.334-11.989 4.196 2.422c-1.207-.085-2.458.145-3.504.748-2.061 1.19-2.017 3.086.25 4.395 2.253 1.3 5.551 1.334 7.612.144 1.045-.603 1.428-1.334 1.281-2.031l.913.527 1.958-1.13-10.748-6.205-1.958 1.13Zm7.155 6.51c-1.222.706-3.003.68-4.299-.067-1.28-.74-1.31-1.76-.088-2.465 1.178-.68 3.018-.706 4.299.034 1.296.748 1.266 1.819.088 2.499Z"
           fill="#000"
         />
-        <g clip-path="url(#clip1)">
+        <g clipPath="url(#clip1)">
           <path
             d="m53.16 72.579-4.95 10.666 13.524 7.808 18.476-2.858 4.95-10.666-13.525-7.808-18.475 2.858Zm20.091 5.573-1.317 2.842-5.823.992 4.31 2.488-1.297 3.344-9.01-5.202L61.205 80l5.958-1.065-4.4-2.54 1.494-3.445 8.994 5.203Z"
             fill="#00CA8E"
@@ -300,14 +300,14 @@ export default function PluginsSvg() {
           fill="#252F3E"
         />
         <path
-          fill-rule="evenodd"
-          clip-rule="evenodd"
+          fillRule="evenodd"
+          clipRule="evenodd"
           d="M453.786 73.749c-.937 3.678-4.803 7.575-9.367 10.21-6.397 3.693-14.543 5.646-22.854 5.874-.657.018-.771-.407-.114-.502 7.459-1.13 14.933-3.522 20.941-6.99 4.054-2.34 7.657-5.402 10.011-8.775.331-.514 1.535-.421 1.383.183Z"
           fill="#F90"
         />
         <path
-          fill-rule="evenodd"
-          clip-rule="evenodd"
+          fillRule="evenodd"
+          clipRule="evenodd"
           d="M453.562 71.864c-1.07-.08-3.378 1.614-4.421 2.384-.31.231-.679.083-.592-.239.612-2.057 4.469-3.793 5.36-3.74.903.06 3.847 2.35 3.548 4.433-.043.322-.466.41-.668.14-.663-.895-2.168-2.905-3.227-2.978Z"
           fill="#F90"
         />
@@ -343,14 +343,14 @@ export default function PluginsSvg() {
           fill="#252F3E"
         />
         <path
-          fill-rule="evenodd"
-          clip-rule="evenodd"
+          fillRule="evenodd"
+          clipRule="evenodd"
           d="M453.786 495.34c-.937 3.678-4.803 7.575-9.367 10.21-6.397 3.693-14.543 5.645-22.854 5.874-.657.018-.771-.407-.114-.502 7.459-1.131 14.933-3.522 20.941-6.991 4.054-2.34 7.657-5.401 10.011-8.774.331-.514 1.535-.422 1.383.183Z"
           fill="#F90"
         />
         <path
-          fill-rule="evenodd"
-          clip-rule="evenodd"
+          fillRule="evenodd"
+          clipRule="evenodd"
           d="M453.562 493.455c-1.07-.08-3.378 1.614-4.421 2.384-.31.231-.679.082-.592-.239.612-2.057 4.469-3.793 5.36-3.74.903.06 3.847 2.349 3.548 4.433-.043.321-.466.411-.668.14-.663-.895-2.168-2.905-3.227-2.978Z"
           fill="#F90"
         />
@@ -362,24 +362,24 @@ export default function PluginsSvg() {
           fill="#C9F0F2"
         />
         <path
-          stroke-dasharray="3"
+          strokeDasharray="3"
           d="M5.5 492.431v9.942l132 76.058"
           stroke="#62D4DC"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
-          stroke-dasharray="3"
+          strokeDasharray="3"
           d="M270.5 492.431v10.5l-132.5 76v-10"
           stroke="#62D4DC"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
-          stroke-dasharray="3"
+          strokeDasharray="3"
           d="M136.164 415.424a3.664 3.664 0 0 1 3.672 0l.251-.433-.251.433 129.869 75.122.251-.433-.25.433a1.587 1.587 0 0 1 .581 2.174c-.139.242-.34.443-.581.582h-.001l-129.869 75.136a3.664 3.664 0 0 1-3.672 0L6.286 493.305l-.002-.001a1.601 1.601 0 0 1-.784-1.38 1.606 1.606 0 0 1 .784-1.38l.002-.001 129.878-75.119Z"
           fill="#D7F8FA"
-          fill-opacity=".3"
+          fillOpacity=".3"
           stroke="#62D4DC"
         />
         <path
@@ -387,27 +387,27 @@ export default function PluginsSvg() {
           fill="#62D4DC"
         />
         <path
-          fill-rule="evenodd"
-          clip-rule="evenodd"
+          fillRule="evenodd"
+          clipRule="evenodd"
           d="m55.844 481.046 18.28-3.518c1.55-.3 3.26-.069 4.417.598l14.517 8.381c1.155.667 1.556 1.655 1.035 2.55L88 499.609c-.428.744-1.439 1.327-2.726 1.575l-18.28 3.517c-1.555.296-3.267.058-4.417-.616l-14.501-8.371c-1.156-.668-1.557-1.656-1.036-2.55l6.093-10.553c.43-.738 1.433-1.317 2.711-1.565Z"
           stroke="#62D4DC"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           d="m46.918 494.482 22.118-4.256 7.372-12.768"
           stroke="#62D4DC"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           d="m86.949 500.568-17.914-10.341"
           stroke="#62D4DC"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
       </g>
       <defs>
@@ -419,9 +419,9 @@ export default function PluginsSvg() {
           y2="20544.8"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#FAFAFA" />
-          <stop offset=".68" stop-color="#FAFAFA" />
-          <stop offset="1" stop-color="#EFEFF0" />
+          <stop stopColor="#FAFAFA" />
+          <stop offset=".68" stopColor="#FAFAFA" />
+          <stop offset="1" stopColor="#EFEFF0" />
         </linearGradient>
         <linearGradient
           id="paint1_linear"
@@ -431,8 +431,8 @@ export default function PluginsSvg() {
           y2="14821.2"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#C0C0C2" />
-          <stop offset="1" stop-color="#DBDBDC" />
+          <stop stopColor="#C0C0C2" />
+          <stop offset="1" stopColor="#DBDBDC" />
         </linearGradient>
         <linearGradient
           id="paint2_linear"
@@ -442,9 +442,9 @@ export default function PluginsSvg() {
           y2="14821.2"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset=".01" stop-color="#EFEFF0" />
-          <stop offset=".48" stop-color="#E7E7E8" />
-          <stop offset="1" stop-color="#D8D8D9" />
+          <stop offset=".01" stopColor="#EFEFF0" />
+          <stop offset=".48" stopColor="#E7E7E8" />
+          <stop offset="1" stopColor="#D8D8D9" />
         </linearGradient>
         <linearGradient
           id="paint3_linear"
@@ -454,9 +454,9 @@ export default function PluginsSvg() {
           y2="20649.1"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#FAFAFA" />
-          <stop offset=".68" stop-color="#FAFAFA" />
-          <stop offset="1" stop-color="#EFEFF0" />
+          <stop stopColor="#FAFAFA" />
+          <stop offset=".68" stopColor="#FAFAFA" />
+          <stop offset="1" stopColor="#EFEFF0" />
         </linearGradient>
         <linearGradient
           id="paint4_linear"
@@ -466,8 +466,8 @@ export default function PluginsSvg() {
           y2="14925.5"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#C0C0C2" />
-          <stop offset="1" stop-color="#DBDBDC" />
+          <stop stopColor="#C0C0C2" />
+          <stop offset="1" stopColor="#DBDBDC" />
         </linearGradient>
         <linearGradient
           id="paint5_linear"
@@ -477,9 +477,9 @@ export default function PluginsSvg() {
           y2="14925.5"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset=".01" stop-color="#EFEFF0" />
-          <stop offset=".48" stop-color="#E7E7E8" />
-          <stop offset="1" stop-color="#D8D8D9" />
+          <stop offset=".01" stopColor="#EFEFF0" />
+          <stop offset=".48" stopColor="#E7E7E8" />
+          <stop offset="1" stopColor="#D8D8D9" />
         </linearGradient>
         <linearGradient
           id="paint6_linear"
@@ -489,9 +489,9 @@ export default function PluginsSvg() {
           y2="20971.8"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#FAFAFA" />
-          <stop offset=".68" stop-color="#FAFAFA" />
-          <stop offset="1" stop-color="#EFEFF0" />
+          <stop stopColor="#FAFAFA" />
+          <stop offset=".68" stopColor="#FAFAFA" />
+          <stop offset="1" stopColor="#EFEFF0" />
         </linearGradient>
         <linearGradient
           id="paint7_linear"
@@ -501,8 +501,8 @@ export default function PluginsSvg() {
           y2="15248.2"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#C0C0C2" />
-          <stop offset="1" stop-color="#DBDBDC" />
+          <stop stopColor="#C0C0C2" />
+          <stop offset="1" stopColor="#DBDBDC" />
         </linearGradient>
         <linearGradient
           id="paint8_linear"
@@ -512,9 +512,9 @@ export default function PluginsSvg() {
           y2="15248.2"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset=".01" stop-color="#EFEFF0" />
-          <stop offset=".48" stop-color="#E7E7E8" />
-          <stop offset="1" stop-color="#D8D8D9" />
+          <stop offset=".01" stopColor="#EFEFF0" />
+          <stop offset=".48" stopColor="#E7E7E8" />
+          <stop offset="1" stopColor="#D8D8D9" />
         </linearGradient>
         <linearGradient
           id="paint9_linear"
@@ -524,9 +524,9 @@ export default function PluginsSvg() {
           y2="20441.1"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#FAFAFA" />
-          <stop offset=".68" stop-color="#FAFAFA" />
-          <stop offset="1" stop-color="#EFEFF0" />
+          <stop stopColor="#FAFAFA" />
+          <stop offset=".68" stopColor="#FAFAFA" />
+          <stop offset="1" stopColor="#EFEFF0" />
         </linearGradient>
         <linearGradient
           id="paint10_linear"
@@ -536,8 +536,8 @@ export default function PluginsSvg() {
           y2="14717.5"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#C0C0C2" />
-          <stop offset="1" stop-color="#DBDBDC" />
+          <stop stopColor="#C0C0C2" />
+          <stop offset="1" stopColor="#DBDBDC" />
         </linearGradient>
         <linearGradient
           id="paint11_linear"
@@ -547,9 +547,9 @@ export default function PluginsSvg() {
           y2="14717.5"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset=".01" stop-color="#EFEFF0" />
-          <stop offset=".48" stop-color="#E7E7E8" />
-          <stop offset="1" stop-color="#D8D8D9" />
+          <stop offset=".01" stopColor="#EFEFF0" />
+          <stop offset=".48" stopColor="#E7E7E8" />
+          <stop offset="1" stopColor="#D8D8D9" />
         </linearGradient>
         <linearGradient
           id="paint12_linear"
@@ -559,9 +559,9 @@ export default function PluginsSvg() {
           y2="20753.5"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#FAFAFA" />
-          <stop offset=".68" stop-color="#FAFAFA" />
-          <stop offset="1" stop-color="#EFEFF0" />
+          <stop stopColor="#FAFAFA" />
+          <stop offset=".68" stopColor="#FAFAFA" />
+          <stop offset="1" stopColor="#EFEFF0" />
         </linearGradient>
         <linearGradient
           id="paint13_linear"
@@ -571,8 +571,8 @@ export default function PluginsSvg() {
           y2="15029.9"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#C0C0C2" />
-          <stop offset="1" stop-color="#DBDBDC" />
+          <stop stopColor="#C0C0C2" />
+          <stop offset="1" stopColor="#DBDBDC" />
         </linearGradient>
         <linearGradient
           id="paint14_linear"
@@ -582,9 +582,9 @@ export default function PluginsSvg() {
           y2="15029.9"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset=".01" stop-color="#EFEFF0" />
-          <stop offset=".48" stop-color="#E7E7E8" />
-          <stop offset="1" stop-color="#D8D8D9" />
+          <stop offset=".01" stopColor="#EFEFF0" />
+          <stop offset=".48" stopColor="#E7E7E8" />
+          <stop offset="1" stopColor="#D8D8D9" />
         </linearGradient>
         <linearGradient
           id="paint15_linear"
@@ -594,9 +594,9 @@ export default function PluginsSvg() {
           y2="20649.1"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#FAFAFA" />
-          <stop offset=".68" stop-color="#FAFAFA" />
-          <stop offset="1" stop-color="#EFEFF0" />
+          <stop stopColor="#FAFAFA" />
+          <stop offset=".68" stopColor="#FAFAFA" />
+          <stop offset="1" stopColor="#EFEFF0" />
         </linearGradient>
         <linearGradient
           id="paint16_linear"
@@ -606,8 +606,8 @@ export default function PluginsSvg() {
           y2="14925.5"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#C0C0C2" />
-          <stop offset="1" stop-color="#DBDBDC" />
+          <stop stopColor="#C0C0C2" />
+          <stop offset="1" stopColor="#DBDBDC" />
         </linearGradient>
         <linearGradient
           id="paint17_linear"
@@ -617,9 +617,9 @@ export default function PluginsSvg() {
           y2="14925.5"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset=".01" stop-color="#EFEFF0" />
-          <stop offset=".48" stop-color="#E7E7E8" />
-          <stop offset="1" stop-color="#D8D8D9" />
+          <stop offset=".01" stopColor="#EFEFF0" />
+          <stop offset=".48" stopColor="#E7E7E8" />
+          <stop offset="1" stopColor="#D8D8D9" />
         </linearGradient>
         <linearGradient
           id="paint18_linear"
@@ -629,9 +629,9 @@ export default function PluginsSvg() {
           y2="20441.1"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#FAFAFA" />
-          <stop offset=".68" stop-color="#FAFAFA" />
-          <stop offset="1" stop-color="#EFEFF0" />
+          <stop stopColor="#FAFAFA" />
+          <stop offset=".68" stopColor="#FAFAFA" />
+          <stop offset="1" stopColor="#EFEFF0" />
         </linearGradient>
         <linearGradient
           id="paint19_linear"
@@ -641,8 +641,8 @@ export default function PluginsSvg() {
           y2="14717.5"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#C0C0C2" />
-          <stop offset="1" stop-color="#DBDBDC" />
+          <stop stopColor="#C0C0C2" />
+          <stop offset="1" stopColor="#DBDBDC" />
         </linearGradient>
         <linearGradient
           id="paint20_linear"
@@ -652,9 +652,9 @@ export default function PluginsSvg() {
           y2="14717.5"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset=".01" stop-color="#EFEFF0" />
-          <stop offset=".48" stop-color="#E7E7E8" />
-          <stop offset="1" stop-color="#D8D8D9" />
+          <stop offset=".01" stopColor="#EFEFF0" />
+          <stop offset=".48" stopColor="#E7E7E8" />
+          <stop offset="1" stopColor="#D8D8D9" />
         </linearGradient>
         <linearGradient
           id="paint21_linear"
@@ -664,9 +664,9 @@ export default function PluginsSvg() {
           y2="20862.6"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#FAFAFA" />
-          <stop offset=".68" stop-color="#FAFAFA" />
-          <stop offset="1" stop-color="#EFEFF0" />
+          <stop stopColor="#FAFAFA" />
+          <stop offset=".68" stopColor="#FAFAFA" />
+          <stop offset="1" stopColor="#EFEFF0" />
         </linearGradient>
         <linearGradient
           id="paint22_linear"
@@ -676,8 +676,8 @@ export default function PluginsSvg() {
           y2="15139.1"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#C0C0C2" />
-          <stop offset="1" stop-color="#DBDBDC" />
+          <stop stopColor="#C0C0C2" />
+          <stop offset="1" stopColor="#DBDBDC" />
         </linearGradient>
         <linearGradient
           id="paint23_linear"
@@ -687,9 +687,9 @@ export default function PluginsSvg() {
           y2="15139.1"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset=".01" stop-color="#EFEFF0" />
-          <stop offset=".48" stop-color="#E7E7E8" />
-          <stop offset="1" stop-color="#D8D8D9" />
+          <stop offset=".01" stopColor="#EFEFF0" />
+          <stop offset=".48" stopColor="#E7E7E8" />
+          <stop offset="1" stopColor="#D8D8D9" />
         </linearGradient>
         <clipPath id="clip0">
           <path
