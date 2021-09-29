@@ -6,7 +6,7 @@ import { later } from '@ember/runloop';
 import { render } from '@ember/test-helpers';
 import { setupRenderingTest } from 'ember-qunit';
 
-module('Integration | Component | terminal', function (hooks) {
+module('Integration | Component | render-terminal', function (hooks) {
   setupRenderingTest(hooks);
 
   test('basic rendering', async function (assert) {
@@ -14,7 +14,7 @@ module('Integration | Component | terminal', function (hooks) {
     let terminal = createTerminal({ inputDisabled: true });
     this.set('terminal', terminal);
     // pass terminal and render
-    await render(hbs`<Terminal @terminal={{this.terminal}}/>`);
+    await render(hbs`<RenderTerminal @terminal={{this.terminal}}/>`);
     // write line and see if it renders
     terminal.writeln('Welcome to Waypoint!');
     // We have to use the runloop as writeln isn't async
