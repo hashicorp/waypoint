@@ -5,6 +5,7 @@
   (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployment')
   (not-eq this.target.currentRouteName 'workspace.projects.project.app.release')
   (not (includes this.target.currentRouteName 'workspace.projects.project.app.deployment.'))
+  (not (includes this.target.currentRouteName 'workspace.projects.project.app.release.'))
 )}}
 <PageHeader @iconName="git-repository">
   <div class="title">

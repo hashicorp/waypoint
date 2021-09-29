@@ -1,43 +1,68 @@
 {{page-title (concat "Release" " v" @model.sequence)}}
 
-<PageHeader @iconName="public-default">
-  <div class="title">
-    {{! TODO(jgwhite): Make this a real <h1> }}
-    <h2 aria-level="1"><b class="badge badge--version">v{{@model.sequence}}</b></h2>
-    <small>
-      <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
-      <span>Released on <b>{{component-name @model.component.name}}</b>
-        {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
-    </small>
-    {{#if @model.preload.jobDataSourceRef.git.commit}}
+{{#if (not-eq this.target.currentRouteName "workspace.projects.project.app.release.resource")}}
+  <PageHeader @iconName="public-default">
+    <div class="title">
+      {{! TODO(jgwhite): Make this a real <h1> }}
+      <h2 aria-level="1"><b class="badge badge--version">v{{@model.sequence}}</b></h2>
       <small>
-        <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
+        <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
+        <span>Released on <b>{{component-name @model.component.name}}</b>
+          {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
       </small>
-    {{/if}}
-  </div>
-  <div class="actions">
-    {{#if @isLatest}}
-    <button class="button button--primary" type="button">
-      <span>{{@model.release.url}}</span>
-      <Pds::Icon @type="exit" class="icon" />
-    </button>
-    {{/if}}
-  </div>
-</PageHeader>
-
-<StatusReportBar @model={{@model}} @artifactType="Release">
-  {{!-- todo(pearkes): API doesn't return this object but just a string of it, so wait for that to be fixed --}}
-  {{#if @model.deployment }}
-    <div class="item">
-      <small>
-        Released deployment <LinkTo @route="workspace.projects.project.app.deployment"
-          @models={{array @model.deployment.id}}>
-          <b class="badge badge--version">v{{@model.deployment.sequence}}</b>
-          <code>{{@model.deployment.id}}</code>
-        </LinkTo>
-      </small>
+      {{#if @model.preload.jobDataSourceRef.git.commit}}
+        <small>
+          <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
+        </small>
+      {{/if}}
     </div>
-  {{/if}}
-</StatusReportBar>
+    <div class="actions">
+      {{#if @isLatest}}
+      <button class="button button--primary" type="button">
+        <span>{{@model.release.url}}</span>
+        <Pds::Icon @type="exit" class="icon" />
+      </button>
+      {{/if}}
+    </div>
+  </PageHeader>
 
-<OperationLogs @jobId={{@model.jobId}} />
+  <StatusReportBar @model={{@model}} @artifactType="Release">
+    {{!-- todo(pearkes): API doesn't return this object but just a string of it, so wait for that to be fixed --}}
+    {{#if @model.deployment }}
+      <div class="item">
+        <small>
+          Released deployment <LinkTo @route="workspace.projects.project.app.deployment"
+            @models={{array @model.deployment.id}}>
+            <b class="badge badge--version">v{{@model.deployment.sequence}}</b>
+            <code>{{@model.deployment.id}}</code>
+          </LinkTo>
+        </small>
+      </div>
+    {{/if}}
+  </StatusReportBar>
+
+  {{#if @model.statusReport.resourcesList.length}}
+    <Section>
+      <:heading>{{t "page.release.resources.heading"}}</:heading>
+      <:body>
+        <ResourcesTable
+          @resources={{@model.statusReport.resourcesList}}
+          @route="workspace.projects.project.app.release.resource"
+        >
+          <:caption>
+            {{t "page.release.resources.table-caption" htmlSafe=true}}
+          </:caption>
+        </ResourcesTable>
+      </:body>
+    </Section>
+  {{/if}}
+
+  <Section>
+    <:heading>{{t "page.release.logs.heading"}}</:heading>
+    <:body>
+      <OperationLogs @jobId={{@model.jobId}} />
+    </:body>
+  </Section>
+{{/if}}
+
+{{outlet}}

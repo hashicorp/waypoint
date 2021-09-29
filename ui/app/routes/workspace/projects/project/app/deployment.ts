@@ -1,15 +1,19 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { GetDeploymentRequest, Deployment, Ref, StatusReport } from 'waypoint-pb';
+import { GetDeploymentRequest, Deployment, Ref, Release, StatusReport } from 'waypoint-pb';
 import { Model as AppRouteModel } from '../app';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
 type Params = { sequence: string };
-export type Model = Deployment.AsObject & WithStatusReport;
+export type Model = Deployment.AsObject & WithStatusReport & WithRelease;
 
 interface WithStatusReport {
   statusReport?: StatusReport.AsObject;
+}
+
+interface WithRelease {
+  release?: Release.AsObject & WithStatusReport;
 }
 
 export default class DeploymentDetail extends Route {
@@ -44,10 +48,17 @@ export default class DeploymentDetail extends Route {
     return deploy.toObject();
   }
 
-  afterModel(model: Deployment.AsObject & WithStatusReport): void {
-    let { statusReports } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
+  afterModel(model: Model): void {
+    let { releases, statusReports } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
     let statusReport = statusReports.find((sr) => sr.deploymentId === model.id);
+    let release = releases.find((r) => r.deploymentId === model.id);
+
+    if (release) {
+      let releaseId = release.id;
+      release.statusReport = statusReports.find((sr) => sr.releaseId === releaseId);
+    }
 
     model.statusReport = statusReport;
+    model.release = release;
   }
 }

@@ -33,11 +33,18 @@ page:
   deployment:
     resources:
       heading: Resources
-      table-caption: Resources created by <b>this deployment</b>
+      deployment-table-caption: Resources created by <b>this deployment</b>
+      release-table-caption-prefix: Resources created by <b>Release</b>
     logs:
       heading: Deployment Logs
   releases:
     title: 'Releases'
+  release:
+    resources:
+      heading: Resources
+      table-caption: Resources created by <b>this release</b>
+    logs:
+      heading: Release Logs
 
 form:
   project_new:
