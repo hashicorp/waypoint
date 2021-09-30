@@ -17,9 +17,11 @@ export default class LogStream extends Component<LogStreamArgs> {
   @service api!: ApiService;
 
   @tracked terminal!: Terminal;
+  @tracked hasLogs: boolean;
 
   constructor(owner: unknown, args: LogStreamArgs) {
     super(owner, args);
+    this.hasLogs = false;
     this.terminal = createTerminal({ inputDisabled: true });
     this.startTerminalStream();
   }
@@ -31,7 +33,14 @@ export default class LogStream extends Component<LogStreamArgs> {
     stream.on('status', this.onStatus);
   }
 
+  setHasLogs(): void {
+    if (!this.hasLogs) {
+      this.hasLogs = true;
+    }
+  }
+
   onData = (response: LogBatch): void => {
+    this.setHasLogs();
     response.getLinesList().forEach((entry) => {
       let ts = entry.getTimestamp();
       if (!ts) {
@@ -43,6 +52,7 @@ export default class LogStream extends Component<LogStreamArgs> {
   };
 
   onStatus = (status?: Status): void => {
+    this.setHasLogs();
     if (status?.details) {
       this.terminal.writeln(status.details);
     }

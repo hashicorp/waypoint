@@ -30,11 +30,12 @@ const STYLE_TO_ANSI: Record<string, (msg: string) => string> = {
 };
 export default class OperationLogs extends Component<OperationLogsArgs> {
   @service api!: ApiService;
-
+  @tracked hasLogs: boolean;
   @tracked terminal!: Terminal;
 
   constructor(owner: unknown, args: OperationLogsArgs) {
     super(owner, args);
+    this.hasLogs = false;
     this.terminal = createTerminal({ inputDisabled: true });
     this.startTerminalStream();
   }
@@ -73,6 +74,12 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
     this.terminal.writeln(formattedMsg);
   }
 
+  setHasLogs(): void {
+    if (!this.hasLogs) {
+      this.hasLogs = true;
+    }
+  }
+
   async startTerminalStream(): Promise<void> {
     let req = new GetJobStreamRequest();
     req.setJobId(this.args.jobId);
@@ -83,10 +90,12 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
   }
 
   onData = (response: GetJobStreamResponse): void => {
+    this.setHasLogs();
     this.writeTerminalOutput(response);
   };
 
   onStatus = (status: Status): void => {
+    this.setHasLogs();
     if (status.details) {
       this.terminal.writeln(status.details);
     }

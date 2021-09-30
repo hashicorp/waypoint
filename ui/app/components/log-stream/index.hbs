@@ -1,1 +1,9 @@
-<RenderTerminal @terminal={{this.terminal}}/>
+{{#if this.hasLogs}}
+  <RenderTerminal @terminal={{this.terminal}}/>
+{{else}}
+  <EmptyState>
+    <p>There are no logs to display for this app yet</p>
+    <p>Logs will be displayed when you run actions in the CLI such as <code class="inline">build</code>,
+      <code class="inline">deploy</code> or <code class="inline">release</code></p>
+  </EmptyState>
+{{/if}}

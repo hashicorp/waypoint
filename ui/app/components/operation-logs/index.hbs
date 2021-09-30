@@ -1,1 +1,8 @@
-<RenderTerminal @terminal={{this.terminal}}/>
+{{#if this.hasLogs}}
+  <RenderTerminal @terminal={{this.terminal}}/>
+{{else}}
+  <EmptyState>
+    <p>No output available</p>
+    <p>This could be because the operation did not render any output, or because it is no longer available</p>
+  </EmptyState>
+{{/if}}
