@@ -68,8 +68,8 @@ export default Factory.extend({
       server.create('release', 'random', 'minutes-old-success', {
         sequence: 3,
         application,
-        deployment: deployments[2],
-        statusReport: server.create('status-report', 'ready', { application }),
+        deployment: deployments[0],
+        statusReport: server.create('status-report', 'ready', 'with-release-resources', { application }),
       });
       server.create('release', 'random', 'hours-old-success', {
         sequence: 2,
@@ -79,7 +79,7 @@ export default Factory.extend({
       server.create('release', 'random', 'days-old-success', {
         sequence: 1,
         application,
-        deployment: deployments[0],
+        deployment: deployments[2],
       });
     },
   }),
