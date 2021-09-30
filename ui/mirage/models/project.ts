@@ -10,7 +10,6 @@ export default Model.extend({
     result.setApplicationsList(this.applications.models.map((a) => a.toProtobuf()));
     // TODO: result.setDataSource(...)
     // TODO: result.setDataSourcePoll(...)
-    // TODO: result.setExtension(...)
     result.setFileChangeSignal(this.fileChangeSignal);
     result.setName(this.name);
     result.setRemoteEnabled(this.remoteEnabled);
@@ -24,7 +23,6 @@ export default Model.extend({
   toProtobufRef(): Ref.Project {
     let result = new Ref.Project();
 
-    // TODO: result.setExtension(...)
     result.setProject(this.name);
 
     return result;

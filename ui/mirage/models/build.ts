@@ -15,7 +15,6 @@ export default Model.extend({
     result.setApplication(this.application?.toProtobufRef());
     // TODO: result.setArtifact(...)
     result.setComponent(this.component?.toProtobuf());
-    // TODO: result.setExtension(...)
     result.setId(this.id);
     result.setJobId(this.JobId);
     result.setSequence(this.sequence);
