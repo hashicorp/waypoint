@@ -20,19 +20,18 @@ export default class DockerImageBadge extends Component<DockerImageBadgeArgs> {
     this.parseImageAndTag();
   }
 
-  findImageKey(obj: Record<string, unknown>, key: string): void {
+  findImageKey(obj: Record<string, unknown>): void {
     if (typeof obj !== 'object') {
       return;
     }
 
     for (let k in obj) {
-      if (k === key && typeof obj[k] === 'string') {
-        this.imageFromJson = obj[k] as string;
-        return;
+      if (k === 'Config') {
+        this.imageFromJson = obj[k].Image;
       }
 
       if (!obj || typeof obj[k] === 'object') {
-        this.findImageKey(obj[k] as Record<string, unknown>, key);
+        this.findImageKey(obj[k] as Record<string, unknown>);
       }
     }
     return;
@@ -45,7 +44,7 @@ export default class DockerImageBadge extends Component<DockerImageBadgeArgs> {
 
     let container = this.args.statusReport.resourcesList.find((r) => r.type === 'container');
     let containerState = JSON.parse(container?.stateJson ?? '{}');
-    this.findImageKey(containerState, 'Image');
+    this.findImageKey(containerState);
     if (this.imageFromJson) {
       [this.image, this.tag] = this.imageFromJson?.split(':');
     }
