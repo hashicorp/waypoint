@@ -11,19 +11,19 @@ module('Integration | Component | container-image-tag', function (hooks) {
       resourcesList: [
         {
           type: 'container',
-          stateJson: '{"Image": "docker:tag"}',
+          stateJson: '{"Config": {"Image": "docker:tag"}}',
         },
       ],
     });
 
     await render(hbs`<ContainerImageTag @statusReport={{this.statusReport}}/>`);
-    assert.equal(this.element?.textContent.trim().replace(/\s+/, ' '), 'docker tag');
+    assert.equal(this.element?.textContent?.trim().replace(/\s+/, ' '), 'docker tag');
   });
 
   test('it renders n/a when a status report does not exist', async function (assert) {
     this.set('statusReport2', {});
 
     await render(hbs`<ContainerImageTag @statusReport={{this.statusReport2}}/>`);
-    assert.equal(this.element?.textContent.trim().replace(/\s+/, ' '), 'n/a');
+    assert.equal(this.element?.textContent?.trim().replace(/\s+/, ' '), 'n/a');
   });
 });

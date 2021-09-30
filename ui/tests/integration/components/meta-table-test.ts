@@ -29,7 +29,7 @@ module('Integration | Component | meta-table', function (hooks) {
       resourcesList: [
         {
           type: 'container',
-          stateJson: '{"Image": "image:latest"}',
+          stateJson: '{"Config": {"Image": "docker:tag"}}',
         },
       ],
     };

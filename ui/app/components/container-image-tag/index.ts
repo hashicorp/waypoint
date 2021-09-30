@@ -8,6 +8,10 @@ interface DockerImageBadgeArgs {
   statusReport: StatusReport.AsObject;
 }
 
+interface StateJsonConfig {
+  Image: string;
+}
+
 export default class DockerImageBadge extends Component<DockerImageBadgeArgs> {
   @service api!: ApiService;
   @tracked image?: string;
@@ -27,7 +31,8 @@ export default class DockerImageBadge extends Component<DockerImageBadgeArgs> {
 
     for (let k in obj) {
       if (k === 'Config') {
-        this.imageFromJson = obj[k].Image;
+        let config = obj[k] as StateJsonConfig;
+        this.imageFromJson = config.Image;
       }
 
       if (!obj || typeof obj[k] === 'object') {
