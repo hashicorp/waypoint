@@ -37,10 +37,15 @@ module.exports = function (defaults) {
     autoImport: {
       // allows use of a CSP without 'unsafe-eval' directive
       forbidEval: true,
-      // uncomment this to see a tree view of what ember-cli-auto-import builds
-      // webpack: {
-      //   plugins: [new (require('webpack-bundle-analyzer').BundleAnalyzerPlugin)()],
-      // },
+
+      webpack: {
+        // uncomment this to see a tree view of what ember-cli-auto-import builds
+        // plugins: [new (require('webpack-bundle-analyzer').BundleAnalyzerPlugin)()],
+        // required for ansi-colors to work in the browser
+        node: {
+          process: true,
+        },
+      },
       skipBabel: [
         {
           package: 'waypoint-client',
@@ -66,5 +71,9 @@ module.exports = function (defaults) {
   // modules that you would like to import into your application
   // please specify an object with the list of modules as keys
   // along with the exports of each module as its value.
+
+  // xterm.js styles https://xtermjs.org/
+  app.import('node_modules/xterm/css/xterm.css');
+
   return app.toTree();
 };

@@ -1,0 +1,3 @@
+```release-note:improvement
+ui: the rendering of the Application and Operation Logs has been greatly improved
+```
