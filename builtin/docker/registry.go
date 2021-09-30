@@ -3,7 +3,6 @@ package docker
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -66,13 +65,13 @@ func (r *Registry) Push(
 		Tag:   r.config.Tag,
 	}
 	if !r.config.Local {
-		target.Location = &Image_Registry{Registry: &empty.Empty{}}
+		target.Location = &Image_Registry{Registry: &Image_RegistryLocation{}}
 	}
 
 	// Depending on whethere the image is, we diverge at this point.
-	switch img.Location.(type) {
+	switch sv := img.Location.(type) {
 	case *Image_Registry:
-		if img.Image != r.config.Image || img.Tag != r.config.Tag {
+		if !sv.Registry.WaypointGenerated && (img.Image != r.config.Image || img.Tag != r.config.Tag) {
 			return nil, status.Errorf(codes.FailedPrecondition,
 				"Input image is not pulled locally and therefore can't be pushed. "+
 					"Please pull the image or use a builder that pulls the image first.")

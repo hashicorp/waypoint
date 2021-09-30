@@ -268,6 +268,7 @@ RUN mkdir /tmp/cache /tmp/layers && \
 
 	dir := src.Path
 
+	step.Update("Repository is available and ready: %s:%s", ai.Image, ai.Tag)
 	step.Done()
 	step = sg.Add("Executing kaniko...")
 

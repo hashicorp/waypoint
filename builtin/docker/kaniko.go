@@ -8,7 +8,6 @@ import (
 	"os/exec"
 
 	"github.com/docker/distribution/reference"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/assets"
@@ -38,7 +37,7 @@ func (b *Builder) buildWithKaniko(
 	target := &Image{
 		Image:    ai.Image,
 		Tag:      ai.Tag,
-		Location: &Image_Registry{Registry: &empty.Empty{}},
+		Location: &Image_Registry{Registry: &Image_RegistryLocation{}},
 	}
 
 	var os ociregistry.Server
