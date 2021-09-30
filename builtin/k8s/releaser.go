@@ -66,6 +66,8 @@ func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithCreate(r.resourceServiceCreate),
 			resource.WithDestroy(r.resourceServiceDestroy),
 			resource.WithStatus(r.resourceServiceStatus),
+			resource.WithPlatform(platformName),
+			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_ROUTER),
 		)),
 		resource.WithResource(resource.NewResource(
 			resource.WithName("ingress"),
@@ -73,6 +75,8 @@ func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithCreate(r.resourceIngressCreate),
 			resource.WithDestroy(r.resourceIngressDestroy),
 			resource.WithStatus(r.resourceIngressStatus),
+			resource.WithPlatform(platformName),
+			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_ROUTER),
 		)),
 	)
 }
