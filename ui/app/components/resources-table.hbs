@@ -1,6 +1,9 @@
 <div
   data-test-resources-table
-  class="resources-table"
+  class="
+    resources-table
+    {{if @withMargin "resources-table--with-margin"}}
+  "
 >
   <table>
     <caption>{{yield to="caption"}}</caption>
