@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	datadog "github.com/DataDog/opencensus-go-exporter-datadog"
+
 	"contrib.go.opencensus.io/exporter/ocagent"
 	"github.com/hashicorp/waypoint/internal/telemetry"
 
@@ -72,6 +74,12 @@ type ServerRunCommand struct {
 	flagAcceptTOS              bool
 	flagTLSCertFile            string
 	flagTLSKeyFile             string
+
+	flagTelemetryOpenCensusAgentAddr     string
+	flagTelemetryOpenCensusAgentInsecure bool
+
+	flagTelemetryDatadogTraceAddr     string
+	flagTelemetryOpenCensusZpagesAddr string
 }
 
 func (c *ServerRunCommand) Run(args []string) int {
@@ -208,13 +216,18 @@ func (c *ServerRunCommand) Run(args []string) int {
 		defer httpInsecureLn.Close()
 	}
 
+	telemetryEnabled := false
+	// If we have any export address configured, we should enable telemetry.
+	if c.flagTelemetryOpenCensusAgentAddr != "" || c.flagTelemetryDatadogTraceAddr != "" {
+		telemetryEnabled = true
+	}
+
 	options := []server.Option{
 		server.WithContext(c.Ctx),
 		server.WithLogger(log),
 		server.WithGRPC(ln),
 		server.WithHTTP(httpLn),
 		server.WithImpl(impl),
-		server.WithTelemetryEnabled(), // TODO(izaak): make configurable from flag
 	}
 	if httpInsecureLn != nil {
 		options = append(options, server.WithHTTP(httpInsecureLn))
@@ -230,6 +243,10 @@ func (c *ServerRunCommand) Run(args []string) int {
 		options = append(options, server.WithBrowserUI(true))
 	} else {
 		ui = false
+	}
+
+	if telemetryEnabled {
+		options = append(options, server.WithTelemetryEnabled())
 	}
 
 	// Output information to the user
@@ -316,21 +333,52 @@ This command will bootstrap the server and setup a CLI context.
 		}
 	}
 
-	// Enable telemetry if required
-	// TODO(izaak) Make dependent on flags (and reassess this block's location)
-
-	go func() {
-		if err := telemetry.Run(
+	if telemetryEnabled {
+		telemetryOptions := []telemetry.Option{
 			telemetry.WithContext(c.Ctx),
 			telemetry.WithLogger(log.Named("telemetry")),
-			telemetry.WithZpages("127.0.0.1:9999"),
-			telemetry.WithOpenCensusExporter([]ocagent.ExporterOption{
-				ocagent.WithInsecure(),
-			}),
-		); err != nil {
-			log.Error("Failed to run telemetry: %s", err)
 		}
-	}()
+
+		// ZPages
+		if c.flagTelemetryOpenCensusZpagesAddr != "" {
+			telemetryOptions = append(telemetryOptions, telemetry.WithZpages(c.flagTelemetryOpenCensusZpagesAddr))
+		}
+
+		// OpenCensus Agent
+		if c.flagTelemetryOpenCensusAgentAddr != "" {
+			ocagentOptions := []ocagent.ExporterOption{
+				ocagent.WithAddress(c.flagTelemetryOpenCensusAgentAddr),
+				ocagent.WithServiceName("waypoint"),
+			}
+			if c.flagTelemetryOpenCensusAgentInsecure {
+				ocagentOptions = append(ocagentOptions, ocagent.WithInsecure())
+			}
+
+			telemetryOptions = append(telemetryOptions, telemetry.WithOpenCensusExporter(ocagentOptions))
+		}
+
+		// Datadog
+		if c.flagTelemetryDatadogTraceAddr != "" {
+			telemetryOptions = append(telemetryOptions, telemetry.WithDatadogExporter(
+				datadog.Options{
+					TraceAddr: c.flagTelemetryDatadogTraceAddr,
+					Service:   "waypoint",
+				},
+			))
+		}
+
+		go func() {
+			// Will gracefully exit when the context passed in closes.
+			err := telemetry.Run(telemetryOptions...)
+			if err != nil {
+				log.Error("Telemetry runner exited with error", "error", err)
+			} else {
+				log.Debug("Telemetry runner completed.")
+			}
+		}()
+	}
+	// Enable telemetry if required
+	// TODO(izaak) Make dependent on flags (and reassess this block's location)
 
 	// Run the server
 	log.Info("starting built-in server", "addr", ln.Addr().String())
@@ -476,6 +524,31 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Target:  &c.flagAcceptTOS,
 			Usage:   acceptTOSHelp,
 			Default: false,
+		})
+		f.StringVar(&flag.StringVar{
+			Name:   "telemetry-opencensus-agent-addr",
+			Target: &c.flagTelemetryOpenCensusAgentAddr,
+			Usage: "Address of an opencensus agent or collector available to receive opencensus formatted\n" +
+				"telemetry, traces and stats (commonly port 55678). Example: localhost:55678",
+		})
+		f.BoolVar(&flag.BoolVar{
+			Name:    "telemetry-opencensus-agent-insecure",
+			Target:  &c.flagTelemetryOpenCensusAgentInsecure,
+			Usage:   "Disables client transport security for the OpenCensus agent exporter's gRPC connection.",
+			Default: false,
+		})
+		f.StringVar(&flag.StringVar{
+			Name:   "telemetry-datadog-trace-addr",
+			Target: &c.flagTelemetryDatadogTraceAddr,
+			Usage:  "Address of a datadog agent available to accept traces (commonly port 8126). Example: localhost:8126",
+		})
+		f.StringVar(&flag.StringVar{
+			Name:   "telemetry-opencensus-zpages-addr",
+			Target: &c.flagTelemetryOpenCensusZpagesAddr,
+			Usage: "If set, waypoint will run a telemetry zpages server at this address. Typically this is\n" +
+				"set to something like localhost:9999, whereupon trace debug information could be viewed at\n" +
+				"http://localhost:9999/debug/tracez, and rpc stats at http://localhost:55679/debug/rpcz.\n" +
+				"More information at https://opencensus.io/zpages/",
 		})
 	})
 }
