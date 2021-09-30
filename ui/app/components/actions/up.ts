@@ -12,7 +12,7 @@ import Component from '@glimmer/component';
 import PollModelService from 'waypoint/services/poll-model';
 import { perform } from 'ember-concurrency-ts';
 import { inject as service } from '@ember/service';
-import { task } from 'ember-concurrency-decorators';
+import { task } from 'ember-concurrency';
 import { tracked } from '@glimmer/tracking';
 
 interface ActionsUpArgs {
