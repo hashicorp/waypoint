@@ -30,7 +30,7 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(flags),
-		WithSingleApp(),
+		WithMultipleApp(),
 	); err != nil {
 		return 1
 	}

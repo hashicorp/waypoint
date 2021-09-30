@@ -23,7 +23,7 @@ func (c *DestroyCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithSingleApp(),
+		WithMultipleApp(),
 	); err != nil {
 		return 1
 	}

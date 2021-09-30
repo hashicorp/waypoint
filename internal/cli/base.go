@@ -407,6 +407,11 @@ func (c *baseCommand) Init(opts ...Option) error {
 // will stop any remaining callbacks and exit early.
 func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *clientpkg.App) error) error {
 	var appTargets []string
+	if c.flagApp != "" {
+		c.refApp = &pb.Ref_Application{
+			Application: c.flagApp,
+		}
+	}
 	if c.refApp != nil {
 		appTargets = []string{c.refApp.Application}
 	} else if c.cfg != nil {
