@@ -848,21 +848,16 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	if c.flagJson {
 		c.outputJsonAppStatus(appTbl, deployTbl, resourcesTbl, releaseTbl, releaseResourcesTbl, project)
 	} else {
-		c.ui.Output("")
 		c.ui.Output("Application Summary", terminal.WithHeaderStyle())
 		c.ui.Table(appTbl, terminal.WithStyle("Simple"))
-		c.ui.Output("")
 		c.ui.Output("Deployment Summary", terminal.WithHeaderStyle())
 		c.ui.Table(deployTbl, terminal.WithStyle("Simple"))
-		c.ui.Output("")
 		c.ui.Output("Deployment Resources Summary", terminal.WithHeaderStyle())
 		c.ui.Table(resourcesTbl, terminal.WithStyle("Simple"))
-		c.ui.Output("")
 
 		if !releaseUnimplemented {
 			c.ui.Output("Release Summary", terminal.WithHeaderStyle())
 			c.ui.Table(releaseTbl, terminal.WithStyle("Simple"))
-			c.ui.Output("")
 			c.ui.Output("Release Resources Summary", terminal.WithHeaderStyle())
 			c.ui.Table(releaseResourcesTbl, terminal.WithStyle("Simple"))
 			c.ui.Output("")
@@ -872,8 +867,6 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	}
 
 	if appFailures {
-		c.ui.Output("")
-
 		c.ui.Output(wpStatusHealthTriageMsg, projectTarget, terminal.WithWarningStyle())
 	}
 

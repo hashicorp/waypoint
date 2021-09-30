@@ -467,7 +467,7 @@ func (c *DeploymentListCommand) Synopsis() string {
 
 func (c *DeploymentListCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint deployment list [options]
+Usage: waypoint deployment list [options] [project/app]
 
   Lists the deployments that were created.
 
