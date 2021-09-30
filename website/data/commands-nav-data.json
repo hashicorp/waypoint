@@ -32,10 +32,6 @@
     "path": "logs"
   },
   {
-    "title": "project apply",
-    "path": "project-apply"
-  },
-  {
     "title": "release",
     "path": "release"
   },
@@ -173,6 +169,10 @@
   {
     "title": "plugin",
     "path": "plugin"
+  },
+  {
+    "title": "project apply",
+    "path": "project-apply"
   },
   {
     "title": "project inspect",
