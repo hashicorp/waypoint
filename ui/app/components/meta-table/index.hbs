@@ -1,20 +1,20 @@
 <div class="artifact-overview">
   <table>
     <tbody>
-      {{#if @model.statusReport}}
+      {{#if @statusReport}}
         <tr>
           <td>
             Image
           </td>
           <td>
-            <ContainerImageTag @statusReport={{@model.statusReport}}/>
+            <ContainerImageTag @statusReport={{@statusReport}}/>
           </td>
         </tr>
         <tr>
           <td>Health Check</td>
           <td>
             <div class="status-indicator">
-              <StatusReportIndicator @statusReport={{@model.statusReport}} /> &nbsp;
+              <StatusReportIndicator @statusReport={{@statusReport}} /> &nbsp;
               <Pds::Button @variant="ghost" @iconStart="refresh-default" disabled={{this.isRefreshRunning}} {{on "click" this.refreshHealthCheck}}>
                 Re-run
               </Pds::Button>

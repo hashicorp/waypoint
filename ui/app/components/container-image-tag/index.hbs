@@ -1,8 +1,8 @@
 {{#if this.image}}
-<span class="container-badge" title="Image">
-  {{this.image}}
-  <span class="container-badge-tag">{{this.tag}}</span>
-</span> 
+  <span data-test-container-info class="container-badge" title="Image">
+    {{this.image}}
+    <span class="container-badge-tag">{{this.tag}}</span>
+  </span> 
 {{else}}
   n/a
 {{/if}}
