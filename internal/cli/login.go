@@ -361,7 +361,13 @@ func (c *LoginCommand) k8sServerAddr(ctx context.Context) (string, error) {
 
 		if service.Spec.Type == "LoadBalancer" {
 			if ig := service.Status.LoadBalancer.Ingress; len(ig) > 0 {
-				advertiseAddr = ig[0].IP
+				// Prefer hostname over the IP
+				if v := ig[0].Hostname; v != "" {
+					advertiseAddr = v
+				} else {
+					advertiseAddr = ig[0].IP
+				}
+
 				return true, nil
 			}
 		} else {
@@ -381,6 +387,10 @@ func (c *LoginCommand) k8sServerAddr(ctx context.Context) (string, error) {
 	})
 	if err != nil {
 		return "", err
+	}
+
+	if advertiseAddr == "" {
+		return "", fmt.Errorf("Failed to detect waypoint-ui service address.")
 	}
 
 	// The advertise addr always needs the gRPC port. For our Helm chart
