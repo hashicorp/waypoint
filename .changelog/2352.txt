@@ -1,0 +1,3 @@
+```release-note:feature
+ui: overview section added + Docker container information displayed
+```
