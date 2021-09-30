@@ -17,6 +17,9 @@ import (
 	"strings"
 	"time"
 
+	"contrib.go.opencensus.io/exporter/ocagent"
+	"github.com/hashicorp/waypoint/internal/telemetry"
+
 	"github.com/hashicorp/go-hclog"
 	hznhub "github.com/hashicorp/horizon/pkg/hub"
 	hzntest "github.com/hashicorp/horizon/pkg/testutils/central"
@@ -211,6 +214,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 		server.WithGRPC(ln),
 		server.WithHTTP(httpLn),
 		server.WithImpl(impl),
+		server.WithTelemetryEnabled(), // TODO(izaak): make configurable from flag
 	}
 	if httpInsecureLn != nil {
 		options = append(options, server.WithHTTP(httpInsecureLn))
@@ -311,6 +315,22 @@ This command will bootstrap the server and setup a CLI context.
 			})
 		}
 	}
+
+	// Enable telemetry if required
+	// TODO(izaak) Make dependent on flags (and reassess this block's location)
+
+	go func() {
+		if err := telemetry.Run(
+			telemetry.WithContext(c.Ctx),
+			telemetry.WithLogger(log.Named("telemetry")),
+			telemetry.WithZpages("127.0.0.1:9999"),
+			telemetry.WithOpenCensusExporter([]ocagent.ExporterOption{
+				ocagent.WithInsecure(),
+			}),
+		); err != nil {
+			log.Error("Failed to run telemetry: %s", err)
+		}
+	}()
 
 	// Run the server
 	log.Info("starting built-in server", "addr", ln.Addr().String())

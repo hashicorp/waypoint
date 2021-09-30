@@ -5,6 +5,8 @@ import (
 	"net"
 	"sync"
 
+	"go.opencensus.io/trace"
+
 	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -35,6 +37,10 @@ func Run(opts ...Option) error {
 	if err != nil {
 		return err
 	}
+
+	// TODO(izaak): delete this test span
+	ctx, span := trace.StartSpan(context.Background(), "izaak.thing.is.working")
+	span.End()
 
 	wg := sync.WaitGroup{}
 
@@ -120,6 +126,9 @@ type options struct {
 
 	// BrowserUIEnabled determines if the browser UI should be mounted
 	BrowserUIEnabled bool
+
+	// TelemetryEnabled determines if hte server should instrument itself to emit telemetry. Default false
+	TelemetryEnabled bool
 }
 
 // WithContext sets the context for the server. When this context is cancelled,
@@ -162,4 +171,8 @@ func WithAuthentication(ac AuthChecker) Option {
 // WithBrowserUI configures the server to enable the browser UI.
 func WithBrowserUI(enabled bool) Option {
 	return func(opts *options) { opts.BrowserUIEnabled = enabled }
+}
+
+func WithTelemetryEnabled() Option {
+	return func(opts *options) { opts.TelemetryEnabled = true }
 }

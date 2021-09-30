@@ -3,6 +3,8 @@ package server
 import (
 	"time"
 
+	"go.opencensus.io/plugin/ocgrpc"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
@@ -60,6 +62,11 @@ func newGrpcServer(opts *options) (*grpcServer, error) {
 			grpc.ChainUnaryInterceptor(authUnaryInterceptor(opts.AuthChecker)),
 			grpc.ChainStreamInterceptor(authStreamInterceptor(opts.AuthChecker)),
 		)
+	}
+
+	if opts.TelemetryEnabled {
+		log.Debug("Enabling server ocgrpc stats handler")
+		so = append(so, grpc.StatsHandler(&ocgrpc.ServerHandler{}))
 	}
 
 	s := grpc.NewServer(so...)
