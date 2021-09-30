@@ -328,16 +328,20 @@ func configureK8sContainer(
 	var k8sPorts []corev1.ContainerPort
 	for _, port := range ports {
 		k8sPorts = append(k8sPorts, corev1.ContainerPort{
-			Name:     port.Name,
-			HostPort: int32(port.HostPort),
-			HostIP:   port.HostIP,
-			Protocol: corev1.Protocol(strings.TrimSpace(strings.ToUpper(port.Protocol))),
+			Name:          port.Name,
+			ContainerPort: int32(port.Port),
+			HostPort:      int32(port.HostPort),
+			HostIP:        port.HostIP,
+			Protocol:      corev1.Protocol(strings.TrimSpace(strings.ToUpper(port.Protocol))),
 		})
 	}
 
 	// assume the first port defined is the 'main' port to use
-	defaultPort := int(k8sPorts[0].ContainerPort)
-	envVars["PORT"] = fmt.Sprintf("%d", defaultPort)
+	var defaultPort int
+	if len(k8sPorts) != 0 {
+		defaultPort = int(k8sPorts[0].ContainerPort)
+		envVars["PORT"] = fmt.Sprintf("%d", defaultPort)
+	}
 	var k8sEnvVars []corev1.EnvVar
 	for k, v := range envVars {
 		k8sEnvVars = append(k8sEnvVars, corev1.EnvVar{Name: k, Value: v})
@@ -424,24 +428,6 @@ func configureK8sContainer(
 		Requests: resourceRequests,
 	}
 
-	var handler corev1.Handler
-	if probePath != "" {
-		handler = corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path: probePath,
-				Port: intstr.FromInt(defaultPort),
-			},
-		}
-	} else {
-		// If no probe path is defined, assume app will bind to default TCP port
-		// TODO: handle apps that aren't socket listeners
-		handler = corev1.Handler{
-			TCPSocket: &corev1.TCPSocketAction{
-				Port: intstr.FromInt(defaultPort),
-			},
-		}
-	}
-
 	var volumeMounts []corev1.VolumeMount
 	for idx, scratchSpaceLocation := range scratchSpace {
 		volumeMounts = append(
@@ -458,28 +444,52 @@ func configureK8sContainer(
 		Name:            name,
 		Image:           image,
 		ImagePullPolicy: pullPolicy,
-		Ports:           k8sPorts,
-		LivenessProbe: &corev1.Probe{
-			Handler:             handler,
-			InitialDelaySeconds: initialDelaySeconds,
-			TimeoutSeconds:      timeoutSeconds,
-			FailureThreshold:    failureThreshold,
-		},
-		ReadinessProbe: &corev1.Probe{
-			Handler:             handler,
-			InitialDelaySeconds: initialDelaySeconds,
-			TimeoutSeconds:      timeoutSeconds,
-		},
-		Env:          k8sEnvVars,
-		Resources:    resourceRequirements,
-		VolumeMounts: volumeMounts,
+		Env:             k8sEnvVars,
+		Resources:       resourceRequirements,
+		VolumeMounts:    volumeMounts,
 	}
 
+	if len(k8sPorts) > 0 {
+		container.Ports = k8sPorts
+	}
 	if command != nil {
 		container.Command = *command
 	}
 	if args != nil {
 		container.Args = *args
+	}
+
+	// Only define liveliness & readiness checks if container binds to a port
+	if defaultPort > 0 {
+		var handler corev1.Handler
+		if probePath != "" {
+			handler = corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path: probePath,
+					Port: intstr.FromInt(defaultPort),
+				},
+			}
+		} else {
+			// If no probe path is defined, assume app will bind to default TCP port
+			// TODO: handle apps that aren't socket listeners
+			handler = corev1.Handler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromInt(defaultPort),
+				},
+			}
+		}
+
+		container.LivenessProbe = &corev1.Probe{
+			Handler:             handler,
+			InitialDelaySeconds: initialDelaySeconds,
+			TimeoutSeconds:      timeoutSeconds,
+			FailureThreshold:    failureThreshold,
+		}
+		container.ReadinessProbe = &corev1.Probe{
+			Handler:             handler,
+			InitialDelaySeconds: initialDelaySeconds,
+			TimeoutSeconds:      timeoutSeconds,
+		}
 	}
 
 	return &container, nil
@@ -493,7 +503,6 @@ func (p *Platform) resourceDeploymentCreate(
 	img *docker.Image,
 	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
-
 	result *Deployment,
 	state *Resource_Deployment,
 	csinfo *clientsetInfo,
@@ -527,7 +536,23 @@ func (p *Platform) resourceDeploymentCreate(
 		return err
 	}
 
+	// Setup our port configuration
+	if p.config.ServicePort == 0 && len(p.config.Ports) == 0 {
+		// nothing defined, set up the defaults
+		p.config.Ports = append(p.config.Ports, &Port{Port: DefaultServicePort, Name: "http"})
+	} else if p.config.ServicePort > 0 && len(p.config.Ports) == 0 {
+		// old ServicePort var is used, so set it up in our Ports map to be used
+		p.config.Ports = append(p.config.Ports, &Port{Port: p.config.ServicePort, Name: "http"})
+	} else if p.config.ServicePort > 0 && len(p.config.Ports) > 0 {
+		// both defined, this is an error
+		return fmt.Errorf("cannot define both 'service_port' and 'ports'. Use" +
+			" 'ports' for configuring multiple container ports")
+	}
+
 	// Add deploy config environment to container env vars
+	if p.config.StaticEnvVars == nil {
+		p.config.StaticEnvVars = make(map[string]string)
+	}
 	for k, v := range deployConfig.Env() {
 		p.config.StaticEnvVars[k] = v
 	}
@@ -561,7 +586,8 @@ func (p *Platform) resourceDeploymentCreate(
 		args = p.config.Pod.Container.Args
 	}
 
-	appContainer, err := configureK8sContainer(src.App,
+	appContainer, err := configureK8sContainer(
+		src.App,
 		fmt.Sprintf("%s:%s", img.Image, img.Tag),
 		p.config.Ports,
 		p.config.StaticEnvVars,
@@ -607,8 +633,9 @@ func (p *Platform) resourceDeploymentCreate(
 	}
 
 	// Update the deployment with our spec
+	containers := []corev1.Container{*appContainer}
 	deployment.Spec.Template.Spec = corev1.PodSpec{
-		Containers: append(sidecarContainers, *appContainer),
+		Containers: append(containers, sidecarContainers...),
 	}
 
 	// If no count is specified, presume that the user is managing the replica
@@ -701,7 +728,7 @@ func (p *Platform) resourceDeploymentCreate(
 		deployment, err = dc.Update(ctx, deployment, metav1.UpdateOptions{})
 	}
 	if err != nil {
-		return err
+		return status.Errorf(codes.Internal, "failed to create or update deployment: %s", err)
 	}
 
 	ev := clientSet.CoreV1().Events(ns)
