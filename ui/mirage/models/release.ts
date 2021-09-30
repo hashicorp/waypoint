@@ -18,7 +18,6 @@ export default Model.extend({
     result.setApplication(this.application?.toProtobufRef());
     result.setComponent(this.component?.toProtobuf());
     result.setDeploymentId(this.deployment?.id);
-    // TODO: result.setExtension
     result.setId(this.id);
     result.setJobId(this.jobId);
     result.setPreload(this.preloadProtobuf());

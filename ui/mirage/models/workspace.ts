@@ -9,7 +9,6 @@ export default Model.extend({
     let result = new Workspace();
 
     // TODO: result.setActiveTime
-    // TODO: result.setExtension
     result.setName(this.name);
     // TODO: result.setProjectsList
 
