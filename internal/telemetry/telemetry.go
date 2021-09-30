@@ -2,19 +2,17 @@ package telemetry
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
-	"go.opencensus.io/zpages"
-
+	"contrib.go.opencensus.io/exporter/ocagent"
+	datadog "github.com/DataDog/opencensus-go-exporter-datadog"
+	"github.com/hashicorp/go-hclog"
 	ocview "go.opencensus.io/stats/view"
+	octrace "go.opencensus.io/trace"
+	"go.opencensus.io/zpages"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"contrib.go.opencensus.io/exporter/ocagent"
-
-	octrace "go.opencensus.io/trace"
-
-	"github.com/hashicorp/go-hclog"
 )
 
 type Option func(*telemetry)
@@ -25,10 +23,18 @@ func Run(opts ...Option) error {
 		opt(&t)
 	}
 
-	// TODO(izaak): would be nice to warn if no exporters have been configured
+	if t.Logger == nil {
+		t.Logger = hclog.L().Named("telemetry")
+	}
+	log := t.Logger
 
+	// If any of the below agents or servers need to close on exit, they can
+	// register their close function here, and they will be called when the parent
+	// context closes this runner.
 	var closeFuncs []func()
+
 	if t.EnableOpenCensusExporter {
+		log.Debug("Starting the opencensus agent exporter")
 		exporter, err := ocagent.NewExporter(t.OpenCensusExporterOptions...)
 		if err != nil {
 			return status.Errorf(codes.InvalidArgument, "failed to initalize opencensus agent exporter: %s", err)
@@ -36,17 +42,32 @@ func Run(opts ...Option) error {
 		octrace.RegisterExporter(exporter)
 		ocview.RegisterExporter(exporter)
 		closeFuncs = append(closeFuncs, func() {
-			t.Log.Debug("Shutting down opencensus agent exporter")
+			log.Debug("Shutting down opencensus agent exporter")
 			exporter.Flush()
 			if err := exporter.Stop(); err != nil {
-				t.Log.Error("Failed to stop the opencensus agent exporter: %s", err)
+				log.Error("Failed to stop the opencensus agent exporter", "err", err)
 			} else {
-				t.Log.Debug("OpenCensus agent exporter flushed and stopped")
+				log.Debug("OpenCensus agent exporter flushed and stopped")
 			}
 		})
 	}
 
-	// Run Zpages
+	if t.EnableDatadogExporter {
+		log.Debug("Starting the opencensus datadog exporter")
+		exporter, err := datadog.NewExporter(t.DatadogExporterOptions)
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, "failed to initalize datadog exporter: %s", err)
+		}
+		octrace.RegisterExporter(exporter)
+		ocview.RegisterExporter(exporter)
+		closeFuncs = append(closeFuncs, func() {
+			log.Debug("Shutting down datadog exporter")
+			exporter.Stop()
+			log.Debug("Datadog exporter flushed and stopped")
+		})
+	}
+
+	// Run zPages
 	if t.EnableZpages {
 		zPagesMux := http.NewServeMux()
 		zpages.Handle(zPagesMux, "/debug")
@@ -64,15 +85,15 @@ func Run(opts ...Option) error {
 		}
 
 		go func() {
-			t.Log.Debug("Starting zPages server at %s", zpagesAddr)
+			log.Debug("Starting zPages server", "addr", zpagesAddr)
 			if err := srv.ListenAndServe(); err != nil {
-				panic("Failed to serve zPages")
+				log.Debug("zPages server exited", "err", err)
 			}
 		}()
 		closeFuncs = append(closeFuncs, func() {
 			err := srv.Close()
 			if err != nil {
-				t.Log.Error("Failed to shut down zPages server: %s", err)
+				log.Error(fmt.Sprintf("Failed to shut down zPages server: %s", err))
 			}
 		})
 	}
@@ -86,7 +107,7 @@ func Run(opts ...Option) error {
 		for _, f := range closeFuncs {
 			f()
 		}
-		t.Log.Debug("Finished shutting down telemetry components")
+		log.Debug("Finished shutting down telemetry components")
 	}
 	return nil
 }
@@ -97,20 +118,17 @@ type telemetry struct {
 	Context context.Context
 
 	// Logger is the logger to use. This will default to hclog.L() if not set.
-	Log hclog.Logger
-
-	// TODO(izaak): looks like ocagent doesn't do global tags? This would be nice...
-	// Tags to apply globally if possible
-	//GlobalTags []string
+	Logger hclog.Logger
 
 	EnableOpenCensusExporter  bool
 	OpenCensusExporterOptions []ocagent.ExporterOption
 
+	EnableDatadogExporter  bool
+	DatadogExporterOptions datadog.Options
+
 	EnableZpages bool
 	// Address to listen on for zpages. Defaults to 127.0.0.1:9999
 	ZpagesAddr string
-
-	// TODO(izaak): datadog exporter options
 }
 
 // WithContext sets the logger for use with the server.
@@ -123,7 +141,7 @@ func WithContext(ctx context.Context) Option {
 // WithLogger sets the logger for use with the server.
 func WithLogger(log hclog.Logger) Option {
 	return func(t *telemetry) {
-		t.Log = log
+		t.Logger = log
 	}
 }
 
@@ -131,6 +149,13 @@ func WithOpenCensusExporter(exporterOptions []ocagent.ExporterOption) Option {
 	return func(t *telemetry) {
 		t.EnableOpenCensusExporter = true
 		t.OpenCensusExporterOptions = exporterOptions
+	}
+}
+
+func WithDatadogExporter(exporterOptions datadog.Options) Option {
+	return func(t *telemetry) {
+		t.EnableDatadogExporter = true
+		t.DatadogExporterOptions = exporterOptions
 	}
 }
 

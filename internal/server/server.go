@@ -5,8 +5,6 @@ import (
 	"net"
 	"sync"
 
-	"go.opencensus.io/trace"
-
 	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -37,10 +35,6 @@ func Run(opts ...Option) error {
 	if err != nil {
 		return err
 	}
-
-	// TODO(izaak): delete this test span
-	ctx, span := trace.StartSpan(context.Background(), "izaak.thing.is.working")
-	span.End()
 
 	wg := sync.WaitGroup{}
 

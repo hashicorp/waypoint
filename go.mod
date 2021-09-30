@@ -8,6 +8,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.18
 	github.com/Azure/go-autorest/autorest/azure/auth v0.4.2
 	github.com/Azure/go-autorest/autorest/to v0.3.0
+	github.com/DataDog/opencensus-go-exporter-datadog v0.0.0-20210527074920-9baf37265e83
 	github.com/adrg/xdg v0.2.1
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/armon/circbuf v0.0.0-20190214190532-5111143e8da2

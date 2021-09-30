@@ -3,10 +3,9 @@ package server
 import (
 	"time"
 
-	"go.opencensus.io/plugin/ocgrpc"
-
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
+	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
