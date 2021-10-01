@@ -1,8 +1,14 @@
-{{#if this.image}}
+{{#each this.imageRefs as |imageRef|}}
   <span data-test-container-info class="container-badge" title="Image">
-    {{this.image}}
-    <span class="container-badge-tag">{{this.tag}}</span>
+    {{imageRef.label}}
+    <span class="container-badge-tag">
+      {{#if (eq imageRef.label "sha256")}}
+        {{truncate-commit imageRef.tag}}
+      {{else}}
+        {{imageRef.tag}}
+      {{/if}}
+    </span>
   </span> 
 {{else}}
   n/a
-{{/if}}
+{{/each}}

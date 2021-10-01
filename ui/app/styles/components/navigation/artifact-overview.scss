@@ -10,18 +10,18 @@
     font-size: 0.875rem;
 
     tr {
-      td {
-        padding-bottom: 0.5rem;
-      }
-      .status-indicator {
-        display: flex;
-        align-items: flex-end;
-      }
-
-      td:first-child {
+      th {
         font-weight: 500;
         color: rgb(var(--text-muted));
         width: 158px;
+        text-align: left;
+        padding-bottom: 0.25rem;
+      }
+
+      .status-indicator {
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 0.25rem;
       }
     }
 

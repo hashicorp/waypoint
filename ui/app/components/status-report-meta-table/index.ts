@@ -14,7 +14,7 @@ import {
   Job,
 } from 'waypoint-pb';
 
-interface OverviewTableArgs {
+interface Args {
   model: Deployment.AsObject & WithStatusReport;
   artifactType: string;
 }
@@ -23,21 +23,20 @@ interface WithStatusReport {
   statusReport?: StatusReport.AsObject;
 }
 
-export default class OverviewTable extends Component<OverviewTableArgs> {
+export default class StatusReportMetaTable extends Component<Args> {
   @service api!: ApiService;
   @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
   @tracked isRefreshRunning = false;
 
-
-  get artifactType(): OverviewTableArgs['artifactType'] {
+  get artifactType(): Args['artifactType'] {
     return this.args.artifactType;
   }
 
-  get model(): OverviewTableArgs['model'] {
+  get model(): Args['model'] {
     return this.args.model;
   }
 
-  get statusReport(): OverviewTableArgs['model']['statusReport'] {
+  get statusReport(): Args['model']['statusReport'] {
     return this.model.statusReport;
   }
 
