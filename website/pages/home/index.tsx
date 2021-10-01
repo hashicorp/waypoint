@@ -15,13 +15,19 @@ export default function HomePage(): JSX.Element {
       <Hero
         heading={
           <>
-            Easy application deployment for <em>Kubernetes</em> and <em>ECS</em>
+            Easy application deployment for <em>Kubernetes</em> and{' '}
+            <em>Amazon ECS</em>
           </>
         }
         description="Waypoint is an application deployment tool for Kubernetes, ECS, and
         many other platforms. It allows developers to deploy, manage, and
         observe their applications through a consistent abstraction of the
         underlying infrastructure."
+        link={{
+          title: 'Get Started',
+          url:
+            'https://learn.hashicorp.com/collections/waypoint/get-started-kubernetes',
+        }}
       />
       <SectionIntro
         columnLeft={{

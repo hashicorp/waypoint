@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import classNames from 'classnames'
+import Button from '@hashicorp/react-button'
 import Mask from './Mask'
 import Logos from './Logos'
 import usePrefersReducedMotion from 'lib/hooks/usePrefersReducedMotion'
@@ -8,9 +9,17 @@ import s from './style.module.css'
 interface HeroProps {
   heading: React.ReactNode
   description: string
+  link: {
+    title: string
+    url: string
+  }
 }
 
-export default function Hero({ heading, description }: HeroProps): JSX.Element {
+export default function Hero({
+  heading,
+  description,
+  link,
+}: HeroProps): JSX.Element {
   const prefersReducedMotion = usePrefersReducedMotion()
   const [loaded, setLoaded] = useState(false)
   useEffect(() => {
@@ -27,6 +36,14 @@ export default function Hero({ heading, description }: HeroProps): JSX.Element {
       <div className={s.heroInner}>
         <h1 className={s.heroHeading}>{heading}</h1>
         <p className={s.heroDescription}>{description}</p>
+        <div className={s.heroButton}>
+          <Button
+            {...link}
+            theme={{
+              brand: 'waypoint',
+            }}
+          />
+        </div>
       </div>
       <div
         className={classNames(s.heroGraphic, {
