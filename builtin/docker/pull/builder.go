@@ -173,7 +173,7 @@ func (b *Builder) Build(args buildArgs) (*wpdocker.Image, error) {
 		step.Update("Using Docker image in remote registry: %s", result.Name())
 		step.Done()
 
-		result.Location = &wpdocker.Image_Registry{Registry: &empty.Empty{}}
+		result.Location = &wpdocker.Image_Registry{Registry: &wpdocker.Image_RegistryLocation{}}
 		return result, nil
 	}
 

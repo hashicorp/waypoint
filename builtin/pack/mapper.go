@@ -2,7 +2,6 @@ package pack
 
 import (
 	"github.com/hashicorp/waypoint/builtin/docker"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // PackImageMapper maps a pack.DockerImage to our Image structure.
@@ -17,7 +16,9 @@ func PackImageMapper(src *DockerImage) *docker.Image {
 	}
 
 	if src.Remote {
-		img.Location = &docker.Image_Registry{Registry: &emptypb.Empty{}}
+		img.Location = &docker.Image_Registry{Registry: &docker.Image_RegistryLocation{
+			WaypointGenerated: true,
+		}}
 	}
 
 	return img
