@@ -6,6 +6,7 @@ import BuildAndDeploy from 'components/homepage/sections/how-it-works/build-and-
 import MonitorAndManage from 'components/homepage/sections/how-it-works/monitor-and-manage'
 import SectionMonitorAppHealth from 'components/homepage/sections/monitor-app-health'
 import SectionExtendPlugins from 'components/homepage/sections/extend-plugins'
+import SectionCallToAction from 'components/homepage/sections/call-to-action'
 // import SectionWorkflowThatScales from 'components/homepage/sections/workflow-that-scales'
 import s from './style.module.css'
 
@@ -169,6 +170,67 @@ export default function HomePage(): JSX.Element {
         ]}
       />
       {/* <SectionWorkflowThatScales /> */}
+      <SectionCallToAction
+        features={[
+          {
+            media: {
+              src: '/img/prebuilt-binaries.svg',
+              alt: '',
+              width: 189,
+              height: 44,
+            },
+            text: (
+              <>
+                Pre-built binaries available for{' '}
+                <strong>macOS, Windows &amp; Linux</strong>
+              </>
+            ),
+          },
+          {
+            media: {
+              src: '/img/deploys-kubernetes-helm.svg',
+              alt: '',
+              width: 121,
+              height: 44,
+            },
+            text: (
+              <>
+                Deploys to <strong>Kubernetes</strong> in seconds with{' '}
+                <strong>Helm</strong>
+              </>
+            ),
+          },
+          {
+            media: {
+              src: '/img/first-party-aws-docker.svg',
+              alt: '',
+              width: 122,
+              height: 42,
+            },
+            text: (
+              <>
+                First party support for{' '}
+                <strong>AWS ECS, Docker, AWS Lambda</strong> and more
+              </>
+            ),
+          },
+          {
+            media: {
+              src: '/img/extensible-plugins.svg',
+              alt: '',
+              width: 65,
+              height: 42,
+            },
+            text: <>Infinitely extensible with Waypoint plugins</>,
+          },
+        ]}
+        heading="Ready to get started?"
+        content="Start by following a tutorial to deploy a simple application with Waypoint or learn about how the project works by exploring the documentation."
+        links={[
+          { text: 'Get Started', url: '#' },
+          { text: 'Explore Documentation', url: '#' },
+        ]}
+      />
     </div>
   )
 }
