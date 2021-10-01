@@ -40,9 +40,11 @@ type nomadConfig struct {
 	runnerResourcesCPU    string `hcl:"runner_resources_cpu,optional"`
 	runnerResourcesMemory string `hcl:"runner_resources_memory,optional"`
 
-	volumeType        string `hcl:"volume_type,optional"`
-	hostVolume        string `hcl:"host_volume,optional"`
-	csiVolumeProvider string `hcl:"csi_volume_provider"`
+	volumeType           string `hcl:"volume_type,optional"`
+	hostVolume           string `hcl:"host_volume,optional"`
+	csiVolumeProvider    string `hcl:"csi_volume_provider,optional"`
+	csiVolumeCapacityMin int64  `hcl:"csi_volume_capacity_min,optional"`
+	csiVolumeCapacityMax int64  `hcl:"csi_volume_capacity_max,optional"`
 }
 
 var (
@@ -140,6 +142,12 @@ func (i *NomadInstaller) Install(
 	}
 
 	if strings.ToLower(i.config.volumeType) == "csi" {
+		var (
+			// bytes
+			defaultCSIVolumeCapacityMin = int64(1073741824)
+			defaultCSIVolumeCapacityMax = int64(2147483648)
+		)
+
 		if i.config.csiVolumeProvider == "" {
 			return nil, fmt.Errorf("please include '-nomad-csi-volume-provider' flag")
 		}
@@ -159,11 +167,16 @@ func (i *NomadInstaller) Install(
 				FSType:     "xfs",
 				MountFlags: []string{"noatime"},
 			},
-			RequestedCapacityMin: 1073741824,
-			RequestedCapacityMax: 2147483648,
+			RequestedCapacityMin: defaultCSIVolumeCapacityMin,
+			RequestedCapacityMax: defaultCSIVolumeCapacityMax,
 			PluginID:             i.config.csiVolumeProvider,
 		}
-
+		if i.config.csiVolumeCapacityMin != 0 {
+			vol.RequestedCapacityMin = i.config.csiVolumeCapacityMin
+		}
+		if i.config.csiVolumeCapacityMax != 0 {
+			vol.RequestedCapacityMax = i.config.csiVolumeCapacityMax
+		}
 		_, _, err = client.CSIVolumes().Create(&vol, &api.WriteOptions{})
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "Failed creating Nomad persistent volume ID %s: %s", vol.ID, err)
@@ -462,6 +475,7 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 				return err
 			}
 			s.Update("Successfully destroyed persistent volumes")
+			break
 		}
 	}
 	s.Done()
@@ -994,19 +1008,31 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:   "nomad-volume-type",
 		Target: &i.config.volumeType,
-		Usage:  "Nomad volume type for the Waypoint server.",
+		Usage:  "Nomad persistent volume type for the Waypoint server.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:   "nomad-host-volume",
 		Target: &i.config.hostVolume,
-		Usage:  "Nomad host volume name.",
+		Usage:  "Nomad host volume name, required for volume type 'host'.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:   "nomad-csi-volume-provider",
 		Target: &i.config.csiVolumeProvider,
-		Usage:  "Nomad CSI volume provider.",
+		Usage:  "Nomad CSI volume provider, required for volume type 'csi'.",
+	})
+
+	set.Int64Var(&flag.Int64Var{
+		Name:   "nomad-csi-volume-capacity-min",
+		Target: &i.config.csiVolumeCapacityMin,
+		Usage:  "Nomad CSI volume capacity minimum, in bytes.",
+	})
+
+	set.Int64Var(&flag.Int64Var{
+		Name:   "nomad-csi-volume-capacity-max",
+		Target: &i.config.csiVolumeCapacityMax,
+		Usage:  "Nomad CSI volume capacity maximum, in bytes.",
 	})
 }
 
@@ -1091,7 +1117,7 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:   "nomad-volume-type",
 		Target: &i.config.volumeType,
-		Usage:  "Nomad volume type for the Waypoint server.",
+		Usage:  "Nomad volume type for the Waypoint server ('csi' or 'host').",
 	})
 
 	set.StringVar(&flag.StringVar{

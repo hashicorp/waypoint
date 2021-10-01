@@ -111,8 +111,10 @@ and disable the UI, the command would be:
 - `-nomad-consul-service` - Create service for Waypoint UI in Consul.
 - `-nomad-consul-service-ui-tags=<string>` - Tags for the Waypoint UI service generated in Consul.
 - `-nomad-consul-service-backend-tags=<string>` - Tags for the Waypoint backend service generated in Consul.
-- `-nomad-volume-type=<string>` - Nomad volume type for the Waypoint server.
-- `-nomad-host-volume=<string>` - Nomad host volume name.
-- `-nomad-csi-volume-provider=<string>` - Nomad CSI volume provider.
+- `-nomad-volume-type=<string>` - Nomad persistent volume type for the Waypoint server.
+- `-nomad-host-volume=<string>` - Nomad host volume name, required for volume type 'host'.
+- `-nomad-csi-volume-provider=<string>` - Nomad CSI volume provider, required for volume type 'csi'.
+- `-nomad-csi-volume-capacity-min=<int>` - Nomad CSI volume capacity minimum, in bytes.
+- `-nomad-csi-volume-capacity-max=<int>` - Nomad CSI volume capacity maximum, in bytes.
 
 @include "commands/install_more.mdx"
