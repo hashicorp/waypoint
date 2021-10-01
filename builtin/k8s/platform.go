@@ -703,7 +703,7 @@ func (p *Platform) resourceDeploymentCreate(
 	)
 
 	// We wait the maximum amount of time that the deployment controller would wait for a pod
-	// to start before exitting. We double the time to allow for various kubernetes based
+	// to start before exiting. We double the time to allow for various Kubernetes based
 	// delays in startup, detection, and reporting.
 	timeout := time.Duration((timeoutSeconds*failureThreshold)+initialDelaySeconds) * 2 * time.Second
 
@@ -772,6 +772,7 @@ func (p *Platform) resourceDeploymentCreate(
 	})
 	if err != nil {
 		step.Update("Error detected waiting for Deployment to start.")
+		step.Status(terminal.StatusError)
 		step.Abort()
 
 		ui.Output("The following is events for pods observed while attempting to start the Deployment", terminal.WithWarningStyle())
