@@ -19,6 +19,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -580,6 +581,7 @@ func (p *Platform) resourceDeploymentCreate(
 			},
 			InitialDelaySeconds: initialDelaySeconds,
 			TimeoutSeconds:      timeoutSeconds,
+			FailureThreshold:    failureThreshold,
 		}
 	}
 
@@ -681,6 +683,8 @@ func (p *Platform) resourceDeploymentCreate(
 		return err
 	}
 
+	ev := clientSet.CoreV1().Events(ns)
+
 	// We successfully created or updated, so set the name on our state so
 	// that if we error, we'll partially clean up properly. THIS IS IMPORTANT.
 	state.Name = result.Name
@@ -698,10 +702,15 @@ func (p *Platform) resourceDeploymentCreate(
 		reportedError bool
 	)
 
-	timeout := 10 * time.Minute
+	// We wait the maximum amount of time that the deployment controller would wait for a pod
+	// to start before exiting. We double the time to allow for various Kubernetes based
+	// delays in startup, detection, and reporting.
+	timeout := time.Duration((timeoutSeconds*failureThreshold)+initialDelaySeconds) * 2 * time.Second
+
+	podsSeen := make(map[types.UID]string)
 
 	// Wait on the Pod to start
-	err = wait.PollImmediate(2*time.Second, timeout, func() (bool, error) {
+	err = wait.PollImmediate(time.Second, timeout, func() (bool, error) {
 		dep, err := dc.Get(ctx, result.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -709,9 +718,9 @@ func (p *Platform) resourceDeploymentCreate(
 
 		if time.Since(lastStatus) > 10*time.Second {
 			step.Update(fmt.Sprintf(
-				"Waiting on deployment to become available: %d/%d/%d",
+				"Waiting on deployment to become available: requested=%d running=%d ready=%d",
 				*dep.Spec.Replicas,
-				dep.Status.UnavailableReplicas,
+				dep.Status.UnavailableReplicas+dep.Status.AvailableReplicas,
 				dep.Status.AvailableReplicas,
 			))
 			lastStatus = time.Now()
@@ -730,6 +739,8 @@ func (p *Platform) resourceDeploymentCreate(
 		}
 
 		for _, p := range pods.Items {
+			podsSeen[p.UID] = p.Name
+
 			for _, cs := range p.Status.ContainerStatuses {
 				if cs.Ready {
 					continue
@@ -760,6 +771,29 @@ func (p *Platform) resourceDeploymentCreate(
 		return false, nil
 	})
 	if err != nil {
+		step.Update("Error detected waiting for Deployment to start.")
+		step.Status(terminal.StatusError)
+		step.Abort()
+
+		ui.Output("The following is events for pods observed while attempting to start the Deployment", terminal.WithWarningStyle())
+
+		for uid, name := range podsSeen {
+			sel := ev.GetFieldSelector(nil, nil, nil, (*string)(&uid))
+
+			events, err := ev.List(ctx, metav1.ListOptions{
+				FieldSelector: sel.String(),
+			})
+			if err == nil {
+				ui.Output("Events for %s", name, terminal.WithHeaderStyle())
+				for _, ev := range events.Items {
+					if ev.Type == "Normal" {
+						continue
+					}
+					ui.Output("  %s: %s (%s)", ev.Type, ev.Message, ev.Reason)
+				}
+			}
+		}
+
 		if err == wait.ErrWaitTimeout {
 			err = fmt.Errorf("Deployment was not able to start pods after %s", timeout)
 		}
@@ -771,6 +805,8 @@ func (p *Platform) resourceDeploymentCreate(
 
 	return nil
 }
+
+var deleteGrace = int64(120)
 
 // Destroy deletes the K8S deployment.
 func (p *Platform) resourceDeploymentDestroy(
@@ -791,8 +827,14 @@ func (p *Platform) resourceDeploymentDestroy(
 	step.Done()
 
 	step = sg.Add("Deleting deployment...")
+
+	del := metav1.DeletePropagationBackground
+
 	deployclient := csinfo.Clientset.AppsV1().Deployments(ns)
-	if err := deployclient.Delete(ctx, state.Name, metav1.DeleteOptions{}); err != nil {
+	if err := deployclient.Delete(ctx, state.Name, metav1.DeleteOptions{
+		GracePeriodSeconds: &deleteGrace,
+		PropagationPolicy:  &del,
+	}); err != nil {
 		return err
 	}
 
@@ -843,6 +885,10 @@ func (p *Platform) resourceAutoscalerCreate(
 		// we don't return the error, this was mostly to provide a helpful warning
 		log.Info("receieved error while listing pods in attempt to detect existing metrics-server: %s", err)
 		err = nil
+
+		// The apis return an non-nil but empty value when observing an error, so we need to be sure to
+		// skip the code below.
+		metricsPods = nil
 	}
 
 	if metricsPods != nil && len(metricsPods.Items) == 0 {
@@ -929,7 +975,7 @@ func (p *Platform) resourceAutoscalerDestroy(
 	sg terminal.StepGroup,
 	csinfo *clientsetInfo,
 ) error {
-	if p.config.AutoscaleConfig == nil && state.Name == "" {
+	if state.Name == "" {
 		// No autoscale config, so don't destroy one
 		return nil
 	}

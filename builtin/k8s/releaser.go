@@ -724,12 +724,18 @@ func (r *Releaser) Release(
 	ctx context.Context,
 	log hclog.Logger,
 	src *component.Source,
+	job *component.JobInfo,
 	ui terminal.UI,
 	target *Deployment,
 	dcr *component.DeclaredResourcesResp,
 ) (*Release, error) {
 	var result Release
-	result.ServiceName = src.App
+
+	if job.Workspace == "default" {
+		result.ServiceName = src.App
+	} else {
+		result.ServiceName = src.App + "-" + job.Workspace
+	}
 
 	sg := ui.StepGroup()
 	defer sg.Wait()

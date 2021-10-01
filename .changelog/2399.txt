@@ -1,0 +1,7 @@
+```release-note:feature
+plugin/k8: Report events on failed pods when a deployment fails
+```
+
+```release-note:bug
+plugin/k8: Setup Kubernetes services for different workspaces properly
+```
