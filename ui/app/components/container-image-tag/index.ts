@@ -2,56 +2,59 @@ import Component from '@glimmer/component';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { StatusReport } from 'waypoint-pb';
-import { tracked } from '@glimmer/tracking';
 
 interface DockerImageBadgeArgs {
   statusReport: StatusReport.AsObject;
 }
 
-interface StateJsonConfig {
-  Image: string;
-}
-
 export default class DockerImageBadge extends Component<DockerImageBadgeArgs> {
   @service api!: ApiService;
-  @tracked image?: string;
-  @tracked tag?: string;
-  imageFromJson?: string;
 
-  constructor(owner: unknown, args: DockerImageBadgeArgs) {
-    super(owner, args);
-
-    this.parseImageAndTag();
+  get states(): unknown {
+    return this.args.statusReport.resourcesList.map((r) => JSON.parse(r.stateJson ?? '{}'));
   }
 
-  findImageKey(obj: Record<string, unknown>): void {
-    if (typeof obj !== 'object') {
-      return;
-    }
+  get imageRefs(): ImageRef[] {
+    return findImageRefs(this.states);
+  }
+}
 
-    for (let k in obj) {
-      if (k === 'Config') {
-        let config = obj[k] as StateJsonConfig;
-        this.imageFromJson = config.Image;
-      }
-
-      if (!obj || typeof obj[k] === 'object') {
-        this.findImageKey(obj[k] as Record<string, unknown>);
-      }
-    }
-    return;
+function findImageRefs(obj: unknown, result: ImageRef[] = []): ImageRef[] {
+  if (typeof obj !== 'object') {
+    return result;
   }
 
-  parseImageAndTag(): void {
-    if (!this.args.statusReport || !this.args.statusReport.resourcesList) {
-      return;
-    }
+  if (obj === null) {
+    return result;
+  }
 
-    let container = this.args.statusReport.resourcesList.find((r) => r.type === 'container');
-    let containerState = JSON.parse(container?.stateJson ?? '{}');
-    this.findImageKey(containerState);
-    if (this.imageFromJson) {
-      [this.image, this.tag] = this.imageFromJson?.split(':');
+  for (let [key, value] of Object.entries(obj)) {
+    if (key.toLowerCase() === 'image' && typeof value === 'string') {
+      result.push(new ImageRef(value));
+    } else {
+      findImageRefs(value, result);
     }
+  }
+
+  return result;
+}
+
+class ImageRef {
+  ref: string;
+
+  constructor(ref: string) {
+    this.ref = ref;
+  }
+
+  get label(): string {
+    return this.split[0];
+  }
+
+  get tag(): string {
+    return this.split[1];
+  }
+
+  private get split(): string[] {
+    return this.ref.split(':');
   }
 }

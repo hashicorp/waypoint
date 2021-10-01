@@ -1,8 +1,8 @@
-{{#if this.image}}
+{{#each this.imageRefs as |imageRef|}}
   <span data-test-container-info class="container-badge" title="Image">
-    {{this.image}}
-    <span class="container-badge-tag">{{this.tag}}</span>
+    {{imageRef.label}}
+    <span class="container-badge-tag">{{imageRef.tag}}</span>
   </span> 
 {{else}}
   n/a
-{{/if}}
+{{/each}}
