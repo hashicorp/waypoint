@@ -227,8 +227,12 @@ export default function HomePage(): JSX.Element {
         heading="Ready to get started?"
         content="Start by following a tutorial to deploy a simple application with Waypoint or learn about how the project works by exploring the documentation."
         links={[
-          { text: 'Get Started', url: '#' },
-          { text: 'Explore Documentation', url: '#' },
+          {
+            text: 'Get Started',
+            url:
+              'https://learn.hashicorp.com/collections/waypoint/get-started-kubernetes',
+          },
+          { text: 'Explore Documentation', url: '/docs' },
         ]}
       />
     </div>
