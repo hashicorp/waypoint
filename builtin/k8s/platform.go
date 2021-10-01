@@ -1294,7 +1294,7 @@ type Config struct {
 	// A full resource of options to define ports for your service running on the container
 	// Defaults to port 3000.
 	// Todo(XX): add in HCL parse logic to warn if defining ports the old way, & update docs
-	Ports []*Port `hcl:"ports,optional"`
+	Ports []*Port `hcl:"port,block"`
 
 	// If set, this is the HTTP path to request to test that the application
 	// is up and running. Without this, we only test that a connection can be
@@ -1365,7 +1365,7 @@ type Pod struct {
 type SidecarContainer struct {
 	Name          string            `hcl:"name"`
 	Image         string            `hcl:"image"`
-	Ports         []*Port           `hcl:"ports,optional"`
+	Ports         []*Port           `hcl:"port,block"`
 	ProbePath     string            `hcl:"probe_path,optional"`
 	Probe         *Probe            `hcl:"probe,block"`
 	CPU           *ResourceConfig   `hcl:"cpu,block"`
@@ -1567,12 +1567,11 @@ deploy "kubernetes" {
 	)
 
 	doc.SetField(
-		"ports",
-		"a map of ports and options that the application is listening on",
+		"port",
+		"a port and options that the application is listening on",
 		docs.Summary(
 			"used to define and expose multiple ports that the application is",
-			"listening on for the container in use. Available keys are 'port', 'name'",
-			", 'host_port', and 'host_ip'. Ports defined will be TCP protocol.",
+			"listening on for the container in use. Can be specified multiple times for many ports.",
 		),
 	)
 
