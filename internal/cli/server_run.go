@@ -375,8 +375,6 @@ This command will bootstrap the server and setup a CLI context.
 			}
 		}()
 	}
-	// Enable telemetry if required
-	// TODO(izaak) Make dependent on flags (and reassess this block's location)
 
 	// Run the server
 	log.Info("starting built-in server", "addr", ln.Addr().String())
