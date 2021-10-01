@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 )
 
-type OnDemandRunnerConfigListCommand struct {
+type RunnerProfileListCommand struct {
 	*baseCommand
 }
 
-func (c *OnDemandRunnerConfigListCommand) Run(args []string) int {
+func (c *RunnerProfileListCommand) Run(args []string) int {
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	if err := c.Init(
 		WithArgs(args),
@@ -33,7 +33,7 @@ func (c *OnDemandRunnerConfigListCommand) Run(args []string) int {
 		return 0
 	}
 
-	c.ui.Output("On-Demand Runner Configurations")
+	c.ui.Output("Runner profiles")
 
 	tbl := terminal.NewTable("Name", "Plugin Type", "OCI Url", "Default")
 
@@ -56,29 +56,29 @@ func (c *OnDemandRunnerConfigListCommand) Run(args []string) int {
 	return 0
 }
 
-func (c *OnDemandRunnerConfigListCommand) Flags() *flag.Sets {
+func (c *RunnerProfileListCommand) Flags() *flag.Sets {
 	return c.flagSet(0, nil)
 }
 
-func (c *OnDemandRunnerConfigListCommand) AutocompleteArgs() complete.Predictor {
+func (c *RunnerProfileListCommand) AutocompleteArgs() complete.Predictor {
 	return complete.PredictNothing
 }
 
-func (c *OnDemandRunnerConfigListCommand) AutocompleteFlags() complete.Flags {
+func (c *RunnerProfileListCommand) AutocompleteFlags() complete.Flags {
 	return c.Flags().Completions()
 }
 
-func (c *OnDemandRunnerConfigListCommand) Synopsis() string {
-	return "List all registered on-demand runner configurations."
+func (c *RunnerProfileListCommand) Synopsis() string {
+	return "List all registered runner profiles."
 }
 
-func (c *OnDemandRunnerConfigListCommand) Help() string {
+func (c *RunnerProfileListCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint runner list
+Usage: waypoint runner profile list
 
-  List all information on runners.
+  List runner profiles.
 
-  On-Demand runner configuration is used to dynamically start tasks to execute operations for
-  projects such as building, deploying, etc.
+  Runner profiles are used to dynamically start tasks (i.e. on-demand runners) to execute 
+  operations for projects such as building, deploying, etc.
 `)
 }

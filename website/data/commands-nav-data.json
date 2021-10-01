@@ -195,16 +195,16 @@
     "path": "runner-agent"
   },
   {
-    "title": "runner list",
-    "path": "runner-list"
+    "title": "runner profile list",
+    "path": "runner-profile-list"
   },
   {
-    "title": "runner on-demand inspect",
-    "path": "runner-on-demand-inspect"
+    "title": "runner profile inspect",
+    "path": "runner-profile-inspect"
   },
   {
-    "title": "runner on-demand set",
-    "path": "runner-on-demand-set"
+    "title": "runner profile set",
+    "path": "runner-profile-set"
   },
   {
     "title": "server bootstrap",

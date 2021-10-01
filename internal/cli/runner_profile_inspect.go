@@ -12,13 +12,13 @@ import (
 	"github.com/posener/complete"
 )
 
-type OnDemandRunnerInspectCommand struct {
+type RunnerProfileInspectCommand struct {
 	*baseCommand
 
 	flagJson bool
 }
 
-func (c *OnDemandRunnerInspectCommand) Run(args []string) int {
+func (c *RunnerProfileInspectCommand) Run(args []string) int {
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	if err := c.Init(
 		WithArgs(args),
@@ -30,7 +30,7 @@ func (c *OnDemandRunnerInspectCommand) Run(args []string) int {
 	}
 
 	if len(c.args) == 0 {
-		c.ui.Output("on-demand runner configuration ID required", terminal.WithErrorStyle())
+		c.ui.Output("Runner profile ID required.", terminal.WithErrorStyle())
 		return 1
 	}
 	name := c.args[0]
@@ -73,7 +73,7 @@ func (c *OnDemandRunnerInspectCommand) Run(args []string) int {
 	}
 
 	config := resp.Config
-	c.ui.Output("On-Demand Runner Configuration:", terminal.WithHeaderStyle())
+	c.ui.Output("Runner profile:", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
 			Name: "Name", Value: config.Name,
@@ -106,36 +106,36 @@ func (c *OnDemandRunnerInspectCommand) Run(args []string) int {
 	return 0
 }
 
-func (c *OnDemandRunnerInspectCommand) Flags() *flag.Sets {
+func (c *RunnerProfileInspectCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(sets *flag.Sets) {
 		f := sets.NewSet("Command Options")
 
 		f.BoolVar(&flag.BoolVar{
 			Name:   "json",
 			Target: &c.flagJson,
-			Usage: "Output on-demand runner information as JSON. This includes " +
+			Usage: "Output runner profile information as JSON. This includes " +
 				"more fields since this is the complete API structure.",
 		})
 	})
 }
 
-func (c *OnDemandRunnerInspectCommand) AutocompleteArgs() complete.Predictor {
+func (c *RunnerProfileInspectCommand) AutocompleteArgs() complete.Predictor {
 	return complete.PredictNothing
 }
 
-func (c *OnDemandRunnerInspectCommand) AutocompleteFlags() complete.Flags {
+func (c *RunnerProfileInspectCommand) AutocompleteFlags() complete.Flags {
 	return c.Flags().Completions()
 }
 
-func (c *OnDemandRunnerInspectCommand) Synopsis() string {
-	return "Show detailed information about a configured auth method"
+func (c *RunnerProfileInspectCommand) Synopsis() string {
+	return "Show detailed information about a runner profile."
 }
 
-func (c *OnDemandRunnerInspectCommand) Help() string {
+func (c *RunnerProfileInspectCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint runner on-demand inspect NAME
+Usage: waypoint runner profile inspect NAME
 
-  Show detailed information about an on-demand runner configuration.
+  Show detailed information about a runner profile.
 
 `)
 }

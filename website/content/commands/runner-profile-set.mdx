@@ -1,29 +1,29 @@
 ---
 layout: commands
-page_title: 'Commands: Runner on-demand set'
-sidebar_title: 'runner on-demand set'
-description: 'Create or update an on-demand runner configuration.'
+page_title: 'Commands: Runner profile set'
+sidebar_title: 'runner profile set'
+description: 'Create or update a runner profile.'
 ---
 
-# Waypoint Runner on-demand set
+# Waypoint Runner profile set
 
-Command: `waypoint runner on-demand set`
+Command: `waypoint runner profile set`
 
-Create or update an on-demand runner configuration.
+Create or update a runner profile.
 
-@include "commands/runner-on-demand-set_desc.mdx"
+@include "commands/runner-profile-set_desc.mdx"
 
 ## Usage
 
-Usage: `waypoint runner on-demand set [OPTIONS]`
+Usage: `waypoint runner profile set [OPTIONS]`
 
-Create or update an on-demand runner configuration.
+Create or update a runner profile.
 
-This will register a new on-demand runner config with the given options. If
-a on-demand runner config with the same id already exists, this will update the
-existing runner config using the fields that are set.
+This will register a new runner profile with the given options. If
+a runner profile with the same id already exists, this will update the
+existing runner profile using the fields that are set.
 
-Waypoint will use an on-demand runner configuration to spawn containers for
+Waypoint will use a runner profile to spawn containers for
 various kinds of work as needed on the platform requested during any given
 lifecycle operation.
 
@@ -35,11 +35,11 @@ lifecycle operation.
 
 #### Command Options
 
-- `-name=<string>` - The name of an existing on-demand runner to update.
+- `-name=<string>` - The name of an existing runner profile to update.
 - `-oci-url=<string>` - The url for the OCI image to launch for the on-demand runner.
 - `-env-vars=<string>` - Environment variable to expose to the on-demand runner. Typically used to introduce configuration for the plugins that the runner will execute.
 - `-plugin-type=<string>` - The type of the plugin to launch for the on-demand runner, such as aws-ecs, kubernetes, etc.
 - `-plugin-config=<string>` - Path to an hcl file that contains the configuration for the plugin. This is only necessary when the plugin's defaults need to be adjusted for the environment the plugin will launch the on-demand runner in.
 - `-default` - Indicates that this on-demand runner should be used by any project that doesn't otherwise specify its own on-demand runner.
 
-@include "commands/runner-on-demand-set_more.mdx"
+@include "commands/runner-profile-set_more.mdx"

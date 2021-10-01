@@ -17,7 +17,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type OnDemandRunnerConfigApplyCommand struct {
+type RunnerProfileSetCommand struct {
 	*baseCommand
 
 	flagName         string
@@ -28,7 +28,7 @@ type OnDemandRunnerConfigApplyCommand struct {
 	flagDefault      bool
 }
 
-func (c *OnDemandRunnerConfigApplyCommand) Run(args []string) int {
+func (c *RunnerProfileSetCommand) Run(args []string) int {
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	flagSet := c.Flags()
 	if err := c.Init(
@@ -58,7 +58,7 @@ func (c *OnDemandRunnerConfigApplyCommand) Run(args []string) int {
 	)
 
 	if c.flagName != "" {
-		s = sg.Add("Checking for an existing on-demand runner config: %s", c.flagName)
+		s = sg.Add("Checking for an existing runner profile: %s", c.flagName)
 		// Check for an existing project of the same name.
 		resp, err := c.project.Client().GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
 			Config: &pb.Ref_OnDemandRunnerConfig{
@@ -81,16 +81,16 @@ func (c *OnDemandRunnerConfigApplyCommand) Run(args []string) int {
 
 		if resp != nil {
 			od = resp.Config
-			s.Update("Updating on-demand runner config %q (%q)...", od.Name, od.Id)
+			s.Update("Updating runner profile %q (%q)...", od.Name, od.Id)
 			updated = true
 		} else {
-			s.Update("No existing on-demand runner config found for name %q...command will create a new config", c.flagName)
+			s.Update("No existing runner profile found for id %q...command will create a new profile", c.flagName)
 			od = &pb.OnDemandRunnerConfig{
 				Name: c.flagName,
 			}
 		}
 	} else {
-		s = sg.Add("Creating new on-demand runner config")
+		s = sg.Add("Creating new runner profile")
 		od = &pb.OnDemandRunnerConfig{
 			Name: c.flagName,
 		}
@@ -186,23 +186,23 @@ func (c *OnDemandRunnerConfigApplyCommand) Run(args []string) int {
 	})
 	if err != nil {
 		c.ui.Output(
-			"Error upserting on-demand runner config: %s", clierrors.Humanize(err),
+			"Error upserting runner profile: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 		return 1
 	}
 
 	if updated {
-		s.Update("On-Demand Runner configuration updated")
+		s.Update("Runner profile updated")
 	} else {
-		s.Update("On-Demand Runner configuration created")
+		s.Update("Runner profile created")
 	}
 	s.Done()
 
 	return 0
 }
 
-func (c *OnDemandRunnerConfigApplyCommand) Flags() *flag.Sets {
+func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(sets *flag.Sets) {
 		f := sets.NewSet("Command Options")
 
@@ -210,13 +210,13 @@ func (c *OnDemandRunnerConfigApplyCommand) Flags() *flag.Sets {
 			Name:    "name",
 			Target:  &c.flagName,
 			Default: "",
-			Usage:   "The name of an existing on-demand runner to update.",
+			Usage:   "The name of an existing runner profile to update.",
 		})
 
 		f.StringVar(&flag.StringVar{
 			Name:    "oci-url",
 			Target:  &c.flagOCIUrl,
-			Default: "hashicorp/waypoint:stable",
+			Default: "hashicorp/waypoint:stable", // TODO: update to published prod ODR image before 0.6.0 release
 			Usage:   "The url for the OCI image to launch for the on-demand runner.",
 		})
 
@@ -253,29 +253,29 @@ func (c *OnDemandRunnerConfigApplyCommand) Flags() *flag.Sets {
 	})
 }
 
-func (c *OnDemandRunnerConfigApplyCommand) AutocompleteArgs() complete.Predictor {
+func (c *RunnerProfileSetCommand) AutocompleteArgs() complete.Predictor {
 	return complete.PredictNothing
 }
 
-func (c *OnDemandRunnerConfigApplyCommand) AutocompleteFlags() complete.Flags {
+func (c *RunnerProfileSetCommand) AutocompleteFlags() complete.Flags {
 	return c.Flags().Completions()
 }
 
-func (c *OnDemandRunnerConfigApplyCommand) Synopsis() string {
-	return "Create or update an on-demand runner configuration."
+func (c *RunnerProfileSetCommand) Synopsis() string {
+	return "Create or update a runner profile."
 }
 
-func (c *OnDemandRunnerConfigApplyCommand) Help() string {
+func (c *RunnerProfileSetCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint runner on-demand set [OPTIONS]
+Usage: waypoint runner profile set [OPTIONS]
 
-  Create or update an on-demand runner configuration.
+  Create or update a runner profile.
 
-  This will register a new on-demand runner config with the given options. If
-  a on-demand runner config with the same id already exists, this will update the
-  existing runner config using the fields that are set.
+  This will register a new runner profile with the given options. If
+  a runner profile with the same id already exists, this will update the
+  existing runner profile using the fields that are set.
 
-  Waypoint will use an on-demand runner configuration to spawn containers for
+  Waypoint will use a runner profile to spawn containers for
   various kinds of work as needed on the platform requested during any given
   lifecycle operation.
 
