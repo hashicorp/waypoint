@@ -200,15 +200,31 @@ func (r *Runner) Start() error {
 		return err
 	}
 
-	// Start the watcher and the gorotuine that receives configs
-	ch := make(chan *pb.RunnerConfig)
-	go r.watchConfig(r.runningCtx, ch)
-	go r.recvConfig(r.runningCtx, client, ch)
+	errCh := make(chan error)
 
+	// Start the watcher and the goroutine that receives configs
+	configCh := make(chan *pb.RunnerConfig)
+	go func() {
+		r.watchConfig(r.runningCtx, configCh)
+		errCh <- status.Errorf(codes.Internal, "Stopped watching for config changes")
+	}()
+
+	go func() {
+		r.recvConfig(r.runningCtx, client, configCh)
+		errCh <- status.Errorf(codes.Internal, "Stopped receiving configs")
+	}()
+
+	go func() {
+		if r.waitState(&r.stateConfigOnce, true) {
+			errCh <- status.Errorf(codes.Internal, "early exit while waiting for first config processing")
+		} else {
+			errCh <- nil
+		}
+	}()
 	// Wait for the initial configuration to be set
 	log.Debug("runner registered, waiting for first config processing")
-	if r.waitState(&r.stateConfigOnce, true) {
-		return status.Errorf(codes.Internal, "early exit while waiting for first config processing")
+	if err := <-errCh; err != nil {
+		return status.Errorf(status.Code(err), "Failed to start runner: %s", err)
 	}
 
 	log.Info("runner registered with server and ready")
