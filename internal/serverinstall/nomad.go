@@ -149,7 +149,7 @@ func (i *NomadInstaller) Install(
 		)
 
 		if i.config.csiVolumeProvider == "" {
-			return nil, fmt.Errorf("please include '-nomad-csi-volume-provider' flag")
+			return nil, fmt.Errorf("please include '-nomad-csi-volume-provider' flag for 'csi' volume type")
 		}
 
 		s.Update("Creating persistent volume")
@@ -181,8 +181,12 @@ func (i *NomadInstaller) Install(
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "Failed creating Nomad persistent volume ID %s: %s", vol.ID, err)
 		}
-	} else if strings.ToLower(i.config.volumeType) == "host" && i.config.hostVolume == "" {
-		return nil, fmt.Errorf("please include '-nomad-host-volume' flag")
+	} else if strings.ToLower(i.config.volumeType) == "host" {
+		if i.config.hostVolume == "" {
+			return nil, fmt.Errorf("please include '-nomad-host-volume' flag for 'host' volume type")
+		}
+	} else {
+		return nil, fmt.Errorf("please include valid persistent volume type")
 	}
 
 	s.Update("Installing Waypoint server to Nomad")
