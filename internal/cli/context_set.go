@@ -62,7 +62,7 @@ func (c *ContextSetCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.ui.Output("Context %q updated to use %s workspace.", contextName, cfg.Workspace, terminal.WithSuccessStyle())
+	c.ui.Output("Context %q (%s) updated to use %s workspace.", contextName, cfg.Server.Address, cfg.Workspace, terminal.WithSuccessStyle())
 	return 0
 }
 
