@@ -28,9 +28,6 @@ export default class OverviewTable extends Component<OverviewTableArgs> {
   @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
   @tracked isRefreshRunning = false;
 
-  constructor(owner: unknown, args: OverviewTableArgs) {
-    super(owner, args);
-  }
 
   get artifactType(): OverviewTableArgs['artifactType'] {
     return this.args.artifactType;
