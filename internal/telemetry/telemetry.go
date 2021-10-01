@@ -98,7 +98,7 @@ func Run(opts ...Option) error {
 		})
 	}
 
-	// TODO: allow applying sampling different sampling config
+	// Less frequent sampling can be achieved by exporting to an opencensus collector with sampling configured.
 	octrace.ApplyConfig(octrace.Config{DefaultSampler: octrace.AlwaysSample()})
 
 	// Wait on context to close
