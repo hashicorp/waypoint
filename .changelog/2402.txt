@@ -1,0 +1,3 @@
+```release-note:feature
+core/server: Allow exporting of grpc server traces and stats
+```
