@@ -464,6 +464,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"context set": func() (cli.Command, error) {
+			return &ContextSetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"ui": func() (cli.Command, error) {
 			return &UICommand{

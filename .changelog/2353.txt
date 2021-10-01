@@ -1,0 +1,4 @@
+```release-note:improvement
+cli: Add new context subcommand "set" to set the workspace value for the current
+context.
+```

@@ -67,6 +67,18 @@ func (c *ContextInspectCommand) Run(args []string) int {
 			},
 		}, terminal.WithInfoStyle())
 
+		c.ui.Output("Workspace Info:", terminal.WithHeaderStyle())
+		workspace := cc.Workspace
+		if workspace == "" {
+			workspace = "default"
+		}
+
+		c.ui.NamedValues([]terminal.NamedValue{
+			{
+				Name: "Name", Value: workspace,
+			},
+		}, terminal.WithInfoStyle())
+
 		return 0
 	}
 

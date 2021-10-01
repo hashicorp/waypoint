@@ -37,7 +37,7 @@ func (c *ContextCreateCommand) Run(args []string) int {
 
 	name := args[0]
 
-	// Get our contexts
+	// Set the context
 	if err := c.contextStorage.Set(name, &c.flagConfig); err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1

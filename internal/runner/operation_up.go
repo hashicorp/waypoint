@@ -34,6 +34,8 @@ func (r *Runner) executeUpOp(
 		op.Release = &pb.Job_ReleaseOp{Prune: true}
 	}
 
+	// TODO: output the context in use (maybe only if non-default)
+
 	// Build it
 	app.UI.Output("Building...", terminal.WithHeaderStyle())
 	result, err := r.executeBuildOp(ctx, &pb.Job{

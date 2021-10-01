@@ -5,6 +5,7 @@ import (
 	"errors"
 	stdflag "flag"
 	"io"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -22,6 +23,11 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
+)
+
+const (
+	defaultWorkspace        = "default"
+	defaultWorkspaceEnvName = "WAYPOINT_WORKSPACE"
 )
 
 // baseCommand is embedded in all commands to provide common logic and data.
@@ -187,9 +193,6 @@ func (c *baseCommand) Init(opts ...Option) error {
 		c.args = c.args[1:]
 	}
 
-	// With the flags we now know what workspace we're targeting
-	c.refWorkspace = &pb.Ref_Workspace{Workspace: c.flagWorkspace}
-
 	// Setup our base config path
 	homeConfigPath, err := xdg.ConfigFile("waypoint/.ignore")
 	if err != nil {
@@ -208,6 +211,15 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return err
 	}
 	c.contextStorage = contextStorage
+
+	// load workspace from cli/env/storage
+	workspace, err := c.workspace()
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return err
+	}
+
+	c.refWorkspace = &pb.Ref_Workspace{Workspace: workspace}
 
 	// Parse the configuration
 	c.cfg = &config.Config{}
@@ -458,10 +470,9 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "workspace",
-			Target:  &c.flagWorkspace,
-			Default: "default",
-			Usage:   "Workspace to operate in.",
+			Name:   "workspace",
+			Target: &c.flagWorkspace,
+			Usage:  "Workspace to operate in.",
 		})
 	}
 
@@ -606,6 +617,46 @@ func checkFlagsAfterArgs(args []string, set *flag.Sets) error {
 	}
 
 	return nil
+}
+
+// workspace computes the workspace based on available values, in this order of
+// precedence (last value wins):
+//
+// - value stored in the CLI context
+// - value from the environment variable WAYPOINT_WORKSPACE
+// - value set in the CLI flag -workspace
+//
+// The default value is "default"
+func (c *baseCommand) workspace() (string, error) {
+	// load env for workspace
+	workspaceENV := os.Getenv(defaultWorkspaceEnvName)
+	switch {
+	case c.flagWorkspace != "":
+		return c.flagWorkspace, nil
+	case workspaceENV != "":
+		return workspaceENV, nil
+	default:
+		// attempt to load from CLI context storage
+		defaultName, err := c.contextStorage.Default()
+		if err != nil {
+			return "", err
+		}
+
+		// If we have no context name, then we just return the default
+		if defaultName != "" && defaultName != "-" {
+			// Load the context and return the workspace value. If it's empty,
+			// we'll fall through and return the default
+			cfg, err := c.contextStorage.Load(defaultName)
+			if err != nil {
+				return "", err
+			}
+			if cfg.Workspace != "" {
+				return cfg.Workspace, nil
+			}
+		}
+		// default value
+		return defaultWorkspace, nil
+	}
 }
 
 // flagSetBit is used with baseCommand.flagSet

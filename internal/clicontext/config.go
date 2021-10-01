@@ -17,6 +17,11 @@ import (
 type Config struct {
 	// Server is the configuration to talk to a Waypoint server.
 	Server serverconfig.Client `hcl:"server,block"`
+
+	// Workspace represents the current workspace for this context. This value
+	// can be set instead of using the -workspace CLI flag. If empty, the
+	// default value is "default"
+	Workspace string `hcl:"workspace,optional"`
 }
 
 // LoadPath loads a context configuration from a filepath.
