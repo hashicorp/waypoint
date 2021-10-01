@@ -8,14 +8,6 @@
     "path": "deploy"
   },
   {
-    "title": "context",
-    "path": "context"
-  },
-  {
-    "title": "context-inspect",
-    "path": "context-inspect"
-  },
-  {
     "title": "destroy",
     "path": "destroy"
   },
@@ -38,10 +30,6 @@
   {
     "title": "logs",
     "path": "logs"
-  },
-  {
-    "title": "project apply",
-    "path": "project-apply"
   },
   {
     "title": "release",
@@ -111,6 +99,10 @@
     "path": "config-sync"
   },
   {
+    "title": "context",
+    "path": "context"
+  },
+  {
     "title": "context clear",
     "path": "context-clear"
   },
@@ -121,6 +113,10 @@
   {
     "title": "context delete",
     "path": "context-delete"
+  },
+  {
+    "title": "context inspect",
+    "path": "context-inspect"
   },
   {
     "title": "context list",
@@ -173,6 +169,10 @@
   {
     "title": "plugin",
     "path": "plugin"
+  },
+  {
+    "title": "project apply",
+    "path": "project-apply"
   },
   {
     "title": "project inspect",
