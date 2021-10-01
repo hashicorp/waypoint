@@ -32,7 +32,13 @@ func (c *baseCommand) initConfig(filename string, optional bool) (*configpkg.Con
 			return nil, nil
 		}
 
-		return nil, errors.New("A Waypoint configuration file (waypoint.hcl) is required but wasn't found.")
+		return nil, errors.New(
+			"A Waypoint configuration file (waypoint.hcl) is required but wasn't found.\n" +
+				"The command can use configuration stored on the server by adding project/app\n" +
+				"as a final argument on the command line.\n" +
+				"For instance: `waypoint deployment list webapp/web` for the app 'web' in\n" +
+				"the project 'webapp'",
+		)
 	}
 
 	return c.initConfigLoad(path)
