@@ -1,0 +1,17 @@
+receivers:
+  opencensus:
+    address: ":55678"
+    reconnection-delay: 2s
+#  jaeger:
+#    collector_http_port: 14268
+
+exporters:
+  opencensus:
+    endpoint: "oc-collector:55678"
+#  datadog:
+#    namespace: "waypoint-test-1"
+#    trace_addr: "datadog:8126"
+#    enable_tracing: true
+
+zpages:
+    port: 9998
