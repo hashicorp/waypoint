@@ -102,13 +102,12 @@ func Run(opts ...Option) error {
 	octrace.ApplyConfig(octrace.Config{DefaultSampler: octrace.AlwaysSample()})
 
 	// Wait on context to close
-	select {
-	case <-t.Context.Done():
-		for _, f := range closeFuncs {
-			f()
-		}
-		log.Debug("Finished shutting down telemetry components")
+	<-t.Context.Done()
+	log.Debug("Shutting down telemetry components")
+	for _, f := range closeFuncs {
+		f()
 	}
+	log.Debug("Finished shutting down telemetry components")
 	return nil
 }
 
