@@ -104,7 +104,7 @@ func (c *WorkspaceInspectCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *WorkspaceInspectCommand) Synopsis() string {
-	return "Output Workspace information."
+	return "Output information for a given Workspace."
 }
 
 func (c *WorkspaceInspectCommand) Help() string {

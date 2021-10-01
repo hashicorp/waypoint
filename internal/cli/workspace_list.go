@@ -100,7 +100,7 @@ func (c *WorkspaceListCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *WorkspaceListCommand) Synopsis() string {
-	return "List contexts."
+	return "List workspaces for the current context."
 }
 
 func (c *WorkspaceListCommand) Help() string {

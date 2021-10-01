@@ -609,8 +609,8 @@ func Commands(
 		},
 		"workspace": func() (cli.Command, error) {
 			return &helpCommand{
-				SynopsisText: helpText["workspaces"][0],
-				HelpText:     helpText["workspaces"][1],
+				SynopsisText: helpText["workspace"][0],
+				HelpText:     helpText["workspace"][1],
 			}, nil
 		},
 		"workspace inspect": func() (cli.Command, error) {
@@ -978,7 +978,7 @@ Each on-demand runner confiuration entry represents the ability to spawn
 runners when needed using the configured plugin.
 `,
 	},
-	"workspaces": {
+	"workspace": {
 		"Manage workspaces",
 		`
 List and inspect Workspaces for this context.
