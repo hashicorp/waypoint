@@ -2,6 +2,8 @@ import { Factory, trait } from 'ember-cli-mirage';
 import { fakeId } from '../utils';
 
 export default Factory.extend({
+  state: () => ({}),
+
   'random-deployment': trait({
     id: () => fakeId(),
     name: 'web-01ffr30gszyz43x7jxkkyt7zjk',

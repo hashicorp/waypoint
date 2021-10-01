@@ -37,6 +37,10 @@ page:
       release-table-caption-prefix: Resources created by <b>Release</b>
     overview:
       heading: Overview
+      image: Image
+      health-check: Health Check
+      re-run-health-check: Re-run
+      unavailable: Currently unavailable
     logs:
       heading: Deployment Logs
   releases:

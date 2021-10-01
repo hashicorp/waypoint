@@ -26,4 +26,17 @@ module('Integration | Component | container-image-tag', function (hooks) {
     await render(hbs`<ContainerImageTag @statusReport={{this.statusReport2}}/>`);
     assert.equal(this.element?.textContent?.trim().replace(/\s+/, ' '), 'n/a');
   });
+
+  test('it renders multiple tags', async function (assert) {
+    this.set('multiStatus', {
+      resourcesList: [
+        {
+          stateJson: '{ "Config": { "Image": "docker:tag" }, "Pod": { "Image": "kubernetes:latest" } }',
+        },
+      ],
+    });
+
+    await render(hbs`<ContainerImageTag @statusReport={{this.multiStatus}}/>`);
+    assert.dom('[data-test-container-info]').exists({ count: 2 });
+  });
 });

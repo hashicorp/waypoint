@@ -7,11 +7,33 @@ interface Args {
   statusReport: StatusReport.AsObject;
 }
 
-export default class DockerImageBadge extends Component<Args> {
+class ImageRef {
+  ref: string;
+
+  constructor(ref: string) {
+    this.ref = ref;
+  }
+
+  get label(): string {
+    return this.split[0];
+  }
+
+  get tag(): string {
+    return this.split[1];
+  }
+
+  private get split(): string[] {
+    return this.ref.split(':');
+  }
+}
+
+export default class extends Component<Args> {
   @service api!: ApiService;
 
   get states(): unknown {
-    return this.args.statusReport.resourcesList.map((r) => JSON.parse(r.stateJson ?? '{}'));
+    return this.args.statusReport.resourcesList
+      ? this.args.statusReport.resourcesList.map((r) => JSON.parse(r.stateJson ?? '{}'))
+      : [];
   }
 
   get imageRefs(): ImageRef[] {
@@ -39,24 +61,4 @@ function findImageRefs(obj: unknown, result: ImageRef[] = []): ImageRef[] {
   }
 
   return result;
-}
-
-class ImageRef {
-  ref: string;
-
-  constructor(ref: string) {
-    this.ref = ref;
-  }
-
-  get label(): string {
-    return this.split[0];
-  }
-
-  get tag(): string {
-    return this.split[1];
-  }
-
-  private get split(): string[] {
-    return this.ref.split(':');
-  }
 }
