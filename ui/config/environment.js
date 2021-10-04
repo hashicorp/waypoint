@@ -30,6 +30,7 @@ module.exports = function (environment) {
       extendedTimeout: 700,
       type: 'info',
       types: ['error', 'success', 'info', 'warning'],
+      injectionFactories: [],
     },
 
     // Ember-toggle addon settings
