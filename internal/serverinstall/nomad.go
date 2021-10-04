@@ -44,6 +44,7 @@ type nomadConfig struct {
 	csiVolumeProvider    string `hcl:"csi_volume_provider,optional"`
 	csiVolumeCapacityMin int64  `hcl:"csi_volume_capacity_min,optional"`
 	csiVolumeCapacityMax int64  `hcl:"csi_volume_capacity_max,optional"`
+	csiFS                string `hcl:"csi_fs,optional"`
 }
 
 var (
@@ -55,6 +56,8 @@ var (
 	// bytes
 	defaultCSIVolumeCapacityMin = int64(1073741824)
 	defaultCSIVolumeCapacityMax = int64(2147483648)
+
+	defaultCSIVolumeMountFS = "xfs"
 )
 
 // Install is a method of NomadInstaller and implements the Installer interface to
@@ -164,7 +167,7 @@ func (i *NomadInstaller) Install(
 				},
 			},
 			MountOptions: &api.CSIMountOptions{
-				FSType:     "xfs",
+				FSType:     defaultCSIVolumeMountFS,
 				MountFlags: []string{"noatime"},
 			},
 			RequestedCapacityMin: defaultCSIVolumeCapacityMin,
@@ -177,6 +180,10 @@ func (i *NomadInstaller) Install(
 		if i.config.csiVolumeCapacityMax != 0 {
 			vol.RequestedCapacityMax = i.config.csiVolumeCapacityMax
 		}
+		if i.config.csiFS != "" {
+			vol.MountOptions.FSType = i.config.csiFS
+		}
+
 		_, _, err = client.CSIVolumes().Create(&vol, &api.WriteOptions{})
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "Failed creating Nomad persistent volume ID %s: %s", vol.ID, err)
@@ -1025,6 +1032,13 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.config.csiVolumeCapacityMax,
 		Usage:   "Nomad CSI volume capacity maximum, in bytes.",
 		Default: defaultCSIVolumeCapacityMax,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-csi-fs",
+		Target:  &i.config.csiFS,
+		Usage:   "Nomad CSI volume mount option file system.",
+		Default: defaultCSIVolumeMountFS,
 	})
 }
 
