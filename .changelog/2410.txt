@@ -1,0 +1,3 @@
+```release-note:improvement
+ui: Toggle checkboxes are nicely styled in dark mode
+```

@@ -5,7 +5,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --toggle-color-off: #{dehex(color.$ui-cool-gray-100)};
+    --toggle-color-off: #{dehex(color.$ui-cool-gray-900)};
     --toggle-color-on: #{dehex(color.$blue-500)};
   }
 }
