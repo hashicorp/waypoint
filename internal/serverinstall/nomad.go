@@ -3,11 +3,12 @@ package serverinstall
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"strconv"
 	"strings"
 	"time"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -771,14 +772,12 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	waypointUserID := 100
 	waypointGroupID := 1000
 	preTask.Config = map[string]interface{}{
-		// TODO(xx): pin busybox image
 		"image":   "busybox:latest",
 		"command": "sh",
 		"args":    []string{"-c", fmt.Sprintf("chown -R %d:%d /data/", waypointUserID, waypointGroupID)},
 	}
 	preTask.VolumeMounts = volumeMounts
 	preTask.Resources = &api.Resources{
-		// TODO(xx): make pointer vars for smaller cpu and mem
 		CPU:      &cpu,
 		MemoryMB: &mem,
 	}
