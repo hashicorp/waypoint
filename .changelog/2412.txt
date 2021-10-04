@@ -1,0 +1,8 @@
+```release-note:improvement
+cli/serverinstall/k8s: Fix a problem where deployments would be marked as "Degraded", but were actually fine.
+```
+
+```release-note:improvement
+cli/serverinstall/k8s: Add new cluster role and binding to allow nodeport services to work
+```
+
