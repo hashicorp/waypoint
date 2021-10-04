@@ -772,6 +772,7 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	waypointUserID := 100
 	waypointGroupID := 1000
 	preTask.Config = map[string]interface{}{
+		// Doing this because this is the only way https://github.com/hashicorp/nomad/issues/8892
 		"image":   "busybox:latest",
 		"command": "sh",
 		"args":    []string{"-c", fmt.Sprintf("chown -R %d:%d /data/", waypointUserID, waypointGroupID)},
