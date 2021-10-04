@@ -42,5 +42,10 @@
         opacity: 0;
       }
     }
+    // Overrides for the flash-messages content
+    .pds-popup__header {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
   }
 }
