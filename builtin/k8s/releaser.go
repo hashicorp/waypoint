@@ -320,11 +320,13 @@ func (r *Releaser) resourceServiceCreate(
 		nodeclient := clientSet.CoreV1().Nodes()
 		nodes, err := nodeclient.List(ctx, metav1.ListOptions{})
 		if err != nil {
-			return err
+			// Rather than fail the whole release, report the error and then complete.
+			step.Status(terminal.StatusError)
+			step.Update("Cannot determine release URL for nodeport service due to failure to list nodes: %s", err)
+		} else {
+			nodeIP := nodes.Items[0].Status.Addresses[0].Address
+			result.Url = fmt.Sprintf("http://%s:%d", nodeIP, service.Spec.Ports[0].NodePort)
 		}
-
-		nodeIP := nodes.Items[0].Status.Addresses[0].Address
-		result.Url = fmt.Sprintf("http://%s:%d", nodeIP, service.Spec.Ports[0].NodePort)
 	} else {
 		result.Url = fmt.Sprintf("http://%s:%d", service.Spec.ClusterIP, service.Spec.Ports[0].Port)
 	}

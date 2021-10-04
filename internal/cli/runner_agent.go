@@ -42,7 +42,7 @@ type RunnerAgentCommand struct {
 	flagODR bool
 }
 
-// This is how long a runner in ODR mode will wait for it's job assignment before
+// This is how long a runner in ODR mode will wait for its job assignment before
 // timing out.
 var defaultRunnerODRAcceptTimeout = 60 * time.Second
 
