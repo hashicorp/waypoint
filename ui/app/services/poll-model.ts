@@ -1,9 +1,8 @@
 import Ember from 'ember';
 import Service from '@ember/service';
 import Route from '@ember/routing/route';
-import { task } from 'ember-concurrency-decorators';
+import { task, timeout } from 'ember-concurrency';
 import { taskFor } from 'ember-concurrency-ts';
-import { timeout } from 'ember-concurrency';
 
 // Seconds for polling
 const INTERVAL = 15000;
