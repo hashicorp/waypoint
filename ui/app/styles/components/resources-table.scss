@@ -6,6 +6,10 @@
   line-height: 17px;
   color: rgb(var(--text-muted));
 
+  &--with-margin {
+    margin-bottom: scale.$sm--1;
+  }
+
   table {
     background: rgb(var(--background));
     border-radius: 5px;

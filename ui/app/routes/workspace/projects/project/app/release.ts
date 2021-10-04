@@ -6,7 +6,7 @@ import { Model as AppRouteModel } from '../app';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
 type Params = { sequence: string };
-type Model = Release.AsObject & WithStatusReport;
+export type Model = Release.AsObject & WithStatusReport;
 
 interface WithStatusReport {
   statusReport?: StatusReport.AsObject;

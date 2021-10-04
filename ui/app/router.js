@@ -48,7 +48,9 @@ Router.map(function () {
           });
           this.route('releases');
           this.route('release-id', { path: '/release/:release_id' });
-          this.route('release', { path: '/release/seq/:sequence' });
+          this.route('release', { path: '/release/seq/:sequence' }, function () {
+            this.route('resource', { path: 'resources/:resource_id' });
+          });
           this.route('logs');
           this.route('exec');
         });

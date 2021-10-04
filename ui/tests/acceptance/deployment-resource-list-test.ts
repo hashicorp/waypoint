@@ -14,11 +14,16 @@ module('Acceptance | deployment resource list', function (hooks) {
     let application = this.server.create('application', { project, name: 'my-app' });
     let deployment = this.server.create('deployment', 'random', { application, sequence: 1 });
     let statusReport = this.server.create('status-report', 'ready', { application, target: deployment });
-    this.server.create('resource', { statusReport, name: 'example-pod' });
+    let resource = this.server.create('resource', { statusReport, name: 'example-pod' });
 
     await visit(`/default/${project.name}/app/${application.name}/deployment/seq/${deployment.sequence}`);
 
     assert.dom('[data-test-resources-table]').containsText('example-pod');
+    assert
+      .dom(
+        `[href="/default/${project.name}/app/${application.name}/deployment/seq/${deployment.sequence}/resources/${resource.id}"`
+      )
+      .exists();
   });
 
   test('empty state', async function (assert) {

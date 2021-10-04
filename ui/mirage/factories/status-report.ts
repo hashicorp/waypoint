@@ -41,9 +41,15 @@ export default Factory.extend({
     },
   }),
 
-  'with-resources': trait({
+  'with-deployment-resources': trait({
     afterCreate(statusReport, server) {
       server.create('resource', 'random-deployment', { statusReport });
+    },
+  }),
+
+  'with-release-resources': trait({
+    afterCreate(statusReport, server) {
+      server.create('resource', 'random-service', { statusReport });
     },
   }),
 });

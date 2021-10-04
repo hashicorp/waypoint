@@ -30,18 +30,49 @@
 
   <StatusReportBar @model={{@model}} @artifactType="Deployment"/>
 
-  {{#if @model.statusReport.resourcesList.length}}
-    <Section>
-      <:heading>{{t "page.deployment.resources.heading"}}</:heading>
-      <:body>
-        <ResourcesTable @resources={{@model.statusReport.resourcesList}}>
-          <:caption>
-            {{t "page.deployment.resources.table-caption" htmlSafe=true}}
-          </:caption>
-        </ResourcesTable>
-      </:body>
-    </Section>
-  {{/if}}
+  {{#let
+    @model.statusReport.resourcesList
+    @model.release.statusReport.resourcesList
+    as |deploymentResources releaseResources|
+  }}
+    {{#if (or deploymentResources.length releaseResources.length)}}
+      <Section>
+        <:heading>{{t "page.deployment.resources.heading"}}</:heading>
+        <:body>
+          {{#if deploymentResources.length}}
+            <ResourcesTable
+              @resources={{deploymentResources}}
+              @route="workspace.projects.project.app.deployment.resource"
+              @models={{array @model.sequence}}
+              @withMargin={{true}}
+            >
+              <:caption>
+                {{t "page.deployment.resources.deployment-table-caption" htmlSafe=true}}
+              </:caption>
+            </ResourcesTable>
+          {{/if}}
+
+          {{#if releaseResources.length}}
+            <ResourcesTable
+              @resources={{releaseResources}}
+              @route="workspace.projects.project.app.release.resource"
+              @models={{array @model.release.sequence}}
+            >
+              <:caption>
+                {{t "page.deployment.resources.release-table-caption-prefix" htmlSafe=true}}
+                <LinkTo
+                  @route="workspace.projects.project.app.release"
+                  @model={{@model.release.sequence}}
+                >
+                  <b class="badge badge--info badge--version">v{{@model.release.sequence}}</b>
+                </LinkTo>
+              </:caption>
+            </ResourcesTable>
+          {{/if}}
+        </:body>
+      </Section>
+    {{/if}}
+  {{/let}}
 
   <Section>
     <:heading>{{t "page.deployment.logs.heading"}}</:heading>

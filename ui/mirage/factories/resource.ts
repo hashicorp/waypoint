@@ -62,4 +62,39 @@ export default Factory.extend({
       },
     }),
   }),
+
+  'random-service': trait({
+    id: () => fakeId(),
+    name: 'web',
+    platform: 'kubernetes',
+    type: 'service',
+    categoryDisplayHint: 'ROUTER',
+    createdTime: () => new Date(),
+    state: () => ({
+      ipAddress: '10.104.177.149',
+      service: {
+        metadata: {
+          name: 'web',
+          namespace: 'default',
+          uid: '267ef8f3-2b41-4e3e-88b4-b28799dc87a0',
+          resourceVersion: '405154',
+        },
+        spec: {
+          ports: [{ protocol: 'TCP', port: 80, targetPort: 'http' }],
+          selector: {
+            name: 'web-v2',
+            'waypoint.hashicorp.com/id': '01FGW6JS8XWG4G66YD8RH75BNM',
+          },
+          clusterIP: '10.104.177.149',
+          clusterIPs: ['10.104.177.149'],
+          type: 'ClusterIP',
+          sessionAffinity: 'None',
+          ipFamilies: ['IPv4'],
+          ipFamilyPolicy: 'SingleStack',
+        },
+      },
+    }),
+    health: 'READY',
+    healthMessage: 'Available: Deployment has minimum availability.',
+  }),
 });

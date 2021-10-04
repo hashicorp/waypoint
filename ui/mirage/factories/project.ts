@@ -41,33 +41,35 @@ export default Factory.extend({
           sequence: 4,
           application,
           build: builds[0],
-          statusReport: server.create('status-report', 'alive', 'with-resources', { application }),
+          statusReport: server.create('status-report', 'alive', 'with-deployment-resources', { application }),
         }),
         server.create('deployment', 'random', 'minutes-old-success', {
           sequence: 3,
           application,
           build: builds[1],
-          statusReport: server.create('status-report', 'ready', 'with-resources', { application }),
+          statusReport: server.create('status-report', 'ready', 'with-deployment-resources', { application }),
         }),
         server.create('deployment', 'random', 'hours-old-success', {
           sequence: 2,
           application,
           build: builds[2],
-          statusReport: server.create('status-report', 'partial', 'with-resources', { application }),
+          statusReport: server.create('status-report', 'partial', 'with-deployment-resources', {
+            application,
+          }),
         }),
         server.create('deployment', 'random', 'days-old-success', {
           sequence: 1,
           application,
           build: builds[3],
-          statusReport: server.create('status-report', 'down', 'with-resources', { application }),
+          statusReport: server.create('status-report', 'down', 'with-deployment-resources', { application }),
         }),
       ];
 
       server.create('release', 'random', 'minutes-old-success', {
         sequence: 3,
         application,
-        deployment: deployments[2],
-        statusReport: server.create('status-report', 'ready', { application }),
+        deployment: deployments[0],
+        statusReport: server.create('status-report', 'ready', 'with-release-resources', { application }),
       });
       server.create('release', 'random', 'hours-old-success', {
         sequence: 2,
@@ -77,7 +79,7 @@ export default Factory.extend({
       server.create('release', 'random', 'days-old-success', {
         sequence: 1,
         application,
-        deployment: deployments[0],
+        deployment: deployments[2],
       });
     },
   }),
