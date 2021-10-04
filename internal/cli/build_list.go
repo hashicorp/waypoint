@@ -95,6 +95,7 @@ func (c *BuildListCommand) Run(args []string) int {
 			})
 		}
 
+		app.UI.Output("%s", app.Ref().Application, terminal.WithHeaderStyle())
 		c.ui.Table(table)
 
 		return nil

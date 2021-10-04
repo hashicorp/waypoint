@@ -23,7 +23,6 @@ type DeploymentDestroyCommand struct {
 }
 
 func (c *DeploymentDestroyCommand) Run(args []string) int {
-	ctx := c.Ctx
 	flags := c.Flags()
 
 	// Initialize. If we fail, we just exit since Init handles the UI.
@@ -36,46 +35,54 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 	}
 	args = flags.Args()
 
-	// Determine the deployments to delete
-	var deployments []*pb.Deployment
+	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		app.UI.Output("Destroying deployments for %s", app.Ref().Application, terminal.WithHeaderStyle())
 
-	var err error
-	if len(args) > 0 {
-		// If we have arguments, we only delete the deployments specified.
-		deployments, err = c.getDeployments(ctx, args)
-		if err != nil {
-			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		}
-	} else {
-		// No arguments, get ALL deployments that are still physically created.
-		deployments, err = c.allDeployments(ctx)
-		if err != nil {
-			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		}
-	}
+		// Determine the deployments to delete
+		var deployments []*pb.Deployment
 
-	// Destroy each deployment
-	c.ui.Output("%d deployments will be destroyed.", len(deployments), terminal.WithHeaderStyle())
-	for _, deployment := range deployments {
-		// Can't destroy a deployment that was not successful
-		if deployment.Status.GetState() != pb.Status_SUCCESS {
-			continue
+		var err error
+		if len(args) > 0 {
+			// If we have arguments, we only delete the deployments specified.
+			deployments, err = c.getDeployments(ctx, args)
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return ErrSentinel
+			}
+		} else {
+			// No arguments, get ALL deployments that are still physically created.
+			deployments, err = c.allDeployments(ctx)
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return ErrSentinel
+			}
 		}
 
-		// Get our app client
-		app := c.project.App(deployment.Application.Application)
+		// Destroy each deployment
+		c.ui.Output("%d deployments will be destroyed.", len(deployments), terminal.WithHeaderStyle())
+		for _, deployment := range deployments {
+			// Can't destroy a deployment that was not successful
+			if deployment.Status.GetState() != pb.Status_SUCCESS {
+				continue
+			}
 
-		c.ui.Output("Destroying deployment: %s", deployment.Id, terminal.WithInfoStyle())
-		if err := app.Destroy(ctx, &pb.Job_DestroyOp{
-			Target: &pb.Job_DestroyOp_Deployment{
-				Deployment: deployment,
-			},
-		}); err != nil {
-			c.ui.Output("Error destroying the deployment: %s", err.Error(), terminal.WithErrorStyle())
-			return 1
+			// Get our app client
+			app := c.project.App(deployment.Application.Application)
+
+			c.ui.Output("Destroying deployment: %s", deployment.Id, terminal.WithInfoStyle())
+			if err := app.Destroy(ctx, &pb.Job_DestroyOp{
+				Target: &pb.Job_DestroyOp_Deployment{
+					Deployment: deployment,
+				},
+			}); err != nil {
+				c.ui.Output("Error destroying the deployment: %s", err.Error(), terminal.WithErrorStyle())
+				return ErrSentinel
+			}
 		}
+		return nil
+	})
+	if err != nil {
+		return 1
 	}
 
 	return 0

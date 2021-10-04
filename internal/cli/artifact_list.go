@@ -62,6 +62,9 @@ func (c *ArtifactListCommand) Run(args []string) int {
 		}
 		sort.Sort(serversort.ArtifactStartDesc(resp.Artifacts))
 
+		// Output the app's name before the json or table data
+		app.UI.Output("%s", app.Ref().Application, terminal.WithHeaderStyle())
+
 		if c.flagJson {
 			return c.displayJson(resp.Artifacts)
 		}

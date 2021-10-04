@@ -29,7 +29,7 @@ func (c *ArtifactBuildCommand) Run(args []string) int {
 	}
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		app.UI.Output("Building...", terminal.WithHeaderStyle())
+		app.UI.Output("Building %s...", app.Ref().Application, terminal.WithHeaderStyle())
 		_, err := app.Build(ctx, &pb.Job_BuildOp{
 			DisablePush: !c.flagPush,
 		})

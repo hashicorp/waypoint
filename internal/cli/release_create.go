@@ -128,7 +128,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 		}
 
 		// UI
-		app.UI.Output("Releasing...", terminal.WithHeaderStyle())
+		app.UI.Output("Releasing %s...", app.Ref().Application, terminal.WithHeaderStyle())
 
 		// Release
 		result, err := app.Release(ctx, &pb.Job_ReleaseOp{

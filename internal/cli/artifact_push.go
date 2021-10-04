@@ -30,6 +30,7 @@ func (c *ArtifactPushCommand) Run(args []string) int {
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// Get the most recent build
+		app.UI.Output("Pushing artifact for %s...", app.Ref().Application, terminal.WithHeaderStyle())
 		build, err := client.GetLatestBuild(ctx, &pb.GetLatestBuildRequest{
 			Application: app.Ref(),
 			Workspace:   c.project.WorkspaceRef(),
