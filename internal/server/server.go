@@ -121,7 +121,7 @@ type options struct {
 	// BrowserUIEnabled determines if the browser UI should be mounted
 	BrowserUIEnabled bool
 
-	// TelemetryEnabled determines if hte server should instrument itself to emit telemetry. Default false
+	// TelemetryEnabled determines if the server should instrument itself to emit telemetry. Default false
 	TelemetryEnabled bool
 }
 
