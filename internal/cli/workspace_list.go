@@ -129,7 +129,7 @@ func getWorkspace(ctx context.Context, client pb.WaypointClient, name string) (*
 	// this is unlikely to happen without first hitting the codes.NotFound error
 	// above, but added here to be defensive.
 	if resp.Workspace == nil {
-		return nil, fmt.Errorf("no workspace returned for name \"%s\"", name)
+		return nil, fmt.Errorf("no workspace returned for name %q", name)
 	}
 	return resp.Workspace, nil
 }
