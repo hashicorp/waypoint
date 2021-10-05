@@ -146,6 +146,9 @@ func (c *LoginCommand) Run(args []string) int {
 	}
 	newContext.Server.AuthToken = token
 	newContext.Server.RequireAuth = true
+	if c.flagK8S {
+		newContext.Server.Platform = "kubernetes"
+	}
 	log.Debug("final login connection info",
 		"address", newContext.Server.Address,
 		"tls", newContext.Server.Tls,
