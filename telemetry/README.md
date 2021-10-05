@@ -45,7 +45,7 @@ waypoint server run \
   -telemetry-opencensus-agent-insecure \
 ```
 
-You may observe in the debug logs that the opencensus agent exporter and zpages server have started.
+You may observe in the debug logs that the opencensus agent exporter and zPages server have started.
 
 For detailed server telemetry documentation, see the flags prefixed with `-telemetry`
 at https://www.waypointproject.io/commands/server-run#command-options. 
