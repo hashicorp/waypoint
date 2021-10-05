@@ -23,6 +23,7 @@ type ReleaseCreateCommand struct {
 	flagDeployment  string
 	flagPrune       bool
 	flagPruneRetain int
+	flagId          idFormat
 }
 
 func (c *ReleaseCreateCommand) Run(args []string) int {
@@ -114,7 +115,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 			} else {
 				c.Log.Warn("deployment already released")
 				app.UI.Output(strings.TrimSpace(releaseUpToDate),
-					deploy.Id,
+					c.flagId.FormatId(deploy.Sequence, deploy.Id),
 					terminal.WithSuccessStyle())
 				return nil
 			}
@@ -233,12 +234,12 @@ func (c *ReleaseCreateCommand) Synopsis() string {
 
 func (c *ReleaseCreateCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint release [options] [id]
+Usage: waypoint release [options]
 
   Open a deployment to traffic.
 
   This defaults to the latest deployment. Other deployments can be
-  specified by sequence number or long ID.
+  specified by ID.
 
 ` + c.Flags().Help())
 }
