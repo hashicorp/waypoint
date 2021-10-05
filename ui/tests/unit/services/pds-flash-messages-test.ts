@@ -3,7 +3,6 @@ import { setupApplicationTest } from 'ember-qunit';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import FlashMessagesService from 'waypoint/services/pds-flash-messages';
-import PdsFlashMessages from 'waypoint/services/pds-flash-messages';
 
 class TestRoute extends Route {
   @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
