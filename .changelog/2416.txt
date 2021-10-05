@@ -1,0 +1,4 @@
+```release-note:bug
+config: Fix dynamic config vars targeting files.
+```
+
