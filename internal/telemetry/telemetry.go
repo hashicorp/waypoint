@@ -42,7 +42,7 @@ func Run(opts ...Option) error {
 		octrace.RegisterExporter(exporter)
 		ocview.RegisterExporter(exporter)
 		closeFuncs = append(closeFuncs, func() {
-			log.Debug("Shutting down opencensus agent exporter")
+			log.Debug("Shutting down OpenCensus agent exporter")
 			exporter.Flush()
 			if err := exporter.Stop(); err != nil {
 				log.Error("Failed to stop the opencensus agent exporter", "err", err)
