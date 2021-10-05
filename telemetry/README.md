@@ -24,7 +24,7 @@ The waypoint server supports multiple exporters, but this example will show expo
 to the opencensus agent, and viewing traces in jeager.
 
 #### Run the docker-compose infrastructure
-Run `docker-compose up` within this directroy. You do not need to specify a `DD_API_KEY`
+Run `docker-compose up` within this directory. You do not need to specify a `DD_API_KEY`
 
 #### Run the waypoint server
 
