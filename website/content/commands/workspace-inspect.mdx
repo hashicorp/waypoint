@@ -1,0 +1,29 @@
+---
+layout: commands
+page_title: 'Commands: Workspace inspect'
+sidebar_title: 'workspace inspect'
+description: 'Output information for a given Workspace.'
+---
+
+# Waypoint Workspace inspect
+
+Command: `waypoint workspace inspect`
+
+Output information for a given Workspace.
+
+@include "commands/workspace-inspect_desc.mdx"
+
+## Usage
+
+Usage: `waypoint workspace inspect [<name>]`
+
+Output information about a Waypoint workspace, including all projects and
+last known activity timestamp
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+@include "commands/workspace-inspect_more.mdx"

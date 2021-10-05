@@ -607,6 +607,22 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"workspace": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["workspace"][0],
+				HelpText:     helpText["workspace"][1],
+			}, nil
+		},
+		"workspace inspect": func() (cli.Command, error) {
+			return &WorkspaceInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"workspace list": func() (cli.Command, error) {
+			return &WorkspaceListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 
 	// register our aliases
@@ -960,6 +976,12 @@ List and edit On-Demand Runner configuration.
 
 Each on-demand runner confiuration entry represents the ability to spawn
 runners when needed using the configured plugin.
+`,
+	},
+	"workspace": {
+		"Manage workspaces",
+		`
+List and inspect Workspaces for this context.
 `,
 	},
 }

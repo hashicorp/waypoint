@@ -263,6 +263,14 @@
     "path": "version"
   },
   {
+    "title": "workspace inspect",
+    "path": "workspace-inspect"
+  },
+  {
+    "title": "workspace list",
+    "path": "workspace-list"
+  },
+  {
     "divider": true
   },
   {

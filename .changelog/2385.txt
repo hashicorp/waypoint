@@ -1,0 +1,4 @@
+```release-note:feature
+cli: Add new commands `workspace inspect` and `workspace list` to view and list
+workspaces.
+```
