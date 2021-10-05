@@ -766,6 +766,8 @@ func buildAppConfig(
 	// Ininitialize our result with the static values
 	var envVars []string
 
+	var dynamicFiles []*FileContent
+
 	// Go through each and read our configurations. Note that ConfigSourcers
 	// are documented to note that Read will be called frequently so caching
 	// is expected within the sourcer itself.
@@ -833,9 +835,15 @@ func buildAppConfig(
 				if req.cv.Internal {
 					internal[req.req.Name] = cty.StringVal(r.Value)
 				} else {
-					envVars = append(envVars, req.req.Name+"="+r.Value)
-
-					env[req.req.Name] = cty.StringVal(r.Value)
+					if req.cv.NameIsPath {
+						dynamicFiles = append(dynamicFiles, &FileContent{
+							Path: req.req.Name,
+							Data: []byte(r.Value),
+						})
+					} else {
+						envVars = append(envVars, req.req.Name+"="+r.Value)
+						env[req.req.Name] = cty.StringVal(r.Value)
+					}
 				}
 
 			case *sdkpb.ConfigSource_Value_Error:
@@ -869,7 +877,7 @@ func buildAppConfig(
 
 	staticEnv, staticFiles := expandStaticVars(log, &ectx, staticVars)
 
-	return append(envVars, staticEnv...), staticFiles
+	return append(envVars, staticEnv...), append(staticFiles, dynamicFiles...)
 }
 
 // expandStaticVars will parse any value that appears to be a HCL template as one and then
