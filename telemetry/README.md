@@ -50,7 +50,7 @@ You may observe in the debug logs that the opencensus agent exporter and zpages 
 For detailed server telemetry documentation, see the flags prefixed with `-telemetry`
 at https://www.waypointproject.io/commands/server-run#command-options. 
 
-#### Make grpc requests to the waypoint server
+#### Make gRPC requests to the Waypoint server
 
 [Bootstrap](https://www.waypointproject.io/commands/server-bootstrap) your server if you're running it for the first
 time via `server-run`, or run any Waypoint CLI commands against your server (i.e. `waypoint context verify`).
