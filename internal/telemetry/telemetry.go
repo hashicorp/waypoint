@@ -45,7 +45,7 @@ func Run(opts ...Option) error {
 			log.Debug("Shutting down OpenCensus agent exporter")
 			exporter.Flush()
 			if err := exporter.Stop(); err != nil {
-				log.Error("Failed to stop the opencensus agent exporter", "err", err)
+				log.Error("Failed to stop the OpenCensus agent exporter", "err", err)
 			} else {
 				log.Debug("OpenCensus agent exporter flushed and stopped")
 			}
