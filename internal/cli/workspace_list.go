@@ -107,7 +107,7 @@ func (c *WorkspaceListCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint workspace list
 
-  Lists all the known workspaces available to the CLI for the current sever
+  Lists all the known workspaces available to the CLI for the current Waypoint server
   context.
 
 ` + c.Flags().Help())
