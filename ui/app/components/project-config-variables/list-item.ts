@@ -1,10 +1,11 @@
-import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
-import { action } from '@ember/object';
 import { ConfigVar, Project } from 'waypoint-pb';
-import { inject as service } from '@ember/service';
+
 import ApiService from 'waypoint/services/api';
+import Component from '@glimmer/component';
 import FlashMessagesService from 'waypoint/services/pds-flash-messages';
+import { action } from '@ember/object';
+import { inject as service } from '@ember/service';
+import { tracked } from '@glimmer/tracking';
 
 interface VariableArgs {
   variable: ConfigVar.AsObject;
@@ -60,7 +61,13 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
       this.flashMessages.error('Variable keys or values can not be empty');
       return;
     }
-    await this.args.saveVariableSettings(this.variable, false);
+    if (this.initialVariable.name !== this.variable.name) {
+      await this.args.saveVariableSettings(this.variable, false);
+      await this.args.deleteVariable(this.initialVariable);
+      this.storeInitialVariable();
+    } else {
+      await this.args.saveVariableSettings(this.variable, false);
+    }
     this.isCreating = false;
     this.isEditing = false;
   }
