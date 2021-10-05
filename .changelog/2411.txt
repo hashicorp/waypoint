@@ -1,0 +1,3 @@
+```release-note:bug
+ui: notification messages display nicely when containing long words such as URLs
+```
