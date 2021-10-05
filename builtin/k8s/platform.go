@@ -336,6 +336,10 @@ func configureK8sContainer(
 		})
 	}
 
+	if envVars == nil {
+		envVars = make(map[string]string)
+	}
+
 	// assume the first port defined is the 'main' port to use
 	var defaultPort int
 	if len(k8sPorts) != 0 {
@@ -549,12 +553,13 @@ func (p *Platform) resourceDeploymentCreate(
 			" 'ports' for configuring multiple container ports")
 	}
 
+	envVars := make(map[string]string)
 	// Add deploy config environment to container env vars
-	if p.config.StaticEnvVars == nil {
-		p.config.StaticEnvVars = make(map[string]string)
+	for k, v := range p.config.StaticEnvVars {
+		envVars[k] = v
 	}
 	for k, v := range deployConfig.Env() {
-		p.config.StaticEnvVars[k] = v
+		envVars[k] = v
 	}
 
 	// Check autoscaling
@@ -565,10 +570,10 @@ func (p *Platform) resourceDeploymentCreate(
 	}
 
 	// Create scratch space volumes
+	var volumes []corev1.Volume
 	for idx := range p.config.ScratchSpace {
 		scratchName := fmt.Sprintf("scratch-%d", idx)
-		deployment.Spec.Template.Spec.Volumes = append(
-			deployment.Spec.Template.Spec.Volumes,
+		volumes = append(volumes,
 			corev1.Volume{
 				Name: scratchName,
 				VolumeSource: corev1.VolumeSource{
@@ -590,7 +595,7 @@ func (p *Platform) resourceDeploymentCreate(
 		src.App,
 		fmt.Sprintf("%s:%s", img.Image, img.Tag),
 		p.config.Ports,
-		p.config.StaticEnvVars,
+		envVars,
 		p.config.Probe,
 		p.config.ProbePath,
 		p.config.CPU,
@@ -599,7 +604,7 @@ func (p *Platform) resourceDeploymentCreate(
 		command,
 		args,
 		p.config.ScratchSpace,
-		deployment.Spec.Template.Spec.Volumes,
+		volumes,
 		log,
 	)
 	if err != nil {
@@ -609,6 +614,16 @@ func (p *Platform) resourceDeploymentCreate(
 
 	var sidecarContainers []corev1.Container
 	for _, sidecarConfig := range p.config.Pod.Sidecars {
+
+		sidecarEnvVars := make(map[string]string)
+		// Add deploy config environment to container env vars
+		for k, v := range sidecarConfig.StaticEnvVars {
+			sidecarEnvVars[k] = v
+		}
+		for k, v := range deployConfig.Env() {
+			sidecarEnvVars[k] = v
+		}
+
 		sidecarContainer, err := configureK8sContainer(
 			sidecarConfig.Name,
 			sidecarConfig.Image,
@@ -622,7 +637,7 @@ func (p *Platform) resourceDeploymentCreate(
 			sidecarConfig.Command,
 			sidecarConfig.Args,
 			p.config.ScratchSpace,
-			deployment.Spec.Template.Spec.Volumes,
+			volumes,
 			log,
 		)
 		if err != nil {
@@ -636,6 +651,7 @@ func (p *Platform) resourceDeploymentCreate(
 	containers := []corev1.Container{*appContainer}
 	deployment.Spec.Template.Spec = corev1.PodSpec{
 		Containers: append(containers, sidecarContainers...),
+		Volumes:    volumes,
 	}
 
 	// If no count is specified, presume that the user is managing the replica
@@ -716,6 +732,13 @@ func (p *Platform) resourceDeploymentCreate(
 	}
 
 	dc := clientSet.AppsV1().Deployments(ns)
+
+	// TODO(izaak) delete me
+	j, err := json.Marshal(deployment)
+	if err != nil {
+		return fmt.Errorf("Failed to marshal deploy json")
+	}
+	log.Info(fmt.Sprintf("Deployment json \n\n %s \n\n", j))
 
 	// Create/update
 	if create {
