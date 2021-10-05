@@ -1,0 +1,6 @@
+```release-note:improvement
+cli: Remove unused arg and use sequence ID for CLI message in `release`
+```
+```release-note:bug
+cli: Fix logic on when a rocket indicator shows in `release list`
+```
