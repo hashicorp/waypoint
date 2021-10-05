@@ -1,6 +1,6 @@
 # Telemetry
 
-Waypoint can publish internal telemetry, including server grpc traces.
+Waypoint can publish internal telemetry, including server gRPC traces.
 This directory contains examples and sample infrastructure for consuming that telemetry.
 
 ### Docker-Compose
