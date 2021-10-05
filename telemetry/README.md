@@ -5,7 +5,7 @@ This directory contains examples and sample infrastructure for consuming that te
 
 ### Docker-Compose
 In this directory is a docker compose file to bring up opencensus infrastructure
-for consuming and forwarding metrics (an agent anda collector), a jeager
+for consuming and forwarding metrics (an agent and a collector), a Jeager
 all-in-one container for viewing trace data, and a datadog agent for
 forwarding traced to datadog. If you wish to use the datadog exporter, you'll
 need to supply a `DD_API_KEY` environment variable to the docker compose, like so:
