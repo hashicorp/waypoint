@@ -111,8 +111,8 @@ func (c *WorkspaceInspectCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint workspace inspect [<name>]
 
-  Output information about a waypoint workspace, including the projects and
-  last known activity
+  Output information about a Waypoint workspace, including all projects and
+  last known activity timestamp
 
 ` + c.Flags().Help())
 }
