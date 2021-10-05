@@ -541,9 +541,9 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:   "telemetry-opencensus-zpages-addr",
 			Target: &c.flagTelemetryOpenCensusZpagesAddr,
-			Usage: "If set, waypoint will run a telemetry zpages server at this address. Typically this is\n" +
-				"set to something like localhost:9999, whereupon trace debug information could be viewed at\n" +
-				"http://localhost:9999/debug/tracez, and rpc stats at http://localhost:55679/debug/rpcz.\n" +
+			Usage: "If set, Waypoint will run a telemetry zPages server at this address. Typically this is " +
+				"set to something like localhost:9999, where trace debug information could be viewed at " +
+				"http://localhost:9999/debug/tracez, and rpc stats at http://localhost:55679/debug/rpcz. " +
 				"More information at https://opencensus.io/zpages/",
 		})
 	})
