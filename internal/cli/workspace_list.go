@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/olekukonko/tablewriter"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -51,17 +50,7 @@ func (c *WorkspaceListCommand) Run(args []string) int {
 	}
 	sort.Strings(result)
 
-	// Get our direct stdout handle because we're going to be writing colors
-	// and want color detection to work.
-	out, _, err := c.ui.OutputWriters()
-	if err != nil {
-		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return 1
-	}
-
-	table := tablewriter.NewWriter(out)
-	table.SetHeader([]string{"Name", "Projects"})
-	table.SetBorder(false)
+	table := terminal.NewTable("Name", "Projects")
 	for _, workspaceName := range result {
 		workspace, err := getWorkspace(c.Ctx, c.project.Client(), workspaceName)
 		if err != nil {
@@ -77,12 +66,9 @@ func (c *WorkspaceListCommand) Run(args []string) int {
 		table.Rich([]string{
 			workspace.Name,
 			strings.Join(projects, ","),
-		}, []tablewriter.Colors{
-			{},
-			{},
-		})
+		}, nil)
 	}
-	table.Render()
+	c.ui.Table(table)
 
 	return 0
 }
