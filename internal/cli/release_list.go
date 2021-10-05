@@ -125,7 +125,7 @@ func (c *ReleaseListCommand) Run(args []string) int {
 					status = "✔"
 					statusColor = terminal.Green
 
-					if resp.Releases[0] != nil {
+					if resp.Releases[0] != nil && resp.Releases[0].Release.Id == b.Id {
 						status = "🚀"
 					}
 
