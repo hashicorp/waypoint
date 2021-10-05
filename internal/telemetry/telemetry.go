@@ -37,7 +37,7 @@ func Run(opts ...Option) error {
 		log.Debug("Starting the opencensus agent exporter")
 		exporter, err := ocagent.NewExporter(t.OpenCensusExporterOptions...)
 		if err != nil {
-			return status.Errorf(codes.InvalidArgument, "failed to initalize opencensus agent exporter: %s", err)
+			return status.Errorf(codes.InvalidArgument, "failed to initalize OpenCensus agent exporter: %s", err)
 		}
 		octrace.RegisterExporter(exporter)
 		ocview.RegisterExporter(exporter)
