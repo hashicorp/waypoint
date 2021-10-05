@@ -312,9 +312,11 @@ func (i *K8sInstaller) Install(
 		_, err = net.DialTimeout("tcp", httpAddr, 1*time.Second)
 		if err != nil {
 			// Depending on the platform, this can take a long time. On EKS, it's by far the longest step. Adding an explicit message helps
-			s.Update("Service %s exists and is configured, but isn't yet accepting incoming connections. Waiting...\n", serviceName)
+			s.Update("Service %q exists and is configured, but isn't yet accepting incoming connections. Waiting...", serviceName)
 			return false, nil
 		}
+
+		s.Update("Service %q is ready", serviceName)
 		log.Info("http server ready", "httpAddr", addr)
 
 		// Set our advertise address
