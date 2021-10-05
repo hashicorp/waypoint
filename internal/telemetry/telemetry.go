@@ -63,7 +63,7 @@ func Run(opts ...Option) error {
 		closeFuncs = append(closeFuncs, func() {
 			log.Debug("Shutting down datadog exporter")
 			exporter.Stop()
-			log.Debug("Datadog exporter flushed and stopped")
+			log.Debug("DataDog exporter flushed and stopped")
 		})
 	}
 
