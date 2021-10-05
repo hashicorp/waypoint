@@ -1061,6 +1061,7 @@ func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	}
 
 	return &pb.OnDemandRunnerConfig{
+		Name:         "kubernetes",
 		OciUrl:       i.config.odrImage,
 		PluginType:   "kubernetes",
 		Default:      true,

@@ -138,6 +138,11 @@ func (s *State) ondemandRunnerPut(
 		)
 	}
 
+	// If no name was given, set it to the id.
+	if value.Name == "" {
+		value.Name = value.Id
+	}
+
 	id := s.onDemandRunnerId(value)
 
 	// Get the global bucket and write the value to it.
@@ -158,7 +163,35 @@ func (s *State) onDemandRunnerGet(
 	var result pb.OnDemandRunnerConfig
 	b := dbTxn.Bucket(onDemandRunnerBucket)
 
-	return &result, dbGet(b, []byte(strings.ToLower(ref.Id)), &result)
+	if ref.Id != "" {
+		s.log.Info("looking up ondemand runner config by id", "id", ref.Id)
+		return &result, dbGet(b, []byte(strings.ToLower(ref.Id)), &result)
+	}
+
+	// Look for one by name if possible.
+	if ref.Name != "" {
+		s.log.Info("looking up ondemand runner config by name", "name", ref.Name)
+		iter, err := memTxn.Get(
+			onDemandRunnerIndexTableName,
+			onDemandRunnerIndexName+"_prefix",
+			ref.Name,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		next := iter.Next()
+		if next == nil {
+			// Indicates that there isn't one of the given name.
+			return nil, nil
+		}
+
+		idx := next.(*onDemandRunnerIndexRecord)
+
+		return &result, dbGet(b, []byte(strings.ToLower(idx.Id)), &result)
+	}
+
+	return nil, nil
 }
 
 func (s *State) onDemandRunnerList(
@@ -247,6 +280,7 @@ func (s *State) onDemandRunnerDelete(
 func (s *State) onDemandRunnerIndexSet(txn *memdb.Txn, id []byte, value *pb.OnDemandRunnerConfig) error {
 	record := &onDemandRunnerIndexRecord{
 		Id:      string(id),
+		Name:    value.Name,
 		Default: value.Default,
 	}
 
@@ -262,6 +296,12 @@ func (s *State) onDemandRunnerIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error
 		if err := proto.Unmarshal(v, &value); err != nil {
 			return err
 		}
+
+		// Do a minor upgrade, namely set a name if there is no name.
+		if value.Name == "" {
+			value.Name = value.Id
+		}
+
 		if err := s.onDemandRunnerIndexSet(memTxn, k, &value); err != nil {
 			return err
 		}
@@ -291,6 +331,15 @@ func onDemandRunnerIndexSchema() *memdb.TableSchema {
 					Lowercase: true,
 				},
 			},
+			onDemandRunnerIndexName: {
+				Name:         onDemandRunnerIndexName,
+				AllowMissing: false,
+				Unique:       true,
+				Indexer: &memdb.StringFieldIndex{
+					Field:     "Name",
+					Lowercase: true,
+				},
+			},
 			onDemandRunnerIndexDefault: {
 				Name:         onDemandRunnerIndexDefault,
 				AllowMissing: true,
@@ -314,6 +363,7 @@ func onDemandRunnerIndexSchema() *memdb.TableSchema {
 const (
 	onDemandRunnerIndexTableName = "ondemandRunner-index"
 	onDemandRunnerIndexId        = "id"
+	onDemandRunnerIndexName      = "name"
 	onDemandRunnerIndexDefault   = "default"
 
 	onDemandRunnerWaypointHclMaxSize = 5 * 1024 // 5 MB
@@ -321,6 +371,7 @@ const (
 
 type onDemandRunnerIndexRecord struct {
 	Id      string
+	Name    string
 	Default bool
 }
 

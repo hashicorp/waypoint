@@ -20,7 +20,7 @@ import (
 type OnDemandRunnerConfigApplyCommand struct {
 	*baseCommand
 
-	flagId           string
+	flagName         string
 	flagOCIUrl       string
 	flagEnvVars      []string
 	flagPluginType   string
@@ -57,12 +57,12 @@ func (c *OnDemandRunnerConfigApplyCommand) Run(args []string) int {
 		updated bool
 	)
 
-	if c.flagId != "" {
-		s = sg.Add("Checking for an existing on-demand runner config: %s", c.flagId)
+	if c.flagName != "" {
+		s = sg.Add("Checking for an existing on-demand runner config: %s", c.flagName)
 		// Check for an existing project of the same name.
 		resp, err := c.project.Client().GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
 			Config: &pb.Ref_OnDemandRunnerConfig{
-				Id: c.flagId,
+				Name: c.flagName,
 			},
 		})
 		if status.Code(err) == codes.NotFound {
@@ -81,15 +81,19 @@ func (c *OnDemandRunnerConfigApplyCommand) Run(args []string) int {
 
 		if resp != nil {
 			od = resp.Config
-			s.Update("Updating on-demand runner config %q...", od.Id)
+			s.Update("Updating on-demand runner config %q (%q)...", od.Name, od.Id)
 			updated = true
 		} else {
-			s.Update("No existing on-demand runner config found for id %q...command will create a new config", c.flagId)
-			od = &pb.OnDemandRunnerConfig{}
+			s.Update("No existing on-demand runner config found for id %q...command will create a new config", c.flagName)
+			od = &pb.OnDemandRunnerConfig{
+				Name: c.flagName,
+			}
 		}
 	} else {
 		s = sg.Add("Creating new on-demand runner config")
-		od = &pb.OnDemandRunnerConfig{}
+		od = &pb.OnDemandRunnerConfig{
+			Name: c.flagName,
+		}
 	}
 
 	// If we were specified a file then we're going to load that up.
@@ -203,10 +207,10 @@ func (c *OnDemandRunnerConfigApplyCommand) Flags() *flag.Sets {
 		f := sets.NewSet("Command Options")
 
 		f.StringVar(&flag.StringVar{
-			Name:    "id",
-			Target:  &c.flagId,
+			Name:    "name",
+			Target:  &c.flagName,
 			Default: "",
-			Usage:   "The id of an existing on-demand runner to update.",
+			Usage:   "The name of an existing on-demand runner to update.",
 		})
 
 		f.StringVar(&flag.StringVar{
