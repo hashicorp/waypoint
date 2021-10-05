@@ -21,7 +21,6 @@ export default Model.extend({
     result.setId(this.id);
     result.setJobId(this.jobId);
     result.setPreload(this.preloadProtobuf());
-    // TODO: result.setRelease
     result.setSequence(this.sequence);
     result.setState(PhysicalState[this.state as StateName]);
     result.setStatus(this.status?.toProtobuf());

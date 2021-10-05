@@ -19,7 +19,6 @@ export default Model.extend({
     result.setApplication(this.application?.toProtobufRef());
     result.setArtifactId(this.artifactId);
     result.setComponent(this.component?.toProtobuf());
-    // TODO: result.setDeployment
     result.setGeneration(this.generation?.toProtobuf());
     result.setHasEntrypointConfig(this.hasEntrypointConfig);
     result.setHasExecPlugin(this.hasExecPlugin);
