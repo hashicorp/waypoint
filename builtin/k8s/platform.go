@@ -613,38 +613,39 @@ func (p *Platform) resourceDeploymentCreate(
 	}
 
 	var sidecarContainers []corev1.Container
-	for _, sidecarConfig := range p.config.Pod.Sidecars {
+	if p.config.Pod != nil {
+		for _, sidecarConfig := range p.config.Pod.Sidecars {
+			sidecarEnvVars := make(map[string]string)
+			// Add deploy config environment to container env vars
+			for k, v := range sidecarConfig.StaticEnvVars {
+				sidecarEnvVars[k] = v
+			}
+			for k, v := range deployConfig.Env() {
+				sidecarEnvVars[k] = v
+			}
 
-		sidecarEnvVars := make(map[string]string)
-		// Add deploy config environment to container env vars
-		for k, v := range sidecarConfig.StaticEnvVars {
-			sidecarEnvVars[k] = v
+			sidecarContainer, err := configureK8sContainer(
+				sidecarConfig.Name,
+				sidecarConfig.Image,
+				sidecarConfig.Ports,
+				sidecarConfig.StaticEnvVars,
+				sidecarConfig.Probe,
+				sidecarConfig.ProbePath,
+				sidecarConfig.CPU,
+				sidecarConfig.Memory,
+				sidecarConfig.Resources,
+				sidecarConfig.Command,
+				sidecarConfig.Args,
+				p.config.ScratchSpace,
+				volumes,
+				log,
+			)
+			if err != nil {
+				return status.Errorf(status.Code(err),
+					"Failed to define sidecar container %s: %s", sidecarConfig.Name, err)
+			}
+			sidecarContainers = append(sidecarContainers, *sidecarContainer)
 		}
-		for k, v := range deployConfig.Env() {
-			sidecarEnvVars[k] = v
-		}
-
-		sidecarContainer, err := configureK8sContainer(
-			sidecarConfig.Name,
-			sidecarConfig.Image,
-			sidecarConfig.Ports,
-			sidecarConfig.StaticEnvVars,
-			sidecarConfig.Probe,
-			sidecarConfig.ProbePath,
-			sidecarConfig.CPU,
-			sidecarConfig.Memory,
-			sidecarConfig.Resources,
-			sidecarConfig.Command,
-			sidecarConfig.Args,
-			p.config.ScratchSpace,
-			volumes,
-			log,
-		)
-		if err != nil {
-			return status.Errorf(status.Code(err),
-				"Failed to define sidecar container %s: %s", sidecarConfig.Name, err)
-		}
-		sidecarContainers = append(sidecarContainers, *sidecarContainer)
 	}
 
 	// Update the deployment with our spec
