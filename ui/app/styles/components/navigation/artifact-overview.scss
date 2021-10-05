@@ -1,0 +1,35 @@
+.artifact-overview {
+  padding-bottom: 0.5rem;
+  h2 {
+    border-bottom: 1px solid rgb(var(--border));
+    padding-bottom: 0.5rem;
+  }
+
+  table {
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+
+    tr {
+      th {
+        font-weight: 500;
+        color: rgb(var(--text-muted));
+        width: 158px;
+        text-align: left;
+        padding-bottom: 0.25rem;
+      }
+
+      .status-indicator {
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 0.25rem;
+      }
+    }
+
+    button {
+      padding: 0 0.25rem;
+      height: inherit;
+      display: flex;
+      align-items: baseline;
+    }
+  }
+}

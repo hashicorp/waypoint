@@ -2302,6 +2302,11 @@ export class Job extends jspb.Message {
   hasDataSourceRef(): boolean;
   clearDataSourceRef(): Job;
 
+  getConfig(): Job.Config | undefined;
+  setConfig(value?: Job.Config): Job;
+  hasConfig(): boolean;
+  clearConfig(): Job;
+
   getError(): google_rpc_status_pb.Status | undefined;
   setError(value?: google_rpc_status_pb.Status): Job;
   hasError(): boolean;
@@ -2369,6 +2374,7 @@ export namespace Job {
     ackTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     completeTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     dataSourceRef?: Job.DataSource.Ref.AsObject,
+    config?: Job.Config.AsObject,
     error?: google_rpc_status_pb.Status.AsObject,
     result?: Job.Result.AsObject,
     cancelTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
@@ -2470,6 +2476,31 @@ export namespace Job {
       statusReport?: Job.StatusReportResult.AsObject,
       startTask?: Job.StartTaskResult.AsObject,
       init?: Job.InitResult.AsObject,
+    }
+  }
+
+
+  export class Config extends jspb.Message {
+    getSource(): Job.Config.Source;
+    setSource(value: Job.Config.Source): Config;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Config.AsObject;
+    static toObject(includeInstance: boolean, msg: Config): Config.AsObject;
+    static serializeBinaryToWriter(message: Config, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Config;
+    static deserializeBinaryFromReader(message: Config, reader: jspb.BinaryReader): Config;
+  }
+
+  export namespace Config {
+    export type AsObject = {
+      source: Job.Config.Source,
+    }
+
+    export enum Source { 
+      UNKNOWN = 0,
+      FILE = 1,
+      SERVER = 2,
     }
   }
 
@@ -3785,6 +3816,11 @@ export class GetJobStreamResponse extends jspb.Message {
   hasState(): boolean;
   clearState(): GetJobStreamResponse;
 
+  getJob(): GetJobStreamResponse.JobChange | undefined;
+  setJob(value?: GetJobStreamResponse.JobChange): GetJobStreamResponse;
+  hasJob(): boolean;
+  clearJob(): GetJobStreamResponse;
+
   getTerminal(): GetJobStreamResponse.Terminal | undefined;
   setTerminal(value?: GetJobStreamResponse.Terminal): GetJobStreamResponse;
   hasTerminal(): boolean;
@@ -3819,6 +3855,7 @@ export namespace GetJobStreamResponse {
   export type AsObject = {
     open?: GetJobStreamResponse.Open.AsObject,
     state?: GetJobStreamResponse.State.AsObject,
+    job?: GetJobStreamResponse.JobChange.AsObject,
     terminal?: GetJobStreamResponse.Terminal.AsObject,
     download?: GetJobStreamResponse.Download.AsObject,
     error?: GetJobStreamResponse.Error.AsObject,
@@ -3869,6 +3906,27 @@ export namespace GetJobStreamResponse {
       current: Job.State,
       job?: Job.AsObject,
       canceling: boolean,
+    }
+  }
+
+
+  export class JobChange extends jspb.Message {
+    getJob(): Job | undefined;
+    setJob(value?: Job): JobChange;
+    hasJob(): boolean;
+    clearJob(): JobChange;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): JobChange.AsObject;
+    static toObject(includeInstance: boolean, msg: JobChange): JobChange.AsObject;
+    static serializeBinaryToWriter(message: JobChange, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): JobChange;
+    static deserializeBinaryFromReader(message: JobChange, reader: jspb.BinaryReader): JobChange;
+  }
+
+  export namespace JobChange {
+    export type AsObject = {
+      job?: Job.AsObject,
     }
   }
 
@@ -4293,6 +4351,7 @@ export namespace GetJobStreamResponse {
     EVENT_NOT_SET = 0,
     OPEN = 1,
     STATE = 2,
+    JOB = 7,
     TERMINAL = 3,
     DOWNLOAD = 6,
     ERROR = 4,
@@ -4457,6 +4516,11 @@ export class RunnerJobStreamRequest extends jspb.Message {
   hasDownload(): boolean;
   clearDownload(): RunnerJobStreamRequest;
 
+  getConfigLoad(): RunnerJobStreamRequest.ConfigLoad | undefined;
+  setConfigLoad(value?: RunnerJobStreamRequest.ConfigLoad): RunnerJobStreamRequest;
+  hasConfigLoad(): boolean;
+  clearConfigLoad(): RunnerJobStreamRequest;
+
   getHeartbeat(): RunnerJobStreamRequest.Heartbeat | undefined;
   setHeartbeat(value?: RunnerJobStreamRequest.Heartbeat): RunnerJobStreamRequest;
   hasHeartbeat(): boolean;
@@ -4480,6 +4544,7 @@ export namespace RunnerJobStreamRequest {
     error?: RunnerJobStreamRequest.Error.AsObject,
     terminal?: GetJobStreamResponse.Terminal.AsObject,
     download?: GetJobStreamResponse.Download.AsObject,
+    configLoad?: RunnerJobStreamRequest.ConfigLoad.AsObject,
     heartbeat?: RunnerJobStreamRequest.Heartbeat.AsObject,
   }
 
@@ -4574,6 +4639,27 @@ export namespace RunnerJobStreamRequest {
   }
 
 
+  export class ConfigLoad extends jspb.Message {
+    getConfig(): Job.Config | undefined;
+    setConfig(value?: Job.Config): ConfigLoad;
+    hasConfig(): boolean;
+    clearConfig(): ConfigLoad;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ConfigLoad.AsObject;
+    static toObject(includeInstance: boolean, msg: ConfigLoad): ConfigLoad.AsObject;
+    static serializeBinaryToWriter(message: ConfigLoad, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ConfigLoad;
+    static deserializeBinaryFromReader(message: ConfigLoad, reader: jspb.BinaryReader): ConfigLoad;
+  }
+
+  export namespace ConfigLoad {
+    export type AsObject = {
+      config?: Job.Config.AsObject,
+    }
+  }
+
+
   export enum EventCase { 
     EVENT_NOT_SET = 0,
     REQUEST = 1,
@@ -4582,6 +4668,7 @@ export namespace RunnerJobStreamRequest {
     ERROR = 4,
     TERMINAL = 5,
     DOWNLOAD = 7,
+    CONFIG_LOAD = 8,
     HEARTBEAT = 6,
   }
 }
@@ -5484,6 +5571,9 @@ export class Artifact extends jspb.Message {
   hasArtifact(): boolean;
   clearArtifact(): Artifact;
 
+  getArtifactJson(): string;
+  setArtifactJson(value: string): Artifact;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Artifact.AsObject;
   static toObject(includeInstance: boolean, msg: Artifact): Artifact.AsObject;
@@ -5495,6 +5585,7 @@ export class Artifact extends jspb.Message {
 export namespace Artifact {
   export type AsObject = {
     artifact?: google_protobuf_any_pb.Any.AsObject,
+    artifactJson: string,
   }
 }
 
@@ -6079,6 +6170,9 @@ export class Deployment extends jspb.Message {
   hasDeployment(): boolean;
   clearDeployment(): Deployment;
 
+  getDeploymentJson(): string;
+  setDeploymentJson(value: string): Deployment;
+
   getLabelsMap(): jspb.Map<string, string>;
   clearLabelsMap(): Deployment;
 
@@ -6130,6 +6224,7 @@ export namespace Deployment {
     component?: Component.AsObject,
     artifactId: string,
     deployment?: google_protobuf_any_pb.Any.AsObject,
+    deploymentJson: string,
     labelsMap: Array<[string, string]>,
     templateData: Uint8Array | string,
     jobId: string,
@@ -6532,6 +6627,9 @@ export class Release extends jspb.Message {
   hasRelease(): boolean;
   clearRelease(): Release;
 
+  getReleaseJson(): string;
+  setReleaseJson(value: string): Release;
+
   getDeploymentId(): string;
   setDeploymentId(value: string): Release;
 
@@ -6580,6 +6678,7 @@ export namespace Release {
     state: Operation.PhysicalState,
     component?: Component.AsObject,
     release?: google_protobuf_any_pb.Any.AsObject,
+    releaseJson: string,
     deploymentId: string,
     labelsMap: Array<[string, string]>,
     templateData: Uint8Array | string,
@@ -6714,6 +6813,29 @@ export class GetLatestStatusReportRequest extends jspb.Message {
   hasWorkspace(): boolean;
   clearWorkspace(): GetLatestStatusReportRequest;
 
+  getAny(): google_protobuf_empty_pb.Empty | undefined;
+  setAny(value?: google_protobuf_empty_pb.Empty): GetLatestStatusReportRequest;
+  hasAny(): boolean;
+  clearAny(): GetLatestStatusReportRequest;
+
+  getDeploymentAny(): google_protobuf_empty_pb.Empty | undefined;
+  setDeploymentAny(value?: google_protobuf_empty_pb.Empty): GetLatestStatusReportRequest;
+  hasDeploymentAny(): boolean;
+  clearDeploymentAny(): GetLatestStatusReportRequest;
+
+  getDeploymentId(): string;
+  setDeploymentId(value: string): GetLatestStatusReportRequest;
+
+  getReleaseAny(): google_protobuf_empty_pb.Empty | undefined;
+  setReleaseAny(value?: google_protobuf_empty_pb.Empty): GetLatestStatusReportRequest;
+  hasReleaseAny(): boolean;
+  clearReleaseAny(): GetLatestStatusReportRequest;
+
+  getReleaseId(): string;
+  setReleaseId(value: string): GetLatestStatusReportRequest;
+
+  getTargetCase(): GetLatestStatusReportRequest.TargetCase;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GetLatestStatusReportRequest.AsObject;
   static toObject(includeInstance: boolean, msg: GetLatestStatusReportRequest): GetLatestStatusReportRequest.AsObject;
@@ -6726,6 +6848,20 @@ export namespace GetLatestStatusReportRequest {
   export type AsObject = {
     application?: Ref.Application.AsObject,
     workspace?: Ref.Workspace.AsObject,
+    any?: google_protobuf_empty_pb.Empty.AsObject,
+    deploymentAny?: google_protobuf_empty_pb.Empty.AsObject,
+    deploymentId: string,
+    releaseAny?: google_protobuf_empty_pb.Empty.AsObject,
+    releaseId: string,
+  }
+
+  export enum TargetCase { 
+    TARGET_NOT_SET = 0,
+    ANY = 3,
+    DEPLOYMENT_ANY = 4,
+    DEPLOYMENT_ID = 5,
+    RELEASE_ANY = 6,
+    RELEASE_ID = 7,
   }
 }
 
@@ -6915,6 +7051,9 @@ export class StatusReport extends jspb.Message {
   hasStatusReport(): boolean;
   clearStatusReport(): StatusReport;
 
+  getStatusReportJson(): string;
+  setStatusReportJson(value: string): StatusReport;
+
   getHealth(): StatusReport.Health | undefined;
   setHealth(value?: StatusReport.Health): StatusReport;
   hasHealth(): boolean;
@@ -6957,6 +7096,7 @@ export namespace StatusReport {
     status?: Status.AsObject,
     id: string,
     statusReport?: google_protobuf_any_pb.Any.AsObject,
+    statusReportJson: string,
     health?: StatusReport.Health.AsObject,
     generatedTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     external: boolean,

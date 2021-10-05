@@ -17,7 +17,6 @@ module('Acceptance | deployment resource list', function (hooks) {
     let resource = this.server.create('resource', { statusReport, name: 'example-pod' });
 
     await visit(`/default/${project.name}/app/${application.name}/deployment/seq/${deployment.sequence}`);
-
     assert.dom('[data-test-resources-table]').containsText('example-pod');
     assert
       .dom(
