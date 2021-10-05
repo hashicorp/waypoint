@@ -60,7 +60,7 @@ forward it to the OpenCensus collector, which will forward it to Jeager.
 #### Observe traces in local Jaeger
 
 Wait a moment, then visit http://localhost:16686/. Observe that a service `waypoint` exists. Choose "Find Traces"
-with the waypoint service selected, and observe traces!
+with the Waypoint service selected, and observe traces!
 
 ![jaeger traces](images/jeager-traces.png)
 
