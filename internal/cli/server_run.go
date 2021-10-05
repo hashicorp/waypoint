@@ -536,7 +536,7 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:   "telemetry-datadog-trace-addr",
 			Target: &c.flagTelemetryDatadogTraceAddr,
-			Usage:  "Address of a datadog agent available to accept traces (commonly port 8126). Example: localhost:8126",
+			Usage:  "Address of a DataDog agent available to accept traces (commonly port 8126). Example: localhost:8126",
 		})
 		f.StringVar(&flag.StringVar{
 			Name:   "telemetry-opencensus-zpages-addr",
