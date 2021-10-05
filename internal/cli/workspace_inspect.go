@@ -81,7 +81,7 @@ func (c *WorkspaceInspectCommand) Run(args []string) int {
 			Name: "Name", Value: workspace.Name,
 		},
 		{
-			Name: "Latest activity", Value: lastActiveTime,
+			Name: "Last Updated", Value: lastActiveTime,
 		},
 		{
 			Name: "Projects", Value: strings.Join(projects, ","),
