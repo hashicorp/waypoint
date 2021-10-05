@@ -20,7 +20,7 @@ rest of the infrastructure will function correctly.
 ### Waypoint Server -> Jeager example
 
 
-The waypoint server supports multiple exporters, but this example will show exporting
+The Waypoint server supports multiple exporters, but this example will show exporting
 to the opencensus agent, and viewing traces in jeager.
 
 #### Run the docker-compose infrastructure
