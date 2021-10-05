@@ -524,7 +524,7 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:   "telemetry-opencensus-agent-addr",
 			Target: &c.flagTelemetryOpenCensusAgentAddr,
-			Usage: "Address of an opencensus agent or collector available to receive opencensus formatted\n" +
+			Usage: "Address of an OpenCensus agent or collector available to receive OpenCensus formatted " +
 				"telemetry, traces and stats (commonly port 55678). Example: localhost:55678",
 		})
 		f.BoolVar(&flag.BoolVar{
