@@ -4,7 +4,7 @@ Waypoint can publish internal telemetry, including server gRPC traces.
 This directory contains examples and sample infrastructure for consuming that telemetry.
 
 ### Docker-Compose
-In this directory is a docker compose file to bring up opencensus infrastructure
+This directory contains a docker compose file to bring up OpenCensus infrastructure
 for consuming and forwarding metrics (an agent and a collector), a Jeager
 all-in-one container for viewing trace data, and a datadog agent for
 forwarding traced to DataDog. If you wish to use the DataDog exporter, you'll
