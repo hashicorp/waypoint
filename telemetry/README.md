@@ -67,10 +67,10 @@ with the waypoint service selected, and observe traces!
 ### Troubleshooting
 
 You can troubleshoot the flow of traces by visiting the zPages endpoints:
-- on the waypoint server (if enabled with the `-telemetry-opencensus-zpages-addr=localhost:9999` flag) at http://localhost:9999/debug/tracez
-- on the opencensus agent container at http://localhost:9998/debug/tracez
-- on the opencensus collector container at http://localhost:9997/debug/tracez
+- on the Waypoint server (if enabled with the `-telemetry-opencensus-zpages-addr=localhost:9999` flag) at http://localhost:9999/debug/tracez
+- on the OpenCensus agent container at http://localhost:9998/debug/tracez
+- on the OpenCensus collector container at http://localhost:9997/debug/tracez
 
-Example tracez on from the waypoint server:
+Example tracez on from the Waypoint server:
 
 ![tracez example](images/tracez-example.png)
