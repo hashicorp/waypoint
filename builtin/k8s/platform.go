@@ -774,6 +774,24 @@ func (p *Platform) resourceDeploymentCreate(
 		reportedError bool
 	)
 
+	var timeoutSeconds int
+	var failureThreshold int
+	var initialDelaySeconds int
+
+	for _, container := range deployment.Spec.Template.Spec.Containers {
+		if int(container.ReadinessProbe.TimeoutSeconds) > timeoutSeconds {
+			timeoutSeconds = int(container.ReadinessProbe.TimeoutSeconds)
+		}
+
+		if int(container.ReadinessProbe.FailureThreshold) > failureThreshold {
+			failureThreshold = int(container.ReadinessProbe.FailureThreshold)
+		}
+
+		if int(container.ReadinessProbe.TimeoutSeconds) > initialDelaySeconds {
+			initialDelaySeconds = int(container.ReadinessProbe.InitialDelaySeconds)
+		}
+	}
+
 	// We wait the maximum amount of time that the deployment controller would wait for a pod
 	// to start before exiting. We double the time to allow for various Kubernetes based
 	// delays in startup, detection, and reporting.
