@@ -125,7 +125,7 @@ task {
 	return doc, nil
 }
 
-// TaskLauncher implements Configurable
+// Config implements Configurable
 func (p *TaskLauncher) Config() (interface{}, error) {
 	return &p.config, nil
 }

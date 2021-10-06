@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
-// The port that a service will forward to the pod(s)
+// DefaultPort is the port that a service will forward to the pod(s)
 const DefaultPort = 80
 
 // Releaser is the ReleaseManager implementation for Kubernetes.
@@ -320,11 +320,15 @@ func (r *Releaser) resourceServiceCreate(
 		nodeclient := clientSet.CoreV1().Nodes()
 		nodes, err := nodeclient.List(ctx, metav1.ListOptions{})
 		if err != nil {
-			return err
+			// Rather than fail the whole release, report the error and then complete.
+			// Print in a standalone step, so the output won't get overwritten if we add more step output later in the future.
+			errStep := sg.Add("Cannot determine release URL for nodeport service due to failure to list nodes: %s", err)
+			errStep.Status(terminal.StatusError)
+			errStep.Done()
+		} else {
+			nodeIP := nodes.Items[0].Status.Addresses[0].Address
+			result.Url = fmt.Sprintf("http://%s:%d", nodeIP, service.Spec.Ports[0].NodePort)
 		}
-
-		nodeIP := nodes.Items[0].Status.Addresses[0].Address
-		result.Url = fmt.Sprintf("http://%s:%d", nodeIP, service.Spec.Ports[0].NodePort)
 	} else {
 		result.Url = fmt.Sprintf("http://%s:%d", service.Spec.ClusterIP, service.Spec.Ports[0].Port)
 	}

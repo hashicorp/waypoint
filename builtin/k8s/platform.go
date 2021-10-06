@@ -186,17 +186,11 @@ func (p *Platform) resourceDeploymentStatus(
 			}
 		}
 
-		var deployHealth sdk.StatusReport_Health
-		switch mostRecentCondition.Type {
-		case v1.DeploymentAvailable:
-			deployHealth = sdk.StatusReport_READY
-		case v1.DeploymentProgressing:
-			deployHealth = sdk.StatusReport_ALIVE
-		case v1.DeploymentReplicaFailure:
-			deployHealth = sdk.StatusReport_DOWN
-		default:
-			deployHealth = sdk.StatusReport_UNKNOWN
-		}
+		// The most recently updated condition isn't always the most pertinent - a healthy deployment
+		// can have a "Progressing" most recently updated condition at steady-state.
+		// If the deployment exists, we'll mark it as "Ready", and rely on our pod status checks
+		// to give more detailed status.
+		deployHealth := sdk.StatusReport_READY
 
 		// Redact env vars from containers - they can contain secrets
 		for i := 0; i < len(deployResp.Spec.Template.Spec.Containers); i++ {

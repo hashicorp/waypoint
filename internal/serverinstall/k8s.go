@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/ghodss/yaml"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -309,8 +311,12 @@ func (i *K8sInstaller) Install(
 		// Ensure the service is ready to use before returning
 		_, err = net.DialTimeout("tcp", httpAddr, 1*time.Second)
 		if err != nil {
+			// Depending on the platform, this can take a long time. On EKS, it's by far the longest step. Adding an explicit message helps
+			s.Update("Service %q exists and is configured, but isn't yet accepting incoming connections. Waiting...", serviceName)
 			return false, nil
 		}
+
+		s.Update("Service %q is ready", serviceName)
 		log.Info("http server ready", "httpAddr", addr)
 
 		// Set our advertise address
@@ -1358,6 +1364,43 @@ func newServiceAccount(c k8sConfig) (*apiv1.ServiceAccount, error) {
 	}, nil
 }
 
+// newServiceAccountClusterRoleWithBinding creates the cluster role and binding necessary to create and verify
+// a nodeport type services.
+func newServiceAccountClusterRoleWithBinding(c k8sConfig) (*rbacv1.ClusterRole, *rbacv1.ClusterRoleBinding, error) {
+	roleName := "waypoint-runner"
+	return &rbacv1.ClusterRole{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: roleName,
+			},
+			Rules: []rbacv1.PolicyRule{{
+				APIGroups: []string{""},
+				Resources: []string{"nodes"},
+				Verbs:     []string{"get", "list"},
+			}},
+		}, &rbacv1.ClusterRoleBinding{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: roleName,
+			},
+
+			// Our default runner role is just the default "edit" role. This
+			// gives access to read/write most things in this namespace but
+			// disallows modifying roles and rolebindings.
+			RoleRef: rbacv1.RoleRef{
+				APIGroup: "",
+				Kind:     "ClusterRole",
+				Name:     roleName,
+			},
+
+			Subjects: []rbacv1.Subject{
+				{
+					Kind:      "ServiceAccount",
+					Name:      c.odrServiceAccount,
+					Namespace: c.namespace,
+				},
+			},
+		}, nil
+}
+
 // newServiceAccountRoleBinding creates the role binding necessary to
 // map the ODR role to the service account.
 func newServiceAccountRoleBinding(c k8sConfig) (*rbacv1.RoleBinding, error) {
@@ -1671,7 +1714,7 @@ func (i *K8sInstaller) initServiceAccount(
 	}
 
 	// Setup the role binding
-	s.Update("Initializing role binding for on-demand runner...")
+	s.Update("Initializing role bindings for on-demand runner...")
 	rbClient := clientset.RbacV1().RoleBindings(i.config.namespace)
 	rb, err := newServiceAccountRoleBinding(i.config)
 	if err != nil {
@@ -1688,6 +1731,31 @@ func (i *K8sInstaller) initServiceAccount(
 	}
 	if _, err := rbClient.Create(ctx, rb, metav1.CreateOptions{}); err != nil {
 		return err
+	}
+
+	cr, crb, err := newServiceAccountClusterRoleWithBinding(i.config)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Failed to get definition for runner service account's cluster role and binding: %q", err)
+	}
+	if cr != nil {
+		crClient := clientset.RbacV1().ClusterRoles()
+		_, err = crClient.Get(ctx, cr.Name, metav1.GetOptions{})
+		if err != nil && !errors.IsNotFound(err) {
+			return status.Errorf(codes.Internal, "Failed to get cluster role %q: %q", cr.Name, err)
+		}
+		if _, err := crClient.Create(ctx, cr, metav1.CreateOptions{}); err != nil {
+			return status.Errorf(codes.Internal, "Failed to create cluster role %q: %q", cr.Name, err)
+		}
+	}
+	if crb != nil {
+		crbClient := clientset.RbacV1().ClusterRoleBindings()
+		_, err = crbClient.Get(ctx, crb.Name, metav1.GetOptions{})
+		if err != nil && !errors.IsNotFound(err) {
+			return status.Errorf(codes.Internal, "Failed to get cluster role binding %q: %q", crb.Name, err)
+		}
+		if _, err := crbClient.Create(ctx, crb, metav1.CreateOptions{}); err != nil {
+			return status.Errorf(codes.Internal, "Failed to create cluster role binding %q: %q", cr.Name, err)
+		}
 	}
 
 	s.Update("Service account for on-demand runner initialized!")
