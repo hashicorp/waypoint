@@ -95,6 +95,15 @@ Must enable Docker buildkit to use the 'platform' flag.
 - Type: **string**
 - **Optional**
 
+#### target
+
+The target build stage in a multi-stage Dockerfile.
+
+If buildkit is enabled unused stages will be skipped.
+
+- Type: **string**
+- **Optional**
+
 ### Output Attributes
 
 Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
