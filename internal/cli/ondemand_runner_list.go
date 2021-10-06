@@ -35,7 +35,7 @@ func (c *OnDemandRunnerConfigListCommand) Run(args []string) int {
 
 	c.ui.Output("On-Demand Runner Configurations")
 
-	tbl := terminal.NewTable("Id", "Plugin Type", "OCI Url", "Default")
+	tbl := terminal.NewTable("Name", "Plugin Type", "OCI Url", "Default")
 
 	for _, p := range resp.Configs {
 		def := ""
@@ -44,7 +44,7 @@ func (c *OnDemandRunnerConfigListCommand) Run(args []string) int {
 		}
 
 		tbl.Rich([]string{
-			p.Id,
+			p.Name,
 			p.PluginType,
 			p.OciUrl,
 			def,

@@ -33,14 +33,30 @@ func (c *OnDemandRunnerInspectCommand) Run(args []string) int {
 		c.ui.Output("on-demand runner configuration ID required", terminal.WithErrorStyle())
 		return 1
 	}
-	id := c.args[0]
+	name := c.args[0]
 
 	resp, err := c.project.Client().GetOnDemandRunnerConfig(c.Ctx, &pb.GetOnDemandRunnerConfigRequest{
-		Config: &pb.Ref_OnDemandRunnerConfig{Id: id},
+		Config: &pb.Ref_OnDemandRunnerConfig{
+			Name: name,
+		},
 	})
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
+	}
+
+	// Try again with arg as the ID
+	if resp == nil {
+		resp, err = c.project.Client().GetOnDemandRunnerConfig(c.Ctx, &pb.GetOnDemandRunnerConfigRequest{
+			Config: &pb.Ref_OnDemandRunnerConfig{
+				Id: name,
+			},
+		})
+
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
 	}
 
 	if c.flagJson {
@@ -59,6 +75,9 @@ func (c *OnDemandRunnerInspectCommand) Run(args []string) int {
 	config := resp.Config
 	c.ui.Output("On-Demand Runner Configuration:", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
+		{
+			Name: "Name", Value: config.Name,
+		},
 		{
 			Name: "ID", Value: config.Id,
 		},

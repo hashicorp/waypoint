@@ -704,6 +704,7 @@ func (i *DockerInstaller) InstallRunner(
 
 func (i *DockerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	return &pb.OnDemandRunnerConfig{
+		Name:       "docker",
 		OciUrl:     i.config.odrImage,
 		PluginType: "docker",
 		Default:    true,

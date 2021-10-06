@@ -832,10 +832,11 @@ message Ref {
     string name = 1;
   }
 
-  // OnDemandRunner references an OnDemandRunner value to be used for contextual
-  // operation.
+  // OnDemandRunnerConfig references an OnDemandRunnerConfig value to be used for contextual
+  // operation. The reference can by via id or name, with id taking priority if both are set.
   message OnDemandRunnerConfig {
     string id = 1;
+    string name = 2;
   }
 }
 
@@ -2527,6 +2528,9 @@ message Artifact {
 message OnDemandRunnerConfig {
   // id is the unique ID of the runner config
   string id = 1;
+
+  // name is the unique name for this config
+  string name = 8;
 
   // oci_url is the OCI image that will be used to boot the ondemand runner.
   string oci_url = 2;
