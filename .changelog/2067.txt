@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/docker: Resolve image identifiers properly
+```
