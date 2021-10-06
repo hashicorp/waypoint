@@ -175,7 +175,10 @@ func TestWatcher_dynamicSuccess(t *testing.T) {
 
 	// Create our test config source
 	testSource := &testConfigSourcer{
-		readValue: map[string]string{"key": "hello"},
+		readValue: map[string]string{
+			"envVarKey": "helloEnv",
+			"fileKey":   "helloFile",
+		},
 	}
 
 	w, err := NewWatcher(
@@ -193,27 +196,46 @@ func TestWatcher_dynamicSuccess(t *testing.T) {
 				Dynamic: &pb.ConfigVar_DynamicVal{
 					From: "cloud",
 					Config: map[string]string{
-						"key": "key",
+						"key": "envVarKey",
+					},
+				},
+			},
+		},
+		{
+			Name:       "/tmp/test_file.txt",
+			NameIsPath: true,
+			Value: &pb.ConfigVar_Dynamic{
+				Dynamic: &pb.ConfigVar_DynamicVal{
+					From: "cloud",
+					Config: map[string]string{
+						"key": "fileKey",
 					},
 				},
 			},
 		},
 	})
 
-	// We should get the static vars back
-	env, iter, err := w.Next(ctx, 0)
+	// We should get the static vars and files back
+	cfg, iter, err := w.Next(ctx, 0)
 	require.NoError(err)
-	require.Equal(env.EnvVars, []string{"TEST_VALUE=hello"})
+	require.Equal(cfg.EnvVars, []string{"TEST_VALUE=helloEnv"})
+	require.Equal(cfg.Files, []*FileContent{{
+		Path: "/tmp/test_file.txt", Data: []byte("helloFile"),
+	}})
 
-	// Change the value and make sure we get it
+	// Change the values and make sure we get them
 	testSource.Lock()
-	testSource.readValue["key"] = "goodbye"
+	testSource.readValue["envVarKey"] = "goodbyeEnv"
+	testSource.readValue["fileKey"] = "goodbyeFile"
 	testSource.Unlock()
 
-	// We should get the static vars back
-	env, iter, err = w.Next(ctx, iter)
+	// We should get the static vars and files back
+	cfg, iter, err = w.Next(ctx, iter)
 	require.NoError(err)
-	require.Equal(env.EnvVars, []string{"TEST_VALUE=goodbye"})
+	require.Equal(cfg.EnvVars, []string{"TEST_VALUE=goodbyeEnv"})
+	require.Equal(cfg.Files, []*FileContent{{
+		Path: "/tmp/test_file.txt", Data: []byte("goodbyeFile"),
+	}})
 
 	// We should've called Stop once: exactly for the first read
 	testSource.Lock()
@@ -224,10 +246,11 @@ func TestWatcher_dynamicSuccess(t *testing.T) {
 	// Unset our dynamic config
 	w.UpdateVars(ctx, []*pb.ConfigVar{})
 
-	// We should get the static vars back
-	env, iter, err = w.Next(ctx, iter)
+	// We should get the static vars and files back
+	cfg, iter, err = w.Next(ctx, iter)
 	require.NoError(err)
-	require.Empty(env.EnvVars)
+	require.Empty(cfg.EnvVars)
+	require.Empty(cfg.Files)
 
 	// We should call stop once more to end the previous run
 	testSource.Lock()

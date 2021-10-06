@@ -2,6 +2,7 @@ package vault
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -148,9 +149,15 @@ func (cs *ConfigSourcer) read(
 			secret, err := client.Logical().Read(vaultReq.Path)
 			if err != nil {
 				result.Result = &pb.ConfigSource_Value_Error{
-					Error: status.New(codes.Aborted, err.Error()).Proto(),
+					Error: status.New(codes.Aborted, fmt.Sprintf("Failed to read from vault. Path: %q, err: %q", vaultReq.Path, err)).Proto(),
 				}
 
+				continue
+			}
+			if secret == nil {
+				result.Result = &pb.ConfigSource_Value_Error{
+					Error: status.New(codes.Aborted, fmt.Sprintf("path %q is missing", vaultReq.Path)).Proto(),
+				}
 				continue
 			}
 			cachedSecretVal = &cachedSecret{Secret: secret}
