@@ -10,7 +10,7 @@ export default Model.extend({
   toProtobuf(): Application {
     let result = new Application();
 
-    // TODO: result.setFileChangeSignal(...)
+    result.setFileChangeSignal(this.fileChangeSignal);
     result.setName(this.name);
     result.setProject(this.project.toProtobufRef());
 
