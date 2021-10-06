@@ -23,7 +23,6 @@ type DeploymentDestroyCommand struct {
 }
 
 func (c *DeploymentDestroyCommand) Run(args []string) int {
-	ctx := c.Ctx
 	flags := c.Flags()
 
 	// Initialize. If we fail, we just exit since Init handles the UI.
@@ -36,46 +35,52 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 	}
 	args = flags.Args()
 
-	// Determine the deployments to delete
-	var deployments []*pb.Deployment
+	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		// Determine the deployments to delete
+		var deployments []*pb.Deployment
 
-	var err error
-	if len(args) > 0 {
-		// If we have arguments, we only delete the deployments specified.
-		deployments, err = c.getDeployments(ctx, args)
-		if err != nil {
-			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		}
-	} else {
-		// No arguments, get ALL deployments that are still physically created.
-		deployments, err = c.allDeployments(ctx)
-		if err != nil {
-			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		}
-	}
-
-	// Destroy each deployment
-	c.ui.Output("%d deployments will be destroyed.", len(deployments), terminal.WithHeaderStyle())
-	for _, deployment := range deployments {
-		// Can't destroy a deployment that was not successful
-		if deployment.Status.GetState() != pb.Status_SUCCESS {
-			continue
+		var err error
+		if len(args) > 0 {
+			// If we have arguments, we only delete the deployments specified.
+			deployments, err = c.getDeployments(ctx, args)
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return err
+			}
+		} else {
+			// No arguments, get ALL deployments that are still physically created.
+			deployments, err = c.allDeployments(ctx, app)
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return err
+			}
 		}
 
-		// Get our app client
-		app := c.project.App(deployment.Application.Application)
+		// Destroy each deployment
+		c.ui.Output("%d deployments will be destroyed.", len(deployments), terminal.WithHeaderStyle())
+		for _, deployment := range deployments {
+			// Can't destroy a deployment that was not successful
+			if deployment.Status.GetState() != pb.Status_SUCCESS {
+				continue
+			}
 
-		c.ui.Output("Destroying deployment: %s", deployment.Id, terminal.WithInfoStyle())
-		if err := app.Destroy(ctx, &pb.Job_DestroyOp{
-			Target: &pb.Job_DestroyOp_Deployment{
-				Deployment: deployment,
-			},
-		}); err != nil {
-			c.ui.Output("Error destroying the deployment: %s", err.Error(), terminal.WithErrorStyle())
-			return 1
+			// Get our app client
+			app := c.project.App(deployment.Application.Application)
+
+			c.ui.Output("Destroying deployment: %s", deployment.Id, terminal.WithInfoStyle())
+			if err := app.Destroy(ctx, &pb.Job_DestroyOp{
+				Target: &pb.Job_DestroyOp_Deployment{
+					Deployment: deployment,
+				},
+			}); err != nil {
+				c.ui.Output("Error destroying the deployment: %s", err.Error(), terminal.WithErrorStyle())
+				return err
+			}
 		}
+		return nil
+	})
+	if err != nil {
+		return 1
 	}
 
 	return 0
@@ -112,59 +117,57 @@ func (c *DeploymentDestroyCommand) getDeployments(ctx context.Context, ids []str
 	return result, nil
 }
 
-func (c *DeploymentDestroyCommand) allDeployments(ctx context.Context) ([]*pb.Deployment, error) {
+func (c *DeploymentDestroyCommand) allDeployments(ctx context.Context, app *clientpkg.App) ([]*pb.Deployment, error) {
 	L := c.Log
 
 	var result []*pb.Deployment
 
 	client := c.project.Client()
-	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
-			Application:   app.Ref(),
-			Workspace:     c.project.WorkspaceRef(),
-			PhysicalState: pb.Operation_CREATED,
-			Order: &pb.OperationOrder{
-				Order: pb.OperationOrder_COMPLETE_TIME,
-				Desc:  true,
-			},
+
+	resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
+		Application:   app.Ref(),
+		Workspace:     c.project.WorkspaceRef(),
+		PhysicalState: pb.Operation_CREATED,
+		Order: &pb.OperationOrder{
+			Order: pb.OperationOrder_COMPLETE_TIME,
+			Desc:  true,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// If we aren't deploying all, then we have to find the released
+	// deployment and NOT delete that.
+	if !c.flagAll {
+		release, err := client.GetLatestRelease(ctx, &pb.GetLatestReleaseRequest{
+			Application: app.Ref(),
+			Workspace:   c.project.WorkspaceRef(),
 		})
+		if status.Code(err) == codes.NotFound {
+			L.Debug("no release found to exclude any deployments")
+			err = nil
+			release = nil
+		}
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		// If we aren't deploying all, then we have to find the released
-		// deployment and NOT delete that.
-		if !c.flagAll {
-			release, err := client.GetLatestRelease(ctx, &pb.GetLatestReleaseRequest{
-				Application: app.Ref(),
-				Workspace:   c.project.WorkspaceRef(),
-			})
-			if status.Code(err) == codes.NotFound {
-				L.Debug("no release found to exclude any deployments")
-				err = nil
-				release = nil
-			}
-			if err != nil {
-				return nil
-			}
-
-			if release != nil {
-				for i := 0; i < len(resp.Deployments); i++ {
-					d := resp.Deployments[i]
-					if d.Id == release.DeploymentId {
-						L.Info("not destroying deployment that is released", "id", d.Id)
-						resp.Deployments[len(resp.Deployments)-1], resp.Deployments[i] =
-							resp.Deployments[i], resp.Deployments[len(resp.Deployments)-1]
-						resp.Deployments = resp.Deployments[:len(resp.Deployments)-1]
-						i--
-					}
+		if release != nil {
+			for i := 0; i < len(resp.Deployments); i++ {
+				d := resp.Deployments[i]
+				if d.Id == release.DeploymentId {
+					L.Info("not destroying deployment that is released", "id", d.Id)
+					resp.Deployments[len(resp.Deployments)-1], resp.Deployments[i] =
+						resp.Deployments[i], resp.Deployments[len(resp.Deployments)-1]
+					resp.Deployments = resp.Deployments[:len(resp.Deployments)-1]
+					i--
 				}
 			}
 		}
+	}
 
-		result = append(result, resp.Deployments...)
-		return nil
-	})
+	result = append(result, resp.Deployments...)
 
 	return result, err
 }
