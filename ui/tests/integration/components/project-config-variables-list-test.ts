@@ -1,10 +1,11 @@
+import { clickable, collection, create, fillable, isPresent, text } from 'ember-cli-page-object';
 import { module, test } from 'qunit';
-import { setupRenderingTest } from 'ember-qunit';
-import { setupMirage } from 'ember-cli-mirage/test-support';
-import { render, settled } from '@ember/test-helpers';
+import { pauseTest, render, settled } from '@ember/test-helpers';
+
 import { TestContext } from 'ember-test-helpers';
 import hbs from 'htmlbars-inline-precompile';
-import { create, collection, clickable, isPresent, fillable, text } from 'ember-cli-page-object';
+import { setupMirage } from 'ember-cli-mirage/test-support';
+import { setupRenderingTest } from 'ember-qunit';
 
 const page = create({
   hasForm: isPresent('[data-test-config-variables-form]'),
@@ -112,5 +113,34 @@ module('Integration | Component | project-config-variables-list', function (hook
     await page.variablesList.objectAt(0).dropdown();
     assert.ok(page.variablesList.objectAt(0).hasDropDownEdit, 'Static Variable is editable');
     assert.notOk(page.variablesList.objectAt(3).hasDropDown, 'Dynamic Variable is not editable or deletable');
+  });
+
+  test('renaming variables works', async function (assert) {
+    let dbproj = await this.server.create('project', { name: 'Proj1' });
+    let proj = dbproj.toProtobuf().toObject();
+    let dbVariablesList = this.server.createList('config-variable', 3, 'random', { project: dbproj });
+    let dynamicVar = this.server.create('config-variable', 'dynamic', { project: dbproj });
+    dbVariablesList.push(dynamicVar);
+    let varList = dbVariablesList.map((v) => {
+      return v.toProtobuf().toObject();
+    });
+    this.set('variablesList', varList);
+    this.set('project', proj);
+    await render(
+      hbs`<ProjectConfigVariables::List @variablesList={{this.variablesList}} @project={{this.project}}/>`
+    );
+    assert.equal(page.variablesList.length, 4, 'the list contains the right number of variables');
+    await page.variablesList.objectAt(0).dropdown();
+    await page.variablesList.objectAt(0).dropdownEdit();
+    await page.varName('edited_var_name');
+    await page.saveButton();
+    // Necessary to wait for the next request after save
+    await settled();
+    await page.variablesList.objectAt(1).dropdown();
+    assert.equal(
+      page.variablesList.length,
+      4,
+      'the list contains the right number of variables after name edition'
+    );
   });
 });

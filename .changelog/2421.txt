@@ -1,0 +1,3 @@
+```release-note:bug
+ui: fixed config variable duplication when renaming 
+```
