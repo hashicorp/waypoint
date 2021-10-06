@@ -48,6 +48,9 @@ func (c *ReleaseListCommand) Run(args []string) int {
 	client := c.project.Client()
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		// UI -- this should happen at the top so that the app name shows clearly
+		// for any errors we may encounter prior to the actual table output
+		app.UI.Output("%s", app.Ref().Application, terminal.WithHeaderStyle())
 		var wsRef *pb.Ref_Workspace
 		if !c.flagWorkspaceAll {
 			wsRef = c.project.WorkspaceRef()
@@ -89,9 +92,6 @@ func (c *ReleaseListCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 		sort.Sort(serversort.ReleaseBundleCompleteDesc(resp.Releases))
-
-		// Output the app's name before the json or table data
-		app.UI.Output("%s", app.Ref().Application, terminal.WithHeaderStyle())
 
 		if c.flagJson {
 			return c.displayJson(resp.Releases)

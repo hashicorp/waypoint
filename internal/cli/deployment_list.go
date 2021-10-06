@@ -71,6 +71,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 	client := c.project.Client()
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		app.UI.Output("%s", app.Ref().Application, terminal.WithHeaderStyle())
 		var wsRef *pb.Ref_Workspace
 		if !c.flagWorkspaceAll {
 			wsRef = c.project.WorkspaceRef()
