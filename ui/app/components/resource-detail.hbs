@@ -28,10 +28,14 @@
               </td>
             </tr>
           {{/if}}
-          {{#if this.image}}
+          {{#if this.imageRefs.length}}
             <tr>
               <th scope="row">{{t "resource-detail.overview.image"}}</th>
-              <td><code>{{this.image}}</code></td>
+              <td>
+                {{#each this.imageRefs as |imageRef|}}
+                  <ImageRef @imageRef={{imageRef}} />
+                {{/each}}
+              </td>
             </tr>
           {{/if}}
         </tbody>
