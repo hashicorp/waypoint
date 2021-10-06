@@ -51,7 +51,7 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 			}
 		} else {
 			// No arguments, get ALL deployments that are still physically created.
-			deployments, err = c.allDeployments(ctx)
+			deployments, err = c.allDeployments(ctx, app)
 			if err != nil {
 				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 				return ErrSentinel
@@ -119,59 +119,57 @@ func (c *DeploymentDestroyCommand) getDeployments(ctx context.Context, ids []str
 	return result, nil
 }
 
-func (c *DeploymentDestroyCommand) allDeployments(ctx context.Context) ([]*pb.Deployment, error) {
+func (c *DeploymentDestroyCommand) allDeployments(ctx context.Context, app *clientpkg.App) ([]*pb.Deployment, error) {
 	L := c.Log
 
 	var result []*pb.Deployment
 
 	client := c.project.Client()
-	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
-			Application:   app.Ref(),
-			Workspace:     c.project.WorkspaceRef(),
-			PhysicalState: pb.Operation_CREATED,
-			Order: &pb.OperationOrder{
-				Order: pb.OperationOrder_COMPLETE_TIME,
-				Desc:  true,
-			},
+
+	resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
+		Application:   app.Ref(),
+		Workspace:     c.project.WorkspaceRef(),
+		PhysicalState: pb.Operation_CREATED,
+		Order: &pb.OperationOrder{
+			Order: pb.OperationOrder_COMPLETE_TIME,
+			Desc:  true,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// If we aren't deploying all, then we have to find the released
+	// deployment and NOT delete that.
+	if !c.flagAll {
+		release, err := client.GetLatestRelease(ctx, &pb.GetLatestReleaseRequest{
+			Application: app.Ref(),
+			Workspace:   c.project.WorkspaceRef(),
 		})
+		if status.Code(err) == codes.NotFound {
+			L.Debug("no release found to exclude any deployments")
+			err = nil
+			release = nil
+		}
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		// If we aren't deploying all, then we have to find the released
-		// deployment and NOT delete that.
-		if !c.flagAll {
-			release, err := client.GetLatestRelease(ctx, &pb.GetLatestReleaseRequest{
-				Application: app.Ref(),
-				Workspace:   c.project.WorkspaceRef(),
-			})
-			if status.Code(err) == codes.NotFound {
-				L.Debug("no release found to exclude any deployments")
-				err = nil
-				release = nil
-			}
-			if err != nil {
-				return nil
-			}
-
-			if release != nil {
-				for i := 0; i < len(resp.Deployments); i++ {
-					d := resp.Deployments[i]
-					if d.Id == release.DeploymentId {
-						L.Info("not destroying deployment that is released", "id", d.Id)
-						resp.Deployments[len(resp.Deployments)-1], resp.Deployments[i] =
-							resp.Deployments[i], resp.Deployments[len(resp.Deployments)-1]
-						resp.Deployments = resp.Deployments[:len(resp.Deployments)-1]
-						i--
-					}
+		if release != nil {
+			for i := 0; i < len(resp.Deployments); i++ {
+				d := resp.Deployments[i]
+				if d.Id == release.DeploymentId {
+					L.Info("not destroying deployment that is released", "id", d.Id)
+					resp.Deployments[len(resp.Deployments)-1], resp.Deployments[i] =
+						resp.Deployments[i], resp.Deployments[len(resp.Deployments)-1]
+					resp.Deployments = resp.Deployments[:len(resp.Deployments)-1]
+					i--
 				}
 			}
 		}
+	}
 
-		result = append(result, resp.Deployments...)
-		return nil
-	})
+	result = append(result, resp.Deployments...)
 
 	return result, err
 }

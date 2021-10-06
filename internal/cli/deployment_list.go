@@ -128,6 +128,13 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
+		if len(resp.Deployments) == 0 {
+			c.project.UI.Output(
+				fmt.Sprintf("No deployments found for application %q", app.Ref().Application),
+				terminal.WithWarningStyle(),
+			)
+			return nil
+		}
 		sort.Sort(serversort.DeploymentBundleCompleteDesc(resp.Deployments))
 
 		if c.flagJson {

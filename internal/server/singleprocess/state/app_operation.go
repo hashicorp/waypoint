@@ -190,7 +190,7 @@ func (op *appOperation) getIdForSeq(
 	}
 	if raw == nil {
 		return "", status.Errorf(codes.NotFound,
-			"not found for sequence number %d", ref.Number)
+			"not found for sequence id number %d, application %q, and project %q", ref.Number, ref.Application.Application, ref.Application.Project)
 	}
 
 	idx := raw.(*operationIndexRecord)
