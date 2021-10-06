@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/docker/distribution/reference"
 	"github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/mapstructure"
 	"google.golang.org/grpc/codes"
@@ -307,22 +308,19 @@ func configureK8sContainer(
 ) (*corev1.Container, error) {
 	// If the user is using the latest tag, then don't specify an overriding pull policy.
 	// This by default means kubernetes will always pull so that latest is useful.
-	splitImage := strings.Split(image, ":")
+
 	var pullPolicy corev1.PullPolicy
-	if len(splitImage) == 1 {
+	imageReference, err := reference.Parse(image)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "image %q is not a valid OCI reference: %q", image, err)
+	}
+	taggedImageReference, ok := imageReference.(reference.Tagged)
+	if !ok || taggedImageReference.Tag() == "latest" {
 		// If no tag is set, docker will default to "latest", and we always want to pull.
 		pullPolicy = corev1.PullAlways
-	} else if len(splitImage) == 2 {
-		tag := splitImage[1]
-		if tag == "latest" {
-			// Always pull a latest image, so the k8s workers don't use their local cache and ignore new changes.
-			pullPolicy = corev1.PullAlways
-		} else {
-			// A tag is present, we can use k8s worker caching
-			pullPolicy = corev1.PullIfNotPresent
-		}
 	} else {
-		return nil, status.Errorf(codes.InvalidArgument, "image %s is in an invalid format", image)
+		// A tag is present, we can use k8s worker caching
+		pullPolicy = corev1.PullIfNotPresent
 	}
 
 	var k8sPorts []corev1.ContainerPort
