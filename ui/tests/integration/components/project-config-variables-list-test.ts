@@ -1,6 +1,6 @@
 import { clickable, collection, create, fillable, isPresent, text } from 'ember-cli-page-object';
 import { module, test } from 'qunit';
-import { pauseTest, render, settled } from '@ember/test-helpers';
+import { render, settled } from '@ember/test-helpers';
 
 import { TestContext } from 'ember-test-helpers';
 import hbs from 'htmlbars-inline-precompile';
