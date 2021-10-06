@@ -49,3 +49,14 @@ port = "80${floor(80.4)}" // 8080
 ## Custom Functions
 
 Waypoint does not support custom defined functions.
+
+### Use with variables
+
+HCL functions are often especially useful when combined with hcl variables. For example, to include
+the base64 encoded contents of a file in your app's source project, you can use:
+
+```hcl
+file_contents = filebase64("${path.app}/config.conf")
+```
+
+For a complete list of variables, see [variables](/docs/waypoint-hcl/variables)
