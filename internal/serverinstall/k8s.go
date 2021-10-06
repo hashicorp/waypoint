@@ -1735,26 +1735,26 @@ func (i *K8sInstaller) initServiceAccount(
 
 	cr, crb, err := newServiceAccountClusterRoleWithBinding(i.config)
 	if err != nil {
-		return status.Errorf(codes.Internal, "Failed to get definition for runner service account's cluster role and binding: %s", err)
+		return status.Errorf(codes.Internal, "Failed to get definition for runner service account's cluster role and binding: %q", err)
 	}
 	if cr != nil {
 		crClient := clientset.RbacV1().ClusterRoles()
 		_, err = crClient.Get(ctx, cr.Name, metav1.GetOptions{})
 		if err != nil && !errors.IsNotFound(err) {
-			return err
+			return status.Errorf(codes.Internal, "Failed to get cluster role %q: %q", cr.Name, err)
 		}
 		if _, err := crClient.Create(ctx, cr, metav1.CreateOptions{}); err != nil {
-			return status.Errorf(codes.Internal, "Failed to create cluster role %s: %s", cr.Name, err)
+			return status.Errorf(codes.Internal, "Failed to create cluster role %q: %q", cr.Name, err)
 		}
 	}
 	if crb != nil {
 		crbClient := clientset.RbacV1().ClusterRoleBindings()
 		_, err = crbClient.Get(ctx, crb.Name, metav1.GetOptions{})
 		if err != nil && !errors.IsNotFound(err) {
-			return err
+			return status.Errorf(codes.Internal, "Failed to get cluster role binding %q: %q", crb.Name, err)
 		}
 		if _, err := crbClient.Create(ctx, crb, metav1.CreateOptions{}); err != nil {
-			return status.Errorf(codes.Internal, "Failed to create cluster role binding %s: %s", cr.Name, err)
+			return status.Errorf(codes.Internal, "Failed to create cluster role binding %q: %q", cr.Name, err)
 		}
 	}
 
