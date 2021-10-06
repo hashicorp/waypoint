@@ -35,7 +35,7 @@ module('Integration | Component | meta-table', function (hooks) {
     `);
 
     assert.ok(this.element.textContent?.includes('Image'));
-    assert.dom('[data-test-container-info]').exists();
+    assert.dom('[data-test-image-ref]').exists();
     assert.ok(this.element.textContent?.includes('Health Check'));
     assert.dom('[data-test-status-report-indicator]').exists();
   });

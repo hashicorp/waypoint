@@ -1,0 +1,12 @@
+<span data-test-image-ref class="image-ref" title="Image">
+  <span class="image-ref__label">
+    {{@imageRef.label}}
+  </span>
+  <span class="image-ref__tag">
+    {{#if (eq @imageRef.label "sha256")}}
+      {{truncate-commit @imageRef.tag}}
+    {{else}}
+      {{@imageRef.tag}}
+    {{/if}}
+  </span>
+</span> 
