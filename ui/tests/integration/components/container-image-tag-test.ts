@@ -37,6 +37,6 @@ module('Integration | Component | container-image-tag', function (hooks) {
     });
 
     await render(hbs`<ContainerImageTag @statusReport={{this.multiStatus}}/>`);
-    assert.dom('[data-test-container-info]').exists({ count: 2 });
+    assert.dom('[data-test-image-ref]').exists({ count: 2 });
   });
 });

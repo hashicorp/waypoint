@@ -17,7 +17,10 @@ module('Acceptance | deployment resource detail', function (hooks) {
     let resource = this.server.create('resource', {
       statusReport,
       name: 'example-pod',
-      state: { example: 'OK' },
+      state: {
+        example: 'OK',
+        image: 'example:1',
+      },
     });
 
     await visit(
@@ -25,6 +28,7 @@ module('Acceptance | deployment resource detail', function (hooks) {
     );
 
     assert.dom('h1').containsText('example-pod');
+    assert.dom('[data-test-resource-detail]').containsText('example 1');
     assert.dom('[data-test-json-viewer]').containsText('"example": "OK"');
   });
 

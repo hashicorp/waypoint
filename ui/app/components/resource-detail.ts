@@ -2,6 +2,7 @@ import Component from '@glimmer/component';
 import { inject as service } from '@ember/service';
 import RouterService from '@ember/routing/router-service';
 import { StatusReport } from 'waypoint-pb';
+import { ImageRef, findImageRefs } from 'waypoint/utils/image-refs';
 
 interface Args {
   resource?: StatusReport.Resource.AsObject;
@@ -36,8 +37,8 @@ export default class extends Component<Args> {
     return this.state?.pod?.metadata?.labels;
   }
 
-  get image(): string | undefined {
-    return this.state?.pod?.spec?.containers?.[0]?.image;
+  get imageRefs(): ImageRef[] {
+    return findImageRefs(this.state);
   }
 
   get hasLabels(): boolean {

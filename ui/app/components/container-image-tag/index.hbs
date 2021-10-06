@@ -1,14 +1,5 @@
 {{#each this.imageRefs as |imageRef|}}
-  <span data-test-container-info class="container-badge" title="Image">
-    {{imageRef.label}}
-    <span class="container-badge-tag">
-      {{#if (eq imageRef.label "sha256")}}
-        {{truncate-commit imageRef.tag}}
-      {{else}}
-        {{imageRef.tag}}
-      {{/if}}
-    </span>
-  </span> 
+  <ImageRef @imageRef={{imageRef}} />
 {{else}}
   n/a
 {{/each}}

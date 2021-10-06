@@ -1,8 +1,8 @@
-.container-badge {
+.image-ref {
   display: flex;
   align-items: center;
 
-  &-tag {
+  &__tag {
     background: rgb(var(--tag-background));
     color: rgb(var(--text-muted));
     border-radius: 2px;
