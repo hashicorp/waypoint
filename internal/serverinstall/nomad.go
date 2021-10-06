@@ -162,8 +162,8 @@ func (i *NomadInstaller) Install(
 	s.Done()
 
 	ui.Output(
-		"WARNING - the Waypoint server running on Nomad is being accessed via it's allocation ip and port.\n"+
-			"This could change in the future if nomad creates a new allocation for the Waypoint server, \n"+
+		"WARNING - the Waypoint server running on Nomad is being accessed via its allocation ip and port.\n"+
+			"This could change in the future if Nomad creates a new allocation for the Waypoint server, \n"+
 			"which would break all existing waypoint contexts.", terminal.WithWarningStyle(),
 	)
 
