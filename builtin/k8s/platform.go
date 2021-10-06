@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mitchellh/copystructure"
+
 	"github.com/docker/distribution/reference"
 	"github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/mapstructure"
@@ -291,17 +293,8 @@ func (p *Platform) resourceDeploymentStatus(
 }
 
 func configureK8sContainer(
-	name string,
-	image string,
-	ports []*Port,
+	c *Container,
 	envVars map[string]string,
-	probe *Probe,
-	probePath string,
-	cpu *ResourceConfig,
-	memory *ResourceConfig,
-	resources map[string]string,
-	command *[]string,
-	args *[]string,
 	scratchSpace []string,
 	volumes []corev1.Volume,
 	log hclog.Logger,
@@ -310,9 +303,9 @@ func configureK8sContainer(
 	// This by default means kubernetes will always pull so that latest is useful.
 
 	var pullPolicy corev1.PullPolicy
-	imageReference, err := reference.Parse(image)
+	imageReference, err := reference.Parse(c.Image)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "image %q is not a valid OCI reference: %q", image, err)
+		return nil, status.Errorf(codes.InvalidArgument, "image %q is not a valid OCI reference: %q", c.Image, err)
 	}
 	taggedImageReference, ok := imageReference.(reference.Tagged)
 	if !ok || taggedImageReference.Tag() == "latest" {
@@ -324,7 +317,7 @@ func configureK8sContainer(
 	}
 
 	var k8sPorts []corev1.ContainerPort
-	for _, port := range ports {
+	for _, port := range c.Ports {
 		k8sPorts = append(k8sPorts, corev1.ContainerPort{
 			Name:          port.Name,
 			ContainerPort: int32(port.Port),
@@ -353,15 +346,15 @@ func configureK8sContainer(
 	timeoutSeconds := int32(5)
 	failureThreshold := int32(5)
 
-	if probe != nil {
-		if probe.InitialDelaySeconds != 0 {
-			initialDelaySeconds = int32(probe.InitialDelaySeconds)
+	if c.Probe != nil {
+		if c.Probe.InitialDelaySeconds != 0 {
+			initialDelaySeconds = int32(c.Probe.InitialDelaySeconds)
 		}
-		if probe.TimeoutSeconds != 0 {
-			timeoutSeconds = int32(probe.TimeoutSeconds)
+		if c.Probe.TimeoutSeconds != 0 {
+			timeoutSeconds = int32(c.Probe.TimeoutSeconds)
 		}
-		if probe.FailureThreshold != 0 {
-			failureThreshold = int32(probe.FailureThreshold)
+		if c.Probe.FailureThreshold != 0 {
+			failureThreshold = int32(c.Probe.FailureThreshold)
 		}
 	}
 
@@ -369,47 +362,47 @@ func configureK8sContainer(
 	var resourceLimits = make(map[corev1.ResourceName]k8sresource.Quantity)
 	var resourceRequests = make(map[corev1.ResourceName]k8sresource.Quantity)
 
-	if cpu != nil {
-		if cpu.Requested != "" {
-			q, err := k8sresource.ParseQuantity(cpu.Requested)
+	if c.CPU != nil {
+		if c.CPU.Requested != "" {
+			q, err := k8sresource.ParseQuantity(c.CPU.Requested)
 			if err != nil {
 				return nil,
-					status.Errorf(codes.InvalidArgument, "failed to parse cpu request %s to k8s quantity: %s", cpu.Requested, err)
+					status.Errorf(codes.InvalidArgument, "failed to parse cpu request %s to k8s quantity: %s", c.CPU.Requested, err)
 			}
 			resourceRequests[corev1.ResourceCPU] = q
 		}
 
-		if cpu.Limit != "" {
-			q, err := k8sresource.ParseQuantity(cpu.Limit)
+		if c.CPU.Limit != "" {
+			q, err := k8sresource.ParseQuantity(c.CPU.Limit)
 			if err != nil {
 				return nil,
-					status.Errorf(codes.InvalidArgument, "failed to parse cpu limit %s to k8s quantity: %s", cpu.Limit, err)
+					status.Errorf(codes.InvalidArgument, "failed to parse cpu limit %s to k8s quantity: %s", c.CPU.Limit, err)
 			}
 			resourceLimits[corev1.ResourceCPU] = q
 		}
 	}
 
-	if memory != nil {
-		if memory.Requested != "" {
-			q, err := k8sresource.ParseQuantity(memory.Requested)
+	if c.Memory != nil {
+		if c.Memory.Requested != "" {
+			q, err := k8sresource.ParseQuantity(c.Memory.Requested)
 			if err != nil {
 				return nil,
-					status.Errorf(codes.InvalidArgument, "failed to parse memory requested %s to k8s quantity: %s", memory.Requested, err)
+					status.Errorf(codes.InvalidArgument, "failed to parse memory requested %s to k8s quantity: %s", c.Memory.Requested, err)
 			}
 			resourceRequests[corev1.ResourceMemory] = q
 		}
 
-		if memory.Limit != "" {
-			q, err := k8sresource.ParseQuantity(memory.Limit)
+		if c.Memory.Limit != "" {
+			q, err := k8sresource.ParseQuantity(c.Memory.Limit)
 			if err != nil {
 				return nil,
-					status.Errorf(codes.InvalidArgument, "failed to parse memory limit %s to k8s quantity: %s", memory.Limit, err)
+					status.Errorf(codes.InvalidArgument, "failed to parse memory limit %s to k8s quantity: %s", c.Memory.Limit, err)
 			}
 			resourceLimits[corev1.ResourceMemory] = q
 		}
 	}
 
-	for k, v := range resources {
+	for k, v := range c.Resources {
 		if strings.HasPrefix(k, "limits_") || strings.HasPrefix(k, "requests_") {
 			key := strings.Split(k, "_")
 			resourceName := corev1.ResourceName(key[1])
@@ -443,8 +436,8 @@ func configureK8sContainer(
 	}
 
 	container := corev1.Container{
-		Name:            name,
-		Image:           image,
+		Name:            c.Name,
+		Image:           c.Image,
 		ImagePullPolicy: pullPolicy,
 		Env:             k8sEnvVars,
 		Resources:       resourceRequirements,
@@ -454,20 +447,20 @@ func configureK8sContainer(
 	if len(k8sPorts) > 0 {
 		container.Ports = k8sPorts
 	}
-	if command != nil {
-		container.Command = *command
+	if c.Command != nil {
+		container.Command = *c.Command
 	}
-	if args != nil {
-		container.Args = *args
+	if c.Args != nil {
+		container.Args = *c.Args
 	}
 
 	// Only define liveliness & readiness checks if container binds to a port
 	if defaultPort > 0 {
 		var handler corev1.Handler
-		if probePath != "" {
+		if c.ProbePath != "" {
 			handler = corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
-					Path: probePath,
+					Path: c.ProbePath,
 					Port: intstr.FromInt(defaultPort),
 				},
 			}
@@ -538,6 +531,13 @@ func (p *Platform) resourceDeploymentCreate(
 		return err
 	}
 
+	var overlayTarget *Container
+	if p.config.Pod != nil && p.config.Pod.Container != nil {
+		overlayTarget = p.config.Pod.Container
+	} else {
+		overlayTarget = &Container{}
+	}
+
 	// Setup our port configuration
 	if p.config.ServicePort == 0 && len(p.config.Ports) == 0 {
 		// nothing defined, set up the defaults
@@ -549,6 +549,11 @@ func (p *Platform) resourceDeploymentCreate(
 		// both defined, this is an error
 		return fmt.Errorf("cannot define both 'service_port' and 'ports'. Use" +
 			" 'ports' for configuring multiple container ports")
+	}
+
+	appContainerSpec, err := overlayTopLevelProperties(p.config, overlayTarget)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "Failed to parse container config: %s", err)
 	}
 
 	envVars := make(map[string]string)
@@ -581,26 +586,12 @@ func (p *Platform) resourceDeploymentCreate(
 		)
 	}
 
-	// Configure containers
-	var command *[]string
-	var args *[]string
-	if p.config.Pod != nil && p.config.Pod.Container != nil {
-		command = p.config.Pod.Container.Command
-		args = p.config.Pod.Container.Args
-	}
+	appContainerSpec.Image = fmt.Sprintf("%s:%s", img.Image, img.Tag)
+	appContainerSpec.Name = src.App
 
 	appContainer, err := configureK8sContainer(
-		src.App,
-		fmt.Sprintf("%s:%s", img.Image, img.Tag),
-		p.config.Ports,
+		appContainerSpec,
 		envVars,
-		p.config.Probe,
-		p.config.ProbePath,
-		p.config.CPU,
-		p.config.Memory,
-		p.config.Resources,
-		command,
-		args,
 		p.config.ScratchSpace,
 		volumes,
 		log,
@@ -613,27 +604,18 @@ func (p *Platform) resourceDeploymentCreate(
 	var sidecarContainers []corev1.Container
 	if p.config.Pod != nil {
 		for _, sidecarConfig := range p.config.Pod.Sidecars {
-			sidecarEnvVars := make(map[string]string)
+			envVars := make(map[string]string)
 			// Add deploy config environment to container env vars
 			for k, v := range sidecarConfig.StaticEnvVars {
-				sidecarEnvVars[k] = v
+				envVars[k] = v
 			}
 			for k, v := range deployConfig.Env() {
-				sidecarEnvVars[k] = v
+				envVars[k] = v
 			}
 
 			sidecarContainer, err := configureK8sContainer(
-				sidecarConfig.Name,
-				sidecarConfig.Image,
-				sidecarConfig.Ports,
-				sidecarConfig.StaticEnvVars,
-				sidecarConfig.Probe,
-				sidecarConfig.ProbePath,
-				sidecarConfig.CPU,
-				sidecarConfig.Memory,
-				sidecarConfig.Resources,
-				sidecarConfig.Command,
-				sidecarConfig.Args,
+				sidecarConfig,
+				envVars,
 				p.config.ScratchSpace,
 				volumes,
 				log,
@@ -1296,6 +1278,80 @@ func (p *Platform) Status(
 	return result, nil
 }
 
+// overlayDefaultProperties overlays the top level container properties from config onto the
+// more detailed container properties in container, erroring if both are not empty.
+func overlayTopLevelProperties(config Config, container *Container) (*Container, error) {
+	var overlaidContainer *Container
+	i, err := copystructure.Copy(container)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to initialize container spec: %s", err)
+	}
+	overlaidContainer, _ = i.(*Container)
+
+	// Layer in easily discoverable top-level properties, and error on conflicts
+	if config.ProbePath != "" {
+		if container.ProbePath != "" {
+			return nil, status.Errorf(codes.InvalidArgument, "ProbePath defined multiple times - in top-level config and in Pod.Container.")
+		}
+		overlaidContainer.ProbePath = config.ProbePath
+	}
+
+	if config.Probe != nil {
+		if container.Probe != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "Probe defined multiple times - in top-level config and in Pod.Container.")
+		}
+		overlaidContainer.ProbePath = config.ProbePath
+	}
+
+	if config.Resources != nil {
+		if container.Resources != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "Resources defined multiple times - in top-level config and in Pod.Container.")
+		}
+		overlaidContainer.Resources = config.Resources
+	}
+
+	if config.CPU != nil {
+		if container.CPU != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "CPU defined multiple times - in top-level config and in Pod.Container.")
+		}
+		overlaidContainer.CPU = config.CPU
+	}
+
+	if config.Memory != nil {
+		if container.Memory != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "Memory defined multiple times - in top-level config and in Pod.Container.")
+		}
+		overlaidContainer.Memory = config.Memory
+	}
+
+	if config.StaticEnvVars != nil {
+		if container.StaticEnvVars != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "StaticEnvVars defined multiple times - in top-level config and in Pod.Container.")
+		}
+		overlaidContainer.StaticEnvVars = config.StaticEnvVars
+	}
+
+	if config.StaticEnvVars != nil {
+		if container.StaticEnvVars != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "StaticEnvVars defined multiple times - in top-level config and in Pod.Container.")
+		}
+		overlaidContainer.StaticEnvVars = config.StaticEnvVars
+	}
+
+	if config.Ports != nil {
+		if container.Ports != nil {
+			if config.ServicePort != 0 {
+				return nil, status.Errorf(codes.InvalidArgument, "Ports defined multiple times - in top-level config as ServicePort and in Pod.Container.")
+			} else {
+				return nil, status.Errorf(codes.InvalidArgument, "Ports defined multiple times - in top-level config and in Pod.Container.")
+			}
+		}
+		overlaidContainer.Ports = config.Ports
+	}
+
+	return overlaidContainer, nil
+}
+
 // Config is the configuration structure for the Platform.
 type Config struct {
 	// Annotations are added to the pod spec of the deployed application.  This is
@@ -1398,11 +1454,19 @@ type AutoscaleConfig struct {
 type Pod struct {
 	SecurityContext *PodSecurityContext `hcl:"security_context,block"`
 	Container       *Container          `hcl:"container,block"`
-	Sidecars        []*SidecarContainer `hcl:"sidecar,block"`
+	Sidecars        []*Container        `hcl:"sidecar,block"`
 }
 
-// SidecarContainer describes the configuration for the sidecar container
-type SidecarContainer struct {
+type Port struct {
+	Name     string `hcl:"name"`
+	Port     uint   `hcl:"port"`
+	HostPort uint   `hcl:"host_port,optional"`
+	HostIP   string `hcl:"host_ip,optional"`
+	Protocol string `hcl:"protocol,optional"`
+}
+
+// Container describes the detailed parameters to declare a kubernetes container
+type Container struct {
 	Name          string            `hcl:"name"`
 	Image         string            `hcl:"image"`
 	Ports         []*Port           `hcl:"port,block"`
@@ -1414,20 +1478,6 @@ type SidecarContainer struct {
 	Command       *[]string         `hcl:"command,optional"`
 	Args          *[]string         `hcl:"args,optional"`
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
-}
-
-type Port struct {
-	Name     string `hcl:"name"`
-	Port     uint   `hcl:"port"`
-	HostPort uint   `hcl:"host_port,optional"`
-	HostIP   string `hcl:"host_ip,optional"`
-	Protocol string `hcl:"protocol,optional"`
-}
-
-// Container describes the commands and arguments for a container config
-type Container struct {
-	Command *[]string `hcl:"command"`
-	Args    *[]string `hcl:"args"`
 }
 
 // PodSecurityContext describes the security config for the Pod
