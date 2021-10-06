@@ -84,7 +84,7 @@ func (c *OnDemandRunnerConfigApplyCommand) Run(args []string) int {
 			s.Update("Updating on-demand runner config %q (%q)...", od.Name, od.Id)
 			updated = true
 		} else {
-			s.Update("No existing on-demand runner config found for id %q...command will create a new config", c.flagName)
+			s.Update("No existing on-demand runner config found for name %q...command will create a new config", c.flagName)
 			od = &pb.OnDemandRunnerConfig{
 				Name: c.flagName,
 			}
