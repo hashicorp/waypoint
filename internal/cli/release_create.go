@@ -239,7 +239,7 @@ Usage: waypoint release [options]
   Open a deployment to traffic.
 
   This defaults to the latest deployment. Other deployments can be
-  specified by ID.
+  specified by ID using the '-deployment' flag.
 
 ` + c.Flags().Help())
 }
