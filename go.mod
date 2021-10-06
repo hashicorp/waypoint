@@ -59,7 +59,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/hcl/v2 v2.10.1-0.20210621220818-327f3ce2570e
 	github.com/hashicorp/horizon v0.0.0-20210317214650-d2053943be04
-	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
+	github.com/hashicorp/nomad/api v0.0.0-20210907162733-cf7675a376b9
 	github.com/hashicorp/vault/api v1.0.5-0.20200519221902-385fac77e20f
 	github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
