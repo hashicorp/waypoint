@@ -131,14 +131,7 @@ export default function HomePage(): JSX.Element {
       <SectionMonitorAppHealth
         heading="Monitor app health on any cloud"
         description="Waypoint provides real time status updates and monitoring for the entire lifecycle of your applications, no matter where you deploy to."
-        features={[
-          {
-            icon: require('components/homepage/icons/eye.svg?include'),
-            heading: 'A single pane of glass',
-            description:
-              'View all deployments, regardless of target from one location',
-          },
-        ]}
+        features={[]}
       />
       <SectionExtendPlugins
         heading="Extend Waypoint with plugins"
