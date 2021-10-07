@@ -1,8 +1,11 @@
 import './style.css'
 import '@hashicorp/platform-util/nprogress/style.css'
+
+import { useEffect } from 'react'
 import NProgress from '@hashicorp/platform-util/nprogress'
+import * as Fathom from 'fathom-client'
 import useAnchorLinkAnalytics from '@hashicorp/platform-util/anchor-link-analytics'
-import Router from 'next/router'
+import Router, { useRouter } from 'next/router'
 import HashiHead from '@hashicorp/react-head'
 import HashiStackMenu from '@hashicorp/react-hashi-stack-menu'
 import AlertBanner from '@hashicorp/react-alert-banner'
@@ -23,6 +26,27 @@ const description =
   'Waypoint is an open source solution that provides a modern workflow for build, deploy, and release across platforms.'
 
 export default function App({ Component, pageProps }) {
+  const router = useRouter()
+
+  useEffect(() => {
+    // Load Fathom analytics
+    Fathom.load('NWELMPCF', {
+      includedDomains: ['waypointproject.io', 'www.waypointproject.io'],
+    })
+
+    function onRouteChangeComplete() {
+      Fathom.trackPageview()
+    }
+
+    // Record a pageview when route changes
+    router.events.on('routeChangeComplete', onRouteChangeComplete)
+
+    // Unassign event listener
+    return () => {
+      router.events.off('routeChangeComplete', onRouteChangeComplete)
+    }
+  }, [])
+
   useAnchorLinkAnalytics()
 
   return (
