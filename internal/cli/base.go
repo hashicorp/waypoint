@@ -498,6 +498,7 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "project",
 			Target:  &c.flagProject,
+			Aliases: []string{"p"},
 			Default: "",
 			Usage:   "Project to target.",
 		})
