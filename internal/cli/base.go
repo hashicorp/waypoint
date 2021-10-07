@@ -235,12 +235,9 @@ func (c *baseCommand) Init(opts ...Option) error {
 			match := reAppTarget.FindStringSubmatch(c.args[0])
 			if match != nil {
 				// Set our refs
-				c.refProject = &pb.Ref_Project{Project: match[1]}
-				if match[2] != "" {
-					c.refApp = &pb.Ref_Application{
-						Project:     match[1],
-						Application: match[2],
-					}
+				c.refApp = &pb.Ref_Application{
+					Project:     match[1],
+					Application: match[2],
 				}
 
 				// Shift the args
@@ -722,7 +719,7 @@ so you can specify the app to target using the "-app" flag.
 This command requires a targeted project.`)
 
 	// matches either "project" or "project/app"
-	reAppTarget = regexp.MustCompile(`^(?P<project>[-0-9A-Za-z_]+)/?(?P<app>[-0-9A-Za-z_]+)?$`)
+	reAppTarget = regexp.MustCompile(`^(?P<project>[-0-9A-Za-z_]+)/(?P<app>[-0-9A-Za-z_]+)$`)
 
 	snapshotUnimplementedErr = strings.TrimSpace(`
 The current Waypoint server does not support snapshots. Rerunning the command
