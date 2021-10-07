@@ -19,6 +19,13 @@
     &:first-of-type {
       padding-right: 70px;
       border-right: 1px solid var(--waypoint-secondary);
+      & .terminal {
+        & > div {
+          @media (min-width: 832px) {
+            min-height: 344px;
+          }
+        }
+      }
     }
 
     &:last-of-type {
