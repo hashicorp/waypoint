@@ -66,6 +66,13 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
         });
       }
     }
+    // Push job errors to build logs
+    if (event == GetJobStreamResponse.EventCase.STATE) {
+      if (response?.getState()?.toObject()?.job?.error) {
+        let err = response?.getState()?.toObject()?.job?.error?.message || '';
+        this.terminal.writeln(STYLE_TO_ANSI['error-bold'](err));
+      }
+    }
   }
 
   writeLine(line: GetJobStreamResponse.Terminal.Event.Line): void {
