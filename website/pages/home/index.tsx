@@ -20,10 +20,7 @@ export default function HomePage(): JSX.Element {
             <em>Amazon ECS</em>
           </>
         }
-        description="Waypoint is an application deployment tool for Kubernetes, ECS, and
-        many other platforms. It allows developers to deploy, manage, and
-        observe their applications through a consistent abstraction of the
-        underlying infrastructure."
+        description="Waypoint allows developers to deploy, manage, and observe their applications through a consistent abstraction of underlying infrastructure. Waypoint works with Kubernetes, ECS and many other platforms."
         link={{
           title: 'Get Started',
           url:
@@ -133,9 +130,7 @@ export default function HomePage(): JSX.Element {
       </SectionHowItWorks>
       <SectionMonitorAppHealth
         heading="Monitor app health on any cloud"
-        description="One place to monitor the entire lifecycle of your applications, no
-          matter where you deploy to. View Logs, Builds, Releasese and even run
-          Exec commands from the Waypoint UI"
+        description="Waypoint provides real time status updates and monitoring for the entire lifecycle of your applications, no matter where you deploy to."
         features={[
           {
             icon: require('components/homepage/icons/eye.svg?include'),
