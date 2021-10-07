@@ -195,11 +195,8 @@ func withConnectionHelper(c *client.Client) error {
 }
 
 func containsEntrypoint(entrypoint []string) bool {
-	for _, ep := range entrypoint {
-		if ep == "/waypoint-entrypoint" {
-			return true
-		}
+	if len(entrypoint) > 0 {
+		return entrypoint[0] == "/waypoint-entrypoint"
 	}
-
 	return false
 }

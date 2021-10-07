@@ -600,18 +600,14 @@ func (s *Server) updateManifest(w http.ResponseWriter, r *http.Request) {
 		Author:    "waypoint",
 	})
 
-	var found bool
-	for _, entryPoint := range config.Config.Entrypoint {
-		if entryPoint == "/waypoint-entrypoint" {
-			found = true
-			s.Logger.Debug("waypoint-entrypoint found, not injecting")
-			break
-		}
-	}
-
-	if !found {
+	// By default we want to prepend waypoint-entrypoint to the Entrypoint and
+	// inject the CEB. If the Entrypoint is empty, or the first element is
+	// already waypoint-entrypoint, we skip the injection
+	if len(config.Config.Entrypoint) == 0 || config.Config.Entrypoint[0] != "/waypoint-entrypoint" {
 		config.Config.Entrypoint = append([]string{"/waypoint-entrypoint"}, config.Config.Entrypoint...)
 		s.Logger.Debug("injected entrypoint", "value", config.Config.Entrypoint)
+	} else {
+		s.Logger.Debug("entrypoint already included", "value", config.Config.Entrypoint)
 	}
 
 	newConfig, err := json.MarshalIndent(config, "", "  ")
