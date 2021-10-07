@@ -464,7 +464,7 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 			return err
 		}
 
-		if appDeployStatus != nil {
+		if appDeployStatus != nil && appDeployStatus.Health != nil {
 			if appDeployStatus.Health.HealthStatus == "ERROR" ||
 				appDeployStatus.Health.HealthStatus == "DOWN" {
 				appFailures = true
@@ -503,9 +503,9 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 			return err
 		}
 
-		if appReleaseStatus != nil {
-			if appDeployStatus.Health.HealthStatus == "ERROR" ||
-				appDeployStatus.Health.HealthStatus == "DOWN" {
+		if appReleaseStatus != nil && appReleaseStatus.Health != nil {
+			if appReleaseStatus.Health.HealthStatus == "ERROR" ||
+				appReleaseStatus.Health.HealthStatus == "DOWN" {
 				appFailures = true
 			}
 		}
