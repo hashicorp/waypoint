@@ -6,13 +6,13 @@
   grid-template-columns: 1fr;
   row-gap: 100px;
 
-  @media (--medium-up) {
+  @media (min-width: 832px) {
     grid-template-columns: 1fr 1fr;
   }
 }
 
 .column {
-  @media (--medium-up) {
+  @media (min-width: 832px) {
     padding-top: 50px;
     padding-bottom: 100px;
 
