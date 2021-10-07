@@ -100,9 +100,25 @@ export default function HomePage(): JSX.Element {
                 'View sample waypoint.hcl files to see how straight-forward it is to configure your deployments',
             },
           ]}
-          code={
-            '<span class="token keyword">project =</span> "marketing-public"\n<span class="token keyword">app</span> "tech-blog" <span class="token keyword">{</span>\n<span class="token keyword">  build {</span>\n<span class="token keyword">    use</span> "pack" <span class="token keyword">{}</span> <span class="token comment"># Use Cloud Buildpacks</span>\n<span class="token keyword">  }</span>\n​\n<span class="token keyword">  deploy {</span>\n<span class="token keyword">    use</span> "kubernetes" <span class="token keyword">{}</span> <span class="token comment"># Deploy to Kubernetes</span>\n<span class="token keyword">  }</span>\n<span class="token keyword">}</span>'
-          }
+          code={`<span class="token keyword">build</span> {
+  use <span class="token string">"pack"</span> {}
+  <span class="token keyword">registry</span> {
+    use <span class="token string">"docker"</span> {
+      <span class="token keyword">image</span> = <span class="token string">"nodejs-example"</span>
+      <span class="token keyword">tag</span>   = <span class="token string">"latest"</span>
+      <span class="token keyword">local</span> = <span class="token boolean">true</span>
+    }
+  }
+}
+<span class="token keyword">deploy</span> {
+  use <span class="token string">"helm"</span> {
+    <span class="token keyword">chart</span> = "\${<span class="token keyword">path</span>.app}<span class="token string">/chart</span>"
+    <span class="token keyword">set</span> {
+      <span class="token keyword">name</span>  = <span class="token string">"deployment.image"</span>
+      <span class="token keyword">value</span> = artfact.name
+    }
+  }
+}`}
           codeNote="Configure your app for Waypoint in just a few lines"
         />
         <BuildAndDeploy
