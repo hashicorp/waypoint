@@ -37,6 +37,7 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		app.UI.Output("Destroying deployments for %s", app.Ref().Application, terminal.WithHeaderStyle())
+		c.refApp = app.Ref()
 
 		// Determine the deployments to delete
 		var deployments []*pb.Deployment
