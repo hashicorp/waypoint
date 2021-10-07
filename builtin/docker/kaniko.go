@@ -126,6 +126,10 @@ func (b *Builder) buildWithKaniko(
 		"-d", localRef,
 	}
 
+	if b.config.Target != "" {
+		args = append(args, "--target", b.config.Target)
+	}
+
 	// If we have build args we append each
 	for k, v := range buildArgs {
 		// v should always not be nil but guard just in case to avoid a panic
