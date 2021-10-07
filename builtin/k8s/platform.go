@@ -143,7 +143,6 @@ func (p *Platform) getClientset() (*clientsetInfo, error) {
 
 func (p *Platform) resourceDeploymentStatus(
 	ctx context.Context,
-	log hclog.Logger,
 	sg terminal.StepGroup,
 	deploymentState *Resource_Deployment,
 	clientset *clientsetInfo,
@@ -297,7 +296,9 @@ func configureK8sContainer(
 	envVars map[string]string,
 	scratchSpace []string,
 	volumes []corev1.Volume,
+	autoscaleConfig *AutoscaleConfig,
 	log hclog.Logger,
+	ui terminal.UI,
 ) (*corev1.Container, error) {
 	// If the user is using the latest tag, then don't specify an overriding pull policy.
 	// This by default means kubernetes will always pull so that latest is useful.
@@ -403,19 +404,37 @@ func configureK8sContainer(
 	}
 
 	for k, v := range c.Resources {
-		if strings.HasPrefix(k, "limits_") || strings.HasPrefix(k, "requests_") {
-			key := strings.Split(k, "_")
-			resourceName := corev1.ResourceName(key[1])
+		if strings.HasPrefix(k, "limits_") {
+			limitKey := strings.Split(k, "_")
+			resourceName := corev1.ResourceName(limitKey[1])
 
-			quantity, err := k8sresource.ParseQuantity(v)
+			q, err := k8sresource.ParseQuantity(v)
 			if err != nil {
-				return nil,
-					status.Errorf(codes.InvalidArgument, "failed to parse resource %s to k8s quantity: %s", v, err)
+				return nil, status.Errorf(codes.InvalidArgument, "failed to parse resource %s to k8s quantity: %s", v, err)
 			}
-			resourceLimits[resourceName] = quantity
+			resourceLimits[resourceName] = q
+		} else if strings.HasPrefix(k, "requests_") {
+			reqKey := strings.Split(k, "_")
+			resourceName := corev1.ResourceName(reqKey[1])
+
+			q, err := k8sresource.ParseQuantity(v)
+			if err != nil {
+				return nil, status.Errorf(codes.InvalidArgument, "failed to parse resource %s to k8s quantity: %s", v, err)
+			}
+			resourceRequests[resourceName] = q
 		} else {
 			log.Warn("ignoring unrecognized k8s resources key: %q", k)
 		}
+	}
+
+	_, cpuLimit := resourceLimits[corev1.ResourceCPU]
+	_, cpuRequest := resourceRequests[corev1.ResourceCPU]
+
+	// Check autoscaling
+	if autoscaleConfig != nil && !(cpuLimit || cpuRequest) {
+		ui.Output("For autoscaling in Kubernetes to work, a deployment must specify "+
+			"cpu resource limits and requests. Otherwise the metrics-server will not properly be able "+
+			"to scale your deployment.", terminal.WithWarningStyle())
 	}
 
 	resourceRequirements := corev1.ResourceRequirements{
@@ -565,13 +584,6 @@ func (p *Platform) resourceDeploymentCreate(
 		envVars[k] = v
 	}
 
-	// Check autoscaling
-	if p.config.AutoscaleConfig != nil && p.config.CPU == nil {
-		ui.Output("For autoscaling in Kubernetes to work, a deployment must specify "+
-			"cpu resource limits and requests. Otherwise the metrics-server will not properly be able "+
-			"to scale your deployment.", terminal.WithWarningStyle())
-	}
-
 	// Create scratch space volumes
 	var volumes []corev1.Volume
 	for idx := range p.config.ScratchSpace {
@@ -594,7 +606,9 @@ func (p *Platform) resourceDeploymentCreate(
 		envVars,
 		p.config.ScratchSpace,
 		volumes,
+		p.config.AutoscaleConfig,
 		log,
+		ui,
 	)
 	if err != nil {
 		return status.Errorf(status.Code(err),
@@ -618,7 +632,9 @@ func (p *Platform) resourceDeploymentCreate(
 				envVars,
 				p.config.ScratchSpace,
 				volumes,
+				p.config.AutoscaleConfig,
 				log,
+				ui,
 			)
 			if err != nil {
 				return status.Errorf(status.Code(err),
@@ -713,13 +729,6 @@ func (p *Platform) resourceDeploymentCreate(
 	}
 
 	dc := clientSet.AppsV1().Deployments(ns)
-
-	// TODO(izaak) delete me
-	j, err := json.Marshal(deployment)
-	if err != nil {
-		return fmt.Errorf("Failed to marshal deploy json")
-	}
-	log.Info(fmt.Sprintf("Deployment json \n\n %s \n\n", j))
 
 	// Create/update
 	if create {
