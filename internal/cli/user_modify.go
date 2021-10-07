@@ -29,7 +29,6 @@ func (c *UserModifyCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
-
 	client := c.project.Client()
 
 	// Get the user we're modifying.
