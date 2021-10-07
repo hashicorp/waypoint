@@ -62,10 +62,19 @@ func AlterEntrypointImg(
 	L.Debug("extracted existing entrypoint", "entrypoint", imageSpec.Config.Entrypoint)
 
 	// Determine the new entrypoint configuration based on the existing
-	newEp, err := cb(imageSpec.Config.Entrypoint)
-	if err != nil {
-		return "", err
+	// entrypoint. Check if '/waypoint-entrypoint' is already found in the
+	// container's entrypoints and if so, don't execute the provided callback
+	// which would add the endpoint, and assume it's already included.
+	var newEp *NewEntrypoint
+	if containsEntrypoint(imageSpec.Config.Entrypoint) {
+		newEp = new(NewEntrypoint)
+	} else {
+		newEp, err = cb(imageSpec.Config.Entrypoint)
+		if err != nil {
+			return "", err
+		}
 	}
+
 	if newEp.Entrypoint == nil {
 		newEp.Entrypoint = imageSpec.Config.Entrypoint
 	}

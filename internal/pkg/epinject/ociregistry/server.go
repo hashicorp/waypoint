@@ -600,8 +600,19 @@ func (s *Server) updateManifest(w http.ResponseWriter, r *http.Request) {
 		Author:    "waypoint",
 	})
 
-	config.Config.Entrypoint = append([]string{"/waypoint-entrypoint"}, config.Config.Entrypoint...)
-	s.Logger.Debug("injected entrypoint", "value", config.Config.Entrypoint)
+	var found bool
+	for _, entryPoint := range config.Config.Entrypoint {
+		if entryPoint == "/waypoint-entrypoint" {
+			found = true
+			s.Logger.Debug("waypoint-entrypoint found, not injecting")
+			break
+		}
+	}
+
+	if !found {
+		config.Config.Entrypoint = append([]string{"/waypoint-entrypoint"}, config.Config.Entrypoint...)
+		s.Logger.Debug("injected entrypoint", "value", config.Config.Entrypoint)
+	}
 
 	newConfig, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {

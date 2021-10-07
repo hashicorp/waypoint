@@ -415,7 +415,6 @@ func (b *Builder) buildWithDocker(
 		ExcludePatterns: excludes,
 		ChownOpts:       &idtools.Identity{UID: 0, GID: 0},
 	})
-
 	if err != nil {
 		return status.Errorf(codes.Internal, "unable to compress context: %s", err)
 	}
