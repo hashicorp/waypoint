@@ -20,6 +20,8 @@ type UserModifyCommand struct {
 }
 
 func (c *UserModifyCommand) Run(args []string) int {
+	numArgs := len(args)
+
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	if err := c.Init(
 		WithArgs(args),
@@ -29,6 +31,13 @@ func (c *UserModifyCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
+
+	// Need to do this after running c.Init to get access to ui.
+	if numArgs == 0 {
+		c.ui.Output(c.Help())
+		return 1
+	}
+
 	client := c.project.Client()
 
 	// Get the user we're modifying.
