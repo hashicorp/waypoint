@@ -123,6 +123,18 @@ The UID to run the entrypoint of the container process.
 
 - Type: **k8s.PodSecurityContext**
 
+##### pod.sidecar
+
+- Type: **list of k8s.Container**
+
+#### port
+
+A port and options that the application is listening on.
+
+Used to define and expose multiple ports that the application is listening on for the container in use. Can be specified multiple times for many ports.
+
+- Type: **list of k8s.Port**
+
 #### probe (category)
 
 Configuration to control liveness and readiness probes.
@@ -207,15 +219,6 @@ Namespace to target deployment into.
 Namespace is the name of the Kubernetes namespace to apply the deployment in. This is useful to create deployments in non-default namespaces without creating kubeconfig contexts for each.
 
 - Type: **string**
-- **Optional**
-
-#### ports
-
-A map of ports and options that the application is listening on.
-
-Used to define and expose multiple ports that the application is listening on for the container in use. Available keys are 'port', 'name' , 'host_port', and 'host_ip'. Ports defined will be TCP protocol.
-
-- Type: **list of map of string to string**
 - **Optional**
 
 #### probe_path
