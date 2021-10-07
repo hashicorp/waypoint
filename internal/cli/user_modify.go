@@ -20,8 +20,6 @@ type UserModifyCommand struct {
 }
 
 func (c *UserModifyCommand) Run(args []string) int {
-	numArgs := len(args)
-
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	if err := c.Init(
 		WithArgs(args),
@@ -29,12 +27,6 @@ func (c *UserModifyCommand) Run(args []string) int {
 		WithNoConfig(),
 		WithNoAutoServer(), // local mode has no need for tokens
 	); err != nil {
-		return 1
-	}
-
-	// Need to do this after running c.Init to get access to ui.
-	if numArgs == 0 {
-		c.ui.Output(c.Help())
 		return 1
 	}
 
@@ -59,11 +51,20 @@ func (c *UserModifyCommand) Run(args []string) int {
 	user := userResp.User
 
 	// Perform modifications
+	willModify := false
 	if v := c.flagNewUsername; v != "" {
 		user.Username = v
+		willModify = true
 	}
 	if v := c.flagDisplay; v != "" {
 		user.Display = v
+		willModify = true
+	}
+
+	if !willModify {
+		c.ui.Output("At least one user modification flag must be specified...\n\n"+
+			c.Help(), terminal.WithErrorStyle())
+		return 1
 	}
 
 	if _, err := client.UpdateUser(c.Ctx, &pb.UpdateUserRequest{User: user}); err != nil {
