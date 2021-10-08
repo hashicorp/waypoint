@@ -67,6 +67,14 @@ func (c *ArtifactListCommand) Run(args []string) int {
 			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
+		if len(resp.Artifacts) == 0 {
+			c.project.UI.Output(
+				"No artifacts found for application %q",
+				app.Ref().Application,
+				terminal.WithWarningStyle(),
+			)
+			return nil
+		}
 		sort.Sort(serversort.ArtifactStartDesc(resp.Artifacts))
 
 		if c.flagJson {
