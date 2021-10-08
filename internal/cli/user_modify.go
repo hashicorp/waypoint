@@ -61,7 +61,7 @@ func (c *UserModifyCommand) Run(args []string) int {
 	}
 
 	if !willModify {
-		c.ui.Output("At least one user modification flag must be specified...\n\n"+
+		c.ui.Output("at least one user modification flag must be specified"+
 			c.Help(), terminal.WithErrorStyle())
 		return 1
 	}
