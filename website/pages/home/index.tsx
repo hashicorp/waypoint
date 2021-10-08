@@ -199,7 +199,7 @@ export default function HomePage(): JSX.Element {
             },
             text: (
               <>
-                Deploys to <strong>Kubernetes</strong> in seconds with{' '}
+                Deploys to <strong>Kubernetes</strong> in seconds with&#160;
                 <strong>Helm</strong>
               </>
             ),
@@ -214,7 +214,7 @@ export default function HomePage(): JSX.Element {
             text: (
               <>
                 First party support for{' '}
-                <strong>AWS ECS, Docker, AWS Lambda</strong> and more
+                <strong>AWS ECS, Docker, AWS Lambda</strong> and&#160;more
               </>
             ),
           },
@@ -225,7 +225,7 @@ export default function HomePage(): JSX.Element {
               width: 65,
               height: 42,
             },
-            text: <>Infinitely extensible with Waypoint plugins</>,
+            text: <>Infinitely extensible with Waypoint&#160;plugins</>,
           },
         ]}
         heading="Ready to get started?"
