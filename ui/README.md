@@ -88,12 +88,6 @@ if you've made API changes in `/internal/server` and want to use those on the fr
 - `go generate ./internal/server`
 - `make gen/ts`
 
-You'll need to re-install the new files to your `node_modules` directory by running:
-
-```
-yarn add ./lib/waypoint-client ./lib/waypoint-pb
-```
-
 ### Code Generators
 
 Make use of the many generators for code, try `ember help generate` for more details
