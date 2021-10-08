@@ -167,6 +167,7 @@ func WithBrowserUI(enabled bool) Option {
 	return func(opts *options) { opts.BrowserUIEnabled = enabled }
 }
 
-func WithTelemetryEnabled() Option {
-	return func(opts *options) { opts.TelemetryEnabled = true }
+// WithTelemetryEnabled instructs the server to export OpenCensus traces for requests.
+func WithTelemetryEnabled(enabled bool) Option {
+	return func(opts *options) { opts.TelemetryEnabled = enabled }
 }

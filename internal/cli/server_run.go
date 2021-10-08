@@ -226,6 +226,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 		server.WithGRPC(ln),
 		server.WithHTTP(httpLn),
 		server.WithImpl(impl),
+		server.WithTelemetryEnabled(telemetryEnabled),
 	}
 	if httpInsecureLn != nil {
 		options = append(options, server.WithHTTP(httpInsecureLn))
@@ -241,10 +242,6 @@ func (c *ServerRunCommand) Run(args []string) int {
 		options = append(options, server.WithBrowserUI(true))
 	} else {
 		ui = false
-	}
-
-	if telemetryEnabled {
-		options = append(options, server.WithTelemetryEnabled())
 	}
 
 	// Output information to the user

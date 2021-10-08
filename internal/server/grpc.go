@@ -63,6 +63,7 @@ func newGrpcServer(opts *options) (*grpcServer, error) {
 		)
 	}
 
+	// This is the only place we wire telemetry into our grpc server.
 	if opts.TelemetryEnabled {
 		log.Debug("Enabling server ocgrpc stats handler")
 		so = append(so, grpc.StatsHandler(&ocgrpc.ServerHandler{}))

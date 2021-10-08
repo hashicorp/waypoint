@@ -8,11 +8,8 @@ import (
 	"contrib.go.opencensus.io/exporter/ocagent"
 	datadog "github.com/DataDog/opencensus-go-exporter-datadog"
 	"github.com/hashicorp/go-hclog"
-	ocview "go.opencensus.io/stats/view"
 	octrace "go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type Telemetry struct {
@@ -35,23 +32,17 @@ type Telemetry struct {
 	zpagesServer *http.Server
 
 	// Configured exporters that need to be registered and closed
-	exporters []Exporter
+	exporters []exporter
 }
 
 // Exporter is an OpenCensus exporter
-type Exporter interface {
-	Register()
-	Close() error
-}
+type exporter interface {
+	// Instructs the exporter to register itself (for traces, views, or both)
+	register()
 
-// exporter is a prototype struct that can be embedded to anonymously fulfill the Exporter interface.
-type exporter struct {
-	register func()
-	close    func() error
+	// Instructs the exporter to flush data and shut down.
+	close() error
 }
-
-func (e *exporter) Register()    { e.register() }
-func (e *exporter) Close() error { return e.close() }
 
 // NewTelemetry initializes the telemetry components.
 func NewTelemetry(opts ...Option) (Telemetry, error) {
@@ -70,7 +61,7 @@ func NewTelemetry(opts ...Option) (Telemetry, error) {
 	if config.enableOpenCensusExporter {
 		log.Debug("Creating the OpenCensus agent exporter")
 
-		e, err := openCensusAgentExporter(config.openCensusExporterOptions, log)
+		e, err := newOpenCensusAgentExporter(config.openCensusExporterOptions, log)
 		if err != nil {
 			return t, err
 		}
@@ -81,7 +72,7 @@ func NewTelemetry(opts ...Option) (Telemetry, error) {
 	if config.enableDatadogExporter {
 		log.Debug("Starting the Datadog exporter")
 
-		e, err := datadogExporter(config.datadogExporterOptions, log)
+		e, err := newDatadogExporter(config.datadogExporterOptions, log)
 		if err != nil {
 			return t, err
 		}
@@ -115,66 +106,13 @@ func NewTelemetry(opts ...Option) (Telemetry, error) {
 	return t, nil
 }
 
-func openCensusAgentExporter(opts []ocagent.ExporterOption, log hclog.Logger) (Exporter, error) {
-	ocExporter, err := ocagent.NewExporter(opts...)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "failed to initialize OpenCensus agent exporter: %s", err)
-	}
-
-	// Create our exporter that we can register and close later
-	e := &struct{ exporter }{}
-
-	e.register = func() {
-		log.Debug("Registering the OpenCensus agent exporter")
-		octrace.RegisterExporter(ocExporter)
-		ocview.RegisterExporter(ocExporter)
-	}
-
-	e.close = func() error {
-		log.Debug("Shutting down OpenCensus agent exporter")
-		ocExporter.Flush()
-		if err := ocExporter.Stop(); err != nil {
-			return fmt.Errorf("failed to stop the OpenCensus agent exporter: %s", err)
-		} else {
-			log.Debug("OpenCensus agent exporter flushed and stopped")
-		}
-		return nil
-	}
-	return e, nil
-}
-
-func datadogExporter(opts datadog.Options, log hclog.Logger) (Exporter, error) {
-	ddExporter, err := datadog.NewExporter(opts)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "failed to initialize Datadog exporter: %s", err)
-	}
-
-	// Create our exporter that we can register and close later
-	e := &struct{ exporter }{}
-
-	e.register = func() {
-		log.Debug("Registering the Datadog exporter")
-		octrace.RegisterExporter(ddExporter)
-		ocview.RegisterExporter(ddExporter)
-	}
-
-	e.close = func() error {
-		log.Debug("Shutting down Datadog exporter")
-		ddExporter.Stop()
-		log.Debug("Datadog exporter flushed and stopped")
-		return nil
-	}
-
-	return e, nil
-}
-
 // Run registers and starts the telemetry providers. It blocks until the provided context closes.
 func (t *Telemetry) Run(ctx context.Context) error {
 	log := t.log
 
 	// Register all of our configured exporters
 	for _, e := range t.exporters {
-		e.Register()
+		e.register()
 	}
 
 	// Run zPages
@@ -201,7 +139,7 @@ func (t *Telemetry) Run(ctx context.Context) error {
 
 	log.Debug("Shutting down telemetry exporters")
 	for _, e := range t.exporters {
-		if err := e.Close(); err != nil {
+		if err := e.close(); err != nil {
 			log.Error("Failed to close exporter", "err", err)
 		}
 	}
