@@ -11,6 +11,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// opencensusAgentExporter is a wrapper around an ocagent.Exporter that implements exporter to give some well-defined registration
+// and shut down behavior.
 type opencensusAgentExporter struct {
 	exporter *ocagent.Exporter
 	log      hclog.Logger

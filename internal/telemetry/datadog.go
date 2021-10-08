@@ -9,7 +9,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// datadogExporter implements the telemetry exporter interface.
+// datadogExporter is a wrapper around a datadog.Exporter that implements exporter to give some well-defined registration
+// and shut down behavior.
 type datadogExporter struct {
 	exporter *datadog.Exporter
 	log      hclog.Logger
