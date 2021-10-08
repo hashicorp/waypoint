@@ -3,8 +3,8 @@ package serverinstall
 import (
 	"context"
 	"fmt"
-	"strings"
 
+	"github.com/distribution/distribution/v3/reference"
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -135,16 +135,20 @@ var (
 // supplied server image. We default the ODR image to the name of the server
 // image with the `-odr` suffix attached to it.
 func defaultODRImage(serverImage string) (string, error) {
-	// We COULD use the official Docker "reference" library here and I used to,
-	// but I stopped because it canonicalizes the name to add "docker.io/library"
-	// if it's a short name which forces the Docker daemon to pull. The BNF
-	// syntax of a docker image only allows for a single `:` so we can easily
-	// and safely do this ourselves with string arithmetic.
-	idx := strings.Index(serverImage, ":")
-	if idx < 0 {
+	image, err := reference.Parse(serverImage)
+	if err != nil {
+		return "", fmt.Errorf("server image name %q is not a valid oci reference: %s", serverImage, err)
+	}
+	tagged, ok := image.(reference.Tagged)
+	if !ok {
 		return "", fmt.Errorf("server image doesn't have a tag specified. " +
 			"Please specify a tag, for example `waypoint:latest`.")
 	}
 
-	return fmt.Sprintf("%s-odr:%s", serverImage[0:idx], serverImage[idx+1:]), nil
+	tag := tagged.Tag()
+
+	// Everything but the tag
+	imageName := serverImage[0 : len(serverImage)-len(tag)-1]
+
+	return fmt.Sprintf("%s-odr:%s", imageName, tag), nil
 }
