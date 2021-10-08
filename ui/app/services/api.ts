@@ -22,6 +22,7 @@ import {
   PushedArtifact,
   Ref,
   Release,
+  StatusFilter,
   StatusReport,
   UpsertProjectRequest,
   Variable,
@@ -94,16 +95,21 @@ export default class ApiService extends Service {
 
   async listPushedArtifacts(
     wsRef: Ref.Workspace,
-    appRef: Ref.Application
+    appRef: Ref.Application,
+    options?: {
+      includeBuild?: boolean;
+      order?: OperationOrder;
+      statusList?: StatusFilter[];
+    }
   ): Promise<PushedArtifact.AsObject[]> {
     let request = new ListPushedArtifactsRequest();
 
     request.setApplication(appRef);
     request.setWorkspace(wsRef);
 
-    // TODO(jgwhite): request.setIncludeBuild
-    // TODO(jgwhite): request.setOrder
-    // TODO(jgwhite): request.setStatusList
+    request.setIncludeBuild(options?.includeBuild ?? false);
+    request.setOrder(options?.order ?? undefined);
+    request.setStatusList(options?.statusList ?? []);
 
     let response = await this.client.listPushedArtifacts(request, this.WithMeta());
     let result = response.getArtifactsList().map((pa) => pa.toObject());
