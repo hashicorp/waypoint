@@ -333,7 +333,6 @@ This command will bootstrap the server and setup a CLI context.
 
 	if telemetryEnabled {
 		telemetryOptions := []telemetry.Option{
-			telemetry.WithContext(c.Ctx),
 			telemetry.WithLogger(log.Named("telemetry")),
 		}
 
@@ -365,9 +364,18 @@ This command will bootstrap the server and setup a CLI context.
 			))
 		}
 
+		t, err := telemetry.NewTelemetry(telemetryOptions...)
+		if err != nil {
+			c.ui.Output(
+				"Error setting up telemetry: %s", err.Error(),
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+
 		go func() {
 			// Will gracefully exit when the context passed in closes.
-			err := telemetry.Run(telemetryOptions...)
+			err := t.Run(c.Ctx)
 			if err != nil {
 				log.Error("Telemetry runner exited with error", "error", err)
 			} else {
