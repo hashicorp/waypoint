@@ -35,8 +35,8 @@ func WithSingleApp() Option {
 }
 
 // WithMultipleApp configures the CLI to expect a configuration with
-// one or more apps defined in a project and a project targeted with `-project`.
-// TODO krantzinator: better doc
+// one or more apps defined in a project. The option will prioritize a value
+// provided to the -project flag.
 func WithMultipleApp() Option {
 	return func(c *baseConfig) {
 		c.ProjectTargetRequired = true
