@@ -34,6 +34,11 @@ export function createTerminal(options: TerminalOptions): Terminal {
     terminalOptions.cursorBlink = false;
     terminalOptions.cursorStyle = 'bar';
     terminalOptions.cursorWidth = 1;
+    terminalOptions.theme.cursor = terminalOptions.theme.background;
+  } else {
+    terminalOptions.cursorBlink = true;
+    terminalOptions.cursorStyle = 'bar';
+    terminalOptions.cursorWidth = 2;
   }
 
   let terminal = new Terminal(terminalOptions);
