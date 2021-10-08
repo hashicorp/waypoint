@@ -1,0 +1,291 @@
+digraph {
+  rankdir="LR"
+  style="rounded"
+  fontname="Courier-Bold"
+
+  node [
+    shape="rect"
+    style="filled,rounded"
+    fontname="Courier"
+  ]
+
+  edge [
+    fontname="Courier"
+    style="dashed"
+  ]
+
+  subgraph cluster_hcl {
+    label="waypoint.hcl"
+    bgcolor="#EEF2FF"
+    color="#3730A3"
+    fontcolor="#312E81"
+
+    node [
+      fillcolor="#6366F1"
+      color="#6366F1"
+      fontcolor="white"
+    ]
+
+    edge [
+      color="#3730A3"
+    ]
+
+    hcl_config_vars [label="ConfigVars"]
+
+    subgraph cluster_hcl_project_config {
+      label="config"
+      bgcolor="#E0E7FF"
+
+      hcl_project_config_var [label="Config Var"]
+
+      subgraph cluster_hcl_project_workspace {
+        label="workspace"
+        bgcolor="#C7D2FE"
+
+        hcl_project_workspace_config_var [label="Config Var"]
+      }
+
+      subgraph cluster_hcl_project_label {
+        label="label"
+        bgcolor="#C7D2FE"
+
+        hcl_project_label_config_var [label="Config Var"]
+      }
+
+      subgraph cluster_hcl_project_runner {
+        label="runner"
+        bgcolor="#C7D2FE"
+
+        hcl_project_runner_config_var [label="Config Var"]
+      }
+    }
+
+    subgraph cluster_hcl_app {
+      label="app"
+      bgcolor="#E0E7FF"
+
+      subgraph cluster_hcl_app_config {
+        label="config"
+        bgcolor="#C7D2FE"
+
+        hcl_app_config_var [label="Config Var"]
+
+        subgraph cluster_hcl_app_workspace {
+          label="workspace"
+          bgcolor="#A5B4FC"
+
+          hcl_app_workspace_config_var [label="Config Var"]
+        }
+
+        subgraph cluster_hcl_app_label {
+          label="label"
+          bgcolor="#A5B4FC"
+
+          hcl_app_label_config_var [label="Config Var"]
+        }
+      }
+    }
+
+    {
+      hcl_project_config_var
+      hcl_project_label_config_var
+      hcl_project_workspace_config_var
+      hcl_project_runner_config_var
+      hcl_app_config_var
+      hcl_app_workspace_config_var
+      hcl_app_label_config_var
+    }
+    -> hcl_config_vars
+  }
+
+  subgraph cluster_cli {
+    label="CLI"
+    bgcolor="#F5F5F4"
+    color="#292524"
+    fontcolor="#1C1917"
+
+    node [
+      fillcolor="#44403C"
+      color="#44403C"
+      fontcolor="white"
+    ]
+
+    cli_config_sync [label="waypoint config sync"]
+  }
+
+  subgraph cluster_server {
+    label="Waypoint Server"
+    bgcolor="#F0FDFA"
+    color="#0F766E"
+    fontcolor="#115E59"
+
+    node [
+      fillcolor="#0D9488"
+      color="#0D9488"
+      fontcolor="white"
+    ]
+
+    edge [
+      color="#115E59"
+    ]
+
+    server_global_config_var [label="Config Var"]
+    server_ceb_config [label="EntrypointConfig"]
+    server_runner_config [label="RunnerConfig"]
+    server_set_config [label="SetConfig"]
+
+    subgraph cluster_server_project {
+      label="Project"
+      bgcolor="#CCFBF1"
+      color="#0F766E"
+
+      server_project_config_var [label="Config Var"]
+
+      subgraph cluster_server_app {
+        label="App"
+        bgcolor="#99F6E4"
+        color="#0F766E"
+
+        server_app_config_var [label="Config Var"]
+      }
+    }
+
+    subgraph cluster_server_workspace {
+      label="Workspace"
+      bgcolor="#CCFBF1"
+      color="#0F766E"
+
+      server_workspace_config_var [label="Config Var"]
+    }
+
+    subgraph cluster_server_label {
+      label="Label Selector"
+      bgcolor="#CCFBF1"
+      color="#0F766E"
+
+      server_label_config_var [label="Config Var"]
+    }
+
+    subgraph cluster_server_runner {
+      label="Runner"
+      bgcolor="#CCFBF1"
+      color="#0F766E"
+
+      server_runner_config_var [label="Config Var"]
+    }
+
+    server_set_config -> {
+      server_global_config_var
+      server_project_config_var
+      server_app_config_var
+      server_workspace_config_var
+      server_label_config_var
+      server_runner_config_var
+    }
+    
+    {
+      server_global_config_var
+      server_project_config_var
+      server_app_config_var
+      server_workspace_config_var
+      server_label_config_var
+    }
+    -> server_ceb_config
+
+    {
+      server_global_config_var
+      server_runner_config_var
+    }
+    -> server_runner_config
+  }
+
+  subgraph cluster_deployment {
+    label="Deployment"
+    bgcolor="#FDF4FF"
+    color="#86198F"
+    fontcolor="#701A75"
+
+    node [
+      fillcolor="#C026D3"
+      color="#C026D3"
+      fontcolor="white"
+    ]
+
+    edge [
+      color="#86198F"
+    ]
+
+    deployment_ceb [label="Waypoint Entrypoint"]
+    deployment_env [label="ENV"]
+    deployment_file [label="File"]
+    deployment_my_code [label="My Code"]
+
+    deployment_ceb
+    -> {
+      deployment_env
+      deployment_file
+    }
+    -> deployment_my_code
+  }
+
+  subgraph cluster_dynamic {
+    label="Dynamic Sources"
+    bgcolor="#FEF2F2"
+    fontcolor="#7F1D1D"
+    color="#991B1B"
+
+    node [
+      fontcolor="white"
+      fillcolor="#991B1B"
+      color="#991B1B"
+    ]
+
+    dynamic_kube [label="Kubernetes"]
+    dynamic_vault [label="Vault"]
+  }
+
+  subgraph cluster_runner {
+    label="Runner"
+    bgcolor="#F0FDFA"
+    color="#0F766E"
+    fontcolor="#115E59"
+
+    node [
+      fillcolor="#0D9488"
+      color="#0D9488"
+      fontcolor="white"
+    ]
+
+    edge [
+      color="#115E59"
+    ]
+
+    runner_runner [label="Runner"]
+    runner_env [label="ENV"]
+    runner_op [label="Operation"]
+
+    runner_runner
+    -> {
+      runner_env
+    }
+    -> runner_op
+  }
+
+  hcl_config_vars -> cli_config_sync -> server_set_config
+
+  server_ceb_config -> deployment_ceb
+  server_runner_config -> runner_runner
+
+  {
+    dynamic_vault
+    dynamic_kube
+  }
+  -> {
+    deployment_ceb
+    runner_runner
+  }
+
+  // server_ceb_config -> dynamic_kube [style="invis"]
+  // server_runner_config -> dynamic_kube [style="invis"]
+
+}
