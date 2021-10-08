@@ -1,0 +1,3 @@
+```release-note:bug
+entrypoint: fix issue injecting waypoint-entrypoint multiple times
+```

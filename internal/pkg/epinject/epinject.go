@@ -70,9 +70,18 @@ func AlterEntrypoint(
 
 	L.Debug("extracted existing entrypoint", "image", image, "entrypoint", icfg.Entrypoint)
 
-	newEp, err := f(icfg.Entrypoint)
-	if err != nil {
-		return "", err
+	// Determine the new entrypoint configuration based on the existing
+	// entrypoint. Check if '/waypoint-entrypoint' is already found in the
+	// container's entrypoints and if so, don't execute the provided callback
+	// which would add the endpoint, and assume it's already included.
+	var newEp *NewEntrypoint
+	if containsEntrypoint(icfg.Entrypoint) {
+		newEp = new(NewEntrypoint)
+	} else {
+		newEp, err = f(icfg.Entrypoint)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	if newEp.Entrypoint != nil {
@@ -140,7 +149,6 @@ func AlterEntrypoint(
 		Comment:   fmt.Sprintf("Alter image '%s' to modify entrypoint", image),
 		Config:    icfg,
 	})
-
 	if err != nil {
 		return "", err
 	}
@@ -184,4 +192,8 @@ func withConnectionHelper(c *client.Client) error {
 	}
 
 	return nil
+}
+
+func containsEntrypoint(entrypoint []string) bool {
+	return len(entrypoint) > 0 && entrypoint[0] == "/waypoint-entrypoint"
 }
