@@ -2,25 +2,21 @@
 
 <h3>Exec</h3>
 
-<div class="output-pane">
-  {{#if this.hasExec}}
-  <div class="output">
-    <code>A line of output</code>
-    <code>Another line of output</code>
+{{#if this.hasExec}}
+  <Exec @deploymentId={{@model.releases.firstObject.deploymentId}}/>
+{{else}}
+  <div class="output-pane">
+    <EmptyState>
+      <p>This functionality is not available yet.</p>
+      <p>You can run exec in the CLI with <code class="inline">waypoint exec &lt;command&gt;</code></p>
+    </EmptyState>
+    <div class="run-prompt">
+      <Pds::Icon @type="chevron-right" class="prompt-icon" />
+      <input type="text" class="run-prompt-input" disabled aria-label="Command" />
+      <button type="button" class="button button--primary" disabled>
+        <Pds::Icon @type="sub-right" class="icon" />
+        <span>Run</span>
+      </button>
+    </div>
   </div>
-  {{else}}
-  <EmptyState>
-    <p>This functionality is not available yet.</p>
-    <p>You can run exec in the CLI with <code class="inline">waypoint exec &lt;command&gt;</code></p>
-  </EmptyState>
-  {{/if}}
-
-  <div class="run-prompt">
-    <Pds::Icon @type="chevron-right" class="prompt-icon" />
-    <input type="text" class="run-prompt-input" disabled aria-label="Command" />
-    <button type="button" class="button button--primary" disabled>
-      <Pds::Icon @type="sub-right" class="icon" />
-      <span>Run</span>
-    </button>
-  </div>
-</div>
+{{/if}}
