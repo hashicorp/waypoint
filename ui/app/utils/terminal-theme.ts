@@ -3,6 +3,7 @@ import { ITheme } from 'xterm';
 const lightTheme: ITheme = {
   foreground: 'rgb(0,0,0)',
   background: 'rgb(247,250,252)',
+  cursor: 'rgb(0, 187, 187)',
   cyan: 'rgb(0, 187, 187)',
   brightBlue: 'rgb(85, 85, 255)',
   green: 'rgb(0, 187, 0)',
@@ -18,6 +19,7 @@ const lightTheme: ITheme = {
 const darkTheme: ITheme = {
   foreground: 'rgb(247,250,252)',
   background: 'rgb(29,33,38)',
+  cursor: 'rgb(0, 187, 187)',
   cyan: 'rgb(0, 187, 187)',
   brightBlue: 'rgb(85, 85, 255)',
   green: 'rgb(0, 187, 0)',
