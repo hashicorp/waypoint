@@ -7,7 +7,7 @@ exporters:
   opencensus:
     endpoint: "oc-collector:55678"
 
-# It's possible to export to datadog directly from this agent
+# It's possible to export to Datadog directly from this agent
 #  datadog:
 #    namespace: "waypoint-test-1"
 #    trace_addr: "datadog:8126"
