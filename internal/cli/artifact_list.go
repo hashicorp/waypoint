@@ -44,6 +44,13 @@ func (c *ArtifactListCommand) Run(args []string) int {
 	client := c.project.Client()
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		if !c.flagJson {
+			// UI -- this should happen at the top so that the app name shows clearly
+			// for any errors we may encounter prior to the actual table output
+			// but we also don't want to corrupt the json
+			app.UI.Output("%s", app.Ref().Application, terminal.WithHeaderStyle())
+		}
+
 		var wsRef *pb.Ref_Workspace
 		if !c.flagWorkspaceAll {
 			wsRef = c.project.WorkspaceRef()
@@ -61,9 +68,6 @@ func (c *ArtifactListCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 		sort.Sort(serversort.ArtifactStartDesc(resp.Artifacts))
-
-		// Output the app's name before the json or table data
-		app.UI.Output("%s", app.Ref().Application, terminal.WithHeaderStyle())
 
 		if c.flagJson {
 			return c.displayJson(resp.Artifacts)
