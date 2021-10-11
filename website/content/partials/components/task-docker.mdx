@@ -1,0 +1,103 @@
+## docker (task)
+
+Launch a Docker container as a task.
+
+If a Docker server is available (either locally or via environment variables
+such as "DOCKER_HOST"), then it will be used to start the container.
+
+### Interface
+
+### Examples
+
+```hcl
+task {
+  use "docker" {
+		force_pull = true
+  }
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### client_config
+
+- Type: **docker.ClientConfig**
+
+#### resources (category)
+
+The resources that the tasks should use.
+
+##### resources.cpu
+
+The cpu shares that the tasks should use.
+
+- Type: **int64**
+- **Optional**
+
+##### resources.memory
+
+The amount of memory to use. Defined as '512MB', '44kB', etc.
+
+- Type: **string**
+- **Optional**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### binds
+
+A 'source:destination' list of folders to mount onto the container from the host.
+
+A list of folders to mount onto the container from the host. The expected format for each string entry in the list is `source:destination`. So for example: `binds: ["host_folder/scripts:/scripts"].
+
+- Type: **list of string**
+- **Optional**
+
+#### debug_containers
+
+- Type: **bool**
+- **Optional**
+
+#### force_pull
+
+- Type: **bool**
+- **Optional**
+
+#### labels
+
+A map of key/value pairs to label the docker container with.
+
+A map of key/value pair(s), stored in docker as a string. Each key/value pair must be unique. Validiation occurs at the docker layer, not in Waypoint. Label keys are alphanumeric strings which may contain periods (.) and hyphens (-).
+
+- Type: **map of string to string**
+- **Optional**
+
+#### networks
+
+A list of strings with network names to connect the container to.
+
+A list of networks to connect the container to. By default the container will always connect to the `waypoint` network.
+
+- Type: **list of string**
+- **Optional**
+- Default: waypoint
+
+#### static_environment
+
+Environment variables to expose to the application.
+
+These variables are used to control all of a container's modes, such as configuring it to start a web app vs a background worker. These environment variables should not be common configuration variables normally set in `waypoint config`.
+
+- Type: **map of string to string**
+- **Optional**
+
+### Output Attributes
+
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### id
+
+- Type: **string**
