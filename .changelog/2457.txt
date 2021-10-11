@@ -1,0 +1,3 @@
+```release-note:improvement
+ui: Headings in our HTML are more descriptive of the document structure
+```
