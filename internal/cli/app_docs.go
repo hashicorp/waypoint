@@ -202,10 +202,15 @@ func (c *AppDocsCommand) emitField(w io.Writer, h, out string, f *docs.FieldDocs
 		parts = append(parts, list.String())
 	}
 
+	nh := h + "#"
+	if len(nh) > 6 {
+		nh = h
+	}
+
 	if sf := f.SubFields; len(sf) > 0 {
 		for _, f := range sf {
 			var sub bytes.Buffer
-			c.emitField(&sub, h+"#", name, f)
+			c.emitField(&sub, nh, name, f)
 			parts = append(parts, sub.String())
 		}
 	}
@@ -251,7 +256,12 @@ func (c *AppDocsCommand) emitSection(w io.Writer, name, use, h string, fields []
 	}
 
 	for i, f := range fields {
-		c.emitField(w, h+"#", "", f)
+		nh := h + "#"
+		if len(nh) > 6 {
+			nh = h
+		}
+
+		c.emitField(w, nh, "", f)
 		endingSpace(w, i, len(fields))
 	}
 }
