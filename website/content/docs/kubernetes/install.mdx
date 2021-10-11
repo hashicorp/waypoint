@@ -90,19 +90,19 @@ understanding what the above actually does beneath the covers.
 The following is an overview of what happened between the `helm install`
 and `waypoint login` commands:
 
-* A Waypoint server was started on Kubernetes. The Waypoint server must
+- A Waypoint server was started on Kubernetes. The Waypoint server must
   store data, so a persistent volume claim is used to store this state.
 
-* A Waypoint runner profile was configured so that operations such as
+- A Waypoint runner profile was configured so that operations such as
   builds, deploys, etc. launch within Kubernetes pods.
 
-* The Waypoint server was [bootstrapped](/docs/server/run#bootstrap-the-server)
+- The Waypoint server was [bootstrapped](/docs/server/run#bootstrap-the-server)
   which creates the first user. The authentication token for this first
   user was stored in a Kubernetes Secret.
 
-* A `LoadBalancer` service was created to access the Waypoint service.
+- A `LoadBalancer` service was created to access the Waypoint service.
 
-* The `waypoint login` command used your local Kubernetes configuration
+- The `waypoint login` command used your local Kubernetes configuration
   to look up the Waypoint service and connect to it using the bootstrapped
   authentication token present in the Kubernetes secret.
 
