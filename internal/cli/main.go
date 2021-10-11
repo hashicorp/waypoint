@@ -577,27 +577,27 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-		"runner on-demand": func() (cli.Command, error) {
+		"runner profile": func() (cli.Command, error) {
 			return &helpCommand{
-				SynopsisText: helpText["on-demand-runner"][0],
-				HelpText:     helpText["on-demand-runner"][1],
+				SynopsisText: helpText["runner-profile"][0],
+				HelpText:     helpText["runner-profile"][1],
 			}, nil
 		},
 
-		"runner on-demand set": func() (cli.Command, error) {
-			return &OnDemandRunnerConfigApplyCommand{
+		"runner profile set": func() (cli.Command, error) {
+			return &RunnerProfileSetCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
 
-		"runner on-demand inspect": func() (cli.Command, error) {
-			return &OnDemandRunnerInspectCommand{
+		"runner profile inspect": func() (cli.Command, error) {
+			return &RunnerProfileInspectCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
 
-		"runner list": func() (cli.Command, error) {
-			return &OnDemandRunnerConfigListCommand{
+		"runner profile list": func() (cli.Command, error) {
+			return &RunnerProfileListCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
@@ -969,13 +969,13 @@ users directly into the Waypoint server.
 If you are looking to log in to Waypoint, use "waypoint login".
 `,
 	},
-	"on-demand-runner": {
-		"On-Demand Runner configuration",
+	"runner-profile": {
+		"Manage runner profiles",
 		`
-List and edit On-Demand Runner configuration.
+List and edit runner profiles
 
-Each on-demand runner confiuration entry represents the ability to spawn
-runners when needed using the configured plugin.
+Each runner profile entry represents the ability to spawn
+runners (i.e. on-demand runners) when needed using the configured plugin.
 `,
 	},
 	"workspace": {

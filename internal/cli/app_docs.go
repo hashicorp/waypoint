@@ -257,7 +257,7 @@ func (c *AppDocsCommand) emitSection(w io.Writer, name, use, h string, fields []
 }
 
 func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
-	// we use this constnat to compare to ct for some special behavior
+	// we use this constant to compare to ct for some special behavior
 	const csType = "configsourcer"
 
 	w, err := os.Create(fmt.Sprintf("./website/content/partials/components/%s-%s.mdx", ct, name))
