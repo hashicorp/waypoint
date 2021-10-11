@@ -28,7 +28,7 @@ These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this
 
 Cluster name to place On-Demand runner tasks in.
 
-ECS Cluster to place On-Demand runners in. This defaults to the cluster used by the waypoint server.
+ECS Cluster to place On-Demand runners in. This defaults to the cluster used by the Waypoint server.
 
 - Type: **string**
 - **Optional**
@@ -37,7 +37,7 @@ ECS Cluster to place On-Demand runners in. This defaults to the cluster used by 
 
 The name of the AWS IAM role to apply to the task's Execution Role.
 
-ExecutionRoleName is the name of the AWS IAM role to apply to the task's Execution Role. At this time we reuse the same Role as the waypoint server Execution Role.
+ExecutionRoleName is the name of the AWS IAM role to apply to the task's Execution Role. At this time we reuse the same Role as the Waypoint server Execution Role.
 
 - Type: **string**
 - **Optional**
@@ -82,7 +82,7 @@ AWS region to use. Defaults to the region used for the Waypoint Server.
 
 Security Group ID to place the On-Demand Runner task in.
 
-Security Group ID to place the On-Demand Runner task in. This defaults to the security group used for the waypoint server.
+Security Group ID to place the On-Demand Runner task in. This defaults to the security group used for the Waypoint server.
 
 - Type: **string**
 - **Optional**
@@ -91,7 +91,7 @@ Security Group ID to place the On-Demand Runner task in. This defaults to the se
 
 List of subnets to place the On-Demand Runner task in.
 
-List of subnets to place the On-Demand Runner task in. This defaults to the list of subnets configured for the waypoint server and must be either identical or a subset of the subnets used by the waypoint server.
+List of subnets to place the On-Demand Runner task in. This defaults to the list of subnets configured for the Waypoint server and must be either identical or a subset of the subnets used by the Waypoint server.
 
 - Type: **string**
 - **Optional**

@@ -113,7 +113,7 @@ permissions"
 		"Cluster name to place On-Demand runner tasks in",
 		docs.Summary(
 			"ECS Cluster to place On-Demand runners in. This defaults to the cluster",
-			"used by the waypoint server",
+			"used by the Waypoint server",
 		),
 	)
 
@@ -130,7 +130,7 @@ permissions"
 		"The name of the AWS IAM role to apply to the task's Execution Role",
 		docs.Summary(
 			"ExecutionRoleName is the name of the AWS IAM role to apply to the task's",
-			"Execution Role. At this time we reuse the same Role as the waypoint",
+			"Execution Role. At this time we reuse the same Role as the Waypoint",
 			"server Execution Role.",
 		),
 	)
@@ -151,9 +151,9 @@ permissions"
 		"List of subnets to place the On-Demand Runner task in.",
 		docs.Summary(
 			"List of subnets to place the On-Demand Runner task in. This defaults",
-			"to the list of subnets configured for the waypoint server and ",
+			"to the list of subnets configured for the Waypoint server and ",
 			"must be either identical or a subset of the subnets used by the ",
-			"waypoint server",
+			"Waypoint server",
 		),
 	)
 
@@ -162,7 +162,7 @@ permissions"
 		"Security Group ID to place the On-Demand Runner task in",
 		docs.Summary(
 			"Security Group ID to place the On-Demand Runner task in. This defaults ",
-			"to the security group used for the waypoint server",
+			"to the security group used for the Waypoint server",
 		),
 	)
 
