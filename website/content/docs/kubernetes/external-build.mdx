@@ -40,6 +40,11 @@ A more realistic example would likely use
 or [functions](/docs/waypoint-hcl/functions/all) to dynamically specify
 the correct image.
 
+-> **Why `disable_entrypoint`?** Waypoint doesn't currently support
+entrypoint injection for the `docker-pull` builder on Kubernetes runners.
+See the [entrypoint injection](#waypoint-entrypoint-with-external-image-builds)
+section on this page for how you can manually inject the entrypoint.
+
 ### Input Variables to Specify the Image Tag
 
 [Input variables](/docs/waypoint-hcl/variables/input) can be used
@@ -134,3 +139,34 @@ branch) that you only merge to _after_ your CI system ran tests and built
 the resulting image.
 
 This requires a different style of Git discipline and may not fit all teams.
+
+## Waypoint Entrypoint with External Image Builds
+
+The [Waypoint Entrypoint](/docs/entrypoint) is an optional component that enables
+features such as `waypoint exec`, log streaming, instance tracking, and more.
+When using externally built Docker images, you must also manually inject
+the entrypoint.
+This is **optional**! Waypoint does not require the entrypoint to perform
+deploys.
+
+To setup the entrypoint, the simplest approach is to use
+[Docker multi-stage builds](https://docs.docker.com/develop/develop-images/multistage-build/):
+
+```dockerfile
+FROM hashicorp/waypoint:latest AS waypoint
+
+# Your main build:
+FROM yourbaseimage
+
+COPY --from=waypoint /usr/bin/waypoint-entrypoint /waypoint-entrypoint
+
+# Replace "<EXISTING>" with your existing entrypoint (if any)
+ENTRYPOINT ["/waypoint-entrypoint", <EXISTING>]
+```
+
+Note that injecting the entrypoint is safe _even if you don't use Waypoint_.
+If the entrypoint doesn't have the proper environment variables set
+(by Waypoint itself, not as part of the build), then the entrypoints acts
+as if it doesn't exist: it executes its child process and does nothing.
+This lets you start injecting the entrypoint even if you're still only
+experimenting with Waypoint.
