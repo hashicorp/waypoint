@@ -3,7 +3,7 @@
 {{#if (not-eq this.target.currentRouteName "workspace.projects.project.app.deployment.resource")}}
   <PageHeader @iconName="upload">
     <div class="title">
-      <h1><b class="badge badge--version">v{{@model.sequence}}</b></h1>
+      <h1 class="h1"><b class="badge badge--version">v{{@model.sequence}}</b></h1>
       <small>
         <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
         <span>Deployed by <b>{{component-name @model.component.name}}</b>

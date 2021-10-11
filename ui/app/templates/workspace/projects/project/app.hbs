@@ -9,7 +9,7 @@
 )}}
 <PageHeader @iconName="git-repository">
   <div class="title">
-    <h1>{{@model.application.application}}</h1>
+    <h1 class="h1">{{@model.application.application}}</h1>
     <small>
       {{#if @model.releases.length}}
       {{#if (eq @model.releases.[0].status.state 2)}}

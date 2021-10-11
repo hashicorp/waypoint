@@ -11,7 +11,7 @@
 
 <PageHeader @className="projects-header">
   <div class="title">
-    <h1>Projects</h1>
+    <h1 class="h1">Projects</h1>
     <small>
       {{#if @model.length}}
       {{pluralize @model.length "project"}}
@@ -33,7 +33,7 @@
       <div class="row">
         <IconTile @icon="folder-outline" @isSmall={{true}} />
         <div class="meta">
-          <h2>{{project.project}}</h2>
+          <h2 class="h2">{{project.project}}</h2>
           {{!-- todo(pearkes): get full project objects from list api --}}
           {{!-- <small>{{pluralize project.applicationsList.length "application"}}</small> --}}
         </div>

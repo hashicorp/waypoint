@@ -2,7 +2,7 @@
 
 <PageHeader @iconName="folder-outline">
   <div class="title">
-    <h1>{{@model.name}}</h1>
+    <h1 class="h1">{{@model.name}}</h1>
     <small>{{pluralize @model.applicationsList.length "application"}}</small>
   </div>
   <Pds::CtaLink @route="workspace.projects.project.settings" @model={{@model.name}} @variant="ghost "class="pds--iconStart">
@@ -17,7 +17,7 @@
       <div class="row">
         <IconTile @icon="git-repository" @isSmall={{true}} />
         <div class="meta">
-          <h2>{{app.name}}</h2>
+          <h2 class="h2">{{app.name}}</h2>
         </div>
       </div>
     </LinkTo>

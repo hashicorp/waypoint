@@ -23,23 +23,27 @@ body {
 h1,
 h2,
 h3,
-h4 {
+h4,
+.h1,
+.h2,
+.h3,
+.h4 {
   margin-bottom: scale.$sm-3;
 }
 
-h1 {
+h1, .h1 {
   @include Typography.Heading(1);
 }
 
-h2 {
+h2, .h2 {
   @include Typography.Heading(2);
 }
 
-h3 {
+h3, .h3 {
   @include Typography.Heading(3);
 }
 
-h4 {
+h4, .h4 {
   @include Typography.Heading(4);
 }
 

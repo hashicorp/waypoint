@@ -1,7 +1,7 @@
 <Card @classNames={{unless @builds.length 'empty-state'}}>
   {{#if @builds.length}}
     <Card::Header>
-      <h4>
+      <h4 class="h4">
         <Pds::Icon @type="build" class="icon" />
         <span>Latest build</span>
       </h4>
