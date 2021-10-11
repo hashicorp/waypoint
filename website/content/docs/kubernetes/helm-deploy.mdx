@@ -40,21 +40,21 @@ you might still ask: but why would I use Helm with Waypoint? Why not use
 Helm directly? There are many reasons:
 
 1. **Dynamic Chart values.** Waypoint makes it easy to set chart values
-  based on dynamic information such as metadata about the most recent
-  artifact build, Git commit information, or just computed or templated
-  information using [HCL functions](/docs/waypoint-hcl/functions/all).
+   based on dynamic information such as metadata about the most recent
+   artifact build, Git commit information, or just computed or templated
+   information using [HCL functions](/docs/waypoint-hcl/functions/all).
 
 2. **Environments.** Waypoint handles the higher level multi-environment
-  abstraction for you, so you can deploy your chart to multiple environments
-  but manage and see them all using the same tool and UI.
+   abstraction for you, so you can deploy your chart to multiple environments
+   but manage and see them all using the same tool and UI.
 
 3. **Single Workflow Configuration.** While you still have to write Helm charts,
-  you can invoke Helm using the same tool you're using to invoke builds,
-  release management, etc.
+   you can invoke Helm using the same tool you're using to invoke builds,
+   release management, etc.
 
 4. **Other Waypoint features.** You can take advantage of other Waypoint
-  features such as [remote operations](/docs/waypoint-hcl/functions/all),
-  [logs](/docs/logs), [exec](/docs/exec), [input variables](/docs/waypoint-hcl/variables/input), and more.
+   features such as [remote operations](/docs/waypoint-hcl/functions/all),
+   [logs](/docs/logs), [exec](/docs/exec), [input variables](/docs/waypoint-hcl/variables/input), and more.
 
 ## Using Helm with Waypoint
 
