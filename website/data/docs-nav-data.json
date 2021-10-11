@@ -80,6 +80,10 @@
       {
         "title": "Externally Built Images",
         "path": "kubernetes/external-build"
+      },
+      {
+        "title": "Building Container Images",
+        "path": "kubernetes/container-build"
       }
     ]
   },
