@@ -1,10 +1,10 @@
 <Card @classNames={{unless @builds.length 'empty-state'}}>
   {{#if @builds.length}}
     <Card::Header>
-      <h4 class="h4">
+      <h2 class="h4">
         <Pds::Icon @type="build" class="icon" />
         <span>Latest build</span>
-      </h4>
+      </h2>
       <LinkTo @route="workspace.projects.project.app.builds">
         View all builds
       </LinkTo>
