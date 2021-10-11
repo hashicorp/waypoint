@@ -427,6 +427,7 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 		component.PlatformType,
 		component.ReleaseManagerType,
 		component.ConfigSourcerType,
+		component.TaskLauncherType,
 	}
 
 	docfactories := map[component.Type]*factory.Factory{}
@@ -456,6 +457,7 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 		{docfactories[component.PlatformType], "platform"},
 		{docfactories[component.ReleaseManagerType], "releasemanager"},
 		{docfactories[component.ConfigSourcerType], "configsourcer"},
+		{docfactories[component.TaskLauncherType], "task"},
 	}
 
 	for _, f := range factories {
@@ -510,6 +512,7 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 		component.PlatformType,
 		component.ReleaseManagerType,
 		component.ConfigSourcerType,
+		component.TaskLauncherType,
 	}
 
 	docfactories := map[component.Type]*factory.Factory{}
@@ -539,6 +542,7 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 		{docfactories[component.PlatformType], "platform"},
 		{docfactories[component.ReleaseManagerType], "releasemanager"},
 		{docfactories[component.ConfigSourcerType], "configsourcer"},
+		{docfactories[component.TaskLauncherType], "task"},
 	}
 
 	for _, f := range factories {

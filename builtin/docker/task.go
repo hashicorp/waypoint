@@ -117,7 +117,7 @@ task {
 		docs.Summary(
 			"A list of folders to mount onto the container from the host. The expected",
 			"format for each string entry in the list is `source:destination`. So",
-			"for example: `binds: [\"host_folder/scripts:/scripts\"]",
+			"for example: `binds: [\"host_folder/scripts:/scripts\"]`",
 		),
 	)
 
