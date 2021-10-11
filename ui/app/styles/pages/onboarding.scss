@@ -33,7 +33,7 @@
       margin-left: scale.$lg-1;
     }
 
-    h1 {
+    .h1 {
       @include Typography.Heading(2);
       color: $brand-color;
       margin: 0 auto scale.$sm-2;
@@ -53,8 +53,8 @@
     font-size: 14px;
     padding: 0 scale.$lg-2;
 
-    h2,
-    h3,
+    .h2,
+    .h3,
     p,
     pre,
     ul {
