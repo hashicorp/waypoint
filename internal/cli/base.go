@@ -424,8 +424,7 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 	// that are assigned to that project
 	if c.flagProject != "" {
 		client := c.project.Client()
-		var projectTarget *pb.Ref_Project
-		projectTarget = &pb.Ref_Project{Project: c.flagProject}
+		projectTarget := &pb.Ref_Project{Project: c.flagProject}
 		resp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{
 			Project: &pb.Ref_Project{
 				Project: projectTarget.Project,
