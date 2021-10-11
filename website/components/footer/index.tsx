@@ -1,3 +1,4 @@
+import Button from '@hashicorp/react-button'
 import Card, { CardProps } from 'components/card'
 import Link from 'next/link'
 import InlineSvg from '@hashicorp/react-inline-svg'
@@ -45,10 +46,18 @@ export default function Footer({
           {ctaLinks && ctaLinks.length
             ? ctaLinks.map((link) => {
                 return (
-                  <p className={s.contentLink} key={link.text}>
-                    <FooterLink url={link.url} text={link.text} />
-                    <RightArrowIcon />
-                  </p>
+                  <Button
+                    key={link.url}
+                    className={s.contentLink}
+                    title={link.text}
+                    url={link.url}
+                    linkType="inbound"
+                    theme={{
+                      variant: 'tertiary',
+                      brand: 'neutral',
+                      background: 'dark',
+                    }}
+                  />
                 )
               })
             : null}

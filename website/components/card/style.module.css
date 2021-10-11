@@ -56,3 +56,8 @@
     margin-left: 10px;
   }
 }
+
+.card:hover .fauxLink svg {
+  transition: transform 0.2s;
+  transform: translate3d(2px, 0, 0);
+}
