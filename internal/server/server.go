@@ -120,6 +120,9 @@ type options struct {
 
 	// BrowserUIEnabled determines if the browser UI should be mounted
 	BrowserUIEnabled bool
+
+	// TelemetryEnabled determines if the server should instrument itself to emit telemetry. Default false
+	TelemetryEnabled bool
 }
 
 // WithContext sets the context for the server. When this context is cancelled,
@@ -162,4 +165,9 @@ func WithAuthentication(ac AuthChecker) Option {
 // WithBrowserUI configures the server to enable the browser UI.
 func WithBrowserUI(enabled bool) Option {
 	return func(opts *options) { opts.BrowserUIEnabled = enabled }
+}
+
+// WithTelemetry instructs the server to export OpenCensus traces for requests.
+func WithTelemetry(enabled bool) Option {
+	return func(opts *options) { opts.TelemetryEnabled = enabled }
 }

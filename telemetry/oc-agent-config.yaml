@@ -1,0 +1,17 @@
+receivers:
+  opencensus:
+    address: ":55678"
+    reconnection-delay: 2s
+
+exporters:
+  opencensus:
+    endpoint: "oc-collector:55678"
+
+# It's possible to export to Datadog directly from this agent
+#  datadog:
+#    namespace: "waypoint-test-1"
+#    trace_addr: "datadog:8126"
+#    enable_tracing: true
+
+zpages:
+    port: 9998

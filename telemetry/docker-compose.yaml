@@ -1,0 +1,48 @@
+version: "2"
+services:
+
+  # Agent
+  oc-agent:
+    image: omnition/opencensus-agent:0.1.11
+    command: ["--config=/etc/oc-agent-config.yaml", "--http-pprof-port=1888"]
+    volumes:
+      - ./oc-agent-config.yaml:/etc/oc-agent-config.yaml
+    ports:
+      - "1888:1888" # http pprof
+      - "14268"
+      - "55678:55678"
+      - "9998:9998" # zPages
+
+  # Collector
+  oc-collector:
+    image: omnition/opencensus-collector:0.1.11
+    command: ["--config=/etc/oc-collector-config.yaml", "--http-pprof-port=1777"]
+    volumes:
+      - ./oc-collector-config.yaml:/etc/oc-collector-config.yaml
+    ports:
+      - "55678"
+      - "9997:55679" # zPages
+      - "1777:1777"
+      - "8888:8888" # Prometheus metrics
+    depends_on:
+      - jaeger
+
+  # Jaeger
+  jaeger:
+    image: jaegertracing/all-in-one:1.8
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+
+  # Datadog
+  datadog:
+    image: gcr.io/datadoghq/agent:7
+    ports:
+      - "8126:8126" # APM input
+    environment:
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+      - DD_SITE=datadoghq.com
+      - DD_APM_ENABLED=true
+      - DD_DOGSTATSD_TAGS="testver=1"
+      - DD_ENV="local"
+      - DD_API_KEY=${DD_API_KEY}

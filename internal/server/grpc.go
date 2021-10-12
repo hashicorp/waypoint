@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
+	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
@@ -60,6 +61,12 @@ func newGrpcServer(opts *options) (*grpcServer, error) {
 			grpc.ChainUnaryInterceptor(authUnaryInterceptor(opts.AuthChecker)),
 			grpc.ChainStreamInterceptor(authStreamInterceptor(opts.AuthChecker)),
 		)
+	}
+
+	// This is the only place we wire telemetry into our grpc server.
+	if opts.TelemetryEnabled {
+		log.Debug("Enabling server ocgrpc stats handler")
+		so = append(so, grpc.StatsHandler(&ocgrpc.ServerHandler{}))
 	}
 
 	s := grpc.NewServer(so...)

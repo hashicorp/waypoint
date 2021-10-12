@@ -1,0 +1,22 @@
+receivers:
+  opencensus:
+    port: 55678
+
+exporters:
+  datadog:
+    namespace: "waypoint"
+    trace_addr: "datadog:8126"
+    enable_tracing: true
+
+queued-exporters:
+  jaeger:
+    num-workers: 4
+    queue-size: 100
+    retry-on-failure: true
+    sender-type: jaeger-thrift-http
+    jaeger-thrift-http:
+      collector-endpoint: http://jaeger:14268/api/traces
+      timeout: 5s
+
+zpages:
+    port: 55679

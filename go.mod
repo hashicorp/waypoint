@@ -3,10 +3,12 @@ module github.com/hashicorp/waypoint
 go 1.13
 
 require (
+	contrib.go.opencensus.io/exporter/ocagent v0.5.0
 	github.com/Azure/azure-sdk-for-go v42.3.0+incompatible
 	github.com/Azure/go-autorest/autorest v0.11.18
 	github.com/Azure/go-autorest/autorest/azure/auth v0.4.2
 	github.com/Azure/go-autorest/autorest/to v0.3.0
+	github.com/DataDog/opencensus-go-exporter-datadog v0.0.0-20210527074920-9baf37265e83
 	github.com/adrg/xdg v0.2.1
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/armon/circbuf v0.0.0-20190214190532-5111143e8da2
@@ -104,6 +106,7 @@ require (
 	github.com/zclconf/go-cty v1.8.4
 	github.com/zclconf/go-cty-yaml v1.0.2
 	go.etcd.io/bbolt v1.3.6
+	go.opencensus.io v0.23.0
 	go.uber.org/goleak v1.1.10
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
 	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602
