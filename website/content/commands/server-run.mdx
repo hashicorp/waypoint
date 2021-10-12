@@ -51,13 +51,9 @@ environment.
 - `-advertise-tls` - If true, the advertised address should be connected to with TLS.
 - `-advertise-tls-skip-verify` - Do not verify the TLS certificate presented by the server.
 - `-accept-tos` - Pass to accept the Terms of Service and Privacy Policy to use the Waypoint URL Service. This is required if the URL service is enabled and you're using the HashiCorp-provided URL service rather than self-hosting. See the privacy policy at https://hashicorp.com/privacy and the ToS at https://waypointproject.io/terms
-- `-telemetry-opencensus-agent-addr=<string>` - Address of an opencensus agent or collector available to receive opencensus formatted
-  telemetry, traces and stats (commonly port 55678). Example: localhost:55678
+- `-telemetry-opencensus-agent-addr=<string>` - Address of an OpenCensus agent or collector available to receive OpenCensus formatted telemetry, traces and stats (commonly port 55678). Example: localhost:55678
 - `-telemetry-opencensus-agent-insecure` - Disables client transport security for the OpenCensus agent exporter's gRPC connection.
-- `-telemetry-datadog-trace-addr=<string>` - Address of a datadog agent available to accept traces (commonly port 8126). Example: localhost:8126
-- `-telemetry-opencensus-zpages-addr=<string>` - If set, waypoint will run a telemetry zpages server at this address. Typically this is
-  set to something like localhost:9999, whereupon trace debug information could be viewed at
-  http://localhost:9999/debug/tracez, and rpc stats at http://localhost:55679/debug/rpcz.
-  More information at https://opencensus.io/zpages/
+- `-telemetry-datadog-trace-addr=<string>` - Address of a DataDog agent available to accept traces (commonly port 8126). Example: localhost:8126
+- `-telemetry-opencensus-zpages-addr=<string>` - If set, Waypoint will run a telemetry zPages server at this address. Typically this is set to something like localhost:9999, where trace debug information could be viewed at http://localhost:9999/debug/tracez, and rpc stats at http://localhost:55679/debug/rpcz. More information at https://opencensus.io/zpages/
 
 @include "commands/server-run_more.mdx"
