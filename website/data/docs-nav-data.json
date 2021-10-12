@@ -71,6 +71,30 @@
     "divider": true
   },
   {
+    "title": "Kubernetes",
+    "routes": [
+      {
+        "title": "Install",
+        "path": "kubernetes/install"
+      },
+      {
+        "title": "Externally Built Images",
+        "path": "kubernetes/external-build"
+      },
+      {
+        "title": "Building Container Images",
+        "path": "kubernetes/container-build"
+      },
+      {
+        "title": "Helm Deployment",
+        "path": "kubernetes/helm-deploy"
+      }
+    ]
+  },
+  {
+    "divider": true
+  },
+  {
     "title": "Projects",
     "routes": [
       {
