@@ -60,7 +60,8 @@ Helm directly? There are many reasons:
 
 The example below shows a `waypoint.hcl` configuration that uses a
 Helm chart in the "helm" directory. We set two Chart values `image.repository`
-and `image.tag` to point to the artifact we just built. Notice that with the
+and `image.tag` to point to the artifact we just built (see
+[here for more information on artifact variables](/docs/waypoint-hcl/variables/artifact)). Notice that with the
 `set` Chart values, we could use any Waypoint variables, HCL functions, etc.
 to dynamically set chart configuration.
 
