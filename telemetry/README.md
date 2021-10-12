@@ -71,6 +71,6 @@ You can troubleshoot the flow of traces by visiting the zPages endpoints:
 - on the OpenCensus agent container at http://localhost:9998/debug/tracez
 - on the OpenCensus collector container at http://localhost:9997/debug/tracez
 
-Example tracez on from the Waypoint server:
+Example tracez on the Waypoint server:
 
 ![tracez example](images/tracez-example.png)
