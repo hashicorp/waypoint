@@ -787,6 +787,70 @@ func TestJobAssign(t *testing.T) {
 		require.Equal("C", job.Id)
 		require.Equal(pb.Job_WAITING, job.State)
 	})
+
+	t.Run("blocking on dependency", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "B",
+			DependsOn: []string{"A"},
+		})))
+
+		// Assign it, we should get this build
+		{
+			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+			require.NoError(err)
+			require.NotNil(job)
+			require.Equal("A", job.Id)
+		}
+
+		// Get the next value in a goroutine
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		var job *Job
+		var jerr error
+		doneCh := make(chan struct{})
+		go func() {
+			defer close(doneCh)
+			job, jerr = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
+		}()
+
+		// We should be blocking
+		select {
+		case <-doneCh:
+			t.Fatal("should wait")
+
+		case <-time.After(500 * time.Millisecond):
+		}
+
+		// Ack it
+		_, err := s.JobAck("A", true)
+		require.NoError(err)
+
+		// Complete it
+		require.NoError(s.JobComplete("A", &pb.Job_Result{
+			Build: &pb.Job_BuildResult{},
+		}, nil))
+
+		// We should get a result
+		select {
+		case <-doneCh:
+
+		case <-time.After(500 * time.Millisecond):
+			t.Fatal("should have a result")
+		}
+
+		require.NoError(jerr)
+		require.NotNil(job)
+		require.Equal("B", job.Id)
+	})
 }
 
 func TestJobAck(t *testing.T) {
@@ -1144,6 +1208,39 @@ func TestJobCancel(t *testing.T) {
 
 		// Verify it is canceled
 		job, err := s.JobById("A", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.Job.State)
+		require.NotNil(job.Job.Error)
+		require.NotEmpty(job.CancelTime)
+	})
+
+	t.Run("queued with dependents", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "B",
+			DependsOn: []string{"A"},
+		})))
+
+		// Cancel it
+		require.NoError(s.JobCancel("A", false))
+
+		// Verify it is canceled
+		job, err := s.JobById("A", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.Job.State)
+		require.NotNil(job.Job.Error)
+		require.NotEmpty(job.CancelTime)
+
+		// Verify dependent is canceled
+		job, err = s.JobById("B", nil)
 		require.NoError(err)
 		require.Equal(pb.Job_ERROR, job.Job.State)
 		require.NotNil(job.Job.Error)

@@ -1248,6 +1248,7 @@ func (s *State) jobCascadeDependentState(
 			parent.Id,
 			parent.Error.Message,
 		)).Proto()
+		job.CancelTime = parent.CancelTime
 
 		// Write to disk
 		if err := dbPut(dbTxn.Bucket(jobBucket), []byte(job.Id), job); err != nil {
