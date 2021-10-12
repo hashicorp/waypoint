@@ -50,11 +50,20 @@ func (c *UserModifyCommand) Run(args []string) int {
 	user := userResp.User
 
 	// Perform modifications
+	willModify := false
 	if v := c.flagNewUsername; v != "" {
 		user.Username = v
+		willModify = true
 	}
 	if v := c.flagDisplay; v != "" {
 		user.Display = v
+		willModify = true
+	}
+
+	if !willModify {
+		c.ui.Output("at least one user modification flag must be specified"+
+			c.Help(), terminal.WithErrorStyle())
+		return 1
 	}
 
 	if _, err := client.UpdateUser(c.Ctx, &pb.UpdateUserRequest{User: user}); err != nil {
