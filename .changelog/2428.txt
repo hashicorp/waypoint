@@ -1,0 +1,8 @@
+```release-note:feature
+plugin/k8s: Allows users to add sidecar containers to apps using the k8s plugin config.
+```
+
+```
+release-note:breaking-change
+plugin/k8s: Advanced `Ports` config has a new type and has moves out of the top-level config.
+```
