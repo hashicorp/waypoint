@@ -19,7 +19,6 @@ rest of the infrastructure will function correctly.
 
 ### Waypoint Server -> Jeager example
 
-
 The Waypoint server supports multiple exporters, but this example will show exporting
 to the OpenCensus agent, and viewing traces in Jeager.
 
