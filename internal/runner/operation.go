@@ -2,14 +2,11 @@ package runner
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"sync"
 
 	"github.com/hashicorp/go-hclog"
@@ -18,7 +15,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	sdk "github.com/hashicorp/waypoint-plugin-sdk"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -291,7 +287,7 @@ func (r *Runner) pluginFactories(
 	reattachPluginsStr := os.Getenv("WP_REATTACH_PLUGINS")
 	if reattachPluginsStr != "" {
 		var err error
-		reattachPluginConfigs, err = parseReattachPlugins(reattachPluginsStr)
+		reattachPluginConfigs, err = plugin.ParseReattachPlugins(reattachPluginsStr)
 		if err != nil {
 			return nil, err
 		}
@@ -351,46 +347,6 @@ func (r *Runner) pluginFactories(
 	}
 
 	return result, perr
-}
-
-// parse information on reattaching to plugins out of a
-// JSON-encoded environment variable.
-func parseReattachPlugins(in string) (map[string]*goplugin.ReattachConfig, error) {
-	reattachConfigs := map[string]*goplugin.ReattachConfig{}
-	if in != "" {
-		in = strings.TrimRight(in, "'")
-		in = strings.TrimLeft(in, "'")
-		var m map[string]sdk.ReattachConfig
-		err := json.Unmarshal([]byte(in), &m)
-		if err != nil {
-			return reattachConfigs, fmt.Errorf("Invalid format for WP_REATTACH_PROVIDERS: %w", err)
-		}
-		for p, c := range m {
-			var addr net.Addr
-			switch c.Addr.Network {
-			case "unix":
-				addr, err = net.ResolveUnixAddr("unix", c.Addr.String)
-				if err != nil {
-					return reattachConfigs, fmt.Errorf("Invalid unix socket path %q for %q: %w", c.Addr.String, p, err)
-				}
-			case "tcp":
-				addr, err = net.ResolveTCPAddr("tcp", c.Addr.String)
-				if err != nil {
-					return reattachConfigs, fmt.Errorf("Invalid TCP address %q for %q: %w", c.Addr.String, p, err)
-				}
-			default:
-				return reattachConfigs, fmt.Errorf("Unknown address type %q for %q", c.Addr.String, p)
-			}
-			reattachConfigs[p] = &goplugin.ReattachConfig{
-				Protocol:        goplugin.Protocol(c.Protocol),
-				ProtocolVersion: c.ProtocolVersion,
-				Pid:             c.Pid,
-				Test:            c.Test,
-				Addr:            addr,
-			}
-		}
-	}
-	return reattachConfigs, nil
 }
 
 // operationNoDataFunc is the function type for operations that are

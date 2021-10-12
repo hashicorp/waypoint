@@ -14,6 +14,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/hashicorp/go-argmapper"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -430,92 +431,13 @@ func (c *AppDocsCommand) markdownFormatPB(name, ct string, doc *pb.Documentation
 	}
 }
 
-func (c *AppDocsCommand) builtinDocs(args []string) int {
-	types := []component.Type{
-		component.BuilderType,
-		component.RegistryType,
-		component.PlatformType,
-		component.ReleaseManagerType,
-		component.ConfigSourcerType,
-		component.TaskLauncherType,
-	}
-
-	docfactories := map[component.Type]*factory.Factory{}
-
-	for _, t := range types {
-		fact, err := factory.New(component.TypeMap[t])
-		if err != nil {
-			panic(err)
-		}
-
-		docfactories[t] = fact
-	}
-
-	for name := range plugin.Builtins {
-		for _, t := range types {
-			f := plugin.BuiltinFactory(name, t)
-			docfactories[t].Register(name, f)
-		}
-	}
-
-	factories := []struct {
-		f *factory.Factory
-		t string
-	}{
-		{docfactories[component.BuilderType], "builder"},
-		{docfactories[component.RegistryType], "registry"},
-		{docfactories[component.PlatformType], "platform"},
-		{docfactories[component.ReleaseManagerType], "releasemanager"},
-		{docfactories[component.ConfigSourcerType], "configsourcer"},
-		{docfactories[component.TaskLauncherType], "task"},
-	}
-
-	for _, f := range factories {
-		if c.flagType != "" && c.flagType != f.t {
-			continue
-		}
-
-		types := f.f.Registered()
-		sort.Strings(types)
-
-		for _, t := range types {
-			if c.flagPlugin != "" && c.flagPlugin != t {
-				continue
-			}
-
-			fn := f.f.Func(t)
-			res := fn.Call(argmapper.Typed(c.Log))
-			if res.Err() != nil {
-				panic(res.Err())
-			}
-
-			raw := res.Out(0)
-
-			// If we have a plugin.Instance then we can extract other information
-			// from this plugin. We accept pure factories too that don't return
-			// this so we type-check here.
-			if pinst, ok := raw.(*plugin.Instance); ok {
-				raw = pinst.Component
-				defer pinst.Close()
-			}
-
-			doc, err := component.Documentation(raw)
-			if err != nil {
-				continue
-			}
-
-			if c.flagMarkdown {
-				c.markdownFormat(t, f.t, doc)
-			} else {
-				c.basicFormat(t, f.t, doc)
-			}
-		}
-	}
-
-	return 0
+type pluginDocs struct {
+	pluginName string
+	pluginType string
+	doc        *docs.Documentation
 }
 
-func (c *AppDocsCommand) builtinMDX(args []string) int {
+func getDocs(builtinPluginNames []string, log hclog.Logger) ([]*pluginDocs, error) {
 	types := []component.Type{
 		component.BuilderType,
 		component.RegistryType,
@@ -530,13 +452,17 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 	for _, t := range types {
 		fact, err := factory.New(component.TypeMap[t])
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		docfactories[t] = fact
 	}
 
-	for name := range plugin.Builtins {
+	for _, name := range builtinPluginNames {
+		_, ok := plugin.Builtins[name]
+		if !ok {
+			return nil, fmt.Errorf("Builtin plugin named %s does not exist", name)
+		}
 		for _, t := range types {
 			f := plugin.BuiltinFactory(name, t)
 			docfactories[t].Register(name, f)
@@ -555,15 +481,17 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 		{docfactories[component.TaskLauncherType], "task"},
 	}
 
+	var requestedDocs []*pluginDocs
 	for _, f := range factories {
 		types := f.f.Registered()
 		sort.Strings(types)
 
 		for _, t := range types {
+
 			fn := f.f.Func(t)
-			res := fn.Call(argmapper.Typed(c.Log))
+			res := fn.Call(argmapper.Typed(log))
 			if res.Err() != nil {
-				panic(res.Err())
+				return nil, res.Err()
 			}
 
 			raw := res.Out(0)
@@ -579,18 +507,73 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 
 			doc, err := component.Documentation(raw)
 			if err != nil {
-				cleanup()
-				panic(err.Error())
+				continue
 			}
 
-			switch f.t {
-			case "configsourcer":
-				c.mdxFormatConfigSourcer(t, f.t, doc)
-
-			default:
-				c.mdxFormat(t, f.t, doc)
-			}
+			requestedDocs = append(requestedDocs, &pluginDocs{
+				pluginName: t,
+				pluginType: f.t,
+				doc:        doc,
+			})
 			cleanup()
+		}
+	}
+	return requestedDocs, nil
+}
+
+func (c *AppDocsCommand) builtinDocs(args []string) int {
+	var pluginNames []string
+	if c.flagPlugin != "" {
+		pluginNames = append(pluginNames, c.flagPlugin)
+	} else {
+		// Use all plugins
+		for pluginName := range plugin.Builtins {
+			pluginNames = append(pluginNames, pluginName)
+		}
+	}
+
+	pluginDocs, err := getDocs(pluginNames, c.Log)
+	if err != nil {
+		c.ui.Output(fmt.Sprintf("Failed to get plugin docs: %s", err), terminal.StatusError)
+		return 1
+	}
+
+	for _, pluginDoc := range pluginDocs {
+		if c.flagMarkdown {
+			c.markdownFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
+		} else {
+			c.basicFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
+		}
+	}
+
+	return 0
+}
+
+func (c *AppDocsCommand) builtinMDX() int {
+
+	var pluginNames []string
+	if c.flagPlugin != "" {
+		pluginNames = append(pluginNames, c.flagPlugin)
+	} else {
+		// Use all plugins
+		for pluginName := range plugin.Builtins {
+			pluginNames = append(pluginNames, pluginName)
+		}
+	}
+
+	pluginDocs, err := getDocs(pluginNames, c.Log)
+	if err != nil {
+		c.ui.Output(fmt.Sprintf("Failed to get plugin docs: %s", err), terminal.StatusError)
+		return 1
+	}
+
+	for _, pluginDoc := range pluginDocs {
+		switch pluginDoc.pluginType {
+		case "configsourcer":
+			c.mdxFormatConfigSourcer(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
+
+		default:
+			c.mdxFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
 		}
 	}
 
@@ -695,7 +678,7 @@ func (c *AppDocsCommand) Run(args []string) int {
 	}
 
 	if c.flagMDX {
-		return c.builtinMDX(args)
+		return c.builtinMDX()
 	}
 
 	err = c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
