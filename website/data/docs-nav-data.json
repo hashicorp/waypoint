@@ -96,6 +96,14 @@
       {
         "title": "YAML Directory Deployment",
         "path": "kubernetes/kubectl-deploy"
+      },
+      {
+        "title": "Resource Status",
+        "path": "kubernetes/resource-status"
+      },
+      {
+        "title": "ConfigMaps and Secrets",
+        "path": "kubernetes/config"
       }
     ]
   },
