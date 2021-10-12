@@ -33,6 +33,23 @@ Please see our [compatibility promise](/docs/upgrading/compatibility)
 for details on how to determine compatibility. This page will focus on
 how to upgrade components in both compatible and incompatible scenarios.
 
+### Helm Chart
+
+If you're using the [Waypoint Helm chart](https://github.com/hashicorp/waypoint-helm)
+to install Waypoint, you can upgrade using the `helm upgrade` command.
+Please take note of any
+[version-specific upgrade notes](//docs/upgrading/version-guides) prior
+to upgrading, which may include minimum Helm chart versions for the upgrade
+or steps you should take prior or following the upgrade.
+
+```shell-session
+$ helm repo update
+$ helm upgrade waypoint
+```
+
+-> Note that the "waypoint" value in `helm upgrade` refers to the
+release name you chose during `helm install`. This may be different for you.
+
 ### Server Upgrade Command
 
 Waypoint provides a command for users to upgrade the
