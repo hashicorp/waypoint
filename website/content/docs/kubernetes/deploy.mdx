@@ -145,3 +145,26 @@ app "my-app" {
   }
 }
 ```
+
+### Ingress
+
+You can expose your application through a
+[Kubernetes Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/):
+
+```hcl
+app "my-app" {
+  release {
+    use "kubernetes" {
+      ingress "http" {
+        path_type = "Prefix"
+        path      = "/"
+      }
+    }
+  }
+}
+```
+
+-> **This requires that you have an Ingress controller configured.**
+Kubernetes does not do this by default. See the
+[official Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/)
+for more information.
