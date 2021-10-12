@@ -1648,7 +1648,7 @@ deploy "kubernetes" {
 		"resources": func(doc docs.DocField) {
 			doc.SetField(
 				"resources",
-				"a map of resource limits and requests to apply to a pod on deploy",
+				"a map of resource limits and requests to apply to a container on deploy",
 				docs.Summary(
 					"resource limits and requests for a container. This exists to allow any possible "+
 						"resources. For cpu and memory, use those relevant settings instead. "+
