@@ -92,6 +92,10 @@
       {
         "title": "YAML-Free Deployment",
         "path": "kubernetes/deploy"
+      },
+      {
+        "title": "YAML Directory Deployment",
+        "path": "kubernetes/kubectl-deploy"
       }
     ]
   },

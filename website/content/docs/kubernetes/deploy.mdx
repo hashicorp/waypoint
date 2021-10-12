@@ -2,7 +2,7 @@
 layout: docs
 page_title: Kubernetes - YAML-Free Deployment
 description: |-
-  Waypoint can deploy your applications onto Kubernetes using Helm. Waypoint then tracks and shows you the health of all the resources that the Helm chart created.
+  For many applications, Waypoint can deploy to Kubernetes with only a handful of lines of configuration in the `waypoint.hcl` file and zero external configuration.
 ---
 
 # Deploying Applications without YAML
@@ -15,7 +15,7 @@ you can always switch deployment plugins.
 
 -> **Prefer writing YAML? That's okay!** Waypoint supports
 [Helm](/docs/kubernetes/helm-deploy) and raw
-[`kubectl apply`](/plugins/kubernetes#kubernetes-apply-platform) as first-class
+[`kubectl apply`](/docs/kubernetes/kubectl-deploy) as first-class
 deployment plugins, too.
 
 ## A Simple Application
