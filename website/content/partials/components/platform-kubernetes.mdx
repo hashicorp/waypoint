@@ -109,11 +109,11 @@ Cpu resource configuration.
 
 CPU lets you define resource limits and requests for a container in a deployment.
 
-####### pod.container.cpu.limit
+###### pod.container.cpu.limit
 
 Maximum amount of cpu to give the container. Supports m to indicate milli-cores.
 
-####### pod.container.cpu.request
+###### pod.container.cpu.request
 
 How much cpu to give the container in cpu cores. Supports m to indicate milli-cores.
 
@@ -123,11 +123,11 @@ Memory resource configuration.
 
 Memory lets you define resource limits and requests for a container in a deployment.
 
-####### pod.container.memory.limit
+###### pod.container.memory.limit
 
 Maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes.
 
-####### pod.container.memory.request
+###### pod.container.memory.request
 
 How much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes.
 
@@ -141,29 +141,29 @@ A port and options that the application is listening on.
 
 Used to define and expose multiple ports that the application or process is listening on for the container in use. Can be specified multiple times for many ports.
 
-####### pod.container.port.host_ip
+###### pod.container.port.host_ip
 
 What host IP to bind the external port to.
 
-####### pod.container.port.host_port
+###### pod.container.port.host_port
 
 The corresponding worker node port.
 
 Number of port to expose on the host. If specified, this must be a valid port number, 0 < x < 65536. If HostNetwork is specified, this must match ContainerPort. Most containers do not need this.
 
-####### pod.container.port.name
+###### pod.container.port.name
 
 Name of the port.
 
 If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
 
-####### pod.container.port.port
+###### pod.container.port.port
 
 The port number.
 
 Number of port to expose on the pod's IP address. This must be a valid port number, 0 < x < 65536.
 
-####### pod.container.port.protocol
+###### pod.container.port.protocol
 
 Protocol for port. Must be UDP, TCP, or SCTP.
 
@@ -173,17 +173,17 @@ Configuration to control liveness and readiness probes.
 
 Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
 
-####### pod.container.probe.failure_threshold
+###### pod.container.probe.failure_threshold
 
 Number of times a liveness probe can fail before the container is killed.
 
 FailureThreshold \* TimeoutSeconds should be long enough to cover your worst case startup times.
 
-####### pod.container.probe.initial_delay
+###### pod.container.probe.initial_delay
 
 Time in seconds to wait before performing the initial liveness and readiness probes.
 
-####### pod.container.probe.timeout
+###### pod.container.probe.timeout
 
 Time in seconds before the probe fails.
 
@@ -195,7 +195,7 @@ Without this, the test will simply be that the application has bound to the port
 
 ###### pod.container.resources
 
-A map of resource limits and requests to apply to a pod on deploy.
+A map of resource limits and requests to apply to a container on deploy.
 
 Resource limits and requests for a container. This exists to allow any possible resources. For cpu and memory, use those relevant settings instead. Keys must start with either `limits_` or `requests_`. Any other options will be ignored.
 
@@ -235,111 +235,111 @@ Another container to run alongside the app container in the kubernetes pod. Can 
 
 Container describes the commands and arguments for a container config.
 
-####### pod.sidecar.container.args
+###### pod.sidecar.container.args
 
 An array of string arguments to pass through to the container.
 
-####### pod.sidecar.container.command
+###### pod.sidecar.container.command
 
 An array of strings to run for the container.
 
-####### pod.sidecar.container.cpu (category)
+###### pod.sidecar.container.cpu (category)
 
 Cpu resource configuration.
 
 CPU lets you define resource limits and requests for a container in a deployment.
 
-######## pod.sidecar.container.cpu.limit
+###### pod.sidecar.container.cpu.limit
 
 Maximum amount of cpu to give the container. Supports m to indicate milli-cores.
 
-######## pod.sidecar.container.cpu.request
+###### pod.sidecar.container.cpu.request
 
 How much cpu to give the container in cpu cores. Supports m to indicate milli-cores.
 
-####### pod.sidecar.container.memory (category)
+###### pod.sidecar.container.memory (category)
 
 Memory resource configuration.
 
 Memory lets you define resource limits and requests for a container in a deployment.
 
-######## pod.sidecar.container.memory.limit
+###### pod.sidecar.container.memory.limit
 
 Maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes.
 
-######## pod.sidecar.container.memory.request
+###### pod.sidecar.container.memory.request
 
 How much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes.
 
-####### pod.sidecar.container.name
+###### pod.sidecar.container.name
 
 Name of the container.
 
-####### pod.sidecar.container.port (category)
+###### pod.sidecar.container.port (category)
 
 A port and options that the application is listening on.
 
 Used to define and expose multiple ports that the application or process is listening on for the container in use. Can be specified multiple times for many ports.
 
-######## pod.sidecar.container.port.host_ip
+###### pod.sidecar.container.port.host_ip
 
 What host IP to bind the external port to.
 
-######## pod.sidecar.container.port.host_port
+###### pod.sidecar.container.port.host_port
 
 The corresponding worker node port.
 
 Number of port to expose on the host. If specified, this must be a valid port number, 0 < x < 65536. If HostNetwork is specified, this must match ContainerPort. Most containers do not need this.
 
-######## pod.sidecar.container.port.name
+###### pod.sidecar.container.port.name
 
 Name of the port.
 
 If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
 
-######## pod.sidecar.container.port.port
+###### pod.sidecar.container.port.port
 
 The port number.
 
 Number of port to expose on the pod's IP address. This must be a valid port number, 0 < x < 65536.
 
-######## pod.sidecar.container.port.protocol
+###### pod.sidecar.container.port.protocol
 
 Protocol for port. Must be UDP, TCP, or SCTP.
 
-####### pod.sidecar.container.probe (category)
+###### pod.sidecar.container.probe (category)
 
 Configuration to control liveness and readiness probes.
 
 Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
 
-######## pod.sidecar.container.probe.failure_threshold
+###### pod.sidecar.container.probe.failure_threshold
 
 Number of times a liveness probe can fail before the container is killed.
 
 FailureThreshold \* TimeoutSeconds should be long enough to cover your worst case startup times.
 
-######## pod.sidecar.container.probe.initial_delay
+###### pod.sidecar.container.probe.initial_delay
 
 Time in seconds to wait before performing the initial liveness and readiness probes.
 
-######## pod.sidecar.container.probe.timeout
+###### pod.sidecar.container.probe.timeout
 
 Time in seconds before the probe fails.
 
-####### pod.sidecar.container.probe_path
+###### pod.sidecar.container.probe_path
 
 The HTTP path to request to test that the application is running.
 
 Without this, the test will simply be that the application has bound to the port.
 
-####### pod.sidecar.container.resources
+###### pod.sidecar.container.resources
 
-A map of resource limits and requests to apply to a pod on deploy.
+A map of resource limits and requests to apply to a container on deploy.
 
 Resource limits and requests for a container. This exists to allow any possible resources. For cpu and memory, use those relevant settings instead. Keys must start with either `limits_` or `requests_`. Any other options will be ignored.
 
-####### pod.sidecar.container.static_environment
+###### pod.sidecar.container.static_environment
 
 Environment variables to control broad modes of the application.
 
@@ -455,7 +455,7 @@ If the replica count is maintained outside waypoint, for instance by a pod autos
 
 #### resources
 
-A map of resource limits and requests to apply to a pod on deploy.
+A map of resource limits and requests to apply to a container on deploy.
 
 Resource limits and requests for a container. This exists to allow any possible resources. For cpu and memory, use those relevant settings instead. Keys must start with either `limits_` or `requests_`. Any other options will be ignored.
 
