@@ -53,7 +53,7 @@ at https://www.waypointproject.io/commands/server-run#command-options.
 #### Make gRPC requests to the Waypoint server
 
 [Bootstrap](https://www.waypointproject.io/commands/server-bootstrap) your server if you're running it for the first
-time via `server-run`, or run any Waypoint CLI commands against your server (i.e. `waypoint context verify`).
+time via `server run`, or run any Waypoint CLI commands against your server (i.e. `waypoint context verify`).
 When the Waypoint server handles any gRPC request, it will send a trace to the OpenCensus agent, which will
 forward it to the OpenCensus collector, which will forward it to Jeager.
 
