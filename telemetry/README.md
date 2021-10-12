@@ -30,18 +30,18 @@ Run `docker-compose up` within this directory. You do not need to specify a `DD_
 Provide the following flags to the Waypoint server (either via extra flags passed to `waypoint server install` after a `--`,
 or as flags to `waypoint server run`):
 
-- `-telemetry-opencensus-agent-addr=127.0.0.1:55678`
-- `-telemetry-opencensus-agent-insecure`
-- `-telemetry-opencensus-zpages-addr=localhost:9999` (not required, but useful for troubleshooting)
+- `-telemetry-oc-agent-addr=127.0.0.1:55678`
+- `-telemetry-oc-agent-insecure`
+- `-telemetry-oc-zpages-addr=localhost:9999` (not required, but useful for troubleshooting)
 
 A full example of a `waypoint server run` command:
 ```
 waypoint server run \
   -advertise-addr=127.0.0.1:9701 -listen-grpc=127.0.0.1:9701 -listen-http=127.0.0.1:9702 \
   -db=/tmp/data.db -accept-tos -advertise-tls-skip-verify -url-enabled -vv \
-  -telemetry-opencensus-agent-addr=127.0.0.1:55678 \
-  -telemetry-opencensus-zpages-addr=localhost:9999 \
-  -telemetry-opencensus-agent-insecure \
+  -telemetry-oc-agent-addr=127.0.0.1:55678 \
+  -telemetry-oc-zpages-addr=localhost:9999 \
+  -telemetry-oc-agent-insecure \
 ```
 
 You may observe in the debug logs that the OpenCensus agent exporter and zPages server have started.
@@ -66,7 +66,7 @@ with the Waypoint service selected, and observe traces!
 ### Troubleshooting
 
 You can troubleshoot the flow of traces by visiting the zPages endpoints:
-- on the Waypoint server (if enabled with the `-telemetry-opencensus-zpages-addr=localhost:9999` flag) at http://localhost:9999/debug/tracez
+- on the Waypoint server (if enabled with the `-telemetry-oc-zpages-addr=localhost:9999` flag) at http://localhost:9999/debug/tracez
 - on the OpenCensus agent container at http://localhost:9998/debug/tracez
 - on the OpenCensus collector container at http://localhost:9997/debug/tracez
 

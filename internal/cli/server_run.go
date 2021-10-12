@@ -226,7 +226,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 		server.WithGRPC(ln),
 		server.WithHTTP(httpLn),
 		server.WithImpl(impl),
-		server.WithTelemetryEnabled(telemetryEnabled),
+		server.WithTelemetry(telemetryEnabled),
 	}
 	if httpInsecureLn != nil {
 		options = append(options, server.WithHTTP(httpInsecureLn))
@@ -329,6 +329,7 @@ This command will bootstrap the server and setup a CLI context.
 	}
 
 	if telemetryEnabled {
+		log.Debug("Telemetry enabled - configuring telemetry options.")
 		telemetryOptions := []telemetry.Option{
 			telemetry.WithLogger(log.Named("telemetry")),
 		}
@@ -527,26 +528,26 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Default: false,
 		})
 		f.StringVar(&flag.StringVar{
-			Name:   "telemetry-opencensus-agent-addr",
+			Name:   "telemetry-oc-agent-addr",
 			Target: &c.flagTelemetryOpenCensusAgentAddr,
 			Usage: "Address of an OpenCensus agent or collector available to receive OpenCensus formatted " +
 				"telemetry, traces and stats (commonly port 55678). Example: localhost:55678",
 		})
 		f.BoolVar(&flag.BoolVar{
-			Name:    "telemetry-opencensus-agent-insecure",
+			Name:    "telemetry-oc-agent-insecure",
 			Target:  &c.flagTelemetryOpenCensusAgentInsecure,
 			Usage:   "Disables client transport security for the OpenCensus agent exporter's gRPC connection.",
 			Default: false,
 		})
 		f.StringVar(&flag.StringVar{
-			Name:   "telemetry-datadog-trace-addr",
+			Name:   "telemetry-dd-trace-addr",
 			Target: &c.flagTelemetryDatadogTraceAddr,
 			Usage:  "Address of a DataDog agent available to accept traces (commonly port 8126). Example: localhost:8126",
 		})
 		f.StringVar(&flag.StringVar{
-			Name:   "telemetry-opencensus-zpages-addr",
+			Name:   "telemetry-oc-zpages-addr",
 			Target: &c.flagTelemetryOpenCensusZpagesAddr,
-			Usage: "If set, Waypoint will run a telemetry zPages server at this address. Typically this is " +
+			Usage: "If set, Waypoint will run an OpenCensus zPages server at this address. Typically this is " +
 				"set to something like localhost:9999, where trace debug information could be viewed at " +
 				"http://localhost:9999/debug/tracez, and rpc stats at http://localhost:55679/debug/rpcz. " +
 				"More information at https://opencensus.io/zpages/",
