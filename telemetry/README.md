@@ -28,7 +28,7 @@ Run `docker-compose up` within this directory. You do not need to specify a `DD_
 
 #### Run the waypoint server
 
-Provide the following flags to the waypoint server (either via extra flags passed to `waypoint server install` after a `--`,
+Provide the following flags to the Waypoint server (either via extra flags passed to `waypoint server install` after a `--`,
 or as flags to `waypoint server run`):
 
 - `-telemetry-opencensus-agent-addr=127.0.0.1:55678`
