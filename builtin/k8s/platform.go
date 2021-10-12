@@ -1370,7 +1370,7 @@ func overlayTopLevelProperties(config Config, container *Container) (*Container,
 	}
 	if config.ServicePort != nil {
 		// We've already validated that ports is nil in ConfigSet - they cannot both be set at once.
-		container.Ports = []*Port{{Port: *config.ServicePort, Name: "http"}}
+		overlaidContainer.Ports = []*Port{{Port: *config.ServicePort, Name: "http"}}
 	}
 
 	return overlaidContainer, nil
