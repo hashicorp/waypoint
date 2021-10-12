@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strings"
 
+	goplugin "github.com/hashicorp/go-plugin"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/posener/complete"
 	"github.com/zclconf/go-cty/cty"
@@ -458,15 +460,37 @@ func getDocs(builtinPluginNames []string, log hclog.Logger) ([]*pluginDocs, erro
 		docfactories[t] = fact
 	}
 
+	// Look for any reattach plugins
+	var reattachPluginConfigs map[string]*goplugin.ReattachConfig
+	reattachPluginsStr := os.Getenv("WP_REATTACH_PLUGINS")
+	if reattachPluginsStr != "" {
+		var err error
+		reattachPluginConfigs, err = plugin.ParseReattachPlugins(reattachPluginsStr)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	for _, name := range builtinPluginNames {
 		_, ok := plugin.Builtins[name]
 		if !ok {
 			return nil, fmt.Errorf("Builtin plugin named %s does not exist", name)
 		}
-		for _, t := range types {
-			f := plugin.BuiltinFactory(name, t)
-			docfactories[t].Register(name, f)
+		if reattachConfig, ok := reattachPluginConfigs[name]; ok {
+			log.Debug(fmt.Sprintf("plugin %s is declared as running for reattachment", name))
+			for _, t := range types {
+				if err := docfactories[t].Register(name, plugin.ReattachPluginFactory(reattachConfig, t)); err != nil {
+					return nil, err
+				}
+			}
+			continue
+		} else {
+			for _, t := range types {
+				f := plugin.BuiltinFactory(name, t)
+				docfactories[t].Register(name, f)
+			}
 		}
+
 	}
 
 	factories := []struct {
