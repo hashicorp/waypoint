@@ -10,6 +10,9 @@ Router.map(function () {
   this.route('auth', function () {
     this.route('invite');
     this.route('token');
+    this.route('oidc', { path: '/:provider_name' }, function () {
+      this.route('oidc-redirect');
+    });
   });
   this.route('onboarding', function () {
     this.route('install', function () {

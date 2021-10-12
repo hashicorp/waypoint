@@ -1,0 +1,3 @@
+{{#each @model.authMethodsList as |authMethod|}}
+  <LinkTo @route="auth.oidc" @model={{authMethod.name}} class="pds-button pds--primary">{{authMethod.displayName}}</LinkTo>
+{{/each}}
