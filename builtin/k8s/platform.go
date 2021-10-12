@@ -1549,8 +1549,8 @@ deploy "kubernetes" {
 }
 `)
 
-	setCommonVar := map[string]func(doc docs.DocField){
-		"port": func(doc docs.DocField) {
+	commonSubFields := map[string]func(doc *docs.SubFieldDoc){
+		"port": func(doc *docs.SubFieldDoc) {
 			doc.SetField(
 				"port",
 				"a port and options that the application is listening on",
@@ -1558,7 +1558,7 @@ deploy "kubernetes" {
 					"used to define and expose multiple ports that the application or process is",
 					"listening on for the container in use. Can be specified multiple times for many ports.",
 				),
-				docs.SubFields(func(doc *docs.SubFieldDoc) {
+				doc.SubFields("port", func(doc *docs.SubFieldDoc) {
 					doc.SetField(
 						"name",
 						"name of the port",
@@ -1595,7 +1595,7 @@ deploy "kubernetes" {
 				}),
 			)
 		},
-		"static_environment": func(doc docs.DocField) {
+		"static_environment": func(doc *docs.SubFieldDoc) {
 			doc.SetField(
 				"static_environment",
 				"environment variables to control broad modes of the application",
@@ -1607,18 +1607,17 @@ deploy "kubernetes" {
 				),
 			)
 		},
-		"cpu": func(doc docs.DocField) {
+		"cpu": func(doc *docs.SubFieldDoc) {
 			doc.SetField(
 				"cpu",
 				"cpu resource configuration",
 				docs.Summary("CPU lets you define resource limits and requests for a container in "+
 					"a deployment."),
-				docs.SubFields(func(doc *docs.SubFieldDoc) {
+				doc.SubFields("cpu", func(doc *docs.SubFieldDoc) {
 					doc.SetField(
 						"request",
 						"how much cpu to give the container in cpu cores. Supports m to indicate milli-cores",
 					)
-
 					doc.SetField(
 						"limit",
 						"maximum amount of cpu to give the container. Supports m to indicate milli-cores",
@@ -1626,13 +1625,13 @@ deploy "kubernetes" {
 				}),
 			)
 		},
-		"memory": func(doc docs.DocField) {
+		"memory": func(doc *docs.SubFieldDoc) {
 			doc.SetField(
 				"memory",
 				"memory resource configuration",
 				docs.Summary("Memory lets you define resource limits and requests for a container in "+
 					"a deployment."),
-				docs.SubFields(func(doc *docs.SubFieldDoc) {
+				doc.SubFields("memory", func(doc *docs.SubFieldDoc) {
 					doc.SetField(
 						"request",
 						"how much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes",
@@ -1645,7 +1644,7 @@ deploy "kubernetes" {
 				}),
 			)
 		},
-		"resources": func(doc docs.DocField) {
+		"resources": func(doc *docs.SubFieldDoc) {
 			doc.SetField(
 				"resources",
 				"a map of resource limits and requests to apply to a container on deploy",
@@ -1657,7 +1656,7 @@ deploy "kubernetes" {
 				),
 			)
 		},
-		"probe_path": func(doc docs.DocField) {
+		"probe_path": func(doc *docs.SubFieldDoc) {
 			doc.SetField(
 				"probe_path",
 				"the HTTP path to request to test that the application is running",
@@ -1666,13 +1665,13 @@ deploy "kubernetes" {
 				),
 			)
 		},
-		"probe": func(doc docs.DocField) {
+		"probe": func(doc *docs.SubFieldDoc) {
 			doc.SetField(
 				"probe",
 				"configuration to control liveness and readiness probes",
 				docs.Summary("Probe describes a health check to be performed against a ",
 					"container to determine whether it is alive or ready to receive traffic."),
-				docs.SubFields(func(doc *docs.SubFieldDoc) {
+				doc.SubFields("probe", func(doc *docs.SubFieldDoc) {
 					doc.SetField(
 						"initial_delay",
 						"time in seconds to wait before performing the initial liveness and readiness probes",
@@ -1698,23 +1697,23 @@ deploy "kubernetes" {
 			)
 		},
 	}
-	setCommonVar["container"] = func(doc docs.DocField) {
+	commonSubFields["container"] = func(doc *docs.SubFieldDoc) {
 		doc.SetField(
 			"container",
 			"container describes the commands and arguments for a container config",
-			docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SubFields("container", func(doc *docs.SubFieldDoc) {
 				doc.SetField(
 					"name",
 					"name of the container",
 				)
 
-				setCommonVar["cpu"](doc)
-				setCommonVar["memory"](doc)
-				setCommonVar["resources"](doc)
-				setCommonVar["probe_path"](doc)
-				setCommonVar["probe"](doc)
-				setCommonVar["port"](doc)
-				setCommonVar["static_environment"](doc)
+				commonSubFields["cpu"](doc)
+				commonSubFields["memory"](doc)
+				commonSubFields["resources"](doc)
+				commonSubFields["probe_path"](doc)
+				commonSubFields["probe"](doc)
+				commonSubFields["port"](doc)
+				commonSubFields["static_environment"](doc)
 
 				doc.SetField(
 					"command",
@@ -1809,11 +1808,89 @@ deploy "kubernetes" {
 		),
 	)
 
-	setCommonVar["probe_path"](doc)
-	setCommonVar["probe"](doc)
-	setCommonVar["resources"](doc)
-	setCommonVar["cpu"](doc)
-	setCommonVar["memory"](doc)
+	doc.SetField(
+		"probe_path",
+		"the HTTP path to request to test that the application is running",
+		docs.Summary(
+			"without this, the test will simply be that the application has bound to the port",
+		),
+	)
+
+	doc.SetField(
+		"probe",
+		"configuration to control liveness and readiness probes",
+		docs.Summary("Probe describes a health check to be performed against a ",
+			"container to determine whether it is alive or ready to receive traffic."),
+		doc.SubFields("probe", func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"initial_delay",
+				"time in seconds to wait before performing the initial liveness and readiness probes",
+				docs.Default("5"),
+			)
+
+			doc.SetField(
+				"timeout",
+				"time in seconds before the probe fails",
+				docs.Default("5"),
+			)
+
+			doc.SetField(
+				"failure_threshold",
+				"number of times a liveness probe can fail before the container is killed",
+				docs.Summary(
+					"failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
+				),
+				docs.Default("5"),
+			)
+
+		}),
+	)
+
+	doc.SetField(
+		"resources",
+		"a map of resource limits and requests to apply to a container on deploy",
+		docs.Summary(
+			"resource limits and requests for a container. This exists to allow any possible "+
+				"resources. For cpu and memory, use those relevant settings instead. "+
+				"Keys must start with either `limits_` or `requests_`. Any other options "+
+				"will be ignored.",
+		),
+	)
+
+	doc.SetField(
+		"cpu",
+		"cpu resource configuration",
+		docs.Summary("CPU lets you define resource limits and requests for a container in "+
+			"a deployment."),
+		doc.SubFields("cpu", func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"request",
+				"how much cpu to give the container in cpu cores. Supports m to indicate milli-cores",
+			)
+			doc.SetField(
+				"limit",
+				"maximum amount of cpu to give the container. Supports m to indicate milli-cores",
+			)
+		}),
+	)
+
+	doc.SetField(
+		"memory",
+		"memory resource configuration",
+		docs.Summary("Memory lets you define resource limits and requests for a container in "+
+			"a deployment."),
+		doc.SubFields("memory", func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"request",
+				"how much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+			)
+
+			doc.SetField(
+				"limit",
+				"maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+			)
+		}),
+	)
 
 	doc.SetField(
 		"scratch_path",
@@ -1842,26 +1919,35 @@ deploy "kubernetes" {
 		),
 	)
 
-	setCommonVar["static_environment"](doc)
+	doc.SetField(
+		"static_environment",
+		"environment variables to control broad modes of the application",
+		docs.Summary(
+			"environment variables that are meant to configure the container in a static",
+			"way. This might be control an image that has multiple modes of operation,",
+			"selected via environment variable. Most configuration should use the waypoint",
+			"config commands",
+		),
+	)
 
 	doc.SetField(
 		"pod",
 		"the configuration for a pod",
 		docs.Summary("Pod describes the configuration for a pod when deploying"),
-		docs.SubFields(func(doc *docs.SubFieldDoc) {
-			setCommonVar["container"](doc)
+		doc.SubFields("pod", func(doc *docs.SubFieldDoc) {
+			commonSubFields["container"](doc)
 			doc.SetField(
 				"sidecar",
 				"a sidecar container within the same pod",
 				docs.Summary("Another container to run alongside the app container in the kubernetes pod.",
 					"Can be specified multiple times for multiple sidecars.",
 				),
-				docs.SubFields(func(doc *docs.SubFieldDoc) {
+				doc.SubFields("sidecar", func(doc *docs.SubFieldDoc) {
 					doc.SetField(
 						"image",
 						"image of the sidecar container",
 					)
-					setCommonVar["container"](doc)
+					commonSubFields["container"](doc)
 				}),
 			)
 			doc.SetField(

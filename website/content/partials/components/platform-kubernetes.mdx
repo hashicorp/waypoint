@@ -99,9 +99,15 @@ Container describes the commands and arguments for a container config.
 
 An array of string arguments to pass through to the container.
 
+- Type: **list of string**
+- **Optional**
+
 ###### pod.container.command
 
 An array of strings to run for the container.
+
+- Type: **list of string**
+- **Optional**
 
 ###### pod.container.cpu (category)
 
@@ -113,9 +119,15 @@ CPU lets you define resource limits and requests for a container in a deployment
 
 Maximum amount of cpu to give the container. Supports m to indicate milli-cores.
 
+- Type: **string**
+- **Optional**
+
 ###### pod.container.cpu.request
 
 How much cpu to give the container in cpu cores. Supports m to indicate milli-cores.
+
+- Type: **string**
+- **Optional**
 
 ###### pod.container.memory (category)
 
@@ -127,13 +139,22 @@ Memory lets you define resource limits and requests for a container in a deploym
 
 Maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes.
 
+- Type: **string**
+- **Optional**
+
 ###### pod.container.memory.request
 
 How much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes.
 
+- Type: **string**
+- **Optional**
+
 ###### pod.container.name
 
 Name of the container.
+
+- Type: **string**
+- **Optional**
 
 ###### pod.container.port (category)
 
@@ -145,11 +166,17 @@ Used to define and expose multiple ports that the application or process is list
 
 What host IP to bind the external port to.
 
+- Type: **string**
+- **Optional**
+
 ###### pod.container.port.host_port
 
 The corresponding worker node port.
 
 Number of port to expose on the host. If specified, this must be a valid port number, 0 < x < 65536. If HostNetwork is specified, this must match ContainerPort. Most containers do not need this.
+
+- Type: **uint**
+- **Optional**
 
 ###### pod.container.port.name
 
@@ -157,15 +184,23 @@ Name of the port.
 
 If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
 
+- Type: **string**
+
 ###### pod.container.port.port
 
 The port number.
 
 Number of port to expose on the pod's IP address. This must be a valid port number, 0 < x < 65536.
 
+- Type: **uint**
+
 ###### pod.container.port.protocol
 
 Protocol for port. Must be UDP, TCP, or SCTP.
+
+- Type: **string**
+- **Optional**
+- Default: TCP
 
 ###### pod.container.probe (category)
 
@@ -179,13 +214,25 @@ Number of times a liveness probe can fail before the container is killed.
 
 FailureThreshold \* TimeoutSeconds should be long enough to cover your worst case startup times.
 
+- Type: **uint**
+- **Optional**
+- Default: 5
+
 ###### pod.container.probe.initial_delay
 
 Time in seconds to wait before performing the initial liveness and readiness probes.
 
+- Type: **uint**
+- **Optional**
+- Default: 5
+
 ###### pod.container.probe.timeout
 
 Time in seconds before the probe fails.
+
+- Type: **uint**
+- **Optional**
+- Default: 5
 
 ###### pod.container.probe_path
 
@@ -193,17 +240,26 @@ The HTTP path to request to test that the application is running.
 
 Without this, the test will simply be that the application has bound to the port.
 
+- Type: **string**
+- **Optional**
+
 ###### pod.container.resources
 
 A map of resource limits and requests to apply to a container on deploy.
 
 Resource limits and requests for a container. This exists to allow any possible resources. For cpu and memory, use those relevant settings instead. Keys must start with either `limits_` or `requests_`. Any other options will be ignored.
 
+- Type: **map of string to string**
+- **Optional**
+
 ###### pod.container.static_environment
 
 Environment variables to control broad modes of the application.
 
 Environment variables that are meant to configure the container in a static way. This might be control an image that has multiple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands.
+
+- Type: **map of string to string**
+- **Optional**
 
 ##### pod.pod_security_context (category)
 
@@ -239,9 +295,15 @@ Container describes the commands and arguments for a container config.
 
 An array of string arguments to pass through to the container.
 
+- Type: **list of string**
+- **Optional**
+
 ###### pod.sidecar.container.command
 
 An array of strings to run for the container.
+
+- Type: **list of string**
+- **Optional**
 
 ###### pod.sidecar.container.cpu (category)
 
@@ -253,9 +315,15 @@ CPU lets you define resource limits and requests for a container in a deployment
 
 Maximum amount of cpu to give the container. Supports m to indicate milli-cores.
 
+- Type: **string**
+- **Optional**
+
 ###### pod.sidecar.container.cpu.request
 
 How much cpu to give the container in cpu cores. Supports m to indicate milli-cores.
+
+- Type: **string**
+- **Optional**
 
 ###### pod.sidecar.container.memory (category)
 
@@ -267,13 +335,22 @@ Memory lets you define resource limits and requests for a container in a deploym
 
 Maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes.
 
+- Type: **string**
+- **Optional**
+
 ###### pod.sidecar.container.memory.request
 
 How much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes.
 
+- Type: **string**
+- **Optional**
+
 ###### pod.sidecar.container.name
 
 Name of the container.
+
+- Type: **string**
+- **Optional**
 
 ###### pod.sidecar.container.port (category)
 
@@ -285,11 +362,17 @@ Used to define and expose multiple ports that the application or process is list
 
 What host IP to bind the external port to.
 
+- Type: **string**
+- **Optional**
+
 ###### pod.sidecar.container.port.host_port
 
 The corresponding worker node port.
 
 Number of port to expose on the host. If specified, this must be a valid port number, 0 < x < 65536. If HostNetwork is specified, this must match ContainerPort. Most containers do not need this.
+
+- Type: **uint**
+- **Optional**
 
 ###### pod.sidecar.container.port.name
 
@@ -297,15 +380,23 @@ Name of the port.
 
 If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
 
+- Type: **string**
+
 ###### pod.sidecar.container.port.port
 
 The port number.
 
 Number of port to expose on the pod's IP address. This must be a valid port number, 0 < x < 65536.
 
+- Type: **uint**
+
 ###### pod.sidecar.container.port.protocol
 
 Protocol for port. Must be UDP, TCP, or SCTP.
+
+- Type: **string**
+- **Optional**
+- Default: TCP
 
 ###### pod.sidecar.container.probe (category)
 
@@ -319,13 +410,25 @@ Number of times a liveness probe can fail before the container is killed.
 
 FailureThreshold \* TimeoutSeconds should be long enough to cover your worst case startup times.
 
+- Type: **uint**
+- **Optional**
+- Default: 5
+
 ###### pod.sidecar.container.probe.initial_delay
 
 Time in seconds to wait before performing the initial liveness and readiness probes.
 
+- Type: **uint**
+- **Optional**
+- Default: 5
+
 ###### pod.sidecar.container.probe.timeout
 
 Time in seconds before the probe fails.
+
+- Type: **uint**
+- **Optional**
+- Default: 5
 
 ###### pod.sidecar.container.probe_path
 
@@ -333,11 +436,17 @@ The HTTP path to request to test that the application is running.
 
 Without this, the test will simply be that the application has bound to the port.
 
+- Type: **string**
+- **Optional**
+
 ###### pod.sidecar.container.resources
 
 A map of resource limits and requests to apply to a container on deploy.
 
 Resource limits and requests for a container. This exists to allow any possible resources. For cpu and memory, use those relevant settings instead. Keys must start with either `limits_` or `requests_`. Any other options will be ignored.
+
+- Type: **map of string to string**
+- **Optional**
 
 ###### pod.sidecar.container.static_environment
 
@@ -345,9 +454,14 @@ Environment variables to control broad modes of the application.
 
 Environment variables that are meant to configure the container in a static way. This might be control an image that has multiple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands.
 
+- Type: **map of string to string**
+- **Optional**
+
 ###### pod.sidecar.image
 
 Image of the sidecar container.
+
+- Type: **string**
 
 #### probe (category)
 
