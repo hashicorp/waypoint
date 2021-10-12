@@ -690,6 +690,13 @@ func (c *AppDocsCommand) Run(args []string) int {
 		return 1
 	}
 
+	if os.Getenv("WP_REATTACH_PLUGINS") != "" {
+		// Currently, only waypoint runners have the logic necessary to reattach to an existing plugin.
+		c.ui.Output("WP_REATTACH_PLUGINS detected, but plugin debugging is not supported with this command.", terminal.StatusError)
+		// Exit immediately, as an IDE user is unlikely to notice this warning otherwise
+		return 1
+	}
+
 	if c.flagBuiltin {
 		return c.builtinDocs(args)
 	}

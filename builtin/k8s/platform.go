@@ -7,10 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/copystructure"
-
 	"github.com/docker/distribution/reference"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint/builtin/aws/utils"
+	"github.com/mitchellh/copystructure"
 	"github.com/mitchellh/mapstructure"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -38,7 +39,6 @@ const (
 	labelId    = "waypoint.hashicorp.com/id"
 	labelNonce = "waypoint.hashicorp.com/nonce"
 
-	// TODO Evaluate if this should remain as a default 3000 to another port.
 	DefaultServicePort = 3000
 )
 
@@ -97,6 +97,57 @@ func (p *Platform) DefaultReleaserFunc() interface{} {
 			config: rc,
 		}
 	}
+}
+
+// ConfigSet is called after a configuration has been decoded
+// we can use this to validate the config
+func (p *Platform) ConfigSet(config interface{}) error {
+	c, ok := config.(*Config)
+	if !ok {
+		// this should never happen
+		return status.Errorf(codes.FailedPrecondition, "invalid configuration, expected *k8s.Config, got %T", config)
+	}
+
+	if len(c.DeprecatedPorts) > 0 {
+		return status.Errorf(codes.InvalidArgument, "invalid kubernetes platform config - the 'ports' field has been deprecated and removed "+
+			"in favor of Pod.Container.Port. Refer to Port documentation here: https://www.waypointproject.io/plugins/kubernetes#port")
+	}
+
+	// Some fields can be specified on pod.Container and at the top level, for convenience and for
+	// historical reasons. Validate that both are not set at once.
+	if c.Pod != nil && c.Pod.Container != nil {
+		containerOverlayErrStr := "%s defined multiple times - in top level config and in Pod.Container"
+		container := c.Pod.Container
+		err := utils.Error(validation.ValidateStruct(c,
+			validation.Field(&c.Probe,
+				validation.Empty.When(container.Probe != nil).Error(fmt.Sprintf(containerOverlayErrStr, "Probe")),
+			),
+			validation.Field(&c.ProbePath,
+				validation.Empty.When(container.ProbePath != "").Error(fmt.Sprintf(containerOverlayErrStr, "ProbePath")),
+			),
+			validation.Field(&c.Resources,
+				validation.Empty.When(container.Resources != nil).Error(fmt.Sprintf(containerOverlayErrStr, "Resources")),
+			),
+			validation.Field(&c.CPU,
+				validation.Empty.When(container.CPU != nil).Error(fmt.Sprintf(containerOverlayErrStr, "CPU")),
+			),
+			validation.Field(&c.Memory,
+				validation.Empty.When(container.Memory != nil).Error(fmt.Sprintf(containerOverlayErrStr, "Memory")),
+			),
+			validation.Field(&c.StaticEnvVars,
+				validation.Empty.When(container.StaticEnvVars != nil).Error(fmt.Sprintf(containerOverlayErrStr, "StaticEnvVars")),
+			),
+			validation.Field(&c.ServicePort,
+				validation.Empty.When(len(container.Ports) > 0).Error("Cannot define both 'service_port' and container 'port'. Use"+
+					" container 'port' multiple times for configuring multiple container ports"),
+			),
+		))
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, fmt.Sprintf("Invalid kubernetes platform plugin config: %s", err.Error()))
+		}
+	}
+
+	return nil
 }
 
 func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
@@ -291,8 +342,9 @@ func (p *Platform) resourceDeploymentStatus(
 	return nil
 }
 
-func configureK8sContainer(
+func configureContainer(
 	c *Container,
+	image string,
 	envVars map[string]string,
 	scratchSpace []string,
 	volumes []corev1.Volume,
@@ -304,9 +356,9 @@ func configureK8sContainer(
 	// This by default means kubernetes will always pull so that latest is useful.
 
 	var pullPolicy corev1.PullPolicy
-	imageReference, err := reference.Parse(c.Image)
+	imageReference, err := reference.Parse(image)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "image %q is not a valid OCI reference: %q", c.Image, err)
+		return nil, status.Errorf(codes.InvalidArgument, "image %q is not a valid OCI reference: %q", image, err)
 	}
 	taggedImageReference, ok := imageReference.(reference.Tagged)
 	if !ok || taggedImageReference.Tag() == "latest" {
@@ -319,6 +371,11 @@ func configureK8sContainer(
 
 	var k8sPorts []corev1.ContainerPort
 	for _, port := range c.Ports {
+		// Default the port protocol to TCP
+		if port.Protocol == "" {
+			port.Protocol = "TCP"
+		}
+
 		k8sPorts = append(k8sPorts, corev1.ContainerPort{
 			Name:          port.Name,
 			ContainerPort: int32(port.Port),
@@ -456,7 +513,7 @@ func configureK8sContainer(
 
 	container := corev1.Container{
 		Name:            c.Name,
-		Image:           c.Image,
+		Image:           image,
 		ImagePullPolicy: pullPolicy,
 		Env:             k8sEnvVars,
 		Resources:       resourceRequirements,
@@ -557,22 +614,15 @@ func (p *Platform) resourceDeploymentCreate(
 		overlayTarget = &Container{}
 	}
 
-	// Setup our port configuration
-	if p.config.ServicePort == 0 && len(p.config.Ports) == 0 {
-		// nothing defined, set up the defaults
-		p.config.Ports = append(p.config.Ports, &Port{Port: DefaultServicePort, Name: "http"})
-	} else if p.config.ServicePort > 0 && len(p.config.Ports) == 0 {
-		// old ServicePort var is used, so set it up in our Ports map to be used
-		p.config.Ports = append(p.config.Ports, &Port{Port: p.config.ServicePort, Name: "http"})
-	} else if p.config.ServicePort > 0 && len(p.config.Ports) > 0 {
-		// both defined, this is an error
-		return fmt.Errorf("cannot define both 'service_port' and 'ports'. Use" +
-			" 'ports' for configuring multiple container ports")
-	}
-
 	appContainerSpec, err := overlayTopLevelProperties(p.config, overlayTarget)
 	if err != nil {
 		return status.Errorf(codes.InvalidArgument, "Failed to parse container config: %s", err)
+	}
+
+	// App container must have some kind of port
+	if len(appContainerSpec.Ports) == 0 {
+		ui.Output(fmt.Sprintf("No ports defined - defaulting to http on port %d", DefaultServicePort), terminal.WithWarningStyle())
+		appContainerSpec.Ports = append(appContainerSpec.Ports, &Port{Port: DefaultServicePort, Name: "http"})
 	}
 
 	envVars := make(map[string]string)
@@ -598,11 +648,12 @@ func (p *Platform) resourceDeploymentCreate(
 		)
 	}
 
-	appContainerSpec.Image = fmt.Sprintf("%s:%s", img.Image, img.Tag)
+	appImage := fmt.Sprintf("%s:%s", img.Image, img.Tag)
 	appContainerSpec.Name = src.App
 
-	appContainer, err := configureK8sContainer(
+	appContainer, err := configureContainer(
 		appContainerSpec,
+		appImage,
 		envVars,
 		p.config.ScratchSpace,
 		volumes,
@@ -620,15 +671,16 @@ func (p *Platform) resourceDeploymentCreate(
 		for _, sidecarConfig := range p.config.Pod.Sidecars {
 			envVars := make(map[string]string)
 			// Add deploy config environment to container env vars
-			for k, v := range sidecarConfig.StaticEnvVars {
+			for k, v := range sidecarConfig.Container.StaticEnvVars {
 				envVars[k] = v
 			}
 			for k, v := range deployConfig.Env() {
 				envVars[k] = v
 			}
 
-			sidecarContainer, err := configureK8sContainer(
-				sidecarConfig,
+			sidecarContainer, err := configureContainer(
+				&sidecarConfig.Container,
+				sidecarConfig.Image,
 				envVars,
 				p.config.ScratchSpace,
 				volumes,
@@ -638,7 +690,7 @@ func (p *Platform) resourceDeploymentCreate(
 			)
 			if err != nil {
 				return status.Errorf(status.Code(err),
-					"Failed to define sidecar container %s: %s", sidecarConfig.Name, err)
+					"Failed to define sidecar container %s: %s", sidecarConfig.Container.Name, err)
 			}
 			sidecarContainers = append(sidecarContainers, *sidecarContainer)
 		}
@@ -1288,7 +1340,8 @@ func (p *Platform) Status(
 }
 
 // overlayDefaultProperties overlays the top level container properties from config onto the
-// more detailed container properties in container, erroring if both are not empty.
+// more detailed container properties in container.
+// ConfigSet has already validated that both are not set, so we don't have to check here.
 func overlayTopLevelProperties(config Config, container *Container) (*Container, error) {
 	var overlaidContainer *Container
 	i, err := copystructure.Copy(container)
@@ -1297,65 +1350,27 @@ func overlayTopLevelProperties(config Config, container *Container) (*Container,
 	}
 	overlaidContainer, _ = i.(*Container)
 
-	// Layer in easily discoverable top-level properties, and error on conflicts
 	if config.ProbePath != "" {
-		if container.ProbePath != "" {
-			return nil, status.Errorf(codes.InvalidArgument, "ProbePath defined multiple times - in top-level config and in Pod.Container.")
-		}
 		overlaidContainer.ProbePath = config.ProbePath
 	}
-
 	if config.Probe != nil {
-		if container.Probe != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "Probe defined multiple times - in top-level config and in Pod.Container.")
-		}
 		overlaidContainer.ProbePath = config.ProbePath
 	}
-
 	if config.Resources != nil {
-		if container.Resources != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "Resources defined multiple times - in top-level config and in Pod.Container.")
-		}
 		overlaidContainer.Resources = config.Resources
 	}
-
 	if config.CPU != nil {
-		if container.CPU != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "CPU defined multiple times - in top-level config and in Pod.Container.")
-		}
 		overlaidContainer.CPU = config.CPU
 	}
-
 	if config.Memory != nil {
-		if container.Memory != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "Memory defined multiple times - in top-level config and in Pod.Container.")
-		}
 		overlaidContainer.Memory = config.Memory
 	}
-
 	if config.StaticEnvVars != nil {
-		if container.StaticEnvVars != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "StaticEnvVars defined multiple times - in top-level config and in Pod.Container.")
-		}
 		overlaidContainer.StaticEnvVars = config.StaticEnvVars
 	}
-
-	if config.StaticEnvVars != nil {
-		if container.StaticEnvVars != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "StaticEnvVars defined multiple times - in top-level config and in Pod.Container.")
-		}
-		overlaidContainer.StaticEnvVars = config.StaticEnvVars
-	}
-
-	if config.Ports != nil {
-		if container.Ports != nil {
-			if config.ServicePort != 0 {
-				return nil, status.Errorf(codes.InvalidArgument, "Ports defined multiple times - in top-level config as ServicePort and in Pod.Container.")
-			} else {
-				return nil, status.Errorf(codes.InvalidArgument, "Ports defined multiple times - in top-level config and in Pod.Container.")
-			}
-		}
-		overlaidContainer.Ports = config.Ports
+	if config.ServicePort != nil {
+		// We've already validated that ports is nil in ConfigSet - they cannot both be set at once.
+		container.Ports = []*Port{{Port: *config.ServicePort, Name: "http"}}
 	}
 
 	return overlaidContainer, nil
@@ -1396,11 +1411,6 @@ type Config struct {
 	// Namespace is the Kubernetes namespace to target the deployment to.
 	Namespace string `hcl:"namespace,optional"`
 
-	// A full resource of options to define ports for your service running on the container
-	// Defaults to port 3000.
-	// Todo(XX): add in HCL parse logic to warn if defining ports the old way, & update docs
-	Ports []*Port `hcl:"port,block"`
-
 	// If set, this is the HTTP path to request to test that the application
 	// is up and running. Without this, we only test that a connection can be
 	// made to the port.
@@ -1430,16 +1440,19 @@ type Config struct {
 	// Port that your service is running on within the actual container.
 	// Defaults to DefaultServicePort const.
 	// NOTE: Ports and ServicePort cannot both be defined
-	ServicePort uint `hcl:"service_port,optional"`
+	ServicePort *uint `hcl:"service_port,optional"`
 
 	// Environment variables that are meant to configure the application in a static
-	// way. This might be control an image that has mulitple modes of operation,
+	// way. This might be control an image that has multiple modes of operation,
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 
 	// Pod describes the configuration for the pod
 	Pod *Pod `hcl:"pod,block"`
+
+	// Deprecated field, previous definition of ports
+	DeprecatedPorts []map[string]string `hcl:"ports,optional" docs:"hidden"`
 }
 
 // ResourceConfig describes the request and limit of a resource. Used for
@@ -1463,7 +1476,15 @@ type AutoscaleConfig struct {
 type Pod struct {
 	SecurityContext *PodSecurityContext `hcl:"security_context,block"`
 	Container       *Container          `hcl:"container,block"`
-	Sidecars        []*Container        `hcl:"sidecar,block"`
+	Sidecars        []*Sidecar          `hcl:"sidecar,block"`
+}
+
+type Sidecar struct {
+	// Specifying Image in Container would make it visible on the main Pod config,
+	// which isn't the right way to specify the app image.
+	Image string `hcl:"image"`
+
+	Container Container `hcl:"container,block"`
 }
 
 type Port struct {
@@ -1476,8 +1497,7 @@ type Port struct {
 
 // Container describes the detailed parameters to declare a kubernetes container
 type Container struct {
-	Name          string            `hcl:"name"`
-	Image         string            `hcl:"image"`
+	Name          string            `hcl:"name,optional"`
 	Ports         []*Port           `hcl:"port,block"`
 	ProbePath     string            `hcl:"probe_path,optional"`
 	Probe         *Probe            `hcl:"probe,block"`
@@ -1529,6 +1549,196 @@ deploy "kubernetes" {
 }
 `)
 
+	setCommonVar := map[string]func(doc docs.DocField){
+		"port": func(doc docs.DocField) {
+			doc.SetField(
+				"port",
+				"a port and options that the application is listening on",
+				docs.Summary(
+					"used to define and expose multiple ports that the application or process is",
+					"listening on for the container in use. Can be specified multiple times for many ports.",
+				),
+				docs.SubFields(func(doc *docs.SubFieldDoc) {
+					doc.SetField(
+						"name",
+						"name of the port",
+						docs.Summary("If specified, this must be an IANA_SVC_NAME and unique within the pod. Each",
+							"named port in a pod must have a unique name. Name for the port that can be",
+							"referred to by services.",
+						),
+					)
+					doc.SetField(
+						"port",
+						"the port number",
+						docs.Summary("Number of port to expose on the pod's IP address.",
+							"This must be a valid port number, 0 < x < 65536.",
+						),
+					)
+					doc.SetField(
+						"host_port",
+						"the corresponding worker node port",
+						docs.Summary("Number of port to expose on the host.",
+							"If specified, this must be a valid port number, 0 < x < 65536.",
+							"If HostNetwork is specified, this must match ContainerPort.",
+							"Most containers do not need this.",
+						),
+					)
+					doc.SetField(
+						"host_ip",
+						"what host IP to bind the external port to",
+					)
+					doc.SetField(
+						"protocol",
+						"protocol for port. Must be UDP, TCP, or SCTP",
+						docs.Default("TCP"),
+					)
+				}),
+			)
+		},
+		"static_environment": func(doc docs.DocField) {
+			doc.SetField(
+				"static_environment",
+				"environment variables to control broad modes of the application",
+				docs.Summary(
+					"environment variables that are meant to configure the container in a static",
+					"way. This might be control an image that has multiple modes of operation,",
+					"selected via environment variable. Most configuration should use the waypoint",
+					"config commands",
+				),
+			)
+		},
+		"cpu": func(doc docs.DocField) {
+			doc.SetField(
+				"cpu",
+				"cpu resource configuration",
+				docs.Summary("CPU lets you define resource limits and requests for a container in "+
+					"a deployment."),
+				docs.SubFields(func(doc *docs.SubFieldDoc) {
+					doc.SetField(
+						"request",
+						"how much cpu to give the container in cpu cores. Supports m to indicate milli-cores",
+					)
+
+					doc.SetField(
+						"limit",
+						"maximum amount of cpu to give the container. Supports m to indicate milli-cores",
+					)
+				}),
+			)
+		},
+		"memory": func(doc docs.DocField) {
+			doc.SetField(
+				"memory",
+				"memory resource configuration",
+				docs.Summary("Memory lets you define resource limits and requests for a container in "+
+					"a deployment."),
+				docs.SubFields(func(doc *docs.SubFieldDoc) {
+					doc.SetField(
+						"request",
+						"how much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+					)
+
+					doc.SetField(
+						"limit",
+						"maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+					)
+				}),
+			)
+		},
+		"resources": func(doc docs.DocField) {
+			doc.SetField(
+				"resources",
+				"a map of resource limits and requests to apply to a pod on deploy",
+				docs.Summary(
+					"resource limits and requests for a container. This exists to allow any possible "+
+						"resources. For cpu and memory, use those relevant settings instead. "+
+						"Keys must start with either `limits_` or `requests_`. Any other options "+
+						"will be ignored.",
+				),
+			)
+		},
+		"probe_path": func(doc docs.DocField) {
+			doc.SetField(
+				"probe_path",
+				"the HTTP path to request to test that the application is running",
+				docs.Summary(
+					"without this, the test will simply be that the application has bound to the port",
+				),
+			)
+		},
+		"probe": func(doc docs.DocField) {
+			doc.SetField(
+				"probe",
+				"configuration to control liveness and readiness probes",
+				docs.Summary("Probe describes a health check to be performed against a ",
+					"container to determine whether it is alive or ready to receive traffic."),
+				docs.SubFields(func(doc *docs.SubFieldDoc) {
+					doc.SetField(
+						"initial_delay",
+						"time in seconds to wait before performing the initial liveness and readiness probes",
+						docs.Default("5"),
+					)
+
+					doc.SetField(
+						"timeout",
+						"time in seconds before the probe fails",
+						docs.Default("5"),
+					)
+
+					doc.SetField(
+						"failure_threshold",
+						"number of times a liveness probe can fail before the container is killed",
+						docs.Summary(
+							"failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
+						),
+						docs.Default("5"),
+					)
+
+				}),
+			)
+		},
+	}
+	setCommonVar["container"] = func(doc docs.DocField) {
+		doc.SetField(
+			"container",
+			"container describes the commands and arguments for a container config",
+			docs.SubFields(func(doc *docs.SubFieldDoc) {
+				doc.SetField(
+					"name",
+					"name of the container",
+				)
+
+				setCommonVar["cpu"](doc)
+				setCommonVar["memory"](doc)
+				setCommonVar["resources"](doc)
+				setCommonVar["probe_path"](doc)
+				setCommonVar["probe"](doc)
+				setCommonVar["port"](doc)
+				setCommonVar["static_environment"](doc)
+
+				doc.SetField(
+					"command",
+					"an array of strings to run for the container",
+				)
+
+				doc.SetField(
+					"args",
+					"an array of string arguments to pass through to the container",
+				)
+			}),
+		)
+	}
+
+	doc.SetField(
+		"annotations",
+		"annotations to be added to the application pod",
+		docs.Summary(
+			"annotations are added to the pod spec of the deployed application. This is",
+			"useful when using mutating webhook admission controllers to further process",
+			"pod events.",
+		),
+	)
+
 	doc.SetField(
 		"autoscale",
 		"sets up a horizontal pod autoscaler to scale deployments automatically",
@@ -1540,68 +1750,20 @@ deploy "kubernetes" {
 		docs.SubFields(func(doc *docs.SubFieldDoc) {
 			doc.SetField(
 				"min_replicas",
-				"The minimum amount of pods to have for a deployment",
+				"the minimum amount of pods to have for a deployment",
 			)
 
 			doc.SetField(
 				"max_replicas",
-				"The maximum amount of pods to scale to for a deployment",
+				"the maximum amount of pods to scale to for a deployment",
 			)
 
 			doc.SetField(
 				"cpu_percent",
-				"The target CPU percent utilization before the horizontal pod autoscaler "+
+				"the target CPU percent utilization before the horizontal pod autoscaler "+
 					"scales up a deployments replicas",
 			)
 		}),
-	)
-
-	doc.SetField(
-		"pod",
-		"the configuration for a pod",
-		docs.Summary("Pod describes the configuration for a pod when deploying"),
-		docs.SubFields(func(doc *docs.SubFieldDoc) {
-			doc.SetField(
-				"container",
-				"container describes the commands and arguments for a container config",
-				docs.SubFields(func(doc *docs.SubFieldDoc) {
-					doc.SetField(
-						"command",
-						"An array of strings to run for the container",
-					)
-
-					doc.SetField(
-						"args",
-						"An array of string arguments to pass through to the container",
-					)
-				}),
-			)
-			doc.SetField(
-				"pod_security_context",
-				"holds pod-level security attributes and container settings",
-				docs.SubFields(func(doc *docs.SubFieldDoc) {
-					doc.SetField(
-						"run_as_user",
-						"The UID to run the entrypoint of the container process",
-					)
-					doc.SetField(
-						"run_as_non_root",
-						"Indicates that the container must run as a non-root user",
-					)
-					doc.SetField(
-						"fs_group",
-						"A special supplemental group that applies to all containers in a pod",
-					)
-				}),
-			)
-		}),
-	)
-
-	doc.SetField(
-		"kubeconfig",
-		"path to the kubeconfig file to use",
-		docs.Summary("by default uses from current user's home directory"),
-		docs.EnvVar("KUBECONFIG"),
 	)
 
 	doc.SetField(
@@ -1619,108 +1781,6 @@ deploy "kubernetes" {
 	)
 
 	doc.SetField(
-		"cpu",
-		"cpu resource configuration",
-		docs.Summary("CPU lets you define resource limits and requests for a pod in "+
-			"a deployment."),
-		docs.SubFields(func(doc *docs.SubFieldDoc) {
-			doc.SetField(
-				"request",
-				"how much cpu to give the pod in cpu cores. Supports m to inidicate milli-cores",
-			)
-
-			doc.SetField(
-				"limit",
-				"maximum amount of cpu to give the pod. Supports m to inidicate milli-cores",
-			)
-		}),
-	)
-
-	doc.SetField(
-		"memory",
-		"memory resource configuration",
-		docs.Summary("Memory lets you define resource limits and requests for a pod in "+
-			"a deployment."),
-		docs.SubFields(func(doc *docs.SubFieldDoc) {
-			doc.SetField(
-				"request",
-				"how much memory to give the pod in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes",
-			)
-
-			doc.SetField(
-				"limit",
-				"maximum amount of memory to give the pod. Supports k for kilobytes, m for megabytes, and g for gigabytes",
-			)
-		}),
-	)
-
-	doc.SetField(
-		"resources",
-		"a map of resource limits and requests to apply to a pod on deploy",
-		docs.Summary(
-			"resource limits and requests for a pod. This exists to allow any possible "+
-				"resources. For cpu and memory, use those relevent settings instead. "+
-				"Keys must start with either 'limits\\_' or 'requests\\_'. Any other options "+
-				"will be ignored.",
-		),
-	)
-
-	doc.SetField(
-		"port",
-		"a port and options that the application is listening on",
-		docs.Summary(
-			"used to define and expose multiple ports that the application is",
-			"listening on for the container in use. Can be specified multiple times for many ports.",
-		),
-	)
-
-	doc.SetField(
-		"probe_path",
-		"the HTTP path to request to test that the application is running",
-		docs.Summary(
-			"without this, the test will simply be that the application has bound to the port",
-		),
-	)
-
-	doc.SetField(
-		"probe",
-		"configuration to control liveness and readiness probes",
-		docs.Summary("Probe describes a health check to be performed against a ",
-			"container to determine whether it is alive or ready to receive traffic."),
-		docs.SubFields(func(doc *docs.SubFieldDoc) {
-			doc.SetField(
-				"initial_delay",
-				"time in seconds to wait before performing the initial liveness and readiness probes",
-				docs.Default("5"),
-			)
-
-			doc.SetField(
-				"timeout",
-				"time in seconds before the probe fails",
-				docs.Default("5"),
-			)
-
-			doc.SetField(
-				"failure_threshold",
-				"number of times a liveness probe can fail before the container is killed",
-				docs.Summary(
-					"failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
-				),
-				docs.Default("5"),
-			)
-
-		}),
-	)
-
-	doc.SetField(
-		"scratch_path",
-		"a path for the service to store temporary data",
-		docs.Summary(
-			"a path to a directory that will be created for the service to store temporary data using tmpfs",
-		),
-	)
-
-	doc.SetField(
 		"image_secret",
 		"name of the Kubernetes secrete to use for the image",
 		docs.Summary(
@@ -1729,43 +1789,10 @@ deploy "kubernetes" {
 	)
 
 	doc.SetField(
-		"static_environment",
-		"environment variables to control broad modes of the application",
-		docs.Summary(
-			"environment variables that are meant to configure the application in a static",
-			"way. This might be control an image that has multiple modes of operation,",
-			"selected via environment variable. Most configuration should use the waypoint",
-			"config commands",
-		),
-	)
-
-	doc.SetField(
-		"service_port",
-		"the TCP port that the application is listening on",
-		docs.Default(fmt.Sprint(DefaultServicePort)),
-		docs.Summary(
-			"by default, this config variable is used for exposing a single port for",
-			"the container in use. For multi-port configuration, use 'ports' instead.",
-		),
-	)
-
-	doc.SetField(
-		"annotations",
-		"annotations to be added to the application pod",
-		docs.Summary(
-			"annotations are added to the pod spec of the deployed application. This is",
-			"useful when using mutating webhook admission controllers to further process",
-			"pod events.",
-		),
-	)
-
-	doc.SetField(
-		"service_account",
-		"service account name to be added to the application pod",
-		docs.Summary(
-			"service account is the name of the Kubernetes service account to add to the pod.",
-			"This is useful to apply Kubernetes RBAC to the application.",
-		),
+		"kubeconfig",
+		"path to the kubeconfig file to use",
+		docs.Summary("by default uses from current user's home directory"),
+		docs.EnvVar("KUBECONFIG"),
 	)
 
 	doc.SetField(
@@ -1780,6 +1807,82 @@ deploy "kubernetes" {
 			"namespace is the name of the Kubernetes namespace to apply the deployment in.",
 			"This is useful to create deployments in non-default namespaces without creating kubeconfig contexts for each",
 		),
+	)
+
+	setCommonVar["probe_path"](doc)
+	setCommonVar["probe"](doc)
+	setCommonVar["resources"](doc)
+	setCommonVar["cpu"](doc)
+	setCommonVar["memory"](doc)
+
+	doc.SetField(
+		"scratch_path",
+		"a path for the service to store temporary data",
+		docs.Summary(
+			"a path to a directory that will be created for the service to store temporary data using tmpfs",
+		),
+	)
+
+	doc.SetField(
+		"service_account",
+		"service account name to be added to the application pod",
+		docs.Summary(
+			"service account is the name of the Kubernetes service account to add to the pod.",
+			"This is useful to apply Kubernetes RBAC to the application.",
+		),
+	)
+
+	doc.SetField(
+		"service_port",
+		"the TCP port that the application is listening on",
+		docs.Default(fmt.Sprint(DefaultServicePort)),
+		docs.Summary(
+			"by default, this config variable is used for exposing a single port for",
+			"the container in use. For multi-port configuration, use 'ports' instead.",
+		),
+	)
+
+	setCommonVar["static_environment"](doc)
+
+	doc.SetField(
+		"pod",
+		"the configuration for a pod",
+		docs.Summary("Pod describes the configuration for a pod when deploying"),
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			setCommonVar["container"](doc)
+			doc.SetField(
+				"sidecar",
+				"a sidecar container within the same pod",
+				docs.Summary("Another container to run alongside the app container in the kubernetes pod.",
+					"Can be specified multiple times for multiple sidecars.",
+				),
+				docs.SubFields(func(doc *docs.SubFieldDoc) {
+					doc.SetField(
+						"image",
+						"image of the sidecar container",
+					)
+					setCommonVar["container"](doc)
+				}),
+			)
+			doc.SetField(
+				"pod_security_context",
+				"holds pod-level security attributes and container settings",
+				docs.SubFields(func(doc *docs.SubFieldDoc) {
+					doc.SetField(
+						"run_as_user",
+						"the UID to run the entrypoint of the container process",
+					)
+					doc.SetField(
+						"run_as_non_root",
+						"indicates that the container must run as a non-root user",
+					)
+					doc.SetField(
+						"fs_group",
+						"a special supplemental group that applies to all containers in a pod",
+					)
+				}),
+			)
+		}),
 	)
 
 	return doc, nil
