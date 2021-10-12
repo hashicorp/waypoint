@@ -33,6 +33,7 @@ const (
 	jobQueueTimeIndexName   = "queue-time"
 	jobTargetIdIndexName    = "target-id"
 	jobSingletonIdIndexName = "singleton-id"
+	jobDependsOnIndexName   = "depends-on"
 
 	maximumJobsIndexed = 10000
 )
@@ -123,6 +124,16 @@ func jobSchema() *memdb.TableSchema {
 					},
 				},
 			},
+
+			jobDependsOnIndexName: {
+				Name:         jobDependsOnIndexName,
+				AllowMissing: true,
+				Unique:       false,
+				Indexer: &memdb.StringSliceFieldIndex{
+					Field:     "DependsOn",
+					Lowercase: true,
+				},
+			},
 		},
 	}
 }
@@ -132,6 +143,13 @@ type jobIndex struct {
 
 	// SingletonId matches singleton_id if set on the job.
 	SingletonId string
+
+	// DependsOn is the list of jobs that this job depends on. If these
+	// don't exist, they're assumed to have COMPLETED due to pruning,
+	// since we don't allow job creation unless they existed in the past,
+	// and if they errored then they would've immediately set this job
+	// state to error.
+	DependsOn []string
 
 	// OpType is the operation type for the job.
 	OpType reflect.Type
@@ -183,8 +201,10 @@ type Job struct {
 	// time of connection.
 	OutputBuffer *logbuffer.Buffer
 
-	// Blocked is true if this job is blocked on another job for the same
-	// project/app/workspace.
+	// Blocked is true if this job is blocked for some reason. The reasons
+	// a job may be blocked:
+	//  - another job for the same project/app/workspace.
+	//  - a dependent job hasn't completed yet
 	Blocked bool
 }
 
@@ -448,7 +468,7 @@ RETRY_ASSIGN:
 
 		// Update our state and update our on-disk job
 		job.State = pb.Job_WAITING
-		result, err := s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
+		result, err := s.jobReadAndUpdate(txn, job.Id, func(jobpb *pb.Job) error {
 			jobpb.State = job.State
 			jobpb.AssignTime, err = ptypes.TimestampProto(time.Now())
 			if err != nil {
@@ -514,7 +534,7 @@ func (s *State) JobAck(id string, ack bool) (*Job, error) {
 	// We're now modifying this job, so perform a copy
 	job = job.Copy()
 
-	result, err := s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
+	result, err := s.jobReadAndUpdate(txn, job.Id, func(jobpb *pb.Job) error {
 		if ack {
 			// Set to accepted
 			job.State = pb.Job_RUNNING
@@ -589,6 +609,8 @@ func (s *State) JobUpdateRef(id string, ref *pb.Job_DataSource_Ref) error {
 // The callback is called in the context of a database write lock so it
 // should NOT compute anything and should be fast. The callback can return
 // an error to abort the transaction.
+//
+// Job states should NOT be modified using this, only metadata.
 func (s *State) JobUpdate(id string, cb func(jobpb *pb.Job) error) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
@@ -603,7 +625,7 @@ func (s *State) JobUpdate(id string, cb func(jobpb *pb.Job) error) error {
 	}
 	job := raw.(*jobIndex)
 
-	_, err = s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
+	_, err = s.jobReadAndUpdate(txn, job.Id, func(jobpb *pb.Job) error {
 		return cb(jobpb)
 	})
 	if err != nil {
@@ -651,7 +673,7 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 	// We're now modifying this job, so perform a copy
 	job = job.Copy()
 
-	_, err = s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
+	_, err = s.jobReadAndUpdate(txn, job.Id, func(jobpb *pb.Job) error {
 		// Set to complete, assume success for now
 		job.State = pb.Job_SUCCESS
 		jobpb.State = job.State
@@ -750,7 +772,7 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 	}
 
 	// Persist the on-disk data
-	_, err := s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
+	_, err := s.jobReadAndUpdate(txn, job.Id, func(jobpb *pb.Job) error {
 		var err error
 		jobpb.State = job.State
 		jobpb.CancelTime, err = ptypes.TimestampProto(time.Now())
@@ -965,6 +987,7 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex
 	rec := &jobIndex{
 		Id:          jobpb.Id,
 		SingletonId: jobpb.SingletonId,
+		DependsOn:   jobpb.DependsOn,
 		State:       jobpb.State,
 		Application: jobpb.Application,
 		Workspace:   jobpb.Workspace,
@@ -1095,6 +1118,20 @@ func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) erro
 		}
 	}
 
+	// If we have dependencies, they all must exist.
+	if len(jobpb.DependsOn) > 0 {
+		// Let's remove any duplicates
+		jobpb.DependsOn = uniqueStr(jobpb.DependsOn)
+
+		// Go through and ensure that each exists.
+		for _, id := range jobpb.DependsOn {
+			_, err := s.jobById(dbTxn, id)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	// Insert into bolt
 	if err := dbPut(dbTxn.Bucket(jobBucket), id, jobpb); err != nil {
 		return err
@@ -1135,7 +1172,8 @@ func (s *State) jobById(dbTxn *bolt.Tx, id string) (*pb.Job, error) {
 	return &result, dbGet(b, []byte(id), &result)
 }
 
-func (s *State) jobReadAndUpdate(id string, f func(*pb.Job) error) (*pb.Job, error) {
+func (s *State) jobReadAndUpdate(
+	memTxn *memdb.Txn, id string, f func(*pb.Job) error) (*pb.Job, error) {
 	var result *pb.Job
 	var err error
 	return result, s.db.Update(func(dbTxn *bolt.Tx) error {
@@ -1149,9 +1187,83 @@ func (s *State) jobReadAndUpdate(id string, f func(*pb.Job) error) (*pb.Job, err
 			return err
 		}
 
+		// Cascade our state if we have to. We do this within the database
+		// transaction so that error updates the full dependent chain or
+		// nothing.
+		if err := s.jobCascadeDependentState(memTxn, dbTxn, result); err != nil {
+			return err
+		}
+
 		// Commit
 		return dbPut(dbTxn.Bucket(jobBucket), []byte(id), result)
 	})
+}
+
+// jobCascadeDependentState cascades certain state changes to all dependent
+// jobs. For example, if a job transitions to an error state, then all
+// dependents must also error.
+func (s *State) jobCascadeDependentState(
+	memTxn *memdb.Txn,
+	dbTxn *bolt.Tx,
+	parent *pb.Job,
+) error {
+	// If the state isn't error, we don't cascade anything.
+	if parent.State != pb.Job_ERROR {
+		return nil
+	}
+
+	// Look for any dependents
+	iter, err := memTxn.Get(jobTableName, jobDependsOnIndexName, parent.Id)
+	if err != nil {
+		return err
+	}
+
+	for {
+		next := iter.Next()
+		if next == nil {
+			break
+		}
+		idx := next.(*jobIndex)
+
+		// The state SHOULD be queued if the job is still waiting on us.
+		// We only handle this scenario. If it isn't queued, we just ignore
+		// it because we're in a state we don't understand.
+		if idx.State != pb.Job_QUEUED {
+			continue
+		}
+
+		// Read this dependent job from disk so we can update the proto struct.
+		job, err := s.jobById(dbTxn, idx.Id)
+		if status.Code(err) == codes.NotFound {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+
+		// Cascade the error state
+		job.State = pb.Job_ERROR
+		job.Error = status.New(codes.Canceled, fmt.Sprintf(
+			"Job dependency %q errored: %s",
+			parent.Id,
+			parent.Error.Message,
+		)).Proto()
+
+		// Write to disk
+		if err := dbPut(dbTxn.Bucket(jobBucket), []byte(job.Id), job); err != nil {
+			return err
+		}
+
+		// Write to memory index. Error state is terminal so we also call End.
+		idx = idx.Copy()
+		idx.State = job.State
+		idx.End()
+		if err := memTxn.Insert(jobTableName, idx); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // jobCandidateById returns the most promising candidate job to assign
@@ -1253,4 +1365,17 @@ func (idx *jobIndex) End() {
 		idx.StateTimer.Stop()
 		idx.StateTimer = nil
 	}
+}
+
+// uniqueStr is a little helper to ensure a string slice only has unique values.
+func uniqueStr(s []string) []string {
+	keys := map[string]struct{}{}
+	result := make([]string, 0, len(s))
+	for _, value := range s {
+		if _, ok := keys[value]; !ok {
+			keys[value] = struct{}{}
+			result = append(result, value)
+		}
+	}
+	return result
 }

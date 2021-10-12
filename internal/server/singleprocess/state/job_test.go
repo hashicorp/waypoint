@@ -653,6 +653,140 @@ func TestJobAssign(t *testing.T) {
 		require.NotNil(job)
 		require.Equal("B", job.Id)
 	})
+
+	t.Run("assignment with a dependent job", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a job
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "B",
+			DependsOn: []string{"A"},
+		})))
+
+		// Assign it, we should get job A
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+		require.Equal(pb.Job_WAITING, job.State)
+
+		// We should not have an output buffer yet
+		require.Nil(job.OutputBuffer)
+
+		// Should block if requesting another since none exist
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		job, err = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
+		require.Error(err)
+		require.Nil(job)
+		require.Equal(ctx.Err(), err)
+
+		// Peek should return something, even though it is blocked, to
+		// show that we do have some job queued.
+		job, err = s.JobPeekForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("B", job.Id)
+
+		// Ack it
+		_, err = s.JobAck("A", true)
+		require.NoError(err)
+
+		// Complete it
+		require.NoError(s.JobComplete("A", &pb.Job_Result{
+			Build: &pb.Job_BuildResult{},
+		}, nil))
+
+		// Assign it, we should now get job B
+		job, err = s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("B", job.Id)
+		require.Equal(pb.Job_WAITING, job.State)
+	})
+
+	t.Run("assignment with a multiple dependent jobs", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a job
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "B",
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "C",
+			DependsOn: []string{"A", "B"},
+		})))
+
+		{
+			// Assign it, we should get job A
+			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+			require.NoError(err)
+			require.NotNil(job)
+			require.Equal("A", job.Id)
+			require.Equal(pb.Job_WAITING, job.State)
+
+			// Ack it
+			_, err = s.JobAck("A", true)
+			require.NoError(err)
+
+			// Complete it
+			require.NoError(s.JobComplete("A", &pb.Job_Result{
+				Build: &pb.Job_BuildResult{},
+			}, nil))
+		}
+
+		{
+			// Assign it, we should get job B
+			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+			require.NoError(err)
+			require.NotNil(job)
+			require.Equal("B", job.Id)
+			require.Equal(pb.Job_WAITING, job.State)
+
+			// Should block if requesting another since none exist
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			badjob, err := s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
+			require.Error(err)
+			require.Nil(badjob)
+			require.Equal(ctx.Err(), err)
+
+			// Ack it
+			_, err = s.JobAck(job.Id, true)
+			require.NoError(err)
+
+			// Complete it
+			require.NoError(s.JobComplete(job.Id, &pb.Job_Result{
+				Build: &pb.Job_BuildResult{},
+			}, nil))
+		}
+
+		// Peek should return something, even though it is blocked, to
+		// show that we do have some job queued.
+		job, err := s.JobPeekForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("C", job.Id)
+
+		// Assign it, we should now get job B
+		job, err = s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("C", job.Id)
+		require.Equal(pb.Job_WAITING, job.State)
+	})
 }
 
 func TestJobAck(t *testing.T) {
@@ -821,6 +955,59 @@ func TestJobComplete(t *testing.T) {
 		st := status.FromProto(job.Error)
 		require.Equal(codes.Unknown, st.Code())
 		require.Contains(st.Message(), "bad")
+	})
+
+	t.Run("error cascades to dependents", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create jobs
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "B",
+			DependsOn: []string{"A"},
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+
+		// Ack it
+		_, err = s.JobAck(job.Id, true)
+		require.NoError(err)
+
+		// Complete it with error
+		require.NoError(s.JobComplete(job.Id, nil, fmt.Errorf("bad")))
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id, nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.State)
+		require.NotNil(job.Error)
+
+		st := status.FromProto(job.Error)
+		require.Equal(codes.Unknown, st.Code())
+		require.Contains(st.Message(), "bad")
+
+		// Should block if requesting another since none exist
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		job, err = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
+		require.Error(err)
+		require.Nil(job)
+		require.Equal(ctx.Err(), err)
+
+		// Dependent should be error
+		job, err = s.JobById("B", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.State)
+		require.NotNil(job.Error)
 	})
 }
 
