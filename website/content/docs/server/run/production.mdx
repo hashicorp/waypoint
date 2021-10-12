@@ -73,20 +73,9 @@ using the `-tls-cert-file` and `-tls-key-file` flags on the `waypoint server run
 command. These flags should point to a PEM-encoded certificate file and
 private key, respectively.
 
--> **Note:** Servers installed using `waypoint install` currently don't
-support specifying a custom TLS certificate. This limitation will be fixed
-in the future.
+### TLS Rotation
 
-## Limitations
-
-### TLS Certs
-
-The Waypoint server is always protected with TLS, but there is currently
-no way to specify a custom TLS cert. Instead, the Waypoint server will always
-create a self-signed TLS cert on startup. A future version of Waypoint very
-soon will fix this limitation.
-
-A workaround for this today is to front the Waypoint server with a TCP
-load balancer that terminates TLS with your desired TLS certificate. The
-backend connection must use the self-signed TLS connection to the Waypoint
-server.
+Waypoint servers specified with the `-tls-cert-file` and `-tls-key-file`
+parameters will detect any file changes and automatically reload the
+TLS cert without impacting any active connections. Therefore, the easiest
+way to rotate certificates is to overwrite the existing TLS PEM files.
