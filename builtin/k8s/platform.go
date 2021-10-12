@@ -679,7 +679,7 @@ func (p *Platform) resourceDeploymentCreate(
 			}
 
 			sidecarContainer, err := configureContainer(
-				&sidecarConfig.Container,
+				sidecarConfig.Container,
 				sidecarConfig.Image,
 				envVars,
 				p.config.ScratchSpace,
@@ -1484,7 +1484,7 @@ type Sidecar struct {
 	// which isn't the right way to specify the app image.
 	Image string `hcl:"image"`
 
-	Container Container `hcl:"container,block"`
+	Container *Container `hcl:"container,block"`
 }
 
 type Port struct {
