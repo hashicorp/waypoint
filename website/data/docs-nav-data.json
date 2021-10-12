@@ -88,6 +88,10 @@
       {
         "title": "Helm Deployment",
         "path": "kubernetes/helm-deploy"
+      },
+      {
+        "title": "YAML-Free Deployment",
+        "path": "kubernetes/deploy"
       }
     ]
   },
