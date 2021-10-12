@@ -1,5 +1,5 @@
 ```release-note:feature
-plugin/k8s: Allows advanced users to add sidecar containers to apps using the k8s plugin config.
+plugin/k8s: Allows users to add sidecar containers to apps using the k8s plugin config.
 ```
 
 ```
