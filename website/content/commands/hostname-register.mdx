@@ -17,10 +17,17 @@ Register a hostname to route to your apps.
 
 Usage: `waypoint hostname register [hostname]`
 
+Register a hostname with the URL service to route to your apps.
+
+The URL service must be enabled and configured with the Waypoint server.
+This will output the fully qualified domain name that should begin
+routing immediately.
+
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.
 - `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-workspace=<string>` - Workspace to operate in.
+- `-project=<string>` (`-p`) - Project to target.
 
 @include "commands/hostname-register_more.mdx"

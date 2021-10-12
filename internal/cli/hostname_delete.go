@@ -62,5 +62,5 @@ Usage: waypoint hostname delete HOSTNAME
 
   Delete a previously registered hostname.
 
-`)
+` + c.Flags().Help())
 }

@@ -23,7 +23,7 @@ func (c *DestroyCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithSingleApp(),
+		WithMultipleApp(),
 	); err != nil {
 		return 1
 	}
@@ -70,14 +70,14 @@ func (c *DestroyCommand) Flags() *flag.Sets {
 }
 
 func (c *DestroyCommand) Synopsis() string {
-	return "Delete all the resources created for an app"
+	return "Delete all the resources created"
 }
 
 func (c *DestroyCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint destroy [options]
 
-  Delete all resources created for an app in the current workspace.
+  Delete all resources created for an app or project in the current workspace.
 
   The workspace can continue to be used after this call, this just deletes
   all the resources created for this app up to this point.

@@ -26,7 +26,7 @@ func (c *UpCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithSingleApp(),
+		WithMultipleApp(),
 	); err != nil {
 		return 1
 	}
@@ -236,14 +236,14 @@ func (c *UpCommand) Flags() *flag.Sets {
 }
 
 func (c *UpCommand) Synopsis() string {
-	return "Perform the build, deploy, and release steps for the app"
+	return "Perform the build, deploy, and release steps"
 }
 
 func (c *UpCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint up [options]
 
-  Perform the build, deploy, and release steps for the app.
+  Perform the build, deploy, and release steps.
 
 ` + c.Flags().Help())
 }

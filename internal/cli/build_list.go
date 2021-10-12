@@ -28,7 +28,7 @@ func (c *BuildListCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithSingleApp(),
+		WithMultipleApp(),
 	); err != nil {
 		return 1
 	}
@@ -95,6 +95,7 @@ func (c *BuildListCommand) Run(args []string) int {
 			})
 		}
 
+		app.UI.Output("%s", app.Ref().Application, terminal.WithHeaderStyle())
 		c.ui.Table(table)
 
 		return nil

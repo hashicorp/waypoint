@@ -34,6 +34,17 @@ func WithSingleApp() Option {
 	}
 }
 
+// WithMultipleApp configures the CLI to expect a configuration with
+// one or more apps defined in a project. The option will prioritize a value
+// provided to the -project flag.
+func WithMultipleApp() Option {
+	return func(c *baseConfig) {
+		c.ProjectTargetRequired = true
+		c.Config = false
+		c.Client = true
+	}
+}
+
 // WithOptionalApp configures the CLI to work with or without an explicit
 // project config locally. It also allows for operations on multiple apps
 // inside a project.
@@ -96,14 +107,15 @@ func WithConnectionArg() Option {
 }
 
 type baseConfig struct {
-	Args              []string
-	Flags             *flag.Sets
-	Config            bool
-	ConfigOptional    bool
-	AppOptional       bool
-	Client            bool
-	AppTargetRequired bool
-	UI                terminal.UI
+	Args                  []string
+	Flags                 *flag.Sets
+	Config                bool
+	ConfigOptional        bool
+	AppOptional           bool
+	Client                bool
+	AppTargetRequired     bool
+	ProjectTargetRequired bool
+	UI                    terminal.UI
 
 	// NoAutoServer is true if an in-memory server is not allowed.
 	NoAutoServer bool

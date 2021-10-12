@@ -1,0 +1,3 @@
+```release-note:improvement
+cli: Update base commands to default to all apps within the project if project has more than one application
+```

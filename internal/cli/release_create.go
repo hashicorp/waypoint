@@ -33,13 +33,17 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithSingleApp(),
+		WithMultipleApp(),
 	); err != nil {
 		return 1
 	}
 
 	client := c.project.Client()
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		// UI -- this should happen at the top so that the app name shows clearly
+		// for any errors we may encounter prior to the actual release op
+		app.UI.Output("Releasing %s...", app.Ref().Application, terminal.WithHeaderStyle())
+
 		// Get the latest release
 		release, err := client.GetLatestRelease(ctx, &pb.GetLatestReleaseRequest{
 			Application: app.Ref(),
@@ -126,9 +130,6 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 				terminal.WithErrorStyle())
 			return ErrSentinel
 		}
-
-		// UI
-		app.UI.Output("Releasing...", terminal.WithHeaderStyle())
 
 		// Release
 		result, err := app.Release(ctx, &pb.Job_ReleaseOp{

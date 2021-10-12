@@ -62,7 +62,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithSingleApp(),
+		WithMultipleApp(),
 	); err != nil {
 		return 1
 	}
@@ -71,6 +71,13 @@ func (c *DeploymentListCommand) Run(args []string) int {
 	client := c.project.Client()
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		if !c.flagJson {
+			// UI -- this should happen at the top so that the app name shows clearly
+			// for any errors we may encounter prior to the actual table output
+			// but we also don't want to corrupt the json
+			app.UI.Output("%s", app.Ref().Application, terminal.WithHeaderStyle())
+		}
+
 		var wsRef *pb.Ref_Workspace
 		if !c.flagWorkspaceAll {
 			wsRef = c.project.WorkspaceRef()
@@ -126,6 +133,14 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			}
 			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
+		}
+		if len(resp.Deployments) == 0 {
+			c.project.UI.Output(
+				"No deployments found for application %q",
+				app.Ref().Application,
+				terminal.WithWarningStyle(),
+			)
+			return nil
 		}
 		sort.Sort(serversort.DeploymentBundleCompleteDesc(resp.Deployments))
 

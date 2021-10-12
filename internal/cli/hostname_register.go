@@ -20,7 +20,7 @@ func (c *HostnameRegisterCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithSingleApp(),
+		WithMultipleApp(),
 	); err != nil {
 		return 1
 	}
@@ -29,9 +29,16 @@ func (c *HostnameRegisterCommand) Run(args []string) int {
 	if len(c.args) > 0 {
 		hostname = c.args[0]
 	}
+	if hostname != "" && c.flagApp == "" {
+		c.ui.Output("A target app is required when providing a specific hostname to register.",
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
 
 	client := c.project.Client()
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		app.UI.Output("Registering hostname for %s...", app.Ref().Application, terminal.WithHeaderStyle())
 		resp, err := client.CreateHostname(ctx, &pb.CreateHostnameRequest{
 			Hostname: hostname,
 			Target: &pb.Hostname_Target{
@@ -84,5 +91,5 @@ Usage: waypoint hostname register [hostname]
   This will output the fully qualified domain name that should begin
   routing immediately.
 
-`)
+` + c.Flags().Help())
 }

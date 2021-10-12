@@ -15,11 +15,10 @@ import (
 type ConfigGetCommand struct {
 	*baseCommand
 
-	json        bool
-	raw         bool
-	flagProject string
-	flagRunner  bool
-	flagLabels  map[string]string
+	json       bool
+	raw        bool
+	flagRunner bool
+	flagLabels map[string]string
 }
 
 func (c *ConfigGetCommand) Run(args []string) int {
@@ -236,15 +235,6 @@ func (c *ConfigGetCommand) Flags() *flag.Sets {
 			Target: &c.flagLabels,
 			Usage:  "Labels to set for this operation. Can be specified multiple times.",
 		})
-
-		f.StringVar(&flag.StringVar{
-			Name:   "project",
-			Target: &c.flagProject,
-			Usage: "The name of the project for 'project' or 'app' scopes specified " +
-				"with -scope. This is not required if scope is global or there is " +
-				"a local waypoint.hcl file.",
-			Default: "",
-		})
 	})
 }
 
@@ -269,15 +259,15 @@ Usage: waypoint config get [prefix]
 
   The output of this command depends on whether an exact application is
   specified or not. If no app is specified with "-app", this will list
-  all POSSIBLE config vars that could be set for an application. It is
-  the list of "possible" variables because some are dependent on the application
-  name, workspace, or labels.
+  all POSSIBLE config vars that could be set for applications within the project.
+  It is the list of "possible" variables because some are dependent on the
+  application name, workspace, or labels.
 
   By specifying the "-app" flag you can look at config variables that
   would be resolved for a specific application. This will never show duplicate
   variables and will show the full resolved list of variables that will be
-  set for a specific application. This will default to a workspace of "default"
-  and empty labels.
+  set for a specific application. This will default to a workspace of "default,"
+  the current project, and empty labels.
 
   To further simulate what config variables an application would receive,
   you may specify the "-workspace" flag or the "-label" flag (repeatedly)

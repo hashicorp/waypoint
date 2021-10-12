@@ -68,5 +68,5 @@ Usage: waypoint hostname list
 
   This will list all the registered hostnames for all applications.
 
-`)
+` + c.Flags().Help())
 }

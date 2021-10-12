@@ -24,7 +24,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithSingleApp(),
+		WithMultipleApp(),
 	); err != nil {
 		return 1
 	}
@@ -43,7 +43,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 		}
 
 		// Push it
-		app.UI.Output("Deploying...", terminal.WithHeaderStyle())
+		app.UI.Output("Deploying %s...", app.Ref().Application, terminal.WithHeaderStyle())
 		result, err := app.Deploy(ctx, &pb.Job_DeployOp{
 			Artifact: push,
 		})

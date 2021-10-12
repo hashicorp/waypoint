@@ -22,15 +22,15 @@ the given prefix. If no prefix is given, all variables are returned.
 
 The output of this command depends on whether an exact application is
 specified or not. If no app is specified with "-app", this will list
-all POSSIBLE config vars that could be set for an application. It is
-the list of "possible" variables because some are dependent on the application
-name, workspace, or labels.
+all POSSIBLE config vars that could be set for applications within the project.
+It is the list of "possible" variables because some are dependent on the
+application name, workspace, or labels.
 
 By specifying the "-app" flag you can look at config variables that
 would be resolved for a specific application. This will never show duplicate
 variables and will show the full resolved list of variables that will be
-set for a specific application. This will default to a workspace of "default"
-and empty labels.
+set for a specific application. This will default to a workspace of "default,"
+the current project, and empty labels.
 
 To further simulate what config variables an application would receive,
 you may specify the "-workspace" flag or the "-label" flag (repeatedly)
@@ -45,6 +45,7 @@ as well.
 - `-plain` - Plain output: no colors, no animation.
 - `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-workspace=<string>` - Workspace to operate in.
+- `-project=<string>` (`-p`) - Project to target.
 
 #### Command Options
 
@@ -52,6 +53,5 @@ as well.
 - `-raw` - Output in key=val
 - `-runner` - Show configuration that is set on runners. This will not show any configuration that is set on any applications. This only includes configuration set with the -runner flag.
 - `-label=<key=value>` - Labels to set for this operation. Can be specified multiple times.
-- `-project=<string>` - The name of the project for 'project' or 'app' scopes specified with -scope. This is not required if scope is global or there is a local waypoint.hcl file.
 
 @include "commands/config-get_more.mdx"

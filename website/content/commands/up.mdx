@@ -2,14 +2,14 @@
 layout: commands
 page_title: 'Commands: Up'
 sidebar_title: 'up'
-description: 'Perform the build, deploy, and release steps for the app'
+description: 'Perform the build, deploy, and release steps'
 ---
 
 # Waypoint Up
 
 Command: `waypoint up`
 
-Perform the build, deploy, and release steps for the app
+Perform the build, deploy, and release steps
 
 @include "commands/up_desc.mdx"
 
@@ -17,13 +17,14 @@ Perform the build, deploy, and release steps for the app
 
 Usage: `waypoint up [options]`
 
-Perform the build, deploy, and release steps for the app.
+Perform the build, deploy, and release steps.
 
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.
 - `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-workspace=<string>` - Workspace to operate in.
+- `-project=<string>` (`-p`) - Project to target.
 
 #### Operation Options
 

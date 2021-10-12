@@ -35,9 +35,10 @@ func (r *Runner) executeUpOp(
 	}
 
 	// TODO: output the context in use (maybe only if non-default)
+	appName := app.Ref().Application
 
 	// Build it
-	app.UI.Output("Building...", terminal.WithHeaderStyle())
+	app.UI.Output("Building %s...", appName, terminal.WithHeaderStyle())
 	result, err := r.executeBuildOp(ctx, &pb.Job{
 		Application: job.Application,
 		Operation: &pb.Job_Build{
@@ -50,7 +51,7 @@ func (r *Runner) executeUpOp(
 	buildResult := result.Build
 
 	// Deploy it
-	app.UI.Output("Deploying...", terminal.WithHeaderStyle())
+	app.UI.Output("Deploying %s...", appName, terminal.WithHeaderStyle())
 	result, err = r.executeDeployOp(ctx, &pb.Job{
 		Application: job.Application,
 		Operation: &pb.Job_Deploy{
@@ -82,7 +83,7 @@ func (r *Runner) executeUpOp(
 	statusReportResult := result.StatusReport
 
 	// We're releasing, do that too.
-	app.UI.Output("Releasing...", terminal.WithHeaderStyle())
+	app.UI.Output("Releasing %s...", appName, terminal.WithHeaderStyle())
 	op.Release.Deployment = deployResult.Deployment
 	result, err = r.executeReleaseOp(ctx, log, &pb.Job{
 		Application: job.Application,

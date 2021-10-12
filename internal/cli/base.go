@@ -102,6 +102,9 @@ type baseCommand struct {
 	// flagApp is the app to target.
 	flagApp string
 
+	// flagProject is the project to target.
+	flagProject string
+
 	// flagWorkspace is the workspace to work in.
 	flagWorkspace string
 
@@ -232,7 +235,6 @@ func (c *baseCommand) Init(opts ...Option) error {
 			match := reAppTarget.FindStringSubmatch(c.args[0])
 			if match != nil {
 				// Set our refs
-				c.refProject = &pb.Ref_Project{Project: match[1]}
 				c.refApp = &pb.Ref_Application{
 					Project:     match[1],
 					Application: match[2],
@@ -254,7 +256,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	// Some CLIs don't explicitly need an app, but sometimes need to load a config
 	// and setup the project client with the proper project refs.
-	if baseCfg.AppOptional {
+	if baseCfg.AppOptional || baseCfg.ProjectTargetRequired {
 		// If we have args, attempt to extract there first.
 		if len(c.args) > 0 {
 			match := reAppTarget.FindStringSubmatch(c.args[0])
@@ -271,7 +273,10 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 				// Explicitly set remote
 				c.flagRemote = true
-			} else {
+
+				// the below should only be used for commands that don't accept
+				// other arguments
+			} else if !baseCfg.ProjectTargetRequired {
 				// Assume the target is just project
 				p := c.args[0]
 				c.refProject = &pb.Ref_Project{Project: p}
@@ -304,7 +309,19 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 		c.cfg = cfg
 		if cfg != nil {
-			c.refProject = &pb.Ref_Project{Project: cfg.Project}
+
+			// If we require a project target and we still haven't set it,
+			// and the user provided it via the CLI, set it now.
+			// If they didn't provide a value via flag, we default to
+			// the project from initConfig.
+			if baseCfg.ProjectTargetRequired &&
+				c.refProject == nil {
+				if c.flagProject != "" {
+					c.refProject = &pb.Ref_Project{Project: c.flagProject}
+				} else {
+					c.refProject = &pb.Ref_Project{Project: cfg.Project}
+				}
+			}
 
 			// If we require an app target and we still haven't set it,
 			// and the user provided it via the CLI, set it now. This code
@@ -314,7 +331,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 				c.refApp == nil &&
 				c.flagApp != "" {
 				c.refApp = &pb.Ref_Application{
-					Project:     cfg.Project,
+					Project:     c.refProject.Project,
 					Application: c.flagApp,
 				}
 			}
@@ -373,6 +390,19 @@ func (c *baseCommand) Init(opts ...Option) error {
 		}
 	}
 
+	if baseCfg.ProjectTargetRequired {
+		if c.refProject == nil {
+			if len(c.cfg.Project) == 0 {
+				c.ui.Output(errProjectMode, terminal.WithErrorStyle())
+				return ErrSentinel
+			}
+
+			c.refProject = &pb.Ref_Project{
+				Project: c.cfg.Project,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -389,9 +419,39 @@ func (c *baseCommand) Init(opts ...Option) error {
 // will stop any remaining callbacks and exit early.
 func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *clientpkg.App) error) error {
 	var appTargets []string
+
+	// If the user specified a project flag, we want only the apps
+	// that are assigned to that project
+	if c.flagProject != "" {
+		client := c.project.Client()
+		projectTarget := &pb.Ref_Project{Project: c.flagProject}
+		resp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{
+			Project: &pb.Ref_Project{
+				Project: projectTarget.Project,
+			},
+		})
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+		project := resp.Project
+
+		for _, a := range project.Applications {
+			appTargets = append(appTargets, a.Name)
+		}
+	}
+
+	if c.flagApp != "" {
+		c.refApp = &pb.Ref_Application{
+			Application: c.flagApp,
+		}
+	}
+
+	// if we specifically target an app, we no longer care about the rest
+	// of the apps in the project that we set above
 	if c.refApp != nil {
 		appTargets = []string{c.refApp.Application}
-	} else if c.cfg != nil {
+	} else if c.cfg != nil && len(appTargets) == 0 {
 		appTargets = append(appTargets, c.cfg.Apps()...)
 	}
 
@@ -473,6 +533,14 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 			Name:   "workspace",
 			Target: &c.flagWorkspace,
 			Usage:  "Workspace to operate in.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "project",
+			Target:  &c.flagProject,
+			Aliases: []string{"p"},
+			Default: "",
+			Usage:   "Project to target.",
 		})
 	}
 
@@ -688,6 +756,10 @@ This command requires a single targeted app. You have multiple apps defined
 so you can specify the app to target using the "-app" flag.
 `)
 
+	errProjectMode = strings.TrimSpace(`
+This command requires a targeted project.`)
+
+	// matches either "project" or "project/app"
 	reAppTarget = regexp.MustCompile(`^(?P<project>[-0-9A-Za-z_]+)/(?P<app>[-0-9A-Za-z_]+)$`)
 
 	snapshotUnimplementedErr = strings.TrimSpace(`
