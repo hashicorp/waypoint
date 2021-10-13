@@ -554,10 +554,17 @@ func (r *Releaser) resourceIngressCreate(
 		if r.config.IngressConfig.TlsConfig != nil {
 			protocol = "https://"
 		}
-		lbIngress := ingress.Status.LoadBalancer.Ingress[0]
-		result.Url = protocol + lbIngress.IP
-		if lbIngress.Hostname != "" {
-			result.Url = protocol + lbIngress.Hostname
+
+		if r.config.IngressConfig.Host != "" {
+			// We set the requested hostname from the waypoint.hcl if defined
+			result.Url = protocol + r.config.IngressConfig.Host
+		} else {
+			// set the hostname based on the load balancer configured in k8s
+			lbIngress := ingress.Status.LoadBalancer.Ingress[0]
+			result.Url = protocol + lbIngress.IP
+			if lbIngress.Hostname != "" {
+				result.Url = protocol + lbIngress.Hostname
+			}
 		}
 
 		if serviceBackend.Spec.Ports[0].Port != 80 {
