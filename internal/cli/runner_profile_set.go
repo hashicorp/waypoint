@@ -216,7 +216,7 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "oci-url",
 			Target:  &c.flagOCIUrl,
-			Default: "hashicorp/waypoint-odr:stable",
+			Default: "hashicorp/waypoint-odr:latest",
 			Usage:   "The url for the OCI image to launch for the on-demand runner.",
 		})
 
