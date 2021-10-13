@@ -314,7 +314,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 			// and the user provided it via the CLI, set it now.
 			// If they didn't provide a value via flag, we default to
 			// the project from initConfig.
-			if baseCfg.ProjectTargetRequired &&
+			if (baseCfg.AppOptional || baseCfg.ProjectTargetRequired) &&
 				c.refProject == nil {
 				if c.flagProject != "" {
 					c.refProject = &pb.Ref_Project{Project: c.flagProject}
