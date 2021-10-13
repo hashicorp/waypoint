@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useInView } from 'react-intersection-observer'
-import Typical from 'react-typical'
+import Typical from 'components/typical'
 import InlineSvg from '@hashicorp/react-inline-svg'
 import NumberedBlock from 'components/homepage/numbered-block'
 import Features, { FeaturesProps } from 'components/homepage/features'
