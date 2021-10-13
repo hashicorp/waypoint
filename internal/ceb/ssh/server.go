@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/creack/pty"
 	"github.com/gliderlabs/ssh"
@@ -80,6 +81,7 @@ func createHandler(ctx context.Context, logger hclog.Logger, server **ssh.Server
 
 		logger.Debug("executing command", "command", args)
 
+		outDoneCh := make(chan struct{})
 		if ptyInfo, winCh, ok := s.Pty(); ok {
 			logger.Debug("running command in a PTY")
 
@@ -121,6 +123,7 @@ func createHandler(ctx context.Context, logger hclog.Logger, server **ssh.Server
 			}()
 
 			go func() {
+				defer close(outDoneCh)
 				io.Copy(stdout, ptyFile)
 				logger.Debug("command closed stdout")
 			}()
@@ -180,7 +183,10 @@ func createHandler(ctx context.Context, logger hclog.Logger, server **ssh.Server
 			}
 
 			go io.Copy(stdin, s)
-			go io.Copy(s, stdout)
+			go func() {
+				defer close(outDoneCh)
+				io.Copy(s, stdout)
+			}()
 		}
 
 		exitCh := make(chan error, 1)
@@ -206,7 +212,16 @@ func createHandler(ctx context.Context, logger hclog.Logger, server **ssh.Server
 				cmd.Process.Kill()
 				return
 			case err := <-exitCh:
-				logger.Debug("command as exited")
+				logger.Debug("command has exited, waiting for output to complete")
+
+				select {
+				case <-outDoneCh:
+					logger.Trace("output copy complete")
+				case <-time.After(1 * time.Second):
+					// We don't want to block on poorly behaved commands. They
+					// should all finish copying relatively quickly.
+					logger.Trace("output copy timeout, just forcing exit")
+				}
 
 				if err != nil {
 					if exiterr, ok := err.(*exec.ExitError); ok {
