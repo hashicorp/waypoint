@@ -621,9 +621,18 @@ func (p *Platform) resourceDeploymentCreate(
 
 	// App container must have some kind of port
 	if len(appContainerSpec.Ports) == 0 {
-		ui.Output("No ports defined - defaulting to http on port %d", DefaultServicePort, terminal.WithWarningStyle())
+		log.Warn("No ports defined in waypoint.hcl - defaulting to http on port %d", DefaultServicePort)
 		appContainerSpec.Ports = append(appContainerSpec.Ports, &Port{Port: DefaultServicePort, Name: "http"})
 	}
+
+	portStep := sg.Add("")
+	defer func() { portStep.Abort() }()
+	// we dont use %q to save us convering a uint Port to a string and handling the error
+	portStep.Update("Expected %q port \"%d\" for app %q",
+		appContainerSpec.Ports[0].Name,
+		appContainerSpec.Ports[0].Port,
+		result.Name)
+	portStep.Done()
 
 	envVars := make(map[string]string)
 	// Add deploy config environment to container env vars
