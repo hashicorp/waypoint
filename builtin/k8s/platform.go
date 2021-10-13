@@ -621,7 +621,7 @@ func (p *Platform) resourceDeploymentCreate(
 
 	// App container must have some kind of port
 	if len(appContainerSpec.Ports) == 0 {
-		ui.Output("No ports defined - defaulting to http on port %d", DefaultServicePort, terminal.WithWarningStyle())
+		log.Debug("No ports defined - defaulting to http on port %d", DefaultServicePort)
 		appContainerSpec.Ports = append(appContainerSpec.Ports, &Port{Port: DefaultServicePort, Name: "http"})
 	}
 
