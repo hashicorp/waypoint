@@ -59,6 +59,15 @@ func TestOnDemandRunnerConfig(t *testing.T) {
 			require.NotNil(resp)
 		}
 
+		// Get missing (returns not found error)
+		{
+			_, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+				Id: strings.ToUpper("unknown"),
+			})
+			require.Error(err)
+			require.Equal(status.Code(err), codes.NotFound)
+		}
+
 		// List
 		{
 			resp, err := s.OnDemandRunnerConfigList()
