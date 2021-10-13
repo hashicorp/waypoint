@@ -50,8 +50,7 @@ Helm directly? There are many reasons:
    you can invoke Helm using the same tool you're using to invoke builds,
    release management, etc.
 
-4. **Other Waypoint features.** You can take advantage of other Waypoint
-   features such as [remote operations](/docs/waypoint-hcl/functions/all),
+4. **Other Waypoint features.** You can take advantage of other Waypoint features such as [remote operations](/docs/waypoint-hcl/functions/all),
    [logs](/docs/logs), [exec](/docs/exec), [input variables](/docs/waypoint-hcl/variables/input), and more.
 
 ## Using Helm with Waypoint
@@ -115,6 +114,86 @@ deploy {
   }
 }
 ```
+
+## Entrypoint Variables
+
+If you want to use the [Waypoint entrypoint](/docs/entrypoint) functionality,
+you must manually inject the [entrypoint environment variables](/docs/entrypoint).
+The [opinionated Kubernetes plugin](/docs/kubernetes/deploy) does this
+automatically but since with Helm you're writing manual Kubernetes resources with
+YAML, we can't automatically inject the environment variables.
+
+A map of the environment variables to set are exposed in the `waypoint.hcl`
+as [`entrypoint.env`](/docs/waypoint-hcl/variables/entrypoint). This can be
+passed into your Helm chart either as values or templating your YAML templates.
+The recommended approach is to use Helm values, to avoid templating a template.
+
+A full example is available [in the `waypoint-examples` repository](https://github.com/hashicorp/waypoint-examples/tree/main/kubernetes/nodejs-helm),
+but an incomplete example is shown below to briefly explain the process.
+
+-> **Note:** This also requires that the entrypoint binary is already
+injected into the image as part of the build process. This happens automatically
+for `docker` or `pack` builders. If you're using an externally built image,
+you must [inject the entrypoint manually](/docs/kubernetes/external-build#waypoint-entrypoint-with-external-image-builds).
+
+```hcl
+app "my-app" {
+  // ...
+
+  deploy {
+    use "helm" {
+      name  = "my-app"
+      chart = "${path.app}/helm"
+
+      // We use a values file so we can set the entrypoint environment
+      // variables into a rich YAML structure. This is easier than --set
+      values = [
+        file(templatefile("${path.app}/values.yaml.tpl")),
+      ]
+
+      set {
+        name  = "image.repository"
+        value = artifact.image
+      }
+
+      set {
+        name  = "image.tag"
+        value = artifact.tag
+      }
+    }
+  }
+}
+```
+
+And `values.yaml.tpl`:
+
+```yaml
+env:
+%{ for k,v in entrypoint.env ~}
+- name: ${k}
+  value: "${v}"
+%{ endfor ~}
+```
+
+And your Deployment template in your Helm chart:
+
+```yaml
+...
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.env }}
+          env:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+```
+
+The key thing we do is setup a `values.yaml` override that templates our
+`entrypoint.env` variables. This is then passed into the Helm installation
+and used within the deployment template to set the proper environment
+variables. This is equivalent to running `helm install` with the `-f` flag
+to specify a values YAML file.
 
 ## Reference Documentation
 
