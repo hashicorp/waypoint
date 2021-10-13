@@ -63,6 +63,11 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
   @action
   async saveVariable(e: Event): Promise<void> {
     e.preventDefault();
+
+    if (this.changeset === undefined) {
+      return;
+    }
+
     if (this.changeset.name === '' || this.changeset.pb_static === '') {
       this.flashMessages.error('Variable keys or values can not be empty');
       return;
