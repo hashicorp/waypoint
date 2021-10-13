@@ -14,6 +14,8 @@ interface ProjectConfigArgs {
   project: Project.AsObject;
 }
 
+type ConfigVarChangeset = Partial<BufferedChangeset> & ConfigVar.AsObject;
+
 export default class ProjectConfigVariablesListComponent extends Component<ProjectConfigArgs> {
   @service api!: ApiService;
   @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
@@ -54,7 +56,7 @@ export default class ProjectConfigVariablesListComponent extends Component<Proje
   }
 
   @action
-  async saveVariableSettings(variable: BufferedChangeset, deleteVariable?: boolean): Promise<void> {
+  async saveVariableSettings(variable: ConfigVarChangeset, deleteVariable?: boolean): Promise<void> {
     let req = new ConfigSetRequest();
 
     let projectRef = new Ref.Project();
