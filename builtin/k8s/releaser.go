@@ -462,10 +462,11 @@ func (r *Releaser) resourceIngressCreate(
 
 	// Apply any annotations to the ingress resource
 	if r.config.IngressConfig.Annotations != nil {
-		ingressResource = &networkingv1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: r.config.IngressConfig.Annotations,
-			},
+		if ingressResource.ObjectMeta.Annotations == nil {
+			ingressResource.ObjectMeta.Annotations = map[string]string{}
+		}
+		for k, v := range r.config.IngressConfig.Annotations {
+			ingressResource.ObjectMeta.Annotations[k] = v
 		}
 	}
 
