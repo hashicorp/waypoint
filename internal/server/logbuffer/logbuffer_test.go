@@ -303,7 +303,13 @@ func TestBuffer_maxHistory(t *testing.T) {
 	doneCh := make(chan struct{})
 	go func() {
 		defer close(doneCh)
-		v = r1.Read(10, true)
+
+		// We have to read 0 here otherwise there is a race here
+		// with the r1.Read that happens outside the goroutine later.
+		// By specifying 0, we will still block when none are available,
+		// but when any are available we don't consume any, ensuring that
+		// the read later works.
+		v = r1.Read(0, true)
 	}()
 
 	select {
