@@ -45,7 +45,59 @@ export default function App({ Component, pageProps }) {
       <div className="content">
         <Component {...pageProps} />
       </div>
-      <Footer openConsentManager={openConsentManager} />
+      <Footer
+        openConsentManager={openConsentManager}
+        heading="Using Waypoint"
+        description="The best way to understand what Waypoint can enable for your projects is to give it a try."
+        cards={[
+          {
+            link:
+              'https://learn.hashicorp.com/collections/waypoint/get-started-kubernetes',
+            img: '/img/get-started-kubernetes.png',
+            eyebrow: 'Tutorial',
+            title: 'Get Started - Kubernetes',
+            description:
+              'Build, deploy, and release applications to a Kubernetes cluster.',
+          },
+          {
+            link:
+              'https://learn.hashicorp.com/tutorials/waypoint/get-started-intro',
+            img: '/img/intro-to-waypoint.png',
+            eyebrow: 'Tutorial',
+            title: 'Introduction to Waypoint',
+            description:
+              'Waypoint enables you to publish any application to any platform with a single file and a single command.',
+          },
+        ]}
+        ctaLinks={[
+          {
+            text: 'Waypoint tutorials',
+            url: 'https://learn.hashicorp.com/waypoint',
+          },
+          {
+            text: 'Waypoint documentation',
+            url: '/docs',
+          },
+        ]}
+        navLinks={[
+          {
+            text: 'Documentation',
+            url: '/docs',
+          },
+          {
+            text: 'API Reference',
+            url: '/',
+          },
+          {
+            text: 'Tutorials',
+            url: 'https://learn.hashicorp.com/waypoint',
+          },
+          {
+            text: 'Integrations',
+            url: '/',
+          },
+        ]}
+      />
       <ConsentManager />
     </ErrorBoundary>
   )

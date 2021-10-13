@@ -1,0 +1,46 @@
+.howItWorks {
+  position: relative;
+  padding-top: 164px;
+  padding-bottom: 50px;
+  background-image: url('./background.svg');
+  background-repeat: no-repeat;
+  background-position: top right;
+
+  /* --waypoint-secondary at 50% opacity */
+  background-color: #ebfcfd;
+  overflow: hidden;
+  width: 100%;
+  max-width: 1488px;
+  margin: auto;
+  border-radius: 6.67755px;
+
+  @media (--medium-up) {
+    width: calc(100% - 48px);
+  }
+
+  & img {
+    max-width: 100%;
+  }
+
+  & ol {
+    margin: 100px 0 0;
+    padding: 0;
+    list-style: none;
+
+    & > li {
+      width: 100%;
+
+      & + li {
+        margin-top: 132px;
+
+        @media (--medium-up) {
+          margin-top: 232px;
+        }
+      }
+    }
+  }
+}
+
+.container {
+  composes: g-grid-container from global;
+}

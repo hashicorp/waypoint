@@ -22,8 +22,9 @@ export default function ProductSubnav() {
           url: '/downloads',
         },
       ]}
+      hideGithubStars={true}
       currentPath={router.asPath}
-      menuItemsAlign="right"
+      menuItemsAlign="center"
       menuItems={subnavItems}
       constrainWidth
       Link={Link}

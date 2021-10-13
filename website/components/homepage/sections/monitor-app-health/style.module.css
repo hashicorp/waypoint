@@ -1,0 +1,85 @@
+.monitorAppHealth {
+  --columns: 1;
+
+  composes: g-grid-container from global;
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  column-gap: 32px;
+  row-gap: 50px;
+  padding-top: 150px;
+  padding-bottom: 150px;
+
+  @media (--medium-up) {
+    --columns: 12;
+  }
+}
+
+.media {
+  grid-column: 1 / -1;
+
+  @media (--medium-up) {
+    grid-column: 1 / 7;
+  }
+
+  & svg {
+    max-width: 100%;
+  }
+
+  & :global(.ring) {
+    transform: scale(0);
+    transform-origin: center;
+    transition: transform ease-in-out 1s;
+  }
+
+  & :global(.middle) {
+    transition-delay: 0.2s;
+  }
+
+  & :global(.outer) {
+    transition-delay: 0.3s;
+  }
+
+  & :global(.badge) {
+    opacity: 0;
+    transition: all ease-in-out 0.5s;
+    transform: scale(0.5);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  & :global(.available) {
+    transition-delay: 1s;
+  }
+
+  & :global(.down) {
+    transition-delay: 0.8s;
+  }
+
+  & :global(.deploying) {
+    transition-delay: 1.2s;
+  }
+
+  &.visible {
+    & :global(.ring) {
+      transform: scale(1);
+    }
+
+    & :global(.badge) {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+.content {
+  grid-column: 1 / -1;
+  align-self: center;
+
+  @media (--medium-up) {
+    grid-column: 8 / -1;
+  }
+}
+
+.contentMediaObject {
+  margin-top: 32px;
+}

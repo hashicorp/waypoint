@@ -1,0 +1,25 @@
+.section {
+  display: block;
+}
+
+.sectionContainer {
+  composes: g-grid-container from global;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-column-gap: 32px;
+
+  & > * {
+    grid-column: 1 / -1;
+  }
+}
+
+.sectionHeading {
+  margin: 0;
+  composes: g-type-display-1 from global;
+}
+
+.sectionDescription {
+  margin: 24px 0 0;
+  composes: g-type-body-small from global;
+  color: var(--gray-3);
+}

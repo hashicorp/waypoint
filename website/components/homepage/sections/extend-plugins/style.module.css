@@ -1,0 +1,96 @@
+.extendPlugins {
+  padding-top: 150px;
+  padding-bottom: 150px;
+}
+
+.inner {
+  --columns: 1;
+
+  composes: g-grid-container from global;
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  grid-column-gap: 32px;
+
+  @media (--medium-up) {
+    --columns: 12;
+  }
+}
+
+.content {
+  grid-column: 1 / -1;
+  align-self: center;
+
+  @media (--medium-up) {
+    grid-column: 1 / 6;
+  }
+}
+
+.contentBlocks {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-column-gap: 32px;
+
+  & > * {
+    margin-top: 0 !important;
+  }
+}
+
+.media {
+  position: relative;
+  margin-top: 50px;
+  grid-column: 1 / -1;
+
+  @media (--medium-up) {
+    margin-top: 0;
+    grid-column: 6 / -1;
+  }
+
+  & svg {
+    background-image: url('./background.svg');
+    background-size: 120%;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  & :global(.plugin) {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all ease-in-out 0.5s;
+  }
+
+  & :global(.plugin:nth-child(odd)) {
+    transition-delay: 0.25s;
+  }
+
+  & :global(.yourPlugin) {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all ease-in-out 0.5s;
+    transition-delay: 0.75s;
+  }
+
+  & :global(.yourPluginShadow) {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all ease-in-out 0.5s;
+    transition-delay: 0.75s;
+  }
+
+  &.visible {
+    & :global(.plugin) {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    & :global(.yourPlugin) {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    & :global(.yourPluginShadow) {
+      transform: translateY(0);
+      opacity: 0.5;
+    }
+  }
+}

@@ -1,0 +1,43 @@
+.workflowThatScales {
+  --columns: 1;
+
+  padding-top: 150px;
+  padding-bottom: 150px;
+  composes: g-grid-container from global;
+  display: grid;
+  grid-template-columns: repeat(var(--columns), 1fr);
+  grid-column-gap: 32px;
+
+  @media (--medium-up) {
+    --columns: 12;
+  }
+}
+
+.heading {
+  grid-column: 1 / -1;
+
+  @media (--medium-up) {
+    grid-column: 1 / 5;
+  }
+}
+
+.description {
+  grid-column: 1 / -1;
+
+  @media (--medium-up) {
+    grid-column: 6 / 10;
+  }
+}
+
+.media {
+  margin-top: 50px;
+  grid-column: 1 / -1;
+
+  @media (--medium-up) {
+    grid-column: 2 / 11;
+  }
+
+  & img {
+    max-width: 100%;
+  }
+}

@@ -1,0 +1,54 @@
+/* http://www.stubbornella.org/content/2010/06/25/the-media-object-saves-hundreds-of-lines-of-code/ */
+
+.mediaObject {
+  display: flex;
+
+  & + .mediaObject {
+    margin-top: 40px;
+  }
+}
+
+.mediaObjectStacked {
+  flex-direction: column;
+}
+
+.mediaObjectIcon {
+  margin-bottom: 18px;
+  flex-shrink: 0;
+  margin-right: 20px;
+  width: 24px;
+  height: 24px;
+}
+
+.mediaObjectBody {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.mediaObjectHeading {
+  margin: 0;
+  composes: g-type-display-6 from global;
+}
+
+.mediaObjectDescription {
+  margin: 8px 0 0;
+  composes: g-type-body-small from global;
+  color: var(--gray-3);
+}
+
+.mediaObjectAnchor {
+  margin-top: auto;
+  padding-top: 16px;
+  display: inline-flex;
+  align-items: center;
+
+  & svg {
+    margin-left: 10px;
+  }
+}
+
+.mediaObjectAnchorLink {
+  composes: g-type-buttons-and-standalone-links from global;
+  color: #000;
+}

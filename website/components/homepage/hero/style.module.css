@@ -1,0 +1,128 @@
+.hero {
+  padding-top: 124px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+.heroInner {
+  --columns: 1;
+
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  grid-column-gap: 32px;
+  composes: g-grid-container from global;
+
+  @media (--medium-up) {
+    --columns: 12;
+  }
+}
+
+.heroHeading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 36px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  grid-column: 1 / -1;
+  justify-self: center;
+
+  @media (--medium-up) {
+    font-size: 53px;
+    line-height: 56px;
+    grid-column: 2 / span 10;
+  }
+
+  & > em {
+    font-style: normal;
+    font-weight: 500;
+  }
+}
+
+.heroDescription {
+  position: relative;
+  margin: 32px 0 0;
+  composes: g-type-body-small from global;
+  color: var(--gray-3);
+  z-index: 10;
+  grid-column: 1 / -1;
+
+  @media (--medium-up) {
+    grid-column: 3 / span 8;
+  }
+
+  @media (--large) {
+    grid-column: 4 / span 6;
+  }
+}
+
+.heroButton {
+  margin-top: 24px;
+  grid-column: 1 / -1;
+}
+
+.heroGraphic {
+  position: relative;
+  overflow: hidden;
+  margin-top: -50px;
+  width: 140%;
+  max-width: 1685px;
+  display: grid;
+  background-image: linear-gradient(
+    92.28deg,
+    rgba(89, 220, 228, 0.8) 0.25%,
+    rgba(99, 208, 255, 0.5) 95.01%
+  );
+  z-index: -1;
+
+  @media (--medium-up) {
+    margin-top: -140px;
+    width: 120%;
+  }
+
+  & > * {
+    grid-area: 1 / 1;
+  }
+
+  & svg {
+    vertical-align: top;
+    width: 100%;
+  }
+
+  & :global(.circle) {
+    transform: scale(0);
+    opacity: 0;
+    transform-origin: center;
+    transform-box: fill-box;
+    transition: all ease-in-out 0.75s;
+
+    &:nth-of-type(even) {
+      transition-delay: 0.5s;
+    }
+  }
+
+  &.visible {
+    & :global(.circle) {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    /* Custom sizing for the logos */
+    & :global(.circleEcs) {
+      transform: scale(0.85);
+    }
+
+    & :global(.circleKubernetes) {
+      transform: scale(0.72);
+    }
+  }
+}
+
+@keyframes rotate-bg {
+  to {
+    transform: rotate(360deg);
+  }
+}

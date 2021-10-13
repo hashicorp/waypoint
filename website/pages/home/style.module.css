@@ -1,29 +1,16 @@
 .homePage {
-  & .testingTerminal {
-    position: absolute;
-    top: 110px;
-    right: -40px;
-  }
+  overflow-x: hidden;
 
-  & .whyWaypointDiagram {
-    margin-top: 72px;
-    width: 100%;
-  }
-}
-
-.terminalWrapper {
-  height: 560px;
-
-  & > img {
-    width: 100%;
-    height: auto;
-  }
-
-  @media (--medium-up) {
-    width: 400px;
-  }
-
-  @media (min-width: 900px) {
-    width: 600px;
+  /* https://web.dev/prefers-reduced-motion/#(bonus)-forcing-reduced-motion-on-all-websites */
+  @media (prefers-reduced-motion: reduce) {
+    & *,
+    & *::before,
+    & *::after {
+      animation-delay: -1ms !important;
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
+    }
   }
 }

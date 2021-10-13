@@ -1,0 +1,44 @@
+.root {
+  --columns: 1;
+
+  composes: g-grid-container from global;
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  column-gap: 32px;
+  row-gap: 50px;
+
+  @media (--medium-up) {
+    --columns: 12;
+  }
+}
+
+.content {
+  grid-column: 1 / -1;
+
+  @media (--medium-up) {
+    grid-column: 1 / 6;
+  }
+}
+
+.contentExtra {
+  padding-left: 40px;
+}
+
+.logos {
+  margin-top: 32px;
+  margin-bottom: 18px;
+  max-width: 397px;
+
+  & svg {
+    max-width: 100%;
+  }
+}
+
+.media {
+  grid-column: 1 / -1;
+  align-self: center;
+
+  @media (--medium-up) {
+    grid-column: 7 / -1;
+  }
+}

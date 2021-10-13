@@ -1,0 +1,84 @@
+.terminal {
+  margin: 0;
+  background: linear-gradient(95.19deg, #343536 7.32%, #000 108.94%);
+  box-shadow: 0 83.4693px 66.7755px rgba(0, 129, 150, 0.07),
+    0 34.8715px 27.8972px rgba(0, 129, 150, 0.08),
+    0 18.644px 14.9152px rgba(0, 129, 150, 0.02),
+    0 10.4517px 8.36132px rgba(0, 0, 0, 0.035),
+    0 5.5508px 4.44064px rgba(0, 129, 150, 0.12),
+    0 2.30981px 1.84785px rgba(0, 0, 0, 0.0196802);
+  border-radius: 6.67755px;
+  color: var(--white);
+  composes: g-type-code from global;
+
+  & pre {
+    margin: 0;
+  }
+}
+
+.terminalHeader {
+  padding: 12px 24px;
+  background: linear-gradient(121.34deg, #353637 17.43%, #070707 111.74%);
+  border-radius: 6.67755px;
+}
+
+.terminalTabList {
+  display: flex;
+
+  & button {
+    appearance: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+    transition: color ease-in-out 0.3s;
+
+    &[aria-selected='true'] {
+      color: var(--waypoint);
+      font-weight: bold;
+    }
+  }
+}
+
+.terminalTabListSeperator {
+  padding: 0 15px;
+}
+
+.terminalTabPanels,
+.terminalContent {
+  display: grid;
+  padding: 14px 24px;
+
+  & > * {
+    grid-area: 1 / 1;
+    transition: opacity ease-in-out 0.3s;
+  }
+
+  & > [hidden] {
+    display: block;
+    opacity: 0;
+  }
+}
+
+.terminalLine {
+  white-space: pre-wrap;
+  display: block;
+  line-height: 2;
+}
+
+.terminalToken {
+  &.fushia {
+    color: #c93a75;
+  }
+
+  &.teal {
+    color: #63d0ff;
+  }
+
+  &.green {
+    color: #62d4dc;
+  }
+}

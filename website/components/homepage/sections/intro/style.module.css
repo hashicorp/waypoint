@@ -1,0 +1,56 @@
+.intro {
+  margin: 0 auto 156px;
+  composes: g-grid-container from global;
+  max-width: 1026px;
+  display: grid;
+  grid-template-columns: 1fr;
+  row-gap: 100px;
+
+  @media (min-width: 832px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.column {
+  @media (min-width: 832px) {
+    padding-top: 50px;
+    padding-bottom: 100px;
+
+    &:first-of-type {
+      padding-right: 70px;
+      border-right: 1px solid var(--waypoint-secondary);
+      & .terminal {
+        & > div {
+          @media (min-width: 832px) {
+            min-height: 344px;
+          }
+        }
+      }
+    }
+
+    &:last-of-type {
+      padding-top: 175px;
+      padding-left: 70px;
+    }
+  }
+}
+
+.heading {
+  margin: 0;
+  composes: g-type-display-4 from global;
+
+  & em {
+    font-style: normal;
+    color: var(--waypoint-link);
+  }
+}
+
+.description {
+  margin: 16px 0 40px;
+  composes: g-type-body-small from global;
+  color: var(--gray-3);
+}
+
+.terminal {
+  margin-bottom: 60px;
+}
