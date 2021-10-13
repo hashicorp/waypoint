@@ -17,7 +17,7 @@ their deployments when something isn't healthy.
 
 ## Viewing Resource Status
 
-TODO: UI
+![Kubernetes Resource Status](/img/k8s-resource-status.png)
 
 You may also view the resource status in the CLI. While in your project
 repository (with a `waypoint.hcl` file), execute `waypoint status`. To
@@ -25,8 +25,26 @@ view detailed status about a specific app, specify the `-app` flag with
 the name of the application.
 
 ```shell-session
-$ waypoint status
-TODO
+$ waypoint status -app=my-app my-project
+Current status for application "my-app" in project "my-project"
+
+» Application Summary
+APP           	WORKSPACE	DEPLOYMENT STATUS	DEPLOYMENT CHECKED	RELEASE STATUS	RELEASE CHECKED
+my-app  	✔ READY          	2 minutes ago     	N/A
+
+
+» Deployment Summary
+APP NAME      	VERSION	WORKSPACE	PLATFORM	ARTIFACT          	LIFECYCLE STATE
+my-app	v13    	default  	helm    	id:1	image:2f3122b		SUCCESS
+
+
+» Deployment Resources Summary
+TYPE      	NAME                          	PLATFORM  	HEALTH 	TIME CREATED
+Service   	my-app-waypoint-nodejs			kubernetes	UNKNOWN	13 minutes ago
+Deployment	my-app-waypoint-nodejs			kubernetes	UNKNOWN	13 minutes ago
+
+The application and its resources listed above represents its current state known
+in the Waypoint server.
 ```
 
 ## Refreshing Resource Status
@@ -40,5 +58,5 @@ deployment and the load on Kubernetes.
 
 ```shell-session
 $ waypoint status -refresh
-TODO
+...
 ```
