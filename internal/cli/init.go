@@ -151,7 +151,13 @@ func (c *InitCommand) Run(args []string) int {
 		c.validateConfig,
 		c.validateServer,
 		c.validateProject,
-		c.validatePlugins,
+		// NOTE(mitchellh): this is disabled as of 0.6 since we can't load
+		// plugins in the CLI safely due to the usage of input variables +
+		// remote runners. This will be fixed in the future by migrating the
+		// init task to the InitOp remote operation. We're keeping this code
+		// around so we can migrate it then.
+		// c.validatePlugins,
+
 		// NOTE(mitchellh): this is disabled as of 0.2 since we can't load
 		// config anymore. We're keeping the code around so that we can migrate
 		// it in the future.
