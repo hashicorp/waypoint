@@ -462,12 +462,7 @@ func (r *Releaser) resourceIngressCreate(
 
 	// Apply any annotations to the ingress resource
 	if r.config.IngressConfig.Annotations != nil {
-		if ingressResource.ObjectMeta.Annotations == nil {
-			ingressResource.ObjectMeta.Annotations = map[string]string{}
-		}
-		for k, v := range r.config.IngressConfig.Annotations {
-			ingressResource.ObjectMeta.Annotations[k] = v
-		}
+		ingressResource.ObjectMeta.Annotations = r.config.IngressConfig.Annotations
 	}
 
 	// Define the ingress resources backend service it should route traffic to
