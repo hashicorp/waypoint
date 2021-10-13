@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/jsonpb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -30,7 +32,7 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 	}
 
 	if len(c.args) == 0 {
-		c.ui.Output("Runner profile ID required.", terminal.WithErrorStyle())
+		c.ui.Output("Runner profile name required.", terminal.WithErrorStyle())
 		return 1
 	}
 	name := c.args[0]
@@ -40,7 +42,7 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 			Name: name,
 		},
 	})
-	if err != nil {
+	if err != nil && status.Code(err) != codes.NotFound {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
@@ -52,6 +54,11 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 				Id: name,
 			},
 		})
+
+		if status.Code(err) == codes.NotFound {
+			c.ui.Output("runner profile not found", terminal.WithErrorStyle())
+			return 1
+		}
 
 		if err != nil {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
