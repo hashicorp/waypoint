@@ -74,17 +74,41 @@ app "my-app" {
 ### Alternate or Additional Ports
 
 With zero configuration, your application must listen on the `PORT`
-environment variable set by Waypoint. You may change or add ports
-using the `ports` variable:
+environment variable set by Waypoint. You can change the primary
+service port using `service_port`:
 
 ```hcl
 app "my-app" {
   deploy {
     use "kubernetes" {
-      ports = [{
-        port = 3000
-        name = "http"
-      }]
+	  service_port = 1234
+    }
+  }
+}
+```
+
+This is optimized and very simple for applications that have only one
+primary listening port. If you require multiple ports, you must use the
+slightly more complex `ports` configuration and must NOT use the `service_port`
+field (they are mutually exclusive).
+
+```hcl
+app "my-app" {
+  deploy {
+    use "kubernetes" {
+      pod {
+        container {
+          port {
+            name = "http"
+            port = 1234
+          }
+
+          port {
+            name = "https"
+            port = 2345
+          }
+        }
+      }
     }
   }
 }
@@ -103,6 +127,11 @@ in just a few lines:
 app "my-app" {
   deploy {
     use "kubernetes" {
+      cpu {
+        request = "250m"
+        limit   = "500m"
+      }
+
       autoscale {
         min_replicas = 1
         max_replicas = 5
