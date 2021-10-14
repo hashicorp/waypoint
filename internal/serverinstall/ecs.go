@@ -1189,7 +1189,7 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 		Name:    "ecs-odr-mem",
 		Target:  &i.config.OdrMemory,
 		Usage:   "Configures the requested memory amount for the Waypoint On-Demand runner in ECS.",
-		Default: "1024",
+		Default: "2048",
 	})
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-odr-cpu",
@@ -1250,7 +1250,7 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 		Name:    "ecs-odr-mem",
 		Target:  &i.config.OdrMemory,
 		Usage:   "Configures the requested memory amount for the Waypoint On-Demand runner in ECS.",
-		Default: "1024",
+		Default: "2048",
 	})
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-odr-cpu",
