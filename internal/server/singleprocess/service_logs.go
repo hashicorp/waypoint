@@ -171,6 +171,7 @@ func (s *service) GetLogStream(
 			log.Debug("deployment supports log plugin. spawning log plugin")
 			inst, jobId, err := s.spawnLogPlugin(srv.Context(), log, deployment)
 			if err != nil {
+				log.Warn("error spawning log plugin", "err", err)
 				return err
 			}
 
@@ -179,7 +180,7 @@ func (s *service) GetLogStream(
 
 			// Because we spawned the writer, we can safely delete the whole thing
 			// when the reader is done.
-			go s.state.InstanceLogsDelete(inst.Id)
+			defer s.state.InstanceLogsDelete(inst.Id)
 
 			log.Debug("log plugin spawned", "job_id", jobId)
 			instanceFunc = func(ws memdb.WatchSet) ([]*streamRec, error) {

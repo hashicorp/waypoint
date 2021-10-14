@@ -376,23 +376,31 @@ func TestServiceGetLogStream_depPlugin(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// Observe that a job to start the exec plugin has been queued
-	time.Sleep(time.Second)
+	// Should have the job to spawn the logs plugin
+	var job *pb.Job
+	require.Eventually(t, func() bool {
+		jobs, err := testServiceImpl(impl).state.JobList()
+		if err != nil {
+			t.Logf("error getting job list: %s", err)
+			return false
+		}
 
-	jobs, err := testServiceImpl(impl).state.JobList()
-	require.NoError(t, err)
+		if len(jobs) == 1 {
+			job = jobs[0]
+			return true
+		}
 
-	require.True(t, len(jobs) == 1)
+		return false
+	}, 10*time.Second, 10*time.Millisecond)
 
-	TestRunner(t, client, &pb.Runner{Id: fakeRunner})
-
-	job := jobs[0]
 	require.Equal(t, pb.Job_QUEUED, job.State)
 	require.Equal(t, fakeRunner, job.TargetRunner.Target.(*pb.Ref_Runner_Id).Id.Id)
 	require.Equal(t, resp.Deployment.Application, job.Application)
 
-	// We force the job forward so that the server side moves forward not.
+	// Start our runner so it'll process the job
+	TestRunner(t, client, &pb.Runner{Id: fakeRunner})
 
+	// We force the job forward so that the server side moves forward not.
 	rs, err := client.RunnerJobStream(ctx)
 	require.NoError(t, err)
 	require.NoError(t, rs.Send(&pb.RunnerJobStreamRequest{
@@ -418,6 +426,20 @@ func TestServiceGetLogStream_depPlugin(t *testing.T) {
 
 	instanceId := assignment.Assignment.Job.Operation.(*pb.Job_Logs).Logs.InstanceId
 
+	// Wait for our instance log buffer to register, otherwise
+	// we can't send logs. In a real CEB/runner environment, we'd
+	// retry so this is only needed in tests.
+	require.Eventually(t, func() bool {
+		_, err := testServiceImpl(impl).state.InstanceLogsByInstanceId(
+			instanceId)
+		if err != nil {
+			t.Logf("error getting instance logs: %s", err)
+			return false
+		}
+
+		return true
+	}, 10*time.Second, 50*time.Millisecond)
+
 	// Create the stream and send some log messages
 	logSendClient, err := client.EntrypointLogStream(ctx)
 	require.NoError(t, err)
@@ -435,13 +457,29 @@ func TestServiceGetLogStream_depPlugin(t *testing.T) {
 			Lines:      entries,
 		})
 	}
-	time.Sleep(100 * time.Millisecond)
 
-	// Get a batch
-	batch, err := logRecvClient.Recv()
-	require.NoError(t, err)
-	require.NotEmpty(t, batch.Lines)
-	require.Len(t, batch.Lines, 25)
+	// We have to use an Eventually here and accumulate lines because
+	// the send above may take time to fully flush to the server.
+	var lines []*pb.LogBatch_Entry
+	require.Eventually(t, func() bool {
+		// Get a batch
+		batch, err := logRecvClient.Recv()
+		if err != nil {
+			t.Logf("error waiting for log recv: %s", err)
+			return false
+		}
+
+		lines = append(lines, batch.Lines...)
+		if len(lines) < 25 {
+			t.Logf("waiting for 25 log lines, have %d", len(lines))
+			return false
+		}
+
+		return true
+	}, 10*time.Second, 10*time.Millisecond)
+
+	require.NotEmpty(t, lines)
+	require.Len(t, lines, 25)
 }
 
 func TestServiceGetLogStream_byApp(t *testing.T) {
