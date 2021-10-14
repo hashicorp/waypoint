@@ -368,7 +368,7 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 
 	if c.flagOndemandRunner != "" {
 		ref := &pb.Ref_OnDemandRunnerConfig{
-			Id: c.flagOndemandRunner,
+			Name: c.flagOndemandRunner,
 		}
 
 		// Validate the ref is validate by looking up the runner.
@@ -539,9 +539,9 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:   "ondemand-runner",
+			Name:   "runner-profile",
 			Target: &c.flagOndemandRunner,
-			Usage:  "Assign an ondemand runner to be used for this project",
+			Usage:  "Name of a runner profile to be used for this project",
 		})
 	})
 }

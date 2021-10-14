@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Fix `project apply` to set runner profiles by name
+```
