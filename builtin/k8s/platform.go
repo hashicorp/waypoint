@@ -402,7 +402,7 @@ func configureContainer(
 
 	initialDelaySeconds := int32(5)
 	timeoutSeconds := int32(5)
-	failureThreshold := int32(5)
+	failureThreshold := int32(30)
 
 	if c.Probe != nil {
 		if c.Probe.InitialDelaySeconds != 0 {
@@ -1538,7 +1538,7 @@ type Probe struct {
 
 	// Number of times a liveness probe can fail before the container is killed.
 	// FailureThreshold * TimeoutSeconds should be long enough to cover your worst
-	// case startup times. Defaults to 5 failures.
+	// case startup times. Defaults to 30 failures.
 	FailureThreshold uint `hcl:"failure_threshold,optional"`
 }
 
@@ -1849,7 +1849,7 @@ deploy "kubernetes" {
 				docs.Summary(
 					"failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
 				),
-				docs.Default("5"),
+				docs.Default("30"),
 			)
 
 		}),
