@@ -233,6 +233,7 @@ func (s *service) EntrypointLogStream(
 						return err
 					}
 
+					log.Info("using InstanceLogs record")
 					buf = il.LogBuffer
 				} else {
 					return err
