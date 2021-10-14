@@ -560,6 +560,7 @@ func configureContainer(
 			Handler:             handler,
 			InitialDelaySeconds: initialDelaySeconds,
 			TimeoutSeconds:      timeoutSeconds,
+			FailureThreshold:    failureThreshold,
 		}
 	}
 
