@@ -11,7 +11,6 @@ With runner profiles, Waypoint's remote runners can be configured to spawn new e
 to perform operations like building and deploying apps. Runner profiles describe the configuration and settings
 necessary to create an on-demand runner. Profiles can be used globally, or by specific projects.
 
-
 ## Viewing runner profiles
 
 Waypoint installations performed on Kubernetes and ECS with the `waypoint install` command come with a default
@@ -61,6 +60,7 @@ It may be necessary to change the config (environment variables or files) delive
 The best way is to add config to every runner and profile with the `waypoint config -runner`, detailed [here](/docs/runner/config).
 
 ### Static environment variables
+
 If you need environment variables that are scoped to a specific runner profile, rather than every runner, you can use
 the `-env-vars` flag of `waypoint runner profile set`, i.e.:
 
@@ -104,6 +104,7 @@ service_account=my-custom-service-account
 ```
 
 And then apply it to your plugin with `waypoint runner profile set`:
+
 ```
 $ waypoint runner profile set -name=kubernetes -plugin-type=kubernetes -plugin-config=./k8s-runner-profile-plugin-config.hcl
 ```
@@ -114,6 +115,7 @@ New runner profiles can be added with the `waypoint profile set` command, using 
 Here's an example of creating a runner profile for aws-ecs:
 
 Sample task plugin (at `./aws-ecs-plugin-config.hcl`)
+
 ```hcl
 cluster = waypoint
 execution_role_name = waypoint-server-execution-role
@@ -142,6 +144,3 @@ to build using an on-demand runner on ECS, for example, add a new runner profile
 ```shell-session
 $ waypoint project apply -runner-profile=ecs <your-project-name>
 ```
-
-
-
