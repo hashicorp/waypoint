@@ -435,13 +435,23 @@ func TestServiceGetLogStream_depPlugin(t *testing.T) {
 			Lines:      entries,
 		})
 	}
-	time.Sleep(100 * time.Millisecond)
 
-	// Get a batch
-	batch, err := logRecvClient.Recv()
-	require.NoError(t, err)
-	require.NotEmpty(t, batch.Lines)
-	require.Len(t, batch.Lines, 25)
+	// We have to use an Eventually here and accumulate lines because
+	// the send above may take time to fully flush to the server.
+	var lines []*pb.LogBatch_Entry
+	require.Eventually(t, func() bool {
+		// Get a batch
+		batch, err := logRecvClient.Recv()
+		if err != nil {
+			return false
+		}
+
+		lines = append(lines, batch.Lines...)
+		return len(lines) >= 25
+	}, 10*time.Second, 10*time.Millisecond)
+
+	require.NotEmpty(t, lines)
+	require.Len(t, lines, 25)
 }
 
 func TestServiceGetLogStream_byApp(t *testing.T) {
