@@ -1,3 +1,86 @@
+## 0.6.0 (October 14, 2021)
+
+FEATURES:
+
+* cli: Add new commands `workspace inspect` and `workspace list` to view and list
+workspaces. [[GH-2385](https://github.com/hashicorp/waypoint/issues/2385)]
+* cli: Allow `install` cmd to support pass-through flags to `server run` [[GH-2328](https://github.com/hashicorp/waypoint/issues/2328)]
+* config: Specify configuration (env vars and files) for runners while executing
+operations related to a specific to that project or application. [[GH-2237](https://github.com/hashicorp/waypoint/issues/2237)]
+* config: Specify configuration that is scoped to deployments in certain workspaces
+or label sets. [[GH-2237](https://github.com/hashicorp/waypoint/issues/2237)]
+* config: `labels` variable for accessing the label set of an operation [[GH-2065](https://github.com/hashicorp/waypoint/issues/2065)]
+* config: New functions `selectormatch` and `selectorlookup` for working with
+label selectors [[GH-2065](https://github.com/hashicorp/waypoint/issues/2065)]
+* core/server: Allow exporting of grpc server traces and stats by introducing OpenCensus and DataDog telemetry for Waypoint Server by request [[GH-2402](https://github.com/hashicorp/waypoint/issues/2402)]
+* core: Runner configuration can now write to files [[GH-2201](https://github.com/hashicorp/waypoint/issues/2201)]
+* core: Runner configuration can use dynamic configuration sources [[GH-2201](https://github.com/hashicorp/waypoint/issues/2201)]
+* platform/nomad: Add persistent data volumes to nomad deploy [[GH-2282](https://github.com/hashicorp/waypoint/issues/2282)]
+* plugin/docker: Add ability to build images with kaniko inside an ondemand runner [[GH-2056](https://github.com/hashicorp/waypoint/issues/2056)]
+* plugin/helm: A new plugin "helm" can deploy using Helm charts. [[GH-2336](https://github.com/hashicorp/waypoint/issues/2336)]
+* plugin/k8s: Report events on failed pods when a deployment fails [[GH-2399](https://github.com/hashicorp/waypoint/issues/2399)]
+* plugin/k8s: Allows users to add sidecar containers to apps using the k8s plugin config. [[GH-2428](https://github.com/hashicorp/waypoint/issues/2428)]
+* plugin/pack: Add ability to build images with kaniko inside an ondemand runner [[GH-2056](https://github.com/hashicorp/waypoint/issues/2056)]
+* runner: Add ability to build images without needing a containarization API [[GH-2056](https://github.com/hashicorp/waypoint/issues/2056)]
+* runner: Adds ondemand runners, single job runner processes launched via the task API [[GH-2056](https://github.com/hashicorp/waypoint/issues/2056)]
+* ui: Allow config variables to be managed in the browser UI [[GH-1915](https://github.com/hashicorp/waypoint/issues/1915)]
+* ui: Deployment resources [[GH-2317](https://github.com/hashicorp/waypoint/issues/2317)]
+* ui: Release resources [[GH-2386](https://github.com/hashicorp/waypoint/issues/2386)]
+* ui: Overview section added + Docker container information displayed [[GH-2352](https://github.com/hashicorp/waypoint/issues/2352)]
+
+IMPROVEMENTS:
+
+* cli/serverinstall/k8s: Add new cluster role and binding to allow nodeport services to work [[GH-2412](https://github.com/hashicorp/waypoint/issues/2412)]
+* cli/serverinstall/k8s: Fix a problem where deployments would be marked as "Degraded", but were actually fine. [[GH-2412](https://github.com/hashicorp/waypoint/issues/2412)]
+* cli: Add new context subcommand "set" to set the workspace value for the current
+context. [[GH-2353](https://github.com/hashicorp/waypoint/issues/2353)]
+* cli: Remove unused arg and use sequence ID for CLI message in `release` [[GH-2426](https://github.com/hashicorp/waypoint/issues/2426)]
+* cli: Return help on malformed command [[GH-2444](https://github.com/hashicorp/waypoint/issues/2444)]
+* cli: Update base commands to default to all apps within the project if project has more than one application [[GH-2413](https://github.com/hashicorp/waypoint/issues/2413)]
+* cli: Use default log level of debug instead of trace on server install [[GH-2325](https://github.com/hashicorp/waypoint/issues/2325)]
+* cli: `server run` can now create a non-TLS HTTP listener. This listener
+redirects to HTTPS unless X-Forwarded-Proto is https. [[GH-2347](https://github.com/hashicorp/waypoint/issues/2347)]
+* cli: `login` subcommand defaults server port to 9701 if it isn't set [[GH-2320](https://github.com/hashicorp/waypoint/issues/2320)]
+* config: `gitrefpretty` no longer requires `git` to be installed [[GH-2371](https://github.com/hashicorp/waypoint/issues/2371)]
+* config: Input variables (`variable`) can now use an `env` key to specify
+alternate environment variable names to source variable values from [[GH-2362](https://github.com/hashicorp/waypoint/issues/2362)]
+* core: Automatically remotely init projects with a Git data source [[GH-2145](https://github.com/hashicorp/waypoint/issues/2145)]
+* core: HTTP requests from Kubernetes probes are logged at a trace level rather than info [[GH-2348](https://github.com/hashicorp/waypoint/issues/2348)]
+* core: Easier to understand error messages when using incompatible plugins [[GH-2143](https://github.com/hashicorp/waypoint/issues/2143)]
+* core: Server with custom TLS certificates will automatically reload and rotate
+the TLS certificates when they change on disk [[GH-2346](https://github.com/hashicorp/waypoint/issues/2346)]
+* plugin/docker: Add support for multi-stage Dockerfile builds [[GH-1992](https://github.com/hashicorp/waypoint/issues/1992)]
+* plugin/k8s: Add new ability to release by creating an ingress resource to route
+traffic to a service backend from an ingress controller. [[GH-2261](https://github.com/hashicorp/waypoint/issues/2261)]
+* plugin/k8s: Introduce a new config option `autoscale`, which creates a horizontal
+pod autoscaler for each deployment. [[GH-2309](https://github.com/hashicorp/waypoint/issues/2309)]
+* plugin/k8s: Introduce a new config option `cpu` and `memory` for defining
+resource limits and requests for a pod in a deployment. [[GH-2309](https://github.com/hashicorp/waypoint/issues/2309)]
+* plugin/k8s: Use sequence number in k8s deployment name for improved traceability to waypoint deployments. [[GH-2296](https://github.com/hashicorp/waypoint/issues/2296)]
+* ui: Display project remote initialization state [[GH-2145](https://github.com/hashicorp/waypoint/issues/2145)]
+* ui: Gitops users not using Git polling can run "Up" from the browser [[GH-2331](https://github.com/hashicorp/waypoint/issues/2331)]
+* ui: Improve design of status row on Build/Deployment/Release detail pages [[GH-2036](https://github.com/hashicorp/waypoint/issues/2036)]
+* ui: Improve tab styles for dark mode [[GH-2053](https://github.com/hashicorp/waypoint/issues/2053)]
+* ui: Toggle checkboxes are nicely styled in dark mode [[GH-2410](https://github.com/hashicorp/waypoint/issues/2410)]
+* ui: Improve the input field for server-side HCL file on the settings page [[GH-2168](https://github.com/hashicorp/waypoint/issues/2168)]
+* ui: The rendering of the Application and Operation Logs has been greatly improved [[GH-2356](https://github.com/hashicorp/waypoint/issues/2356)]
+
+BUG FIXES:
+
+* cli: Fix a panic in `waypoint status` when no successful release is available [[GH-2436](https://github.com/hashicorp/waypoint/issues/2436)]
+* cli: Fix logic on when a rocket indicator shows in `release list` [[GH-2426](https://github.com/hashicorp/waypoint/issues/2426)]
+* config: Fix dynamic config vars targeting files. [[GH-2416](https://github.com/hashicorp/waypoint/issues/2416)]
+* entrypoint: Fix issue injecting waypoint-entrypoint multiple times [[GH-2447](https://github.com/hashicorp/waypoint/issues/2447)]
+* plugin/docker: Resolve image identifiers properly [[GH-2067](https://github.com/hashicorp/waypoint/issues/2067)]
+* plugin/docker: Support SSH hosts for entrypoint injection [[GH-2277](https://github.com/hashicorp/waypoint/issues/2277)]
+* plugin/k8: Setup Kubernetes services for different workspaces properly [[GH-2399](https://github.com/hashicorp/waypoint/issues/2399)]
+* server: Adds API validation to ensure server doesn't panic when given an empty
+request body [[GH-2273](https://github.com/hashicorp/waypoint/issues/2273)]
+* server: Validate GetDeployment request has a valid request body to avoid a server
+panic. [[GH-2269](https://github.com/hashicorp/waypoint/issues/2269)]
+* ui: Fixed config variable duplication when renaming [[GH-2421](https://github.com/hashicorp/waypoint/issues/2421)]
+* ui: Notification messages display nicely when containing long words such as URLs [[GH-2411](https://github.com/hashicorp/waypoint/issues/2411)]
+
 ## 0.5.2 (September 09, 2021)
 
 FEATURES:
