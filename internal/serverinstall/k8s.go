@@ -1490,10 +1490,9 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:    "k8s-pull-secret",
-		Target:  &i.config.imagePullSecret,
-		Usage:   "Secret to use to access the Waypoint server image on Kubernetes.",
-		Default: "github",
+		Name:   "k8s-pull-secret",
+		Target: &i.config.imagePullSecret,
+		Usage:  "Secret to use to access the Waypoint server image on Kubernetes.",
 	})
 
 	set.StringVar(&flag.StringVar{
