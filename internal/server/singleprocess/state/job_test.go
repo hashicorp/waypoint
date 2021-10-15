@@ -1348,6 +1348,47 @@ func TestJobCancel(t *testing.T) {
 		require.False(job2.Blocked)
 	})
 
+	t.Run("assigned with force cancels dependents", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "B",
+			DependsOn: []string{"A"},
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+		require.Equal(pb.Job_WAITING, job.State)
+
+		// Cancel it
+		require.NoError(s.JobCancel("A", true))
+
+		// Verify it is canceled
+		job, err = s.JobById("A", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.Job.State)
+		require.NotNil(job.Job.Error)
+		require.NotEmpty(job.CancelTime)
+
+		// Verify dependent is canceled. Even if it was assigned and forced
+		// we should have canceled all dependents.
+		job, err = s.JobById("B", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.Job.State)
+		require.NotNil(job.Job.Error)
+		require.NotEmpty(job.CancelTime)
+	})
+
 	t.Run("completed", func(t *testing.T) {
 		require := require.New(t)
 
