@@ -179,6 +179,7 @@ status_report_indicator:
     ready: Available
     down: Down
     partial: Degraded
+    missing: Missing
   tooltip:
     checking_now: Checking now…
     last_checked: Last checked
