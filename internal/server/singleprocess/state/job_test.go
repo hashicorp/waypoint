@@ -416,6 +416,84 @@ func TestJobAssign(t *testing.T) {
 		}
 	})
 
+	t.Run("canceling unblocks other jobs in a matching app and workspace", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create two builds for the same app/workspace
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "w1",
+			},
+			Operation: &pb.Job_Deploy{
+				Deploy: &pb.Job_DeployOp{},
+			},
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "B",
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "w1",
+			},
+			Operation: &pb.Job_Deploy{
+				Deploy: &pb.Job_DeployOp{},
+			},
+		})))
+
+		// Assign it, we should get this build
+		{
+			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+			require.NoError(err)
+			require.NotNil(job)
+			require.Equal("A", job.Id)
+		}
+
+		// Get the next value in a goroutine
+		{
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			var job *Job
+			var jerr error
+			doneCh := make(chan struct{})
+			go func() {
+				defer close(doneCh)
+				job, jerr = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
+			}()
+
+			// We should be blocking
+			select {
+			case <-doneCh:
+				t.Fatal("should wait")
+
+			case <-time.After(500 * time.Millisecond):
+			}
+
+			// Cancel job A without force, which shouldn't block reassignment queue.
+			require.NoError(s.JobCancel("A", false))
+			select {
+			case <-doneCh:
+				t.Fatal("should wait despite a non-forceful cancel")
+
+			case <-time.After(500 * time.Millisecond):
+			}
+
+			// Cancel job A with force, which should clear the lock
+			require.NoError(s.JobCancel("A", true))
+
+			// Verify that runner B is now allowed to run its job
+			select {
+			case <-doneCh:
+				require.NoError(jerr)
+				require.NotNil(job)
+				require.Equal("B", job.Id)
+			case <-time.After(5 * time.Second):
+				t.Errorf("Timed out waiting for job B to be assigned. Job A canceling must not have unlocked the app/project/workspace")
+			}
+		}
+	})
+
 	t.Run("blocking on matching app and workspace (sequential)", func(t *testing.T) {
 		require := require.New(t)
 
