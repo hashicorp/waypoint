@@ -30,8 +30,8 @@ server is installed with [`waypoint install`](/commands/install).
 
 ### On-demand runners
 
-While the remote runner is capable of performing operations on its own, on supported platforms it instead spawns
-on-demand runners - ephemeral container instances that perform one operation before exiting. These on-demand runners can
+While the remote runner is capable of performing operations on its own, it also supports plugins
+to spawn on-demand runners for a given platform. These on-demand runners are ephemeral container instances that perform one operation before exiting. These on-demand runners can
 perform container builds without any privileged access, offer more isolation between operations, and allow Waypoint
 to scale further.
 
