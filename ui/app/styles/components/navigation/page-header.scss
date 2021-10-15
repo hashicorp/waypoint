@@ -3,7 +3,7 @@
   align-items: center;
   flex-wrap: wrap;
   margin-bottom: scale.$base;
-
+  border-bottom: 1px solid rgb(var(--border));
   .icon-tile {
     margin-right: scale.$base;
   }
@@ -17,6 +17,15 @@
     margin-right: auto;
     min-height: 76px;
     max-width: 100%;
+
+    .details-page-header {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      font-size: 0.9em;
+      font-weight: 400;
+      color: rgb(var(--text-muted));
+    }
 
     h1,
     h2 {

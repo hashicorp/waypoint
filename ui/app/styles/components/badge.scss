@@ -9,6 +9,7 @@
 
   &--version {
     @include Typography.Interface(M);
+    font-family: var(--monospace);
     border-radius: scale.$base;
   }
 

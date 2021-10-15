@@ -109,7 +109,7 @@ ul.list {
 // Waypoint styles
 
 code {
-  font-family: ui-monospace, 'Menlo', monospace;
+  font-family: var(--monospace);
   white-space: nowrap;
   color: rgb(var(--text));
   background: none;
