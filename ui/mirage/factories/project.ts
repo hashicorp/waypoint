@@ -1,4 +1,4 @@
-import { Factory, trait } from 'ember-cli-mirage';
+import { Factory, trait, association } from 'ember-cli-mirage';
 import faker from '../faker';
 
 export default Factory.extend({
@@ -26,6 +26,10 @@ export default Factory.extend({
   // This is our primary demo trait for development mode
   'marketing-public': trait({
     name: 'marketing-public',
+
+    dataSource: association('marketing-public'),
+    dataSourcePoll: association('every-2-minutes'),
+
     afterCreate(project, server) {
       let application = server.create('application', 'with-random-name', { project });
 
