@@ -1253,6 +1253,10 @@ message QueueJobResponse {
 message CancelJobRequest {
   // The job to cancel
   string job_id = 1;
+
+  // Force canceling clears all locks on this app/project/workspace, so only force if you are
+  // sure that the job actually complete or will not conflict with other jobs.
+  bool force = 2;
 }
 
 message ValidateJobRequest {

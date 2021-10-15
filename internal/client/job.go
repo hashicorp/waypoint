@@ -60,7 +60,7 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 // The receiver must be careful to not block sending to mon as it will block
 // the job state processing loop.
 func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.UI, monCh chan pb.Job_State) (*pb.Job_Result, error) {
-	// Be sure that the monitor is closed so the reciever knows for sure the job isn't going
+	// Be sure that the monitor is closed so the receiver knows for sure the job isn't going
 	// anymore.
 	if monCh != nil {
 		defer close(monCh)
@@ -165,6 +165,10 @@ func (c *Project) queueAndStreamJob(
 			log.Warn("canceling job")
 			_, err := c.client.CancelJob(ctx, &pb.CancelJobRequest{
 				JobId: queueResp.JobId,
+
+				// We're sure the job has exited at this point, so we should force cancel to clear the
+				// assignment lock for future jobs.
+				Force: true,
 			})
 			if err != nil {
 				log.Warn("error canceling job", "err", err)
