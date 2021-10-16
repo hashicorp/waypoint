@@ -2,7 +2,7 @@ export const ALERT_BANNER_ACTIVE = true
 
 // https://github.com/hashicorp/web-components/tree/master/packages/alert-banner
 export default {
-  tag: 'new',
+  tag: 'New Release',
   url: 'https://www.hashicorp.com/blog/announcing-hashicorp-waypoint-0-6',
   text:
     'Waypoint 0.6 is available to download! Check out the announcement blog for more details.',
