@@ -122,7 +122,7 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
     // If ssh force users to use a git: url
     if (this.authSSH) {
       if (gitUrl.protocol !== 'ssh') {
-        this.flashMessages.error('Git url needs to use "git:" protocol');
+        this.flashMessages.error('Git url needs to use "ssh:" protocol');
         return false;
       }
     }

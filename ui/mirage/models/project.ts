@@ -1,15 +1,18 @@
-import { Model, hasMany } from 'ember-cli-mirage';
+import { Model, hasMany, belongsTo } from 'ember-cli-mirage';
 import { Project, Ref } from 'waypoint-pb';
 
 export default Model.extend({
   applications: hasMany(),
   variables: hasMany(),
+  dataSource: belongsTo('job-data-source'),
+  dataSourcePoll: belongsTo('project-poll'),
+
   toProtobuf(): Project {
     let result = new Project();
 
     result.setApplicationsList(this.applications.models.map((a) => a.toProtobuf()));
-    // TODO: result.setDataSource(...)
-    // TODO: result.setDataSourcePoll(...)
+    result.setDataSource(this.dataSource?.toProtobuf());
+    result.setDataSourcePoll(this.dataSourcePoll?.toProtobuf());
     result.setFileChangeSignal(this.fileChangeSignal);
     result.setName(this.name);
     result.setRemoteEnabled(this.remoteEnabled);

@@ -1,6 +1,6 @@
 import { ListProjectsResponse, GetProjectResponse, UpsertProjectResponse } from 'waypoint-pb';
 import { decode } from '../helpers/protobufs';
-import { UI, GetProjectRequest, UpsertProjectRequest } from 'waypoint-pb';
+import { UI, GetProjectRequest, UpsertProjectRequest, Job, Project } from 'waypoint-pb';
 import { Request, Response } from 'miragejs';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
@@ -49,9 +49,13 @@ export function update(schema: any, { requestBody }: Request): Response {
     .getProject()
     .getVariablesList()
     .map((v) => v.toObject());
+  let dataSource = requestMsg.getProject().getDataSource();
+  let poll = requestMsg.getProject().getDataSourcePoll();
   let model = schema.projects.findBy({ name });
 
   model.variables = variablesList.map((v) => model.newVariable(v));
+  model.dataSource = dataSourceFromProto(schema, dataSource);
+  model.dataSourcePoll = pollFromProto(schema, poll);
   model.save();
 
   let project = model?.toProtobuf();
@@ -59,4 +63,32 @@ export function update(schema: any, { requestBody }: Request): Response {
   resp.setProject(project);
 
   return this.serialize(resp, 'application');
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function dataSourceFromProto(schema: any, dataSource: Job.DataSource): any {
+  let dataSourceObj = dataSource.toObject();
+  let result = schema.new('job-data-source');
+
+  if (dataSourceObj.git) {
+    let { url, ref, path, ignoreChangesOutsidePath } = dataSourceObj.git;
+    let git = result.newGit({ url, ref, path, ignoreChangesOutsidePath });
+
+    if (dataSourceObj.git.ssh) {
+      git.newSsh(dataSourceObj.git.ssh);
+    }
+
+    if (dataSourceObj.git.basic) {
+      git.newBasic(dataSourceObj.git.basic);
+    }
+  }
+
+  return result;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function pollFromProto(schema: any, poll: Project.Poll): any {
+  let result = schema.new('project-poll', poll.toObject());
+
+  return result;
 }
