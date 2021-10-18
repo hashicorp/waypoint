@@ -123,6 +123,54 @@ func (*Resource) Descriptor() ([]byte, []int) {
 	return file_waypoint_builtin_nomad_plugin_proto_rawDescGZIP(), []int{1}
 }
 
+// This represents the state of the TaskLaunch implementation.
+type TaskInfo struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (x *TaskInfo) Reset() {
+	*x = TaskInfo{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_waypoint_builtin_nomad_plugin_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *TaskInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TaskInfo) ProtoMessage() {}
+
+func (x *TaskInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_waypoint_builtin_nomad_plugin_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TaskInfo.ProtoReflect.Descriptor instead.
+func (*TaskInfo) Descriptor() ([]byte, []int) {
+	return file_waypoint_builtin_nomad_plugin_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *TaskInfo) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
 type Resource_Job struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -134,7 +182,7 @@ type Resource_Job struct {
 func (x *Resource_Job) Reset() {
 	*x = Resource_Job{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_nomad_plugin_proto_msgTypes[2]
+		mi := &file_waypoint_builtin_nomad_plugin_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -147,7 +195,7 @@ func (x *Resource_Job) String() string {
 func (*Resource_Job) ProtoMessage() {}
 
 func (x *Resource_Job) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_nomad_plugin_proto_msgTypes[2]
+	mi := &file_waypoint_builtin_nomad_plugin_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -186,9 +234,11 @@ var file_waypoint_builtin_nomad_plugin_proto_rawDesc = []byte{
 	0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x0d, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63,
 	0x65, 0x53, 0x74, 0x61, 0x74, 0x65, 0x22, 0x25, 0x0a, 0x08, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72,
 	0x63, 0x65, 0x1a, 0x19, 0x0a, 0x03, 0x4a, 0x6f, 0x62, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d,
-	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x42, 0x18, 0x5a,
-	0x16, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2f, 0x62, 0x75, 0x69, 0x6c, 0x74, 0x69,
-	0x6e, 0x2f, 0x6e, 0x6f, 0x6d, 0x61, 0x64, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x1a, 0x0a,
+	0x08, 0x54, 0x61, 0x73, 0x6b, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x42, 0x18, 0x5a, 0x16, 0x77, 0x61, 0x79,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2f, 0x62, 0x75, 0x69, 0x6c, 0x74, 0x69, 0x6e, 0x2f, 0x6e, 0x6f,
+	0x6d, 0x61, 0x64, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -203,15 +253,16 @@ func file_waypoint_builtin_nomad_plugin_proto_rawDescGZIP() []byte {
 	return file_waypoint_builtin_nomad_plugin_proto_rawDescData
 }
 
-var file_waypoint_builtin_nomad_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_waypoint_builtin_nomad_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_waypoint_builtin_nomad_plugin_proto_goTypes = []interface{}{
 	(*Deployment)(nil),   // 0: nomad.Deployment
 	(*Resource)(nil),     // 1: nomad.Resource
-	(*Resource_Job)(nil), // 2: nomad.Resource.Job
-	(*anypb.Any)(nil),    // 3: google.protobuf.Any
+	(*TaskInfo)(nil),     // 2: nomad.TaskInfo
+	(*Resource_Job)(nil), // 3: nomad.Resource.Job
+	(*anypb.Any)(nil),    // 4: google.protobuf.Any
 }
 var file_waypoint_builtin_nomad_plugin_proto_depIdxs = []int32{
-	3, // 0: nomad.Deployment.resource_state:type_name -> google.protobuf.Any
+	4, // 0: nomad.Deployment.resource_state:type_name -> google.protobuf.Any
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -250,6 +301,18 @@ func file_waypoint_builtin_nomad_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_nomad_plugin_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*TaskInfo); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_waypoint_builtin_nomad_plugin_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Resource_Job); i {
 			case 0:
 				return &v.state
@@ -268,7 +331,7 @@ func file_waypoint_builtin_nomad_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_waypoint_builtin_nomad_plugin_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
