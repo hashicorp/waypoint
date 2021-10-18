@@ -368,6 +368,10 @@
         "path": "runner/config"
       },
       {
+        "title": "Profiles",
+        "path": "runner/profiles"
+      },
+      {
         "title": "Additional Runners",
         "path": "runner/run-manual"
       }

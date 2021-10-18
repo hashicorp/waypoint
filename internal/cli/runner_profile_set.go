@@ -224,7 +224,7 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 			Name:   "env-vars",
 			Target: &c.flagEnvVars,
 			Usage: "Environment variable to expose to the on-demand runner. Typically used to " +
-				"introduce configuration for the plugins that the runner will execute.",
+				"introduce configuration for the plugins that the runner will execute. Can be specified multiple times.",
 		})
 
 		f.StringVar(&flag.StringVar{
