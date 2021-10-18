@@ -1,0 +1,3 @@
+```release-note:bug
+cli: fix issue where sending ctrl-c to the CLI could block all subsiquent operations on the app/project/workspace for two minutes.
+```
