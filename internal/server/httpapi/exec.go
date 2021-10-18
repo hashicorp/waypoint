@@ -1,10 +1,13 @@
 package httpapi
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/hashicorp/go-hclog"
 	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wspb"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -18,6 +21,14 @@ func HandleExec(addr string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := hclog.FromContext(ctx)
+
+		// Get our authorization token
+		var token string
+		_, err := fmt.Scanf("Bearer %s", r.Header.Get("Authorization"))
+		if err != nil || token == "" {
+			http.Error(w, "no bearer token", 403)
+			return
+		}
 
 		// Accept our websocket connection.
 		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
@@ -37,13 +48,6 @@ func HandleExec(addr string) http.HandlerFunc {
 		// We can defer close an error because multiple calls to Close are ignored.
 		defer c.Close(websocket.StatusInternalError, "early exit")
 
-		// Before we spend a bunch of time connecting back to the gRPC
-		// service and all that, let's read the start request from
-		// the websocket. This is used to initialize the exec stream. If the
-		// client never sends it, then we can just exit out without wasting
-		// resources even attempting to connect back to gRPC.
-		// TODO
-
 		// Connect back to our own gRPC service.
 		grpcConn, err := serverclient.Connect(ctx,
 			serverclient.Logger(log),
@@ -51,7 +55,7 @@ func HandleExec(addr string) http.HandlerFunc {
 				Server: serverconfig.Client{
 					Address:     addr,
 					RequireAuth: true,
-					AuthToken:   "TODO",
+					AuthToken:   token,
 
 					// Our gRPC server should always be listening on TLS.
 					// We ignore it because its coming out of our own process.
@@ -83,5 +87,74 @@ func HandleExec(addr string) http.HandlerFunc {
 			return
 		}
 		defer exec.CloseSend()
+
+		// Start a goroutine that'll just read requests from our websocket.
+		// This will exit once our connection is closed.
+		reqCh := make(chan *pb.ExecStreamRequest)
+		go func() {
+			for {
+				var req pb.ExecStreamRequest
+				err := wspb.Read(ctx, c, &req)
+				if err != nil {
+					if err != io.EOF {
+						log.Error("websocket receive error", "err", err)
+					}
+					return
+				}
+
+				select {
+				case reqCh <- &req:
+				case <-ctx.Done():
+					log.Warn("context canceled while waiting to send data")
+					return
+				}
+			}
+		}()
+
+		// Start goroutine that'll just read exec stream responses. This
+		// will exit once our connection is closed.
+		respCh := make(chan *pb.ExecStreamResponse)
+		go func() {
+			for {
+				resp, err := exec.Recv()
+				if err != nil {
+					if err != io.EOF {
+						log.Error("stream receive error", "err", err)
+					}
+
+					return
+				}
+
+				// Send our received data but exit if our context is canceled.
+				select {
+				case respCh <- resp:
+				case <-ctx.Done():
+					log.Warn("context canceled while waiting to send data")
+					return
+				}
+			}
+		}()
+
+		// Sit in an event loop and just shuttle data back and forth.
+		for {
+			select {
+			case <-ctx.Done():
+				// Done!
+				c.Close(websocket.StatusNormalClosure, "")
+				return
+
+			case req := <-reqCh:
+				if err := exec.Send(req); err != nil {
+					c.Close(websocket.StatusInternalError, err.Error())
+					return
+				}
+
+			case resp := <-respCh:
+				if err := wspb.Write(ctx, c, resp); err != nil {
+					c.Close(websocket.StatusInternalError, err.Error())
+					return
+				}
+			}
+		}
 	}
 }
