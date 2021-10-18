@@ -80,7 +80,7 @@ type ecsConfig struct {
 	// Memory configures the default amount of memory for the task
 	Memory string `hcl:"memory,optional"`
 
-	// OdrExecutionRoleName string `hcl:"odr_execution_role_name,optional"`
+	// IAM Execution Role to assign to the on-demand runner
 	TaskRoleName string `hcl:"task_role_name,optional"`
 
 	// On-Demand Runner docker image. Defaults to hashicorp/waypoint-odr
