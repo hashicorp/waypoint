@@ -36,7 +36,6 @@ require (
 	github.com/gliderlabs/ssh v0.3.1
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
-	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/gofrs/flock v0.8.0
 	github.com/golang/protobuf v1.5.2
@@ -72,7 +71,6 @@ require (
 	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/kevinburke/go-bindata v3.22.0+incompatible
 	github.com/kr/text v0.2.0
-	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/mitchellh/cli v1.1.2
 	github.com/mitchellh/copystructure v1.1.1
@@ -122,6 +120,7 @@ require (
 	k8s.io/apimachinery v0.22.1
 	k8s.io/client-go v0.22.1
 	k8s.io/utils v0.0.0-20210820185131-d34e5cb4466e
+	nhooyr.io/websocket v1.8.7
 	sigs.k8s.io/yaml v1.2.0
 )
 

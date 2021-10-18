@@ -6,11 +6,12 @@ import (
 	"google.golang.org/grpc"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
+	"github.com/gorilla/mux"
 	"github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/httpapi"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 )
 
@@ -33,6 +34,7 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 		grpcweb.WithAllowNonRootResource(true),
 	)
 
+	// This is the http.Handler for the UI
 	uifs := http.FileServer(&assetfs.AssetFS{
 		Asset:     gen.Asset,
 		AssetDir:  gen.AssetDir,
@@ -41,15 +43,15 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 		Fallback:  "index.html",
 	})
 
-	// If the path has a grpc prefix we assume it's a GRPC gateway request,
-	// otherwise fall back to serving the UI from the filesystem
-	var rootHandler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/grpc") {
-			grpcWrapped.ServeHTTP(w, r)
-		} else if opts.BrowserUIEnabled {
-			uifs.ServeHTTP(w, r)
-		}
-	})
+	// Create our full router
+	r := mux.NewRouter()
+	r.HandleFunc("/v1/exec", httpapi.HandleExec)
+	r.PathPrefix("/grpc").Handler(grpcWrapped)
+	r.PathPrefix("/").Handler(uifs)
+
+	// Create our root handler which is just our router. We then wrap it
+	// in various middlewares below.
+	var rootHandler http.Handler = r
 
 	// Wrap our handler to force TLS
 	rootHandler = forceTLSHandler(rootHandler)
