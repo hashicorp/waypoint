@@ -31,11 +31,7 @@ func TestHandleExec(t *testing.T) {
 	defer httpServer.Close()
 
 	// Dial it up
-	conn, _, err := websocket.Dial(ctx, httpServer.URL, &websocket.DialOptions{
-		HTTPHeader: map[string][]string{
-			"Authorization": {"Bearer foo-bar-baz"},
-		},
-	})
+	conn, _, err := websocket.Dial(ctx, httpServer.URL+"?token=foo-bar-baz", nil)
 	require.NoError(err)
 	defer conn.Close(websocket.StatusInternalError, "early exit")
 

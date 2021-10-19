@@ -1,7 +1,6 @@
 package httpapi
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 
@@ -24,10 +23,9 @@ func HandleExec(addr string, tls bool) http.HandlerFunc {
 		log.SetLevel(hclog.Trace)
 
 		// Get our authorization token
-		var token string
-		_, err := fmt.Sscanf(r.Header.Get("Authorization"), "Bearer %s", &token)
-		if err != nil || token == "" {
-			http.Error(w, "no bearer token", 403)
+		token := r.URL.Query().Get("token")
+		if token == "" {
+			http.Error(w, "no token provided", 403)
 			return
 		}
 
