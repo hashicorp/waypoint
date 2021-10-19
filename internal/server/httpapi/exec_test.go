@@ -111,6 +111,4 @@ func (v *execImpl) StartExecStream(srv pb.Waypoint_StartExecStreamServer) error 
 		v.Recv = append(v.Recv, req)
 		v.Unlock()
 	}
-
-	return nil
 }
