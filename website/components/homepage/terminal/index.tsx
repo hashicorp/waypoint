@@ -31,7 +31,7 @@ function Terminal({ tabs, children }: TerminalProps): JSX.Element {
         setTabIndex((prevTabIndex) => prevTabIndex + 1)
       }
     },
-    isHovering || !inView ? null : 5000
+    isHovering || !inView ? null : 3000
   )
   return (
     <div
