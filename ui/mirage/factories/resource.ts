@@ -57,7 +57,16 @@ export default Factory.extend({
         spec: {
           containers: [
             {
-              image: 'marketing-public/wp-matrix:1',
+              image: 'marketing-public/wp-matrix@sha256:c47cbb1d0526ad29183fb14919ff6c757ec31173',
+            },
+            {
+              image: 'localhost:5000/wp-matrix:a-very-long-but-still-human-readable-tag',
+            },
+            {
+              image: 'marketing-public/wp-matrix:latest',
+            },
+            {
+              image: 'quay.io/marketing-public/wp-matrix',
             },
           ],
         },

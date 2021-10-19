@@ -5846,6 +5846,11 @@ dir-glob@^3.0.1:
   dependencies:
     path-type "^4.0.0"
 
+docker-parse-image@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/docker-parse-image/-/docker-parse-image-3.0.1.tgz#33dc69291eac3414f84871f2d59d77b6f6948be4"
+  integrity sha1-M9xpKR6sNBT4SHHy1Z13tvaUi+Q=
+
 doctrine@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/doctrine/-/doctrine-3.0.0.tgz#addebead72a6574db783639dc87a121773973961"

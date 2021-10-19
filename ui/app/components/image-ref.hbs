@@ -1,12 +1,22 @@
 <span data-test-image-ref class="image-ref" title="Image">
-  <span class="image-ref__label">
-    {{@imageRef.label}}
+  <span class="image-ref__uri" data-test-image-ref-uri>
+    {{this.uri}}
   </span>
-  <span class="image-ref__tag">
-    {{#if (eq @imageRef.label "sha256")}}
-      {{truncate-commit @imageRef.tag}}
-    {{else}}
-      {{@imageRef.tag}}
-    {{/if}}
-  </span>
+
+  {{#if this.hasTag}}
+    <span class="image-ref__tag badge badge--info" data-test-image-ref-tag>
+      {{this.presentableTag}}
+    </span>
+  {{/if}}
+
+  {{#if this.tagIsDigest}}
+    <CopyButton
+      @clipboardText={{@imageRef.tag}}
+      @success={{perform this.displayCopySuccess}}
+      class="image-ref__copy-button focus-ring"
+      title={{t "image-ref.copy-button-title"}}
+    >
+      <Pds::Icon @type={{if this.displayCopySuccess.isRunning "copy-success" "copy-action"}} />
+    </CopyButton>
+  {{/if}}
 </span> 
