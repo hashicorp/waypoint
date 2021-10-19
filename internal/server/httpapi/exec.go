@@ -17,14 +17,15 @@ import (
 
 // HandleExec handles the `waypoint exec` websocket API. This works by
 // connecting back to our own local gRPC server.
-func HandleExec(addr string) http.HandlerFunc {
+func HandleExec(addr string, tls bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := hclog.FromContext(ctx)
+		log.SetLevel(hclog.Trace)
 
 		// Get our authorization token
 		var token string
-		_, err := fmt.Scanf("Bearer %s", r.Header.Get("Authorization"))
+		_, err := fmt.Sscanf(r.Header.Get("Authorization"), "Bearer %s", &token)
 		if err != nil || token == "" {
 			http.Error(w, "no bearer token", 403)
 			return
@@ -59,7 +60,7 @@ func HandleExec(addr string) http.HandlerFunc {
 
 					// Our gRPC server should always be listening on TLS.
 					// We ignore it because its coming out of our own process.
-					Tls:           true,
+					Tls:           tls,
 					TlsSkipVerify: true,
 				},
 			}),
