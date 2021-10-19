@@ -38,7 +38,7 @@ page:
     overview:
       heading: Overview
       image: Image
-      health-check: Health Check
+      health-check: Health
       re-run-health-check: Re-run
       unavailable: Currently unavailable
     logs:
@@ -232,3 +232,6 @@ resource-detail:
 section:
   expand: Expand section
   collapse: Collapse section
+
+image-ref:
+  copy-button-title: Copy full digest
