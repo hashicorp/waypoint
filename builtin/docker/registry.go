@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"google.golang.org/grpc/codes"
@@ -226,3 +227,6 @@ build {
 
 	return doc, nil
 }
+
+var _ component.Registry = (*Registry)(nil)
+var _ component.RegistryAccess = (*Registry)(nil)
