@@ -177,13 +177,10 @@ func (op *buildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ 
 				return nil, err
 			}
 		} else {
-			if ra != nil && ra.AccessInfoFunc() == nil {
+			if ok && ra != nil && ra.AccessInfoFunc() == nil {
 				return nil, status.Error(codes.Internal, "The plugin requested does not "+
 					"define an AccessInfoFunc() in its Registry plugin. This is an internal "+
 					"error and should be reported to the author of the plugin.")
-			} else {
-				return nil, status.Error(codes.Internal, "The given build operation value "+
-					"is not a component.RegistryAccess type.")
 			}
 		}
 	}
