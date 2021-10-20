@@ -81,18 +81,6 @@ func (r *Registry) Push(
 		// directly. Ergo we don't need to do anyhting and can just return the image as is.
 		return img, nil
 
-	case *Image_Img:
-		// If the image is already in img, we have to use `img push`.
-		if err := r.pushWithImg(
-			ctx,
-			log,
-			ui,
-			img,
-			target,
-		); err != nil {
-			return nil, err
-		}
-
 	case *Image_Docker, nil:
 		// We support "nil" here for backwards compatibility. Images built
 		// prior to supporting the Location field will set nil.
@@ -105,6 +93,13 @@ func (r *Registry) Push(
 		); err != nil {
 			return nil, err
 		}
+
+	case *Image_UnusedImg:
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"Input image is in `img` but Waypoint doesn't support img from "+
+				"version 0.7 onwards. Please use a Waypoint 0.6 runner to complete "+
+				"this job or rerun the build without img.")
+
 	}
 
 	sg := ui.StepGroup()
