@@ -2,7 +2,9 @@ name: "size"
 on:
   pull_request:
     branches:
-      - master
+      - main
+    paths:
+      - ui/**
 jobs:
   size:
     runs-on: ubuntu-latest
