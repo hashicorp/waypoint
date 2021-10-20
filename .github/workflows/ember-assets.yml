@@ -1,0 +1,16 @@
+name: Ember Asset Sizes
+
+on: [pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: simplabs/ember-asset-size-action@v2
+      with:
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
