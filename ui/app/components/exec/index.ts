@@ -1,7 +1,10 @@
 import Component from '@glimmer/component';
 import KEYS from 'waypoint/utils/keys';
+import SessionService from 'waypoint/services/session';
 import { Terminal } from 'xterm';
+import config from 'waypoint/config/environment';
 import { createTerminal } from 'waypoint/utils/create-terminal';
+import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
 interface ExecComponentArgs {
@@ -14,6 +17,8 @@ const BACKSPACE_ONE_CHARACTER = '\x08 \x08';
 const UNPRINTABLE_CHARACTERS_REGEX = /[\x00-\x1F]/g;
 
 export default class ExecComponent extends Component<ExecComponentArgs> {
+  @service session!: SessionService;
+
   @tracked deploymentId: string;
   @tracked terminal!: Terminal;
   @tracked command!: string;
@@ -27,11 +32,33 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     this.startExecStream(deploymentId);
   }
 
-  startExecStream(deploymentId: string): void {
-    this.dataListener = this.terminal.onData((data) => {
-      this.handleDataEvent(data);
+  async startExecStream(deploymentId: string): void {
+    let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    let socket = new WebSocket(`ws://localhost:9702/v1/exec`, );
+    socket.addEventListener('open', (event) => {
+      socket.send(JSON.stringify({ version: 1, auth_token: this.token || '' }));
+      console.log(event);
+      socket.send('Hello Server!');
     });
-    // Todo
+    socket.addEventListener('message', (event) => {
+      console.log(event);
+    });
+    socket.addEventListener('close', (event) => {
+      console.log(event);
+    });
+    socket.addEventListener('error', (event) => {
+      console.log(event);
+    });
+    // this.dataListener = this.terminal.onData((data) => {
+    //   this.handleDataEvent(data);
+    // });
+  }
+
+  async openSocketStream() {
+    // Todo: handle different hosts/ports
+    let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    let socket = new WebSocket(`ws://localhost:9702/v1/exec`, []);
+    return socket;
   }
 
   handleDataEvent = (data) => {

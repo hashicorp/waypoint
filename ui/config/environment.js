@@ -59,6 +59,7 @@ module.exports = function (environment) {
     if (process.argv.includes('local')) {
       // Default Docker server address
       ENV.apiAddress = 'https://localhost:9702';
+      ENV.apiHost = 'localhost:9702';
       ENV['ember-cli-mirage'] = {
         enabled: false,
       };
