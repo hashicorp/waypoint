@@ -1,0 +1,4 @@
+```release-note:bug
+core: Fix a panic where a custom Waypoint plugin would panic if the plugin
+did not properly implement a Registry component with AccessInfoFunc()
+```
