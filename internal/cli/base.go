@@ -317,11 +317,10 @@ func (c *baseCommand) Init(opts ...Option) error {
 		if cfg != nil {
 			project := &pb.Ref_Project{Project: cfg.Project}
 
-			// If we require a project target and we still haven't set it,
-			// and the user provided it via the CLI, set it now.
+			// If we're loading config, we'll have a project, and we set it now.
 			// If they didn't provide a value via flag, we default to
 			// the project from initConfig.
-			if baseCfg.ProjectTargetRequired && c.flagProject != "" {
+			if c.flagProject != "" {
 				project = &pb.Ref_Project{Project: c.flagProject}
 			}
 			if c.refProject == nil {
