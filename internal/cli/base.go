@@ -240,6 +240,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 			match := reAppTarget.FindStringSubmatch(c.args[0])
 			if match != nil {
 				// Set our refs
+				c.refProject = &pb.Ref_Project{Project: match[1]}
 				c.refApp = &pb.Ref_Application{
 					Project:     match[1],
 					Application: match[2],
@@ -314,18 +315,17 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 		c.cfg = cfg
 		if cfg != nil {
+			project := &pb.Ref_Project{Project: cfg.Project}
 
 			// If we require a project target and we still haven't set it,
 			// and the user provided it via the CLI, set it now.
 			// If they didn't provide a value via flag, we default to
 			// the project from initConfig.
-			if (baseCfg.AppOptional || baseCfg.ProjectTargetRequired) &&
-				c.refProject == nil {
-				if c.flagProject != "" {
-					c.refProject = &pb.Ref_Project{Project: c.flagProject}
-				} else {
-					c.refProject = &pb.Ref_Project{Project: cfg.Project}
-				}
+			if baseCfg.ProjectTargetRequired && c.flagProject != "" {
+				project = &pb.Ref_Project{Project: c.flagProject}
+			}
+			if c.refProject == nil {
+				c.refProject = project
 			}
 
 			// If we require an app target and we still haven't set it,
@@ -336,7 +336,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 				c.refApp == nil &&
 				c.flagApp != "" {
 				c.refApp = &pb.Ref_Application{
-					Project:     c.refProject.Project,
+					Project:     project.Project,
 					Application: c.flagApp,
 				}
 			}
@@ -391,19 +391,6 @@ func (c *baseCommand) Init(opts ...Option) error {
 			c.refApp = &pb.Ref_Application{
 				Project:     c.cfg.Project,
 				Application: c.cfg.Apps()[0],
-			}
-		}
-	}
-
-	if baseCfg.ProjectTargetRequired {
-		if c.refProject == nil {
-			if len(c.cfg.Project) == 0 {
-				c.ui.Output(errProjectMode, terminal.WithErrorStyle())
-				return ErrSentinel
-			}
-
-			c.refProject = &pb.Ref_Project{
-				Project: c.cfg.Project,
 			}
 		}
 	}
@@ -760,9 +747,6 @@ enforces this requirement. Sorry!
 This command requires a single targeted app. You have multiple apps defined
 so you can specify the app to target using the "-app" flag.
 `)
-
-	errProjectMode = strings.TrimSpace(`
-This command requires a targeted project.`)
 
 	// matches either "project" or "project/app"
 	reAppTarget = regexp.MustCompile(`^(?P<project>[-0-9A-Za-z_]+)/(?P<app>[-0-9A-Za-z_]+)$`)
