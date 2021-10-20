@@ -314,19 +314,16 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 		c.cfg = cfg
 		if cfg != nil {
+			project := &pb.Ref_Project{Project: cfg.Project}
 
 			// If we require a project target and we still haven't set it,
 			// and the user provided it via the CLI, set it now.
 			// If they didn't provide a value via flag, we default to
 			// the project from initConfig.
-			if (baseCfg.AppOptional || baseCfg.ProjectTargetRequired) &&
-				c.refProject == nil {
-				if c.flagProject != "" {
-					c.refProject = &pb.Ref_Project{Project: c.flagProject}
-				} else {
-					c.refProject = &pb.Ref_Project{Project: cfg.Project}
-				}
+			if baseCfg.ProjectTargetRequired && c.flagProject != "" {
+				project = &pb.Ref_Project{Project: c.flagProject}
 			}
+			c.refProject = project
 
 			// If we require an app target and we still haven't set it,
 			// and the user provided it via the CLI, set it now. This code
@@ -336,7 +333,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 				c.refApp == nil &&
 				c.flagApp != "" {
 				c.refApp = &pb.Ref_Application{
-					Project:     c.refProject.Project,
+					Project:     project.Project,
 					Application: c.flagApp,
 				}
 			}
