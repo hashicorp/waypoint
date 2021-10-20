@@ -177,7 +177,7 @@ func (op *buildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ 
 				return nil, err
 			}
 		} else {
-			if ra.AccessInfoFunc() == nil {
+			if ra != nil && ra.AccessInfoFunc() == nil {
 				return nil, status.Error(codes.Internal, "The plugin requested does not "+
 					"define an AccessInfoFunc() in its Registry plugin. This is an internal "+
 					"error and should be reported to the author of the plugin.")
