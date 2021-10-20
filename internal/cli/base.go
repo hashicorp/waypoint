@@ -240,6 +240,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 			match := reAppTarget.FindStringSubmatch(c.args[0])
 			if match != nil {
 				// Set our refs
+				c.refProject = &pb.Ref_Project{Project: match[1]}
 				c.refApp = &pb.Ref_Application{
 					Project:     match[1],
 					Application: match[2],
