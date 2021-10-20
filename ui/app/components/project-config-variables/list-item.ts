@@ -9,11 +9,13 @@ import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
+type ConfigVarChangeset = Partial<BufferedChangeset> & ConfigVar.AsObject;
+
 interface VariableArgs {
   variable: ConfigVar.AsObject;
   isEditing: boolean;
   isCreating: boolean;
-  saveVariableSettings: (variable: BufferedChangeset, deleteVariable?: boolean) => Promise<Project.AsObject>;
+  saveVariableSettings: (variable: ConfigVarChangeset, deleteVariable?: boolean) => Promise<Project.AsObject>;
   deleteVariable: (variable: ConfigVar.AsObject) => Promise<void>;
   cancelCreate: () => void;
 }
@@ -24,7 +26,7 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
 
   initialVariable!: ConfigVar.AsObject;
   @tracked variable: ConfigVar.AsObject;
-  @tracked changeset?: BufferedChangeset;
+  @tracked changeset?: ConfigVarChangeset;
   @tracked isCreating: boolean;
   @tracked isEditing: boolean;
 
@@ -36,7 +38,7 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
     this.isCreating = isCreating;
 
     if (this.isCreating || this.isEditing) {
-      this.changeset = Changeset(this.variable);
+      this.changeset = Changeset(this.variable) as ConfigVarChangeset;
     }
   }
 
@@ -57,7 +59,7 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
   @action
   editVariable(): void {
     this.isEditing = true;
-    this.changeset = Changeset(this.variable);
+    this.changeset = Changeset(this.variable) as ConfigVarChangeset;
   }
 
   @action
@@ -78,13 +80,14 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
     } else {
       await this.args.saveVariableSettings(this.changeset, false);
     }
-    this.changeset?.execute();
+    this.changeset = undefined;
     this.isCreating = false;
     this.isEditing = false;
   }
 
   @action
   cancelCreate(): void {
+    this.changeset = undefined;
     this.isCreating = false;
     this.isEditing = false;
     this.args.cancelCreate();
@@ -92,9 +95,8 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
 
   @action
   cancelEdit(): void {
+    this.changeset = undefined;
     this.isCreating = false;
     this.isEditing = false;
-    this.changeset?.unexecute();
-    // this.variable = this.initialVariable;
   }
 }
