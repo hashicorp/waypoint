@@ -184,9 +184,14 @@ func (c *ExecCommand) Synopsis() string {
 
 func (c *ExecCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint exec [options]
+Usage: waypoint exec [options] cmd
 
   Execute a command in the context of a running application instance.
+
+  For example, you could run one of the following commands:
+
+    waypoint exec bash
+    waypoint exec rake db:migrate
 
 ` + c.Flags().Help())
 }
