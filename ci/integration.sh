@@ -32,18 +32,6 @@ cd ci/sinatra || exit 1
 ## Let things get going.
 sleep 10
 
-# Smoke test
-"$WP" exec echo "exec working"
-
-"$WP" logs > /tmp/wp-logs &
-logs_pid=$!
-if [[ ! -f /tmp/wp-logs || $(cat /tmp/wp-logs | wc -l) -eq 0 ]]; then
-  echo "logs did not work"
-  exit 1
-fi
-kill $logs_pid
-
-
 PORT=$(kubectl get service sinatra -o jsonpath="{.spec.ports[0].nodePort}")
 
 test "$(curl -s "localhost:$PORT")" = "Welcome to Waypoint!"
