@@ -323,7 +323,9 @@ func (c *baseCommand) Init(opts ...Option) error {
 			if baseCfg.ProjectTargetRequired && c.flagProject != "" {
 				project = &pb.Ref_Project{Project: c.flagProject}
 			}
-			c.refProject = project
+			if c.refProject == nil {
+				c.refProject = project
+			}
 
 			// If we require an app target and we still haven't set it,
 			// and the user provided it via the CLI, set it now. This code
