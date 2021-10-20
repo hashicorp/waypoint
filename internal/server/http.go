@@ -2,11 +2,12 @@ package server
 
 import (
 	"context"
-	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc"
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
