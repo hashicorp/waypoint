@@ -394,19 +394,6 @@ func (c *baseCommand) Init(opts ...Option) error {
 		}
 	}
 
-	if baseCfg.ProjectTargetRequired {
-		if c.refProject == nil {
-			if len(c.cfg.Project) == 0 {
-				c.ui.Output(errProjectMode, terminal.WithErrorStyle())
-				return ErrSentinel
-			}
-
-			c.refProject = &pb.Ref_Project{
-				Project: c.cfg.Project,
-			}
-		}
-	}
-
 	return nil
 }
 
@@ -759,9 +746,6 @@ enforces this requirement. Sorry!
 This command requires a single targeted app. You have multiple apps defined
 so you can specify the app to target using the "-app" flag.
 `)
-
-	errProjectMode = strings.TrimSpace(`
-This command requires a targeted project.`)
 
 	// matches either "project" or "project/app"
 	reAppTarget = regexp.MustCompile(`^(?P<project>[-0-9A-Za-z_]+)/(?P<app>[-0-9A-Za-z_]+)$`)
