@@ -39,6 +39,13 @@ build:
 	@echo "Compile Plugin"
 
 	go build -o ./bin/waypoint-plugin-${PLUGIN_NAME} ./main.go
+
+# Install the plugin locally
+install:
+	@echo ""
+	@echo "Installing Plugin"
+
+	cp ./bin/waypoint-plugin-${PLUGIN_NAME}* ${HOME}/.config/waypoint/plugins/
 ```
 
 Let's modify it a little. Edit the `Makefile` and change the `PLUGIN_NAME` to your plugin name `gobuilder`
