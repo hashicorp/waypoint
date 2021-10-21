@@ -476,6 +476,10 @@
             "path": "extending-waypoint/plugin-interfaces/destroy"
           },
           {
+            "title": "Status",
+            "path": "extending-waypoint/plugin-interfaces/status"
+          },
+          {
             "title": "Default Parameters",
             "path": "extending-waypoint/plugin-interfaces/default-parameters"
           }
