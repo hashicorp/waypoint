@@ -5,20 +5,20 @@
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
   outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
+    let
+      localOverlay = import ./nix/overlay.nix;
+      overlays = [ localOverlay ];
+    in flake-utils.lib.eachDefaultSystem (system:
       let
-        overlay = (import ./nix/overlay.nix) nixpkgs;
-
         pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ overlay ];
-        };
-
-        waypoint = pkgs.callPackage ./nix/waypoint.nix {
-          inherit pkgs;
+          inherit system overlays;
         };
       in {
-        devShell = waypoint.shell;
-      }
-    );
+        legacyPackages = pkgs;
+        inherit (pkgs) devShell;
+      }) // {
+        # platform independent attrs
+        overlay = final: prev: (nixpkgs.lib.composeManyExtensions overlays) final prev;
+        inherit overlays;
+      };
 }
