@@ -1296,6 +1296,15 @@ message Job {
   // This is optional.
   string singleton_id = 8;
 
+  // List of IDs that this job depends on. This job will not be allowed to
+  // leave the QUEUED state until jobs with these IDs are successfully
+  // completed (SUCESS state). If any dependent jobs enter a terminal state
+  // that is not SUCCESS, this job will transition to ERROR.
+  //
+  // These IDs MUST already be registered jobs. It is an error to depend
+  // on a non-existent job.
+  repeated string depends_on = 10;
+
   // The application to target for the operation. Some operations may allow
   // certain fields of this to be empty, so check with the operation
   // documentation to determine what needs to be set. Generally, project
