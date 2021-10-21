@@ -155,7 +155,7 @@ func (op *buildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ 
 
 	// If there is a registry defined and it implements RegistryAccess...
 	if op.Registry != nil {
-		if ra, ok := op.Registry.Value.(component.RegistryAccess); ok {
+		if ra, ok := op.Registry.Value.(component.RegistryAccess); ok && ra.AccessInfoFunc() != nil {
 			raw, err := app.callDynamicFunc(ctx, log, nil, op.Component, ra.AccessInfoFunc())
 			if err == nil {
 				args = append(args, argmapper.Typed(raw))
@@ -175,6 +175,12 @@ func (op *buildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ 
 			} else {
 				log.Error("error calling dynamic func", "error", err)
 				return nil, err
+			}
+		} else {
+			if ok && ra != nil && ra.AccessInfoFunc() == nil {
+				return nil, status.Error(codes.Internal, "The plugin requested does not "+
+					"define an AccessInfoFunc() in its Registry plugin. This is an internal "+
+					"error and should be reported to the author of the plugin.")
 			}
 		}
 	}
