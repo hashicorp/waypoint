@@ -42,7 +42,7 @@ export default Model.extend({
   preloadProtobuf(): Deployment.Preload {
     let result = new Deployment.Preload();
 
-    // TODO: result.setArtifact
+    result.setArtifact(this.build?.pushedArtifact?.toProtobuf());
     result.setBuild(this.build?.toProtobuf());
     result.setDeployUrl(this.deployUrl);
 
