@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -52,6 +53,24 @@ func TestRunnerAccept(t *testing.T) {
 	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId})
 	require.NoError(err)
 	require.Equal(pb.Job_SUCCESS, job.State)
+}
+
+func TestRunnerAccept_timeout(t *testing.T) {
+	require := require.New(t)
+	ctx := context.Background()
+
+	// Setup our runner
+	client := singleprocess.TestServer(t)
+	runner := TestRunner(t, WithClient(client), WithAcceptTimeout(10*time.Millisecond))
+	require.NoError(runner.Start())
+
+	// Initialize our app
+	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// DO NOT QUEUE A JOB. Accept sholud timeout
+	err := runner.Accept(ctx)
+	require.Error(err)
+	require.True(errors.Is(err, ErrTimeout))
 }
 
 func TestRunnerAccept_closeCancelesAccept(t *testing.T) {

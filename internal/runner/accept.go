@@ -6,6 +6,7 @@ import (
 	"io"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -96,11 +97,16 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 
 	log := r.logger
 
+	// Setup a new context that we can cancel at any time to close the stream.
+	// We use this for timeouts.
+	streamCtx, streamCancel := context.WithCancel(r.runningCtx)
+	defer streamCancel()
+
 	// Open a new job stream. NOTE: we purposely do NOT use ctx above
 	// since if the context is cancelled we want to continue reporting
 	// errors.
 	log.Debug("opening job stream")
-	client, err := r.client.RunnerJobStream(r.runningCtx)
+	client, err := r.client.RunnerJobStream(streamCtx)
 	if err != nil {
 		return err
 	}
@@ -121,27 +127,19 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	// Wait for an assignment
 	log.Info("waiting for job assignment")
 
-	var (
-		acceptTimer *time.Timer
-		timerMu     sync.Mutex
-		accepted    bool
-		canceled    bool
-	)
-
-	if r.acceptTimeout != 0 {
+	// If we have a timeout, then we setup a timer for accepting.
+	var acceptTimer *time.Timer
+	var canceled int32
+	if r.acceptTimeout > 0 {
 		acceptTimer = time.AfterFunc(r.acceptTimeout, func() {
-			timerMu.Lock()
-			defer timerMu.Unlock()
+			log.Error("runner timed out waiting for a job",
+				"timeout", r.acceptTimeout.String())
 
-			// If we raced to this point and timed out BUT the job was accepted, don't cancel
-			// the context.
-			if accepted {
-				return
-			}
+			// Mark that we canceled
+			atomic.StoreInt32(&canceled, 1)
 
-			canceled = true
-			log.Error("runner timed out waiting for a job", "timeout", r.acceptTimeout.String())
-			r.runningCancel()
+			// Cancel the context
+			streamCancel()
 		})
 	}
 
@@ -150,29 +148,17 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	// for us to ack the job, and auto-nack it.
 	resp, err := client.Recv()
 	if err != nil {
-		if canceled {
+		if atomic.LoadInt32(&canceled) > 0 {
 			return ErrTimeout
 		}
 
 		return err
 	}
 
-	timerMu.Lock()
-
-	if canceled {
-		log.Error("Got an event but fired the timeout timer, regrettably dropping event")
-		timerMu.Unlock()
-		return ErrTimeout
-	}
-
-	accepted = true
-
 	// Be sure to stop the timer so that we don't cancel the context after this point.
 	if acceptTimer != nil {
 		acceptTimer.Stop()
 	}
-
-	timerMu.Unlock()
 
 	// We received an assignment!
 	assignment, ok := resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
