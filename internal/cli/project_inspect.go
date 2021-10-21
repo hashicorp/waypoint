@@ -52,7 +52,7 @@ func (c *ProjectInspectCommand) Run(args []string) int {
 
 	err := c.FormatProject(projectTarget)
 	if err != nil {
-		c.ui.Output("Failed to format project: %s"+
+		c.ui.Output("Failed to format project: %s",
 			clierrors.Humanize(err),
 			terminal.WithErrorStyle())
 		return 1

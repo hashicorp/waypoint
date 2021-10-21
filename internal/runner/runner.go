@@ -200,7 +200,7 @@ func (r *Runner) Start() error {
 		return err
 	}
 
-	// Start the watcher and the gorotuine that receives configs
+	// Start the watcher and the goroutine that receives configs
 	ch := make(chan *pb.RunnerConfig)
 	go r.watchConfig(r.runningCtx, ch)
 	go r.recvConfig(r.runningCtx, client, ch)
