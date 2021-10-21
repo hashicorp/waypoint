@@ -1,0 +1,3 @@
+```release-note:bug
+ecs: Update ODR role permissions to enable status reports
+```
