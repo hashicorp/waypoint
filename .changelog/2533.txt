@@ -1,0 +1,3 @@
+```release-note:bug
+serverinstall/ecs: Fix potential panic in some ECS On-Demand Runner releases
+```
