@@ -14,7 +14,7 @@ for resources which have been created by the waypoint `deploy`
 and `release` phase. The intended use is to leverage the platforms existing
 health check features to determine the overall health.
 
-Destroy can only be implemented in `Platform` and `ReleaseManager` components and is implemented through the following interface.
+Status can only be implemented in `Platform` and `ReleaseManager` components and is implemented through the following interface.
 
 ```go
 type Status interface {
