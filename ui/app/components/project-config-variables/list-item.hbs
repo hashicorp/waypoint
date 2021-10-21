@@ -16,8 +16,8 @@
                 data-test-config-variables-var-name
                 id="config-variable-name"
                 placeholder={{t "form.config_variables_settings.variable_name_placeholder"}}
-                value={{this.variable.name}}
-                {{on "input" (pick "target.value" (set this "variable.name"))}}
+                value={{this.changeset.name}}
+                {{on "input" (pick "target.value" (changeset-set this.changeset "name"))}}
               />
             </div>
             <div class="pds-formField">
@@ -30,8 +30,8 @@
                   id="config-variable-value"
                   data-test-config-variables-var-static
                   placeholder={{t "form.config_variables_settings.variable_value_placeholder"}}
-                  value={{this.variable.pb_static}}
-                  {{on "input" (pick "target.value" (set this "variable.pb_static"))}}
+                  value={{this.changeset.pb_static}}
+                  {{on "input" (pick "target.value" (changeset-set this.changeset "pb_static"))}}
                 />
               </div>
             </div>
@@ -40,9 +40,9 @@
             <div class="pds-formFieldToggle">
               <XToggle
                 @showLabels={{true}}
-                @value={{this.variable.nameIsPath}}
+                @value={{this.changeset.nameIsPath}}
                 @size="small"
-                @onToggle={{fn (mut this.variable.nameIsPath)}} as |toggle|>
+                @onToggle={{fn (mut this.changeset.nameIsPath)}} as |toggle|>
                 <toggle.switch
                   @showLabels={{false}}
                   @name="name-is-path"
@@ -50,7 +50,7 @@
                 <toggle.label
                   data-test-config-variables-name-is-path-toggle
                   for="name-is-path"
-                  @value={{not this.variable.nameIsPath}}>
+                  @value={{not this.changeset.nameIsPath}}>
                   <span class="pds-toggleLabel">
                     {{t "form.config_variables_settings.nameIsPath.label"}}
                   </span>
@@ -62,9 +62,9 @@
             <div class="pds-formFieldToggle">
               <XToggle
                 @showLabels={{true}}
-                @value={{this.variable.internal}}
+                @value={{this.changeset.internal}}
                 @size="small"
-                @onToggle={{fn (mut this.variable.internal)}} as |toggle|>
+                @onToggle={{fn (mut this.changeset.internal)}} as |toggle|>
                 <toggle.switch
                   @showLabels={{false}}
                   @name="internal"
@@ -72,7 +72,7 @@
                 <toggle.label
                   data-test-config-variables-internal-toggle
                   for="internal"
-                  @value={{not this.variable.internal}}>
+                  @value={{not this.changeset.internal}}>
                   <span class="pds-toggleLabel">
                     {{t "form.config_variables_settings.internal.label"}}
                   </span>

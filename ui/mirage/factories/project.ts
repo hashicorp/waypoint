@@ -33,6 +33,8 @@ export default Factory.extend({
     afterCreate(project, server) {
       let application = server.create('application', 'with-random-name', { project });
 
+      server.create('config-variable', 'random', { project, name: 'test' });
+
       let builds = [
         server.create('build', 'random', 'seconds-old-success', { sequence: 4, application }),
         server.create('build', 'random', 'minutes-old-success', { sequence: 3, application }),

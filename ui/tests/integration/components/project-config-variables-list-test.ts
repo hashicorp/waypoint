@@ -113,6 +113,11 @@ module('Integration | Component | project-config-variables-list', function (hook
     await page.variablesList.objectAt(0).dropdown();
     assert.ok(page.variablesList.objectAt(0).hasDropDownEdit, 'Static Variable is editable');
     assert.notOk(page.variablesList.objectAt(3).hasDropDown, 'Dynamic Variable is not editable or deletable');
+    await page.variablesList.objectAt(0).dropdownEdit();
+    await page.varStatic('foozbarz');
+    await page.saveButton();
+    await settled(); // TODO(jgwhite): Figure out why we need this
+    assert.notOk(page.hasForm, 'Create Variable: the form disappears after creation');
   });
 
   test('renaming variables works', async function (assert) {

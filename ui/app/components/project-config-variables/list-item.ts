@@ -1,17 +1,21 @@
 import { ConfigVar, Project } from 'waypoint-pb';
 
 import ApiService from 'waypoint/services/api';
+import { BufferedChangeset } from 'ember-changeset/types';
+import { Changeset } from 'ember-changeset';
 import Component from '@glimmer/component';
 import FlashMessagesService from 'waypoint/services/pds-flash-messages';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
+type ConfigVarChangeset = Partial<BufferedChangeset> & ConfigVar.AsObject;
+
 interface VariableArgs {
   variable: ConfigVar.AsObject;
   isEditing: boolean;
   isCreating: boolean;
-  saveVariableSettings: (variable: ConfigVar.AsObject, deleteVariable?: boolean) => Promise<Project.AsObject>;
+  saveVariableSettings: (variable: ConfigVarChangeset, deleteVariable?: boolean) => Promise<Project.AsObject>;
   deleteVariable: (variable: ConfigVar.AsObject) => Promise<void>;
   cancelCreate: () => void;
 }
@@ -22,6 +26,7 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
 
   initialVariable!: ConfigVar.AsObject;
   @tracked variable: ConfigVar.AsObject;
+  @tracked changeset?: ConfigVarChangeset;
   @tracked isCreating: boolean;
   @tracked isEditing: boolean;
 
@@ -31,7 +36,10 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
     this.variable = variable;
     this.isEditing = isEditing;
     this.isCreating = isCreating;
-    this.storeInitialVariable();
+
+    if (this.isCreating || this.isEditing) {
+      this.changeset = Changeset(this.variable) as ConfigVarChangeset;
+    }
   }
 
   get isEditable(): boolean {
@@ -51,29 +59,35 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
   @action
   editVariable(): void {
     this.isEditing = true;
-    this.storeInitialVariable();
+    this.changeset = Changeset(this.variable) as ConfigVarChangeset;
   }
 
   @action
   async saveVariable(e: Event): Promise<void> {
     e.preventDefault();
-    if (this.variable.name === '' || this.variable.pb_static === '') {
+
+    if (this.changeset === undefined) {
+      return;
+    }
+
+    if (this.changeset.name === '' || this.changeset.pb_static === '') {
       this.flashMessages.error('Variable keys or values can not be empty');
       return;
     }
-    if (this.initialVariable.name !== this.variable.name) {
-      await this.args.saveVariableSettings(this.variable, false);
-      await this.args.deleteVariable(this.initialVariable);
-      this.storeInitialVariable();
+    if (this.variable.name !== this.changeset.name) {
+      await this.args.saveVariableSettings(this.changeset, false);
+      await this.args.deleteVariable(this.variable);
     } else {
-      await this.args.saveVariableSettings(this.variable, false);
+      await this.args.saveVariableSettings(this.changeset, false);
     }
+    this.changeset = undefined;
     this.isCreating = false;
     this.isEditing = false;
   }
 
   @action
   cancelCreate(): void {
+    this.changeset = undefined;
     this.isCreating = false;
     this.isEditing = false;
     this.args.cancelCreate();
@@ -81,8 +95,8 @@ export default class ProjectConfigVariablesListItemComponent extends Component<V
 
   @action
   cancelEdit(): void {
+    this.changeset = undefined;
     this.isCreating = false;
     this.isEditing = false;
-    this.variable = this.initialVariable;
   }
 }

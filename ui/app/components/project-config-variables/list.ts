@@ -1,6 +1,7 @@
 import { ConfigGetRequest, ConfigSetRequest, ConfigVar, Project, Ref } from 'waypoint-pb';
 
 import ApiService from 'waypoint/services/api';
+import { BufferedChangeset } from 'validated-changeset';
 import Component from '@glimmer/component';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import FlashMessagesService from 'waypoint/services/pds-flash-messages';
@@ -12,6 +13,8 @@ interface ProjectConfigArgs {
   variablesList: ConfigVar.AsObject[];
   project: Project.AsObject;
 }
+
+type ConfigVarChangeset = Partial<BufferedChangeset> & ConfigVar.AsObject;
 
 export default class ProjectConfigVariablesListComponent extends Component<ProjectConfigArgs> {
   @service api!: ApiService;
@@ -53,7 +56,7 @@ export default class ProjectConfigVariablesListComponent extends Component<Proje
   }
 
   @action
-  async saveVariableSettings(variable: ConfigVar.AsObject, deleteVariable?: boolean): Promise<void> {
+  async saveVariableSettings(variable: ConfigVarChangeset, deleteVariable?: boolean): Promise<void> {
     let req = new ConfigSetRequest();
 
     let projectRef = new Ref.Project();
