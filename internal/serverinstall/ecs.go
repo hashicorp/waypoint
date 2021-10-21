@@ -1884,6 +1884,7 @@ const odrRolePolicy = `{
         "ecs:DescribeClusters",
         "ecs:DescribeServices",
         "ecs:ListTasks",
+        "ecs:DescribeTasks",
         "ecs:RegisterTaskDefinition",
         "ecs:RunTask",
         "elasticloadbalancing:CreateListener",
