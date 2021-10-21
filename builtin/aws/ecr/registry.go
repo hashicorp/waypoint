@@ -297,3 +297,5 @@ registry {
 }
 
 var _ component.Documented = (*Registry)(nil)
+var _ component.Registry = (*Registry)(nil)
+var _ component.RegistryAccess = (*Registry)(nil)
