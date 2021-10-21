@@ -1,10 +1,13 @@
-## unreleased
-
-FEATURES:
-
-IMPROVEMENTS:
+## 0.6.1 (October 21, 2021)
 
 BUG FIXES:
+
+* cli: Fix `project apply` to set runner profiles by name [[GH-2489](https://github.com/hashicorp/waypoint/issues/2489)]
+* cli: Fix displaying config variables set with pre-0.6.0 Waypoint [[GH-2535](https://github.com/hashicorp/waypoint/issues/2535)]
+* cli: Fix panic in logs and exec commands [[GH-2526](https://github.com/hashicorp/waypoint/issues/2526)]
+* cli: Fix issue where sending ctrl-c to the CLI could block all subsiquent operations on the app/project/workspace for two minutes [[GH-2513](https://github.com/hashicorp/waypoint/issues/2513)]
+* serverinstall/ecs: Fix potential panic in some ECS On-Demand Runner releases [[GH-2533](https://github.com/hashicorp/waypoint/issues/2533)]
+* serverinstall/ecs: Update ODR role permissions to enable status reports [[GH-2543](https://github.com/hashicorp/waypoint/issues/2543)]
 
 
 ## 0.6.0 (October 14, 2021)
