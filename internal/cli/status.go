@@ -440,11 +440,13 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 			Workspace: &pb.Ref_Workspace{
 				Workspace: workspace,
 			},
+			PhysicalState: pb.Operation_CREATED,
 			Order: &pb.OperationOrder{
 				Order: pb.OperationOrder_COMPLETE_TIME,
 				Limit: 1,
 			},
 		})
+
 		if err != nil {
 			if s, ok := status.FromError(err); ok {
 				if s.Code() == codes.Unimplemented {
@@ -595,6 +597,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		Workspace: &pb.Ref_Workspace{
 			Workspace: workspace,
 		},
+		PhysicalState: pb.Operation_CREATED,
 		Order: &pb.OperationOrder{
 			Order: pb.OperationOrder_COMPLETE_TIME,
 			Limit: 1,

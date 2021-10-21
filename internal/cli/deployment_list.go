@@ -109,6 +109,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			PhysicalState: phyState,
 			Status:        c.filterFlags.statusFilters(),
 		})
+
 		if err != nil {
 			if s, ok := status.FromError(err); ok {
 				if s.Code() == codes.Unimplemented {
