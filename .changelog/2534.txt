@@ -1,0 +1,6 @@
+```release-note:breaking-change
+plugin/docker: `img`-based Dockerless builds are no longer supported.
+Dockerless builds are still fully supported via Kaniko and on-demand
+runners that shipped in Waypoint 0.6. Static runners without access to
+a Docker daemon can no longer build images.
+```

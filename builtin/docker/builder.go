@@ -96,14 +96,11 @@ to a Docker server. In these cases, it is desirable to perform what is called
 a "dockerless" build: building a Docker image without access to a Docker
 daemon. Waypoint supports dockerless builds.
 
-Waypoint will automatically attempt a dockerless build if a Docker daemon
-is not available and no remote Docker server environment variables are set.
-
-Dockerless builds require user namespaces to be enabled. This is a host-level
-setting that is often not enabled by default. For GKE, you must not use ContainerOS.
-For AKS (Azure) and EKS (AWS), you must use a custom AMI that has user namespaces
-enabled. Please search for how to enable user namespaces for your distro; it is
-usually a single line configuration.
+Waypoint performs Dockerless builds by leveraging
+[Kaniko](https://github.com/GoogleContainerTools/kaniko)
+within on-demand launched runners. This should work in all supported
+Waypoint installation environments by default and you should not have
+to specify any additional configuration.
 `)
 
 	doc.Example(`
@@ -142,10 +139,10 @@ build {
 
 	doc.SetField(
 		"build_args",
-		"build args to pass to docker or img for the build step",
+		"build args to pass to docker for the build step",
 		docs.Summary(
 			"An array of strings of build-time variables passed as build-arg to docker",
-			" or img for the build step.",
+			" for the build step.",
 		),
 	)
 
@@ -309,38 +306,11 @@ func (b *Builder) Build(
 		"dockerfile", relDockerfile,
 	)
 
-	// We now test if Docker is actually functional. We do this here because we
-	// need all of the above to complete the actual build.
-	log.Debug("testing if we should use a Docker fallback")
-	useImg := false
-	if fallback, err := wpdockerclient.Fallback(ctx, log, cli); err != nil {
-		log.Warn("error during check if we should use Docker fallback", "err", err)
-		return nil, status.Errorf(codes.Internal,
-			"error validating Docker connection: %s", err)
-	} else if fallback && HasImg() {
-		// If we're falling back and have "img" available, use that. If we
-		// don't have "img" available, we continue to try to use Docker. We'll
-		// fail but that error message should help the user.
-		step.Update("Docker isn't available. Falling back to daemonless image build...")
-		step.Done()
-		step = nil
-		if err := b.buildWithImg(ctx, ui, sg, relDockerfile, contextDir, result.Name(), b.config.BuildArgs, b.config.Target); err != nil {
-			return nil, err
-		}
-
-		// Our image is in the img registry now. We set this so that
-		// future users of this result type know where to look.
-		result.Location = &Image_Img{Img: &empty.Empty{}}
-
-		// We set this to true so we use the img-based injector later
-		useImg = true
-	} else {
-		// No fallback, build with Docker
-		step.Done()
-		step = nil
-		if err := b.buildWithDocker(ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.Platform, b.config.BuildArgs, b.config.Target, log); err != nil {
-			return nil, err
-		}
+	// Build
+	step.Done()
+	step = nil
+	if err := b.buildWithDocker(ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.Platform, b.config.BuildArgs, b.config.Target, log); err != nil {
+		return nil, err
 	}
 
 	if !b.config.DisableCEB {
@@ -370,11 +340,7 @@ func (b *Builder) Build(
 			return ep, nil
 		}
 
-		if !useImg {
-			_, err = epinject.AlterEntrypoint(ctx, result.Name(), callback)
-		} else {
-			_, err = epinject.AlterEntrypointImg(ctx, result.Name(), callback)
-		}
+		_, err = epinject.AlterEntrypoint(ctx, result.Name(), callback)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "unable to set modify Docker entrypoint: %s", err)
 		}

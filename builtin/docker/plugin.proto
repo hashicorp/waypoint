@@ -27,9 +27,11 @@ message Image {
     // docker is set if the image is in a local Docker daemon registry.
     google.protobuf.Empty docker = 4;
 
-    // img is set if the image is in a local img content store directory.
-    // img: https://github.com/genuinetools/img
-    google.protobuf.Empty img = 5;
+    // Waypoint 0.6 and earlier supported "img" as a Dockerless builder.
+    // We removed this in 0.7, hence we prefix this now with "unused". We
+    // keep the field around so we can detect old clients sending it and
+    // show an error. Do not set this.
+    google.protobuf.Empty unused_img = 5;
   }
 
   message RegistryLocation {

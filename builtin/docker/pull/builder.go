@@ -184,42 +184,13 @@ func (b *Builder) Build(args buildArgs) (*wpdocker.Image, error) {
 	}
 	cli.NegotiateAPIVersion(ctx)
 
-	// We now test if Docker is actually functional. We do this here because we
-	// need all of the above to complete the actual build.
-	log.Debug("testing if we should use a Docker fallback")
-	useImg := false
-	if fallback, err := wpdockerclient.Fallback(ctx, log, cli); err != nil {
-		log.Warn("error during check if we should use Docker fallback", "err", err)
-		return nil, status.Errorf(codes.Internal,
-			"error validating Docker connection: %s", err)
-	} else if fallback && wpdocker.HasImg() {
-		// If we're falling back and have "img" available, use that. If we
-		// don't have "img" available, we continue to try to use Docker. We'll
-		// fail but that error message should help the user.
-		step.Update("Docker isn't available. Falling back to daemonless image pull...")
-		step.Done()
-		step = nil
-		if err := b.buildWithImg(
-			ctx, log, sg, result,
-		); err != nil {
-			return nil, err
-		}
-
-		// Our image is in the img registry now. We set this so that
-		// future users of this result type know where to look.
-		result.Location = &wpdocker.Image_Img{Img: &empty.Empty{}}
-
-		// We set this to true so we use the img-based injector later
-		useImg = true
-	} else {
-		// No fallback, build with Docker
-		step.Done()
-		step = nil
-		if err := b.buildWithDocker(
-			ctx, log, ui, sg, cli, result,
-		); err != nil {
-			return nil, err
-		}
+	// Build
+	step.Done()
+	step = nil
+	if err := b.buildWithDocker(
+		ctx, log, ui, sg, cli, result,
+	); err != nil {
+		return nil, err
 	}
 
 	if !b.config.DisableCEB {
@@ -249,11 +220,7 @@ func (b *Builder) Build(args buildArgs) (*wpdocker.Image, error) {
 			return ep, nil
 		}
 
-		if !useImg {
-			_, err = epinject.AlterEntrypoint(ctx, result.Name(), callback)
-		} else {
-			_, err = epinject.AlterEntrypointImg(ctx, result.Name(), callback)
-		}
+		_, err = epinject.AlterEntrypoint(ctx, result.Name(), callback)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "unable to set modify Docker entrypoint: %s", err)
 		}
