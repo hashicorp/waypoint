@@ -419,6 +419,7 @@ jobs:
           name: Push content to Algolia Index
           command: |
             cd website/
+            npm install -g npm@latest
             npm install
             node scripts/index_search_content.js
 
