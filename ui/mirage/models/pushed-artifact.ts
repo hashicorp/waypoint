@@ -7,12 +7,13 @@ export default Model.extend({
   component: belongsTo({ inverse: 'owner' }),
   status: belongsTo({ inverse: 'owner' }),
   workspace: belongsTo(),
+  artifact: belongsTo(),
 
   toProtobuf(): PushedArtifact {
     let result = new PushedArtifact();
 
     result.setApplication(this.application?.toProtobufRef());
-    // TODO: result.setArtifact
+    result.setArtifact(this.artifact?.toProtobuf());
     result.setBuild(this.build?.toProtobuf());
     result.setBuildId(this.build?.id);
     result.setComponent(this.component?.toProtobuf());

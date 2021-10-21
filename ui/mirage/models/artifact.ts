@@ -3,6 +3,7 @@ import { Artifact } from 'waypoint-pb';
 
 export default Model.extend({
   build: belongsTo(),
+  pushedArtifact: belongsTo(),
 
   toProtobuf(): Artifact {
     let result = new Artifact();
