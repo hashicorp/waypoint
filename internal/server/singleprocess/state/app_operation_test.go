@@ -144,6 +144,13 @@ func TestAppOperation(t *testing.T) {
 		// to test our index is really doing the right thing.
 		rand.Shuffle(len(times), func(i, j int) { times[i], times[j] = times[j], times[i] })
 
+		// Since we search by latest sequence later, we don't want our latest
+		// to be sequence #1. This fixes a flaky test that would happen in
+		// that case cause we'd search for sequence 0 which doesn't exist.
+		if times[0] == latest {
+			times[0], times[1] = times[1], times[0]
+		}
+
 		// Create a build for each time
 		for _, timeVal := range times {
 			pt, err := ptypes.TimestampProto(timeVal)
