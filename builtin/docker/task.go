@@ -264,13 +264,38 @@ func (b *TaskLauncher) StopTask(
 	log hclog.Logger,
 	ti *TaskInfo,
 ) error {
+	log = log.With("container_id", ti.Id)
+	log.Debug("connecting to Docker")
 	cli, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
 	}
 	cli.NegotiateAPIVersion(ctx)
 
-	return cli.ContainerStop(ctx, ti.Id, nil)
+	log.Debug("stopping container")
+	if err := cli.ContainerStop(ctx, ti.Id, nil); err != nil {
+		// We're going to ignore this error other than logging it, just
+		// so we can try to remove it below. We want to do everything we can
+		// to remove this container.
+		log.Warn("error stopping container", "err", err)
+	}
+
+	// If we're debugging, we do NOT remove the container so that
+	// an operator can come in and inspect it.
+	if b.config.DebugContainers {
+		log.Info("not removing container, debug containers is enabled")
+		return nil
+	}
+
+	log.Debug("removing container")
+	if err := cli.ContainerRemove(ctx, ti.Id, types.ContainerRemoveOptions{
+		Force: true,
+	}); err != nil {
+		log.Warn("error removing container", "err", err)
+		return err
+	}
+
+	return nil
 }
 
 // StartTask creates a docker container for the task.

@@ -165,7 +165,6 @@ func (r *Runner) executeStopTaskOp(
 	defer pi.Close()
 
 	stop := c.(component.TaskLauncher).StopTaskFunc()
-
 	_, err = pi.Invoke(ctx, log, stop, plugin.ArgNamedAny("state", state))
 	if err != nil {
 		return nil, err
