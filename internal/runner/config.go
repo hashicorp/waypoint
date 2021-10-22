@@ -205,6 +205,7 @@ func (r *Runner) recvConfig(
 	// On exit, we note that we're no longer connected to the config stream.
 	r.setState(&r.stateConfig, true)
 	defer r.setState(&r.stateConfig, false)
+	defer r.setState(&r.stateExit, true)
 
 	for {
 		// If the context is closed, exit
