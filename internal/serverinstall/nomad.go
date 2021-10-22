@@ -994,12 +994,20 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 func (i *NomadInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	// Generate some configuration
 	cfgMap := map[string]interface{}{}
-	// TODO set the defaults?
 	if v := i.config.runnerResourcesCPU; v != "" {
 		cfgMap["resources_cpu"] = v
 	}
 	if v := i.config.runnerResourcesMemory; v != "" {
 		cfgMap["resources_memory"] = v
+	}
+	if v := i.config.datacenters[0]; v != "" {
+		cfgMap["datacenter"] = v
+	}
+	if v := i.config.namespace; v != "" {
+		cfgMap["namespace"] = v
+	}
+	if v := i.config.region; v != "" {
+		cfgMap["region"] = v
 	}
 	// TODO more configs?
 
