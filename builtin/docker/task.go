@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"strings"
 
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
@@ -291,8 +292,22 @@ func (b *TaskLauncher) StopTask(
 	if err := cli.ContainerRemove(ctx, ti.Id, types.ContainerRemoveOptions{
 		Force: true,
 	}); err != nil {
-		log.Warn("error removing container", "err", err)
-		return err
+		// "removal of container already in progress" is the error when
+		// the daemon is removing this for some reason (auto remove or
+		// other). This is not an error.
+		if strings.Contains(err.Error(), "already in progress") {
+			err = nil
+		}
+
+		// Container is already removed
+		if strings.Contains(strings.ToLower(err.Error()), "no such container") {
+			err = nil
+		}
+
+		if err != nil {
+			log.Warn("error removing container", "err", err)
+			return err
+		}
 	}
 
 	return nil
