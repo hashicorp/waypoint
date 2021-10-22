@@ -39,6 +39,8 @@ type nomadConfig struct {
 	// making a consul DNS hostname for the server address in its context
 	consulServiceHostname string `hcl:"consul_service_hostname,optional"`
 
+	odrImage string `hcl:"odr_image,optional"`
+
 	region         string   `hcl:"namespace,optional"`
 	datacenters    []string `hcl:"datacenters,optional"`
 	policyOverride bool     `hcl:"policy_override,optional"`
@@ -113,6 +115,14 @@ func (i *NomadInstaller) Install(
 			}
 			serverDetected = true
 			break
+		}
+	}
+
+	if i.config.odrImage == "" {
+		var err error
+		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -327,6 +337,14 @@ func (i *NomadInstaller) Upgrade(
 		if j.Name == serverName {
 			serverDetected = true
 			break
+		}
+	}
+
+	if i.config.odrImage == "" {
+		var err error
+		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -972,6 +990,15 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 	return "", nil
 }
 
+func (i *NomadInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	// TODO(briancain): any other ODR config should happen here
+	return &pb.OnDemandRunnerConfig{
+		OciUrl:     i.config.odrImage,
+		PluginType: "nomad",
+		Default:    true,
+	}
+}
+
 func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringMapVar(&flag.StringMapVar{
 		Name:   "nomad-annotate-service",
@@ -999,6 +1026,13 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.config.namespace,
 		Default: "default",
 		Usage:   "Namespace to install the Waypoint server into for Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-odr-image",
+		Target: &i.config.odrImage,
+		Usage: "Docker image for the On-Demand runners. If not specified, it " +
+			"defaults to the server image name + '-dr' (i.e. 'hashicorp/waypoint-odr:latest')",
 	})
 
 	set.BoolVar(&flag.BoolVar{
@@ -1155,6 +1189,13 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Target:  &i.config.namespace,
 		Default: "default",
 		Usage:   "Namespace to install the Waypoint server into for Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-odr-image",
+		Target: &i.config.odrImage,
+		Usage: "Docker image for the On-Demand runners. If not specified, it " +
+			"defaults to the server image name + '-dr' (i.e. 'hashicorp/waypoint-odr:latest')",
 	})
 
 	set.BoolVar(&flag.BoolVar{
