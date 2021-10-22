@@ -55,5 +55,6 @@ or file.
 - `-from-kubernetes` - Perform the initial authentication after Waypoint is installed to Kubernetes. This requires kubectl to be configured with access to the Kubernetes cluster. The primary use case of this is to get the first token from a Waypoint installation. After that, future users should use a configured auth method or request a token from an administrator.
 - `-from-kubernetes-service=<string>` - The name of the Kubernetes service to get the server address from when using the -from-kubernetes flag.
 - `-from-kubernetes-secret=<string>` - The name of the Kubernetes secret that has the Waypoint token when using the -from-kubernetes flag.
+- `-from-kubernetes-namespace=<string>` - The name of the Kubernetes namespace that has the Waypoint token when using the -from-kubernetes flag.
 
 @include "commands/login_more.mdx"
