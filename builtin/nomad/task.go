@@ -60,10 +60,44 @@ func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
 	doc.Description(`
 Launch a Nomad job for on-demand tasks from the Waypoint server.
 
-TODO write me
+This will use the standard Nomad environment used for with the server install
+to launch on demand Nomad jobs for Waypoint server tasks.
 	`)
 
-	// TODO set the rest of the fields
+	doc.Example(`
+task {
+	use "nomad" {}
+}
+`)
+
+	doc.SetField(
+		"region",
+		"The Nomad region to deploy the job to.",
+		docs.Default("global"),
+	)
+
+	doc.SetField(
+		"datacenter",
+		"The Nomad datacenter to deploy the job to.",
+		docs.Default("dc1"),
+	)
+
+	doc.SetField(
+		"namespace",
+		"The Nomad namespace to deploy the job to.",
+	)
+
+	doc.SetField(
+		"resources_cpu",
+		"Amount of CPU in MHz to allocate to this task",
+		docs.Default("200"),
+	)
+
+	doc.SetField(
+		"resources_memory",
+		"Amount of memory in MB to allocate to this task.",
+		docs.Default("600"),
+	)
 
 	return doc, nil
 }
