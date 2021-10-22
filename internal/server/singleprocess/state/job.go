@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -1119,16 +1120,29 @@ func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) erro
 	}
 
 	// If we have dependencies, they all must exist.
+	dependsMap := map[string]struct{}{}
 	if len(jobpb.DependsOn) > 0 {
 		// Let's remove any duplicates
 		jobpb.DependsOn = uniqueStr(jobpb.DependsOn)
 
 		// Go through and ensure that each exists.
 		for _, id := range jobpb.DependsOn {
+			dependsMap[id] = struct{}{}
+
 			_, err := s.jobById(dbTxn, id)
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	// Allowed failures must be in the DependsOn list
+	for _, id := range jobpb.DependsOnAllowFailure {
+		if _, ok := dependsMap[id]; !ok {
+			return status.Errorf(codes.FailedPrecondition,
+				"job %q in depends_on_allow_failure but not in depends_on",
+				id,
+			)
 		}
 	}
 
@@ -1239,6 +1253,18 @@ func (s *State) jobCascadeDependentState(
 		}
 		if err != nil {
 			return err
+		}
+
+		// If this dependency is allowed to fail, do not cascade.
+		failAllowed := false
+		for _, id := range job.DependsOnAllowFailure {
+			if strings.EqualFold(id, parent.Id) {
+				failAllowed = true
+				break
+			}
+		}
+		if failAllowed {
+			continue
 		}
 
 		// Cascade the error state

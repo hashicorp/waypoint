@@ -1305,6 +1305,16 @@ message Job {
   // on a non-existent job.
   repeated string depends_on = 10;
 
+  // List of IDs that are in depends_on that are ignored if they error.
+  // Normally, when a dependency fails, this job also fails. If the ID
+  // is specified in both depends_on AND here, then the dependency is
+  // allowed to fail and this task will still run. This is good for jobs
+  // that should run no matter what.
+  //
+  // All IDs in this value must ALSO be present in "depends_on". This field
+  // only specifies which of those values can fail.
+  repeated string depends_on_allow_failure = 11;
+
   // The application to target for the operation. Some operations may allow
   // certain fields of this to be empty, so check with the operation
   // documentation to determine what needs to be set. Generally, project

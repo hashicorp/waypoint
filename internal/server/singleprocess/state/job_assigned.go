@@ -116,9 +116,11 @@ func (s *State) jobIsBlockedByDeps(
 			continue
 		}
 
-		// We only check if the job was success. Any other state blocks us.
+		// We only check if the job state is terminal. Any other state blocks us.
+		// We allow errors here because errors should cascade to failing
+		// this job earlier.
 		depIdx := raw.(*jobIndex)
-		if depIdx.State != pb.Job_SUCCESS {
+		if depIdx.State != pb.Job_SUCCESS && depIdx.State != pb.Job_ERROR {
 			// Add this to our watch status, because we should recheck if
 			// this job ever changes.
 			ws.Add(watchCh)
