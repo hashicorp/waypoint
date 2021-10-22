@@ -33,6 +33,7 @@ type LoginCommand struct {
 	flagK8S            bool
 	flagK8SService     string
 	flagK8STokenSecret string
+	flagK8SNamespace   string
 }
 
 func (c *LoginCommand) Run(args []string) int {
@@ -326,6 +327,11 @@ func (c *LoginCommand) loginK8S(ctx context.Context) (string, int) {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return "", 1
 	}
+
+	if c.flagK8SNamespace != "" {
+		ns = c.flagK8SNamespace
+	}
+
 	secretClient := clientset.CoreV1().Secrets(ns)
 
 	// Get the secret
@@ -351,6 +357,11 @@ func (c *LoginCommand) k8sServerAddr(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	if c.flagK8SNamespace != "" {
+		ns = c.flagK8SNamespace
+	}
+
 	serviceClient := clientset.CoreV1().Services(ns)
 
 	// Get the service
@@ -445,6 +456,13 @@ func (c *LoginCommand) Flags() *flag.Sets {
 			Usage: "The name of the Kubernetes secret that has the Waypoint token " +
 				"when using the -from-kubernetes flag.",
 			Default: "waypoint-server-token",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "from-kubernetes-namespace",
+			Target: &c.flagK8SNamespace,
+			Usage: "The name of the Kubernetes namespace that has the Waypoint token " +
+				"when using the -from-kubernetes flag.",
 		})
 	})
 }
