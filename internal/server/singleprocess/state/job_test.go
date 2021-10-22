@@ -222,6 +222,46 @@ func TestJobCreate_singleton(t *testing.T) {
 			require.False(oldQueueTime.Equal(queueTime))
 		}
 	})
+
+	t.Run("create with a dependency cycle", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create jobs
+		err := s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "A",
+			DependsOn: []string{"C"},
+		}), serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "B",
+			DependsOn: []string{"A"},
+		}), serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "C",
+			DependsOn: []string{"B"},
+		}))
+		require.Error(err)
+		require.Contains(err.Error(), "cycle")
+	})
+
+	t.Run("create in non-dependency order", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create jobs
+		err := s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "A",
+			DependsOn: []string{"C"},
+		}), serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "B",
+			DependsOn: []string{"A"},
+		}), serverptypes.TestJobNew(t, &pb.Job{
+			Id: "C",
+		}))
+		require.NoError(err)
+	})
 }
 
 func TestJobAssign(t *testing.T) {
