@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc/status"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
@@ -136,21 +135,14 @@ func (p *TaskLauncher) StopTask(
 	log hclog.Logger,
 	ti *TaskInfo,
 ) error {
-	// Get our client
-	clientSet, ns, _, err := Clientset(p.config.KubeconfigPath, p.config.Context)
-	if err != nil {
-		return err
-	}
-
-	// Get our jobs client
-	jobsClient := clientSet.BatchV1().Jobs(ns)
-	err = jobsClient.Delete(ctx, ti.Id, metav1.DeleteOptions{})
-	if errors.IsNotFound(err) {
-		// If it doesn't exist then that's fine, it's already stopped then.
-		err = nil
-	}
-
-	return err
+	// Purposely do nothing. We leverage the job TTL feature in Kube 1.19+
+	// so that Kubernetes automatically deletes old jobs after they complete
+	// running.
+	//
+	// In the future, we may want to get more clever about this and explicitly
+	// delete jobs under certain conditions, but for now we leave them around
+	// and let K8S clean it up
+	return nil
 }
 
 // StartTask creates a docker container for the task.

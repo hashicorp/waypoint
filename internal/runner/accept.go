@@ -327,6 +327,12 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		}
 	}
 
+	// If we have a nil result, then use an empty result so its set to
+	// SOMETHING but just with no values.
+	if result == nil {
+		result = &pb.Job_Result{}
+	}
+
 	// For the remainder of the job, we're going to hold the mutex. We are
 	// just sending quick status updates so this should not block anything
 	// for very long.
@@ -389,6 +395,8 @@ func (r *Runner) prepareAndExecuteJob(
 		return r.executePollOp(ctx, log, ui, job)
 	case *pb.Job_StartTask:
 		return r.executeStartTaskOp(ctx, log, ui, job)
+	case *pb.Job_StopTask:
+		return r.executeStopTaskOp(ctx, log, ui, job)
 	}
 
 	// We need to get our data source next prior to executing.

@@ -71,14 +71,14 @@ func (s *service) queueJobMulti(
 	ctx context.Context,
 	req []*pb.QueueJobRequest,
 ) ([]*pb.QueueJobResponse, error) {
-	jobs := make([]*pb.Job, len(req))
-	for i, single := range req {
-		job, err := s.queueJobReqToJob(ctx, single)
+	jobs := make([]*pb.Job, 0, len(req))
+	for _, single := range req {
+		job, _, err := s.queueJobReqToJob(ctx, single)
 		if err != nil {
 			return nil, err
 		}
 
-		jobs[i] = job
+		jobs = append(jobs, job...)
 	}
 
 	// Queue the jobs
@@ -96,33 +96,35 @@ func (s *service) queueJobMulti(
 }
 
 // queueJobReqToJob converts a QueueJobRequest to a job to queue, but
-// does not queue it.
+// does not queue it. This may return multiple jobs if the queue job
+// request requires an on-demand runner. They should all be queued
+// atomically with JobCreate.
 func (s *service) queueJobReqToJob(
 	ctx context.Context,
 	req *pb.QueueJobRequest,
-) (*pb.Job, error) {
+) ([]*pb.Job, string, error) {
 	log := hclog.FromContext(ctx)
 	job := req.Job
 
 	// Validation
 	if job == nil {
-		return nil, status.Errorf(codes.FailedPrecondition, "job must be set")
+		return nil, "", status.Errorf(codes.FailedPrecondition, "job must be set")
 	}
 	if job.Operation == nil {
 		// We special case this check and return "Unimplemented" because
 		// the primary case where operation is nil is if a client is sending
 		// us an unsupported operation.
-		return nil, status.Errorf(codes.Unimplemented, "operation is nil or unknown")
+		return nil, "", status.Errorf(codes.Unimplemented, "operation is nil or unknown")
 	}
 	if err := serverptypes.ValidateJob(job); err != nil {
-		return nil, status.Errorf(codes.FailedPrecondition, err.Error())
+		return nil, "", status.Errorf(codes.FailedPrecondition, err.Error())
 	}
 
 	// Verify the project exists and use that to set the default data source
 	log.Debug("checking job project", "project", job.Application.Project)
 	project, err := s.state.ProjectGet(&pb.Ref_Project{Project: job.Application.Project})
 	if status.Code(err) == codes.NotFound {
-		return nil, status.Errorf(codes.NotFound,
+		return nil, "", status.Errorf(codes.NotFound,
 			"Project %q was not found! Please ensure that 'waypoint init' was run with this project.",
 			job.Application.Project,
 		)
@@ -130,7 +132,7 @@ func (s *service) queueJobReqToJob(
 
 	if job.DataSource == nil {
 		if project.DataSource == nil {
-			return nil, status.Errorf(codes.FailedPrecondition,
+			return nil, "", status.Errorf(codes.FailedPrecondition,
 				"Project %s does not have a data source configured. Remote jobs "+
 					"require a data source such as Git to be configured with the project. "+
 					"Data sources can be configured via the CLI or UI. For help, see : "+
@@ -145,7 +147,7 @@ func (s *service) queueJobReqToJob(
 	// Get the next id
 	id, err := server.Id()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+		return nil, "", status.Errorf(codes.Internal, "uuid generation failed: %s", err)
 	}
 	job.Id = id
 
@@ -154,13 +156,13 @@ func (s *service) queueJobReqToJob(
 	if req.ExpiresIn != "" {
 		dur, err := time.ParseDuration(req.ExpiresIn)
 		if err != nil {
-			return nil, status.Errorf(codes.FailedPrecondition,
+			return nil, "", status.Errorf(codes.FailedPrecondition,
 				"Invalid expiry duration: %s", err.Error())
 		}
 
 		job.ExpireTime, err = ptypes.TimestampProto(time.Now().Add(dur))
 		if err != nil {
-			return nil, status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
+			return nil, "", status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
 		}
 	}
 
@@ -173,7 +175,7 @@ func (s *service) queueJobReqToJob(
 		if od == nil {
 			ods, err := s.state.OnDemandRunnerConfigDefault()
 			if err != nil {
-				return nil, err
+				return nil, "", err
 			}
 
 			switch len(ods) {
@@ -189,76 +191,111 @@ func (s *service) queueJobReqToJob(
 		}
 	}
 
-	// If the job is targetted at any runner AND project has configuration for launching ondemand
-	// runners, then we dutifully launch an ondemand runner now. We'll also assign the job to this
-	// new runner now, so that it doesn't get picked up by other runners.
-	if od != nil {
-		runnerId, err := s.launchOnDemandRunner(ctx, job, project, od)
-		if err != nil {
-			return nil, err
-		}
+	// If we have no ODR, our result is just the job
+	result := []*pb.Job{job}
 
-		job.TargetRunner = &pb.Ref_Runner{
-			Target: &pb.Ref_Runner_Id{
-				Id: &pb.Ref_RunnerId{
-					Id: runnerId,
-				},
-			},
+	// If we have an ODR profile, then we know that we should be using
+	// an on-demand runner for this. Let's wrap the jobs so that we have
+	// the full set of start to stop.
+	if od != nil {
+		result, err = s.wrapJobWithRunner(ctx, job, od)
+		if err != nil {
+			return nil, "", err
 		}
 	}
 
-	return job, nil
+	return result, job.Id, nil
 }
 
 func (s *service) QueueJob(
 	ctx context.Context,
 	req *pb.QueueJobRequest,
 ) (*pb.QueueJobResponse, error) {
-	job, err := s.queueJobReqToJob(ctx, req)
+	jobs, jobId, err := s.queueJobReqToJob(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	// Queue the job
-	if err := s.state.JobCreate(job); err != nil {
+	if err := s.state.JobCreate(jobs...); err != nil {
 		return nil, err
 	}
 
-	return &pb.QueueJobResponse{JobId: job.Id}, nil
+	return &pb.QueueJobResponse{JobId: jobId}, nil
 }
 
-func (s *service) launchOnDemandRunner(
+// wrapJobWithRunner takes a job and "wraps" it within an on-demand launched
+// runner. This creates a dependency chain that ensures that the runner is
+// started and stopped around the given job (hence "wraps").
+func (s *service) wrapJobWithRunner(
 	ctx context.Context,
 	source *pb.Job,
-	project *pb.Project,
-	odref *pb.Ref_OnDemandRunnerConfig,
-) (string, error) {
+	profileRef *pb.Ref_OnDemandRunnerConfig,
+) ([]*pb.Job, error) {
+	// Get the runner profile we're going to use for this runner.
+	od, err := s.state.OnDemandRunnerConfigGet(profileRef)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate our job to start the ODR
+	startJob, runnerId, err := s.onDemandRunnerStartJob(ctx, source, od)
+	if err != nil {
+		return nil, err
+	}
+
+	// Change our source job to require being run on the launched ODR.
+	source.TargetRunner = &pb.Ref_Runner{
+		Target: &pb.Ref_Runner_Id{
+			Id: &pb.Ref_RunnerId{
+				Id: runnerId,
+			},
+		},
+	}
+
+	// Our source job depends on the starting job.
+	source.DependsOn = []string{startJob.Id}
+
+	// Job to stop the ODR
+	stopJob, err := s.onDemandRunnerStopJob(ctx, startJob, source, od)
+	if err != nil {
+		return nil, err
+	}
+
+	// These must be in order of dependency currently. This is a limitation
+	// of the state.JobCreate API and we should fix it one day. If we get
+	// this wrong it'll just error so we'll know quickly.
+	return []*pb.Job{
+		startJob,
+		source,
+		stopJob,
+	}, nil
+}
+
+func (s *service) onDemandRunnerStartJob(
+	ctx context.Context,
+	source *pb.Job,
+	od *pb.OnDemandRunnerConfig,
+) (*pb.Job, string, error) {
 	log := hclog.FromContext(ctx)
 
-	od, err := s.state.OnDemandRunnerConfigGet(odref)
-	if err != nil {
-		return "", err
-	}
-
+	// Generate a unique ID for the runner
 	runnerId, err := server.Id()
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
-
 	log.Info("requesting ondemand runner via task start", "runner-id", runnerId)
 
-	// Get our server config
-	cfg, err := s.state.ServerConfigGet()
-	if err != nil {
-		return "", err
-	}
-
-	// Follow the same logic as RunnerGetDeploymentConfig, which includes this note:
+	// Follow the same logic as RunnerGetDeploymentConfig to get our advertise
+	// address for the runner to connect to the Waypoint server. Note:
 	// Our addr for now is just the first one since we don't support
 	// multiple addresses yet. In the future we will want to support more
 	// advanced choicing.
-
 	var addr *pb.ServerConfig_AdvertiseAddr
+	cfg, err := s.state.ServerConfigGet()
+	if err != nil {
+		return nil, "", err
+	}
 
 	// This should only happen during tests
 	if len(cfg.AdvertiseAddrs) == 0 {
@@ -279,9 +316,10 @@ func (s *service) launchOnDemandRunner(
 		}},
 	})
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 
+	// Build up our env vars to connect to the server, and add in our runner ID.
 	scfg := serverconfig.Client{
 		Address:       addr.Addr,
 		Tls:           addr.Tls,
@@ -289,19 +327,23 @@ func (s *service) launchOnDemandRunner(
 		RequireAuth:   true,
 		AuthToken:     token,
 	}
-
 	envVars := scfg.EnvMap()
 	envVars["WAYPOINT_RUNNER_ID"] = runnerId
 
+	// Add any env vars that our profile overrides
 	for k, v := range od.EnvironmentVariables {
 		envVars[k] = v
 	}
 
+	// Arguments for the runner image. Waypoint is ALWAYS assumed to be
+	// the entrypoint for ODR images.
 	args := []string{"runner", "agent", "-vv", "-id", runnerId, "-odr"}
 
 	job := &pb.Job{
+		// Inherit the workspace/application of the source job.
 		Workspace:   source.Workspace,
 		Application: source.Application,
+
 		Operation: &pb.Job_StartTask{
 			StartTask: &pb.Job_StartTaskLaunchOp{
 				Params: &pb.Job_TaskPluginParams{
@@ -318,10 +360,10 @@ func (s *service) launchOnDemandRunner(
 		},
 	}
 
-	// Get the next id
+	// Get the next id for the job
 	id, err := server.Id()
 	if err != nil {
-		return "", status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+		return nil, "", status.Errorf(codes.Internal, "uuid generation failed: %s", err)
 	}
 	job.Id = id
 
@@ -329,29 +371,73 @@ func (s *service) launchOnDemandRunner(
 	// picked up immediately.
 	dur, err := time.ParseDuration("60s")
 	if err != nil {
-		return "", status.Errorf(codes.FailedPrecondition,
+		return nil, "", status.Errorf(codes.FailedPrecondition,
 			"Invalid expiry duration: %s", err.Error())
 	}
 
 	job.ExpireTime, err = ptypes.TimestampProto(time.Now().Add(dur))
 	if err != nil {
-		return "", status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
+		return nil, "", status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
 	}
 
+	// Our start runner job can go anywhere.
+	// NOTE(mitchellh): For more targetted runners in multi-cluster mode,
+	// we'll probably want this to be controllable by runner profiles
+	// so that start tasks get sent to the right cluster.
 	job.TargetRunner = &pb.Ref_Runner{
 		Target: &pb.Ref_Runner_Any{
 			Any: &pb.Ref_RunnerAny{},
 		},
 	}
 
-	// Queue the job
-	if err := s.state.JobCreate(job); err != nil {
-		return "", err
+	return job, runnerId, nil
+}
+
+func (s *service) onDemandRunnerStopJob(
+	ctx context.Context,
+	startJob *pb.Job,
+	source *pb.Job,
+	od *pb.OnDemandRunnerConfig,
+) (*pb.Job, error) {
+	job := &pb.Job{
+		// Inherit the workspace/application of the source job.
+		Workspace:   source.Workspace,
+		Application: source.Application,
+
+		// We depend on both the start job and the main job. We allow them
+		// both to fail, however, cause we want to try to stop no matter what.
+		DependsOn:             []string{startJob.Id, source.Id},
+		DependsOnAllowFailure: []string{startJob.Id, source.Id},
+
+		// Use the same targetting as the start job. We assume the start job
+		// had proper access to stop, too, so we just copy it.
+		TargetRunner: startJob.TargetRunner,
+
+		// Stop
+		Operation: &pb.Job_StopTask{
+			StopTask: &pb.Job_StopTaskLaunchOp{
+				Params: &pb.Job_TaskPluginParams{
+					PluginType: od.PluginType,
+					HclConfig:  od.PluginConfig,
+					HclFormat:  od.ConfigFormat,
+				},
+
+				// Get our state from the start job.
+				State: &pb.Job_StopTaskLaunchOp_StartJobId{
+					StartJobId: startJob.Id,
+				},
+			},
+		},
 	}
 
-	log.Debug("queue'd task to start on-demand runner", "job-id", job.Id, "runner-id", runnerId)
+	// Get the next id for the job
+	id, err := server.Id()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+	}
+	job.Id = id
 
-	return runnerId, nil
+	return job, nil
 }
 
 func (s *service) ValidateJob(

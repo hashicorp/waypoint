@@ -1326,6 +1326,11 @@ func (s *State) jobCascadeDependentState(
 		if err := memTxn.Insert(jobTableName, idx); err != nil {
 			return err
 		}
+
+		// Cascade further if necessary
+		if err := s.jobCascadeDependentState(memTxn, dbTxn, job); err != nil {
+			return err
+		}
 	}
 
 	return nil

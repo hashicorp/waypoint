@@ -449,14 +449,13 @@ func jobStreamRecv(
 
 func TestServiceQueueJob_odr(t *testing.T) {
 	require := require.New(t)
-
 	ctx := context.Background()
 
+	// Add a loud logger to our context
 	log := hclog.New(&hclog.LoggerOptions{
 		Name:  "odr-test",
 		Level: hclog.Trace,
 	})
-
 	ctx = hclog.WithContext(ctx, log)
 
 	// Create our server
@@ -464,7 +463,6 @@ func TestServiceQueueJob_odr(t *testing.T) {
 		WithLogger(log),
 		WithDB(testDB(t)),
 	)
-
 	require.NoError(err)
 	client := server.TestServer(t, impl, server.TestWithContext(ctx))
 
@@ -479,6 +477,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	// Simplify writing tests
 	type Req = pb.QueueJobRequest
 
+	// Create an ODR profile
 	odr := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
 		PluginType:   "magic-carpet",
 		PluginConfig: []byte("foo = 1"),
@@ -486,14 +485,11 @@ func TestServiceQueueJob_odr(t *testing.T) {
 			"CARPET_DRIVER": "apu",
 		},
 	})
-
 	cfgResp, err := client.UpsertOnDemandRunnerConfig(context.Background(), &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: odr,
 	})
-
 	odr = cfgResp.Config
-
-	log.Info("test odr", "id", odr.Id)
+	log.Info("test odr profile", "id", odr.Id)
 
 	// Update the project to include ondemand runner
 	proj := serverptypes.TestProject(t, &pb.Project{
@@ -502,10 +498,10 @@ func TestServiceQueueJob_odr(t *testing.T) {
 			Id: odr.Id,
 		},
 	})
-
 	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
 		Project: proj,
 	})
+	require.NoError(err)
 
 	// Create, should get an ID back
 	queueResp, err := client.QueueJob(ctx, &Req{
@@ -517,7 +513,6 @@ func TestServiceQueueJob_odr(t *testing.T) {
 		}),
 	})
 	require.NoError(err)
-	require.NotNil(queueResp)
 	require.NotEmpty(queueResp)
 
 	// Job should exist and be queued
@@ -539,14 +534,13 @@ func TestServiceQueueJob_odr(t *testing.T) {
 		},
 	}))
 
-	// Wait for assignment and ack
+	// We should get a task to start the job first.
 	resp, err := runnerStream.Recv()
 	require.NoError(err)
 	assignment, ok := resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
 	require.True(ok, "should be an assignment")
 	require.NotNil(assignment)
 	require.NotEqual(queueResp.JobId, assignment.Assignment.Job.Id)
-
 	require.IsType(&pb.Job_StartTask{}, assignment.Assignment.Job.Operation)
 
 	st := assignment.Assignment.Job.Operation.(*pb.Job_StartTask).StartTask
@@ -557,8 +551,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 		require.Equal(v, st.Info.EnvironmentVariables[k])
 	}
 
-	runnerId := st.Info.EnvironmentVariables["WAYPOINT_RUNNER_ID"]
-
+	// Ack it and complete it
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Ack_{
 			Ack: &pb.RunnerJobStreamRequest_Ack{},
@@ -566,6 +559,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	}))
 
 	// Register our runner
+	runnerId := st.Info.EnvironmentVariables["WAYPOINT_RUNNER_ID"]
 	TestRunner(t, client, &pb.Runner{
 		Id: runnerId,
 	})
@@ -578,6 +572,13 @@ func TestServiceQueueJob_odr(t *testing.T) {
 			Request: &pb.RunnerJobStreamRequest_Request{
 				RunnerId: runnerId,
 			},
+		},
+	}))
+
+	// Complete our launch task job so that we can move on
+	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Complete_{
+			Complete: &pb.RunnerJobStreamRequest_Complete{},
 		},
 	}))
 
@@ -723,6 +724,13 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Ack_{
 			Ack: &pb.RunnerJobStreamRequest_Ack{},
+		},
+	}))
+
+	// Complete our launch task job so that we can move on
+	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Complete_{
+			Complete: &pb.RunnerJobStreamRequest_Complete{},
 		},
 	}))
 

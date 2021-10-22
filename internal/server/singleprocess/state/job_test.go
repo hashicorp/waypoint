@@ -1114,6 +1114,69 @@ func TestJobComplete(t *testing.T) {
 		require.NotNil(job.Error)
 	})
 
+	t.Run("error cascades to grandchildren+ dependents", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create jobs
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "B",
+			DependsOn: []string{"A"},
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "C",
+			DependsOn: []string{"B"},
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+
+		// Ack it
+		_, err = s.JobAck(job.Id, true)
+		require.NoError(err)
+
+		// Complete it with error
+		require.NoError(s.JobComplete(job.Id, nil, fmt.Errorf("bad")))
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id, nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.State)
+		require.NotNil(job.Error)
+
+		st := status.FromProto(job.Error)
+		require.Equal(codes.Unknown, st.Code())
+		require.Contains(st.Message(), "bad")
+
+		// Should block if requesting another since none exist
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		job, err = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
+		require.Error(err)
+		require.Nil(job)
+		require.Equal(ctx.Err(), err)
+
+		// Dependent should be error
+		job, err = s.JobById("B", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.State)
+		require.NotNil(job.Error)
+
+		// Grandchild should be error
+		job, err = s.JobById("C", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.State)
+		require.NotNil(job.Error)
+	})
+
 	t.Run("error does not cascade to allowed fail dependents", func(t *testing.T) {
 		require := require.New(t)
 
