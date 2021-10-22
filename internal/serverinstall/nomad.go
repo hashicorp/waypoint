@@ -2,6 +2,7 @@ package serverinstall
 
 import (
 	"context"
+	json "encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -991,11 +992,32 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 }
 
 func (i *NomadInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
-	// TODO(briancain): any other ODR config should happen here
+	// Generate some configuration
+	cfgMap := map[string]interface{}{}
+	// TODO set the defaults?
+	if v := i.config.runnerResourcesCPU; v != "" {
+		cfgMap["resources_cpu"] = v
+	}
+	if v := i.config.runnerResourcesMemory; v != "" {
+		cfgMap["resources_memory"] = v
+	}
+	// TODO more configs?
+
+	// Marshal our config
+	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
+	if err != nil {
+		// This shouldn't happen cause we control our input. If it does,
+		// just panic cause this will be in a `server install` CLI and
+		// we want the user to report a bug.
+		panic(err)
+	}
+
 	return &pb.OnDemandRunnerConfig{
-		OciUrl:     i.config.odrImage,
-		PluginType: "nomad",
-		Default:    true,
+		OciUrl:       i.config.odrImage,
+		PluginType:   "nomad",
+		Default:      true,
+		PluginConfig: cfgJson,
+		ConfigFormat: pb.Project_JSON,
 	}
 }
 
