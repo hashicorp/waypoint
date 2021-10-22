@@ -484,6 +484,15 @@
             "path": "extending-waypoint/plugin-interfaces/default-parameters"
           }
         ]
+      },
+      {
+        "title": "Plugin Frameworks",
+        "routes": [
+          {
+            "title": "Overview",
+            "path": "extending-waypoint/plugin-frameworks"
+          }
+        ]
       }
     ]
   },
