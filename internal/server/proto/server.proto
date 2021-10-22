@@ -1780,11 +1780,17 @@ message Job {
   }
 
   message StopTaskLaunchOp {
-    // The state returned by the start operation.
-    google.protobuf.Any state = 1;
-
     // Params is needed to spawn the plugin so we can send it the stop.
     TaskPluginParams params = 2;
+
+    // The state of the start task. This can come in multiple ways.
+    oneof state {
+      // The state can be directly provided.
+      google.protobuf.Any direct = 1;
+
+      // The state can be looked up from the result of a StartTask job.
+      string start_job_id = 3;
+    }
   }
 
   message StatusReportOp {

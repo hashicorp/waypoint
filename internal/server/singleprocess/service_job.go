@@ -232,8 +232,14 @@ func (s *service) wrapJobWithRunner(
 	source *pb.Job,
 	profileRef *pb.Ref_OnDemandRunnerConfig,
 ) ([]*pb.Job, error) {
+	// Get the runner profile we're going to use for this runner.
+	od, err := s.state.OnDemandRunnerConfigGet(profileRef)
+	if err != nil {
+		return nil, err
+	}
+
 	// Generate our job to start the ODR
-	startJob, runnerId, err := s.onDemandRunnerStartJob(ctx, source, profileRef)
+	startJob, runnerId, err := s.onDemandRunnerStartJob(ctx, source, od)
 	if err != nil {
 		return nil, err
 	}
@@ -247,10 +253,14 @@ func (s *service) wrapJobWithRunner(
 		},
 	}
 
-	// TODO(mitchellh): create a stop task job
-
-	// Create our dependency chain: startRunner => source => stopRunner
+	// Our source job depends on the starting job.
 	source.DependsOn = []string{startJob.Id}
+
+	// Job to stop the ODR
+	stopJob, err := s.onDemandRunnerStopJob(ctx, startJob, source, od)
+	if err != nil {
+		return nil, err
+	}
 
 	// These must be in order of dependency currently. This is a limitation
 	// of the state.JobCreate API and we should fix it one day. If we get
@@ -258,21 +268,16 @@ func (s *service) wrapJobWithRunner(
 	return []*pb.Job{
 		startJob,
 		source,
+		stopJob,
 	}, nil
 }
 
 func (s *service) onDemandRunnerStartJob(
 	ctx context.Context,
 	source *pb.Job,
-	profileRef *pb.Ref_OnDemandRunnerConfig,
+	od *pb.OnDemandRunnerConfig,
 ) (*pb.Job, string, error) {
 	log := hclog.FromContext(ctx)
-
-	// Get the runner profile we're going to use for this runner.
-	od, err := s.state.OnDemandRunnerConfigGet(profileRef)
-	if err != nil {
-		return nil, "", err
-	}
 
 	// Generate a unique ID for the runner
 	runnerId, err := server.Id()
@@ -386,6 +391,53 @@ func (s *service) onDemandRunnerStartJob(
 	}
 
 	return job, runnerId, nil
+}
+
+func (s *service) onDemandRunnerStopJob(
+	ctx context.Context,
+	startJob *pb.Job,
+	source *pb.Job,
+	od *pb.OnDemandRunnerConfig,
+) (*pb.Job, error) {
+	job := &pb.Job{
+		// Inherit the workspace/application of the source job.
+		Workspace:   source.Workspace,
+		Application: source.Application,
+
+		// We depend on both the start job and the main job. We allow them
+		// both to fail, however, cause we want to try to stop no matter what.
+		DependsOn:             []string{startJob.Id, source.Id},
+		DependsOnAllowFailure: []string{startJob.Id, source.Id},
+
+		// Use the same targetting as the start job. We assume the start job
+		// had proper access to stop, too, so we just copy it.
+		TargetRunner: startJob.TargetRunner,
+
+		// Stop
+		Operation: &pb.Job_StopTask{
+			StopTask: &pb.Job_StopTaskLaunchOp{
+				Params: &pb.Job_TaskPluginParams{
+					PluginType: od.PluginType,
+					HclConfig:  od.PluginConfig,
+					HclFormat:  od.ConfigFormat,
+				},
+
+				// Get our state from the start job.
+				State: &pb.Job_StopTaskLaunchOp_StartJobId{
+					StartJobId: startJob.Id,
+				},
+			},
+		},
+	}
+
+	// Get the next id for the job
+	id, err := server.Id()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+	}
+	job.Id = id
+
+	return job, nil
 }
 
 func (s *service) ValidateJob(
