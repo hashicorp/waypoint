@@ -5,22 +5,17 @@ import { tracked } from '@glimmer/tracking';
 import ApiService from 'waypoint/services/api';
 import FlashMessagesService from 'waypoint/services/pds-flash-messages';
 import {
-  Deployment,
   Ref,
   ExpediteStatusReportRequest,
-  StatusReport,
   GetJobStreamRequest,
   GetJobStreamResponse,
   Job,
 } from 'waypoint-pb';
+import { DeploymentExtended } from 'waypoint/services/api';
 
 interface Args {
-  model: Deployment.AsObject & WithStatusReport;
+  model: DeploymentExtended;
   artifactType: string;
-}
-
-interface WithStatusReport {
-  statusReport?: StatusReport.AsObject;
 }
 
 export default class StatusReportMetaTable extends Component<Args> {

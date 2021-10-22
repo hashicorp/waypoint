@@ -36,6 +36,7 @@ export default function (this: Server): void {
   this.post('/ListBuilds', build.list);
   this.post('/GetBuild', build.get);
   this.post('/ListDeployments', deployment.list);
+  this.post('/UI_ListDeployments', deployment.ui_list);
   this.post('/GetDeployment', deployment.get);
   this.post('/UpsertProject', project.update);
   this.post('/ListProjects', project.list);
@@ -45,6 +46,7 @@ export default function (this: Server): void {
   this.post('/GenerateInviteToken', inviteToken.create);
   this.post('/GenerateLoginToken', token.create);
   this.post('/ListReleases', release.list);
+  this.post('/UI_ListReleases', release.ui_list);
   this.post('/GetRelease', release.get);
   this.post('/GetVersionInfo', versionInfo.get);
   this.post('/ListStatusReports', statusReport.list);
