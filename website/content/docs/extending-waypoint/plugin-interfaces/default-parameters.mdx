@@ -14,9 +14,6 @@ At present there are 11 possible parameters which you can inject, these are:
 - \*component.Source
 - \*component.JobInfo
 - \*component.DeploymentConfig
-- \*datadir.Project
-- \*datadir.App
-- \*datadir.Component
 - hclog.Logger
 - terminal.UI
 - \*component.LabelSet
@@ -99,46 +96,6 @@ returns a map of the correct environment variables and their values.
 ```go
 func (c *DeploymentConfig) Env() map[string]string
 ```
-
-## \*datadir.Project
-
-https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/datadir#Project
-
-Project exposes information regarding data and cache directories for the current project, Project implements the
-Dir interface which has the following two methods.
-
-`CacheDir` returns the absolute path of the project directory which can be used to store assets like built applications
-between operations.
-
-```go
-CacheDir() string
-```
-
-`DataDir` returns the absolute path of the project directory which can be used to persist data between operations.
-
-```go
-DataDir() string
-```
-
-To obtain the specific folders related to an individual application in the project you can use the `App` function.
-App which is returned from this function also implements the Dir interface and has the CacheDir and DataDir methods.
-
-```go
-func (p *Project) App(name string) (*App, error)
-```
-
-## \*datadir.App
-
-https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/datadir#App
-
-App exposes information regarding data and cache directories for the current application within the project.
-App implements the Dir interface.
-
-## \*datadir.Component
-
-https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/datadir#Component
-
-Component exposes information regarding data and cache directories which are scoped to the individual component.
 
 ## hclog.Logger
 
