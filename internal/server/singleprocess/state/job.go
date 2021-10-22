@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/pkg/graph"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 )
@@ -216,12 +217,49 @@ func (s *State) JobCreate(jobs ...*pb.Job) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
+	// Before we do any job creation, we go through and verify that
+	// any dependencies being created do not result in a cycle. We know
+	// that jobs already created couldn't have depended on these new jobs
+	// because a dependency must exist at time of creation, so we only
+	// need to check our new dependencies for cycles between each other.
+	jobMap := map[string]*pb.Job{}
+	var depGraph graph.Graph
+	for _, job := range jobs {
+		// Add our job
+		jobId := strings.ToLower(job.Id)
+		jobMap[jobId] = job
+		depGraph.Add(jobId)
+
+		// Add any dependencies
+		for _, depId := range job.DependsOn {
+			depId = strings.ToLower(depId)
+			depGraph.Add(depId)
+			depGraph.AddEdge(depId, jobId)
+		}
+	}
+	if cycles := depGraph.Cycles(); len(cycles) > 0 {
+		return status.Errorf(codes.FailedPrecondition,
+			"Job dependencies contain one or more cycles: %#v", cycles)
+	}
+
+	// Get our order that we'll create the jobs in. We do a topological
+	// sort so that we get we create dependencies first. This is so that
+	// if someone submits jobs A, B, C that depend on each other in that order
+	// in argumen torder of C, A, B, we can still create, since jobCreate
+	// requires that all dependencies exist.
+	order := depGraph.KahnSort()
+
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
-		// Go through each job one at a time. If any fail, the transaction
-		// is aborted so the whole thing will fail.
-		for _, job := range jobs {
-			if err := s.jobCreate(dbTxn, txn, job); err != nil {
-				return err
+		// Go through the jobs in DFS-order. This ensures that we create
+		// the jobs that are dependencies first.
+		for _, id := range order {
+			// Create the job. Its okay if it doesn't exist in the jobMap,
+			// that means its just a root node or some other dep already exists.
+			job, ok := jobMap[id.(string)]
+			if ok {
+				if err := s.jobCreate(dbTxn, txn, job); err != nil {
+					return err
+				}
 			}
 		}
 
