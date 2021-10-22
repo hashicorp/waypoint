@@ -32,6 +32,8 @@ type nomadConfig struct {
 	consulServiceUITags      []string          `hcl:"consul_service_ui_tags:optional"`
 	consulServiceBackendTags []string          `hcl:"consul_service_backend_tags:optional"`
 
+	odrImage string `hcl:"odr_image,optional"`
+
 	region         string   `hcl:"namespace,optional"`
 	datacenters    []string `hcl:"datacenters,optional"`
 	policyOverride bool     `hcl:"policy_override,optional"`
@@ -67,6 +69,14 @@ func (i *NomadInstaller) Install(
 	ctx context.Context,
 	opts *InstallOpts,
 ) (*InstallResults, error) {
+	if i.config.odrImage == "" {
+		var err error
+		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	ui := opts.UI
 
 	sg := ui.StepGroup()
@@ -523,6 +533,15 @@ func (i *NomadInstaller) InstallRunner(
 	s.Done()
 
 	return nil
+}
+
+func (i *NomadInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	return &pb.OnDemandRunnerConfig{
+		Name:       "nomad",
+		OciUrl:     i.config.odrImage,
+		PluginType: "nomad",
+		Default:    true,
+	}
 }
 
 // UninstallRunner implements Installer.
@@ -1046,6 +1065,13 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Usage:   "Nomad CSI volume mount option file system.",
 		Default: defaultCSIVolumeMountFS,
 	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-odr-image",
+		Target: &i.config.odrImage,
+		Usage: "Nomad image for the Waypoint On-Demand Runners. This will " +
+			"default to the server image with the name (not label) suffixed with '-odr'.",
+	})
 }
 
 func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
@@ -1130,6 +1156,13 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Name:   "nomad-host-volume",
 		Target: &i.config.hostVolume,
 		Usage:  "Nomad host volume name.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-odr-image",
+		Target: &i.config.odrImage,
+		Usage: "Nomad image for the Waypoint On-Demand Runners. This will " +
+			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
 }
 
