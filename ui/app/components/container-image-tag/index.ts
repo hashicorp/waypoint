@@ -2,7 +2,7 @@ import Component from '@glimmer/component';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { StatusReport } from 'waypoint-pb';
-import { ImageRef, findImageRefs } from 'waypoint/utils/image-refs';
+import { findImageRefs } from 'waypoint/utils/image-refs';
 
 interface Args {
   statusReport: StatusReport.AsObject;
@@ -17,7 +17,7 @@ export default class extends Component<Args> {
       : [];
   }
 
-  get imageRefs(): ImageRef[] {
+  get imageRefs(): ReturnType<typeof findImageRefs> {
     return findImageRefs(this.states);
   }
 }
