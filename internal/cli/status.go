@@ -295,21 +295,7 @@ func (c *StatusCommand) refreshAppStatus(
 		// Get Latest Deployment and Release
 
 		// Deployments
-
 		deploymentsResp, err := ListDeployments(c.Ctx, client, app.Name, project.Name, workspace)
-		//	client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
-		//	Application: &pb.Ref_Application{
-		//		Application: app.Name,
-		//		Project:     project.Name,
-		//	},
-		//	Workspace: &pb.Ref_Workspace{
-		//		Workspace: workspace,
-		//	},
-		//	Order: &pb.OperationOrder{
-		//		Order: pb.OperationOrder_COMPLETE_TIME,
-		//		Limit: 1,
-		//	},
-		//})
 		if err != nil {
 			if s, ok := status.FromError(err); ok {
 				if s.Code() == codes.Unimplemented {
@@ -342,19 +328,7 @@ func (c *StatusCommand) refreshAppStatus(
 		}
 
 		// Releases
-		releaseResp, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
-			Application: &pb.Ref_Application{
-				Application: app.Name,
-				Project:     project.Name,
-			},
-			Workspace: &pb.Ref_Workspace{
-				Workspace: workspace,
-			},
-			Order: &pb.OperationOrder{
-				Order: pb.OperationOrder_COMPLETE_TIME,
-				Limit: 1,
-			},
-		})
+		releaseResp, err := ListReleases(c.Ctx, client, app.Name, project.Name, workspace)
 		if err != nil {
 			if s, ok := status.FromError(err); ok {
 				if s.Code() == codes.Unimplemented {
@@ -395,10 +369,9 @@ func (c *StatusCommand) refreshAppStatus(
 }
 
 //
-// UI format functions
+// Helper functions
 //
 
-// Gets deployment list
 func ListDeployments(c context.Context, client pb.WaypointClient, app string, project string, workspace string) (*pb.UI_ListDeploymentsResponse, error) {
 	resp, err := client.UI_ListDeployments(c, &pb.UI_ListDeploymentsRequest{
 		Application: &pb.Ref_Application{
@@ -416,6 +389,27 @@ func ListDeployments(c context.Context, client pb.WaypointClient, app string, pr
 	})
 	return resp, err
 }
+
+func ListReleases(c context.Context, client pb.WaypointClient, app string, project string, workspace string) (*pb.UI_ListReleasesResponse, error) {
+	resp, err := client.UI_ListReleases(c, &pb.UI_ListReleasesRequest{
+		Application: &pb.Ref_Application{
+			Application: app,
+			Project:     project,
+		},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: workspace,
+		},
+		Order: &pb.OperationOrder{
+			Order: pb.OperationOrder_COMPLETE_TIME,
+			Limit: 1,
+		},
+	})
+	return resp, err
+}
+
+//
+// UI format functions
+//
 
 // FormatProjectAppStatus formats all applications inside a project
 func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
@@ -454,21 +448,6 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 	for _, app := range project.Applications {
 		// Get the latest deployment
 		deploymentsResp, err := ListDeployments(c.Ctx, client, app.Name, project.Name, workspace)
-		//	client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
-		//	Application: &pb.Ref_Application{
-		//		Application: app.Name,
-		//		Project:     project.Name,
-		//	},
-		//	Workspace: &pb.Ref_Workspace{
-		//		Workspace: workspace,
-		//	},
-		//	PhysicalState: pb.Operation_CREATED,
-		//	Order: &pb.OperationOrder{
-		//		Order: pb.OperationOrder_COMPLETE_TIME,
-		//		Limit: 1,
-		//	},
-		//})
-
 		if err != nil {
 			if s, ok := status.FromError(err); ok {
 				if s.Code() == codes.Unimplemented {
@@ -496,19 +475,7 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 		}
 
 		// Get the latest release, if there was one
-		releasesResp, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
-			Application: &pb.Ref_Application{
-				Application: app.Name,
-				Project:     project.Name,
-			},
-			Workspace: &pb.Ref_Workspace{
-				Workspace: workspace,
-			},
-			Order: &pb.OperationOrder{
-				Order: pb.OperationOrder_COMPLETE_TIME,
-				Limit: 1,
-			},
-		})
+		releasesResp, err := ListReleases(c.Ctx, client, app.Name, project.Name, workspace)
 		if err != nil {
 			if s, ok := status.FromError(err); ok {
 				if s.Code() == codes.Unimplemented {
@@ -612,20 +579,6 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 
 	// Get the latest deployment
 	respDeployList, err := ListDeployments(c.Ctx, client, app.Name, project.Name, workspace)
-	//	client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
-	//	Application: &pb.Ref_Application{
-	//		Application: app.Name,
-	//		Project:     project.Name,
-	//	},
-	//	Workspace: &pb.Ref_Workspace{
-	//		Workspace: workspace,
-	//	},
-	//	PhysicalState: pb.Operation_CREATED,
-	//	Order: &pb.OperationOrder{
-	//		Order: pb.OperationOrder_COMPLETE_TIME,
-	//		Limit: 1,
-	//	},
-	//})
 	if err != nil {
 		if s, ok := status.FromError(err); ok {
 			if s.Code() == codes.Unimplemented {
@@ -732,19 +685,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	// Release Summary
 	//   Release List
 
-	releasesResp, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
-		Application: &pb.Ref_Application{
-			Application: app.Name,
-			Project:     project.Name,
-		},
-		Workspace: &pb.Ref_Workspace{
-			Workspace: workspace,
-		},
-		Order: &pb.OperationOrder{
-			Order: pb.OperationOrder_COMPLETE_TIME,
-			Limit: 1,
-		},
-	})
+	releasesResp, err := ListReleases(c.Ctx, client, app.Name, project.Name, workspace)
 	if err != nil {
 		if s, ok := status.FromError(err); ok {
 			if s.Code() == codes.Unimplemented {
@@ -940,19 +881,6 @@ func (c *StatusCommand) FormatProjectStatus() error {
 		for _, app := range resp.Project.Applications {
 			// Latest Deployment for app
 			respDeployList, err := ListDeployments(c.Ctx, client, app.Name, resp.Project.Name, workspace)
-			//	client.UI_ListDeployments(c.Ctx, &pb.UI_ListDeploymentsRequest{
-			//	Application: &pb.Ref_Application{
-			//		Application: app.Name,
-			//		Project:     resp.Project.Name,
-			//	},
-			//	Workspace: &pb.Ref_Workspace{
-			//		Workspace: workspace,
-			//	},
-			//	Order: &pb.OperationOrder{
-			//		Order: pb.OperationOrder_COMPLETE_TIME,
-			//		Limit: 1,
-			//	},
-			//})
 			if err != nil {
 				if s, ok := status.FromError(err); ok {
 					if s.Code() == codes.Unimplemented {
@@ -972,19 +900,7 @@ func (c *StatusCommand) FormatProjectStatus() error {
 			}
 
 			// Latest Release for app
-			respReleaseList, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
-				Application: &pb.Ref_Application{
-					Application: app.Name,
-					Project:     resp.Project.Name,
-				},
-				Workspace: &pb.Ref_Workspace{
-					Workspace: workspace,
-				},
-				Order: &pb.OperationOrder{
-					Order: pb.OperationOrder_COMPLETE_TIME,
-					Limit: 1,
-				},
-			})
+			respReleaseList, err := ListReleases(c.Ctx, client, app.Name, resp.Project.Name, workspace)
 			if err != nil {
 				if s, ok := status.FromError(err); ok {
 					if s.Code() == codes.Unimplemented {
