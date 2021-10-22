@@ -25,7 +25,7 @@ https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/framework/resource
 The Waypoint Plugin SDK Framework is used to implement Resource Manager for your
 plugin. By integrating this framework into your `deploy` or `release` lifecycle
 funcs, Resource Manager can automatically handle the creation, deletion, and status
-of the resources involed with deployments and releases.
+of the resources involved with deployments and releases.
 
 Rather than having one large `Deploy` or `Release` function that creates or
 deletes every resource, Resource Manager lets you define each resources create
@@ -97,7 +97,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 
 If your deployment or release involves multiple resources, you would define
 them when creating Resource Manager. When `CreateAll` is invoked, each function
-should be called during the deployment process for creating the required reosurces.
+should be called during the deployment process for creating the required resources.
 
 Then, you'll be ready to implement one of the functions invoked by Resource Manager.
 For examples sake, let's take a look at what the `resourceDeploymentCreate` might look like.
