@@ -1,0 +1,258 @@
+---
+layout: docs
+page_title: 'Plugin Frameworks'
+description: |-
+  How Waypoint plugins work
+---
+
+# Plugin Frameworks
+
+Package `framework` contains a high-level framework for writing Waypoint plugins.
+The framework is split into sub-packages for specific functionality, whereas
+this root package contains the highest-level functionality.
+
+Currently, the only framework supported is for managing resources during the lifecycle
+of a deployment or release. This framework gives plugin authors a way to manage
+multiple resources easily without having to define a large `Deploy` or `Release` func
+that attempts to do it all. By defining each resources CRUD functions (i.e. the
+create and delete funcs, plus a status), resource manager will call the appropriate
+functions depending on what operations are being taken with Waypoint.
+
+https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/framework/resource
+
+# Implementing Resource Manager
+
+The Waypoint Plugin SDK Framework is used to implement Resource Manager for your
+plugin. By integrating this framework into your `deploy` or `release` lifecycle
+funcs, Resource Manager can automatically handle the creation, deletion, and status
+of the resources involved with deployments and releases.
+
+Rather than having one large `Deploy` or `Release` function that creates or
+deletes every resource, Resource Manager lets you define each resources create
+and delete functions. It also is expected to store a little bit of state about
+the resources being managed for easier access.
+
+In the following example, we set up a Deployment proto that has a single resource:
+
+```protobuf
+syntax = "proto3";
+
+package platform;
+
+option go_package = "github.com/hashicorp/waypoint-plugin-examples/template/platform";
+
+import "google/protobuf/any.proto";
+
+// You can customize this message to change the fields for
+// the output value from your Deployment
+message Deployment {
+  string id = 1;
+  string name = 2;
+  google.protobuf.Any resource_state = 3;
+}
+
+// An example proto message for a deployment resource. When you make your own
+// this might look a little different depending on what kinds of options you
+// wish to know about a resource
+message Resource {
+  string name = 1;
+  message Deployment {
+    string name = 1;
+  }
+}
+```
+
+When setting up a new resource manager, your plugin will want to make sure to
+initialize the manager with some fields that tell it what to call when it invokes
+the `create`, `delete`, and `status` funcs.
+
+```go
+// Resource manager will tell the Waypoint Plugin SDK how to create and delete
+// certain resources for your deployments.
+//
+// For example, your deployment might need to create a "container" or "load balancer".
+// Your plugin could implement two resources through ResourceManager and the Waypoint
+// Plugin SDK will automatically create or delete these resources as well as
+// obtain the defined status for them.
+//
+// ResourceManager can also be implemented for Release as well.
+func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
+        return resource.NewManager(
+                resource.WithLogger(log.Named("resource_manager")),
+                resource.WithValueProvider(p.getConnectContext),
+                resource.WithDeclaredResourcesResp(dcr),
+                resource.WithResource(resource.NewResource(
+                        resource.WithName("template_example"), // The name of your resource
+                        resource.WithState(&Resource_Deployment{}), // This is your Resource proto (this is the message we created earlier in this section)
+                        resource.WithCreate(p.resourceDeploymentCreate),
+                        resource.WithDestroy(p.resourceDeploymentDestroy),
+                        resource.WithStatus(p.resourceDeploymentStatus),
+                        resource.WithPlatform("template_platform"), // Update this to match your plugins platform, like Kubernetes
+                        resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER), // This is meant for the UI to determine what kind of icon to show
+                )),
+                // NOTE: Add more resource funcs here if your plugin has more than 1 resource
+        )
+}
+```
+
+If your deployment or release involves multiple resources, you would define
+them when creating Resource Manager. When `CreateAll` is invoked, each function
+should be called during the deployment process for creating the required resources.
+
+Then, you'll be ready to implement one of the functions invoked by Resource Manager.
+For examples sake, let's take a look at what the `resourceDeploymentCreate` might look like.
+
+```go
+func (b *Platform) deploy(
+        ctx context.Context,
+        ui terminal.UI,
+        log hclog.Logger,
+        dcr *component.DeclaredResourcesResp,
+        artifact *registry.Artifact,
+) (*Deployment, error) {
+        u := ui.Status()
+        defer u.Close()
+        u.Update("Deploy application")
+
+        var result Deployment
+
+        // Create our resource manager and create deployment resources
+        rm := b.resourceManager(log, dcr)
+
+        // NOTE: These params must match exactly to your resourceDeploymentCreate
+        // params (or any other additional deployment resource create funcs).
+        // Otherwise they will not be invoked during CreateAll()
+        if err := rm.CreateAll(
+                ctx, log, u, ui,
+                artifact, &result,
+        ); err != nil {
+                return nil, err
+        }
+
+        // Store our resource state
+        result.ResourceState = rm.State()
+
+        u.Update("Application deployed")
+
+        return &Deployment{}, nil
+}
+
+func (b *Platform) resourceDeploymentCreate(
+        ctx context.Context,
+        log hclog.Logger,
+        st terminal.Status,
+        ui terminal.UI,
+        artifact *registry.Artifact,
+        result *Deployment,
+) error {
+        // Create your deployment resource here!
+        // Update `result` with the created deployment
+
+        return nil
+}
+```
+
+When your plugin needs to destroy the resources it manages, you can use Resource
+Manager to destroy them as well.
+
+```go
+func (p *Platform) destroy(
+        ctx context.Context,
+        ui terminal.UI,
+        log hclog.Logger,
+        deployment *Deployment,
+) error {
+        sg := ui.StepGroup()
+        defer sg.Wait()
+
+        rm := p.resourceManager(log, nil)
+
+        // If we don't have resource state, this state is from an older version
+        // and we need to manually recreate it.
+        if deployment.ResourceState == nil {
+                rm.Resource("deployment").SetState(&Resource_Deployment{
+                        Name: deployment.Name,
+                })
+        } else {
+                // Load our set state
+                if err := rm.LoadState(deployment.ResourceState); err != nil {
+                        return err
+                }
+        }
+
+        // Destroy
+        return rm.DestroyAll(ctx, log, sg, ui)
+}
+
+func (b *Platform) resourceDeploymentDestroy(
+        ctx context.Context,
+        log hclog.Logger,
+        sg terminal.StepGroup,
+        ui terminal.UI,
+) error {
+        // Destroy your deployment resource
+        return nil
+}
+```
+
+Finally, each resource can report a status if it makes sense to. Generally these
+statuses are reported by the platform they run on. If the resource is fairly
+simple, it might only have an "exists" or "does not exist" status rather than
+having a more complex status like a Pod in Kubernetes.
+
+```go
+func (d *Platform) status(
+        ctx context.Context,
+        ji *component.JobInfo,
+        ui terminal.UI,
+        log hclog.Logger,
+        deployment *Deployment,
+) (*sdk.StatusReport, error) {
+        sg := ui.StepGroup()
+        s := sg.Add("Checking the status of the deployment...")
+
+        rm := d.resourceManager(log, nil)
+
+        // If we don't have resource state, this state is from an older version
+        // and we need to manually recreate it.
+        if deployment.ResourceState == nil {
+                rm.Resource("deployment").SetState(&Resource_Deployment{
+                        Name: deployment.Id,
+                })
+        } else {
+                // Load our set state
+                if err := rm.LoadState(deployment.ResourceState); err != nil {
+                        return nil, err
+                }
+        }
+
+        // This will call the StatusReport func on every defined resource in ResourceManager
+        report, err := rm.StatusReport(ctx, log, sg, ui)
+        if err != nil {
+                return nil, status.Errorf(codes.Internal, "resource manager failed to generate resource statuses: %s", err)
+        }
+
+        report.Health = sdk.StatusReport_UNKNOWN
+        s.Update("Deployment is currently not implemented!")
+        s.Done()
+
+        return report, nil
+}
+
+func (b *Platform) resourceDeploymentStatus(
+        ctx context.Context,
+        ui terminal.UI,
+        sg terminal.StepGroup,
+        artifact *registry.Artifact,
+) error {
+        // Determine health status of "this" resource.
+        return nil
+}
+```
+
+For a more complete picture of what this implementation might look like with
+a real platform plugin, check out how Waypoint handles Resource Manager
+with the Kubernetes plugin for deployments and releases:
+
+- [Waypoint Kubernetes Deploy Plugin](https://github.com/hashicorp/waypoint/blob/main/builtin/k8s/platform.go)
+- [Waypoint Kubernetes Release Plugin](https://github.com/hashicorp/waypoint/blob/main/builtin/k8s/releaser.go)
