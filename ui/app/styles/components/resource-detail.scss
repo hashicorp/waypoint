@@ -20,6 +20,10 @@
       padding-bottom: scale.$sm--2;
       vertical-align: top;
     }
+
+    .image-ref:first-child {
+      margin-top: -1px;
+    }
   }
 
   &__flex {
