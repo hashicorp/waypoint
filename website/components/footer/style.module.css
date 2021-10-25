@@ -110,21 +110,40 @@
 .bottomAnchors {
   display: flex;
   flex-direction: column;
+  flex-wrap: wrap;
 
   @media (--medium-up) {
     flex-direction: row;
   }
 
-  & a {
+  & > * {
     margin-bottom: 12px;
+
+    @media (--medium-up) {
+      &:not(:last-child) {
+        margin-right: 24px;
+      }
+    }
+  }
+
+  & a {
     color: var(--gray-4);
     transition: color 0.25s ease;
 
-    @media (--medium-up) {
-      & + a {
-        margin-left: 24px;
-      }
+    &:hover {
+      color: var(--gray-6);
     }
+  }
+
+  & button {
+    font: inherit;
+    padding: 0;
+    background-color: transparent;
+    border: 0;
+    color: var(--gray-4);
+    transition: color 0.25s ease;
+    cursor: pointer;
+    text-align: left;
 
     &:hover {
       color: var(--gray-6);
@@ -133,43 +152,10 @@
 
   & .status {
     white-space: nowrap;
-    margin-left: auto;
-    padding-left: 20px;
 
     & a.normal {
       padding-left: 20px;
       background: url(/img/status-normal.svg) no-repeat left center;
-    }
-
-    & a.degraded {
-      color: var(--warning-d1);
-      margin: -4px 0;
-      padding: 4px 10px 4px 32px;
-      border-radius: 2px;
-      background: url(/img/status-degraded.svg) no-repeat 10px center;
-      background-color: var(--warning-l2);
-
-      &:hover {
-        background-color: var(--warning-l1);
-      }
-    }
-  }
-
-  & button {
-    margin-bottom: 12px;
-    padding: 0;
-    background-color: transparent;
-    border: 0;
-    color: var(--gray-4);
-    transition: color 0.25s ease;
-    cursor: pointer;
-
-    @media (--medium-up) {
-      margin-left: 24px;
-    }
-
-    &:hover {
-      color: var(--gray-6);
     }
   }
 }
