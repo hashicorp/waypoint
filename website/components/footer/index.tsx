@@ -100,6 +100,7 @@ export default function Footer({
                   <FooterLink key={link.text} text={link.text} url={link.url} />
                 )
               })}
+              <button onClick={openConsentManager}>Consent Manager</button>
               {waypointServiceOK && (
                 <div className={s.status}>
                   <Link href="https://status.hashicorp.com">
@@ -107,7 +108,6 @@ export default function Footer({
                   </Link>
                 </div>
               )}
-              <button onClick={openConsentManager}>Consent Manager</button>
             </div>
           ) : null}
         </div>
