@@ -1,6 +1,6 @@
 import { clickable, collection, create, fillable, isPresent, text } from 'ember-cli-page-object';
 import { module, test } from 'qunit';
-import { render, settled } from '@ember/test-helpers';
+import { render } from '@ember/test-helpers';
 
 import { TestContext } from 'ember-test-helpers';
 import hbs from 'htmlbars-inline-precompile';
@@ -84,7 +84,6 @@ module('Integration | Component | project-config-variables-list', function (hook
     await page.varNameIsPath();
     await page.varInternal();
     await page.saveButton();
-    await settled(); // TODO(jgwhite): Figure out why we need this
     assert.notOk(page.hasForm, 'Create Variable: the form disappears after creation');
     assert.equal(page.variablesList.length, 4, 'Create Variable: the list has the new variable');
     assert.equal(page.variablesList.objectAt(3).varName, 'var_name', 'Var name is correct');
@@ -134,8 +133,6 @@ module('Integration | Component | project-config-variables-list', function (hook
     await page.variablesList.objectAt(0).dropdownEdit();
     await page.varName('edited_var_name');
     await page.saveButton();
-    // Necessary to wait for the next request after save
-    await settled();
     await page.variablesList.objectAt(1).dropdown();
     assert.equal(
       page.variablesList.length,
