@@ -85,8 +85,8 @@ export default function App({ Component, pageProps }) {
             url: '/docs',
           },
           {
-            text: 'API Reference',
-            url: '/',
+            text: 'CLI Reference',
+            url: '/commands',
           },
           {
             text: 'Tutorials',
@@ -94,7 +94,7 @@ export default function App({ Component, pageProps }) {
           },
           {
             text: 'Integrations',
-            url: '/',
+            url: '/plugins',
           },
         ]}
       />
