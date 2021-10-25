@@ -570,6 +570,7 @@ func TestApplicationPollHandler(t *testing.T) {
 	require.NoError(err)
 	require.NotNil(a)
 	require.NotNil(nextPollTime)
+	t.Logf("nextPollTime %q should be after initial pollTime %q", nextPollTime.String(), pollTime.String())
 	require.True(nextPollTime.After(pollTime))
 }
 
