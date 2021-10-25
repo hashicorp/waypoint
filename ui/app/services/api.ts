@@ -1,4 +1,5 @@
 import Service from '@ember/service';
+import { DEBUG } from '@glimmer/env';
 import { WaypointClient } from 'waypoint-client';
 import SessionService from 'waypoint/services/session';
 import { inject as service } from '@ember/service';
@@ -61,8 +62,16 @@ export default class ApiService extends Service {
   // If the the apiAddress is not set, this will use the /grpc prefix on the
   // same host as the UI is being served from
   client = new WaypointClient(`${config.apiAddress}/grpc`, null, {
-    unaryInterceptors: [new ApiWaiterUnaryInterceptor()],
+    unaryInterceptors: this.unaryInterceptors(),
   });
+
+  unaryInterceptors(): UnaryInterceptor<Message, Message>[] {
+    if (DEBUG) {
+      return [new ApiWaiterUnaryInterceptor()];
+    } else {
+      return [];
+    }
+  }
 
   // Merges metadata with required metadata for the request
   WithMeta(meta?: Metadata): Metadata {
