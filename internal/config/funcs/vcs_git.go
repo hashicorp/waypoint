@@ -62,14 +62,14 @@ func (s *VCSGit) refPrettyFunc(args []cty.Value, retType cty.Type) (cty.Value, e
 
 	ref, err := s.repo.Head()
 	if err != nil {
-		return cty.UnknownVal(cty.String), err
+		return cty.UnknownVal(cty.String), fmt.Errorf("error getting repo HEAD reference - this repo may have no commits: %w", err)
 	}
 	result := ref.Hash().String()
 
 	// Get the tags
 	iter, err := s.repo.Tags()
 	if err != nil {
-		return cty.UnknownVal(cty.String), err
+		return cty.UnknownVal(cty.String), fmt.Errorf("error getting repo tags: %w", err)
 	}
 	defer iter.Close()
 	for {
@@ -154,7 +154,7 @@ func (s *VCSGit) refHashFunc(args []cty.Value, retType cty.Type) (cty.Value, err
 
 	ref, err := s.repo.Head()
 	if err != nil {
-		return cty.UnknownVal(cty.String), err
+		return cty.UnknownVal(cty.String), fmt.Errorf("error getting repo HEAD reference - this repo may have no commits: %w", err)
 	}
 
 	return cty.StringVal(ref.Hash().String()), nil
@@ -178,13 +178,13 @@ func (s *VCSGit) refTagFunc(args []cty.Value, retType cty.Type) (cty.Value, erro
 
 	ref, err := s.repo.Head()
 	if err != nil {
-		return cty.UnknownVal(cty.String), err
+		return cty.UnknownVal(cty.String), fmt.Errorf("error getting repo HEAD reference - this repo may have no commits: %w", err)
 	}
 
 	// Get the tags
 	iter, err := s.repo.Tags()
 	if err != nil {
-		return cty.UnknownVal(cty.String), err
+		return cty.UnknownVal(cty.String), fmt.Errorf("error getting repo tags: %w", err)
 	}
 
 	var tagRefStr string
