@@ -15,6 +15,7 @@ interface FooterProps {
   cards?: [CardProps, CardProps] // Require two cards
   navLinks?: Array<LinkProps>
   ctaLinks?: Array<LinkProps>
+  openConsentManager: () => void
 }
 
 function FooterLink({ text, url }) {
@@ -36,6 +37,7 @@ export default function Footer({
   cards,
   ctaLinks,
   navLinks,
+  openConsentManager,
 }: FooterProps) {
   return (
     <footer className={s.footer}>
@@ -97,28 +99,11 @@ export default function Footer({
                   <FooterLink key={link.text} text={link.text} url={link.url} />
                 )
               })}
+              <button onClick={openConsentManager}>Consent Manager</button>
             </div>
           ) : null}
         </div>
       </div>
     </footer>
-  )
-}
-
-function RightArrowIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M3.334 10h13.333M11.666 5l5 5-5 5"
-        stroke="#62D4DC"
-        strokeWidth="1.5"
-      />
-    </svg>
   )
 }
