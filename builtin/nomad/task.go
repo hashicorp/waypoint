@@ -201,7 +201,9 @@ func (p *TaskLauncher) StartTask(
 	job.TaskGroups[0].Tasks[0].Env = env
 
 	config := map[string]interface{}{
-		"image": tli.OciUrl,
+		"image":   tli.OciUrl,
+		"args":    tli.Arguments,
+		"command": tli.Entrypoint,
 	}
 
 	// TODO set auth here for pulling ODR image? not needed? we don't do it on install
@@ -217,6 +219,7 @@ func (p *TaskLauncher) StartTask(
 	log.Debug("registering on-demand task job %q...", taskName)
 	_, _, err = jobclient.Register(job, nil)
 	if err != nil {
+		log.Debug("failed to register job to nomad")
 		return nil, err
 	}
 
@@ -225,6 +228,7 @@ func (p *TaskLauncher) StartTask(
 	// Wait on the allocation
 	//evalID := regResult.EvalID
 
+	log.Debug("finished launching on-demand task for build", "task-name", taskName)
 	return &TaskInfo{
 		Id: taskName,
 	}, nil
