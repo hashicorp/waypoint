@@ -2,6 +2,7 @@ import Button from '@hashicorp/react-button'
 import Card, { CardProps } from 'components/card'
 import Link from 'next/link'
 import InlineSvg from '@hashicorp/react-inline-svg'
+import useWaypointServiceStatus from 'lib/hooks/useWaypointServiceStatus'
 import s from './style.module.css'
 
 interface LinkProps {
@@ -39,6 +40,7 @@ export default function Footer({
   navLinks,
   openConsentManager,
 }: FooterProps) {
+  const waypointServiceOK = useWaypointServiceStatus()
   return (
     <footer className={s.footer}>
       <div className={s.inner}>
@@ -86,10 +88,9 @@ export default function Footer({
           <div className={s.bottomMeta}>
             <InlineSvg src={require('./hashicorp-logo.svg?include')} />
             <p>Waypoint is maintained by HashiCorp, Inc.</p>
-            {/* TODO: COC link */}
-            <Link href="/">
-              <a>View Code of Conduct</a>
-            </Link>
+            <a href="https://github.com/hashicorp/waypoint/blob/main/.github/CODE_OF_CONDUCT.md">
+              View Code of Conduct
+            </a>
           </div>
 
           {navLinks && navLinks.length ? (
@@ -99,10 +100,25 @@ export default function Footer({
                   <FooterLink key={link.text} text={link.text} url={link.url} />
                 )
               })}
+              {waypointServiceOK && (
+                <div className={s.status}>
+                  <Link href="https://status.hashicorp.com">
+                    <a className={s.normal}>All systems normal</a>
+                  </Link>
+                </div>
+              )}
               <button onClick={openConsentManager}>Consent Manager</button>
             </div>
           ) : null}
         </div>
+        {!waypointServiceOK && (
+          <a className={s.statusBanner} href="https://status.hashicorp.com">
+            <span>
+              The Waypoint URL service is currently experiencing an issue. View
+              information on <b>status.hashicorp.com</b>
+            </span>
+          </a>
+        )}
       </div>
     </footer>
   )
