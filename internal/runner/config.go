@@ -16,17 +16,15 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-var (
-	// appConfigRefreshPeriod is the interval between checking for new
-	// config values. In a steady state, configuration NORMALLY doesn't
-	// change so this is set fairly high to avoid unnecessary load on
-	// dynamic config sources.
-	//
-	// NOTE(mitchellh): In the future, we'd like to build a way for
-	// config sources to edge-trigger when changes happen to prevent
-	// this refresh.
-	appConfigRefreshPeriod = 15 * time.Second
-)
+// appConfigRefreshPeriod is the interval between checking for new
+// config values. In a steady state, configuration NORMALLY doesn't
+// change so this is set fairly high to avoid unnecessary load on
+// dynamic config sources.
+//
+// NOTE(mitchellh): In the future, we'd like to build a way for
+// config sources to edge-trigger when changes happen to prevent
+// this refresh.
+var appConfigRefreshPeriod = 15 * time.Second
 
 // watchConfig sits in a goroutine receiving the new configurations from the
 // server.
@@ -205,6 +203,9 @@ func (r *Runner) recvConfig(
 	// On exit, we note that we're no longer connected to the config stream.
 	r.setState(&r.stateConfig, true)
 	defer r.setState(&r.stateConfig, false)
+	// On exit set the Runner state to stateExit to ensure the runner blocking
+	// on waitState is unblocked.
+	// See https://github.com/hashicorp/waypoint/pull/2571 for more information.
 	defer r.setState(&r.stateExit, true)
 
 	for {
