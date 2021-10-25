@@ -2,6 +2,7 @@ import Button from '@hashicorp/react-button'
 import Card, { CardProps } from 'components/card'
 import Link from 'next/link'
 import InlineSvg from '@hashicorp/react-inline-svg'
+import useWaypointServiceStatus from 'lib/hooks/useWaypointServiceStatus'
 import s from './style.module.css'
 
 interface LinkProps {
@@ -15,6 +16,7 @@ interface FooterProps {
   cards?: [CardProps, CardProps] // Require two cards
   navLinks?: Array<LinkProps>
   ctaLinks?: Array<LinkProps>
+  openConsentManager: () => void
 }
 
 function FooterLink({ text, url }) {
@@ -36,7 +38,9 @@ export default function Footer({
   cards,
   ctaLinks,
   navLinks,
+  openConsentManager,
 }: FooterProps) {
+  const waypointServiceOK = useWaypointServiceStatus()
   return (
     <footer className={s.footer}>
       <div className={s.inner}>
@@ -84,10 +88,9 @@ export default function Footer({
           <div className={s.bottomMeta}>
             <InlineSvg src={require('./hashicorp-logo.svg?include')} />
             <p>Waypoint is maintained by HashiCorp, Inc.</p>
-            {/* TODO: COC link */}
-            <Link href="/">
-              <a>View Code of Conduct</a>
-            </Link>
+            <a href="https://github.com/hashicorp/waypoint/blob/main/.github/CODE_OF_CONDUCT.md">
+              View Code of Conduct
+            </a>
           </div>
 
           {navLinks && navLinks.length ? (
@@ -97,28 +100,26 @@ export default function Footer({
                   <FooterLink key={link.text} text={link.text} url={link.url} />
                 )
               })}
+              <button onClick={openConsentManager}>Consent Manager</button>
+              {waypointServiceOK && (
+                <div className={s.status}>
+                  <Link href="https://status.hashicorp.com">
+                    <a className={s.normal}>All systems normal</a>
+                  </Link>
+                </div>
+              )}
             </div>
           ) : null}
         </div>
+        {!waypointServiceOK && (
+          <a className={s.statusBanner} href="https://status.hashicorp.com">
+            <span>
+              The Waypoint URL service is currently experiencing an issue. View
+              information on <b>status.hashicorp.com</b>
+            </span>
+          </a>
+        )}
       </div>
     </footer>
-  )
-}
-
-function RightArrowIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M3.334 10h13.333M11.666 5l5 5-5 5"
-        stroke="#62D4DC"
-        strokeWidth="1.5"
-      />
-    </svg>
   )
 }
