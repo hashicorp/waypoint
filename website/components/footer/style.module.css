@@ -130,4 +130,22 @@
       color: var(--gray-6);
     }
   }
+
+  & button {
+    margin-bottom: 12px;
+    padding: 0;
+    background-color: transparent;
+    border: 0;
+    color: var(--gray-4);
+    transition: color 0.25s ease;
+    cursor: pointer;
+
+    @media (--medium-up) {
+      margin-left: 24px;
+    }
+
+    &:hover {
+      color: var(--gray-6);
+    }
+  }
 }
