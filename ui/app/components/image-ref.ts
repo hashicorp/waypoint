@@ -1,9 +1,7 @@
 import Ember from 'ember';
 import Component from '@glimmer/component';
 import { Ref } from 'docker-parse-image';
-import { action } from '@ember/object';
 import { TaskGenerator, task, timeout } from 'ember-concurrency';
-import { taskFor } from 'ember-concurrency-ts';
 
 type Args = {
   imageRef?: Ref;
