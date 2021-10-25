@@ -1,19 +1,15 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { GetDeploymentRequest, Deployment, Ref, Release, StatusReport } from 'waypoint-pb';
 import { Model as AppRouteModel } from '../app';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
+import { DeploymentExtended, ReleaseExtended } from 'waypoint/services/api';
 
 type Params = { sequence: string };
-export type Model = Deployment.AsObject & WithStatusReport & WithRelease;
-
-interface WithStatusReport {
-  statusReport?: StatusReport.AsObject;
-}
+export type Model = DeploymentExtended & WithRelease;
 
 interface WithRelease {
-  release?: Release.AsObject & WithStatusReport;
+  release?: ReleaseExtended;
 }
 
 export default class DeploymentDetail extends Route {
@@ -32,33 +28,16 @@ export default class DeploymentDetail extends Route {
 
   async model(params: Params): Promise<Model> {
     let { deployments } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
-    let deploymentFromAppRoute = deployments.find((obj) => obj.sequence == Number(params.sequence));
+    let deployment = deployments.find((obj) => obj.sequence == Number(params.sequence));
 
-    if (!deploymentFromAppRoute) {
+    if (!deployment) {
       throw new Error(`Deployment v${params.sequence} not found`);
     }
 
-    let ref = new Ref.Operation();
-    ref.setId(deploymentFromAppRoute.id);
-    let req = new GetDeploymentRequest();
-    req.setRef(ref);
+    let deploymentId = deployment.id;
+    let { releases } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
+    let release = releases.find((r) => r.deploymentId === deploymentId);
 
-    let resp = await this.api.client.getDeployment(req, this.api.WithMeta());
-    let deploy: Deployment = resp;
-    return deploy.toObject();
-  }
-
-  afterModel(model: Model): void {
-    let { releases, statusReports } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
-    let statusReport = statusReports.find((sr) => sr.deploymentId === model.id);
-    let release = releases.find((r) => r.deploymentId === model.id);
-
-    if (release) {
-      let releaseId = release.id;
-      release.statusReport = statusReports.find((sr) => sr.releaseId === releaseId);
-    }
-
-    model.statusReport = statusReport;
-    model.release = release;
+    return { ...deployment, release };
   }
 }

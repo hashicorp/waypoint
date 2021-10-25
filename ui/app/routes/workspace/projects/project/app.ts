@@ -1,7 +1,7 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
-import ApiService from 'waypoint/services/api';
-import { Ref, Deployment, Build, Release, Project, StatusReport, PushedArtifact } from 'waypoint-pb';
+import ApiService, { DeploymentExtended, ReleaseExtended } from 'waypoint/services/api';
+import { Ref, Build, Project, PushedArtifact } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
 import { hash } from 'rsvp';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
@@ -13,15 +13,10 @@ export interface Params {
 export interface Model {
   project: Project.AsObject;
   application: Ref.Application.AsObject;
-  deployments: (Deployment.AsObject & WithStatusReport)[];
-  releases: (Release.AsObject & WithStatusReport)[];
+  deployments: DeploymentExtended[];
+  releases: ReleaseExtended[];
   builds: (Build.AsObject & WithPushedArtifact)[];
   pushedArtifacts: PushedArtifact.AsObject[];
-  statusReports: StatusReport.AsObject[];
-}
-
-interface WithStatusReport {
-  statusReport?: StatusReport.AsObject;
 }
 
 interface WithPushedArtifact {
@@ -63,35 +58,12 @@ export default class App extends Route {
       releases: this.api.listReleases(wsRef, appRef),
       builds: this.api.listBuilds(wsRef, appRef),
       pushedArtifacts: this.api.listPushedArtifacts(wsRef, appRef),
-      statusReports: this.api.listStatusReports(wsRef, appRef),
     });
   }
 
   afterModel(model: Model): void {
-    injectStatusReports(model);
     injectPushedArtifacts(model);
     this.pollModel.setup(this);
-  }
-}
-
-function injectStatusReports(model: Model): void {
-  let { deployments, releases, statusReports } = model;
-
-  for (let statusReport of statusReports) {
-    let statusTime = statusReport.generatedTime?.seconds || 0;
-    if (statusReport.deploymentId) {
-      let deployment = deployments.find((d) => d.id === statusReport.deploymentId);
-      let deploymentTime = deployment?.statusReport?.generatedTime?.seconds || 0;
-      if (deployment && statusTime >= deploymentTime) {
-        deployment.statusReport = statusReport;
-      }
-    } else if (statusReport.releaseId) {
-      let release = releases.find((d) => d.id === statusReport.releaseId);
-      let releaseTime = release?.statusReport?.generatedTime?.seconds || 0;
-      if (release && statusTime >= releaseTime) {
-        release.statusReport = statusReport;
-      }
-    }
   }
 }
 

@@ -10,13 +10,7 @@ import {
   Job,
   ListBuildsRequest,
   ListBuildsResponse,
-  ListDeploymentsRequest,
-  ListDeploymentsResponse,
   ListPushedArtifactsRequest,
-  ListReleasesRequest,
-  ListReleasesResponse,
-  ListStatusReportsRequest,
-  ListStatusReportsResponse,
   OperationOrder,
   Project,
   PushedArtifact,
@@ -26,6 +20,7 @@ import {
   StatusReport,
   UpsertProjectRequest,
   Variable,
+  UI,
 } from 'waypoint-pb';
 import { Metadata } from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
@@ -39,6 +34,20 @@ const protocolVersions = {
   // later used to identify different versions of the UI
   // todo: policy for when we change this..
   'client-version': 'ui-0.0.1',
+};
+
+// This is an adapter type. It exists to let us transition to
+// UI.DeploymentBundle incrementally.
+export type DeploymentExtended = Deployment.AsObject & {
+  statusReport?: StatusReport.AsObject;
+  pushedArtifact?: PushedArtifact.AsObject;
+};
+
+// This is an adapter type. It exists to let us transition to
+// UI.ReleaseBundle incrementally.
+export type ReleaseExtended = Release.AsObject & {
+  statusReport?: StatusReport.AsObject;
+  pushedArtifact?: PushedArtifact.AsObject;
 };
 
 export default class ApiService extends Service {
@@ -63,8 +72,8 @@ export default class ApiService extends Service {
     }
   }
 
-  async listDeployments(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<Deployment.AsObject[]> {
-    let req = new ListDeploymentsRequest();
+  async listDeployments(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<DeploymentExtended[]> {
+    let req = new UI.ListDeploymentsRequest();
     req.setWorkspace(wsRef);
     req.setApplication(appRef);
 
@@ -72,9 +81,24 @@ export default class ApiService extends Service {
     order.setDesc(true);
     req.setOrder(order);
 
-    let resp: ListDeploymentsResponse = await this.client.listDeployments(req, this.WithMeta());
+    let resp = await this.client.uI_ListDeployments(req, this.WithMeta());
 
-    return resp.getDeploymentsList().map((d) => d.toObject());
+    // The following is “adapter” logic. It reshapes UI.DeploymentBundle to work
+    // with existing app code so that we can incrementally migrate to
+    // UI.DeploymentBundle.
+    return resp
+      .getDeploymentsList()
+      .map((bundle) => bundle.toObject())
+      .filter(has('deployment'))
+      .map((bundle) => ({
+        ...bundle.deployment,
+        preload: {
+          ...bundle.deployment.preload,
+          deployUrl: bundle.deployUrl,
+        },
+        statusReport: bundle.latestStatusReport,
+        pushedArtifact: bundle.artifact,
+      }));
   }
 
   async listBuilds(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<Build.AsObject[]> {
@@ -117,8 +141,8 @@ export default class ApiService extends Service {
     return result;
   }
 
-  async listReleases(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<Release.AsObject[]> {
-    let req = new ListReleasesRequest();
+  async listReleases(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<ReleaseExtended[]> {
+    let req = new UI.ListReleasesRequest();
     req.setWorkspace(wsRef);
     req.setApplication(appRef);
 
@@ -127,23 +151,19 @@ export default class ApiService extends Service {
     order.setDesc(true);
     req.setOrder(order);
 
-    let resp: ListReleasesResponse = await this.client.listReleases(req, this.WithMeta());
+    let resp = await this.client.uI_ListReleases(req, this.WithMeta());
 
-    return resp.getReleasesList().map((d) => d.toObject());
-  }
-
-  async listStatusReports(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<StatusReport.AsObject[]> {
-    let req = new ListStatusReportsRequest();
-    req.setWorkspace(wsRef);
-    req.setApplication(appRef);
-
-    let order = new OperationOrder();
-    order.setDesc(true);
-    req.setOrder(order);
-
-    let resp: ListStatusReportsResponse = await this.client.listStatusReports(req, this.WithMeta());
-
-    return resp.getStatusReportsList().map((d) => d.toObject());
+    // The following is “adapter” logic. It reshapes UI.ReleaseBundle to work
+    // with existing app code so that we can incrementally migrate to
+    // UI.ReleaseBundle.
+    return resp
+      .getReleasesList()
+      .map((bundle) => bundle.toObject())
+      .filter(has('release'))
+      .map((bundle) => ({
+        ...bundle.release,
+        statusReport: bundle.latestStatusReport,
+      }));
   }
 
   async getLatestStatusReport(
@@ -324,4 +344,26 @@ function applicationFromObject(object: Application.AsObject): Application {
   }
 
   return result;
+}
+
+/**
+ * Takes a string k and returns a type guard that ensures that, for a given
+ * object o, o[k] !== undefined;
+ *
+ * Useful when working with Array.filter, for which automatic type narrowing is
+ * not yet supported.
+ *
+ * @example
+ * ```
+ * let a: { name?: string }[] = [{ name: 'Alice' }, {}];
+ * let b: { name: string }[] = a.filter(has('name'));
+ * ```
+ *
+ * @param key - the property we want to ensure is present
+ * @returns type guard
+ */
+function has<T, K extends keyof T>(key: K): (obj: T) => obj is T & Required<Pick<T, K>> {
+  return function (obj): obj is T & Required<Pick<T, K>> {
+    return !!obj[key];
+  };
 }
