@@ -1023,7 +1023,6 @@ func (i *NomadInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	if v := i.config.nomadHost; v != "" {
 		cfgMap["nomad_host"] = v
 	}
-	// TODO more configs?
 
 	// Marshal our config
 	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
