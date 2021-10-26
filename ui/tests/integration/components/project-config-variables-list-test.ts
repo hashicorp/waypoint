@@ -121,9 +121,7 @@ module('Integration | Component | project-config-variables-list', function (hook
   test('renaming variables works', async function (assert) {
     let dbproj = await this.server.create('project', { name: 'Proj1' });
     let proj = dbproj.toProtobuf().toObject();
-    let dbVariablesList = this.server.createList('config-variable', 3, 'random', { project: dbproj });
-    let dynamicVar = this.server.create('config-variable', 'dynamic', { project: dbproj });
-    dbVariablesList.push(dynamicVar);
+    let dbVariablesList = this.server.createList('config-variable', 4, 'random', { project: dbproj });
     let varList = dbVariablesList.map((v) => {
       return v.toProtobuf().toObject();
     });
@@ -137,7 +135,6 @@ module('Integration | Component | project-config-variables-list', function (hook
     await page.variablesList.objectAt(0).dropdownEdit();
     await page.varName('edited_var_name');
     await page.saveButton();
-    await page.variablesList.objectAt(1).dropdown();
     assert.equal(
       page.variablesList.length,
       4,
