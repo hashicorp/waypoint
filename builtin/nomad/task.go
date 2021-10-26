@@ -92,25 +92,26 @@ task {
 	doc.SetField(
 		"region",
 		"The Nomad region to deploy the job to.",
-		docs.Default("global"),
+		docs.Default(defaultODRRegion),
 	)
 
 	doc.SetField(
 		"datacenter",
 		"The Nomad datacenter to deploy the job to.",
-		docs.Default("dc1"),
+		docs.Default(defaultODRDatacenter),
 	)
 
 	doc.SetField(
 		"namespace",
 		"The Nomad namespace to deploy the job to.",
+		docs.Default(defaultODRNamespace),
 	)
 
 	doc.SetField(
 		"resources_cpu",
 		"Amount of CPU in MHz to allocate to this task. This can be overriden with "+
 			"the '-nomad-runner-memory' flag on server install.",
-		docs.Default("200"),
+		docs.Default(defaultODRCPU),
 	)
 
 	doc.SetField(
