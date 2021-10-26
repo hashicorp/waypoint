@@ -2,6 +2,7 @@ package state
 
 import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 var releaseOp = &appOperation{
@@ -30,9 +31,9 @@ func (s *State) ReleaseGet(ref *pb.Ref_Operation) (*pb.Release, error) {
 
 func (s *State) ReleaseList(
 	ref *pb.Ref_Application,
-	opts ...ListOperationOption,
+	opts ...serverstate.ListOperationOption,
 ) ([]*pb.Release, error) {
-	raw, err := releaseOp.List(s, buildListOperationsOptions(ref, opts...))
+	raw, err := releaseOp.List(s, serverstate.BuildListOperationsOptions(ref, opts...))
 	if err != nil {
 		return nil, err
 	}

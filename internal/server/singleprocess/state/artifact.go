@@ -2,6 +2,7 @@ package state
 
 import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 var artifactOp = &appOperation{
@@ -30,9 +31,9 @@ func (s *State) ArtifactGet(ref *pb.Ref_Operation) (*pb.PushedArtifact, error) {
 
 func (s *State) ArtifactList(
 	ref *pb.Ref_Application,
-	opts ...ListOperationOption,
+	opts ...serverstate.ListOperationOption,
 ) ([]*pb.PushedArtifact, error) {
-	raw, err := artifactOp.List(s, buildListOperationsOptions(ref, opts...))
+	raw, err := artifactOp.List(s, serverstate.BuildListOperationsOptions(ref, opts...))
 	if err != nil {
 		return nil, err
 	}

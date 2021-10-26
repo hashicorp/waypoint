@@ -13,13 +13,14 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 // service implements the gRPC service for the server.
 type service struct {
 	// state is the state management interface that provides functions for
 	// safely mutating server state.
-	state *state.State
+	state serverstate.Interface
 
 	// id is our unique server ID.
 	id string
