@@ -59,6 +59,8 @@ var (
 	defaultCSIVolumeCapacityMax = int64(2147483648)
 
 	defaultCSIVolumeMountFS = "xfs"
+
+	defaultConsulServiceTag = "waypoint"
 )
 
 // Install is a method of NomadInstaller and implements the Installer interface to
@@ -219,11 +221,20 @@ func (i *NomadInstaller) Install(
 	s.Update("Waypoint server ready")
 	s.Done()
 
-	ui.Output(
-		"WARNING - the Waypoint server running on Nomad is being accessed via its allocation IP and port.\n"+
-			"This could change in the future if Nomad creates a new allocation for the Waypoint server, \n"+
-			"which would break all existing Waypoint contexts.", terminal.WithWarningStyle(),
-	)
+	if i.config.consulService {
+		s = sg.Add("The CLI has been configured to automatically install a Consul service for\n" +
+			"the Waypoint service backend and ui service in Nomad.")
+		s.Done()
+	}
+
+	s = sg.Add(
+		" Waypoint server running on Nomad is being accessed via its allocation IP and port.\n" +
+			"This could change in the future if Nomad creates a new allocation for the Waypoint server,\n" +
+			"which would break all existing Waypoint contexts.\n\n" +
+			"It is recommended to use Consul for determining Waypoint servers IP running on Nomad rather than\n" +
+			"relying on the static IP that is initially set up for this allocation.")
+	s.Status(terminal.StatusWarn)
+	s.Done()
 
 	return &InstallResults{
 		Context:       &clicfg,
@@ -999,19 +1010,21 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Name:    "nomad-consul-service",
 		Target:  &i.config.consulService,
 		Usage:   "Create service for Waypoint UI in Consul.",
-		Default: false,
+		Default: true,
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
-		Name:   "nomad-consul-service-ui-tags",
-		Target: &i.config.consulServiceUITags,
-		Usage:  "Tags for the Waypoint UI service generated in Consul.",
+		Name:    "nomad-consul-service-ui-tags",
+		Target:  &i.config.consulServiceUITags,
+		Usage:   "Tags for the Waypoint UI service generated in Consul.",
+		Default: []string{defaultConsulServiceTag},
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
-		Name:   "nomad-consul-service-backend-tags",
-		Target: &i.config.consulServiceBackendTags,
-		Usage:  "Tags for the Waypoint backend service generated in Consul.",
+		Name:    "nomad-consul-service-backend-tags",
+		Target:  &i.config.consulServiceBackendTags,
+		Usage:   "Tags for the Waypoint backend service generated in Consul.",
+		Default: []string{defaultConsulServiceTag},
 	})
 
 	set.StringVar(&flag.StringVar{
