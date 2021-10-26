@@ -1,0 +1,4 @@
+```release-note:feature
+plugin/nomad: Introduce Nomad On-Demand Runner support for Waypoint server. Launch
+tasks to build containers in short lived runners.
+```
