@@ -38,6 +38,11 @@ The Nomad namespace to deploy the job to.
 - Type: **string**
 - **Optional**
 
+#### nomad_host
+
+- Type: **string**
+- **Optional**
+
 #### region
 
 The Nomad region to deploy the job to.
@@ -48,7 +53,7 @@ The Nomad region to deploy the job to.
 
 #### resources_cpu
 
-Amount of CPU in MHz to allocate to this task.
+Amount of CPU in MHz to allocate to this task. This can be overriden with the '-nomad-runner-memory' flag on server install.
 
 - Type: **string**
 - **Optional**
@@ -56,11 +61,11 @@ Amount of CPU in MHz to allocate to this task.
 
 #### resources_memory
 
-Amount of memory in MB to allocate to this task.
+Amount of memory in MB to allocate to this task. This can be overriden with the '-nomad-runner-memory' flag on server install.
 
 - Type: **string**
 - **Optional**
-- Default: 600
+- Default: 2000
 
 ### Output Attributes
 
