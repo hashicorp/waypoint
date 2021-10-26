@@ -481,7 +481,7 @@ func TestApplicationPollHandler(t *testing.T) {
 			},
 			StatusReportPoll: &pb.Project_AppStatusPoll{
 				Enabled:  false,
-				Interval: "15ms",
+				Interval: "30ms",
 			},
 			Applications: []*pb.Application{
 				{
@@ -522,7 +522,8 @@ func TestApplicationPollHandler(t *testing.T) {
 
 	// Update the app to start polling
 	project.StatusReportPoll = &pb.Project_AppStatusPoll{
-		Enabled: true,
+		Enabled:  true,
+		Interval: "30ms",
 	}
 	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 		Project: project,
