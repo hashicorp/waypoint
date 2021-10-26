@@ -56,6 +56,8 @@ type nomadConfig struct {
 	csiVolumeCapacityMin int64  `hcl:"csi_volume_capacity_min,optional"`
 	csiVolumeCapacityMax int64  `hcl:"csi_volume_capacity_max,optional"`
 	csiFS                string `hcl:"csi_fs,optional"`
+
+	nomadHost string `hcl:"nomad_host,optional"`
 }
 
 var (
@@ -78,6 +80,8 @@ var (
 	waypointConsulUIName          = "waypoint-ui"
 	defaultWaypointConsulHostname = fmt.Sprintf("%s.%s.service.%s.%s",
 		defaultConsulServiceTag, waypointConsulBackendName, defaultConsulDatacenter, defaultConsulDomain)
+
+	defaultNomadHost = "http://localhost:4646"
 )
 
 // Install is a method of NomadInstaller and implements the Installer interface to
@@ -952,6 +956,13 @@ func waypointRunnerNomadJob(c nomadConfig, opts *InstallRunnerOpts) *api.Job {
 		value := line[idx+1:]
 		task.Env[key] = value
 	}
+
+	// Let the runner know about the Nomad IP
+	if c.nomadHost == "" {
+		c.nomadHost = defaultNomadHost
+	}
+	task.Env["NOMAD_ADDR"] = c.nomadHost
+
 	tg.AddTask(task)
 
 	return job
@@ -1009,6 +1020,9 @@ func (i *NomadInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	if v := i.config.region; v != "" {
 		cfgMap["region"] = v
 	}
+	if v := i.config.nomadHost; v != "" {
+		cfgMap["nomad_host"] = v
+	}
 	// TODO more configs?
 
 	// Marshal our config
@@ -1049,6 +1063,13 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.config.datacenters,
 		Default: []string{"dc1"},
 		Usage:   "Datacenters to install to for Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-host",
+		Target:  &i.config.nomadHost,
+		Default: "http://localhost:4646",
+		Usage:   "Hostname of the Nomad server to use, like for launching on-demand tasks.",
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -1212,6 +1233,13 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Target:  &i.config.datacenters,
 		Default: []string{"dc1"},
 		Usage:   "Datacenters to install to for Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-host",
+		Target:  &i.config.nomadHost,
+		Default: "http://localhost:4646",
+		Usage:   "Hostname of the Nomad server to use, like for launching on-demand tasks.",
 	})
 
 	set.StringVar(&flag.StringVar{
