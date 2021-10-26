@@ -2,6 +2,7 @@ package serverstate
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/hashicorp/go-memdb"
@@ -16,6 +17,8 @@ import (
 // anytime we want or find it convenient, but we have to make sure so simultaneously
 // modify all our implementations.
 type Interface interface {
+	io.Closer
+
 	HMACKeyEmpty() bool
 	HMACKeyCreateIfNotExist(id string, size int) (*pb.HMACKey, error)
 	HMACKeyGet(id string) (*pb.HMACKey, error)
@@ -49,6 +52,12 @@ type Interface interface {
 	OnDemandRunnerConfigList() ([]*pb.OnDemandRunnerConfig, error)
 	OnDemandRunnerConfigDefault() ([]*pb.Ref_OnDemandRunnerConfig, error)
 
+	ServerURLTokenSet(string) error
+	ServerURLTokenGet() (string, error)
+
+	CreateSnapshot(io.Writer) error
+	StageRestoreSnapshot(io.Reader) error
+
 	//---------------------------------------------------------------
 	// Config (App, Runner, etc.)
 
@@ -71,6 +80,11 @@ type Interface interface {
 
 	//---------------------------------------------------------------
 	// Projects, Apps, Workspaces
+
+	WorkspaceList() ([]*pb.Workspace, error)
+	WorkspaceListByProject(*pb.Ref_Project) ([]*pb.Workspace, error)
+	WorkspaceListByApp(*pb.Ref_Application) ([]*pb.Workspace, error)
+	WorkspaceGet(string) (*pb.Workspace, error)
 
 	ProjectPut(*pb.Project) error
 	ProjectGet(*pb.Ref_Project) (*pb.Project, error)
