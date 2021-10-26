@@ -32,6 +32,20 @@ func (p *TaskLauncher) StopTaskFunc() interface{} {
 	return p.StopTask
 }
 
+const (
+	// Build plugins like pack require a decemt amount of memory to build
+	// an artifact. This default may seem large, but if we used the default
+	// static runner default of 600 MB, it would OOM on a small Go app when
+	// buildpack attempts to finish up its build. 2GB was choosen to be a little
+	// more than what it might need so that Nomad doesn't OOM the task
+	defaultODRMemory = "2000" // in mb
+	defaultODRCPU    = "200"  // in mhz
+
+	defaultODRRegion     = "global"
+	defaultODRDatacenter = "dc1"
+	defaultODRNamespace  = "default"
+)
+
 // TaskLauncherConfig is the configuration structure for the task plugin.
 type TaskLauncherConfig struct {
 	// The Datacenter the runner should be created and run in
@@ -89,14 +103,16 @@ task {
 
 	doc.SetField(
 		"resources_cpu",
-		"Amount of CPU in MHz to allocate to this task",
+		"Amount of CPU in MHz to allocate to this task. This can be overriden with "+
+			"the '-nomad-runner-memory' flag on server install.",
 		docs.Default("200"),
 	)
 
 	doc.SetField(
 		"resources_memory",
-		"Amount of memory in MB to allocate to this task.",
-		docs.Default("600"),
+		"Amount of memory in MB to allocate to this task. This can be overriden with "+
+			"the '-nomad-runner-memory' flag on server install.",
+		docs.Default(defaultODRMemory),
 	)
 
 	return doc, nil
@@ -146,19 +162,19 @@ func (p *TaskLauncher) StartTask(
 
 	// Set some defaults
 	if p.config.Region == "" {
-		p.config.Region = "global"
+		p.config.Region = defaultODRRegion
 	}
 	if p.config.Datacenter == "" {
-		p.config.Region = "dc1"
+		p.config.Datacenter = defaultODRDatacenter
 	}
 	if p.config.Namespace == "" {
-		p.config.Namespace = "default"
+		p.config.Namespace = defaultODRNamespace
 	}
 	if p.config.Memory != "" {
-		p.config.Memory = "600"
+		p.config.Memory = defaultODRMemory
 	}
 	if p.config.CPU != "" {
-		p.config.CPU = "200"
+		p.config.CPU = defaultODRCPU
 	}
 
 	log.Trace("creating Nomad job for task")
