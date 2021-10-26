@@ -44,6 +44,8 @@ const (
 	defaultODRRegion     = "global"
 	defaultODRDatacenter = "dc1"
 	defaultODRNamespace  = "default"
+
+	defaultNomadHost = "http://localhost:4646"
 )
 
 // TaskLauncherConfig is the configuration structure for the task plugin.
@@ -60,6 +62,9 @@ type TaskLauncherConfig struct {
 	// Resource request limits for an on-demand runner
 	Memory string `hcl:"resources_memory,optional"`
 	CPU    string `hcl:"resources_cpu,optional"`
+
+	// The host to connect to for making Nomad API requests
+	NomadHost string `hcl:"nomad_host,optional"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -176,6 +181,9 @@ func (p *TaskLauncher) StartTask(
 	if p.config.CPU != "" {
 		p.config.CPU = defaultODRCPU
 	}
+	if p.config.NomadHost == "" {
+		p.config.NomadHost = defaultNomadHost
+	}
 
 	log.Trace("creating Nomad job for task")
 	jobclient := client.Jobs()
@@ -213,16 +221,21 @@ func (p *TaskLauncher) StartTask(
 	for k, v := range tli.EnvironmentVariables {
 		env[k] = v
 	}
+	task.Env = env
+
+	// Let the on-demand runner know about the Nomad IP
+	task.Env["NOMAD_ADDR"] = p.config.NomadHost
 
 	job.TaskGroups[0].Tasks[0].Env = env
 
+	// On-Demand runner specific configuration to start the task with
 	config := map[string]interface{}{
 		"image":   tli.OciUrl,
 		"args":    tli.Arguments,
 		"command": tli.Entrypoint,
 	}
 
-	// TODO set auth here for pulling ODR image? not needed? we don't do it on install
+	// TODO: Configure the nomad client to use docker auth?
 	//if p.config.Auth != nil {
 	//	config["auth"] = map[string]interface{}{
 	//		"username": p.config.Auth.Username,
@@ -232,17 +245,12 @@ func (p *TaskLauncher) StartTask(
 
 	job.TaskGroups[0].Tasks[0].Config = config
 
-	log.Debug("registering on-demand task job %q...", taskName)
+	log.Debug("registering on-demand task job", "task-name", taskName)
 	_, _, err = jobclient.Register(job, nil)
 	if err != nil {
 		log.Debug("failed to register job to nomad")
 		return nil, err
 	}
-
-	// TODO: wait for allocation to be scheduled
-	//log.Debug("waiting for allocation to be scheduled...")
-	// Wait on the allocation
-	//evalID := regResult.EvalID
 
 	log.Debug("finished launching on-demand task for build", "task-name", taskName)
 	return &TaskInfo{
