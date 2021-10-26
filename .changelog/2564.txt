@@ -1,0 +1,3 @@
+```release-note:bug
+cli: `waypoint status` and `waypoint status -app` no longer display destroyed deployments
+```
