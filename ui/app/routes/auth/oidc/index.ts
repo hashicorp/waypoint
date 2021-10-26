@@ -19,12 +19,14 @@ export default class AuthOIDCRedirect extends Route {
     authMethodrequest.setAuthMethod(authMethodRef);
     let authMethod = await this.api.client.getAuthMethod(authMethodrequest, this.api.WithMeta());
     urlRequest.setAuthMethod(authMethodRef);
-    // todo: generate nonce and add to the url as param
+    let randomArray = new Uint32Array(10);
+    window.crypto.getRandomValues(randomArray);
+    let nonce = randomArray.join('').slice(0, 20);
+    urlRequest.setNonce(nonce);
+    window.localStorage.setItem('waypointOIDCNonce', nonce);
     let redirectUri = `${window.location.origin}/auth/${params.provider_name}/oidc-redirect`;
     urlRequest.setRedirectUri(redirectUri);
     let authUrl = await this.api.client.getOIDCAuthURL(urlRequest, this.api.WithMeta());
-    window.open(authUrl.getUrl());
-    console.log(params);
-    return authMethod.toObject();
+    window.location.replace(authUrl.getUrl());
   }
 }

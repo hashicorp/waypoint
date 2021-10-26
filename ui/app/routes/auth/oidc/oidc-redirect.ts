@@ -2,13 +2,14 @@ import { CompleteOIDCAuthRequest, Ref } from 'waypoint-pb';
 
 import ApiService from 'waypoint/services/api';
 import Route from '@ember/routing/route';
+import RouterService from '@ember/routing/router-service';
 import SessionService from 'waypoint/services/session';
 import { inject as service } from '@ember/service';
 
 export default class AuthOIDCRedirect extends Route {
   @service session!: SessionService;
   @service api!: ApiService;
-
+  @service router!: RouterService;
 
   async model(params) {
     let oidcParams = this.paramsFor('auth.oidc');
@@ -21,14 +22,15 @@ export default class AuthOIDCRedirect extends Route {
     authMethodRef.setName(oidcParams.provider_name);
     completeAuthRequest.setAuthMethod(authMethodRef);
     completeAuthRequest.setRedirectUri(window.location.origin + window.location.pathname);
-    let randomArray = new Uint32Array(10);
-    window.crypto.getRandomValues(randomArray);
-    let nonce = randomArray.join('').slice(0, 20);
+    let nonce = window.localStorage.getItem('waypointOIDCNonce');
     console.log(nonce);
     completeAuthRequest.setNonce(nonce);
     completeAuthRequest.setState(params.state);
     let resp = await this.api.client.completeOIDCAuth(completeAuthRequest, this.api.WithMeta());
-    console.log(resp.toObject());
+    let respObject = resp.toObject();
+    console.log(respObject);
+    this.session.setToken(respObject.token);
+    this.router.transitionTo('workspaces');
   }
 
   // example query params:
