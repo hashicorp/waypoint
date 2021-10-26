@@ -1,6 +1,6 @@
 import { clickable, collection, create, fillable, isPresent, text } from 'ember-cli-page-object';
 import { module, test } from 'qunit';
-import { render, settled } from '@ember/test-helpers';
+import { render } from '@ember/test-helpers';
 
 import { TestContext } from 'ember-test-helpers';
 import hbs from 'htmlbars-inline-precompile';
@@ -137,8 +137,6 @@ module('Integration | Component | project-config-variables-list', function (hook
     await page.variablesList.objectAt(0).dropdownEdit();
     await page.varName('edited_var_name');
     await page.saveButton();
-    // Necessary to wait for the next request after save
-    await settled();
     await page.variablesList.objectAt(1).dropdown();
     assert.equal(
       page.variablesList.length,
