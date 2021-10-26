@@ -39,6 +39,16 @@ type Interface interface {
 	AuthMethodDelete(*pb.Ref_AuthMethod) error
 	AuthMethodList() ([]*pb.AuthMethod, error)
 
+	RunnerCreate(*pb.Runner) error
+	RunnerDelete(string) error
+	RunnerById(string) (*pb.Runner, error)
+
+	OnDemandRunnerConfigPut(*pb.OnDemandRunnerConfig) error
+	OnDemandRunnerConfigGet(*pb.Ref_OnDemandRunnerConfig) (*pb.OnDemandRunnerConfig, error)
+	OnDemandRunnerConfigDelete(*pb.Ref_OnDemandRunnerConfig) error
+	OnDemandRunnerConfigList() ([]*pb.OnDemandRunnerConfig, error)
+	OnDemandRunnerConfigDefault() ([]*pb.Ref_OnDemandRunnerConfig, error)
+
 	//---------------------------------------------------------------
 	// Config (App, Runner, etc.)
 
@@ -58,6 +68,7 @@ type Interface interface {
 	InstanceById(string) (*Instance, error)
 	InstanceByIdWaiting(context.Context, string) (*Instance, error)
 	InstancesByApp(*pb.Ref_Application, *pb.Ref_Workspace, memdb.WatchSet) ([]*Instance, error)
+	InstancesByDeployment(string, memdb.WatchSet) ([]*Instance, error)
 
 	//---------------------------------------------------------------
 	// Projects, Apps, Workspaces
@@ -109,4 +120,21 @@ type Interface interface {
 		func(*pb.StatusReport) (bool, error),
 	) (*pb.StatusReport, error)
 	StatusReportList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.StatusReport, error)
+
+	//---------------------------------------------------------------
+	// Job System
+
+	JobCreate(...*pb.Job) error
+	JobList() ([]*pb.Job, error)
+	JobById(string, memdb.WatchSet) (*Job, error)
+	JobPeekForRunner(context.Context, *pb.Runner) (*Job, error)
+	JobAssignForRunner(context.Context, *pb.Runner, bool, bool) (*Job, error)
+	JobAck(string, bool) (*Job, error)
+	JobUpdateRef(string, *pb.Job_DataSource_Ref) error
+	JobUpdate(string, func(*pb.Job) error) error
+	JobComplete(string, *pb.Job_Result, error) error
+	JobCancel(string, bool) error
+	JobHeartbeat(string) error
+	JobExpire(string) error
+	JobIsAssignable(context.Context, *pb.Job) (bool, error)
 }
