@@ -91,26 +91,26 @@ task {
 
 	doc.SetField(
 		"region",
-		"The Nomad region to deploy the job to.",
+		"The Nomad region to deploy the on-demand runner task to.",
 		docs.Default(defaultODRRegion),
 	)
 
 	doc.SetField(
 		"datacenter",
-		"The Nomad datacenter to deploy the job to.",
+		"The Nomad datacenter to deploy the on-demand runner task to.",
 		docs.Default(defaultODRDatacenter),
 	)
 
 	doc.SetField(
 		"namespace",
-		"The Nomad namespace to deploy the job to.",
+		"The Nomad namespace to deploy the on-demand runner task to.",
 		docs.Default(defaultODRNamespace),
 	)
 
 	doc.SetField(
 		"resources_cpu",
 		"Amount of CPU in MHz to allocate to this task. This can be overriden with "+
-			"the '-nomad-runner-memory' flag on server install.",
+			"the '-nomad-runner-cpu' flag on server install.",
 		docs.Default(defaultODRCPU),
 	)
 
@@ -119,6 +119,12 @@ task {
 		"Amount of memory in MB to allocate to this task. This can be overriden with "+
 			"the '-nomad-runner-memory' flag on server install.",
 		docs.Default(defaultODRMemory),
+	)
+
+	doc.SetField(
+		"nomad_host",
+		"Hostname of the Nomad server to use for launching on-demand tasks.",
+		docs.Default(defaultNomadHost),
 	)
 
 	return doc, nil
@@ -235,14 +241,6 @@ func (p *TaskLauncher) StartTask(
 		"args":    tli.Arguments,
 		"command": tli.Entrypoint,
 	}
-
-	// TODO: Configure the nomad client to use docker auth?
-	//if p.config.Auth != nil {
-	//	config["auth"] = map[string]interface{}{
-	//		"username": p.config.Auth.Username,
-	//		"password": p.config.Auth.Password,
-	//	}
-	//}
 
 	job.TaskGroups[0].Tasks[0].Config = config
 
