@@ -1,10 +1,8 @@
 {{page-title (concat "Release" " v" @model.sequence)}}
 
 {{#if (not-eq this.target.currentRouteName "workspace.projects.project.app.release.resource")}}
-  <PageHeader @iconName="public-default">
-    <div class="title">
-      {{! TODO(jgwhite): Make this a real <h1> }}
-      <h2 aria-level="1"><b class="badge badge--version">v{{@model.sequence}}</b></h2>
+  <PanelHeader @artifact="release" @sequence={{@model.sequence}}>
+    <:title>
       <small>
         <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
         <span>Released on <b>{{component-name @model.component.name}}</b>
@@ -15,16 +13,16 @@
           <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
         </small>
       {{/if}}
-    </div>
-    <div class="actions">
+    </:title>
+    <:actions>
       {{#if @isLatest}}
-      <button class="button button--primary" type="button">
-        <span>{{@model.release.url}}</span>
-        <Pds::Icon @type="exit" class="icon" />
-      </button>
+        <button class="button button--primary" type="button">
+          <span>{{@model.release.url}}</span>
+          <Pds::Icon @type="exit" class="icon" />
+        </button>
       {{/if}}
-    </div>
-  </PageHeader>
+    </:actions>
+  </PanelHeader>
 
   <StatusReportBar @model={{@model}} @artifactType="Release">
     {{!-- todo(pearkes): API doesn't return this object but just a string of it, so wait for that to be fixed --}}

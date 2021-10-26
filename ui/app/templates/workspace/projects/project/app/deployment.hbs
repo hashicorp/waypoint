@@ -1,18 +1,15 @@
 {{page-title (concat "Deployment" " v" @model.sequence)}}
 
 {{#if (not-eq this.target.currentRouteName "workspace.projects.project.app.deployment.resource")}}
-  <PageHeader>
-    <div class="title">
-      <div class="details-page-header">Deployment </div>
-      <h1><b class="badge badge--version">v{{@model.sequence}}</b></h1>
-      
+  <PanelHeader @artifact="deployment" @sequence={{@model.sequence}}>
+    <:title>
       {{#if @model.preload.jobDataSourceRef.git.commit}}
         <small>
           <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
         </small>
       {{/if}}
-    </div>
-    <div class="actions">
+    </:title>
+    <:actions>
       <div class="button-group">
         <ExternalLink
           href={{enforce-protocol @model.preload.deployUrl}}
@@ -22,8 +19,8 @@
         </ExternalLink>
         <Actions::Release @sequence={{@model.sequence}} />
       </div>
-    </div>
-  </PageHeader>
+    </:actions>
+  </PanelHeader>
 
   <Section @isExpandable={{false}}>
     <:heading>{{t "page.deployment.overview.heading"}}</:heading>

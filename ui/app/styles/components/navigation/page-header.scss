@@ -18,15 +18,6 @@
     min-height: 76px;
     max-width: 100%;
 
-    .details-page-header {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      font-size: 0.9em;
-      font-weight: 400;
-      color: rgb(var(--text-muted));
-    }
-
     h1,
     h2 {
       margin: 0;
@@ -38,13 +29,6 @@
         font-size: 1em;
         font-weight: 600;
         margin: scale.$sm-2 0 scale.$sm-4;
-      }
-
-      .badge {
-        font-size: 1rem;
-        position: relative;
-        top: -2px;
-        margin-right: scale.$sm-4;
       }
     }
 
@@ -65,58 +49,5 @@
 
   &.projects-header {
     margin-top: scale.$lg-4;
-  }
-
-  .actions {
-    position: relative;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    max-width: 100%;
-    margin: scale.$sm-4 0;
-
-    .button-group {
-      display: flex;
-      max-width: 100%;
-
-      .button:first-child {
-        flex-shrink: 1;
-        overflow: hidden;
-      }
-    }
-
-    .button {
-      margin: scale.$sm-3 0;
-
-      span {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        min-width: 0;
-      }
-
-      & + .button {
-        margin-left: scale.$base;
-      }
-    }
-
-    .first-run-hint {
-      p {
-        color: rgb(var(--text-muted));
-        @include Typography.Interface(S);
-        display: inline-block;
-        margin-right: scale.$sm-2;
-      }
-
-      .copyable-code {
-        margin: scale.$sm-2 0;
-
-        code {
-          display: inline-flex;
-          font-size: 11px;
-          flex-shrink: 0;
-        }
-      }
-    }
   }
 }

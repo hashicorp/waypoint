@@ -1,0 +1,20 @@
+{{#let
+  (hash
+    title=(or
+      (and (eq @artifact "deployment") "Deployment")
+      (and (eq @artifact "build") "Build")
+      (and (eq @artifact "release") "Release")
+    )
+  )
+  as |vars|
+}}
+<header class="panel-header {{@className}}">
+  <div class="title">
+    <h1>{{vars.title}} <b class="badge badge--version">v{{@sequence}}</b></h1>
+    {{yield to="title"}}
+  </div>
+  <div class="actions">
+    {{yield to="actions"}}
+  </div>
+</header>
+{{/let}}

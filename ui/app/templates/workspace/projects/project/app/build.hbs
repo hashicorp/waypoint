@@ -1,11 +1,8 @@
 {{page-title (concat "Build" " v" @model.sequence)}}
 
 {{#let (or @model.pushedArtifact @model) as |operation|}}
-  <PageHeader @iconName="build">
-    <div class="title">
-      <h2>
-        <b class="badge badge--version">v{{@model.sequence}}</b>
-      </h2>
+  <PanelHeader @artifact="build" @sequence={{@model.sequence}}>
+    <:title>
       <small>
         <Pds::Icon
           @type={{icon-for-component operation.component.name}}
@@ -28,11 +25,11 @@
           <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
         </small>
       {{/if}}
-    </div>
-    <div class="actions">
+    </:title>
+    <:actions>
       <Actions::Deploy @sequence={{@model.sequence}} />
-    </div>
-  </PageHeader>
+    </:actions>
+  </PanelHeader>
 
   <div class="status-row">
     <div class="item">
