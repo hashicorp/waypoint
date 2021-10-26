@@ -1,7 +1,9 @@
 import Service from '@ember/service';
+import { DEBUG } from '@glimmer/env';
 import { WaypointClient } from 'waypoint-client';
 import SessionService from 'waypoint/services/session';
 import { inject as service } from '@ember/service';
+import { buildWaiter } from '@ember/test-waiters';
 import {
   Application,
   Build,
@@ -22,9 +24,14 @@ import {
   Variable,
   UI,
 } from 'waypoint-pb';
-import { Metadata } from 'grpc-web';
+import { Request, Metadata, UnaryResponse, UnaryInterceptor } from 'grpc-web';
+import { Message } from 'google-protobuf';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import config from 'waypoint/config/environment';
+
+// The docs for @ember/test-waiters recommend building waiters in module scope.
+// https://github.com/emberjs/ember-test-waiters#use-buildwaiter-in-module-scope
+const waiter = buildWaiter('waypoint-api-service:waiter');
 
 const protocolVersions = {
   // These map to upstream protocol versions
@@ -54,7 +61,17 @@ export default class ApiService extends Service {
   @service session!: SessionService;
   // If the the apiAddress is not set, this will use the /grpc prefix on the
   // same host as the UI is being served from
-  client = new WaypointClient(`${config.apiAddress}/grpc`, null, null);
+  client = new WaypointClient(`${config.apiAddress}/grpc`, null, {
+    unaryInterceptors: this.unaryInterceptors(),
+  });
+
+  unaryInterceptors(): UnaryInterceptor<Message, Message>[] {
+    if (DEBUG) {
+      return [new ApiWaiterUnaryInterceptor()];
+    } else {
+      return [];
+    }
+  }
 
   // Merges metadata with required metadata for the request
   WithMeta(meta?: Metadata): Metadata {
@@ -366,4 +383,24 @@ function has<T, K extends keyof T>(key: K): (obj: T) => obj is T & Required<Pick
   return function (obj): obj is T & Required<Pick<T, K>> {
     return !!obj[key];
   };
+}
+
+/**
+ * This class uses grpc-web’s interceptor system to track requests using ember’s
+ * test waiter system. For more info, see:
+ * https://github.com/emberjs/ember-test-waiters
+ */
+class ApiWaiterUnaryInterceptor implements UnaryInterceptor<Message, Message> {
+  async intercept(
+    request: Request<Message, Message>,
+    invoker: (request: Request<Message, Message>) => Promise<UnaryResponse<Message, Message>>
+  ) {
+    let token = waiter.beginAsync();
+
+    try {
+      return await invoker(request);
+    } finally {
+      waiter.endAsync(token);
+    }
+  }
 }
