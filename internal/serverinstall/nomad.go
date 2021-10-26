@@ -1067,7 +1067,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-host",
 		Target:  &i.config.nomadHost,
-		Default: "http://localhost:4646",
+		Default: defaultNomadHost,
 		Usage:   "Hostname of the Nomad server to use, like for launching on-demand tasks.",
 	})
 
@@ -1081,7 +1081,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:   "nomad-odr-image",
 		Target: &i.config.odrImage,
-		Usage: "Docker image for the On-Demand runners. If not specified, it " +
+		Usage: "Docker image for the on-demand runners. If not specified, it " +
 			"defaults to the server image name + '-dr' (i.e. 'hashicorp/waypoint-odr:latest')",
 	})
 
