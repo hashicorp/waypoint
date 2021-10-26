@@ -293,6 +293,14 @@ func (s *service) EntrypointExecStream(
 ) error {
 	log := hclog.FromContext(server.Context())
 
+	// TODO(mitchellh): We only support exec if we're using the in-memory
+	// state store. We will add support for our other stores later.
+	inmemstate, ok := s.state.(*state.State)
+	if !ok {
+		return status.Errorf(codes.Unimplemented,
+			"state storage doesn't support exec streaming")
+	}
+
 	// Receive our opening message so we can determine the exec stream.
 	req, err := server.Recv()
 	if err != nil {
@@ -305,7 +313,7 @@ func (s *service) EntrypointExecStream(
 	}
 
 	// Get our instance and look for this exec index
-	exec, err := s.state.InstanceExecById(open.Open.Index)
+	exec, err := inmemstate.InstanceExecById(open.Open.Index)
 	if err != nil {
 		return err
 	}

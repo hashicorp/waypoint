@@ -150,6 +150,7 @@ func (ceb *CEB) initLogStreamSender(
 			case entry = <-ceb.logCh:
 			}
 
+			// TODO: handle Unimplemented
 			err := client.Send(&pb.EntrypointLogBatch{
 				InstanceId: ceb.id,
 				Lines:      []*pb.LogBatch_Entry{entry},
