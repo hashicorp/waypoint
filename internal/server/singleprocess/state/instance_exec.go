@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 const (
@@ -85,7 +86,7 @@ func (s *State) InstanceExecCreateByTargetedInstance(id string, exec *InstanceEx
 		return status.Errorf(codes.NotFound, "No instance by given id: %s", id)
 	}
 
-	instance := raw.(*Instance)
+	instance := raw.(*serverstate.Instance)
 	if instance.DisableExec {
 		return status.Errorf(codes.PermissionDenied,
 			"The requested instance (id: %s) does not support exec.", id)
@@ -149,12 +150,12 @@ func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) e
 
 	// Go through each to try to find the least loaded. Most likely there
 	// will be an instance with no exec sessions and we prefer that.
-	var min *Instance
+	var min *serverstate.Instance
 	minCount := 0
 	empty := true
 	disabled := false
 	for raw := iter.Next(); raw != nil; raw = iter.Next() {
-		rec := raw.(*Instance)
+		rec := raw.(*serverstate.Instance)
 
 		// When looking through all the instances for an exec capable instance
 		// we only consider LONG_RUNNING type instances. These are the only ones

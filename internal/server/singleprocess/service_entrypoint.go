@@ -98,7 +98,7 @@ func (s *service) EntrypointConfig(
 		ws := memdb.NewWatchSet()
 
 		// Get our exec requests
-		var execs []*inmemstate.InstanceExec
+		var execs []*state.InstanceExec
 		if inmemstate != nil {
 			execs, err = inmemstate.InstanceExecListByInstanceId(req.InstanceId, ws)
 			if err != nil {

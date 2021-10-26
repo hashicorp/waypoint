@@ -3,9 +3,8 @@ package singleprocess
 import (
 	"context"
 
-	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
-
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 func (s *service) UI_ListReleases(
@@ -13,8 +12,8 @@ func (s *service) UI_ListReleases(
 	req *pb.UI_ListReleasesRequest,
 ) (*pb.UI_ListReleasesResponse, error) {
 	releaseList, err := s.state.ReleaseList(req.Application,
-		state.ListWithOrder(req.Order),
-		state.ListWithWorkspace(req.Workspace),
+		serverstate.ListWithOrder(req.Order),
+		serverstate.ListWithWorkspace(req.Workspace),
 	)
 	if err != nil {
 		return nil, err
@@ -29,7 +28,7 @@ func (s *service) UI_ListReleases(
 	statusReports, err := s.state.StatusReportList(
 		req.Application,
 		// NOTE(izaak): the only implemented order for list is pb.OperationOrder_COMPLETE_TIME, which doesn't apply here.
-		state.ListWithWorkspace(req.Workspace),
+		serverstate.ListWithWorkspace(req.Workspace),
 	)
 	if err != nil {
 		return nil, err

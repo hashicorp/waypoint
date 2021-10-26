@@ -66,7 +66,6 @@ type Interface interface {
 	InstanceCreate(*Instance) error
 	InstanceDelete(string) error
 	InstanceById(string) (*Instance, error)
-	InstanceByIdWaiting(context.Context, string) (*Instance, error)
 	InstancesByApp(*pb.Ref_Application, *pb.Ref_Workspace, memdb.WatchSet) ([]*Instance, error)
 	InstancesByDeployment(string, memdb.WatchSet) ([]*Instance, error)
 
@@ -128,7 +127,7 @@ type Interface interface {
 	JobList() ([]*pb.Job, error)
 	JobById(string, memdb.WatchSet) (*Job, error)
 	JobPeekForRunner(context.Context, *pb.Runner) (*Job, error)
-	JobAssignForRunner(context.Context, *pb.Runner, bool, bool) (*Job, error)
+	JobAssignForRunner(context.Context, *pb.Runner) (*Job, error)
 	JobAck(string, bool) (*Job, error)
 	JobUpdateRef(string, *pb.Job_DataSource_Ref) error
 	JobUpdate(string, func(*pb.Job) error) error

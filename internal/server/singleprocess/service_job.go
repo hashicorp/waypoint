@@ -17,8 +17,8 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 // TODO: test
@@ -491,7 +491,7 @@ func (s *service) GetJobStream(
 	}
 
 	// Start a goroutine that watches for job changes
-	jobCh := make(chan *state.Job, 1)
+	jobCh := make(chan *serverstate.Job, 1)
 	errCh := make(chan error, 1)
 	go func() {
 		for {
@@ -657,7 +657,7 @@ func (s *service) readJobLogBatch(r *logbuffer.Reader, block bool) []*pb.GetJobS
 
 func (s *service) getJobStreamOutputInit(
 	ctx context.Context,
-	job *state.Job,
+	job *serverstate.Job,
 	server pb.Waypoint_GetJobStreamServer,
 ) (<-chan []*pb.GetJobStreamResponse_Terminal_Event, error) {
 	// Send down all our buffered lines.

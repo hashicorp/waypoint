@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/graph"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 var (
@@ -192,24 +193,6 @@ func jobIsCompleted(state pb.Job_State) bool {
 	}
 }
 
-// Job is the exported structure that is returned for most state APIs
-// and gives callers access to more information than the pure job structure.
-type Job struct {
-	// Full job structure.
-	*pb.Job
-
-	// OutputBuffer is the terminal output for this job. This is a buffer
-	// that may not contain the full amount of output depending on the
-	// time of connection.
-	OutputBuffer *logbuffer.Buffer
-
-	// Blocked is true if this job is blocked for some reason. The reasons
-	// a job may be blocked:
-	//  - another job for the same project/app/workspace.
-	//  - a dependent job hasn't completed yet
-	Blocked bool
-}
-
 // JobCreate queues the given jobs. If any job fails to queue, no jobs
 // are queued. If partial failures are acceptible, call this multiple times
 // with a single job.
@@ -305,7 +288,7 @@ func (s *State) JobList() ([]*pb.Job, error) {
 // JobById looks up a job by ID. The returned Job will be a deep copy
 // of the job so it is safe to read/write. If the job can't be found,
 // a nil result with no error is returned.
-func (s *State) JobById(id string, ws memdb.WatchSet) (*Job, error) {
+func (s *State) JobById(id string, ws memdb.WatchSet) (*serverstate.Job, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -346,7 +329,7 @@ func (s *State) JobById(id string, ws memdb.WatchSet) (*Job, error) {
 // (1) jobs are not actually assigned (they remain queued) and (2) this will
 // not block if a job isn't available. If a job isn't available, this will
 // return (nil, nil).
-func (s *State) JobPeekForRunner(ctx context.Context, r *pb.Runner) (*Job, error) {
+func (s *State) JobPeekForRunner(ctx context.Context, r *pb.Runner) (*serverstate.Job, error) {
 	// The false,false here will (1) not block and (2) not assign
 	return s.jobAssignForRunner(ctx, r, false, false)
 }
@@ -360,11 +343,11 @@ func (s *State) JobPeekForRunner(ctx context.Context, r *pb.Runner) (*Job, error
 //
 // If ctx is provided and assignment has to block waiting for new jobs,
 // this will cancel when the context is done.
-func (s *State) JobAssignForRunner(ctx context.Context, r *pb.Runner) (*Job, error) {
+func (s *State) JobAssignForRunner(ctx context.Context, r *pb.Runner) (*serverstate.Job, error) {
 	return s.jobAssignForRunner(ctx, r, true, true)
 }
 
-func (s *State) jobAssignForRunner(ctx context.Context, r *pb.Runner, block, assign bool) (*Job, error) {
+func (s *State) jobAssignForRunner(ctx context.Context, r *pb.Runner, block, assign bool) (*serverstate.Job, error) {
 	var txn *memdb.Txn
 
 RETRY_ASSIGN:
@@ -549,7 +532,7 @@ RETRY_ASSIGN:
 // JobAck acknowledges that a job has been accepted or rejected by the runner.
 // If ack is false, then this will move the job back to the queued state
 // and be eligible for assignment.
-func (s *State) JobAck(id string, ack bool) (*Job, error) {
+func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -1422,8 +1405,8 @@ func (idx *jobIndex) Copy() *jobIndex {
 }
 
 // Job returns the Job for an index.
-func (idx *jobIndex) Job(jobpb *pb.Job) *Job {
-	return &Job{
+func (idx *jobIndex) Job(jobpb *pb.Job) *serverstate.Job {
+	return &serverstate.Job{
 		Job:          jobpb,
 		OutputBuffer: idx.OutputBuffer,
 	}

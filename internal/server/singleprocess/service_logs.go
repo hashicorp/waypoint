@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 const (
@@ -29,6 +30,14 @@ func (s *service) spawnLogPlugin(
 	log hclog.Logger,
 	deployment *pb.Deployment,
 ) (*state.InstanceLogs, string, error) {
+	// TODO(mitchellh): We only support logs if we're using the in-memory
+	// state store. We will add support for our other stores later.
+	inmemstate, ok := s.state.(*state.State)
+	if !ok {
+		return nil, "", status.Errorf(codes.Unimplemented,
+			"state storage doesn't support log streaming")
+	}
+
 	instId, err := server.Id()
 	if err != nil {
 		return nil, "", err
@@ -43,7 +52,7 @@ func (s *service) spawnLogPlugin(
 	var lo state.InstanceLogs
 	lo.LogBuffer = logbuffer.New()
 
-	err = s.state.InstanceLogsCreate(instId, &lo)
+	err = inmemstate.InstanceLogsCreate(instId, &lo)
 	if err != nil {
 		return nil, "", err
 	}
@@ -142,6 +151,14 @@ func (s *service) GetLogStream(
 ) error {
 	log := hclog.FromContext(srv.Context())
 
+	// TODO(mitchellh): We only support logs if we're using the in-memory
+	// state store. We will add support for our other stores later.
+	inmemstate, ok := s.state.(*state.State)
+	if !ok {
+		return status.Errorf(codes.Unimplemented,
+			"state storage doesn't support log streaming")
+	}
+
 	// Default the limit
 	if req.LimitBacklog == 0 {
 		req.LimitBacklog = defaultLogLimitBacklog
@@ -180,7 +197,7 @@ func (s *service) GetLogStream(
 
 			// Because we spawned the writer, we can safely delete the whole thing
 			// when the reader is done.
-			defer s.state.InstanceLogsDelete(inst.Id)
+			defer inmemstate.InstanceLogsDelete(inst.Id)
 
 			log.Debug("log plugin spawned", "job_id", jobId)
 			instanceFunc = func(ws memdb.WatchSet) ([]*streamRec, error) {
@@ -238,7 +255,7 @@ func (s *service) GetLogStream(
 		// Be sure to cleanup all our detritus when done!
 		defer func() {
 			for _, il := range deploymentToInstance {
-				s.state.InstanceLogsDelete(il.InstanceLogsId)
+				inmemstate.InstanceLogsDelete(il.InstanceLogsId)
 				s.state.JobCancel(il.JobId, false)
 			}
 		}()
@@ -252,8 +269,8 @@ func (s *service) GetLogStream(
 			// that most accurate matches the only scope, so we shouldn't miss anything.
 
 			deployments, err := s.state.DeploymentList(scope.Application.Application,
-				state.ListWithPhysicalState(pb.Operation_CREATED),
-				state.ListWithStatusFilter(&pb.StatusFilter{
+				serverstate.ListWithPhysicalState(pb.Operation_CREATED),
+				serverstate.ListWithStatusFilter(&pb.StatusFilter{
 					Filters: []*pb.StatusFilter_Filter{
 						{
 							Filter: &pb.StatusFilter_Filter_State{
@@ -262,7 +279,7 @@ func (s *service) GetLogStream(
 						},
 					},
 				}),
-				state.ListWithWatchSet(ws),
+				serverstate.ListWithWatchSet(ws),
 			)
 			if err != nil {
 				return nil, err

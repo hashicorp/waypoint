@@ -11,7 +11,7 @@ import (
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 // TODO: test
@@ -296,7 +296,7 @@ func (s *service) RunnerJobStream(
 	}
 
 	// Start a goroutine that watches for job changes
-	jobCh := make(chan *state.Job, 1)
+	jobCh := make(chan *serverstate.Job, 1)
 	errCh := make(chan error, 1)
 	go func() {
 		for {
@@ -437,7 +437,7 @@ func (s *service) RunnerJobStream(
 
 func (s *service) handleJobStreamRequest(
 	log hclog.Logger,
-	job *state.Job,
+	job *serverstate.Job,
 	srv pb.Waypoint_RunnerJobStreamServer,
 	req *pb.RunnerJobStreamRequest,
 ) error {
