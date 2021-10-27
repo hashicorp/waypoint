@@ -3,23 +3,6 @@
 {{#let (or @model.pushedArtifact @model) as |operation|}}
   <PanelHeader @artifact="build" @sequence={{@model.sequence}}>
     <:title>
-      <small>
-        <Pds::Icon
-          @type={{icon-for-component operation.component.name}}
-          class="icon"
-        />
-
-        <span>
-          {{t
-            (concat
-              "build_status"
-              ".type-" operation.component.type
-              ".state-" operation.status.state
-            )
-          }}
-          <b>{{component-name operation.component.name}}</b>
-        </span>
-      </small>
       {{#if @model.preload.jobDataSourceRef.git.commit}}
         <small>
           <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
@@ -31,11 +14,38 @@
     </:actions>
   </PanelHeader>
 
-  <div class="status-row">
-    <div class="item">
-      <OperationStatusIndicator @status={{operation.status}} />
-    </div>
-  </div>
+  <Section @isExpandable={{false}}>
+    <:heading>{{t "page.build.overview.heading"}}</:heading>
+    <:body>
+      <StatusReportMetaTable @model={{@model}} @artifactType="Build">
+        <tr>
+          <th scope="row">Status</th>
+          <td>
+            <Pds::Icon
+              @type={{icon-for-component operation.component.name}}
+              class="icon"
+            />
+            <span>
+              {{t
+                (concat
+                  "build_status"
+                  ".type-" operation.component.type
+                  ".state-" operation.status.state
+                )
+              }}
+              <b>{{component-name operation.component.name}}</b>
+            </span>
+            <OperationStatusIndicator @status={{operation.status}} />
+          </td>
+        </tr>
+      </StatusReportMetaTable>
+    </:body>
+  </Section>
 {{/let}}
 
-<OperationLogs @jobId={{@model.jobId}} />
+<Section>
+    <:heading>{{t "page.deployment.logs.heading"}}</:heading>
+    <:body>
+      <OperationLogs @jobId={{@model.jobId}} />
+    </:body>
+</Section>

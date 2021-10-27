@@ -19,6 +19,13 @@ product:
 page:
   builds:
     title: 'Builds'
+  build:
+    overview:
+      heading: Overview
+      image: Image
+      health-check: Health
+      re-run-health-check: Re-run
+      unavailable: Currently unavailable
   deployments:
     title: 'Deployments'
     destroyed_label: 'Destroyed'
@@ -49,6 +56,12 @@ page:
     resources:
       heading: Resources
       table-caption: Resources created by <b>this release</b>
+    overview:
+      heading: Overview
+      image: Image
+      health-check: Health
+      re-run-health-check: Re-run
+      unavailable: Currently unavailable
     logs:
       heading: Release Logs
 

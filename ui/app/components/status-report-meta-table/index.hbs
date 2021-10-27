@@ -28,7 +28,12 @@
           </td>
         </tr>
       {{else}}
-        {{t "page.deployment.overview.unavailable"}}
+      {{!-- TODO: @sabrinako have yield + the statusReport rows show together --}}
+        {{#if (has-block)}}
+          {{yield}}
+        {{else}}
+          {{t "page.deployment.overview.unavailable"}}
+        {{/if}}
       {{/if}}
     </tbody>
   </table>

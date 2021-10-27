@@ -1,7 +1,7 @@
 .panel-header {
   display: flex;
-  flex-direction: row;
   align-items: center;
+  flex-wrap: wrap;
   font-size: 0.9em;
   font-weight: 400;
   color: rgb(var(--text-muted));
@@ -30,6 +30,7 @@
     flex-wrap: wrap;
     max-width: 100%;
     margin: scale.$sm-4 0;
+    margin-left: auto;
 
     .button-group {
       display: flex;
