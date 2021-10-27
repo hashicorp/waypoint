@@ -480,11 +480,11 @@ func testRegisterExec(t *testing.T, client pb.WaypointClient, impl pb.WaypointSe
 
 	// Wait for the registered exec
 	ws := memdb.NewWatchSet()
-	list, err := testServiceImpl(impl).state.InstanceExecListByInstanceId(instanceId, ws)
+	list, err := testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
 	require.NoError(t, err)
 	if len(list) == 0 {
 		ws.Watch(time.After(1 * time.Second))
-		list, err = impl.(*service).state.InstanceExecListByInstanceId(instanceId, ws)
+		list, err = testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
 		require.NoError(t, err)
 	}
 	require.Len(t, list, 1)

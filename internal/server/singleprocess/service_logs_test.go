@@ -430,7 +430,7 @@ func TestServiceGetLogStream_depPlugin(t *testing.T) {
 	// we can't send logs. In a real CEB/runner environment, we'd
 	// retry so this is only needed in tests.
 	require.Eventually(t, func() bool {
-		_, err := testServiceImpl(impl).state.InstanceLogsByInstanceId(
+		_, err := testStateInmem(impl).InstanceLogsByInstanceId(
 			instanceId)
 		if err != nil {
 			t.Logf("error getting instance logs: %s", err)

@@ -136,11 +136,11 @@ func TestServiceStartExecStream_eventExit(t *testing.T) {
 
 	// Get the record
 	ws := memdb.NewWatchSet()
-	list, err := testServiceImpl(impl).state.InstanceExecListByInstanceId(instanceId, ws)
+	list, err := testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
 	require.NoError(err)
 	if len(list) == 0 {
 		ws.Watch(time.After(1 * time.Second))
-		list, err = impl.(*service).state.InstanceExecListByInstanceId(instanceId, ws)
+		list, err = testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
 		require.NoError(err)
 	}
 	require.Len(list, 1)
@@ -211,11 +211,11 @@ func TestServiceStartExecStream_eventError(t *testing.T) {
 
 	// Get the record
 	ws := memdb.NewWatchSet()
-	list, err := testServiceImpl(impl).state.InstanceExecListByInstanceId(instanceId, ws)
+	list, err := testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
 	require.NoError(err)
 	if len(list) == 0 {
 		ws.Watch(time.After(1 * time.Second))
-		list, err = impl.(*service).state.InstanceExecListByInstanceId(instanceId, ws)
+		list, err = testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
 		require.NoError(err)
 	}
 	require.Len(list, 1)
@@ -287,11 +287,11 @@ func TestServiceStartExecStream_entrypointEventChClose(t *testing.T) {
 
 	// Get the record
 	ws := memdb.NewWatchSet()
-	list, err := testServiceImpl(impl).state.InstanceExecListByInstanceId(instanceId, ws)
+	list, err := testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
 	require.NoError(err)
 	if len(list) == 0 {
 		ws.Watch(time.After(1 * time.Second))
-		list, err = impl.(*service).state.InstanceExecListByInstanceId(instanceId, ws)
+		list, err = testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
 		require.NoError(err)
 	}
 	require.Len(list, 1)
@@ -313,11 +313,11 @@ func TestServiceStartExecStream_entrypointEventChClose(t *testing.T) {
 
 func testGetInstanceExec(t *testing.T, impl pb.WaypointServer, instanceId string) *state.InstanceExec {
 	ws := memdb.NewWatchSet()
-	list, err := testServiceImpl(impl).state.InstanceExecListByInstanceId(instanceId, ws)
+	list, err := testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
 	require.NoError(t, err)
 	if len(list) == 0 {
 		ws.Watch(time.After(1 * time.Second))
-		list, err = impl.(*service).state.InstanceExecListByInstanceId(instanceId, ws)
+		list, err = testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
 		require.NoError(t, err)
 	}
 	require.Len(t, list, 1)

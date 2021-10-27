@@ -17,6 +17,9 @@ import (
 // anytime we want or find it convenient, but we have to make sure so simultaneously
 // modify all our implementations.
 type Interface interface {
+	// Close is always called when the server is shutting down or reloading
+	// the state store. This should clean up any resources (file handles, etc.)
+	// that the state storage is using.
 	io.Closer
 
 	HMACKeyEmpty() bool
@@ -150,4 +153,16 @@ type Interface interface {
 	JobHeartbeat(string) error
 	JobExpire(string) error
 	JobIsAssignable(context.Context, *pb.Job) (bool, error)
+}
+
+// Pruner is implemented by state storage implementations that require
+// a periodic prune. The implementation can't control when this is called,
+// but it will be called roughly every hour or shorter.
+//
+// During pruning, other operations are still allowed to come in. It is up
+// to the state implementation to handle safe concurrency.
+type Pruner interface {
+	Interface
+
+	Prune() error
 }
