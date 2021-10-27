@@ -15747,7 +15747,8 @@ proto.hashicorp.waypoint.Ref.OnDemandRunnerConfig.prototype.toObject = function(
  */
 proto.hashicorp.waypoint.Ref.OnDemandRunnerConfig.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, "")
+    id: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    name: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -15788,6 +15789,10 @@ proto.hashicorp.waypoint.Ref.OnDemandRunnerConfig.deserializeBinaryFromReader = 
       var value = /** @type {string} */ (reader.readString());
       msg.setId(value);
       break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setName(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -15824,6 +15829,13 @@ proto.hashicorp.waypoint.Ref.OnDemandRunnerConfig.serializeBinaryToWriter = func
       f
     );
   }
+  f = message.getName();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
 };
 
 
@@ -15842,6 +15854,24 @@ proto.hashicorp.waypoint.Ref.OnDemandRunnerConfig.prototype.getId = function() {
  */
 proto.hashicorp.waypoint.Ref.OnDemandRunnerConfig.prototype.setId = function(value) {
   return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string name = 2;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Ref.OnDemandRunnerConfig.prototype.getName = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Ref.OnDemandRunnerConfig} returns this
+ */
+proto.hashicorp.waypoint.Ref.OnDemandRunnerConfig.prototype.setName = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
@@ -47677,6 +47707,7 @@ proto.hashicorp.waypoint.OnDemandRunnerConfig.prototype.toObject = function(opt_
 proto.hashicorp.waypoint.OnDemandRunnerConfig.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    name: jspb.Message.getFieldWithDefault(msg, 8, ""),
     ociUrl: jspb.Message.getFieldWithDefault(msg, 2, ""),
     environmentVariablesMap: (f = msg.getEnvironmentVariablesMap()) ? f.toObject(includeInstance, undefined) : [],
     pluginType: jspb.Message.getFieldWithDefault(msg, 4, ""),
@@ -47722,6 +47753,10 @@ proto.hashicorp.waypoint.OnDemandRunnerConfig.deserializeBinaryFromReader = func
     case 1:
       var value = /** @type {string} */ (reader.readString());
       msg.setId(value);
+      break;
+    case 8:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setName(value);
       break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
@@ -47785,6 +47820,13 @@ proto.hashicorp.waypoint.OnDemandRunnerConfig.serializeBinaryToWriter = function
       f
     );
   }
+  f = message.getName();
+  if (f.length > 0) {
+    writer.writeString(
+      8,
+      f
+    );
+  }
   f = message.getOciUrl();
   if (f.length > 0) {
     writer.writeString(
@@ -47842,6 +47884,24 @@ proto.hashicorp.waypoint.OnDemandRunnerConfig.prototype.getId = function() {
  */
 proto.hashicorp.waypoint.OnDemandRunnerConfig.prototype.setId = function(value) {
   return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string name = 8;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.OnDemandRunnerConfig.prototype.getName = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.OnDemandRunnerConfig} returns this
+ */
+proto.hashicorp.waypoint.OnDemandRunnerConfig.prototype.setName = function(value) {
+  return jspb.Message.setProto3StringField(this, 8, value);
 };
 
 

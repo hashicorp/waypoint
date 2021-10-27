@@ -1,5 +1,7 @@
 import Component from '@glimmer/component';
+import { ExecStreamRequest } from 'waypoint-pb';
 import KEYS from 'waypoint/utils/keys';
+import { Message } from 'google-protobuf';
 import SessionService from 'waypoint/services/session';
 import { Terminal } from 'xterm';
 import config from 'waypoint/config/environment';
@@ -34,11 +36,18 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
 
   async startExecStream(deploymentId: string): void {
     let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    let socket = new WebSocket(`ws://localhost:9702/v1/exec`, );
+    let socket = new WebSocket(`wss://localhost:9702/v1/exec?token=${this.session.token}`);
+    socket.binaryType = 'arraybuffer';
+    let encoder = new TextEncoder();
+
     socket.addEventListener('open', (event) => {
-      socket.send(JSON.stringify({ version: 1, auth_token: this.token || '' }));
+      // socket.send(JSON.stringify({ version: 1, auth_token: this.token || '' }));
       console.log(event);
-      socket.send('Hello Server!');
+      let execStreamStartRequest = new ExecStreamRequest();
+      let start = new ExecStreamRequest.Start();
+      start.setDeploymentId(deploymentId);
+      execStreamStartRequest.setStart(start);
+      socket.send(execStreamStartRequest);
     });
     socket.addEventListener('message', (event) => {
       console.log(event);
@@ -57,7 +66,7 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
   async openSocketStream() {
     // Todo: handle different hosts/ports
     let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    let socket = new WebSocket(`ws://localhost:9702/v1/exec`, []);
+    let socket = new WebSocket(`ws://localhost:9702/v1/exec`, ['']);
     return socket;
   }
 

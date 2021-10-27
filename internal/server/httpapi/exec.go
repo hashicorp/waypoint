@@ -21,7 +21,7 @@ func HandleExec(addr string, tls bool) http.HandlerFunc {
 		ctx := r.Context()
 		log := hclog.FromContext(ctx)
 		log.SetLevel(hclog.Trace)
-
+		log.Info("Websocket exec start", addr)
 		// Get our authorization token
 		token := r.URL.Query().Get("token")
 		if token == "" {

@@ -47,10 +47,15 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 	// grpcAddr is the address that we can connect back to our own
 	// gRPC server. This is used by the exec handler.
 	grpcAddr := opts.GRPCListener.Addr().String()
-
+	log.Info("grpcAddr", grpcAddr)
+	log.SetLevel(hclog.Trace)
 	// Create our full router
 	r := mux.NewRouter()
-	r.HandleFunc("/v1/exec", httpapi.HandleExec(grpcAddr, true))
+	err := r.HandleFunc("/v1/exec", httpapi.HandleExec(grpcAddr, true))
+	if err != nil {
+		log.Error("Socket endpoint failed", "error", err)
+	}
+
 	r.PathPrefix("/grpc").Handler(grpcWrapped)
 	r.PathPrefix("/").Handler(uifs)
 

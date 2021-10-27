@@ -1222,6 +1222,9 @@ export namespace Ref {
     getId(): string;
     setId(value: string): OnDemandRunnerConfig;
 
+    getName(): string;
+    setName(value: string): OnDemandRunnerConfig;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): OnDemandRunnerConfig.AsObject;
     static toObject(includeInstance: boolean, msg: OnDemandRunnerConfig): OnDemandRunnerConfig.AsObject;
@@ -1233,6 +1236,7 @@ export namespace Ref {
   export namespace OnDemandRunnerConfig {
     export type AsObject = {
       id: string,
+      name: string,
     }
   }
 
@@ -5593,6 +5597,9 @@ export class OnDemandRunnerConfig extends jspb.Message {
   getId(): string;
   setId(value: string): OnDemandRunnerConfig;
 
+  getName(): string;
+  setName(value: string): OnDemandRunnerConfig;
+
   getOciUrl(): string;
   setOciUrl(value: string): OnDemandRunnerConfig;
 
@@ -5624,6 +5631,7 @@ export class OnDemandRunnerConfig extends jspb.Message {
 export namespace OnDemandRunnerConfig {
   export type AsObject = {
     id: string,
+    name: string,
     ociUrl: string,
     environmentVariablesMap: Array<[string, string]>,
     pluginType: string,
