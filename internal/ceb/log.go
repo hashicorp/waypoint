@@ -173,16 +173,20 @@ func (ceb *CEB) initLogStreamSender(
 				continue
 			}
 
-			// TODO: handle Unimplemented
 			err := client.Send(&pb.EntrypointLogBatch{
 				InstanceId: ceb.id,
 				Lines:      []*pb.LogBatch_Entry{entry},
 			})
+
+			// Server returns this error when it doesn't support application
+			// log streaming. This is possible depending on the configuration
+			// or state backend.
 			if status.Code(err) == codes.Unimplemented {
 				log.Warn("log stream unimplemented on server, dropping logs")
 				err = nil
 				dropCh = time.After(5 * time.Minute)
 			}
+
 			if err == io.EOF || status.Code(err) == codes.Unavailable {
 				log.Debug("log stream disconnected from server, attempting reconnect",
 					"err", err)
