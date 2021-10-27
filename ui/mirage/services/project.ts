@@ -1,10 +1,10 @@
 import { ListProjectsResponse, GetProjectResponse, UpsertProjectResponse } from 'waypoint-pb';
 import { decode } from '../helpers/protobufs';
 import { UI, GetProjectRequest, UpsertProjectRequest, Job, Project } from 'waypoint-pb';
-import { Request, Response } from 'miragejs';
+import { RouteHandler, Request, Response } from 'miragejs';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export function list(schema: any): Response {
+export function list(this: RouteHandler, schema: any): Response {
   let resp = new ListProjectsResponse();
   let projectRefs = schema.projects.all().models.map((p) => p.toProtobufRef());
 
@@ -14,9 +14,9 @@ export function list(schema: any): Response {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export function get(schema: any, { requestBody }: Request): Response {
+export function get(this: RouteHandler, schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(GetProjectRequest, requestBody);
-  let name = requestMsg.getProject().getProject();
+  let name = requestMsg.getProject()?.getProject();
   let model = schema.projects.findBy({ name });
   let resp = new GetProjectResponse();
   let project = model?.toProtobuf();
@@ -27,9 +27,9 @@ export function get(schema: any, { requestBody }: Request): Response {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export function uiGet(schema: any, { requestBody }: Request): Response {
+export function uiGet(this: RouteHandler, schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(UI.GetProjectRequest, requestBody);
-  let name = requestMsg.getProject().getProject();
+  let name = requestMsg.getProject()?.getProject();
   let model = schema.projects.findBy({ name });
   let resp = new UI.GetProjectResponse();
   let project = model?.toProtobuf();
@@ -42,18 +42,18 @@ export function uiGet(schema: any, { requestBody }: Request): Response {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export function update(schema: any, { requestBody }: Request): Response {
+export function update(this: RouteHandler, schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(UpsertProjectRequest, requestBody);
-  let name = requestMsg.getProject().getName();
+  let name = requestMsg.getProject()?.getName();
   let variablesList = requestMsg
     .getProject()
-    .getVariablesList()
+    ?.getVariablesList()
     .map((v) => v.toObject());
-  let dataSource = requestMsg.getProject().getDataSource();
-  let poll = requestMsg.getProject().getDataSourcePoll();
+  let dataSource = requestMsg.getProject()?.getDataSource();
+  let poll = requestMsg.getProject()?.getDataSourcePoll();
   let model = schema.projects.findBy({ name });
 
-  model.variables = variablesList.map((v) => model.newVariable(v));
+  model.variables = variablesList?.map((v) => model.newVariable(v));
   model.dataSource = dataSourceFromProto(schema, dataSource);
   model.dataSourcePoll = pollFromProto(schema, poll);
   model.save();
@@ -66,7 +66,11 @@ export function update(schema: any, { requestBody }: Request): Response {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function dataSourceFromProto(schema: any, dataSource: Job.DataSource): any {
+function dataSourceFromProto(schema: any, dataSource: Job.DataSource | undefined): any {
+  if (!dataSource) {
+    return;
+  }
+
   let dataSourceObj = dataSource.toObject();
   let result = schema.new('job-data-source');
 
@@ -87,7 +91,11 @@ function dataSourceFromProto(schema: any, dataSource: Job.DataSource): any {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function pollFromProto(schema: any, poll: Project.Poll): any {
+function pollFromProto(schema: any, poll: Project.Poll | undefined): any {
+  if (!poll) {
+    return;
+  }
+
   let result = schema.new('project-poll', poll.toObject());
 
   return result;

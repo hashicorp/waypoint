@@ -1,7 +1,7 @@
-import { Response } from 'miragejs';
+import { RouteHandler, Response } from 'miragejs';
 import { GetJobStreamResponse } from 'waypoint-pb';
 
-export function stream(): Response {
+export function stream(this: RouteHandler): Response {
   let result = new GetJobStreamResponse();
 
   // TODO(jgwhite): Implement GetJobStream handler

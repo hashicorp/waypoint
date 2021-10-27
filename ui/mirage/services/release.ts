@@ -1,13 +1,13 @@
 import { ListReleasesRequest, ListReleasesResponse, GetReleaseRequest, UI } from 'waypoint-pb';
-import { Request, Response } from 'ember-cli-mirage';
+import { RouteHandler, Request, Response } from 'ember-cli-mirage';
 import { decode } from '../helpers/protobufs';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export function list(schema: any, { requestBody }: Request): Response {
+export function list(this: RouteHandler, schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(ListReleasesRequest, requestBody);
-  let projectName = requestMsg.getApplication().getProject();
-  let appName = requestMsg.getApplication().getApplication();
-  let workspaceName = requestMsg.getWorkspace().getWorkspace();
+  let projectName = requestMsg.getApplication()?.getProject();
+  let appName = requestMsg.getApplication()?.getApplication();
+  let workspaceName = requestMsg.getWorkspace()?.getWorkspace();
   let project = schema.projects.findBy({ name: projectName });
   let application = schema.applications.findBy({ name: appName, projectId: project?.id });
   let workspace = schema.workspaces.findBy({ name: workspaceName });
@@ -23,11 +23,11 @@ export function list(schema: any, { requestBody }: Request): Response {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export function ui_list(schema: any, { requestBody }: Request): Response {
+export function ui_list(this: RouteHandler, schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(UI.ListReleasesRequest, requestBody);
-  let projectName = requestMsg.getApplication().getProject();
-  let appName = requestMsg.getApplication().getApplication();
-  let workspaceName = requestMsg.getWorkspace().getWorkspace();
+  let projectName = requestMsg.getApplication()?.getProject();
+  let appName = requestMsg.getApplication()?.getApplication();
+  let workspaceName = requestMsg.getWorkspace()?.getWorkspace();
   let project = schema.projects.findBy({ name: projectName });
   let application = schema.applications.findBy({ name: appName, projectId: project?.id });
   let workspace = schema.workspaces.findBy({ name: workspaceName });
@@ -49,9 +49,9 @@ export function ui_list(schema: any, { requestBody }: Request): Response {
   return this.serialize(resp, 'application');
 }
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export function get(schema: any, { requestBody }: Request): Response {
+export function get(this: RouteHandler, schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(GetReleaseRequest, requestBody);
-  let id = requestMsg.getRef().getId();
+  let id = requestMsg.getRef()?.getId();
   let model = schema.releases.find(id);
   let protobuf = model?.toProtobuf();
 
