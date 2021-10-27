@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
@@ -141,6 +142,12 @@ func (ceb *CEB) initLogStreamSender(
 			return
 		}
 
+		// dropCh is non-nil if the server noted it doesn't support
+		// log streaming. We periodically retry to send logs because
+		// it is possible the server is reconfigured and restarted to
+		// support logs.
+		var dropCh <-chan time.Time
+
 		for {
 			var entry *pb.LogBatch_Entry
 			select {
@@ -148,6 +155,22 @@ func (ceb *CEB) initLogStreamSender(
 				return
 
 			case entry = <-ceb.logCh:
+
+			case <-dropCh:
+				// Reset dropCh and try to send logs again.
+				dropCh = nil
+			}
+
+			// If we're dropping logs because the server is rejecting our
+			// log stream, then do nothing.
+			if dropCh != nil {
+				continue
+			}
+
+			// Nothing to send? Do nothing. This is possible in the dropCh
+			// case in the select.
+			if entry == nil {
+				continue
 			}
 
 			// TODO: handle Unimplemented
@@ -155,6 +178,11 @@ func (ceb *CEB) initLogStreamSender(
 				InstanceId: ceb.id,
 				Lines:      []*pb.LogBatch_Entry{entry},
 			})
+			if status.Code(err) == codes.Unimplemented {
+				log.Warn("log stream unimplemented on server, dropping logs")
+				err = nil
+				dropCh = time.After(5 * time.Minute)
+			}
 			if err == io.EOF || status.Code(err) == codes.Unavailable {
 				log.Debug("log stream disconnected from server, attempting reconnect",
 					"err", err)
