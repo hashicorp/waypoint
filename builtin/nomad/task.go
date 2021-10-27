@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -38,8 +37,8 @@ const (
 	// static runner default of 600 MB, it would OOM on a small Go app when
 	// buildpack attempts to finish up its build. 2GB was choosen to be a little
 	// more than what it might need so that Nomad doesn't OOM the task
-	defaultODRMemory = "2000" // in mb
-	defaultODRCPU    = "200"  // in mhz
+	defaultODRMemory = 2000 // in mb
+	defaultODRCPU    = 200  // in mhz
 
 	defaultODRRegion     = "global"
 	defaultODRDatacenter = "dc1"
@@ -60,8 +59,8 @@ type TaskLauncherConfig struct {
 	Region string `hcl:"region,optional"`
 
 	// Resource request limits for an on-demand runner
-	Memory string `hcl:"resources_memory,optional"`
-	CPU    string `hcl:"resources_cpu,optional"`
+	Memory int `hcl:"resources_memory,optional"`
+	CPU    int `hcl:"resources_cpu,optional"`
 
 	// The host to connect to for making Nomad API requests
 	NomadHost string `hcl:"nomad_host,optional"`
@@ -182,10 +181,10 @@ func (p *TaskLauncher) StartTask(
 	if p.config.Namespace == "" {
 		p.config.Namespace = defaultODRNamespace
 	}
-	if p.config.Memory != "" {
+	if p.config.Memory == 0 {
 		p.config.Memory = defaultODRMemory
 	}
-	if p.config.CPU != "" {
+	if p.config.CPU == 0 {
 		p.config.CPU = defaultODRCPU
 	}
 	if p.config.NomadHost == "" {
@@ -210,11 +209,9 @@ func (p *TaskLauncher) StartTask(
 		Driver: "docker",
 	}
 
-	cpu, _ := strconv.Atoi(p.config.CPU)
-	mem, _ := strconv.Atoi(p.config.Memory)
 	task.Resources = &api.Resources{
-		CPU:      &cpu,
-		MemoryMB: &mem,
+		CPU:      &p.config.CPU,
+		MemoryMB: &p.config.Memory,
 	}
 
 	tg.AddTask(task)
