@@ -26,6 +26,14 @@ the `waypoint` CLI installed on your local machine. The `waypoint` CLI is
 used to run Waypoint operations such as builds and deploys as well as to
 configure the server.
 
+-> **Note on permissions:** The Waypoint installer requires permissions for
+managing the Kubernetes cluster. This covers basic permission needs, such as
+statefulset management, as well as the management of RBAC objects, such as
+cluster role bindings. Platforms typically have these permissions in a set role.
+For example, GCP's [Kubernetes Engine Admin](https://cloud.google.com/iam/docs/understanding-roles?hl=en#kubernetes-engine-roles)
+role provides the necessary permissions to install a Waypoint server via
+the base installer or with Helm.
+
 If you have an _existing_ Waypoint server cluster already created and you're
 just trying to _use_ Waypoint, you may be able to just use the web interface
 instead. Ask another team member with Waypoint setup for the URL to your
