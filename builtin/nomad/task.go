@@ -110,14 +110,14 @@ task {
 		"resources_cpu",
 		"Amount of CPU in MHz to allocate to this task. This can be overriden with "+
 			"the '-nomad-runner-cpu' flag on server install.",
-		docs.Default(defaultODRCPU),
+		docs.Default(fmt.Sprint(defaultODRCPU)),
 	)
 
 	doc.SetField(
 		"resources_memory",
 		"Amount of memory in MB to allocate to this task. This can be overriden with "+
 			"the '-nomad-runner-memory' flag on server install.",
-		docs.Default(defaultODRMemory),
+		docs.Default(fmt.Sprint(defaultODRMemory)),
 	)
 
 	doc.SetField(
