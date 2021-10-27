@@ -15,3 +15,14 @@ declare module 'ember-a11y-testing/test-support/audit' {
     axeOptions?: Record<string, unknown>
   ): Promise<void>;
 }
+
+declare module 'miragejs' {
+  /**
+   * RouteHandler is the context (the `this`) in which our Mirage route handlers
+   * are executed. Mirage itself does not export this type declaration in any
+   * form so we’re merging it into the module declaration.
+   */
+  export interface RouteHandler {
+    serialize(response: unknown, serializerType: string): Response;
+  }
+}
