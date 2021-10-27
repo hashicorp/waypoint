@@ -1,9 +1,9 @@
 import { LogBatch } from 'waypoint-pb';
 import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
-import { Response } from 'miragejs';
+import { RouteHandler, Response } from 'miragejs';
 import { getUnixTime } from 'date-fns';
 
-export function stream(): Response {
+export function stream(this: RouteHandler): Response {
   // TODO(jgwhite): Implement GetLogStream handler (+ models & factories)
 
   let result = new LogBatch();

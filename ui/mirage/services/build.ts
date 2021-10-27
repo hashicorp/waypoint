@@ -1,13 +1,13 @@
 import { ListBuildsRequest, ListBuildsResponse, GetBuildRequest } from 'waypoint-pb';
-import { Request, Response } from 'miragejs';
+import { RouteHandler, Request, Response } from 'miragejs';
 import { decode } from '../helpers/protobufs';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export function list(schema: any, { requestBody }: Request): Response {
+export function list(this: RouteHandler, schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(ListBuildsRequest, requestBody);
-  let projectName = requestMsg.getApplication().getProject();
-  let appName = requestMsg.getApplication().getApplication();
-  let workspaceName = requestMsg.getWorkspace().getWorkspace();
+  let projectName = requestMsg.getApplication()?.getProject();
+  let appName = requestMsg.getApplication()?.getApplication();
+  let workspaceName = requestMsg.getWorkspace()?.getWorkspace();
   let project = schema.projects.findBy({ name: projectName });
   let application = schema.applications.findBy({ name: appName, projectId: project.id });
   let workspace = schema.workspaces.findBy({ name: workspaceName });
@@ -23,9 +23,9 @@ export function list(schema: any, { requestBody }: Request): Response {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export function get(schema: any, { requestBody }: Request): Response {
+export function get(this: RouteHandler, schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(GetBuildRequest, requestBody);
-  let id = requestMsg.getRef().getId();
+  let id = requestMsg.getRef()?.getId();
   let model = schema.builds.find(id);
   let build = model?.toProtobuf();
 
