@@ -35,7 +35,7 @@ func (s *State) DeploymentList(
 	ref *pb.Ref_Application,
 	opts ...serverstate.ListOperationOption,
 ) ([]*pb.Deployment, error) {
-	raw, err := deploymentOp.List(s, serverstate.BuildListOperationsOptions(ref, opts...))
+	raw, err := deploymentOp.List(s, serverstate.BuildListOperationOptions(ref, opts...))
 	if err != nil {
 		return nil, err
 	}

@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 func TestInstance_crud(t *testing.T) {
@@ -20,7 +21,7 @@ func TestInstance_crud(t *testing.T) {
 	defer s.Close()
 
 	// Create an instance
-	rec := &Instance{Id: "A", DeploymentId: "B", Project: "C", Application: "D", Workspace: "E"}
+	rec := &serverstate.Instance{Id: "A", DeploymentId: "B", Project: "C", Application: "D", Workspace: "E"}
 	require.NoError(s.InstanceCreate(rec))
 
 	// We should be able to find it
@@ -70,7 +71,7 @@ func TestInstancesByApp(t *testing.T) {
 	require.True(ws.Watch(time.After(10 * time.Millisecond)))
 
 	// Create an instance
-	rec := testInstance(t, &Instance{Project: ref.Project, Application: ref.Application})
+	rec := testInstance(t, &serverstate.Instance{Project: ref.Project, Application: ref.Application})
 	require.NoError(s.InstanceCreate(rec))
 
 	// Should be triggered
@@ -116,7 +117,7 @@ func TestInstancesByAppWorkspace(t *testing.T) {
 	require.True(ws.Watch(time.After(10 * time.Millisecond)))
 
 	// Create an instance
-	rec := testInstance(t, &Instance{
+	rec := testInstance(t, &serverstate.Instance{
 		Project: ref.Project, Application: ref.Application, Workspace: refWs.Workspace})
 	require.NoError(s.InstanceCreate(rec))
 
@@ -137,12 +138,12 @@ func TestInstancesByAppWorkspace(t *testing.T) {
 	require.Empty(list)
 }
 
-func testInstance(t *testing.T, v *Instance) *Instance {
+func testInstance(t *testing.T, v *serverstate.Instance) *serverstate.Instance {
 	if v == nil {
-		v = &Instance{}
+		v = &serverstate.Instance{}
 	}
 
-	require.NoError(t, mergo.Merge(v, &Instance{
+	require.NoError(t, mergo.Merge(v, &serverstate.Instance{
 		Id:           "A",
 		DeploymentId: "B",
 		Project:      "C",

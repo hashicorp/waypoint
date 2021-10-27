@@ -33,7 +33,7 @@ func (s *State) ArtifactList(
 	ref *pb.Ref_Application,
 	opts ...serverstate.ListOperationOption,
 ) ([]*pb.PushedArtifact, error) {
-	raw, err := artifactOp.List(s, serverstate.BuildListOperationsOptions(ref, opts...))
+	raw, err := artifactOp.List(s, serverstate.BuildListOperationOptions(ref, opts...))
 	if err != nil {
 		return nil, err
 	}

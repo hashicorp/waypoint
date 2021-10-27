@@ -5,9 +5,9 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// ListOperationsOptions are options that can be set for List calls on
+// ListOperationOptions are options that can be set for List calls on
 // operations for filtering and limiting the response.
-type ListOperationsOptions struct {
+type ListOperationOptions struct {
 	Application   *pb.Ref_Application
 	Workspace     *pb.Ref_Workspace
 	Status        []*pb.StatusFilter
@@ -17,32 +17,32 @@ type ListOperationsOptions struct {
 }
 
 // ListOperationOption is an exported type to set configuration for listing operations.
-type ListOperationOption func(opts *ListOperationsOptions)
+type ListOperationOption func(opts *ListOperationOptions)
 
 // ListWithStatusFilter sets a status filter.
 func ListWithStatusFilter(f ...*pb.StatusFilter) ListOperationOption {
-	return func(opts *ListOperationsOptions) {
+	return func(opts *ListOperationOptions) {
 		opts.Status = f
 	}
 }
 
 // ListWithOrder sets ordering on the list operation.
 func ListWithOrder(f *pb.OperationOrder) ListOperationOption {
-	return func(opts *ListOperationsOptions) {
+	return func(opts *ListOperationOptions) {
 		opts.Order = f
 	}
 }
 
 // ListWithPhysicalState sets ordering on the list operation.
 func ListWithPhysicalState(f pb.Operation_PhysicalState) ListOperationOption {
-	return func(opts *ListOperationsOptions) {
+	return func(opts *ListOperationOptions) {
 		opts.PhysicalState = f
 	}
 }
 
 // ListWithWorkspace sets ordering on the list operation.
 func ListWithWorkspace(f *pb.Ref_Workspace) ListOperationOption {
-	return func(opts *ListOperationsOptions) {
+	return func(opts *ListOperationOptions) {
 		opts.Workspace = f
 	}
 }
@@ -50,15 +50,15 @@ func ListWithWorkspace(f *pb.Ref_Workspace) ListOperationOption {
 // ListWithWatchSet registers watches for the listing, allowing the watcher
 // to detect if new items are added.
 func ListWithWatchSet(ws memdb.WatchSet) ListOperationOption {
-	return func(opts *ListOperationsOptions) {
+	return func(opts *ListOperationOptions) {
 		opts.WatchSet = ws
 	}
 }
 
-// BuildListOperationsOptions is a helper for implementations to create
-// a ListOperationsOptions from an app ref and a set of options.
-func BuildListOperationsOptions(ref *pb.Ref_Application, opts ...ListOperationOption) *ListOperationsOptions {
-	var result ListOperationsOptions
+// BuildListOperationOptions is a helper for implementations to create
+// a ListOperationOptions from an app ref and a set of options.
+func BuildListOperationOptions(ref *pb.Ref_Application, opts ...ListOperationOption) *ListOperationOptions {
+	var result ListOperationOptions
 	result.Application = ref
 	for _, opt := range opts {
 		opt(&result)

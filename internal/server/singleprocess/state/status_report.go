@@ -37,7 +37,7 @@ func (s *State) StatusReportList(
 	ref *pb.Ref_Application,
 	opts ...serverstate.ListOperationOption,
 ) ([]*pb.StatusReport, error) {
-	raw, err := statusReportOp.List(s, serverstate.BuildListOperationsOptions(ref, opts...))
+	raw, err := statusReportOp.List(s, serverstate.BuildListOperationOptions(ref, opts...))
 	if err != nil {
 		return nil, err
 	}

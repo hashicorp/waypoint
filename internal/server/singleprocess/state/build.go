@@ -33,7 +33,7 @@ func (s *State) BuildList(
 	ref *pb.Ref_Application,
 	opts ...serverstate.ListOperationOption,
 ) ([]*pb.Build, error) {
-	raw, err := buildOp.List(s, serverstate.BuildListOperationsOptions(ref, opts...))
+	raw, err := buildOp.List(s, serverstate.BuildListOperationOptions(ref, opts...))
 	if err != nil {
 		return nil, err
 	}

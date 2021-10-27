@@ -200,7 +200,7 @@ func (op *appOperation) getIdForSeq(
 
 // List lists all the records.
 func (op *appOperation) List(
-	s *State, opts *serverstate.ListOperationsOptions) ([]interface{}, error) {
+	s *State, opts *serverstate.ListOperationOptions) ([]interface{}, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
