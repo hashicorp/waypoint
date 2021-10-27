@@ -1,11 +1,11 @@
 import { ConfigGetRequest, ConfigGetResponse, ConfigSetRequest, ConfigSetResponse } from 'waypoint-pb';
-import { Request, Response } from 'miragejs';
+import { RouteHandler, Request, Response } from 'miragejs';
 import { decode } from '../helpers/protobufs';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export function get(schema: any, { requestBody }: Request): Response {
+export function get(this: RouteHandler, schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(ConfigGetRequest, requestBody);
-  let projectName = requestMsg.getProject().getProject();
+  let projectName = requestMsg.getProject()?.getProject();
   let project = schema.projects.findBy({ name: projectName });
   let variables = schema.configVariables.where({ projectId: project.id }).models;
   // The API returns config variables sorted alphabetically by name
@@ -19,7 +19,7 @@ export function get(schema: any, { requestBody }: Request): Response {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export function set(schema: any, { requestBody }: Request): Response {
+export function set(this: RouteHandler, schema: any, { requestBody }: Request): Response {
   // This implementation faithfully recreates the behavior that leads to
   // https://github.com/hashicorp/waypoint/issues/2339.
   // If core changes, we should update this implementation too.

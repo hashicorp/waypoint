@@ -1,5 +1,5 @@
 import { Token, NewTokenResponse } from 'waypoint-pb';
-import { Response } from 'miragejs';
+import { RouteHandler, Response } from 'miragejs';
 
 function createToken(): Token {
   let token = new Token();
@@ -9,7 +9,7 @@ function createToken(): Token {
   return token;
 }
 
-export function create(): Response {
+export function create(this: RouteHandler): Response {
   let resp = new NewTokenResponse();
   resp.setToken(createToken().getAccessorId_asB64());
   return this.serialize(resp, 'application');
