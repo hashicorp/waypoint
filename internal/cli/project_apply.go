@@ -3,6 +3,7 @@ package cli
 import (
 	"io/ioutil"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
@@ -34,9 +35,9 @@ type ProjectApplyCommand struct {
 	flagGitKeyPassword        string
 	flagFromWaypointHcl       string
 	flagWaypointHcl           string
-	flagPoll                  bool
+	flagPoll                  string
 	flagPollInterval          string
-	flagAppStatusPoll         bool
+	flagAppStatusPoll         string
 	flagAppStatusPollInterval string
 	flagOndemandRunner        string
 }
@@ -166,21 +167,27 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 	case "git":
 		// Set remote enabled to true so users can run remote ops
 		proj.RemoteEnabled = true
-		if c.flagPoll {
+		if c.flagPoll != "" {
+			// if c.flagPoll is not empty, it's guaranteed to be either "true"
+			// or "false"
+			poll, _ := strconv.ParseBool(c.flagPoll)
 			if proj.DataSourcePoll == nil {
 				proj.DataSourcePoll = &pb.Project_Poll{}
 			}
 
-			proj.DataSourcePoll.Enabled = true
+			proj.DataSourcePoll.Enabled = poll
 			proj.DataSourcePoll.Interval = c.flagPollInterval
 		}
 
-		if c.flagAppStatusPoll {
+		if c.flagAppStatusPoll != "" {
+			// if c.flagAppStatusPoll is not empty, it's guaranteed to be either "true"
+			// or "false"
+			statusPoll, _ := strconv.ParseBool(c.flagAppStatusPoll)
 			if proj.StatusReportPoll == nil {
 				proj.StatusReportPoll = &pb.Project_AppStatusPoll{}
 			}
 
-			proj.StatusReportPoll.Enabled = c.flagAppStatusPoll
+			proj.StatusReportPoll.Enabled = statusPoll
 			proj.StatusReportPoll.Interval = c.flagAppStatusPollInterval
 		}
 
@@ -284,7 +291,7 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 
 		// Some basic error handling if polling is requested but was not explicit
 		// about a data source for the project
-		if c.flagPoll {
+		if c.flagPoll == "true" {
 			c.ui.Output(
 				"To enable polling, you must specify a git data source for the project with -data-source=git",
 				terminal.WithErrorStyle(),
@@ -294,7 +301,7 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 
 		// Some basic error handling if app status polling is requested but was not explicit
 		// about a data source for the project
-		if c.flagAppStatusPoll {
+		if c.flagAppStatusPoll == "true" {
 			c.ui.Output(
 				"To enable application status polling, you must specify a git data "+
 					"source for the project with -data-source=git",
@@ -375,7 +382,6 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 		_, err := c.project.Client().GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
 			Config: ref,
 		})
-
 		if err != nil {
 			c.ui.Output(
 				"Error looking up ondemand runner: %s", clierrors.Humanize(err),
@@ -508,10 +514,9 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 				"the private key doesn't require a password.",
 		})
 
-		f.BoolVar(&flag.BoolVar{
-			Name:    "poll",
-			Target:  &c.flagPoll,
-			Default: false,
+		f.StringBoolVar(&flag.StringBoolVar{
+			Name:   "poll",
+			Target: &c.flagPoll,
 			Usage: "Enable polling. This is only valid if a Git data source is supplied. " +
 				"This will watch the repo for changes and trigger a remote 'up'.",
 		})
@@ -523,10 +528,9 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 			Usage:   "Interval between polling if polling is enabled.",
 		})
 
-		f.BoolVar(&flag.BoolVar{
-			Name:    "app-status-poll",
-			Target:  &c.flagAppStatusPoll,
-			Default: false,
+		f.StringBoolVar(&flag.StringBoolVar{
+			Name:   "app-status-poll",
+			Target: &c.flagAppStatusPoll,
 			Usage: "Enable polling to continuously generate status reports for apps. " +
 				"This is only valid if a Git data source is supplied.",
 		})
