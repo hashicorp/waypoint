@@ -47,7 +47,7 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
       let start = new ExecStreamRequest.Start();
       start.setDeploymentId(deploymentId);
       execStreamStartRequest.setStart(start);
-      socket.send(execStreamStartRequest);
+      socket.send(execStreamStartRequest.serializeBinary());
     });
     socket.addEventListener('message', (event) => {
       console.log(event);
