@@ -1,0 +1,3 @@
+```release-note:feature
+ui: reformatted app overview page and header of artifact details page
+```

@@ -4,13 +4,18 @@
       (and (eq @artifact "deployment") "Deployment")
       (and (eq @artifact "build") "Build")
       (and (eq @artifact "release") "Release")
+      (and @artifact "n/a")
     )
   )
   as |vars|
 }}
-<header class="panel-header {{@className}}">
+<header data-test-panel-header class="panel-header {{@className}}">
   <div class="title">
-    <h1>{{vars.title}} <b class="badge badge--version">v{{@sequence}}</b></h1>
+    <h1>{{vars.title}} 
+      {{#if @sequence}}
+        <b class="badge badge--version">v{{@sequence}}</b>
+      {{/if}}
+    </h1>
     {{yield to="title"}}
   </div>
   <div class="actions">
