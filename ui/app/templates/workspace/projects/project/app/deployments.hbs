@@ -1,8 +1,6 @@
 {{page-title (concat @model.application.application "Deployments")}}
 
-<h2>
-  {{t "page.deployments.title"}}
-</h2>
+<h2 class="list-heading">{{t "page.deployments.title"}}</h2>
 
 <ul data-test-deployment-list class="list">
   {{#each this.deploymentsByGeneration key="generationID" as |group|}}

@@ -74,6 +74,10 @@ ul.list {
   border-bottom: none;
 }
 
+.list-heading {
+  @include Typography.Heading(3);
+}
+
 .status-row {
   // status information on specific build/deployment/release page
   display: flex;
