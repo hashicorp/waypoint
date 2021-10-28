@@ -10,9 +10,17 @@ func TestStringBool(t *testing.T) {
 	cases := map[string]struct {
 		input     *string
 		expected  string
+		omitValue bool // add the flag, but omit any value
 		shouldErr bool
 	}{
-		"omitted": {},
+		"omitted": {
+			expected: "",
+		},
+		// support -flag for "true"
+		"bool flag behavior": {
+			omitValue: true,
+			expected:  "true",
+		},
 		"true": {
 			input:    strPtr("TRUE"),
 			expected: "true",
@@ -41,7 +49,7 @@ func TestStringBool(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			var valA string
-			var valB []string
+			var valB string
 			sets := NewSets()
 			{
 				set := sets.NewSet("A")
@@ -53,16 +61,19 @@ func TestStringBool(t *testing.T) {
 			{
 				// borrowed from string_slice_test, just to have another input
 				set := sets.NewSet("B")
-				set.StringSliceVar(&StringSliceVar{
+				set.StringVar(&StringVar{
 					Name:   "b",
 					Target: &valB,
 				})
 			}
 
 			var err error
-			inputs := []string{"-b", "somevalueB"}
+			inputs := []string{"-b=somevalueB"}
 			if c.input != nil {
-				inputs = append(inputs, "-a", *c.input)
+				inputs = append(inputs, "-a="+*c.input)
+			}
+			if c.omitValue == true {
+				inputs = append(inputs, "-a")
 			}
 			err = sets.Parse(inputs)
 			if c.shouldErr {

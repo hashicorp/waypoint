@@ -83,3 +83,4 @@ func (s *stringBoolValue) Get() interface{} { return *s.target }
 func (s *stringBoolValue) String() string   { return *s.target }
 func (s *stringBoolValue) Example() string  { return "true" }
 func (s *stringBoolValue) Hidden() bool     { return s.hidden }
+func (s *stringBoolValue) IsBoolFlag() bool { return true }
