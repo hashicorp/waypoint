@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 func (s *service) UpsertStatusReport(
@@ -52,9 +52,9 @@ func (s *service) ListStatusReports(
 	}
 
 	result, err := s.state.StatusReportList(req.Application,
-		state.ListWithStatusFilter(req.Status...),
-		state.ListWithOrder(req.Order),
-		state.ListWithWorkspace(req.Workspace),
+		serverstate.ListWithStatusFilter(req.Status...),
+		serverstate.ListWithOrder(req.Order),
+		serverstate.ListWithWorkspace(req.Workspace),
 	)
 	if err != nil {
 		return nil, err

@@ -22,6 +22,14 @@ func (s *service) StartExecStream(
 ) error {
 	log := hclog.FromContext(srv.Context())
 
+	// TODO(mitchellh): We only support exec if we're using the in-memory
+	// state store. We will add support for our other stores later.
+	inmemstate, ok := s.state.(*state.State)
+	if !ok {
+		return status.Errorf(codes.Unimplemented,
+			"state storage doesn't support exec streaming")
+	}
+
 	// Read our first event which must be a Start event.
 	log.Trace("waiting for Start message")
 	req, err := srv.Recv()
@@ -54,7 +62,7 @@ func (s *service) StartExecStream(
 	switch t := start.Start.Target.(type) {
 	case *pb.ExecStreamRequest_Start_InstanceId:
 		log = log.With("instance_id", t.InstanceId)
-		err = s.state.InstanceExecCreateByTargetedInstance(t.InstanceId, execRec)
+		err = inmemstate.InstanceExecCreateByTargetedInstance(t.InstanceId, execRec)
 		if err != nil {
 			return err
 		}
@@ -163,12 +171,12 @@ func (s *service) StartExecStream(
 			ctx, cancel := context.WithTimeout(srv.Context(), 60*time.Second)
 			defer cancel()
 
-			err = s.state.InstanceExecCreateForVirtualInstance(ctx, instId, execRec)
+			err = inmemstate.InstanceExecCreateForVirtualInstance(ctx, instId, execRec)
 			if err != nil {
 				return err
 			}
 		} else {
-			err = s.state.InstanceExecCreateByDeployment(t.DeploymentId, execRec)
+			err = inmemstate.InstanceExecCreateByDeployment(t.DeploymentId, execRec)
 			if err != nil {
 				return err
 			}
@@ -183,7 +191,7 @@ func (s *service) StartExecStream(
 	log.Debug("exec requested", "args", start.Start.Args)
 
 	// Make sure we always deregister it
-	defer s.state.InstanceExecDelete(execRec.Id)
+	defer inmemstate.InstanceExecDelete(execRec.Id)
 
 	// Always send the open message. In the future we'll send some metadata here.
 	if err := srv.Send(&pb.ExecStreamResponse{

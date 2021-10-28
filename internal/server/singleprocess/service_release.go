@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/ptypes"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 func (s *service) UpsertRelease(
@@ -48,10 +48,10 @@ func (s *service) ListReleases(
 	req *pb.ListReleasesRequest,
 ) (*pb.ListReleasesResponse, error) {
 	result, err := s.state.ReleaseList(req.Application,
-		state.ListWithStatusFilter(req.Status...),
-		state.ListWithOrder(req.Order),
-		state.ListWithWorkspace(req.Workspace),
-		state.ListWithPhysicalState(req.PhysicalState),
+		serverstate.ListWithStatusFilter(req.Status...),
+		serverstate.ListWithOrder(req.Order),
+		serverstate.ListWithWorkspace(req.Workspace),
+		serverstate.ListWithPhysicalState(req.PhysicalState),
 	)
 	if err != nil {
 		return nil, err

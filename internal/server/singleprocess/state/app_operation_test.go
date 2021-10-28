@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 func TestAppOperation(t *testing.T) {
@@ -192,7 +193,7 @@ func TestAppOperation(t *testing.T) {
 		require.Equal(b2.Sequence, b.Sequence-1)
 
 		// Try listing
-		builds, err := op.List(s, &listOperationsOptions{
+		builds, err := op.List(s, &serverstate.ListOperationOptions{
 			Application: ref,
 		})
 		require.NoError(err)
@@ -249,7 +250,7 @@ func TestAppOperation(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
-		_, err := op.List(s, &listOperationsOptions{})
+		_, err := op.List(s, &serverstate.ListOperationOptions{})
 		require.Error(err)
 	})
 
@@ -308,7 +309,7 @@ func TestAppOperation(t *testing.T) {
 		}
 
 		// List with a filter
-		results, err := op.List(s, &listOperationsOptions{
+		results, err := op.List(s, &serverstate.ListOperationOptions{
 			Application: ref,
 			Status: []*pb.StatusFilter{
 				{
@@ -359,7 +360,7 @@ func TestAppOperation(t *testing.T) {
 
 		// List with a filter
 		build := serverptypes.TestValidBuild(t, nil)
-		results, err := op.List(s, &listOperationsOptions{
+		results, err := op.List(s, &serverstate.ListOperationOptions{
 			Application: build.Application,
 			Workspace:   &pb.Ref_Workspace{Workspace: "WS_A"},
 		})
@@ -408,7 +409,7 @@ func TestAppOperation(t *testing.T) {
 
 		// List with a filter
 		build := serverptypes.TestValidBuild(t, nil)
-		results, err := op.List(s, &listOperationsOptions{
+		results, err := op.List(s, &serverstate.ListOperationOptions{
 			Application: build.Application,
 		})
 		require.NoError(err)
@@ -438,7 +439,7 @@ func TestAppOperation(t *testing.T) {
 
 		// List with a filter
 		build := serverptypes.TestValidBuild(t, nil)
-		results, err := op.List(s, &listOperationsOptions{
+		results, err := op.List(s, &serverstate.ListOperationOptions{
 			Application:   build.Application,
 			PhysicalState: pb.Operation_CREATED,
 		})
@@ -492,7 +493,7 @@ func TestAppOperation(t *testing.T) {
 		require.Equal(0, len(ws))
 
 		// List with a filter
-		results, err := op.List(s, &listOperationsOptions{
+		results, err := op.List(s, &serverstate.ListOperationOptions{
 			Application: ref,
 			WatchSet:    ws,
 		})
@@ -653,7 +654,7 @@ func TestAppOperation_deploy(t *testing.T) {
 
 		// List with a filter
 		deploy := serverptypes.TestValidDeployment(t, nil)
-		results, err := op.List(s, &listOperationsOptions{
+		results, err := op.List(s, &serverstate.ListOperationOptions{
 			Application:   deploy.Application,
 			PhysicalState: pb.Operation_CREATED,
 		})

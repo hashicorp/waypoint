@@ -2,6 +2,7 @@ package state
 
 import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 var deploymentOp = &appOperation{
@@ -32,9 +33,9 @@ func (s *State) DeploymentGet(ref *pb.Ref_Operation) (*pb.Deployment, error) {
 
 func (s *State) DeploymentList(
 	ref *pb.Ref_Application,
-	opts ...ListOperationOption,
+	opts ...serverstate.ListOperationOption,
 ) ([]*pb.Deployment, error) {
-	raw, err := deploymentOp.List(s, buildListOperationsOptions(ref, opts...))
+	raw, err := deploymentOp.List(s, serverstate.BuildListOperationOptions(ref, opts...))
 	if err != nil {
 		return nil, err
 	}

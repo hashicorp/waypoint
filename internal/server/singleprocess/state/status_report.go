@@ -2,6 +2,7 @@ package state
 
 import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 var statusReportOp = &appOperation{
@@ -34,9 +35,9 @@ func (s *State) StatusReportPut(update bool, report *pb.StatusReport) error {
 
 func (s *State) StatusReportList(
 	ref *pb.Ref_Application,
-	opts ...ListOperationOption,
+	opts ...serverstate.ListOperationOption,
 ) ([]*pb.StatusReport, error) {
-	raw, err := statusReportOp.List(s, buildListOperationsOptions(ref, opts...))
+	raw, err := statusReportOp.List(s, serverstate.BuildListOperationOptions(ref, opts...))
 	if err != nil {
 		return nil, err
 	}

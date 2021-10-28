@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 // projectPoll accepts a state management interface which provides access
@@ -20,7 +20,7 @@ import (
 type projectPoll struct {
 	// state is the state management interface that provides functions for
 	// safely mutating server state.
-	state *state.State
+	state serverstate.Interface
 }
 
 // Peek returns the latest project to poll on

@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-memdb"
-	"github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 func TestInstanceExecCreateByTargetedInstance_disabled(t *testing.T) {
@@ -123,7 +125,7 @@ func TestInstanceExecCreateByDeploymentId_valid(t *testing.T) {
 	require.Len(list, 2)
 
 	// Create another instance
-	instance = testInstance(t, &Instance{Id: "B", DeploymentId: "A"})
+	instance = testInstance(t, &serverstate.Instance{Id: "B", DeploymentId: "A"})
 	require.NoError(s.InstanceCreate(instance))
 
 	{
@@ -139,7 +141,7 @@ func TestInstanceExecCreateByDeploymentId_valid(t *testing.T) {
 
 	// Create another instance, with exec disabled
 	{
-		instance := testInstance(t, &Instance{
+		instance := testInstance(t, &serverstate.Instance{
 			Id: "C", DeploymentId: "A", DisableExec: true})
 		require.NoError(s.InstanceCreate(instance))
 

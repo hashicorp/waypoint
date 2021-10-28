@@ -10,6 +10,14 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
+
+	"github.com/hashicorp/waypoint/internal/serverstate"
+)
+
+// It is very important we implement both of these.
+var (
+	_ serverstate.Interface = (*State)(nil)
+	_ serverstate.Pruner    = (*State)(nil)
 )
 
 // The global variables below can be set by init() functions of other

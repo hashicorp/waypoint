@@ -14,7 +14,7 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/ptypes"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 func (s *service) UpsertDeployment(
@@ -85,10 +85,10 @@ func (s *service) ListDeployments(
 	req *pb.ListDeploymentsRequest,
 ) (*pb.ListDeploymentsResponse, error) {
 	result, err := s.state.DeploymentList(req.Application,
-		state.ListWithStatusFilter(req.Status...),
-		state.ListWithOrder(req.Order),
-		state.ListWithWorkspace(req.Workspace),
-		state.ListWithPhysicalState(req.PhysicalState),
+		serverstate.ListWithStatusFilter(req.Status...),
+		serverstate.ListWithOrder(req.Order),
+		serverstate.ListWithWorkspace(req.Workspace),
+		serverstate.ListWithPhysicalState(req.PhysicalState),
 	)
 	if err != nil {
 		return nil, err

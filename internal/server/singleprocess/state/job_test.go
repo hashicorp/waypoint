@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 func TestJobCreate_singleton(t *testing.T) {
@@ -331,7 +332,7 @@ func TestJobAssign(t *testing.T) {
 		{
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			var job *Job
+			var job *serverstate.Job
 			var jerr error
 			doneCh := make(chan struct{})
 			go func() {
@@ -415,7 +416,7 @@ func TestJobAssign(t *testing.T) {
 		{
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			var job *Job
+			var job *serverstate.Job
 			var jerr error
 			doneCh := make(chan struct{})
 			go func() {
@@ -492,7 +493,7 @@ func TestJobAssign(t *testing.T) {
 		{
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			var job *Job
+			var job *serverstate.Job
 			var jerr error
 			doneCh := make(chan struct{})
 			go func() {
@@ -854,7 +855,7 @@ func TestJobAssign(t *testing.T) {
 		// Get the next value in a goroutine
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		var job *Job
+		var job *serverstate.Job
 		var jerr error
 		doneCh := make(chan struct{})
 		go func() {

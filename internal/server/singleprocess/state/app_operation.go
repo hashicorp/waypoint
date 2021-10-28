@@ -18,6 +18,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 // appOperation is an abstraction on any "operation" that may happen to
@@ -198,7 +199,8 @@ func (op *appOperation) getIdForSeq(
 }
 
 // List lists all the records.
-func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface{}, error) {
+func (op *appOperation) List(
+	s *State, opts *serverstate.ListOperationOptions) ([]interface{}, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -922,58 +924,6 @@ const (
 	opGenIndexName          = "generation"    // generation index
 )
 
-// listOperationsOptions are options that can be set for List calls on
-// operations for filtering and limiting the response.
-type listOperationsOptions struct {
-	Application   *pb.Ref_Application
-	Workspace     *pb.Ref_Workspace
-	Status        []*pb.StatusFilter
-	Order         *pb.OperationOrder
-	PhysicalState pb.Operation_PhysicalState
-	WatchSet      memdb.WatchSet
-}
-
-func buildListOperationsOptions(ref *pb.Ref_Application, opts ...ListOperationOption) *listOperationsOptions {
-	var result listOperationsOptions
-	result.Application = ref
-	for _, opt := range opts {
-		opt(&result)
-	}
-
-	return &result
-}
-
-// ListOperationOption is an exported type to set configuration for listing operations.
-type ListOperationOption func(opts *listOperationsOptions)
-
-// ListWithStatusFilter sets a status filter.
-func ListWithStatusFilter(f ...*pb.StatusFilter) ListOperationOption {
-	return func(opts *listOperationsOptions) {
-		opts.Status = f
-	}
-}
-
-// ListWithOrder sets ordering on the list operation.
-func ListWithOrder(f *pb.OperationOrder) ListOperationOption {
-	return func(opts *listOperationsOptions) {
-		opts.Order = f
-	}
-}
-
-// ListWithPhysicalState sets ordering on the list operation.
-func ListWithPhysicalState(f pb.Operation_PhysicalState) ListOperationOption {
-	return func(opts *listOperationsOptions) {
-		opts.PhysicalState = f
-	}
-}
-
-// ListWithWorkspace sets ordering on the list operation.
-func ListWithWorkspace(f *pb.Ref_Workspace) ListOperationOption {
-	return func(opts *listOperationsOptions) {
-		opts.Workspace = f
-	}
-}
-
 // statusFilterMatch is a helper that compares a pb.Status to a set of
 // StatusFilters. This returns true if the filters match.
 func statusFilterMatch(
@@ -1010,13 +960,5 @@ func statusFilterMatchSingle(
 	default:
 		// unknown filters never match
 		return false
-	}
-}
-
-// ListWithWatchSet registers watches for the listing, allowing the watcher
-// to detect if new items are added.
-func ListWithWatchSet(ws memdb.WatchSet) ListOperationOption {
-	return func(opts *listOperationsOptions) {
-		opts.WatchSet = ws
 	}
 }

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 func (s *service) runPrune(
@@ -18,6 +20,12 @@ func (s *service) runPrune(
 	funclog.Info("starting")
 	defer funclog.Info("exiting")
 
+	pruner, ok := s.state.(serverstate.Pruner)
+	if !ok {
+		funclog.Info("state background doesn't require pruning")
+		return
+	}
+
 	tk := time.NewTicker(10 * time.Minute)
 	defer tk.Stop()
 
@@ -26,7 +34,7 @@ func (s *service) runPrune(
 		case <-ctx.Done():
 			return
 		case <-tk.C:
-			err := s.state.Prune()
+			err := pruner.Prune()
 			if err != nil {
 				funclog.Error("error pruning data", "error", err)
 			}

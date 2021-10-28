@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 	"github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 // TODO: test
@@ -41,7 +42,7 @@ func (s *service) EntrypointConfig(
 	// Create our record
 	log = log.With("deployment_id", req.DeploymentId, "instance_id", req.InstanceId)
 	log.Trace("registering entrypoint")
-	record := &state.Instance{
+	record := &serverstate.Instance{
 		Id:           req.InstanceId,
 		DeploymentId: req.DeploymentId,
 		Project:      deployment.Application.Project,
@@ -53,6 +54,13 @@ func (s *service) EntrypointConfig(
 	}
 	if err := s.state.InstanceCreate(record); err != nil {
 		return err
+	}
+
+	// TODO(mitchellh): We only support exec if we're using the in-memory
+	// state store. We will add support for our other stores later.
+	inmemstate, ok := s.state.(*state.State)
+	if !ok {
+		inmemstate = nil
 	}
 
 	// Defer deleting this.
@@ -68,16 +76,18 @@ func (s *service) EntrypointConfig(
 			log.Error("failed to delete instance data. This should not happen.", "err", err)
 		}
 
-		// Delete any active but unconnected exec requests. This can happen
-		// if the entrypoint crashed after an exec was assigned to the entrypoint.
-		log.Trace("closing any unconnected exec requests")
-		execs, err := s.state.InstanceExecListByInstanceId(record.Id, nil)
-		if err != nil {
-			log.Error("failed to query instance exec list. This should not happen.", "err", err)
-		} else {
-			for _, exec := range execs {
-				if atomic.CompareAndSwapUint32(&exec.Connected, 0, 1) {
-					close(exec.EntrypointEventCh)
+		if inmemstate != nil {
+			// Delete any active but unconnected exec requests. This can happen
+			// if the entrypoint crashed after an exec was assigned to the entrypoint.
+			log.Trace("closing any unconnected exec requests")
+			execs, err := inmemstate.InstanceExecListByInstanceId(record.Id, nil)
+			if err != nil {
+				log.Error("failed to query instance exec list. This should not happen.", "err", err)
+			} else {
+				for _, exec := range execs {
+					if atomic.CompareAndSwapUint32(&exec.Connected, 0, 1) {
+						close(exec.EntrypointEventCh)
+					}
 				}
 			}
 		}
@@ -86,9 +96,14 @@ func (s *service) EntrypointConfig(
 	// Build our config in a loop.
 	for {
 		ws := memdb.NewWatchSet()
-		execs, err := s.state.InstanceExecListByInstanceId(req.InstanceId, ws)
-		if err != nil {
-			return err
+
+		// Get our exec requests
+		var execs []*state.InstanceExec
+		if inmemstate != nil {
+			execs, err = inmemstate.InstanceExecListByInstanceId(req.InstanceId, ws)
+			if err != nil {
+				return err
+			}
 		}
 
 		// Build our config
@@ -206,6 +221,14 @@ func (s *service) EntrypointLogStream(
 ) error {
 	log := hclog.FromContext(server.Context())
 
+	// TODO(mitchellh): We only support logs if we're using the in-memory
+	// state store. We will add support for our other stores later.
+	inmemstate, ok := s.state.(*state.State)
+	if !ok {
+		return status.Errorf(codes.Unimplemented,
+			"state storage doesn't support log streaming")
+	}
+
 	var buf *logbuffer.Buffer
 	for {
 		// Read the next log entry
@@ -228,7 +251,7 @@ func (s *service) EntrypointLogStream(
 					// without generating a full Instance.
 
 					log.Info("no Instance found, attempting to lookup InstanceLogs record instead")
-					il, err := s.state.InstanceLogsByInstanceId(batch.InstanceId)
+					il, err := inmemstate.InstanceLogsByInstanceId(batch.InstanceId)
 					if err != nil {
 						return err
 					}
@@ -270,6 +293,14 @@ func (s *service) EntrypointExecStream(
 ) error {
 	log := hclog.FromContext(server.Context())
 
+	// TODO(mitchellh): We only support exec if we're using the in-memory
+	// state store. We will add support for our other stores later.
+	inmemstate, ok := s.state.(*state.State)
+	if !ok {
+		return status.Errorf(codes.Unimplemented,
+			"state storage doesn't support exec streaming")
+	}
+
 	// Receive our opening message so we can determine the exec stream.
 	req, err := server.Recv()
 	if err != nil {
@@ -282,7 +313,7 @@ func (s *service) EntrypointExecStream(
 	}
 
 	// Get our instance and look for this exec index
-	exec, err := s.state.InstanceExecById(open.Open.Index)
+	exec, err := inmemstate.InstanceExecById(open.Open.Index)
 	if err != nil {
 		return err
 	}

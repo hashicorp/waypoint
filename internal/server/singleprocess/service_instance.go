@@ -9,14 +9,14 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 func (s *service) ListInstances(
 	ctx context.Context,
 	req *pb.ListInstancesRequest,
 ) (*pb.ListInstancesResponse, error) {
-	var result []*state.Instance
+	var result []*serverstate.Instance
 	var err error
 	switch scope := req.Scope.(type) {
 	case *pb.ListInstancesRequest_DeploymentId:

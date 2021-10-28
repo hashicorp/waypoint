@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/logbuffer"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 const (
@@ -93,33 +93,7 @@ func instanceSchema() *memdb.TableSchema {
 	}
 }
 
-type Instance struct {
-	Id           string
-	DeploymentId string
-	Project      string
-	Application  string
-	Workspace    string
-	LogBuffer    *logbuffer.Buffer
-	Type         pb.Instance_Type
-	DisableExec  bool
-}
-
-func (i *Instance) Proto() *pb.Instance {
-	return &pb.Instance{
-		Id:           i.Id,
-		DeploymentId: i.DeploymentId,
-		Type:         i.Type,
-		Application: &pb.Ref_Application{
-			Project:     i.Project,
-			Application: i.Application,
-		},
-		Workspace: &pb.Ref_Workspace{
-			Workspace: i.Workspace,
-		},
-	}
-}
-
-func (s *State) InstanceCreate(rec *Instance) error {
+func (s *State) InstanceCreate(rec *serverstate.Instance) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -149,7 +123,7 @@ func (s *State) InstanceDelete(id string) error {
 	return nil
 }
 
-func (s *State) InstanceById(id string) (*Instance, error) {
+func (s *State) InstanceById(id string) (*serverstate.Instance, error) {
 	txn := s.inmem.Txn(false)
 	raw, err := txn.First(instanceTableName, instanceIdIndexName, id)
 	txn.Abort()
@@ -160,12 +134,12 @@ func (s *State) InstanceById(id string) (*Instance, error) {
 		return nil, status.Errorf(codes.NotFound, "instance ID not found")
 	}
 
-	return raw.(*Instance), nil
+	return raw.(*serverstate.Instance), nil
 }
 
 // instanceByIdWaiting waits for an instance with +id+ to connect before returning
 // itself record.
-func (s *State) instanceByIdWaiting(ctx context.Context, id string) (*Instance, error) {
+func (s *State) instanceByIdWaiting(ctx context.Context, id string) (*serverstate.Instance, error) {
 	// If the caller specified an instance id already, then just validate it.
 	if id == "" {
 		return nil, status.Errorf(codes.NotFound, "No instance id given")
@@ -187,7 +161,7 @@ func (s *State) instanceByIdWaiting(ctx context.Context, id string) (*Instance, 
 
 		// It's there!
 		if raw != nil {
-			return raw.(*Instance), nil
+			return raw.(*serverstate.Instance), nil
 		}
 
 		// The watcher here registers itself on the bottom of a leaf node in the memdb
@@ -207,7 +181,7 @@ func (s *State) instanceByIdWaiting(ctx context.Context, id string) (*Instance, 
 	}
 }
 
-func (s *State) InstancesByDeployment(id string, ws memdb.WatchSet) ([]*Instance, error) {
+func (s *State) InstancesByDeployment(id string, ws memdb.WatchSet) ([]*serverstate.Instance, error) {
 	txn := s.inmem.Txn(false)
 	defer txn.Abort()
 	iter, err := txn.Get(instanceTableName, instanceDeploymentIdIndexName, id)
@@ -216,9 +190,9 @@ func (s *State) InstancesByDeployment(id string, ws memdb.WatchSet) ([]*Instance
 	}
 	ws.Add(iter.WatchCh())
 
-	var result []*Instance
+	var result []*serverstate.Instance
 	for raw := iter.Next(); raw != nil; raw = iter.Next() {
-		result = append(result, raw.(*Instance))
+		result = append(result, raw.(*serverstate.Instance))
 	}
 
 	return result, nil
@@ -228,7 +202,7 @@ func (s *State) InstancesByApp(
 	ref *pb.Ref_Application,
 	refws *pb.Ref_Workspace,
 	ws memdb.WatchSet,
-) ([]*Instance, error) {
+) ([]*serverstate.Instance, error) {
 	txn := s.inmem.Txn(false)
 	defer txn.Abort()
 
@@ -245,9 +219,9 @@ func (s *State) InstancesByApp(
 	}
 	ws.Add(iter.WatchCh())
 
-	var result []*Instance
+	var result []*serverstate.Instance
 	for raw := iter.Next(); raw != nil; raw = iter.Next() {
-		result = append(result, raw.(*Instance))
+		result = append(result, raw.(*serverstate.Instance))
 	}
 
 	return result, nil

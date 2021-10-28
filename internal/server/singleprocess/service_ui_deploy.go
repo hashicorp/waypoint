@@ -7,7 +7,7 @@ import (
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/ptypes"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 func (s *service) UI_ListDeployments(
@@ -15,10 +15,10 @@ func (s *service) UI_ListDeployments(
 	req *pb.UI_ListDeploymentsRequest,
 ) (*pb.UI_ListDeploymentsResponse, error) {
 	deployList, err := s.state.DeploymentList(req.Application,
-		state.ListWithOrder(req.Order),
-		state.ListWithWorkspace(req.Workspace),
-		state.ListWithStatusFilter(req.Status...),
-		state.ListWithPhysicalState(req.PhysicalState),
+		serverstate.ListWithOrder(req.Order),
+		serverstate.ListWithWorkspace(req.Workspace),
+		serverstate.ListWithStatusFilter(req.Status...),
+		serverstate.ListWithPhysicalState(req.PhysicalState),
 	)
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (s *service) UI_ListDeployments(
 	statusReports, err := s.state.StatusReportList(
 		req.Application,
 		// NOTE(izaak): the only implemented order for list is pb.OperationOrder_COMPLETE_TIME, which doesn't apply here.
-		state.ListWithWorkspace(req.Workspace),
+		serverstate.ListWithWorkspace(req.Workspace),
 	)
 	if err != nil {
 		return nil, err

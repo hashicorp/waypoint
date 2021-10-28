@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 func (s *service) UpsertBuild(
@@ -51,8 +51,8 @@ func (s *service) ListBuilds(
 	}
 
 	result, err := s.state.BuildList(req.Application,
-		state.ListWithWorkspace(req.Workspace),
-		state.ListWithOrder(req.Order),
+		serverstate.ListWithWorkspace(req.Workspace),
+		serverstate.ListWithOrder(req.Order),
 	)
 	if err != nil {
 		return nil, err
