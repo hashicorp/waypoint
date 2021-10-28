@@ -1082,7 +1082,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Name:   "nomad-odr-image",
 		Target: &i.config.odrImage,
 		Usage: "Docker image for the on-demand runners. If not specified, it " +
-			"defaults to the server image name + '-dr' (i.e. 'hashicorp/waypoint-odr:latest')",
+			"defaults to the server image name + '-odr' (i.e. 'hashicorp/waypoint-odr:latest')",
 	})
 
 	set.BoolVar(&flag.BoolVar{
