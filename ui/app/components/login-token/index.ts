@@ -14,7 +14,7 @@ export default class LoginForm extends Component {
   async login(event?: Event): Promise<void> {
     event?.preventDefault();
 
-    await this.session.setToken(this.token);
+    await this.session.authenticate('authenticator:token', this.token);
     this.router.transitionTo('workspaces');
   }
 }
