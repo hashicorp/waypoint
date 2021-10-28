@@ -1,12 +1,11 @@
+import ApiService from 'waypoint/services/api';
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
+import { InviteTokenRequest } from 'waypoint-pb';
+import SessionService from 'waypoint/services/old-session';
 import { action } from '@ember/object';
 import { later } from '@ember/runloop';
-
 import { inject as service } from '@ember/service';
-import ApiService from 'waypoint/services/api';
-import { InviteTokenRequest } from 'waypoint-pb';
-import SessionService from 'waypoint/services/session';
+import { tracked } from '@glimmer/tracking';
 
 export default class ActionsInvite extends Component {
   @service api!: ApiService;

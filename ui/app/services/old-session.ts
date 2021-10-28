@@ -1,8 +1,9 @@
 import Service, { inject as service } from '@ember/service';
-import { tracked } from '@glimmer/tracking';
-import ApiService from './api';
 
-export default class SessionService extends Service {
+import ApiService from './api';
+import { tracked } from '@glimmer/tracking';
+
+export default class OldSessionService extends Service {
   @service api!: ApiService;
   @tracked authConfigured: boolean;
 
