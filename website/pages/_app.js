@@ -1,6 +1,8 @@
 import './style.css'
 import '@hashicorp/platform-util/nprogress/style.css'
+
 import NProgress from '@hashicorp/platform-util/nprogress'
+import useFathomAnalytics from '@hashicorp/platform-analytics'
 import useAnchorLinkAnalytics from '@hashicorp/platform-util/anchor-link-analytics'
 import Router from 'next/router'
 import HashiHead from '@hashicorp/react-head'
@@ -23,6 +25,7 @@ const description =
   'Waypoint is an open source solution that provides a modern workflow for build, deploy, and release across platforms.'
 
 export default function App({ Component, pageProps }) {
+  useFathomAnalytics()
   useAnchorLinkAnalytics()
 
   return (
