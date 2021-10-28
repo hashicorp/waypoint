@@ -17,6 +17,7 @@ export interface Model {
   releases: ReleaseExtended[];
   builds: (Build.AsObject & WithPushedArtifact)[];
   pushedArtifacts: PushedArtifact.AsObject[];
+  workspace: Ref.Workspace.AsObject;
 }
 
 interface WithPushedArtifact {
@@ -58,6 +59,7 @@ export default class App extends Route {
       releases: this.api.listReleases(wsRef, appRef),
       builds: this.api.listBuilds(wsRef, appRef),
       pushedArtifacts: this.api.listPushedArtifacts(wsRef, appRef),
+      workspace: ws,
     });
   }
 

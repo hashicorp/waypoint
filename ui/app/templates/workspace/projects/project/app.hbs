@@ -34,6 +34,28 @@
       {{/if}}
     {{/if}}
   </div>
+  <div class="workspace">
+    <Pds::Dropdown as |D|>
+      <D.Trigger>
+        {{@model.workspace.workspace}}
+      </D.Trigger>
+
+      <D.Dialog>
+        <section>
+          {{#each @model.workspaces as |workspace|}}
+            <LinkTo
+              @route="workspace.projects.project.app"
+              @models={{array
+                workspace.workspace
+                @model.project.name
+                @model.application.application
+              }}
+            />
+          {{/each}}
+        </section>
+      </D.Dialog>
+    </Pds::Dropdown>
+  </div>
 </PageHeader>
 
 <Pds::TabNav>
