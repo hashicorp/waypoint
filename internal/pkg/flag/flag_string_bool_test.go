@@ -60,17 +60,14 @@ func TestStringBool(t *testing.T) {
 			}
 
 			var err error
+			inputs := []string{"-b", "somevalueB"}
 			if c.input != nil {
-				err = sets.Parse([]string{
-					"-a", *c.input,
-					"-b", "somevalueB",
-				})
-			} else {
-				err = sets.Parse([]string{
-					"-b", "somevalueB",
-				})
+				inputs = append(inputs, "-a", *c.input)
 			}
-			if !c.shouldErr {
+			err = sets.Parse(inputs)
+			if c.shouldErr {
+				assert.Error(t, err)
+			} else {
 				assert.NoError(t, err)
 			}
 
