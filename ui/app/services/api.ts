@@ -83,8 +83,8 @@ export default class ApiService extends Service {
   }
 
   get meta(): Metadata {
-    if (this.session.authConfigured) {
-      return { ...protocolVersions, authorization: this.session.token };
+    if (this.session.isAuthenticated) {
+      return { ...protocolVersions, authorization: this.session.data.authenticated.token };
     } else {
       return { ...protocolVersions };
     }

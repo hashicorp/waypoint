@@ -33,6 +33,10 @@ module.exports = function (environment) {
       injectionFactories: [],
     },
 
+    'ember-simple-auth': {
+      routeAfterAuthentication: 'workspaces',
+    },
+
     // Ember-toggle addon settings
     'ember-toggle': {
       includedThemes: ['light'],
