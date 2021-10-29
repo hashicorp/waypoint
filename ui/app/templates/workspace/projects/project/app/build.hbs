@@ -2,13 +2,6 @@
 
 {{#let (or @model.pushedArtifact @model) as |operation|}}
   <PanelHeader @artifact="build" @sequence={{@model.sequence}}>
-    <:title>
-      {{#if @model.preload.jobDataSourceRef.git.commit}}
-        <small>
-          <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
-        </small>
-      {{/if}}
-    </:title>
     <:actions>
       <Actions::Deploy @sequence={{@model.sequence}} />
     </:actions>
@@ -38,6 +31,16 @@
             <OperationStatusIndicator @status={{operation.status}} />
           </td>
         </tr>
+        {{#if @model.preload.jobDataSourceRef.git.commit}}
+        <tr>
+          <th scope="row">
+            Commit
+          </th>
+          <td>
+            <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
+          </td>
+        </tr>
+        {{/if}}
       </StatusReportMetaTable>
     </:body>
   </Section>
