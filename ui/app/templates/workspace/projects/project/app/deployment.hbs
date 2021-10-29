@@ -2,13 +2,6 @@
 
 {{#if (not-eq this.target.currentRouteName "workspace.projects.project.app.deployment.resource")}}
   <PanelHeader @artifact="deployment" @sequence={{@model.sequence}}>
-    <:title>
-      {{#if @model.preload.jobDataSourceRef.git.commit}}
-        <small>
-          <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
-        </small>
-      {{/if}}
-    </:title>
     <:actions>
       <div class="button-group">
         <ExternalLink
@@ -37,33 +30,6 @@
             </span>
           </td>
         </tr>
-        {{#if @model.statusReport}}
-        <tr>
-          <th scope="row">{{t "page.deployment.overview.health-check"}}</th>
-          <td>
-            <div class="status-indicator">
-              <StatusReportIndicator @statusReport={{@model.statusReport}} /> &nbsp;
-              <Pds::Button
-                @variant="ghost"
-                @iconStart="refresh-default"
-                class="refresh-health-check-button"
-                disabled={{this.isRefreshRunning}}
-                {{on "click" this.refreshHealthCheck}}
-              >
-                {{t "page.deployment.overview.re-run-health-check"}}
-              </Pds::Button>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <th scope="row">
-            {{t "page.deployment.overview.image"}}
-          </th>
-          <td>
-            <ContainerImageTag @statusReport={{@model.statusReport}}/>
-          </td>
-        </tr>
-        {{/if}}
       </StatusReportMetaTable>
     </:body>
   </Section>

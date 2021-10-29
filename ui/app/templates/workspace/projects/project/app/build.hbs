@@ -31,16 +31,6 @@
             <OperationStatusIndicator @status={{operation.status}} />
           </td>
         </tr>
-        {{#if @model.preload.jobDataSourceRef.git.commit}}
-        <tr>
-          <th scope="row">
-            Commit
-          </th>
-          <td>
-            <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
-          </td>
-        </tr>
-        {{/if}}
       </StatusReportMetaTable>
     </:body>
   </Section>

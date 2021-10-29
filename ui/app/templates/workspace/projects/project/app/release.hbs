@@ -25,31 +25,6 @@
             </span>
           </td>
         </tr>
-        <tr>
-          <th scope="row">{{t "page.release.overview.health-check"}}</th>
-          <td>
-            <div class="status-indicator">
-              <StatusReportIndicator @statusReport={{@model.statusReport}} /> &nbsp;
-              <Pds::Button
-                @variant="ghost"
-                @iconStart="refresh-default"
-                class="refresh-health-check-button"
-                disabled={{this.isRefreshRunning}}
-                {{on "click" this.refreshHealthCheck}}
-              >
-                {{t "page.release.overview.re-run-health-check"}}
-              </Pds::Button>
-            </div>
-          </td>
-        </tr>
-        {{#if @model.preload.jobDataSourceRef.git.commit}}
-        <tr>
-          <th scope="row">Commit</th>
-          <td>
-            <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
-          </td>
-        </tr>
-        {{/if}}
       </StatusReportMetaTable>
     </:body>
   </Section>
