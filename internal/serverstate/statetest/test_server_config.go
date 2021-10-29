@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-func TestServerConfig(t *testing.T, factory Factory) {
+func TestServerConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("basic put and get", func(t *testing.T) {
 		require := require.New(t)
 

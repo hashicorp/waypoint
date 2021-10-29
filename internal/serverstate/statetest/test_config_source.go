@@ -14,7 +14,7 @@ func init() {
 	tests["config_source"] = []testFunc{TestConfigSource, TestConfigSourceWatch}
 }
 
-func TestConfigSource(t *testing.T, factory Factory) {
+func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("basic put and get", func(t *testing.T) {
 		require := require.New(t)
 
@@ -211,7 +211,7 @@ func TestConfigSource(t *testing.T, factory Factory) {
 	})
 }
 
-func TestConfigSourceWatch(t *testing.T, factory Factory) {
+func TestConfigSourceWatch(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("basic put and get", func(t *testing.T) {
 		require := require.New(t)
 

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/hashicorp/waypoint/internal/serverstate"
 	"github.com/hashicorp/waypoint/internal/serverstate/statetest"
 )
@@ -17,5 +19,9 @@ func init() {
 func TestImpl(t *testing.T) {
 	statetest.Test(t, func(t *testing.T) serverstate.Interface {
 		return TestState(t)
+	}, func(t *testing.T, impl serverstate.Interface) serverstate.Interface {
+		v, err := TestStateRestart(t, impl.(*State))
+		require.NoError(t, err)
+		return v
 	})
 }

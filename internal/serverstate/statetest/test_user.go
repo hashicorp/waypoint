@@ -18,7 +18,7 @@ func init() {
 	}
 }
 
-func TestUser(t *testing.T, factory Factory) {
+func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 	id, err := ulid()
 	require.NoError(t, err)
 

@@ -10,7 +10,7 @@ func init() {
 	tests["HMAC"] = []testFunc{TestHMAC}
 }
 
-func TestHMAC(t *testing.T, factory Factory) {
+func TestHMAC(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("Get returns nil if not exist", func(t *testing.T) {
 		require := require.New(t)
 

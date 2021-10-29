@@ -17,7 +17,7 @@ func init() {
 	}
 }
 
-func TestWorkspace(t *testing.T, factory Factory) {
+func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("List is empty by default", func(t *testing.T) {
 		require := require.New(t)
 
@@ -82,7 +82,7 @@ func TestWorkspace(t *testing.T, factory Factory) {
 	})
 }
 
-func TestWorkspaceProject(t *testing.T, factory Factory) {
+func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("List non-empty", func(t *testing.T) {
 		require := require.New(t)
 
@@ -141,7 +141,7 @@ func TestWorkspaceProject(t *testing.T, factory Factory) {
 	})
 }
 
-func TestWorkspaceApp(t *testing.T, factory Factory) {
+func TestWorkspaceApp(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("List non-empty", func(t *testing.T) {
 		require := require.New(t)
 

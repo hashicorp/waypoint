@@ -19,7 +19,7 @@ func init() {
 	}
 }
 
-func TestApplication(t *testing.T, factory Factory) {
+func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("Put adds a new application", func(t *testing.T) {
 		require := require.New(t)
 
@@ -213,7 +213,7 @@ func TestApplication(t *testing.T, factory Factory) {
 	})
 }
 
-func TestApplicationPollPeek(t *testing.T, factory Factory) {
+func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("returns nil if no values", func(t *testing.T) {
 		require := require.New(t)
 
@@ -390,7 +390,7 @@ func TestApplicationPollPeek(t *testing.T, factory Factory) {
 	})
 }
 
-func TestApplicationPollComplete(t *testing.T, factory Factory) {
+func TestApplicationPollComplete(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("returns nil for application that doesn't exist", func(t *testing.T) {
 		require := require.New(t)
 

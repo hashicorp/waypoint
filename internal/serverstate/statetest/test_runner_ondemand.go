@@ -18,7 +18,7 @@ func init() {
 	}
 }
 
-func TestOnDemandRunnerConfig(t *testing.T, factory Factory) {
+func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("Get returns not found error if not exist", func(t *testing.T) {
 		require := require.New(t)
 

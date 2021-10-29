@@ -17,7 +17,7 @@ func init() {
 	}
 }
 
-func TestRunner_crud(t *testing.T, factory Factory) {
+func TestRunner_crud(t *testing.T, factory Factory, restartF RestartFactory) {
 	require := require.New(t)
 
 	s := factory(t)
@@ -45,7 +45,7 @@ func TestRunner_crud(t *testing.T, factory Factory) {
 	require.NoError(s.RunnerDelete(rec.Id))
 }
 
-func TestRunnerById_notFound(t *testing.T, factory Factory) {
+func TestRunnerById_notFound(t *testing.T, factory Factory, restartF RestartFactory) {
 	require := require.New(t)
 
 	s := factory(t)

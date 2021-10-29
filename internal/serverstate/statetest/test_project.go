@@ -22,7 +22,7 @@ func init() {
 	}
 }
 
-func TestProject(t *testing.T, factory Factory) {
+func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("Get returns not found error if not exist", func(t *testing.T) {
 		require := require.New(t)
 
@@ -171,7 +171,7 @@ func TestProject(t *testing.T, factory Factory) {
 	})
 }
 
-func TestProjectPollPeek(t *testing.T, factory Factory) {
+func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("returns nil if no values", func(t *testing.T) {
 		require := require.New(t)
 
@@ -319,7 +319,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory) {
 	})
 }
 
-func TestProjectPollComplete(t *testing.T, factory Factory) {
+func TestProjectPollComplete(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("returns nil for project that doesn't exist", func(t *testing.T) {
 		require := require.New(t)
 
@@ -430,7 +430,7 @@ func TestProjectPollComplete(t *testing.T, factory Factory) {
 	})
 }
 
-func TestProjectListWorkspaces(t *testing.T, factory Factory) {
+func TestProjectListWorkspaces(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("empty for non-existent project", func(t *testing.T) {
 		require := require.New(t)
 
