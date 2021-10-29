@@ -14,7 +14,7 @@
 <div class="artifact-overview">
   <table>
     <tbody>
-      {{#if (or has-block vars.shouldRenderCommit vars.shouldRenderHealthAndTag)}}
+      {{#if (or (or (has-block) vars.shouldRenderCommit) vars.shouldRenderHealthAndTag)}}
         {{yield}}
       {{else}}
         {{t "page.deployment.overview.unavailable"}}

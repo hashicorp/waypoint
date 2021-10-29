@@ -1,0 +1,20 @@
+<Card @classNames={{unless @builds.length 'empty-state'}}>
+  {{#if @builds.length}}
+    <Card::Header>
+      <h4>
+        <Pds::Icon @type="build" class="icon" />
+        <span>Latest build</span>
+      </h4>
+      <LinkTo @route="workspace.projects.project.app.builds">
+        View all builds
+      </LinkTo>
+    </Card::Header>
+
+    <AppCard::Build @model={{@builds.[0]}} />
+  {{else}}
+    <p>
+      <Pds::Icon @type="build" class="icon" />
+      <span>There are no builds to display yet</span>
+    </p>
+  {{/if}}
+</Card>
