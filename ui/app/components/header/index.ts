@@ -6,6 +6,6 @@ export default class Header extends Component {
   @service session!: SessionService;
 
   get canLogout(): boolean {
-    return this.session.authConfigured;
+    return this.session.isAuthenticated;
   }
 }

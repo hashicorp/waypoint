@@ -10,7 +10,7 @@ export default class Logout extends Component {
 
   @action
   async logout(): Promise<void> {
-    await this.session.removeToken();
+    await this.session.invalidate();
     this.router.transitionTo('auth');
   }
 }

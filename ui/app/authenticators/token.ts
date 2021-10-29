@@ -20,8 +20,4 @@ export default class TokenAuthenticator extends BaseAuthenticator {
       return reject();
     }
   }
-
-  invalidate(data) {
-
-  }
 };
