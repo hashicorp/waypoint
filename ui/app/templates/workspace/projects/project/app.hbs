@@ -46,11 +46,14 @@
             <LinkTo
               @route="workspace.projects.project.app"
               @models={{array
-                workspace.workspace
+                workspace.name
                 @model.project.name
                 @model.application.application
               }}
-            />
+              onclick={{D.close}}
+            >
+              {{workspace.name}}
+            </LinkTo>
           {{/each}}
         </section>
       </D.Dialog>
