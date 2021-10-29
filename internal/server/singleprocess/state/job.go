@@ -24,9 +24,6 @@ import (
 
 var (
 	jobBucket = []byte("jobs")
-
-	jobWaitingTimeout   = 2 * time.Minute
-	jobHeartbeatTimeout = 2 * time.Minute
 )
 
 const (
@@ -505,8 +502,8 @@ RETRY_ASSIGN:
 		}
 
 		// Create our timer to requeue this if it isn't acked
-		job.StateTimer = time.AfterFunc(jobWaitingTimeout, func() {
-			s.log.Info("job ack timer expired", "job", job.Id, "timeout", jobWaitingTimeout)
+		job.StateTimer = time.AfterFunc(serverstate.JobWaitingTimeout, func() {
+			s.log.Info("job ack timer expired", "job", job.Id, "timeout", serverstate.JobWaitingTimeout)
 			s.JobAck(job.Id, false)
 		})
 
@@ -591,7 +588,7 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 
 	// Create a new timer that we'll use for our heartbeat. After this
 	// timer expires, the job will immediately move to an error state.
-	job.StateTimer = time.AfterFunc(jobHeartbeatTimeout, func() {
+	job.StateTimer = time.AfterFunc(serverstate.JobHeartbeatTimeout, func() {
 		s.log.Info("canceling job due to heartbeat timeout", "job", job.Id)
 		// Force cancel
 		err := s.JobCancel(job.Id, true)
@@ -600,7 +597,7 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 		}
 	})
 
-	s.log.Debug("heartbeat timer set", "job", job.Id, "timeout", jobHeartbeatTimeout)
+	s.log.Debug("heartbeat timer set", "job", job.Id, "timeout", serverstate.JobHeartbeatTimeout)
 
 	// Insert to update
 	if err := txn.Insert(jobTableName, job); err != nil {
@@ -867,7 +864,7 @@ func (s *State) jobHeartbeat(txn *memdb.Txn, id string) error {
 	}
 
 	// Reset the timer
-	job.StateTimer.Reset(jobHeartbeatTimeout)
+	job.StateTimer.Reset(serverstate.JobHeartbeatTimeout)
 
 	return nil
 }
@@ -1051,7 +1048,7 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex
 	// We reset the nack timer so it gives runners time to reconnect.
 	if rec.State == pb.Job_WAITING {
 		// Create our timer to requeue this if it isn't acked
-		rec.StateTimer = time.AfterFunc(jobWaitingTimeout, func() {
+		rec.StateTimer = time.AfterFunc(serverstate.JobWaitingTimeout, func() {
 			s.JobAck(rec.Id, false)
 		})
 	}
@@ -1059,7 +1056,7 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex
 	// If this job is running, we need to restart a heartbeat timeout.
 	// This should only happen on reinit. This is tested.
 	if rec.State == pb.Job_RUNNING {
-		rec.StateTimer = time.AfterFunc(jobHeartbeatTimeout, func() {
+		rec.StateTimer = time.AfterFunc(serverstate.JobHeartbeatTimeout, func() {
 			// Force cancel
 			s.JobCancel(rec.Id, true)
 		})

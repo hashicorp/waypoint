@@ -1,8 +1,22 @@
 package serverstate
 
 import (
+	"time"
+
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
+)
+
+// These variables control the timeouts associated with the job system.
+// The job system implementaions MUST use them. They are GUARANTEED
+// to be written only when the state implementation is NOT running. Therefore,
+// no lock is needed to read them.
+//
+// These MUST be used because the tests in statetest will manipulate these
+// to verify various behaviors.
+var (
+	JobWaitingTimeout   = 2 * time.Minute
+	JobHeartbeatTimeout = 2 * time.Minute
 )
 
 // Job is the exported structure that is returned for most state APIs
