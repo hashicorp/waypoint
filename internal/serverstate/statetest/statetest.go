@@ -1,7 +1,10 @@
 package statetest
 
 import (
+	"crypto/rand"
 	"testing"
+
+	ulidpkg "github.com/oklog/ulid"
 
 	"github.com/hashicorp/waypoint/internal/serverstate"
 )
@@ -29,3 +32,13 @@ var tests = map[string][]testFunc{}
 // testFunc is the type of the function that a test that is run as part of
 // Test implements. This is an internal only type.
 type testFunc func(*testing.T, Factory)
+
+// ulid returns a unique ULID.
+func ulid() (string, error) {
+	id, err := ulidpkg.New(ulidpkg.Now(), rand.Reader)
+	if err != nil {
+		return "", err
+	}
+
+	return id.String(), nil
+}

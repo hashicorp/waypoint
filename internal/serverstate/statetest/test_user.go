@@ -1,4 +1,4 @@
-package state
+package statetest
 
 import (
 	"testing"
@@ -9,16 +9,23 @@ import (
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
-func TestUser(t *testing.T) {
+func init() {
+	tests["user"] = []testFunc{
+		TestUser,
+	}
+}
+
+func TestUser(t *testing.T, factory Factory) {
 	id, err := ulid()
 	require.NoError(t, err)
 
 	t.Run("Get returns not found error if not exist", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		_, err := s.UserGet(&pb.Ref_User{
@@ -33,7 +40,7 @@ func TestUser(t *testing.T) {
 	t.Run("Empty", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		{
@@ -59,7 +66,7 @@ func TestUser(t *testing.T) {
 	t.Run("Put and Get", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -118,7 +125,7 @@ func TestUser(t *testing.T) {
 	t.Run("Delete", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// We need two users
@@ -175,7 +182,7 @@ func TestUser(t *testing.T) {
 	t.Run("Delete last user fails", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -209,12 +216,12 @@ func TestUser(t *testing.T) {
 	t.Run("Delete default user fails", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
 		err := s.UserPut(serverptypes.TestUser(t, &pb.User{
-			Id:       DefaultUserId,
+			Id:       serverstate.DefaultUserId,
 			Username: "foo",
 		}))
 		require.NoError(err)
@@ -223,7 +230,7 @@ func TestUser(t *testing.T) {
 		{
 			err := s.UserDelete(&pb.Ref_User{
 				Ref: &pb.Ref_User_Id{
-					Id: &pb.Ref_UserId{Id: DefaultUserId},
+					Id: &pb.Ref_UserId{Id: serverstate.DefaultUserId},
 				},
 			})
 			require.Error(err)
@@ -234,7 +241,7 @@ func TestUser(t *testing.T) {
 	t.Run("User lookup by OIDC", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
