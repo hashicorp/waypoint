@@ -6,7 +6,11 @@ import classic from 'ember-classic-decorator';
 @classic
 export default class TokenAuthenticator extends BaseAuthenticator {
   restore(data) {
-
+    if (data.token) {
+      return resolve(data);
+    } else {
+      return reject();
+    }
   }
 
   authenticate(token) {
