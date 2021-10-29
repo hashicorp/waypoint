@@ -44,7 +44,6 @@
         <section>
           {{#each @model.workspaces as |workspace|}}
             <LinkTo
-              @route="workspace.projects.project.app"
               @models={{array
                 workspace.name
                 @model.project.name
