@@ -215,12 +215,6 @@ func (i *NomadInstaller) Install(
 	// configured clients will be invalid
 	if i.config.consulService {
 		s.Update("Configuring the server context to use Consul DNS hostname")
-		//ct := defaultConsulServiceTag
-		//if len(i.config.consulServiceBackendTags) > 0 {
-		//	// TODO what about the UI service?
-		//	ct = i.config.consulServiceBackendTags[0]
-		//}
-
 		if i.config.consulDatacenter == "" {
 			i.config.consulDatacenter = defaultConsulDatacenter
 		}
@@ -228,11 +222,16 @@ func (i *NomadInstaller) Install(
 			i.config.consulDomain = defaultConsulDomain
 		}
 
-		// tag is optional
-		consulWaypointAddr := fmt.Sprintf("%s.service.%s.%s",
-			waypointConsulBackendName, i.config.consulDatacenter, i.config.consulDomain)
+		//TODO: addr = specify flagDomain for non Consul DNS
+		// add a new install flag to let people override with a custom DNS hostname
 
-		addr.Addr = consulWaypointAddr
+		grpcPort, _ := strconv.Atoi(defaultGrpcPort)
+		httpPort, _ := strconv.Atoi(defaultHttpPort)
+
+		addr.Addr = fmt.Sprintf("%s.service.%s.%s:%d",
+			waypointConsulBackendName, i.config.consulDatacenter, i.config.consulDomain, grpcPort)
+		httpAddr = fmt.Sprintf("%s.service.%s.%s:%d",
+			waypointConsulBackendName, i.config.consulDatacenter, i.config.consulDomain, httpPort)
 	} else {
 		s.Update("Configuring the server context to use the static IP address from the Nomad allocation")
 
@@ -775,18 +774,17 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	tg.Networks = []*api.NetworkResource{
 		{
 			Mode: "host",
-			DynamicPorts: []api.Port{
-				{
-					Label: "server",
-					To:    grpcPort,
-				},
-			},
 			// currently set to static; when ui command can be dynamic - update this
 			ReservedPorts: []api.Port{
 				{
 					Label: "ui",
 					Value: httpPort,
 					To:    httpPort,
+				},
+				{
+					Label: "server",
+					To:    grpcPort,
+					Value: grpcPort,
 				},
 			},
 		},
