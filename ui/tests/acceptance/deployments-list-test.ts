@@ -1,9 +1,10 @@
-import { module, test } from 'qunit';
+import { clickable, collection, create, visitable } from 'ember-cli-page-object';
 import { currentURL, findAll } from '@ember/test-helpers';
+import { module, test } from 'qunit';
+
+import login from 'waypoint/tests/helpers/login';
 import { setupApplicationTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
-import { visitable, create, collection, clickable } from 'ember-cli-page-object';
-import login from 'waypoint/tests/helpers/login';
 
 const url = '/default/microchip/app/wp-bandwidth/deployments';
 
@@ -18,9 +19,9 @@ const page = create({
 module('Acceptance | deployments list', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
-  login();
 
   test('visiting deployments page', async function (assert) {
+    await login();
     let project = this.server.create('project', { name: 'microchip' });
     let application = this.server.create('application', { name: 'wp-bandwidth', project });
     this.server.createList('deployment', 3, 'random', { application });
@@ -32,6 +33,7 @@ module('Acceptance | deployments list', function (hooks) {
   });
 
   test('visiting deployments page with mutable deployments', async function (assert) {
+    await login();
     let project = this.server.create('project', { name: 'microchip' });
     let application = this.server.create('application', { name: 'wp-bandwidth', project });
 
@@ -86,6 +88,7 @@ module('Acceptance | deployments list', function (hooks) {
   });
 
   test('status reports appear where available', async function (assert) {
+    await login();
     let project = this.server.create('project', { name: 'microchip' });
     let application = this.server.create('application', { name: 'wp-bandwidth', project });
 

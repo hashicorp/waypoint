@@ -1,15 +1,16 @@
 import { module, test } from 'qunit';
-import { visit } from '@ember/test-helpers';
+
+import login from 'waypoint/tests/helpers/login';
 import { setupApplicationTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
-import login from 'waypoint/tests/helpers/login';
+import { visit } from '@ember/test-helpers';
 
 module('Acceptance | release resource detail', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
-  login();
 
   test('happy path', async function (assert) {
+    await login();
     let project = this.server.create('project', { name: 'my-project' });
     let application = this.server.create('application', { project, name: 'my-app' });
     let release = this.server.create('release', 'random', { application, sequence: 1 });
@@ -29,6 +30,7 @@ module('Acceptance | release resource detail', function (hooks) {
   });
 
   test('error state', async function (assert) {
+    await login();
     let project = this.server.create('project', { name: 'my-project' });
     let application = this.server.create('application', { project, name: 'my-app' });
     let release = this.server.create('release', 'random', { application, sequence: 1 });
