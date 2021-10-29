@@ -1,4 +1,4 @@
-package state
+package statetest
 
 import (
 	"testing"
@@ -11,7 +11,11 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-func TestConfig(t *testing.T) {
+func init() {
+	tests["config"] = []testFunc{TestConfig, TestConfigWatch}
+}
+
+func TestConfig(t *testing.T, factory Factory) {
 	// NOTE(mitchellh): A lot of the tests below use the "UnusedScope"
 	// field. This is done on purpose because I wanted to retain tests
 	// from our old format to ensure that we have backwards compatibility.
@@ -20,7 +24,7 @@ func TestConfig(t *testing.T) {
 	t.Run("basic put and get", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create a config
@@ -98,7 +102,7 @@ func TestConfig(t *testing.T) {
 	t.Run("deletes before writes", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create a config
@@ -167,7 +171,7 @@ func TestConfig(t *testing.T) {
 	t.Run("merging", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create vars
@@ -254,7 +258,7 @@ func TestConfig(t *testing.T) {
 	t.Run("delete", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create a var
@@ -311,7 +315,7 @@ func TestConfig(t *testing.T) {
 	t.Run("delete with unset", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create a var
@@ -371,7 +375,7 @@ func TestConfig(t *testing.T) {
 	t.Run("delete with empty static value", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create a var
@@ -429,7 +433,7 @@ func TestConfig(t *testing.T) {
 	t.Run("runner configs any", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create the config
@@ -495,7 +499,7 @@ func TestConfig(t *testing.T) {
 	t.Run("runner configs targeting ID", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create the config
@@ -552,7 +556,7 @@ func TestConfig(t *testing.T) {
 	t.Run("runner configs targeting any and ID", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create the config
@@ -600,7 +604,7 @@ func TestConfig(t *testing.T) {
 	t.Run("runner configs scoped to an app", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create the config
@@ -675,7 +679,7 @@ func TestConfig(t *testing.T) {
 	t.Run("workspace matching", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create a config
@@ -747,7 +751,7 @@ func TestConfig(t *testing.T) {
 	t.Run("workspace set and not set", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create a config that overrides based on workspace
@@ -818,7 +822,7 @@ func TestConfig(t *testing.T) {
 	t.Run("workspace conflict", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create a config that overrides based on workspace
@@ -889,7 +893,7 @@ func TestConfig(t *testing.T) {
 	t.Run("label matching", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create a build
@@ -959,11 +963,11 @@ func TestConfig(t *testing.T) {
 	})
 }
 
-func TestConfigWatch(t *testing.T) {
+func TestConfigWatch(t *testing.T, factory Factory) {
 	t.Run("basic put and get", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		ws := memdb.NewWatchSet()

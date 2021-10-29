@@ -1,4 +1,4 @@
-package state
+package statetest
 
 import (
 	"testing"
@@ -13,11 +13,20 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
-func TestProject(t *testing.T) {
+func init() {
+	tests["project"] = []testFunc{
+		TestProject,
+		TestProjectPollPeek,
+		TestProjectPollComplete,
+		TestProjectListWorkspaces,
+	}
+}
+
+func TestProject(t *testing.T, factory Factory) {
 	t.Run("Get returns not found error if not exist", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -31,7 +40,7 @@ func TestProject(t *testing.T) {
 	t.Run("Put and Get", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -72,7 +81,7 @@ func TestProject(t *testing.T) {
 		const name = "AbCdE"
 		ref := &pb.Ref_Project{Project: name}
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -120,7 +129,7 @@ func TestProject(t *testing.T) {
 	t.Run("Delete", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -162,11 +171,11 @@ func TestProject(t *testing.T) {
 	})
 }
 
-func TestProjectPollPeek(t *testing.T) {
+func TestProjectPollPeek(t *testing.T, factory Factory) {
 	t.Run("returns nil if no values", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		v, _, err := s.ProjectPollPeek(nil)
@@ -177,7 +186,7 @@ func TestProjectPollPeek(t *testing.T) {
 	t.Run("returns next to poll", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -212,7 +221,7 @@ func TestProjectPollPeek(t *testing.T) {
 	t.Run("watchset triggers from empty to available", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		ws := memdb.NewWatchSet()
@@ -248,7 +257,7 @@ func TestProjectPollPeek(t *testing.T) {
 	t.Run("watchset triggers when records change", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -310,11 +319,11 @@ func TestProjectPollPeek(t *testing.T) {
 	})
 }
 
-func TestProjectPollComplete(t *testing.T) {
+func TestProjectPollComplete(t *testing.T, factory Factory) {
 	t.Run("returns nil for project that doesn't exist", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		require.NoError(s.ProjectPollComplete(&pb.Project{Name: "NOPE"}, time.Now()))
@@ -323,7 +332,7 @@ func TestProjectPollComplete(t *testing.T) {
 	t.Run("does nothing for project that has polling disabled", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -353,7 +362,7 @@ func TestProjectPollComplete(t *testing.T) {
 	t.Run("schedules the next poll time", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -421,11 +430,11 @@ func TestProjectPollComplete(t *testing.T) {
 	})
 }
 
-func TestProjectListWorkspaces(t *testing.T) {
+func TestProjectListWorkspaces(t *testing.T, factory Factory) {
 	t.Run("empty for non-existent project", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		result, err := s.ProjectListWorkspaces(&pb.Ref_Project{Project: "nope"})
@@ -436,7 +445,7 @@ func TestProjectListWorkspaces(t *testing.T) {
 	t.Run("returns only the workspaces a project is in", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create a build

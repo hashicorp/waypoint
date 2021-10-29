@@ -1,4 +1,4 @@
-package state
+package statetest
 
 import (
 	"testing"
@@ -10,10 +10,17 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-func TestRunner_crud(t *testing.T) {
+func init() {
+	tests["runner"] = []testFunc{
+		TestRunner_crud,
+		TestRunnerById_notFound,
+	}
+}
+
+func TestRunner_crud(t *testing.T, factory Factory) {
 	require := require.New(t)
 
-	s := TestState(t)
+	s := factory(t)
 	defer s.Close()
 
 	// Create an instance
@@ -38,10 +45,10 @@ func TestRunner_crud(t *testing.T) {
 	require.NoError(s.RunnerDelete(rec.Id))
 }
 
-func TestRunnerById_notFound(t *testing.T) {
+func TestRunnerById_notFound(t *testing.T, factory Factory) {
 	require := require.New(t)
 
-	s := TestState(t)
+	s := factory(t)
 	defer s.Close()
 
 	// We should be able to find it

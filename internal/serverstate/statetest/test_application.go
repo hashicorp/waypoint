@@ -1,4 +1,4 @@
-package state
+package statetest
 
 import (
 	"testing"
@@ -11,11 +11,19 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
-func TestApplication(t *testing.T) {
+func init() {
+	tests["application"] = []testFunc{
+		TestApplication,
+		TestApplicationPollPeek,
+		TestApplicationPollComplete,
+	}
+}
+
+func TestApplication(t *testing.T, factory Factory) {
 	t.Run("Put adds a new application", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Write project
@@ -60,7 +68,7 @@ func TestApplication(t *testing.T) {
 	t.Run("Put non-existent project", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Write project
@@ -94,7 +102,7 @@ func TestApplication(t *testing.T) {
 	t.Run("Put appends to existing list of applications", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Write project
@@ -125,7 +133,7 @@ func TestApplication(t *testing.T) {
 	t.Run("Put updates an existing application", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Write project
@@ -158,7 +166,7 @@ func TestApplication(t *testing.T) {
 	t.Run("reads file change signal upward", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		name := "abcde"
@@ -205,11 +213,11 @@ func TestApplication(t *testing.T) {
 	})
 }
 
-func TestApplicationPollPeek(t *testing.T) {
+func TestApplicationPollPeek(t *testing.T, factory Factory) {
 	t.Run("returns nil if no values", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		v, _, err := s.ApplicationPollPeek(nil)
@@ -220,7 +228,7 @@ func TestApplicationPollPeek(t *testing.T) {
 	t.Run("returns next to poll", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -266,7 +274,7 @@ func TestApplicationPollPeek(t *testing.T) {
 	t.Run("watchset triggers from empty to available", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		ws := memdb.NewWatchSet()
@@ -308,7 +316,7 @@ func TestApplicationPollPeek(t *testing.T) {
 	t.Run("watchset triggers when records change", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -382,11 +390,11 @@ func TestApplicationPollPeek(t *testing.T) {
 	})
 }
 
-func TestApplicationPollComplete(t *testing.T) {
+func TestApplicationPollComplete(t *testing.T, factory Factory) {
 	t.Run("returns nil for application that doesn't exist", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		err := s.ApplicationPollComplete(&pb.Project{Name: "NOPE"}, time.Now())
@@ -396,7 +404,7 @@ func TestApplicationPollComplete(t *testing.T) {
 	t.Run("does nothing for project that has polling disabled", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -430,7 +438,7 @@ func TestApplicationPollComplete(t *testing.T) {
 	t.Run("schedules the next poll time", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set

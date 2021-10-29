@@ -1,4 +1,4 @@
-package state
+package statetest
 
 import (
 	"testing"
@@ -10,11 +10,15 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-func TestConfigSource(t *testing.T) {
+func init() {
+	tests["config_source"] = []testFunc{TestConfigSource, TestConfigSourceWatch}
+}
+
+func TestConfigSource(t *testing.T, factory Factory) {
 	t.Run("basic put and get", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create
@@ -68,7 +72,7 @@ func TestConfigSource(t *testing.T) {
 	t.Run("delete", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create
@@ -122,7 +126,7 @@ func TestConfigSource(t *testing.T) {
 	t.Run("hash", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create
@@ -207,11 +211,11 @@ func TestConfigSource(t *testing.T) {
 	})
 }
 
-func TestConfigSourceWatch(t *testing.T) {
+func TestConfigSourceWatch(t *testing.T, factory Factory) {
 	t.Run("basic put and get", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		ws := memdb.NewWatchSet()
