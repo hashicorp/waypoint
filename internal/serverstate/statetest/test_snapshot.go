@@ -1,4 +1,4 @@
-package state
+package statetest
 
 import (
 	"bytes"
@@ -13,10 +13,17 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
-func TestSnapshotRestore(t *testing.T) {
+func init() {
+	tests["snapshot"] = []testFunc{
+		TestSnapshotRestore,
+		TestSnapshotRestore_corrupt,
+	}
+}
+
+func TestSnapshotRestore(t *testing.T, factory Factory, factoryRestart RestartFactory) {
 	require := require.New(t)
 
-	s := TestState(t)
+	s := factory(t)
 	defer s.Close()
 
 	// Create some data
@@ -44,8 +51,7 @@ func TestSnapshotRestore(t *testing.T) {
 	require.NoError(s.StageRestoreSnapshot(bytes.NewReader(buf.Bytes())))
 
 	// Reboot!
-	s, err = TestStateRestart(t, s)
-	require.NoError(err)
+	s = factoryRestart(t, s)
 
 	// Should find first record and not the second
 	{
@@ -70,8 +76,7 @@ func TestSnapshotRestore(t *testing.T) {
 	require.NoError(err)
 
 	// Reboot again, should not restore again
-	s, err = TestStateRestart(t, s)
-	require.NoError(err)
+	s = factoryRestart(t, s)
 
 	// Should find both records
 	{
@@ -90,10 +95,10 @@ func TestSnapshotRestore(t *testing.T) {
 	}
 }
 
-func TestSnapshotRestore_corrupt(t *testing.T) {
+func TestSnapshotRestore_corrupt(t *testing.T, factory Factory, factoryRestart RestartFactory) {
 	require := require.New(t)
 
-	s := TestState(t)
+	s := factory(t)
 	defer s.Close()
 
 	// Restore with garbage data
@@ -101,6 +106,5 @@ func TestSnapshotRestore_corrupt(t *testing.T) {
 		"I am probably not a valid BoltDB file.")))
 
 	// Reboot!
-	s, err := TestStateRestart(t, s)
-	require.NoError(err)
+	factoryRestart(t, s)
 }
