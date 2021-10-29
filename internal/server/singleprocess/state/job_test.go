@@ -1843,7 +1843,8 @@ func TestJobHeartbeat(t *testing.T) {
 		}(s)
 
 		// Reinit the state as if we crashed
-		s = TestStateReinit(t, s)
+		s, err = TestStateRestart(t, s)
+		require.NoError(err)
 		defer s.Close()
 
 		// Verify it exists
