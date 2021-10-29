@@ -1,5 +1,5 @@
 import Route from '@ember/routing/route';
-import SessionService from 'waypoint/services/old-session';
+import { SessionService } from 'ember-simple-auth/services/session';
 import Transition from '@ember/routing/-private/transition';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';

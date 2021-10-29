@@ -1,6 +1,4 @@
-import Application from '@ember/application';
-
-export function initialize(application: Application): void {
+export function initialize(/*application: Application*/): void {
   let waypointToken = window.localStorage.waypointAuthToken;
   if (waypointToken) {
     window.localStorage.setItem(
@@ -12,5 +10,5 @@ export function initialize(application: Application): void {
 }
 
 export default {
-  initialize
+  initialize,
 };
