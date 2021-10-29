@@ -116,13 +116,47 @@ func (c *InstallCommand) Run(args []string) int {
 	s := sg.Add("Connecting to: %s", contextConfig.Server.Address)
 	defer func() { s.Abort() }()
 
-	// Connect
-	log.Info("connecting to the server so we can set the server config", "addr", contextConfig.Server.Address)
-	conn, err := serverclient.Connect(ctx,
-		serverclient.FromContextConfig(contextConfig),
-		serverclient.Timeout(5*time.Minute),
-	)
-	if err != nil {
+	// Connect and retry
+	var conn *grpc.ClientConn
+	retries := 0
+	maxRetries := 12 // attempts to retry for a full minute
+	sr := sg.Add("Attempting to make connection to server...")
+	for {
+		log.Info("connecting to the server so we can set the server config", "addr", contextConfig.Server.Address)
+		conn, err = serverclient.Connect(ctx,
+			serverclient.FromContextConfig(contextConfig),
+			serverclient.Timeout(5*time.Second),
+		)
+		if err != nil {
+			c.ui.Output(
+				"Error connecting to server: %s\n\n%s",
+				clierrors.Humanize(err),
+				errInstallRunning,
+				terminal.WithWarningStyle(),
+			)
+			// dont return the error yet
+		} else {
+			sr.Update("Successfully connected to Waypoint server in Nomad!")
+			sr.Done()
+			break
+		}
+
+		if retries >= maxRetries {
+			sr.Update("Failed to connect to Waypoint server after max retry attempts of %s", maxRetries)
+			sr.Status(terminal.StatusError)
+			sr.Done()
+			break
+		}
+
+		// add ui output for iteration loop retry number
+		sr.Update("Retry connecting to server ... %d/%d retries", retries, maxRetries)
+		sr.Status(terminal.StatusWarn)
+		time.Sleep(5 * time.Second)
+		retries++
+	}
+
+	if conn == nil && err != nil {
+		// raise error
 		c.ui.Output(
 			"Error connecting to server: %s\n\n%s",
 			clierrors.Humanize(err),
@@ -131,6 +165,7 @@ func (c *InstallCommand) Run(args []string) int {
 		)
 		return 1
 	}
+
 	client := pb.NewWaypointClient(conn)
 
 	s.Update("Retrieving initial auth token...")
