@@ -35,6 +35,10 @@ type nomadConfig struct {
 	consulDatacenter         string   `hcl:"consul_datacenter,optional"`
 	consulDomain             string   `hcl:"consul_datacenter,optional"`
 
+	// If set along with consul, will use this hostname instead of
+	// making a consul DNS hostname for the server address in its context
+	consulServiceHostname string `hcl:"consul_service_hostname,optional"`
+
 	region         string   `hcl:"namespace,optional"`
 	datacenters    []string `hcl:"datacenters,optional"`
 	policyOverride bool     `hcl:"policy_override,optional"`
@@ -222,16 +226,18 @@ func (i *NomadInstaller) Install(
 			i.config.consulDomain = defaultConsulDomain
 		}
 
-		//TODO: addr = specify flagDomain for non Consul DNS
-		// add a new install flag to let people override with a custom DNS hostname
-
 		grpcPort, _ := strconv.Atoi(defaultGrpcPort)
 		httpPort, _ := strconv.Atoi(defaultHttpPort)
 
-		addr.Addr = fmt.Sprintf("%s.service.%s.%s:%d",
-			waypointConsulBackendName, i.config.consulDatacenter, i.config.consulDomain, grpcPort)
-		httpAddr = fmt.Sprintf("%s.service.%s.%s:%d",
-			waypointConsulBackendName, i.config.consulDatacenter, i.config.consulDomain, httpPort)
+		if i.config.consulServiceHostname == "" {
+			addr.Addr = fmt.Sprintf("%s.service.%s.%s:%d",
+				waypointConsulBackendName, i.config.consulDatacenter, i.config.consulDomain, grpcPort)
+			httpAddr = fmt.Sprintf("%s.service.%s.%s:%d",
+				waypointConsulUIName, i.config.consulDatacenter, i.config.consulDomain, httpPort)
+		} else {
+			addr.Addr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, grpcPort)
+			httpAddr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, httpPort)
+		}
 	} else {
 		s.Update("Configuring the server context to use the static IP address from the Nomad allocation")
 
@@ -1051,6 +1057,14 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Default: true,
 	})
 
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-consul-service-hostname",
+		Target: &i.config.consulServiceHostname,
+		Usage: "If set, will use this hostname for Consul DNS rather than the default, " +
+			"i.e. \"waypoint-server.service.consul\".",
+		Default: "",
+	})
+
 	set.StringSliceVar(&flag.StringSliceVar{
 		Name:    "nomad-consul-service-ui-tags",
 		Target:  &i.config.consulServiceUITags,
@@ -1203,6 +1217,14 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Target:  &i.config.consulService,
 		Usage:   "Create service for Waypoint UI in Consul.",
 		Default: true,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-consul-service-hostname",
+		Target: &i.config.consulServiceHostname,
+		Usage: "If set, will use this hostname for Consul DNS rather than the default, " +
+			"i.e. \"waypoint-server.service.consul\".",
+		Default: "",
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
