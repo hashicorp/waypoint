@@ -84,6 +84,7 @@ manually installed runners will not be automatically upgraded.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server.
 - `-nomad-host-volume=<string>` - Nomad host volume name.
 - `-nomad-consul-service` - Create service for Waypoint UI in Consul.
+- `-nomad-consul-service-hostname=<string>` - If set, will use this hostname for Consul DNS rather than the default, i.e. "waypoint-server.service.consul".
 - `-nomad-consul-service-ui-tags=<string>` - Tags for the Waypoint UI service generated in Consul.
 - `-nomad-consul-service-backend-tags=<string>` - Tags for the Waypoint backend service generated in Consul. The 'first' tag will be used when crafting the Consul DNS hostname for accessing Waypoint.
 - `-nomad-consul-datacenter=<string>` - The datacenter where Consul is located.
