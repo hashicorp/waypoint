@@ -1,6 +1,6 @@
 {{#let
   (hash
-    shouldRenderHealthAndTag= (and
+    shouldRenderHealthAndTag=(and
       (or
         (eq @artifactType "Deployment")
         (eq @artifactType "Release")
@@ -14,14 +14,14 @@
 <div class="artifact-overview">
   <table>
     <tbody>
-      {{#if (or (or (has-block) vars.shouldRenderCommit) vars.shouldRenderHealthAndTag)}}
+      {{#if (or (has-block) vars.shouldRenderCommit vars.shouldRenderHealthAndTag)}}
         {{yield}}
       {{else}}
-        {{t "page.deployment.overview.unavailable"}}
+        {{t "page.artifact.overview.unavailable"}}
       {{/if}}
       {{#if vars.shouldRenderHealthAndTag}}
       <tr>
-        <th scope="row">{{t "page.deployment.overview.health-check"}}</th>
+        <th scope="row">{{t "page.artifact.overview.health-check"}}</th>
         <td>
           <div class="status-indicator">
             <StatusReportIndicator @statusReport={{@model.statusReport}} /> &nbsp;
@@ -32,14 +32,14 @@
               disabled={{this.isRefreshRunning}}
               {{on "click" this.refreshHealthCheck}}
             >
-              {{t "page.deployment.overview.re-run-health-check"}}
+              {{t "page.artifact.overview.re-run-health-check"}}
             </Pds::Button>
           </div>
         </td>
       </tr>
       <tr>
         <th scope="row">
-          {{t "page.deployment.overview.image"}}
+          {{t "page.artifact.overview.image"}}
         </th>
         <td>
           <ContainerImageTag @statusReport={{@model.statusReport}}/>
@@ -48,7 +48,7 @@
       {{/if}}
       {{#if vars.shouldRenderCommit}}
         <tr>
-          <th scope="row">Commit</th>
+          <th scope="row">{{t "page.artifact.overview.commit"}}</th>
           <td>
             <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
           </td>

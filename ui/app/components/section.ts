@@ -9,7 +9,10 @@ type Args = {
 
 export default class extends Component<Args> {
   @tracked expanded = this.args.expanded ?? true;
-  @tracked isExpandable = this.args.isExpandable ?? true;
+
+  get isExpandable(): boolean {
+    return this.args.isExpandable ?? true;
+  }
 
   @action
   toggleExpanded(): void {

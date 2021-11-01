@@ -3,7 +3,7 @@ import { setupRenderingTest } from 'ember-qunit';
 import { render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 
-module('Integration | Component | panel-title', function (hooks) {
+module('Integration | Component | panel-header', function (hooks) {
   setupRenderingTest(hooks);
 
   test('it renders an empty component when params not passed', async function (assert) {

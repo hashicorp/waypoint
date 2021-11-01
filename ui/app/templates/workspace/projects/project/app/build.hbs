@@ -12,7 +12,7 @@
     <:body>
       <StatusReportMetaTable @model={{@model}} @artifactType="Build">
         <tr>
-          <th scope="row">Status</th>
+          <th scope="row">{{t "page.build.overview.status"}}</th>
           <td>
             <Pds::Icon
               @type={{icon-for-component operation.component.name}}

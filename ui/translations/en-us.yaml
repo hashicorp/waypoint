@@ -17,15 +17,20 @@ product:
   name: 'Waypoint'
 
 page:
+  artifact:
+    overview:
+      image: 'Image'
+      health-check: 'Health'
+      re-run-health-check: 'Re-run'
+      unavailable: 'Currently unavailable'
+      commit: 'Commit'
   builds:
     title: 'Builds'
   build:
+    title: 'Build'
     overview:
-      heading: Overview
-      image: Image
-      health-check: Health
-      re-run-health-check: Re-run
-      unavailable: Currently unavailable
+      heading: 'Overview'
+      status: 'Status'
   deployments:
     title: 'Deployments'
     destroyed_label: 'Destroyed'
@@ -38,32 +43,30 @@ page:
       2: 'Deployed by ' # SUCCESS
       3: 'Failed to deploy by ' # ERROR
   deployment:
+    title: 'Deployment'
     resources:
       heading: Resources
       deployment-table-caption: Resources created by <b>this deployment</b>
       release-table-caption-prefix: Resources created by <b>Release</b>
     overview:
-      heading: Overview
-      image: Image
-      health-check: Health
-      re-run-health-check: Re-run
-      unavailable: Currently unavailable
+      heading: 'Overview'
+      status: 'Status'
     logs:
       heading: Deployment Logs
   releases:
     title: 'Releases'
   release:
+    title: 'Release'
     resources:
       heading: Resources
       table-caption: Resources created by <b>this release</b>
     overview:
-      heading: Overview
-      image: Image
-      health-check: Health
-      re-run-health-check: Re-run
-      unavailable: Currently unavailable
+      heading: 'Overview'
+      status: 'Status'
     logs:
       heading: Release Logs
+  unavailable:
+    title: ''
 
 form:
   project_new:

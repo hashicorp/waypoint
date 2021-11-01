@@ -20,9 +20,7 @@
     <:body>
       <StatusReportMetaTable @model={{@model}} @artifactType="Deployment">
         <tr>
-          <th scope="row">
-            Status
-          </th>
+          <th scope="row">{{t "page.deployment.overview.status"}}</th>
           <td>
             <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
             <span>Deployed by <b>{{component-name @model.component.name}}</b>
