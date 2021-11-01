@@ -1,0 +1,4 @@
+```release-note:improvement
+serverinstall/nomad: Update install helper to always setup a Consul service
+with a backend and ui service tag.
+```

@@ -24,13 +24,20 @@ type NomadInstaller struct {
 }
 
 type nomadConfig struct {
-	authSoftFail             bool              `hcl:"auth_soft_fail,optional"`
-	serverImage              string            `hcl:"server_image,optional"`
-	namespace                string            `hcl:"namespace,optional"`
-	serviceAnnotations       map[string]string `hcl:"service_annotations,optional"`
-	consulService            bool              `hcl:"consul_service,optional"`
-	consulServiceUITags      []string          `hcl:"consul_service_ui_tags:optional"`
-	consulServiceBackendTags []string          `hcl:"consul_service_backend_tags:optional"`
+	authSoftFail       bool              `hcl:"auth_soft_fail,optional"`
+	serverImage        string            `hcl:"server_image,optional"`
+	namespace          string            `hcl:"namespace,optional"`
+	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
+
+	consulService            bool     `hcl:"consul_service,optional"`
+	consulServiceUITags      []string `hcl:"consul_service_ui_tags:optional"`
+	consulServiceBackendTags []string `hcl:"consul_service_backend_tags:optional"`
+	consulDatacenter         string   `hcl:"consul_datacenter,optional"`
+	consulDomain             string   `hcl:"consul_datacenter,optional"`
+
+	// If set along with consul, will use this hostname instead of
+	// making a consul DNS hostname for the server address in its context
+	consulServiceHostname string `hcl:"consul_service_hostname,optional"`
 
 	region         string   `hcl:"namespace,optional"`
 	datacenters    []string `hcl:"datacenters,optional"`
@@ -59,6 +66,15 @@ var (
 	defaultCSIVolumeCapacityMax = int64(2147483648)
 
 	defaultCSIVolumeMountFS = "xfs"
+
+	// Defaults to use for setting up Consul
+	defaultConsulServiceTag       = "waypoint"
+	defaultConsulDatacenter       = "dc1"
+	defaultConsulDomain           = "consul"
+	waypointConsulBackendName     = "waypoint-server"
+	waypointConsulUIName          = "waypoint-ui"
+	defaultWaypointConsulHostname = fmt.Sprintf("%s.%s.service.%s.%s",
+		defaultConsulServiceTag, waypointConsulBackendName, defaultConsulDatacenter, defaultConsulDomain)
 )
 
 // Install is a method of NomadInstaller and implements the Installer interface to
@@ -197,16 +213,47 @@ func (i *NomadInstaller) Install(
 		return nil, err
 	}
 
-	serverAddr, err := getAddrFromAllocID(allocID, client)
-	if err != nil {
-		return nil, err
+	// If a Consul service was requested, set the consul DNS hostname rather
+	// than the direct static IP for the CLI context and server config. Otherwise
+	// if Nomad restarts the server allocation, a new IP will be assigned and any
+	// configured clients will be invalid
+	if i.config.consulService {
+		s.Update("Configuring the server context to use Consul DNS hostname")
+		if i.config.consulDatacenter == "" {
+			i.config.consulDatacenter = defaultConsulDatacenter
+		}
+		if i.config.consulDomain == "" {
+			i.config.consulDomain = defaultConsulDomain
+		}
+
+		grpcPort, _ := strconv.Atoi(defaultGrpcPort)
+		httpPort, _ := strconv.Atoi(defaultHttpPort)
+
+		if i.config.consulServiceHostname == "" {
+			addr.Addr = fmt.Sprintf("%s.service.%s.%s:%d",
+				waypointConsulBackendName, i.config.consulDatacenter, i.config.consulDomain, grpcPort)
+			httpAddr = fmt.Sprintf("%s.service.%s.%s:%d",
+				waypointConsulUIName, i.config.consulDatacenter, i.config.consulDomain, httpPort)
+		} else {
+			addr.Addr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, grpcPort)
+			httpAddr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, httpPort)
+		}
+	} else {
+		s.Update("Configuring the server context to use the static IP address from the Nomad allocation")
+
+		serverAddr, err := getAddrFromAllocID(allocID, client)
+		if err != nil {
+			return nil, err
+		}
+		hAddr, err := getHTTPFromAllocID(allocID, client)
+		if err != nil {
+			return nil, err
+		}
+
+		httpAddr = hAddr
+		addr.Addr = serverAddr
 	}
-	hAddr, err := getHTTPFromAllocID(allocID, client)
-	if err != nil {
-		return nil, err
-	}
-	httpAddr = hAddr
-	addr.Addr = serverAddr
+
 	clicfg = clicontext.Config{
 		Server: serverconfig.Client{
 			Address:       addr.Addr,
@@ -219,11 +266,20 @@ func (i *NomadInstaller) Install(
 	s.Update("Waypoint server ready")
 	s.Done()
 
-	ui.Output(
-		"WARNING - the Waypoint server running on Nomad is being accessed via its allocation IP and port.\n"+
-			"This could change in the future if Nomad creates a new allocation for the Waypoint server, \n"+
-			"which would break all existing Waypoint contexts.", terminal.WithWarningStyle(),
-	)
+	if i.config.consulService {
+		s = sg.Add("The CLI has been configured to automatically install a Consul service for\n" +
+			"the Waypoint service backend and ui service in Nomad.")
+		s.Done()
+	} else {
+		s = sg.Add(
+			" Waypoint server running on Nomad is being accessed via its allocation IP and port.\n" +
+				"This could change in the future if Nomad creates a new allocation for the Waypoint server,\n" +
+				"which would break all existing Waypoint contexts.\n\n" +
+				"It is recommended to use Consul for determining Waypoint servers IP running on Nomad rather than\n" +
+				"relying on the static IP that is initially set up for this allocation.")
+		s.Status(terminal.StatusWarn)
+		s.Done()
+	}
 
 	return &InstallResults{
 		Context:       &clicfg,
@@ -704,17 +760,17 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
 	httpPort, _ := strconv.Atoi(defaultHttpPort)
 
-	// Include services to be registered in Consul, if specified in the server install
+	// Include services to be registered in Consul. Currently configured to happen by default
 	// One service added for Waypoint UI, and one for Waypoint backend port
 	if c.consulService {
 		tg.Services = []*api.Service{
 			{
-				Name:      "waypoint-ui",
+				Name:      waypointConsulUIName,
 				PortLabel: "ui",
 				Tags:      c.consulServiceUITags,
 			},
 			{
-				Name:      "waypoint-server",
+				Name:      waypointConsulBackendName,
 				PortLabel: "server",
 				Tags:      c.consulServiceBackendTags,
 			},
@@ -724,18 +780,17 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	tg.Networks = []*api.NetworkResource{
 		{
 			Mode: "host",
-			DynamicPorts: []api.Port{
-				{
-					Label: "server",
-					To:    grpcPort,
-				},
-			},
 			// currently set to static; when ui command can be dynamic - update this
 			ReservedPorts: []api.Port{
 				{
 					Label: "ui",
 					Value: httpPort,
 					To:    httpPort,
+				},
+				{
+					Label: "server",
+					To:    grpcPort,
+					Value: grpcPort,
 				},
 			},
 		},
@@ -999,19 +1054,44 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Name:    "nomad-consul-service",
 		Target:  &i.config.consulService,
 		Usage:   "Create service for Waypoint UI in Consul.",
-		Default: false,
+		Default: true,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-consul-service-hostname",
+		Target: &i.config.consulServiceHostname,
+		Usage: "If set, will use this hostname for Consul DNS rather than the default, " +
+			"i.e. \"waypoint-server.service.consul\".",
+		Default: "",
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
-		Name:   "nomad-consul-service-ui-tags",
-		Target: &i.config.consulServiceUITags,
-		Usage:  "Tags for the Waypoint UI service generated in Consul.",
+		Name:    "nomad-consul-service-ui-tags",
+		Target:  &i.config.consulServiceUITags,
+		Usage:   "Tags for the Waypoint UI service generated in Consul.",
+		Default: []string{defaultConsulServiceTag},
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
 		Name:   "nomad-consul-service-backend-tags",
 		Target: &i.config.consulServiceBackendTags,
-		Usage:  "Tags for the Waypoint backend service generated in Consul.",
+		Usage: "Tags for the Waypoint backend service generated in Consul. The 'first' tag " +
+			"will be used when crafting the Consul DNS hostname for accessing Waypoint.",
+		Default: []string{defaultConsulServiceTag},
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-consul-datacenter",
+		Target:  &i.config.consulDatacenter,
+		Usage:   "The datacenter where Consul is located.",
+		Default: defaultConsulDatacenter,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-consul-domain",
+		Target:  &i.config.consulDomain,
+		Usage:   "The domain where Consul is located.",
+		Default: defaultConsulDomain,
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -1130,6 +1210,50 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Name:   "nomad-host-volume",
 		Target: &i.config.hostVolume,
 		Usage:  "Nomad host volume name.",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "nomad-consul-service",
+		Target:  &i.config.consulService,
+		Usage:   "Create service for Waypoint UI in Consul.",
+		Default: true,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-consul-service-hostname",
+		Target: &i.config.consulServiceHostname,
+		Usage: "If set, will use this hostname for Consul DNS rather than the default, " +
+			"i.e. \"waypoint-server.service.consul\".",
+		Default: "",
+	})
+
+	set.StringSliceVar(&flag.StringSliceVar{
+		Name:    "nomad-consul-service-ui-tags",
+		Target:  &i.config.consulServiceUITags,
+		Usage:   "Tags for the Waypoint UI service generated in Consul.",
+		Default: []string{defaultConsulServiceTag},
+	})
+
+	set.StringSliceVar(&flag.StringSliceVar{
+		Name:   "nomad-consul-service-backend-tags",
+		Target: &i.config.consulServiceBackendTags,
+		Usage: "Tags for the Waypoint backend service generated in Consul. The 'first' tag " +
+			"will be used when crafting the Consul DNS hostname for accessing Waypoint.",
+		Default: []string{defaultConsulServiceTag},
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-consul-datacenter",
+		Target:  &i.config.consulDatacenter,
+		Usage:   "The datacenter where Consul is located.",
+		Default: defaultConsulDatacenter,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-consul-domain",
+		Target:  &i.config.consulDomain,
+		Usage:   "The domain where Consul is located.",
+		Default: defaultConsulDomain,
 	})
 }
 
