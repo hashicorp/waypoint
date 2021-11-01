@@ -8,6 +8,12 @@ type hclStage struct {
 	Use    *Use     `hcl:"use,block"`
 	Body   hcl.Body `hcl:",body"`
 	Remain hcl.Body `hcl:",remain"`
+
+	// WorkspaceScoped are workspace-scoped stages.
+	WorkspaceScoped []*scopedStage `hcl:"workspace,block"`
+
+	// LabelScoped are label-selector-scoped stages.
+	LabelScoped []*scopedStage `hcl:"label,block"`
 }
 
 type hclBuild struct {
@@ -15,6 +21,24 @@ type hclBuild struct {
 	Use      *Use      `hcl:"use,block"`
 	Body     hcl.Body  `hcl:",body"`
 	Remain   hcl.Body  `hcl:",remain"`
+
+	// WorkspaceScoped are workspace-scoped stages.
+	WorkspaceScoped []*scopedStage `hcl:"workspace,block"`
+
+	// LabelScoped are label-selector-scoped stages.
+	LabelScoped []*scopedStage `hcl:"label,block"`
+}
+
+// scopedStage is used within hclStage for workspace/label scoping.
+type scopedStage struct {
+	// Scope is the label for the block. This is reused for both workspace
+	// and label scoped variables so this could be either of those.
+	Scope string `hcl:",label"`
+
+	// Same as hclStage
+	Use    *Use     `hcl:"use,block"`
+	Body   hcl.Body `hcl:",body"`
+	Remain hcl.Body `hcl:",remain"`
 }
 
 // Build are the build settings.
@@ -27,6 +51,12 @@ type Build struct {
 	// Instead, use App.Registry().
 	Registry *Registry `hcl:"registry,block"`
 
+	// Unused for practical reasons, but we need this here so that
+	// the decoding validates successfully (HCL doesn't error of
+	// unexpected things).
+	WorkspaceScoped []*scopedStage `hcl:"workspace,block"`
+	LabelScoped     []*scopedStage `hcl:"label,block"`
+
 	ctx *hcl.EvalContext
 }
 
@@ -35,6 +65,10 @@ type Registry struct {
 	Labels map[string]string `hcl:"labels,optional"`
 	Hooks  []*Hook           `hcl:"hook,block"`
 	Use    *Use              `hcl:"use,block"`
+
+	// Unused, see Build
+	WorkspaceScoped []*scopedStage `hcl:"workspace,block"`
+	LabelScoped     []*scopedStage `hcl:"label,block"`
 
 	ctx *hcl.EvalContext
 }
@@ -45,6 +79,10 @@ type Deploy struct {
 	Hooks  []*Hook           `hcl:"hook,block"`
 	Use    *Use              `hcl:"use,block"`
 
+	// Unused, see Build
+	WorkspaceScoped []*scopedStage `hcl:"workspace,block"`
+	LabelScoped     []*scopedStage `hcl:"label,block"`
+
 	ctx *hcl.EvalContext
 }
 
@@ -53,6 +91,10 @@ type Release struct {
 	Labels map[string]string `hcl:"labels,optional"`
 	Hooks  []*Hook           `hcl:"hook,block"`
 	Use    *Use              `hcl:"use,block"`
+
+	// Unused, see Build
+	WorkspaceScoped []*scopedStage `hcl:"workspace,block"`
+	LabelScoped     []*scopedStage `hcl:"label,block"`
 
 	ctx *hcl.EvalContext
 }

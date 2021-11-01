@@ -5,7 +5,9 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/require"
+	"github.com/zclconf/go-cty/cty"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -76,6 +78,38 @@ func TestConfigApp_compare(t *testing.T) {
 				r, err := c.Registry(nil)
 				require.NoError(t, err)
 				require.Nil(t, r)
+			},
+		},
+
+		{
+			"build_scoped.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				// Default
+				b, err := c.Build(nil)
+				require.NoError(t, err)
+				require.Equal(t, "A", b.Use.Type)
+
+				// Production workspace
+				b, err = c.Build(labelsCtx(map[string]string{
+					"waypoint/workspace": "production",
+				}))
+				require.NoError(t, err)
+				require.Equal(t, "B", b.Use.Type)
+
+				// Non-matching workspace
+				b, err = c.Build(labelsCtx(map[string]string{
+					"waypoint/workspace": "dev",
+				}))
+				require.NoError(t, err)
+				require.Equal(t, "A", b.Use.Type)
+
+				// No workspace
+				b, err = c.Build(labelsCtx(map[string]string{
+					"whatisthis": "dev",
+				}))
+				require.NoError(t, err)
+				require.Equal(t, "A", b.Use.Type)
 			},
 		},
 
@@ -357,6 +391,20 @@ func TestAppValidate(t *testing.T) {
 			require.Error(err)
 			require.Contains(err.Error(), tt.Err)
 		})
+	}
+}
+
+// labelsCtx creates an EvalContext with the labels set.
+func labelsCtx(vs map[string]string) *hcl.EvalContext {
+	mapValues := map[string]cty.Value{}
+	for k, v := range vs {
+		mapValues[k] = cty.StringVal(v)
+	}
+
+	return &hcl.EvalContext{
+		Variables: map[string]cty.Value{
+			"labels": cty.MapVal(mapValues),
+		},
 	}
 }
 

@@ -6,7 +6,9 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/mitchellh/copystructure"
+	"github.com/zclconf/go-cty/cty"
 
+	"github.com/hashicorp/waypoint/internal/config/funcs"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -173,8 +175,17 @@ func (c *App) ConfigMetadata() (*ConfigMetadata, *ConfigMetadata) {
 func (c *App) Build(ctx *hcl.EvalContext) (*Build, error) {
 	ctx = appendContext(c.ctx, ctx)
 
+	body := c.BuildRaw.Body
+	scope, err := scopeMatchStage(ctx, c.BuildRaw.WorkspaceScoped, c.BuildRaw.LabelScoped)
+	if err != nil {
+		return nil, err
+	}
+	if scope != nil {
+		body = scope.Body
+	}
+
 	var b Build
-	if diag := gohcl.DecodeBody(c.BuildRaw.Body, finalizeContext(ctx), &b); diag.HasErrors() {
+	if diag := gohcl.DecodeBody(body, finalizeContext(ctx), &b); diag.HasErrors() {
 		return nil, diag
 	}
 	b.ctx = ctx
@@ -332,4 +343,64 @@ func labels(ctx *hcl.EvalContext, body hcl.Body) (map[string]string, error) {
 
 	// Merge em
 	return labeled.Labels, nil
+}
+
+// This returns a matching stage (if any) for the given context. The context
+// is expected to have "labels" set in it.
+//
+// If ws is true, then the scope of the scopedStage will be compared to
+// a label of value "waypoint/workspace" which is expected to always be
+// present.
+//
+// This function can return (nil, nil) as a valid result. This means
+// that no scopes matched (which is expected behavior to fallback to a
+// default).
+func scopeMatchStage(
+	ctx *hcl.EvalContext, wsScopes []*scopedStage, labelScopes []*scopedStage,
+) (*scopedStage, error) {
+	// These are all scenarios where we can't possibly match any scope.
+	if ctx == nil || ctx.Variables == nil {
+		return nil, nil
+	}
+
+	// Get our labels. If we have none, we can never match.
+	labels, ok := ctx.Variables["labels"]
+	if !ok || labels.LengthInt() == 0 {
+		return nil, nil
+	}
+
+	// If we're workspace matching, simplify this by looking up the
+	// "waypoint/workspace" key.
+	if len(wsScopes) > 0 {
+		values := labels.AsValueMap()
+		wsValue, ok := values["waypoint/workspace"]
+		if !ok {
+			// No workspace key we can't possibly match.
+			return nil, nil
+		}
+
+		// Look for an exact match
+		for _, s := range wsScopes {
+			if s.Scope == wsValue.AsString() {
+				return s, nil
+			}
+		}
+
+		// No match
+		return nil, nil
+	}
+
+	// Label selector matching.
+	for _, s := range labelScopes {
+		result, err := funcs.SelectorMatch(labels, cty.StringVal(s.Scope))
+		if err != nil {
+			return nil, err
+		}
+
+		if result.True() {
+			return s, nil
+		}
+	}
+
+	return nil, nil
 }
