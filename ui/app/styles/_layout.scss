@@ -78,37 +78,6 @@ ul.list {
   @include Typography.Heading(3);
 }
 
-.status-row {
-  // status information on specific build/deployment/release page
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: scale.$base 0;
-  color: rgb(var(--text-muted));
-  @include Typography.Interface(M);
-
-  .item {
-    display: flex;
-    a {
-      text-decoration: none;
-
-      .badge {
-        margin: 0 scale.$sm-4;
-      }
-    }
-
-    .status-report-indicator__label,
-    .operation-status-indicator__label {
-      @include Typography.Interface(M);
-      margin-right: scale.$lg-1;
-    }
-
-    .badge {
-      padding: scale.$sm-3 scale.$sm-2;
-    }
-  }
-}
-
 // Waypoint styles
 
 code {
