@@ -1,4 +1,4 @@
-package state
+package statetest
 
 import (
 	"testing"
@@ -9,11 +9,19 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
-func TestWorkspace(t *testing.T) {
+func init() {
+	tests["workspace"] = []testFunc{
+		TestWorkspace,
+		TestWorkspaceProject,
+		TestWorkspaceApp,
+	}
+}
+
+func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("List is empty by default", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		result, err := s.WorkspaceList()
@@ -24,7 +32,7 @@ func TestWorkspace(t *testing.T) {
 	t.Run("List non-empty", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create a build
@@ -74,11 +82,11 @@ func TestWorkspace(t *testing.T) {
 	})
 }
 
-func TestWorkspaceProject(t *testing.T) {
+func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("List non-empty", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create a build
@@ -133,11 +141,11 @@ func TestWorkspaceProject(t *testing.T) {
 	})
 }
 
-func TestWorkspaceApp(t *testing.T) {
+func TestWorkspaceApp(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("List non-empty", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Create a build

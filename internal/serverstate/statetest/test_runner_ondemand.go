@@ -1,4 +1,4 @@
-package state
+package statetest
 
 import (
 	"strings"
@@ -12,11 +12,17 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
-func TestOnDemandRunnerConfig(t *testing.T) {
+func init() {
+	tests["runner_ondemand"] = []testFunc{
+		TestOnDemandRunnerConfig,
+	}
+}
+
+func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("Get returns not found error if not exist", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -30,7 +36,7 @@ func TestOnDemandRunnerConfig(t *testing.T) {
 	t.Run("Put and Get", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -79,7 +85,7 @@ func TestOnDemandRunnerConfig(t *testing.T) {
 	t.Run("Delete", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set

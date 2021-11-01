@@ -1,4 +1,4 @@
-package state
+package statetest
 
 import (
 	"testing"
@@ -8,11 +8,17 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-func TestServerConfig(t *testing.T) {
+func init() {
+	tests["server_config"] = []testFunc{
+		TestServerConfig,
+	}
+}
+
+func TestServerConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("basic put and get", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set

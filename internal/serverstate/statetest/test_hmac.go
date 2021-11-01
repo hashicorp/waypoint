@@ -1,4 +1,4 @@
-package state
+package statetest
 
 import (
 	"testing"
@@ -6,11 +6,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHMAC(t *testing.T) {
+func init() {
+	tests["HMAC"] = []testFunc{TestHMAC}
+}
+
+func TestHMAC(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("Get returns nil if not exist", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set
@@ -22,7 +26,7 @@ func TestHMAC(t *testing.T) {
 	t.Run("Put and Get", func(t *testing.T) {
 		require := require.New(t)
 
-		s := TestState(t)
+		s := factory(t)
 		defer s.Close()
 
 		// Set

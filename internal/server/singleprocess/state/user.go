@@ -11,6 +11,7 @@ import (
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/ptypes"
+	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
 var userBucket = []byte("user")
@@ -20,12 +21,6 @@ func init() {
 	dbIndexers = append(dbIndexers, (*State).userIndexInit)
 	schemas = append(schemas, userIndexSchema)
 }
-
-// See the docs in singleprocess.
-const (
-	DefaultUser   = "waypoint"
-	DefaultUserId = "00000000000000000000000001"
-)
 
 // UserPut creates or updates the given user. If the user has no ID set
 // then an ID will be written directly to the parameter.
@@ -309,7 +304,7 @@ func (s *State) userDelete(
 	}
 
 	// If the user is the default user, then we can't delete them for now
-	if u.Id == DefaultUserId {
+	if u.Id == serverstate.DefaultUserId {
 		return status.Errorf(codes.FailedPrecondition,
 			"The initial Waypoint user can't currently be deleted. The initial "+
 				"user is used by deployments and runners for authentication. "+
