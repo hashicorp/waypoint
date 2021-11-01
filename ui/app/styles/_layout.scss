@@ -74,13 +74,16 @@ ul.list {
   border-bottom: none;
 }
 
+.list-heading {
+  @include Typography.Heading(3);
+}
+
 .status-row {
   // status information on specific build/deployment/release page
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: scale.$base 0;
-  border-top: 1px solid rgb(var(--border));
   color: rgb(var(--text-muted));
   @include Typography.Interface(M);
 
@@ -109,7 +112,7 @@ ul.list {
 // Waypoint styles
 
 code {
-  font-family: ui-monospace, 'Menlo', monospace;
+  font-family: var(--monospace);
   white-space: nowrap;
   color: rgb(var(--text));
   background: none;

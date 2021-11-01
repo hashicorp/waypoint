@@ -1,0 +1,25 @@
+{{#let
+  (hash
+    title=(or
+      (and (eq @artifact "deployment") "page.deployment.title")
+      (and (eq @artifact "build") "page.build.title")
+      (and (eq @artifact "release") "page.release.title")
+      "page.unavailable.title"
+    )
+  )
+  as |vars|
+}}
+<header data-test-panel-header class="panel-header {{@className}}">
+  <div class="title">
+    <h1>{{t vars.title}}
+      {{#if @sequence}}
+        <b class="badge badge--version">v{{@sequence}}</b>
+      {{/if}}
+    </h1>
+    {{yield to="title"}}
+  </div>
+  <div class="actions">
+    {{yield to="actions"}}
+  </div>
+</header>
+{{/let}}

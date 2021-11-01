@@ -1,44 +1,44 @@
 {{page-title (concat "Build" " v" @model.sequence)}}
 
 {{#let (or @model.pushedArtifact @model) as |operation|}}
-  <PageHeader @iconName="build">
-    <div class="title">
-      <h2>
-        <b class="badge badge--version">v{{@model.sequence}}</b>
-      </h2>
-      <small>
-        <Pds::Icon
-          @type={{icon-for-component operation.component.name}}
-          class="icon"
-        />
-
-        <span>
-          {{t
-            (concat
-              "build_status"
-              ".type-" operation.component.type
-              ".state-" operation.status.state
-            )
-          }}
-          <b>{{component-name operation.component.name}}</b>
-        </span>
-      </small>
-      {{#if @model.preload.jobDataSourceRef.git.commit}}
-        <small>
-          <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
-        </small>
-      {{/if}}
-    </div>
-    <div class="actions">
+  <PanelHeader @artifact="build" @sequence={{@model.sequence}}>
+    <:actions>
       <Actions::Deploy @sequence={{@model.sequence}} />
-    </div>
-  </PageHeader>
+    </:actions>
+  </PanelHeader>
 
-  <div class="status-row">
-    <div class="item">
-      <OperationStatusIndicator @status={{operation.status}} />
-    </div>
-  </div>
+  <Section @isExpandable={{false}}>
+    <:heading>{{t "page.build.overview.heading"}}</:heading>
+    <:body>
+      <StatusReportMetaTable @model={{@model}} @artifactType="Build">
+        <tr>
+          <th scope="row">{{t "page.build.overview.status"}}</th>
+          <td>
+            <Pds::Icon
+              @type={{icon-for-component operation.component.name}}
+              class="icon"
+            />
+            <span>
+              {{t
+                (concat
+                  "build_status"
+                  ".type-" operation.component.type
+                  ".state-" operation.status.state
+                )
+              }}
+              <b>{{component-name operation.component.name}}</b>
+            </span>
+            <OperationStatusIndicator @status={{operation.status}} />
+          </td>
+        </tr>
+      </StatusReportMetaTable>
+    </:body>
+  </Section>
 {{/let}}
 
-<OperationLogs @jobId={{@model.jobId}} />
+<Section>
+    <:heading>{{t "page.deployment.logs.heading"}}</:heading>
+    <:body>
+      <OperationLogs @jobId={{@model.jobId}} />
+    </:body>
+</Section>

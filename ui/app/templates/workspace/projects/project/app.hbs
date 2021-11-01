@@ -10,17 +10,6 @@
 <PageHeader @iconName="git-repository">
   <div class="title">
     <h1>{{@model.application.application}}</h1>
-    <small>
-      {{#if @model.releases.length}}
-      {{#if (eq @model.releases.[0].status.state 2)}}
-      Last released {{date-format-distance-to-now @model.releases.[0].status.completeTime.seconds}}
-      {{else}}
-      Release in progress...
-      {{/if}}
-      {{else}}
-      Not released yet
-      {{/if}}
-    </small>
   </div>
   <div class="actions">
     {{#if (and (project-is-remote-uppable @model.project) (not @model.releases.length))}}
@@ -47,37 +36,26 @@
   </div>
 </PageHeader>
 
-<div class="cards app-latest">
-  <div class="cards-wrap">
-    <div class="cards-inner">
-      <div class="card-outer"><AppCard::Builds @builds={{@model.builds}} /></div>
-      <div class="card-outer"><AppCard::Deployments @deployments={{@model.deployments}} /></div>
-      <div class="card-outer"><AppCard::Releases @releases={{@model.releases}} /></div>
-    </div>
-  </div>
-</div>
-
-
 <Pds::TabNav>
-  <LinkTo @route="workspace.projects.project.app.logs"
+  <LinkTo @route="workspace.projects.project.app.deployments"
     @models={{array @model.application.project @model.application.application }}>
-    <Pds::Icon @type="page-outline" class="icon" />
-    {{t "nav.logs"}}
+    <Pds::Icon @type="upload" class="icon" />
+    {{t "nav.deployments"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.builds"
     @models={{array @model.application.project @model.application.application }}>
     <Pds::Icon @type="build" class="icon" />
     {{t "nav.builds"}}
   </LinkTo>
-  <LinkTo @route="workspace.projects.project.app.deployments"
-    @models={{array @model.application.project @model.application.application }}>
-    <Pds::Icon @type="upload" class="icon" />
-    {{t "nav.deployments"}}
-  </LinkTo>
   <LinkTo @route="workspace.projects.project.app.releases"
     @models={{array @model.application.project @model.application.application }}>
     <Pds::Icon @type="public-default" class="icon" />
     {{t "nav.releases"}}
+  </LinkTo>
+  <LinkTo @route="workspace.projects.project.app.logs"
+    @models={{array @model.application.project @model.application.application }}>
+    <Pds::Icon @type="page-outline" class="icon" />
+    {{t "nav.logs"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.exec"
     @models={{array @model.application.project @model.application.application }}>

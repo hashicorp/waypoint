@@ -3,6 +3,6 @@ import { Model as AppRouteModel } from '../app';
 
 export default class AppIndex extends Route {
   redirect(model: AppRouteModel): void {
-    this.transitionTo('workspace.projects.project.app.logs', model.application.application);
+    this.transitionTo('workspace.projects.project.app.deployments', model.application.application);
   }
 }

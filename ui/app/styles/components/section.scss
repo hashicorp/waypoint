@@ -2,11 +2,13 @@
   position: relative;
 
   margin-bottom: scale.$base;
+  padding-bottom: scale.$sm--1;
+  border-bottom: 1px solid rgb(var(--border));
+
 
   &__header {
     position: relative;
 
-    border-bottom: 1px solid rgb(var(--border));
     margin-bottom: scale.$sm--1;
   }
 

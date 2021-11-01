@@ -1,45 +1,33 @@
 {{page-title (concat "Release" " v" @model.sequence)}}
 
 {{#if (not-eq this.target.currentRouteName "workspace.projects.project.app.release.resource")}}
-  <PageHeader @iconName="public-default">
-    <div class="title">
-      {{! TODO(jgwhite): Make this a real <h1> }}
-      <h2 aria-level="1"><b class="badge badge--version">v{{@model.sequence}}</b></h2>
-      <small>
-        <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
-        <span>Released on <b>{{component-name @model.component.name}}</b>
-          {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
-      </small>
-      {{#if @model.preload.jobDataSourceRef.git.commit}}
-        <small>
-          <GitCommit @commit={{@model.preload.jobDataSourceRef.git.commit}}/>
-        </small>
-      {{/if}}
-    </div>
-    <div class="actions">
+  <PanelHeader @artifact="release" @sequence={{@model.sequence}}>
+    <:actions>
       {{#if @isLatest}}
-      <button class="button button--primary" type="button">
-        <span>{{@model.release.url}}</span>
-        <Pds::Icon @type="exit" class="icon" />
-      </button>
+        <button class="button button--primary" type="button">
+          <span>{{@model.release.url}}</span>
+          <Pds::Icon @type="exit" class="icon" />
+        </button>
       {{/if}}
-    </div>
-  </PageHeader>
+    </:actions>
+  </PanelHeader>
 
-  <StatusReportBar @model={{@model}} @artifactType="Release">
-    {{!-- todo(pearkes): API doesn't return this object but just a string of it, so wait for that to be fixed --}}
-    {{#if @model.deployment }}
-      <div class="item">
-        <small>
-          Released deployment <LinkTo @route="workspace.projects.project.app.deployment"
-            @models={{array @model.deployment.id}}>
-            <b class="badge badge--version">v{{@model.deployment.sequence}}</b>
-            <code>{{@model.deployment.id}}</code>
-          </LinkTo>
-        </small>
-      </div>
-    {{/if}}
-  </StatusReportBar>
+  <Section @isExpandable={{false}}>
+    <:heading>{{t "page.release.overview.heading"}}</:heading>
+    <:body>
+      <StatusReportMetaTable @model={{@model}} @artifactType="Release">
+        <tr>
+          <th scope="row">{{t "page.release.overview.status"}}</th>
+          <td>
+            <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
+            <span>Released on <b>{{component-name @model.component.name}}</b>
+              <small>{{date-format-distance-to-now @model.status.startTime.seconds}}</small>
+            </span>
+          </td>
+        </tr>
+      </StatusReportMetaTable>
+    </:body>
+  </Section>
 
   {{#if @model.statusReport.resourcesList.length}}
     <Section>
