@@ -13,6 +13,12 @@ This command will install a server into Docker, Kubernetes, AWS ECS, or Nomad,
 bootstrap the server, and configure your local CLI to access that server.
 It is a single command to get up and running with Waypoint.
 
+This command is configured to install recommended defaults out of the box, while
+giving enough dials and options for users to tweak to still be useful. If there's
+a specific setup that doesn't work for you with `waypoint install`, we recommend
+looking at the [server run](/docs/server/run) documentation instead or opening
+an issue on GitHub and requesting a feature enhancement.
+
 ## Officially Supported Server Platforms
 
 Currently, Waypoint supports running its server on the following platforms:
@@ -24,14 +30,17 @@ Currently, Waypoint supports running its server on the following platforms:
 
 ### Kubernetes Platform
 
-Installing Waypoint server onto Kubernetes has a couple of options:
+Installing Waypoint server onto Kubernetes has a couple of options: Using the
+waypoint-helm chart or using `waypoint install`.
 
 The officially supported [hashicorp/waypoint-helm](https://github.com/hashicorp/waypoint-helm)
-chart for deploying Waypoint server directly onto a Kubernetes cluster with Helm charts.
+chart can be used to deploy Waypoint server directly onto a Kubernetes cluster with Helm charts.
+We recommend reading the README detailed on that project for more information on
+how to get going using Helm and Waypoint.
 
-Using the `waypoint install` command, which is what these docs cover. In a future
-release of Waypoint, we plan on updating the `waypoint install` command to use
-this Helm chart directly.
+You can also install Waypoint server onto Kubernetes using the `waypoint install`
+command. This command sets up a Service, Statefulset, Deployment, and Replicatset
+and deploys Waypoint server and its runner as two separate pods by default.
 
 ### Nomad Platform
 
@@ -42,7 +51,10 @@ You must use a CSI or Host volume to store Waypoint servers database in. A host 
 or CSI volume can be specified as a command line option to `waypoint install` and
 should be registered in Nomad prior to running the `waypoint install` command.
 
-~> **NOTE**: We **strongly recommend using Consul** for networking support in Nomad running Waypoint server.
+This command sets up a Nomad job for running Waypoint server and its
+runner as two separate jobs by default.
+
+~> **NOTE**: **We strongly recommend using Consul** for networking support in Nomad running Waypoint server.
 
 By default, the CLI installer will automatically create a service for Consul in
 Nomad for running Waypoint Server. This is an important default, as it gives
@@ -106,3 +118,6 @@ This section still needs to be filled out.
 Waypoint supports running the Waypoint server directly in Docker. Generally, this flow
 is recommended only for development to get started using Waypoint. We do not
 recommend using Waypoint running in Docker for production workflows.
+
+This command sets up a Nomad job for running Waypoint server and its
+runner as two separate jobs by default.
