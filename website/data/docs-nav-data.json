@@ -341,10 +341,6 @@
             "path": "server/run"
           },
           {
-            "title": "Express Install",
-            "path": "server/install"
-          },
-          {
             "title": "Maintenance",
             "path": "server/run/maintenance"
           },
@@ -357,6 +353,10 @@
             "path": "server/run/security"
           }
         ]
+      },
+      {
+        "title": "Express Server Install",
+        "path": "server/install"
       }
     ]
   },
