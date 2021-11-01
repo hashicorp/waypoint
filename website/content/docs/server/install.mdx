@@ -1,0 +1,108 @@
+---
+layout: docs
+page_title: Server Install
+description: |-
+  The recommended way to install the server is using the waypoint install command. This command will install a server into Docker, Kubernetes, AWS ECS, or Nomad, bootstrap the server, and configure your local CLI to access that server. It is a single command to get up and running with Waypoint.
+---
+
+# Waypoint Server Install
+
+The recommended way to install the server is using the
+[`waypoint install`](/commands/install) command.
+This command will install a server into Docker, Kubernetes, AWS ECS, or Nomad,
+bootstrap the server, and configure your local CLI to access that server.
+It is a single command to get up and running with Waypoint.
+
+## Officially Supported Server Platforms
+
+Currently, Waypoint supports running its server on the following platforms:
+
+- [Kubernetes](/docs/server/install#kubernetes-platform)
+- [Nomad](/docs/server/install#nomad-platform)
+- [Amazon ECS](/docs/server/install#aws-ecs-platform)
+- [Docker](/docs/server/install#docker-platform)
+
+### Kubernetes Platform
+
+Installing Waypoint server onto Kubernetes has a couple of options:
+
+The officially supported [hashicorp/waypoint-helm](https://github.com/hashicorp/waypoint-helm)
+chart for deploying Waypoint server directly onto a Kubernetes cluster with Helm charts.
+
+Using the `waypoint install` command, which is what these docs cover. In a future
+release of Waypoint, we plan on updating the `waypoint install` command to use
+this Helm chart directly.
+
+### Nomad Platform
+
+To install Waypoint server on Nomad, there are a few requirements that should be
+met prior to running the install:
+
+You must use a CSI or Host volume to store Waypoint servers database in. A host volume
+or CSI volume can be specified as a command line option to `waypoint install` and
+should be registered in Nomad prior to running the `waypoint install` command.
+
+~> **NOTE**: We **strongly recommend using Consul** for networking support in Nomad running Waypoint server.
+
+By default, the CLI installer will automatically create a service for Consul in
+Nomad for running Waypoint Server. This is an important default, as it gives
+Waypoint server a stable hostname for your clients to point at, or remote
+runners to use for calling back to the Waypoint server. There are a handful of
+installer flags that let you configure what tags the Waypoint server and UI
+service should have, what datacenter or domain Consul is in, or if you wish you
+may define your own Consul service hostname to use. By default, the
+`waypoint install` helper will return a hostname crafted using the default
+expected host for a Consul service, i.e. `waypoint-server.service.dc1.consul`.
+
+When running the install helper, the CLI should show the Consul DNS backed hostname of Waypoint
+server at the end of an install:
+
+```shell
+waypoint@hashicorp:waypoint λ waypoint install -platform=nomad -accept-tos -nomad-host-volume="waypoint"
+✓ Waypoint server ready
+✓ The CLI has been configured to automatically install a Consul service for
+the Waypoint service backend and ui service in Nomad.
+✓ Server installed and configured!
+✓ Successfully connected to Waypoint server in Nomad!
+✓ Installing runner...
+✓ Waypoint runner installed
+Waypoint server successfully installed and configured!
+
+The CLI has been configured to connect to the server automatically. This
+connection information is saved in the CLI context named "install-1635801894".
+Use the "waypoint context" CLI to manage CLI contexts.
+
+The server has been configured to advertise the following address for
+entrypoint communications. This must be a reachable address for all your
+deployments. If this is incorrect, manually set it using the CLI command
+"waypoint server config-set".
+
+To launch and authenticate into the Web UI, run:
+waypoint ui -authenticate
+
+Advertise Address: waypoint-server.service.dc1.consul:9701
+Web UI Address: https://waypoint-ui.service.dc1.consul:9702
+```
+
+Notice that the advertise and web ui address is shown as a hostname, rather than an IP.
+
+Without using Consul, if the Waypoint server allocation ever gets restarted in Nomad, the IP
+address will no longer be valid, and you will have to upgrade every server clients context.
+There are ways around this issue that are considered more advanced, and are likely
+better candidates for using the [server run](/docs/server/run) flow for setting
+up Waypoint Server.
+
+If you do not wish to automatically register a Consul service in Nomad for
+Waypoint Server by default with `waypoint install`, it can always be disabled
+with the `-nomad-consul-service=false` flag included. You should then see
+an IP address from the Nomad allocation after the Waypoint install helper finishes.
+
+### AWS ECS Platform
+
+This section still needs to be filled out.
+
+### Docker Platform
+
+Waypoint supports running the Waypoint server directly in Docker. Generally, this flow
+is recommended only for development to get started using Waypoint. We do not
+recommend using Waypoint running in Docker for production workflows.
