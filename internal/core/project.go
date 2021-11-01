@@ -150,6 +150,16 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	}
 
 	p.logger.Info("project initialized", "workspace", p.workspace)
+
+	// Output all the variables that this project will used along with
+	// the source of that variable. This can be used to debug unexpected
+	// variable values.
+	for name, value := range p.variables {
+		// We purposely do NOT log the value because it may be sensitive
+		// and we have no way currently to mark a variable sensitive or not.
+		p.logger.Debug("variable info", "name", name, "source", value.Source)
+	}
+
 	return p, nil
 }
 
