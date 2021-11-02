@@ -438,9 +438,8 @@ EVAL:
 		// evaluations ID from eval, because if the upgrade job is identical to what is
 		// currently running, we won't get back a list of allocations, which will
 		// fail the upgrade with no allocations running
-		s.Update("Getting allocations for nomad server job")
+		s.Update("Getting allocations for nomad server job, this may take a while...")
 		allocs, qmeta, err := client.Jobs().Allocations(serverName, false, qopts)
-		s.Update("Got allocations for server install job")
 
 		if err != nil {
 			return nil, err
@@ -450,6 +449,8 @@ EVAL:
 		if len(allocs) == 0 {
 			return nil, fmt.Errorf("no allocations found after evaluation completed")
 		}
+
+		s.Update("Got allocations for server install job")
 
 		switch allocs[0].ClientStatus {
 		case "running":
@@ -474,21 +475,53 @@ EVAL:
 		}
 	}
 
-	serverAddr, err := getAddrFromAllocID(allocID, client)
-	if err != nil {
-		return nil, err
+	// If a Consul service was requested, set the consul DNS hostname rather
+	// than the direct static IP for the CLI context and server config. Otherwise
+	// if Nomad restarts the server allocation, a new IP will be assigned and any
+	// configured clients will be invalid
+	if i.config.consulService {
+		s.Update("Configuring the server context to use Consul DNS hostname")
+		if i.config.consulDatacenter == "" {
+			i.config.consulDatacenter = defaultConsulDatacenter
+		}
+		if i.config.consulDomain == "" {
+			i.config.consulDomain = defaultConsulDomain
+		}
+
+		grpcPort, _ := strconv.Atoi(defaultGrpcPort)
+		httpPort, _ := strconv.Atoi(defaultHttpPort)
+
+		if i.config.consulServiceHostname == "" {
+			addr.Addr = fmt.Sprintf("%s.service.%s.%s:%d",
+				waypointConsulBackendName, i.config.consulDatacenter, i.config.consulDomain, grpcPort)
+			httpAddr = fmt.Sprintf("%s.service.%s.%s:%d",
+				waypointConsulUIName, i.config.consulDatacenter, i.config.consulDomain, httpPort)
+		} else {
+			addr.Addr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, grpcPort)
+			httpAddr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, httpPort)
+		}
+	} else {
+		s.Update("Configuring the server context to use the static IP address from the Nomad allocation")
+
+		serverAddr, err := getAddrFromAllocID(allocID, client)
+		if err != nil {
+			return nil, err
+		}
+		hAddr, err := getHTTPFromAllocID(allocID, client)
+		if err != nil {
+			return nil, err
+		}
+
+		httpAddr = hAddr
+		addr.Addr = serverAddr
 	}
-	hAddr, err := getHTTPFromAllocID(allocID, client)
-	if err != nil {
-		return nil, err
-	}
-	httpAddr = hAddr
-	addr.Addr = serverAddr
+
 	clicfg = clicontext.Config{
 		Server: serverconfig.Client{
 			Address:       addr.Addr,
 			Tls:           true,
 			TlsSkipVerify: true, // always for now
+			Platform:      "nomad",
 		},
 	}
 
