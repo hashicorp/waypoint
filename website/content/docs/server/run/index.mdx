@@ -2,14 +2,14 @@
 layout: docs
 page_title: Running a Server
 description: |-
-  The recommended way to install the server is using the waypoint install command. This command will install a server into Docker, Kubernetes, or Nomad, bootstrap the server, and configure your local CLI to access that server. It is a single command to get up and running with Waypoint.
+  The recommended way to install the server is using the waypoint install command. This command will install a server into Docker, Kubernetes, AWS ECS, or Nomad, bootstrap the server, and configure your local CLI to access that server. It is a single command to get up and running with Waypoint.
 ---
 
 # Waypoint Server Installation
 
 The recommended way to install the server is using the
 [`waypoint install`](/commands/install) command.
-This command will install a server into Docker, Kubernetes, or Nomad,
+This command will install a server into Docker, Kubernetes, AWS ECS, or Nomad,
 bootstrap the server, and configure your local CLI to access that server.
 It is a single command to get up and running with Waypoint.
 
@@ -38,6 +38,14 @@ In this case, see the documentation on
 
 For details on upgrading the server, please see the
 [general Waypoint upgrade documentation](/docs/upgrading).
+
+## Easy Installation
+
+We provide an opinionated install method for users who wish to get
+off the ground quickly on certain server platforms with [waypoint install](/docs/server/install).
+
+For more details on what this command provides, as well as any supported server
+platform caveats, please check out the documentation for `waypoint install`.
 
 ## Manually Running the Server
 
