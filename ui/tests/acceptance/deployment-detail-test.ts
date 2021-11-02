@@ -1,13 +1,14 @@
+import { currentURL, visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
-import { visit, currentURL } from '@ember/test-helpers';
+
 import { setupApplicationTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
-import login from 'waypoint/tests/helpers/login';
+import { setupSession } from 'waypoint/tests/helpers/login';
 
 module('Acceptance | deployment detail', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
-  login();
+  setupSession(hooks);
 
   test('displays a status report badge if available', async function (assert) {
     let project = this.server.create('project', { name: 'acme-project' });

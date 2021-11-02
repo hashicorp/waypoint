@@ -1,10 +1,11 @@
+import { clickable, create, text, visitable } from 'ember-cli-page-object';
 import { module, test } from 'qunit';
+
 import { currentURL } from '@ember/test-helpers';
+import { setUa } from 'waypoint/tests/helpers/set-ua';
 import { setupApplicationTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
-import { visitable, create, clickable, text } from 'ember-cli-page-object';
-import login from '../helpers/login';
-import { setUa } from '../helpers/set-ua';
+import { setupSession } from 'waypoint/tests/helpers/login';
 
 const userAgent = window.navigator.userAgent;
 
@@ -18,7 +19,7 @@ module('Acceptance | onboarding index', function (hooks) {
 
   setupApplicationTest(hooks);
   setupMirage(hooks);
-  login();
+  setupSession(hooks);
 
   hooks.afterEach(function () {
     // Reset to the original user agent when this test was initialized
@@ -50,7 +51,7 @@ module('Acceptance | onboarding connect', function (hooks) {
 
   setupApplicationTest(hooks);
   setupMirage(hooks);
-  login();
+  setupSession(hooks);
 
   test('advances to start', async function (assert) {
     await page.visit().nextStep();
@@ -75,7 +76,7 @@ module('Acceptance | onboarding start', function (hooks) {
 
   setupApplicationTest(hooks);
   setupMirage(hooks);
-  login();
+  setupSession(hooks);
 
   test('sends users to default workspace after completion', async function (assert) {
     this.server.create('project', 'marketing-public');

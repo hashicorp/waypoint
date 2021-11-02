@@ -1,8 +1,8 @@
-import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
-import { action } from '@ember/object';
-import SessionService from 'waypoint/services/session';
 import RouterService from '@ember/routing/router-service';
+import { SessionService } from 'ember-simple-auth/services/session';
+import { action } from '@ember/object';
+import { inject as service } from '@ember/service';
 
 export default class LoginForm extends Component {
   @service session!: SessionService;
@@ -14,7 +14,7 @@ export default class LoginForm extends Component {
   async login(event?: Event): Promise<void> {
     event?.preventDefault();
 
-    await this.session.setToken(this.token);
+    await this.session.authenticate('authenticator:token', this.token);
     this.router.transitionTo('workspaces');
   }
 }

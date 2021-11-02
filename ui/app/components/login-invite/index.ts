@@ -1,10 +1,10 @@
-import { inject as service } from '@ember/service';
-import Component from '@glimmer/component';
-import { action } from '@ember/object';
-import SessionService from 'waypoint/services/session';
-import RouterService from '@ember/routing/router-service';
 import ApiService from 'waypoint/services/api';
+import Component from '@glimmer/component';
 import { ConvertInviteTokenRequest } from 'waypoint-pb';
+import RouterService from '@ember/routing/router-service';
+import { SessionService } from 'ember-simple-auth/services/session';
+import { action } from '@ember/object';
+import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
 interface InviteLoginFormArgs {
@@ -40,7 +40,7 @@ export default class InviteLoginForm extends Component<InviteLoginFormArgs> {
     let req = new ConvertInviteTokenRequest();
     req.setToken(this.inviteToken);
     let resp = await this.api.client.convertInviteToken(req, this.api.WithMeta());
-    await this.session.setToken(resp.getToken());
+    await this.session.authenticate('authenticator:token', resp.getToken());
 
     // If this is an invite for a new user, take them to on-boarding, otherwise, take
     // them to the workspaces page with a query parameter to specify it came

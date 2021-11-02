@@ -1,8 +1,8 @@
-import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
-import { action } from '@ember/object';
-import SessionService from 'waypoint/services/session';
 import RouterService from '@ember/routing/router-service';
+import { SessionService } from 'ember-simple-auth/services/session';
+import { action } from '@ember/object';
+import { inject as service } from '@ember/service';
 
 export default class Logout extends Component {
   @service session!: SessionService;
@@ -10,7 +10,7 @@ export default class Logout extends Component {
 
   @action
   async logout(): Promise<void> {
-    await this.session.removeToken();
+    await this.session.invalidate();
     this.router.transitionTo('auth');
   }
 }

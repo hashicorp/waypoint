@@ -1,8 +1,8 @@
 import Route from '@ember/routing/route';
-import { inject as service } from '@ember/service';
-import SessionService from 'waypoint/services/session';
+import { SessionService } from 'ember-simple-auth/services/session';
 import Transition from '@ember/routing/-private/transition';
 import { action } from '@ember/object';
+import { inject as service } from '@ember/service';
 
 const ErrInvalidToken = 'invalid authentication token';
 
@@ -11,7 +11,8 @@ export default class Application extends Route {
 
   async beforeModel(transition: Transition): Promise<void> {
     await super.beforeModel(transition);
-    if (!this.session.authConfigured && !transition.to.name.startsWith('auth')) {
+    if (!this.session.isAuthenticated && !transition.to.name.startsWith('auth')) {
+      this.session.attemptedTransition = transition;
       this.transitionTo('auth');
     }
   }
@@ -21,7 +22,7 @@ export default class Application extends Route {
     console.log(error);
 
     if (error.message.includes(ErrInvalidToken)) {
-      this.session.removeToken();
+      this.session.invalidate();
       this.transitionTo('auth');
     }
     return true;

@@ -1,9 +1,10 @@
+import { collection, create, visitable } from 'ember-cli-page-object';
 import { module, test } from 'qunit';
+
 import { currentURL } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
-import { visitable, create, collection } from 'ember-cli-page-object';
-import login from '../helpers/login';
+import { setupSession } from 'waypoint/tests/helpers/login';
 
 const buildsUrl = '/default/microchip/app/wp-bandwidth/builds';
 
@@ -15,7 +16,7 @@ const page = create({
 module('Acceptance | builds list', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
-  login();
+  setupSession(hooks);
 
   test('visiting builds page', async function (assert) {
     let project = this.server.create('project', { name: 'microchip' });

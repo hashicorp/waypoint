@@ -1,9 +1,3 @@
-import Service from '@ember/service';
-import { DEBUG } from '@glimmer/env';
-import { WaypointClient } from 'waypoint-client';
-import SessionService from 'waypoint/services/session';
-import { inject as service } from '@ember/service';
-import { buildWaiter } from '@ember/test-waiters';
 import {
   Application,
   Build,
@@ -20,14 +14,21 @@ import {
   Release,
   StatusFilter,
   StatusReport,
+  UI,
   UpsertProjectRequest,
   Variable,
-  UI,
 } from 'waypoint-pb';
-import { Request, Metadata, UnaryResponse, UnaryInterceptor } from 'grpc-web';
-import { Message } from 'google-protobuf';
+import { Metadata, Request, UnaryInterceptor, UnaryResponse } from 'grpc-web';
+
+import { DEBUG } from '@glimmer/env';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
+import { Message } from 'google-protobuf';
+import Service from '@ember/service';
+import { SessionService } from 'ember-simple-auth/services/session';
+import { WaypointClient } from 'waypoint-client';
+import { buildWaiter } from '@ember/test-waiters';
 import config from 'waypoint/config/environment';
+import { inject as service } from '@ember/service';
 
 // The docs for @ember/test-waiters recommend building waiters in module scope.
 // https://github.com/emberjs/ember-test-waiters#use-buildwaiter-in-module-scope
@@ -82,8 +83,8 @@ export default class ApiService extends Service {
   }
 
   get meta(): Metadata {
-    if (this.session.authConfigured) {
-      return { ...protocolVersions, authorization: this.session.token };
+    if (this.session.isAuthenticated) {
+      return { ...protocolVersions, authorization: this.session.data.authenticated.token };
     } else {
       return { ...protocolVersions };
     }
