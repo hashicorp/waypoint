@@ -1,6 +1,19 @@
 ## nomad (task)
 
+Launch a Nomad job for on-demand tasks from the Waypoint server.
+
+This will use the standard Nomad environment used for with the server install
+to launch on demand Nomad jobs for Waypoint server tasks.
+
 ### Interface
+
+### Examples
+
+```hcl
+task {
+	use "nomad" {}
+}
+```
 
 ### Required Parameters
 
@@ -8,4 +21,60 @@ This plugin has no required parameters.
 
 ### Optional Parameters
 
-This plugin has no optional parameters.
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### datacenter
+
+The Nomad datacenter to deploy the on-demand runner task to.
+
+- Type: **string**
+- **Optional**
+- Default: dc1
+
+#### namespace
+
+The Nomad namespace to deploy the on-demand runner task to.
+
+- Type: **string**
+- **Optional**
+- Default: default
+
+#### nomad_host
+
+Hostname of the Nomad server to use for launching on-demand tasks.
+
+- Type: **string**
+- **Optional**
+- Default: http://localhost:4646
+
+#### region
+
+The Nomad region to deploy the on-demand runner task to.
+
+- Type: **string**
+- **Optional**
+- Default: global
+
+#### resources_cpu
+
+Amount of CPU in MHz to allocate to this task. This can be overriden with the '-nomad-runner-cpu' flag on server install.
+
+- Type: **int**
+- **Optional**
+- Default: 200
+
+#### resources_memory
+
+Amount of memory in MB to allocate to this task. This can be overriden with the '-nomad-runner-memory' flag on server install.
+
+- Type: **int**
+- **Optional**
+- Default: 2000
+
+### Output Attributes
+
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### id
+
+- Type: **string**

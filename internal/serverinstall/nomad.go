@@ -2,6 +2,7 @@ package serverinstall
 
 import (
 	"context"
+	json "encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -39,6 +40,8 @@ type nomadConfig struct {
 	// making a consul DNS hostname for the server address in its context
 	consulServiceHostname string `hcl:"consul_service_hostname,optional"`
 
+	odrImage string `hcl:"odr_image,optional"`
+
 	region         string   `hcl:"namespace,optional"`
 	datacenters    []string `hcl:"datacenters,optional"`
 	policyOverride bool     `hcl:"policy_override,optional"`
@@ -53,6 +56,8 @@ type nomadConfig struct {
 	csiVolumeCapacityMin int64  `hcl:"csi_volume_capacity_min,optional"`
 	csiVolumeCapacityMax int64  `hcl:"csi_volume_capacity_max,optional"`
 	csiFS                string `hcl:"csi_fs,optional"`
+
+	nomadHost string `hcl:"nomad_host,optional"`
 }
 
 var (
@@ -75,6 +80,8 @@ var (
 	waypointConsulUIName          = "waypoint-ui"
 	defaultWaypointConsulHostname = fmt.Sprintf("%s.%s.service.%s.%s",
 		defaultConsulServiceTag, waypointConsulBackendName, defaultConsulDatacenter, defaultConsulDomain)
+
+	defaultNomadHost = "http://localhost:4646"
 )
 
 // Install is a method of NomadInstaller and implements the Installer interface to
@@ -113,6 +120,14 @@ func (i *NomadInstaller) Install(
 			}
 			serverDetected = true
 			break
+		}
+	}
+
+	if i.config.odrImage == "" {
+		var err error
+		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -299,6 +314,15 @@ func (i *NomadInstaller) Upgrade(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
+	if !i.config.consulService {
+		// By default, we don't auto-enable the consul service because prior to Waypoint
+		// version 0.6.2, we did not enable it by default.
+		sw := sg.Add("Nomad Consul Service is disabled. If you had previously enabled " +
+			"it in the last installation, please stop this upgrade and re-run with -nomad-consul-service=true.")
+		sw.Status(terminal.StatusWarn)
+		sw.Done()
+	}
+
 	s := sg.Add("Initializing Nomad client...")
 	defer func() { s.Abort() }()
 
@@ -327,6 +351,14 @@ func (i *NomadInstaller) Upgrade(
 		if j.Name == serverName {
 			serverDetected = true
 			break
+		}
+	}
+
+	if i.config.odrImage == "" {
+		var err error
+		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -406,9 +438,8 @@ EVAL:
 		// evaluations ID from eval, because if the upgrade job is identical to what is
 		// currently running, we won't get back a list of allocations, which will
 		// fail the upgrade with no allocations running
-		s.Update("Getting allocations for nomad server job")
+		s.Update("Getting allocations for nomad server job, this may take a while...")
 		allocs, qmeta, err := client.Jobs().Allocations(serverName, false, qopts)
-		s.Update("Got allocations for server install job")
 
 		if err != nil {
 			return nil, err
@@ -418,6 +449,8 @@ EVAL:
 		if len(allocs) == 0 {
 			return nil, fmt.Errorf("no allocations found after evaluation completed")
 		}
+
+		s.Update("Got allocations for server install job")
 
 		switch allocs[0].ClientStatus {
 		case "running":
@@ -442,21 +475,53 @@ EVAL:
 		}
 	}
 
-	serverAddr, err := getAddrFromAllocID(allocID, client)
-	if err != nil {
-		return nil, err
+	// If a Consul service was requested, set the consul DNS hostname rather
+	// than the direct static IP for the CLI context and server config. Otherwise
+	// if Nomad restarts the server allocation, a new IP will be assigned and any
+	// configured clients will be invalid
+	if i.config.consulService {
+		s.Update("Configuring the server context to use Consul DNS hostname")
+		if i.config.consulDatacenter == "" {
+			i.config.consulDatacenter = defaultConsulDatacenter
+		}
+		if i.config.consulDomain == "" {
+			i.config.consulDomain = defaultConsulDomain
+		}
+
+		grpcPort, _ := strconv.Atoi(defaultGrpcPort)
+		httpPort, _ := strconv.Atoi(defaultHttpPort)
+
+		if i.config.consulServiceHostname == "" {
+			addr.Addr = fmt.Sprintf("%s.service.%s.%s:%d",
+				waypointConsulBackendName, i.config.consulDatacenter, i.config.consulDomain, grpcPort)
+			httpAddr = fmt.Sprintf("%s.service.%s.%s:%d",
+				waypointConsulUIName, i.config.consulDatacenter, i.config.consulDomain, httpPort)
+		} else {
+			addr.Addr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, grpcPort)
+			httpAddr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, httpPort)
+		}
+	} else {
+		s.Update("Configuring the server context to use the static IP address from the Nomad allocation")
+
+		serverAddr, err := getAddrFromAllocID(allocID, client)
+		if err != nil {
+			return nil, err
+		}
+		hAddr, err := getHTTPFromAllocID(allocID, client)
+		if err != nil {
+			return nil, err
+		}
+
+		httpAddr = hAddr
+		addr.Addr = serverAddr
 	}
-	hAddr, err := getHTTPFromAllocID(allocID, client)
-	if err != nil {
-		return nil, err
-	}
-	httpAddr = hAddr
-	addr.Addr = serverAddr
+
 	clicfg = clicontext.Config{
 		Server: serverconfig.Client{
 			Address:       addr.Addr,
 			Tls:           true,
 			TlsSkipVerify: true, // always for now
+			Platform:      "nomad",
 		},
 	}
 
@@ -933,6 +998,13 @@ func waypointRunnerNomadJob(c nomadConfig, opts *InstallRunnerOpts) *api.Job {
 		value := line[idx+1:]
 		task.Env[key] = value
 	}
+
+	// Let the runner know about the Nomad IP
+	if c.nomadHost == "" {
+		c.nomadHost = defaultNomadHost
+	}
+	task.Env["NOMAD_ADDR"] = c.nomadHost
+
 	tg.AddTask(task)
 
 	return job
@@ -972,6 +1044,46 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 	return "", nil
 }
 
+func (i *NomadInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	// Generate some configuration
+	cfgMap := map[string]interface{}{}
+	if v := i.config.runnerResourcesCPU; v != "" {
+		cfgMap["resources_cpu"] = v
+	}
+	if v := i.config.runnerResourcesMemory; v != "" {
+		cfgMap["resources_memory"] = v
+	}
+	if v := i.config.datacenters[0]; v != "" {
+		cfgMap["datacenter"] = v
+	}
+	if v := i.config.namespace; v != "" {
+		cfgMap["namespace"] = v
+	}
+	if v := i.config.region; v != "" {
+		cfgMap["region"] = v
+	}
+	if v := i.config.nomadHost; v != "" {
+		cfgMap["nomad_host"] = v
+	}
+
+	// Marshal our config
+	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
+	if err != nil {
+		// This shouldn't happen cause we control our input. If it does,
+		// just panic cause this will be in a `server install` CLI and
+		// we want the user to report a bug.
+		panic(err)
+	}
+
+	return &pb.OnDemandRunnerConfig{
+		OciUrl:       i.config.odrImage,
+		PluginType:   "nomad",
+		Default:      true,
+		PluginConfig: cfgJson,
+		ConfigFormat: pb.Project_JSON,
+	}
+}
+
 func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringMapVar(&flag.StringMapVar{
 		Name:   "nomad-annotate-service",
@@ -995,10 +1107,24 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
+		Name:    "nomad-host",
+		Target:  &i.config.nomadHost,
+		Default: defaultNomadHost,
+		Usage:   "Hostname of the Nomad server to use, like for launching on-demand tasks.",
+	})
+
+	set.StringVar(&flag.StringVar{
 		Name:    "nomad-namespace",
 		Target:  &i.config.namespace,
 		Default: "default",
 		Usage:   "Namespace to install the Waypoint server into for Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-odr-image",
+		Target: &i.config.odrImage,
+		Usage: "Docker image for the on-demand runners. If not specified, it " +
+			"defaults to the server image name + '-odr' (i.e. 'hashicorp/waypoint-odr:latest')",
 	})
 
 	set.BoolVar(&flag.BoolVar{
@@ -1053,8 +1179,8 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.BoolVar(&flag.BoolVar{
 		Name:    "nomad-consul-service",
 		Target:  &i.config.consulService,
-		Usage:   "Create service for Waypoint UI in Consul.",
-		Default: true,
+		Usage:   "Create service for Waypoint UI and Server in Consul.",
+		Default: true, // default to true for fresh installs
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -1151,10 +1277,24 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
+		Name:    "nomad-host",
+		Target:  &i.config.nomadHost,
+		Default: "http://localhost:4646",
+		Usage:   "Hostname of the Nomad server to use, like for launching on-demand tasks.",
+	})
+
+	set.StringVar(&flag.StringVar{
 		Name:    "nomad-namespace",
 		Target:  &i.config.namespace,
 		Default: "default",
 		Usage:   "Namespace to install the Waypoint server into for Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-odr-image",
+		Target: &i.config.odrImage,
+		Usage: "Docker image for the on-demand runners. If not specified, it " +
+			"defaults to the server image name + '-odr' (i.e. 'hashicorp/waypoint-odr:latest')",
 	})
 
 	set.BoolVar(&flag.BoolVar{
@@ -1215,8 +1355,8 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 	set.BoolVar(&flag.BoolVar{
 		Name:    "nomad-consul-service",
 		Target:  &i.config.consulService,
-		Usage:   "Create service for Waypoint UI in Consul.",
-		Default: true,
+		Usage:   "Create service for Waypoint UI and Server in Consul.",
+		Default: false, // default to false, make sure people opt into this for upgrades
 	})
 
 	set.StringVar(&flag.StringVar{

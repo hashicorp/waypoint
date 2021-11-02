@@ -137,7 +137,8 @@ func (c *InstallCommand) Run(args []string) int {
 			sr.Status(terminal.StatusError)
 			// dont return the error yet
 		} else {
-			sr.Update("Successfully connected to Waypoint server in Nomad!")
+			sr.Update("Successfully connected to Waypoint server in %s!", strings.Title(c.platform))
+			sr.Status(terminal.StatusOK)
 			sr.Done()
 			break
 		}
@@ -527,8 +528,10 @@ func installRunner(
 
 			if err != nil {
 				s.Update("Error creating ondemand runner: %s", err)
+				s.Status(terminal.StatusError)
 			} else {
 				s.Update("Registered ondemand runner!")
+				s.Status(terminal.StatusOK)
 			}
 		} else {
 			s.Update("Install type did not provide an ondemand runner config")
