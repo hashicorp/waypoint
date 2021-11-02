@@ -26,6 +26,11 @@ func TestConfigValidate(t *testing.T) {
 			"build_no_use.hcl",
 			"",
 		},
+
+		{
+			"build_scoped.hcl",
+			"",
+		},
 	}
 
 	for _, tt := range cases {
