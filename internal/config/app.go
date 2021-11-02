@@ -385,9 +385,6 @@ func scopeMatchStage(
 				return s, nil
 			}
 		}
-
-		// No match
-		return nil, nil
 	}
 
 	// Label selector matching.

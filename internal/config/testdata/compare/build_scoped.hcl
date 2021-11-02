@@ -11,5 +11,9 @@ app "test" {
         workspace "production" {
           use "B" {}
         }
+
+        label "waypoint/workspace == staging" {
+          use "C" {}
+        }
     }
 }

@@ -110,6 +110,13 @@ func TestConfigApp_compare(t *testing.T) {
 				}))
 				require.NoError(t, err)
 				require.Equal(t, "A", b.Use.Type)
+
+				// Labels
+				b, err = c.Build(labelsCtx(map[string]string{
+					"waypoint/workspace": "staging",
+				}))
+				require.NoError(t, err)
+				require.Equal(t, "C", b.Use.Type)
 			},
 		},
 
