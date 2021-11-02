@@ -101,7 +101,9 @@ and disable the UI, the command would be:
 - `-nomad-annotate-service=<key=value>` - Annotations for the Service generated.
 - `-nomad-auth-soft-fail` - Don't fail the Nomad task on an auth failure obtaining server image container. Attempt to continue without auth.
 - `-nomad-dc=<string>` - Datacenters to install to for Nomad.
+- `-nomad-host=<string>` - Hostname of the Nomad server to use, like for launching on-demand tasks.
 - `-nomad-namespace=<string>` - Namespace to install the Waypoint server into for Nomad.
+- `-nomad-odr-image=<string>` - Docker image for the on-demand runners. If not specified, it defaults to the server image name + '-odr' (i.e. 'hashicorp/waypoint-odr:latest')
 - `-nomad-policy-override` - Override the Nomad sentinel policy for enterprise Nomad.
 - `-nomad-region=<string>` - Region to install to for Nomad.
 - `-nomad-server-cpu=<string>` - CPU required to run this task in MHz.
@@ -109,7 +111,7 @@ and disable the UI, the command would be:
 - `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz.
 - `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server.
-- `-nomad-consul-service` - Create service for Waypoint UI in Consul.
+- `-nomad-consul-service` - Create service for Waypoint UI and Server in Consul.
 - `-nomad-consul-service-hostname=<string>` - If set, will use this hostname for Consul DNS rather than the default, i.e. "waypoint-server.service.consul".
 - `-nomad-consul-service-ui-tags=<string>` - Tags for the Waypoint UI service generated in Consul.
 - `-nomad-consul-service-backend-tags=<string>` - Tags for the Waypoint backend service generated in Consul. The 'first' tag will be used when crafting the Consul DNS hostname for accessing Waypoint.
