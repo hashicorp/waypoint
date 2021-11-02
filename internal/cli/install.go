@@ -137,7 +137,7 @@ func (c *InstallCommand) Run(args []string) int {
 			sr.Status(terminal.StatusError)
 			// dont return the error yet
 		} else {
-			sr.Update("Successfully connected to Waypoint server in Nomad!")
+			sr.Update("Successfully connected to Waypoint server in %s!", strings.Title(c.platform))
 			sr.Done()
 			break
 		}
