@@ -57,7 +57,7 @@ func (c *Component) Close() error {
 // for a given application.
 type componentCreator struct {
 	Type       component.Type
-	UseType    func(*App) (string, error)
+	UseType    func(*App, *hcl.EvalContext) (string, error)
 	ConfigFunc func(*App, *hcl.EvalContext) (interface{}, error)
 
 	// Labels should return the labels defined for this component. This is
@@ -71,8 +71,8 @@ type componentCreator struct {
 var componentCreatorMap = map[component.Type]*componentCreator{
 	component.BuilderType: {
 		Type: component.BuilderType,
-		UseType: func(a *App) (string, error) {
-			return a.config.BuildUse(), nil
+		UseType: func(a *App, ctx *hcl.EvalContext) (string, error) {
+			return a.config.BuildUse(ctx)
 		},
 		Labels: func(a *App, ctx *hcl.EvalContext) (map[string]string, error) {
 			return a.config.BuildLabels(ctx)
@@ -84,8 +84,8 @@ var componentCreatorMap = map[component.Type]*componentCreator{
 
 	component.RegistryType: {
 		Type: component.RegistryType,
-		UseType: func(a *App) (string, error) {
-			return a.config.RegistryUse(), nil
+		UseType: func(a *App, ctx *hcl.EvalContext) (string, error) {
+			return a.config.RegistryUse(ctx)
 		},
 		Labels: func(a *App, ctx *hcl.EvalContext) (map[string]string, error) {
 			return a.config.RegistryLabels(ctx)
@@ -97,8 +97,8 @@ var componentCreatorMap = map[component.Type]*componentCreator{
 
 	component.PlatformType: {
 		Type: component.PlatformType,
-		UseType: func(a *App) (string, error) {
-			return a.config.DeployUse(), nil
+		UseType: func(a *App, ctx *hcl.EvalContext) (string, error) {
+			return a.config.DeployUse(ctx)
 		},
 		Labels: func(a *App, ctx *hcl.EvalContext) (map[string]string, error) {
 			return a.config.DeployLabels(ctx)
@@ -110,8 +110,8 @@ var componentCreatorMap = map[component.Type]*componentCreator{
 
 	component.ReleaseManagerType: {
 		Type: component.ReleaseManagerType,
-		UseType: func(a *App) (string, error) {
-			return a.config.ReleaseUse(), nil
+		UseType: func(a *App, ctx *hcl.EvalContext) (string, error) {
+			return a.config.ReleaseUse(ctx)
 		},
 		Labels: func(a *App, ctx *hcl.EvalContext) (map[string]string, error) {
 			return a.config.ReleaseLabels(ctx)
@@ -154,7 +154,7 @@ func (cc *componentCreator) create(
 		return nil, err
 	}
 
-	useType, err := cc.UseType(app)
+	useType, err := cc.UseType(app, hclCtx)
 	if err != nil {
 		return nil, err
 	}

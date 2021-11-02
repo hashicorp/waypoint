@@ -200,9 +200,20 @@ func (c *App) Registry(ctx *hcl.EvalContext) (*Registry, error) {
 		return nil, nil
 	}
 
+	body := c.BuildRaw.Registry.Body
+	scope, err := scopeMatchStage(ctx,
+		c.BuildRaw.Registry.WorkspaceScoped,
+		c.BuildRaw.Registry.LabelScoped)
+	if err != nil {
+		return nil, err
+	}
+	if scope != nil {
+		body = scope.Body
+	}
+
 	var b Registry
 	ctx = appendContext(c.ctx, ctx)
-	if diag := gohcl.DecodeBody(c.BuildRaw.Registry.Body, finalizeContext(ctx), &b); diag.HasErrors() {
+	if diag := gohcl.DecodeBody(body, finalizeContext(ctx), &b); diag.HasErrors() {
 		return nil, diag
 	}
 	b.ctx = ctx
@@ -214,8 +225,17 @@ func (c *App) Registry(ctx *hcl.EvalContext) (*Registry, error) {
 func (c *App) Deploy(ctx *hcl.EvalContext) (*Deploy, error) {
 	ctx = appendContext(c.ctx, ctx)
 
+	body := c.DeployRaw.Body
+	scope, err := scopeMatchStage(ctx, c.DeployRaw.WorkspaceScoped, c.DeployRaw.LabelScoped)
+	if err != nil {
+		return nil, err
+	}
+	if scope != nil {
+		body = scope.Body
+	}
+
 	var b Deploy
-	if diag := gohcl.DecodeBody(c.DeployRaw.Body, finalizeContext(ctx), &b); diag.HasErrors() {
+	if diag := gohcl.DecodeBody(body, finalizeContext(ctx), &b); diag.HasErrors() {
 		return nil, diag
 	}
 	b.ctx = ctx
@@ -229,9 +249,18 @@ func (c *App) Release(ctx *hcl.EvalContext) (*Release, error) {
 		return nil, nil
 	}
 
+	body := c.ReleaseRaw.Body
+	scope, err := scopeMatchStage(ctx, c.ReleaseRaw.WorkspaceScoped, c.ReleaseRaw.LabelScoped)
+	if err != nil {
+		return nil, err
+	}
+	if scope != nil {
+		body = scope.Body
+	}
+
 	var b Release
 	ctx = appendContext(c.ctx, ctx)
-	if diag := gohcl.DecodeBody(c.ReleaseRaw.Body, finalizeContext(ctx), &b); diag.HasErrors() {
+	if diag := gohcl.DecodeBody(body, finalizeContext(ctx), &b); diag.HasErrors() {
 		return nil, diag
 	}
 	b.ctx = ctx
@@ -240,39 +269,75 @@ func (c *App) Release(ctx *hcl.EvalContext) (*Release, error) {
 }
 
 // BuildUse returns the plugin "use" value.
-func (c *App) BuildUse() string {
+func (c *App) BuildUse(ctx *hcl.EvalContext) (string, error) {
 	if c.BuildRaw == nil {
-		return ""
+		return "", nil
 	}
 
-	return c.BuildRaw.Use.Type
+	useType := c.BuildRaw.Use.Type
+	stage, err := scopeMatchStage(ctx, c.BuildRaw.WorkspaceScoped, c.BuildRaw.LabelScoped)
+	if err != nil {
+		return "", err
+	}
+	if stage != nil {
+		useType = stage.Use.Type
+	}
+
+	return useType, nil
 }
 
 // RegistryUse returns the plugin "use" value.
-func (c *App) RegistryUse() string {
+func (c *App) RegistryUse(ctx *hcl.EvalContext) (string, error) {
 	if c.BuildRaw == nil || c.BuildRaw.Registry == nil {
-		return ""
+		return "", nil
 	}
 
-	return c.BuildRaw.Registry.Use.Type
+	useType := c.BuildRaw.Registry.Use.Type
+	stage, err := scopeMatchStage(ctx, c.BuildRaw.Registry.WorkspaceScoped, c.BuildRaw.Registry.LabelScoped)
+	if err != nil {
+		return "", err
+	}
+	if stage != nil {
+		useType = stage.Use.Type
+	}
+
+	return useType, nil
 }
 
 // DeployUse returns the plugin "use" value.
-func (c *App) DeployUse() string {
+func (c *App) DeployUse(ctx *hcl.EvalContext) (string, error) {
 	if c.DeployRaw == nil {
-		return ""
+		return "", nil
 	}
 
-	return c.DeployRaw.Use.Type
+	useType := c.DeployRaw.Use.Type
+	stage, err := scopeMatchStage(ctx, c.DeployRaw.WorkspaceScoped, c.DeployRaw.LabelScoped)
+	if err != nil {
+		return "", err
+	}
+	if stage != nil {
+		useType = stage.Use.Type
+	}
+
+	return useType, nil
 }
 
 // ReleaseUse returns the plugin "use" value.
-func (c *App) ReleaseUse() string {
+func (c *App) ReleaseUse(ctx *hcl.EvalContext) (string, error) {
 	if c.ReleaseRaw == nil {
-		return ""
+		return "", nil
 	}
 
-	return c.ReleaseRaw.Use.Type
+	useType := c.ReleaseRaw.Use.Type
+	stage, err := scopeMatchStage(ctx, c.ReleaseRaw.WorkspaceScoped, c.ReleaseRaw.LabelScoped)
+	if err != nil {
+		return "", err
+	}
+	if stage != nil {
+		useType = stage.Use.Type
+	}
+
+	return useType, nil
 }
 
 // BuildLabels returns the labels for this stage.

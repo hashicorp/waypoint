@@ -152,6 +152,24 @@ func TestConfigApp_compare(t *testing.T) {
 		},
 
 		{
+			"build_registry_scoped.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				// Default
+				b, err := c.Registry(nil)
+				require.NoError(t, err)
+				require.Equal(t, "A", b.Use.Type)
+
+				// Production workspace
+				b, err = c.Registry(labelsCtx(map[string]string{
+					"waypoint/workspace": "production",
+				}))
+				require.NoError(t, err)
+				require.Equal(t, "B", b.Use.Type)
+			},
+		},
+
+		{
 			"config_env.hcl",
 			"test",
 			func(t *testing.T, c *App) {
