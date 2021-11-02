@@ -12,6 +12,7 @@ export default class Application extends Route {
   async beforeModel(transition: Transition): Promise<void> {
     await super.beforeModel(transition);
     if (!this.session.isAuthenticated && !transition.to.name.startsWith('auth')) {
+      this.session.attemptedTransition = transition;
       this.transitionTo('auth');
     }
   }
