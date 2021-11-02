@@ -1,16 +1,16 @@
 import { currentURL, visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import login from 'waypoint/tests/helpers/login';
 import { setupApplicationTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
+import { setupSession } from 'waypoint/tests/helpers/login';
 
 module('Acceptance | deployment detail', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
+  setupSession(hooks);
 
   test('displays a status report badge if available', async function (assert) {
-    await login();
     let project = this.server.create('project', { name: 'acme-project' });
     let application = this.server.create('application', { name: 'acme-app', project });
     let deployment = this.server.create('deployment', 'random', { application });
@@ -22,7 +22,6 @@ module('Acceptance | deployment detail', function (hooks) {
   });
 
   test('displays no status report badge if none is available', async function (assert) {
-    await login();
     let project = this.server.create('project', { name: 'acme-project' });
     let application = this.server.create('application', { name: 'acme-app', project });
     let deployment = this.server.create('deployment', 'random', { application });
@@ -33,7 +32,6 @@ module('Acceptance | deployment detail', function (hooks) {
   });
 
   test('redirects from the ID to the sequence route', async function (assert) {
-    await login();
     let project = this.server.create('project', { name: 'acme-project' });
     let application = this.server.create('application', { name: 'acme-app', project });
     let deployment = this.server.create('deployment', 'random', { application });
