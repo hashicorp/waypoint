@@ -9,7 +9,10 @@
 )}}
 <PageHeader @iconName="git-repository">
   <div class="title">
-    <h1>{{@model.application.application}}</h1>
+    <div style="display: flex">
+      <h1>{{@model.application.application}}</h1>
+      <WorkspaceSwitcher style="margin-left: 1rem" />
+    </div>
   </div>
   <div class="actions">
     {{#if (and (project-is-remote-uppable @model.project) (not @model.releases.length))}}
@@ -33,30 +36,6 @@
       </div>
       {{/if}}
     {{/if}}
-  </div>
-  <div class="workspace">
-    <Pds::Dropdown as |D|>
-      <D.Trigger>
-        {{@model.workspace.workspace}}
-      </D.Trigger>
-
-      <D.Dialog>
-        <section>
-          {{#each @model.workspaces as |workspace|}}
-            <LinkTo
-              @models={{array
-                workspace.name
-                @model.project.name
-                @model.application.application
-              }}
-              onclick={{D.close}}
-            >
-              {{workspace.name}}
-            </LinkTo>
-          {{/each}}
-        </section>
-      </D.Dialog>
-    </Pds::Dropdown>
   </div>
 </PageHeader>
 

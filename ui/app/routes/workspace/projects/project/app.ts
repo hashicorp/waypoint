@@ -1,7 +1,7 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService, { DeploymentExtended, ReleaseExtended } from 'waypoint/services/api';
-import { Ref, Build, Project, PushedArtifact, Workspace } from 'waypoint-pb';
+import { Ref, Build, Project, PushedArtifact } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
 import { hash } from 'rsvp';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
@@ -17,8 +17,6 @@ export interface Model {
   releases: ReleaseExtended[];
   builds: (Build.AsObject & WithPushedArtifact)[];
   pushedArtifacts: PushedArtifact.AsObject[];
-  workspace: Ref.Workspace.AsObject;
-  workspaces: Workspace.AsObject[];
 }
 
 interface WithPushedArtifact {
@@ -60,8 +58,6 @@ export default class App extends Route {
       releases: this.api.listReleases(wsRef, appRef),
       builds: this.api.listBuilds(wsRef, appRef),
       pushedArtifacts: this.api.listPushedArtifacts(wsRef, appRef),
-      workspace: ws,
-      workspaces: this.api.listWorkspaces(),
     });
   }
 

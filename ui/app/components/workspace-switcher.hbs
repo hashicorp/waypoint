@@ -1,0 +1,30 @@
+<div class="workspace-switcher" ...attributes>
+  <Pds::Dropdown as |D|>
+    <D.Trigger>
+      {{this.workspace}}
+    </D.Trigger>
+
+    <D.Dialog>
+      {{#if this.loadWorkspaces.isRunning}}
+        <Spinner /> Loading workspaces…
+      {{else}}
+        {{#each this.workspaces as |workspace|}}
+          <section>
+            {{!-- template-lint-disable no-unknown-arguments-for-builtin-components --}}
+            <LinkTo
+              @models={{array workspace.name this.project this.app}}
+              onclick={{D.close}}
+            >
+              <span class="workspace-switcher__link-contents">
+                {{#if (eq workspace.name this.workspace)}}
+                  <Pds::Icon @type="check-plain" />
+                {{/if}}
+                {{workspace.name}}
+              </span>
+            </LinkTo>
+          </section>
+        {{/each}}
+      {{/if}}
+    </D.Dialog>
+  </Pds::Dropdown>
+</div>

@@ -1,0 +1,13 @@
+.workspace-switcher__link-contents {
+  display: flex;
+  position: relative;
+  padding-left: scale.$lg--2;
+
+  .pds-icon {
+    position: absolute;
+    top: -2px;
+    left: -4px;
+    font-size: scale.$lg--1;
+    color: rgb(var(--link));
+  }
+}
