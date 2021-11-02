@@ -314,6 +314,15 @@ func (i *NomadInstaller) Upgrade(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
+	if !i.config.consulService {
+		// By default, we don't auto-enable the consul service because prior to Waypoint
+		// version 0.6.2, we did not enable it by default.
+		sw := sg.Add("Nomad Consul Service is disabled. If you had previously enabled " +
+			"it in the last installation, please stop this upgrade and re-run with -nomad-consul-service=true.")
+		sw.Status(terminal.StatusWarn)
+		sw.Done()
+	}
+
 	s := sg.Add("Initializing Nomad client...")
 	defer func() { s.Abort() }()
 
@@ -1137,8 +1146,8 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.BoolVar(&flag.BoolVar{
 		Name:    "nomad-consul-service",
 		Target:  &i.config.consulService,
-		Usage:   "Create service for Waypoint UI in Consul.",
-		Default: true,
+		Usage:   "Create service for Waypoint UI and Server in Consul.",
+		Default: true, // default to true for fresh installs
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -1313,8 +1322,8 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 	set.BoolVar(&flag.BoolVar{
 		Name:    "nomad-consul-service",
 		Target:  &i.config.consulService,
-		Usage:   "Create service for Waypoint UI in Consul.",
-		Default: true,
+		Usage:   "Create service for Waypoint UI and Server in Consul.",
+		Default: false, // default to false, make sure people opt into this for upgrades
 	})
 
 	set.StringVar(&flag.StringVar{
