@@ -20,6 +20,12 @@ func TestConfigValidate(t *testing.T) {
 			"no_build.hcl",
 			"'build' stanza",
 		},
+
+		// This isn't an error because we want to catch this at runtime.
+		{
+			"build_no_use.hcl",
+			"",
+		},
 	}
 
 	for _, tt := range cases {
