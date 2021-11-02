@@ -1,0 +1,3 @@
+```release-note:bug
+serverinstall/k8s: Clean up rbac resources on uninstall, and do not error when existing rbac resources are detected during server upgrade.
+```
