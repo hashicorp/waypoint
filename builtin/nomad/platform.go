@@ -139,6 +139,15 @@ func (p *Platform) resourceJobCreate(
 			},
 		}
 
+		// Register app to Consul. If Nomad is not using Consul, this service
+		// is not used when job is registered
+		tg.Services = []*api.Service{
+			{
+				Name:      result.Name,
+				PortLabel: "waypoint", // matches dynamic port label in NetworkResource
+			},
+		}
+
 		if p.config.Namespace == "" {
 			p.config.Namespace = "default"
 		}
@@ -249,6 +258,9 @@ func (p *Platform) Deploy(
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO(briancain): Update to use sequence number instead, and also append
+	// project name to prevent any app name collisions like having two apps with two versions (go-2)
 	result.Id = id
 	result.Name = strings.ToLower(fmt.Sprintf("%s-%s", src.App, id))
 
