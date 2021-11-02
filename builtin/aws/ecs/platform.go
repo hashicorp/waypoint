@@ -1715,7 +1715,11 @@ func getSubnetsResource(
 	}
 
 	if len(desc.Subnets) == 0 {
-		return nil, status.Errorf(codes.Internal, "no subnets found")
+		if len(configuredSubnets) == 0 {
+			return nil, status.Errorf(codes.FailedPrecondition, "No subnets specified, and no default subnets found in the vpc. Either specify subnets explicitly, or assign default subnets for this vpc.")
+		} else {
+			return nil, status.Errorf(codes.InvalidArgument, "subnet ids %q do not exist", strings.Join(configuredSubnets, ", "))
+		}
 	}
 
 	var subnets Resource_Subnets
