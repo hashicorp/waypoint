@@ -1,5 +1,9 @@
+import * as protobuf from 'google-protobuf';
+
+import { ExecStreamRequest, ExecStreamResponse } from 'waypoint-pb';
+
 import Component from '@glimmer/component';
-import { ExecStreamRequest } from 'waypoint-pb';
+import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import KEYS from 'waypoint/utils/keys';
 import { Message } from 'google-protobuf';
 import SessionService from 'waypoint/services/session';
@@ -24,11 +28,13 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
   @tracked deploymentId: string;
   @tracked terminal!: Terminal;
   @tracked command!: string;
+  @tracked socket!: WebSocket;
 
   constructor(owner: unknown, args: ExecComponentArgs) {
     super(owner, args);
     let { deploymentId } = this.args;
     this.deploymentId = deploymentId;
+    this.command = '';
 
     this.terminal = createTerminal({ inputDisabled: false });
     this.startExecStream(deploymentId);
@@ -38,29 +44,54 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     let socket = new WebSocket(`wss://localhost:9702/v1/exec?token=${this.session.token}`);
     socket.binaryType = 'arraybuffer';
-    let encoder = new TextEncoder();
-
+    this.socket = socket;
     socket.addEventListener('open', (event) => {
       // socket.send(JSON.stringify({ version: 1, auth_token: this.token || '' }));
       console.log(event);
       let execStreamStartRequest = new ExecStreamRequest();
       let start = new ExecStreamRequest.Start();
+      // Important: ArgsList can't be empty
+      start.setArgsList(['/bin/bash']);
+      let streaminput = new ExecStreamRequest.Input();
+      execStreamStartRequest.setInput(streaminput);
       start.setDeploymentId(deploymentId);
       execStreamStartRequest.setStart(start);
       socket.send(execStreamStartRequest.serializeBinary());
     });
     socket.addEventListener('message', (event) => {
       console.log(event);
+      let reader = new FileReader();
+      let output = event.data;
+      let resp = ExecStreamResponse.deserializeBinary(output);
+      console.log(resp.getEventCase());
+      if (resp.hasOpen()) {
+        console.log(resp.getOpen()?.toString());
+        this.terminal.writeln('Connected to instance...');
+      }
+      if (resp.getEventCase() === 3) {
+        console.log(resp.getOutput()?.getChannel())
+        console.log(resp.getOutput()?.getData_asU8())
+        console.log(resp.getOutput()?.toObject());
+      }
+      console.log(resp.toObject());
     });
     socket.addEventListener('close', (event) => {
-      console.log(event);
+      let reader = new FileReader();
+      let output = event.data;
+      let resp = ExecStreamResponse.deserializeBinary(output);
+      console.log(resp.getEventCase());
+      console.log(resp.toObject());
     });
     socket.addEventListener('error', (event) => {
-      console.log(event);
+      let reader = new FileReader();
+      let output = event.data;
+      let resp = ExecStreamResponse.deserializeBinary(output);
+      console.log(resp.getEventCase());
+      console.log(resp.toObject());
     });
-    // this.dataListener = this.terminal.onData((data) => {
-    //   this.handleDataEvent(data);
-    // });
+    this.terminal.onData((data) => {
+      this.handleDataEvent(data);
+    });
   }
 
   async openSocketStream() {
@@ -68,6 +99,16 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     let socket = new WebSocket(`ws://localhost:9702/v1/exec`, ['']);
     return socket;
+  }
+
+  sendCommand() {
+    let execStreamRequest = new ExecStreamRequest();
+    let input = new ExecStreamRequest.Input();
+    let encoder = new TextEncoder();
+    input.setData(encoder.encode(this.command));
+    execStreamRequest.setInput(input);
+    this.socket.send(execStreamRequest.serializeBinary());
+    this.command = '';
   }
 
   handleDataEvent = (data) => {
@@ -79,6 +120,12 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
       data === KEYS.DOWN_ARROW
     ) {
       // Ignore arrow keys
+    } else if (data === KEYS.CONTROL_U) {
+      this.terminal.write(BACKSPACE_ONE_CHARACTER.repeat(this.command.length));
+      this.command = '';
+    } else if (data === KEYS.ENTER) {
+      this.terminal.writeln('');
+      this.sendCommand();
     } else if (data === KEYS.DELETE) {
       if (this.command.length > 0) {
         this.terminal.write(BACKSPACE_ONE_CHARACTER);
@@ -89,5 +136,5 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
       this.terminal.write(strippedData);
       this.command = `${this.command}${strippedData}`;
     }
-  }
+  };
 }
