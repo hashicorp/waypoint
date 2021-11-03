@@ -64,10 +64,7 @@ func (c *ReleaseListCommand) Run(args []string) int {
 		resp, err := client.UI_ListReleases(c.Ctx, &pb.UI_ListReleasesRequest{
 			Application: app.Ref(),
 			Workspace:   wsRef,
-			Order: &pb.OperationOrder{
-				Order: pb.OperationOrder_COMPLETE_TIME,
-				Desc:  true,
-			},
+			Order:       c.filterFlags.orderOp(),
 		})
 
 		if err != nil {
