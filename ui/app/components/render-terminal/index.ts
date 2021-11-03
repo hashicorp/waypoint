@@ -1,21 +1,24 @@
-import Component from '@glimmer/component';
+import Component from '@glint/environment-ember-loose/glimmer-component';
 import { FitAddon } from 'xterm-addon-fit';
 import { Terminal } from 'xterm';
 import { action } from '@ember/object';
 import { assert } from '@ember/debug';
 import { tracked } from '@glimmer/tracking';
 
-interface TerminalComponentArgs {
+interface Args {
   terminal?: Terminal;
 }
+interface TerminalSignature {
+  Args: Args;
+}
 
-export default class LogTerminal extends Component<TerminalComponentArgs> {
+export default class RenderTerminal extends Component<TerminalSignature> {
   element!: HTMLElement;
-  terminal?: Terminal;
+  terminal!: Terminal;
   fitAddon!: FitAddon;
   @tracked isFollowingLogs: boolean;
 
-  constructor(owner: unknown, args: TerminalComponentArgs) {
+  constructor(owner: unknown, args: Args) {
     super(owner, args);
     let { terminal } = args;
     assert('A terminal object must be passed to the component', !!terminal);
@@ -73,5 +76,11 @@ export default class LogTerminal extends Component<TerminalComponentArgs> {
     } else {
       return false;
     }
+  }
+}
+
+declare module '@glint/environment-ember-loose/registry' {
+  export default interface Registry {
+    RenderTerminal: typeof RenderTerminal;
   }
 }

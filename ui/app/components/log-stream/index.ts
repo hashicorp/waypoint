@@ -1,7 +1,7 @@
 import { GetLogStreamRequest, LogBatch } from 'waypoint-pb';
 
 import ApiService from 'waypoint/services/api';
-import Component from '@glimmer/component';
+import Component from '@glint/environment-ember-loose/glimmer-component';
 import { Status } from 'grpc-web';
 import { Terminal } from 'xterm';
 import { createTerminal } from 'waypoint/utils/create-terminal';

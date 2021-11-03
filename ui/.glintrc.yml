@@ -1,0 +1,4 @@
+# .glintrc.yml
+environment: ember-loose
+include:
+  - app/**
