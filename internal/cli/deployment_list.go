@@ -108,6 +108,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			Workspace:     wsRef,
 			PhysicalState: phyState,
 			Status:        c.filterFlags.statusFilters(),
+			Order:         c.filterFlags.orderOp(),
 		})
 
 		if err != nil {
