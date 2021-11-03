@@ -144,7 +144,7 @@ func (c *InstallCommand) Run(args []string) int {
 		}
 
 		if retries >= maxRetries {
-			sr.Update("Failed to connect to Waypoint server after max retry attempts of %s", maxRetries)
+			sr.Update("Failed to connect to Waypoint server after max retry attempts of %d", maxRetries)
 			sr.Status(terminal.StatusError)
 			sr.Done()
 			break
