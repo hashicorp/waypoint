@@ -433,6 +433,14 @@ message UI {
     Ref.Workspace workspace = 2;
 
     OperationOrder order = 3;
+
+    // The filters to apply to this request. These are ORed, so you should
+    // specify multiple filters in the StatusFilter for AND behavior.
+    repeated StatusFilter status = 4;
+
+    // The physical state to filter for. If this is zero or unset then no
+    // filtering on physical state will be done.
+    Operation.PhysicalState physical_state = 5;
   }
 
   message ListReleasesResponse {

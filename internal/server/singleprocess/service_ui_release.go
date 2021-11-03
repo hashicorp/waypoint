@@ -14,6 +14,8 @@ func (s *service) UI_ListReleases(
 	releaseList, err := s.state.ReleaseList(req.Application,
 		serverstate.ListWithOrder(req.Order),
 		serverstate.ListWithWorkspace(req.Workspace),
+		serverstate.ListWithStatusFilter(req.Status...),
+		serverstate.ListWithPhysicalState(req.PhysicalState),
 	)
 	if err != nil {
 		return nil, err
