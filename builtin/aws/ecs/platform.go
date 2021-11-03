@@ -183,7 +183,6 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithType("security groups"),
 			resource.WithState(&Resource_InternalSecurityGroups{}),
 			resource.WithCreate(p.resourceInternalSecurityGroupsCreate),
-			// TODO: implement destroy when we have better support for app-scoped resources
 			// TODO: implement status when we have a plan to not hit rate limits
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_POLICY),
 		)),
@@ -193,7 +192,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithType("security groups"),
 			resource.WithState(&Resource_ExternalSecurityGroups{}),
 			resource.WithCreate(p.resourceExternalSecurityGroupsCreate),
-			// TODO: implement destroy when we have better support for app-scoped resources
+			resource.WithDestroy(p.resourceSecurityGroupsDestroy),
 			// TODO: implement status when we have a plan to not hit rate limits
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_POLICY),
 		)),
@@ -240,7 +239,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithPlatform(platformName),
 			resource.WithState(&Resource_Alb{}),
 			resource.WithCreate(p.resourceAlbCreate),
-			// TODO: implement destroy when we have better support for app-scoped resources
+			resource.WithDestroy(p.resourceAlbDestroy),
 			// TODO: implement status when we have a plan to not hit rate limits
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_ROUTER),
 		)),
@@ -267,7 +266,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithPlatform(platformName),
 			resource.WithState(&Resource_TaskDefinition{}),
 			resource.WithCreate(p.resourceTaskDefinitionCreate),
-			// TODO: implement destroy when we have better support for app-scoped resources.
+			resource.WithDestroy(p.resourceTaskDefinitionDestroy),
 			// TODO: implement status when we have a plan to not hit rate limits
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
 		)),
@@ -902,7 +901,7 @@ func (p *Platform) resourceServiceDestroy(
 			s.Done()
 			return nil
 		}
-		return status.Errorf(codes.Internal, "failed to delete ECS cluster %s (ARN: %q): %s", state.Name, state.Arn, err)
+		return status.Errorf(codes.Internal, "failed to delete ECS service %s (ARN: %q): %s", state.Name, state.Arn, err)
 	}
 
 	s.Update("Deleted service %s", state.Name)
@@ -1178,6 +1177,8 @@ func (p *Platform) resourceTargetGroupCreate(
 	deploymentId DeploymentId,
 	subnets *Resource_AlbSubnets, // Required because we need to know which VPC we're in, and subnets discover it.
 	state *Resource_TargetGroup,
+	securityGroupsInternal *Resource_InternalSecurityGroups,
+	securityGroups *Resource_ExternalSecurityGroups,
 ) error {
 	if p.config.DisableALB {
 		log.Debug("ALB disabled - skipping target group creation")
@@ -1484,12 +1485,40 @@ OUTER:
 	return nil
 }
 
+func (p *Platform) resourceTaskDefinitionDestroy(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	log hclog.Logger,
+	sess *session.Session,
+	state *Resource_TaskDefinition,
+	taskRole *Resource_TaskRole,
+) error {
+	ecsSvc := ecs.New(sess)
+
+	if taskRole != nil && taskRole.Arn != "" {
+		return nil // user specified Task definition
+	}
+
+	s := sg.Add("Deleting ecs task definition")
+
+	taskDefInput := ecs.DeregisterTaskDefinitionInput{TaskDefinition: &state.Arn}
+	_, err := ecsSvc.DeregisterTaskDefinition(&taskDefInput)
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to delete ecs task definition: %s", err)
+	}
+
+	s.Update("Deleted ecs task definition")
+	s.Done()
+	return nil
+}
+
 func (p *Platform) resourceAlbCreate(
 	ctx context.Context,
 	sg terminal.StepGroup,
 	sess *session.Session,
 	log hclog.Logger,
 	src *component.Source,
+	securityGroupsInternal *Resource_InternalSecurityGroups,
 	securityGroups *Resource_ExternalSecurityGroups,
 	subnets *Resource_AlbSubnets, // Required because we need to know which VPC we're in, and subnets discover it.
 	state *Resource_Alb,
@@ -1583,6 +1612,36 @@ func (p *Platform) resourceAlbCreate(
 	state.CanonicalHostedZoneId = *lb.CanonicalHostedZoneId
 
 	s.Update("Using Application Load Balancer %q", state.Name)
+	s.Done()
+	return nil
+}
+
+func (p *Platform) resourceAlbDestroy(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	sess *session.Session,
+	log hclog.Logger,
+	state *Resource_Alb,
+) error {
+	if p.config.DisableALB {
+		log.Debug("ALB disabled - skipping target group creation")
+		return nil
+	}
+
+	s := sg.Add("Initializing ALB deletion")
+	defer s.Abort()
+
+	s.Update("Deleting ALB %s", state.DnsName)
+
+	elbsrv := elbv2.New(sess)
+	input := elbv2.DeleteLoadBalancerInput{LoadBalancerArn: &state.Arn}
+
+	_, err := elbsrv.DeleteLoadBalancer(&input)
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to remove ALB %s: %s", state.DnsName, err)
+	}
+
+	s.Update("Deleted ALB %s", state.Arn)
 	s.Done()
 	return nil
 }
@@ -1818,6 +1877,43 @@ func (p *Platform) resourceExternalSecurityGroupsCreate(
 	return nil
 }
 
+func (p *Platform) resourceSecurityGroupsDestroy(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	sess *session.Session,
+	log hclog.Logger,
+	externalState *Resource_ExternalSecurityGroups,
+	internalState *Resource_InternalSecurityGroups,
+) error {
+	s := sg.Add("Deleting security groups")
+	defer s.Abort()
+
+	ids := []string{}
+
+	// only delete the managed security groups
+	// internal groups have a dependency on the external groups
+	// so we must delete these first
+	for _, sg := range internalState.SecurityGroups {
+		if sg.Managed {
+			ids = append(ids, sg.Id)
+		}
+	}
+
+	for _, sg := range externalState.SecurityGroups {
+		if sg.Managed {
+			ids = append(ids, sg.Id)
+		}
+	}
+
+	err := deleteSecurityGroup(ctx, sess, s, log, ids)
+	if err != nil {
+		return err
+	}
+
+	s.Done()
+	return nil
+}
+
 func (p *Platform) resourceInternalSecurityGroupsCreate(
 	ctx context.Context,
 	sg terminal.StepGroup,
@@ -1931,6 +2027,52 @@ func upsertSecurityGroup(
 	}
 
 	return sg, nil
+}
+
+func deleteSecurityGroup(
+	ctx context.Context,
+	sess *session.Session,
+	s terminal.Step,
+	log hclog.Logger,
+	ids []string,
+) error {
+	ec2srv := ec2.New(sess)
+
+	for _, id := range ids {
+		req := ec2.DeleteSecurityGroupInput{GroupId: &id}
+
+		// retry until context cancelled as AWS resource deletion is eventually consistent, we need to
+		// wait for resources that have been linked to this security group to be removed.
+		var returnErr error
+
+		for err := ctx.Err(); err == nil; {
+			s.Update("Attempting to delete security group %s", id)
+			_, err := ec2srv.DeleteSecurityGroup(&req)
+
+			if aerr, ok := err.(awserr.Error); ok && aerr.Code() == "InvalidGroup.NotFound" {
+				s.Update("Security group %s does not exist", id)
+				returnErr = nil
+				break
+			}
+
+			if err == nil {
+				s.Update("Deleted security group %s", id)
+				returnErr = nil
+				break
+			}
+
+			log.Debug("unable to delete security group", "id", id, "error", err)
+			returnErr = status.Errorf(codes.Internal, "error deleting security group id %s: %s", id, err)
+
+			time.Sleep(5 * time.Second)
+		}
+
+		if returnErr != nil {
+			return returnErr
+		}
+	}
+
+	return nil
 }
 
 func (p *Platform) resourceLogGroupCreate(
