@@ -15,7 +15,7 @@ export default class WorkspaceProjectsProjectSettings extends Route {
     return [
       {
         label: model.name,
-        icon: 'folder-outline',
+        icon: 'folder',
         route: 'workspace.projects.project.index',
       },
       {

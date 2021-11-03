@@ -32,7 +32,7 @@
             {{resource.name}}
           </LinkTo>
         </th>
-        <td><Pds::Icon @type={{icon-for-component resource.platform}} /> {{resource.type}}</td>
+        <td><FlightIcon @name={{icon-for-component resource.platform}} /> {{resource.type}}</td>
         <td>{{date-format-distance-to-now resource.createdTime.seconds}}</td>
         <td><ResourceHealthIndicator @resource={{resource}} /></td>
       </tr>

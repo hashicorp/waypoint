@@ -26,7 +26,7 @@
       <:badge>
         {{#if (eq @deployment.state 4)}}
           <b data-test-destroyed-badge class="badge badge--destroyed">
-            <Pds::Icon @type="trash" class="icon" />&nbsp; {{t "page.deployments.destroyed_label"}}
+            <FlightIcon @name="trash" class="icon" />&nbsp; {{t "page.deployments.destroyed_label"}}
           </b>
         {{/if}}
       </:badge>

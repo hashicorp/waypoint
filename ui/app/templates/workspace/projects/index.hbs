@@ -3,7 +3,7 @@
 {{#if this.cli}}
 <div class="flash flash--success">
   <div class="flash-header">
-    <Pds::Icon @type="check-circle-fill" class="icon" />
+    <FlightIcon @name="check-circle-fill" class="icon" />
     <p>Authenticated successfully via the Waypoint CLI</p>
   </div>
 </div>
@@ -21,7 +21,7 @@
     </small>
   </div>
   <Pds::CtaLink @route="workspace.projects.new" @variant="secondary "class="pds--iconStart">
-    <Pds::Icon @type="plus-plain" class="pds-button__iconStart"/>
+    <FlightIcon @name="plus" class="pds-button__iconStart"/>
     &nbsp;{{t "form.project_new.title"}}
   </Pds::CtaLink>
 </PageHeader>
@@ -31,7 +31,7 @@
   <Card>
     <LinkTo @route="workspace.projects.project" @model={{project.project}}>
       <div class="row">
-        <IconTile @icon="folder-outline" @isSmall={{true}} />
+        <IconTile @icon="folder" @isSmall={{true}} />
         <div class="meta">
           <h2>{{project.project}}</h2>
           {{!-- todo(pearkes): get full project objects from list api --}}
