@@ -24,7 +24,7 @@
     "@hashicorp/react-search": "^6.1.1",
     "@hashicorp/react-section-header": "^5.0.4",
     "@hashicorp/react-stepped-feature-list": "^4.0.3",
-    "@hashicorp/react-subnav": "^9.1.4-canary-2021103173547",
+    "@hashicorp/react-subnav": "^9.1.4",
     "@hashicorp/react-tabs": "^7.0.1",
     "@hashicorp/react-vertical-text-block-list": "^7.0.0",
     "@reach/tabs": "^0.16.1",
