@@ -1,3 +1,26 @@
+## 0.6.2 (November 4, 2021)
+
+FEATURES:
+
+* plugin/nomad: **Introduce Nomad On-Demand Runner support for Waypoint server.** Launch
+tasks to build containers in short lived runners. [[GH-2593](https://github.com/hashicorp/waypoint/issues/2593)]
+
+IMPROVEMENTS:
+
+* cli/login: Allow login from-kubernetes command to work with non-default namespace installations [[GH-2575](https://github.com/hashicorp/waypoint/issues/2575)]
+* serverinstall/nomad: Update install helper to always setup a Consul service
+with a backend and ui service tag. [[GH-2597](https://github.com/hashicorp/waypoint/issues/2597)]
+
+BUG FIXES:
+
+* cli: Use values from filter flags when listing deployments and releases [[GH-2672](https://github.com/hashicorp/waypoint/issues/2672)]
+* cli: `waypoint status` and `waypoint status -app` no longer display destroyed deployments [[GH-2564](https://github.com/hashicorp/waypoint/issues/2564)]
+* core: Fix a panic where a custom Waypoint plugin would panic if the plugin
+did not properly implement a Registry component with AccessInfoFunc() [[GH-2532](https://github.com/hashicorp/waypoint/issues/2532)]
+* serverinstall/k8s: Clean up rbac resources on uninstall, and do not error when existing rbac resources are detected during server upgrade. [[GH-2654](https://github.com/hashicorp/waypoint/issues/2654)]
+* ui: avoid loading *all* status reports [[GH-2562](https://github.com/hashicorp/waypoint/issues/2562)]
+* ui: improve docker reference parsing [[GH-2518](https://github.com/hashicorp/waypoint/issues/2518)]
+
 ## 0.6.1 (October 21, 2021)
 
 BUG FIXES:
