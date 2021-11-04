@@ -53,6 +53,13 @@ app "frontend" {
 }
 ```
 
+### Further Scoping: Workspaces and Labels
+
+In both the project and app scope, a configuration can be further scoped
+to only exist in a specific workspace or label set for a deployment.
+For more information, see the
+[workspace and label-scoping documentation](/docs/app-config/scope).
+
 ## Syncing
 
 Changes to `config` in the `waypoint.hcl` file take effect only during
@@ -95,6 +102,14 @@ changed.
   these values may be referenced using `config.internal.NAME` within `env`
   values or `file` values. See the
   [internal values documentation](/docs/app-config/internal) for more information.
+
+- `workspace` <code>([config](#config-parameters))</code> - Define
+  [workspace-scoped configuration](/docs/app-config/scope#workspace-scoping).
+  The label for the stanza is the name of a workspace to exactly match.
+
+- `label` <code>([config](#config-parameters))</code> - Define
+  [label-scoped configuration](/docs/app-config/scope#label-scoping).
+  The label for the stanza is a label selector.
 
 ## `ConfigValue`
 

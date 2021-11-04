@@ -310,6 +310,10 @@
       {
         "title": "Internal Values",
         "path": "app-config/internal"
+      },
+      {
+        "title": "Workspace and Label Scoping",
+        "path": "app-config/scope"
       }
     ]
   },
