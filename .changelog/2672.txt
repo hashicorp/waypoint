@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Use values from filter flags when listing deployments and releases
+```
