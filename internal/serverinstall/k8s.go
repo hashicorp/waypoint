@@ -60,7 +60,10 @@ type k8sConfig struct {
 }
 
 const (
-	serviceName = "waypoint"
+	serviceName                  = "waypoint"
+	runnerRoleBindingName        = "waypoint-runner-rolebinding"
+	runnerClusterRoleName        = "waypoint-runner"
+	runnerClusterRoleBindingName = "waypoint-runner"
 )
 
 // Install is a method of K8sInstaller and implements the Installer interface to
@@ -832,6 +835,72 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 		s.Done()
 	}
 
+	// Delete the role binding
+	rbClient := clientset.RbacV1().RoleBindings(i.config.namespace)
+	if err != nil {
+		return err
+	}
+	_, err = rbClient.Get(ctx, runnerRoleBindingName, metav1.GetOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+	if err == nil {
+		s = sg.Add("Deleting role binding %s...", runnerRoleBindingName)
+		if err := rbClient.Delete(ctx, runnerRoleBindingName, metav1.DeleteOptions{}); err != nil {
+			ui.Output(
+				"Error deleting role binding %s: %s", runnerRoleBindingName, clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
+		}
+		s.Update("Role binding deleted")
+		s.Done()
+	}
+
+	// Delete the cluster role
+	crClient := clientset.RbacV1().ClusterRoles()
+	if err != nil {
+		return err
+	}
+	_, err = crClient.Get(ctx, runnerClusterRoleName, metav1.GetOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+	if err == nil {
+		s = sg.Add("Deleting cluster role %s...", runnerClusterRoleName)
+		if err := crClient.Delete(ctx, runnerClusterRoleName, metav1.DeleteOptions{}); err != nil {
+			ui.Output(
+				"Error deleting cluster role %s: %s", runnerClusterRoleName, clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
+		}
+		s.Update("Cluster role deleted")
+		s.Done()
+	}
+
+	// Delete the cluster role binding
+	crbClient := clientset.RbacV1().ClusterRoleBindings()
+	if err != nil {
+		return err
+	}
+	_, err = crbClient.Get(ctx, runnerClusterRoleBindingName, metav1.GetOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+	if err == nil {
+		s = sg.Add("Deleting cluster role binding %s...", runnerClusterRoleBindingName)
+		if err := crbClient.Delete(ctx, runnerClusterRoleBindingName, metav1.DeleteOptions{}); err != nil {
+			ui.Output(
+				"Error deleting cluster role binding %s: %s", runnerClusterRoleBindingName, clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
+		}
+		s.Update("Cluster role binding deleted")
+		s.Done()
+	}
+
 	s.Done()
 
 	return nil
@@ -1368,10 +1437,9 @@ func newServiceAccount(c k8sConfig) (*apiv1.ServiceAccount, error) {
 // newServiceAccountClusterRoleWithBinding creates the cluster role and binding necessary to create and verify
 // a nodeport type services.
 func newServiceAccountClusterRoleWithBinding(c k8sConfig) (*rbacv1.ClusterRole, *rbacv1.ClusterRoleBinding, error) {
-	roleName := "waypoint-runner"
 	return &rbacv1.ClusterRole{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: roleName,
+				Name: runnerClusterRoleName,
 			},
 			Rules: []rbacv1.PolicyRule{{
 				APIGroups: []string{""},
@@ -1380,7 +1448,7 @@ func newServiceAccountClusterRoleWithBinding(c k8sConfig) (*rbacv1.ClusterRole, 
 			}},
 		}, &rbacv1.ClusterRoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: roleName,
+				Name: runnerClusterRoleBindingName,
 			},
 
 			// Our default runner role is just the default "edit" role. This
@@ -1389,7 +1457,7 @@ func newServiceAccountClusterRoleWithBinding(c k8sConfig) (*rbacv1.ClusterRole, 
 			RoleRef: rbacv1.RoleRef{
 				APIGroup: "",
 				Kind:     "ClusterRole",
-				Name:     roleName,
+				Name:     runnerClusterRoleName,
 			},
 
 			Subjects: []rbacv1.Subject{
@@ -1407,7 +1475,7 @@ func newServiceAccountClusterRoleWithBinding(c k8sConfig) (*rbacv1.ClusterRole, 
 func newServiceAccountRoleBinding(c k8sConfig) (*rbacv1.RoleBinding, error) {
 	return &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "waypoint-runner-rolebinding",
+			Name:      runnerRoleBindingName,
 			Namespace: c.namespace,
 		},
 
@@ -1743,15 +1811,25 @@ func (i *K8sInstaller) initServiceAccount(
 		if err != nil && !errors.IsNotFound(err) {
 			return status.Errorf(codes.Internal, "Failed to get cluster role %q: %q", cr.Name, err)
 		}
+		if err == nil {
+			if err := crClient.Delete(ctx, cr.Name, metav1.DeleteOptions{}); err != nil {
+				return err
+			}
+		}
 		if _, err := crClient.Create(ctx, cr, metav1.CreateOptions{}); err != nil {
 			return status.Errorf(codes.Internal, "Failed to create cluster role %q: %q", cr.Name, err)
 		}
 	}
 	if crb != nil {
 		crbClient := clientset.RbacV1().ClusterRoleBindings()
-		_, err = crbClient.Get(ctx, crb.Name, metav1.GetOptions{})
+		_, err := crbClient.Get(ctx, crb.Name, metav1.GetOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			return status.Errorf(codes.Internal, "Failed to get cluster role binding %q: %q", crb.Name, err)
+		}
+		if err == nil {
+			if err := crbClient.Delete(ctx, crb.Name, metav1.DeleteOptions{}); err != nil {
+				return err
+			}
 		}
 		if _, err := crbClient.Create(ctx, crb, metav1.CreateOptions{}); err != nil {
 			return status.Errorf(codes.Internal, "Failed to create cluster role binding %q: %q", cr.Name, err)
