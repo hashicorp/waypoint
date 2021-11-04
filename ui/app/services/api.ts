@@ -24,7 +24,7 @@ import { DEBUG } from '@glimmer/env';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Message } from 'google-protobuf';
 import Service from '@ember/service';
-import { SessionService } from 'ember-simple-auth/services/session';
+import SessionService from 'ember-simple-auth/services/session';
 import { WaypointClient } from 'waypoint-client';
 import { buildWaiter } from '@ember/test-waiters';
 import config from 'waypoint/config/environment';
@@ -84,7 +84,7 @@ export default class ApiService extends Service {
 
   get meta(): Metadata {
     if (this.session.isAuthenticated) {
-      return { ...protocolVersions, authorization: this.session.data.authenticated.token };
+      return { ...protocolVersions, authorization: this.session.data.authenticated?.token as string };
     } else {
       return { ...protocolVersions };
     }

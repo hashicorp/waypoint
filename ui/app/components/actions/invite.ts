@@ -1,7 +1,7 @@
 import ApiService from 'waypoint/services/api';
 import Component from '@glimmer/component';
 import { InviteTokenRequest } from 'waypoint-pb';
-import { SessionService } from 'ember-simple-auth/services/session';
+import SessionService from 'ember-simple-auth/services/session';
 import { action } from '@ember/object';
 import { later } from '@ember/runloop';
 import { inject as service } from '@ember/service';
