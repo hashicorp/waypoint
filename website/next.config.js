@@ -29,7 +29,6 @@ module.exports = withHashicorp({
   defaultLayout: true,
   nextOptimizedImages: true,
 })({
-  webpack5: false,
   redirects() {
     return redirects
   },

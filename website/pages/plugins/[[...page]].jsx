@@ -1,9 +1,6 @@
 import { productName, productSlug } from 'data/metadata'
 import DocsPage from '@hashicorp/react-docs-page'
-import {
-  generateStaticPaths,
-  generateStaticProps,
-} from '@hashicorp/react-docs-page/server'
+import { getStaticGenerationFunctions } from '@hashicorp/react-docs-page/server'
 
 const NAV_DATA_FILE = 'data/plugins-nav-data.json'
 const CONTENT_DIR = 'content/plugins'
@@ -20,37 +17,13 @@ export default function DocsLayout(props) {
   )
 }
 
-export async function getStaticPaths() {
-  const paths = await generateStaticPaths({
-    navDataFile: NAV_DATA_FILE,
-    localContentDir: CONTENT_DIR,
-    // new ----
-    product: { name: productName, slug: productSlug },
-    basePath,
-  })
-  return {
-    fallback: 'blocking',
-    paths,
-  }
-}
+const { getStaticPaths, getStaticProps } = getStaticGenerationFunctions({
+  basePath: basePath,
+  localContentDir: CONTENT_DIR,
+  navDataFile: NAV_DATA_FILE,
+  product: productSlug,
+  strategy: process.env.STATIC_GENERATION_STRATEGY || 'fs',
+  revalidate: 10,
+})
 
-export async function getStaticProps({ params }) {
-  try {
-    const props = await generateStaticProps({
-      navDataFile: NAV_DATA_FILE,
-      localContentDir: CONTENT_DIR,
-      product: { name: productName, slug: productSlug },
-      params,
-      basePath,
-    })
-    return {
-      props,
-      revalidate: 10,
-    }
-  } catch (err) {
-    console.warn(err)
-    return {
-      notFound: true,
-    }
-  }
-}
+export { getStaticPaths, getStaticProps }
