@@ -2,7 +2,7 @@ import type RouterService from '@ember/routing/router-service';
 type Transition = ReturnType<RouterService['transitionTo']>;
 
 declare module 'ember-simple-auth/services/session' {
-  interface SessionService {
+  export default interface SessionService {
     authenticate(authenticator: string, params: unknown): Promise<void>;
     isAuthenticated: boolean;
     invalidate(): Promise<void>;
@@ -11,6 +11,6 @@ declare module 'ember-simple-auth/services/session' {
   }
 
   interface SessionData {
-    authenticated?: unknown;
+    authenticated?: Record<string, unknown>;
   }
 }

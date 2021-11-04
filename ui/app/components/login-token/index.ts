@@ -1,6 +1,6 @@
 import Component from '@glimmer/component';
 import RouterService from '@ember/routing/router-service';
-import { SessionService } from 'ember-simple-auth/services/session';
+import SessionService from 'ember-simple-auth/services/session';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 
