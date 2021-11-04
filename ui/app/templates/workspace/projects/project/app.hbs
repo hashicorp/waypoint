@@ -49,27 +49,27 @@
 <Pds::TabNav>
   <LinkTo @route="workspace.projects.project.app.deployment"
     @models={{array @model.application.project @model.application.application }}>
-    <FlightIcon @name="upload" class="icon" />
+    <FlightIcon @name="upload" class="tab-icon" />
     {{t "nav.deployments"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.builds"
     @models={{array @model.application.project @model.application.application }}>
-    <FlightIcon @name="build" class="icon" />
+    <FlightIcon @name="hammer" class="tab-icon" />
     {{t "nav.builds"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.releases"
     @models={{array @model.application.project @model.application.application }}>
-    <FlightIcon @name="globe" class="icon" />
+    <FlightIcon @name="globe" class="tab-icon" />
     {{t "nav.releases"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.logs"
     @models={{array @model.application.project @model.application.application }}>
-    <FlightIcon @name="outline" class="icon" />
+    <FlightIcon @name="outline" class="tab-icon" />
     {{t "nav.logs"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.exec"
     @models={{array @model.application.project @model.application.application }}>
-    <FlightIcon @name="terminal-screen" class="icon" />
+    <FlightIcon @name="terminal-screen" class="tab-icon" />
     {{t "nav.exec"}}
   </LinkTo>
 </Pds::TabNav>

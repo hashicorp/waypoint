@@ -40,7 +40,7 @@ module('Integration | Component | app-item/build', function (hooks) {
     `);
 
     assert.dom('[data-test-app-item-build]').includesText('v3');
-    assert.dom('[data-test-icon-type="logo-docker-color"]').exists();
+    assert.dom('[data-test-icon-type="docker-color"]').exists();
     assert.dom('[data-test-app-item-build]').includesText('Pushed to Docker');
     assert.dom('[data-test-operation-status-indicator="success"]').exists();
     assert.dom('[data-test-app-item-build]').includesText('1 minute ago');
@@ -69,7 +69,7 @@ module('Integration | Component | app-item/build', function (hooks) {
     `);
 
     assert.dom('[data-test-app-item-build]').includesText('v3');
-    assert.dom('[data-test-icon-type="logo-docker-color"]').exists();
+    assert.dom('[data-test-icon-type="docker-color"]').exists();
     assert.dom('[data-test-app-item-build]').includesText('Built with Docker');
     assert.dom('[data-test-operation-status-indicator="success"]').exists();
     assert.dom('[data-test-app-item-build]').includesText('2 minutes ago');

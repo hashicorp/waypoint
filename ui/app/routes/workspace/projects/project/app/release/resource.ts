@@ -18,7 +18,6 @@ export default class extends Route {
       {
         label: `v${release.sequence}`,
         route: 'workspace.projects.project.app.release',
-        icon: 'public-default',
       },
     ];
   }

@@ -6,21 +6,21 @@ export function iconForComponent([component]: [string]): string {
     case 'aws-ec2':
     case 'aws-ecs':
     case 'aws-ecr':
-      return 'logo-aws-color';
+      return 'aws-color';
     case 'azure-container-instances':
-      return 'logo-azure-color';
+      return 'azure-color';
     case 'docker':
-      return 'logo-docker-color';
+      return 'docker-color';
     case 'google-cloud-run':
-      return 'logo-gcp-color';
+      return 'gcp-color';
     case 'kubernetes':
     case 'kubernetes-apply':
-      return 'logo-kubernetes-color-alt';
+      return 'kubernetes-color';
     case 'nomad':
     case 'nomad-jobspec':
-      return 'logo-nomad-color';
+      return 'nomad-color';
     case 'pack':
-      return 'logo-pack-color';
+      return 'package';
     default:
       return 'more-horizontal';
   }

@@ -23,27 +23,7 @@
   border-radius: 2px;
   font-size: scale.$lg-1;
 
-  > .pds-icon {
-    height: unset;
-    width: unset;
-  }
-
   @media (prefers-color-scheme: dark) {
     box-shadow: inset 0 0 0 1px rgba(var(--border), 0.5);
-  }
-
-  &--small {
-    width: scale.$lg-6;
-    height: scale.$lg-6;
-  }
-
-  &--large {
-    width: scale.$lg-12;
-    height: scale.$lg-12;
-
-    .icon {
-      width: scale.$lg-8;
-      height: scale.$lg-8;
-    }
   }
 }

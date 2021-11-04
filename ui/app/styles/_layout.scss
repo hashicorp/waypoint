@@ -128,6 +128,9 @@ hr {
   border-top: 1px solid rgb(var(--border));
 }
 
+button .icon {
+  margin-right: scale.$sm-3;
+}
 // Set a default size for icons
 
 svg.icon {
@@ -136,8 +139,3 @@ svg.icon {
   flex-shrink: 0;
 }
 
-.pds-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}

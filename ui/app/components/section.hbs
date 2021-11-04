@@ -7,8 +7,8 @@
   <div class="section__header">
     <h2 class="section__heading">
       {{#if this.isExpandable}}
-        <Pds::Icon
-          @type={{if this.expanded "chevron-down" "chevron-right"}}
+        <FlightIcon
+          @name={{if this.expanded "chevron-down" "chevron-right"}}
         />
       {{/if}}
       <span>

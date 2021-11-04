@@ -20,17 +20,11 @@ ul.breadcrumbs {
       }
 
       span {
+        font-weight: normal;
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
       }
-    }
-
-    .pds-icon {
-      width: 16px;
-      height: 16px;
-      margin-right: scale.$sm-3;
-      flex-shrink: 0;
     }
 
     &::after {
