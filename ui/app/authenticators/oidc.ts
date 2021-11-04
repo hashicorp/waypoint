@@ -1,6 +1,6 @@
 import { reject, resolve } from 'rsvp';
 
-import OAuth2PasswordGrantAuthenticator from 'ember-simple-auth/authenticators/oauth2-password-grant';
+import OAuth2ImplicitGrantAuthenticator from 'ember-simple-auth/authenticators/oauth2-implicit-grant';
 import classic from 'ember-classic-decorator';
 
 interface SessionData {
@@ -8,7 +8,7 @@ interface SessionData {
 }
 
 @classic
-export default class OIDCAuthenticator extends OAuth2PasswordGrantAuthenticator {
+export default class OIDCAuthenticator extends OAuth2ImplicitGrantAuthenticator {
   restore(data: SessionData): Promise<SessionData> {
     if (data.token) {
       return resolve(data);
