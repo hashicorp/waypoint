@@ -1,0 +1,11 @@
+{{#each @model.authMethodsList as |authMethod|}}
+  <Pds::Button @variant="primary">{{authMethod.displayName}}</Pds::Button>
+{{/each}}
+<hr>
+<p>
+  Can't log in? Use Token authentication instead:
+  <LinkTo @route="auth.token">
+    {{t 'auth.button'}}
+  </LinkTo>
+</p>
+

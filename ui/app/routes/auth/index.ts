@@ -2,7 +2,7 @@ import ApiService from 'waypoint/services/api';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { ListOIDCAuthMethodsResponse } from 'waypoint-pb';
 import Route from '@ember/routing/route';
-import { SessionService } from 'ember-simple-auth/services/session';
+import SessionService from 'ember-simple-auth/services/session';
 import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
