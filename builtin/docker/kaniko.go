@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os/exec"
+	"runtime"
 
 	"github.com/docker/distribution/reference"
 	"github.com/hashicorp/go-hclog"
@@ -92,7 +93,15 @@ func (b *Builder) buildWithKaniko(
 	}
 
 	if !b.config.DisableCEB {
-		data, err := assets.Asset("ceb/ceb")
+		// For Kaniko we can use our runtime arch because the image we build
+		// always matches the architecture of our Kaniko environment.
+		assetName, ok := assets.CEBArch[runtime.GOARCH]
+		if !ok {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"automatic entrypoint injection not supported for architecture: %s", runtime.GOARCH)
+		}
+
+		data, err := assets.Asset(assetName)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
 		}

@@ -343,15 +343,30 @@ func (b *Builder) Build(
 		}
 	}
 
+	// We need to determine the image architecture to inject the correct CEB.
+	// And we output our image architecture anyways.
+	inspect, _, err := cli.ImageInspectWithRaw(ctx, result.Name())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal,
+			"error inspecting image: %s", err)
+	}
+
 	if !b.config.DisableCEB {
 		step = sg.Add("Injecting Waypoint Entrypoint...")
 
-		asset, err := assets.Asset("ceb/ceb")
+		assetName, ok := assets.CEBArch[strings.ToLower(inspect.Architecture)]
+		if !ok {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"Automatic Waypoint entrypoint injection only supports amd64 and arm64 "+
+					"image architectures. Got: %s", inspect.Architecture)
+		}
+
+		asset, err := assets.Asset(assetName)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
 		}
 
-		assetInfo, err := assets.AssetInfo("ceb/ceb")
+		assetInfo, err := assets.AssetInfo(assetName)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
 		}
@@ -381,6 +396,13 @@ func (b *Builder) Build(
 
 		step.Done()
 	}
+
+	// Complete the stepgroup and output our info. We output the architecture
+	// since a common mistake especially with newer Macs is that someone on
+	// Apple Silicon will try to deploy to Intel.
+	sg.Wait()
+	ui.Output("Image built: %s (%s)", result.Name(), inspect.Architecture,
+		terminal.WithSuccessStyle())
 
 	return result, nil
 }
