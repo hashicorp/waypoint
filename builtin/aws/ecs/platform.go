@@ -1974,9 +1974,6 @@ func (p *Platform) resourceSecurityGroupsDestroy(
 		return nil
 	}
 
-	s := sg.Add("Deleting security groups")
-	defer s.Abort()
-
 	ids := []string{}
 
 	// only delete the managed security groups
@@ -1994,12 +1991,11 @@ func (p *Platform) resourceSecurityGroupsDestroy(
 		}
 	}
 
-	err := deleteSecurityGroups(ctx, sess, s, log, ids)
+	err := deleteSecurityGroups(ctx, sess, sg, log, ids)
 	if err != nil {
 		return err
 	}
 
-	s.Done()
 	return nil
 }
 
@@ -2121,7 +2117,7 @@ func upsertSecurityGroup(
 func deleteSecurityGroups(
 	ctx context.Context,
 	sess *session.Session,
-	s terminal.Step,
+	sg terminal.StepGroup,
 	log hclog.Logger,
 	ids []string,
 ) error {
@@ -2133,6 +2129,7 @@ func deleteSecurityGroups(
 		// retry until context cancelled as AWS resource deletion is eventually consistent, we need to
 		// wait for resources that have been linked to this security group to be removed.
 		var returnErr error
+		s := sg.Add("Attempting to delete security group %s", id)
 
 		for i := 0; i <= awsDestroyRetries; i++ {
 			if err := ctx.Err(); err != nil {
@@ -2151,7 +2148,7 @@ func deleteSecurityGroups(
 			aerr, isAwsErr := err.(awserr.Error)
 			if isAwsErr && aerr.Code() == "DependencyViolation" {
 				// Expected case - it takes AWS a while to get around to actually removing the ENI.
-				s.Update("Security group %s still has a dependency - waiting for it to be deleted. Will retry in %d seconds (up to %d more times)", id, awsDestroyRetryIntervalSeconds, awsDestroyRetries-i)
+				s.Update("Security group %s still has a dependency - waiting for it to be deleted.\nWill retry in %d seconds (up to %d more times)", id, awsDestroyRetryIntervalSeconds, awsDestroyRetries-i)
 
 				// otherwise sleep and try again
 				time.Sleep(awsDestroyRetryIntervalSeconds * time.Second)
@@ -2173,8 +2170,10 @@ func deleteSecurityGroups(
 		}
 
 		if returnErr != nil {
+			s.Abort()
 			return returnErr
 		}
+		s.Done()
 	}
 
 	return nil
