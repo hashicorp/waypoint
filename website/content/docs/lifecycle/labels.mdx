@@ -1,0 +1,155 @@
+---
+layout: docs
+page_title: 'Lifecycle: Labels'
+description: |-
+  Labels are key/value pairs that can be specified by the user and attached to Waypoint operations. Labels can be used to specify any information that may be useful for the user, but are not directly interpreted by Waypoint itself.
+---
+
+# Labels
+
+Labels are key/value pairs that can be specified by the user and
+attached to Waypoint operations. Labels can be used to specify any information
+that may be useful for the user, but are not directly interpreted by
+Waypoint itself. For example, this can be used for organizational information
+(`team=widget`), process information (`scanned=true`), etc.
+
+## Specifying Labels
+
+### Operation Labels
+
+Labels can be attached to any of the major lifecycle stages using the
+`labels` attribute, as shown below.
+
+```hcl
+app "web" {
+  build {
+    labels = {
+      "region" = "tokyo"
+    }
+
+    // ... normal build fields
+  }
+}
+```
+
+This would attach the label `region=tokyo` to all the "build" operations
+and this would be visible in the UI and accessible via the API.
+
+Operation labels can also be specified using the CLI during any operation
+by specifying the `-label` flag. This flag can be repeated multiple times
+to specify multiple labels. The example below specifies a couple labels
+that will be applied to the build step only for this invocation.
+
+```shell-session
+$ waypoint build -label a=1 -label b=2
+```
+
+### Project and App Labels
+
+Labels can also be specified at both the project and app scope. These
+labels are inherited by all operations within the project and application.
+
+```hcl
+labels = {
+  global = "true"
+}
+
+app "web" {
+  labels = {
+    "app-only" = "true"
+  }
+
+  // ... operations
+}
+```
+
+## Predefined Labels
+
+Labels starting with `waypoint/` are reserved for Waypoint rather than
+user specification. It is an error to try to set any labels starting with
+`waypoint/` and Waypoint will not allow it. We call these "system labels".
+The full set of system labels is listed below:
+
+- `waypoint/workspace` - The current workspace of the operation.
+
+## Using Labels
+
+### Labels Variable
+
+The complete label set for the current operation is always available
+using the [`labels`](/docs/waypoint-hcl/variables/labels) variable
+within the `waypoint.hcl` file. The linked documentation shares various
+examples of how this might be useful, but one example might be that you
+want to also store all the labels as annotations within a platform such
+as Kubernetes:
+
+```hcl
+app "web" {
+  deploy {
+    use "kubernetes" {
+      annotations = { for k, v in labels: "waypoint/${k}" => v }
+    }
+  }
+}
+```
+
+### Filtering with Selectors
+
+Labels can be used in various places in Waypoint for filtering by using
+"label selectors." Label selectors are
+[boolean expressions](https://en.wikipedia.org/wiki/Boolean_expression)
+(result in a "true" or "false"). An example of where filtering can be
+used is [application configuration](/docs/app-config/scope#label-scoping).
+
+The [full label selector syntax](#label-selector-syntax) is documented below.
+
+-> **Note:** Labels have powerful but limited functionality at present.
+We plan for more features to utilize labels in the future but expect their
+usage beyond simple informational tasks to remain advanced concepts.
+
+## Label Selector Syntax
+
+The full syntax for label selectors is documented below.
+
+The list below shows all the operators that can be used for a single
+value, such as equality, inequality, string or list containment, regular
+expression matching, etc.
+
+```
+// Equality & Inequality checks
+<Selector> == "<Value>"
+<Selector> != "<Value>"
+
+// Emptiness checks
+<Selector> is empty
+<Selector> is not empty
+
+// Contains checks or Substring Matching
+"<Value>" in <Selector>
+"<Value>" not in <Selector>
+<Selector> contains "<Value>"
+<Selector> not contains "<Value>"
+
+// Regular Expression Matching
+<Selector> matches "<Value>"
+<Selector> not matches "<Value>"
+```
+
+Multiple such expressions can be composed using `and`, `or`, and parentheses:
+
+```
+// Logical Or - evaluates to true if either sub-expression does
+<Expression 1> or <Expression 2>
+
+// Logical And - evaluates to true if both sub-expressions do
+<Expression 1 > and <Expression 2>
+
+// Logical Not - evaluates to true if the sub-expression does not
+not <Expression 1>
+
+// Grouping - Overrides normal precedence rules
+( <Expression 1> )
+
+// Inspects data to check for a match
+<Matching Expression 1>
+```
