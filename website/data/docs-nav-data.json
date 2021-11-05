@@ -149,6 +149,10 @@
       {
         "title": "Hooks",
         "path": "lifecycle/hooks"
+      },
+      {
+        "title": "Labels",
+        "path": "lifecycle/labels"
       }
     ]
   },
