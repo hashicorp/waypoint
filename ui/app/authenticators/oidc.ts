@@ -1,10 +1,12 @@
+import OAuth2ImplicitGrantAuthenticator, {
+  parseResponse as ESAparseResponse,
+} from 'ember-simple-auth/authenticators/oauth2-implicit-grant';
 import { reject, resolve } from 'rsvp';
 
-import OAuth2ImplicitGrantAuthenticator from 'ember-simple-auth/authenticators/oauth2-implicit-grant';
 import classic from 'ember-classic-decorator';
 
 interface SessionData {
-  token?: string;
+  token: string,
 }
 
 @classic
@@ -17,11 +19,15 @@ export default class OIDCAuthenticator extends OAuth2ImplicitGrantAuthenticator 
     }
   }
 
-  authenticate(token: string): Promise<SessionData> {
-    if (token !== '') {
-      return resolve({ token: token });
+  authenticate(hash: SessionData): Promise<SessionData> {
+    if (hash.token !== '') {
+      return resolve(hash);
     } else {
       return reject();
     }
   }
+}
+
+export function parseResponse(args) {
+  return ESAparseResponse(args);
 }
