@@ -9,5 +9,6 @@ var CEBArch = map[string]string{
 	// Docker sometimes uses "aarch64" and sometimes uses "arm64". I don't know
 	// why it switches between the two or when but our arm64 build works on
 	// both.
+	"x86_64":  "ceb/ceb",
 	"aarch64": "ceb/ceb-arm64",
 }
