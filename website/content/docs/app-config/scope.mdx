@@ -1,0 +1,133 @@
+---
+layout: docs
+page_title: Workspace and Label Scoping - Application Configuration
+description: |-
+  Waypoint allows you to set different configuration values for specific workspaces or labels. For example, you might set a database URL for staging different from production using workspaces, or you might use labels to set different addresses for different regions or any other metadata.
+---
+
+# Workspace and Label Scoping
+
+Waypoint allows you to set different configuration values for specific
+[workspaces](/docs/workspaces) or [labels](/docs/waypoint-hcl/variables/labels).
+For example, you might set a database URL for staging different from production
+using workspaces, or you might use labels to set different addresses for
+different regions or any other metadata.
+
+By default, Waypoint application configuration is exposed to the application
+in every scenario. By using the additional scoping constraints described in
+this document, you can limit what configuration values are set in what
+situations.
+
+## Workspace Scoping
+
+You can use workspace scoping to expose configuration only in specific,
+exact [workspaces](/docs/workspaces):
+
+```hcl
+config {
+  env = {
+    "DB_ADDR" = "dev.example.com"
+  }
+
+  workspace "production" {
+    env = {
+      "DB_ADDR" = "prod.example.com"
+    }
+  }
+}
+```
+
+In this example, the `DB_ADDR` environment variable will be set to
+"prod.example.com" only in the "production" workspace. Within the `workspace`
+stanza, you can use all available configuration parameters such as `env`,
+`internal`, `files`, etc.
+
+-> **Note:** Values aren't inherited from the global scope. For example, you
+cannot set an [internal variable](/docs/app-config/internal) at the root
+and access it within the `workspace` stanza. You must redeclare any internal
+variables used.
+
+### Non-Exact Workspace Matching
+
+The `workspace` stanza does not support non-exact workspace matching. However,
+you can use the `label` stanza documented below to do this. All workspaces
+automatically are exposed via the `waypoint/workspace` label and label
+selectors support
+[Consul style matching operators](https://www.consul.io/api-docs/features/filtering#matching-operators)
+such as `contains`, `matches`, etc. For example, you could match all workspaces
+that contain "dev" this way:
+
+```hcl
+config {
+  env = {
+    "DB_ADDR" = "dev.example.com"
+  }
+
+  label "waypoint/workspace contains \"dev\"" {
+    env = {
+      "DB_ADDR" = "prod.example.com"
+    }
+  }
+}
+```
+
+## Label Scoping
+
+You can use the `label` stanza to expose configuration only in specific
+label contexts:
+
+```hcl
+config {
+  env = {
+    "DB_ADDR" = "dev.example.com"
+  }
+
+  label "env == production and region == us-east-1" {
+    env = {
+      "DB_ADDR" = "prod.example.com"
+    }
+  }
+}
+```
+
+This will only expose the "prod.example.com" value for the `DB_ADDR`
+environment variable if the labels of the deployment match the given
+selector.
+
+~> **Warning!** This is an advanced use case. Most cases can be satisfied
+using the `workspace` stanza which is much simpler to understand and debug.
+Under the covers, the `workspace` stanza is functionally equivalent to a
+label selector of `waypoint/workspace == <name>`.
+
+## Inheritance
+
+Based on the structural syntax of workspace and label selectors, it
+may appear that there is some ability to reference or inherit "parent"
+configuration values, such as [internal values](/docs/app-config/internal).
+**This is not possible.**
+
+For example, given the following configuration:
+
+```hcl
+config {
+  internal = {
+    "db_host" = "example.com"
+  }
+
+  env = {
+    "DB_ADDR" = "dev@${config.internal.db_host}"
+  }
+
+  workspace "production" {
+    # THIS DOES NOT WORK!
+    env = {
+      "DB_ADDR" = "prod@${config.internal.db_host}"
+    }
+  }
+}
+```
+
+This does not work. The environment variable value inside the `workspace`
+stanza does not have access to the internal variables in the root `config`
+stanza. Any `workspace` or `label` stanzas must redeclare internal variables
+that are commonly used.
