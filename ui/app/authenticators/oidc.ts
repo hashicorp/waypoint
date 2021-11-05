@@ -6,13 +6,15 @@ import { reject, resolve } from 'rsvp';
 import classic from 'ember-classic-decorator';
 
 interface SessionData {
-  token: string,
+  token: string;
 }
 
 @classic
 export default class OIDCAuthenticator extends OAuth2ImplicitGrantAuthenticator {
   restore(data: SessionData): Promise<SessionData> {
     if (data.token) {
+      window.localStorage.removeItem('waypointOIDCAuthMethod');
+      window.localStorage.removeItem('waypointOIDCNonce');
       return resolve(data);
     } else {
       return reject();
@@ -28,6 +30,6 @@ export default class OIDCAuthenticator extends OAuth2ImplicitGrantAuthenticator 
   }
 }
 
-export function parseResponse(args) {
+export function parseResponse(args: string): unknown {
   return ESAparseResponse(args);
 }

@@ -1,10 +1,9 @@
 import { CompleteOIDCAuthRequest, Ref } from 'waypoint-pb';
-import OIDCAuthenticator, { parseResponse } from 'waypoint/authenticators/oidc';
 
 import ApiService from 'waypoint/services/api';
 import Route from '@ember/routing/route';
-import RouterService from '@ember/routing/router-service';
 import SessionService from 'ember-simple-auth/services/session';
+import { parseResponse } from 'waypoint/authenticators/oidc';
 import { inject as service } from '@ember/service';
 
 export default class AuthIndex extends Route {
