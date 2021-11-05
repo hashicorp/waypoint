@@ -344,6 +344,25 @@ func (b *Builder) Build(
 		log.Debug("Docker appears available")
 	}
 
+	// We need to test if we're running in arm64 for the Docker server.
+	// Buildpacks has issues with arm64: https://github.com/buildpacks/pack/issues/907
+	// We just do a warning in case buildpacks support arm64 and magically
+	// work later.
+	serverInfo, err := dockerClient.Info(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if serverInfo.Architecture != "amd64" {
+		ui.Output(
+			"Warning! Buildpacks are known to have issues on architectures "+
+				"other than amd64. The architecure being reported by the Docker "+
+				"server is %q. We will still attempt to build the image, but "+
+				"may run into issues.",
+			serverInfo.Architecture,
+			terminal.WithWarningStyle(),
+		)
+	}
+
 	ui.Output("Creating new buildpack-based image using builder: %s", builder)
 
 	sg := ui.StepGroup()
@@ -434,12 +453,20 @@ func (b *Builder) Build(
 		inject := sg.Add("Injecting entrypoint binary to image")
 		defer inject.Abort()
 
-		asset, err := assets.Asset("ceb/ceb")
+		// Use the server architecture to determine our entrypoint architecture.
+		assetName, ok := assets.CEBArch[strings.ToLower(serverInfo.Architecture)]
+		if !ok {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"Automatic Waypoint entrypoint injection only supports amd64 and arm64 "+
+					"image architectures. Got: %s", serverInfo.Architecture)
+		}
+
+		asset, err := assets.Asset(assetName)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
 		}
 
-		assetInfo, err := assets.AssetInfo("ceb/ceb")
+		assetInfo, err := assets.AssetInfo(assetName)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
 		}
