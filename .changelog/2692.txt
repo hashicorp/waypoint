@@ -1,0 +1,7 @@
+```release-note:improvement
+plugin/docker: inject `arm64` Waypoint entrypoints for arm images
+```
+
+```release-note:improvement
+plugin/pack: detect non-Intel Docker server and show a warning
+```
