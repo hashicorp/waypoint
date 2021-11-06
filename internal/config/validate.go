@@ -154,12 +154,46 @@ func (c *App) Validate() error {
 
 	if c.BuildRaw == nil || c.BuildRaw.Use == nil || c.BuildRaw.Use.Type == "" {
 		result = multierror.Append(result, fmt.Errorf(
-			"build stage with a 'use' stanza is required"))
+			"build stage with a default 'use' stanza is required"))
 	}
 
 	if c.DeployRaw == nil || c.DeployRaw.Use == nil || c.DeployRaw.Use.Type == "" {
 		result = multierror.Append(result, fmt.Errorf(
-			"deploy stage with a 'use' stanza is required"))
+			"deploy stage with a default 'use' stanza is required"))
+	}
+
+	for _, scope := range c.BuildRaw.WorkspaceScoped {
+		if scope.Use == nil || scope.Use.Type == "" {
+			result = multierror.Append(result, fmt.Errorf(
+				"build: workspace scope %q: 'use' stanza is required",
+				scope.Scope,
+			))
+		}
+	}
+	for _, scope := range c.BuildRaw.LabelScoped {
+		if scope.Use == nil || scope.Use.Type == "" {
+			result = multierror.Append(result, fmt.Errorf(
+				"build: label scope %q: 'use' stanza is required",
+				scope.Scope,
+			))
+		}
+	}
+
+	for _, scope := range c.DeployRaw.WorkspaceScoped {
+		if scope.Use == nil || scope.Use.Type == "" {
+			result = multierror.Append(result, fmt.Errorf(
+				"deploy: workspace scope %q: 'use' stanza is required",
+				scope.Scope,
+			))
+		}
+	}
+	for _, scope := range c.DeployRaw.LabelScoped {
+		if scope.Use == nil || scope.Use.Type == "" {
+			result = multierror.Append(result, fmt.Errorf(
+				"deploy: label scope %q: 'use' stanza is required",
+				scope.Scope,
+			))
+		}
 	}
 
 	return result
