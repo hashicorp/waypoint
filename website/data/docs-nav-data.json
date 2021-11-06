@@ -153,6 +153,10 @@
       {
         "title": "Labels",
         "path": "lifecycle/labels"
+      },
+      {
+        "title": "Workspace and Label Scoping",
+        "path": "lifecycle/scope"
       }
     ]
   },
