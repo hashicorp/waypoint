@@ -762,6 +762,8 @@ func (i *NomadInstaller) runJob(
 	qopts.WaitIndex = meta.LastIndex
 
 	var allocID string
+	retries := 0
+	maxRetries := 3
 	for {
 		allocs, qmeta, err := client.Evaluations().Allocations(eval.ID, qopts)
 		if err != nil {
@@ -776,6 +778,7 @@ func (i *NomadInstaller) runJob(
 		case "running":
 			allocID = allocs[0].ID
 			s.Update("Nomad allocation running")
+			retries++
 		case "pending":
 			s.Update(fmt.Sprintf("Waiting for allocation %q to start", allocs[0].ID))
 			// retry
@@ -784,7 +787,12 @@ func (i *NomadInstaller) runJob(
 		}
 
 		if allocID != "" {
-			return allocID, nil
+			if retries == maxRetries {
+				return allocID, nil
+			} else {
+				s.Update("Ensuring allocation %q has properly started up...", allocs[0].ID)
+				time.Sleep(1 * time.Second)
+			}
 		}
 
 		select {
