@@ -137,7 +137,7 @@ form:
 auth:
   title: 'Welcome to Waypoint'
   subtitle: 'To get started, please authenticate'
-  button: 'Authenticate...'
+  button: 'Authenticate'
 
 login:
   title: 'Authenticate Waypoint'
