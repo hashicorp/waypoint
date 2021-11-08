@@ -1,0 +1,3 @@
+```release-note:feature
+ui/auth: users can now authenticate through the UI using an OIDC provider
+```
