@@ -1,4 +1,4 @@
-import { GetDeploymentRequest, ListDeploymentsRequest, ListDeploymentsResponse, UI } from 'waypoint-pb';
+import { GetDeploymentRequest, Job, ListDeploymentsRequest, ListDeploymentsResponse, UI } from 'waypoint-pb';
 import { RouteHandler, Request, Response } from 'ember-cli-mirage';
 import { decode } from '../helpers/protobufs';
 
@@ -42,7 +42,16 @@ export function ui_list(this: RouteHandler, schema: any, { requestBody }: Reques
     bundle.setBuild(deployment.build?.toProtobuf());
     bundle.setDeployUrl(deployment.deployUrl);
     bundle.setLatestStatusReport(deployment.statusReport?.toProtobuf());
-    // TODO(jgwhite): bundle.setJobDataSourceRef
+
+    if (deployment.gitCommitRef) {
+      let dataSourceRef = new Job.DataSource.Ref();
+      let gitRef = new Job.Git.Ref();
+
+      gitRef.setCommit(this.gitCommitRef);
+      dataSourceRef.setGit(gitRef);
+
+      bundle.setJobDataSourceRef(dataSourceRef);
+    }
 
     return bundle;
   });

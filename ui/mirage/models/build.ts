@@ -1,5 +1,5 @@
 import { Model, belongsTo, hasMany } from 'ember-cli-mirage';
-import { Build } from 'waypoint-pb';
+import { Build, Job } from 'waypoint-pb';
 
 export default Model.extend({
   application: belongsTo(),
@@ -18,6 +18,7 @@ export default Model.extend({
     result.setComponent(this.component?.toProtobuf());
     result.setId(this.id);
     result.setJobId(this.JobId);
+    result.setPreload(this.preloadProtobuf());
     result.setSequence(this.sequence);
     result.setStatus(this.status?.toProtobuf());
     result.setTemplateData(this.templateData);
@@ -25,6 +26,22 @@ export default Model.extend({
 
     for (let [key, value] of Object.entries<string>(this.labels ?? {})) {
       result.getLabelsMap().set(key, value);
+    }
+
+    return result;
+  },
+
+  preloadProtobuf(): Build.Preload {
+    let result = new Build.Preload();
+
+    if (this.gitCommitRef) {
+      let dataSourceRef = new Job.DataSource.Ref();
+      let gitRef = new Job.Git.Ref();
+
+      gitRef.setCommit(this.gitCommitRef);
+      dataSourceRef.setGit(gitRef);
+
+      result.setJobDataSourceRef(dataSourceRef);
     }
 
     return result;

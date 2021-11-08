@@ -1,5 +1,5 @@
 import { Model, belongsTo } from 'ember-cli-mirage';
-import { Deployment, Operation } from 'waypoint-pb';
+import { Deployment, Operation, Job } from 'waypoint-pb';
 
 const { PhysicalState } = Operation;
 type StateName = keyof typeof PhysicalState;
@@ -45,6 +45,16 @@ export default Model.extend({
     result.setArtifact(this.build?.pushedArtifact?.toProtobuf());
     result.setBuild(this.build?.toProtobuf());
     result.setDeployUrl(this.deployUrl);
+
+    if (this.gitCommitRef) {
+      let dataSourceRef = new Job.DataSource.Ref();
+      let gitRef = new Job.Git.Ref();
+
+      gitRef.setCommit(this.gitCommitRef);
+      dataSourceRef.setGit(gitRef);
+
+      result.setJobDataSourceRef(dataSourceRef);
+    }
 
     return result;
   },
