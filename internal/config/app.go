@@ -2,6 +2,7 @@ package config
 
 import (
 	"path/filepath"
+	"sort"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -451,6 +452,14 @@ func scopeMatchStage(
 			}
 		}
 	}
+
+	// For label selectors, we want to sort by scope length so that
+	// the longest label selectors match first. This is our rule for
+	// tiebreaking.
+	sort.Slice(labelScopes, func(i, j int) bool {
+		x, y := labelScopes[i], labelScopes[j]
+		return len(x.Scope) > len(y.Scope)
+	})
 
 	// Label selector matching.
 	for _, s := range labelScopes {
