@@ -99,13 +99,13 @@ app "my-app" {
   deploy {
     use "kubernetes" {}
 
-    workspace "region == us-east" {
+    label "region == us-east" {
       use "kubernetes" {
         // us-east configs
       }
     }
 
-    workspace "region == us-west" {
+    label "region == us-west" {
       // In us-west we're still migrating from bare ec2
       use "aws-ec2" {}
     }
@@ -117,6 +117,40 @@ app "my-app" {
 See [multiple match ordering](#multiple-match-ordering) to determine
 the behavior when there are multiple matches.
 
+## Scoped Registry Configuration
+
+The `registry` configuration can be scoped as well, but only within
+the root `build` stanza. This does not limit the functionality of scoping
+registry configuration at all.
+
+For example, the following specifies a custom build and registry configuration
+for the "production" workspace. Note that we don't use `registry` within
+the workspace-scoped build configuration. We still use `registry` within
+the top-level `build` and apply a duplicate `workspace` stanza.
+
+```hcl
+app "my-app" {
+  build {
+    use "docker" {}
+
+    registry {
+      use "docker" {
+        local = true
+      }
+
+      workspace "production" {
+        use "docker" {}
+      }
+    }
+
+    // Alternate build configuration for production.
+    workspace "production" {
+      use "pack" {}
+    }
+  }
+}
+```
+
 ## Multiple Match Ordering
 
 If multiple `workspace` and/or `label` stanzas are used, there may be
@@ -127,7 +161,7 @@ halts the lookup.
 1. An exact match `workspace` matches over any `label`.
 
 2. The longest label selector string by byte count (ignoring preceding or trailing
-whitespace) matches before shorter label selector strings.
+   whitespace) matches before shorter label selector strings.
 
 ## Partial Configuration Changes
 
