@@ -137,6 +137,11 @@ workspaces, copying the entire configuration between the different stanzas
 will become error prone, aesthetically displeasing, and verbose. For
 single fields, you should use other features.
 
+-> **Important:** The `workspace` and `label` stanzas _do not_ inherit
+any values from the "default" stanza. You must respecify ALL configurations.
+(For example, you can't set the Kubernetes namespace in the default `deploy`
+stanza and then omit it in a `workspace`-scoped stanza; it must be duplicated).
+
 ### Map Lookup
 
 One option is to use a map lookup as a way to change behavior. For example,
