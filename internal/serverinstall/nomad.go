@@ -408,28 +408,20 @@ func (i *NomadInstaller) Upgrade(
 	}
 
 	s.Update("Waiting for allocation to be scheduled")
-EVAL:
 	qopts := &api.QueryOptions{
 		WaitIndex: resp.EvalCreateIndex,
 	}
 
-	eval, meta, err := client.Evaluations().Info(resp.EvalID, qopts)
+	eval, meta, err := i.waitForEvaluation(ctx, s, client, resp, qopts)
 	if err != nil {
-		return nil, err
-	}
-	qopts.WaitIndex = meta.LastIndex
-	switch eval.Status {
-	case "pending":
-		goto EVAL
-	case "complete":
-		s.Update("Nomad allocation created")
-	case "failed", "canceled", "blocked":
 		s.Update("Nomad failed to schedule the waypoint server ", serverName)
 		s.Status(terminal.StatusError)
-		return nil, fmt.Errorf("nomad evaluation did not transition to 'complete'")
-	default:
-		return nil, fmt.Errorf("unknown eval status: %q", eval.Status)
+		return nil, err
 	}
+	if eval == nil {
+		return nil, fmt.Errorf("evaluation status could not be determined")
+	}
+	qopts.WaitIndex = meta.LastIndex
 
 	var allocID string
 
@@ -756,28 +748,18 @@ func (i *NomadInstaller) runJob(
 	}
 
 	s.Update("Waiting for allocation to be scheduled")
-EVAL:
 	qopts := &api.QueryOptions{
 		WaitIndex: resp.EvalCreateIndex,
 	}
 
-	eval, meta, err := client.Evaluations().Info(resp.EvalID, qopts)
+	eval, meta, err := i.waitForEvaluation(ctx, s, client, resp, qopts)
 	if err != nil {
 		return "", err
 	}
-	qopts.WaitIndex = meta.LastIndex
-	switch eval.Status {
-	case "pending":
-		goto EVAL
-	case "complete":
-		s.Update("Nomad allocation created")
-	case "failed", "canceled", "blocked":
-		s.Update("Nomad failed to schedule the job")
-		s.Status(terminal.StatusError)
-		return "", fmt.Errorf("nomad evaluation did not transition to 'complete'")
-	default:
-		return "", fmt.Errorf("unknown eval status: %q", eval.Status)
+	if eval == nil {
+		return "", fmt.Errorf("evaluation status could not be determined")
 	}
+	qopts.WaitIndex = meta.LastIndex
 
 	var allocID string
 	for {
@@ -809,6 +791,39 @@ EVAL:
 		case <-time.After(500 * time.Millisecond):
 		case <-ctx.Done():
 			return "", ctx.Err()
+		}
+	}
+}
+
+func (i *NomadInstaller) waitForEvaluation(
+	ctx context.Context,
+	s terminal.Step,
+	client *api.Client,
+	resp *api.JobRegisterResponse,
+	qopts *api.QueryOptions,
+) (*api.Evaluation, *api.QueryMeta, error) {
+
+	for {
+		eval, meta, err := client.Evaluations().Info(resp.EvalID, qopts)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		qopts.WaitIndex = meta.LastIndex
+
+		switch eval.Status {
+		case "pending":
+			s.Update("Nomad allocation pending...")
+		case "complete":
+			s.Update("Nomad allocation created")
+
+			return eval, meta, nil
+		case "failed", "canceled", "blocked":
+			s.Update("Nomad failed to schedule the job")
+			s.Status(terminal.StatusError)
+			return nil, nil, fmt.Errorf("Nomad evaluation did not transition to 'complete'")
+		default:
+			return nil, nil, fmt.Errorf("receieved unknown eval status from Nomad: %q", eval.Status)
 		}
 	}
 }
