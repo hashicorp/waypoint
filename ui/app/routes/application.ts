@@ -4,7 +4,7 @@ import Transition from '@ember/routing/-private/transition';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 
-const ErrInvalidToken = 'invalid authentication token';
+const ErrsInvalidToken = ['invalid authentication token', 'Authorization token is not supplied'];
 
 export default class Application extends Route {
   @service session!: SessionService;
@@ -20,8 +20,14 @@ export default class Application extends Route {
   @action
   error(error: Error): boolean | void {
     console.log(error);
+    let hasAuthError = false;
+    ErrsInvalidToken.forEach((msg) => {
+      if (error.message.includes(msg)) {
+        hasAuthError = true;
+      }
+    });
 
-    if (error.message.includes(ErrInvalidToken)) {
+    if (hasAuthError) {
       this.session.invalidate();
       this.transitionTo('auth');
     }
