@@ -6,6 +6,10 @@ import { inject as service } from '@ember/service';
 
 const ErrsInvalidToken = ['invalid authentication token', 'Authorization token is not supplied'];
 
+interface ApiError extends Error {
+  code: number;
+}
+
 export default class Application extends Route {
   @service session!: SessionService;
 
@@ -18,15 +22,9 @@ export default class Application extends Route {
   }
 
   @action
-  error(error: Error): boolean | void {
+  error(error: ApiError): boolean | void {
     console.log(error);
-    let hasAuthError = false;
-    ErrsInvalidToken.forEach((msg) => {
-      if (error.message.includes(msg)) {
-        hasAuthError = true;
-      }
-    });
-
+    let hasAuthError = ErrsInvalidToken.some((msg) => error.message.includes(msg)) || error.code === 16;
     if (hasAuthError) {
       this.session.invalidate();
       this.transitionTo('auth');
