@@ -1,0 +1,4 @@
+```release-note:improvement
+install/nomad: Ensure static runner has started during install by validating its
+running status for a few seconds once it is in a "running" state.
+```
