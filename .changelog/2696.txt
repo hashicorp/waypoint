@@ -1,0 +1,3 @@
+```release-note:bug
+ui: Fix edge case issue where users would not be redirected to the authentication screen if no api token was set
+```
