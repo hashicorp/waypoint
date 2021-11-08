@@ -522,18 +522,18 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "workspace",
-			Target:  &c.flagWorkspace,
-			Aliases: []string{"w"},
-			Usage:   "Workspace to operate in.",
-		})
-
-		f.StringVar(&flag.StringVar{
 			Name:    "project",
 			Target:  &c.flagProject,
 			Aliases: []string{"p"},
 			Default: "",
 			Usage:   "Project to target.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "workspace",
+			Target:  &c.flagWorkspace,
+			Aliases: []string{"w"},
+			Usage:   "Workspace to operate in.",
 		})
 	}
 
