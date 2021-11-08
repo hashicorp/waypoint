@@ -410,6 +410,7 @@ func (i *NomadInstaller) Upgrade(
 	s.Update("Waiting for allocation to be scheduled")
 	qopts := &api.QueryOptions{
 		WaitIndex: resp.EvalCreateIndex,
+		WaitTime:  time.Duration(500 * time.Millisecond),
 	}
 
 	eval, meta, err := i.waitForEvaluation(ctx, s, client, resp, qopts)
@@ -750,6 +751,7 @@ func (i *NomadInstaller) runJob(
 	s.Update("Waiting for allocation to be scheduled")
 	qopts := &api.QueryOptions{
 		WaitIndex: resp.EvalCreateIndex,
+		WaitTime:  time.Duration(500 * time.Millisecond),
 	}
 
 	eval, meta, err := i.waitForEvaluation(ctx, s, client, resp, qopts)
