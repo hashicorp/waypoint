@@ -514,6 +514,7 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "app",
 			Target:  &c.flagApp,
+			Aliases: []string{"a"},
 			Default: "",
 			Usage: "App to target. Certain commands require a single app target for " +
 				"Waypoint configurations with multiple apps. If you have a single app, " +
@@ -523,6 +524,7 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:   "workspace",
 			Target: &c.flagWorkspace,
+			Aliases: []string{"w"},
 			Usage:  "Workspace to operate in.",
 		})
 
