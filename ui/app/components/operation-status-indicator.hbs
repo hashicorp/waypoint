@@ -26,9 +26,10 @@
 --}}
 <div class="operation-status-indicator">
   <span class="icon-text-group">
-    <Pds::Icon
+    <FlightIcon
       data-test-icon-type={{icon-for-component @operation.component.name}}
-      @type={{icon-for-component @operation.component.name}}
+      @name={{icon-for-component @operation.component.name}}
+      @size="16"
     />
     <span>
       {{yield to="status-text"}}
@@ -64,12 +65,12 @@
         tabindex="0"
       >
         {{#if @isDetailed}}
-          <Pds::Icon
+          <FlightIcon
             data-test-time-icon
-            @type={{or
-              (and (eq vars.state "unknown") "help-circle-outline")
-              (and (eq vars.state "running") "clock-outline")
-              (and (eq vars.state "success") "check-plain")
+            @name={{or
+              (and (eq vars.state "unknown") "help")
+              (and (eq vars.state "running") "clock")
+              (and (eq vars.state "success") "check")
               (and (eq vars.state "error") "alert-triangle")
             }}
             @size="16"

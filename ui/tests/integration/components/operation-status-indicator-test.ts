@@ -32,7 +32,7 @@ module('Integration | Component | operation-status-indicator', function (hooks) 
       </OperationStatusIndicator>
     `);
 
-    assert.dom('[data-test-icon-type]').hasAttribute('data-test-icon-type', 'logo-docker-color');
+    assert.dom('[data-test-icon-type]').hasAttribute('data-test-icon-type', 'docker-color');
     assert.dom('.icon-text-group').containsText('Deployed to Docker');
     await focus('[data-test-operation-status-indicator]');
 
