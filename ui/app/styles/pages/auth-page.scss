@@ -49,6 +49,12 @@
     }
   }
 
+  h2 {
+    color: rgb(var(--text-muted));
+    @include Typography.Interface(L);
+    margin-bottom: scale.$lg-2;
+  }
+
   hr {
     border: none;
     border-top: 1px solid rgb(var(--border));
@@ -59,7 +65,13 @@
     color: rgb(var(--text-muted));
   }
 
-  .button {
+  .button, .pds-button {
     width: 100%;
+  }
+  .oidc-redirect {
+    .spinner {
+      font-size: 48px;
+      margin: 24px 80px;
+    }
   }
 }

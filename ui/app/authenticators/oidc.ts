@@ -8,6 +8,13 @@ import classic from 'ember-classic-decorator';
 interface SessionData {
   token: string;
 }
+interface parseResponseObject {
+  authuser: string;
+  prompt: string;
+  scope: string;
+  code: string;
+  state: string;
+}
 
 @classic
 export default class OIDCAuthenticator extends OAuth2ImplicitGrantAuthenticator {
@@ -30,6 +37,6 @@ export default class OIDCAuthenticator extends OAuth2ImplicitGrantAuthenticator 
   }
 }
 
-export function parseResponse(args: string): unknown {
+export function parseResponse(args: string): parseResponseObject {
   return ESAparseResponse(args);
 }

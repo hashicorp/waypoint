@@ -138,6 +138,8 @@ auth:
   title: 'Welcome to Waypoint'
   subtitle: 'To get started, please authenticate'
   button: 'Authenticate'
+  token_link: 'Authenticate with Token'
+  loading: 'Authenticating...'
 
 login:
   title: 'Authenticate Waypoint'
@@ -147,6 +149,7 @@ login:
     label: 'Then enter the token below'
     placeholder: 'Enter your token from the CLI'
   button: 'Authenticate with token'
+  oidc_link: 'Authenticate with SSO'
 
 invite_login:
   title: 'Welcome to Waypoint'

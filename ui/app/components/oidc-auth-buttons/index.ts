@@ -20,10 +20,6 @@ export default class OIDCAuthButtonsComponent extends Component<OIDCAuthButtonsA
   @tracked model!: ListOIDCAuthMethodsResponse.AsObject;
   @service api!: ApiService;
 
-  // async initiateOIDC(authMethod) {
-  //   this.initializeOIDCFlow
-  // }
-
   @task
   async initializeOIDCFlow(authMethodProvider: AuthMethod.AsObject): Promise<void> {
     let authMethodProviderName = authMethodProvider.name;
@@ -43,6 +39,6 @@ export default class OIDCAuthButtonsComponent extends Component<OIDCAuthButtonsA
     let redirectUri = `${window.location.origin}/auth/oidc-redirect`;
     urlRequest.setRedirectUri(redirectUri);
     let authUrl = await this.api.client.getOIDCAuthURL(urlRequest, this.api.WithMeta());
-    window.location.replace(authUrl.getUrl());
+    await window.location.replace(authUrl.getUrl());
   }
 }
