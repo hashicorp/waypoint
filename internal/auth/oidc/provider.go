@@ -40,7 +40,6 @@ func ProviderConfig(am *pb.AuthMethod_OIDC, sc *pb.ServerConfig) (*oidc.Config, 
 	)
 
 	// We also add all the addresses our UI might use with the server advertise addrs.
-	// TODO(mitchellh): once the UI path is determined, we have to update the path
 	if sc != nil {
 		for _, addr := range sc.AdvertiseAddrs {
 			var u url.URL
@@ -49,7 +48,7 @@ func ProviderConfig(am *pb.AuthMethod_OIDC, sc *pb.ServerConfig) (*oidc.Config, 
 			if !addr.Tls {
 				u.Scheme = "http"
 			}
-			u.Path = "/oidc/callback"
+			u.Path = "/auth/oidc-callback"
 
 			allowedUris = append(allowedUris, u.String())
 		}

@@ -54,7 +54,7 @@ You should set the following redirect URLs:
   to work in the CLI. If you do not set this, the CLI login will not work.
   Note that non-TLS is expected here since it is a loopback call.
 
-- `https://<ui addr>/oidc/callback` - This must be set for UI-based
+- `https://<ui addr>/auth/oidc-callback` - This must be set for UI-based
   OIDC authentication to work. In this case, "ui addr" should be the
   routable UI address you visit. And note you SHOULD set TLS (`https`) for
   this.

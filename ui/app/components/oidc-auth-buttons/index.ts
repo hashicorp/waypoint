@@ -36,7 +36,7 @@ export default class OIDCAuthButtonsComponent extends Component<OIDCAuthButtonsA
     urlRequest.setNonce(nonce);
     window.localStorage.setItem('waypointOIDCNonce', nonce);
     window.localStorage.setItem('waypointOIDCAuthMethod', authMethodProviderName);
-    let redirectUri = `${window.location.origin}/auth/oidc-redirect`;
+    let redirectUri = `${window.location.origin}/auth/oidc-callback`;
     urlRequest.setRedirectUri(redirectUri);
     let authUrl = await this.api.client.getOIDCAuthURL(urlRequest, this.api.WithMeta());
     await window.location.replace(authUrl.getUrl());
