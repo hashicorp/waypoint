@@ -5,6 +5,7 @@ export default Model.extend({
   project: belongsTo(),
   builds: hasMany(),
   deployments: hasMany(),
+  releases: hasMany(),
   statusReports: hasMany(),
 
   toProtobuf(): Application {
