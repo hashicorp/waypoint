@@ -15,7 +15,11 @@
     background: color.$black;
     margin-right: scale.$sm--3;
   }
-  
+
+  &__label {
+    line-height: 100%;
+  }
+
   // Status: Unknown
 
   &--unknown &__badge {

@@ -1,0 +1,5 @@
+<OperationStatusIndicator @operation={{@operation}} @isDetailed={{false}}>
+  <:status-text>
+    {{t (concat "page.deployments.status_prefix." @operation.status.state)}}
+  </:status-text>
+</OperationStatusIndicator>

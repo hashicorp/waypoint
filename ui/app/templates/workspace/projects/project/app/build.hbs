@@ -14,21 +14,7 @@
         <tr>
           <th scope="row">{{t "page.build.overview.status"}}</th>
           <td>
-            <Pds::Icon
-              @type={{icon-for-component operation.component.name}}
-              class="icon"
-            />
-            <span>
-              {{t
-                (concat
-                  "build_status"
-                  ".type-" operation.component.type
-                  ".state-" operation.status.state
-                )
-              }}
-              <b>{{component-name operation.component.name}}</b>
-            </span>
-            <OperationStatusIndicator @status={{operation.status}} />
+            <OperationStatusIndicator::Build @operation={{operation}} />
           </td>
         </tr>
       </StatusReportMetaTable>

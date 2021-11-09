@@ -8,15 +8,7 @@
       <b class="badge badge--version">v{{@deployment.sequence}}</b>
     </p>
     <small class="app-item__meta__secondary">
-      <Pds::Icon @type={{icon-for-component @deployment.component.name}} class="icon" />
-      <span>{{t (concat "page.deployments.status_prefix." @deployment.status.state)}}
-        <b>{{component-name @deployment.component.name}}</b>
-        {{#if (eq @deployment.status.state 1)}}
-        (Started {{date-format-distance-to-now @deployment.status.startTime.seconds }})
-        {{else}}
-        {{date-format-distance-to-now @deployment.status.completeTime.seconds }}
-        {{/if}}
-      </span>
+      <OperationStatusIndicator::Deployment @operation={{@deployment}} />
     </small>
     {{#if (eq @deployment.state 4)}}
       <b data-test-destroyed-badge class="badge badge--destroyed">

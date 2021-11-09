@@ -3,22 +3,7 @@
     <b class="badge badge--version">v{{@build.sequence}}</b>
     <small class="app-item__meta__secondary">
       {{#let (or @build.pushedArtifact @build) as |operation|}}
-        <Pds::Icon
-          @type={{icon-for-component operation.component.name}}
-          class="icon"
-        />
-
-        <span>
-          {{t
-            (concat
-              "build_status"
-              ".type-" operation.component.type
-              ".state-" operation.status.state
-            )
-          }}
-          <b>{{component-name operation.component.name}}</b>
-          <OperationStatusIndicator @status={{operation.status}} @matchTypography={{true}} />
-        </span>
+        <OperationStatusIndicator::Build @operation={{operation}} @isDetailed={{true}}/>
       {{/let}}
     </small>
   </LinkTo>

@@ -1,77 +1,105 @@
 {{!--
 
   ## Usage
-
-  <OperationStatusIndicator
-    @status={{build.status}}
-  />
+  {{#let (or @build.pushedArtifact @build) as |operation|}}
+    <OperationStatusIndicator
+      @operation={{build.status}}
+    />
+  {{/let}}
 
   If you would like the indicator to match the surrounding typography,
   pass `@matchTypography={{true}}`:
 
   <OperationStatusIndicator
-    @status={{build.status}}
+    @operation={{build}}
     @matchTypography={{true}}
   />
 
+  If you want the icon + tooltip for the time information,
+  pass `@isDetailed={{true}}`:
+
+  <OperationStatusIndicator
+    @operation={{build}}
+    @isDetailed={{true}}
+  />
+
 --}}
-
-{{#let
-  (hash
-    state=(or
-      (and (eq @status.state 0) "unknown")
-      (and (eq @status.state 1) "running")
-      (and (eq @status.state 2) "success")
-      (and (eq @status.state 3) "error")
-    )
-    message=(or
-      @status.error.message
-      @status.details
-    )
-  )
-  as |vars|
-}}
-  <span
-    data-test-operation-status-indicator={{vars.state}}
-    class="
-      operation-status-indicator
-      operation-status-indicator--{{vars.state}}
-      {{if @matchTypography "operation-status-indicator--match-typography"}}
-      focus-ring
-    "
-    tabindex="0"
-  >
+<div class="operation-status-indicator">
+  <span class="icon-text-group">
     <Pds::Icon
-      class="operation-status-indicator__badge"
-      @type={{or
-        (and (eq vars.state "unknown") "help-circle-outline")
-        (and (eq vars.state "running") "clock-outline")
-        (and (eq vars.state "success") "check-plain")
-        (and (eq vars.state "error") "alert-triangle")
-      }}
+      data-test-icon-type={{icon-for-component @operation.component.name}}
+      @type={{icon-for-component @operation.component.name}}
     />
-
-    <span class="operation-status-indicator__label">
-      {{#if (eq vars.state "running")}}
-        {{date-format-distance-to-now @status.startTime.seconds}}
-      {{else}}
-        {{date-format-distance-to-now @status.completeTime.seconds}}
-      {{/if}}
+    <span>
+      {{yield to="status-text"}}
+      <b>{{component-name @operation.component.name}}</b>
     </span>
-
-    {{#if vars.message}}
-      <EmberTooltip
-        @popperOptions={{hash
-          modifiers=(hash
-            preventOverflow=(hash
-              escapeWithReference=false
-              boundariesElement="viewport"
-            )
-          )
-        }}
-      >
-        {{vars.message}}
-      </EmberTooltip>
-    {{/if}}
   </span>
-{{/let}}
+
+  {{!-- Original OperationStatusIndicator, build time, status, and tooltip  --}}
+  {{#if @operation.status}}
+    {{#let
+      (hash
+        state=(or
+          (and (eq @operation.status.state 0) "unknown")
+          (and (eq @operation.status.state 1) "running")
+          (and (eq @operation.status.state 2) "success")
+          (and (eq @operation.status.state 3) "error")
+        )
+        message=(or
+          @operation.status.error.message
+          @operation.status.details
+        )
+      )
+      as |vars|
+    }}
+      <span
+        data-test-operation-status-indicator={{vars.state}}
+        class="
+          timestamp
+          timestamp--{{vars.state}}
+          {{if @matchTypography "timestamp--match-typography"}}
+          focus-ring
+        "
+        tabindex="0"
+      >
+        {{#if @isDetailed}}
+          <Pds::Icon
+            data-test-time-icon
+            @type={{or
+              (and (eq vars.state "unknown") "help-circle-outline")
+              (and (eq vars.state "running") "clock-outline")
+              (and (eq vars.state "success") "check-plain")
+              (and (eq vars.state "error") "alert-triangle")
+            }}
+            @size="16"
+          />
+        {{/if}}
+
+        <span class="timestamp__label">
+          {{#if (eq vars.state "running")}}
+            {{date-format-distance-to-now @operation.status.startTime.seconds}}
+          {{else}}
+            {{date-format-distance-to-now @operation.status.completeTime.seconds}}
+          {{/if}}
+        </span>
+
+        {{#if (and vars.message @isDetailed)}}
+          <EmberTooltip
+            data-test-tooltip
+            @popperOptions={{hash
+              modifiers=(hash
+                preventOverflow=(hash
+                  escapeWithReference=false
+                  boundariesElement="viewport"
+                )
+              )
+            }}
+          >
+            {{vars.message}}
+          </EmberTooltip>
+        {{/if}}
+      </span>
+    {{/let}}
+  {{/if}}
+</div>

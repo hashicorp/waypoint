@@ -1,0 +1,5 @@
+<OperationStatusIndicator @operation={{@operation}} @isDetailed={{false}}>
+  <:status-text>
+    {{if (eq @operation.status.state 1) 'Releasing' 'Released'}} on
+  </:status-text>
+</OperationStatusIndicator>
