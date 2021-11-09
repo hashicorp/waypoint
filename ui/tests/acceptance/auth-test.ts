@@ -14,6 +14,13 @@ module('Acceptance | auth', function (hooks: NestedHooks) {
     assert.equal(currentURL(), `/auth`);
   });
 
+  test('has an OIDC provider button when it exists', async function (assert) {
+    this.server.create('auth-method', 'google');
+    await visit(`/default`);
+    assert.equal(currentURL(), `/auth`);
+    assert.dom('[data-test-oidc-provider="google"]').exists();
+  });
+
   test('does not redirect to /auth from authenticated routes when logged in', async function (assert) {
     await login();
     await visit(`/default`);
