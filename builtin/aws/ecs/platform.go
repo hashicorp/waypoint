@@ -292,6 +292,10 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 	)
 }
 
+// Below are custom types for various parameters used throughout resource creation.
+// They exist as custom types so that argmapper can recognize and wire them
+// into the appropriate resource lifecycle functions.
+
 // DeploymentId is a unique ID to be consistently used throughout our deployment
 type DeploymentId string
 
