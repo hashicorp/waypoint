@@ -45,6 +45,18 @@
         margin-right: scale.$sm-3;
       }
     }
+
+    .title-wrapper {
+      display: flex;
+      align-items: center;
+
+      .workspace-switcher {
+        margin-left: scale.$base;
+      }
+      .workspace-switching-indicator {
+        margin-left: scale.$sm--2;
+      }
+    }
   }
 
   &.projects-header {

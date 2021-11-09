@@ -1,3 +1,4 @@
+/* eslint-disable ember/no-controller-access-in-routes */
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService, { DeploymentExtended, ReleaseExtended } from 'waypoint/services/api';
@@ -5,6 +6,8 @@ import { Ref, Build, Project, PushedArtifact } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
 import { hash } from 'rsvp';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
+import AppController from 'waypoint/controllers/workspace/projects/project/app';
+import { Params as WorkspaceParams } from 'waypoint/routes/workspace';
 
 export interface Params {
   app_id: string;
@@ -17,6 +20,7 @@ export interface Model {
   releases: ReleaseExtended[];
   builds: (Build.AsObject & WithPushedArtifact)[];
   pushedArtifacts: PushedArtifact.AsObject[];
+  workspaceName: string;
 }
 
 interface WithPushedArtifact {
@@ -26,6 +30,8 @@ interface WithPushedArtifact {
 export default class App extends Route {
   @service api!: ApiService;
   @service pollModel!: PollModelService;
+
+  controller!: AppController;
 
   breadcrumbs(model: Model): Breadcrumb[] {
     if (!model) return [];
@@ -37,6 +43,15 @@ export default class App extends Route {
         route: 'workspace.projects.project.apps',
       },
     ];
+  }
+
+  beforeModel(): void {
+    if (this.controller) {
+      let oldWorkspace = this.controller.model.workspaceName;
+      let newWorkspace = (this.paramsFor('workspace') as WorkspaceParams).workspace_id;
+
+      this.controller.isSwitchingWorkspace = oldWorkspace !== newWorkspace;
+    }
   }
 
   async model(params: Params): Promise<Model> {
@@ -58,12 +73,16 @@ export default class App extends Route {
       releases: this.api.listReleases(wsRef, appRef),
       builds: this.api.listBuilds(wsRef, appRef),
       pushedArtifacts: this.api.listPushedArtifacts(wsRef, appRef),
+      workspaceName: ws.workspace,
     });
   }
 
   afterModel(model: Model): void {
     injectPushedArtifacts(model);
     this.pollModel.setup(this);
+    if (this.controller) {
+      this.controller.isSwitchingWorkspace = false;
+    }
   }
 }
 
