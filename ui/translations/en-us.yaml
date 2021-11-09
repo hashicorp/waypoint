@@ -140,6 +140,7 @@ auth:
   button: 'Authenticate'
   token_link: 'Authenticate with Token'
   loading: 'Authenticating...'
+  oidc_docs_link: 'Set up OIDC'
 
 login:
   title: 'Authenticate Waypoint'
@@ -149,7 +150,7 @@ login:
     label: 'Then enter the token below'
     placeholder: 'Enter your token from the CLI'
   button: 'Authenticate with token'
-  oidc_link: 'Authenticate with SSO'
+  oidc_link: 'Authenticate with OIDC'
 
 invite_login:
   title: 'Welcome to Waypoint'
