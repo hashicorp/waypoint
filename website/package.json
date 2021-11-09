@@ -10,5 +10,8 @@
   },
   "devDependencies": {
     "@hashicorp/platform-cli": "^1.2.0"
+  },
+  "dependencies": {
+    "next": "^11.1.2"
   }
 }
