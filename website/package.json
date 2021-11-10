@@ -7,7 +7,7 @@
     "generate:readme": "next-hashicorp markdown-blocks README.md",
     "format": "next-hashicorp format content/**/* data/**/*",
     "lint": "next-hashicorp lint content/**/* data/**/*",
-    "vercel-build": "npm i -g npm@7 && ./scripts/website-preview-setup.sh && rm -rf .next && cp -R ./content/ ./website-preview/content && cp -R ./public/img/** ./website-preview/public/img/ && cd ./website-preview && DEV_IO_PROXY=waypoint IS_CONTENT_DEPLOY_PREVIEW=true npm run build && cp -R .next/ ../.next"
+    "vercel-build": "npm i -g npm@7 && ./scripts/website-preview-setup.sh && rm -rf .next && cp -R ./content/ ./website-preview/content && cp -R ./public/img/** ./website-preview/public/img/ && cd ./website-preview && DEV_IO_PROXY=waypoint IS_CONTENT_DEPLOY_PREVIEW=true npm run build && cp -R .next/ ../.next && rm -rf ../public && cp -R .public/ ../.public"
   },
   "devDependencies": {
     "@hashicorp/platform-cli": "^1.2.0"
