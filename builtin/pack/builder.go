@@ -345,7 +345,7 @@ func (b *Builder) Build(
 	}
 
 	// We need to test if we're running in arm64 for the Docker server.
-	// Buildpacks has issues with arm64: https://github.com/buildpacks/pack/issues/907
+	// Buildpacks have issues with arm64: https://github.com/buildpacks/pack/issues/907
 	// We just do a warning in case buildpacks support arm64 and magically
 	// work later.
 	serverInfo, err := dockerClient.Info(ctx)
