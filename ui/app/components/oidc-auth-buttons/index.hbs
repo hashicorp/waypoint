@@ -1,0 +1,19 @@
+{{#each @model.authMethodsList as |authMethod|}}
+  <Pds::Button
+  @variant="primary"
+  disabled={{this.initializeOIDCFlow.isRunning}}
+  data-test-oidc-provider={{authMethod.name}}
+  {{on "click" (perform this.initializeOIDCFlow authMethod)}}>
+    {{#if this.initializeOIDCFlow.isRunning}}
+      <Spinner @size="16"/>
+    {{/if}}
+    {{authMethod.displayName}}
+  </Pds::Button>
+{{/each}}
+<hr>
+<small>
+  <LinkTo @route="auth.token">
+    {{t 'auth.token_link'}}
+  </LinkTo>
+</small>
+

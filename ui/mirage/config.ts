@@ -1,20 +1,21 @@
-import Ember from 'ember';
-import { logRequestConsole } from './utils';
-import failUnhandledRequest from './helpers/fail-unhandled-request';
-import { Server } from 'miragejs';
-
+import * as OIDCAuthMethods from './services/oidc-auth-methods';
 import * as build from './services/build';
-import * as project from './services/project';
+import * as config from './services/config';
 import * as deployment from './services/deployment';
-import * as token from './services/token';
 import * as inviteToken from './services/invite-token';
-import * as release from './services/release';
-import * as versionInfo from './services/version-info';
-import * as statusReport from './services/status-report';
 import * as job from './services/job';
 import * as log from './services/log';
+import * as project from './services/project';
 import * as pushedArtifact from './services/pushed-artifact';
-import * as config from './services/config';
+import * as release from './services/release';
+import * as statusReport from './services/status-report';
+import * as token from './services/token';
+import * as versionInfo from './services/version-info';
+
+import Ember from 'ember';
+import { Server } from 'miragejs';
+import failUnhandledRequest from './helpers/fail-unhandled-request';
+import { logRequestConsole } from './utils';
 
 export default function (this: Server): void {
   this.namespace = 'hashicorp.waypoint.Waypoint';
@@ -57,6 +58,7 @@ export default function (this: Server): void {
   this.post('/ExpediteStatusReport', statusReport.expediteStatusReport);
   this.post('/GetConfig', config.get);
   this.post('/SetConfig', config.set);
+  this.post('/ListOIDCAuthMethods', OIDCAuthMethods.list);
 
   if (!Ember.testing) {
     // Pass through all other requests

@@ -1,10 +1,15 @@
-<h1>Authenticate Waypoint</h1>
-<p>To get started, authenticate with a token</p>
+<h1>{{t 'login.title'}}</h1>
+<p>{{t 'login.subtitle'}}</p>
 
 <LoginToken />
 
 <hr />
 <small>
+  <LinkTo @route="auth">{{t 'login.oidc_link'}}</LinkTo>
+</small>
+<hr />
+<small>
   Received an invite?
   <LinkTo @route="auth.invite">Redeem invite</LinkTo>
 </small>
+

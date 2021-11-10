@@ -10,6 +10,7 @@ Router.map(function () {
   this.route('auth', function () {
     this.route('invite');
     this.route('token');
+    this.route('oidc-callback');
   });
   this.route('onboarding', function () {
     this.route('install', function () {

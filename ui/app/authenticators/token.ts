@@ -9,7 +9,6 @@ interface SessionData {
 
 @classic
 export default class TokenAuthenticator extends BaseAuthenticator {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   restore(data: SessionData): Promise<SessionData> {
     if (data.token) {
       return resolve(data);
