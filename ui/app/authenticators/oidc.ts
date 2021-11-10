@@ -20,8 +20,6 @@ interface parseResponseObject {
 export default class OIDCAuthenticator extends OAuth2ImplicitGrantAuthenticator {
   restore(data: SessionData): Promise<SessionData> {
     if (data.token) {
-      window.localStorage.removeItem('waypointOIDCAuthMethod');
-      window.localStorage.removeItem('waypointOIDCNonce');
       return resolve(data);
     } else {
       return reject();
@@ -30,10 +28,18 @@ export default class OIDCAuthenticator extends OAuth2ImplicitGrantAuthenticator 
 
   authenticate(hash: SessionData): Promise<SessionData> {
     if (hash.token !== '') {
+      this._cleanUpLocalStorage();
       return resolve(hash);
     } else {
       return reject();
     }
+  }
+
+  // Used to clean up OIDC information stored in LocalStorage
+  // during the authentication flow
+  _cleanUpLocalStorage(): void {
+    window.localStorage.removeItem('waypointOIDCAuthMethod');
+    window.localStorage.removeItem('waypointOIDCNonce');
   }
 }
 

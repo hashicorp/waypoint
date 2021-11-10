@@ -10,14 +10,13 @@ import ApiService from 'waypoint/services/api';
 import Component from '@glimmer/component';
 import { inject as service } from '@ember/service';
 import { task } from 'ember-concurrency';
-import { tracked } from '@glimmer/tracking';
 
 interface OIDCAuthButtonsArgs {
   model: ListOIDCAuthMethodsResponse.AsObject;
 }
 
 export default class OIDCAuthButtonsComponent extends Component<OIDCAuthButtonsArgs> {
-  @tracked model!: ListOIDCAuthMethodsResponse.AsObject;
+  model!: ListOIDCAuthMethodsResponse.AsObject;
   @service api!: ApiService;
 
   @task
@@ -30,15 +29,28 @@ export default class OIDCAuthButtonsComponent extends Component<OIDCAuthButtonsA
     authMethodRef.setName(authMethodProviderName);
     authMethodrequest.setAuthMethod(authMethodRef);
     urlRequest.setAuthMethod(authMethodRef);
-    let randomArray = new Uint32Array(10);
-    window.crypto.getRandomValues(randomArray);
-    let nonce = randomArray.join('').slice(0, 20);
+
+    let nonce = this._generateNonce();
     urlRequest.setNonce(nonce);
-    window.localStorage.setItem('waypointOIDCNonce', nonce);
-    window.localStorage.setItem('waypointOIDCAuthMethod', authMethodProviderName);
+
+    this._storeOIDCAuthData(nonce, authMethodProviderName);
     let redirectUri = `${window.location.origin}/auth/oidc-callback`;
     urlRequest.setRedirectUri(redirectUri);
     let authUrl = await this.api.client.getOIDCAuthURL(urlRequest, this.api.WithMeta());
     await window.location.replace(authUrl.getUrl());
+  }
+
+  // Generate a 20-char nonce, using window.crypto to
+  // create a sufficiently-large output then trimming
+  _generateNonce(): string {
+    let randomArray = new Uint32Array(10);
+    window.crypto.getRandomValues(randomArray);
+    return randomArray.join('').slice(0, 20);
+  }
+
+  // Store OIDC Data in LocalStorage, this gets cleaned up on authentication
+  _storeOIDCAuthData(nonce: string, authMethod: string): void {
+    window.localStorage.setItem('waypointOIDCNonce', nonce);
+    window.localStorage.setItem('waypointOIDCAuthMethod', authMethod);
   }
 }
