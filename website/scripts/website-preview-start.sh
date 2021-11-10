@@ -1,5 +1,5 @@
 # TODO: clean this up, add comments
-cd website-preview
+cd ./website-preview
 git clean -f
 rm -rf .next
 cp -R ../content/ ./content
