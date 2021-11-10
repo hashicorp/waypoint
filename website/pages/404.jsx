@@ -49,9 +49,9 @@ export default function NotFound() {
       <p>
         Try viewing the&nbsp;
         <Link href={asPath.replace(reg, '')}>
-          <a>latest</a>
+          <a>latest version</a>
         </Link>
-        &nbsp;version instead.
+        &nbsp;instead.
       </p>
     </>
   )
