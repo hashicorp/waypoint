@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import { useEffect } from 'react'
+import { useRouter } from 'next/router'
 
 export default function NotFound() {
+  const { asPath } = useRouter()
+
   useEffect(() => {
     if (
       typeof window !== 'undefined' &&
@@ -15,9 +18,8 @@ export default function NotFound() {
       })
   }, [])
 
-  return (
-    <div id="p-404" className="g-grid-container">
-      <h1 className="g-type-display-1">Page Not Found</h1>
+  const defaultMessage = (
+    <>
       <p>
         We&rsquo;re sorry but we can&rsquo;t find the page you&rsquo;re looking
         for.
@@ -27,6 +29,28 @@ export default function NotFound() {
           <a>Back to Home</a>
         </Link>
       </p>
+    </>
+  )
+
+  const reg = /\/v\d+[.]\d+[.](\d+|x)/g
+  const docsMessage = (
+    <>
+      <p>
+        The document you requested is not available for the current version.
+      </p>
+      <p>
+        Try the latest version,&nbsp;
+        <Link href={asPath.replace(reg, '')}>
+          <a>{asPath.replace(reg, '')}</a>
+        </Link>
+      </p>
+    </>
+  )
+
+  return (
+    <div id="p-404" className="g-grid-container">
+      <h1 className="g-type-display-1">Page Not Found</h1>
+      {asPath.match(reg) ? docsMessage : defaultMessage}
     </div>
   )
 }
