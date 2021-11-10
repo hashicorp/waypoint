@@ -2,6 +2,9 @@
 # TODO: would be nice to leverage caching,
 # TODO: deleted for now as it makes debugging harder
 rm -rf .next
+# Clone the dev-portal repo in ./website-preview
+git config --global credential.helper store
+git clone "https://zchsh:${GITHUB_WEBSITE_PREVIEW_PAT}@github.com/hashicorp/dev-portal.git" website-preview && cd website-preview && git checkout zs.cleanup-refine-migration && npm i --production=false
 # Copy all local content into the cloned dev-portal directory
 # TODO: may be able to avoid, fix in docs-page
 # TODO: the "include partials" remark plugin path needs

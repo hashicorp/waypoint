@@ -7,7 +7,7 @@
     "generate:readme": "next-hashicorp markdown-blocks README.md",
     "format": "next-hashicorp format content/**/* data/**/*",
     "lint": "next-hashicorp lint content/**/* data/**/*",
-    "vercel-build": "npm i -g npm@7 && ./scripts/website-preview-setup.sh && ./scripts/website-preview-build.sh"
+    "vercel-build": "npm i -g npm@7 && ./scripts/website-preview-build.sh"
   },
   "devDependencies": {
     "@hashicorp/platform-cli": "^1.2.0"
