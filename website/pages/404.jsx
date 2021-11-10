@@ -1,9 +1,15 @@
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
+import Placeholder from '@hashicorp/react-placeholder'
 
 export default function NotFound() {
   const { asPath } = useRouter()
+  const [isMounted, setIsMounted] = useState()
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   useEffect(() => {
     if (
@@ -50,10 +56,19 @@ export default function NotFound() {
     </>
   )
 
+  // If we're viewing a versioned page, provide a contextual message
+  const errorMessage = matches ? docsMessage : defaultMessage
+
   return (
     <div id="p-404" className="g-grid-container">
       <h1 className="g-type-display-1">Page Not Found</h1>
-      {matches ? docsMessage : defaultMessage}
+      {isMounted ? (
+        errorMessage
+      ) : (
+        <Placeholder>
+          {(Box) => <Box lines={['60ch', '15ch']} prose />}
+        </Placeholder>
+      )}
     </div>
   )
 }
