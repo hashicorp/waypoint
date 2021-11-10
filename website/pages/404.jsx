@@ -32,17 +32,20 @@ export default function NotFound() {
     </>
   )
 
-  const reg = /\/v\d+[.]\d+[.](\d+|x)/g
+  const reg = /\/(?<version>v\d+[.]\d+[.](\d+|x))/g
+  const matches = reg.exec(asPath)
   const docsMessage = (
     <>
       <p>
-        The document you requested is not available for the current version.
+        We&rsquo;re sorry, but this page does not exist for version&nbsp;
+        <b>{matches?.groups?.version}</b>.
       </p>
       <p>
-        Try the latest version,&nbsp;
+        Try viewing the&nbsp;
         <Link href={asPath.replace(reg, '')}>
-          <a>{asPath.replace(reg, '')}</a>
+          <a>latest</a>
         </Link>
+        &nbsp;version instead.
       </p>
     </>
   )
@@ -50,7 +53,7 @@ export default function NotFound() {
   return (
     <div id="p-404" className="g-grid-container">
       <h1 className="g-type-display-1">Page Not Found</h1>
-      {asPath.match(reg) ? docsMessage : defaultMessage}
+      {matches ? docsMessage : defaultMessage}
     </div>
   )
 }
