@@ -54,7 +54,7 @@ func (a *App) Build(ctx context.Context, optFuncs ...BuildOption) (
 	_, msg, err := a.doOperation(ctx, a.logger.Named("build"), &buildOperation{
 		Component:   c,
 		Registry:    cr,
-		HasRegistry: a.config.RegistryUse() != "",
+		HasRegistry: cr != nil,
 	})
 	if err != nil {
 		return nil, nil, err

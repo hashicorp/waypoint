@@ -33,20 +33,34 @@ func (c *Config) Plugins() []*Plugin {
 		known[p.Name] = p
 	}
 
+	// Helper to also track all the plugins defined within scoped stanzas
+	trackStages := func(typ component.Type, ws, label []*scopedStage) {
+		for _, s := range ws {
+			result = trackPlugin(result, known, s.Use, typ)
+		}
+		for _, s := range label {
+			result = trackPlugin(result, known, s.Use, typ)
+		}
+	}
+
 	// Collect all the plugins used by all the apps.
 	for _, app := range c.hclConfig.Apps {
 		// Get all the implied stage plugins: build, deploy, etc.
 		if v := app.BuildRaw; v != nil {
 			result = trackPlugin(result, known, v.Use, component.BuilderType)
+			trackStages(component.BuilderType, v.WorkspaceScoped, v.LabelScoped)
 			if v := v.Registry; v != nil {
 				result = trackPlugin(result, known, v.Use, component.RegistryType)
+				trackStages(component.RegistryType, v.WorkspaceScoped, v.LabelScoped)
 			}
 		}
 		if v := app.DeployRaw; v != nil {
 			result = trackPlugin(result, known, v.Use, component.PlatformType)
+			trackStages(component.PlatformType, v.WorkspaceScoped, v.LabelScoped)
 		}
 		if v := app.ReleaseRaw; v != nil {
 			result = trackPlugin(result, known, v.Use, component.ReleaseManagerType)
+			trackStages(component.ReleaseManagerType, v.WorkspaceScoped, v.LabelScoped)
 		}
 	}
 

@@ -1,0 +1,200 @@
+---
+layout: docs
+page_title: 'Lifecycle: Workspace and Label Scoping'
+description: |-
+  You can specify alternate configurations for lifecycle operations based on the current workspace or labels. This can be used to change configurations between environments such as development, staging, production.
+---
+
+# Workspace and Label Scoping
+
+You can specify alternate configurations for lifecycle operations
+based on the current [workspace](/docs/workspaces) or
+[labels](/docs/lifecycle/labels). This can be used to change
+configurations between environments such as development, staging,
+production or by specific metadata like region.
+
+This documentation page will use the [deploy](/docs/lifecycle/deploy)
+operation for examples, but the scoping stanzas may be used by
+all lifecycle stages and is not limited to only the deploy stage.
+The basic example below will deploy to the "default" Kubernetes
+namespace no matter what workspace or set of labels are in use:
+
+```hcl
+app "my-app" {
+  deploy {
+    use "kubernetes" {}
+  }
+}
+```
+
+-> **Note:** Scoping is just one way to alter configuration depending
+on workspaces or labels. In particular, it is useful for
+_whole configuration_ differences: where the configuration is wholly different
+between workspaces or labels. For smaller differences, you may want to look
+at alternative methods such as conditionals. See
+[partial configuration changes](#partial-configuration-changes).
+
+## Workspace Scoping
+
+We can use [workspaces](/docs/workspaces) as one way to model environments
+such as staging, production, etc. And we might use multiple Kubernetes
+namespaces as a way to separate these stages. The example below uses
+the "default" namespace by default, but uses the "production" namespace
+if the workspace is also "production":
+
+```hcl
+app "my-app" {
+  deploy {
+    use "kubernetes" {}
+
+    workspace "production" {
+      use "kubernetes" {
+        namespace = "production"
+      }
+    }
+  }
+}
+```
+
+Note that we could go further and completely change the plugin in use as well.
+Perhaps we are testing a migration to [Nomad](https://www.nomadproject.io/)
+if we're in the "new-platform" workspace:
+
+```hcl
+app "my-app" {
+  deploy {
+    use "kubernetes" {}
+
+    workspace "production" {
+      use "kubernetes" {
+        namespace = "production"
+      }
+    }
+
+    workspace "new-platform" {
+      use "nomad" {
+        // nomad configuration here
+      }
+    }
+  }
+}
+```
+
+## Label Scoping
+
+The `label` stanza can be used to configure operations based on
+[label selectors](/docs/lifecycle/labels#label-selector-syntax).
+
+~> **Warning!** This is an advanced use case. Most cases can be satisfied
+using the `workspace` stanza which is much simpler to understand and debug.
+Under the covers, the `workspace` stanza is functionally equivalent to a
+label selector of `waypoint/workspace == <name>`.
+
+For example, perhaps we have a different configuration
+depending on if the `region` label is set for operations. (This label
+must be manually set. See [labels](/docs/lifecycle/labels).)
+
+```hcl
+app "my-app" {
+  deploy {
+    use "kubernetes" {}
+
+    label "region == us-east" {
+      use "kubernetes" {
+        // us-east configs
+      }
+    }
+
+    label "region == us-west" {
+      // In us-west we're still migrating from bare ec2
+      use "aws-ec2" {}
+    }
+  }
+}
+```
+
+-> **Mixing:** `label` and `workspace` stanzas can be used together.
+See [multiple match ordering](#multiple-match-ordering) to determine
+the behavior when there are multiple matches.
+
+## Scoped Registry Configuration
+
+The `registry` configuration can be scoped as well, but only within
+the root `build` stanza. This does not limit the functionality of scoping
+registry configuration at all.
+
+For example, the following specifies a custom build and registry configuration
+for the "production" workspace. Note that we don't use `registry` within
+the workspace-scoped build configuration. We still use `registry` within
+the top-level `build` and apply a duplicate `workspace` stanza.
+
+```hcl
+app "my-app" {
+  build {
+    use "docker" {}
+
+    registry {
+      use "docker" {
+        local = true
+      }
+
+      workspace "production" {
+        use "docker" {}
+      }
+    }
+
+    // Alternate build configuration for production.
+    workspace "production" {
+      use "pack" {}
+    }
+  }
+}
+```
+
+## Multiple Match Ordering
+
+If multiple `workspace` and/or `label` stanzas are used, there may be
+scenarios where multiple are valid choices for the current operation.
+In this scenario, the following rules are used. The first matching rule
+halts the lookup.
+
+1. An exact match `workspace` matches over any `label`.
+
+2. The longest label selector string by byte count (ignoring preceding or trailing
+   whitespace) matches before shorter label selector strings.
+
+## Partial Configuration Changes
+
+The `workspace` and `label` stanzas are particularly powerful for
+_whole configuration differences_. If only one field is changing between
+workspaces, copying the entire configuration between the different stanzas
+will become error prone, aesthetically displeasing, and verbose. For
+single fields, you should use other features.
+
+-> **Important:** The `workspace` and `label` stanzas _do not_ inherit
+any values from the "default" stanza. You must respecify ALL configurations.
+(For example, you can't set the Kubernetes namespace in the default `deploy`
+stanza and then omit it in a `workspace`-scoped stanza; it must be duplicated).
+
+### Map Lookup
+
+One option is to use a map lookup as a way to change behavior. For example,
+if we are only changing the `namespace` for Kubernetes based on the workspace,
+we can do the following:
+
+```hcl
+app "my-app" {
+  deploy {
+    use "kubernetes" {
+      namespace = {
+        "default"    = "default"
+        "production" = "prod"
+      }[workspace.name]
+    }
+  }
+}
+```
+
+This is admittedly not obvious. To explain: we are creating an HCL map
+with the `{}` syntax and then doing a lookup using `[]` keyed on
+the [`workspace` variable](/docs/waypoint-hcl/variables/workspace).

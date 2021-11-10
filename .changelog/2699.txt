@@ -1,0 +1,6 @@
+```release-note:feature
+**Workspace and Label-scoped Configuration:** Build, registry, deploy, and
+release configurations can now be changed depending on the current workspace
+or label sets. This can be used to alter configurations between environments
+(staging, production, etc.) or metadata (region, etc.).
+```
