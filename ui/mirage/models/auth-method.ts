@@ -6,7 +6,7 @@ export default Model.extend({
     let result = new OIDCAuthMethod();
 
     result.setDisplayName(this.displayName);
-    result.setKind(0);
+    result.setKind(this.kind);
     result.setName(this.name);
     return result;
   },
