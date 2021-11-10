@@ -8,6 +8,9 @@ package gen
 
 import (
 	context "context"
+	reflect "reflect"
+	sync "sync"
+
 	status "google.golang.org/genproto/googleapis/rpc/status"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -17,8 +20,6 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -1437,10 +1438,15 @@ type Project struct {
 	// The applications cannot be modified in any Project APIs. You must
 	// use the dedicated Application APIs.
 	Applications []*Application `protobuf:"bytes,2,rep,name=applications,proto3" json:"applications,omitempty"`
+
 	// If true, then the `-remote` flag or the `waypoint build project/app`
 	// syntax can be used with a remote runner. If this is false, then
 	// this is not allowed. This is typically configured using the
 	// `runner {}` block in the waypoint config.
+
+	// for the hcl - users should probably still be able to disable remote ops there,
+	// (or force remote ops?), and it would be nice if the syntax wasn't backwards-compat
+	// breaking
 	RemoteEnabled bool `protobuf:"varint,3,opt,name=remote_enabled,json=remoteEnabled,proto3" json:"remote_enabled,omitempty"`
 	// Where data is sourced for remote operations. If this isn't set, then
 	// there is no default data source and it will be an error if a job is
