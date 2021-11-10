@@ -19,7 +19,7 @@ npm i --production=false
 # Build the site
 # TODO: is there a way to remove these two manully set env vars?
 # TODO: maybe using Vercel's System Environment variables?
-DEV_IO_PROXY=waypoint IS_CONTENT_DEPLOY_PREVIEW=true npm run build
+npm run build
 # Copy .next build output folder into project root,
 # so that Vercel's NextJS preset picks up on the build output
 cp -R .next/ ../.next
