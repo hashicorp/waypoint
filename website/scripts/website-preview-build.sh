@@ -4,7 +4,7 @@
 rm -rf .next
 # Clone the dev-portal repo in ./website-preview
 git config --global credential.helper store
-git clone "https://zchsh:${GITHUB_WEBSITE_PREVIEW_PAT}@github.com/hashicorp/dev-portal.git" website-preview && cd website-preview && git checkout zs.cleanup-refine-migration && npm i --production=false
+git clone "https://zchsh:${GITHUB_WEBSITE_PREVIEW_PAT}@github.com/hashicorp/dev-portal.git" website-preview
 # Copy all local content into the cloned dev-portal directory
 # TODO: may be able to avoid, fix in docs-page
 # TODO: the "include partials" remark plugin path needs
@@ -13,6 +13,9 @@ git clone "https://zchsh:${GITHUB_WEBSITE_PREVIEW_PAT}@github.com/hashicorp/dev-
 cp -R ./content/ ./website-preview/content
 # Change into the cloned dev-portal directory
 cd ./website-preview
+# Install dependencies
+git checkout zs.cleanup-refine-migration
+npm i --production=false
 # Build the site
 DEV_IO_PROXY=waypoint IS_CONTENT_DEPLOY_PREVIEW=true npm run build
 # Copy .next build output folder into project root,
