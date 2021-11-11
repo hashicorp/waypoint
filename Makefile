@@ -20,8 +20,11 @@ bin: # bin creates the binaries for Waypoint for the current platform
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
 	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
 
-.PHONY: bin/cli-only
-bin/cli-only: # bin/cli-only only recompiles waypoint
+# bin/cli-only only recompiles waypoint, and doesn't recompile or embed the ceb.
+# You can use the binary it produces as a server, runner, or CLI, but it won't contain the CEB, so
+# it won't be able to build projects that don't have `disable_entrypoint = true` set in their build hcl.
+.PHONY: bin/no-ceb
+bin/cli-only:
 	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
 
 .PHONY: bin/linux
