@@ -1076,6 +1076,7 @@ func (i *NomadInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	}
 
 	return &pb.OnDemandRunnerConfig{
+		Name:         "nomad",
 		OciUrl:       i.config.odrImage,
 		PluginType:   "nomad",
 		Default:      true,

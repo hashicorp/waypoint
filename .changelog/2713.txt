@@ -1,0 +1,3 @@
+```release-note:improvement
+serverinstall: Set Nomad's ODR profile name to "nomad"
+```
