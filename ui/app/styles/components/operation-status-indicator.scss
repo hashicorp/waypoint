@@ -1,14 +1,41 @@
 .operation-status-indicator {
-  @include Typography.Interface(S);
-  color: rgb(var(--text-muted));
-  cursor: default;
+  display: inline-flex;
+  align-items: center;
 
-  &--error {
-    color: rgb(var(--error-text));
+  span, b {
+    margin-right: scale.$sm-4;
   }
 
-  &--match-typography {
-    font-size: inherit;
-    font-weight: inherit;
+  b {
+    text-transform: capitalize;
+  }
+
+  svg {
+    margin-right: scale.$sm-3;
+  }
+
+  .pds-icon {
+    font-size: 16px;
+  }
+
+  .icon-text-group {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .timestamp {
+    display: inline-flex;
+    align-items: center;
+    color: rgb(var(--text-muted));
+    cursor: default;
+
+    &--error {
+      color: rgb(var(--error-text));
+    }
+
+    &--match-typography {
+      font-size: inherit;
+      font-weight: inherit;
+    }
   }
 }

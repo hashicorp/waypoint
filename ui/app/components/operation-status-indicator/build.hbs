@@ -1,0 +1,11 @@
+<OperationStatusIndicator @operation={{@operation}} @isDetailed={{true}}>
+  <:status-text>
+    {{t
+      (concat
+        "build_status"
+        ".type-" @operation.component.type
+        ".state-" @operation.status.state
+      )
+    }}
+  </:status-text>
+</OperationStatusIndicator>

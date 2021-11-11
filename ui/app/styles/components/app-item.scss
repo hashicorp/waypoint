@@ -52,16 +52,6 @@
     align-items: center;
     color: rgb(var(--text-muted));
     margin-right: scale.$sm-2;
-
-    b {
-      text-transform: capitalize;
-    }
-
-    .icon {
-      margin-right: scale.$sm-3;
-      font-size: scale.$lg-1;
-      display: flex;
-    }
   }
 
   .button {

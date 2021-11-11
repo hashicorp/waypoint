@@ -8,51 +8,90 @@ import { a11yAudit } from 'ember-a11y-testing/test-support';
 module('Integration | Component | operation-status-indicator', function (hooks) {
   setupRenderingTest(hooks);
 
-  test('with a success status', async function (assert) {
-    this.set('status', {
-      state: 2, // success
-      details: 'Example details',
-      startTime: {
-        seconds: getUnixTime(subDays(new Date(), 2)),
-        nanos: 0,
+  test('with a success status (isDetailed)', async function (assert) {
+    this.set('build', {
+      component: {
+        name: 'docker',
       },
-      completeTime: {
-        seconds: getUnixTime(subDays(new Date(), 1)),
-        nanos: 0,
+      status: {
+        state: 2, // success
+        details: 'Example details',
+        startTime: {
+          seconds: getUnixTime(subDays(new Date(), 2)),
+          nanos: 0,
+        },
+        completeTime: {
+          seconds: getUnixTime(subDays(new Date(), 1)),
+          nanos: 0,
+        },
       },
     });
 
     await render(hbs`
-      <OperationStatusIndicator @status={{this.status}} />
+      <OperationStatusIndicator @operation={{this.build}} @isDetailed={{true}}>
+        Deployed to
+      </OperationStatusIndicator>
     `);
+
+    assert.dom('[data-test-icon-type]').hasAttribute('data-test-icon-type', 'logo-docker-color');
+    assert.dom('.icon-text-group').containsText('Deployed to Docker');
     await focus('[data-test-operation-status-indicator]');
     await a11yAudit();
 
-    assert.dom('[data-test-operation-status-indicator]').hasClass('operation-status-indicator--success');
+    assert.dom('[data-test-operation-status-indicator]').hasClass('timestamp--success');
     assert.dom('[data-test-operation-status-indicator]').includesText('1 day ago');
     assert.dom('.ember-tooltip').includesText('Example details');
   });
 
-  test('with a running status', async function (assert) {
-    this.set('status', {
-      state: 1, // running
-      details: 'Example details',
-      startTime: {
-        seconds: getUnixTime(subDays(new Date(), 2)),
-        nanos: 0,
-      },
-      completeTime: {
-        seconds: getUnixTime(subDays(new Date(), 1)),
-        nanos: 0,
+  test('with a running status (isDetailed)', async function (assert) {
+    this.set('build', {
+      status: {
+        state: 1, // running
+        details: 'Example details',
+        startTime: {
+          seconds: getUnixTime(subDays(new Date(), 2)),
+          nanos: 0,
+        },
+        completeTime: {
+          seconds: getUnixTime(subDays(new Date(), 1)),
+          nanos: 0,
+        },
       },
     });
 
     await render(hbs`
-      <OperationStatusIndicator @status={{this.status}} />
+      <OperationStatusIndicator @operation={{this.build}} @isDetailed={{true}}/>
     `);
     await focus('[data-test-operation-status-indicator]');
     await a11yAudit();
 
     assert.dom('[data-test-operation-status-indicator]').includesText('2 days ago');
+  });
+
+  test('icon and ember tooltip not rendered when isDetailed = false', async function (assert) {
+    this.set('build', {
+      status: {
+        state: 1, // running
+        details: 'Example details',
+        startTime: {
+          seconds: getUnixTime(subDays(new Date(), 2)),
+          nanos: 0,
+        },
+        completeTime: {
+          seconds: getUnixTime(subDays(new Date(), 1)),
+          nanos: 0,
+        },
+      },
+    });
+
+    await render(hbs`
+      <OperationStatusIndicator @operation={{this.build}}/>
+    `);
+    await focus('[data-test-operation-status-indicator]');
+
+    await a11yAudit();
+
+    assert.dom('[data-test-tooltip]').doesNotExist();
+    assert.dom('[data-test-time-icon]').doesNotExist();
   });
 });

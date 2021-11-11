@@ -19,10 +19,7 @@
         <tr>
           <th scope="row">{{t "page.release.overview.status"}}</th>
           <td>
-            <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
-            <span>Released on <b>{{component-name @model.component.name}}</b>
-              <small>{{date-format-distance-to-now @model.status.startTime.seconds}}</small>
-            </span>
+            <OperationStatusIndicator::Release @operation={{@model}}/>
           </td>
         </tr>
       </StatusReportMetaTable>
