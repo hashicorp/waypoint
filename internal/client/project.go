@@ -34,9 +34,11 @@ type Project struct {
 
 	localServer bool // True when a local server is created
 
-	// If the project runs a job, it should build off this starting template
-	// It has things like the locality pre-filled.
-	jobTemplate *pb.Job
+	// These tell the project that all of the jobs it creates should be local, not remote.
+	// They're used to template the jobs that it creates, and when interacting with
+	// the jobs as they're running.
+	executeJobsLocally bool
+	localRunnerId      string
 }
 
 // TODO(izaak): maybe call this NewProject? It's more than just a client.
@@ -173,14 +175,6 @@ func WithClient(client pb.WaypointClient) Option {
 	}
 }
 
-// TODO(izaak): idk if I love this.
-func WithJobTemplate(job *pb.Job) Option {
-	return func(c *Project, cfg *config) error {
-		c.jobTemplate = job
-		return nil
-	}
-}
-
 // TODO(izaak): probably delete?
 // WithClientConnect specifies the options for connecting to a client.
 // If WithClient is specified, that client is always used.
@@ -230,6 +224,14 @@ func WithLogger(log hclog.Logger) Option {
 func WithUI(ui terminal.UI) Option {
 	return func(c *Project, cfg *config) error {
 		c.UI = ui
+		return nil
+	}
+}
+
+func WithExecuteJobsLocally(localRunnerId string) Option {
+	return func(c *Project, cfg *config) error {
+		c.executeJobsLocally = true
+		c.localRunnerId = localRunnerId
 		return nil
 	}
 }

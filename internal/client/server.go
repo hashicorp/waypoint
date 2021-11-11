@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
-	"github.com/hashicorp/waypoint/internal/serverclient"
 )
 
 // TODO(izaak): we should probably have something like this here instead of in base.
@@ -26,54 +25,55 @@ import (
 //
 //}
 
-// TODO(izaak): this shouldn't be on a project
-// initServerConnection will initialize a gRPC connection to the Waypoint server.
-// This is called if a client wasn't explicitly given with WithClient.
+// TODO(izaak): delete
+//// TODO(izaak): this shouldn't be on a project
+//// initServerConnection will initialize a gRPC connection to the Waypoint server.
+//// This is called if a client wasn't explicitly given with WithClient.
+////
+//// If a connection is successfully established, this will register connection
+//// closing and server cleanup with the Project cleanup function.
+////
+//// This function will do one of two things:
+////
+////   1. If connection options were given, it'll attempt to connect to
+////      an existing Waypoint server.
+////
+////   2. If WithLocal was specified and no connection addresses can be
+////      found, this will spin up an in-memory server.
+////
+//func (c *Project) initServerConnection(ctx context.Context, cfg *config) (*grpc.ClientConn, error) {
+//	log := c.logger.Named("server")
 //
-// If a connection is successfully established, this will register connection
-// closing and server cleanup with the Project cleanup function.
+//	// TODO(izaak): pretty sure this is conflating "run the op locally, i.e. remote=false", and
+//	// "no remote server exists".
+//	// If we're local, then connection is optional.
+//	opts := cfg.connectOpts
+//	if c.local {
+//		log.Trace("WithLocal set, server credentials optional")
+//		opts = append(opts, serverclient.Optional())
+//	}
 //
-// This function will do one of two things:
+//	// Connect. If we're local, this is set as optional so conn may be nil
+//	log.Info("attempting to source credentials and connect")
+//	conn, err := serverclient.Connect(ctx, opts...)
+//	if err != nil {
+//		return nil, err
+//	}
 //
-//   1. If connection options were given, it'll attempt to connect to
-//      an existing Waypoint server.
+//	// If we established a connection
+//	if conn != nil {
+//		log.Debug("connection established with sourced credentials")
+//		c.cleanup(func() { conn.Close() })
+//		return conn, nil
+//	}
 //
-//   2. If WithLocal was specified and no connection addresses can be
-//      found, this will spin up an in-memory server.
-//
-func (c *Project) initServerConnection(ctx context.Context, cfg *config) (*grpc.ClientConn, error) {
-	log := c.logger.Named("server")
-
-	// TODO(izaak): pretty sure this is conflating "run the op locally, i.e. remote=false", and
-	// "no remote server exists".
-	// If we're local, then connection is optional.
-	opts := cfg.connectOpts
-	if c.local {
-		log.Trace("WithLocal set, server credentials optional")
-		opts = append(opts, serverclient.Optional())
-	}
-
-	// Connect. If we're local, this is set as optional so conn may be nil
-	log.Info("attempting to source credentials and connect")
-	conn, err := serverclient.Connect(ctx, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	// If we established a connection
-	if conn != nil {
-		log.Debug("connection established with sourced credentials")
-		c.cleanup(func() { conn.Close() })
-		return conn, nil
-	}
-
-	// No connection, meaning we have to spin up a local server. This
-	// can only be reached if we specified "Optional" to serverclient
-	// which is only possible if we configured this client to support local
-	// mode.
-	log.Info("no server credentials found, using in-memory local server")
-	return c.initLocalServer(ctx)
-}
+//	// No connection, meaning we have to spin up a local server. This
+//	// can only be reached if we specified "Optional" to serverclient
+//	// which is only possible if we configured this client to support local
+//	// mode.
+//	log.Info("no server credentials found, using in-memory local server")
+//	return c.initLocalServer(ctx)
+//}
 
 // initLocalServer starts the local server and configures p.client to
 // point to it. This also configures p.localClosers so that all the

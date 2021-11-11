@@ -20,7 +20,7 @@ func TestProjectNoop(t *testing.T) {
 	client := singleprocess.TestServer(t)
 
 	// Build our client
-	c := TestProject(t, WithClient(client), WithLocal())
+	c := TestProject(t, WithClient(client), WithExecuteJobsLocally("local-runner"))
 	defer c.Close()
 	app := c.App(TestApp(t, c))
 

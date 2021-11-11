@@ -22,14 +22,11 @@ import (
 // calling this.
 func TestProject(t testing.T, opts ...Option) *Project {
 	require := require.New(t)
-	client := singleprocess.TestServer(t)
 
 	ctx := context.Background()
 
 	// Initialize our client
 	result, err := NewProjectClient(ctx, append([]Option{
-		WithClient(client),
-		WithLocal(),
 		WithProjectRef(&pb.Ref_Project{Project: "test_p"}),
 	}, opts...)...)
 	require.NoError(err)

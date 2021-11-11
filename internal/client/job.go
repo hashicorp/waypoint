@@ -32,31 +32,25 @@ func (c *Project) job() *pb.Job {
 		Operation: &pb.Job_Noop_{
 			Noop: &pb.Job_Noop{},
 		},
-		ExecutionLocation: pb.Job_remote,
+	}
+
+	if c.executeJobsLocally {
+		job.TargetRunner = &pb.Ref_Runner{
+			Target: &pb.Ref_Runner_Id{
+				Id: &pb.Ref_RunnerId{
+					Id: c.localRunnerId, // TODO(izaak): should check that this is not empty
+				},
+			},
+		}
+
+		job.DataSource = &pb.Job_DataSource{
+			Source: &pb.Job_DataSource_Local{
+				Local: &pb.Job_Local{},
+			},
+		}
 	}
 
 	return job
-}
-
-// Updates a job spec to run locally. Mutates the job to add a runner ref and local data source.
-func runJobLocally(job *pb.Job, localRunnerId string) {
-	job.TargetRunner = &pb.Ref_Runner{
-		Target: &pb.Ref_Runner_Id{
-			Id: &pb.Ref_RunnerId{
-				Id: localRunnerId,
-			},
-		},
-	}
-
-	job.DataSource = &pb.Job_DataSource{
-		Source: &pb.Job_DataSource_Local{
-			Local: &pb.Job_Local{},
-		},
-	}
-
-	job.ExecutionLocation = pb.Job_local
-
-	return
 }
 
 // doJob will queue and execute the job. If the client is configured for
@@ -93,7 +87,7 @@ func (c *Project) queueAndStreamJob(
 	// cancel in the event of an error. This will ensure that the jobs don't
 	// remain queued forever. This is only for local ops.
 	expiration := ""
-	if job.ExecutionLocation == pb.Job_local {
+	if c.executeJobsLocally {
 		expiration = "30s"
 	}
 
@@ -147,7 +141,7 @@ func (c *Project) queueAndStreamJob(
 		steps = map[int32]*stepData{}
 	)
 
-	if job.ExecutionLocation == pb.Job_local {
+	if c.executeJobsLocally {
 		defer func() {
 			// If we completed then do nothing, or if the context is still
 			// active since this means that we're not cancelled.
@@ -203,7 +197,7 @@ func (c *Project) queueAndStreamJob(
 
 		case *pb.GetJobStreamResponse_Terminal_:
 			// Ignore this for local jobs since we're using our UI directly.
-			if job.ExecutionLocation == pb.Job_local {
+			if c.executeJobsLocally {
 				continue
 			}
 

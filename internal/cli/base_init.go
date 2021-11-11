@@ -136,8 +136,6 @@ func (c *baseCommand) initProjectClient(
 	client pb.WaypointClient,
 ) (*clientpkg.Project, error) {
 
-	jobTemplate :=
-
 	// Start building our client options
 	opts := []clientpkg.Option{
 		clientpkg.WithLogger(c.Log),
@@ -150,12 +148,7 @@ func (c *baseCommand) initProjectClient(
 	}
 
 	if c.activeRunner != nil {
-		opts = append(opts, clientpkg.WithLocalRunnerId(c.activeRunner.Id()))
-	}
-
-	// TODO(izaak): delete
-	if !c.flagRemote && c.autoServer {
-		opts = append(opts, clientpkg.WithLocal())
+		opts = append(opts, clientpkg.WithExecuteJobsLocally(c.activeRunner.Id()))
 	}
 
 	if c.ui != nil {
