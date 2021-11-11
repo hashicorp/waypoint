@@ -2,16 +2,15 @@ package client
 
 import (
 	"context"
-	"sync"
 
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/internal/runner"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
 )
 
+// TODO(izaak): refine description after the dust settles
 // Project is the primary structure for interacting with a Waypoint
 // server as a client. The client exposes a slightly higher level of
 // abstraction over the server API for performing operations locally and
@@ -19,7 +18,8 @@ import (
 type Project struct {
 	UI terminal.UI
 
-	client              pb.WaypointClient
+	client pb.WaypointClient
+
 	logger              hclog.Logger
 	project             *pb.Ref_Project
 	workspace           *pb.Ref_Workspace
@@ -28,24 +28,22 @@ type Project struct {
 	variables           []*pb.Variable
 	dataSourceOverrides map[string]string
 	cleanupFunc         func()
-	serverVersion       *pb.VersionInfo
 
-	local bool
+	// TODO(izaak): delete?
+	serverVersion *pb.VersionInfo
 
 	localServer bool // True when a local server is created
 
-	// These are used to manage a local runner and its job processing
-	// in a goroutine.
-	wg           sync.WaitGroup
-	bg           context.Context
-	bgCancel     func()
-	activeRunner *runner.Runner
+	// If the project runs a job, it should build off this starting template
+	// It has things like the locality pre-filled.
+	jobTemplate *pb.Job
 }
 
-// New initializes a new client.
-func New(ctx context.Context, opts ...Option) (*Project, error) {
-	// Our default client
-	client := &Project{
+// TODO(izaak): maybe call this NewProject? It's more than just a client.
+// NewProjectClient initializes a new client.
+func NewProjectClient(ctx context.Context, opts ...Option) (*Project, error) {
+	// Our default projectClient
+	projectClient := &Project{
 		UI:     terminal.ConsoleUI(ctx),
 		logger: hclog.L(),
 		runner: &pb.Ref_Runner{
@@ -58,69 +56,39 @@ func New(ctx context.Context, opts ...Option) (*Project, error) {
 	// Build our config
 	var cfg config
 	for _, o := range opts {
-		err := o(client, &cfg)
+		err := o(projectClient, &cfg)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	// Used by any background goroutines that we'll spawn (like runner job processing)
-	client.bg, client.bgCancel = context.WithCancel(context.Background())
-
-	// If a client was explicitly provided, we use that. Otherwise, we
-	// have to establish a connection either through the serverclient
-	// package or spinning up an in-process server.
-	if client.client == nil {
-		client.logger.Trace("no API client provided, initializing connection if possible")
-		conn, err := client.initServerClient(ctx, &cfg)
-		if err != nil {
-			return nil, err
-		}
-		client.client = pb.NewWaypointClient(conn)
-	}
-
-	// Negotiate the version
-	if err := client.negotiateApiVersion(ctx); err != nil {
-		return nil, err
-	}
+	// TODO(izaak): I get the feeling that by the end of this, projectClient will always be set. It should probably
+	//// be given as an arg, or maybe always assumed to be here?
+	//// If a client was explicitly provided, we use that. Otherwise, we
+	//// have to establish a connection either through the serverclient
+	//// package or spinning up an in-process server.
+	//if projectClient.client == nil {
+	//	projectClient.logger.Trace("no API client provided, initializing connection if possible")
+	//	conn, err := projectClient.initServerConnection(ctx, &cfg)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	projectClient.client = pb.NewWaypointClient(conn)
+	//
+	//	// Negotiate the version
+	//	ver, err := NegotiateApiVersion(ctx, projectClient.client, projectClient.logger)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	projectClient.serverVersion = ver
+	//}
 
 	// Default workspace if not specified
-	if client.workspace == nil {
-		client.workspace = &pb.Ref_Workspace{Workspace: "default"}
+	if projectClient.workspace == nil {
+		projectClient.workspace = &pb.Ref_Workspace{Workspace: "default"}
 	}
 
-	if client.local {
-		client.logger.Debug("starting runner to process local jobs")
-		r, err := client.startRunner()
-		if err != nil {
-			return nil, err
-		}
-
-		client.activeRunner = r
-
-		// We spin up the job processing here. Anything that spawns jobs (either locally spawned
-		// or server spawned) will be processed by this runner ONLY if the runner is directly targeted.
-		// Because this runner's lifetime is bound to a CLI context and therefore transient, we don't
-		// want to accept jobs that aren't related to local activities (job's queued or RPCs made)
-		// because they'll hang the CLI randomly as those jobs run (it's also a security issue).
-		client.wg.Add(1)
-		go func() {
-			defer client.wg.Done()
-			r.AcceptMany(client.bg)
-		}()
-	}
-
-	return client, nil
-}
-
-// LocalRunnerId returns the id of the runner that this project started
-// This is used to target jobs specifically at this runner.
-func (c *Project) LocalRunnerId() (string, bool) {
-	if c.activeRunner == nil {
-		return "", false
-	}
-
-	return c.activeRunner.Id(), true
+	return projectClient, nil
 }
 
 // Ref returns the raw Waypoint server API client.
@@ -150,19 +118,8 @@ func (c *Project) ServerVersion() *pb.VersionInfo {
 
 // Close should be called to clean up any resources that the client created.
 func (c *Project) Close() error {
-	// Stop the runner early so that it we block here waiting for any outstanding jobs to finish
-	// before closing down the rest of the resources.
-	if c.activeRunner != nil {
-		if err := c.activeRunner.Close(); err != nil {
-			c.logger.Error("error stopping runner", "error", err)
-		}
-	}
 
-	// Forces any background goroutines to stop
-	c.bgCancel()
-
-	// Now wait on those goroutines to finish up.
-	c.wg.Wait()
+	// TODO(izaak): I don't think we need any of this, or it probably shouldn't live here.
 
 	// Run any cleanup necessary
 	if f := c.cleanupFunc; f != nil {
@@ -216,6 +173,15 @@ func WithClient(client pb.WaypointClient) Option {
 	}
 }
 
+// TODO(izaak): idk if I love this.
+func WithJobTemplate(job *pb.Job) Option {
+	return func(c *Project, cfg *config) error {
+		c.jobTemplate = job
+		return nil
+	}
+}
+
+// TODO(izaak): probably delete?
 // WithClientConnect specifies the options for connecting to a client.
 // If WithClient is specified, that client is always used.
 //
@@ -248,16 +214,6 @@ func WithLabels(m map[string]string) Option {
 func WithSourceOverrides(m map[string]string) Option {
 	return func(c *Project, cfg *config) error {
 		c.dataSourceOverrides = m
-		return nil
-	}
-}
-
-// WithLocal puts the client in local exec mode. In this mode, the client
-// will spin up a per-operation runner locally and reference the local on-disk
-// data for all operations.
-func WithLocal() Option {
-	return func(c *Project, cfg *config) error {
-		c.local = true
 		return nil
 	}
 }

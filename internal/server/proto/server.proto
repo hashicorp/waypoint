@@ -1435,6 +1435,16 @@ message Job {
   // to detect that it was configured to expire.
   google.protobuf.Timestamp expire_time = 109;
 
+  // TODO(izaak): should this actually be a property on the ref runner?
+  // Marks if the job was marked to be executed locally by a CLI runner,
+  // or remotely by some remote runner or ODR.
+  ExecutionLocation executionLocation = 112;
+
+  enum ExecutionLocation {
+    local = 0; // Executed by the CLI runner
+    remote = 1; // Executed by a remote runner or ODR
+  }
+
   enum State {
     UNKNOWN = 0;
     QUEUED = 1; // queued and waiting for assignment

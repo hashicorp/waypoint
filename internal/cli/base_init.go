@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
+
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
@@ -73,14 +75,15 @@ func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
 	return cfg, nil
 }
 
-// initClient initializes the client.
-//
-// If ctx is nil, c.Ctx will be used. If ctx is non-nil, that context will be
-// used and c.Ctx will be ignored.
-func (c *baseCommand) initClient(
+// TODO(izaak): this should live in a client file (client/client or serverclient/client (why are those different again?)
+// TODO(izaak): more contextual errors everywhere
+// but not here.
+func (c baseCommand) initClient(
 	ctx context.Context,
-	connectOpts ...serverclient.ConnectOption,
-) (*clientpkg.Project, error) {
+	connectOpts ...serverclient.ConnectOption, // TODO(izaak): are we ever using this?
+) (pb.WaypointClient, *pb.VersionInfo, error) {
+	log := c.Log
+
 	// We use our flag-based connection info if the user set an addr.
 	var flagConnection *clicontext.Config
 	if v := c.flagConnection; v.Server.Address != "" {
@@ -99,19 +102,58 @@ func (c *baseCommand) initClient(
 	}, connectOpts...)
 	c.clientContext, err = serverclient.ContextConfig(connectOpts...)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+
+	// TODO(izaak): make sure the local server case works
+	// i.e. you're passing serverclient.Optional if using the embedded server
+
+	// Connect. If we're local, this is set as optional so conn may be nil
+	log.Info("attempting to source credentials and connect")
+	conn, err := serverclient.Connect(ctx, connectOpts...)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// TODO(izaak): conn will be nil if you have a local server, and you'll probably have to do something
+	// like c.initLocalServer(ctx)
+
+	client := pb.NewWaypointClient(conn)
+
+	versionInfo, err := clientpkg.NegotiateApiVersion(ctx, client, log)
+	if err != nil {
+		return nil, nil, err
+	}
+	return client, versionInfo, nil
+}
+
+// initProjectClient initializes the client.
+//
+// If ctx is nil, c.Ctx will be used. If ctx is non-nil, that context will be
+// used and c.Ctx will be ignored.
+func (c *baseCommand) initProjectClient(
+	ctx context.Context,
+	client pb.WaypointClient,
+) (*clientpkg.Project, error) {
+
+	jobTemplate :=
 
 	// Start building our client options
 	opts := []clientpkg.Option{
 		clientpkg.WithLogger(c.Log),
-		clientpkg.WithClientConnect(connectOpts...),
+		clientpkg.WithClient(client),
 		clientpkg.WithProjectRef(c.refProject),
 		clientpkg.WithWorkspaceRef(c.refWorkspace),
 		clientpkg.WithVariables(c.variables),
 		clientpkg.WithLabels(c.flagLabels),
 		clientpkg.WithSourceOverrides(c.flagRemoteSource),
 	}
+
+	if c.activeRunner != nil {
+		opts = append(opts, clientpkg.WithLocalRunnerId(c.activeRunner.Id()))
+	}
+
+	// TODO(izaak): delete
 	if !c.flagRemote && c.autoServer {
 		opts = append(opts, clientpkg.WithLocal())
 	}
@@ -125,5 +167,5 @@ func (c *baseCommand) initClient(
 	}
 
 	// Create our client
-	return clientpkg.New(ctx, opts...)
+	return clientpkg.NewProjectClient(ctx, opts...)
 }

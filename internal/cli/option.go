@@ -45,6 +45,7 @@ func WithMultipleApp() Option {
 	}
 }
 
+// TODO(izaak): delete
 // WithOptionalApp configures the CLI to work with or without an explicit
 // project config locally. It also allows for operations on multiple apps
 // inside a project.
@@ -66,14 +67,15 @@ func WithNoConfig() Option {
 	}
 }
 
-// WithConfig configures the CLI to find and load any project configuration.
-// If optional is true, no error will be shown if a config can't be found.
-func WithConfig(optional bool) Option {
-	return func(c *baseConfig) {
-		c.Config = true
-		c.ConfigOptional = optional
-	}
-}
+// TODO(izaak): delete
+//// WithConfig configures the CLI to find and load any project configuration.
+//// If optional is true, no error will be shown if a config can't be found.
+//func WithConfig(optional bool) Option {
+//	return func(c *baseConfig) {
+//		c.Config = true
+//		c.ConfigOptional = optional
+//	}
+//}
 
 // WithClient configures the CLI to initialize a client.
 func WithClient(v bool) Option {
@@ -106,16 +108,27 @@ func WithConnectionArg() Option {
 	}
 }
 
+func WithRunnerRequired() Option {
+	return func(c *baseConfig) {
+		c.RunnerRequired = true
+	}
+}
+
 type baseConfig struct {
-	Args                  []string
-	Flags                 *flag.Sets
-	Config                bool
-	ConfigOptional        bool
-	AppOptional           bool
-	Client                bool
-	AppTargetRequired     bool
+	Args  []string
+	Flags *flag.Sets
+
+	RunnerRequired        bool
 	ProjectTargetRequired bool
-	UI                    terminal.UI
+	Client                bool
+
+	// TODO(izaak): how much of this can we delete? All of it?
+	Config            bool
+	ConfigOptional    bool
+	AppOptional       bool
+	AppTargetRequired bool
+
+	UI terminal.UI
 
 	// NoAutoServer is true if an in-memory server is not allowed.
 	NoAutoServer bool

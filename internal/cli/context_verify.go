@@ -83,7 +83,7 @@ func (c *ContextVerifyCommand) Run(args []string) int {
 	step.Update("Verifying connection is valid for context %q...", name)
 
 	client := pb.NewWaypointClient(conn)
-	if _, err := clientpkg.New(ctx,
+	if _, err := clientpkg.NewProjectClient(ctx,
 		clientpkg.WithLogger(c.Log),
 		clientpkg.WithClient(client),
 	); err != nil {

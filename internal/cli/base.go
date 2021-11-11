@@ -9,6 +9,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
+
+	"github.com/hashicorp/waypoint/internal/runner"
 
 	"github.com/adrg/xdg"
 	"github.com/hashicorp/go-hclog"
@@ -56,6 +59,12 @@ type baseCommand struct {
 
 	// UI is used to write to the CLI.
 	ui terminal.UI
+
+	// client for interacting with the waypoint server
+	client pb.WaypointClient
+
+	// serverVersion is the current version of the waypoint server the client is connected to
+	serverVersion *pb.VersionInfo
 
 	// client for performing operations
 	project *clientpkg.Project
@@ -123,21 +132,87 @@ type baseCommand struct {
 
 	// The home directory that we loaded the waypoint config from
 	homeConfigPath string
+
+	// These are used to manage a local runner and its job processing
+	// in a goroutine.
+	// TODO(izaak): this should probably be abstracted
+	wg           sync.WaitGroup
+	bg           context.Context
+	bgCancel     func()
+	activeRunner *runner.Runner
 }
 
 // Close cleans up any resources that the command created. This should be
 // deferred by any CLI command that embeds baseCommand in the Run command.
 func (c *baseCommand) Close() error {
+
+	// TODO(izaak): I don't think a project will need to be closed after this.
 	// Close the project client, which gracefully shuts down the local runner
 	if c.project != nil {
 		c.project.Close()
 	}
+
+	// Stop the runner early so that it we block here waiting for any outstanding jobs to finish
+	// before closing down the rest of the resources.
+	if c.activeRunner != nil {
+		if err := c.activeRunner.Close(); err != nil {
+			c.Log.Error("error stopping runner", "error", err)
+		}
+	}
+
+	// Forces any background goroutines to stop
+	c.bgCancel()
+
+	// Now wait on those goroutines to finish up.
+	c.wg.Wait()
 
 	// Close our UI if it implements it. The glint-based UI does for example
 	// to finish up all the CLI output.
 	if closer, ok := c.ui.(io.Closer); ok && closer != nil {
 		closer.Close()
 	}
+
+	return nil
+}
+
+func (c *baseCommand) InitRunner() error {
+	log := c.Log
+	log.Debug("starting runner to process local jobs")
+
+	// Initialize our runner
+	r, err := runner.New(
+		runner.WithClient(c.client),
+		runner.WithLogger(log.Named("runner")),
+		runner.ByIdOnly(),      // We'll direct target this
+		runner.WithLocal(c.ui), // Local mode
+	)
+	if err != nil {
+		return err
+	}
+
+	// Start the runner
+	if err := r.Start(); err != nil {
+		return err
+	}
+
+	// Inject the metadata about the client, such as the runner id if it is running
+	// a local runner.
+	// TODO(izaak): i'm not 100% sure that this context is what's used when this id is
+	// needed, but if it works it's probably fine.
+	c.Ctx = grpcmetadata.AddRunner(c.Ctx, r.Id())
+
+	c.activeRunner = r
+
+	// We spin up the job processing here. Anything that spawns jobs (either locally spawned
+	// or server spawned) will be processed by this runner ONLY if the runner is directly targeted.
+	// Because this runner's lifetime is bound to a CLI context and therefore transient, we don't
+	// want to accept jobs that aren't related to local activities (job's queued or RPCs made)
+	// because they'll hang the CLI randomly as those jobs run (it's also a security issue).
+	c.wg.Add(1)
+	go func() {
+		defer c.wg.Done()
+		r.AcceptMany(c.bg)
+	}()
 
 	return nil
 }
@@ -149,6 +224,8 @@ func (c *baseCommand) Close() error {
 // Init should be called FIRST within the Run function implementation. Many
 // options will affect behavior of other functions that can be called later.
 func (c *baseCommand) Init(opts ...Option) error {
+	//log := c.Log
+
 	baseCfg := baseConfig{
 		Config: true,
 		Client: true,
@@ -231,6 +308,24 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	// Parse the configuration
 	c.cfg = &config.Config{}
+
+	if baseCfg.Client {
+		// TODO(izaak): is this the right context here?
+		client, ver, err := c.initClient(c.Ctx)
+		if err != nil {
+			// TODO(izaak): print error
+			return err
+		}
+		c.client = client
+		c.serverVersion = ver
+	}
+
+	if baseCfg.RunnerRequired {
+		if err := c.InitRunner(); err != nil {
+			// TODO(izaak): print error
+			return err
+		}
+	}
 
 	// If we have an app target requirement, we have to get it from the args
 	// or the config.
@@ -353,13 +448,14 @@ func (c *baseCommand) Init(opts ...Option) error {
 	}
 	c.variables = vars
 
-	// Create our client
-	if baseCfg.Client {
-		c.project, err = c.initClient(nil)
+	if baseCfg.ProjectTargetRequired {
+		// TODO(izaak): log
+		// TODO(izaak): check for nil c.client?
+		projectClient, err := c.initProjectClient(c.Ctx, c.client)
 		if err != nil {
-			c.logError(c.Log, "failed to create client", err)
-			return err
+			return err // TODO(izaak): contextual error
 		}
+		c.project = projectClient
 	}
 
 	// Validate remote vs. local operations.
@@ -453,11 +549,12 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 		apps = append(apps, app)
 	}
 
-	// Inject the metadata about the client, such as the runner id if it is running
-	// a local runner.
-	if id, ok := c.project.LocalRunnerId(); ok {
-		ctx = grpcmetadata.AddRunner(ctx, id)
-	}
+	// TODO(izaak) Delete (we moved this into base)
+	//// Inject the metadata about the client, such as the runner id if it is running
+	//// a local runner.
+	//if id, ok := c.project.LocalRunnerId(); ok {
+	//	ctx = grpcmetadata.AddRunner(ctx, id)
+	//}
 
 	// Just a serialize loop for now, one day we'll parallelize.
 	var finalErr error

@@ -133,7 +133,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	client := pb.NewWaypointClient(conn)
 	// validate API compat here with new clientpkg
-	if _, err := clientpkg.New(ctx,
+	if _, err := clientpkg.NewProjectClient(ctx,
 		clientpkg.WithLogger(c.Log),
 		clientpkg.WithClient(client),
 	); err != nil {
@@ -266,7 +266,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	// Connect
 	c.ui.Output("Verifying upgrade...", terminal.WithHeaderStyle())
 
-	// New stepgroup to ensure output is after upgrade output
+	// NewProjectClient stepgroup to ensure output is after upgrade output
 	sg2 := c.ui.StepGroup()
 	defer sg2.Wait()
 

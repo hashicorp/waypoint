@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/hashicorp/go-hclog"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
@@ -19,7 +21,13 @@ import (
 	"github.com/hashicorp/waypoint/internal/serverclient"
 )
 
-// initServerClient will initialize a gRPC connection to the Waypoint server.
+// TODO(izaak): we should probably have something like this here instead of in base.
+//func New(ctx context.Context, connectOpts ...serverclient.ConnectOption) (pb.WaypointClient, error) {
+//
+//}
+
+// TODO(izaak): this shouldn't be on a project
+// initServerConnection will initialize a gRPC connection to the Waypoint server.
 // This is called if a client wasn't explicitly given with WithClient.
 //
 // If a connection is successfully established, this will register connection
@@ -33,9 +41,11 @@ import (
 //   2. If WithLocal was specified and no connection addresses can be
 //      found, this will spin up an in-memory server.
 //
-func (c *Project) initServerClient(ctx context.Context, cfg *config) (*grpc.ClientConn, error) {
+func (c *Project) initServerConnection(ctx context.Context, cfg *config) (*grpc.ClientConn, error) {
 	log := c.logger.Named("server")
 
+	// TODO(izaak): pretty sure this is conflating "run the op locally, i.e. remote=false", and
+	// "no remote server exists".
 	// If we're local, then connection is optional.
 	opts := cfg.connectOpts
 	if c.local {
@@ -71,6 +81,8 @@ func (c *Project) initServerClient(ctx context.Context, cfg *config) (*grpc.Clie
 //
 // If this returns an error, all resources associated with this operation
 // will be closed, but the project can retry.
+
+// TODO(izaak): this shouldn't live on a project
 func (c *Project) initLocalServer(ctx context.Context) (*grpc.ClientConn, error) {
 	log := c.logger.Named("server")
 	c.localServer = true
@@ -170,15 +182,15 @@ func (c *Project) initLocalServer(ctx context.Context) (*grpc.ClientConn, error)
 	return conn, nil
 }
 
+// TODO(izaak): this shouldn't be on a project
 // negotiateApiVersion negotiates the API version to use and validates
 // that we are compatible to talk to the server.
-func (c *Project) negotiateApiVersion(ctx context.Context) error {
-	log := c.logger
+func NegotiateApiVersion(ctx context.Context, client pb.WaypointClient, log hclog.Logger) (*pb.VersionInfo, error) {
 
 	log.Trace("requesting version info from server")
-	resp, err := c.client.GetVersionInfo(ctx, &empty.Empty{})
+	resp, err := client.GetVersionInfo(ctx, &empty.Empty{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	log.Info("server version info",
@@ -189,14 +201,11 @@ func (c *Project) negotiateApiVersion(ctx context.Context) error {
 		"entrypoint_current", resp.Info.Entrypoint.Current,
 	)
 
-	// Store the server version info
-	c.serverVersion = resp.Info
-
 	vsn, err := protocolversion.Negotiate(protocolversion.Current().Api, resp.Info.Api)
 	if err != nil {
-		return err
+		return resp.Info, err
 	}
 
 	log.Info("negotiated api version", "version", vsn)
-	return nil
+	return resp.Info, nil
 }

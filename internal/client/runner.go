@@ -4,6 +4,8 @@ import (
 	"github.com/hashicorp/waypoint/internal/runner"
 )
 
+// TODO(izaak): delete.
+
 // startRunner initializes and starts a local runner. If the returned
 // runner is non-nil, you must call Close on it to clean up resources properly.
 func (c *Project) startRunner() (*runner.Runner, error) {

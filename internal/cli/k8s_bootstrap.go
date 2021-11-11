@@ -123,7 +123,7 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 	// service came up quicker than Waypoint itself. A more robust check would
 	// be checking the pods for readiness.
 	log.Info("initializing server connection")
-	proj, err := c.initClient(ctx, serverclient.Timeout(120*time.Second))
+	proj, err := c.initProjectClient(ctx, serverclient.Timeout(120*time.Second))
 	if err != nil {
 		c.ui.Output(
 			"Error reconnecting with token: %s",
@@ -167,7 +167,7 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 
 	// Reconnect
 	log.Info("reconnecting to the server with the bootstrap token")
-	proj, err = c.initClient(ctx)
+	proj, err = c.initProjectClient(ctx)
 	if err != nil {
 		c.ui.Output(
 			"Error reconnecting with token: %s",

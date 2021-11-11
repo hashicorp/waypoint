@@ -27,7 +27,7 @@ func TestProject(t testing.T, opts ...Option) *Project {
 	ctx := context.Background()
 
 	// Initialize our client
-	result, err := New(ctx, append([]Option{
+	result, err := NewProjectClient(ctx, append([]Option{
 		WithClient(client),
 		WithLocal(),
 		WithProjectRef(&pb.Ref_Project{Project: "test_p"}),

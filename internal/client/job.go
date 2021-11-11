@@ -15,7 +15,7 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// job returns the basic job skeleton prepoulated with the correct
+// job returns the basic job skeleton pre-populated with the correct
 // defaults based on how the client is configured. For example, for local
 // operations, this will already have the targeting for the local runner.
 func (c *Project) job() *pb.Job {
@@ -27,26 +27,36 @@ func (c *Project) job() *pb.Job {
 		Application: &pb.Ref_Application{
 			Project: c.project.Project,
 		},
-
-		DataSource: &pb.Job_DataSource{
-			Source: &pb.Job_DataSource_Local{
-				Local: &pb.Job_Local{},
-			},
-		},
 		DataSourceOverrides: c.dataSourceOverrides,
 
 		Operation: &pb.Job_Noop_{
 			Noop: &pb.Job_Noop{},
 		},
-	}
-
-	// If we're not local, we set a nil data source so it defaults to
-	// wahtever the project has remotely.
-	if !c.local {
-		job.DataSource = nil
+		ExecutionLocation: pb.Job_remote,
 	}
 
 	return job
+}
+
+// Updates a job spec to run locally. Mutates the job to add a runner ref and local data source.
+func runJobLocally(job *pb.Job, localRunnerId string) {
+	job.TargetRunner = &pb.Ref_Runner{
+		Target: &pb.Ref_Runner_Id{
+			Id: &pb.Ref_RunnerId{
+				Id: localRunnerId,
+			},
+		},
+	}
+
+	job.DataSource = &pb.Job_DataSource{
+		Source: &pb.Job_DataSource_Local{
+			Local: &pb.Job_Local{},
+		},
+	}
+
+	job.ExecutionLocation = pb.Job_local
+
+	return
 }
 
 // doJob will queue and execute the job. If the client is configured for
@@ -60,24 +70,10 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 // The receiver must be careful to not block sending to mon as it will block
 // the job state processing loop.
 func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.UI, monCh chan pb.Job_State) (*pb.Job_Result, error) {
-	// Be sure that the monitor is closed so the reciever knows for sure the job isn't going
+	// Be sure that the monitor is closed so the receiver knows for sure the job isn't going
 	// anymore.
 	if monCh != nil {
 		defer close(monCh)
-	}
-
-	// In local mode we have to start a runner.
-	if c.local {
-		// Modify the job to target this runner and use the local data source.
-		// The runner will have been started when we created the Project value and be
-		// used for all local jobs.
-		job.TargetRunner = &pb.Ref_Runner{
-			Target: &pb.Ref_Runner_Id{
-				Id: &pb.Ref_RunnerId{
-					Id: c.activeRunner.Id(),
-				},
-			},
-		}
 	}
 
 	return c.queueAndStreamJob(ctx, job, ui, monCh)
@@ -97,7 +93,7 @@ func (c *Project) queueAndStreamJob(
 	// cancel in the event of an error. This will ensure that the jobs don't
 	// remain queued forever. This is only for local ops.
 	expiration := ""
-	if c.local {
+	if job.ExecutionLocation == pb.Job_local {
 		expiration = "30s"
 	}
 
@@ -151,7 +147,7 @@ func (c *Project) queueAndStreamJob(
 		steps = map[int32]*stepData{}
 	)
 
-	if c.local {
+	if job.ExecutionLocation == pb.Job_local {
 		defer func() {
 			// If we completed then do nothing, or if the context is still
 			// active since this means that we're not cancelled.
@@ -207,7 +203,7 @@ func (c *Project) queueAndStreamJob(
 
 		case *pb.GetJobStreamResponse_Terminal_:
 			// Ignore this for local jobs since we're using our UI directly.
-			if c.local {
+			if job.ExecutionLocation == pb.Job_local {
 				continue
 			}
 
@@ -362,6 +358,6 @@ func (c *Project) queueAndStreamJob(
 
 // The time here is meant to encompass the typical case for an operation to begin.
 // With the introduction of ondemand runners, we bumped it up from 1500 to 3000
-// to accomidate the additional time before the job was picked up when testing in
+// to accommodate the additional time before the job was picked up when testing in
 // local Docker.
 const stateEventPause = 3000 * time.Millisecond

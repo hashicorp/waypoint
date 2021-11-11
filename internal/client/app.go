@@ -13,6 +13,10 @@ type App struct {
 
 	project     *Project
 	application *pb.Ref_Application
+
+	// If the app runs a job, it should build off this starting template
+	// It has things like the locality pre-filled.
+	jobTemplate *pb.Job
 }
 
 // App returns the app-specific operations client.

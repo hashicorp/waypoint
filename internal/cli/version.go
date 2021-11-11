@@ -38,7 +38,7 @@ func (c *VersionCommand) Run(args []string) int {
 	// Get our server version. We use a short context here.
 	ctx, cancel := context.WithTimeout(c.Ctx, 2*time.Second)
 	defer cancel()
-	client, err := c.initClient(ctx)
+	client, err := c.initProjectClient(ctx)
 	if err != nil && !errors.Is(err, serverclient.ErrNoServerConfig) {
 		c.ui.Output("Error connecting to server to read server version: %s", err.Error())
 	}
