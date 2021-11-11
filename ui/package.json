@@ -22,7 +22,8 @@
     "start": "ember serve",
     "test": "npm-run-all lint test:*",
     "test:ember": "ember test",
-    "test:ember:percy": "percy exec ember test"
+    "test:ember:percy": "percy exec ember test",
+    "test:ember:percy:ci": "percy exec ember test --path=dist"
   },
   "devDependencies": {
     "@ember-decorators/component": "^6.1.1",
