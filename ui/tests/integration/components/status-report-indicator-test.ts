@@ -3,7 +3,6 @@ import { setupRenderingTest } from 'ember-qunit';
 import { render, focus } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import { getUnixTime, subDays } from 'date-fns';
-import { a11yAudit } from 'ember-a11y-testing/test-support';
 
 module('Integration | Component | status-report-indicator', function (hooks) {
   setupRenderingTest(hooks);
@@ -26,7 +25,6 @@ module('Integration | Component | status-report-indicator', function (hooks) {
       <StatusReportIndicator @statusReport={{this.statusReport}} />
     `);
     await focus('[data-test-status-report-indicator]');
-    await a11yAudit();
 
     assert.dom('[data-test-status-report-indicator]').hasClass('status-report-indicator--alive');
     assert.dom('[data-test-status-report-indicator]').includesText('Starting…');
@@ -49,7 +47,6 @@ module('Integration | Component | status-report-indicator', function (hooks) {
       <StatusReportIndicator @statusReport={{this.statusReport}} />
     `);
     await focus('[data-test-status-report-indicator]');
-    await a11yAudit();
 
     assert.dom('[data-test-status-report-indicator]').hasClass('status-report-indicator--unknown');
     assert.dom('[data-test-status-report-indicator]').includesText('Unknown');
@@ -71,7 +68,6 @@ module('Integration | Component | status-report-indicator', function (hooks) {
       <StatusReportIndicator @statusReport={{this.statusReport}} />
     `);
     await focus('[data-test-status-report-indicator]');
-    await a11yAudit();
 
     assert.dom('.ember-tooltip').doesNotIncludeText('Last checked');
   });
