@@ -1,0 +1,51 @@
+{{#if this.shouldExist}}
+  <div
+    data-test-workspace-switcher
+    class="workspace-switcher"
+    ...attributes
+  >
+    <Pds::Dropdown @isOpen={{@isOpen}} as |D|>
+      <D.Trigger>
+        {{@current}}
+      </D.Trigger>
+
+      <D.Dialog
+        data-test-workspace-switcher-dialog
+        class="workspace-switcher__dialog"
+      >
+        {{#if this.loadWorkspaces.last.value.error}}
+          <section>
+            <D.ListItem>
+              <div
+                data-test-workspace-switcher-error-state
+                class="workspace-switcher__error-state"
+              >
+                <Pds::Icon @type="alert-triangle" />
+                {{t "workspace-switcher.error"}}
+                ({{this.loadWorkspaces.last.value.error.message}})
+              </div>
+            </D.ListItem>
+          </section>
+        {{else}}
+          {{#each this.loadWorkspaces.last.value.workspaces as |workspace|}}
+            <section>
+              <LinkTo
+                @route={{@route}}
+                @models={{array-concat workspace.name @models}}
+                aria-current={{if (eq workspace.name @current) "page" false}}
+                {{on "click" D.close}}
+              >
+                <span class="workspace-switcher__link-contents">
+                  {{#if (eq workspace.name @current)}}
+                    <Pds::Icon @type="check-plain" />
+                  {{/if}}
+                  {{workspace.name}}
+                </span>
+              </LinkTo>
+            </section>
+          {{/each}}
+        {{/if}}
+      </D.Dialog>
+    </Pds::Dropdown>
+  </div>
+{{/if}}

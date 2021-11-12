@@ -33,6 +33,8 @@ export default Factory.extend({
     afterCreate(project, server) {
       let application = server.create('application', 'with-random-name', { project });
 
+      let prodWorkspace = server.create('workspace', { name: 'production' });
+
       server.create('config-variable', 'random', { project, name: 'test' });
 
       let builds = [
@@ -40,6 +42,14 @@ export default Factory.extend({
         server.create('build', 'random', 'minutes-old-success', { sequence: 3, application }),
         server.create('build', 'random', 'hours-old-success', { sequence: 2, application }),
         server.create('build', 'random', 'days-old-success', { sequence: 1, application }),
+      ];
+
+      let prodBuilds = [
+        server.create('build', 'random', 'seconds-old-success', {
+          sequence: 5,
+          application,
+          workspace: prodWorkspace,
+        }),
       ];
 
       let deployments = [
@@ -68,6 +78,16 @@ export default Factory.extend({
           application,
           build: builds[3],
           statusReport: server.create('status-report', 'down', 'with-deployment-resources', { application }),
+        }),
+      ];
+
+      let prodDeployments = [
+        server.create('deployment', 'random', 'seconds-old-success', {
+          sequence: 5,
+          application,
+          workspace: prodWorkspace,
+          build: prodBuilds[0],
+          statusReport: server.create('status-report', 'alive', 'with-deployment-resources', { application }),
         }),
       ];
 

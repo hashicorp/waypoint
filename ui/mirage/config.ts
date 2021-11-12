@@ -11,6 +11,7 @@ import * as release from './services/release';
 import * as statusReport from './services/status-report';
 import * as token from './services/token';
 import * as versionInfo from './services/version-info';
+import * as workspace from './services/workspace';
 
 import Ember from 'ember';
 import { Server } from 'miragejs';
@@ -59,6 +60,7 @@ export default function (this: Server): void {
   this.post('/GetConfig', config.get);
   this.post('/SetConfig', config.set);
   this.post('/ListOIDCAuthMethods', OIDCAuthMethods.list);
+  this.post('/ListWorkspaces', workspace.list);
 
   if (!Ember.testing) {
     // Pass through all other requests

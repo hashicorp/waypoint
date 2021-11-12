@@ -17,6 +17,8 @@ product:
   name: 'Waypoint'
 
 page:
+  app:
+    switching-workspace: Loading…
   artifact:
     overview:
       image: 'Image'
@@ -255,3 +257,6 @@ section:
 
 image-ref:
   copy-button-title: Copy full digest
+
+workspace-switcher:
+  error: Failed to load workspaces

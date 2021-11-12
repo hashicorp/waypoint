@@ -1,0 +1,44 @@
+.workspace-switcher__dialog {
+  margin-top: scale.$sm--2;
+  width: auto;
+  min-width: 100%;
+  white-space: nowrap;
+  // Pds::DropDown does not support dark mode yet, so these rules just about
+  // keep it legible.
+  --pds-color: black;
+  --spinner-stroke: 0, 0, 0;
+}
+
+.workspace-switcher__link-contents {
+  display: flex;
+  position: relative;
+  padding-left: scale.$lg--2;
+
+  .pds-icon {
+    position: absolute;
+    top: -2px;
+    left: -4px;
+    font-size: scale.$lg--1;
+    color: rgb(var(--link));
+  }
+}
+
+.workspace-switcher__error-state {
+  display: flex;
+  align-items: center;
+  position: relative;
+  font-weight: 500;
+  line-height: var(--pds-lineHeight--dense);
+  padding-left: scale.$lg--2;
+
+  .pds-icon {
+    position: absolute;
+    font-size: scale.$lg--1;
+    left: -4px;
+    top: -2px;
+  }
+}
+
+.workspace-switcher__error-state .pds-icon {
+  color: rgb(var(--error-text));
+}

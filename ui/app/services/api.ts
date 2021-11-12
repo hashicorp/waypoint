@@ -7,6 +7,7 @@ import {
   ListBuildsRequest,
   ListBuildsResponse,
   ListPushedArtifactsRequest,
+  ListWorkspacesRequest,
   OperationOrder,
   Project,
   PushedArtifact,
@@ -17,6 +18,7 @@ import {
   UI,
   UpsertProjectRequest,
   Variable,
+  Workspace,
 } from 'waypoint-pb';
 import { Metadata, Request, UnaryInterceptor, UnaryResponse } from 'grpc-web';
 
@@ -339,6 +341,18 @@ export default class ApiService extends Service {
     let resp = await this.client.upsertProject(req, this.WithMeta());
     let respProject = resp.toObject().project;
     return respProject;
+  }
+
+  async listWorkspaces(projectRef?: Ref.Project): Promise<Workspace.AsObject[]> {
+    let req = new ListWorkspacesRequest();
+
+    if (projectRef) {
+      req.setProject(projectRef);
+    }
+
+    let resp = await this.client.listWorkspaces(req, this.WithMeta());
+
+    return resp.toObject().workspacesList;
   }
 }
 
