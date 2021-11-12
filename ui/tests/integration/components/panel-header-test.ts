@@ -7,10 +7,9 @@ module('Integration | Component | panel-header', function (hooks) {
   setupRenderingTest(hooks);
 
   test('it renders an empty component when params not passed', async function (assert) {
-    await render(hbs`<PanelHeader/>`);
+    await render(hbs`<PanelHeader @artifact="build" />`);
 
-    assert.dom('[data-test-panel-header]').exists();
-    assert.equal(this.element?.textContent?.trim(), '');
+    assert.dom('[data-test-panel-header]').containsText('Build');
   });
 
   test('it renders an empty component when params passed', async function (assert) {
