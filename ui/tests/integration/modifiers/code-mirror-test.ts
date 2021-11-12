@@ -12,9 +12,15 @@ module('Integration | Modifier | code-mirror', function (hooks) {
     this.set('onInput', () => null);
 
     await render(
-      hbs`<div
-      {{code-mirror value=this.value onInput=this.onInput}}
-    />`
+      hbs`
+      <div
+        {{code-mirror
+          value=this.value
+          onInput=this.onInput
+          options=(hash screenReaderLabel="test")
+        }}
+      />
+    `
     );
 
     assert.dom('.CodeMirror').exists();
@@ -27,7 +33,11 @@ module('Integration | Modifier | code-mirror', function (hooks) {
 
     await render(hbs`
       <div
-        {{code-mirror value=this.value onInput=this.onInput}}
+        {{code-mirror
+          value=this.value
+          onInput=this.onInput
+          options=(hash screenReaderLabel="test")
+        }}
       />
     `);
     assert.dom('.CodeMirror').exists();
@@ -38,9 +48,18 @@ module('Integration | Modifier | code-mirror', function (hooks) {
     this.set('onInput', (value: string) => this.set('value', value));
     this.set('options', {
       lineNumbers: false,
+      screenReaderLabel: 'test',
     }); // otherwise the #s appear when comparing text
 
-    await render(hbs`<div {{code-mirror value=this.value onInput=this.onInput options=this.options}}/>`);
+    await render(hbs`
+      <div
+        {{code-mirror
+          value=this.value
+          onInput=this.onInput
+          options=this.options
+        }}
+      />
+    `);
 
     let textArea = this.element.querySelector('textarea') as HTMLElement;
     // if set as value on initial render, it won't get deleted on the second fillIn call
@@ -64,14 +83,33 @@ module('Integration | Modifier | code-mirror', function (hooks) {
     this.set('options', {
       lineNumbers: false,
       theme: 'default',
+      screenReaderLabel: 'test',
     });
 
-    await render(hbs`<div {{code-mirror value=this.value onInput=this.onInput}}/>`); // without options
+    await render(hbs`
+      <div
+        {{code-mirror
+          value=this.value
+          onInput=this.onInput
+          options=(hash
+            screenReaderLabel="test"
+          )
+        }}
+      />
+    `); // without options
     // default options
     assert.dom('.cm-s-monokai').exists();
     assert.dom('.CodeMirror-code').containsText('1');
 
-    await render(hbs`<div {{code-mirror value=this.value onInput=this.onInput options=this.options}}/>`); // with options
+    await render(hbs`
+      <div
+        {{code-mirror
+          value=this.value
+          onInput=this.onInput
+          options=this.options
+        }}
+      />
+    `); // with options
     // codemirror's real default theme should be set and linenumbers gone
     assert.dom('.cm-s-monokai').doesNotExist();
     assert.dom('.CodeMirror-code').doesNotContainText('1');
