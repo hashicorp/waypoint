@@ -59,3 +59,20 @@ func (s *service) ListWorkspaces(
 
 	return &pb.ListWorkspacesResponse{Workspaces: result}, nil
 }
+
+func (s *service) UpsertWorkspace(
+	ctx context.Context,
+	req *pb.UpsertWorkspaceRequest,
+) (*pb.UpsertWorkspaceResponse, error) {
+	// if err := ptypes.ValidateGetWorkspaceRequest(req); err != nil {
+	// 	return nil, err
+	// }
+
+	// result, err := s.state.WorkspaceGet(req.Workspace.Workspace)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// return &pb.UpsertWorkspaceResponse{Workspace: nil}, nil
+	return nil, nil
+}

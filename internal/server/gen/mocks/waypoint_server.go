@@ -1651,6 +1651,29 @@ func (_m *WaypointServer) UpsertStatusReport(_a0 context.Context, _a1 *gen.Upser
 	return r0, r1
 }
 
+// UpsertWorkspace provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UpsertWorkspace(_a0 context.Context, _a1 *gen.UpsertWorkspaceRequest) (*gen.UpsertWorkspaceResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UpsertWorkspaceResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertWorkspaceRequest) *gen.UpsertWorkspaceResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertWorkspaceResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertWorkspaceRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ValidateJob provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) ValidateJob(_a0 context.Context, _a1 *gen.ValidateJobRequest) (*gen.ValidateJobResponse, error) {
 	ret := _m.Called(_a0, _a1)
