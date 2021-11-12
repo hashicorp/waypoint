@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -43,16 +44,18 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
+		name := "AbCdE"
+
 		// Set
 		err := s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
-			Name: "AbCdE",
+			Name: name,
 		}))
 		require.NoError(err)
 
 		// Get exact
 		{
 			resp, err := s.ProjectGet(&pb.Ref_Project{
-				Project: "AbCdE",
+				Project: name,
 			})
 			require.NoError(err)
 			require.NotNil(resp)
@@ -61,17 +64,25 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 		// Get case insensitive
 		{
 			resp, err := s.ProjectGet(&pb.Ref_Project{
-				Project: "abcDe",
+				Project: strings.ToLower(name),
 			})
-			require.NoError(err)
+			require.NoError(err, "unable to use case insensitive name for: %s", name)
 			require.NotNil(resp)
 		}
+
+		// Create another one so we're sure that List can see more than one.
+
+		// Set
+		err = s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: name + "2",
+		}))
+		require.NoError(err)
 
 		// List
 		{
 			resp, err := s.ProjectList()
 			require.NoError(err)
-			require.Len(resp, 1)
+			require.Len(resp, 2)
 		}
 	})
 
