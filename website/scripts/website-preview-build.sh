@@ -1,6 +1,9 @@
 # Delete cached .next, if present
 # TODO: would be nice to leverage caching,
 # TODO: deleted for now as it makes debugging harder
+echo "Files before .next cache delete:"
+ls -a
+echo "Deleting .next cache..."
 rm -rf .next
 # Clone the dev-portal repo in ./website-preview
 git config --global credential.helper store
