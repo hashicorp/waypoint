@@ -1,0 +1,7 @@
+```release-note:improvement
+serverinstall/ecs: Add permissions to the ECS runner IAM policy to allow the removal of security groups and de-registration of task
+```
+
+```release-note:improvement
+plugin/ecs: Implement the destruction of AWS resources created when deploying a workspace
+```
