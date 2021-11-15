@@ -37,7 +37,11 @@ const (
 	executionRolePolicyArn        = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 	awsCreateRetries              = 30
 	awsCreateRetryIntervalSeconds = 2
-	defaultServicePort            = 3000
+
+	// Five minutes of retrying for destroy - destroys are slower than creates in aws.
+	awsDestroyRetries              = 60
+	awsDestroyRetryIntervalSeconds = 5
+	defaultServicePort             = 3000
 )
 
 type Platform struct {
@@ -120,6 +124,11 @@ func (p *Platform) ValidateAuthFunc() interface{} {
 	return p.ValidateAuth
 }
 
+// DestroyWorkspaceFunc implements component.WorkspaceDestroyer
+func (p *Platform) DestroyWorkspaceFunc() interface{} {
+	return p.DestroyWorkspace
+}
+
 // AuthFunc implements component.Authenticator
 func (p *Platform) AuthFunc() interface{} {
 	return p.Auth
@@ -153,7 +162,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithPlatform(platformName),
 			resource.WithState(&Resource_Cluster{}),
 			resource.WithCreate(p.resourceClusterCreate),
-			// TODO: implement destroy when we have better support for app-scoped resources
+			// TODO: implement destroy when we have better support for globally-scoped resources
 			resource.WithStatus(p.resourceClusterStatus),
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_OTHER),
 		)),
@@ -183,7 +192,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithType("security groups"),
 			resource.WithState(&Resource_InternalSecurityGroups{}),
 			resource.WithCreate(p.resourceInternalSecurityGroupsCreate),
-			// TODO: implement destroy when we have better support for app-scoped resources
+			// NOTE(izaak/nic): these are destroyed by resourceSecurityGroupsDestroy, registered under external security groups
 			// TODO: implement status when we have a plan to not hit rate limits
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_POLICY),
 		)),
@@ -193,7 +202,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithType("security groups"),
 			resource.WithState(&Resource_ExternalSecurityGroups{}),
 			resource.WithCreate(p.resourceExternalSecurityGroupsCreate),
-			// TODO: implement destroy when we have better support for app-scoped resources
+			resource.WithDestroy(p.resourceSecurityGroupsDestroy),
 			// TODO: implement status when we have a plan to not hit rate limits
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_POLICY),
 		)),
@@ -240,7 +249,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithPlatform(platformName),
 			resource.WithState(&Resource_Alb{}),
 			resource.WithCreate(p.resourceAlbCreate),
-			// TODO: implement destroy when we have better support for app-scoped resources
+			resource.WithDestroy(p.resourceAlbDestroy),
 			// TODO: implement status when we have a plan to not hit rate limits
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_ROUTER),
 		)),
@@ -267,7 +276,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithPlatform(platformName),
 			resource.WithState(&Resource_TaskDefinition{}),
 			resource.WithCreate(p.resourceTaskDefinitionCreate),
-			// TODO: implement destroy when we have better support for app-scoped resources.
+			resource.WithDestroy(p.resourceTaskDefinitionDestroy),
 			// TODO: implement status when we have a plan to not hit rate limits
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
 		)),
@@ -283,8 +292,16 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 	)
 }
 
+// Below are custom types for various parameters used throughout resource creation.
+// They exist as custom types so that argmapper can recognize and wire them
+// into the appropriate resource lifecycle functions.
+
 // DeploymentId is a unique ID to be consistently used throughout our deployment
 type DeploymentId string
+
+// WorkspaceDestroy marks that we're destroying the entire workspace (not just the deployment), and
+// we should destroy global resources too
+type WorkspaceDestroy bool
 
 // ExternalIngressPort is the port that the ALB will listen for traffic on
 type ExternalIngressPort int64
@@ -455,10 +472,53 @@ func (p *Platform) Destroy(
 		}
 	}
 
-	// Destroy
-	err := rm.DestroyAll(ctx, log, sg, ui)
+	// Destroy app-scoped resources
+	// Note: This calls the destroy func for all resources, but resource destroy funcs will use the WorkspaceDestroy
+	// param to only actually destroy if they are deployment scoped.
+	err := rm.DestroyAll(ctx, log, sg, ui, WorkspaceDestroy(false))
 	if err != nil {
 		return status.Errorf(status.Convert(err).Code(), "failed to destroy all resources for deployment: %s", err)
+	}
+
+	s.Update("Finished destroying ECS deployment")
+	s.Done()
+	return nil
+}
+
+func (p *Platform) DestroyWorkspace(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	app *component.Source,
+	ui terminal.UI,
+) error {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Destroying ecs workspace...")
+	defer s.Abort()
+
+	rm := p.resourceManager(log, nil)
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if deployment.ResourceState == nil {
+		if err := p.loadResourceManagerState(ctx, rm, deployment, log, sg); err != nil {
+			return status.Errorf(codes.Internal, "failed recovering old state into resource manager: %s", err)
+		}
+	} else {
+		// Load our set state
+		if err := rm.LoadState(deployment.ResourceState); err != nil {
+			return status.Errorf(codes.Internal, "failed loading state into resource manager: %s", err)
+		}
+	}
+
+	// Destroy
+	// Note: This calls the destroy func for all resources, but resource destroy funcs will use the WorkspaceDestroy
+	// param to only actually destroy if they are workspace scoped.
+	err := rm.DestroyAll(ctx, log, sg, ui, WorkspaceDestroy(true))
+	if err != nil {
+		return status.Errorf(status.Convert(err).Code(), "failed to destroy all resources for workspace: %s", err)
 	}
 
 	s.Update("Finished destroying ECS deployment")
@@ -881,7 +941,13 @@ func (p *Platform) resourceServiceDestroy(
 	sess *session.Session,
 	log hclog.Logger,
 	state *Resource_Service,
+	workspaceDestroy WorkspaceDestroy,
 ) error {
+	if workspaceDestroy {
+		// Services are destroyed when a deployment is destroyed, not a whole workspace.
+		return nil
+	}
+
 	log.Debug("deleting ecs service", "arn", state.Arn)
 	if state.Arn == "" {
 		log.Debug("Missing ECS Service ARN - it must not have been created successfully. Skipping delete.")
@@ -902,7 +968,7 @@ func (p *Platform) resourceServiceDestroy(
 			s.Done()
 			return nil
 		}
-		return status.Errorf(codes.Internal, "failed to delete ECS cluster %s (ARN: %q): %s", state.Name, state.Arn, err)
+		return status.Errorf(codes.Internal, "failed to delete ECS service %s (ARN: %q): %s", state.Name, state.Arn, err)
 	}
 
 	s.Update("Deleted service %s", state.Name)
@@ -1066,7 +1132,12 @@ func (p *Platform) resourceAlbListenerDestroy(
 	sess *session.Session,
 	log hclog.Logger,
 	state *Resource_Alb_Listener,
+	workspaceDestroy WorkspaceDestroy,
 ) error {
+	if workspaceDestroy {
+		// alb listeners are destroyed when a deployment is destroyed, not a workspace
+		return nil
+	}
 	if !state.Managed {
 		log.Debug("Skipping destroy of unmanaged ALB listener with ARN %q", state.Arn)
 		return nil
@@ -1089,7 +1160,6 @@ func (p *Platform) resourceAlbListenerDestroy(
 		// There doesn't seem to be an aws error to cast to for this code.
 		if strings.Contains(err.Error(), "ListenerNotFound") {
 			s.Update("Listener does not exist and must have been destroyed (ARN %q).", state.Arn)
-			s.Status(terminal.StatusWarn)
 			s.Done()
 			return nil
 		}
@@ -1099,7 +1169,6 @@ func (p *Platform) resourceAlbListenerDestroy(
 	if len(listeners.Listeners) == 0 {
 		// Could happen if listener was deleted out-of-band
 		s.Update("ALB listener does not exist - not deleting (ARN: %q)", state.Arn)
-		s.Status(terminal.StatusWarn)
 		s.Done()
 		return nil
 	}
@@ -1178,6 +1247,8 @@ func (p *Platform) resourceTargetGroupCreate(
 	deploymentId DeploymentId,
 	subnets *Resource_AlbSubnets, // Required because we need to know which VPC we're in, and subnets discover it.
 	state *Resource_TargetGroup,
+	securityGroupsInternal *Resource_InternalSecurityGroups,
+	securityGroups *Resource_ExternalSecurityGroups,
 ) error {
 	if p.config.DisableALB {
 		log.Debug("ALB disabled - skipping target group creation")
@@ -1235,9 +1306,14 @@ func (p *Platform) resourceTargetGroupDestroy(
 	sess *session.Session,
 	log hclog.Logger,
 	state *Resource_TargetGroup,
+	workspaceDestroy WorkspaceDestroy,
 ) error {
 	if state.Arn == "" {
 		log.Debug("Missing target group ARN - it must not have been created successfully. Skipping delete.")
+		return nil
+	}
+	if workspaceDestroy {
+		// The target group is destroyed when a deployment is destroyed, not a whole workspace.
 		return nil
 	}
 
@@ -1484,12 +1560,46 @@ OUTER:
 	return nil
 }
 
+func (p *Platform) resourceTaskDefinitionDestroy(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	log hclog.Logger,
+	sess *session.Session,
+	state *Resource_TaskDefinition,
+	taskRole *Resource_TaskRole,
+	workspaceDestroy WorkspaceDestroy,
+) error {
+	if !workspaceDestroy {
+		// Do not destroy app-scoped resource unless the whole workspace is being destroyed
+		return nil
+	}
+
+	ecsSvc := ecs.New(sess)
+
+	if taskRole != nil && taskRole.Arn != "" {
+		return nil // user specified Task definition
+	}
+
+	s := sg.Add("Deleting ecs task definition")
+
+	taskDefInput := ecs.DeregisterTaskDefinitionInput{TaskDefinition: &state.Arn}
+	_, err := ecsSvc.DeregisterTaskDefinition(&taskDefInput)
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to delete ecs task definition: %s", err)
+	}
+
+	s.Update("Deleted ECS task definition")
+	s.Done()
+	return nil
+}
+
 func (p *Platform) resourceAlbCreate(
 	ctx context.Context,
 	sg terminal.StepGroup,
 	sess *session.Session,
 	log hclog.Logger,
 	src *component.Source,
+	securityGroupsInternal *Resource_InternalSecurityGroups,
 	securityGroups *Resource_ExternalSecurityGroups,
 	subnets *Resource_AlbSubnets, // Required because we need to know which VPC we're in, and subnets discover it.
 	state *Resource_Alb,
@@ -1583,6 +1693,42 @@ func (p *Platform) resourceAlbCreate(
 	state.CanonicalHostedZoneId = *lb.CanonicalHostedZoneId
 
 	s.Update("Using Application Load Balancer %q", state.Name)
+	s.Done()
+	return nil
+}
+
+func (p *Platform) resourceAlbDestroy(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	sess *session.Session,
+	log hclog.Logger,
+	state *Resource_Alb,
+	workspaceDestroy WorkspaceDestroy,
+) error {
+	if !workspaceDestroy {
+		// Do not destroy app-scoped resource unless the whole workspace is being destroyed
+		return nil
+	}
+
+	if p.config.DisableALB {
+		log.Debug("ALB disabled - skipping target group creation")
+		return nil
+	}
+
+	s := sg.Add("Initializing ALB deletion")
+	defer s.Abort()
+
+	s.Update("Deleting ALB %s", state.DnsName)
+
+	elbsrv := elbv2.New(sess)
+	input := elbv2.DeleteLoadBalancerInput{LoadBalancerArn: &state.Arn}
+
+	_, err := elbsrv.DeleteLoadBalancer(&input)
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to remove ALB %s: %s", state.DnsName, err)
+	}
+
+	s.Update("Deleted ALB %s", state.Arn)
 	s.Done()
 	return nil
 }
@@ -1822,6 +1968,45 @@ func (p *Platform) resourceExternalSecurityGroupsCreate(
 	return nil
 }
 
+func (p *Platform) resourceSecurityGroupsDestroy(
+	ctx context.Context,
+	sg terminal.StepGroup,
+	sess *session.Session,
+	log hclog.Logger,
+	externalState *Resource_ExternalSecurityGroups,
+	internalState *Resource_InternalSecurityGroups,
+	workspaceDestroy WorkspaceDestroy,
+) error {
+	if !workspaceDestroy {
+		// Do not destroy app-scoped resource unless the whole workspace is being destroyed
+		return nil
+	}
+
+	ids := []string{}
+
+	// only delete the managed security groups
+	// internal groups have a dependency on the external groups
+	// so we must delete these first
+	for _, sg := range internalState.SecurityGroups {
+		if sg.Managed {
+			ids = append(ids, sg.Id)
+		}
+	}
+
+	for _, sg := range externalState.SecurityGroups {
+		if sg.Managed {
+			ids = append(ids, sg.Id)
+		}
+	}
+
+	err := deleteSecurityGroups(ctx, sess, sg, log, ids)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (p *Platform) resourceInternalSecurityGroupsCreate(
 	ctx context.Context,
 	sg terminal.StepGroup,
@@ -1935,6 +2120,71 @@ func upsertSecurityGroup(
 	}
 
 	return sg, nil
+}
+
+func deleteSecurityGroups(
+	ctx context.Context,
+	sess *session.Session,
+	sg terminal.StepGroup,
+	log hclog.Logger,
+	ids []string,
+) error {
+	ec2srv := ec2.New(sess)
+
+	for _, id := range ids {
+		req := ec2.DeleteSecurityGroupInput{GroupId: &id}
+
+		// retry until context cancelled as AWS resource deletion is eventually consistent, we need to
+		// wait for resources that have been linked to this security group to be removed.
+		var returnErr error
+		s := sg.Add("Attempting to delete security group %s", id)
+
+		for i := 0; i <= awsDestroyRetries; i++ {
+			if err := ctx.Err(); err != nil {
+				return returnErr
+			}
+
+			s.Update("Attempting to delete security group %s", id)
+			_, err := ec2srv.DeleteSecurityGroup(&req)
+
+			if err == nil {
+				s.Update("Deleted security group %s", id)
+				returnErr = nil
+				break
+			}
+
+			aerr, isAwsErr := err.(awserr.Error)
+			if isAwsErr && aerr.Code() == "DependencyViolation" {
+				// Expected case - it takes AWS a while to get around to actually removing the ENI.
+				s.Update("Security group %s still has a dependency - waiting for it to be deleted.\nWill retry in %d seconds (up to %d more times)", id, awsDestroyRetryIntervalSeconds, awsDestroyRetries-i)
+
+				// otherwise sleep and try again
+				time.Sleep(awsDestroyRetryIntervalSeconds * time.Second)
+
+				returnErr = err // If we time out after hitting this case, return the error
+				continue
+			} else if isAwsErr && aerr.Code() == "InvalidGroup.NotFound" {
+				// Will happen if the security group has been deleted out of band
+				s.Update("Security group %s does not exist", id)
+				returnErr = nil
+				break
+			} else {
+				// Some unexpected error
+				s.Update("unable to delete security group id %s: %s", id, err)
+				returnErr = status.Errorf(codes.Internal, "error deleting security group id %s: %s", id, err)
+				break
+			}
+
+		}
+
+		if returnErr != nil {
+			s.Abort()
+			return returnErr
+		}
+		s.Done()
+	}
+
+	return nil
 }
 
 func (p *Platform) resourceLogGroupCreate(
