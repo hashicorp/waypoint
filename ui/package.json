@@ -19,23 +19,12 @@
     "lint:hbs:fix": "ember-template-lint . --fix",
     "lint:js": "eslint . --cache",
     "lint:js:fix": "eslint . --fix",
-    "size": "yarn build && size-limit",
     "start": "ember serve",
     "test": "npm-run-all lint test:*",
     "test:ember": "ember test",
     "test:ember:percy": "percy exec ember test",
     "test:ember:percy:ci": "percy exec ember test --path=dist"
   },
-  "size-limit": [
-    {
-     "path": "dist/assets/waypoint-*.js",
-     "limit": "60 kB"
-    },
-    {
-      "path": "dist/assets/vendor-*.js",
-      "limit": "600 kB"
-    }
-  ],
   "devDependencies": {
     "@ember-decorators/component": "^6.1.1",
     "@ember/optional-features": "^2.0.0",
@@ -47,7 +36,6 @@
     "@hashicorp/structure-icons": "^1.9.0-0",
     "@percy/cli": "^1.0.0-beta.58",
     "@percy/ember": "^3.0.0",
-    "@size-limit/file": "^6.0.3",
     "@types/codemirror": "^5.60.2",
     "@types/ember": "^3.16.0",
     "@types/ember-qunit": "^3.4.9",
@@ -127,7 +115,6 @@
     "qunit": "^2.13.0",
     "qunit-dom": "^1.6.0",
     "sass": "^1.26.10",
-    "size-limit": "^6.0.3",
     "typescript": "^4.4.2",
     "ua-parser-js": "^0.7.24",
     "webpack-bundle-analyzer": "^3.8.0",
