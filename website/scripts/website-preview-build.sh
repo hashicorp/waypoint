@@ -37,4 +37,7 @@ rm -rf ./src/pages/_proxied-dot-io/boundary/api-docs
 npm run build
 # Copy .next build output folder into project root,
 # so that Vercel's NextJS preset picks up on the build output
+echo "Listing files after build..."
+ls -a
+echo "Done."
 cp -R .next/ ../.next
