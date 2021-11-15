@@ -3,7 +3,6 @@ import { setupRenderingTest } from 'ember-qunit';
 import { render, focus } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import { getUnixTime, subDays } from 'date-fns';
-import { a11yAudit } from 'ember-a11y-testing/test-support';
 
 module('Integration | Component | operation-status-indicator', function (hooks) {
   setupRenderingTest(hooks);
@@ -36,7 +35,6 @@ module('Integration | Component | operation-status-indicator', function (hooks) 
     assert.dom('[data-test-icon-type]').hasAttribute('data-test-icon-type', 'logo-docker-color');
     assert.dom('.icon-text-group').containsText('Deployed to Docker');
     await focus('[data-test-operation-status-indicator]');
-    await a11yAudit();
 
     assert.dom('[data-test-operation-status-indicator]').hasClass('timestamp--success');
     assert.dom('[data-test-operation-status-indicator]').includesText('1 day ago');
@@ -63,7 +61,6 @@ module('Integration | Component | operation-status-indicator', function (hooks) 
       <OperationStatusIndicator @operation={{this.build}} @isDetailed={{true}}/>
     `);
     await focus('[data-test-operation-status-indicator]');
-    await a11yAudit();
 
     assert.dom('[data-test-operation-status-indicator]').includesText('2 days ago');
   });
@@ -88,8 +85,6 @@ module('Integration | Component | operation-status-indicator', function (hooks) 
       <OperationStatusIndicator @operation={{this.build}}/>
     `);
     await focus('[data-test-operation-status-indicator]');
-
-    await a11yAudit();
 
     assert.dom('[data-test-tooltip]').doesNotExist();
     assert.dom('[data-test-time-icon]').doesNotExist();

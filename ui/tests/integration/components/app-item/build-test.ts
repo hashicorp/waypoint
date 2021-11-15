@@ -3,7 +3,6 @@ import { setupRenderingTest } from 'ember-qunit';
 import { render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import { getUnixTime, subMinutes } from 'date-fns';
-import { a11yAudit } from 'ember-a11y-testing/test-support';
 import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
 
 module('Integration | Component | app-item/build', function (hooks) {
@@ -39,7 +38,6 @@ module('Integration | Component | app-item/build', function (hooks) {
         <AppItem::Build @build={{this.build}} />
       </ul>
     `);
-    await a11yAudit();
 
     assert.dom('[data-test-app-item-build]').includesText('v3');
     assert.dom('[data-test-icon-type="logo-docker-color"]').exists();
@@ -69,7 +67,6 @@ module('Integration | Component | app-item/build', function (hooks) {
         <AppItem::Build @build={{this.build}} />
       </ul>
     `);
-    await a11yAudit();
 
     assert.dom('[data-test-app-item-build]').includesText('v3');
     assert.dom('[data-test-icon-type="logo-docker-color"]').exists();
