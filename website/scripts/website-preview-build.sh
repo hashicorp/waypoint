@@ -29,6 +29,7 @@ npm i --production=false
 # Delete other products' pages,
 # these will just increase build times
 rm -rf ./src/pages/_proxied-dot-io/boundary
+mkdir ./src/pages/_proxied-dot-io/boundary
 # Build the site
 # TODO: is there a way to remove these two manully set env vars?
 # TODO: maybe using Vercel's System Environment variables?
