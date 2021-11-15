@@ -122,7 +122,7 @@
     "xterm-addon-fit": "^0.5.0"
   },
   "engines": {
-    "node": "12"
+    "node": "12.* || 14.* || >= 16"
   },
   "ember": {
     "edition": "octane"
