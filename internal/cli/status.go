@@ -163,7 +163,7 @@ func (c *StatusCommand) Run(args []string) int {
 // CLI won't be able to refresh that project's application statuses.
 func (c *StatusCommand) RefreshApplicationStatus(projectTarget, appTarget string) error {
 	// Get our API client
-	client := c.project.Client()
+	client := c.client
 
 	// Get the entire list of apps
 	// Determine project locality
@@ -290,7 +290,7 @@ func (c *StatusCommand) refreshAppStatus(
 	}
 	err := c.DoApp(c.Ctx, func(ctx context.Context, appClient *clientpkg.App) error {
 		// Get our API client
-		client := c.project.Client()
+		client := c.client
 
 		// Get Latest Deployment and Release
 
@@ -418,7 +418,7 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 	}
 
 	// Get our API client
-	client := c.project.Client()
+	client := c.client
 
 	resp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{
 		Project: &pb.Ref_Project{
@@ -544,7 +544,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	}
 
 	// Get our API client
-	client := c.project.Client()
+	client := c.client
 
 	projResp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{
 		Project: &pb.Ref_Project{
@@ -847,7 +847,7 @@ func (c *StatusCommand) FormatProjectStatus() error {
 	}
 
 	// Get our API client
-	client := c.project.Client()
+	client := c.client
 
 	projectResp, err := client.ListProjects(c.Ctx, &empty.Empty{})
 	if err != nil {

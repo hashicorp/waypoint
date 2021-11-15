@@ -36,7 +36,7 @@ func (c *HostnameRegisterCommand) Run(args []string) int {
 		return 1
 	}
 
-	client := c.project.Client()
+	client := c.client
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		app.UI.Output("Registering hostname for %s...", app.Ref().Application, terminal.WithHeaderStyle())
 		resp, err := client.CreateHostname(ctx, &pb.CreateHostnameRequest{

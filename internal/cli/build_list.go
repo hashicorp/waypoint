@@ -34,7 +34,7 @@ func (c *BuildListCommand) Run(args []string) int {
 	}
 
 	// Get our API client
-	client := c.project.Client()
+	client := c.client
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		var wsRef *pb.Ref_Workspace

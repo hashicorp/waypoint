@@ -123,7 +123,7 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 	// service came up quicker than Waypoint itself. A more robust check would
 	// be checking the pods for readiness.
 	log.Info("initializing server connection")
-	proj, err := c.initProjectClient(ctx, serverclient.Timeout(120*time.Second))
+	client, err := c.initClient(serverclient.Timeout(120 * time.Second))
 	if err != nil {
 		c.ui.Output(
 			"Error reconnecting with token: %s",
@@ -135,7 +135,6 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 
 	// Waypoint bootstrap
 	log.Info("bootstrapping the server")
-	client := proj.Client()
 	resp, err := client.BootstrapToken(ctx, &empty.Empty{})
 	if status.Code(err) == codes.PermissionDenied {
 		// This is not an error, since our Helm chart will run this
@@ -167,7 +166,7 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 
 	// Reconnect
 	log.Info("reconnecting to the server with the bootstrap token")
-	proj, err = c.initProjectClient(ctx)
+	client, err = c.initClient()
 	if err != nil {
 		c.ui.Output(
 			"Error reconnecting with token: %s",
@@ -176,7 +175,6 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 		)
 		return 1
 	}
-	client = proj.Client()
 
 	// Set our server configuration
 	log.Info("setting server configuration")

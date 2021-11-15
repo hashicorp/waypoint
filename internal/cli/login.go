@@ -103,7 +103,7 @@ func (c *LoginCommand) Run(args []string) int {
 	// Manually initialize our client. We have to do this because we have
 	// WithClient(false) set above in case we populate the server addr with
 	// Kubernetes info.
-	c.project, err = c.initProjectClient(ctx)
+	_, err = c.initClient()
 	if err != nil {
 		c.ui.Output(
 			"Error reconnecting with token: %s",
@@ -159,7 +159,7 @@ func (c *LoginCommand) Run(args []string) int {
 	)
 
 	// Validate the connection
-	_, err = c.initProjectClient(ctx, serverclient.FromContextConfig(&newContext))
+	_, err = c.initClient(serverclient.FromContextConfig(&newContext))
 	if err != nil {
 		c.ui.Output(fmt.Sprintf(
 			strings.TrimSpace(errTokenValidation),

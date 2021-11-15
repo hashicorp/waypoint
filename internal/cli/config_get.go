@@ -56,7 +56,7 @@ func (c *ConfigGetCommand) Run(args []string) int {
 	}
 
 	// Get our API client
-	client := c.project.Client()
+	client := c.client
 
 	var prefix string
 	switch len(c.args) {

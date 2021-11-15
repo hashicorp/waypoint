@@ -33,7 +33,7 @@ func (c *ConfigSourceSetCommand) Run(args []string) int {
 	}
 
 	// Set our config
-	client := c.project.Client()
+	client := c.client
 	_, err := client.SetConfigSource(c.Ctx, &pb.SetConfigSourceRequest{
 		ConfigSource: &pb.ConfigSource{
 			Scope: &pb.ConfigSource_Global{

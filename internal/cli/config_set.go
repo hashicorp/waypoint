@@ -83,7 +83,7 @@ func (c *ConfigSetCommand) Run(args []string) int {
 	}
 
 	// Get our API client
-	client := c.project.Client()
+	client := c.client
 
 	var req pb.ConfigSetRequest
 

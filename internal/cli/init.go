@@ -240,14 +240,14 @@ func (c *InitCommand) validateServer() bool {
 	defer sg.Wait()
 
 	s := sg.Add("Validating server credentials...")
-	client, err := c.initProjectClient(nil)
+	_, err := c.initClient()
 	if err != nil {
 		c.stepError(s, initStepConnect, err)
 		return false
 	}
-	c.project = client
 
-	if c.project.Local() {
+	// TODO(izaak): test
+	if c.localServer != nil {
 		s.Update("Local mode initialized successfully")
 	} else {
 		s.Update("Connection to Waypoint server was successful")
@@ -266,7 +266,7 @@ func (c *InitCommand) validateProject() bool {
 
 	s := sg.Add("Checking if project %q is registered...", ref.Project)
 
-	client := c.project.Client()
+	client := c.client
 	resp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{Project: ref})
 	if status.Code(err) == codes.NotFound {
 		err = nil

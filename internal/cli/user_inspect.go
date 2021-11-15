@@ -28,7 +28,7 @@ func (c *UserInspectCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
-	client := c.project.Client()
+	client := c.client
 
 	var refUser *pb.Ref_User
 	if c.flagUsername != "" {

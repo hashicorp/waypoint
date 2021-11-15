@@ -78,10 +78,9 @@ func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
 // TODO(izaak): this should live in a client file (client/client or serverclient/client (why are those different again?)
 // TODO(izaak): more contextual errors everywhere
 // but not here.
-func (c baseCommand) initClient(
-	ctx context.Context,
-	connectOpts ...serverclient.ConnectOption, // TODO(izaak): are we ever using this?
-) (pb.WaypointClient, *pb.VersionInfo, error) {
+// initClient initializes a server client based on the provided flags, saves the
+// client and version info on the command, and also returns the client for convenience.
+func (c baseCommand) initClient(opts ...serverclient.ConnectOption) (pb.WaypointClient, error) {
 	log := c.Log
 
 	// We use our flag-based connection info if the user set an addr.
@@ -94,15 +93,15 @@ func (c baseCommand) initClient(
 	// the following precedence: (1) context (2) env (3) flags where the
 	// later values override the former.
 	var err error
-	connectOpts = append([]serverclient.ConnectOption{
+	connectOpts := append(opts, []serverclient.ConnectOption{
 		serverclient.FromContext(c.contextStorage, ""),
 		serverclient.FromEnv(),
 		serverclient.FromContextConfig(flagConnection),
 		serverclient.Logger(c.Log.Named("serverclient")),
-	}, connectOpts...)
+	}...)
 	c.clientContext, err = serverclient.ContextConfig(connectOpts...)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// TODO(izaak): make sure the local server case works
@@ -110,9 +109,9 @@ func (c baseCommand) initClient(
 
 	// Connect. If we're local, this is set as optional so conn may be nil
 	log.Info("attempting to source credentials and connect")
-	conn, err := serverclient.Connect(ctx, connectOpts...)
+	conn, err := serverclient.Connect(c.Ctx, connectOpts...)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// TODO(izaak): conn will be nil if you have a local server, and you'll probably have to do something
@@ -120,11 +119,15 @@ func (c baseCommand) initClient(
 
 	client := pb.NewWaypointClient(conn)
 
-	versionInfo, err := clientpkg.NegotiateApiVersion(ctx, client, log)
+	// Grab the server version and save it for later
+	// TODO(izaak): feels like a weird side-effect, but not _that_ weird
+	versionInfo, err := clientpkg.NegotiateApiVersion(c.Ctx, client, log)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return client, versionInfo, nil
+	c.serverVersion = versionInfo
+
+	return client, nil
 }
 
 // initProjectClient initializes the client.

@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"sync"
 
 	"github.com/hashicorp/waypoint/internal/runner"
 
@@ -127,7 +126,7 @@ type baseCommand struct {
 	globalOptions []Option
 
 	// autoServer will be set to true if an automatic in-memory server
-	// is allowd.
+	// is allowed.
 	autoServer bool
 
 	// The home directory that we loaded the waypoint config from
@@ -135,11 +134,10 @@ type baseCommand struct {
 
 	// These are used to manage a local runner and its job processing
 	// in a goroutine.
-	// TODO(izaak): this should probably be abstracted
-	wg           sync.WaitGroup
-	bg           context.Context
-	bgCancel     func()
 	activeRunner *runner.Runner
+
+	// TODO(izaak): spawn this if necessary
+	localServer *clientpkg.LocalServer
 }
 
 // Close cleans up any resources that the command created. This should be
@@ -160,22 +158,10 @@ func (c *baseCommand) Close() error {
 		}
 	}
 
-	// Forces any background goroutines to stop
-	c.bgCancel()
-
-	// Now wait on those goroutines to finish up.
-	c.wg.Wait()
-
-	// Close our UI if it implements it. The glint-based UI does for example
-	// to finish up all the CLI output.
-	if closer, ok := c.ui.(io.Closer); ok && closer != nil {
-		closer.Close()
-	}
-
 	return nil
 }
 
-func (c *baseCommand) InitRunner() error {
+func (c *baseCommand) initRunner() error {
 	log := c.Log
 	log.Debug("starting runner to process local jobs")
 
@@ -208,11 +194,9 @@ func (c *baseCommand) InitRunner() error {
 	// Because this runner's lifetime is bound to a CLI context and therefore transient, we don't
 	// want to accept jobs that aren't related to local activities (job's queued or RPCs made)
 	// because they'll hang the CLI randomly as those jobs run (it's also a security issue).
-	c.wg.Add(1)
-	go func() {
-		defer c.wg.Done()
-		r.AcceptMany(c.bg)
-	}()
+	// NOTE(izaak): we manage the runner's lifecycle independently - closing this context
+	// forces a hard halt, which we don't want to do. We call Cancel on it instead when we close down.
+	go r.AcceptMany(context.Background())
 
 	return nil
 }
@@ -224,7 +208,7 @@ func (c *baseCommand) InitRunner() error {
 // Init should be called FIRST within the Run function implementation. Many
 // options will affect behavior of other functions that can be called later.
 func (c *baseCommand) Init(opts ...Option) error {
-	//log := c.Log
+	log := c.Log
 
 	baseCfg := baseConfig{
 		Config: true,
@@ -311,20 +295,40 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	if baseCfg.Client {
 		// TODO(izaak): is this the right context here?
-		client, ver, err := c.initClient(c.Ctx)
+		client, err := c.initClient()
 		if err != nil {
 			// TODO(izaak): print error
 			return err
 		}
 		c.client = client
-		c.serverVersion = ver
 	}
 
 	if baseCfg.RunnerRequired {
-		if err := c.InitRunner(); err != nil {
-			// TODO(izaak): print error
+		log.Debug("starting runner to process local jobs")
+
+		// Initialize our runner
+		r, err := runner.New(
+			runner.WithClient(c.client),
+			runner.WithLogger(log.Named("runner")),
+			runner.ByIdOnly(),      // We'll direct target this
+			runner.WithLocal(c.ui), // Local mode
+		)
+		if err != nil {
 			return err
 		}
+
+		// Start the runner
+		if err := r.Start(); err != nil {
+			return err
+		}
+
+		// Inject the metadata about the client, such as the runner id if it is running
+		// a local runner.
+		// TODO(izaak): i'm not 100% sure that this context is what's used when this id is
+		// needed, but if it works it's probably fine.
+		c.Ctx = grpcmetadata.AddRunner(c.Ctx, r.Id())
+
+		c.activeRunner = r
 	}
 
 	// If we have an app target requirement, we have to get it from the args
@@ -510,7 +514,7 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 	// If the user specified a project flag, we want only the apps
 	// that are assigned to that project
 	if c.flagProject != "" {
-		client := c.project.Client()
+		client := c.client
 		projectTarget := &pb.Ref_Project{Project: c.flagProject}
 		resp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{
 			Project: &pb.Ref_Project{

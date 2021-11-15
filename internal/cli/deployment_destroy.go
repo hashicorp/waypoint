@@ -93,7 +93,7 @@ func (c *DeploymentDestroyCommand) getDeployments(ctx context.Context, ids []str
 	var result []*pb.Deployment
 
 	// Get each deployment
-	client := c.project.Client()
+	client := c.client
 	for _, id := range ids {
 		ref := &pb.Ref_Operation{
 			Target: &pb.Ref_Operation_Id{Id: id},
@@ -125,7 +125,7 @@ func (c *DeploymentDestroyCommand) allDeployments(ctx context.Context, app *clie
 
 	var result []*pb.Deployment
 
-	client := c.project.Client()
+	client := c.client
 
 	resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
 		Application:   app.Ref(),

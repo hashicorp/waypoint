@@ -31,7 +31,7 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 	}
 
 	// Get our config source
-	client := c.project.Client()
+	client := c.client
 	resp, err := client.GetConfigSource(c.Ctx, &pb.GetConfigSourceRequest{
 		Scope: &pb.GetConfigSourceRequest_Global{
 			Global: &pb.Ref_Global{},

@@ -71,6 +71,7 @@ require (
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/kevinburke/go-bindata v3.22.0+incompatible
+	github.com/kisielk/godepgraph v0.0.0-20190626013829-57a7e4a651a9 // indirect
 	github.com/kr/text v0.2.0
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.13 // indirect

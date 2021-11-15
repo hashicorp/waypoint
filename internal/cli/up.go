@@ -128,7 +128,7 @@ func (c *UpCommand) legacyUp(
 	ctx context.Context,
 	app *clientpkg.App,
 ) error {
-	client := c.project.Client()
+	client := c.client
 
 	// Build it
 	app.UI.Output("Building...", terminal.WithHeaderStyle())

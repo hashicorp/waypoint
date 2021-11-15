@@ -29,7 +29,7 @@ func (c *UserInviteCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
-	client := c.project.Client()
+	client := c.client
 
 	req := &pb.InviteTokenRequest{
 		Duration: c.flagDuration.String(),

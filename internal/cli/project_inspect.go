@@ -25,7 +25,9 @@ func (c *ProjectInspectCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(flagSet),
-		WithConfig(true), // optional config loading
+
+		// TODO(izaak): replace this deprecated thing
+		//WithConfig(true), // optional config loading
 	); err != nil {
 		return 1
 	}
@@ -62,7 +64,7 @@ func (c *ProjectInspectCommand) Run(args []string) int {
 
 func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 	// Get our API client
-	client := c.project.Client()
+	client := c.client
 
 	resp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{
 		Project: &pb.Ref_Project{

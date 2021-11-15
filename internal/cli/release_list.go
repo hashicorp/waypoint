@@ -45,7 +45,7 @@ func (c *ReleaseListCommand) Run(args []string) int {
 	}
 
 	// Get our API client
-	client := c.project.Client()
+	client := c.client
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		if !c.flagJson {

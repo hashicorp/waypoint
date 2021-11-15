@@ -117,7 +117,7 @@ func (c *ExecCommand) Run(args []string) int {
 	}
 
 	var exitCode int
-	client := c.project.Client()
+	client := c.client
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		ec := &execclient.Client{
 			Logger:  c.Log,

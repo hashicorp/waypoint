@@ -34,7 +34,7 @@ func (c *ServerBootstrapCommand) Run(args []string) int {
 	}
 
 	// If we're running a local in-memory server, bootstrapping is not useful.
-	if c.project.Local() {
+	if c.localServer != nil {
 		c.ui.Output(
 			errBootstrapLocal,
 			terminal.WithErrorStyle(),
@@ -42,7 +42,7 @@ func (c *ServerBootstrapCommand) Run(args []string) int {
 		return 1
 	}
 
-	client := c.project.Client()
+	client := c.client
 	resp, err := client.BootstrapToken(ctx, &empty.Empty{})
 	if err != nil {
 		c.ui.Output(

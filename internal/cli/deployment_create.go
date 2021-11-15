@@ -29,7 +29,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 		return 1
 	}
 
-	client := c.project.Client()
+	client := c.client
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// Get the most recent pushed artifact

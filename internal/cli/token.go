@@ -30,7 +30,7 @@ func (c *GetInviteCommand) Run(args []string) int {
 	}
 
 	// Get our API client
-	client := c.project.Client()
+	client := c.client
 
 	resp, err := client.GenerateInviteToken(c.Ctx, &pb.InviteTokenRequest{
 		Duration: c.duration.String(),
@@ -105,7 +105,7 @@ func (c *ExchangeInviteCommand) Run(args []string) int {
 	}
 
 	// Get our API client
-	client := c.project.Client()
+	client := c.client
 
 	resp, err := client.ConvertInviteToken(c.Ctx, &pb.ConvertInviteTokenRequest{
 		Token: c.token,
@@ -171,7 +171,7 @@ func (c *GetTokenCommand) Run(args []string) int {
 	}
 
 	// Get our API client
-	client := c.project.Client()
+	client := c.client
 
 	resp, err := client.GenerateLoginToken(c.Ctx, &pb.LoginTokenRequest{})
 	if err != nil {

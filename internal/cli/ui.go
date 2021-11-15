@@ -29,12 +29,12 @@ func (c *UICommand) Run(args []string) int {
 		return 1
 	}
 
-	if c.project.Local() {
+	if c.localServer != nil {
 		c.project.UI.Output("Waypoint must be configured in server mode to access the UI", terminal.WithWarningStyle())
 	}
 
 	// Get our API client
-	client := c.project.Client()
+	client := c.client
 
 	var inviteToken string
 	if c.flagAuthenticate {

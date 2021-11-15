@@ -29,7 +29,7 @@ func (c *UserModifyCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
-	client := c.project.Client()
+	client := c.client
 
 	// Get the user we're modifying.
 	var refUser *pb.Ref_User

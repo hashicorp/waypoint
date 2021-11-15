@@ -108,11 +108,6 @@ func (c *Project) WorkspaceRef() *pb.Ref_Workspace {
 	return c.workspace
 }
 
-// Local is true if the server is an in-process just-in-time server.
-func (c *Project) Local() bool {
-	return c.localServer
-}
-
 // ServerVersion returns the server version that this client is connected to.
 func (c *Project) ServerVersion() *pb.VersionInfo {
 	return c.serverVersion

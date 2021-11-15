@@ -38,7 +38,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 		return 1
 	}
 
-	client := c.project.Client()
+	client := c.client
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// UI -- this should happen at the top so that the app name shows clearly
 		// for any errors we may encounter prior to the actual release op

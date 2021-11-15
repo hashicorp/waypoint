@@ -55,7 +55,7 @@ func (c *ServerConfigSetCommand) Run(args []string) int {
 		},
 	}
 
-	client := c.project.Client()
+	client := c.client
 	_, err := client.SetServerConfig(c.Ctx, &pb.SetServerConfigRequest{
 		Config: cfg,
 	})

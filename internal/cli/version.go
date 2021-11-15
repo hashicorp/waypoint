@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"errors"
 	"time"
 
@@ -36,16 +35,15 @@ func (c *VersionCommand) Run(args []string) int {
 	c.ui.Output("CLI: %s", out)
 
 	// Get our server version. We use a short context here.
-	ctx, cancel := context.WithTimeout(c.Ctx, 2*time.Second)
-	defer cancel()
-	client, err := c.initProjectClient(ctx)
+	// TODO(izaak): validate this times out after 2 seconds
+	_, err := c.initClient(serverclient.Timeout(2 * time.Second))
 	if err != nil && !errors.Is(err, serverclient.ErrNoServerConfig) {
 		c.ui.Output("Error connecting to server to read server version: %s", err.Error())
 	}
 
+	// version is saved on the base command when we initialize the server
 	if err == nil {
-		server := client.ServerVersion()
-		c.ui.Output("Server: %s", server.Version)
+		c.ui.Output("Server: %s", c.serverVersion)
 	}
 
 	return 0

@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/hashicorp/waypoint/internal/runner"
+
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/require"
 
@@ -19,8 +21,18 @@ func TestProjectNoop(t *testing.T) {
 	require := require.New(t)
 	client := singleprocess.TestServer(t)
 
+	// Start a local runner
+	testRunner, err := runner.New(runner.WithClient(client))
+	require.Nil(err)
+
+	require.NoError(testRunner.Start())
+
+	go func() {
+		require.NoError(testRunner.Accept(ctx))
+	}()
+
 	// Build our client
-	c := TestProject(t, WithClient(client), WithExecuteJobsLocally("local-runner"))
+	c := TestProject(t, WithClient(client), WithExecuteJobsLocally(testRunner.Id()))
 	defer c.Close()
 	app := c.App(TestApp(t, c))
 

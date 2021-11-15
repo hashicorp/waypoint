@@ -42,7 +42,7 @@ func (c *UserTokenCommand) Run(args []string) int {
 	}
 
 	// Generate the token
-	client := c.project.Client()
+	client := c.client
 	resp, err := client.GenerateLoginToken(c.Ctx, &pb.LoginTokenRequest{
 		Duration: c.flagDuration.String(),
 		User:     refUser,
