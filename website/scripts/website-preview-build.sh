@@ -5,6 +5,7 @@ echo "Files before .next cache delete:"
 ls -a
 echo "Deleting .next cache..."
 rm -rf .next
+echo "Done"
 # Clone the dev-portal repo in ./website-preview
 git config --global credential.helper store
 git clone "https://zchsh:${GITHUB_WEBSITE_PREVIEW_PAT}@github.com/hashicorp/dev-portal.git" website-preview
@@ -38,5 +39,6 @@ npm run build
 # so that Vercel's NextJS preset picks up on the build output
 echo "Listing files after build..."
 ls -a
-echo "Done."
+echo "Copying .next output to project root..."
 cp -R .next/ ../.next
+echo "Done."
