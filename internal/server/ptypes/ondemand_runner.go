@@ -75,14 +75,14 @@ func isPluginHcl(p *pb.OnDemandRunnerConfig) validation.Rule {
 		}
 
 		switch p.ConfigFormat {
-		case pb.Project_HCL:
+		case pb.Hcl_HCL:
 			_, diag := hclsyntax.ParseConfig(p.PluginConfig, "<waypoint-hcl>", hcl.Pos{})
 			if diag.HasErrors() {
 				return diag
 			}
 
 			return nil
-		case pb.Project_JSON:
+		case pb.Hcl_JSON:
 			_, diag := hcljson.Parse(p.PluginConfig, "<waypoint-hcl>")
 			if diag.HasErrors() {
 				return diag
