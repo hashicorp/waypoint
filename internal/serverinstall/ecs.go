@@ -2500,6 +2500,6 @@ func (i *ECSInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		PluginType:   "aws-ecs",
 		Default:      true,
 		PluginConfig: cfgJson,
-		ConfigFormat: pb.Project_JSON,
+		ConfigFormat: pb.Hcl_JSON,
 	}
 }

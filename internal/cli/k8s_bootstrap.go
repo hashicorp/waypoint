@@ -250,7 +250,7 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 	"service_account": "%s",
 	"image_pull_policy": "%s"
 }`, c.flagODRServiceAccount, c.flagODRImagePullPolicy)),
-			ConfigFormat: pb.Project_JSON,
+			ConfigFormat: pb.Hcl_JSON,
 			Default:      true,
 		},
 	})
