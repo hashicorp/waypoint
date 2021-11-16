@@ -24,6 +24,7 @@
 , postgresql_12
 , protobufPin
 , protoc-gen-doc
+, protoc-gen-grpc-web
 , yarn
 , zlib
 }:
@@ -39,6 +40,7 @@ mkShell rec {
     nodejs-16_x
     postgresql_12
     protoc-gen-doc
+    protoc-gen-grpc-web
     yarn
 
     # Custom packages, added to overlay
