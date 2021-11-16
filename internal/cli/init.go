@@ -42,7 +42,8 @@ func (c *InitCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
-		WithClient(false),
+		WithProjectTargetRequired(),
+		WithRunnerRequired(),
 	); err != nil {
 		return 1
 	}

@@ -22,6 +22,15 @@ func WithFlags(f *flag.Sets) Option {
 	return func(c *baseConfig) { c.Flags = f }
 }
 
+// WithProjectTargetRequired indicates that the command needs to operate against a project.
+// Will require parsing config
+func WithProjectTargetRequired() Option {
+	return func(c *baseConfig) {
+		// TODO(izaak): we should also parse config here
+		c.ProjectTargetRequired = true
+	}
+}
+
 // WithSingleApp configures the CLI to expect a configuration with
 // one or more apps defined but a single app targeted with `-app`.
 // If only a single app exists, it is implicitly the target.
@@ -30,7 +39,6 @@ func WithSingleApp() Option {
 	return func(c *baseConfig) {
 		c.AppTargetRequired = true
 		c.Config = false
-		c.Client = true
 	}
 }
 
@@ -41,7 +49,6 @@ func WithMultipleApp() Option {
 	return func(c *baseConfig) {
 		c.ProjectTargetRequired = true
 		c.Config = false
-		c.Client = true
 	}
 }
 
@@ -54,7 +61,6 @@ func WithOptionalApp() Option {
 		c.AppTargetRequired = false
 		c.AppOptional = true
 		c.Config = false
-		c.Client = true
 		c.ConfigOptional = true
 	}
 }
@@ -77,10 +83,10 @@ func WithNoConfig() Option {
 //	}
 //}
 
-// WithClient configures the CLI to initialize a client.
-func WithClient(v bool) Option {
+// WithNoClient prevents the CLI from instantiating a client automatically.
+func WithNoClient() Option {
 	return func(c *baseConfig) {
-		c.Client = v
+		c.NoClient = true
 	}
 }
 
@@ -120,7 +126,7 @@ type baseConfig struct {
 
 	RunnerRequired        bool
 	ProjectTargetRequired bool
-	Client                bool
+	NoClient              bool
 
 	// TODO(izaak): how much of this can we delete? All of it?
 	Config            bool

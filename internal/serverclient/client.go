@@ -3,12 +3,12 @@ package serverclient
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"os"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
@@ -104,7 +104,11 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 	)
 
 	// Connect to this server
-	return grpc.DialContext(ctx, cfg.Addr, grpcOpts...)
+	conn, err := grpc.DialContext(ctx, cfg.Addr, grpcOpts...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to dial address %s", cfg.Addr)
+	}
+	return conn, nil
 }
 
 // ContextConfig will return the context configuration for the given connection

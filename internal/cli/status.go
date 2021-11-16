@@ -1198,7 +1198,7 @@ func (c *StatusCommand) formatJsonMap(t *terminal.Table) []map[string]interface{
 
 func (c *StatusCommand) errAPIUnimplemented(err error) error {
 	var serverVersion string
-	serverVersionResp := c.project.ServerVersion()
+	serverVersionResp := c.serverVersion
 	if serverVersionResp != nil {
 		serverVersion = serverVersionResp.Version
 	}

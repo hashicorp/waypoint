@@ -25,8 +25,8 @@ func (c *ContextVerifyCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithClient(false),
 		WithNoConfig(),
+		WithNoClient(),
 	); err != nil {
 		return 1
 	}
@@ -83,10 +83,7 @@ func (c *ContextVerifyCommand) Run(args []string) int {
 	step.Update("Verifying connection is valid for context %q...", name)
 
 	client := pb.NewWaypointClient(conn)
-	if _, err := clientpkg.NewProjectClient(ctx,
-		clientpkg.WithLogger(c.Log),
-		clientpkg.WithClient(client),
-	); err != nil {
+	if _, err := clientpkg.NewProjectClient(ctx, client, clientpkg.WithLogger(c.Log)); err != nil {
 		c.ui.Output(
 			"Error connecting with context %q: %s",
 			name,

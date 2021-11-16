@@ -32,8 +32,7 @@ func TestProjectNoop(t *testing.T) {
 	}()
 
 	// Build our client
-	c := TestProject(t, WithClient(client), WithExecuteJobsLocally(testRunner.Id()))
-	defer c.Close()
+	c := TestProject(t, client, WithExecuteJobsLocally(testRunner.Id()))
 	app := c.App(TestApp(t, c))
 
 	// TODO(mitchellh): once we have an API to list jobs, verify we have

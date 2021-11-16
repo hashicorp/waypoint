@@ -144,18 +144,18 @@ type baseCommand struct {
 // deferred by any CLI command that embeds baseCommand in the Run command.
 func (c *baseCommand) Close() error {
 
-	// TODO(izaak): I don't think a project will need to be closed after this.
-	// Close the project client, which gracefully shuts down the local runner
-	if c.project != nil {
-		c.project.Close()
-	}
-
 	// Stop the runner early so that it we block here waiting for any outstanding jobs to finish
 	// before closing down the rest of the resources.
 	if c.activeRunner != nil {
 		if err := c.activeRunner.Close(); err != nil {
 			c.Log.Error("error stopping runner", "error", err)
 		}
+	}
+
+	// Close our UI if it implements it. The glint-based UI does for example
+	// to finish up all the CLI output.
+	if closer, ok := c.ui.(io.Closer); ok && closer != nil {
+		closer.Close()
 	}
 
 	return nil
@@ -208,11 +208,9 @@ func (c *baseCommand) initRunner() error {
 // Init should be called FIRST within the Run function implementation. Many
 // options will affect behavior of other functions that can be called later.
 func (c *baseCommand) Init(opts ...Option) error {
-	log := c.Log
 
 	baseCfg := baseConfig{
 		Config: true,
-		Client: true,
 	}
 
 	for _, opt := range c.globalOptions {
@@ -293,42 +291,20 @@ func (c *baseCommand) Init(opts ...Option) error {
 	// Parse the configuration
 	c.cfg = &config.Config{}
 
-	if baseCfg.Client {
+	if !baseCfg.NoClient {
 		// TODO(izaak): is this the right context here?
-		client, err := c.initClient()
+		_, err := c.initClient()
 		if err != nil {
 			// TODO(izaak): print error
 			return err
 		}
-		c.client = client
 	}
 
 	if baseCfg.RunnerRequired {
-		log.Debug("starting runner to process local jobs")
-
-		// Initialize our runner
-		r, err := runner.New(
-			runner.WithClient(c.client),
-			runner.WithLogger(log.Named("runner")),
-			runner.ByIdOnly(),      // We'll direct target this
-			runner.WithLocal(c.ui), // Local mode
-		)
-		if err != nil {
+		if err := c.initRunner(); err != nil {
+			// TODO(izaak): print error
 			return err
 		}
-
-		// Start the runner
-		if err := r.Start(); err != nil {
-			return err
-		}
-
-		// Inject the metadata about the client, such as the runner id if it is running
-		// a local runner.
-		// TODO(izaak): i'm not 100% sure that this context is what's used when this id is
-		// needed, but if it works it's probably fine.
-		c.Ctx = grpcmetadata.AddRunner(c.Ctx, r.Id())
-
-		c.activeRunner = r
 	}
 
 	// If we have an app target requirement, we have to get it from the args

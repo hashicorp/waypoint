@@ -51,7 +51,7 @@ func (c *LoginCommand) Run(args []string) int {
 		// Don't initialize the client automatically because if we have
 		// -from-kubernetes set we may want to do more logic to detect the
 		// server URL.
-		WithClient(false),
+		WithNoClient(),
 	); err != nil {
 		// This error specifically comes if we attempt to run this without
 		// a server address configured.

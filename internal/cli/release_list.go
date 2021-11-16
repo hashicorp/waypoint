@@ -71,7 +71,7 @@ func (c *ReleaseListCommand) Run(args []string) int {
 			if s, ok := status.FromError(err); ok {
 				if s.Code() == codes.Unimplemented {
 					var serverVersion string
-					serverVersionResp := c.project.ServerVersion()
+					serverVersionResp := c.serverVersion
 					if serverVersionResp != nil {
 						serverVersion = serverVersionResp.Version
 					}

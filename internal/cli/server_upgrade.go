@@ -133,10 +133,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	client := pb.NewWaypointClient(conn)
 	// validate API compat here with new clientpkg
-	if _, err := clientpkg.NewProjectClient(ctx,
-		clientpkg.WithLogger(c.Log),
-		clientpkg.WithClient(client),
-	); err != nil {
+	if _, err := clientpkg.NewProjectClient(ctx, client, clientpkg.WithLogger(c.Log)); err != nil {
 		c.ui.Output(
 			"Error connecting with context %q: %s",
 			ctxName,

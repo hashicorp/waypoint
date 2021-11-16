@@ -25,7 +25,7 @@ func (c *VersionCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(flagSet),
 		WithNoConfig(),
-		WithClient(false),
+		WithNoClient(),
 		WithNoAutoServer(),
 	); err != nil {
 		return 1

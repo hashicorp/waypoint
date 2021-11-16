@@ -20,13 +20,13 @@ import (
 // so that any side effect file creation doesn't impact the real working
 // directory. If you need to use your working directory, query it before
 // calling this.
-func TestProject(t testing.T, opts ...Option) *Project {
+func TestProject(t testing.T, client pb.WaypointClient, opts ...Option) *Project {
 	require := require.New(t)
 
 	ctx := context.Background()
 
 	// Initialize our client
-	result, err := NewProjectClient(ctx, append([]Option{
+	result, err := NewProjectClient(ctx, client, append([]Option{
 		WithProjectRef(&pb.Ref_Project{Project: "test_p"}),
 	}, opts...)...)
 	require.NoError(err)

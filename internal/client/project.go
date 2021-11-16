@@ -27,10 +27,6 @@ type Project struct {
 	labels              map[string]string
 	variables           []*pb.Variable
 	dataSourceOverrides map[string]string
-	cleanupFunc         func()
-
-	// TODO(izaak): delete?
-	serverVersion *pb.VersionInfo
 
 	localServer bool // True when a local server is created
 
@@ -43,7 +39,7 @@ type Project struct {
 
 // TODO(izaak): maybe call this NewProject? It's more than just a client.
 // NewProjectClient initializes a new client.
-func NewProjectClient(ctx context.Context, opts ...Option) (*Project, error) {
+func NewProjectClient(ctx context.Context, client pb.WaypointClient, opts ...Option) (*Project, error) {
 	// Our default projectClient
 	projectClient := &Project{
 		UI:     terminal.ConsoleUI(ctx),
@@ -53,6 +49,7 @@ func NewProjectClient(ctx context.Context, opts ...Option) (*Project, error) {
 				Any: &pb.Ref_RunnerAny{},
 			},
 		},
+		client: client,
 	}
 
 	// Build our config
@@ -63,27 +60,6 @@ func NewProjectClient(ctx context.Context, opts ...Option) (*Project, error) {
 			return nil, err
 		}
 	}
-
-	// TODO(izaak): I get the feeling that by the end of this, projectClient will always be set. It should probably
-	//// be given as an arg, or maybe always assumed to be here?
-	//// If a client was explicitly provided, we use that. Otherwise, we
-	//// have to establish a connection either through the serverclient
-	//// package or spinning up an in-process server.
-	//if projectClient.client == nil {
-	//	projectClient.logger.Trace("no API client provided, initializing connection if possible")
-	//	conn, err := projectClient.initServerConnection(ctx, &cfg)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	projectClient.client = pb.NewWaypointClient(conn)
-	//
-	//	// Negotiate the version
-	//	ver, err := NegotiateApiVersion(ctx, projectClient.client, projectClient.logger)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	projectClient.serverVersion = ver
-	//}
 
 	// Default workspace if not specified
 	if projectClient.workspace == nil {
@@ -108,35 +84,6 @@ func (c *Project) WorkspaceRef() *pb.Ref_Workspace {
 	return c.workspace
 }
 
-// ServerVersion returns the server version that this client is connected to.
-func (c *Project) ServerVersion() *pb.VersionInfo {
-	return c.serverVersion
-}
-
-// Close should be called to clean up any resources that the client created.
-func (c *Project) Close() error {
-
-	// TODO(izaak): I don't think we need any of this, or it probably shouldn't live here.
-
-	// Run any cleanup necessary
-	if f := c.cleanupFunc; f != nil {
-		f()
-	}
-
-	return nil
-}
-
-// cleanup stacks cleanup functions to call when Close is called.
-func (c *Project) cleanup(f func()) {
-	oldF := c.cleanupFunc
-	c.cleanupFunc = func() {
-		defer f()
-		if oldF != nil {
-			oldF()
-		}
-	}
-}
-
 type config struct {
 	connectOpts []serverclient.ConnectOption
 }
@@ -156,29 +103,6 @@ func WithProjectRef(ref *pb.Ref_Project) Option {
 func WithWorkspaceRef(ref *pb.Ref_Workspace) Option {
 	return func(c *Project, cfg *config) error {
 		c.workspace = ref
-		return nil
-	}
-}
-
-// WithClient sets the client directly. In this case, the runner won't
-// attempt any connection at all regardless of other configuration (env
-// vars or waypoint config file). This will be used.
-func WithClient(client pb.WaypointClient) Option {
-	return func(c *Project, cfg *config) error {
-		c.client = client
-		return nil
-	}
-}
-
-// TODO(izaak): probably delete?
-// WithClientConnect specifies the options for connecting to a client.
-// If WithClient is specified, that client is always used.
-//
-// If WithLocal is set and no client is specified and no server creds
-// can be found, then an in-process server will be created.
-func WithClientConnect(opts ...serverclient.ConnectOption) Option {
-	return func(c *Project, cfg *config) error {
-		cfg.connectOpts = opts
 		return nil
 	}
 }

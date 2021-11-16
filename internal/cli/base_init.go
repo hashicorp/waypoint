@@ -75,12 +75,9 @@ func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
 	return cfg, nil
 }
 
-// TODO(izaak): this should live in a client file (client/client or serverclient/client (why are those different again?)
-// TODO(izaak): more contextual errors everywhere
-// but not here.
 // initClient initializes a server client based on the provided flags, saves the
 // client and version info on the command, and also returns the client for convenience.
-func (c baseCommand) initClient(opts ...serverclient.ConnectOption) (pb.WaypointClient, error) {
+func (c *baseCommand) initClient(opts ...serverclient.ConnectOption) (pb.WaypointClient, error) {
 	log := c.Log
 
 	// We use our flag-based connection info if the user set an addr.
@@ -117,17 +114,17 @@ func (c baseCommand) initClient(opts ...serverclient.ConnectOption) (pb.Waypoint
 	// TODO(izaak): conn will be nil if you have a local server, and you'll probably have to do something
 	// like c.initLocalServer(ctx)
 
-	client := pb.NewWaypointClient(conn)
+	c.client = pb.NewWaypointClient(conn)
 
 	// Grab the server version and save it for later
 	// TODO(izaak): feels like a weird side-effect, but not _that_ weird
-	versionInfo, err := clientpkg.NegotiateApiVersion(c.Ctx, client, log)
+	versionInfo, err := clientpkg.NegotiateApiVersion(c.Ctx, c.client, log)
 	if err != nil {
 		return nil, err
 	}
 	c.serverVersion = versionInfo
 
-	return client, nil
+	return c.client, nil
 }
 
 // initProjectClient initializes the client.
@@ -142,7 +139,6 @@ func (c *baseCommand) initProjectClient(
 	// Start building our client options
 	opts := []clientpkg.Option{
 		clientpkg.WithLogger(c.Log),
-		clientpkg.WithClient(client),
 		clientpkg.WithProjectRef(c.refProject),
 		clientpkg.WithWorkspaceRef(c.refWorkspace),
 		clientpkg.WithVariables(c.variables),
@@ -163,5 +159,5 @@ func (c *baseCommand) initProjectClient(
 	}
 
 	// Create our client
-	return clientpkg.NewProjectClient(ctx, opts...)
+	return clientpkg.NewProjectClient(ctx, client, opts...)
 }

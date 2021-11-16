@@ -45,7 +45,7 @@ func (c *InstallCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
-		WithClient(false),
+		WithNoClient(),
 	); err != nil {
 		return 1
 	}

@@ -49,7 +49,7 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 
 		// Don't initialize the client because this is called before
 		// the client is ready.
-		WithClient(false),
+		WithNoClient(),
 	); err != nil {
 		return 1
 	}
