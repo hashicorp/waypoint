@@ -14,6 +14,17 @@ import (
 	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
+func (s *service) ListRunners(
+	ctx context.Context,
+	req *pb.ListRunnersRequest,
+) (*pb.ListRunnersResponse, error) {
+	runners, err := s.state.RunnerList()
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ListRunnersResponse{Runners: runners}, nil
+}
+
 // TODO: test
 func (s *service) GetRunner(
 	ctx context.Context,

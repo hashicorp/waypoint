@@ -81,6 +81,28 @@ func (s *State) RunnerById(id string) (*pb.Runner, error) {
 	return raw.(*runnerRecord).Runner, nil
 }
 
+func (s *State) RunnerList() ([]*pb.Runner, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	iter, err := memTxn.Get(runnerTableName, runnerIdIndexName+"_prefix", "")
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*pb.Runner
+	for {
+		next := iter.Next()
+		if next == nil {
+			break
+		}
+		record := next.(*runnerRecord)
+		result = append(result, record.Runner)
+	}
+
+	return result, nil
+}
+
 // runnerEmpty returns true if there are no runners registered.
 func (s *State) runnerEmpty(memTxn *memdb.Txn) (bool, error) {
 	iter, err := memTxn.LowerBound(runnerTableName, runnerIdIndexName, "")

@@ -195,6 +195,10 @@ service Waypoint {
   // GetRunner gets information about a single runner.
   rpc GetRunner(GetRunnerRequest) returns (Runner);
 
+  // ListRunners lists runners that are currently registered with the waypoint server.
+  // This list does not include previous on-demand runners that have exited.
+  rpc ListRunners(ListRunnersRequest) returns (ListRunnersResponse);
+
   // GetServerConfig sets configuration for the Waypoint server.
   rpc GetServerConfig(google.protobuf.Empty) returns (GetServerConfigResponse);
 
@@ -2278,6 +2282,12 @@ message RunnerGetDeploymentConfigResponse {
 message GetRunnerRequest {
   // ID of the runner to request.
   string runner_id = 1;
+}
+
+message ListRunnersRequest {}
+
+message ListRunnersResponse {
+  repeated Runner runners = 1;
 }
 
 /********************************************************************
