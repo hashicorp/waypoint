@@ -23,6 +23,11 @@ func TestRunner_crud(t *testing.T, factory Factory, restartF RestartFactory) {
 	s := factory(t)
 	defer s.Close()
 
+	// List should be empty
+	list, err := s.RunnerList()
+	require.NoError(err)
+	require.Len(list, 0)
+
 	// Create an instance
 	rec := &pb.Runner{Id: "A"}
 	require.NoError(s.RunnerCreate(rec))
@@ -32,6 +37,11 @@ func TestRunner_crud(t *testing.T, factory Factory, restartF RestartFactory) {
 	require.NoError(err)
 	require.Equal(rec, found)
 
+	// List should include it
+	list, err = s.RunnerList()
+	require.NoError(err)
+	require.Len(list, 1)
+
 	// Delete that instance
 	require.NoError(s.RunnerDelete(rec.Id))
 
@@ -40,6 +50,11 @@ func TestRunner_crud(t *testing.T, factory Factory, restartF RestartFactory) {
 	require.Error(err)
 	require.Nil(found)
 	require.Equal(codes.NotFound, status.Code(err))
+
+	// List should be empty again
+	list, err = s.RunnerList()
+	require.NoError(err)
+	require.Len(list, 0)
 
 	// Delete again should be fine
 	require.NoError(s.RunnerDelete(rec.Id))

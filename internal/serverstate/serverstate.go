@@ -48,6 +48,7 @@ type Interface interface {
 	RunnerCreate(*pb.Runner) error
 	RunnerDelete(string) error
 	RunnerById(string) (*pb.Runner, error)
+	RunnerList() ([]*pb.Runner, error)
 
 	OnDemandRunnerConfigPut(*pb.OnDemandRunnerConfig) error
 	OnDemandRunnerConfigGet(*pb.Ref_OnDemandRunnerConfig) (*pb.OnDemandRunnerConfig, error)

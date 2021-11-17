@@ -50,6 +50,19 @@ func TestServiceRunnerConfig_happy(t *testing.T) {
 	require.NoError(err)
 	require.NotNil(resp.Config)
 	require.Empty(resp.Config.ConfigVars)
+
+	// Get and list the runner
+	{
+		runner, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: id})
+		require.NoError(err)
+		require.NotNil(runner)
+		require.Equal(runner.Id, id)
+
+		runners, err := client.ListRunners(ctx, &pb.ListRunnersRequest{})
+		require.NoError(err)
+		require.Len(runners.Runners, 1)
+		require.Equal(runners.Runners[0].Id, id)
+	}
 }
 
 // ODR with no job is not allowed

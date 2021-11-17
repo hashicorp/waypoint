@@ -1089,6 +1089,29 @@ func (_m *WaypointServer) ListReleases(_a0 context.Context, _a1 *gen.ListRelease
 	return r0, r1
 }
 
+// ListRunners provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListRunners(_a0 context.Context, _a1 *gen.ListRunnersRequest) (*gen.ListRunnersResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListRunnersResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListRunnersRequest) *gen.ListRunnersResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListRunnersResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListRunnersRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListStatusReports provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) ListStatusReports(_a0 context.Context, _a1 *gen.ListStatusReportsRequest) (*gen.ListStatusReportsResponse, error) {
 	ret := _m.Called(_a0, _a1)
