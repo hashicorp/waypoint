@@ -127,6 +127,7 @@ func HandleExec(addr string, tls bool) http.HandlerFunc {
 				// Send our received data but exit if our context is canceled.
 				select {
 				case respCh <- resp:
+					log.Info("resp data sent to channel")
 				case <-ctx.Done():
 					log.Warn("context canceled while waiting to send data")
 					return

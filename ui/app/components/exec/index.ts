@@ -48,15 +48,8 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     socket.addEventListener('open', (event) => {
       // socket.send(JSON.stringify({ version: 1, auth_token: this.token || '' }));
       console.log(event);
-      let execStreamStartRequest = new ExecStreamRequest();
-      let start = new ExecStreamRequest.Start();
-      // Important: ArgsList can't be empty
-      start.setArgsList(['/bin/bash']);
-      let streaminput = new ExecStreamRequest.Input();
-      execStreamStartRequest.setInput(streaminput);
-      start.setDeploymentId(deploymentId);
-      execStreamStartRequest.setStart(start);
-      socket.send(execStreamStartRequest.serializeBinary());
+      this.sendStart(deploymentId);
+      this.setupWinch();
     });
     socket.addEventListener('message', (event) => {
       console.log(event);
@@ -69,9 +62,16 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
         this.terminal.writeln('Connected to instance...');
       }
       if (resp.getEventCase() === 3) {
-        console.log(resp.getOutput()?.getChannel())
-        console.log(resp.getOutput()?.getData_asU8())
+        console.log(resp.getOutput()?.getChannel());
+        console.log(resp.getOutput()?.getData_asU8());
         console.log(resp.getOutput()?.toObject());
+      }
+
+      if (resp.getEventCase() === 1) {
+        console.log(resp.getOutput()?.getChannel());
+        console.log(resp.getOutput()?.getData_asU8());
+        console.log(resp.getOutput()?.toObject());
+        this.terminal.writeUtf8(resp.getOutput()?.getData_asU8());
       }
       console.log(resp.toObject());
     });
@@ -105,10 +105,56 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     let execStreamRequest = new ExecStreamRequest();
     let input = new ExecStreamRequest.Input();
     let encoder = new TextEncoder();
-    input.setData(encoder.encode(this.command));
+    input.setData(encoder.encode(`${this.command}\r`));
     execStreamRequest.setInput(input);
     this.socket.send(execStreamRequest.serializeBinary());
     this.command = '';
+  }
+
+  sendStart(deploymentId) {
+    let execStreamStartRequest = new ExecStreamRequest();
+    let start = new ExecStreamRequest.Start();
+    // Important: ArgsList can't be empty
+    start.setArgsList(['/bin/bash']);
+    let streaminput = new ExecStreamRequest.Input();
+    execStreamStartRequest.setInput(streaminput);
+    start.setDeploymentId(deploymentId);
+    let pty = new ExecStreamRequest.PTY();
+    pty.setTerm('bash');
+    let windowSize = new ExecStreamRequest.WindowSize();
+    windowSize.setCols(this.terminal.cols);
+    windowSize.setRows(this.terminal.rows);
+    windowSize.setHeight(this.terminal.element?.offsetHeight);
+    windowSize.setWidth(this.terminal.element?.offsetWidth);
+    pty.setWindowSize(windowSize);
+    pty.setEnable(true);
+    start.setPty(pty);
+    execStreamStartRequest.setStart(start);
+    // Send start message
+    this.socket.send(execStreamStartRequest.serializeBinary());
+  }
+
+  setupWinch() {
+    // setup winch
+    let execStreamWinchRequest = new ExecStreamRequest();
+    let windowSize = new ExecStreamRequest.WindowSize();
+    windowSize.setCols(this.terminal.cols);
+    windowSize.setRows(this.terminal.rows);
+    windowSize.setHeight(this.terminal.element?.offsetHeight);
+    windowSize.setWidth(this.terminal.element?.offsetWidth);
+    execStreamWinchRequest.setWinch(windowSize);
+    this.socket.send(execStreamWinchRequest.serializeBinary());
+  }
+
+  disconnect() {
+    let execStreamRequest = new ExecStreamRequest();
+    execStreamRequest.setInputEof(new Empty());
+    this.socket.send(execStreamRequest.serializeBinary());
+  }
+
+  willDestroy(): void {
+    this.disconnect();
+    super.willDestroy();
   }
 
   handleDataEvent = (data) => {
