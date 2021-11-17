@@ -27,7 +27,7 @@ Router.map(function () {
     this.route('connect');
     this.route('start');
   });
-  this.route('-lab', function() {
+  this.route('lab', { path: '/-lab' }, function () {
     this.route('runner-profiles');
   });
   this.route('workspaces', { path: '/' }, function () {
