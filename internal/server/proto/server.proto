@@ -195,7 +195,8 @@ service Waypoint {
   // GetRunner gets information about a single runner.
   rpc GetRunner(GetRunnerRequest) returns (Runner);
 
-  // ListRunners gets information about existing runners.
+  // ListRunners lists runners that are currently registered with the waypoint server.
+  // This list does not include previous on-demand runners that have exited.
   rpc ListRunners(ListRunnersRequest) returns (ListRunnersResponse);
 
   // GetServerConfig sets configuration for the Waypoint server.

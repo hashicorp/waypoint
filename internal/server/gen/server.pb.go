@@ -30839,7 +30839,8 @@ type WaypointClient interface {
 	GetJobStream(ctx context.Context, in *GetJobStreamRequest, opts ...grpc.CallOption) (Waypoint_GetJobStreamClient, error)
 	// GetRunner gets information about a single runner.
 	GetRunner(ctx context.Context, in *GetRunnerRequest, opts ...grpc.CallOption) (*Runner, error)
-	// ListRunners gets information about existing runners.
+	// ListRunners lists runners that are currently registered with the waypoint server.
+	// This list does not include previous on-demand runners that have exited.
 	ListRunners(ctx context.Context, in *ListRunnersRequest, opts ...grpc.CallOption) (*ListRunnersResponse, error)
 	// GetServerConfig sets configuration for the Waypoint server.
 	GetServerConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetServerConfigResponse, error)
@@ -32008,7 +32009,8 @@ type WaypointServer interface {
 	GetJobStream(*GetJobStreamRequest, Waypoint_GetJobStreamServer) error
 	// GetRunner gets information about a single runner.
 	GetRunner(context.Context, *GetRunnerRequest) (*Runner, error)
-	// ListRunners gets information about existing runners.
+	// ListRunners lists runners that are currently registered with the waypoint server.
+	// This list does not include previous on-demand runners that have exited.
 	ListRunners(context.Context, *ListRunnersRequest) (*ListRunnersResponse, error)
 	// GetServerConfig sets configuration for the Waypoint server.
 	GetServerConfig(context.Context, *emptypb.Empty) (*GetServerConfigResponse, error)
