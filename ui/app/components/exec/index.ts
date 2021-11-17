@@ -53,7 +53,6 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     });
     socket.addEventListener('message', (event) => {
       console.log(event);
-      let reader = new FileReader();
       let output = event.data;
       let resp = ExecStreamResponse.deserializeBinary(output);
       console.log(resp.getEventCase());
@@ -61,29 +60,43 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
         console.log(resp.getOpen()?.toString());
         this.terminal.writeln('Connected to instance...');
       }
+      // Open
       if (resp.getEventCase() === 3) {
         console.log(resp.getOutput()?.getChannel());
         console.log(resp.getOutput()?.getData_asU8());
         console.log(resp.getOutput()?.toObject());
       }
-
-      if (resp.getEventCase() === 1) {
+      // Exit
+      if (resp.getEventCase() === 2) {
+        this.terminal.writeln('Connection closed...');
         console.log(resp.getOutput()?.getChannel());
         console.log(resp.getOutput()?.getData_asU8());
         console.log(resp.getOutput()?.toObject());
+      }
+      // Output
+      if (resp.getEventCase() === 1) {
+        console.log(resp.getOutput()?.getChannel());
+        console.log(resp.getOutput()?.getData_asU8());
+        console.log(resp.getOutput()?.getData());
+        console.log(resp.getOutput()?.toObject());
         this.terminal.writeUtf8(resp.getOutput()?.getData_asU8());
+      }
+      // Event not set
+      if (resp.getEventCase() === 0) {
+        this.terminal.writeln('Connection closed...');
+        console.log(resp.getOutput()?.getChannel());
+        console.log(resp.getOutput()?.getData_asU8());
+        console.log(resp.getOutput()?.toObject());
       }
       console.log(resp.toObject());
     });
     socket.addEventListener('close', (event) => {
-      let reader = new FileReader();
       let output = event.data;
       let resp = ExecStreamResponse.deserializeBinary(output);
       console.log(resp.getEventCase());
       console.log(resp.toObject());
     });
     socket.addEventListener('error', (event) => {
-      let reader = new FileReader();
       let output = event.data;
       let resp = ExecStreamResponse.deserializeBinary(output);
       console.log(resp.getEventCase());
