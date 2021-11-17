@@ -1,7 +1,7 @@
 package ptypes
 
 import (
-	"github.com/go-ozzo/ozzo-validation/v4"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
@@ -9,6 +9,21 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/validationext"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
+
+// TestWorkspace returns a valid workspace for tests.
+func TestWorkspace(t testing.T, src *pb.Workspace) *pb.Workspace {
+	t.Helper()
+
+	if src == nil {
+		src = &pb.Workspace{}
+	}
+
+	require.NoError(t, mergo.Merge(src, &pb.Workspace{
+		Name: "test",
+	}))
+
+	return src
+}
 
 func TestGetWorkspaceRequest(t testing.T, src *pb.GetWorkspaceRequest) *pb.GetWorkspaceRequest {
 	t.Helper()
@@ -34,4 +49,22 @@ func ValidateGetWorkspaceRequest(v *pb.GetWorkspaceRequest) error {
 			return ValidateRefWorkspaceRules(v.Workspace)
 		}),
 	))
+}
+
+// ValidateWorkspace validates the Workspace structure.
+func ValidateWorkspace(v *pb.Workspace) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		ValidateWorkspaceRules(v)...,
+	))
+}
+
+// ValidateWorkspaceRules
+func ValidateWorkspaceRules(v *pb.Workspace) []*validation.FieldRules {
+	return []*validation.FieldRules{
+		validation.Field(&v.Name,
+			validation.Required,
+			// re-use Username regex here
+			validation.Match(UsernameRegexp),
+			validation.Length(1, 38)),
+	}
 }

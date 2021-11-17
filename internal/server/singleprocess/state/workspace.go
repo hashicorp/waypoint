@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
+	gptypes "github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-memdb"
+	"github.com/hashicorp/waypoint/internal/server/ptypes"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,14 +15,41 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-var (
-	workspaceBucket = []byte("workspaces")
-)
+var workspaceBucket = []byte("workspaces")
 
 func init() {
 	dbBuckets = append(dbBuckets, workspaceBucket)
 	dbIndexers = append(dbIndexers, (*State).workspaceIndexInit)
 	schemas = append(schemas, workspaceIndexSchema)
+}
+
+// WorkspacePut creates or updates the given Workspace.
+//
+// Project changes will be ignored
+func (s *State) WorkspacePut(workspace *pb.Workspace) error {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		prev, err := s.workspaceGet(dbTxn, memTxn, &pb.Ref_Workspace{
+			Workspace: workspace.Name,
+		})
+		if err != nil && status.Code(err) != codes.NotFound {
+			// We ignore NotFound since this function is used to create
+			// Workspaces.
+			return err
+		}
+		if err == nil {
+			// If we have a previous Workspace, preserve the Projects.
+			workspace.Projects = prev.Projects
+		}
+		return s.workspacePut(dbTxn, memTxn, workspace)
+	})
+	if err == nil {
+		memTxn.Commit()
+	}
+
+	return err
 }
 
 // WorkspaceList lists all the workspaces.
@@ -90,6 +118,29 @@ PROJECT_LOOP:
 	return result, nil
 }
 
+func (s *State) workspacePut(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	value *pb.Workspace,
+) error {
+	// Validate the Workspace
+	if err := ptypes.ValidateWorkspace(value); err != nil {
+		return err
+	}
+
+	id := []byte(strings.ToLower(value.Name))
+
+	// Get the global bucket and write the value to it.
+	b := dbTxn.Bucket(workspaceBucket)
+	if err := dbPut(b, id, value); err != nil {
+		return err
+	}
+
+	// Create our index value and write that.
+	_, err := s.workspaceIndexSet(memTxn, id, value)
+	return err
+}
+
 func (s *State) workspaceListFromIter(iter memdb.ResultIterator) ([]*pb.Workspace, error) {
 	var result []*pb.Workspace
 	for {
@@ -132,6 +183,16 @@ func (s *State) WorkspaceGet(n string) (*pb.Workspace, error) {
 
 	return nil, status.Errorf(codes.NotFound,
 		"not found for name: %q", n)
+}
+
+func (s *State) workspaceGet(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref *pb.Ref_Workspace,
+) (*pb.Workspace, error) {
+	var result pb.Workspace
+	b := dbTxn.Bucket(workspaceBucket)
+	return &result, dbGet(b, []byte(strings.ToLower(ref.Workspace)), &result)
 }
 
 // workspaceTouchApp updates a workspace with the given project/application
@@ -180,7 +241,7 @@ func (s *State) workspaceTouchApp(
 	}
 
 	// Update our timestamps
-	tsProto, err := ptypes.TimestampProto(ts)
+	tsProto, err := gptypes.TimestampProto(ts)
 	if err != nil {
 		return err
 	}
@@ -310,7 +371,7 @@ func (s *State) workspaceInitProject(
 	return p, nil
 }
 
-// workspaceInitApp finds the given app or creates a new one if it doensn't exist.
+// workspaceInitApp finds the given app or creates a new one if it doesn't exist.
 // This does not persist to any database.
 func (s *State) workspaceInitApp(
 	wsProject *pb.Workspace_Project,

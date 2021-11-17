@@ -64,15 +64,23 @@ func (s *service) UpsertWorkspace(
 	ctx context.Context,
 	req *pb.UpsertWorkspaceRequest,
 ) (*pb.UpsertWorkspaceResponse, error) {
+	// TODO (clint): validate workspace request
 	// if err := ptypes.ValidateGetWorkspaceRequest(req); err != nil {
 	// 	return nil, err
 	// }
 
-	// result, err := s.state.WorkspaceGet(req.Workspace.Workspace)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	workspace, err := s.state.WorkspaceGet(req.Workspace.Name)
+	if err != nil {
+		return nil, err
+	}
 
-	// return &pb.UpsertWorkspaceResponse{Workspace: nil}, nil
+	workspace.Name = req.Workspace.Name
+
+	// TODO: (clint) merge projects
+
+	if err := s.state.WorkspacePut(workspace); err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }

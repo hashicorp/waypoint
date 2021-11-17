@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
@@ -14,6 +16,7 @@ func init() {
 		TestWorkspace,
 		TestWorkspaceProject,
 		TestWorkspaceApp,
+		TestWorkspacePut,
 	}
 }
 
@@ -78,6 +81,124 @@ func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 			result, err := s.WorkspaceList()
 			require.NoError(err)
 			require.Len(result, 2)
+		}
+	})
+}
+
+func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
+	t.Run("Require Name", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		{
+			workspace, err := s.WorkspaceGet("default")
+			require.Equal(codes.NotFound, status.Code(err))
+			require.Error(err)
+			require.Nil(workspace)
+		}
+
+		// Put
+		err := s.WorkspacePut(&pb.Workspace{})
+		require.Error(err)
+
+		err = s.WorkspacePut(&pb.Workspace{Name: "no spaces allowed in names"})
+		require.Error(err)
+	})
+
+	t.Run("Default", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		{
+			workspace, err := s.WorkspaceGet("default")
+			require.Equal(codes.NotFound, status.Code(err))
+			require.Error(err)
+			require.Nil(workspace)
+		}
+
+		// Put
+		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+			Name: "default",
+		}))
+		require.NoError(err)
+
+		{
+			workspace, err := s.WorkspaceGet("default")
+			require.NoError(err)
+			require.NotNil(workspace)
+			require.Equal(workspace.Name, "default")
+		}
+	})
+
+	t.Run("Multi List", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Put
+		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+			Name: "default",
+		}))
+		require.NoError(err)
+		// Put
+		err = s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+			Name: "dev",
+		}))
+		require.NoError(err)
+		err = s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+			Name: "staging",
+		}))
+		require.NoError(err)
+
+		{
+			workspace, err := s.WorkspaceList()
+			require.NoError(err)
+			require.NotNil(workspace)
+			require.Len(workspace, 3)
+		}
+	})
+
+	t.Run("Preserves Projects", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Create a project
+		err := s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: "projectA",
+		}))
+		require.NoError(err)
+
+		// Put a Workspace with a Project
+		err = s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+			Name: "staging",
+			Projects: []*pb.Workspace_Project{
+				{
+					Project:   &pb.Ref_Project{Project: "projectA"},
+					Workspace: &pb.Ref_Workspace{Workspace: "staging"},
+				},
+			},
+		}))
+		require.NoError(err)
+
+		// Put again, without projects
+		err = s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+			Name: "staging",
+		}))
+		require.NoError(err)
+
+		{
+			workspace, err := s.WorkspaceGet("staging")
+			require.NoError(err)
+			require.NotNil(workspace)
+			require.Equal(workspace.Name, "staging")
+			require.Len(workspace.Projects, 1)
 		}
 	})
 }

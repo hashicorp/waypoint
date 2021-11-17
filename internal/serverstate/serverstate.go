@@ -89,6 +89,7 @@ type Interface interface {
 	WorkspaceListByProject(*pb.Ref_Project) ([]*pb.Workspace, error)
 	WorkspaceListByApp(*pb.Ref_Application) ([]*pb.Workspace, error)
 	WorkspaceGet(string) (*pb.Workspace, error)
+	WorkspacePut(*pb.Workspace) error
 
 	ProjectPut(*pb.Project) error
 	ProjectGet(*pb.Ref_Project) (*pb.Project, error)
