@@ -54,16 +54,37 @@ func (r *Runner) executeJob(
 	// update our job later.
 	var configInfo pb.Job_Config
 
-	// Eventually we'll need to extract the data source. For now we're
-	// just building for local exec so it is the working directory.
+	// Try to load the waypoint.hcl from the working directory first.
 	configInfo.Source = pb.Job_Config_FILE
 	path, err := configpkg.FindPath(wd, "", false)
 	if err != nil {
 		return nil, err
 	}
+
+	// Waypoint.hcl set on the job overrides all, even if we found a
+	// waypoint.hcl in the working directory above.
+	if job.WaypointHcl != nil && len(job.WaypointHcl.Contents) > 0 {
+		log.Info("using waypoint.hcl associated with the project in the server")
+
+		// ext has the extra extension information for the file. We add
+		// ".json" if this is JSON-formatted.
+		ext := ""
+		if job.WaypointHcl.Format == pb.Hcl_JSON {
+			ext = ".json"
+		}
+
+		// We just write this into the working directory.
+		path = filepath.Join(wd, configpkg.Filename+ext)
+		if err := ioutil.WriteFile(path, job.WaypointHcl.Contents, 0644); err != nil {
+			return nil, status.Errorf(codes.Internal,
+				"Failed to write waypoint.hcl from job metadata: %s", err)
+		}
+
+		configInfo.Source = pb.Job_Config_JOB
+	}
+
+	// If we still have no path, try to load from the project.
 	if path == "" {
-		// If no waypoint.hcl file is found in the downloaded data, look for
-		// a default waypoint HCL.
 		log.Trace("waypoint.hcl not found in downloaded data, looking for default in server")
 		if v := resp.Project.WaypointHcl; len(v) > 0 {
 			log.Info("using waypoint.hcl associated with the project in the server")
@@ -71,7 +92,7 @@ func (r *Runner) executeJob(
 			// ext has the extra extension information for the file. We add
 			// ".json" if this is JSON-formatted.
 			ext := ""
-			if resp.Project.WaypointHclFormat == pb.Project_JSON {
+			if resp.Project.WaypointHclFormat == pb.Hcl_JSON {
 				ext = ".json"
 			}
 

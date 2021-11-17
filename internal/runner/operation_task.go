@@ -35,7 +35,7 @@ func (r *Runner) executeStartTaskOp(
 		},
 		Dir:        "/tmp",
 		ConfigData: params.HclConfig,
-		JsonConfig: params.HclFormat == pb.Project_JSON,
+		JsonConfig: params.HclFormat == pb.Hcl_JSON,
 		Type:       component.TaskLauncherType,
 	})
 	if err != nil {
@@ -156,7 +156,7 @@ func (r *Runner) executeStopTaskOp(
 		},
 		Dir:        "/tmp",
 		ConfigData: params.HclConfig,
-		JsonConfig: params.HclFormat == pb.Project_JSON,
+		JsonConfig: params.HclFormat == pb.Hcl_JSON,
 		Type:       component.TaskLauncherType,
 	})
 	if err != nil {

@@ -102,14 +102,14 @@ func isWaypointHcl(p *pb.Project) validation.Rule {
 		}
 
 		switch p.WaypointHclFormat {
-		case pb.Project_HCL:
+		case pb.Hcl_HCL:
 			_, diag := hclsyntax.ParseConfig(p.WaypointHcl, "<waypoint-hcl>", hcl.Pos{})
 			if diag.HasErrors() {
 				return diag
 			}
 
 			return nil
-		case pb.Project_JSON:
+		case pb.Hcl_JSON:
 			_, diag := hcljson.Parse(p.WaypointHcl, "<waypoint-hcl>")
 			if diag.HasErrors() {
 				return diag

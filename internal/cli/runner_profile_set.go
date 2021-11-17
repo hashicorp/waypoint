@@ -122,7 +122,7 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 
 		switch filepath.Ext(path) {
 		case ".hcl":
-			od.ConfigFormat = pb.Project_HCL
+			od.ConfigFormat = pb.Hcl_HCL
 			_, diag := hclsyntax.ParseConfig(data, "<waypoint-hcl>", hcl.Pos{})
 			if diag.HasErrors() {
 				c.ui.Output(
@@ -135,7 +135,7 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 			}
 
 		case ".json":
-			od.ConfigFormat = pb.Project_JSON
+			od.ConfigFormat = pb.Hcl_JSON
 			_, diag := hcljson.Parse(data, "<waypoint-hcl>")
 			if diag.HasErrors() {
 				c.ui.Output(

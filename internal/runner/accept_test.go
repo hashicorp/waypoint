@@ -430,7 +430,7 @@ func TestRunnerAccept_noConfig_serverHclJson(t *testing.T) {
 			Project: &pb.Project{
 				Name:              ref.Project,
 				WaypointHcl:       []byte(configpkg.TestSourceJSON(t)),
-				WaypointHclFormat: pb.Project_JSON,
+				WaypointHclFormat: pb.Hcl_JSON,
 			},
 		})
 		require.NoError(err)
@@ -458,6 +458,59 @@ func TestRunnerAccept_noConfig_serverHclJson(t *testing.T) {
 	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId})
 	require.NoError(err)
 	require.Equal(pb.Job_SUCCESS, job.State)
+}
+
+func TestRunnerAccept_jobHcl(t *testing.T) {
+	require := require.New(t)
+	ctx := context.Background()
+
+	// Setup our runner
+	client := singleprocess.TestServer(t)
+	runner := TestRunner(t, WithClient(client))
+	require.NoError(runner.Start())
+
+	// Change our directory to a new temp directory with no config file.
+	testChdir(t, testTempDir(t))
+
+	// Create the project/app
+	ref := serverptypes.TestJobNew(t, nil).Application
+	{
+		_, err := client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+			Project: &pb.Project{
+				Name: ref.Project,
+			},
+		})
+		require.NoError(err)
+	}
+
+	{
+		_, err := client.UpsertApplication(context.Background(), &pb.UpsertApplicationRequest{
+			Project: &pb.Ref_Project{Project: ref.Project},
+			Name:    ref.Application,
+		})
+		require.NoError(err)
+	}
+
+	// Queue a job
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, &pb.Job{
+			WaypointHcl: &pb.Hcl{
+				Contents: []byte(configpkg.TestSourceJSON(t)),
+				Format:   pb.Hcl_JSON,
+			},
+		}),
+	})
+	require.NoError(err)
+	jobId := queueResp.JobId
+
+	// Accept should complete
+	require.NoError(runner.Accept(ctx))
+
+	// Verify that the job is completed
+	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId})
+	require.NoError(err)
+	require.Equal(pb.Job_SUCCESS, job.State)
+	require.Equal(pb.Job_Config_JOB, job.Config.Source)
 }
 
 // testGitFixture MUST be called before TestRunner since TestRunner

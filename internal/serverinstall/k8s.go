@@ -1141,7 +1141,7 @@ func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		PluginType:   "kubernetes",
 		Default:      true,
 		PluginConfig: cfgJson,
-		ConfigFormat: pb.Project_JSON,
+		ConfigFormat: pb.Hcl_JSON,
 	}
 }
 

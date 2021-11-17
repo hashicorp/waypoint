@@ -76,7 +76,7 @@ func TestValidateProject(t *testing.T) {
 			"invalid Waypoint HCL",
 			func(v *pb.Project) {
 				v.WaypointHcl = []byte("i am not valid")
-				v.WaypointHclFormat = pb.Project_HCL
+				v.WaypointHclFormat = pb.Hcl_HCL
 			},
 			"waypoint_hcl",
 		},
@@ -85,7 +85,7 @@ func TestValidateProject(t *testing.T) {
 			"valid Waypoint HCL",
 			func(v *pb.Project) {
 				v.WaypointHcl = []byte("foo = 42")
-				v.WaypointHclFormat = pb.Project_HCL
+				v.WaypointHclFormat = pb.Hcl_HCL
 			},
 			"",
 		},

@@ -601,7 +601,7 @@ message Project {
   // file. The CLI may still be used for remote operations by executing
   // i.e. waypoint up <project>
   bytes waypoint_hcl = 5;
-  Format waypoint_hcl_format = 6;
+  Hcl.Format waypoint_hcl_format = 6;
 
   // Indicates signal to be sent to any applications when their config files
   // change.
@@ -624,11 +624,6 @@ message Project {
   // ondemand_runner, if set, indicates the configuation on the ondemand runner
   // that should be used for the operations of this project.
   Ref.OnDemandRunnerConfig ondemand_runner = 11;
-
-  enum Format {
-    HCL = 0; // We assume HCL by default
-    JSON = 1;
-  }
 
   message Poll {
     // enabled must be set to true to enable polling.
@@ -1355,6 +1350,12 @@ message Job {
   DataSource data_source = 6;
   map<string, string> data_source_overrides = 7;
 
+  // Waypoint.hcl file contents. This is OPTIONAL and not typically supplied.
+  // If this is not provided, the job will source the waypoint.hcl file
+  // from the server or the data source. This can be used to override those
+  // and force a specific waypoint.hcl to be used.
+  Hcl waypoint_hcl = 12;
+
   // variables store the key/value pairs of parsed variables; the parse
   // prior to running a job only verifies syntax correctness. Verifying type
   // checks and the presence of required values will both need to be done
@@ -1477,6 +1478,10 @@ message Job {
       // Server is when the waypoint.hcl was loaded from the server
       // from being written directly in the project settings.
       SERVER = 2;
+
+      // Job is when the waypoint.hcl was loaded directly from the job by
+      // being embedded in the "waypoint_hcl" field (tag 12).
+      JOB = 3;
     }
   }
 
@@ -1771,7 +1776,7 @@ message Job {
     // decoded to figure out the task plugin and then provide that
     // task plugin with configuration
     bytes hcl_config = 3;
-    Project.Format hcl_format = 4;
+    Hcl.Format hcl_format = 4;
   }
 
   message StartTaskLaunchOp {
@@ -2582,7 +2587,7 @@ message OnDemandRunnerConfig {
   bytes plugin_config = 5;
 
   // config format specifies the format of plugin_config
-  Project.Format config_format = 6;
+  Hcl.Format config_format = 6;
 
   // Indicates if this entry is the default for any new projects.
   bool default = 7;
@@ -4146,6 +4151,26 @@ message Snapshot {
 /********************************************************************
 * Waypoint.hcl Helpers
 ********************************************************************/
+
+// Hcl is a message used to encapsulate the contents of an HCL
+// file. Note that this was introduced later so there are some message types
+// that reproduce this functionality without actually using this in order
+// to maintain backwards compatibility.
+message Hcl {
+  // Raw contents of the HCL file.
+  bytes contents = 1;
+
+  // Format of HCL contents
+  Format format = 2;
+
+  // HCL files can be in either HCL or JSON syntax. We need to know ahead of
+  // time in order to parse it properly. We could perform heuristics but
+  // we prefer to be explicit.
+  enum Format {
+    HCL = 0; // We assume HCL by default
+    JSON = 1;
+  }
+}
 
 message WaypointHclFmtRequest {
   bytes waypoint_hcl = 1;

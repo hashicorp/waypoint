@@ -1106,7 +1106,7 @@ func (i *NomadInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		PluginType:   "nomad",
 		Default:      true,
 		PluginConfig: cfgJson,
-		ConfigFormat: pb.Project_JSON,
+		ConfigFormat: pb.Hcl_JSON,
 	}
 }
 
