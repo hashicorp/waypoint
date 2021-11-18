@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	gptypes "github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-memdb"
-	"github.com/hashicorp/waypoint/internal/server/ptypes"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -123,11 +122,6 @@ func (s *State) workspacePut(
 	memTxn *memdb.Txn,
 	value *pb.Workspace,
 ) error {
-	// Validate the Workspace
-	if err := ptypes.ValidateWorkspace(value); err != nil {
-		return err
-	}
-
 	id := []byte(strings.ToLower(value.Name))
 
 	// Get the global bucket and write the value to it.
@@ -241,7 +235,7 @@ func (s *State) workspaceTouchApp(
 	}
 
 	// Update our timestamps
-	tsProto, err := gptypes.TimestampProto(ts)
+	tsProto, err := ptypes.TimestampProto(ts)
 	if err != nil {
 		return err
 	}

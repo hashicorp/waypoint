@@ -1,6 +1,8 @@
 package ptypes
 
 import (
+	"regexp"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
@@ -9,6 +11,10 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/validationext"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
+
+// WorkspaceNameRegexp is the valid Workspace name regular expression.
+// Copied from UsernameRegexp.
+var WorkspaceNameRegexp = regexp.MustCompile(`(?i)^[a-z\d][a-z\d_-]*[a-z\d]+$`)
 
 // TestWorkspace returns a valid workspace for tests.
 func TestWorkspace(t testing.T, src *pb.Workspace) *pb.Workspace {
@@ -63,8 +69,7 @@ func ValidateWorkspaceRules(v *pb.Workspace) []*validation.FieldRules {
 	return []*validation.FieldRules{
 		validation.Field(&v.Name,
 			validation.Required,
-			// re-use Username regex here
-			validation.Match(UsernameRegexp),
+			validation.Match(WorkspaceNameRegexp),
 			validation.Length(1, 38)),
 	}
 }

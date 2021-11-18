@@ -28,30 +28,43 @@ func TestUpsertWorkspace(t *testing.T) {
 		{
 			resp, err := client.UpsertWorkspace(ctx, &Req{
 				Workspace: serverptypes.TestWorkspace(t, &pb.Workspace{
-					Name: "default",
+					Name: "staging",
 				}),
 			})
 			require.NoError(err)
 			require.NotNil(resp)
 		}
-		// },
-		// 	{
-		// 		resp, err := client.UpsertAuthMethod(ctx, &Req{
-		// 			AuthMethod: serverptypes.TestAuthMethod(t, &pb.AuthMethod{
-		// 				Name: "B",
-		// 			}),
-		// 		})
-		// 		require.NoError(err)
-		// 		require.NotNil(resp)
-		// 	}
 
-		// 	// List
-		// 	resp, err := client.ListOIDCAuthMethods(ctx, &empty.Empty{})
-		// 	require.NoError(err)
-		// 	require.NotNil(resp)
-		// 	require.Len(resp.AuthMethods, 2)
-		// 	for _, method := range resp.AuthMethods {
-		// 		require.NotEmpty(method.Name)
-		// 	}
+		// Create another
+		{
+			resp, err := client.UpsertWorkspace(ctx, &Req{
+				Workspace: serverptypes.TestWorkspace(t, &pb.Workspace{
+					Name: "dev",
+				}),
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+		}
+
+		// List
+		{
+			resp, err := client.ListWorkspaces(ctx, &pb.ListWorkspacesRequest{})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Len(resp.Workspaces, 2)
+			for _, workspace := range resp.Workspaces {
+				require.NotEmpty(workspace.Name)
+			}
+		}
+
+		// Get dev
+		{
+			resp, err := client.GetWorkspace(ctx, &pb.GetWorkspaceRequest{
+				Workspace: &pb.Ref_Workspace{Workspace: "dev"},
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal(resp.Workspace.Name, "dev")
+		}
 	})
 }

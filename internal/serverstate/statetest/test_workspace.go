@@ -86,27 +86,6 @@ func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 }
 
 func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
-	t.Run("Require Name", func(t *testing.T) {
-		require := require.New(t)
-
-		s := factory(t)
-		defer s.Close()
-
-		{
-			workspace, err := s.WorkspaceGet("default")
-			require.Equal(codes.NotFound, status.Code(err))
-			require.Error(err)
-			require.Nil(workspace)
-		}
-
-		// Put
-		err := s.WorkspacePut(&pb.Workspace{})
-		require.Error(err)
-
-		err = s.WorkspacePut(&pb.Workspace{Name: "no spaces allowed in names"})
-		require.Error(err)
-	})
-
 	t.Run("Default", func(t *testing.T) {
 		require := require.New(t)
 
@@ -140,16 +119,19 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
-		// Put
+		// Put default
 		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "default",
 		}))
 		require.NoError(err)
-		// Put
+
+		// Put dev
 		err = s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "dev",
 		}))
 		require.NoError(err)
+
+		// Put staging
 		err = s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "staging",
 		}))
@@ -169,14 +151,8 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
-		// Create a project
-		err := s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
-			Name: "projectA",
-		}))
-		require.NoError(err)
-
 		// Put a Workspace with a Project
-		err = s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "staging",
 			Projects: []*pb.Workspace_Project{
 				{

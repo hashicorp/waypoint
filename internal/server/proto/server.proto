@@ -73,9 +73,9 @@ service Waypoint {
   // GetWorkspace returns the workspace.
   rpc GetWorkspace(GetWorkspaceRequest) returns (GetWorkspaceResponse);
 
-  // UpsertWorkspace upserts the workspace.
+  // UpsertWorkspace upserts the workspace. Changes to a Workspace's Projects
+  // are ignored at this time.
   rpc UpsertWorkspace(UpsertWorkspaceRequest) returns (UpsertWorkspaceResponse);
-
 
   // UpsertProject upserts the project.
   rpc UpsertProject(UpsertProjectRequest) returns (UpsertProjectResponse);
@@ -2422,19 +2422,13 @@ message GetWorkspaceResponse {
   Workspace workspace = 1;
 }
 
-// TODO: (clint) document upsert workspace
 message UpsertWorkspaceRequest {
-  // workspace name
   Workspace workspace = 1;
-
-  // projects to associate with the workspace
-  repeated Ref.Project projects = 2;
 }
 
 message UpsertWorkspaceResponse {
   Workspace workspace = 1;
 }
-
 
 /********************************************************************
 * Projects & Apps
