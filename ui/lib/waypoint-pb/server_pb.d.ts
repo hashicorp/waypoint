@@ -196,6 +196,14 @@ export namespace UI {
     hasOrder(): boolean;
     clearOrder(): ListReleasesRequest;
 
+    getStatusList(): Array<StatusFilter>;
+    setStatusList(value: Array<StatusFilter>): ListReleasesRequest;
+    clearStatusList(): ListReleasesRequest;
+    addStatus(value?: StatusFilter, index?: number): StatusFilter;
+
+    getPhysicalState(): Operation.PhysicalState;
+    setPhysicalState(value: Operation.PhysicalState): ListReleasesRequest;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): ListReleasesRequest.AsObject;
     static toObject(includeInstance: boolean, msg: ListReleasesRequest): ListReleasesRequest.AsObject;
@@ -209,6 +217,8 @@ export namespace UI {
       application?: Ref.Application.AsObject,
       workspace?: Ref.Workspace.AsObject,
       order?: OperationOrder.AsObject,
+      statusList: Array<StatusFilter.AsObject>,
+      physicalState: Operation.PhysicalState,
     }
   }
 
@@ -583,8 +593,8 @@ export class Project extends jspb.Message {
   getWaypointHcl_asB64(): string;
   setWaypointHcl(value: Uint8Array | string): Project;
 
-  getWaypointHclFormat(): Project.Format;
-  setWaypointHclFormat(value: Project.Format): Project;
+  getWaypointHclFormat(): Hcl.Format;
+  setWaypointHclFormat(value: Hcl.Format): Project;
 
   getFileChangeSignal(): string;
   setFileChangeSignal(value: string): Project;
@@ -620,7 +630,7 @@ export namespace Project {
     dataSource?: Job.DataSource.AsObject,
     dataSourcePoll?: Project.Poll.AsObject,
     waypointHcl: Uint8Array | string,
-    waypointHclFormat: Project.Format,
+    waypointHclFormat: Hcl.Format,
     fileChangeSignal: string,
     variablesList: Array<Variable.AsObject>,
     statusReportPoll?: Project.AppStatusPoll.AsObject,
@@ -672,11 +682,6 @@ export namespace Project {
     }
   }
 
-
-  export enum Format { 
-    HCL = 0,
-    JSON = 1,
-  }
 }
 
 export class Workspace extends jspb.Message {
@@ -1222,6 +1227,9 @@ export namespace Ref {
     getId(): string;
     setId(value: string): OnDemandRunnerConfig;
 
+    getName(): string;
+    setName(value: string): OnDemandRunnerConfig;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): OnDemandRunnerConfig.AsObject;
     static toObject(includeInstance: boolean, msg: OnDemandRunnerConfig): OnDemandRunnerConfig.AsObject;
@@ -1233,6 +1241,7 @@ export namespace Ref {
   export namespace OnDemandRunnerConfig {
     export type AsObject = {
       id: string,
+      name: string,
     }
   }
 
@@ -2143,6 +2152,16 @@ export class Job extends jspb.Message {
   getSingletonId(): string;
   setSingletonId(value: string): Job;
 
+  getDependsOnList(): Array<string>;
+  setDependsOnList(value: Array<string>): Job;
+  clearDependsOnList(): Job;
+  addDependsOn(value: string, index?: number): Job;
+
+  getDependsOnAllowFailureList(): Array<string>;
+  setDependsOnAllowFailureList(value: Array<string>): Job;
+  clearDependsOnAllowFailureList(): Job;
+  addDependsOnAllowFailure(value: string, index?: number): Job;
+
   getApplication(): Ref.Application | undefined;
   setApplication(value?: Ref.Application): Job;
   hasApplication(): boolean;
@@ -2168,6 +2187,11 @@ export class Job extends jspb.Message {
 
   getDataSourceOverridesMap(): jspb.Map<string, string>;
   clearDataSourceOverridesMap(): Job;
+
+  getWaypointHcl(): Hcl | undefined;
+  setWaypointHcl(value?: Hcl): Job;
+  hasWaypointHcl(): boolean;
+  clearWaypointHcl(): Job;
 
   getVariablesList(): Array<Variable>;
   setVariablesList(value: Array<Variable>): Job;
@@ -2341,12 +2365,15 @@ export namespace Job {
   export type AsObject = {
     id: string,
     singletonId: string,
+    dependsOnList: Array<string>,
+    dependsOnAllowFailureList: Array<string>,
     application?: Ref.Application.AsObject,
     workspace?: Ref.Workspace.AsObject,
     targetRunner?: Ref.Runner.AsObject,
     labelsMap: Array<[string, string]>,
     dataSource?: Job.DataSource.AsObject,
     dataSourceOverridesMap: Array<[string, string]>,
+    waypointHcl?: Hcl.AsObject,
     variablesList: Array<Variable.AsObject>,
     noop?: Job.Noop.AsObject,
     build?: Job.BuildOp.AsObject,
@@ -2501,6 +2528,7 @@ export namespace Job {
       UNKNOWN = 0,
       FILE = 1,
       SERVER = 2,
+      JOB = 3,
     }
   }
 
@@ -3205,8 +3233,8 @@ export namespace Job {
     getHclConfig_asB64(): string;
     setHclConfig(value: Uint8Array | string): TaskPluginParams;
 
-    getHclFormat(): Project.Format;
-    setHclFormat(value: Project.Format): TaskPluginParams;
+    getHclFormat(): Hcl.Format;
+    setHclFormat(value: Hcl.Format): TaskPluginParams;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): TaskPluginParams.AsObject;
@@ -3220,7 +3248,7 @@ export namespace Job {
     export type AsObject = {
       pluginType: string,
       hclConfig: Uint8Array | string,
-      hclFormat: Project.Format,
+      hclFormat: Hcl.Format,
     }
   }
 
@@ -3274,15 +3302,20 @@ export namespace Job {
 
 
   export class StopTaskLaunchOp extends jspb.Message {
-    getState(): google_protobuf_any_pb.Any | undefined;
-    setState(value?: google_protobuf_any_pb.Any): StopTaskLaunchOp;
-    hasState(): boolean;
-    clearState(): StopTaskLaunchOp;
-
     getParams(): Job.TaskPluginParams | undefined;
     setParams(value?: Job.TaskPluginParams): StopTaskLaunchOp;
     hasParams(): boolean;
     clearParams(): StopTaskLaunchOp;
+
+    getDirect(): google_protobuf_any_pb.Any | undefined;
+    setDirect(value?: google_protobuf_any_pb.Any): StopTaskLaunchOp;
+    hasDirect(): boolean;
+    clearDirect(): StopTaskLaunchOp;
+
+    getStartJobId(): string;
+    setStartJobId(value: string): StopTaskLaunchOp;
+
+    getStateCase(): StopTaskLaunchOp.StateCase;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): StopTaskLaunchOp.AsObject;
@@ -3294,8 +3327,15 @@ export namespace Job {
 
   export namespace StopTaskLaunchOp {
     export type AsObject = {
-      state?: google_protobuf_any_pb.Any.AsObject,
       params?: Job.TaskPluginParams.AsObject,
+      direct?: google_protobuf_any_pb.Any.AsObject,
+      startJobId: string,
+    }
+
+    export enum StateCase { 
+      STATE_NOT_SET = 0,
+      DIRECT = 1,
+      START_JOB_ID = 3,
     }
   }
 
@@ -4805,6 +4845,40 @@ export namespace GetRunnerRequest {
   }
 }
 
+export class ListRunnersRequest extends jspb.Message {
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListRunnersRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ListRunnersRequest): ListRunnersRequest.AsObject;
+  static serializeBinaryToWriter(message: ListRunnersRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListRunnersRequest;
+  static deserializeBinaryFromReader(message: ListRunnersRequest, reader: jspb.BinaryReader): ListRunnersRequest;
+}
+
+export namespace ListRunnersRequest {
+  export type AsObject = {
+  }
+}
+
+export class ListRunnersResponse extends jspb.Message {
+  getRunnersList(): Array<Runner>;
+  setRunnersList(value: Array<Runner>): ListRunnersResponse;
+  clearRunnersList(): ListRunnersResponse;
+  addRunners(value?: Runner, index?: number): Runner;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListRunnersResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ListRunnersResponse): ListRunnersResponse.AsObject;
+  static serializeBinaryToWriter(message: ListRunnersResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListRunnersResponse;
+  static deserializeBinaryFromReader(message: ListRunnersResponse, reader: jspb.BinaryReader): ListRunnersResponse;
+}
+
+export namespace ListRunnersResponse {
+  export type AsObject = {
+    runnersList: Array<Runner.AsObject>,
+  }
+}
+
 export class SetServerConfigRequest extends jspb.Message {
   getConfig(): ServerConfig | undefined;
   setConfig(value?: ServerConfig): SetServerConfigRequest;
@@ -5593,6 +5667,9 @@ export class OnDemandRunnerConfig extends jspb.Message {
   getId(): string;
   setId(value: string): OnDemandRunnerConfig;
 
+  getName(): string;
+  setName(value: string): OnDemandRunnerConfig;
+
   getOciUrl(): string;
   setOciUrl(value: string): OnDemandRunnerConfig;
 
@@ -5607,8 +5684,8 @@ export class OnDemandRunnerConfig extends jspb.Message {
   getPluginConfig_asB64(): string;
   setPluginConfig(value: Uint8Array | string): OnDemandRunnerConfig;
 
-  getConfigFormat(): Project.Format;
-  setConfigFormat(value: Project.Format): OnDemandRunnerConfig;
+  getConfigFormat(): Hcl.Format;
+  setConfigFormat(value: Hcl.Format): OnDemandRunnerConfig;
 
   getDefault(): boolean;
   setDefault(value: boolean): OnDemandRunnerConfig;
@@ -5624,11 +5701,12 @@ export class OnDemandRunnerConfig extends jspb.Message {
 export namespace OnDemandRunnerConfig {
   export type AsObject = {
     id: string,
+    name: string,
     ociUrl: string,
     environmentVariablesMap: Array<[string, string]>,
     pluginType: string,
     pluginConfig: Uint8Array | string,
-    configFormat: Project.Format,
+    configFormat: Hcl.Format,
     pb_default: boolean,
   }
 }
@@ -8966,6 +9044,35 @@ export namespace Snapshot {
     }
   }
 
+}
+
+export class Hcl extends jspb.Message {
+  getContents(): Uint8Array | string;
+  getContents_asU8(): Uint8Array;
+  getContents_asB64(): string;
+  setContents(value: Uint8Array | string): Hcl;
+
+  getFormat(): Hcl.Format;
+  setFormat(value: Hcl.Format): Hcl;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Hcl.AsObject;
+  static toObject(includeInstance: boolean, msg: Hcl): Hcl.AsObject;
+  static serializeBinaryToWriter(message: Hcl, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Hcl;
+  static deserializeBinaryFromReader(message: Hcl, reader: jspb.BinaryReader): Hcl;
+}
+
+export namespace Hcl {
+  export type AsObject = {
+    contents: Uint8Array | string,
+    format: Hcl.Format,
+  }
+
+  export enum Format { 
+    HCL = 0,
+    JSON = 1,
+  }
 }
 
 export class WaypointHclFmtRequest extends jspb.Message {
