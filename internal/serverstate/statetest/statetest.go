@@ -2,6 +2,7 @@ package statetest
 
 import (
 	"crypto/rand"
+	"fmt"
 	"testing"
 
 	ulidpkg "github.com/oklog/ulid"
@@ -37,6 +38,20 @@ func Test(t *testing.T, f Factory, rf RestartFactory) {
 			}
 		})
 	}
+}
+
+// TestGroup runs a specific group of validation tests for a state implementation.
+func TestGroup(t *testing.T, name string, f Factory, rf RestartFactory) {
+	funcs, ok := tests[name]
+	if !ok {
+		panic(fmt.Sprintf("unknown test group: %s", name))
+	}
+
+	t.Run(name, func(t *testing.T) {
+		for _, tf := range funcs {
+			tf(t, f, rf)
+		}
+	})
 }
 
 // tests is the list of tests to run.
