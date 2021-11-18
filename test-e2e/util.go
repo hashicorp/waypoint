@@ -56,6 +56,8 @@ type TableOutput struct {
 	rows   []string
 }
 
+// Sets up a new project test directory in a temp folder, and renames the
+// project to have a random suffix. Provides project isolation between runs.
 func SetupTestProject(templateDir string) (projectName string, projectDir string, err error) {
 	projectRandomId := randSuffix()
 
@@ -94,6 +96,7 @@ func SetupTestProject(templateDir string) (projectName string, projectDir string
 	return newProjectName, tempDir, nil
 }
 
+// Runs the test, ensures output contains outputContains
 func (b *binary) RunWithOutput(outputContains string, args string) {
 	stdout := b.Run(args)
 	if !strings.Contains(stdout, outputContains) {
@@ -101,6 +104,7 @@ func (b *binary) RunWithOutput(outputContains string, args string) {
 	}
 }
 
+// Appends -o json to the args, runs the test, returns the unmarshalled json
 func (b *binary) RunJson(args string) map[string]interface{} {
 	args = args + " -o json"
 	stdout := b.Run(args)
@@ -112,6 +116,7 @@ func (b *binary) RunJson(args string) map[string]interface{} {
 	return ret
 }
 
+// Runs the test, formats as a table, and requires expectedLength rows
 func (b *binary) RunTableExpectLength(expectedLength int, args string) {
 	table := b.RunTable(args)
 	if len(table.rows) != expectedLength {
@@ -119,6 +124,7 @@ func (b *binary) RunTableExpectLength(expectedLength int, args string) {
 	}
 }
 
+// Runs the command, presents output as a table, fails test on error
 func (b *binary) RunTable(args string) TableOutput {
 	stdout := b.Run(args)
 	lines := strings.Split(stdout, "\n")
@@ -156,6 +162,7 @@ func splitArgs(args string) []string {
 	return strings.Split(args, " ")
 }
 
+// Runs the command, fails the test on errors
 func (b *binary) Run(args string) (stdout string) {
 	fmt.Printf("running %s ...\n", args)
 	stdout, stderr, err := b.RunRaw(splitArgs(args)...)
