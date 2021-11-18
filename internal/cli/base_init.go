@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -21,24 +20,15 @@ import (
 
 // initConfig initializes the configuration with the specified filename from the CLI.
 // If filename is empty, it will default to configpkg.Filename.
-func (c *baseCommand) initConfig(filename string, optional bool) (*configpkg.Config, error) {
+// Not finding config is not an error case - config will return nil.
+func (c *baseCommand) initConfig(filename string) (*configpkg.Config, error) {
 	path, err := c.initConfigPath(filename)
 	if err != nil {
 		return nil, err
 	}
 
 	if path == "" {
-		if optional {
-			return nil, nil
-		}
-
-		return nil, errors.New(
-			"A Waypoint configuration file (waypoint.hcl) is required but wasn't found.\n" +
-				"The command can use configuration stored on the server by adding project/app\n" +
-				"as a final argument on the command line.\n" +
-				"For instance: `waypoint deployment list webapp/web` for the app 'web' in\n" +
-				"the project 'webapp'",
-		)
+		return nil, nil
 	}
 
 	return c.initConfigLoad(path)
@@ -112,8 +102,8 @@ func (c *baseCommand) initClient(
 		clientpkg.WithLabels(c.flagLabels),
 		clientpkg.WithSourceOverrides(c.flagRemoteSource),
 	}
-	if !c.flagRemote && c.autoServer {
-		opts = append(opts, clientpkg.WithLocal())
+	if c.noLocalServer {
+		opts = append(opts, clientpkg.WithNoLocalServer())
 	}
 
 	if c.ui != nil {

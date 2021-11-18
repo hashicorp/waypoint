@@ -24,7 +24,7 @@ func (c *UserInspectCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
-		WithNoAutoServer(), // local mode has no need for tokens
+		WithNoLocalServer(), // local mode has no need for tokens
 	); err != nil {
 		return 1
 	}

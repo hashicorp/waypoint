@@ -29,7 +29,8 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(flags),
-		WithMultipleApp(),
+		WithSingleAppTarget(),
+		WithRunnerRequired(),
 	); err != nil {
 		return 1
 	}
@@ -37,7 +38,6 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		app.UI.Output("Destroying deployments for %s", app.Ref().Application, terminal.WithHeaderStyle())
-		c.refApp = app.Ref()
 
 		// Determine the deployments to delete
 		var deployments []*pb.Deployment
@@ -45,7 +45,7 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 		var err error
 		if len(args) > 0 {
 			// If we have arguments, we only delete the deployments specified.
-			deployments, err = c.getDeployments(ctx, args)
+			deployments, err = c.getDeployments(ctx, app.Ref(), args)
 			if err != nil {
 				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 				return ErrSentinel
@@ -89,7 +89,7 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 	return 0
 }
 
-func (c *DeploymentDestroyCommand) getDeployments(ctx context.Context, ids []string) ([]*pb.Deployment, error) {
+func (c *DeploymentDestroyCommand) getDeployments(ctx context.Context, refApp *pb.Ref_Application, ids []string) ([]*pb.Deployment, error) {
 	var result []*pb.Deployment
 
 	// Get each deployment
@@ -101,7 +101,7 @@ func (c *DeploymentDestroyCommand) getDeployments(ctx context.Context, ids []str
 		if v, err := strconv.ParseInt(id, 10, 64); err == nil {
 			ref.Target = &pb.Ref_Operation_Sequence{
 				Sequence: &pb.Ref_OperationSeq{
-					Application: c.refApp,
+					Application: refApp,
 					Number:      uint64(v),
 				},
 			}

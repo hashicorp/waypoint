@@ -42,7 +42,7 @@ func (c *InitCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
-		WithClient(false),
+		WithNoClient(),
 	); err != nil {
 		return 1
 	}
@@ -220,7 +220,7 @@ func (c *InitCommand) validateConfig() bool {
 	defer sg.Wait()
 
 	s := sg.Add("Validating configuration file...")
-	cfg, err := c.initConfig(c.fromProject, false)
+	cfg, err := c.initConfig(c.fromProject)
 	if err != nil {
 		c.stepError(s, initStepConfig, err)
 		return false

@@ -29,7 +29,7 @@ func (c *LogsCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithSingleApp(),
+		WithSingleAppTarget(),
 	); err != nil {
 		return 1
 	}

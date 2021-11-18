@@ -43,7 +43,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
-		WithNoAutoServer(),
+		WithNoLocalServer(),
 	); err != nil {
 		return 1
 	}

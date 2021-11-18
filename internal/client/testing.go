@@ -29,9 +29,12 @@ func TestProject(t testing.T, opts ...Option) *Project {
 	// Initialize our client
 	result, err := New(ctx, append([]Option{
 		WithClient(client),
-		WithLocal(),
 		WithProjectRef(&pb.Ref_Project{Project: "test_p"}),
 	}, opts...)...)
+	require.NoError(err)
+
+	// Start the local runner
+	_, err = result.StartLocalRunner()
 	require.NoError(err)
 
 	// Move into a temporary directory

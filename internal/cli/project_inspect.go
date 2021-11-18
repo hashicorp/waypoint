@@ -25,7 +25,7 @@ func (c *ProjectInspectCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(flagSet),
-		WithConfig(true), // optional config loading
+		WithProjectTarget(),
 	); err != nil {
 		return 1
 	}

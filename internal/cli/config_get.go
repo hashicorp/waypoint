@@ -28,7 +28,7 @@ func (c *ConfigGetCommand) Run(args []string) int {
 
 		// Don't allow a local in-mem server because configuration
 		// makes no sense with the local server.
-		WithNoAutoServer(),
+		WithNoLocalServer(),
 	}
 
 	// We parse our flags twice in this command because we need to

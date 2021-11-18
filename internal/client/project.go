@@ -30,9 +30,10 @@ type Project struct {
 	cleanupFunc         func()
 	serverVersion       *pb.VersionInfo
 
-	local bool
+	useLocalRunner bool
 
-	localServer bool // True when a local server is created
+	noLocalServer bool // config setting - indicates the project should never create a local server
+	localServer   bool // True when a local server is created
 
 	// These are used to manage a local runner and its job processing
 	// in a goroutine.
@@ -89,28 +90,33 @@ func New(ctx context.Context, opts ...Option) (*Project, error) {
 		client.workspace = &pb.Ref_Workspace{Workspace: "default"}
 	}
 
-	if client.local {
-		client.logger.Debug("starting runner to process local jobs")
-		r, err := client.startRunner()
-		if err != nil {
-			return nil, err
-		}
+	return client, nil
+}
 
-		client.activeRunner = r
-
-		// We spin up the job processing here. Anything that spawns jobs (either locally spawned
-		// or server spawned) will be processed by this runner ONLY if the runner is directly targeted.
-		// Because this runner's lifetime is bound to a CLI context and therefore transient, we don't
-		// want to accept jobs that aren't related to local activities (job's queued or RPCs made)
-		// because they'll hang the CLI randomly as those jobs run (it's also a security issue).
-		client.wg.Add(1)
-		go func() {
-			defer client.wg.Done()
-			r.AcceptMany(client.bg)
-		}()
+// StartLocalRunner starts a local runner in a separate goroutine.
+func (c *Project) StartLocalRunner() (*runner.Runner, error) {
+	c.logger.Debug("starting runner to process local jobs")
+	r, err := c.startRunner()
+	if err != nil {
+		return nil, err
 	}
 
-	return client, nil
+	c.activeRunner = r
+
+	// We spin up the job processing here. Anything that spawns jobs (either locally spawned
+	// or server spawned) will be processed by this runner ONLY if the runner is directly targeted.
+	// Because this runner's lifetime is bound to a CLI context and therefore transient, we don't
+	// want to accept jobs that aren't related to local activities (job's queued or RPCs made)
+	// because they'll hang the CLI randomly as those jobs run (it's also a security issue).
+	c.wg.Add(1)
+	go func() {
+		defer c.wg.Done()
+		r.AcceptMany(c.bg)
+	}()
+
+	c.useLocalRunner = true
+
+	return r, nil
 }
 
 // LocalRunnerId returns the id of the runner that this project started
@@ -252,16 +258,6 @@ func WithSourceOverrides(m map[string]string) Option {
 	}
 }
 
-// WithLocal puts the client in local exec mode. In this mode, the client
-// will spin up a per-operation runner locally and reference the local on-disk
-// data for all operations.
-func WithLocal() Option {
-	return func(c *Project, cfg *config) error {
-		c.local = true
-		return nil
-	}
-}
-
 // WithLogger sets the logger for the client.
 func WithLogger(log hclog.Logger) Option {
 	return func(c *Project, cfg *config) error {
@@ -274,6 +270,15 @@ func WithLogger(log hclog.Logger) Option {
 func WithUI(ui terminal.UI) Option {
 	return func(c *Project, cfg *config) error {
 		c.UI = ui
+		return nil
+	}
+}
+
+// WithNoLocalServer prevents the project client from automatically
+// creating a local server.
+func WithNoLocalServer() Option {
+	return func(c *Project, cfg *config) error {
+		c.noLocalServer = true
 		return nil
 	}
 }
