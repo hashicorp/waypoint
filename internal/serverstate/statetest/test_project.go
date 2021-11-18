@@ -253,7 +253,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 		})))
 
 		// Should be triggered.
-		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+		require.False(ws.Watch(time.After(2 * time.Second)))
 
 		// Get exact
 		{
@@ -317,7 +317,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 		require.NoError(s.ProjectPollComplete(pA, now.Add(1*time.Second)))
 
 		// Should be triggered.
-		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+		require.False(ws.Watch(time.After(2 * time.Second)))
 
 		// Get exact
 		{
