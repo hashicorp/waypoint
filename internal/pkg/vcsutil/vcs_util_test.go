@@ -11,39 +11,42 @@ import (
 )
 
 // TODO(izaak): clean up afterwards
+type VCSTester struct {
+	repoPath       string
+	remoteRepoPath string
+	remoteUrl      string
+}
 
-func generateGitState(branchName string) (repoFolder string, remoteUrl string, err error) {
+func generateGitState(branchName string) (VCSTester, error) {
 
 	log := hclog.Default()
 
 	// Create a temporary directory for our test
 	td, err := ioutil.TempDir("", "test")
 	if err != nil {
-		return "", "", err
+		return VCSTester{}, err
 	}
-	//defer os.RemoveAll(td)
 
 	// Create a temporary directory for our remote
 	remote, err := ioutil.TempDir("", "test")
 	if err != nil {
-		return "", "", err
+		return VCSTester{}, err
 	}
-	//defer os.RemoveAll(remote)
 
 	if _, err := runGitCommand(log, td, "init", "-b", branchName); err != nil {
-		return "", "", err
+		return VCSTester{}, err
 	}
 
 	if _, err := runGitCommand(log, remote, "init"); err != nil {
-		return "", "", err
+		return VCSTester{}, err
 	}
 
-	remoteUrl = remote + "/.git"
+	remoteUrl := remote + "/.git"
 
 	remoteName := "remote"
 	// add remote
 	if _, err := runGitCommand(log, td, "remote", "add", remoteName, remoteUrl); err != nil {
-		return "", "", err
+		return VCSTester{}, err
 	}
 
 	// Create a test file and commit
@@ -52,18 +55,27 @@ func generateGitState(branchName string) (repoFolder string, remoteUrl string, e
 	r.Close()
 
 	if _, err := runGitCommand(log, td, "add", "main"); err != nil {
-		return "", "", err
+		return VCSTester{}, err
 	}
 
 	if _, err := runGitCommand(log, td, "commit", "-m", "'first commit'"); err != nil {
-		return "", "", err
+		return VCSTester{}, err
 	}
 
 	if _, err := runGitCommand(log, td, "push", remoteName, branchName); err != nil {
-		return "", "", err
+		return VCSTester{}, err
 	}
 
-	return td, remoteUrl, nil
+	return VCSTester{
+		td,
+		remote,
+		remoteUrl,
+	}, nil
+}
+
+func cleanupGeneratedDirs(vcsTester VCSTester) {
+	os.RemoveAll(vcsTester.repoPath)
+	os.RemoveAll(vcsTester.remoteRepoPath)
 }
 
 func TestIsDirty(t *testing.T) {
@@ -72,27 +84,28 @@ func TestIsDirty(t *testing.T) {
 	require := require.New(t)
 	branchName := "waypoint"
 
-	repoPath, remoteUrl, err := generateGitState(branchName)
+	vcsTester, err := generateGitState(branchName)
 	require.NoError(err)
+	defer cleanupGeneratedDirs(vcsTester)
 
 	v := NewVcsChecker(
 		hclog.Default(),
-		repoPath,
+		vcsTester.repoPath,
 	)
 
 	t.Run("Initial state is clean", func(t *testing.T) {
-		dirty, err := v.IsDirty(remoteUrl, branchName)
+		dirty, err := v.IsDirty(vcsTester.remoteUrl, branchName)
 		require.NoError(err)
 		require.False(dirty)
 	})
 
 	t.Run("Creating (but not commiting) a new file is dirty", func(t *testing.T) {
-		file := repoPath + "/dirtyfile"
+		file := vcsTester.repoPath + "/dirtyfile"
 		r, err := os.OpenFile(file, os.O_CREATE, 0600)
 		r.Close()
 		require.NoError(err)
 
-		dirty, err := v.IsDirty(remoteUrl, branchName)
+		dirty, err := v.IsDirty(vcsTester.remoteUrl, branchName)
 		require.NoError(err)
 		require.True(dirty)
 	})
