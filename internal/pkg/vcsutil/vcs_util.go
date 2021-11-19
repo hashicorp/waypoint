@@ -121,7 +121,7 @@ func (v *VcsChecker) remoteHasDiff(remoteName string, remoteBranch string) (bool
 	return false, nil
 }
 
-// remoteFileHasDiff compares the named file in the local repo to the 
+// remoteFileHasDiff compares the named file in the local repo to the
 // specified remote and branch
 func (v *VcsChecker) remoteFileHasDiff(remoteName string, remoteBranch string, filename string) (bool, error) {
 	diff, err := v.runVcsGitCommand("diff", fmt.Sprintf("%s/%s", remoteName, remoteBranch), "--", filename)
