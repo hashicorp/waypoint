@@ -6,14 +6,12 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	pbmocks "github.com/hashicorp/waypoint/internal/server/gen/mocks"
+	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 )
 
 func TestCheckFlagsAfterArgs(t *testing.T) {
@@ -208,143 +206,123 @@ func TestWorkspacePrecedence(t *testing.T) {
 	}
 }
 
-func Test_remoteIsPossible(t *testing.T) {
+func Test_remoteOpPreferred(t *testing.T) {
 	log := hclog.Default()
+	require := require.New(t)
 
-	type args struct {
-		project           *pb.Project
-		runnersResp       *pb.ListRunnersResponse
-		runnerConfigsResp *pb.ListOnDemandRunnerConfigsResponse
+	ctx := context.Background()
+
+	client := singleprocess.TestServer(t)
+
+	project := &pb.Project{
+		Name: "test",
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    bool
-		wantErr bool
-	}{
-		{
-			name: "Choose local if remote enabled is false for the project.",
-			args: args{
-				project: &pb.Project{
-					RemoteEnabled: false,
-				},
-			},
-			want:    false,
-			wantErr: false,
-		},
 
-		{
-			name: "Choose local if the datasource is not remote-capable",
-			args: args{
-				project: &pb.Project{
-					RemoteEnabled: true,
-					DataSource: &pb.Job_DataSource{
-						Source: &pb.Job_DataSource_Local{},
-					},
-				},
-			},
-			want:    false,
-			wantErr: false,
-		},
+	_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
+	require.Nil(err)
 
-		{
-			name: "Choose local if there are no remote runners",
-			args: args{
-				project: &pb.Project{
-					RemoteEnabled: true,
-					DataSource: &pb.Job_DataSource{
-						Source: &pb.Job_DataSource_Git{},
-					},
-				},
-				runnersResp: &pb.ListRunnersResponse{Runners: []*pb.Runner{{Odr: true}}},
-			},
-			want:    false,
-			wantErr: false,
-		},
+	t.Run("Choose local if remote enabled is false for the project.", func(t *testing.T) {
+		project = &pb.Project{
+			Name:          "test",
+			RemoteEnabled: false,
+		}
+		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
+		require.Nil(err)
 
-		{
-			name: "Choose remote if the datasource is good, a remote runner exists, and a runner profile is set",
-			args: args{
-				project: &pb.Project{
-					RemoteEnabled: true,
-					DataSource: &pb.Job_DataSource{
-						Source: &pb.Job_DataSource_Git{},
-					},
-					OndemandRunner: &pb.Ref_OnDemandRunnerConfig{},
-				},
-				runnersResp: &pb.ListRunnersResponse{Runners: []*pb.Runner{{Odr: false}}},
-			},
-			want:    true,
-			wantErr: false,
-		},
+		remote, err := remoteOpPreferred(ctx, client, project, log)
+		require.Nil(err)
+		require.False(remote)
+	})
 
-		{
-			name: "Choose local if no runner profile is set for the project, and there is no default",
-			args: args{
-				project: &pb.Project{
-					RemoteEnabled: true,
-					DataSource: &pb.Job_DataSource{
-						Source: &pb.Job_DataSource_Git{},
-					},
-					OndemandRunner: nil,
-				},
-				runnerConfigsResp: &pb.ListOnDemandRunnerConfigsResponse{
-					Configs: []*pb.OnDemandRunnerConfig{{
-						Default: false,
-					}},
-				},
-				runnersResp: &pb.ListRunnersResponse{Runners: []*pb.Runner{{Odr: false}}},
+	t.Run("Choose local if the datasource is not remote-capable.", func(t *testing.T) {
+		project = &pb.Project{
+			Name:          "test",
+			RemoteEnabled: true,
+			DataSource: &pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Local{},
 			},
-			want:    false,
-			wantErr: false,
-		},
-		{
-			name: "Choose remote if the project is good and the default runner is set",
-			args: args{
-				project: &pb.Project{
-					RemoteEnabled: true,
-					DataSource: &pb.Job_DataSource{
-						Source: &pb.Job_DataSource_Git{},
-					},
-					OndemandRunner: nil,
-				},
-				runnerConfigsResp: &pb.ListOnDemandRunnerConfigsResponse{
-					Configs: []*pb.OnDemandRunnerConfig{{
-						Default: true,
-					}},
-				},
-				runnersResp: &pb.ListRunnersResponse{Runners: []*pb.Runner{{Odr: false}}},
+		}
+		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
+		require.Nil(err)
+
+		remote, err := remoteOpPreferred(ctx, client, project, log)
+		require.Nil(err)
+		require.False(remote)
+	})
+
+	remoteCapableDataSource := &pb.Job_DataSource{
+		Source: &pb.Job_DataSource_Git{
+			Git: &pb.Job_Git{
+				Ref: "main",
+				Url: "git.test",
 			},
-			want:    true,
-			wantErr: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx, cancel := context.WithCancel(context.Background())
 
-			var client pb.WaypointClient
-			if tt.args.runnerConfigsResp != nil || tt.args.runnersResp != nil {
-				m := &pbmocks.WaypointServer{}
-				// Called when initializing the client
-				m.On("BootstrapToken", mock.Anything, mock.Anything).Return(&pb.NewTokenResponse{Token: "hello"}, nil)
-				m.On("GetVersionInfo", mock.Anything, mock.Anything).Return(server.TestVersionInfoResponse(), nil)
+	// Register a remote runner
+	_, remoteRunnerClose := singleprocess.TestRunner(t, client, &pb.Runner{Odr: false})
+	defer remoteRunnerClose()
 
-				m.On("ListOnDemandRunnerConfigs", mock.Anything, mock.Anything).Return(tt.args.runnerConfigsResp, nil)
-				m.On("ListRunners", mock.Anything, mock.Anything).Return(tt.args.runnersResp, nil)
-				client = server.TestServer(t, m, server.TestWithContext(ctx))
-			}
+	t.Run("Choose remote if the datasource is good, a remote runner exists, and a runner profile is set for the project", func(t *testing.T) {
+		project = &pb.Project{
+			Name:           "test",
+			RemoteEnabled:  true,
+			DataSource:     remoteCapableDataSource,
+			OndemandRunner: &pb.Ref_OnDemandRunnerConfig{},
+		}
+		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
+		require.Nil(err)
 
-			got, err := remoteIsPossible(ctx, client, tt.args.project, log)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("remoteIsPossible() error = %v, wantErr %v", err, tt.wantErr)
-				cancel()
-				return
-			}
-			if got != tt.want {
-				t.Errorf("remoteIsPossible() got = %v, want %v", got, tt.want)
-			}
-			cancel()
-		})
-	}
+		remote, err := remoteOpPreferred(ctx, client, project, log)
+		require.Nil(err)
+		require.True(remote)
+	})
+
+	// Register a non-default runner profile
+	_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+		Config: &pb.OnDemandRunnerConfig{
+			Name:       "some non-default config",
+			PluginType: "docker",
+			Default:    false,
+		},
+	})
+	require.Nil(err)
+
+	t.Run("Choose local if no runner profile is set for the project, and there is no default", func(t *testing.T) {
+		project = &pb.Project{
+			Name:          "test",
+			RemoteEnabled: true,
+			DataSource:    remoteCapableDataSource,
+		}
+		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
+		require.Nil(err)
+
+		remote, err := remoteOpPreferred(ctx, client, project, log)
+		require.Nil(err)
+		require.False(remote)
+	})
+
+	// Register a default runner profile
+	_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+		Config: &pb.OnDemandRunnerConfig{
+			Name:       "the default",
+			PluginType: "docker",
+			Default:    true,
+		},
+	})
+	require.Nil(err)
+
+	t.Run("Choose remote if the project is good and the default runner is set", func(t *testing.T) {
+		project = &pb.Project{
+			Name:          "test",
+			RemoteEnabled: true,
+			DataSource:    remoteCapableDataSource,
+		}
+		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
+		require.Nil(err)
+
+		remote, err := remoteOpPreferred(ctx, client, project, log)
+		require.Nil(err)
+		require.True(remote)
+	})
 }

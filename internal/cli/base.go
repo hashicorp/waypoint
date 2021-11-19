@@ -399,12 +399,15 @@ func (c *baseCommand) Init(opts ...Option) error {
 	return nil
 }
 
-// remoteIsPossible attempts to determine if the current waypoint infrastructure will be successful
+// remoteOpPreferred attempts to determine if the current waypoint infrastructure will be successful
 // performing a remote operation against this project. It verifies the project's datasource,
 // it's ODR runner profile, and detects if a remote runner is currently registered.
-func remoteIsPossible(ctx context.Context, client pb.WaypointClient, project *pb.Project, log hclog.Logger) (bool, error) {
-	// Check if remote is disabled in the waypoint.hcl
-
+// If an operation can occur successfully remotely, we prefer the remote environment for consistency
+// and security reasons.
+//
+// Note that this cannot guarantee that an operation will succeed remotely - the remote environment
+// may not have the right auth configured, the right plugins configured, etc.
+func remoteOpPreferred(ctx context.Context, client pb.WaypointClient, project *pb.Project, log hclog.Logger) (bool, error) {
 	if !project.RemoteEnabled {
 		log.Debug("Remote operations are disabled for this project - operation cannot occur remotely")
 		return false, nil
@@ -453,9 +456,8 @@ func remoteIsPossible(ctx context.Context, client pb.WaypointClient, project *pb
 	}
 
 	// Check to see if we have a runner profile assigned to this project
-
 	if project.OndemandRunner != nil {
-		log.Debug("Project has an explicit ODR profile set - operation will work remotely")
+		log.Debug("Project has an explicit ODR profile set - operation is possible remotely")
 		return true, nil
 	}
 
@@ -476,11 +478,12 @@ func remoteIsPossible(ctx context.Context, client pb.WaypointClient, project *pb
 	}
 
 	if defaultRunnerProfileExists {
-		log.Debug("Default runner profile exists - operation will work remotely.")
+		log.Debug("Default runner profile exists - operation is possible remotely.")
 		return true, nil
 	}
 
 	log.Debug("No runner profile is set for this project and no global default exists - operation should happen locally")
+
 	// The operation here _could_ still happen remotely - executed on the remote runner itself without ODR.
 	// If it's a container build op it will probably fail (because no kaniko), and if it's a deploy/release op it
 	// very well might fail do to incorrect/insufficient permissions. Because it probably won't work, we won't try,
