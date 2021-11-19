@@ -99,7 +99,7 @@ func TestIsDirty(t *testing.T) {
 	)
 
 	t.Run("Initial state is clean", func(t *testing.T) {
-		dirty, err := v.IsDirty(vcsTester.remoteUrl, branchName)
+		dirty, err := v.RepoHasDiff(vcsTester.remoteUrl, branchName)
 		require.NoError(err)
 		require.False(dirty)
 	})
@@ -110,7 +110,7 @@ func TestIsDirty(t *testing.T) {
 		r.Close()
 		require.NoError(err)
 
-		dirty, err := v.IsDirty(vcsTester.remoteUrl, branchName)
+		dirty, err := v.RepoHasDiff(vcsTester.remoteUrl, branchName)
 		require.NoError(err)
 		require.True(dirty)
 	})
@@ -123,7 +123,7 @@ func TestIsDirty(t *testing.T) {
 		_, err = runGitCommand(v.log, vcsTester.repoPath, "commit", "-am", "\"committed\"")
 		require.NoError(err)
 
-		dirty, err := v.IsDirty(vcsTester.remoteUrl, branchName)
+		dirty, err := v.RepoHasDiff(vcsTester.remoteUrl, branchName)
 		require.NoError(err)
 		require.True(dirty)
 	})

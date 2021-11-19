@@ -22,8 +22,10 @@ func NewVcsChecker(log hclog.Logger, path string) *VcsChecker {
 	}
 }
 
-// TODO(izaak): think about http vs ssh urls
-func (v *VcsChecker) IsDirty(remoteUrl string, remoteBranch string) (bool, error) {
+// RepoHasDiff looks for unstaged, staged, and committed (but not pushed)
+// differences between the local VcsChecker.path repo and the specified
+// remote url and branch
+func (v *VcsChecker) RepoHasDiff(remoteUrl string, remoteBranch string) (bool, error) {
 	gitStatus, err := v.runVcsGitCommand("status", "-s")
 	if len(gitStatus) > 0 {
 		return true, nil
@@ -42,6 +44,9 @@ func (v *VcsChecker) IsDirty(remoteUrl string, remoteBranch string) (bool, error
 	return diff, nil
 }
 
+// FileHasDiff checks only the specified file for unstaged, staged, and
+// committed (but not pushed) differences between the local VcsChecker.path
+// repo and the specified remote url and branch
 func (v *VcsChecker) FileHasDiff(remoteUrl string, remoteBranch string, filename string) (bool, error) {
 	remoteName, err := v.getRemoteName(remoteUrl)
 	if err != nil {
