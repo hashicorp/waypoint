@@ -42,6 +42,8 @@ func (v *VcsChecker) IsDirty(remoteUrl string, remoteBranch string) (bool, error
 	return diff, nil
 }
 
+// getRemoteName queries the repo at VcsChecker.path for all remotes, and then
+// searches for the remote that matches the provided url
 func (v *VcsChecker) getRemoteName(url string) (name string, err error) {
 	remotes, err := v.runVcsGitCommand("remote", "-v")
 	if err != nil {
@@ -58,19 +60,19 @@ func (v *VcsChecker) getRemoteName(url string) (name string, err error) {
 			// This always happens once
 			continue
 		}
-		split1 := strings.Split(line, "\t")
-		if len(split1) != 2 {
+		split := strings.Split(line, "\t")
+		if len(split) != 2 {
 			// That's weird
 			continue
 		}
-		remoteName := split1[0]
-		theRestOfTheRemote := strings.Split(split1[1], " ")
-		if len(theRestOfTheRemote) != 2 {
+		remoteName := split[0]
+		remoteInfo := strings.Split(split[1], " ")
+		if len(remoteInfo) != 2 {
 			// That's weird too
 			continue
 		}
-		remoteUrl := theRestOfTheRemote[0]
-		remoteType := theRestOfTheRemote[1]
+		remoteUrl := remoteInfo[0]
+		remoteType := remoteInfo[1]
 
 		if url != remoteUrl {
 			continue
@@ -86,14 +88,15 @@ func (v *VcsChecker) getRemoteName(url string) (name string, err error) {
 
 		matchingRemoteName = remoteName
 	}
-
 	if matchingRemoteName == "" {
 		return "", fmt.Errorf("no remote with url matching %s found", url)
 	}
+
 	return matchingRemoteName, nil
 }
 
-// will error if no remote url is found
+// remoteHasDiff compares the local repo to the specified remote and branch,
+// and returns an error if no remote url is found
 func (v *VcsChecker) remoteHasDiff(remoteName string, remoteBranch string) (bool, error) {
 	diff, err := v.runVcsGitCommand("diff", fmt.Sprintf("%s/%s", remoteName, remoteBranch))
 	if err != nil {
@@ -105,10 +108,14 @@ func (v *VcsChecker) remoteHasDiff(remoteName string, remoteBranch string) (bool
 	return false, nil
 }
 
+// runVcsGitCommand runs a git command given the provided args against the repo
+// found at VcsChecker.path
 func (v *VcsChecker) runVcsGitCommand(gitArgs ...string) (output string, err error) {
 	return runGitCommand(v.log, v.path, gitArgs...)
 }
 
+// runGitCommand executes a git command against the repo at the given path with
+// the provided args, returning the standard output.
 func runGitCommand(log hclog.Logger, path string, gitArgs ...string) (output string, err error) {
 	args := append([]string{"-C", path}, gitArgs...)
 	log.Debug(fmt.Sprintf("Running this command: git %s", strings.Join(args, " ")))
