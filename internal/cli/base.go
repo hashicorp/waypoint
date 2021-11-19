@@ -445,7 +445,7 @@ func remoteOpPreferred(ctx context.Context, client pb.WaypointClient, project *p
 			// So if some other waypoint client is performing an operation at this moment, we will interpret
 			// that as a remote runner, and this will return a false positive.
 
-			// Also note that this is designed to run our own CLI runner.
+			// Also note that this is designed to run before se start our own CLI runner.
 			hasRemoteRunner = true
 			break
 		}
