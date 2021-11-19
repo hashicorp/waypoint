@@ -16,6 +16,7 @@ type VCSTester struct {
 	testFile       *os.File
 	remoteRepoPath string
 	remoteUrl      string
+	remoteName     string
 }
 
 func generateGitState(branchName string) (VCSTester, error) {
@@ -72,6 +73,7 @@ func generateGitState(branchName string) (VCSTester, error) {
 		r,
 		remote,
 		remoteUrl,
+		remoteName,
 	}, nil
 }
 
@@ -123,47 +125,50 @@ func TestIsDirty(t *testing.T) {
 	})
 }
 
-//func TestRemotesMatchCommitted(t *testing.T) {
-//	require := require.New(t)
-//
-//	// Create a temporary directory for our test
-//	td, err := ioutil.TempDir("", "test")
-//	require.NoError(err)
-//	defer os.RemoveAll(td)
-//
-//	// Create a temporary directory for our remote
-//	remote, err := ioutil.TempDir("", "test")
-//	require.NoError(err)
-//	defer os.RemoveAll(remote)
-//
-//	cmd := exec.Command("git", "-C", td, "init")
-//	err = cmd.Run()
-//	require.NoError(err)
-//
-//	// add remote
-//	cmd = exec.Command("git", "-C", td, "remote", "add", "remote", remote+"/.git")
-//	err = cmd.Run()
-//	require.NoError(err)
-//
-//	// check if local commits differ from remote
-//	match, err := remoteHasDiff(td, remote)
-//	require.NoError(err)
-//	require.False(match)
-//
-//	// commit file
-//	file := td + "/dirtyfile"
-//	r, err := os.OpenFile(file, os.O_CREATE, 0600)
-//	r.Close()
-//	require.NoError(err)
-//	cmd = exec.Command("git", "-C", td, "add", ".")
-//	err = cmd.Run()
-//	require.NoError(err)
-//	cmd = exec.Command("git", "-C", td, "commit", "-m", "'nothing much'")
-//	err = cmd.Run()
-//	require.NoError(err)
-//
-//	// check if local commits differ from remote
-//	match, err = remoteHasDiff(td, remote)
-//	require.NoError(err)
-//	require.True(match)
-//}
+func TestRemotesMatchCommitted(t *testing.T) {
+	hclog.Default().SetLevel(hclog.Debug)
+
+	require := require.New(t)
+	branchName := "waypoint"
+
+	vcsTester, err := generateGitState(branchName)
+	require.NoError(err)
+	defer cleanupGeneratedDirs(vcsTester)
+
+	v := NewVcsChecker(
+		hclog.Default(),
+		vcsTester.repoPath,
+	)
+
+	t.Run("Local commits don't differ from remote", func(t *testing.T) {
+		diff, err := v.remoteHasDiff(vcsTester.remoteName, branchName)
+		require.NoError(err)
+		require.False(diff)
+	})
+
+	t.Run("Local commits differ from remote on changes", func(t *testing.T) {change := []byte("I'm changing EVERYTHING")
+		err := ioutil.WriteFile(vcsTester.testFile.Name(), change, 0600)
+		require.NoError(err)
+
+		diff, err := v.remoteHasDiff(vcsTester.remoteName, branchName)
+		require.NoError(err)
+		require.True(diff)
+	})
+
+	// // commit file
+	// file := vcsTester.repoPath + "/dirtyfile"
+	// r, err := os.OpenFile(file, os.O_CREATE, 0600)
+	// r.Close()
+	// require.NoError(err)
+	// cmd = exec.Command("git", "-C", vcsTester.repoPath, "add", ".")
+	// err = cmd.Run()
+	// require.NoError(err)
+	// cmd = exec.Command("git", "-C", vcsTester.repoPath, "commit", "-m", "'nothing much'")
+	// err = cmd.Run()
+	// require.NoError(err)
+
+	// // check if local commits differ from remote
+	// match, err = v.remoteHasDiff(vcsTester.repoPath, vcsTester.remoteRepoPath)
+	// require.NoError(err)
+	// require.True(match)
+}

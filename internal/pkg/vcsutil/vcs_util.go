@@ -94,7 +94,7 @@ func (v *VcsChecker) getRemoteName(url string) (name string, err error) {
 func (v *VcsChecker) remoteHasDiff(remoteName string, remoteBranch string) (bool, error) {
 	diff, err := v.runVcsGitCommand("diff", fmt.Sprintf("%s/%s", remoteName, remoteBranch))
 	if err != nil {
-		return false, errors.Wrapf(err, "failed to diff against remote %s", remoteName)
+		return false, errors.Wrapf(err, "failed to diff against remote %q on branch %q", remoteName, remoteBranch)
 	}
 	if len(diff) > 0 {
 		return true, nil
