@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO(izaak): clean up afterwards
 type VCSTester struct {
 	repoPath       string
 	testFile       *os.File
@@ -28,12 +27,14 @@ func generateGitState(branchName string) (VCSTester, error) {
 	if err != nil {
 		return VCSTester{}, err
 	}
+	// cleanup is in a separate function since we can't defer it here
 
 	// Create a temporary directory for our remote
 	remote, err := ioutil.TempDir("", "test")
 	if err != nil {
 		return VCSTester{}, err
 	}
+	// cleanup is in a separate function since we can't defer it here
 
 	if _, err := runGitCommand(log, td, "init", "-b", branchName); err != nil {
 		return VCSTester{}, err
@@ -125,7 +126,7 @@ func TestIsDirty(t *testing.T) {
 	})
 }
 
-func TestRemotesMatchCommitted(t *testing.T) {
+func TestRemoteHasDiff(t *testing.T) {
 	hclog.Default().SetLevel(hclog.Debug)
 
 	require := require.New(t)
@@ -158,5 +159,73 @@ func TestRemotesMatchCommitted(t *testing.T) {
 		diff, err := v.remoteHasDiff(vcsTester.remoteName, branchName)
 		require.NoError(err)
 		require.True(diff)
+	})
+}
+
+func TestGetRemoteName(t *testing.T) {
+	hclog.Default().SetLevel(hclog.Debug)
+
+	require := require.New(t)
+	branchName := "waypoint"
+
+	vcsTester, err := generateGitState(branchName)
+	require.NoError(err)
+	defer cleanupGeneratedDirs(vcsTester)
+
+	v := NewVcsChecker(
+		hclog.Default(),
+		vcsTester.repoPath,
+	)
+
+	t.Run("Get the remote name", func(t *testing.T) {
+		name, err := v.getRemoteName(vcsTester.remoteUrl)
+		require.NoError(err)
+		require.Equal(vcsTester.remoteName, name)
+	})
+
+	t.Run("Get the remote name if multiple remotes", func(t *testing.T) {
+		// create a new dir for new remote
+		td, err := ioutil.TempDir("", "test")
+		defer os.RemoveAll(td)
+		require.NoError(err)
+
+		// add a remote
+		_, err = runGitCommand(v.log, v.path, "remote", "add", "newremote", td)
+		require.NoError(err)
+
+		// do it again for fun and profit
+		tdt, err := ioutil.TempDir("", "test")
+		defer os.RemoveAll(tdt)
+		require.NoError(err)
+
+		// add a remote
+		_, err = runGitCommand(v.log, v.path, "remote", "add", "znewremote", tdt)
+		require.NoError(err)
+
+		name, err := v.getRemoteName(vcsTester.remoteUrl)
+		require.NoError(err)
+		require.Equal(vcsTester.remoteName, name)
+	})
+
+	t.Run("Fail if no match found", func(t *testing.T) {
+		name, err := v.getRemoteName(vcsTester.remoteUrl+"noexist")
+		require.Error(err)
+		require.Empty(name)
+		require.Contains(err.Error(), "no remote with url matching")
+	})
+
+	t.Run("Fail if no remotes", func(t *testing.T) {
+		td, err := ioutil.TempDir("", "test")
+		defer os.RemoveAll(td)
+		require.NoError(err)
+
+		_, err = runGitCommand(v.log, td, "init")
+		require.NoError(err)
+		v.path = td
+
+		name, err := v.getRemoteName("irrelevant-to-test")
+		require.Error(err)
+		require.Empty(name)
+		require.Contains(err.Error(), "no remotes found for repo at path")
 	})
 }

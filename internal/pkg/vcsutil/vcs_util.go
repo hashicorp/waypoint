@@ -47,6 +47,9 @@ func (v *VcsChecker) getRemoteName(url string) (name string, err error) {
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to list git remotes")
 	}
+	if len(remotes) == 0 {
+		return "", fmt.Errorf("no remotes found for repo at path %q", v.path)
+	}
 
 	var matchingRemoteName string
 
@@ -74,10 +77,10 @@ func (v *VcsChecker) getRemoteName(url string) (name string, err error) {
 		}
 
 		// So the url matches, but can we fetch from it?
-		// It would be weird if we couldn't.
-
+		// If we can't, then a lot of other things in a gitops setup
+		// will fail; we'll double check though
 		if remoteType != "(fetch)" {
-			// TODO: it could be nice to warn if we find a remote with the right URI but wrong type
+			v.log.Warn("The git remote %q is not linked as a `fetch` source. Please tell us how you did this, we thought it was impossible.")
 			continue
 		}
 
