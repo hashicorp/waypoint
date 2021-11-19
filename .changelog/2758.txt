@@ -1,0 +1,3 @@
+```release-note:improvement
+core/server: add new grpc endpoint UpserWorkspace
+```
