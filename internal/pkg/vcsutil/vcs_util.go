@@ -42,8 +42,22 @@ func (v *VcsChecker) IsDirty(remoteUrl string, remoteBranch string) (bool, error
 	return diff, nil
 }
 
+func (v *VcsChecker) FileHasDiff(remoteUrl string, remoteBranch string, filename string) (bool, error) {
+	remoteName, err := v.getRemoteName(remoteUrl)
+	if err != nil {
+		return false, errors.Wrapf(err, "Failed to get remote name for url %s", remoteUrl)
+	}
+
+	diff, err := v.remoteFileHasDiff(remoteName, remoteBranch, filename)
+	if err != nil {
+		return false, err
+	}
+	return diff, nil
+}
+
 // getRemoteName queries the repo at VcsChecker.path for all remotes, and then
-// searches for the remote that matches the provided url
+// searches for the remote that matches the provided url, returning an error if
+// no remote url is found
 func (v *VcsChecker) getRemoteName(url string) (name string, err error) {
 	remotes, err := v.runVcsGitCommand("remote", "-v")
 	if err != nil {
@@ -95,10 +109,22 @@ func (v *VcsChecker) getRemoteName(url string) (name string, err error) {
 	return matchingRemoteName, nil
 }
 
-// remoteHasDiff compares the local repo to the specified remote and branch,
-// and returns an error if no remote url is found
+// remoteHasDiff compares the local repo to the specified remote and branch
 func (v *VcsChecker) remoteHasDiff(remoteName string, remoteBranch string) (bool, error) {
 	diff, err := v.runVcsGitCommand("diff", fmt.Sprintf("%s/%s", remoteName, remoteBranch))
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to diff against remote %q on branch %q", remoteName, remoteBranch)
+	}
+	if len(diff) > 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
+// remoteFileHasDiff compares the named file in the local repo to the 
+// specified remote and branch
+func (v *VcsChecker) remoteFileHasDiff(remoteName string, remoteBranch string, filename string) (bool, error) {
+	diff, err := v.runVcsGitCommand("diff", fmt.Sprintf("%s/%s", remoteName, remoteBranch), "--", filename)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to diff against remote %q on branch %q", remoteName, remoteBranch)
 	}

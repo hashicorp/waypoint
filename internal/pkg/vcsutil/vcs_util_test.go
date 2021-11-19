@@ -120,45 +120,12 @@ func TestIsDirty(t *testing.T) {
 		err := ioutil.WriteFile(vcsTester.testFile.Name(), change, 0600)
 		require.NoError(err)
 
+		_, err = runGitCommand(v.log, vcsTester.repoPath, "commit", "-am", "\"committed\"")
+		require.NoError(err)
+
 		dirty, err := v.IsDirty(vcsTester.remoteUrl, branchName)
 		require.NoError(err)
 		require.True(dirty)
-	})
-}
-
-func TestRemoteHasDiff(t *testing.T) {
-	hclog.Default().SetLevel(hclog.Debug)
-
-	require := require.New(t)
-	branchName := "waypoint"
-
-	vcsTester, err := generateGitState(branchName)
-	require.NoError(err)
-	defer cleanupGeneratedDirs(vcsTester)
-
-	v := NewVcsChecker(
-		hclog.Default(),
-		vcsTester.repoPath,
-	)
-
-	t.Run("Initial state is same as remote", func(t *testing.T) {
-		diff, err := v.remoteHasDiff(vcsTester.remoteName, branchName)
-		require.NoError(err)
-		require.False(diff)
-	})
-
-	t.Run("Local commits differ from remote on changes", func(t *testing.T) {
-		// create branch that differs from remote branch name for cross-branch comparison
-		_, err = runGitCommand(v.log, vcsTester.repoPath, "checkout", "-b", "newbranch")
-
-		change := []byte("I'm changing EVERYTHING")
-		require.NoError(err)
-		err := ioutil.WriteFile(vcsTester.testFile.Name(), change, 0600)
-		require.NoError(err)
-
-		diff, err := v.remoteHasDiff(vcsTester.remoteName, branchName)
-		require.NoError(err)
-		require.True(diff)
 	})
 }
 
@@ -227,5 +194,84 @@ func TestGetRemoteName(t *testing.T) {
 		require.Error(err)
 		require.Empty(name)
 		require.Contains(err.Error(), "no remotes found for repo at path")
+	})
+}
+
+func TestRemoteHasDiff(t *testing.T) {
+	hclog.Default().SetLevel(hclog.Debug)
+
+	require := require.New(t)
+	branchName := "waypoint"
+
+	vcsTester, err := generateGitState(branchName)
+	require.NoError(err)
+	defer cleanupGeneratedDirs(vcsTester)
+
+	v := NewVcsChecker(
+		hclog.Default(),
+		vcsTester.repoPath,
+	)
+
+	t.Run("Initial state is same as remote", func(t *testing.T) {
+		diff, err := v.remoteHasDiff(vcsTester.remoteName, branchName)
+		require.NoError(err)
+		require.False(diff)
+	})
+
+	t.Run("Local commits differ from remote on changes", func(t *testing.T) {
+		// create branch that differs from remote branch name for cross-branch comparison
+		_, err = runGitCommand(v.log, vcsTester.repoPath, "checkout", "-b", "newbranch")
+
+		change := []byte("I'm changing EVERYTHING")
+		require.NoError(err)
+		err := ioutil.WriteFile(vcsTester.testFile.Name(), change, 0600)
+		require.NoError(err)
+
+		diff, err := v.remoteHasDiff(vcsTester.remoteName, branchName)
+		require.NoError(err)
+		require.True(diff)
+	})
+}
+
+func TestRemoteFileHasDiff(t *testing.T) {
+	hclog.Default().SetLevel(hclog.Debug)
+
+	require := require.New(t)
+	branchName := "waypoint"
+
+	vcsTester, err := generateGitState(branchName)
+	require.NoError(err)
+	defer cleanupGeneratedDirs(vcsTester)
+
+	v := NewVcsChecker(
+		hclog.Default(),
+		vcsTester.repoPath,
+	)
+
+	t.Run("Initial state is same as remote", func(t *testing.T) {
+		diff, err := v.remoteFileHasDiff(vcsTester.remoteName, branchName, vcsTester.testFile.Name())
+		require.NoError(err)
+		require.False(diff)
+	})
+
+	t.Run("Diff for changes to specified file", func(t *testing.T) {
+		change := []byte("I'm changing EVERYTHING")
+		err := ioutil.WriteFile(vcsTester.testFile.Name(), change, 0600)
+		require.NoError(err)
+
+		diff, err := v.remoteFileHasDiff(vcsTester.remoteName, branchName, vcsTester.testFile.Name())
+		require.NoError(err)
+		require.True(diff)
+	})
+
+	t.Run("No diff for other local changes", func(t *testing.T) {
+		file := vcsTester.repoPath + "/dirtyfile"
+		r, err := os.OpenFile(file, os.O_CREATE, 0600)
+		r.Close()
+		require.NoError(err)
+
+		diff, err := v.remoteFileHasDiff(vcsTester.remoteName, branchName, vcsTester.testFile.Name())
+		require.NoError(err)
+		require.False(diff)
 	})
 }
