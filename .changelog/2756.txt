@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Fix panic when referencing runner profiles that do not exist
+```
