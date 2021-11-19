@@ -128,10 +128,14 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 		app.UI.Output("")
 		switch {
 		case releaseUrl != "":
-			printInplaceInfo(inplace, app)
-			app.UI.Output("   Release URL: %s", releaseUrl, terminal.WithSuccessStyle())
-			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
-
+			if deployUrl != "" {
+				printInplaceInfo(inplace, app)
+				app.UI.Output("   Release URL: %s", releaseUrl, terminal.WithSuccessStyle())
+				app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+			} else {
+				app.UI.Output("The deploy was successful! \n", terminal.WithSuccessStyle())
+				app.UI.Output("   Release URL: %s", releaseUrl, terminal.WithSuccessStyle())
+			}
 		case hostname != nil:
 			printInplaceInfo(inplace, app)
 			app.UI.Output("           URL: https://%s", hostname.Fqdn, terminal.WithSuccessStyle())
