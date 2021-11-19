@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Fix issue where users could not disable project polling from the CLI
+```
