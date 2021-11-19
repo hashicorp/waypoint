@@ -263,12 +263,23 @@ func Test_remoteOpPreferred(t *testing.T) {
 	_, remoteRunnerClose := singleprocess.TestRunner(t, client, &pb.Runner{Odr: false})
 	defer remoteRunnerClose()
 
+	// Register a non-default runner profile
+	odrProfileName := "project-specific ODR profile"
+	_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+		Config: &pb.OnDemandRunnerConfig{
+			Name:       odrProfileName,
+			PluginType: "docker",
+			Default:    false,
+		},
+	})
+	require.Nil(err)
+
 	t.Run("Choose remote if the datasource is good, a remote runner exists, and a runner profile is set for the project", func(t *testing.T) {
 		project = &pb.Project{
 			Name:           "test",
 			RemoteEnabled:  true,
 			DataSource:     remoteCapableDataSource,
-			OndemandRunner: &pb.Ref_OnDemandRunnerConfig{},
+			OndemandRunner: &pb.Ref_OnDemandRunnerConfig{Name: odrProfileName},
 		}
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
 		require.Nil(err)
@@ -277,16 +288,6 @@ func Test_remoteOpPreferred(t *testing.T) {
 		require.Nil(err)
 		require.True(remote)
 	})
-
-	// Register a non-default runner profile
-	_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
-		Config: &pb.OnDemandRunnerConfig{
-			Name:       "some non-default config",
-			PluginType: "docker",
-			Default:    false,
-		},
-	})
-	require.Nil(err)
 
 	t.Run("Choose local if no runner profile is set for the project, and there is no default", func(t *testing.T) {
 		project = &pb.Project{
