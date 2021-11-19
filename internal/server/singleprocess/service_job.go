@@ -166,7 +166,7 @@ func (s *service) queueJobReqToJob(
 		}
 	}
 
-	// If the job can be run any any runner, then we attempt to see if we should spawn
+	// If the job can be run by any runner, then we attempt to see if we should spawn
 	// on on-demand runner for it. We only consider jobs for any runner because ones
 	// that are targeted can not target on-demand runners, because they don't yet exist.
 	var od *pb.Ref_OnDemandRunnerConfig
@@ -238,6 +238,10 @@ func (s *service) wrapJobWithRunner(
 		return nil, err
 	}
 
+	if od == nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "no ODR config found for profile ref named %s", profileRef.Name)
+	}
+
 	// Generate our job to start the ODR
 	startJob, runnerId, err := s.onDemandRunnerStartJob(ctx, source, od)
 	if err != nil {
@@ -278,6 +282,10 @@ func (s *service) onDemandRunnerStartJob(
 	od *pb.OnDemandRunnerConfig,
 ) (*pb.Job, string, error) {
 	log := hclog.FromContext(ctx)
+
+	if od == nil {
+		return nil, "", status.Error(codes.FailedPrecondition, "Missing required parameter OnDemandRunnerConfig")
+	}
 
 	// Generate a unique ID for the runner
 	runnerId, err := server.Id()
