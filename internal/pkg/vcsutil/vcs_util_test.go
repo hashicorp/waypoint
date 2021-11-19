@@ -13,6 +13,7 @@ import (
 // TODO(izaak): clean up afterwards
 type VCSTester struct {
 	repoPath       string
+	testFile       *os.File
 	remoteRepoPath string
 	remoteUrl      string
 }
@@ -68,6 +69,7 @@ func generateGitState(branchName string) (VCSTester, error) {
 
 	return VCSTester{
 		td,
+		r,
 		remote,
 		remoteUrl,
 	}, nil
@@ -103,6 +105,16 @@ func TestIsDirty(t *testing.T) {
 		file := vcsTester.repoPath + "/dirtyfile"
 		r, err := os.OpenFile(file, os.O_CREATE, 0600)
 		r.Close()
+		require.NoError(err)
+
+		dirty, err := v.IsDirty(vcsTester.remoteUrl, branchName)
+		require.NoError(err)
+		require.True(dirty)
+	})
+
+	t.Run("Committing a change is dirty", func(t *testing.T) {
+		change := []byte("I'm changing EVERYTHING")
+		err := ioutil.WriteFile(vcsTester.testFile.Name(), change, 0600)
 		require.NoError(err)
 
 		dirty, err := v.IsDirty(vcsTester.remoteUrl, branchName)
