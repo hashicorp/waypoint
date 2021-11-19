@@ -208,7 +208,7 @@ func TestGetRemoteName(t *testing.T) {
 	})
 
 	t.Run("Fail if no match found", func(t *testing.T) {
-		name, err := v.getRemoteName(vcsTester.remoteUrl+"noexist")
+		name, err := v.getRemoteName(vcsTester.remoteUrl + "noexist")
 		require.Error(err)
 		require.Empty(name)
 		require.Contains(err.Error(), "no remote with url matching")
