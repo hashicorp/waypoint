@@ -52,11 +52,11 @@ func generateGitState(branchName string) (VCSTester, error) {
 	}
 
 	// Create a test file and commit
-	file := td + "/main"
+	file := td + "/testfile"
 	r, err := os.OpenFile(file, os.O_CREATE, 0600)
 	r.Close()
 
-	if _, err := runGitCommand(log, td, "add", "main"); err != nil {
+	if _, err := runGitCommand(log, td, "add", "testfile"); err != nil {
 		return VCSTester{}, err
 	}
 
@@ -140,13 +140,18 @@ func TestRemotesMatchCommitted(t *testing.T) {
 		vcsTester.repoPath,
 	)
 
-	t.Run("Local commits don't differ from remote", func(t *testing.T) {
+	t.Run("Initial state is same as remote", func(t *testing.T) {
 		diff, err := v.remoteHasDiff(vcsTester.remoteName, branchName)
 		require.NoError(err)
 		require.False(diff)
 	})
 
-	t.Run("Local commits differ from remote on changes", func(t *testing.T) {change := []byte("I'm changing EVERYTHING")
+	t.Run("Local commits differ from remote on changes", func(t *testing.T) {
+		// create branch that differs from remote branch name for cross-branch comparison
+		_, err = runGitCommand(v.log, vcsTester.repoPath, "checkout", "-b", "newbranch")
+
+		change := []byte("I'm changing EVERYTHING")
+		require.NoError(err)
 		err := ioutil.WriteFile(vcsTester.testFile.Name(), change, 0600)
 		require.NoError(err)
 
@@ -154,21 +159,4 @@ func TestRemotesMatchCommitted(t *testing.T) {
 		require.NoError(err)
 		require.True(diff)
 	})
-
-	// // commit file
-	// file := vcsTester.repoPath + "/dirtyfile"
-	// r, err := os.OpenFile(file, os.O_CREATE, 0600)
-	// r.Close()
-	// require.NoError(err)
-	// cmd = exec.Command("git", "-C", vcsTester.repoPath, "add", ".")
-	// err = cmd.Run()
-	// require.NoError(err)
-	// cmd = exec.Command("git", "-C", vcsTester.repoPath, "commit", "-m", "'nothing much'")
-	// err = cmd.Run()
-	// require.NoError(err)
-
-	// // check if local commits differ from remote
-	// match, err = v.remoteHasDiff(vcsTester.repoPath, vcsTester.remoteRepoPath)
-	// require.NoError(err)
-	// require.True(match)
 }
