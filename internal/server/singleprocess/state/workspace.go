@@ -30,18 +30,6 @@ func (s *State) WorkspacePut(workspace *pb.Workspace) error {
 	defer memTxn.Abort()
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
-		prev, err := s.workspaceGet(dbTxn, memTxn, &pb.Ref_Workspace{
-			Workspace: workspace.Name,
-		})
-		if err != nil && status.Code(err) != codes.NotFound {
-			// We ignore NotFound since this function is used to create
-			// Workspaces.
-			return err
-		}
-		if err == nil {
-			// If we have a previous Workspace, preserve the Projects.
-			workspace.Projects = prev.Projects
-		}
 		return s.workspacePut(dbTxn, memTxn, workspace)
 	})
 	if err == nil {
@@ -122,6 +110,18 @@ func (s *State) workspacePut(
 	memTxn *memdb.Txn,
 	value *pb.Workspace,
 ) error {
+	prev, err := s.workspaceGet(dbTxn, memTxn, &pb.Ref_Workspace{
+		Workspace: value.Name,
+	})
+	if err != nil && status.Code(err) != codes.NotFound {
+		// We ignore NotFound since this function is used to create
+		// Workspaces.
+		return err
+	}
+	if err == nil {
+		// If we have a previous Workspace, preserve the Projects.
+		value.Projects = prev.Projects
+	}
 	id := []byte(strings.ToLower(value.Name))
 
 	// Get the global bucket and write the value to it.
@@ -131,7 +131,7 @@ func (s *State) workspacePut(
 	}
 
 	// Create our index value and write that.
-	_, err := s.workspaceIndexSet(memTxn, id, value)
+	_, err = s.workspaceIndexSet(memTxn, id, value)
 	return err
 }
 
