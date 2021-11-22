@@ -54,5 +54,12 @@ module.exports = {
         '@typescript-eslint/no-var-requires': 'off',
       },
     },
+    // mirage files
+    {
+      files: ['mirage/**/*.ts'],
+      rules: {
+        'ember/avoid-leaking-state-in-ember-objects': 'off',
+      },
+    },
   ],
 };
