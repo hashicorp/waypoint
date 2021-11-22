@@ -1268,13 +1268,13 @@ var (
 	wpStatusSuccessMsg = strings.TrimSpace(`
 The projects listed above represent their current state known
 in the Waypoint server. For more information about a project’s applications and
-their current state, run ‘waypoint status PROJECT-NAME’.
+their current state, run ‘waypoint status -project=PROJECT-NAME’.
 `)
 
 	wpStatusProjectSuccessMsg = strings.TrimSpace(`
 The project and its apps listed above represents its current state known
 in the Waypoint server. For more information about a project’s applications and
-their current state, run ‘waypoint status -app=APP-NAME PROJECT-NAME’.
+their current state, run ‘waypoint status -app=APP-NAME -project=PROJECT-NAME’.
 `)
 
 	wpStatusAppSuccessMsg = strings.TrimSpace(`
@@ -1307,7 +1307,7 @@ The projects listed above represent their current state known
 in Waypoint server. For more information about an application defined in the
 project %[1]q can be viewed by running the command:
 
-waypoint status -app=APP-NAME %[1]s
+waypoint status -app=APP-NAME -project=%[1]s
 `)
 
 	wpProjectNotFound = strings.TrimSpace(`
@@ -1315,7 +1315,7 @@ No project named %q was found for the server context %q. To see a list of
 currently configured projects, run “waypoint project list”.
 
 If you want more information for a specific application, use the '-app' flag
-with “waypoint status -app=APP-NAME PROJECT-NAME”.
+with “waypoint status -app=APP-NAME -project=PROJECT-NAME”.
 `)
 
 	wpAppNotFound = strings.TrimSpace(`
