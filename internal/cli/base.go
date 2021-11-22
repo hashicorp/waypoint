@@ -11,9 +11,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hashicorp/waypoint/internal/runner"
-	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
-
 	"github.com/adrg/xdg"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
@@ -26,7 +23,9 @@ import (
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/runner"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
 )
 
 const (
@@ -284,7 +283,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return err
 	}
 
-	if baseCfg.SingleAppTarget && len(c.refApps) != 0 {
+	if baseCfg.SingleAppTarget && len(c.refApps) > 1 {
 		c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
 		return ErrSentinel
 	}
