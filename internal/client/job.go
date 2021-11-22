@@ -60,7 +60,7 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 // The receiver must be careful to not block sending to mon as it will block
 // the job state processing loop.
 func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.UI, monCh chan pb.Job_State) (*pb.Job_Result, error) {
-	// Be sure that the monitor is closedthe reciever knows for sure the job isn't going
+	// Be sure that the monitor is closed so the receiver knows for sure the job isn't going
 	// anymore.
 	if monCh != nil {
 		defer close(monCh)
