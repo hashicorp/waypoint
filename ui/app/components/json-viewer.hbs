@@ -3,7 +3,7 @@
   class="json-viewer"
 >
   {{#if this.parseResult.error}}
-    <Pds::ErrorMessage>{{this.parseResult.error.message}}</Pds::ErrorMessage>
+    <Pds::ErrorMessage data-test-error-message>{{this.parseResult.error.message}}</Pds::ErrorMessage>
   {{else}}
     <div
       {{code-mirror
