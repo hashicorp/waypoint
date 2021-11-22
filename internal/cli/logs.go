@@ -30,6 +30,7 @@ func (c *LogsCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithSingleAppTarget(),
+		WithRunnerRequired(), // Some platforms have a separate logs plugin that require a runner
 	); err != nil {
 		return 1
 	}

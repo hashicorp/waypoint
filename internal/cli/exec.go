@@ -102,6 +102,7 @@ func (c *ExecCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(flagSet),
 		WithSingleAppTarget(),
+		WithRunnerRequired(), // Some platforms require an exec plugin
 	); err != nil {
 		return 1
 	}
