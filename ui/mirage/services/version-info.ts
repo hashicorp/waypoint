@@ -1,5 +1,6 @@
 import { VersionInfo, GetVersionInfoResponse } from 'waypoint-pb';
-import { Response, RouteHandler } from 'miragejs';
+import { Response } from 'miragejs';
+import { RouteHandler } from '../types';
 
 function createVersionInfo(): VersionInfo {
   let versionInfo = new VersionInfo();

@@ -1,4 +1,5 @@
-import { RouteHandler, Request, Response } from 'miragejs';
+import { Request, Response } from 'miragejs';
+import { RouteHandler } from '../types';
 import {
   ListStatusReportsRequest,
   ListStatusReportsResponse,

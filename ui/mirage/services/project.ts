@@ -1,7 +1,8 @@
 import { ListProjectsResponse, GetProjectResponse, UpsertProjectResponse } from 'waypoint-pb';
 import { decode } from '../helpers/protobufs';
 import { UI, GetProjectRequest, UpsertProjectRequest, Job, Project } from 'waypoint-pb';
-import { RouteHandler, Request, Response } from 'miragejs';
+import { Request, Response } from 'miragejs';
+import { RouteHandler } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
 export function list(this: RouteHandler, schema: any): Response {
