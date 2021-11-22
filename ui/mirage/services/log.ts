@@ -1,6 +1,7 @@
 import { LogBatch } from 'waypoint-pb';
 import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
-import { RouteHandler, Response } from 'miragejs';
+import { Response } from 'miragejs';
+import { RouteHandler } from '../types';
 import { getUnixTime } from 'date-fns';
 
 export function stream(this: RouteHandler): Response {
