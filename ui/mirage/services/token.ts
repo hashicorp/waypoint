@@ -1,5 +1,6 @@
 import { Token, NewTokenResponse } from 'waypoint-pb';
-import { RouteHandler, Response } from 'miragejs';
+import { Response } from 'miragejs';
+import { RouteHandler } from '../types';
 
 function createToken(): Token {
   let token = new Token();

@@ -1,5 +1,6 @@
 import { ConfigGetRequest, ConfigGetResponse, ConfigSetRequest, ConfigSetResponse } from 'waypoint-pb';
-import { RouteHandler, Request, Response } from 'miragejs';
+import { Request, Response } from 'miragejs';
+import { RouteHandler } from '../types';
 import { decode } from '../helpers/protobufs';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
