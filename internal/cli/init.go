@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	getter "github.com/hashicorp/go-getter"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
@@ -225,6 +227,14 @@ func (c *InitCommand) validateConfig() bool {
 		c.stepError(s, initStepConfig, err)
 		return false
 	}
+	if cfg == nil {
+		// This should never happen, because if there is no config, init should have created
+		// it an exited earlier.
+		err = errors.New("No configuration file found")
+		c.stepError(s, initStepConfig, err)
+		return false
+	}
+
 	c.cfg = cfg
 	c.refProject = &pb.Ref_Project{Project: cfg.Project}
 
