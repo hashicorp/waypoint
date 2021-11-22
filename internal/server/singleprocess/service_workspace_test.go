@@ -66,5 +66,16 @@ func TestUpsertWorkspace(t *testing.T) {
 			require.NotNil(resp)
 			require.Equal(resp.Workspace.Name, "dev")
 		}
+
+		// Fail with bad Workspace name
+		{
+			resp, err := client.UpsertWorkspace(ctx, &Req{
+				Workspace: serverptypes.TestWorkspace(t, &pb.Workspace{
+					Name: "a bad name",
+				}),
+			})
+			require.Error(err)
+			require.Nil(resp)
+		}
 	})
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-memdb"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -110,6 +111,9 @@ func (s *State) workspacePut(
 	memTxn *memdb.Txn,
 	value *pb.Workspace,
 ) error {
+	if err := serverptypes.ValidateWorkspace(value); err != nil {
+		return err
+	}
 	prev, err := s.workspaceGet(dbTxn, memTxn, &pb.Ref_Workspace{
 		Workspace: value.Name,
 	})

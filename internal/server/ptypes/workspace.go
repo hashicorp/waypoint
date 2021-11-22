@@ -12,9 +12,9 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// WorkspaceNameRegexp is the valid Workspace name regular expression.
-// Copied from UsernameRegexp.
-var WorkspaceNameRegexp = regexp.MustCompile(`(?i)^[a-z\d][a-z\d_-]*[a-z\d]+$`)
+// WorkspaceNameRegexp is the valid Workspace name regular expression. At this
+// time the only restriction is to not allow spaces.
+var WorkspaceNameRegexp = regexp.MustCompile(`^[\p{L}\p{N}_]*$`)
 
 // TestWorkspace returns a valid workspace for tests.
 func TestWorkspace(t testing.T, src *pb.Workspace) *pb.Workspace {

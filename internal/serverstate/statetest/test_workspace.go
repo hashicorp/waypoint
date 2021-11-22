@@ -113,6 +113,19 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		}
 	})
 
+	t.Run("No spaces in name", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Put with a bad name
+		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+			Name: "no spaces allowed",
+		}))
+		require.Error(err)
+	})
+
 	t.Run("Multi List", func(t *testing.T) {
 		require := require.New(t)
 
