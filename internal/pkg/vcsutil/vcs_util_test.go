@@ -12,29 +12,21 @@ import (
 
 type VCSTester struct {
 	repoPath       string
-	testFile       *os.File
+	testFiles      []*os.File
 	remoteRepoPath string
 	remoteUrl      string
 	remoteName     string
 }
 
-func generateGitState(branchName string) (VCSTester, error) {
+func generateGitState(branchName string, t *testing.T) (VCSTester, error) {
 
 	log := hclog.Default()
 
 	// Create a temporary directory for our test
-	td, err := ioutil.TempDir("", "test")
-	if err != nil {
-		return VCSTester{}, err
-	}
-	// cleanup is in a separate function since we can't defer it here
+	td := t.TempDir()
 
 	// Create a temporary directory for our remote
-	remote, err := ioutil.TempDir("", "test")
-	if err != nil {
-		return VCSTester{}, err
-	}
-	// cleanup is in a separate function since we can't defer it here
+	remote := t.TempDir()
 
 	if _, err := runGitCommand(log, td, "init", "-b", branchName); err != nil {
 		return VCSTester{}, err
@@ -55,9 +47,24 @@ func generateGitState(branchName string) (VCSTester, error) {
 	// Create a test file and commit
 	file := td + "/testfile"
 	r, err := os.OpenFile(file, os.O_CREATE, 0600)
+	if err != nil {
+		return VCSTester{}, err
+	}
 	r.Close()
 
 	if _, err := runGitCommand(log, td, "add", "testfile"); err != nil {
+		return VCSTester{}, err
+	}
+
+	// Add another one for testing multi-line diff output
+	f := td + "/second-testfile"
+	rr, err := os.OpenFile(f, os.O_CREATE, 0600)
+	if err != nil {
+		return VCSTester{}, err
+	}
+	rr.Close()
+
+	if _, err := runGitCommand(log, td, "add", "second-testfile"); err != nil {
 		return VCSTester{}, err
 	}
 
@@ -71,16 +78,11 @@ func generateGitState(branchName string) (VCSTester, error) {
 
 	return VCSTester{
 		td,
-		r,
+		[]*os.File{r, rr},
 		remote,
 		remoteUrl,
 		remoteName,
 	}, nil
-}
-
-func cleanupGeneratedDirs(vcsTester VCSTester) {
-	os.RemoveAll(vcsTester.repoPath)
-	os.RemoveAll(vcsTester.remoteRepoPath)
 }
 
 func TestIsDirty(t *testing.T) {
@@ -89,9 +91,8 @@ func TestIsDirty(t *testing.T) {
 	require := require.New(t)
 	branchName := "waypoint"
 
-	vcsTester, err := generateGitState(branchName)
+	vcsTester, err := generateGitState(branchName, t)
 	require.NoError(err)
-	defer cleanupGeneratedDirs(vcsTester)
 
 	v := NewVcsChecker(
 		hclog.Default(),
@@ -117,7 +118,7 @@ func TestIsDirty(t *testing.T) {
 
 	t.Run("Committing a change is dirty", func(t *testing.T) {
 		change := []byte("I'm changing EVERYTHING")
-		err := ioutil.WriteFile(vcsTester.testFile.Name(), change, 0600)
+		err := ioutil.WriteFile(vcsTester.testFiles[0].Name(), change, 0600)
 		require.NoError(err)
 
 		_, err = runGitCommand(v.log, vcsTester.repoPath, "commit", "-am", "\"committed\"")
@@ -135,9 +136,8 @@ func TestGetRemoteName(t *testing.T) {
 	require := require.New(t)
 	branchName := "waypoint"
 
-	vcsTester, err := generateGitState(branchName)
+	vcsTester, err := generateGitState(branchName, t)
 	require.NoError(err)
-	defer cleanupGeneratedDirs(vcsTester)
 
 	v := NewVcsChecker(
 		hclog.Default(),
@@ -203,9 +203,8 @@ func TestRemoteHasDiff(t *testing.T) {
 	require := require.New(t)
 	branchName := "waypoint"
 
-	vcsTester, err := generateGitState(branchName)
+	vcsTester, err := generateGitState(branchName, t)
 	require.NoError(err)
-	defer cleanupGeneratedDirs(vcsTester)
 
 	v := NewVcsChecker(
 		hclog.Default(),
@@ -224,7 +223,7 @@ func TestRemoteHasDiff(t *testing.T) {
 
 		change := []byte("I'm changing EVERYTHING")
 		require.NoError(err)
-		err := ioutil.WriteFile(vcsTester.testFile.Name(), change, 0600)
+		err := ioutil.WriteFile(vcsTester.testFiles[0].Name(), change, 0600)
 		require.NoError(err)
 
 		diff, err := v.remoteHasDiff(vcsTester.remoteName, branchName)
@@ -239,9 +238,8 @@ func TestRemoteFileHasDiff(t *testing.T) {
 	require := require.New(t)
 	branchName := "waypoint"
 
-	vcsTester, err := generateGitState(branchName)
+	vcsTester, err := generateGitState(branchName, t)
 	require.NoError(err)
-	defer cleanupGeneratedDirs(vcsTester)
 
 	v := NewVcsChecker(
 		hclog.Default(),
@@ -249,29 +247,28 @@ func TestRemoteFileHasDiff(t *testing.T) {
 	)
 
 	t.Run("Initial state is same as remote", func(t *testing.T) {
-		diff, err := v.remoteFileHasDiff(vcsTester.remoteName, branchName, vcsTester.testFile.Name())
+		diff, err := v.remoteFileHasDiff(vcsTester.remoteName, branchName, vcsTester.testFiles[0].Name())
 		require.NoError(err)
 		require.False(diff)
 	})
 
-	t.Run("Diff for changes to specified file", func(t *testing.T) {
-		change := []byte("I'm changing EVERYTHING")
-		err := ioutil.WriteFile(vcsTester.testFile.Name(), change, 0600)
+	t.Run("No diff for changes to non-named file(s)", func(t *testing.T) {
+		change := []byte("I'm changing more things")
+		err := ioutil.WriteFile(vcsTester.testFiles[1].Name(), change, 0600)
 		require.NoError(err)
 
-		diff, err := v.remoteFileHasDiff(vcsTester.remoteName, branchName, vcsTester.testFile.Name())
+		diff, err := v.remoteFileHasDiff(vcsTester.remoteName, branchName, vcsTester.testFiles[0].Name())
+		require.NoError(err)
+		require.False(diff)
+	})
+
+	t.Run("Diff for changes to named file", func(t *testing.T) {
+		change := []byte("I'm changing EVERYTHING")
+		err := ioutil.WriteFile(vcsTester.testFiles[0].Name(), change, 0600)
+		require.NoError(err)
+
+		diff, err := v.remoteFileHasDiff(vcsTester.remoteName, branchName, vcsTester.testFiles[0].Name())
 		require.NoError(err)
 		require.True(diff)
-	})
-
-	t.Run("No diff for other local changes", func(t *testing.T) {
-		file := vcsTester.repoPath + "/dirtyfile"
-		r, err := os.OpenFile(file, os.O_CREATE, 0600)
-		r.Close()
-		require.NoError(err)
-
-		diff, err := v.remoteFileHasDiff(vcsTester.remoteName, branchName, vcsTester.testFile.Name())
-		require.NoError(err)
-		require.False(diff)
 	})
 }
