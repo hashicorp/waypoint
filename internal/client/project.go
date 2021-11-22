@@ -106,7 +106,7 @@ func (c *Project) StartLocalRunner() (*runner.Runner, error) {
 	// We spin up the job processing here. Anything that spawns jobs (either locally spawned
 	// or server spawned) will be processed by this runner ONLY if the runner is directly targeted.
 	// Because this runner's lifetime is bound to a CLI context and therefore transient, we don't
-	// want to accept jobs that aren't related to local activities (job's queued or RPCs made)
+	// want to accept jobs that aren't related to local activities (jobs queued or RPCs made)
 	// because they'll hang the CLI randomly as those jobs run (it's also a security issue).
 	c.wg.Add(1)
 	go func() {

@@ -228,7 +228,7 @@ func (c *InitCommand) validateConfig() bool {
 	}
 	if cfg == nil {
 		// This should never happen, because if there is no config, init should have created
-		// it an exited earlier.
+		// it and exited earlier.
 		err = errors.New("No configuration file found")
 		c.stepError(s, initStepConfig, err)
 		return false
