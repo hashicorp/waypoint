@@ -14,8 +14,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 )
 
-// Exec creates an ECS task using the given deployments ECR image and then
-// ssh's to it to provide the shell.
+// Logs fetches logs from cloudwatch
 func (p *Platform) Logs(
 	ctx context.Context,
 	log hclog.Logger,
