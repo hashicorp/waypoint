@@ -65,7 +65,7 @@ func (s *service) UpsertWorkspace(
 	req *pb.UpsertWorkspaceRequest,
 ) (*pb.UpsertWorkspaceResponse, error) {
 	// Validate the Workspace
-	if err := ptypes.ValidateWorkspace(req.Workspace); err != nil {
+	if err := ptypes.ValidateUpsertWorkspaceRequest(req); err != nil {
 		return nil, err
 	}
 

@@ -57,6 +57,18 @@ func ValidateGetWorkspaceRequest(v *pb.GetWorkspaceRequest) error {
 	))
 }
 
+// ValidateUpdateUserRequest
+func ValidateUpsertWorkspaceRequest(v *pb.UpsertWorkspaceRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Workspace, validation.Required),
+		validationext.StructField(&v.Workspace, func() []*validation.FieldRules {
+			return append(ValidateWorkspaceRules(v.Workspace),
+				validation.Field(&v.Workspace.Name, validation.Required),
+			)
+		}),
+	))
+}
+
 // ValidateWorkspace validates the Workspace structure.
 func ValidateWorkspace(v *pb.Workspace) error {
 	return validationext.Error(validation.ValidateStruct(v,
