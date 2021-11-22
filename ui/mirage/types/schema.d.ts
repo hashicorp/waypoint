@@ -1,0 +1,104 @@
+import Schema from 'miragejs/orm/schema';
+import { Registry } from 'miragejs/-types';
+
+import ApplicationModel from '../models/application';
+import ArtifactModel from '../models/artifact';
+import AuthMethodModel from '../models/auth-method';
+import BuildModel from '../models/build';
+import ComponentModel from '../models/component';
+import ConfigVariableModel from '../models/config-variable';
+import DeploymentModel from '../models/deployment';
+import GenerationModel from '../models/generation';
+import HealthModel from '../models/health';
+import JobDataSourceModel from '../models/job-data-source';
+import JobGitBasicModel from '../models/job-git-basic';
+import JobGitSshModel from '../models/job-git-ssh';
+import JobGitModel from '../models/job-git';
+import ProjectPollModel from '../models/project-poll';
+import ProjectModel from '../models/project';
+import PushedArtifactModel from '../models/pushed-artifact';
+import ReleaseModel from '../models/release';
+import ResourceModel from '../models/resource';
+import StatusReportModel from '../models/status-report';
+import StatusModel from '../models/status';
+import VariableModel from '../models/variable';
+import WorkspaceModel from '../models/workspace';
+
+import ApplicationFactory from '../factories/application';
+import ArtifactFactory from '../factories/artifact';
+import AuthMethodFactory from '../factories/auth-method';
+import BuildFactory from '../factories/build';
+import ComponentFactory from '../factories/component';
+import ConfigVariableFactory from '../factories/config-variable';
+import DeploymentFactory from '../factories/deployment';
+import GenerationFactory from '../factories/generation';
+import HealthFactory from '../factories/health';
+import JobDataSourceFactory from '../factories/job-data-source';
+import JobGitBasicFactory from '../factories/job-git-basic';
+import JobGitSshFactory from '../factories/job-git-ssh';
+import JobGitFactory from '../factories/job-git';
+import ProjectPollFactory from '../factories/project-poll';
+import ProjectFactory from '../factories/project';
+import PushedArtifactFactory from '../factories/pushed-artifact';
+import ReleaseFactory from '../factories/release';
+import ResourceFactory from '../factories/resource';
+import StatusReportFactory from '../factories/status-report';
+import StatusFactory from '../factories/status';
+import VariableFactory from '../factories/variable';
+import WorkspaceFactory from '../factories/workspace';
+
+export default WaypointSchema;
+
+type WaypointSchema = Schema<WaypointRegistry>;
+
+type WaypointRegistry = Registry<WaypointModels, WaypointFactories>;
+
+type WaypointModels = {
+  application: typeof ApplicationModel;
+  artifact: typeof ArtifactModel;
+  'auth-method': typeof AuthMethodModel;
+  build: typeof BuildModel;
+  component: typeof ComponentModel;
+  'config-variable': typeof ConfigVariableModel;
+  deployment: typeof DeploymentModel;
+  generation: typeof GenerationModel;
+  health: typeof HealthModel;
+  'job-data-source': typeof JobDataSourceModel;
+  'job-git-basic': typeof JobGitBasicModel;
+  'job-git-ssh': typeof JobGitSshModel;
+  'job-git': typeof JobGitModel;
+  'project-poll': typeof ProjectPollModel;
+  project: typeof ProjectModel;
+  'pushed-artifact': typeof PushedArtifactModel;
+  release: typeof ReleaseModel;
+  resource: typeof ResourceModel;
+  'status-report': typeof StatusReportModel;
+  status: typeof StatusModel;
+  variable: typeof VariableModel;
+  workspace: typeof WorkspaceModel;
+};
+
+type WaypointFactories = {
+  application: typeof ApplicationFactory;
+  artifact: typeof ArtifactFactory;
+  'auth-method': typeof AuthMethodFactory;
+  build: typeof BuildFactory;
+  component: typeof ComponentFactory;
+  'config-variable': typeof ConfigVariableFactory;
+  deployment: typeof DeploymentFactory;
+  generation: typeof GenerationFactory;
+  health: typeof HealthFactory;
+  'job-data-source': typeof JobDataSourceFactory;
+  'job-git-basic': typeof JobGitBasicFactory;
+  'job-git-ssh': typeof JobGitSshFactory;
+  'job-git': typeof JobGitFactory;
+  'project-poll': typeof ProjectPollFactory;
+  project: typeof ProjectFactory;
+  'pushed-artifact': typeof PushedArtifactFactory;
+  release: typeof ReleaseFactory;
+  resource: typeof ResourceFactory;
+  'status-report': typeof StatusReportFactory;
+  status: typeof StatusFactory;
+  variable: typeof VariableFactory;
+  workspace: typeof WorkspaceFactory;
+};

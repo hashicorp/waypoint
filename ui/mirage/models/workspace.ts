@@ -1,7 +1,9 @@
-import { Model } from 'ember-cli-mirage';
+import { Model } from 'miragejs';
 import { Ref, Workspace } from 'waypoint-pb';
 
 export default Model.extend({
+  name: undefined as string | undefined,
+
   toProtobuf(): Workspace {
     let result = new Workspace();
 

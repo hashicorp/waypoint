@@ -1,4 +1,4 @@
-import { Model, belongsTo } from 'ember-cli-mirage';
+import { Model, belongsTo } from 'miragejs';
 import { Component } from 'waypoint-pb';
 
 // eslint-disable-next-line ember/require-tagless-components

@@ -1,4 +1,4 @@
-import { Model, hasMany, belongsTo } from 'ember-cli-mirage';
+import { Model, hasMany, belongsTo } from 'miragejs';
 import { Project, Ref } from 'waypoint-pb';
 
 export default Model.extend({
@@ -6,6 +6,8 @@ export default Model.extend({
   variables: hasMany(),
   dataSource: belongsTo('job-data-source'),
   dataSourcePoll: belongsTo('project-poll'),
+
+  name: undefined as string | undefined,
 
   toProtobuf(): Project {
     let result = new Project();

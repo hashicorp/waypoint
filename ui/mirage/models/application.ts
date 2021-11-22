@@ -1,4 +1,4 @@
-import { Model, belongsTo, hasMany } from 'ember-cli-mirage';
+import { Model, belongsTo, hasMany } from 'miragejs';
 import { Application, Ref } from 'waypoint-pb';
 
 export default Model.extend({
@@ -7,6 +7,9 @@ export default Model.extend({
   deployments: hasMany(),
   releases: hasMany(),
   statusReports: hasMany(),
+
+  name: undefined as string | undefined,
+  projectId: undefined as string | undefined,
 
   toProtobuf(): Application {
     let result = new Application();

@@ -1,4 +1,5 @@
-import { Factory, trait } from 'ember-cli-mirage';
+import { Factory } from 'miragejs';
+import { trait } from 'ember-cli-mirage';
 import { fakeId } from '../utils';
 
 export default Factory.extend({

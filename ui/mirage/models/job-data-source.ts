@@ -1,4 +1,4 @@
-import { Model, belongsTo } from 'ember-cli-mirage';
+import { Model, belongsTo } from 'miragejs';
 import { Job } from 'waypoint-pb';
 
 export default Model.extend({
