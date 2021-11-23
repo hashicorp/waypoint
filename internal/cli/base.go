@@ -11,6 +11,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hashicorp/waypoint/internal/config/variables"
+
 	"github.com/adrg/xdg"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
@@ -21,7 +23,6 @@ import (
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/config"
-	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/runner"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -234,6 +235,17 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	c.refWorkspace = &pb.Ref_Workspace{Workspace: workspace}
 
+	// Collect variable values from -var and -varfile flags,
+	// and env vars set with WP_VAR_* and set them on the job
+	vars, diags := variables.LoadVariableValues(c.flagVars, c.flagVarFile)
+	if diags.HasErrors() {
+		// we only return errors for file parsing, so we are specific
+		// in the error log here
+		c.logError(c.Log, "failed to load wpvars file", errors.New(diags.Error()))
+		return diags
+	}
+	c.variables = vars
+
 	// Parse the configuration
 	c.cfg = &config.Config{}
 
@@ -271,6 +283,15 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return err
 	}
 
+	// Create our client (must be done after the project ref and vars are set)
+	if !baseCfg.NoClient {
+		c.project, err = c.initClient(nil)
+		if err != nil {
+			c.logError(c.Log, "failed to create client", err)
+			return err
+		}
+	}
+
 	// Parse app flags
 	if c.flagApp != "" {
 		// NOTE: we could allow app to be specified multiple times in the future
@@ -278,35 +299,30 @@ func (c *baseCommand) Init(opts ...Option) error {
 	}
 
 	if (baseCfg.SingleAppTarget || baseCfg.MultiAppTarget) && len(c.refApps) == 0 {
-		err = fmt.Errorf("This command requires an app to be targeted, but no apps were found in project %q.", c.refProject.Project)
-		c.logError(c.Log, "", err)
-		return err
+		// We must not have found an app from config or flags, so we need to resort to the API.
+		c.Log.Debug("No apps found via CLI or API - listing them from the CLI.")
+		resp, err := c.project.Client().GetProject(c.Ctx, &pb.GetProjectRequest{Project: c.refProject})
+		if err != nil {
+			c.logError(c.Log, fmt.Sprintf("Failed to inspect project %s", c.refProject.Project), err)
+			return err
+		}
+		for _, app := range resp.Project.Applications {
+			c.refApps = append(c.refApps, &pb.Ref_Application{
+				Application: app.Name,
+				Project:     app.Project.Project,
+			})
+		}
+
+		if len(c.refApps) == 0 {
+			err = fmt.Errorf("This command requires an app to be targeted, but no apps were found in project %q.", c.refProject.Project)
+			c.logError(c.Log, "", err)
+			return err
+		}
 	}
 
 	if baseCfg.SingleAppTarget && len(c.refApps) > 1 {
 		c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
 		return ErrSentinel
-	}
-
-	// Collect variable values from -var and -varfile flags,
-	// and env vars set with WP_VAR_* and set them on the job
-	vars, diags := variables.LoadVariableValues(c.flagVars, c.flagVarFile)
-	if diags.HasErrors() {
-		// we only return errors for file parsing, so we are specific
-		// in the error log here
-		c.logError(c.Log, "failed to load wpvars file", errors.New(diags.Error()))
-		return diags
-	}
-	c.variables = vars
-
-	// Create our client
-	if !baseCfg.NoClient {
-		c.project, err = c.initClient(nil)
-
-		if err != nil {
-			c.logError(c.Log, "failed to create client", err)
-			return err
-		}
 	}
 
 	// Start a local runner if necessary
