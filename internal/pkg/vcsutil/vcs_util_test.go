@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
-
 	"github.com/stretchr/testify/require"
 )
 

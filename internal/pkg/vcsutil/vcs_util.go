@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
-
 	"github.com/pkg/errors"
 )
 
