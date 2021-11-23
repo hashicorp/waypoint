@@ -102,9 +102,9 @@ type baseCommand struct {
 	// for defined input variables
 	flagVarFile []string
 
-	// flagRemote is whether to execute using a remote runner or use
-	// a local runner.
-	flagRemote bool
+	// flagLocal indicates that any operations performed must happen with a local runner
+	// not a remote runner.
+	flagLocal *bool
 
 	// flagRemoteSource are the remote data source overrides for jobs.
 	flagRemoteSource map[string]string
@@ -132,6 +132,10 @@ type baseCommand struct {
 
 	// The home directory that we loaded the waypoint config from
 	homeConfigPath string
+
+	// deprecatedFlagRemote is whether to execute using a remote runner or use
+	// a local runner.
+	deprecatedFlagRemote *bool
 }
 
 // Close cleans up any resources that the command created. This should be
@@ -148,6 +152,25 @@ func (c *baseCommand) Close() error {
 		closer.Close()
 	}
 
+	return nil
+}
+
+// Checks for deprecated flags and args.
+func (c *baseCommand) checkDeprecatedFlags() error {
+	// Check for deprecated project/app syntax.
+	// NOTE(izaak): we should remove this in the next major (v0.8.0) because it
+	// collides with arguments that contain a single slash (i.e. `waypoint exec bin/bash`)
+	if len(c.args) > 0 {
+		match := reAppTarget.FindStringSubmatch(c.args[0])
+		if match != nil {
+			return errors.New(errDeprecatedProjectAppArg)
+		}
+	}
+
+	// Check for deprecated remote flag
+	if c.deprecatedFlagRemote != nil {
+		return fmt.Errorf("The -remote flag has been deprecated. Use -local=%t instead", !*c.deprecatedFlagRemote)
+	}
 	return nil
 }
 
@@ -202,16 +225,9 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return err
 	}
 
-	// Check for deprecated project/app syntax.
-	// NOTE(izaak): we should remove this in the next major (v0.8.0) because it
-	// collides with arguments that contain a single slash (i.e. `waypoint exec bin/bash`)
-	if len(c.args) > 0 {
-		match := reAppTarget.FindStringSubmatch(c.args[0])
-		if match != nil {
-			err := errors.New(errDeprecatedProjectAppArg)
-			c.logError(c.Log, "", err)
-			return err
-		}
+	if err := c.checkDeprecatedFlags(); err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return err
 	}
 
 	// Reset the UI to plain if that was set
@@ -408,7 +424,11 @@ func (c *baseCommand) startLocalRunner() (*runner.Runner, error) {
 // should happen remotely.
 func (c *baseCommand) remoteOpPreferred() bool {
 	// NOTE(izaak): will be significantly improved in the near future.
-	return c.flagRemote
+	if c.flagLocal != nil {
+		return !*c.flagLocal
+	} else {
+		return false
+	}
 }
 
 // remoteOpPreferred attempts to determine if the current waypoint infrastructure will be successful
@@ -631,12 +651,19 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 			Usage:  "Labels to set for this operation. Can be specified multiple times.",
 		})
 
-		f.BoolVar(&flag.BoolVar{
-			Name:    "remote",
-			Target:  &c.flagRemote,
-			Default: false,
-			Usage: "True to use a remote runner to execute. This defaults to false \n" +
-				"unless 'runner.default' is set in your configuration.",
+		f.BoolPtrVar(&flag.BoolPtrVar{
+			Name:   "remote",
+			Target: &c.deprecatedFlagRemote,
+			Hidden: true,
+			Usage:  "True to use a remote runner to execute.",
+		})
+
+		f.BoolPtrVar(&flag.BoolPtrVar{
+			Name:   "local",
+			Target: &c.flagLocal,
+			Usage: "True to use a local runner to execute the operation, false to use a remote runner. \n" +
+				"If unset, waypoint will automatically determine where the operation will occur, \n" +
+				"defaulting to remote if possible.",
 		})
 
 		f.StringMapVar(&flag.StringMapVar{
