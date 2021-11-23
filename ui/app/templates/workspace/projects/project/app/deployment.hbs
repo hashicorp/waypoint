@@ -1,84 +1,44 @@
-{{page-title (concat "Deployment" " v" @model.sequence)}}
-
-{{#if (not-eq this.target.currentRouteName "workspace.projects.project.app.deployment.resource")}}
-  <PanelHeader @artifact="deployment" @sequence={{@model.sequence}}>
-    <:actions>
-      <div class="button-group">
-        <ExternalLink
-          href={{enforce-protocol @model.preload.deployUrl}}
-          class="button button--secondary button--external-link">
-          <span>{{lowercase @model.preload.deployUrl}}</span>
-          <Pds::Icon @type="exit" class="icon" />
-        </ExternalLink>
-        <Actions::Release @sequence={{@model.sequence}} />
-      </div>
-    </:actions>
-  </PanelHeader>
-
-  <Section @isExpandable={{false}}>
-    <:heading>{{t "page.deployment.overview.heading"}}</:heading>
-    <:body>
-      <StatusReportMetaTable @model={{@model}} @artifactType="Deployment">
-        <tr>
-          <th scope="row">{{t "page.deployment.overview.status"}}</th>
-          <td>
-            <OperationStatusIndicator::Deployment @operation={{@model}} />
-          </td>
-        </tr>
-      </StatusReportMetaTable>
-    </:body>
-  </Section>
-
-  {{#let
-    @model.statusReport.resourcesList
-    @model.release.statusReport.resourcesList
-    as |deploymentResources releaseResources|
-  }}
-    {{#if (or deploymentResources.length releaseResources.length)}}
-      <Section>
-        <:heading>{{t "page.deployment.resources.heading"}}</:heading>
-        <:body>
-          {{#if deploymentResources.length}}
-            <ResourcesTable
-              @resources={{deploymentResources}}
-              @route="workspace.projects.project.app.deployment.resource"
-              @models={{array @model.sequence}}
-              @withMargin={{true}}
-            >
-              <:caption>
-                {{t "page.deployment.resources.deployment-table-caption" htmlSafe=true}}
-              </:caption>
-            </ResourcesTable>
-          {{/if}}
-
-          {{#if releaseResources.length}}
-            <ResourcesTable
-              @resources={{releaseResources}}
-              @route="workspace.projects.project.app.release.resource"
-              @models={{array @model.release.sequence}}
-            >
-              <:caption>
-                {{t "page.deployment.resources.release-table-caption-prefix" htmlSafe=true}}
-                <LinkTo
-                  @route="workspace.projects.project.app.release"
-                  @model={{@model.release.sequence}}
-                >
-                  <b class="badge badge--info badge--version">v{{@model.release.sequence}}</b>
-                </LinkTo>
-              </:caption>
-            </ResourcesTable>
-          {{/if}}
-        </:body>
-      </Section>
+{{page-title (concat @model.application.application "Deployments")}}
+{{#let (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployment.deployment-seq.resource') as |isNotResourcePage|}}
+  <div class={{if (and isNotResourcePage this.deploymentsByGeneration) "grid"}}>
+  {{#if isNotResourcePage}}
+    {{#if this.deploymentsByGeneration}}
+    <ul data-test-deployment-list class="sidebar list">
+        {{#each this.deploymentsByGeneration key="generationID" as |group|}}
+          {{#each group.deployments key="id" as |deployment|}}
+            {{#if (or this.isShowingDestroyed (not-eq deployment.state 4))}}
+              <AppItem::Deployment @deployment={{deployment}} @latest={{group.deployments.[0]}} />
+            {{/if}}
+          {{/each}}
+        {{/each}}
+      </ul>
+      {{#if (and this.hasMoreDeployments (not this.isShowingDestroyed))}}
+        <div class="destroyed-deployments-filter">
+          <Pds::HelpText>
+            {{t "page.deployments.destroyed_and_hidden_state"}}
+            <Pds::Button
+              data-test-display-destroyed-button
+              @compact={{true}}
+              @variant="ghost"
+              {{on "click" this.showDestroyed}}>
+              {{t "page.deployments.display_destroyed"}}
+            </Pds::Button>
+          </Pds::HelpText>
+        </div>
+      {{/if}}
+    {{else}}
+    <EmptyState>
+      <p>There are no deployments to display for this app yet</p>
+      <p>To create your first build, you can run
+        <CopyableCode @ref="empty-deploy" @inline="true">
+          <code id="empty-deploy">waypoint deploy</code>
+        </CopyableCode>
+        from the CLI</p>
+    </EmptyState>
     {{/if}}
-  {{/let}}
-
-  <Section>
-    <:heading>{{t "page.deployment.logs.heading"}}</:heading>
-    <:body>
-      <OperationLogs @jobId={{@model.jobId}} />
-    </:body>
-  </Section>
-{{/if}}
-
-{{outlet}}
+  {{/if}}
+    <div class="panel">
+      {{outlet}}
+    </div>
+  </div>
+{{/let}}

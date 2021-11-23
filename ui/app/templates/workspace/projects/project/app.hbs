@@ -1,11 +1,8 @@
 {{page-title @model.application.application}}
-
 {{#if (and
   (not-eq this.target.currentRouteName 'workspace.projects.project.app.build')
-  (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployment')
-  (not-eq this.target.currentRouteName 'workspace.projects.project.app.release')
-  (not (includes this.target.currentRouteName 'workspace.projects.project.app.deployment.'))
-  (not (includes this.target.currentRouteName 'workspace.projects.project.app.release.'))
+  (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployment.deployment-seq.resource')
+  (not-eq this.target.currentRouteName 'workspace.projects.project.app.release.resource')
 )}}
 <PageHeader @iconName="git-repository">
   <div class="title">
@@ -50,7 +47,7 @@
 </PageHeader>
 
 <Pds::TabNav>
-  <LinkTo @route="workspace.projects.project.app.deployments"
+  <LinkTo @route="workspace.projects.project.app.deployment"
     @models={{array @model.application.project @model.application.application }}>
     <Pds::Icon @type="upload" class="icon" />
     {{t "nav.deployments"}}
@@ -77,5 +74,4 @@
   </LinkTo>
 </Pds::TabNav>
 {{/if}}
-
 {{outlet}}

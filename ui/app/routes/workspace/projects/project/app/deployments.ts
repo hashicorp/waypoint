@@ -1,18 +1,24 @@
 import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
+import ApiService, { DeploymentExtended } from 'waypoint/services/api';
 import { Model as AppRouteModel } from '../app';
-import DeploymentsController from 'waypoint/controllers/workspace/projects/project/app/deployments';
 
 type Model = AppRouteModel['deployments'];
 
-export default class Deployments extends Route {
-  async model(): Promise<Model> {
+export default class DeploymentsList extends Route {
+  @service api!: ApiService;
+
+  async model(): Promise<DeploymentExtended[]> {
     let app = this.modelFor('workspace.projects.project.app') as AppRouteModel;
     return app.deployments;
   }
 
-  resetController(controller: DeploymentsController, isExiting: boolean): void {
-    if (isExiting) {
-      controller.set('isShowingDestroyed', null);
+  redirect(model: Model): void {
+    if (model) {
+      if (model[0]) {
+        this.transitionTo('workspace.projects.project.app.deployment.deployment-seq', model[0].sequence);
+      }
+      this.transitionTo('workspace.projects.project.app.deployment');
     }
   }
 }

@@ -1,8 +1,6 @@
 .operation-status-indicator {
-  display: inline-flex;
-  align-items: center;
 
-  span, b {
+  > span {
     margin-right: scale.$sm-4;
   }
 
@@ -21,6 +19,7 @@
   .icon-text-group {
     display: inline-flex;
     align-items: center;
+    line-height: initial;
   }
 
   .timestamp {
@@ -37,5 +36,9 @@
       font-size: inherit;
       font-weight: inherit;
     }
+  }
+
+  span:nth-last-of-type(1) {
+    width: fit-content;
   }
 }

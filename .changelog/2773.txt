@@ -1,0 +1,4 @@
+```release-note:improvement
+ui: Updated the deployments tab UI/UX
+```
+

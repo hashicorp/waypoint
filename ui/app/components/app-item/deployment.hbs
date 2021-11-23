@@ -1,36 +1,31 @@
 <li
   class="app-item
   {{if (not-eq @deployment.sequence @latest.sequence) "app-item--previous"}}
-  {{if (eq @deployment.state 4) "app-item--destroyed"}}"
+  {{if (eq @deployment.state 4) "app-item--destroyed"}}
+  {{if (is-active 'workspace.projects.project.app.deployment.deployment-seq' @deployment.sequence) "active"}}"
 >
-  <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @deployment.sequence}}>
-    <p>
-      <b class="badge badge--version">v{{@deployment.sequence}}</b>
-    </p>
-    <small class="app-item__meta__secondary">
-      <OperationStatusIndicator::Deployment @operation={{@deployment}} />
-    </small>
-    {{#if (eq @deployment.state 4)}}
-      <b data-test-destroyed-badge class="badge badge--destroyed">
-        <Pds::Icon @type="trash" class="icon" />&nbsp; {{t "page.deployments.destroyed_label"}}
-      </b>
-    {{/if}}
+  <hr>
+  <LinkTo
+    data-test-deployment-list-item
+    @route="workspace.projects.project.app.deployment.deployment-seq"
+    @models={{array @deployment.sequence}}
+  >
+    <b class="badge badge--version">v{{@deployment.sequence}}</b>
+    <OperationStatusIndicator::Deployment @operation={{@deployment}}>
+      <:small-text>
+        {{#if (not-eq @latest.id @deployment.id)}}
+        <span class="replacement-info">
+          {{t "page.deployments.replaced_label"}}<b class="badge badge--version">v{{@latest.sequence}}</b>
+        </span>
+        {{/if}}
+      </:small-text>
+      <:badge>
+        {{#if (eq @deployment.state 4)}}
+          <b data-test-destroyed-badge class="badge badge--destroyed">
+            <Pds::Icon @type="trash" class="icon" />&nbsp; {{t "page.deployments.destroyed_label"}}
+          </b>
+        {{/if}}
+      </:badge>
+    </OperationStatusIndicator::Deployment>
   </LinkTo>
-  {{#if (and (not-eq @deployment.state 4) @deployment.statusReport)}}
-    <small>
-      <StatusReportIndicator @statusReport={{@deployment.statusReport}} />
-    </small>
-  {{/if}}
-  {{#if (not-eq @latest.id @deployment.id)}}
-  <small class="replacement-info">
-    {{t "page.deployments.replaced_label"}}<b class="badge badge--version">v{{@latest.sequence}}</b>
-  </small>
-  {{else if (and @deployment.preload.deployUrl (not-eq @deployment.state 4))}}
-    <ExternalLink data-test-external-deployment-button
-      href={{enforce-protocol @deployment.preload.deployUrl}}
-      class="button button--secondary button--external-link">
-      <span>{{@deployment.preload.deployUrl}}</span>
-      <Pds::Icon @type="exit" class="icon" />
-    </ExternalLink>
-  {{/if}}
 </li>

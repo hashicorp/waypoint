@@ -1,6 +1,6 @@
 import Route from '@ember/routing/route';
 import { StatusReport } from 'waypoint-pb';
-import { Model as DeploymentRouteModel } from '../deployment';
+import { Model as DeploymentRouteModel } from '../deployment-seq';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 import { action } from '@ember/object';
 
@@ -13,18 +13,22 @@ type Model = StatusReport.Resource.AsObject;
 export default class extends Route {
   @action
   breadcrumbs(): Breadcrumb[] {
-    let deployment = this.modelFor('workspace.projects.project.app.deployment') as DeploymentRouteModel;
+    let deployment = this.modelFor(
+      'workspace.projects.project.app.deployment.deployment-seq'
+    ) as DeploymentRouteModel;
     return [
       {
         label: `v${deployment.sequence}`,
-        route: 'workspace.projects.project.app.deployment',
+        route: 'workspace.projects.project.app.deployment.deployment-seq',
         icon: 'upload',
       },
     ];
   }
 
   model({ resource_id }: Params): Model {
-    let deployment = this.modelFor('workspace.projects.project.app.deployment') as DeploymentRouteModel;
+    let deployment = this.modelFor(
+      'workspace.projects.project.app.deployment.deployment-seq'
+    ) as DeploymentRouteModel;
     let resources = deployment.statusReport?.resourcesList ?? [];
     let resource = resources.find((r) => r.id === resource_id);
 

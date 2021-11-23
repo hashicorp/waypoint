@@ -56,24 +56,5 @@
         margin-left: scale.$base;
       }
     }
-
-    .first-run-hint {
-      p {
-        color: rgb(var(--text-muted));
-        @include Typography.Interface(S);
-        display: inline-block;
-        margin-right: scale.$sm-2;
-      }
-
-      .copyable-code {
-        margin: scale.$sm-2 0;
-
-        code {
-          display: inline-flex;
-          font-size: 11px;
-          flex-shrink: 0;
-        }
-      }
-    }
   }
 }

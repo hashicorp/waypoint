@@ -10,6 +10,7 @@
   border-color: rgb(var(--border));
   border-radius: 2px;
   padding: scale.$lg-4;
+  min-height: 526px;
 
   p {
     color: rgb(var(--text-muted));

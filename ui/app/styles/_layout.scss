@@ -11,8 +11,7 @@ body {
   flex-direction: column;
   flex-grow: 1;
   width: 100vw;
-  max-width: 1600px;
-  margin: 0 auto;
+  margin: 0;
   padding: scale.$lg-3 scale.$lg-4 scale.$lg-5;
 }
 
@@ -51,23 +50,53 @@ aside {
   padding-top: scale.$lg-6;
 }
 
+.grid {
+  display: grid;
+  grid-gap: 36px;
+  grid-template-columns: 23vw auto;
+  grid-template-areas: 'menu panel';
+}
+
 ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-ul.list {
-  li {
-    padding-bottom: scale.$base;
-    border-top: 1rem solid transparent;
-    margin-bottom: 0;
-    border-bottom: 1px solid rgb(var(--border));
+ul.sidebar {
+  grid-area: menu;
 
-    &:last-child {
-      border-bottom: none;
+  li:first-child {
+    hr {
+      border-top: 0;
     }
   }
+
+  .active {
+    hr {
+      border-top: 1px solid transparent;
+    }
+    @media (prefers-color-scheme: light) {
+      background-color: rgb(var(--highlighted-list-item));
+    }
+  }
+
+  .active + li {
+    hr {
+      border-top: 1px solid transparent;
+    }
+  }
+
+  .badge {
+    @media (prefers-color-scheme: light) {
+      color: color.$ui-cool-gray-600;
+      background: color.$ui-cool-gray-100;
+    }
+  }
+}
+
+.panel {
+  grid-area: panel;
 }
 
 :any-link:not(.pds-button) {
