@@ -67,6 +67,7 @@
     "static": "npm run build && npm run export"
   },
   "engines": {
-    "npm": ">=7.0.0"
+    "npm": ">=7.0.0",
+    "node": ">=14"
   }
 }
