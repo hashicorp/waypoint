@@ -202,6 +202,18 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return err
 	}
 
+	// Check for deprecated project/app syntax.
+	// NOTE(izaak): we should remove this in the next major (v0.8.0) because it
+	// collides with arguments that contain a single slash (i.e. `waypoint exec bin/bash`)
+	if len(c.args) > 0 {
+		match := reAppTarget.FindStringSubmatch(c.args[0])
+		if match != nil {
+			err := errors.New(errDeprecatedProjectAppArg)
+			c.logError(c.Log, "", err)
+			return err
+		}
+	}
+
 	// Reset the UI to plain if that was set
 	if c.flagPlain {
 		c.ui = terminal.NonInteractiveUI(c.Ctx)
@@ -796,6 +808,11 @@ so you can specify the app to target using the "-app" flag.
 
 	// matches either "project" or "project/app"
 	reAppTarget = regexp.MustCompile(`^(?P<project>[-0-9A-Za-z_]+)/(?P<app>[-0-9A-Za-z_]+)$`)
+
+	errDeprecatedProjectAppArg = strings.TrimSpace(`
+The project/app argument has been deprecated. Instead, use -project and -app flags, or their
+short notation -p and -a.
+`)
 
 	snapshotUnimplementedErr = strings.TrimSpace(`
 The current Waypoint server does not support snapshots. Rerunning the command
