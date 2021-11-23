@@ -1,8 +1,7 @@
 ---
 layout: docs
-page_title: 'Compiling the Plugin'
-description: |-
-  How Waypoint plugins work
+page_title: Compiling the Plugin
+description: How Waypoint plugins work
 ---
 
 # Compiling the plugin
@@ -109,8 +108,8 @@ You can install your plugin using the `make install` command. Waypoint will auto
 load plugins from certain know locations, these are:
 
 - Same directory as any `waypoint.hcl`
-- <waypoint_app_folder>/.waypoint/plugins/
-- \$XDG_CONFIG_HOME/waypoint/plugins/
+- \<waypoint_app_folder>/.waypoint/plugins/
+- $XDG_CONFIG_HOME/waypoint/plugins/
 
 The `make install` command will copy the plugin to the Waypoint config in your
 `$HOME` folder. Note that this may not match your `$XDG_CONFIG_HOME` value so

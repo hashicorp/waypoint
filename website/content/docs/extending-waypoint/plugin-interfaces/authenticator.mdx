@@ -1,8 +1,7 @@
 ---
 layout: docs
-page_title: 'Authenticator'
-description: |-
-  How Waypoint plugins work
+page_title: Authenticator
+description: How Waypoint plugins work
 ---
 
 # Authenticator
@@ -65,8 +64,8 @@ func (p *Deploy) validateAuth(
 AuthFunc is only called when ValidateAuthFunc returns an error, this is where you would implement any prompts to the
 user to authenticate or where you can attempt to authenticate.
 
-The signature for an AuthFunc has two output parameters, \*component.AuthResult and an error. If authentication succeeds
-you return an AuthResult message which has Authenticated set to true &component.AuthResult{Authenticated: true}, and for
+The signature for an AuthFunc has two output parameters, *component.AuthResult and an error. If authentication succeeds
+you return an AuthResult message which has Authenticated set to true \&component.AuthResult\{Authenticated: true}, and for
 failed authentication set this to false. If an error occurs during the authentication process you can return this as the
 second output parameter.
 

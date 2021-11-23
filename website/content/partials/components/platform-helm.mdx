@@ -11,7 +11,7 @@ as logs, exec, app configuration, and more require two properties to be true:
 1. The running image must already have the Waypoint entrypoint installed
    and configured as the entrypoint. This should happen in the build stage.
 
-2. Proper environment variables must be set so the entrypoint knows how
+1. Proper environment variables must be set so the entrypoint knows how
    to communicate to the Waypoint server. **This step happens in this
    deployment stage.**
 
@@ -79,7 +79,7 @@ A single value to set. This can be repeated multiple times.
 
 This sets a single value. Separate nested values with a `.`. This is the same as the `--set` flag on `helm install`.
 
-- Type: **list of struct { Name string "hcl:\"name,attr\""; Value string "hcl:\"value,attr\""; Type string "hcl:\"type,optional\"" }**
+- Type: **list of struct { Name string "hcl:"name,attr""; Value string "hcl:"value,attr""; Type string "hcl:"type,optional"" }**
 
 ### Optional Parameters
 

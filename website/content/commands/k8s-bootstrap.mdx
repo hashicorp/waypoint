@@ -1,8 +1,8 @@
 ---
 layout: commands
 page_title: 'Commands: K8s bootstrap'
-sidebar_title: 'k8s bootstrap'
-description: 'Post-Helm-install bootstrapping'
+sidebar_title: k8s bootstrap
+description: Post-Helm-install bootstrapping
 ---
 
 # Waypoint K8s bootstrap
@@ -25,10 +25,10 @@ will not work with out-of-cluster kubectl configuration.
 This command will do a number of things:
 
 1. Equivalent of "waypoint server bootstrap"
-2. Write a bootstrap token to the given Kubernetes secret
-3. Create a token for a static runner and write it to the configured
+1. Write a bootstrap token to the given Kubernetes secret
+1. Create a token for a static runner and write it to the configured
    Kubernetes secret.
-4. Configure Kubernetes on-demand runners.
+1. Configure Kubernetes on-demand runners.
 
 This command will only run if the server hasn't already been bootstrapped.
 If the server is bootstrapped, this will not run again. This doesn't handle

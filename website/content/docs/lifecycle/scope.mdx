@@ -1,8 +1,10 @@
 ---
 layout: docs
 page_title: 'Lifecycle: Workspace and Label Scoping'
-description: |-
-  You can specify alternate configurations for lifecycle operations based on the current workspace or labels. This can be used to change configurations between environments such as development, staging, production.
+description: >-
+  You can specify alternate configurations for lifecycle operations based on the
+  current workspace or labels. This can be used to change configurations between
+  environments such as development, staging, production.
 ---
 
 # Workspace and Label Scoping
@@ -160,7 +162,7 @@ halts the lookup.
 
 1. An exact match `workspace` matches over any `label`.
 
-2. The longest label selector string by byte count (ignoring preceding or trailing
+1. The longest label selector string by byte count (ignoring preceding or trailing
    whitespace) matches before shorter label selector strings.
 
 ## Partial Configuration Changes

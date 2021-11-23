@@ -29,6 +29,9 @@ module.exports = withHashicorp({
   defaultLayout: true,
   nextOptimizedImages: true,
 })({
+  experimental: {
+    esmExternals: true,
+  },
   redirects() {
     return redirects
   },

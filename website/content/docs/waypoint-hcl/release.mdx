@@ -1,8 +1,11 @@
 ---
 layout: docs
 page_title: release - waypoint.hcl
-description: |-
-  The `release` stanza describes how an application is released. A release activates a previously staged deployment and opens it to general traffic. This step may involve adding a deployment to a load balancer, updating DNS, configuring a service mesh, etc.
+description: >-
+  The `release` stanza describes how an application is released. A release
+  activates a previously staged deployment and opens it to general traffic. This
+  step may involve adding a deployment to a load balancer, updating DNS,
+  configuring a service mesh, etc.
 ---
 
 # `release` Stanza
@@ -59,5 +62,6 @@ app "frontend" {
 - `hook` <code>([hook][hook]: nil)</code> - [Hooks](/docs/lifecycle/hooks)
   to execute before and/or after the release.
 
-[hook]: /docs/waypoint-hcl/hook 'Hook Stanza'
-[use]: /docs/waypoint-hcl/use 'Use Stanza'
+[hook]: /docs/waypoint-hcl/hook "Hook Stanza"
+
+[use]: /docs/waypoint-hcl/use "Use Stanza"

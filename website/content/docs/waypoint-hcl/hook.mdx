@@ -1,19 +1,21 @@
 ---
 layout: docs
 page_title: hook - waypoint.hcl
-description: |-
-  The `hook` stanza configures hooks that are executed before or after operations. This can be useful to do things such as perform a security scan on an image, run database migrations on a deploy, etc.
+description: >-
+  The `hook` stanza configures hooks that are executed before or after
+  operations. This can be useful to do things such as perform a security scan on
+  an image, run database migrations on a deploy, etc.
 ---
 
 # `hook` Stanza
 
-<Placement
-  groups={[
-    ['app', 'build', 'hook'],
-    ['app', 'build', 'registry', 'hook'],
-    ['app', 'deploy', 'hook'],
-    ['app', 'release', 'hook'],
-  ]}
+\<Placement
+groups={[
+['app', 'build', 'hook'],
+['app', 'build', 'registry', 'hook'],
+['app', 'deploy', 'hook'],
+['app', 'release', 'hook'],
+]}
 />
 
 The `hook` stanza configures [hooks](/docs/lifecycle/hooks) that are

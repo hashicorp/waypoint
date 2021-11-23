@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "author": "HashiCorp",
   "dependencies": {
+    "@hashicorp/mdx-v2-migrate": "^0.1.0-canary-20211023155615",
     "@hashicorp/mktg-global-styles": "^4.0.0",
     "@hashicorp/platform-analytics": "^0.2.0",
     "@hashicorp/platform-code-highlighting": "^0.1.2",
@@ -15,7 +16,7 @@
     "@hashicorp/react-command-line-terminal": "^2.0.4",
     "@hashicorp/react-consent-manager": "^7.0.1",
     "@hashicorp/react-content": "^8.0.2",
-    "@hashicorp/react-docs-page": "^14.6.0",
+    "@hashicorp/react-docs-page": "^15.0.0-canary-20211023173848",
     "@hashicorp/react-hashi-stack-menu": "^2.0.7",
     "@hashicorp/react-head": "^3.1.2",
     "@hashicorp/react-image": "^4.0.3",
@@ -30,11 +31,12 @@
     "@reach/tabs": "^0.16.1",
     "classnames": "^2.3.1",
     "next": "^11.1.2",
-    "next-mdx-remote": "3.0.1",
+    "next-mdx-remote": "^4.0.0-alpha.1",
     "nuka-carousel": "4.7.5",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-intersection-observer": "8.31.0",
+    "rehype-raw": "^6.1.0",
     "semver": "7.3.4"
   },
   "devDependencies": {

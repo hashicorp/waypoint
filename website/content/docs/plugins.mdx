@@ -1,8 +1,9 @@
 ---
 layout: docs
 page_title: Plugins
-description: |-
-  Waypoint can be extended using custom plugins. Waypoint supports custom builders, deployment platforms, registries, release managers, and more.
+description: >-
+  Waypoint can be extended using custom plugins. Waypoint supports custom
+  builders, deployment platforms, registries, release managers, and more.
 ---
 
 # Plugins
@@ -53,8 +54,8 @@ Once the plugin is named, it must be copied into the correct location. Waypoint
 will look for plugins in the following locations in the following order:
 
 1. In the same directory as the `waypoint.hcl` file.
-2. In `./.waypoint/plugins/` relative to the `waypoint.hcl` file.
-3. In `$XDG_CONFIG_HOME/waypoint/plugins`
+1. In `./.waypoint/plugins/` relative to the `waypoint.hcl` file.
+1. In `$XDG_CONFIG_HOME/waypoint/plugins`
 
 Once a plugin is found, it will not search the later paths.
 

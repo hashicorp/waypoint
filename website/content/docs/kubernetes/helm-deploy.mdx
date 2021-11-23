@@ -1,8 +1,10 @@
 ---
 layout: docs
 page_title: Kubernetes - Deploy with Helm
-description: |-
-  Waypoint can deploy your applications onto Kubernetes using Helm. Waypoint then tracks and shows you the health of all the resources that the Helm chart created.
+description: >-
+  Waypoint can deploy your applications onto Kubernetes using Helm. Waypoint
+  then tracks and shows you the health of all the resources that the Helm chart
+  created.
 ---
 
 # Deploying Applications with Helm
@@ -42,15 +44,15 @@ Helm directly? There are many reasons:
    artifact build, Git commit information, or just computed or templated
    information using [HCL functions](/docs/waypoint-hcl/functions/all).
 
-2. **Environments.** Waypoint handles the higher level multi-environment
+1. **Environments.** Waypoint handles the higher level multi-environment
    abstraction for you, so you can deploy your chart to multiple environments
    but manage and see them all using the same tool and UI.
 
-3. **Single Workflow Configuration.** While you still have to write Helm charts,
+1. **Single Workflow Configuration.** While you still have to write Helm charts,
    you can invoke Helm using the same tool you're using to invoke builds,
    release management, etc.
 
-4. **Other Waypoint features.** You can take advantage of other Waypoint features such as [remote operations](/docs/waypoint-hcl/functions/all),
+1. **Other Waypoint features.** You can take advantage of other Waypoint features such as [remote operations](/docs/waypoint-hcl/functions/all),
    [logs](/docs/logs), [exec](/docs/exec), [input variables](/docs/waypoint-hcl/variables/input), and more.
 
 ## Using Helm with Waypoint

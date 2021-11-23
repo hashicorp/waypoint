@@ -1,8 +1,11 @@
 ---
 layout: docs
 page_title: Application Configuration
-description: |-
-  Waypoint can configure your application by setting environment variables and writing files. Both the environment variables and files can use values sourced from external systems such as Kubernetes ConfigMaps, HashiCorp Vault, Amazon Parameter Store, etc.
+description: >-
+  Waypoint can configure your application by setting environment variables and
+  writing files. Both the environment variables and files can use values sourced
+  from external systems such as Kubernetes ConfigMaps, HashiCorp Vault, Amazon
+  Parameter Store, etc.
 ---
 
 # Application Configuration
@@ -151,9 +154,9 @@ your application with the following steps:
 1. The `SIGTERM` signal is sent to your application process. This signal
    can be trapped to perform last minute cleanup and shutdown.
 
-2. Waypoint will wait up to 30 seconds for your application to gracefully exit.
+1. Waypoint will wait up to 30 seconds for your application to gracefully exit.
 
-3. After 30 seconds, Waypoint will send the `SIGKILL` signal to your
+1. After 30 seconds, Waypoint will send the `SIGKILL` signal to your
    application process group. This will kill the application process as well
    as any subprocesses it may have started. This signal is not able to be trapped
    and your application will be killed immediately.

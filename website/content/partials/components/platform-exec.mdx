@@ -18,7 +18,7 @@ artifact. There are two mechanisms for templates:
 
 1. Any argument in "command" is processed as a template.
 
-2. You may specify a file or directory to be processed for templating
+1. You may specify a file or directory to be processed for templating
    using the "template" stanza. Any argument with the value `<TPL>` in it
    will be replaced with the path to the template.
 
@@ -29,7 +29,7 @@ template. The top of the documentation there has details on the format.
 
 The following template values are always available:
 
-- ".Env" (map<string\>string) - These are environment variables that should
+- ".Env" (map\<string>string) - These are environment variables that should
   be set on the deployed workload. These enable the entrypoint to work so
   you should set these if able.
 

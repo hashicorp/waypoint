@@ -1,8 +1,7 @@
 ---
 layout: docs
-page_title: 'Default Parameters'
-description: |-
-  How Waypoint plugins work
+page_title: Default Parameters
+description: How Waypoint plugins work
 ---
 
 # Default Parameters
@@ -11,12 +10,12 @@ In addition to user defined return values you can also request waypoint injects 
 At present there are 11 possible parameters which you can inject, these are:
 
 - context.Context
-- \*component.Source
-- \*component.JobInfo
-- \*component.DeploymentConfig
+- *component.Source
+- *component.JobInfo
+- *component.DeploymentConfig
 - hclog.Logger
 - terminal.UI
-- \*component.LabelSet
+- *component.LabelSet
 
 ## context.Context
 
@@ -33,7 +32,7 @@ if ctx.Err() != nil {
 }
 ```
 
-## \*component.Source
+## *component.Source
 
 https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#Source
 
@@ -47,7 +46,7 @@ type Source struct {
 }
 ```
 
-## \*component.JobInfo
+## *component.JobInfo
 
 https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#JobInfo
 
@@ -71,7 +70,7 @@ type JobInfo struct {
 }
 ```
 
-## \*component.DeploymentConfig
+## *component.DeploymentConfig
 
 https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#DeploymentConfig
 
@@ -127,7 +126,7 @@ https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/terminal#UI
 UI allows you to build rich output for your plugin, more details on using terminal.UI can be found in the
 Interacting with the UI section.
 
-## \*component.LabelSet
+## *component.LabelSet
 
 https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#LabelSet
 

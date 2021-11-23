@@ -1,8 +1,12 @@
 ---
 layout: docs
 page_title: JSON Syntax - waypoint.hcl
-description: |-
-  Waypoint configuration is usually written in [HCL syntax](/docs/waypoint-hcl/syntax) which is designed to be relatively easy for humans to read and update. Waypoint also supports JSON. This syntax is useful when generating configurations programmatically, since existing JSON libraries can be used to prepare the generated configuration files.
+description: >-
+  Waypoint configuration is usually written in [HCL
+  syntax](/docs/waypoint-hcl/syntax) which is designed to be relatively easy for
+  humans to read and update. Waypoint also supports JSON. This syntax is useful
+  when generating configurations programmatically, since existing JSON libraries
+  can be used to prepare the generated configuration files.
 ---
 
 # JSON Configuration Syntax
@@ -107,7 +111,7 @@ in the template; in these other situations, a string value is always produced.
 ## Comments
 
 Although we do not recommend hand-editing of JSON syntax configuration files
--- this format is primarily intended for programmatic generation and consumption --
+\-- this format is primarily intended for programmatic generation and consumption --
 a limited form of _comments_ are allowed inside JSON objects that represent
 stanza bodies using a special property name:
 

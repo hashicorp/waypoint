@@ -15,13 +15,13 @@ The example demonstrates the main steps:
 1. **Set-up the dependencies Waypoint might use.** This could be
    a Kubernetes context for a more advanced application, or in the
    below example, a Docker daemon to run applications on.
-2. **Install Waypoint from the official source.** If you are
+1. **Install Waypoint from the official source.** If you are
    using a Docker custom image executor with your other deploy
    dependencies, you could utilize the public Docker image in a multi-stage build.
-3. **Run `waypoint init`.** This depends on the environment variables listed
+1. **Run `waypoint init`.** This depends on the environment variables listed
    below and documented in the [Automating Execution](/docs/automating-execution#init)
    overview.
-4. **Run the build, deploy, and release.** In this case, instead of using `waypoint up`,
+1. **Run the build, deploy, and release.** In this case, instead of using `waypoint up`,
    it breaks out each stage as a separate command to be easier to read and
    filter through in the GitLab UI.
 

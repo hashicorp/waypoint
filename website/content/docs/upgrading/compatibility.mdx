@@ -1,7 +1,10 @@
 ---
 layout: docs
 page_title: Compatibility Promise
-description: Waypoint version compatibility is determined based on the protocol version and not the release version such as "1.2.3". Two different Waypoint release versions are compatible so long as their protocol versions are compatible.
+description: >-
+  Waypoint version compatibility is determined based on the protocol version and
+  not the release version such as "1.2.3". Two different Waypoint release
+  versions are compatible so long as their protocol versions are compatible.
 ---
 
 # Compatibility Promise
@@ -23,10 +26,10 @@ Our promises:
 1. We promise that two Waypoint versions can interoperate with each other if their
    [protocol versions](#protocol-versions) overlap.
 
-2. We promise that there will always be a release with overlapping protocol
+1. We promise that there will always be a release with overlapping protocol
    versions to allow all Waypoint components to safely upgrade.
 
-3. For Waypoint servers, we promise that each subsequent release will be compatible with the
+1. For Waypoint servers, we promise that each subsequent release will be compatible with the
    prior release for upgrades. Concretely: 0.4 can upgrade to 0.5 but
    may not be able to safely upgrade to 0.6 directly. You often will be
    able to upgrade multiple versions at once but you must verify with the

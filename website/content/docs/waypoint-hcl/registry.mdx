@@ -1,8 +1,10 @@
 ---
 layout: docs
 page_title: registry - waypoint.hcl
-description: |-
-  The `registry` stanza configures the result of a build to be pushed to a registry such as a Docker Registry, Artifactory, etc. A registry is used to make the result of a build available to the deployment platform.
+description: >-
+  The `registry` stanza configures the result of a build to be pushed to a
+  registry such as a Docker Registry, Artifactory, etc. A registry is used to
+  make the result of a build available to the deployment platform.
 ---
 
 # `registry` Stanza
@@ -53,5 +55,6 @@ app "frontend" {
 - `hook` <code>([hook][hook]: nil)</code> - [Hooks](/docs/lifecycle/hooks)
   to execute before and/or after the artifact is pushed to the registry.
 
-[hook]: /docs/waypoint-hcl/hook 'Hook Stanza'
-[use]: /docs/waypoint-hcl/use 'Use Stanza'
+[hook]: /docs/waypoint-hcl/hook "Hook Stanza"
+
+[use]: /docs/waypoint-hcl/use "Use Stanza"
