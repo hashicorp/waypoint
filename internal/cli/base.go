@@ -268,7 +268,22 @@ func (c *baseCommand) Init(opts ...Option) error {
 	}
 	c.variables = vars
 
-	// Parse the configuration
+	// Now we begin parsing project and/or app values, when they are required
+	// by the command.
+	// The goal is to set c.refProject and c.refApps for the following options:
+	// WithSingleAppTarget:
+	//   - 1 app in []c.refApps
+	//   - c.refProject set
+	// WithMultiAppTargets:
+	//   - 1 or more apps in []c.refApps
+	//   - c.refProject set
+	// WithProjectTarget:
+	//   - c.refProject set
+	//   - value of []c.refApps doesn't matter; likely will be set when using
+	//     a local waypoint.hcl or if someone also includes -app flag, but not
+	//     required
+
+	// 1. Parse the configuration
 	c.cfg = &config.Config{}
 
 	if !baseCfg.NoConfig {
@@ -291,11 +306,14 @@ func (c *baseCommand) Init(opts ...Option) error {
 		}
 	}
 
-	// Parse project flags
+	// 2. Parse project flags; overwrite any c.refProject value set from
+	// config parsing, as precedence order means we take the most specific value
+	// which is the -project flag
 	if c.flagProject != "" {
 		c.refProject = &pb.Ref_Project{Project: c.flagProject}
 	}
 
+	// 2.a. if c.refProject is nil at this point but we know it's required, we fail out
 	if baseCfg.ProjectTargetRequired && c.refProject == nil {
 		// The user must not have specified a project flag, and config parsing didn't produce one either.
 
@@ -305,7 +323,9 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return err
 	}
 
-	// Create our client (must be done after the project ref and vars are set)
+	// 3. Create our client
+	// We must do this after the project ref and vars are set, and we need
+	// the client to find the project for the specified app targets.
 	if !baseCfg.NoClient {
 		c.project, err = c.initClient(nil)
 		if err != nil {
@@ -314,12 +334,18 @@ func (c *baseCommand) Init(opts ...Option) error {
 		}
 	}
 
-	// Parse app flags
+	// 4. Parse app flags; overwrite any []c.refApps value set from
+	// config parsing, as precedence order means we take the most specific value
+	// which is the -app flag
 	if c.flagApp != "" {
 		// NOTE: we could allow app to be specified multiple times in the future
 		c.refApps = []*pb.Ref_Application{{Application: c.flagApp}}
 	}
 
+	// 4.a. If app(s) are required but not set, we do a final check to the
+	// Waypoint server to see if it knows what apps belong to the project. We
+	// set ProjectTargetRequired to `true` for both AppTarget options, so at this
+	// point, if an AppTarget option is set then we should have a c.refProject.
 	if (baseCfg.SingleAppTarget || baseCfg.MultiAppTarget) && len(c.refApps) == 0 {
 		// We must not have found an app from config or flags, so we need to resort to the API.
 		c.Log.Debug("No apps found via CLI or API - listing them from the CLI.")
@@ -335,6 +361,8 @@ func (c *baseCommand) Init(opts ...Option) error {
 			})
 		}
 
+		// This should be a very-edge case; we have done everything we possibly
+		// can to find apps, and we don't have them
 		if len(c.refApps) == 0 {
 			err = fmt.Errorf("This command requires an app to be targeted, but no apps were found in project %q.", c.refProject.Project)
 			c.logError(c.Log, "", err)
@@ -342,6 +370,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 		}
 	}
 
+	// 4.b. Check to ensure there is 1 and only 1 target for SingleAppTarget cmd
 	if baseCfg.SingleAppTarget && len(c.refApps) > 1 {
 		c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
 		return ErrSentinel
