@@ -155,8 +155,26 @@ func TestGetRemoteName(t *testing.T) {
 	hclog.Default().SetLevel(hclog.Debug)
 
 	require := require.New(t)
-	branchName := "waypoint"
 
+	t.Run("Fail if no remotes", func(t *testing.T) {
+		td, err := ioutil.TempDir("", "test")
+		defer os.RemoveAll(td)
+		require.NoError(err)
+
+		log := hclog.Default()
+		_, err = runGitCommand(log, td, "init")
+		require.NoError(err)
+
+		_, err = NewVcsChecker(
+			log,
+			td,
+			"irrelevant-to-test",
+		)
+		require.Error(err)
+		require.Contains(err.Error(), "no remotes found for repo at path")
+	})
+
+	branchName := "waypoint"
 	vcsTester, err := generateGitState(branchName, t)
 	require.NoError(err)
 
@@ -197,6 +215,31 @@ func TestGetRemoteName(t *testing.T) {
 		require.Equal(vcsTester.remoteName, name)
 	})
 
+	// This test case is especially important to waypoint, as it's not unlikely that developers will use the https
+	// remote for the project definition (and user/pass auth), but ssh auth locally. We need to be able to
+	// detect which ssh remote corresponds to the http remote.
+	t.Run("Works regardless of protocol", func(t *testing.T) {
+		httpRemote := "https://git.test/testorg/testrepo.git"
+		sshRemote := "git@git.test:testorg/testrepo.git"
+		_, err := runGitCommand(v.log, v.path, "remote", "add", "sshRemote", sshRemote)
+		require.NoError(err)
+
+		name, err := v.getRemoteName(httpRemote)
+		require.NoError(err)
+		require.Equal(name, "sshRemote")
+
+		// Again, but detecting http locally from ssh remotely. This is less important.
+		_, err = runGitCommand(v.log, v.path, "remote", "remove", "sshRemote")
+		require.NoError(err)
+
+		_, err = runGitCommand(v.log, v.path, "remote", "add", "httpRemote", httpRemote)
+		require.NoError(err)
+
+		name, err = v.getRemoteName(sshRemote)
+		require.NoError(err)
+		require.Equal(name, "httpRemote")
+	})
+
 	t.Run("Fail if no match found", func(t *testing.T) {
 		name, err := v.getRemoteName(vcsTester.remoteUrl + "noexist")
 		require.Error(err)
@@ -204,20 +247,6 @@ func TestGetRemoteName(t *testing.T) {
 		require.Contains(err.Error(), "no remote with url matching")
 	})
 
-	t.Run("Fail if no remotes", func(t *testing.T) {
-		td, err := ioutil.TempDir("", "test")
-		defer os.RemoveAll(td)
-		require.NoError(err)
-
-		_, err = runGitCommand(v.log, td, "init")
-		require.NoError(err)
-		v.path = td
-
-		name, err := v.getRemoteName("irrelevant-to-test")
-		require.Error(err)
-		require.Empty(name)
-		require.Contains(err.Error(), "no remotes found for repo at path")
-	})
 }
 
 func TestRemoteHasDiff(t *testing.T) {
@@ -310,4 +339,24 @@ func TestRemoteFileHasDiff(t *testing.T) {
 		require.NoError(err)
 		require.True(diff)
 	})
+}
+
+func Test_remoteConvertSSHtoHTTPS(t *testing.T) {
+	require := require.New(t)
+	httpRemote := "https://git.test/testorg/testrepo.git"
+	sshRemote := "git@git.test:testorg/testrepo.git"
+
+	newHttpRemote, err := remoteConvertSSHtoHTTPS(sshRemote)
+	require.NoError(err)
+	require.Equal(httpRemote, newHttpRemote)
+}
+
+func Test_remoteConvertHTTPStoSSH(t *testing.T) {
+	require := require.New(t)
+	httpRemote := "https://git.test/testorg/testrepo.git"
+	sshRemote := "git@git.test:testorg/testrepo.git"
+
+	newSSHRemote, err := remoteConvertHTTPStoSSH(httpRemote)
+	require.NoError(err)
+	require.Equal(sshRemote, newSSHRemote)
 }
