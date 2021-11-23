@@ -25,7 +25,7 @@ type VcsChecker struct {
 // NewVcsChecker creates a new configured VcsChecker.
 // NOTE: VcsChecker subprocceses to the `git` command. Git must be installed.
 func NewVcsChecker(log hclog.Logger, path string, remoteUrl string) (*VcsChecker, error) {
-	if _, err := exec.LookPath("git"); err == nil {
+	if _, err := exec.LookPath("git"); err != nil {
 		return nil, errors.New("command 'git' not installed")
 	}
 
