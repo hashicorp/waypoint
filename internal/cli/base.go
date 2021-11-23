@@ -23,9 +23,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"github.com/hashicorp/waypoint/internal/runner"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
 )
 
 const (
@@ -366,7 +364,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 		c.Log.Debug("No apps found via CLI or API - listing them from the CLI.")
 		resp, err := c.project.Client().GetProject(c.Ctx, &pb.GetProjectRequest{Project: c.refProject})
 		if err != nil {
-			c.logError(c.Log, fmt.Sprintf("Failed to inspect project %s", c.refProject.Project), err)
+			c.logError(c.Log, fmt.Sprintf("Failed to get project %s", c.refProject.Project), err)
 			return err
 		}
 		for _, app := range resp.Project.Applications {
@@ -391,43 +389,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return ErrSentinel
 	}
 
-	// Start a local runner if necessary
-	if baseCfg.RunnerRequired && !c.remoteOpPreferred() {
-		_, err := c.startLocalRunner()
-		if err != nil {
-			c.logError(c.Log, "failed to start a local runner", err)
-			return err
-		}
-	}
-
 	return nil
-}
-
-// startLocalRunner starts a local runner, and adds its id to the grpc context.
-func (c *baseCommand) startLocalRunner() (*runner.Runner, error) {
-	// NOTE(izaak): For now, we just start the local runner every time one is required - we may not end up using it.
-	// Will start this more selectively in a future PR.
-	r, err := c.project.StartLocalRunner()
-	if err != nil {
-		c.logError(c.Log, "failed to start a local runner", err)
-		return nil, err
-	}
-
-	// Inject the metadata about the client, such as the runner id if it is running
-	// a local runner.
-	c.Ctx = grpcmetadata.AddRunner(c.Ctx, r.Id())
-	return r, nil
-}
-
-// remoteOpPreferred determines if any operations that occur during the invocation of this command
-// should happen remotely.
-func (c *baseCommand) remoteOpPreferred() bool {
-	// NOTE(izaak): will be significantly improved in the near future.
-	if c.flagLocal != nil {
-		return !*c.flagLocal
-	} else {
-		return false
-	}
 }
 
 // remoteOpPreferred attempts to determine if the current waypoint infrastructure will be successful
@@ -439,6 +401,7 @@ func (c *baseCommand) remoteOpPreferred() bool {
 // Note that this cannot guarantee that an operation will succeed remotely - the remote environment
 // may not have the right auth configured, the right plugins configured, etc.
 func remoteOpPreferred(ctx context.Context, client pb.WaypointClient, project *pb.Project, log hclog.Logger) (bool, error) {
+
 	if !project.RemoteEnabled {
 		log.Debug("Remote operations are disabled for this project - operation cannot occur remotely")
 		return false, nil

@@ -30,10 +30,11 @@ type Project struct {
 	cleanupFunc         func()
 	serverVersion       *pb.VersionInfo
 
-	useLocalRunner bool
+	useLocalRunner *bool
 
-	noLocalServer bool // config setting - indicates the project should never create a local server
-	localServer   bool // True when a local server is created
+	noLocalServer      bool // config setting - indicates the project should never create a local server
+	localServer        bool // True when a local server is created
+	executeJobsLocally bool // True to force the project to execute all jobs locally
 
 	// These are used to manage a local runner and its job processing
 	// in a goroutine.
@@ -91,32 +92,6 @@ func New(ctx context.Context, opts ...Option) (*Project, error) {
 	}
 
 	return client, nil
-}
-
-// StartLocalRunner starts a local runner in a separate goroutine.
-func (c *Project) StartLocalRunner() (*runner.Runner, error) {
-	c.logger.Debug("starting runner to process local jobs")
-	r, err := c.startRunner()
-	if err != nil {
-		return nil, err
-	}
-
-	c.activeRunner = r
-
-	// We spin up the job processing here. Anything that spawns jobs (either locally spawned
-	// or server spawned) will be processed by this runner ONLY if the runner is directly targeted.
-	// Because this runner's lifetime is bound to a CLI context and therefore transient, we don't
-	// want to accept jobs that aren't related to local activities (jobs queued or RPCs made)
-	// because they'll hang the CLI randomly as those jobs run (it's also a security issue).
-	c.wg.Add(1)
-	go func() {
-		defer c.wg.Done()
-		r.AcceptMany(c.bg)
-	}()
-
-	c.useLocalRunner = true
-
-	return r, nil
 }
 
 // LocalRunnerId returns the id of the runner that this project started
@@ -279,6 +254,16 @@ func WithUI(ui terminal.UI) Option {
 func WithNoLocalServer() Option {
 	return func(c *Project, cfg *config) error {
 		c.noLocalServer = true
+		return nil
+	}
+}
+
+// WithUseLocalRunner instructs this client to execute all jobs either on a local runner,
+// or on a remote runner. If unset, it will automatically determine where jobs will execute,
+// preferring remote when possible
+func WithUseLocalRunner(useLocalRunner bool) Option {
+	return func(c *Project, cfg *config) error {
+		c.useLocalRunner = &useLocalRunner
 		return nil
 	}
 }

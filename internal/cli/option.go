@@ -93,20 +93,10 @@ func WithConnectionArg() Option {
 	}
 }
 
-// WithRunnerRequired indicates that the command will trigger an operation that needs a runner.
-// The framework will then determine if a local runner will be necessary (and start it), or
-// if it can rely on remote runners/ODR.
-func WithRunnerRequired() Option {
-	return func(c *baseConfig) {
-		c.RunnerRequired = true
-	}
-}
-
 type baseConfig struct {
 	Args  []string
 	Flags *flag.Sets
 
-	RunnerRequired        bool
 	ProjectTargetRequired bool
 	NoClient              bool
 	SingleAppTarget       bool

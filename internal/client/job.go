@@ -6,6 +6,10 @@ import (
 	"io"
 	"time"
 
+	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
+
+	"github.com/pkg/errors"
+
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -27,23 +31,11 @@ func (c *Project) job() *pb.Job {
 		Application: &pb.Ref_Application{
 			Project: c.project.Project,
 		},
-
-		DataSource: &pb.Job_DataSource{
-			Source: &pb.Job_DataSource_Local{
-				Local: &pb.Job_Local{},
-			},
-		},
 		DataSourceOverrides: c.dataSourceOverrides,
 
 		Operation: &pb.Job_Noop_{
 			Noop: &pb.Job_Noop{},
 		},
-	}
-
-	// If we're not local, we set a nil data source so it defaults to
-	// wahtever the project has remotely.
-	if !c.useLocalRunner {
-		job.DataSource = nil
 	}
 
 	return job
@@ -60,6 +52,32 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 // The receiver must be careful to not block sending to mon as it will block
 // the job state processing loop.
 func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.UI, monCh chan pb.Job_State) (*pb.Job_Result, error) {
+
+	if c.useLocalRunner == nil {
+		// Automatically determine if we should use local or remote
+
+		// NOTE(izaak): If in the future we need this in other places too, we should probably cache it on the parent struct.
+		getProjectResp, err := c.client.GetProject(ctx, &pb.GetProjectRequest{Project: c.project})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to get project %s", c.project.Project)
+		}
+		remotePreferred, err := remoteOpPreferred(ctx, c.client, getProjectResp.Project, c.logger)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to determine if job %s should run locally or remotely", job.Application)
+		}
+
+		// Store this for later operations on this same project
+		useLocalRunner := !remotePreferred
+		c.useLocalRunner = &useLocalRunner
+	}
+
+	if *c.useLocalRunner && c.activeRunner == nil {
+		// we need a local runner and we haven't started it yet
+		if err := c.startRunner(); err != nil {
+			return nil, errors.Wrapf(err, "failed to start local runner for job %s, err")
+		}
+	}
+
 	// Be sure that the monitor is closed so the receiver knows for sure the job isn't going
 	// anymore.
 	if monCh != nil {
@@ -67,7 +85,20 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 	}
 
 	// In local mode we have to target the local runner.
-	if c.useLocalRunner {
+	if *c.useLocalRunner {
+
+		// Inject the metadata about the client, such as the runner id if it is running
+		// a local runner.
+		ctx = grpcmetadata.AddRunner(ctx, c.activeRunner.Id())
+
+		// If we're local, we set a local data source. Otherwise, it defaults to whatever the
+		// project has remotely.
+		job.DataSource = &pb.Job_DataSource{
+			Source: &pb.Job_DataSource_Local{
+				Local: &pb.Job_Local{},
+			},
+		}
+
 		// Modify the job to target this runner and use the local data source.
 		// The runner will have been started when we created the Project value and be
 		// used for all local jobs.
@@ -97,7 +128,7 @@ func (c *Project) queueAndStreamJob(
 	// cancel in the event of an error. This will ensure that the jobs don't
 	// remain queued forever. This is only for local ops.
 	expiration := ""
-	if c.useLocalRunner {
+	if *c.useLocalRunner {
 		expiration = "30s"
 	}
 
@@ -151,7 +182,7 @@ func (c *Project) queueAndStreamJob(
 		steps = map[int32]*stepData{}
 	)
 
-	if c.useLocalRunner {
+	if *c.useLocalRunner {
 		defer func() {
 			// If we completed then do nothing, or if the context is still
 			// active since this means that we're not cancelled.
@@ -207,7 +238,7 @@ func (c *Project) queueAndStreamJob(
 
 		case *pb.GetJobStreamResponse_Terminal_:
 			// Ignore this for local jobs since we're using our UI directly.
-			if c.useLocalRunner {
+			if *c.useLocalRunner {
 				continue
 			}
 

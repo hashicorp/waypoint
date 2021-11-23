@@ -106,6 +106,10 @@ func (c *baseCommand) initClient(
 		opts = append(opts, clientpkg.WithNoLocalServer())
 	}
 
+	if c.flagLocal != nil {
+		opts = append(opts, clientpkg.WithUseLocalRunner(*c.flagLocal))
+	}
+
 	if c.ui != nil {
 		opts = append(opts, clientpkg.WithUI(c.ui))
 	}
