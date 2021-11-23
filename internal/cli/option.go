@@ -22,39 +22,35 @@ func WithFlags(f *flag.Sets) Option {
 	return func(c *baseConfig) { c.Flags = f }
 }
 
-// WithSingleApp configures the CLI to expect a configuration with
+// WithProjectTarget configures the CLI to expect a configuration
+// with a project specified, either through a waypoint.hcl file or
+// the -project flag
+func WithProjectTarget() Option {
+	return func(c *baseConfig) {
+		c.ProjectTargetRequired = true
+	}
+}
+
+// WithSingleAppTarget configures the CLI to expect a configuration with
 // one or more apps defined but a single app targeted with `-app`.
 // If only a single app exists, it is implicitly the target.
 // Zero apps is an error.
-func WithSingleApp() Option {
+func WithSingleAppTarget() Option {
 	return func(c *baseConfig) {
-		c.AppTargetRequired = true
-		c.Config = false
-		c.Client = true
-	}
-}
-
-// WithMultipleApp configures the CLI to expect a configuration with
-// one or more apps defined in a project. The option will prioritize a value
-// provided to the -project flag.
-func WithMultipleApp() Option {
-	return func(c *baseConfig) {
+		c.SingleAppTarget = true
+		// Projects are implicitly required for app targets
 		c.ProjectTargetRequired = true
-		c.Config = false
-		c.Client = true
 	}
 }
 
-// WithOptionalApp configures the CLI to work with or without an explicit
-// project config locally. It also allows for operations on multiple apps
-// inside a project.
-func WithOptionalApp() Option {
+// WithMultiAppTargets configures the CLI to allow this command to run against
+// every app specified by the user - either each application in the project,
+// or the single app specified with the -app flag.
+func WithMultiAppTargets() Option {
 	return func(c *baseConfig) {
-		c.AppTargetRequired = false
-		c.AppOptional = true
-		c.Config = false
-		c.Client = true
-		c.ConfigOptional = true
+		c.MultiAppTarget = true
+		// Projects are implicitly required for app targets
+		c.ProjectTargetRequired = true
 	}
 }
 
@@ -62,23 +58,14 @@ func WithOptionalApp() Option {
 // This will not read any configuration files.
 func WithNoConfig() Option {
 	return func(c *baseConfig) {
-		c.Config = false
+		c.NoConfig = true
 	}
 }
 
-// WithConfig configures the CLI to find and load any project configuration.
-// If optional is true, no error will be shown if a config can't be found.
-func WithConfig(optional bool) Option {
+// WithNoClient configures the CLI to not use a client
+func WithNoClient() Option {
 	return func(c *baseConfig) {
-		c.Config = true
-		c.ConfigOptional = optional
-	}
-}
-
-// WithClient configures the CLI to initialize a client.
-func WithClient(v bool) Option {
-	return func(c *baseConfig) {
-		c.Client = v
+		c.NoClient = true
 	}
 }
 
@@ -89,11 +76,11 @@ func WithUI(ui terminal.UI) Option {
 	}
 }
 
-// WithNoAutoServer configures the CLI to not automatically spin up
+// WithNoLocalServer configures the CLI to not automatically spin up
 // an in-memory server for this command.
-func WithNoAutoServer() Option {
+func WithNoLocalServer() Option {
 	return func(c *baseConfig) {
-		c.NoAutoServer = true
+		c.NoLocalServer = true
 	}
 }
 
@@ -106,19 +93,30 @@ func WithConnectionArg() Option {
 	}
 }
 
-type baseConfig struct {
-	Args                  []string
-	Flags                 *flag.Sets
-	Config                bool
-	ConfigOptional        bool
-	AppOptional           bool
-	Client                bool
-	AppTargetRequired     bool
-	ProjectTargetRequired bool
-	UI                    terminal.UI
+// WithRunnerRequired indicates that the command will trigger an operation that needs a runner.
+// The framework will then determine if a local runner will be necessary (and start it), or
+// if it can rely on remote runners/ODR.
+func WithRunnerRequired() Option {
+	return func(c *baseConfig) {
+		c.RunnerRequired = true
+	}
+}
 
-	// NoAutoServer is true if an in-memory server is not allowed.
-	NoAutoServer bool
+type baseConfig struct {
+	Args  []string
+	Flags *flag.Sets
+
+	RunnerRequired        bool
+	ProjectTargetRequired bool
+	NoClient              bool
+	SingleAppTarget       bool
+	MultiAppTarget        bool
+	NoConfig              bool
+
+	UI terminal.UI
+
+	// NoLocalServer is true if an in-memory server is not allowed.
+	NoLocalServer bool
 
 	// ConnArg as true means we should parse the server address as an
 	// argument (the first argument).

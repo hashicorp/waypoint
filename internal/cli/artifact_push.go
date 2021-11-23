@@ -21,7 +21,8 @@ func (c *ArtifactPushCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithMultipleApp(),
+		WithMultiAppTargets(),
+		WithRunnerRequired(),
 	); err != nil {
 		return 1
 	}

@@ -101,7 +101,8 @@ func (c *ExecCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(flagSet),
-		WithSingleApp(),
+		WithSingleAppTarget(),
+		WithRunnerRequired(), // Some platforms require an exec plugin
 	); err != nil {
 		return 1
 	}

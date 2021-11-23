@@ -18,7 +18,7 @@ import (
 // and set WP_PROJECT_TEMPLATE_PATH=/path/to/waypoint-examples/docker/static
 func TestCliE2E(t *testing.T) {
 
-	wpBinary = Getenv("waypoint", "waypoint")
+	wpBinary = Getenv("WP_BINARY", "waypoint")
 	projectTemplatePath := Getenv("WP_PROJECT_TEMPLATE_PATH", "")
 	if projectTemplatePath == "" {
 		t.Fatalf("Missing required environment variable WP_PROJECT_TEMPLATE_PATH")
@@ -136,9 +136,9 @@ func TestCliE2E(t *testing.T) {
 	t.Run("Runner profiles", func(t *testing.T) {
 		wp.Run("runner profile list") // Has no output right now
 
-		wp.Run("runner profile set -name=test -plugin-type=docker")
+		wp.Run("runner profile set -name=e2e-test -plugin-type=docker")
 
-		wp.RunTableExpectLength(1, "runner profile list")
+		wp.RunWithOutput("e2e-test", "runner profile list")
 	})
 
 	t.Run("Cleanup", func(t *testing.T) {

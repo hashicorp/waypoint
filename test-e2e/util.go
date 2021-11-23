@@ -167,10 +167,10 @@ func (b *binary) Run(args string) (stdout string) {
 	fmt.Printf("running %s ...\n", args)
 	stdout, stderr, err := b.RunRaw(splitArgs(args)...)
 	if err != nil {
-		b.t.Fatalf("unexpected error running %q inside %q: %s", args, b.workingDir, err)
+		b.t.Fatalf("unexpected error running %q inside %q\nERROR:\n%s\n\nSTDERR:\n%s\n\nSTDOUT:\n%s", args, b.workingDir, err, stderr, stdout)
 	}
 	if stderr != "" {
-		b.t.Fatalf("unexpected stderr output running %s: %s", args, err)
+		b.t.Fatalf("unexpected stderr output running %s:\n%s", args, stderr)
 	}
 	return stdout
 }

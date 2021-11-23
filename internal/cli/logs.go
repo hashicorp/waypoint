@@ -29,7 +29,8 @@ func (c *LogsCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithSingleApp(),
+		WithSingleAppTarget(),
+		WithRunnerRequired(), // Some platforms have a separate logs plugin that require a runner
 	); err != nil {
 		return 1
 	}

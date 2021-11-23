@@ -42,7 +42,7 @@ func (c *Project) job() *pb.Job {
 
 	// If we're not local, we set a nil data source so it defaults to
 	// wahtever the project has remotely.
-	if !c.local {
+	if !c.useLocalRunner {
 		job.DataSource = nil
 	}
 
@@ -60,14 +60,14 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 // The receiver must be careful to not block sending to mon as it will block
 // the job state processing loop.
 func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.UI, monCh chan pb.Job_State) (*pb.Job_Result, error) {
-	// Be sure that the monitor is closed so the reciever knows for sure the job isn't going
+	// Be sure that the monitor is closed so the receiver knows for sure the job isn't going
 	// anymore.
 	if monCh != nil {
 		defer close(monCh)
 	}
 
-	// In local mode we have to start a runner.
-	if c.local {
+	// In local mode we have to target the local runner.
+	if c.useLocalRunner {
 		// Modify the job to target this runner and use the local data source.
 		// The runner will have been started when we created the Project value and be
 		// used for all local jobs.
@@ -97,7 +97,7 @@ func (c *Project) queueAndStreamJob(
 	// cancel in the event of an error. This will ensure that the jobs don't
 	// remain queued forever. This is only for local ops.
 	expiration := ""
-	if c.local {
+	if c.useLocalRunner {
 		expiration = "30s"
 	}
 
@@ -151,7 +151,7 @@ func (c *Project) queueAndStreamJob(
 		steps = map[int32]*stepData{}
 	)
 
-	if c.local {
+	if c.useLocalRunner {
 		defer func() {
 			// If we completed then do nothing, or if the context is still
 			// active since this means that we're not cancelled.
@@ -207,7 +207,7 @@ func (c *Project) queueAndStreamJob(
 
 		case *pb.GetJobStreamResponse_Terminal_:
 			// Ignore this for local jobs since we're using our UI directly.
-			if c.local {
+			if c.useLocalRunner {
 				continue
 			}
 
