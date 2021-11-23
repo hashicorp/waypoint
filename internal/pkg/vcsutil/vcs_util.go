@@ -11,32 +11,49 @@ import (
 )
 
 type VcsChecker struct {
-	log  hclog.Logger
+	log hclog.Logger
+
+	// path is the local path to the cloned git repo
 	path string
+
+	// remoteUrl is the url of the git remote
+	remoteUrl string
+
+	// remoteName is the name of the remote that corresponds to the url
+	remoteName string
 }
 
-func NewVcsChecker(log hclog.Logger, path string) *VcsChecker {
-	return &VcsChecker{
-		log:  log,
-		path: path,
+// NewVcsChecker creates a new configured VcsChecker.
+// NOTE: VcsChecker subprocceses to the `git` command. Git must be installed.
+func NewVcsChecker(log hclog.Logger, path string, remoteUrl string) (*VcsChecker, error) {
+	if _, err := exec.LookPath("git"); err == nil {
+		return nil, errors.New("command 'git' not installed")
 	}
+
+	v := &VcsChecker{
+		log:       log,
+		path:      path,
+		remoteUrl: remoteUrl,
+	}
+
+	remoteName, err := v.getRemoteName(remoteUrl)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get remote name from url %s", remoteUrl)
+	}
+	v.remoteName = remoteName
+	return v, nil
 }
 
 // RepoHasDiff looks for unstaged, staged, and committed (but not pushed)
 // differences between the local VcsChecker.path repo and the specified
 // remote url and branch
-func (v *VcsChecker) RepoHasDiff(remoteUrl string, remoteBranch string) (bool, error) {
+func (v *VcsChecker) RepoHasDiff(remoteBranch string) (bool, error) {
 	gitStatus, err := v.runVcsGitCommand("status", "-s")
 	if len(gitStatus) > 0 {
 		return true, nil
 	}
 
-	remoteName, err := v.getRemoteName(remoteUrl)
-	if err != nil {
-		return false, errors.Wrapf(err, "Failed to get remote name for url %s", remoteUrl)
-	}
-
-	diff, err := v.remoteHasDiff(remoteName, remoteBranch)
+	diff, err := v.remoteHasDiff(remoteBranch)
 	if err != nil {
 		return false, err
 	}
@@ -115,10 +132,10 @@ func (v *VcsChecker) getRemoteName(url string) (name string, err error) {
 }
 
 // remoteHasDiff compares the local repo to the specified remote and branch
-func (v *VcsChecker) remoteHasDiff(remoteName string, remoteBranch string) (bool, error) {
-	diff, err := v.runVcsGitCommand("diff", fmt.Sprintf("%s/%s", remoteName, remoteBranch))
+func (v *VcsChecker) remoteHasDiff(remoteBranch string) (bool, error) {
+	diff, err := v.runVcsGitCommand("diff", fmt.Sprintf("%s/%s", v.remoteName, remoteBranch))
 	if err != nil {
-		return false, errors.Wrapf(err, "failed to diff against remote %q on branch %q", remoteName, remoteBranch)
+		return false, errors.Wrapf(err, "failed to diff against remote %q on branch %q", v.remoteName, remoteBranch)
 	}
 	if len(diff) > 0 {
 		return true, nil

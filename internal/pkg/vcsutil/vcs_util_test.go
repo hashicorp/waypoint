@@ -3,6 +3,7 @@ package vcsutil
 import (
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
@@ -16,6 +17,14 @@ type VCSTester struct {
 	remoteRepoPath string
 	remoteUrl      string
 	remoteName     string
+}
+
+var testHasGit bool
+
+func init() {
+	if _, err := exec.LookPath("git"); err == nil {
+		testHasGit = true
+	}
 }
 
 func generateGitState(branchName string, t *testing.T) (VCSTester, error) {
@@ -86,6 +95,11 @@ func generateGitState(branchName string, t *testing.T) (VCSTester, error) {
 }
 
 func TestIsDirty(t *testing.T) {
+	if !testHasGit {
+		t.Skip("git not installed")
+		return
+	}
+
 	hclog.Default().SetLevel(hclog.Debug)
 
 	require := require.New(t)
@@ -94,24 +108,27 @@ func TestIsDirty(t *testing.T) {
 	vcsTester, err := generateGitState(branchName, t)
 	require.NoError(err)
 
-	v := NewVcsChecker(
+	v, err := NewVcsChecker(
 		hclog.Default(),
 		vcsTester.repoPath,
+		vcsTester.remoteUrl,
 	)
 
+	require.NoError(err)
+
 	t.Run("Initial state is clean", func(t *testing.T) {
-		dirty, err := v.RepoHasDiff(vcsTester.remoteUrl, branchName)
+		dirty, err := v.RepoHasDiff(branchName)
 		require.NoError(err)
 		require.False(dirty)
 	})
 
-	t.Run("Creating (but not commiting) a new file is dirty", func(t *testing.T) {
+	t.Run("Creating (but not committing) a new file is dirty", func(t *testing.T) {
 		file := vcsTester.repoPath + "/dirtyfile"
 		r, err := os.OpenFile(file, os.O_CREATE, 0600)
 		r.Close()
 		require.NoError(err)
 
-		dirty, err := v.RepoHasDiff(vcsTester.remoteUrl, branchName)
+		dirty, err := v.RepoHasDiff(branchName)
 		require.NoError(err)
 		require.True(dirty)
 	})
@@ -124,13 +141,18 @@ func TestIsDirty(t *testing.T) {
 		_, err = runGitCommand(v.log, vcsTester.repoPath, "commit", "-am", "\"committed\"")
 		require.NoError(err)
 
-		dirty, err := v.RepoHasDiff(vcsTester.remoteUrl, branchName)
+		dirty, err := v.RepoHasDiff(branchName)
 		require.NoError(err)
 		require.True(dirty)
 	})
 }
 
 func TestGetRemoteName(t *testing.T) {
+	if !testHasGit {
+		t.Skip("git not installed")
+		return
+	}
+
 	hclog.Default().SetLevel(hclog.Debug)
 
 	require := require.New(t)
@@ -139,10 +161,12 @@ func TestGetRemoteName(t *testing.T) {
 	vcsTester, err := generateGitState(branchName, t)
 	require.NoError(err)
 
-	v := NewVcsChecker(
+	v, err := NewVcsChecker(
 		hclog.Default(),
 		vcsTester.repoPath,
+		vcsTester.remoteUrl,
 	)
+	require.NoError(err)
 
 	t.Run("Get the remote name", func(t *testing.T) {
 		name, err := v.getRemoteName(vcsTester.remoteUrl)
@@ -198,6 +222,11 @@ func TestGetRemoteName(t *testing.T) {
 }
 
 func TestRemoteHasDiff(t *testing.T) {
+	if !testHasGit {
+		t.Skip("git not installed")
+		return
+	}
+
 	hclog.Default().SetLevel(hclog.Debug)
 
 	require := require.New(t)
@@ -206,13 +235,16 @@ func TestRemoteHasDiff(t *testing.T) {
 	vcsTester, err := generateGitState(branchName, t)
 	require.NoError(err)
 
-	v := NewVcsChecker(
+	v, err := NewVcsChecker(
 		hclog.Default(),
 		vcsTester.repoPath,
+		vcsTester.remoteUrl,
 	)
 
+	require.NoError(err)
+
 	t.Run("Initial state is same as remote", func(t *testing.T) {
-		diff, err := v.remoteHasDiff(vcsTester.remoteName, branchName)
+		diff, err := v.remoteHasDiff(branchName)
 		require.NoError(err)
 		require.False(diff)
 	})
@@ -226,13 +258,18 @@ func TestRemoteHasDiff(t *testing.T) {
 		err := ioutil.WriteFile(vcsTester.testFiles[0].Name(), change, 0600)
 		require.NoError(err)
 
-		diff, err := v.remoteHasDiff(vcsTester.remoteName, branchName)
+		diff, err := v.remoteHasDiff(branchName)
 		require.NoError(err)
 		require.True(diff)
 	})
 }
 
 func TestRemoteFileHasDiff(t *testing.T) {
+	if !testHasGit {
+		t.Skip("git not installed")
+		return
+	}
+
 	hclog.Default().SetLevel(hclog.Debug)
 
 	require := require.New(t)
@@ -241,10 +278,13 @@ func TestRemoteFileHasDiff(t *testing.T) {
 	vcsTester, err := generateGitState(branchName, t)
 	require.NoError(err)
 
-	v := NewVcsChecker(
+	v, err := NewVcsChecker(
 		hclog.Default(),
 		vcsTester.repoPath,
+		vcsTester.remoteUrl,
 	)
+
+	require.NoError(err)
 
 	t.Run("Initial state is same as remote", func(t *testing.T) {
 		diff, err := v.remoteFileHasDiff(vcsTester.remoteName, branchName, vcsTester.testFiles[0].Name())
