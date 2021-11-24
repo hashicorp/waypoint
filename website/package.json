@@ -16,7 +16,7 @@
     "@hashicorp/react-command-line-terminal": "^2.0.4",
     "@hashicorp/react-consent-manager": "^7.0.1",
     "@hashicorp/react-content": "^8.0.2",
-    "@hashicorp/react-docs-page": "^15.0.0-canary-20211023173848",
+    "@hashicorp/react-docs-page": "^15.0.0-canary-20211024164256",
     "@hashicorp/react-hashi-stack-menu": "^2.0.7",
     "@hashicorp/react-head": "^3.1.2",
     "@hashicorp/react-image": "^4.0.3",
@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@hashicorp/platform-cli": "^1.2.0",
-    "@hashicorp/platform-nextjs-plugin": "^1.0.1",
+    "@hashicorp/platform-nextjs-plugin": "^2.0.0-canary-20211024163138",
     "@hashicorp/platform-types": "^0.1.1",
     "@types/node": "^14.14.40",
     "@types/react": "^17.0.3",
