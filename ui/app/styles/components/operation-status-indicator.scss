@@ -20,6 +20,13 @@
     display: inline-flex;
     align-items: center;
     line-height: initial;
+    @include Typography.Interface(M);
+
+    span {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
   }
 
   .timestamp {

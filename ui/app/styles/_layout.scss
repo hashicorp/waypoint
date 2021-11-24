@@ -50,7 +50,7 @@ aside {
   padding-top: scale.$lg-6;
 }
 
-.grid {
+.grid--menu-with-panel {
   display: grid;
   grid-gap: 36px;
   grid-template-columns: 23vw auto;
@@ -65,6 +65,9 @@ ul {
 
 ul.sidebar {
   grid-area: menu;
+  overflow: scroll;
+  height:0;
+  min-height:100%;
 
   li:first-child {
     hr {
@@ -73,24 +76,20 @@ ul.sidebar {
   }
 
   .active {
+    background-color: rgb(var(--highlighted-list-item));
+
+    @media (prefers-color-scheme: dark) {
+      color: rgb(var(--highlighted-list-item-text));
+    }
+
     hr {
       border-top: 1px solid transparent;
-    }
-    @media (prefers-color-scheme: light) {
-      background-color: rgb(var(--highlighted-list-item));
     }
   }
 
   .active + li {
     hr {
       border-top: 1px solid transparent;
-    }
-  }
-
-  .badge {
-    @media (prefers-color-scheme: light) {
-      color: color.$ui-cool-gray-600;
-      background: color.$ui-cool-gray-100;
     }
   }
 }

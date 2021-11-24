@@ -12,7 +12,7 @@ export default class Deployment extends Route {
     return app.deployments;
   }
 
-  afterModel(_: Model, transition: Transition): void {
+  redirect(_: Model, transition: Transition): void {
     let latestDeployment = this.modelFor(this.routeName)[0] as DeploymentExtended;
     if (
       latestDeployment &&

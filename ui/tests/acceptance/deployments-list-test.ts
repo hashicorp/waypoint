@@ -12,7 +12,6 @@ const redirectUrl = '/default/microchip/app/wp-bandwidth/deployment/seq/'; // co
 
 const page = create({
   visit: visitable(url),
-  list: collection('[data-test-deployment-list] li'),
   destroyedBadges: collection('[data-test-destroyed-badge]'),
   showDestroyed: clickable('[data-test-display-destroyed-button]'),
   linkList: collection('[data-test-deployment-list-item]'),
@@ -30,8 +29,8 @@ module('Acceptance | deployments list', function (hooks) {
 
     await page.visit();
 
-    assert.equal(page.list.length, 3);
-    assert.equal(currentURL(), redirectUrl + 3);
+    assert.equal(page.linkList.length, 3);
+    assert.equal(currentURL(), redirectUrl + '3');
   });
 
   test('empty deployments list provides empty state ui', async function (assert) {
@@ -40,8 +39,9 @@ module('Acceptance | deployments list', function (hooks) {
 
     await page.visit();
 
-    assert.equal(page.list.length, 0);
+    assert.equal(page.linkList.length, 0);
     assert.equal(currentURL(), emptyStateUrl);
+    assert.dom('.empty-state').exists();
   });
 
   test('clicking a different deployment moves us to that details page', async function (assert) {
@@ -102,11 +102,11 @@ module('Acceptance | deployments list', function (hooks) {
 
     await page.visit();
 
-    assert.equal(page.list.length, 4);
+    assert.equal(page.linkList.length, 4);
 
     await page.showDestroyed();
 
-    assert.equal(page.list.length, 5);
+    assert.equal(page.linkList.length, 5);
     assert.equal(page.destroyedBadges.length, 1);
   });
 });

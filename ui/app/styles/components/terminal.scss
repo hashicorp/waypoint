@@ -6,9 +6,8 @@
   flex-shrink: 1;
   padding: scale.$sm-2 scale.$sm-2 scale.$sm-2 scale.$sm-2;
   background: rgb(var(--panel));
-  border: 1px solid;
-  border-color: rgb(var(--border));
-  border-radius: 2px;
+  border: 0px;
+  border-radius: 8px;
   min-height: 488px;
   margin-bottom: 0;
 

@@ -16,7 +16,6 @@
     @include Typography.Interface(M);
 
     .badge {
-      font-size: 1rem;
       position: relative;
       top: -2px;
       margin-left: scale.$sm-3;

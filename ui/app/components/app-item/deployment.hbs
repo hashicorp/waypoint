@@ -7,6 +7,10 @@
   <hr>
   <LinkTo
     data-test-deployment-list-item
+    title={{ concat
+      "v" @deployment.sequence ": "
+      (t (concat "page.deployments.status_prefix." @deployment.status.state))
+      (component-name @deployment.component.name)}}
     @route="workspace.projects.project.app.deployment.deployment-seq"
     @models={{array @deployment.sequence}}
   >

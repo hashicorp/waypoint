@@ -4,12 +4,12 @@
     <:actions>
       <div class="button-group">
         {{#if @model.preload.deployUrl}}
-        <ExternalLink
-          href={{enforce-protocol @model.preload.deployUrl}}
-          class="button button--secondary button--external-link">
-          <span>{{lowercase @model.preload.deployUrl}}</span>
-          <Pds::Icon @type="exit" class="icon" />
-        </ExternalLink>
+          <ExternalLink
+            href={{enforce-protocol @model.preload.deployUrl}}
+            class="button button--secondary button--external-link">
+            <span>{{lowercase @model.preload.deployUrl}}</span>
+            <Pds::Icon @type="exit" class="icon" />
+          </ExternalLink>
         {{/if}}
         <Actions::Release @sequence={{@model.sequence}} />
       </div>

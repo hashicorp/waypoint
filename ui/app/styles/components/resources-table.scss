@@ -40,6 +40,9 @@
   td {
     padding: 8px 10px;
     text-align: left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   tbody {
