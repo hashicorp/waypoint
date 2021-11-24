@@ -2,12 +2,14 @@ import * as protobuf from 'google-protobuf';
 
 import { ExecStreamRequest, ExecStreamResponse } from 'waypoint-pb';
 
+import { AttachAddon } from 'xterm-addon-attach';
 import Component from '@glimmer/component';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import KEYS from 'waypoint/utils/keys';
 import { Message } from 'google-protobuf';
-import SessionService from 'waypoint/services/session';
+import SessionService from 'ember-simple-auth/services/session';
 import { Terminal } from 'xterm';
+import { assert } from '@ember/debug';
 import config from 'waypoint/config/environment';
 import { createTerminal } from 'waypoint/utils/create-terminal';
 import { inject as service } from '@ember/service';
@@ -24,7 +26,6 @@ const UNPRINTABLE_CHARACTERS_REGEX = /[\x00-\x1F]/g;
 
 export default class ExecComponent extends Component<ExecComponentArgs> {
   @service session!: SessionService;
-
   @tracked deploymentId: string;
   @tracked terminal!: Terminal;
   @tracked command!: string;
@@ -34,6 +35,7 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     super(owner, args);
     let { deploymentId } = this.args;
     this.deploymentId = deploymentId;
+    assert('a deployment id was not provided', !!deploymentId);
     this.command = '';
 
     this.terminal = createTerminal({ inputDisabled: false });
@@ -41,10 +43,13 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
   }
 
   async startExecStream(deploymentId: string): void {
+    let token = this.session.data.authenticated?.token;
     let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    let socket = new WebSocket(`wss://localhost:9702/v1/exec?token=${this.session.token}`);
+    let socket = new WebSocket(`wss://localhost:9702/v1/exec?token=${token}`);
+    let attachAddon = new AttachAddon(socket);
     socket.binaryType = 'arraybuffer';
     this.socket = socket;
+    // this.terminal.loadAddon(attachAddon);
     socket.addEventListener('open', (event) => {
       // socket.send(JSON.stringify({ version: 1, auth_token: this.token || '' }));
       console.log(event);
@@ -87,6 +92,7 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
         console.log(resp.getOutput()?.getChannel());
         console.log(resp.getOutput()?.getData_asU8());
         console.log(resp.getOutput()?.toObject());
+        this.terminal.writeUtf8(resp.getOutput()?.getData_asU8());
       }
       console.log(resp.toObject());
     });
@@ -104,6 +110,11 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     });
     this.terminal.onData((data) => {
       this.handleDataEvent(data);
+      this.sendData(data);
+    });
+    this.terminal.onBinary((data) => {
+      this.handleDataEvent(data);
+      this.sendBinary(data);
     });
   }
 
@@ -114,14 +125,25 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     return socket;
   }
 
-  sendCommand() {
+  sendBinary(data) {
+    let buffer = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; ++i) {
+      buffer[i] = data.charCodeAt(i) & 255;
+    }
+    let execStreamRequest = new ExecStreamRequest();
+    let input = new ExecStreamRequest.Input();
+    input.setData(buffer);
+    execStreamRequest.setInput(input);
+    this.socket.send(execStreamRequest.serializeBinary());
+  }
+
+  sendData(data) {
     let execStreamRequest = new ExecStreamRequest();
     let input = new ExecStreamRequest.Input();
     let encoder = new TextEncoder();
-    input.setData(encoder.encode(`${this.command}\r`));
+    input.setData(encoder.encode(data));
     execStreamRequest.setInput(input);
     this.socket.send(execStreamRequest.serializeBinary());
-    this.command = '';
   }
 
   sendStart(deploymentId) {
@@ -163,6 +185,7 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     let execStreamRequest = new ExecStreamRequest();
     execStreamRequest.setInputEof(new Empty());
     this.socket.send(execStreamRequest.serializeBinary());
+    this.socket.close();
   }
 
   willDestroy(): void {
@@ -172,19 +195,21 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
 
   handleDataEvent = (data) => {
     console.log(data);
+    // this.terminal.write(data);
     if (
       data === KEYS.LEFT_ARROW ||
       data === KEYS.UP_ARROW ||
       data === KEYS.RIGHT_ARROW ||
       data === KEYS.DOWN_ARROW
     ) {
-      // Ignore arrow keys
+    //   // Ignore arrow keys
     } else if (data === KEYS.CONTROL_U) {
       this.terminal.write(BACKSPACE_ONE_CHARACTER.repeat(this.command.length));
       this.command = '';
     } else if (data === KEYS.ENTER) {
-      this.terminal.writeln('');
-      this.sendCommand();
+    //   this.terminal.writeln('');
+    //   this.sendCommand();
+      this.command = '';
     } else if (data === KEYS.DELETE) {
       if (this.command.length > 0) {
         this.terminal.write(BACKSPACE_ONE_CHARACTER);
@@ -192,7 +217,6 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
       }
     } else if (data.length > 0) {
       let strippedData = data.replace(UNPRINTABLE_CHARACTERS_REGEX, '');
-      this.terminal.write(strippedData);
       this.command = `${this.command}${strippedData}`;
     }
   };
