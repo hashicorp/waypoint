@@ -1,0 +1,15 @@
+{{#if @model.resources.length}}
+  <ResourcesTable
+    @resources={{@model.resources}}
+  >
+    {{!-- <:caption>
+      {{t "page.deployment.resources.release-table-caption-prefix" htmlSafe=true}}
+      <LinkTo
+        @route="workspace.projects.project.app.release"
+        @model={{@model.release.sequence}}
+      >
+        <b class="badge badge--info badge--version">v{{@model.release.sequence}}</b>
+      </LinkTo>
+    </:caption> --}}
+  </ResourcesTable>
+{{/if}}
