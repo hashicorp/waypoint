@@ -1,0 +1,22 @@
+<h1>Runners</h1>
+
+<div class="lab/runner-table">
+  <table>
+    <thead>
+      <tr>
+        <th>id</th>
+        <th>by_id_only</th>
+        <th>odr</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each @model as |runner|}}
+        <tr>
+          <th scope="row">{{runner.id}}</th>
+          <td>{{runner.byIdOnly}}</td>
+          <td>{{runner.odr}}</td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>

@@ -29,6 +29,7 @@ Router.map(function () {
   });
   this.route('lab', { path: '/-lab' }, function () {
     this.route('runner-profiles');
+    this.route('runners');
   });
   this.route('workspaces', { path: '/' }, function () {
     this.route('projects', function () {
