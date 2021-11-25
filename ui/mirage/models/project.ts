@@ -1,5 +1,5 @@
-import { Model, hasMany, belongsTo } from 'ember-cli-mirage';
-import { Project, Ref } from 'waypoint-pb';
+import { Hcl, Project, Ref } from 'waypoint-pb';
+import { Model, belongsTo, hasMany } from 'ember-cli-mirage';
 
 export default Model.extend({
   applications: hasMany(),
@@ -17,7 +17,7 @@ export default Model.extend({
     result.setName(this.name);
     result.setRemoteEnabled(this.remoteEnabled);
     result.setWaypointHcl(this.waypointHcl);
-    result.setWaypointHclFormat(Project.Format.HCL);
+    result.setWaypointHclFormat(Hcl.Format.HCL);
     let varProtosList = this.variables.models.map((a) => a.toProtobuf());
     result.setVariablesList(varProtosList);
     return result;
