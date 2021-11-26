@@ -9,6 +9,6 @@ cd website-preview
 # Checkout target branch
 # TODO: should be main once this PR merges:
 # TODO: https://github.com/hashicorp/dev-portal/pull/34
-git checkout zs.cleanup-refine-migration
+git checkout main
 # Install dependencies
 npm i --production=false
