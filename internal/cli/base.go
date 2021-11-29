@@ -655,14 +655,14 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 			Name:   "remote",
 			Target: &c.deprecatedFlagRemote,
 			Hidden: true,
-			Usage:  "True to use a remote runner to execute.",
+			Usage:  "True to use a remote runner to execute the operation.",
 		})
 
 		f.BoolPtrVar(&flag.BoolPtrVar{
 			Name:   "local",
 			Target: &c.flagLocal,
 			Usage: "True to use a local runner to execute the operation, false to use a remote runner. \n" +
-				"If unset, waypoint will automatically determine where the operation will occur, \n" +
+				"If unset, Waypoint will automatically determine where the operation will occur, \n" +
 				"defaulting to remote if possible.",
 		})
 
