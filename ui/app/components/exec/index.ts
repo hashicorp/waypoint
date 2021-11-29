@@ -1,14 +1,10 @@
-import * as protobuf from 'google-protobuf';
-
 import { ExecStreamRequest, ExecStreamResponse } from 'waypoint-pb';
 
 import Component from '@glimmer/component';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import KEYS from 'waypoint/utils/keys';
-import { Message } from 'google-protobuf';
-import SessionService from 'waypoint/services/session';
+import SessionService from 'ember-simple-auth/services/session';
 import { Terminal } from 'xterm';
-import config from 'waypoint/config/environment';
 import { createTerminal } from 'waypoint/utils/create-terminal';
 import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
@@ -41,8 +37,9 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
   }
 
   async startExecStream(deploymentId: string): void {
+    let token = this.session.data.authenticated?.token;
     let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    let socket = new WebSocket(`wss://localhost:9702/v1/exec?token=${this.session.token}`);
+    let socket = new WebSocket(`wss://localhost:9702/v1/exec?token=${token}`);
     socket.binaryType = 'arraybuffer';
     this.socket = socket;
     socket.addEventListener('open', (event) => {
