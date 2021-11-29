@@ -3992,9 +3992,6 @@ message Token {
   message Trigger {
     // The user that initiated the trigger token generation
     string from_user_id = 1;
-
-    // The login token we'd like to create.
-    Login login = 2;
   }
 
   // OLD FIELDS FOR BACKWARDS COMPATIBILITY. These are no longer used

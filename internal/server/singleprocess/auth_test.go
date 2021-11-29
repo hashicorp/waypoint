@@ -315,7 +315,7 @@ func TestServiceAuth_TriggerToken(t *testing.T) {
 		require.NoError(err)
 		kind, ok := body.Kind.(*pb.Token_Trigger_)
 		assert.True(t, ok)
-		assert.Equal(t, DefaultUserId, kind.Trigger.Login.UserId)
+		assert.Equal(t, DefaultUserId, kind.Trigger.FromUserId)
 
 		// Verify authing won't work currently
 		_, err = s.Authenticate(context.Background(), token, "test", nil)

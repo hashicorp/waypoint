@@ -339,7 +339,6 @@ func (s *service) GenerateLoginToken(
 		createToken.Kind = &pb.Token_Trigger_{
 			Trigger: &pb.Token_Trigger{
 				FromUserId: currentUser.Id,
-				Login:      login,
 			},
 		}
 	} else {
