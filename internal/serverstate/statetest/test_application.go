@@ -301,7 +301,7 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 		require.NoError(err)
 
 		// Should be triggered.
-		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+		require.False(ws.Watch(time.After(2 * time.Second)))
 
 		// Get exact
 		{
@@ -377,7 +377,7 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 		require.NoError(s.ApplicationPollComplete(pA, now.Add(1*time.Second)))
 
 		// Should be triggered.
-		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+		require.False(ws.Watch(time.After(2 * time.Second)))
 
 		// Get exact
 		{
