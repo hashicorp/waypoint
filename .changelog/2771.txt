@@ -1,0 +1,3 @@
+```release-note:improvement
+cli: Deprecate -remote flag for operations, replace with -local flag
+```
