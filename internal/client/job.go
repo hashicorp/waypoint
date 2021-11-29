@@ -6,17 +6,15 @@ import (
 	"io"
 	"time"
 
-	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
-
-	"github.com/pkg/errors"
-
 	"github.com/hashicorp/go-hclog"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/pkg/finalcontext"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
 )
 
 // job returns the basic job skeleton prepoulated with the correct
