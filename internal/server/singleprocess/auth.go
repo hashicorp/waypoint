@@ -107,6 +107,13 @@ func (s *service) Authenticate(
 		return nil, err
 	}
 
+	// trigger token auth should explicitly not be allowed for gRPC requests
+	_, ok := body.Kind.(*pb.Token_Trigger_)
+	if ok {
+		return nil, status.Errorf(codes.Unauthenticated, "Trigger URL token not "+
+			"authorized to make requests on this endpoint.")
+	}
+
 	// Token must be a login token to be used for auth
 	login, ok := body.Kind.(*pb.Token_Login_)
 	if !ok || login == nil {
@@ -322,9 +329,19 @@ func (s *service) GenerateLoginToken(
 		login.UserId = user.Id
 	}
 
-	token, err := s.newToken(dur, DefaultKeyId, nil, &pb.Token{
-		Kind: &pb.Token_Login_{Login: login},
-	})
+	createToken := &pb.Token{}
+	if req.Trigger {
+		createToken.Kind = &pb.Token_Trigger_{
+			Trigger: &pb.Token_Trigger{
+				Login: login,
+			},
+		}
+	} else {
+		// Default token type
+		createToken.Kind = &pb.Token_Login_{Login: login}
+	}
+
+	token, err := s.newToken(dur, DefaultKeyId, nil, createToken)
 	if err != nil {
 		return nil, err
 	}

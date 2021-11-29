@@ -3941,6 +3941,9 @@ message Token {
     // invite tokens can be exhanged for login tokens and also optionally
     // sign a new user up.
     Invite invite = 9;
+
+    // trigger tokens can be used to trigger lifecycle actions via HTTP
+    Trigger trigger = 10;
   }
 
   message Login {
@@ -3981,6 +3984,14 @@ message Token {
   message Entrypoint {
     // deployment id is the deployment to restrict this token to.
     string deployment_id = 1;
+  }
+
+  // The Trigger message is a kind of token type that is only used for
+  // authenticated trigger URL requests. It should not have any other
+  // authorized access to make requests in any other API endpoint.
+  message Trigger {
+    // The login token we'd like to create.
+    Login login = 1;
   }
 
   // OLD FIELDS FOR BACKWARDS COMPATIBILITY. These are no longer used
@@ -4032,6 +4043,10 @@ message LoginTokenRequest {
   // logged in user is used. The calling user must have permission to create
   // a token for the target user if this is set.
   Ref.User user = 2;
+
+  // The token generated will only be used for Trigger URL actions. The token
+  // will not be authorized to make any other requests to any other endpoints
+  bool trigger = 3;
 }
 
 // Passed with GenerateInviteToken with the params on how the invite token should
