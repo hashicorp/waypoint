@@ -9,6 +9,5 @@ export default class Exec extends Route {
   async model(): Promise<AppRouteModel> {
     let app = this.modelFor('workspace.projects.project.app') as AppRouteModel;
     return app;
-    // todo(pearkes): construct GetExecStreamRequest
   }
 }
