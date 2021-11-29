@@ -1,3 +1,5 @@
+import * as AnsiColors from 'ansi-colors';
+
 import { ExecStreamRequest, ExecStreamResponse } from 'waypoint-pb';
 
 import Component from '@glimmer/component';
@@ -33,6 +35,7 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     this.command = '';
 
     this.terminal = createTerminal({ inputDisabled: false });
+    this.terminal.focus();
     this.startExecStream(deploymentId);
   }
 
@@ -42,76 +45,65 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     let socket = new WebSocket(`wss://localhost:9702/v1/exec?token=${token}`);
     socket.binaryType = 'arraybuffer';
     this.socket = socket;
-    socket.addEventListener('open', (event) => {
-      // socket.send(JSON.stringify({ version: 1, auth_token: this.token || '' }));
-      console.log(event);
+    this.terminal.writeln(AnsiColors.bold.cyan('Connecting...'));
+    socket.addEventListener('open', () => {
       this.sendStart(deploymentId);
       this.setupWinch();
     });
     socket.addEventListener('message', (event) => {
-      console.log(event);
       let output = event.data;
       let resp = ExecStreamResponse.deserializeBinary(output);
-      console.log(resp.getEventCase());
       if (resp.hasOpen()) {
-        console.log(resp.getOpen()?.toString());
-        this.terminal.writeln('Connected to instance...');
+        this.terminal.clear();
+        this.terminal.writeln(AnsiColors.bold.cyan(`Connected to deployment: ${deploymentId}`));
       }
       // Open
-      if (resp.getEventCase() === 3) {
-        console.log(resp.getOutput()?.getChannel());
-        console.log(resp.getOutput()?.getData_asU8());
-        console.log(resp.getOutput()?.toObject());
-      }
+      // if (resp.getEventCase() === 3) {
+      //    do we need to handle this in any way?
+      // }
       // Exit
-      if (resp.getEventCase() === 2) {
-        this.terminal.writeln('Connection closed...');
-        console.log(resp.getOutput()?.getChannel());
-        console.log(resp.getOutput()?.getData_asU8());
-        console.log(resp.getOutput()?.toObject());
+      if (resp.getEventCase() === 2 && resp.getExit()) {
+        let exitCode = resp.getExit() || 'unknown';
+        this.terminal.writeln(AnsiColors.yellow(`Exit code: ${exitCode}`));
+        this.terminal.writeln(AnsiColors.yellow('Connection closed...'));
       }
       // Output
-      if (resp.getEventCase() === 1) {
-        console.log(resp.getOutput()?.getChannel());
-        console.log(resp.getOutput()?.getData_asU8());
-        console.log(resp.getOutput()?.getData());
-        console.log(resp.getOutput()?.toObject());
+      if (resp.getEventCase() === 1 && resp.getOutput()) {
         this.terminal.writeUtf8(resp.getOutput()?.getData_asU8());
       }
       // Event not set
       if (resp.getEventCase() === 0) {
-        this.terminal.writeln('Connection closed...');
-        console.log(resp.getOutput()?.getChannel());
-        console.log(resp.getOutput()?.getData_asU8());
-        console.log(resp.getOutput()?.toObject());
+        this.terminal.writeln(AnsiColors.yellow('Connection closed...'));
       }
-      console.log(resp.toObject());
     });
     socket.addEventListener('close', (event) => {
       let output = event.data;
-      let resp = ExecStreamResponse.deserializeBinary(output);
-      console.log(resp.getEventCase());
-      console.log(resp.toObject());
+      if (output) {
+        let resp = ExecStreamResponse.deserializeBinary(output);
+        this.terminal.writeUtf8(resp.getOutput()?.getData_asU8());
+        this.terminal.writeln(AnsiColors.yellow('Connection closed...'));
+      }
     });
     socket.addEventListener('error', (event) => {
       let output = event.data;
-      let resp = ExecStreamResponse.deserializeBinary(output);
-      console.log(resp.getEventCase());
-      console.log(resp.toObject());
+      if (output) {
+        let resp = ExecStreamResponse.deserializeBinary(output);
+        this.terminal.writeUtf8(AnsiColors.red(resp.getOutput()?.getData_asU8()));
+      }
     });
     this.terminal.onData((data) => {
       this.handleDataEvent(data);
     });
   }
 
-  async openSocketStream() {
+  async openSocketStream(): Promise<WebSocket> {
     // Todo: handle different hosts/ports
     let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     let socket = new WebSocket(`ws://localhost:9702/v1/exec`, ['']);
     return socket;
   }
 
-  sendCommand() {
+  sendCommand(): void {
     let execStreamRequest = new ExecStreamRequest();
     let input = new ExecStreamRequest.Input();
     let encoder = new TextEncoder();
@@ -131,12 +123,14 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     start.setDeploymentId(deploymentId);
     let pty = new ExecStreamRequest.PTY();
     pty.setTerm('bash');
-    let windowSize = new ExecStreamRequest.WindowSize();
-    windowSize.setCols(this.terminal.cols);
-    windowSize.setRows(this.terminal.rows);
-    windowSize.setHeight(this.terminal.element?.offsetHeight);
-    windowSize.setWidth(this.terminal.element?.offsetWidth);
-    pty.setWindowSize(windowSize);
+    if (this.terminal.element) {
+      let windowSize = new ExecStreamRequest.WindowSize();
+      windowSize.setCols(this.terminal.cols);
+      windowSize.setRows(this.terminal.rows);
+      windowSize.setHeight(this.terminal.element.offsetHeight);
+      windowSize.setWidth(this.terminal.element.offsetWidth);
+      pty.setWindowSize(windowSize);
+    }
     pty.setEnable(true);
     start.setPty(pty);
     execStreamStartRequest.setStart(start);
@@ -144,19 +138,21 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     this.socket.send(execStreamStartRequest.serializeBinary());
   }
 
-  setupWinch() {
-    // setup winch
-    let execStreamWinchRequest = new ExecStreamRequest();
-    let windowSize = new ExecStreamRequest.WindowSize();
-    windowSize.setCols(this.terminal.cols);
-    windowSize.setRows(this.terminal.rows);
-    windowSize.setHeight(this.terminal.element?.offsetHeight);
-    windowSize.setWidth(this.terminal.element?.offsetWidth);
-    execStreamWinchRequest.setWinch(windowSize);
-    this.socket.send(execStreamWinchRequest.serializeBinary());
+  setupWinch(): void {
+    if (this.terminal.element) {
+      // setup winch
+      let execStreamWinchRequest = new ExecStreamRequest();
+      let windowSize = new ExecStreamRequest.WindowSize();
+      windowSize.setCols(this.terminal.cols);
+      windowSize.setRows(this.terminal.rows);
+      windowSize.setHeight(this.terminal.element?.offsetHeight);
+      windowSize.setWidth(this.terminal.element?.offsetWidth);
+      execStreamWinchRequest.setWinch(windowSize);
+      this.socket.send(execStreamWinchRequest.serializeBinary());
+    }
   }
 
-  disconnect() {
+  disconnect(): void {
     let execStreamRequest = new ExecStreamRequest();
     execStreamRequest.setInputEof(new Empty());
     this.socket.send(execStreamRequest.serializeBinary());
@@ -167,8 +163,7 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     super.willDestroy();
   }
 
-  handleDataEvent = (data) => {
-    console.log(data);
+  handleDataEvent = (data: string): void => {
     if (
       data === KEYS.LEFT_ARROW ||
       data === KEYS.UP_ARROW ||
