@@ -52,6 +52,7 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.UI, monCh chan pb.Job_State) (*pb.Job_Result, error) {
 
 	// Automatically determine if we should use a local or a remote runner
+
 	if c.useLocalRunner == nil {
 
 		// NOTE(izaak): If in the future we need the full project in other places, we should probably cache it on the parent struct.
@@ -109,7 +110,7 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 		}
 	}
 
-	return c.queueAndStreamJob(ctx, job, ui, monCh)
+	return c.queueAndStreamJob(ctx, job, ui, monCh, *c.useLocalRunner)
 }
 
 // queueAndStreamJob will queue the job. If the client is configured to watch the job,
@@ -119,6 +120,7 @@ func (c *Project) queueAndStreamJob(
 	job *pb.Job,
 	ui terminal.UI,
 	monCh chan pb.Job_State,
+	localJob bool,
 ) (*pb.Job_Result, error) {
 	log := c.logger
 
@@ -126,7 +128,7 @@ func (c *Project) queueAndStreamJob(
 	// cancel in the event of an error. This will ensure that the jobs don't
 	// remain queued forever. This is only for local ops.
 	expiration := ""
-	if *c.useLocalRunner {
+	if localJob {
 		expiration = "30s"
 	}
 
@@ -180,7 +182,7 @@ func (c *Project) queueAndStreamJob(
 		steps = map[int32]*stepData{}
 	)
 
-	if *c.useLocalRunner {
+	if localJob {
 		defer func() {
 			// If we completed then do nothing, or if the context is still
 			// active since this means that we're not cancelled.
@@ -236,7 +238,7 @@ func (c *Project) queueAndStreamJob(
 
 		case *pb.GetJobStreamResponse_Terminal_:
 			// Ignore this for local jobs since we're using our UI directly.
-			if *c.useLocalRunner {
+			if localJob {
 				continue
 			}
 

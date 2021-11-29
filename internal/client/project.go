@@ -30,8 +30,10 @@ type Project struct {
 	cleanupFunc         func()
 	serverVersion       *pb.VersionInfo
 
-	useLocalRunner *bool
-
+	// useLocalRunner indicates if a local runner should be created for new jobs. True if a local runner
+	// should be created to handle jobs, false if jobs should be left to the remote runner. If nil, a value
+	// will be determined and saved when a job is first executed.
+	useLocalRunner     *bool
 	noLocalServer      bool // config setting - indicates the project should never create a local server
 	localServer        bool // True when a local server is created
 	executeJobsLocally bool // True to force the project to execute all jobs locally
