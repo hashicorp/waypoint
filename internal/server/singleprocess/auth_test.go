@@ -298,34 +298,6 @@ func TestServiceAuth_TriggerToken(t *testing.T) {
 	// "Log in" a default user
 	ctx = userWithContext(ctx, &pb.User{Id: DefaultUserId})
 
-	// Bootstrap
-	var bootstrapToken string
-	{
-		resp, err := impl.BootstrapToken(ctx, &empty.Empty{})
-		require.NoError(t, err)
-		require.NotEmpty(t, resp.Token)
-		bootstrapToken = resp.Token
-	}
-
-	t.Run("authenticate with gibberish", func(t *testing.T) {
-		_, err := s.Authenticate(context.Background(), "hello!", "test", nil)
-		require.Error(t, err)
-	})
-
-	t.Run("authenticate with gibberish to unauthenticated endpoint", func(t *testing.T) {
-		_, err := s.Authenticate(context.Background(), "hello!", "GetVersionInfo", nil)
-		require.NoError(t, err)
-	})
-
-	t.Run("authenticate with bootstrap token", func(t *testing.T) {
-		ctx, err := s.Authenticate(context.Background(), bootstrapToken, "test", nil)
-		require.NoError(t, err)
-
-		user := s.userFromContext(ctx)
-		require.NotNil(t, user)
-		require.Equal(t, DefaultUserId, user.Id)
-	})
-
 	t.Run("create and validate new token cannot authenticate grpc endpoint", func(t *testing.T) {
 		require := require.New(t)
 
@@ -348,6 +320,8 @@ func TestServiceAuth_TriggerToken(t *testing.T) {
 		// Verify authing won't work currently
 		_, err = s.Authenticate(context.Background(), token, "test", nil)
 		require.Error(err)
+		e, _ := status.FromError(err)
+		assert.Equal(t, e.Code(), codes.PermissionDenied)
 	})
 
 	// TODO(briancain): Add tests for HTTP endpoint when implemeneted

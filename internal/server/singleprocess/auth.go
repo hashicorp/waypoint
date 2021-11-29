@@ -110,7 +110,7 @@ func (s *service) Authenticate(
 	// trigger token auth should explicitly not be allowed for gRPC requests
 	_, ok := body.Kind.(*pb.Token_Trigger_)
 	if ok {
-		return nil, status.Errorf(codes.Unauthenticated, "Trigger URL token not "+
+		return nil, status.Errorf(codes.PermissionDenied, "Trigger URL token not "+
 			"authorized to make requests on this endpoint.")
 	}
 
