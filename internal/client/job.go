@@ -53,10 +53,10 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 // the job state processing loop.
 func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.UI, monCh chan pb.Job_State) (*pb.Job_Result, error) {
 
+	// Automatically determine if we should use a local or a remote runner
 	if c.useLocalRunner == nil {
-		// Automatically determine if we should use local or remote
 
-		// NOTE(izaak): If in the future we need this in other places too, we should probably cache it on the parent struct.
+		// NOTE(izaak): If in the future we need the full project in other places, we should probably cache it on the parent struct.
 		getProjectResp, err := c.client.GetProject(ctx, &pb.GetProjectRequest{Project: c.project})
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get project %s", c.project.Project)
@@ -74,7 +74,7 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 	if *c.useLocalRunner && c.activeRunner == nil {
 		// we need a local runner and we haven't started it yet
 		if err := c.startRunner(); err != nil {
-			return nil, errors.Wrapf(err, "failed to start local runner for job %s, err")
+			return nil, errors.Wrapf(err, "failed to start local runner for job %s", err)
 		}
 	}
 
