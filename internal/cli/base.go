@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/adrg/xdg"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
 
@@ -390,99 +389,6 @@ func (c *baseCommand) Init(opts ...Option) error {
 	}
 
 	return nil
-}
-
-// remoteOpPreferred attempts to determine if the current waypoint infrastructure will be successful
-// performing a remote operation against this project. It verifies the project's datasource,
-// it's ODR runner profile, and detects if a remote runner is currently registered.
-// If an operation can occur successfully remotely, we prefer the remote environment for consistency
-// and security reasons.
-//
-// Note that this cannot guarantee that an operation will succeed remotely - the remote environment
-// may not have the right auth configured, the right plugins configured, etc.
-func remoteOpPreferred(ctx context.Context, client pb.WaypointClient, project *pb.Project, log hclog.Logger) (bool, error) {
-
-	if !project.RemoteEnabled {
-		log.Debug("Remote operations are disabled for this project - operation cannot occur remotely")
-		return false, nil
-	}
-
-	if project.DataSource == nil {
-		log.Debug("Project has no datasource configured - operation cannot occur remotely")
-		// This is probably going to be fatal somewhere downstream
-		return false, nil
-	}
-
-	var hasRemoteDataSource bool
-	switch project.DataSource.GetSource().(type) {
-	case *pb.Job_DataSource_Git:
-		hasRemoteDataSource = true
-	default:
-		hasRemoteDataSource = false
-	}
-
-	if !hasRemoteDataSource {
-		log.Debug("Project does not have a remote data source - operation cannot occur remotely")
-		return false, nil
-	}
-
-	// We know the project can handle remote ops at this point - but do we have runners?
-
-	runnersResp, err := client.ListRunners(ctx, &pb.ListRunnersRequest{})
-	if err != nil {
-		return false, err
-	}
-	hasRemoteRunner := false
-	for _, runner := range runnersResp.Runners {
-		if !runner.Odr {
-			// NOTE(izaak): There is currently no way to distinguish between a remote runner and a CLI runner.
-			// So if some other waypoint client is performing an operation at this moment, we will interpret
-			// that as a remote runner, and this will return a false positive.
-
-			// Also note that this is designed to run before se start our own CLI runner.
-			hasRemoteRunner = true
-			break
-		}
-	}
-	if !hasRemoteRunner {
-		log.Debug("No remote runner detected - operation cannot occur remotely")
-		return false, nil
-	}
-
-	// Check to see if we have a runner profile assigned to this project
-	if project.OndemandRunner != nil {
-		log.Debug("Project has an explicit ODR profile set - operation is possible remotely")
-		return true, nil
-	}
-
-	// Check to see if we have a global default ODR profile
-
-	// TODO: it would be more efficient if we had an arg to filter to just get default profiles.
-	configsResp, err := client.ListOnDemandRunnerConfigs(ctx, &empty.Empty{})
-	if err != nil {
-		return false, err
-	}
-
-	defaultRunnerProfileExists := false
-	for _, odrConfig := range configsResp.Configs {
-		if odrConfig.Default {
-			defaultRunnerProfileExists = true
-			break
-		}
-	}
-
-	if defaultRunnerProfileExists {
-		log.Debug("Default runner profile exists - operation is possible remotely.")
-		return true, nil
-	}
-
-	log.Debug("No runner profile is set for this project and no global default exists - operation should happen locally")
-
-	// The operation here _could_ still happen remotely - executed on the remote runner itself without ODR.
-	// If it's a container build op it will probably fail (because no kaniko), and if it's a deploy/release op it
-	// very well might fail do to incorrect/insufficient permissions. Because it probably won't work, we won't try,
-	// but the user could force it to happen locally by setting -local=false.
-	return false, nil
 }
 
 // DoApp calls the callback for each app. This lets you execute logic
