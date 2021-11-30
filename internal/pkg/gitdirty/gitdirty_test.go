@@ -142,8 +142,8 @@ func TestRepoIsDirty(t *testing.T) {
 			"",
 		},
 		{
-			"commited unpushed change is dirty",
-			"commited-unpushed-change",
+			"committed unpushed change is dirty",
+			"committed-unpushed-change",
 			"origin",
 			"main",
 			true,
@@ -167,7 +167,7 @@ func TestRepoIsDirty(t *testing.T) {
 		},
 		{
 			"No branch specified, diffs on default branch",
-			"commited-unpushed-change",
+			"committed-unpushed-change",
 			"origin",
 			"",
 			true,
