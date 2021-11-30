@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Added check for empty deployUrl in output for release switch case
+```
