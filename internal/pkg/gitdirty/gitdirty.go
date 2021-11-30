@@ -43,35 +43,71 @@ func FileIsDirty(log hclog.Logger, repoPath string, remoteUrl string, remoteBran
 		return false, errors.Wrapf(err, "Failed to get remote name for url %s", remoteUrl)
 	}
 
-	hasBranch, err := remoteHasTrackingBranch(log, repoPath, remoteName, remoteBranch)
-	if err != nil {
-		return false, errors.Wrapf(err, "failed to determine if remote %s has branch %s", remoteName, remoteBranch)
-	}
-	if !hasBranch {
-		return false, fmt.Errorf(
-			"remote %s does not have specified branch %s. To fix this, try running `git fetch %s`",
-			remoteName, remoteBranch, remoteName,
-		)
+	var diffTarget string
+	if remoteBranch != "" {
+		trackingBranch := fmt.Sprintf("%s/%s", remoteName, remoteBranch)
+		hasBranch, err := remoteHasBranch(log, repoPath, trackingBranch)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to determine if remote %s has branch %s", remoteName, remoteBranch)
+		}
+		if !hasBranch {
+			return false, fmt.Errorf(
+				"remote %s does not have specified branch %q. To fix this, try running `git fetch %s`",
+				remoteName, remoteBranch, remoteName,
+			)
+		}
+		diffTarget = trackingBranch
+	} else {
+		// No remote branch was specified. The remote runner will clone the default branch in this case, so we need to
+		// figure out what that is and diff against it.
+		defaultBranch, err := getDefaultBranch(log, repoPath, remoteName)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to determine default branch for remote %q: Try setting an explicit git ref on your project", remoteName)
+		}
+		diffTarget = fmt.Sprintf("%s/%s", remoteName, defaultBranch)
 	}
 
-	diff, err := remoteHasDiff(log, repoPath, remoteName, remoteBranch, filePath)
+	diff, err := remoteHasDiff(log, repoPath, diffTarget, filePath)
 	if err != nil {
 		return false, err
 	}
 	return diff, nil
 }
 
-// remoteHasTrackingBranch checks to see if the configured remote
-func remoteHasTrackingBranch(log hclog.Logger, repoPath string, remoteName string, branch string) (bool, error) {
+func getDefaultBranch(log hclog.Logger, repoPath string, remoteName string) (string, error) {
+	// NOTE(izaak): this relies heavily on parsing the output of `git remote show`, which isn't entirely safe
+	// to depend on. To use go-get though, we'd have to figure out what credentials the user has
+	// configured to auth to the repo.
+
+	out, err := runGitCommand(log, repoPath, "remote", "show", remoteName)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to show remote %q", remoteName)
+	}
+	lines := strings.Split(out, "\n")
+	var defaultBranch string
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "HEAD branch") {
+			// The default branch is everything after the first colon, chomped
+			defaultBranch = strings.TrimSpace(line[strings.Index(line, ":")+1:])
+		}
+	}
+	if defaultBranch == "" {
+		return "", fmt.Errorf("no default branch found")
+	}
+	return defaultBranch, nil
+}
+
+// remoteHasBranch checks to see if the configured remote
+func remoteHasBranch(log hclog.Logger, repoPath string, branch string) (bool, error) {
 	remoteBranchOutput, err := runGitCommand(log, repoPath, "branch", "-r")
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to list branches for repo at path %s", repoPath)
 	}
-	trackingBranch := fmt.Sprintf("%s/%s", remoteName, branch)
 	branches := strings.Split(remoteBranchOutput, "\n")
 	for _, thisBranch := range branches {
 		thisBranch = strings.TrimSpace(thisBranch)
-		if thisBranch == trackingBranch {
+		if thisBranch == branch {
 			return true, nil
 		}
 	}
@@ -97,7 +133,7 @@ func remoteConvertHTTPStoSSH(httpsRemote string) (string, error) {
 
 	sshRemote := githubStyleHttpRemoteRegexp.ReplaceAllString(httpsRemote, "git@$1:$2")
 	if !isSSHRemote(sshRemote) {
-		return "", fmt.Errorf("failed to convert https remote %s to ssh remote: got %s, which is not valid", httpsRemote, sshRemote)
+		return "", fmt.Errorf("failed to convert https remote %q to ssh remote: got %q, which is not valid", httpsRemote, sshRemote)
 	}
 	return sshRemote, nil
 }
@@ -113,9 +149,15 @@ func remoteConvertSSHtoHTTPS(sshRemote string) (string, error) {
 
 	httpsRemote := githubStyleSshRemoteRegexp.ReplaceAllString(sshRemote, "https://$1/$2")
 	if !isHTTPSRemote(httpsRemote) {
-		return "", fmt.Errorf("failed to convert ssh remote %s to https remote: got %s, which is not valid", sshRemote, httpsRemote)
+		return "", fmt.Errorf("failed to convert ssh remote %q to https remote: got %q, which is not valid", sshRemote, httpsRemote)
 	}
 	return httpsRemote, nil
+}
+
+// nomralizeRemote returns a normalized form of the remote url.
+// The .git extension at the end of a remote url is optional for github
+func normalizeRemote(remoteUrl string) string {
+	return strings.TrimRight(remoteUrl, ".git")
 }
 
 // getRemoteName queries the repo at GitDirty.path for all remotes, and then
@@ -128,7 +170,7 @@ func getRemoteName(log hclog.Logger, repoPath string, remoteUrl string) (name st
 		DetectDotGit: true,
 	})
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to open git repo at path %s", repoPath)
+		return "", errors.Wrapf(err, "failed to open git repo at path %q", repoPath)
 	}
 
 	remotes, err := repo.Remotes()
@@ -151,7 +193,7 @@ func getRemoteName(log hclog.Logger, repoPath string, remoteUrl string) (name st
 			continue
 		}
 		for _, thisRemoteUrl := range remoteConfig.URLs {
-			if thisRemoteUrl == remoteUrl {
+			if normalizeRemote(thisRemoteUrl) == normalizeRemote(remoteUrl) {
 				if exactMatchRemoteName != "" {
 					// NOTE(izaak): I can't think of a dev setup where you'd get multiple remotes with the same url.
 					// If it does though, I think it's likely that any remote will work for us for diffing purposes,
@@ -195,7 +237,7 @@ func getRemoteName(log hclog.Logger, repoPath string, remoteUrl string) (name st
 				}
 			}
 
-			if convertedUrl != "" && convertedUrl == thisRemoteUrl {
+			if convertedUrl != "" && normalizeRemote(convertedUrl) == normalizeRemote(thisRemoteUrl) {
 				if alternateProtocolRemoteName != "" {
 					// NOTE(izaak): I can't think of a dev setup where you'd get multiple remotes with the same url.
 					// If it does though, I think it's likely that any remote will work for us for diffing purposes,
@@ -216,20 +258,23 @@ func getRemoteName(log hclog.Logger, repoPath string, remoteUrl string) (name st
 		return alternateProtocolRemoteName, nil
 	}
 
-	return "", fmt.Errorf("no remote with url matching %s found", remoteUrl)
+	return "", fmt.Errorf("no remote with url matching %q found", remoteUrl)
 }
 
 // remoteHasDiff compares the local repo to the specified branch on the configured remote.
 // If filePath is not empty, it will check only the specified file path.
-func remoteHasDiff(log hclog.Logger, repoPath string, remoteName string, remoteBranch string, filePath string) (bool, error) {
-	args := []string{"diff", "--quiet", fmt.Sprintf("%s/%s", remoteName, remoteBranch)}
+func remoteHasDiff(log hclog.Logger, repoPath string, remoteRef string, filePath string) (bool, error) {
+	args := []string{"diff", "--quiet", remoteRef}
 	if filePath != "" {
 		args = append(args, "--", filePath)
 	}
-	_, err := runGitCommand(log, repoPath, args...)
+	out, err := runGitCommand(log, repoPath, args...)
+	if out != "" {
+		return false, fmt.Errorf("unexpected output from 'git %s': %q", strings.Join(args, " "), out)
+	}
 	exitErr, ok := err.(*exec.ExitError)
 	if !ok {
-		return false, errors.Wrapf(err, "failed to diff against remote %q on branch %q", remoteName, remoteBranch)
+		return false, errors.Wrapf(err, "failed to diff against ref %q", remoteRef)
 	}
 	if exitErr.ExitCode() != 0 {
 		return true, nil

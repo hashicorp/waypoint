@@ -41,11 +41,11 @@ func TestFileIsDirty(t *testing.T) {
 			"",
 		},
 		{
-			"uncommited change is dirty",
+			"uncommited change to a file is dirty",
 			"uncommited-change",
 			"origin",
 			"main",
-			"a.txt",
+			"project-a/a.txt",
 			true,
 			"",
 		},
@@ -55,6 +55,24 @@ func TestFileIsDirty(t *testing.T) {
 			"origin",
 			"main",
 			"README.txt",
+			false,
+			"",
+		},
+		{
+			"unpushed change to a dirty directory is dirty",
+			"committed-unpushed-change",
+			"origin",
+			"main",
+			"project-a",
+			true,
+			"",
+		},
+		{
+			"unpushed change to a different directory is clean",
+			"committed-unpushed-change",
+			"origin",
+			"main",
+			"project-b",
 			false,
 			"",
 		},
@@ -147,6 +165,14 @@ func TestRepoIsDirty(t *testing.T) {
 			true,
 			"remote origin does not have specified branch",
 		},
+		{
+			"No branch specified, diffs on default branch",
+			"commited-unpushed-change",
+			"origin",
+			"",
+			true,
+			"",
+		},
 	}
 
 	log := hclog.Default()
@@ -210,6 +236,13 @@ func Test_getRemoteName(t *testing.T) {
 			"finds remote name with ssh/https mismatch",
 			"ssh-remote", // this repo has a remote url of "git@git.test:testorg/testrepo.git"
 			"https://git.test/testorg/testrepo.git",
+			"origin",
+			"",
+		},
+		{
+			"finds remote name with ssh/https mismatch and no .git extension on https",
+			"ssh-remote", // this repo has a remote url of "git@git.test:testorg/testrepo.git"
+			"https://git.test/testorg/testrepo",
 			"origin",
 			"",
 		},
@@ -314,12 +347,57 @@ func Test_remoteConvertSSHtoHTTPS(t *testing.T) {
 	require.Equal(httpRemote, newHttpRemote)
 }
 
-func Test_remoteConvertHTTPStoSSH(t *testing.T) {
-	require := require.New(t)
-	httpRemote := "https://git.test/testorg/testrepo.git"
-	sshRemote := "git@git.test:testorg/testrepo.git"
+func Test_remoteConverters(t *testing.T) {
+	tests := []struct {
+		name        string
+		httpsRemote string
+		sshRemote   string
+		wantErr     bool
+	}{
+		{
+			"standard pattern",
+			"https://git.test/testorg/testrepo.git",
+			"git@git.test:testorg/testrepo.git",
+			false,
+		},
+		{
+			"No trailing .git",
+			"https://git.test/testorg/testrepo",
+			"git@git.test:testorg/testrepo",
+			false,
+		},
+		{
+			"Invalid",
+			"invalid",
+			"invalid",
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := remoteConvertHTTPStoSSH(tt.httpsRemote)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("remoteConvertHTTPStoSSH() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+			} else if got != tt.sshRemote {
+				t.Errorf("remoteConvertHTTPStoSSH() got = %v, want %v", got, tt.sshRemote)
+			}
 
-	newSSHRemote, err := remoteConvertHTTPStoSSH(httpRemote)
-	require.NoError(err)
-	require.Equal(sshRemote, newSSHRemote)
+			got, err = remoteConvertSSHtoHTTPS(tt.sshRemote)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("remoteConvertSSHtoHTTPS() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+			} else if got != tt.httpsRemote {
+				t.Errorf("remoteConvertSSHtoHTTPS() got = %v, want %v", got, tt.httpsRemote)
+			}
+		})
+	}
+}
+
+func Test_getDefaultBranch(t *testing.T) {
+	getDefaultBranch(hclog.Default(), "/Users/izaak/dev/waypoint", "origin")
 }
