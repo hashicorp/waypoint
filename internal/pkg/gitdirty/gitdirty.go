@@ -18,9 +18,9 @@ var (
 
 func init() {
 	// Regex matching http/https remotes, tokenizing the unique components for replacement.
-	// Works for github, gitlab, and other remotes using this style.
-	githubStyleSshRemoteRegexp, _ = regexp.Compile(`git@(.*?\..*?):(.*)`)            // Example: git@git.test:testorg/testrepo.git
-	githubStyleHttpRemoteRegexp, _ = regexp.Compile(`http[s]?:\/\/(.*?\..*?)\/(.*)`) // Example: https://git.test/testorg/testrepo.git
+	// Works for github, gitlab, sourcehut, and other remotes using this style.
+	githubStyleSshRemoteRegexp = regexp.MustCompile(`git@(.*?\..*?):(.*)`)            // Example: git@git.test:testorg/testrepo.git
+	githubStyleHttpRemoteRegexp = regexp.MustCompile(`http[s]?:\/\/(.*?\..*?)\/(.*)`) // Example: https://git.test/testorg/testrepo.git
 }
 
 // RepoIsDirty looks for unstaged, staged, and committed (but not pushed)
