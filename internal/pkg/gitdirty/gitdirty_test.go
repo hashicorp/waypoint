@@ -284,14 +284,24 @@ func testGitFixture(t *testing.T, path string) {
 	t.Helper()
 
 	// Look for a DOTgit
-	original := filepath.Join(path, "DOTgit")
-	_, err := os.Stat(original)
+	originalGit := filepath.Join(path, "DOTgit")
+	_, err := os.Stat(originalGit)
 	require.NoError(t, err)
 
 	// Rename it
-	newPath := filepath.Join(path, ".git")
-	require.NoError(t, os.Rename(original, newPath))
-	t.Cleanup(func() { os.Rename(newPath, original) })
+	newGit := filepath.Join(path, ".git")
+	require.NoError(t, os.Rename(originalGit, newGit))
+	t.Cleanup(func() { os.Rename(newGit, originalGit) })
+
+	// Look for a DOTgitignore and rename it if it exists
+	originalGitignore := filepath.Join(path, "DOTgitignore")
+	_, err = os.Stat(originalGitignore)
+	if err == nil {
+		// Rename it
+		newGitignore := filepath.Join(path, ".gitignore")
+		require.NoError(t, os.Rename(originalGitignore, newGitignore))
+		t.Cleanup(func() { os.Rename(newGitignore, originalGitignore) })
+	}
 }
 
 func Test_remoteConvertSSHtoHTTPS(t *testing.T) {
