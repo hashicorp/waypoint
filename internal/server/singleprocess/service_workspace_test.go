@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUpsertWorkspace(t *testing.T) {
+func TestWorkspace_Upsert(t *testing.T) {
 	ctx := context.Background()
 
 	// Create our server
