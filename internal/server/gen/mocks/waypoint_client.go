@@ -288,6 +288,36 @@ func (_m *WaypointClient) DeleteHostname(ctx context.Context, in *gen.DeleteHost
 	return r0, r1
 }
 
+// DeleteTrigger provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) DeleteTrigger(ctx context.Context, in *gen.DeleteTriggerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteTriggerRequest, ...grpc.CallOption) *emptypb.Empty); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteTriggerRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteUser provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) DeleteUser(ctx context.Context, in *gen.DeleteUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	_va := make([]interface{}, len(opts))
@@ -1098,6 +1128,36 @@ func (_m *WaypointClient) GetStatusReport(ctx context.Context, in *gen.GetStatus
 	return r0, r1
 }
 
+// GetTrigger provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetTrigger(ctx context.Context, in *gen.GetTriggerRequest, opts ...grpc.CallOption) (*gen.GetTriggerResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.GetTriggerResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetTriggerRequest, ...grpc.CallOption) *gen.GetTriggerResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetTriggerResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetTriggerRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetUser provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) GetUser(ctx context.Context, in *gen.GetUserRequest, opts ...grpc.CallOption) (*gen.GetUserResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -1540,6 +1600,36 @@ func (_m *WaypointClient) ListStatusReports(ctx context.Context, in *gen.ListSta
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListStatusReportsRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListTriggers provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ListTriggers(ctx context.Context, in *gen.ListTriggerRequest, opts ...grpc.CallOption) (*gen.ListTriggerResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.ListTriggerResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListTriggerRequest, ...grpc.CallOption) *gen.ListTriggerResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListTriggerResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListTriggerRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -2260,6 +2350,36 @@ func (_m *WaypointClient) UpsertStatusReport(ctx context.Context, in *gen.Upsert
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertStatusReportRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpsertTrigger provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UpsertTrigger(ctx context.Context, in *gen.UpsertTriggerRequest, opts ...grpc.CallOption) (*gen.UpsertTriggerResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UpsertTriggerResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertTriggerRequest, ...grpc.CallOption) *gen.UpsertTriggerResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertTriggerResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertTriggerRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
