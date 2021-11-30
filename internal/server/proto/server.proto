@@ -73,6 +73,10 @@ service Waypoint {
   // GetWorkspace returns the workspace.
   rpc GetWorkspace(GetWorkspaceRequest) returns (GetWorkspaceResponse);
 
+  // UpsertWorkspace upserts the workspace. Changes to a Workspace's Projects
+  // are ignored at this time.
+  rpc UpsertWorkspace(UpsertWorkspaceRequest) returns (UpsertWorkspaceResponse);
+
   // UpsertProject upserts the project.
   rpc UpsertProject(UpsertProjectRequest) returns (UpsertProjectResponse);
 
@@ -2415,6 +2419,14 @@ message GetWorkspaceRequest {
 }
 
 message GetWorkspaceResponse {
+  Workspace workspace = 1;
+}
+
+message UpsertWorkspaceRequest {
+  Workspace workspace = 1;
+}
+
+message UpsertWorkspaceResponse {
   Workspace workspace = 1;
 }
 
