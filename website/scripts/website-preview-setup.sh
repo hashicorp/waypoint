@@ -6,9 +6,7 @@ rm -rf ./website-preview
 # Clone project, and cd into it
 git clone https://github.com/hashicorp/dev-portal.git website-preview
 cd website-preview
-# Checkout target branch
-# TODO: should be main once this PR merges:
-# TODO: https://github.com/hashicorp/dev-portal/pull/34
+# Ensure we're on main (can probably remove this)
 git checkout main
 # Install dependencies
 npm i --production=false

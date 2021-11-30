@@ -12,9 +12,12 @@ RUN apk add --update --no-cache \
     libpng-dev \
     make \
     nasm
+# note: /website/package.json is copied only for sake
+# of consistency in use of start script
+COPY package.json /website/package.json
+ADD scripts /website/scripts
+ADD website-preview /website/website-preview
 WORKDIR /website
 RUN npm install -g npm@latest
-RUN mkdir /website/website-preview
-COPY ./package.json /website/website-preview/package.json
-COPY ./package-lock.json /website/website-preview/package-lock.json
+# install dependencies within /website/website-preview
 RUN cd /website/website-preview && npm install --production=false
