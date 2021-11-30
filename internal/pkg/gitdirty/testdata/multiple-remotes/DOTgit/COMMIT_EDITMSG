@@ -1,0 +1,47 @@
+Added readme and gitignore
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch main
+# Changes to be committed:
+#	new file:   .gitignore
+#	new file:   README.md
+#
+# ------------------------ >8 ------------------------
+# Do not modify or remove the line above.
+# Everything below it will be ignored.
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..2add962
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1 @@
++origin/
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..31e37d0
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,22 @@
++# Test git repo
++
++Note that the `origin` folder is a configured origin.
++
++To recreate this setup:
++
++```shell
++mkdir remote
++cd remote
++git init
++mkdir origin
++cd origin
++git init --bare
++cd ..
++```
++
++From there, you can make and push changes:
++```shell
++echo "contents" > a.txt
++git commit -am "first commit"
++git push origin main
++```

@@ -1,0 +1,13 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+[remote "origin"]
+	url = origin-url
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[remote "upstream"]
+	url = upstream-url
+	fetch = +refs/heads/*:refs/remotes/upstream/*
