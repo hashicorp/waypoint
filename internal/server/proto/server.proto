@@ -864,6 +864,13 @@ message Ref {
     string id = 1;
     string name = 2;
   }
+
+  // Trigger references a Trigger message value to be used for a given operation.
+  // It can be looked up by name or id. Id takes priority if both are set.
+  message Trigger {
+    string id = 1;
+    string name = 2;
+  }
 }
 
 // Component represents metadata about a component. A component is the
