@@ -1,47 +1,34 @@
-Added readme and gitignore
+Multiple directories
 # Please enter the commit message for your changes. Lines starting
 # with '#' will be ignored, and an empty message aborts the commit.
 #
 # On branch main
 # Changes to be committed:
-#	new file:   .gitignore
-#	new file:   README.md
+#	deleted:    a.txt
+#	new file:   project-a/a.txt
+#	new file:   project-b/b.txt
 #
 # ------------------------ >8 ------------------------
 # Do not modify or remove the line above.
 # Everything below it will be ignored.
-diff --git a/.gitignore b/.gitignore
+diff --git a/a.txt b/a.txt
+deleted file mode 100644
+index d2492f5..0000000
+--- a/a.txt
++++ /dev/null
+@@ -1 +0,0 @@
+-synced contents
+diff --git a/project-a/a.txt b/project-a/a.txt
 new file mode 100644
-index 0000000..2add962
+index 0000000..859df8f
 --- /dev/null
-+++ b/.gitignore
++++ b/project-a/a.txt
 @@ -0,0 +1 @@
-+origin/
-diff --git a/README.md b/README.md
++dirty change
+diff --git a/project-b/b.txt b/project-b/b.txt
 new file mode 100644
-index 0000000..31e37d0
+index 0000000..a22cfdc
 --- /dev/null
-+++ b/README.md
-@@ -0,0 +1,22 @@
-+# Test git repo
-+
-+Note that the `origin` folder is a configured origin.
-+
-+To recreate this setup:
-+
-+```shell
-+mkdir remote
-+cd remote
-+git init
-+mkdir origin
-+cd origin
-+git init --bare
-+cd ..
-+```
-+
-+From there, you can make and push changes:
-+```shell
-+echo "contents" > a.txt
-+git commit -am "first commit"
-+git push origin main
-+```
++++ b/project-b/b.txt
+@@ -0,0 +1 @@
++project b's file
