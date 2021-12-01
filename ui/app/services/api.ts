@@ -301,12 +301,16 @@ export default class ApiService extends Service {
         git.clearBasic();
         git.clearSsh();
       }
+
+      ref.setRemoteEnabled(true);
     } else {
       // if we set up a project without connecting it to a git repo
       // but we want to set input variables, a git URL is required
       // for updating a project's settings. this silences that error
       // while not adding settings the user did not specify
       git.setUrl('\n');
+
+      ref.setRemoteEnabled(project.remoteEnabled);
     }
 
     dataSource.setGit(git);
