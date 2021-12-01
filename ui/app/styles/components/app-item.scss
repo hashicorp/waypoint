@@ -1,29 +1,32 @@
 .app-item {
   // individual list item in expanded builds/deployments/releases section
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  color: rgb(var(--text-muted));
+  margin-right: scale.$sm-2;
   width: 100%;
-  height: 70px;
-  padding-left: scale.$sm-2;
+  border-radius: 5px;
+
+  hr {
+    border: 0;
+    width: 100%;
+    margin: 0;
+    border-top: 1px solid rgb(var(--border));
+  }
 
   a:not(.button) {
     display: flex;
     flex-direction: row;
+    align-items: flex-start;
     flex-grow: 1;
     color: inherit;
     text-decoration: none;
-    margin-right: scale.$base;
+    width: 100%;
+    min-height: 73px;
+    padding: scale.$sm-1 scale.$sm-2;
+    border-radius: 5px;
 
     &:hover code {
       color: rgb(var(--link));
     }
-  }
-
-  p {
-    display: inline-flex;
-    align-items: center;
   }
 
   code {
@@ -39,19 +42,12 @@
   }
 
   .badge--destroyed {
-    margin-left: scale.$sm-2;
+    margin-left: auto;
 
     @media (prefers-color-scheme: light) {
       background: color.$ui-cool-gray-200;
       color: color.$ui-cool-gray-800;
     }
-  }
-
-  &__meta__secondary {
-    display: flex;
-    align-items: center;
-    color: rgb(var(--text-muted));
-    margin-right: scale.$sm-2;
   }
 
   .button {
@@ -66,27 +62,43 @@
   }
 
   .replacement-info {
+    @include Typography.Interface(S);
     b {
       text-transform: inherit;
-      margin-left: scale.$sm-2;
     }
+  }
+
+  .timestamp__label {
+    @include Typography.Interface(S);
   }
 
   &--previous {
     background: rgb(var(--panel));
-    background-clip: border-box;
-    margin-bottom: 0px;
-    border-top: 1rem solid rgb(var(--panel));
+  }
+
+  .operation-status-indicator {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding-right: scale.$sm-2;
+    max-width: 85%;
+
+    span {
+      width: 100%;
+    }
   }
 }
 
 .destroyed-deployments-filter {
   // explanatory text + button at the bottom of the expanded list of deployments
   display: block;
-  float: right;
-  text-align: right;
-  margin-bottom: scale.$sm-1;
-  button {
-    font-size: 0.75rem;
+  font-size: 0.875rem;
+
+  hr {
+    margin: 0;
+  }
+
+  span {
+    padding: scale.$sm-1 0;
   }
 }

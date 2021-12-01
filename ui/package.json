@@ -90,6 +90,7 @@
     "ember-page-title": "^6.2.2",
     "ember-qunit": "^5.1.1",
     "ember-resolver": "^8.0.2",
+    "ember-router-helpers": "^0.4.0",
     "ember-router-service-refresh-polyfill": "^0.1.0",
     "ember-set-helper": "^2.0.0",
     "ember-simple-auth": "^4.0.2",

@@ -29,6 +29,7 @@
         <tr>
           <th scope="row">
             <LinkTo
+              title={{resource.name}}
               @route={{@route}}
               @models={{append (or @models (array)) resource.id}}
             >
