@@ -144,7 +144,7 @@ func (c *ExecCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
-		exitCode, err = ec.Run()
+		exitCode, err = app.Exec(ctx, ec)
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel

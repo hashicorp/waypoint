@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 
+	"github.com/hashicorp/waypoint/internal/server/execclient"
+
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -142,38 +144,6 @@ func (c *App) Deploy(ctx context.Context, op *pb.Job_DeployOp) (*pb.Job_DeployRe
 	return result.Deploy, nil
 }
 
-func (c *App) Destroy(ctx context.Context, op *pb.Job_DestroyOp) error {
-	if op == nil {
-		op = &pb.Job_DestroyOp{}
-	}
-
-	// Build our job
-	job := c.job()
-	job.Operation = &pb.Job_Destroy{
-		Destroy: op,
-	}
-
-	// Execute it
-	_, err := c.doJob(ctx, job)
-	return err
-}
-
-func (c *App) Exec(ctx context.Context, op *pb.Job_ExecOp, mon chan pb.Job_State) error {
-	if op == nil {
-		op = &pb.Job_ExecOp{}
-	}
-
-	// Build our job
-	job := c.job()
-	job.Operation = &pb.Job_Exec{
-		Exec: op,
-	}
-
-	// Execute it
-	_, err := c.doJobMonitored(ctx, job, mon)
-	return err
-}
-
 func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_ReleaseResult, error) {
 	if op == nil {
 		op = &pb.Job_ReleaseOp{}
@@ -192,6 +162,37 @@ func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_Releas
 	}
 
 	return result.Release, nil
+}
+
+func (c *App) Destroy(ctx context.Context, op *pb.Job_DestroyOp) error {
+	if op == nil {
+		op = &pb.Job_DestroyOp{}
+	}
+
+	// Build our job
+	job := c.job()
+	job.Operation = &pb.Job_Destroy{
+		Destroy: op,
+	}
+
+	// Execute it
+	_, err := c.doJob(ctx, job)
+	return err
+}
+
+func (c *App) Exec(ctx context.Context, ec *execclient.Client) (exitCode int, err error) {
+
+	// Depending on which deployments are at play, and which plugins those deployments
+	// correspond to, we may need a local runner. It'll be up to the server to actually
+	// create the job, but we'll need to create the local runner if necessary, error
+	// if vcs is dirty, etc.
+	_, ctx, err = c.project.setupLocalJobSystem(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	ec.Context = ctx
+	return ec.Run()
 }
 
 func (a *App) Logs(ctx context.Context) (pb.Waypoint_GetLogStreamClient, error) {
