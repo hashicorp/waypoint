@@ -3265,7 +3265,7 @@ message Trigger {
 
   // The application to use. Can be empty, this trigger will run on every app
   // if not set.
-  Ref.Application app = 9;
+  Ref.Application application = 9;
 }
 
 // Trigger Request Messages
