@@ -112,7 +112,35 @@ func TestServiceTrigger_GetTrigger(t *testing.T) {
 	})
 }
 
-func TestServiceTrigger_ListTriggers(t *testing.T) {
+func TestServiceTrigger_ListTriggersSimple(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	db := testDB(t)
+	impl, err := New(WithDB(db))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+		Trigger: serverptypes.TestValidTrigger(t, nil),
+	})
+	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+		Trigger: serverptypes.TestValidTrigger(t, nil),
+	})
+	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+		Trigger: serverptypes.TestValidTrigger(t, nil),
+	})
+
+	t.Run("list", func(t *testing.T) {
+		require := require.New(t)
+
+		respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{})
+		require.NoError(err)
+		require.Equal(len(respList.Triggers), 3)
+	})
+}
+
+func TestServiceTrigger_ListTriggersWithFilters(t *testing.T) {
 	//ctx := context.Background()
 
 	//// Create our server
@@ -120,6 +148,10 @@ func TestServiceTrigger_ListTriggers(t *testing.T) {
 	//impl, err := New(WithDB(db))
 	//require.NoError(t, err)
 	//client := server.TestServer(t, impl)
+
+	// TODO:
+	// create some triggers across workspaces, projects, apps, labels
+	// test that listing with filters returns expected number of triggers
 }
 
 func TestServiceTrigger_DeleteTrigger(t *testing.T) {

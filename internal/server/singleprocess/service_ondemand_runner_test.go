@@ -137,7 +137,7 @@ func TestServiceOnDemandRunnerConfig_ListOnDemandRunnerConfigs(t *testing.T) {
 	t.Run("list", func(t *testing.T) {
 		require := require.New(t)
 
-		// Get, should return a deployment
+		// Get, should return a ondemand runner config
 		deployments, err := client.ListOnDemandRunnerConfigs(ctx, &emptypb.Empty{})
 		require.NoError(err)
 		require.NotEmpty(deployments)
