@@ -49,7 +49,7 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 // - figure out if jobs should be executed locally or remotely.
 // - if job should be executed locally, start a local runner
 // - FUTURE: if a job should be executed remotely, but local VCS is present and dirty, warn.
-// This lives separately from DoJob because the logs command needs to conditionally warm up the
+// This lives separately from DoJob because the logs and exec commands need to conditionally warm up the
 // local job infrastructure, but don't actually create a job (the server does).
 func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx context.Context, err error) {
 	// Automatically determine if we should use a local or a remote runner
