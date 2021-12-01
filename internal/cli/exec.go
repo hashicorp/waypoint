@@ -160,7 +160,7 @@ func (c *ExecCommand) Run(args []string) int {
 }
 
 func (c *ExecCommand) Flags() *flag.Sets {
-	return c.flagSet(0, func(s *flag.Sets) {
+	return c.flagSet(flagSetOperation, func(s *flag.Sets) {
 		f := s.NewSet("Command Options")
 		f.StringVar(&flag.StringVar{
 			Name:   "instance",

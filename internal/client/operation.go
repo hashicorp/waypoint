@@ -197,6 +197,15 @@ func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_Releas
 func (a *App) Logs(ctx context.Context) (pb.Waypoint_GetLogStreamClient, error) {
 	log := a.project.logger.Named("logs")
 
+	// Depending on which deployments are at play, and which plugins those deployments
+	// correspond to, we may need a local runner. It'll be up to the server to actually
+	// create the job, but we'll need to create the local runner if necessary, error
+	// if vcs is dirty, etc.
+	_, ctx, err := a.project.setupLocalJobSystem(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// First we attempt to query the server for logs for this deployment.
 	log.Info("requesting log stream")
 	client, err := a.project.client.GetLogStream(ctx, &pb.GetLogStreamRequest{

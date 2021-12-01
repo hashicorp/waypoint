@@ -13,7 +13,7 @@ import (
 // spawn jobs back on that client in response to an RPC.
 const grpcMetadataRunnerId = "waypoint-runner-id"
 
-// AddRunner adds gRPC metadata to indicate that that RPCs sent with the returned
+// AddRunner adds gRPC metadata to indicate that RPCs sent with the returned
 // context having the given runner (specified by id) attached to the sending client,
 // allow the server to target jobs back to the client that performed an RPC call.
 func AddRunner(ctx context.Context, id string) context.Context {

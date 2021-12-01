@@ -45,24 +45,30 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 	return c.doJobMonitored(ctx, job, ui, nil)
 }
 
-// Same as doJob, but with the addition of a mon channel that can be used
-// to monitor the job status as it changes.
-// The receiver must be careful to not block sending to mon as it will block
-// the job state processing loop.
-func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.UI, monCh chan pb.Job_State) (*pb.Job_Result, error) {
-
+// setupLocalJobSystem does the pre-work required to run jobs locally. This includes:
+// - figure out if jobs should be executed locally or remotely.
+// - if job should be executed locally, start a local runner
+// - FUTURE: if a job should be executed remotely, but local VCS is present and dirty, warn.
+// This lives separately from DoJob because the logs command needs to conditionally warm up the
+// local job infrastructure, but don't actually create a job (the server does).
+func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx context.Context, err error) {
 	// Automatically determine if we should use a local or a remote runner
+	newCtx = ctx
 
 	if c.useLocalRunner == nil {
 
 		// NOTE(izaak): If in the future we need the full project in other places, we should probably cache it on the parent struct.
 		getProjectResp, err := c.client.GetProject(ctx, &pb.GetProjectRequest{Project: c.project})
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get project %s", c.project.Project)
+			if status.Code(err) == codes.NotFound {
+				return false, newCtx, fmt.Errorf("Project %q was not found! Please ensure that 'waypoint init' was run with this project.", c.project.Project)
+			} else {
+				return false, newCtx, errors.Wrapf(err, "failed to get project %s", c.project.Project)
+			}
 		}
 		remotePreferred, err := remoteOpPreferred(ctx, c.client, getProjectResp.Project, c.logger)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to determine if job %s should run locally or remotely", job.Application)
+			return false, newCtx, errors.Wrapf(err, "failed to determine if job should run locally or remotely")
 		}
 
 		// Store this for later operations on this same project
@@ -70,11 +76,28 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 		c.useLocalRunner = &useLocalRunner
 	}
 
-	if *c.useLocalRunner && c.activeRunner == nil {
-		// we need a local runner and we haven't started it yet
-		if err := c.startRunner(); err != nil {
-			return nil, errors.Wrapf(err, "failed to start local runner for job %s", err)
+	if *c.useLocalRunner {
+		if c.activeRunner == nil {
+			// we need a local runner and we haven't started it yet
+			if err := c.startRunner(); err != nil {
+				return false, newCtx, errors.Wrapf(err, "failed to start local runner for job %s", err)
+			}
 		}
+		// Inject the metadata about the client, such as the runner id if it is running
+		// a local runner.
+		newCtx = grpcmetadata.AddRunner(ctx, c.activeRunner.Id())
+	}
+	return *c.useLocalRunner, newCtx, nil
+}
+
+// Same as doJob, but with the addition of a mon channel that can be used
+// to monitor the job status as it changes.
+// The receiver must be careful to not block sending to mon as it will block
+// the job state processing loop.
+func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.UI, monCh chan pb.Job_State) (*pb.Job_Result, error) {
+	isLocal, ctx, err := c.setupLocalJobSystem(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	// Be sure that the monitor is closed so the receiver knows for sure the job isn't going
@@ -84,11 +107,7 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 	}
 
 	// In local mode we have to target the local runner.
-	if *c.useLocalRunner {
-
-		// Inject the metadata about the client, such as the runner id if it is running
-		// a local runner.
-		ctx = grpcmetadata.AddRunner(ctx, c.activeRunner.Id())
+	if isLocal {
 
 		// If we're local, we set a local data source. Otherwise, it defaults to whatever the
 		// project has remotely.
@@ -110,7 +129,7 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 		}
 	}
 
-	return c.queueAndStreamJob(ctx, job, ui, monCh, *c.useLocalRunner)
+	return c.queueAndStreamJob(ctx, job, ui, monCh, isLocal)
 }
 
 // queueAndStreamJob will queue the job. If the client is configured to watch the job,
