@@ -3283,7 +3283,7 @@ message UpsertTriggerResponse {
 }
 
 message GetTriggerRequest {
-  string id = 1;
+  Ref.Trigger ref = 1;
 }
 
 message GetTriggerResponse {
@@ -3291,7 +3291,7 @@ message GetTriggerResponse {
 }
 
 message DeleteTriggerRequest {
-  Trigger trigger = 1;
+  Ref.Trigger ref = 1;
 }
 
 // ListTriggerRequest can take a handful of optional filter arguments. If none
