@@ -140,6 +140,26 @@ func TestValidStatusReport(t testing.T, src *pb.StatusReport) *pb.StatusReport {
 	return src
 }
 
+func TestValidTrigger(t testing.T, src *pb.Trigger) *pb.Trigger {
+	t.Helper()
+
+	if src == nil {
+		src = &pb.Trigger{}
+	}
+
+	require.NoError(t, mergo.Merge(src, &pb.Trigger{
+		Application: &pb.Ref_Application{
+			Application: "a_test",
+			Project:     "p_test",
+		},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: "default",
+		},
+	}))
+
+	return src
+}
+
 func testStatus(t testing.T) *pb.Status {
 	pt, err := ptypes.TimestampProto(time.Now())
 	require.NoError(t, err)
