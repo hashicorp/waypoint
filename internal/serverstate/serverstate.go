@@ -140,6 +140,14 @@ type Interface interface {
 	StatusReportList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.StatusReport, error)
 
 	//---------------------------------------------------------------
+	// Trigger
+
+	TriggerPut(*pb.Trigger) error
+	TriggerGet(*pb.Ref_Trigger) (*pb.Trigger, error)
+	TriggerDelete(*pb.Ref_Trigger) error
+	TriggerList() ([]*pb.Trigger, error)
+
+	//---------------------------------------------------------------
 	// Job System
 
 	JobCreate(...*pb.Job) error
