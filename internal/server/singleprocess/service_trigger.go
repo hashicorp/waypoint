@@ -12,7 +12,13 @@ func (s *service) UpsertTrigger(
 	req *pb.UpsertTriggerRequest,
 ) (*pb.UpsertTriggerResponse, error) {
 	// TODO: Validate request with ptypes
-	return nil, nil
+
+	result := req.Trigger
+	if err := s.state.TriggerPut(result); err != nil {
+		return nil, err
+	}
+
+	return &pb.UpsertTriggerResponse{Trigger: result}, nil
 }
 
 // GetTrigger returns a Trigger based on ID
@@ -21,7 +27,13 @@ func (s *service) GetTrigger(
 	req *pb.GetTriggerRequest,
 ) (*pb.GetTriggerResponse, error) {
 	// TODO: Validate request with ptypes
-	return nil, nil
+
+	t, err := s.state.TriggerGet(req.Ref)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetTriggerResponse{Trigger: t}, nil
 }
 
 // DeleteTrigger deletes a Trigger based on ID
@@ -30,7 +42,13 @@ func (s *service) DeleteTrigger(
 	req *pb.DeleteTriggerRequest,
 ) (*empty.Empty, error) {
 	// TODO: Validate request with ptypes
-	return nil, nil
+
+	err := s.state.TriggerDelete(req.Ref)
+	if err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
 }
 
 func (s *service) ListTriggers(
@@ -38,5 +56,11 @@ func (s *service) ListTriggers(
 	req *pb.ListTriggerRequest,
 ) (*pb.ListTriggerResponse, error) {
 	// TODO: Validate request with ptypes
-	return nil, nil
+
+	result, err := s.state.TriggerList()
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.ListTriggerResponse{Triggers: result}, nil
 }
