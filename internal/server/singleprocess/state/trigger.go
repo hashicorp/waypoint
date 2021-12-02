@@ -41,6 +41,10 @@ func (s *State) TriggerPut(t *pb.Trigger) error {
 			t.Id = id
 		}
 
+		if t.Workspace == nil {
+			t.Workspace = &pb.Ref_Workspace{Workspace: "default"}
+		}
+
 		return s.triggerPut(dbTxn, memTxn, t)
 	})
 	if err == nil {

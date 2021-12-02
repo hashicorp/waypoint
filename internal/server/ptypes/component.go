@@ -148,6 +148,9 @@ func TestValidTrigger(t testing.T, src *pb.Trigger) *pb.Trigger {
 	}
 
 	require.NoError(t, mergo.Merge(src, &pb.Trigger{
+		Project: &pb.Ref_Project{
+			Project: "p_test",
+		},
 		Application: &pb.Ref_Application{
 			Application: "a_test",
 			Project:     "p_test",

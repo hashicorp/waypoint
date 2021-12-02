@@ -47,6 +47,21 @@ func TestServiceTrigger(t *testing.T) {
 		require.Equal(result.Name, testName)
 	})
 
+	t.Run("create uses default workspace if unset", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		resp, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+			Trigger: &pb.Trigger{},
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		result := resp.Trigger
+		require.NotEmpty(result.Id)
+		require.NotEmpty(result.Workspace)
+		require.Equal(result.Workspace.Workspace, "default")
+	})
+
 	t.Run("update non-existent", func(t *testing.T) {
 		require := require.New(t)
 
