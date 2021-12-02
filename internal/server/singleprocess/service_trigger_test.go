@@ -173,16 +173,71 @@ func TestServiceTrigger_ListTriggersWithFilters(t *testing.T) {
 		require.Equal(len(respList.Triggers), 3)
 	})
 
-	// TODO: fix me
-	//t.Run("list non-existent workspace triggers", func(t *testing.T) {
-	//	require := require.New(t)
+	t.Run("list non-existent workspace triggers", func(t *testing.T) {
+		require := require.New(t)
 
-	//	respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{
-	//		Workspace: &pb.Ref_Workspace{Workspace: "fake"},
-	//	})
-	//	require.NoError(err)
-	//	require.Equal(len(respList.Triggers), 0)
-	//})
+		respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{
+			Workspace: &pb.Ref_Workspace{Workspace: "fake"},
+		})
+		require.NoError(err)
+		require.Equal(len(respList.Triggers), 0)
+	})
+
+	t.Run("list project triggers", func(t *testing.T) {
+		require := require.New(t)
+
+		respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+			Project:   &pb.Ref_Project{Project: "p_test"},
+		})
+		require.NoError(err)
+		require.Equal(len(respList.Triggers), 3)
+	})
+
+	t.Run("list app triggers", func(t *testing.T) {
+		require := require.New(t)
+
+		respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{
+			Workspace:   &pb.Ref_Workspace{Workspace: "default"},
+			Project:     &pb.Ref_Project{Project: "p_test"},
+			Application: &pb.Ref_Application{Project: "p_test", Application: "a_test"},
+		})
+		require.NoError(err)
+		require.Equal(len(respList.Triggers), 3)
+	})
+
+	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+		Trigger: &pb.Trigger{
+			Application: &pb.Ref_Application{
+				Application: "another_one",
+				Project:     "secret_project",
+			},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "staging",
+			},
+		},
+	})
+
+	t.Run("filter to one app", func(t *testing.T) {
+		require := require.New(t)
+
+		respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{
+			Workspace:   &pb.Ref_Workspace{Workspace: "staging"},
+			Project:     &pb.Ref_Project{Project: "secret_project"},
+			Application: &pb.Ref_Application{Project: "secret_project", Application: "another_one"},
+		})
+		require.NoError(err)
+		require.Equal(len(respList.Triggers), 1)
+	})
+
+	t.Run("filter with missing workspace on app returns error", func(t *testing.T) {
+		require := require.New(t)
+
+		_, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{
+			Application: &pb.Ref_Application{Project: "secret_project", Application: "another_one"},
+		})
+		require.Error(err)
+	})
 }
 
 func TestServiceTrigger_DeleteTrigger(t *testing.T) {

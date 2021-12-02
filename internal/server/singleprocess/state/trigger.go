@@ -81,9 +81,29 @@ func (s *State) TriggerDelete(ref *pb.Ref_Trigger) error {
 }
 
 // TriggerList returns the list of triggers.
-func (s *State) TriggerList() ([]*pb.Trigger, error) {
+func (s *State) TriggerList(
+	refws *pb.Ref_Workspace,
+	refproj *pb.Ref_Project,
+	refapp *pb.Ref_Application,
+) ([]*pb.Trigger, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
+
+	if refproj != nil && refws == nil {
+		return nil, status.Error(codes.FailedPrecondition,
+			"Workspace Ref is required when filtering on a Project")
+	}
+
+	if refapp != nil {
+		if refproj == nil {
+			return nil, status.Error(codes.FailedPrecondition,
+				"Project Ref is required when filtering on an Application")
+		}
+		if refws == nil {
+			return nil, status.Error(codes.FailedPrecondition,
+				"Workspace Ref is required when filtering on an Application")
+		}
+	}
 
 	refs, err := s.triggerList(memTxn)
 	if err != nil {
@@ -97,6 +117,25 @@ func (s *State) TriggerList() ([]*pb.Trigger, error) {
 			val, err := s.triggerGet(dbTxn, memTxn, ref)
 			if err != nil {
 				return err
+			}
+
+			// filter out triggers on request
+			if refws != nil {
+				if val.Workspace.Workspace != refws.Workspace {
+					continue
+				}
+
+				if refproj != nil && val.Project != nil {
+					if val.Project.Project != refproj.Project {
+						continue
+					}
+
+					if refapp != nil && val.Application != nil {
+						if val.Application.Application != refapp.Application {
+							continue
+						}
+					}
+				}
 			}
 
 			out = append(out, val)

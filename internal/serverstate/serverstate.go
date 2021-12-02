@@ -145,7 +145,7 @@ type Interface interface {
 	TriggerPut(*pb.Trigger) error
 	TriggerGet(*pb.Ref_Trigger) (*pb.Trigger, error)
 	TriggerDelete(*pb.Ref_Trigger) error
-	TriggerList() ([]*pb.Trigger, error)
+	TriggerList(*pb.Ref_Workspace, *pb.Ref_Project, *pb.Ref_Application) ([]*pb.Trigger, error)
 
 	//---------------------------------------------------------------
 	// Job System
