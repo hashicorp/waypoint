@@ -64,7 +64,7 @@ func (s *service) ListTriggers(
 ) (*pb.ListTriggerResponse, error) {
 	// NOTE: no ptype validation at the moment, as all Ref fields are optional
 
-	result, err := s.state.TriggerList(req.Workspace, req.Project, req.Application)
+	result, err := s.state.TriggerList(req.Workspace, req.Project, req.Application, req.Labels)
 	if err != nil {
 		return nil, err
 	}

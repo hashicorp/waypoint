@@ -65,7 +65,7 @@ func TestServiceTrigger(t *testing.T) {
 	t.Run("errors if no project defined", func(t *testing.T) {
 		require := require.New(t)
 
-		// Create, should get an ID back
+		// create should error with no project defined
 		resp, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
 			Trigger: &pb.Trigger{},
 		})
@@ -109,7 +109,7 @@ func TestServiceTrigger_GetTrigger(t *testing.T) {
 	t.Run("get existing", func(t *testing.T) {
 		require := require.New(t)
 
-		// Get, should return a status report
+		// Get, should return a trigger
 		resp, err := client.GetTrigger(ctx, &pb.GetTriggerRequest{
 			Ref: &pb.Ref_Trigger{
 				Id: resp.Trigger.Id,
@@ -174,10 +174,6 @@ func TestServiceTrigger_ListTriggersWithFilters(t *testing.T) {
 	impl, err := New(WithDB(db))
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
-
-	// TODO:
-	// create some triggers across workspaces, projects, apps, labels
-	// test that listing with filters returns expected number of triggers
 
 	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
 		Trigger: serverptypes.TestValidTrigger(t, nil),
@@ -260,6 +256,62 @@ func TestServiceTrigger_ListTriggersWithFilters(t *testing.T) {
 		require.Equal(1, len(respList.Triggers))
 	})
 
+	t.Run("filter on labels", func(t *testing.T) {
+		require := require.New(t)
+
+		_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+			Trigger: &pb.Trigger{
+				Project: &pb.Ref_Project{
+					Project: "secret_project",
+				},
+				Application: &pb.Ref_Application{
+					Application: "another_one",
+					Project:     "secret_project",
+				},
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "staging",
+				},
+				Labels: []string{"prod", "test"},
+			},
+		})
+		require.NoError(err)
+
+		respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{
+			Workspace: &pb.Ref_Workspace{Workspace: "staging"},
+			Labels:    []string{"prod"},
+		})
+		require.NoError(err)
+		require.Equal(1, len(respList.Triggers))
+	})
+
+	t.Run("filter on missing labels returns nothing", func(t *testing.T) {
+		require := require.New(t)
+
+		_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+			Trigger: &pb.Trigger{
+				Project: &pb.Ref_Project{
+					Project: "secret_project",
+				},
+				Application: &pb.Ref_Application{
+					Application: "another_one",
+					Project:     "secret_project",
+				},
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "staging",
+				},
+				Labels: []string{"prod", "test"},
+			},
+		})
+		require.NoError(err)
+
+		respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{
+			Workspace: &pb.Ref_Workspace{Workspace: "staging"},
+			Labels:    []string{"pikachu"},
+		})
+		require.NoError(err)
+		require.Equal(0, len(respList.Triggers))
+	})
+
 	t.Run("filter with missing workspace on app returns error", func(t *testing.T) {
 		require := require.New(t)
 
@@ -289,7 +341,7 @@ func TestServiceTrigger_DeleteTrigger(t *testing.T) {
 	t.Run("get existing then delete", func(t *testing.T) {
 		require := require.New(t)
 
-		// Get, should return a status report
+		// Get, should return a trigger
 		resp, err := client.GetTrigger(ctx, &pb.GetTriggerRequest{
 			Ref: &pb.Ref_Trigger{
 				Id: resp.Trigger.Id,

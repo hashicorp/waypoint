@@ -93,6 +93,7 @@ func (s *State) TriggerList(
 	refws *pb.Ref_Workspace,
 	refproj *pb.Ref_Project,
 	refapp *pb.Ref_Application,
+	labelFilter []string,
 ) ([]*pb.Trigger, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
@@ -128,6 +129,29 @@ func (s *State) TriggerList(
 			}
 
 			// filter out triggers on request
+			if len(labelFilter) > 0 {
+				if len(val.Labels) == 0 {
+					// the trigger has no labels, so it's not a match
+					continue
+				}
+
+				labelMatch := false
+			EXIT:
+				for _, f := range labelFilter {
+					for _, tf := range val.Labels {
+						if tf == f {
+							labelMatch = true // we found a matching label on this value
+							// break to continue to compare ws, proj, app on value
+							break EXIT
+						}
+					}
+				}
+
+				if !labelMatch {
+					continue
+				}
+			}
+
 			if refws != nil {
 				if val.Workspace.Workspace != refws.Workspace {
 					continue
@@ -220,7 +244,6 @@ func (s *State) triggerGet(
 	return nil, nil
 }
 
-// TODO: implement some kind of filtering?
 func (s *State) triggerList(
 	memTxn *memdb.Txn,
 ) ([]*pb.Ref_Trigger, error) {
