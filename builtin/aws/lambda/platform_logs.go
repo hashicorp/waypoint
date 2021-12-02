@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
+	"github.com/pkg/errors"
 )
 
 // Logs fetches logs from cloudwatch
@@ -48,7 +49,7 @@ func (p *Platform) Logs(
 		})
 
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to describe log stream for group %q in region %q", group, p.config.Region)
 		}
 
 		if len(streams.LogStreams) == 0 {
