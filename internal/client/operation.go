@@ -144,26 +144,6 @@ func (c *App) Deploy(ctx context.Context, op *pb.Job_DeployOp) (*pb.Job_DeployRe
 	return result.Deploy, nil
 }
 
-func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_ReleaseResult, error) {
-	if op == nil {
-		op = &pb.Job_ReleaseOp{}
-	}
-
-	// Build our job
-	job := c.job()
-	job.Operation = &pb.Job_Release{
-		Release: op,
-	}
-
-	// Execute it
-	result, err := c.doJob(ctx, job)
-	if err != nil {
-		return nil, err
-	}
-
-	return result.Release, nil
-}
-
 func (c *App) Destroy(ctx context.Context, op *pb.Job_DestroyOp) error {
 	if op == nil {
 		op = &pb.Job_DestroyOp{}
@@ -193,6 +173,26 @@ func (c *App) Exec(ctx context.Context, ec *execclient.Client) (exitCode int, er
 
 	ec.Context = ctx
 	return ec.Run()
+}
+
+func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_ReleaseResult, error) {
+	if op == nil {
+		op = &pb.Job_ReleaseOp{}
+	}
+
+	// Build our job
+	job := c.job()
+	job.Operation = &pb.Job_Release{
+		Release: op,
+	}
+
+	// Execute it
+	result, err := c.doJob(ctx, job)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Release, nil
 }
 
 func (a *App) Logs(ctx context.Context) (pb.Waypoint_GetLogStreamClient, error) {
