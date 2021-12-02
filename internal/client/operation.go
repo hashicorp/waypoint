@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/hashicorp/waypoint/internal/server/execclient"
-
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
