@@ -56,6 +56,11 @@ func ValidateTriggerRules(v *pb.Trigger) []*validation.FieldRules {
 func ValidateUpsertTriggerRequest(v *pb.UpsertTriggerRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
 		validation.Field(&v.Trigger, validation.Required),
+		validationext.StructField(&v.Trigger, func() []*validation.FieldRules {
+			return []*validation.FieldRules{
+				validation.Field(&v.Trigger.Project, validation.Required),
+			}
+		}),
 	))
 }
 

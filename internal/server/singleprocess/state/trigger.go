@@ -26,6 +26,10 @@ func (s *State) TriggerPut(t *pb.Trigger) error {
 	defer memTxn.Abort()
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		if t.Project == nil {
+			return status.Error(codes.FailedPrecondition, "A Project is required to create a trigger")
+		}
+
 		if t.Id != "" {
 			var err error
 			_, err = s.triggerGet(dbTxn, memTxn, &pb.Ref_Trigger{Id: t.Id})

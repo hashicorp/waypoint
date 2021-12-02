@@ -52,7 +52,7 @@ func TestServiceTrigger(t *testing.T) {
 
 		// Create, should get an ID back
 		resp, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
-			Trigger: &pb.Trigger{},
+			Trigger: &pb.Trigger{Project: &pb.Ref_Project{Project: "test_proj"}},
 		})
 		require.NoError(err)
 		require.NotNil(resp)
@@ -60,6 +60,17 @@ func TestServiceTrigger(t *testing.T) {
 		require.NotEmpty(result.Id)
 		require.NotEmpty(result.Workspace)
 		require.Equal(result.Workspace.Workspace, "default")
+	})
+
+	t.Run("errors if no project defined", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		resp, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+			Trigger: &pb.Trigger{},
+		})
+		require.Error(err)
+		require.Nil(resp)
 	})
 
 	t.Run("update non-existent", func(t *testing.T) {
@@ -221,20 +232,24 @@ func TestServiceTrigger_ListTriggersWithFilters(t *testing.T) {
 		require.Equal(len(respList.Triggers), 3)
 	})
 
-	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
-		Trigger: &pb.Trigger{
-			Application: &pb.Ref_Application{
-				Application: "another_one",
-				Project:     "secret_project",
-			},
-			Workspace: &pb.Ref_Workspace{
-				Workspace: "staging",
-			},
-		},
-	})
-
 	t.Run("filter to one app", func(t *testing.T) {
 		require := require.New(t)
+
+		_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+			Trigger: &pb.Trigger{
+				Project: &pb.Ref_Project{
+					Project: "secret_project",
+				},
+				Application: &pb.Ref_Application{
+					Application: "another_one",
+					Project:     "secret_project",
+				},
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "staging",
+				},
+			},
+		})
+		require.NoError(err)
 
 		respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{
 			Workspace:   &pb.Ref_Workspace{Workspace: "staging"},
@@ -242,7 +257,7 @@ func TestServiceTrigger_ListTriggersWithFilters(t *testing.T) {
 			Application: &pb.Ref_Application{Project: "secret_project", Application: "another_one"},
 		})
 		require.NoError(err)
-		require.Equal(len(respList.Triggers), 1)
+		require.Equal(1, len(respList.Triggers))
 	})
 
 	t.Run("filter with missing workspace on app returns error", func(t *testing.T) {
