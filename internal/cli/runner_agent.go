@@ -40,6 +40,10 @@ type RunnerAgentCommand struct {
 	// is made available to the plugins so they can alter their behavior for
 	// this unique context.
 	flagODR bool
+
+	// If this is an ODR runner, this should be the ODR profile that it was created
+	// from.
+	flagOdrProfileId string
 }
 
 // This is how long a runner in ODR mode will wait for its job assignment before
@@ -133,7 +137,7 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 
 	if c.flagODR {
 		options = append(options,
-			runnerpkg.WithODR(),
+			runnerpkg.WithODR(c.flagOdrProfileId),
 			runnerpkg.ByIdOnly(),
 			runnerpkg.WithAcceptTimeout(defaultRunnerODRAcceptTimeout),
 		)
@@ -272,6 +276,12 @@ func (c *RunnerAgentCommand) Flags() *flag.Sets {
 			Name:   "odr",
 			Target: &c.flagODR,
 			Usage:  "Indicates to the runner it's operating as an on-demand runner.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "odr-profile-id",
+			Target: &c.flagOdrProfileId,
+			Hidden: true,
 		})
 	})
 }

@@ -148,7 +148,22 @@ func New(opts ...Option) (*Runner, error) {
 	runner.runner = &pb.Runner{
 		Id:       runner.id,
 		ByIdOnly: cfg.byIdOnly,
-		Odr:      cfg.odr,
+	}
+
+	if cfg.odr {
+		runner.runner.Type = &pb.Runner_Odr{
+			Odr: &pb.Runner_TypeODR{
+				ProfileId: cfg.odrProfileId,
+			},
+		}
+	} else if runner.local {
+		runner.runner.Type = &pb.Runner_Local{
+			Local: &pb.Runner_TypeLocal{},
+		}
+	} else {
+		runner.runner.Type = &pb.Runner_Remote{
+			Remote: &pb.Runner_TypeRemote{},
+		}
 	}
 
 	// Setup our runner components list
@@ -267,8 +282,9 @@ func (r *Runner) setState(state *bool, v bool) {
 }
 
 type config struct {
-	byIdOnly bool
-	odr      bool
+	byIdOnly     bool
+	odr          bool
+	odrProfileId string
 }
 
 type Option func(*Runner, *config) error
@@ -323,9 +339,10 @@ func ByIdOnly() Option {
 
 // WithODR configures this runner to be an on-demand runner. This
 // will flag this to the server on registration.
-func WithODR() Option {
+func WithODR(profileId string) Option {
 	return func(r *Runner, cfg *config) error {
 		cfg.odr = true
+		cfg.odrProfileId = profileId
 		return nil
 	}
 }

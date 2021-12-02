@@ -128,7 +128,8 @@ func (s *service) RunnerConfig(
 	// ODR is launched. If we can't find a job, we error and exit which
 	// will also exit the runner.
 	var job *pb.Job
-	if record.Odr {
+
+	if _, ok := record.Type.(*pb.Runner_Odr); ok {
 		// Get a job assignment for this runner, non-blocking
 		sjob, err := s.state.JobPeekForRunner(ctx, record)
 		if err != nil {

@@ -232,6 +232,8 @@ func (c *Project) queueAndStreamJob(
 		}()
 	}
 
+	var assignedRunner *pb.Ref_RunnerId
+
 	for {
 		resp, err := stream.Recv()
 		if err != nil {
@@ -381,6 +383,40 @@ func (c *Project) queueAndStreamJob(
 			if stateEventTimer != nil {
 				stateEventTimer.Stop()
 				stateEventTimer = nil
+			}
+
+			// Check if this job has been assigned a runner for the first time
+			if event.State != nil &&
+				event.State.Job != nil &&
+				event.State.Job.AssignedRunner != nil &&
+				assignedRunner == nil {
+
+				assignedRunner = event.State.Job.AssignedRunner
+
+				runner, err := c.client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: assignedRunner.Id})
+				if err != nil {
+					c.UI.Output("Failed to inspect the runner (id %q) assigned for this operation: %s", assignedRunner.Id, err, terminal.WithErrorStyle())
+				}
+				switch runnerType := runner.Type.(type) {
+				case *pb.Runner_Local:
+					c.UI.Output("Performing operation locally", terminal.WithInfoStyle())
+				case *pb.Runner_Remote:
+					c.UI.Output("Performing this operation on a remote runner with id %q", runner.Id, terminal.WithInfoStyle())
+				case *pb.Runner_Odr:
+					log.Debug("Executing operation on an on-demand runner from profile with ID %q", runnerType.Odr.ProfileId)
+					profile, err := c.client.GetOnDemandRunnerConfig(
+						ctx, &pb.GetOnDemandRunnerConfigRequest{
+							Config: &pb.Ref_OnDemandRunnerConfig{
+								Id: runnerType.Odr.ProfileId,
+							},
+						})
+					if err != nil {
+						c.UI.Output("Performing operation on an on-demand runner from profile with ID %q", runnerType.Odr.ProfileId, terminal.WithInfoStyle())
+						c.UI.Output("Failed inspecting runner profile with id %q: %s", runnerType.Odr.GetProfileId(), err, terminal.WithErrorStyle())
+					} else {
+						c.UI.Output("Performing operation on %q with runner profile %q", profile.Config.PluginType, profile.Config.Name, terminal.WithInfoStyle())
+					}
+				}
 			}
 
 			// For certain states, we do a quality of life UI message if
