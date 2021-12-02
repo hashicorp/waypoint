@@ -3305,7 +3305,7 @@ message ListTriggerRequest {
   Ref.Project project = 2;
 
   // Defaults to all applications in a project, can be filtered to a single application if set.
-  Ref.Application app = 3;
+  Ref.Application application = 3;
 
   // Will filter triggers by the requested labels if set.
   repeated string labels = 4;
