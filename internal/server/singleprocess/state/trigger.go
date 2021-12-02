@@ -173,6 +173,7 @@ func (s *State) triggerGet(
 	return nil, nil
 }
 
+// TODO: implement some kind of filtering?
 func (s *State) triggerList(
 	memTxn *memdb.Txn,
 ) ([]*pb.Ref_Trigger, error) {

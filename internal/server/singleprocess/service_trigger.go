@@ -69,7 +69,5 @@ func (s *service) ListTriggers(
 		return nil, err
 	}
 
-	// TODO: implement filtering based on the request here
-
 	return &pb.ListTriggerResponse{Triggers: result}, nil
 }

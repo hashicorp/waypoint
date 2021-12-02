@@ -141,17 +141,48 @@ func TestServiceTrigger_ListTriggersSimple(t *testing.T) {
 }
 
 func TestServiceTrigger_ListTriggersWithFilters(t *testing.T) {
-	//ctx := context.Background()
+	ctx := context.Background()
 
-	//// Create our server
-	//db := testDB(t)
-	//impl, err := New(WithDB(db))
-	//require.NoError(t, err)
-	//client := server.TestServer(t, impl)
+	// Create our server
+	db := testDB(t)
+	impl, err := New(WithDB(db))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
 
 	// TODO:
 	// create some triggers across workspaces, projects, apps, labels
 	// test that listing with filters returns expected number of triggers
+
+	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+		Trigger: serverptypes.TestValidTrigger(t, nil),
+	})
+	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+		Trigger: serverptypes.TestValidTrigger(t, nil),
+	})
+	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+		Trigger: serverptypes.TestValidTrigger(t, nil),
+	})
+
+	t.Run("list default workspace triggers", func(t *testing.T) {
+		require := require.New(t)
+
+		respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		})
+		require.NoError(err)
+		require.Equal(len(respList.Triggers), 3)
+	})
+
+	// TODO: fix me
+	//t.Run("list non-existent workspace triggers", func(t *testing.T) {
+	//	require := require.New(t)
+
+	//	respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{
+	//		Workspace: &pb.Ref_Workspace{Workspace: "fake"},
+	//	})
+	//	require.NoError(err)
+	//	require.Equal(len(respList.Triggers), 0)
+	//})
 }
 
 func TestServiceTrigger_DeleteTrigger(t *testing.T) {
