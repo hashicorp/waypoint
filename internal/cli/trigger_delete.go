@@ -3,7 +3,10 @@ package cli
 import (
 	"github.com/posener/complete"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 type TriggerDeleteCommand struct {
@@ -23,6 +26,23 @@ func (c *TriggerDeleteCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
+	ctx := c.Ctx
+
+	_, err := c.project.Client().DeleteTrigger(ctx, &pb.DeleteTriggerRequest{
+		Ref: &pb.Ref_Trigger{
+			Name: c.flagTriggerName,
+			Id:   c.flagTriggerId,
+		},
+	})
+	if err != nil {
+		c.ui.Output(
+			"Error deleting trigger: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
+
+	c.ui.Output("Trigger deleted", terminal.WithSuccessStyle())
 
 	return 0
 }
