@@ -129,7 +129,7 @@ func (s *service) RunnerConfig(
 	// will also exit the runner.
 	var job *pb.Job
 
-	if _, ok := record.Type.(*pb.Runner_Odr); ok {
+	if _, ok := record.Kind.(*pb.Runner_Odr); ok {
 		// Get a job assignment for this runner, non-blocking
 		sjob, err := s.state.JobPeekForRunner(ctx, record)
 		if err != nil {

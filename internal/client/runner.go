@@ -91,7 +91,7 @@ func remoteOpPreferred(ctx context.Context, client pb.WaypointClient, project *p
 	}
 	hasRemoteRunner := false
 	for _, runner := range runnersResp.Runners {
-		if _, ok := runner.Type.(*pb.Runner_Remote); ok {
+		if _, ok := runner.Kind.(*pb.Runner_Remote_); ok {
 			// NOTE(izaak): There is currently no way to distinguish between a remote runner and a CLI runner.
 			// So if some other waypoint client is performing an operation at this moment, we will interpret
 			// that as a remote runner, and this will return a false positive.

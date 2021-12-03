@@ -397,10 +397,10 @@ func (c *Project) queueAndStreamJob(
 				if err != nil {
 					c.UI.Output("Failed to inspect the runner (id %q) assigned for this operation: %s", assignedRunner.Id, err, terminal.WithErrorStyle())
 				}
-				switch runnerType := runner.Type.(type) {
-				case *pb.Runner_Local:
+				switch runnerType := runner.Kind.(type) {
+				case *pb.Runner_Local_:
 					c.UI.Output("Performing operation locally", terminal.WithInfoStyle())
-				case *pb.Runner_Remote:
+				case *pb.Runner_Remote_:
 					c.UI.Output("Performing this operation on a remote runner with id %q", runner.Id, terminal.WithInfoStyle())
 				case *pb.Runner_Odr:
 					log.Debug("Executing operation on an on-demand runner from profile with ID %q", runnerType.Odr.ProfileId)

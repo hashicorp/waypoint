@@ -151,18 +151,18 @@ func New(opts ...Option) (*Runner, error) {
 	}
 
 	if cfg.odr {
-		runner.runner.Type = &pb.Runner_Odr{
-			Odr: &pb.Runner_TypeODR{
+		runner.runner.Kind = &pb.Runner_Odr{
+			Odr: &pb.Runner_ODR{
 				ProfileId: cfg.odrProfileId,
 			},
 		}
 	} else if runner.local {
-		runner.runner.Type = &pb.Runner_Local{
-			Local: &pb.Runner_TypeLocal{},
+		runner.runner.Kind = &pb.Runner_Local_{
+			Local: &pb.Runner_Local{},
 		}
 	} else {
-		runner.runner.Type = &pb.Runner_Remote{
-			Remote: &pb.Runner_TypeRemote{},
+		runner.runner.Kind = &pb.Runner_Remote_{
+			Remote: &pb.Runner_Remote{},
 		}
 	}
 
