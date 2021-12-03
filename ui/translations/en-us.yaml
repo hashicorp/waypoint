@@ -33,6 +33,8 @@ page:
     overview:
       heading: 'Overview'
       status: 'Status'
+    logs:
+      heading: Build Logs
   deployments:
     title: 'Deployments'
     destroyed_label: 'Destroyed'
