@@ -321,6 +321,22 @@ func (c *baseCommand) Init(opts ...Option) error {
 	// config parsing, as precedence order means we take the most specific value
 	// which is the -project flag
 	if c.flagProject != "" {
+		// Warn if the project from config and the project from flags conflict
+		if c.refProject != nil && c.flagProject != c.refProject.Project {
+			c.ui.Output(warnProjectFlagMismatch, c.refProject.Project, c.flagProject, terminal.WithWarningStyle())
+
+			// The config we parsed is for some other project, so we don't want to use it
+			c.cfg = nil
+			c.refProject = nil
+			c.refApps = nil
+
+			// NOTE(izaak): unless we force remoteness, we may spawn a local runner which will operate against
+			// the current config (which isn't relevant)
+			c.Log.Debug("Forcing any future operations to occur remotely because we don't have the relevant waypoint.hcl present.")
+			flagLocal := false
+			c.flagLocal = &flagLocal
+		}
+
 		c.refProject = &pb.Ref_Project{Project: c.flagProject}
 	}
 
@@ -720,5 +736,10 @@ short notation -p and -a.
 The current Waypoint server does not support snapshots. Rerunning the command
 with '-snapshot=false' is required, and there will be no automatic data backups
 for the server.
+`)
+
+	warnProjectFlagMismatch = strings.TrimSpace(`
+Warning: Currently in project directory for %q, but will operate 
+against specified project %q
 `)
 )
