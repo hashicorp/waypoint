@@ -158,6 +158,7 @@ func TestValidTrigger(t testing.T, src *pb.Trigger) *pb.Trigger {
 		Workspace: &pb.Ref_Workspace{
 			Workspace: "default",
 		},
+		Operation: &pb.Trigger_Up{},
 	}))
 
 	return src
