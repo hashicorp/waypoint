@@ -150,6 +150,7 @@ func New(opts ...Option) (*Runner, error) {
 		ByIdOnly: cfg.byIdOnly,
 	}
 
+	// Determine what kind of remote runner we are
 	if cfg.odr {
 		runner.runner.Kind = &pb.Runner_Odr{
 			Odr: &pb.Runner_ODR{
@@ -161,6 +162,8 @@ func New(opts ...Option) (*Runner, error) {
 			Local: &pb.Runner_Local{},
 		}
 	} else {
+		// If this runner isn't ODR or Local, by process of elimination it must be a "static" remote runner.
+		// We don't currently have a method to indicate this explicitly.
 		runner.runner.Kind = &pb.Runner_Remote_{
 			Remote: &pb.Runner_Remote{},
 		}
