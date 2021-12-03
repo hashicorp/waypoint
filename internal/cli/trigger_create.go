@@ -27,6 +27,7 @@ type TriggerCreateCommand struct {
 	flagReleasePruneRetain int
 }
 
+// Current supported trigger operation names.
 var triggerOpValues = []string{"build", "push", "deploy", "destroy", "release", "up", "init"}
 
 func (c *TriggerCreateCommand) Run(args []string) int {
@@ -151,7 +152,7 @@ Usage: waypoint trigger create [options]
 
 	If no sequence number is specified, the trigger will use the "latest" sequence
 	for the given operation. I.e. if you create a deploy trigger with no specified
-	build sequence number, it will use whatever the latest build sequence is.
+	build artifact sequence number, it will use whatever the latest artifact sequence is.
 
 ` + c.Flags().Help())
 }

@@ -8,6 +8,9 @@ import (
 
 type TriggerDeleteCommand struct {
 	*baseCommand
+
+	flagTriggerName string
+	flagTriggerId   string
 }
 
 func (c *TriggerDeleteCommand) Run(args []string) int {
@@ -25,7 +28,21 @@ func (c *TriggerDeleteCommand) Run(args []string) int {
 }
 
 func (c *TriggerDeleteCommand) Flags() *flag.Sets {
-	return c.flagSet(flagSetOperation, nil)
+	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+
+		f.StringVar(&flag.StringVar{
+			Name:   "name",
+			Target: &c.flagTriggerName,
+			Usage:  "The name of the trigger URL to delete.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "id",
+			Target: &c.flagTriggerId,
+			Usage:  "The id of the trigger URL to delete.",
+		})
+	})
 }
 
 func (c *TriggerDeleteCommand) AutocompleteArgs() complete.Predictor {
