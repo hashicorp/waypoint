@@ -405,6 +405,33 @@ func Commands(
 			}, nil
 		},
 
+		"trigger": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["trigger"][0],
+				HelpText:     helpText["trigger"][1],
+			}, nil
+		},
+		"trigger create": func() (cli.Command, error) {
+			return &TriggerCreateCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"trigger apply": func() (cli.Command, error) {
+			return &TriggerApplyCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"trigger delete": func() (cli.Command, error) {
+			return &TriggerDeleteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"trigger list": func() (cli.Command, error) {
+			return &TriggerListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"runner": func() (cli.Command, error) {
 			return &helpCommand{
 				SynopsisText: helpText["runner"][0],
@@ -954,6 +981,15 @@ Tokens are the primary form of authentication to Waypoint. Everyone who
 accesses a Waypoint server requires a token.
 
 ` + warnTokenDeprecated,
+	},
+
+	"trigger": {
+		"Trigger management",
+		`
+Trigger management.
+
+Triggers are used to lifecycle operations for Waypoint.
+`,
 	},
 
 	"user": {
