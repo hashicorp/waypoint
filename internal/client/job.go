@@ -52,10 +52,18 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 // This lives separately from DoJob because the logs and exec commands need to conditionally warm up the
 // local job infrastructure, but don't actually create a job (the server does).
 func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx context.Context, err error) {
+	log := c.logger.Named("setupLocalJobSystem")
+	defer func() {
+		log.Debug("result", "isLocal", isLocal)
+	}()
+
 	// Automatically determine if we should use a local or a remote runner
 	newCtx = ctx
 
+	// A nil useLocalRunner means the option was not set explicitly when this client was created.
+	// We'll decide a value for it here, and set it for future runs.
 	if c.useLocalRunner == nil {
+		log.Debug("determining if a local or remote runner should be used for this and future jobs")
 
 		// NOTE(izaak): If in the future we need the full project in other places, we should probably cache it on the parent struct.
 		getProjectResp, err := c.client.GetProject(ctx, &pb.GetProjectRequest{Project: c.project})
