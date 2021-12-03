@@ -1,6 +1,7 @@
 package state
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -8,6 +9,57 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
+
+func TestJobAck(t *testing.T) {
+	t.Run("A job nack unsets the job's assigned runner", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		job := serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})
+		require.NoError(s.JobCreate(job))
+
+		ctx := context.Background()
+		runner := &pb.Runner{
+			Id: "test_runner_id",
+		}
+
+		assignedJob, err := s.JobAssignForRunner(ctx, runner)
+		require.NoError(err)
+		require.Equal(assignedJob.AssignedRunner.Id, runner.Id)
+
+		nackedJob, err := s.JobAck(job.Id, false)
+		require.NoError(err)
+		require.Nil(nackedJob.Job.AssignedRunner)
+	})
+}
+
+func TestJobAssignForRunner(t *testing.T) {
+	t.Run("job assignment sets the job's assigned runner id", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+
+		ctx := context.Background()
+		runner := &pb.Runner{
+			Id: "test_runner_id",
+		}
+
+		job, err := s.JobAssignForRunner(ctx, runner)
+		require.NoError(err)
+		require.Equal(job.AssignedRunner.Id, runner.Id)
+	})
+}
 
 func TestJobsPrune(t *testing.T) {
 	t.Run("removes only completed jobs", func(t *testing.T) {
