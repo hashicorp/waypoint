@@ -149,6 +149,9 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 		require.NotNil(assignment)
 		require.Equal(queueResp.JobId, assignment.Assignment.Job.Id)
 
+		// The assigned runner ID has been set for the job
+		require.Equal(id, assignment.Assignment.Job.AssignedRunner.Id)
+
 		require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
 			Event: &pb.RunnerJobStreamRequest_Ack_{
 				Ack: &pb.RunnerJobStreamRequest_Ack{},
@@ -540,6 +543,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	assignment, ok := resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
 	require.True(ok, "should be an assignment")
 	require.NotNil(assignment)
+	require.Equal(id, assignment.Assignment.Job.AssignedRunner.Id)
 	require.NotEqual(queueResp.JobId, assignment.Assignment.Job.Id)
 	require.IsType(&pb.Job_StartTask{}, assignment.Assignment.Job.Operation)
 
@@ -590,6 +594,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	require.NotNil(assignment)
 	require.Equal(queueResp.JobId, assignment.Assignment.Job.Id)
 	require.Equal(runnerId, assignment.Assignment.Job.TargetRunner.Target.(*pb.Ref_Runner_Id).Id.Id)
+	require.Equal(runnerId, assignment.Assignment.Job.AssignedRunner.Id)
 
 	require.NoError(rs2.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Ack_{
