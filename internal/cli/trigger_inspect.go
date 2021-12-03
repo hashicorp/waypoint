@@ -77,6 +77,8 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 		app = trigger.Application.Application
 	}
 
+	// TODO: might have to get a case statement for figuring out the operation
+
 	c.ui.Output("Trigger URL config:", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{

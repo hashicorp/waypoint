@@ -3,7 +3,10 @@ package cli
 import (
 	"github.com/posener/complete"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 type TriggerCreateCommand struct {
@@ -16,10 +19,10 @@ type TriggerCreateCommand struct {
 	flagTriggerNoAuth      bool
 
 	// Operation options
-	flagArtifactSeq string
-	flagBuildSeq    string
-	flagDeploySeq   string
-	flagReleaseSeq  string
+	flagArtifactSeq int
+	flagBuildSeq    int
+	flagDeploySeq   int
+	flagReleaseSeq  int
 	flagDisablePush bool
 
 	// Release options
@@ -28,7 +31,8 @@ type TriggerCreateCommand struct {
 }
 
 // Current supported trigger operation names.
-var triggerOpValues = []string{"build", "push", "deploy", "destroy", "release", "up", "init"}
+var triggerOpValues = []string{"build", "push", "deploy", "destroy-workspace",
+	"destroy-deployment", "release", "up", "init"}
 
 func (c *TriggerCreateCommand) Run(args []string) int {
 	// Initialize. If we fail, we just exit since Init handles the UI.
@@ -40,6 +44,156 @@ func (c *TriggerCreateCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
+	ctx := c.Ctx
+
+	createTrigger := &pb.Trigger{
+		Name:          c.flagTriggerName,
+		Description:   c.flagTriggerDescription,
+		Labels:        c.flagTriggerLabels,
+		Authenticated: !c.flagTriggerNoAuth,
+		Workspace: &pb.Ref_Workspace{
+			Workspace: c.flagWorkspace,
+		},
+		Project: &pb.Ref_Project{
+			Project: c.flagProject,
+		},
+		Application: &pb.Ref_Application{
+			Application: c.flagApp,
+			Project:     c.flagProject,
+		},
+	}
+
+	// Set the operation
+	switch {
+	case c.flagTriggerOperation == "build":
+		createTrigger.Operation = &pb.Trigger_Build{
+			Build: &pb.Job_BuildOp{
+				DisablePush: c.flagDisablePush,
+			},
+		}
+	case c.flagTriggerOperation == "push":
+		if c.flagBuildSeq == 0 {
+			c.ui.Output("Must specify a build sequence number for the \"push\" operation: %s",
+				c.Flags().Help(), terminal.WithErrorStyle())
+			return 1
+		}
+
+		// TODO: Check ws, proj, app too? maybe not, API could check it
+
+		createTrigger.Operation = &pb.Trigger_Push{
+			Push: &pb.Job_PushOp{
+				Build: &pb.Build{
+					Sequence: uint64(c.flagBuildSeq),
+					Workspace: &pb.Ref_Workspace{
+						Workspace: c.flagWorkspace,
+					},
+					Application: &pb.Ref_Application{
+						Application: c.flagApp,
+						Project:     c.flagProject,
+					},
+				},
+			},
+		}
+	case c.flagTriggerOperation == "deploy":
+		// TODO/NOTE: If no sequence number is specififed (i.e. seq 0), the backend should default to using the "latest" artifact instead
+
+		createTrigger.Operation = &pb.Trigger_Deploy{
+			Deploy: &pb.Job_DeployOp{
+				Artifact: &pb.PushedArtifact{
+					Sequence: uint64(c.flagBuildSeq),
+					Workspace: &pb.Ref_Workspace{
+						Workspace: c.flagWorkspace,
+					},
+					Application: &pb.Ref_Application{
+						Application: c.flagApp,
+						Project:     c.flagProject,
+					},
+				},
+			},
+		}
+	case c.flagTriggerOperation == "destroy-workspace":
+		// NOTE(briancain): I don't think this operation actually works, takes no arguments...
+		createTrigger.Operation = &pb.Trigger_Destroy{
+			Destroy: &pb.Job_DestroyOp{
+				Target: &pb.Job_DestroyOp_Workspace{},
+			},
+		}
+	case c.flagTriggerOperation == "destroy-deployment":
+		createTrigger.Operation = &pb.Trigger_Destroy{
+			Destroy: &pb.Job_DestroyOp{
+				Target: &pb.Job_DestroyOp_Deployment{
+					Deployment: &pb.Deployment{
+						Sequence: uint64(c.flagDeploySeq),
+						Workspace: &pb.Ref_Workspace{
+							Workspace: c.flagWorkspace,
+						},
+						Application: &pb.Ref_Application{
+							Application: c.flagApp,
+							Project:     c.flagProject,
+						},
+					},
+				},
+			},
+		}
+	case c.flagTriggerOperation == "release":
+		// if no deployment seq is specified, the backend should default to latest
+		rt := &pb.Trigger_Release{
+			Release: &pb.Job_ReleaseOp{
+				Deployment: &pb.Deployment{
+					Sequence: uint64(c.flagDeploySeq),
+					Workspace: &pb.Ref_Workspace{
+						Workspace: c.flagWorkspace,
+					},
+					Application: &pb.Ref_Application{
+						Application: c.flagApp,
+						Project:     c.flagProject,
+					},
+				},
+				Prune: c.flagReleasePrune,
+			},
+		}
+
+		if c.flagReleasePruneRetain > 0 {
+			rt.Release.PruneRetain = int32(c.flagReleasePruneRetain)
+			rt.Release.PruneRetainOverride = true
+		}
+
+		createTrigger.Operation = rt
+	case c.flagTriggerOperation == "up":
+		releaseOp := &pb.Job_ReleaseOp{
+			Prune: c.flagReleasePrune,
+		}
+
+		if c.flagReleasePruneRetain > 0 {
+			releaseOp.PruneRetain = int32(c.flagReleasePruneRetain)
+			releaseOp.PruneRetainOverride = true
+		}
+
+		createTrigger.Operation = &pb.Trigger_Up{
+			Up: &pb.Job_UpOp{
+				Release: releaseOp,
+			},
+		}
+	case c.flagTriggerOperation == "init":
+		createTrigger.Operation = &pb.Trigger_Init{
+			Init: &pb.Job_InitOp{},
+		}
+	default:
+		// This shouldn't happened because the flag package should technically be handling the parsing
+		// and fail if any value was not recognized in the defined Enum
+		c.ui.Output("Unrecognized operation type %q: ", c.flagTriggerOperation, terminal.WithErrorStyle())
+		return 1
+	}
+
+	resp, err := c.project.Client().UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+		Trigger: createTrigger,
+	})
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return 1
+	}
+
+	c.ui.Output("Trigger %q has been created", resp.Trigger.Name, terminal.WithSuccessStyle())
 
 	return 0
 }
@@ -84,7 +238,7 @@ func (c *TriggerCreateCommand) Flags() *flag.Sets {
 
 		// Operation specific flags
 		fo := set.NewSet("Operation Options")
-		fo.StringVar(&flag.StringVar{
+		fo.IntVar(&flag.IntVar{
 			Name:   "artifact-sequence",
 			Target: &c.flagArtifactSeq,
 			Usage:  "The sequence number for the artifact to use in an operation.",
@@ -97,19 +251,19 @@ func (c *TriggerCreateCommand) Flags() *flag.Sets {
 			Usage:   "Disables pushing a build artifact to any configured registry for build operations.",
 		})
 
-		fo.StringVar(&flag.StringVar{
+		fo.IntVar(&flag.IntVar{
 			Name:   "build-sequence",
 			Target: &c.flagBuildSeq,
 			Usage:  "The sequence number for the build to use in an operation.",
 		})
 
-		fo.StringVar(&flag.StringVar{
+		fo.IntVar(&flag.IntVar{
 			Name:   "deployment-sequence",
 			Target: &c.flagDeploySeq,
 			Usage:  "The sequence number for the deployment to use in an operation.",
 		})
 
-		fo.StringVar(&flag.StringVar{
+		fo.IntVar(&flag.IntVar{
 			Name:   "release-sequence",
 			Target: &c.flagReleaseSeq,
 			Usage:  "The sequence number for the release to use in an operation.",
