@@ -88,7 +88,10 @@ func TestServiceRunnerConfig_odrNoJob(t *testing.T) {
 	require.NoError(stream.Send(&pb.RunnerConfigRequest{
 		Event: &pb.RunnerConfigRequest_Open_{
 			Open: &pb.RunnerConfigRequest_Open{
-				Runner: &pb.Runner{Id: id, Odr: true},
+				Runner: &pb.Runner{
+					Id:   id,
+					Kind: &pb.Runner_Odr{Odr: &pb.Runner_ODR{ProfileId: "test-profile"}},
+				},
 			},
 		},
 	}))
@@ -224,7 +227,10 @@ func TestServiceRunnerConfig_odrScopedConfig(t *testing.T) {
 	require.NoError(stream.Send(&pb.RunnerConfigRequest{
 		Event: &pb.RunnerConfigRequest_Open_{
 			Open: &pb.RunnerConfigRequest_Open{
-				Runner: &pb.Runner{Id: id, Odr: true},
+				Runner: &pb.Runner{
+					Id:   id,
+					Kind: &pb.Runner_Odr{Odr: &pb.Runner_ODR{ProfileId: "test-profile"}},
+				},
 			},
 		},
 	}))
