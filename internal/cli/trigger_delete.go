@@ -2,6 +2,8 @@ package cli
 
 import (
 	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -30,19 +32,21 @@ func (c *TriggerDeleteCommand) Run(args []string) int {
 
 	_, err := c.project.Client().DeleteTrigger(ctx, &pb.DeleteTriggerRequest{
 		Ref: &pb.Ref_Trigger{
-			Name: c.flagTriggerName,
-			Id:   c.flagTriggerId,
+			Id: c.flagTriggerId,
 		},
 	})
 	if err != nil {
-		c.ui.Output(
-			"Error deleting trigger: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
+		if status.Code(err) == codes.NotFound {
+			c.ui.Output("Trigger configuration for %q not found", c.flagTriggerId, clierrors.Humanize(err),
+				terminal.WithErrorStyle())
+			return 1
+		}
+
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
-	c.ui.Output("Trigger deleted", terminal.WithSuccessStyle())
+	c.ui.Output("Trigger %q deleted", c.flagTriggerId, terminal.WithSuccessStyle())
 
 	return 0
 }
@@ -50,12 +54,6 @@ func (c *TriggerDeleteCommand) Run(args []string) int {
 func (c *TriggerDeleteCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
-
-		f.StringVar(&flag.StringVar{
-			Name:   "name",
-			Target: &c.flagTriggerName,
-			Usage:  "The name of the trigger URL to delete.",
-		})
 
 		f.StringVar(&flag.StringVar{
 			Name:   "id",
