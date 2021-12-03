@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/pkg/finalcontext"
+	"github.com/hashicorp/waypoint/internal/pkg/gitdirty"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
 )
@@ -48,7 +51,7 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 // setupLocalJobSystem does the pre-work required to run jobs locally. This includes:
 // - figure out if jobs should be executed locally or remotely.
 // - if job should be executed locally, start a local runner
-// - FUTURE: if a job should be executed remotely, but local VCS is present and dirty, warn.
+// - if jobs will be executed remotely, but local VCS is present and dirty, warn.
 // This lives separately from DoJob because the logs and exec commands need to conditionally warm up the
 // local job infrastructure, but don't actually create a job (the server does).
 func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx context.Context, err error) {
@@ -60,12 +63,15 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 	// Automatically determine if we should use a local or a remote runner
 	newCtx = ctx
 
+	// We may use this in multiple places, so we save the result if we obtain it
+	// NOTE(izaak): If in the future we need the full project in other places in this codepath, we should probably cache it early on the parent struct.
+	var project *pb.Project
+
 	// A nil useLocalRunner means the option was not set explicitly when this client was created.
 	// We'll decide a value for it here, and set it for future runs.
 	if c.useLocalRunner == nil {
 		log.Debug("determining if a local or remote runner should be used for this and future jobs")
 
-		// NOTE(izaak): If in the future we need the full project in other places, we should probably cache it on the parent struct.
 		getProjectResp, err := c.client.GetProject(ctx, &pb.GetProjectRequest{Project: c.project})
 		if err != nil {
 			if status.Code(err) == codes.NotFound {
@@ -74,7 +80,8 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 				return false, newCtx, errors.Wrapf(err, "failed to get project %s", c.project.Project)
 			}
 		}
-		remotePreferred, err := remoteOpPreferred(ctx, c.client, getProjectResp.Project, c.logger)
+		project = getProjectResp.Project
+		remotePreferred, err := remoteOpPreferred(ctx, c.client, project, c.logger)
 		if err != nil {
 			return false, newCtx, errors.Wrapf(err, "failed to determine if job should run locally or remotely")
 		}
@@ -94,6 +101,74 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 		// Inject the metadata about the client, such as the runner id if it is running
 		// a local runner.
 		newCtx = grpcmetadata.AddRunner(ctx, c.activeRunner.Id())
+	} else {
+		// We're about to run a remote op. We should check if we have a dirty local vcs,
+		// because the user may expect their local changes to be reflected in the remote
+		// op execution, and they won't.
+		gitDirtyErr := func() error {
+			// Running this inside of an anonymous func so that we can return early
+
+			if c.configPath == "" {
+				// No local project dir, so nothing is dirty!
+				return nil
+			}
+
+			if !gitdirty.GitInstalled() {
+				return errors.New("git is not installed - unable to check if local git directory is dirty for warning purposes")
+			}
+
+			repoRoot, err := gitdirty.GetRepoTopLevel(log, c.configPath)
+			if err != nil {
+				return errors.Wrapf(err, "failed to find the top level of the repository that contains %q", c.configPath)
+			}
+
+			// Get the project if we haven't already
+			if project == nil {
+				getProjectResp, err := c.client.GetProject(ctx, &pb.GetProjectRequest{Project: c.project})
+				if err != nil {
+					if status.Code(err) == codes.NotFound {
+						return fmt.Errorf("Project %q was not found! Please ensure that 'waypoint init' was run with this project.", c.project.Project)
+					} else {
+						return errors.Wrapf(err, "failed to get project %s", c.project.Project)
+					}
+				}
+				project = getProjectResp.Project
+			}
+
+			gitDs, ok := project.DataSource.Source.(*pb.Job_DataSource_Git)
+
+			if !ok {
+				// The remote op will likely fail anyway, because it needs a remote-capable datasource.
+				log.Debug("local config directory is a git repo, but project has non-remote datasource type. Will not attempt dirty git warning.",
+					"project datasource type", fmt.Sprintf("%t", project.DataSource.Source),
+				)
+				return nil
+			}
+
+			var dirty bool
+			if gitDs.Git.Path != "" {
+				diffPath := filepath.Join(repoRoot, gitDs.Git.Path)
+				dirty, err = gitdirty.FileIsDirty(log, repoRoot, gitDs.Git.Url, gitDs.Git.Ref, diffPath)
+				if err != nil {
+					return errors.Wrapf(err, "failed to diff repo at %q subpath %q against remote with url %q ref %q",
+						repoRoot, diffPath, gitDs.Git.Url, gitDs.Git.Ref,
+					)
+				}
+			} else {
+				dirty, err = gitdirty.RepoIsDirty(log, repoRoot, gitDs.Git.Url, gitDs.Git.Ref)
+				return errors.Wrapf(err, "failed to diff repo at %q against remote with url %q ref %q",
+					repoRoot, gitDs.Git.Url, gitDs.Git.Ref,
+				)
+			}
+			if dirty {
+				c.UI.Output(warnGitDirty, terminal.WithWarningStyle())
+			}
+
+			return nil
+		}()
+		if gitDirtyErr != nil {
+			log.Warn("failed to determine if local vcs is dirty", "err", gitDirtyErr)
+		}
 	}
 	return *c.useLocalRunner, newCtx, nil
 }
@@ -423,3 +498,13 @@ func (c *Project) queueAndStreamJob(
 // to accomidate the additional time before the job was picked up when testing in
 // local Docker.
 const stateEventPause = 3000 * time.Millisecond
+
+var (
+	warnGitDirty = strings.TrimSpace(`
+       There are local changes that do not match the remote repository. By default, 
+       Waypoint will perform this operation using a remote runner that will use the 
+       remote repository’s git ref and not these local changes. For these changes 
+       to be used for future operations, either commit and push, or run the operation 
+       locally with the -local flag.
+	`)
+)

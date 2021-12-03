@@ -23,6 +23,24 @@ func init() {
 	githubStyleHttpRemoteRegexp = regexp.MustCompile(`http[s]?:\/\/(.*?\..*?)\/(.*)`) // Example: https://git.test/testorg/testrepo.git
 }
 
+// GitInstalled checks if the command-line tool `git` is installed
+func GitInstalled() bool {
+	if _, err := exec.LookPath("git"); err == nil {
+		return true
+	}
+	return false
+}
+
+// GetRepoTopLevel returns the path to the root of the repository that contains pathWithinVcs.
+// Equivalent to git rev-parse --show-toplevel
+func GetRepoTopLevel(log hclog.Logger, pathWithinVcs string) (string, error) {
+	out, err := runGitCommand(log, pathWithinVcs, "rev-parse", "--show-toplevel")
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(strings.TrimRight(out, "\n")), nil
+}
+
 // RepoIsDirty looks for unstaged, staged, and committed (but not pushed)
 // changes on the local GitDirty.path repo not on the specified remote
 // url and branch.
