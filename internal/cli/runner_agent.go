@@ -276,11 +276,13 @@ func (c *RunnerAgentCommand) Flags() *flag.Sets {
 			Name:   "odr",
 			Target: &c.flagODR,
 			Usage:  "Indicates to the runner it's operating as an on-demand runner.",
+			Hidden: true,
 		})
 
 		f.StringVar(&flag.StringVar{
 			Name:   "odr-profile-id",
 			Target: &c.flagOdrProfileId,
+			Usage:  "The ID of the odr profile used to create the task that is running this runner.",
 			Hidden: true,
 		})
 	})
