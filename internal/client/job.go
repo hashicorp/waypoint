@@ -246,6 +246,7 @@ func (c *Project) queueAndStreamJob(
 		}
 
 		switch event := resp.Event.(type) {
+
 		case *pb.GetJobStreamResponse_Complete_:
 			completed = true
 
