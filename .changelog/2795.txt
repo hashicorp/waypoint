@@ -1,0 +1,4 @@
+```release-note:improvement
+cli: Report where each operation runs (locally vs remotely)
+```
+
