@@ -431,6 +431,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"trigger inspect": func() (cli.Command, error) {
+			return &TriggerInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"runner": func() (cli.Command, error) {
 			return &helpCommand{
