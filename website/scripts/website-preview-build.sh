@@ -19,10 +19,15 @@ cp -R ./website-preview/public/ ./public
 # Change into the cloned dev-portal directory
 cd ./website-preview
 # Install dependencies
-git checkout zs.cleanup-refine-migration
+git checkout zs.refine-preview-modes
 npm i --production=false
 # Delete other products' docs pages,
 # these will just increase build times
+# TODO instead of doing thing, should perhaps
+# TODO delete /pages/_proxied-dot-io/boundary
+# TODO entirely? Such routes will be redirected
+# TODO anyways, so not point wasting time
+# TODO in rendering them.
 rm -rf ./src/pages/_proxied-dot-io/boundary/docs
 rm -rf ./src/pages/_proxied-dot-io/boundary/api-docs
 # Build the site
