@@ -38,6 +38,6 @@ npm run build
 # so that Vercel's NextJS preset picks up on the build output
 echo "Listing files after build..."
 ls -a
-# echo "Copying .next output to project root..."
-# cp -R .next/ ../.next
+echo "Copying .next output to project root..."
+cp -R .next/ ../.next
 echo "Done."
