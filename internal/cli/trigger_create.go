@@ -193,7 +193,7 @@ func (c *TriggerCreateCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.ui.Output("Trigger %q has been created", resp.Trigger.Name, terminal.WithSuccessStyle())
+	c.ui.Output("Trigger %q (%s) has been created", resp.Trigger.Name, resp.Trigger.Id, terminal.WithSuccessStyle())
 
 	return 0
 }
