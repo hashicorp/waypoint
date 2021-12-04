@@ -9,12 +9,6 @@ echo "Done"
 # Clone the dev-portal repo in ./website-preview
 git config --global credential.helper store
 git clone "https://zchsh:${GITHUB_WEBSITE_PREVIEW_PAT}@github.com/hashicorp/dev-portal.git" website-preview
-# Copy all local content into the cloned dev-portal directory
-# TODO: may be able to avoid, fix in docs-page
-# TODO: the "include partials" remark plugin path needs
-# TODO: to be an arg of renderPageMdx, not fixed. ref:
-# TODO: https://github.com/hashicorp/react-components/blob/a546b9dc9a874df81a324b9e54e4fb1034b79a5d/packages/docs-page/render-page-mdx.js#L14
-cp -R ./content/ ./website-preview/content
 # Merge the local images (all in ./public/img) into
 # the shared dev-portal public folder
 cp -R ./public/img/** ./website-preview/public/img/
