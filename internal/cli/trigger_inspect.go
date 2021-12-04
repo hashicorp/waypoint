@@ -77,7 +77,32 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 		app = trigger.Application.Application
 	}
 
-	// TODO: might have to get a case statement for figuring out the operation
+	var opStr string
+	switch triggerOpType := trigger.Operation.(type) {
+	case *pb.Trigger_Build:
+		opStr = "build operation"
+	case *pb.Trigger_Push:
+		opStr = "push operation"
+	case *pb.Trigger_Deploy:
+		opStr = "deploy operation"
+	case *pb.Trigger_Destroy:
+		switch triggerOpType.Destroy.Target.(type) {
+		case *pb.Job_DestroyOp_Workspace:
+			opStr = "destroy workspace operation"
+		case *pb.Job_DestroyOp_Deployment:
+			opStr = "destroy deployment operation"
+		default:
+			opStr = "unknown destroy operation target"
+		}
+	case *pb.Trigger_Release:
+		opStr = "release operation"
+	case *pb.Trigger_Up:
+		opStr = "up operation"
+	case *pb.Trigger_Init:
+		opStr = "init operation"
+	default:
+		opStr = fmt.Sprintf("unknown operation: %T", triggerOpType)
+	}
 
 	c.ui.Output("Trigger URL config:", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
@@ -94,7 +119,7 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 			Name: "Authenticated", Value: trigger.Authenticated,
 		},
 		{
-			Name: "Operation", Value: trigger.Operation,
+			Name: "Operation", Value: opStr,
 		},
 		{
 			Name: "Workspace", Value: ws,
