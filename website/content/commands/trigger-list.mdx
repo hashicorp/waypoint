@@ -1,0 +1,44 @@
+---
+layout: commands
+page_title: 'Commands: Trigger list'
+sidebar_title: 'trigger list'
+description: 'List trigger URL configurations on Waypoint server'
+---
+
+# Waypoint Trigger list
+
+Command: `waypoint trigger list`
+
+List trigger URL configurations on Waypoint server
+
+@include "commands/trigger-list_desc.mdx"
+
+## Usage
+
+Usage: `waypoint trigger list [options]`
+
+List trigger URL configurations on Waypoint Server.
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-project=<string>` (`-p`) - Project to target.
+- `-workspace=<string>` (`-w`) - Workspace to operate in.
+
+#### Operation Options
+
+- `-label=<key=value>` - Labels to set for this operation. Can be specified multiple times.
+- `-local` - True to use a local runner to execute the operation, false to use a remote runner.
+  If unset, Waypoint will automatically determine where the operation will occur,
+  defaulting to remote if possible.
+- `-remote-source=<key=value>` - Override configurations for how remote runners source data. This is specified to the data source type being used in your configuration. This is used for example to set a specific Git ref to run against.
+- `-var=<key=value>` - Variable value to set for this operation. Can be specified multiple times.
+- `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "_.auto.wpvars" or "_.auto.wpvars.json" files are present, they will be automatically loaded.
+
+#### Command Options
+
+- `-trigger-label=<string>` - A collection of labels to filter on. If the requested label does not match any defined trigger URL, it will be omitted from the results. Can be specified multiple times.
+- `-json` - Output trigger URL configuration list information as JSON. This includes more fields since this is the complete API structure.
+
+@include "commands/trigger-list_more.mdx"

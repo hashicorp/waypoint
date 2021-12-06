@@ -1,0 +1,65 @@
+---
+layout: commands
+page_title: 'Commands: Trigger apply'
+sidebar_title: 'trigger apply'
+description: 'Generate and Update a trigger URL and register it to Waypoint server'
+---
+
+# Waypoint Trigger apply
+
+Command: `waypoint trigger apply`
+
+Generate and Update a trigger URL and register it to Waypoint server
+
+@include "commands/trigger-apply_desc.mdx"
+
+## Usage
+
+Usage: `waypoint trigger apply [options]`
+
+Create or update a trigger URL to Waypoint Server.
+
+    If no sequence number is specified, the trigger will use the "latest" sequence
+    for the given operation. I.e. if you create a deploy trigger with no specified
+    build artifact sequence number, it will use whatever the latest artifact sequence is.
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-project=<string>` (`-p`) - Project to target.
+- `-workspace=<string>` (`-w`) - Workspace to operate in.
+
+#### Operation Options
+
+- `-label=<key=value>` - Labels to set for this operation. Can be specified multiple times.
+- `-local` - True to use a local runner to execute the operation, false to use a remote runner.
+  If unset, Waypoint will automatically determine where the operation will occur,
+  defaulting to remote if possible.
+- `-remote-source=<key=value>` - Override configurations for how remote runners source data. This is specified to the data source type being used in your configuration. This is used for example to set a specific Git ref to run against.
+- `-var=<key=value>` - Variable value to set for this operation. Can be specified multiple times.
+- `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "_.auto.wpvars" or "_.auto.wpvars.json" files are present, they will be automatically loaded.
+
+#### Command Options
+
+- `-name=<string>` - The name the trigger configuration should be defined as.
+- `-id=<string>` - If specified, will look up an existing trigger by this id and attempt to update the configuration.
+- `-description=<string>` - A human readable description about the trigger URL configuration.
+- `-trigger-label=<string>` - A collection of labels to apply to the trigger URL configuration. Can be specified multiple times.
+- `-no-auth` - If set, the trigger URL configuration will not require authentication to initiate a request.
+- `-op=<string>` - The operation the trigger should execute when requested. One possible value from: build, push, deploy, destroy-workspace, destroy-deployment, release, up, init.
+
+#### Operation Options
+
+- `-artifact-sequence=<int>` - The sequence number for the artifact to use in an operation.
+- `-disable-push` - Disables pushing a build artifact to any configured registry for build operations.
+- `-build-sequence=<int>` - The sequence number for the build to use in an operation.
+- `-deployment-sequence=<int>` - The sequence number for the deployment to use in an operation.
+- `-release-sequence=<int>` - The sequence number for the release to use in an operation.
+
+#### Release Operation Options
+
+- `-prune` - If true, will prune deployments that aren't released.
+- `-prune-retain=<int>` - This sets the number of unreleased deployments to retain when pruning.
+
+@include "commands/trigger-apply_more.mdx"
