@@ -264,9 +264,12 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		return 1
 	}
 
-	// TODO(briancain): update output to show trigger URL with wp server attached once http service is implemented
 	c.ui.Output("Trigger %q (%s) has been %s", resp.Trigger.Name, resp.Trigger.Id,
 		action, terminal.WithSuccessStyle())
+
+	c.ui.Output(" Trigger ID: %s", resp.Trigger.Id, terminal.WithSuccessStyle())
+	// TODO(briancain): update output to show trigger URL with wp server attached once http service is implemented
+	//c.ui.Output("Trigger URL: %s", resp.TriggerURL, terminal.WithSuccessStyle())
 
 	return 0
 }
