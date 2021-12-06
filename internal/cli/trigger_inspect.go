@@ -17,9 +17,8 @@ import (
 type TriggerInspectCommand struct {
 	*baseCommand
 
-	flagTriggerName string
-	flagTriggerId   string
-	flagJson        bool
+	flagTriggerId string
+	flagJson      bool
 }
 
 func (c *TriggerInspectCommand) Run(args []string) int {
@@ -32,12 +31,18 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
+
+	if len(c.args) == 0 && c.flagTriggerId == "" {
+		c.ui.Output("Trigger ID required.\n\n%s", c.Help(), terminal.WithErrorStyle())
+		return 1
+	}
+	c.flagTriggerId = c.args[0]
+
 	ctx := c.Ctx
 
 	resp, err := c.project.Client().GetTrigger(ctx, &pb.GetTriggerRequest{
 		Ref: &pb.Ref_Trigger{
-			Name: c.flagTriggerName,
-			Id:   c.flagTriggerId,
+			Id: c.flagTriggerId,
 		},
 	})
 	if err != nil {
@@ -174,7 +179,7 @@ func (c *TriggerInspectCommand) Synopsis() string {
 
 func (c *TriggerInspectCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint trigger inspect [options]
+Usage: waypoint trigger inspect [options] trigger-id
 
   Inspect a trigger URL from Waypoint Server.
 
