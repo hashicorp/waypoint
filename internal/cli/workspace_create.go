@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -23,7 +21,6 @@ func (c *WorkspaceCreateCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(flagSet),
 		WithNoConfig(),
-		WithNoLocalServer(),
 	); err != nil {
 		return 1
 	}
@@ -54,7 +51,7 @@ func (c *WorkspaceCreateCommand) Run(args []string) int {
 	// defensive.
 	if resp.Workspace == nil {
 		c.ui.Output(
-			fmt.Sprintf("no workspace returned for create command with name %q", workspaceName),
+			"no workspace returned for create command with name %q", workspaceName,
 			terminal.WithErrorStyle(),
 		)
 		return 1
@@ -63,7 +60,7 @@ func (c *WorkspaceCreateCommand) Run(args []string) int {
 	// the UpsertWorkspace call is idempotent, and does not return any
 	// indication if the workspace was created or if it already existed, so we
 	// report a generic response
-	c.ui.Output("Workspace registered with the server")
+	c.ui.Output("Workspace %q registered with the server", workspaceName, terminal.WithSuccessStyle())
 
 	return 0
 }
@@ -86,11 +83,11 @@ func (c *WorkspaceCreateCommand) Synopsis() string {
 
 func (c *WorkspaceCreateCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint workspace create <name>
+Usage: waypoint workspace create [options] <name>
 
   Create a workspace in Waypoint with the given value. If a workspace with the
-	given name already exists, no error will be returned. This command ignores
-	the -workspace flag.
+  given name already exists, no error will be returned. This command ignores
+  the -workspace flag.
 
 ` + c.Flags().Help())
 }
