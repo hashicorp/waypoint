@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -16,6 +17,8 @@ type TriggerListCommand struct {
 	*baseCommand
 
 	flagTriggerLabels []string
+
+	flagJson bool
 }
 
 func (c *TriggerListCommand) Run(args []string) int {
@@ -60,6 +63,21 @@ func (c *TriggerListCommand) Run(args []string) int {
 	}
 
 	if len(resp.Triggers) == 0 {
+		return 0
+	}
+
+	if c.flagJson {
+		var m jsonpb.Marshaler
+		m.Indent = "\t"
+		for _, t := range resp.Triggers {
+			str, err := m.MarshalToString(t)
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+
+			fmt.Println(str)
+		}
 		return 0
 	}
 
@@ -139,6 +157,13 @@ func (c *TriggerListCommand) Flags() *flag.Sets {
 			Usage: "A collection of labels to filter on. If the requested label does " +
 				"not match any defined trigger URL, it will be omitted from the results. " +
 				"Can be specified multiple times.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "json",
+			Target: &c.flagJson,
+			Usage: "Output trigger URL configuration list information as JSON. This includes " +
+				"more fields since this is the complete API structure.",
 		})
 
 	})
