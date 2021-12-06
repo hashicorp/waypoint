@@ -14,6 +14,10 @@ import (
 type TriggerApplyCommand struct {
 	*baseCommand
 
+	// if true, this command will update the trigger. Set by invoking
+	// `trigger update` as opposed to `trigger create`.
+	Update bool
+
 	flagTriggerName        string
 	flagTriggerId          string
 	flagTriggerDescription string
@@ -51,6 +55,11 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 
 	var diffTrigger *pb.Trigger
 	if c.flagTriggerId != "" {
+		if !c.Update {
+			c.ui.Output("Cannot specify id on create, must call 'waypoint trigger update'", terminal.WithErrorStyle())
+			return 1
+		}
+
 		// Look for an existing trigger if id specified
 		respTrigger, err := c.project.Client().GetTrigger(ctx, &pb.GetTriggerRequest{
 			Ref: &pb.Ref_Trigger{
@@ -63,6 +72,12 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		}
 
 		diffTrigger = respTrigger.Trigger
+	} else {
+		if c.Update {
+			c.ui.Output("Cannot update a trigger without specifying an id.\n\n%s",
+				c.Help(), terminal.WithErrorStyle())
+			return 1
+		}
 	}
 
 	if diffTrigger != nil {
@@ -360,18 +375,35 @@ func (c *TriggerApplyCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *TriggerApplyCommand) Synopsis() string {
-	return "Generate and Update a trigger URL and register it to Waypoint server"
+	if c.Update {
+		return "Update a trigger URL and register it to Waypoint server"
+	} else {
+		return "Create and register a trigger URL and register it to Waypoint server"
+	}
 }
 
 func (c *TriggerApplyCommand) Help() string {
-	return formatHelp(`
-Usage: waypoint trigger apply [options]
+	if c.Update {
+		return formatHelp(`
+Usage: waypoint trigger update [options]
 
-  Create or update a trigger URL to Waypoint Server.
+  Update a trigger URL to Waypoint Server.
 
   If no sequence number is specified, the trigger will use the "latest" sequence
   for the given operation. I.e. if you create a deploy trigger with no specified
   build artifact sequence number, it will use whatever the latest artifact sequence is.
 
 ` + c.Flags().Help())
+	} else {
+		return formatHelp(`
+Usage: waypoint trigger create [options]
+
+  Create a trigger URL to Waypoint Server.
+
+  If no sequence number is specified, the trigger will use the "latest" sequence
+  for the given operation. I.e. if you create a deploy trigger with no specified
+  build artifact sequence number, it will use whatever the latest artifact sequence is.
+
+` + c.Flags().Help())
+	}
 }

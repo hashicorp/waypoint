@@ -243,8 +243,12 @@
     "path": "status"
   },
   {
-    "title": "trigger apply",
-    "path": "trigger-apply"
+    "title": "trigger create",
+    "path": "trigger-create"
+  },
+  {
+    "title": "trigger update",
+    "path": "trigger-update"
   },
   {
     "title": "trigger delete",
