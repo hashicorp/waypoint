@@ -243,6 +243,22 @@
     "path": "status"
   },
   {
+    "title": "trigger apply",
+    "path": "trigger-apply"
+  },
+  {
+    "title": "trigger delete",
+    "path": "trigger-delete"
+  },
+  {
+    "title": "trigger inspect",
+    "path": "trigger-inspect"
+  },
+  {
+    "title": "trigger list",
+    "path": "trigger-list"
+  },
+  {
     "title": "user inspect",
     "path": "user-inspect"
   },
