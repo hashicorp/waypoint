@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"strings"
+
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -74,6 +76,16 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		if len(c.flagTriggerLabels) == 0 {
 			c.flagTriggerLabels = diffTrigger.Labels
 		}
+
+		if diffTrigger.Workspace != nil {
+			c.flagWorkspace = diffTrigger.Workspace.Workspace
+		}
+		if diffTrigger.Project != nil {
+			c.flagProject = diffTrigger.Project.Project
+		}
+		if diffTrigger.Application != nil {
+			c.flagApp = diffTrigger.Application.Application
+		}
 	}
 
 	createTrigger := &pb.Trigger{
@@ -93,10 +105,6 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		},
 	}
 
-	if diffTrigger != nil {
-		createTrigger.Id = diffTrigger.Id
-	}
-
 	// Set the operation
 	switch {
 	case c.flagTriggerOperation == "build":
@@ -111,8 +119,6 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 				c.Flags().Help(), terminal.WithErrorStyle())
 			return 1
 		}
-
-		// TODO: Check ws, proj, app too? maybe not, API could check it
 
 		createTrigger.Operation = &pb.Trigger_Push{
 			Push: &pb.Job_PushOp{
@@ -129,7 +135,7 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 			},
 		}
 	case c.flagTriggerOperation == "deploy":
-		// TODO/NOTE: If no sequence number is specififed (i.e. seq 0), the backend should default to using the "latest" artifact instead
+		// TODO/FUTURE NOTE: If no sequence number is specififed (i.e. seq 0), the backend should default to using the "latest" artifact instead
 
 		createTrigger.Operation = &pb.Trigger_Deploy{
 			Deploy: &pb.Job_DeployOp{
@@ -212,6 +218,14 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		createTrigger.Operation = &pb.Trigger_Init{
 			Init: &pb.Job_InitOp{},
 		}
+	case c.flagTriggerOperation == "":
+		if diffTrigger == nil {
+			c.ui.Output("Empty operation type requested. Must be one of the following values:\n%s\n\n%s",
+				strings.Join(triggerOpValues[:], ", "), c.Help(), terminal.WithErrorStyle())
+			return 1
+		} else {
+			createTrigger.Operation = diffTrigger.Operation
+		}
 	default:
 		// This shouldn't happened because the flag package should technically be handling the parsing
 		// and fail if any value was not recognized in the defined Enum
@@ -227,7 +241,7 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		return 1
 	}
 
-	// TODO: update output to show trigger URL with wp server attached
+	// TODO: update output to show trigger URL with wp server attached once http service is implemented
 	c.ui.Output("Trigger %q (%s) has been created", resp.Trigger.Name, resp.Trigger.Id, terminal.WithSuccessStyle())
 
 	return 0
