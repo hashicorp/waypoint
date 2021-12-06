@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/posener/complete"
@@ -109,6 +110,11 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 		opStr = fmt.Sprintf("unknown operation: %T", triggerOpType)
 	}
 
+	var labels string
+	if len(trigger.Labels) > 0 {
+		labels = strings.Join(trigger.Labels[:], ", ")
+	}
+
 	c.ui.Output("Trigger URL config:", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
@@ -136,7 +142,7 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 			Name: "Application", Value: app,
 		},
 		{
-			Name: "Labels", Value: trigger.Labels,
+			Name: "Labels", Value: labels,
 		},
 		{
 			Name: "Description", Value: trigger.Description,
