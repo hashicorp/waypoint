@@ -65,8 +65,9 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		diffTrigger = respTrigger.Trigger
 	}
 
-	// for now we don't let people change the trigger operation or what the target is
 	if diffTrigger != nil {
+		// We're updating by id, so set some fields.
+
 		if c.flagTriggerName == "" {
 			c.flagTriggerName = diffTrigger.Name
 		}
@@ -77,6 +78,7 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 			c.flagTriggerLabels = diffTrigger.Labels
 		}
 
+		// Trigger target
 		if diffTrigger.Workspace != nil {
 			c.flagWorkspace = diffTrigger.Workspace.Workspace
 		}
@@ -233,6 +235,12 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		return 1
 	}
 
+	action := "created"
+	if diffTrigger != nil {
+		action = "updated"
+		createTrigger.Id = diffTrigger.Id
+	}
+
 	resp, err := c.project.Client().UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
 		Trigger: createTrigger,
 	})
@@ -241,8 +249,9 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		return 1
 	}
 
-	// TODO: update output to show trigger URL with wp server attached once http service is implemented
-	c.ui.Output("Trigger %q (%s) has been created", resp.Trigger.Name, resp.Trigger.Id, terminal.WithSuccessStyle())
+	// TODO(briancain): update output to show trigger URL with wp server attached once http service is implemented
+	c.ui.Output("Trigger %q (%s) has been %s", resp.Trigger.Name, resp.Trigger.Id,
+		action, terminal.WithSuccessStyle())
 
 	return 0
 }
@@ -360,9 +369,9 @@ Usage: waypoint trigger apply [options]
 
   Create or update a trigger URL to Waypoint Server.
 
-	If no sequence number is specified, the trigger will use the "latest" sequence
-	for the given operation. I.e. if you create a deploy trigger with no specified
-	build artifact sequence number, it will use whatever the latest artifact sequence is.
+  If no sequence number is specified, the trigger will use the "latest" sequence
+  for the given operation. I.e. if you create a deploy trigger with no specified
+  build artifact sequence number, it will use whatever the latest artifact sequence is.
 
 ` + c.Flags().Help())
 }
