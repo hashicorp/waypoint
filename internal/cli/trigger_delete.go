@@ -28,6 +28,13 @@ func (c *TriggerDeleteCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
+
+	if len(c.args) == 0 && c.flagTriggerId == "" {
+		c.ui.Output("Trigger ID required.\n\n%s", c.Help(), terminal.WithErrorStyle())
+		return 1
+	}
+	c.flagTriggerId = c.args[0]
+
 	ctx := c.Ctx
 
 	_, err := c.project.Client().DeleteTrigger(ctx, &pb.DeleteTriggerRequest{
@@ -77,7 +84,7 @@ func (c *TriggerDeleteCommand) Synopsis() string {
 
 func (c *TriggerDeleteCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint trigger delete [options]
+Usage: waypoint trigger delete [options] trigger-id
 
   Delete a trigger URL from Waypoint Server.
 
