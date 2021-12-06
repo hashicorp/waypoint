@@ -411,11 +411,6 @@ func Commands(
 				HelpText:     helpText["trigger"][1],
 			}, nil
 		},
-		"trigger create": func() (cli.Command, error) {
-			return &TriggerCreateCommand{
-				baseCommand: baseCommand,
-			}, nil
-		},
 		"trigger apply": func() (cli.Command, error) {
 			return &TriggerApplyCommand{
 				baseCommand: baseCommand,
