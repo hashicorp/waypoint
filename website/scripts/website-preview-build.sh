@@ -26,7 +26,14 @@ npm i --production=false
 # TODO delete /pages/_proxied-dot-io/boundary
 # TODO entirely? Such routes will be redirected
 # TODO anyways, so not point wasting time
-# TODO in rendering them.
+# TODO in rendering them...
+# TODO however, this requires product repo awareness.
+# TODO perhaps we could achieve a similar effect
+# TODO with logic in the dev-portal docs routes
+# TODO which would return an empty array
+# TODO from getStaticPaths if the product
+# TODO is not the target product (based on env check)
+# TODO during a build
 rm -rf ./src/pages/_proxied-dot-io/boundary/docs
 rm -rf ./src/pages/_proxied-dot-io/boundary/api-docs
 # Build the site
