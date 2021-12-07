@@ -32,43 +32,64 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     super(owner, args);
     let { deploymentId } = this.args;
     this.deploymentId = deploymentId;
+
     this.command = '';
 
     this.terminal = createTerminal({ inputDisabled: false });
-    this.terminal.focus();
-    this.startExecStream(deploymentId);
+    this.startExecStream();
   }
 
-  async startExecStream(deploymentId: string): void {
+  get hasDeployment(): boolean {
+    return !!this.deploymentId;
+  }
+
+  async startExecStream(): Promise<void> {
     let token = this.session.data.authenticated?.token;
     let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    let socket = new WebSocket(`wss://localhost:9702/v1/exec?token=${token}`);
+    let socket = await new WebSocket(`wss://localhost:9702/v1/exec?token=${token}`);
     socket.binaryType = 'arraybuffer';
     this.socket = socket;
     this.terminal.writeln(AnsiColors.bold.cyan('Connecting...'));
-    socket.addEventListener('open', () => {
-      this.sendStart(deploymentId);
-      this.setupWinch();
+    if (!this.hasDeployment) {
+      this.terminal.writeln(AnsiColors.bold.red('No deployment available'));
+    }
+    this.setUpSocketListeners();
+    this.terminal.onData((data) => {
+      console.log(this.socket.readyState);
+      this.handleDataEvent(data);
     });
-    socket.addEventListener('message', (event) => {
+    this.terminal.onBinary((data) => {
+      console.log(this.socket.readyState);
+      // this.sendData();
+      this.sendBinary(data);
+    });
+  }
+
+  setUpSocketListeners(): void {
+    this.socket.addEventListener('open', () => {
+      this.sendStart(this.deploymentId);
+      this.setupWinch();
+      this.terminal.focus();
+    });
+    this.socket.addEventListener('message', (event) => {
       let output = event.data;
       let resp = ExecStreamResponse.deserializeBinary(output);
       if (resp.hasOpen()) {
         this.terminal.clear();
-        this.terminal.writeln(AnsiColors.bold.cyan(`Connected to deployment: ${deploymentId}`));
+        this.terminal.writeln(AnsiColors.bold.cyan(`Connecting to deployment: ${this.deploymentId}`));
       }
       // Open
-      // if (resp.getEventCase() === 3) {
-      //    do we need to handle this in any way?
-      // }
+      if (resp.getEventCase() === 3) {
+        this.terminal.writeln(AnsiColors.bold.cyan('Connection opened'));
+      }
       // Exit
-      if (resp.getEventCase() === 2 && resp.getExit()) {
+      if (resp.getEventCase() === 2) {
         let exitCode = resp.getExit() || 'unknown';
         this.terminal.writeln(AnsiColors.yellow(`Exit code: ${exitCode}`));
         this.terminal.writeln(AnsiColors.yellow('Connection closed...'));
       }
       // Output
-      if (resp.getEventCase() === 1 && resp.getOutput()) {
+      if (resp.getEventCase() === 1) {
         this.terminal.writeUtf8(resp.getOutput()?.getData_asU8());
       }
       // Event not set
@@ -76,7 +97,7 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
         this.terminal.writeln(AnsiColors.yellow('Connection closed...'));
       }
     });
-    socket.addEventListener('close', (event) => {
+    this.socket.addEventListener('close', (event) => {
       let output = event.data;
       if (output) {
         let resp = ExecStreamResponse.deserializeBinary(output);
@@ -84,36 +105,37 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
         this.terminal.writeln(AnsiColors.yellow('Connection closed...'));
       }
     });
-    socket.addEventListener('error', (event) => {
+    this.socket.addEventListener('error', (event) => {
       let output = event.data;
       if (output) {
         let resp = ExecStreamResponse.deserializeBinary(output);
         this.terminal.writeUtf8(AnsiColors.red(resp.getOutput()?.getData_asU8()));
       }
     });
-    this.terminal.onData((data) => {
-      this.handleDataEvent(data);
-    });
   }
 
-  async openSocketStream(): Promise<WebSocket> {
-    // Todo: handle different hosts/ports
-    let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    let socket = new WebSocket(`ws://localhost:9702/v1/exec`, ['']);
-    return socket;
-  }
-
-  sendCommand(): void {
+  sendData(data: string): void {
     let execStreamRequest = new ExecStreamRequest();
     let input = new ExecStreamRequest.Input();
     let encoder = new TextEncoder();
-    input.setData(encoder.encode(`${this.command}\r`));
+    input.setData(encoder.encode(data));
     execStreamRequest.setInput(input);
     this.socket.send(execStreamRequest.serializeBinary());
-    this.command = '';
   }
 
-  sendStart(deploymentId) {
+  sendBinary(data) {
+    let buffer = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; ++i) {
+      buffer[i] = data.charCodeAt(i) & 255;
+    }
+    let execStreamRequest = new ExecStreamRequest();
+    let input = new ExecStreamRequest.Input();
+    input.setData(buffer);
+    execStreamRequest.setInput(input);
+    this.socket.send(execStreamRequest.serializeBinary());
+  }
+
+  sendStart(deploymentId: string): void {
     let execStreamStartRequest = new ExecStreamRequest();
     let start = new ExecStreamRequest.Start();
     // Important: ArgsList can't be empty
@@ -156,6 +178,7 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
     let execStreamRequest = new ExecStreamRequest();
     execStreamRequest.setInputEof(new Empty());
     this.socket.send(execStreamRequest.serializeBinary());
+    this.socket.close();
   }
 
   willDestroy(): void {
@@ -164,28 +187,32 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
   }
 
   handleDataEvent = (data: string): void => {
-    if (
-      data === KEYS.LEFT_ARROW ||
-      data === KEYS.UP_ARROW ||
-      data === KEYS.RIGHT_ARROW ||
-      data === KEYS.DOWN_ARROW
-    ) {
-      // Ignore arrow keys
-    } else if (data === KEYS.CONTROL_U) {
+    console.log(this.command);
+    console.log(this.terminal.buffer);
+    // if (
+    //   data === KEYS.LEFT_ARROW ||
+    //   data === KEYS.UP_ARROW ||
+    //   data === KEYS.RIGHT_ARROW ||
+    //   data === KEYS.DOWN_ARROW
+    // ) {
+    //   // Ignore arrow keys
+    // } else
+    if (data === KEYS.CONTROL_U) {
       this.terminal.write(BACKSPACE_ONE_CHARACTER.repeat(this.command.length));
       this.command = '';
     } else if (data === KEYS.ENTER) {
-      this.terminal.writeln('');
-      this.sendCommand();
+      this.sendData(data);
+      this.command = '';
     } else if (data === KEYS.DELETE) {
       if (this.command.length > 0) {
         this.terminal.write(BACKSPACE_ONE_CHARACTER);
         this.command = this.command.slice(0, -1);
       }
     } else if (data.length > 0) {
-      let strippedData = data.replace(UNPRINTABLE_CHARACTERS_REGEX, '');
-      this.terminal.write(strippedData);
-      this.command = `${this.command}${strippedData}`;
+      // let strippedData = data.replace(UNPRINTABLE_CHARACTERS_REGEX, '');
+      this.command = `${this.command}${data}`;
+      this.sendData(data);
     }
+    console.log(this.command);
   };
 }
