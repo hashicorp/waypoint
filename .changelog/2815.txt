@@ -1,3 +1,3 @@
 ```release-note:improvement
-cli: Enhance warning project flag mismatches project parsed from config
+cli: Enhance warning for project flag mismatches when project parsed from config
 ```
