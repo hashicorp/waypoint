@@ -216,29 +216,8 @@ func (s *State) triggerGet(
 	if ref.Id != "" {
 		s.log.Info("looking up trigger by id", "id", ref.Id)
 		return &result, dbGet(b, []byte(strings.ToLower(ref.Id)), &result)
-	}
-
-	// Look for one by name if possible.
-	if ref.Name != "" {
-		s.log.Info("looking up trigger by name", "name", ref.Name)
-		iter, err := memTxn.Get(
-			triggerIndexTableName,
-			triggerIndexName+"_prefix",
-			ref.Name,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		next := iter.Next()
-		if next == nil {
-			// Indicates that there isn't one of the given name.
-			return nil, status.Errorf(codes.NotFound, "trigger %q not found", ref.Name)
-		}
-
-		idx := next.(*triggerIndexRecord)
-
-		return &result, dbGet(b, []byte(strings.ToLower(idx.Id)), &result)
+	} else {
+		return nil, status.Error(codes.FailedPrecondition, "No id provided in Trigger ref to triggerGet")
 	}
 
 	return nil, nil

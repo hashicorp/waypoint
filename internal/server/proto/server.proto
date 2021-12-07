@@ -866,10 +866,9 @@ message Ref {
   }
 
   // Trigger references a Trigger message value to be used for a given operation.
-  // It can be looked up by name or id. Id takes priority if both are set.
+  // It can be looked up by id.
   message Trigger {
     string id = 1;
-    string name = 2;
   }
 }
 
