@@ -7,8 +7,7 @@ echo "Deleting .next cache..."
 rm -rf .next
 echo "Done"
 # Clone the dev-portal repo in ./website-preview
-git config --global credential.helper store
-git clone "https://zchsh:${GITHUB_WEBSITE_PREVIEW_PAT}@github.com/hashicorp/dev-portal.git" website-preview
+git clone "https://github.com/hashicorp/dev-portal.git" website-preview
 # Merge the local images (all in ./public/img) into
 # the shared dev-portal public folder
 cp -R ./public/img/** ./website-preview/public/img/
