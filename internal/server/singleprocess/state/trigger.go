@@ -213,8 +213,6 @@ func (s *State) triggerGet(
 	} else {
 		return nil, status.Error(codes.FailedPrecondition, "No id provided in Trigger ref to triggerGet")
 	}
-
-	return nil, nil
 }
 
 func (s *State) triggerList(
