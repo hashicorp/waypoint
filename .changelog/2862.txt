@@ -1,0 +1,4 @@
+```release-note:feature
+runner: Allow apps and projects to target specific runner profiles.
+Allow runner profiles to target specific remote runners.
+```

@@ -34,7 +34,6 @@ func TestRunnerInitOp(t *testing.T) {
 			Name: project.Ref().Project,
 		},
 	})
-
 	res, err := runner.executeInitOp(ctx, runner.logger, project)
 	require.NoError(err)
 	require.NotNil(t, res.Init)

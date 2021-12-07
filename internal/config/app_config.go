@@ -69,8 +69,6 @@ func (c *runnerConfig) configVars(
 	runnerScopeFunc := func(v *pb.ConfigVar) {
 		// Inherit our parent scope.
 		scopeFunc(v)
-
-		// Add that we target runners
 		v.Target.Runner = &pb.Ref_Runner{
 			Target: &pb.Ref_Runner_Any{
 				Any: &pb.Ref_RunnerAny{},

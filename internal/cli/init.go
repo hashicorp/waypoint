@@ -326,12 +326,17 @@ func (c *InitCommand) validateProject() bool {
 			}
 		}
 
+		odrProfile := &pb.Ref_OnDemandRunnerConfig{
+			Name: c.cfg.Runner.Profile,
+		}
+
 		resp, err := client.UpsertProject(c.Ctx, &pb.UpsertProjectRequest{
 			Project: &pb.Project{
 				Name:           ref.Project,
 				RemoteEnabled:  c.cfg.Runner.Enabled,
 				DataSource:     ds,
 				DataSourcePoll: poll,
+				OndemandRunner: odrProfile,
 			},
 		})
 		if err != nil {

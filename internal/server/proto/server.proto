@@ -88,6 +88,9 @@ service Waypoint {
   // can use GetProject to get more information about the project.
   rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse);
 
+  // GetApplication returns one application on the project.
+  rpc GetApplication(GetApplicationRequest) returns (GetApplicationResponse);
+
   // UpsertApplication upserts an application with a project.
   rpc UpsertApplication(UpsertApplicationRequest) returns (UpsertApplicationResponse);
 
@@ -672,7 +675,7 @@ message Project {
   // poll operations and their success/failure by using the ListJobs API.
   AppStatusPoll status_report_poll = 10;
 
-  // ondemand_runner, if set, indicates the configuation on the ondemand runner
+  // ondemand_runner, if set, indicates the configuration on the ondemand runner
   // that should be used for the operations of this project.
   Ref.OnDemandRunnerConfig ondemand_runner = 11;
 
@@ -1389,6 +1392,10 @@ message Job {
   // The runner that should execute this job.
   // This is required.
   Ref.Runner target_runner = 4;
+
+  // If target_runner is Any and this is set, the job will be executed
+  // on an ODR spawned from this config.
+  Ref.OnDemandRunnerConfig ondemand_runner = 112;
 
   // Labels are the labels to set for this operation.
   // This is optional.
@@ -2526,7 +2533,7 @@ message Hostname {
   // target_labels are the raw label targets given to the URL service.
   // We can't reproduce the richer "Target" structure yet but in the future
   // we may expose that.
-  map<string,string> target_labels = 3;
+  map<string, string> target_labels = 3;
 
   message Target {
     oneof target {
@@ -2616,6 +2623,14 @@ message ListProjectsResponse {
   repeated Ref.Project projects = 1;
 }
 
+message GetApplicationRequest {
+  Ref.Application application = 1;
+}
+
+message GetApplicationResponse {
+  Application application = 1;
+}
+
 message UpsertApplicationRequest {
   // project to register the app against
   Ref.Project project = 1;
@@ -2698,7 +2713,7 @@ message Build {
   Artifact artifact = 4;
 
   // labels are the set of labels that are present on this build.
-  map<string,string> labels = 5;
+  map<string, string> labels = 5;
 
   // template data for HCL variables and template functions, json-encoded
   bytes template_data = 10;
@@ -2749,6 +2764,10 @@ message OnDemandRunnerConfig {
 
   // name is the unique name for this config
   string name = 8;
+
+  // target_runner is the id of the runner to target for this profile.
+  // If not set, defaults to use any runner available
+  Ref.Runner target_runner = 9;
 
   // oci_url is the OCI image that will be used to boot the ondemand runner.
   string oci_url = 2;
@@ -2878,7 +2897,7 @@ message PushedArtifact {
   string build_id = 5;
 
   // labels are the set of labels that are present on this build.
-  map<string,string> labels = 6;
+  map<string, string> labels = 6;
 
   // template data for HCL variables and template functions, json-encoded
   bytes template_data = 12;
@@ -3027,7 +3046,7 @@ message Deployment {
   string deployment_json = 20;
 
   // labels are the set of labels that are present on this build.
-  map<string,string> labels = 7;
+  map<string, string> labels = 7;
 
   // template data for HCL variables and template functions, json-encoded
   bytes template_data = 14;
@@ -3269,7 +3288,7 @@ message Release {
   string deployment_id = 5;
 
   // labels are the set of labels that are present on this build.
-  map<string,string> labels = 6;
+  map<string, string> labels = 6;
 
   // template data for HCL variables and template functions, json-encoded
   bytes template_data = 14;
@@ -3548,7 +3567,7 @@ message ExpediteStatusReportRequest {
 
 // id of job expedited by the request
 message ExpediteStatusReportResponse {
-    string job_id = 1;
+  string job_id = 1;
 }
 
 // StatusReport is the report genrated when querying the overall health of
@@ -4028,8 +4047,8 @@ message ExecStreamResponse {
 
     enum Channel {
       UNKNOWN = 0;
-      STDOUT  = 1;
-      STDERR  = 2;
+      STDOUT = 1;
+      STDERR = 2;
     }
   }
 }
@@ -4104,7 +4123,7 @@ message EntrypointConfig {
     Component component = 1;
 
     // labels are the set of labels that are present on the deployment.
-    map<string,string> labels = 2;
+    map<string, string> labels = 2;
   }
 }
 
@@ -4150,8 +4169,8 @@ message EntrypointExecRequest {
 
     enum Channel {
       UNKNOWN = 0;
-      STDOUT  = 1;
-      STDERR  = 2;
+      STDOUT = 1;
+      STDERR = 2;
     }
   }
 

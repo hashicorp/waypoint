@@ -513,6 +513,9 @@ func TestServiceQueueJob_odr(t *testing.T) {
 				Application: "app",
 				Project:     "proj",
 			},
+			OndemandRunner: &pb.Ref_OnDemandRunnerConfig{
+				Name: odr.Name,
+			},
 		}),
 	})
 	require.NoError(err)

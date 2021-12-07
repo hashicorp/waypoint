@@ -36,3 +36,10 @@ func ValidateUpsertApplicationRequest(v *pb.UpsertApplicationRequest) error {
 		validation.Field(&v.Name, validation.Required),
 	))
 }
+
+// ValidateGetApplicationRequest
+func ValidateGetApplicationRequest(v *pb.GetApplicationRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Application, validation.Required),
+	))
+}

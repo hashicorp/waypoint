@@ -159,20 +159,18 @@ func (s *service) queueJobReqToJob(
 			return nil, "", status.Errorf(codes.FailedPrecondition,
 				"Invalid expiry duration: %s", err.Error())
 		}
-
 		job.ExpireTime, err = ptypes.TimestampProto(time.Now().Add(dur))
 		if err != nil {
 			return nil, "", status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
 		}
 	}
 
-	// If the job can be run any runner, then we attempt to see if we should spawn
+	// If the job can be run by any runner, then we attempt to see if we should spawn
 	// an on-demand runner for it. We only consider jobs for any runner because ones
 	// that are targeted can not target on-demand runners, because they don't yet exist.
-	var od *pb.Ref_OnDemandRunnerConfig
+	// If the job has any target runner, it is a remote job.
 	if _, anyTarget := job.TargetRunner.Target.(*pb.Ref_Runner_Any); anyTarget {
-		od = project.OndemandRunner
-		if od == nil {
+		if project.OndemandRunner == nil {
 			ods, err := s.state.OnDemandRunnerConfigDefault()
 			if err != nil {
 				return nil, "", err
@@ -180,13 +178,13 @@ func (s *service) queueJobReqToJob(
 
 			switch len(ods) {
 			case 0:
-				// ok, no ondemand runners
+				// ok, no on-demand runners
 			case 1:
-				od = ods[0]
+				job.OndemandRunner = ods[0]
 			default:
-				od = ods[rand.Intn(len(ods))]
-				log.Debug("multiple default ondemand runners detected, chose a random one",
-					"runner-config-id", od.Id)
+				job.OndemandRunner = ods[rand.Intn(len(ods))]
+				log.Debug("multiple default on-demand runners detected, chose a random one",
+					"runner-config-id", job.OndemandRunner.Id)
 			}
 		}
 	}
@@ -197,8 +195,8 @@ func (s *service) queueJobReqToJob(
 	// If we have an ODR profile, then we know that we should be using
 	// an on-demand runner for this. Let's wrap the jobs so that we have
 	// the full set of start to stop.
-	if od != nil {
-		result, err = s.wrapJobWithRunner(ctx, job, od)
+	if job.OndemandRunner != nil {
+		result, err = s.wrapJobWithRunner(ctx, job)
 		if err != nil {
 			return nil, "", err
 		}
@@ -230,10 +228,9 @@ func (s *service) QueueJob(
 func (s *service) wrapJobWithRunner(
 	ctx context.Context,
 	source *pb.Job,
-	profileRef *pb.Ref_OnDemandRunnerConfig,
 ) ([]*pb.Job, error) {
 	// Get the runner profile we're going to use for this runner.
-	od, err := s.state.OnDemandRunnerConfigGet(profileRef)
+	od, err := s.state.OnDemandRunnerConfigGet(source.OndemandRunner)
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +261,7 @@ func (s *service) wrapJobWithRunner(
 
 	// These must be in order of dependency currently. This is a limitation
 	// of the state.JobCreate API and we should fix it one day. If we get
-	// this wrong it'll just error so we'll know quickly.
+	// this wrong it'll just error, so we'll know quickly.
 	return []*pb.Job{
 		startJob,
 		source,
@@ -380,15 +377,13 @@ func (s *service) onDemandRunnerStartJob(
 		return nil, "", status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
 	}
 
-	// Our start runner job can go anywhere.
-	// NOTE(mitchellh): For more targetted runners in multi-cluster mode,
-	// we'll probably want this to be controllable by runner profiles
-	// so that start tasks get sent to the right cluster.
-	job.TargetRunner = &pb.Ref_Runner{
-		Target: &pb.Ref_Runner_Any{
-			Any: &pb.Ref_RunnerAny{},
-		},
+	if err != nil {
+		return nil, "", status.Errorf(codes.FailedPrecondition,
+			"Failed to get on-demand runner config by name %q, id %q: %s",
+			job.OndemandRunner.Name, job.OndemandRunner.Id, err)
 	}
+	// This will be either "Any" or a specific static runner.
+	job.TargetRunner = od.TargetRunner
 
 	return job, runnerId, nil
 }
@@ -405,11 +400,11 @@ func (s *service) onDemandRunnerStopJob(
 		Application: source.Application,
 
 		// We depend on both the start job and the main job. We allow them
-		// both to fail, however, cause we want to try to stop no matter what.
+		// both to fail, however, because we want to try to stop no matter what.
 		DependsOn:             []string{startJob.Id, source.Id},
 		DependsOnAllowFailure: []string{startJob.Id, source.Id},
 
-		// Use the same targetting as the start job. We assume the start job
+		// Use the same targeting as the start job. We assume the start job
 		// had proper access to stop, too, so we just copy it.
 		TargetRunner: startJob.TargetRunner,
 

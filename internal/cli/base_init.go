@@ -115,7 +115,7 @@ func (c *baseCommand) initClient(
 	}
 
 	if c.cfg != nil {
-		opts = append(opts, clientpkg.WithConfigPath(c.cfg.ConfigPath()))
+		opts = append(opts, clientpkg.WithConfig(c.cfg))
 	}
 
 	if ctx == nil {
