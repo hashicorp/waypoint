@@ -501,10 +501,10 @@ const stateEventPause = 3000 * time.Millisecond
 
 var (
 	warnGitDirty = strings.TrimSpace(`
-       There are local changes that do not match the remote repository. By default, 
-       Waypoint will perform this operation using a remote runner that will use the 
-       remote repository’s git ref and not these local changes. For these changes 
-       to be used for future operations, either commit and push, or run the operation 
-       locally with the -local flag.
-	`)
+There are local changes that do not match the remote repository. By default, 
+Waypoint will perform this operation using a remote runner that will use the 
+remote repository’s git ref and not these local changes. For these changes 
+to be used for future operations, either commit and push, or run the operation 
+locally with the -local flag.
+`)
 )
