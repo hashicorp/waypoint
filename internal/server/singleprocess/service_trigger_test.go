@@ -73,7 +73,7 @@ func TestServiceTrigger(t *testing.T) {
 		require.Nil(resp)
 	})
 
-	t.Run("update non-existent", func(t *testing.T) {
+	t.Run("update non-existent creates a new trigger", func(t *testing.T) {
 		require := require.New(t)
 
 		// Create, should get an ID back
@@ -82,11 +82,9 @@ func TestServiceTrigger(t *testing.T) {
 				Id: "nope",
 			}),
 		})
-		require.Error(err)
-		require.Nil(resp)
-		st, ok := status.FromError(err)
-		require.True(ok)
-		require.Equal(codes.NotFound, st.Code())
+		require.NoError(err)
+		require.NotNil(resp)
+		require.Equal(resp.Trigger.Id, "nope")
 	})
 }
 

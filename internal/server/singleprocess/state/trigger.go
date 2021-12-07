@@ -30,23 +30,17 @@ func (s *State) TriggerPut(t *pb.Trigger) error {
 			return status.Error(codes.FailedPrecondition, "A Project is required to create a trigger")
 		}
 
-		if t.Id != "" {
-			var err error
-			_, err = s.triggerGet(dbTxn, memTxn, &pb.Ref_Trigger{Id: t.Id})
-			if err != nil {
-				return err
-			}
-		} else {
+		if t.Workspace == nil {
+			t.Workspace = &pb.Ref_Workspace{Workspace: "default"}
+		}
+
+		if t.Id == "" {
 			id, err := ulid()
 			if err != nil {
 				return err
 			}
 
 			t.Id = id
-		}
-
-		if t.Workspace == nil {
-			t.Workspace = &pb.Ref_Workspace{Workspace: "default"}
 		}
 
 		return s.triggerPut(dbTxn, memTxn, t)
