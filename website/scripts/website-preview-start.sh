@@ -38,4 +38,7 @@ rm -rf .next
 # TODO set up watcher to sync all files
 # TODO under website/public into website/website-preview/public
 cp -R ../public/img/** ./public/img/
-DEV_IO_PROXY=waypoint IS_CONTENT_DEPLOY_PREVIEW=true ./node_modules/.bin/next
+# TODO make DEV_IO dynamic, based on the
+# TODO name of the grandparent dir of
+# TODO the cloned website-preview folder
+DEV_IO=waypoint IS_CONTENT_PREVIEW=true ./node_modules/.bin/next

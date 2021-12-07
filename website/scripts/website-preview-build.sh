@@ -37,8 +37,8 @@ npm i --production=false
 rm -rf ./src/pages/_proxied-dot-io/boundary/docs
 rm -rf ./src/pages/_proxied-dot-io/boundary/api-docs
 # Build the site
-# TODO: is there a way to remove these two manully set env vars?
-# TODO: maybe using Vercel's System Environment variables?
+# Note that DEV_IO and IS_CONTENT_PREVIEW are set
+# in Vercel configuration for the project
 npm run build
 # Copy .next build output folder into project root,
 # so that Vercel's NextJS preset picks up on the build output
