@@ -1,7 +1,6 @@
 {
   "scripts": {
-    "setup": "./scripts/website-preview-setup.sh",
-    "start": "./scripts/website-preview-start.sh",
+    "start": "./scripts/website-preview-setup.sh && ./scripts/website-preview-start.sh",
     "dev": "npm run start",
     "clean": "rm -rf ./website-preview",
     "generate:readme": "next-hashicorp markdown-blocks README.md",
