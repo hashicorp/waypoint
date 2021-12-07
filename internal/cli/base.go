@@ -332,7 +332,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 			// NOTE(izaak): unless we force remoteness, we may spawn a local runner which will operate against
 			// the current config (which isn't relevant)
-			c.Log.Debug("Forcing any future operations to occur remotely because we don't have the relevant waypoint.hcl present.")
+			c.Log.Debug("Forcing any future operations to occur remotely because the relevant waypoint.hcl is not present.")
 			flagLocal := false
 			c.flagLocal = &flagLocal
 		}
