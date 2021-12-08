@@ -34,8 +34,7 @@ npm i --production=false
 # TODO from getStaticPaths if the product
 # TODO is not the target product (based on env check)
 # TODO during a build
-rm -rf ./src/pages/_proxied-dot-io/boundary/docs
-rm -rf ./src/pages/_proxied-dot-io/boundary/api-docs
+rm -rf ./src/pages/_proxied-dot-io/boundary
 # Build the site
 # Note that DEV_IO and IS_CONTENT_PREVIEW are set
 # in Vercel configuration for the project
