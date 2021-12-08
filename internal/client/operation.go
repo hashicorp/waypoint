@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 
+	"github.com/hashicorp/waypoint/internal/server/execclient"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -158,20 +159,19 @@ func (c *App) Destroy(ctx context.Context, op *pb.Job_DestroyOp) error {
 	return err
 }
 
-func (c *App) Exec(ctx context.Context, op *pb.Job_ExecOp, mon chan pb.Job_State) error {
-	if op == nil {
-		op = &pb.Job_ExecOp{}
+func (c *App) Exec(ctx context.Context, ec *execclient.Client) (exitCode int, err error) {
+
+	// Depending on which deployments are at play, and which plugins those deployments
+	// correspond to, we may need a local runner. It'll be up to the server to actually
+	// create the job, but we'll need to create the local runner if necessary, error
+	// if vcs is dirty, etc.
+	_, ctx, err = c.project.setupLocalJobSystem(ctx)
+	if err != nil {
+		return 0, err
 	}
 
-	// Build our job
-	job := c.job()
-	job.Operation = &pb.Job_Exec{
-		Exec: op,
-	}
-
-	// Execute it
-	_, err := c.doJobMonitored(ctx, job, mon)
-	return err
+	ec.Context = ctx
+	return ec.Run()
 }
 
 func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_ReleaseResult, error) {
@@ -196,6 +196,15 @@ func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_Releas
 
 func (a *App) Logs(ctx context.Context) (pb.Waypoint_GetLogStreamClient, error) {
 	log := a.project.logger.Named("logs")
+
+	// Depending on which deployments are at play, and which plugins those deployments
+	// correspond to, we may need a local runner. It'll be up to the server to actually
+	// create the job, but we'll need to create the local runner if necessary, error
+	// if vcs is dirty, etc.
+	_, ctx, err := a.project.setupLocalJobSystem(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	// First we attempt to query the server for logs for this deployment.
 	log.Info("requesting log stream")

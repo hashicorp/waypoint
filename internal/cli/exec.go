@@ -102,7 +102,6 @@ func (c *ExecCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(flagSet),
 		WithSingleAppTarget(),
-		WithRunnerRequired(), // Some platforms require an exec plugin
 	); err != nil {
 		return 1
 	}
@@ -145,7 +144,7 @@ func (c *ExecCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
-		exitCode, err = ec.Run()
+		exitCode, err = app.Exec(ctx, ec)
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
@@ -161,7 +160,7 @@ func (c *ExecCommand) Run(args []string) int {
 }
 
 func (c *ExecCommand) Flags() *flag.Sets {
-	return c.flagSet(0, func(s *flag.Sets) {
+	return c.flagSet(flagSetOperation, func(s *flag.Sets) {
 		f := s.NewSet("Command Options")
 		f.StringVar(&flag.StringVar{
 			Name:   "instance",

@@ -33,10 +33,6 @@ func TestProject(t testing.T, opts ...Option) *Project {
 	}, opts...)...)
 	require.NoError(err)
 
-	// Start the local runner
-	_, err = result.StartLocalRunner()
-	require.NoError(err)
-
 	// Move into a temporary directory
 	td := testTempDir(t)
 	testChdir(t, td)
