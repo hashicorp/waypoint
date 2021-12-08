@@ -396,13 +396,14 @@ func (c *Project) queueAndStreamJob(
 
 				runner, err := c.client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: assignedRunner.Id})
 				if err != nil {
-					c.UI.Output("Failed to inspect the runner (id %q) assigned for this operation: %s", assignedRunner.Id, err, terminal.WithErrorStyle())
+					ui.Output("Failed to inspect the runner (id %q) assigned for this operation: %s", assignedRunner.Id, err, terminal.WithErrorStyle())
+					break
 				}
 				switch runnerType := runner.Kind.(type) {
 				case *pb.Runner_Local_:
-					c.UI.Output("Performing operation locally", terminal.WithInfoStyle())
+					ui.Output("Performing operation locally", terminal.WithInfoStyle())
 				case *pb.Runner_Remote_:
-					c.UI.Output("Performing this operation on a remote runner with id %q", runner.Id, terminal.WithInfoStyle())
+					ui.Output("Performing this operation on a remote runner with id %q", runner.Id, terminal.WithInfoStyle())
 				case *pb.Runner_Odr:
 					log.Debug("Executing operation on an on-demand runner from profile with ID %q", runnerType.Odr.ProfileId)
 					profile, err := c.client.GetOnDemandRunnerConfig(
@@ -412,10 +413,10 @@ func (c *Project) queueAndStreamJob(
 							},
 						})
 					if err != nil {
-						c.UI.Output("Performing operation on an on-demand runner from profile with ID %q", runnerType.Odr.ProfileId, terminal.WithInfoStyle())
-						c.UI.Output("Failed inspecting runner profile with id %q: %s", runnerType.Odr.GetProfileId(), err, terminal.WithErrorStyle())
+						ui.Output("Performing operation on an on-demand runner from profile with ID %q", runnerType.Odr.ProfileId, terminal.WithInfoStyle())
+						ui.Output("Failed inspecting runner profile with id %q: %s", runnerType.Odr.GetProfileId(), err, terminal.WithErrorStyle())
 					} else {
-						c.UI.Output("Performing operation on %q with runner profile %q", profile.Config.PluginType, profile.Config.Name, terminal.WithInfoStyle())
+						ui.Output("Performing operation on %q with runner profile %q", profile.Config.PluginType, profile.Config.Name, terminal.WithInfoStyle())
 					}
 				}
 			}
