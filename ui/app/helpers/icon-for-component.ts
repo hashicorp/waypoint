@@ -20,7 +20,7 @@ export function iconForComponent([component]: [string]): string {
     case 'nomad-jobspec':
       return 'nomad-color';
     case 'pack':
-      return 'package';
+      return 'pack-color';
     default:
       return 'more-horizontal';
   }
