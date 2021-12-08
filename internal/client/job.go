@@ -48,27 +48,35 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 	return c.doJobMonitored(ctx, job, ui, nil)
 }
 
-// setupLocalJobSystem does the pre-work required to run jobs locally. This includes:
+// setupLocalJobSystem does the pre-work required to run jobs locally.
+// This includes:
 // - figure out if jobs should be executed locally or remotely.
 // - if job should be executed locally, start a local runner
-// - if jobs will be executed remotely, but local VCS is present and dirty, warn.
-// This lives separately from DoJob because the logs and exec commands need to conditionally warm up the
-// local job infrastructure, but don't actually create a job (the server does).
+// - if jobs will be executed remotely, but local VCS is present and
+//   dirty, warn.
+// This lives separately from DoJob because the logs and exec commands
+// need to conditionally warm up the local job infrastructure, but
+// don't actually create a job (the server does).
 func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx context.Context, err error) {
 	log := c.logger.Named("setupLocalJobSystem")
 	defer func() {
 		log.Debug("result", "isLocal", isLocal)
 	}()
 
-	// Automatically determine if we should use a local or a remote runner
+	// Automatically determine if we should use a local or a remote
+	// runner
 	newCtx = ctx
 
-	// We may use this in multiple places, so we save the result if we obtain it
-	// NOTE(izaak): If in the future we need the full project in other places in this codepath, we should probably cache it early on the parent struct.
+	// We may use this in multiple places, so we save the result if we
+	// obtain it
+	// NOTE(izaak): If in the future we need the full project in other
+	// places in this codepath, we should probably cache it early on
+	// the parent struct.
 	var project *pb.Project
 
-	// A nil useLocalRunner means the option was not set explicitly when this client was created.
-	// We'll decide a value for it here, and set it for future runs.
+	// A nil useLocalRunner means the option was not set explicitly
+	// when this client was created. We'll decide a value for it here,
+	// and set it for future runs.
 	if c.useLocalRunner == nil {
 		log.Debug("determining if a local or remote runner should be used for this and future jobs")
 
@@ -98,15 +106,17 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 				return false, newCtx, errors.Wrapf(err, "failed to start local runner for job %s", err)
 			}
 		}
-		// Inject the metadata about the client, such as the runner id if it is running
-		// a local runner.
+		// Inject the metadata about the client, such as the runner id
+		// if it is running a local runner.
 		newCtx = grpcmetadata.AddRunner(ctx, c.activeRunner.Id())
 	} else {
-		// We're about to run a remote op. We should check if we have a dirty local vcs,
-		// because the user may expect their local changes to be reflected in the remote
-		// op execution, and they won't.
+		// We're about to run a remote op. We should check if we have
+		// a dirty local vcs, because the user may expect their local
+		// changes to be reflected in the remote op execution, and
+		// they won't.
 		gitDirtyErr := func() error {
-			// Running this inside of an anonymous func so that we can return early
+			// Running this inside of an anonymous func so that we can
+			// return early
 
 			if c.configPath == "" {
 				// No local project dir, so nothing is dirty!
@@ -117,7 +127,7 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 				return errors.New("git is not installed - unable to check if local git directory is dirty for warning purposes")
 			}
 
-			repoRoot, err := gitdirty.GetRepoTopLevel(log, c.configPath)
+			repoRoot, err := gitdirty.RepoTopLevelPath(log, c.configPath)
 			if err != nil {
 				return errors.Wrapf(err, "failed to find the top level of the repository that contains %q", c.configPath)
 			}
@@ -138,7 +148,8 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 			gitDs, ok := project.DataSource.Source.(*pb.Job_DataSource_Git)
 
 			if !ok {
-				// The remote op will likely fail anyway, because it needs a remote-capable datasource.
+				// The remote op will likely fail anyway, because it
+				// needs a remote-capable datasource.
 				log.Debug("local config directory is a git repo, but project has non-remote datasource type. Will not attempt dirty git warning.",
 					"project datasource type", fmt.Sprintf("%t", project.DataSource.Source),
 				)
@@ -173,18 +184,18 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 	return *c.useLocalRunner, newCtx, nil
 }
 
-// Same as doJob, but with the addition of a mon channel that can be used
-// to monitor the job status as it changes.
-// The receiver must be careful to not block sending to mon as it will block
-// the job state processing loop.
+// Same as doJob, but with the addition of a mon channel that can be
+// used to monitor the job status as it changes.
+// The receiver must be careful to not block sending to mon as it will
+// block the job state processing loop.
 func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.UI, monCh chan pb.Job_State) (*pb.Job_Result, error) {
 	isLocal, ctx, err := c.setupLocalJobSystem(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// Be sure that the monitor is closed so the receiver knows for sure the job isn't going
-	// anymore.
+	// Be sure that the monitor is closed so the receiver knows for
+	// sure the job isn't going anymore.
 	if monCh != nil {
 		defer close(monCh)
 	}
@@ -192,17 +203,17 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 	// In local mode we have to target the local runner.
 	if isLocal {
 
-		// If we're local, we set a local data source. Otherwise, it defaults to whatever the
-		// project has remotely.
+		// If we're local, we set a local data source. Otherwise, it
+		// defaults to whatever the project has remotely.
 		job.DataSource = &pb.Job_DataSource{
 			Source: &pb.Job_DataSource_Local{
 				Local: &pb.Job_Local{},
 			},
 		}
 
-		// Modify the job to target this runner and use the local data source.
-		// The runner will have been started when we created the Project value and be
-		// used for all local jobs.
+		// Modify the job to target this runner and use the local data
+		// source. The runner will have been started when we created
+		// the Project value and be used for all local jobs.
 		job.TargetRunner = &pb.Ref_Runner{
 			Target: &pb.Ref_Runner_Id{
 				Id: &pb.Ref_RunnerId{

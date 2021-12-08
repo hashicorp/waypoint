@@ -25,15 +25,13 @@ func init() {
 
 // GitInstalled checks if the command-line tool `git` is installed
 func GitInstalled() bool {
-	if _, err := exec.LookPath("git"); err == nil {
-		return true
-	}
-	return false
+	_, err := exec.LookPath("git")
+	return err == nil
 }
 
-// GetRepoTopLevel returns the path to the root of the repository that contains pathWithinVcs.
+// RepoTopLevelPath returns the path to the root of the repository that contains pathWithinVcs.
 // Equivalent to git rev-parse --show-toplevel
-func GetRepoTopLevel(log hclog.Logger, pathWithinVcs string) (string, error) {
+func RepoTopLevelPath(log hclog.Logger, pathWithinVcs string) (string, error) {
 	out, err := runGitCommand(log, pathWithinVcs, "rev-parse", "--show-toplevel")
 	if err != nil {
 		return "", err
