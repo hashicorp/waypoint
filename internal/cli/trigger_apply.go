@@ -152,7 +152,7 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 			},
 		}
 	case c.flagTriggerOperation == "deploy":
-		// TODO/FUTURE NOTE: If no sequence number is specififed (i.e. seq 0), the backend should default to using the "latest" artifact instead
+		// TODO/FUTURE NOTE: If no sequence number is specified (i.e. seq 0), the backend should default to using the "latest" artifact instead
 
 		createTrigger.Operation = &pb.Trigger_Deploy{
 			Deploy: &pb.Job_DeployOp{
