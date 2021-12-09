@@ -132,7 +132,7 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		}
 	case c.flagTriggerOperation == "push":
 		if c.flagBuildSeq == 0 {
-			c.ui.Output("Must specify a build sequence number for the \"push\" operation: %s",
+			c.ui.Output("Must specify a build ID number for the \"push\" operation: %s",
 				c.Flags().Help(), terminal.WithErrorStyle())
 			return 1
 		}
@@ -322,9 +322,9 @@ func (c *TriggerApplyCommand) Flags() *flag.Sets {
 		// Operation specific flags
 		fo := set.NewSet("Operation Options")
 		fo.IntVar(&flag.IntVar{
-			Name:   "artifact-sequence",
+			Name:   "artifact-id",
 			Target: &c.flagArtifactSeq,
-			Usage:  "The sequence number for the artifact to use in an operation.",
+			Usage:  "The sequence number (short id) for the artifact to use in an operation.",
 		})
 
 		fo.BoolVar(&flag.BoolVar{
@@ -335,21 +335,21 @@ func (c *TriggerApplyCommand) Flags() *flag.Sets {
 		})
 
 		fo.IntVar(&flag.IntVar{
-			Name:   "build-sequence",
+			Name:   "build-id",
 			Target: &c.flagBuildSeq,
-			Usage:  "The sequence number for the build to use in an operation.",
+			Usage:  "The sequence number (short id) for the build to use in an operation.",
 		})
 
 		fo.IntVar(&flag.IntVar{
-			Name:   "deployment-sequence",
+			Name:   "deployment-id",
 			Target: &c.flagDeploySeq,
-			Usage:  "The sequence number for the deployment to use in an operation.",
+			Usage:  "The sequence number (short id) for the deployment to use in an operation.",
 		})
 
 		fo.IntVar(&flag.IntVar{
-			Name:   "release-sequence",
+			Name:   "release-id",
 			Target: &c.flagReleaseSeq,
-			Usage:  "The sequence number for the release to use in an operation.",
+			Usage:  "The sequence number (short id) for the release to use in an operation.",
 		})
 
 		// Release operation specific flags
