@@ -20,6 +20,9 @@ cd ./website-preview
 # Install dependencies
 git checkout zs.refine-preview-modes
 npm i --production=false
+#
+# BEGIN "CLEAR OTHER PRODUCTS"
+#
 # Delete other products' docs pages,
 # these will just increase build times
 # TODO instead of doing thing, should perhaps
@@ -44,8 +47,13 @@ mkdir ./src/pages/_proxied-dot-io/boundary
 mkdir ./src/pages/_proxied-dot-io/boundary/home
 # ... put the saved CSS files back
 mv ./temp-global-page-css/boundary-home.css ./src/pages/_proxied-dot-io/boundary/home/style.css
+# Remove Waypoint
+# rm -rf ./src/pages/_proxied-dot-io/waypoint
 # Remove Sentinel
 rm -rf ./src/pages/_proxied-dot-io/sentinel
+#
+# END "CLEAR OTHER PRODUCTS"
+#
 # Build the site
 # Note that DEV_IO and IS_CONTENT_PREVIEW are set
 # in Vercel configuration for the project
