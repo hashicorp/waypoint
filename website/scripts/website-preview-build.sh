@@ -34,7 +34,17 @@ npm i --production=false
 # TODO from getStaticPaths if the product
 # TODO is not the target product (based on env check)
 # TODO during a build
+# Remove Boundary
+# ... but first save some global CSS files,
+# ... otherwise the build breaks
+mkdir ./temp-global-page-css
+mv ./src/pages/_proxied-dot-io/boundary/home/style.css ./temp-global-page-css/boundary-home.css
 rm -rf ./src/pages/_proxied-dot-io/boundary
+mkdir ./src/pages/_proxied-dot-io/boundary
+mkdir ./src/pages/_proxied-dot-io/boundary/home
+# ... put the saved CSS files back
+mv ./temp-global-page-css/boundary-home.css ./src/pages/_proxied-dot-io/boundary/home/style.css
+# Remove Sentinel
 rm -rf ./src/pages/_proxied-dot-io/sentinel
 # Build the site
 # Note that DEV_IO and IS_CONTENT_PREVIEW are set
