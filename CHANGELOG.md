@@ -1,26 +1,9 @@
-## unreleased
-
-FEATURES:
-
-IMPROVEMENTS:
-
-BUG FIXES:
-
-
 ## 0.6.3 (December 10, 2021)
 
 SECURITY UPDATE:
 * Update Go build version to 1.16.12 per [Go security release](https://groups.google.com/g/golang-announce/c/hcmEScgc00k?pli=1)
 
-## 0.6.2 (November 04, 2021)
-
-FEATURES:
-
-IMPROVEMENTS:
-
-BUG FIXES:
-
-# 0.6.2 (November 4, 2021)
+## 0.6.2 (November 4, 2021)
 
 FEATURES:
 
