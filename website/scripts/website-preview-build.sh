@@ -35,6 +35,7 @@ npm i --production=false
 # TODO is not the target product (based on env check)
 # TODO during a build
 rm -rf ./src/pages/_proxied-dot-io/boundary
+rm -rf ./src/pages/_proxied-dot-io/sentinel
 # Build the site
 # Note that DEV_IO and IS_CONTENT_PREVIEW are set
 # in Vercel configuration for the project
