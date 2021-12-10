@@ -359,6 +359,10 @@ service Waypoint {
   // ListTriggers takes a request filter, and returns any matching existing triggers
   rpc ListTriggers(ListTriggerRequest) returns (ListTriggerResponse);
 
+  // RunTrigger will look up the referenced trigger and attempt to queue a job
+  // based on the trigger configuration.
+  rpc RunTrigger(RunTriggerRequest) returns (RunTriggerResponse);
+
   //----------------------------------------------------------------------
   // UI endpoints. The endpoints below are convenience methods for Waypoint's
   // various UIs (web GUI and CLI). They contain no unique functionality, i.e.
@@ -3308,6 +3312,17 @@ message GetTriggerResponse {
 
 message DeleteTriggerRequest {
   Ref.Trigger ref = 1;
+}
+
+message RunTriggerRequest {
+  // The trigger ref to execute
+  Ref.Trigger ref = 1;
+}
+
+message RunTriggerResponse {
+  // the job ID that was queued. This can be used with other RPC methods
+  // to check on the status, cancel, etc.
+  repeated string job_ids = 1;
 }
 
 // ListTriggerRequest can take a handful of optional filter arguments. If none
