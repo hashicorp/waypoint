@@ -20,7 +20,7 @@ export default class DeploymentDetail extends Route {
     return [
       {
         label: model.application?.application ?? 'unknown',
-        icon: 'git-repository',
+        icon: 'git-repo',
         route: 'workspace.projects.project.app',
       },
       {

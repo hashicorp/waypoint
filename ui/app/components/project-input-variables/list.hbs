@@ -24,7 +24,7 @@
       {{t "form.project_variables_settings.empty_state_content"}}
     </P.Body>
     <P.Footer>
-      <Pds::Button data-test-input-variables-add-variable @variant="primary" {{on "click" this.addVariable}}>
+      <Pds::Button data-test-input-variables-add-variable @variant="primary" class="button--add-variable" {{on "click" this.addVariable}}>
         <FlightIcon @name="plus" />{{t "form.project_variables_settings.button_apply"}}
       </Pds::Button>
     </P.Footer>

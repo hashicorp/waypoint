@@ -8,7 +8,7 @@
             href={{enforce-protocol @model.preload.deployUrl}}
             class="button button--secondary button--external-link">
             <span>{{lowercase @model.preload.deployUrl}}</span>
-            <FlightIcon @name="exit" class="icon" />
+            <FlightIcon @name="external-link" class="icon" />
           </ExternalLink>
         {{/if}}
         <Actions::Release @sequence={{@model.sequence}} />

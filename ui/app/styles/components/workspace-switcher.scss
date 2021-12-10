@@ -12,12 +12,11 @@
 .workspace-switcher__link-contents {
   display: flex;
   position: relative;
-  padding-left: scale.$lg--2;
+  padding-left: scale.$lg-1;
 
-  .pds-icon {
+  svg {
     position: absolute;
-    top: -2px;
-    left: -4px;
+    left: -3px;
     font-size: scale.$lg--1;
     color: rgb(var(--link));
   }
@@ -31,7 +30,7 @@
   line-height: var(--pds-lineHeight--dense);
   padding-left: scale.$lg--2;
 
-  .pds-icon {
+  svg {
     position: absolute;
     font-size: scale.$lg--1;
     left: -4px;
@@ -39,6 +38,6 @@
   }
 }
 
-.workspace-switcher__error-state .pds-icon {
+.workspace-switcher__error-state svg {
   color: rgb(var(--error-text));
 }

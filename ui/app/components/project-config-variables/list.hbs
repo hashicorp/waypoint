@@ -20,7 +20,7 @@
     {{/each}}
   </ul>
   <Pds::ButtonSet>
-    <Pds::Button data-test-config-variables-add-variable disabled={{this.isCreating}} @variant="primary" {{on "click" this.addVariable}}>
+    <Pds::Button data-test-config-variables-add-variable disabled={{this.isCreating}} @variant="primary" class="button--add-variable" {{on "click" this.addVariable}}>
       <FlightIcon @name="plus" />{{t "form.config_variables_settings.button_apply"}}
     </Pds::Button>
   </Pds::ButtonSet>
@@ -31,7 +31,7 @@
       {{t "form.config_variables_settings.empty_state_content"}}
     </P.Body>
     <P.Footer>
-      <Pds::Button data-test-config-variables-add-variable @variant="primary" {{on "click" this.addVariable}}>
+      <Pds::Button data-test-config-variables-add-variable @variant="primary" class="button--add-variable" {{on "click" this.addVariable}}>
         <FlightIcon @name="plus" />{{t "form.config_variables_settings.button_apply"}}
       </Pds::Button>
     </P.Footer>

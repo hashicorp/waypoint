@@ -131,11 +131,3 @@ hr {
 button .icon {
   margin-right: scale.$sm-3;
 }
-// Set a default size for icons
-
-svg.icon {
-  width: scale.$lg-2;
-  height: scale.$lg-2;
-  flex-shrink: 0;
-}
-

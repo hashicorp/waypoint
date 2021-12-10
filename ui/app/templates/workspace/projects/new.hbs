@@ -28,8 +28,10 @@
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
         <div class="pds-fieldName" id="create-git-help-text">
-          <FlightIcon @name="git-repo" class="icon" />
-          {{t 'form.project_new.create_git_label'}}
+          <span>
+            <FlightIcon @name="git-repo" @size="16" class="icon" />
+            {{t 'form.project_new.create_git_label'}}
+          </span>
           <Pds::HelpText>
             {{t 'form.project_new.create_git_helptext'}}
           </Pds::HelpText>
