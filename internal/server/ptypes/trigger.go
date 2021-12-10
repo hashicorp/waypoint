@@ -90,3 +90,13 @@ func ValidateRefTriggerRules(v *pb.Ref_Trigger) []*validation.FieldRules {
 		validation.Field(&v.Id, validation.Required),
 	}
 }
+
+// ValidateRunTriggerRequest
+func ValidateRunTriggerRequest(v *pb.RunTriggerRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Ref, validation.Required),
+		validationext.StructField(&v.Ref, func() []*validation.FieldRules {
+			return ValidateRefTriggerRules(v.Ref)
+		}),
+	))
+}
