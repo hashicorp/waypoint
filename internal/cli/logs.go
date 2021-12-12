@@ -30,7 +30,6 @@ func (c *LogsCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithSingleAppTarget(),
-		WithRunnerRequired(), // Some platforms have a separate logs plugin that require a runner
 	); err != nil {
 		return 1
 	}
@@ -101,7 +100,7 @@ func (c *LogsCommand) Run(args []string) int {
 }
 
 func (c *LogsCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(flagSetOperation, nil)
 }
 
 func (c *LogsCommand) AutocompleteArgs() complete.Predictor {

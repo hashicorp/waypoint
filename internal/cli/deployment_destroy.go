@@ -30,7 +30,6 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(flags),
 		WithSingleAppTarget(),
-		WithRunnerRequired(),
 	); err != nil {
 		return 1
 	}

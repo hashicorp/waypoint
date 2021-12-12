@@ -1,0 +1,47 @@
+{{!--
+
+This component is designed to be a drop-in replacement for `<table>`. It applies
+some styles and adds an extra wrapping element, but apart from that it’s a plain
+old HTML table so feel free to use all your favorite HTML table features.
+
+Usage:
+
+    <Table>
+      <caption>My very nice table</caption>
+
+      <colgroup>
+        <col class="w-1/2">
+        <col>
+        <col>
+      </colgroup>
+
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Location</th>
+          <th>Role</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <th scope="row">Alice Example</th>
+          <td>Minneapolis</td>
+          <td>Engineer</td>
+        </tr>
+      </tbody>
+    </Table>
+
+--}}
+
+<div
+  data-test-table
+  class="
+    table
+    {{if @withMargin "table--with-margin"}}
+  "
+>
+  <table ...attributes>
+    {{yield}}
+  </table>
+</div>

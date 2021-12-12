@@ -27,7 +27,6 @@ func (c *UpCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithMultiAppTargets(),
-		WithRunnerRequired(),
 	); err != nil {
 		return 1
 	}

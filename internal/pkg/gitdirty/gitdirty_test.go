@@ -104,7 +104,7 @@ func TestFileIsDirty(t *testing.T) {
 
 			testGitFixture(t, path)
 
-			result, err := FileIsDirty(log, path, tt.RemoteUrl, tt.RemoteBranch, tt.FilePath)
+			result, err := PathIsDirty(log, path, tt.RemoteUrl, tt.RemoteBranch, tt.FilePath)
 			if tt.ExpectedErr != "" {
 				require.Error(err)
 				require.Contains(err.Error(), tt.ExpectedErr)
@@ -144,6 +144,14 @@ func TestRepoIsDirty(t *testing.T) {
 		{
 			"committed unpushed change is dirty",
 			"committed-unpushed-change",
+			"origin",
+			"main",
+			true,
+			"",
+		},
+		{
+			"unstaged change is dirty",
+			"unstaged",
 			"origin",
 			"main",
 			true,

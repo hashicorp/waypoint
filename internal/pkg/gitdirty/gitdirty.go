@@ -29,18 +29,32 @@ func init() {
 // CAVEAT: This does not fetch any remotes, and therefore will not detect if
 // the local copy is behind the remote,
 func RepoIsDirty(log hclog.Logger, repoPath string, remoteUrl string, remoteBranch string) (bool, error) {
-	return FileIsDirty(log, repoPath, remoteUrl, remoteBranch, "")
+	return PathIsDirty(log, repoPath, remoteUrl, remoteBranch, "")
 }
 
-// FileIsDirty checks only the specified file for unstaged, staged, and committed
+// PathIsDirty checks only the specified file for unstaged, staged, and committed
 // (but not pushed) changes on the local GitDirty.path repo not on the specified remote
-// url and branch. If filePath is empty, this will check the entire repo.
+// url and branch. If path is empty, this will check the entire repo.
 // CAVEAT: This does not fetch any remotes, and therefore will not detect if
 // the local copy is behind the remote,
-func FileIsDirty(log hclog.Logger, repoPath string, remoteUrl string, remoteBranch string, filePath string) (bool, error) {
+func PathIsDirty(log hclog.Logger, repoPath string, remoteUrl string, remoteBranch string, path string) (bool, error) {
 	remoteName, err := getRemoteName(log, repoPath, remoteUrl)
 	if err != nil {
 		return false, errors.Wrapf(err, "Failed to get remote name for url %s", remoteUrl)
+	}
+
+	statusArgs := []string{"status", "--porcelain"}
+	if path != "" {
+		statusArgs = append(statusArgs, path)
+	}
+	// Check if git status is dirty
+	statusOut, err := runGitCommand(log, repoPath, statusArgs...)
+	if err != nil {
+		return false, err
+	}
+	if !(statusOut == "") {
+		log.Debug("Git path is dirty because git status is non-empty")
+		return true, nil
 	}
 
 	var diffTarget string
@@ -67,11 +81,23 @@ func FileIsDirty(log hclog.Logger, repoPath string, remoteUrl string, remoteBran
 		diffTarget = fmt.Sprintf("%s/%s", remoteName, defaultBranch)
 	}
 
-	diff, err := remoteHasDiff(log, repoPath, diffTarget, filePath)
+	diff, err := remoteHasDiff(log, repoPath, diffTarget, path)
 	if err != nil {
 		return false, err
 	}
+	if diff {
+		log.Debug("Git path is dirty because there is a non-empty diff against the specified remote/ref")
+	}
 	return diff, nil
+}
+
+// hasDirtyStatus checks if the path in the repo has an unclean status
+func hasDirtyStatus(log hclog.Logger, repoPath string, path string) (bool, error) {
+	out, err := runGitCommand(log, repoPath, "status", "--porcelain", path)
+	if err != nil {
+		return false, err
+	}
+	return !(out == ""), nil
 }
 
 func getDefaultBranch(log hclog.Logger, repoPath string, remoteName string) (string, error) {
@@ -262,11 +288,11 @@ func getRemoteName(log hclog.Logger, repoPath string, remoteUrl string) (name st
 }
 
 // remoteHasDiff compares the local repo to the specified branch on the configured remote.
-// If filePath is not empty, it will check only the specified file path.
-func remoteHasDiff(log hclog.Logger, repoPath string, remoteRef string, filePath string) (bool, error) {
+// If path is not empty, it will check only the specified file path.
+func remoteHasDiff(log hclog.Logger, repoPath string, remoteRef string, path string) (bool, error) {
 	args := []string{"diff", "--quiet", remoteRef}
-	if filePath != "" {
-		args = append(args, "--", filePath)
+	if path != "" {
+		args = append(args, "--", path)
 	}
 	out, err := runGitCommand(log, repoPath, args...)
 	if out != "" {

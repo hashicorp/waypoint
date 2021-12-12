@@ -5,7 +5,7 @@ This directory contains examples and sample infrastructure for consuming that te
 
 ### Docker-Compose
 This directory contains a docker compose file to bring up OpenCensus infrastructure
-for consuming and forwarding metrics (an agent and a collector), a Jeager
+for consuming and forwarding metrics (an agent and a collector), a Jaeger
 all-in-one container for viewing trace data, and a Datadog agent for
 forwarding traces to Datadog. If you wish to use the Datadog exporter, you'll
 need to supply a `DD_API_KEY` environment variable to the docker compose, like so:
@@ -17,10 +17,10 @@ DD_API_KEY=<redacted> docker-compose up
 If you do not provide a DD_API_KEY, the Datadog agent will fail to start, but the
 rest of the infrastructure will function correctly.
 
-### Waypoint Server -> Jeager example
+### Waypoint Server -> Jaeger example
 
 The Waypoint server supports multiple exporters, but this example will show exporting
-to the OpenCensus agent, and viewing traces in Jeager.
+to the OpenCensus agent, and viewing traces in Jaeger.
 
 #### Run the docker-compose infrastructure
 Run `docker-compose up` within this directory. You do not need to specify a `DD_API_KEY`.

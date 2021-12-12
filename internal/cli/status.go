@@ -134,14 +134,6 @@ func (c *StatusCommand) RefreshApplicationStatus() error {
 	// Get our API client
 	client := c.project.Client()
 
-	// We now know that we're going to need a runner for the refresh job.
-	if !c.remoteOpPreferred() {
-		_, err := c.startLocalRunner()
-		if err != nil {
-			return err
-		}
-	}
-
 	// Get the entire list of apps
 	// Determine project locality
 	// Do the Work (local or remote)
