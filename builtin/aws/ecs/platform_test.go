@@ -44,6 +44,33 @@ func TestPlatformConfig(t *testing.T) {
 		require.NoError(t, p.ConfigSet(cfg))
 	})
 
+	t.Run("fine if only security_group_ids", func(t *testing.T) {
+		var p Platform
+
+		cfg := &Config{
+			Memory: 512,
+			ALB: &ALBConfig{
+				SecurityGroupIDs: []string{"xyz", "lmnop"},
+			},
+		}
+
+		require.NoError(t, p.ConfigSet(cfg))
+	})
+
+	t.Run("errors if security_group_ids and listener are set", func(t *testing.T) {
+		var p Platform
+
+		cfg := &Config{
+			Memory: 512,
+			ALB: &ALBConfig{
+				SecurityGroupIDs: []string{"xyz", "lmnop"},
+				ListenerARN:      "abc",
+			},
+		}
+
+		require.Error(t, p.ConfigSet(cfg))
+	})
+
 	t.Run("errors if cert and listener are set", func(t *testing.T) {
 		var p Platform
 
