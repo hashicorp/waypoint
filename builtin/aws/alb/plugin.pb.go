@@ -200,6 +200,8 @@ type Resource_SecurityGroup struct {
 	unknownFields protoimpl.UnknownFields
 
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Indicates if a security group was created by waypoint, and should be destroyed by waypoint
+	Managed bool `protobuf:"varint,3,opt,name=managed,proto3" json:"managed,omitempty"`
 }
 
 func (x *Resource_SecurityGroup) Reset() {
