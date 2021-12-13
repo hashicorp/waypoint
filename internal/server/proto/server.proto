@@ -3322,7 +3322,7 @@ message ListTriggerRequest {
   Ref.Application application = 3;
 
   // Will filter triggers by the requested labels if set.
-  repeated string labels = 4;
+  repeated string tags = 4;
 }
 
 message ListTriggerResponse {
