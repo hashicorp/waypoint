@@ -43,6 +43,7 @@ func AddStandardFunctions(ctx *hcl.EvalContext, pwd string) {
 	}
 
 	// Add some of our functions
+	addFuncs(ConfigDynamicFuncs())
 	addFuncs(VCSGitFuncs(pwd))
 	addFuncs(Filesystem())
 	addFuncs(Encoding())

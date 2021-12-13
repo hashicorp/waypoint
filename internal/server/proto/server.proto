@@ -3509,6 +3509,7 @@ message ConfigVar {
     Ref.Runner runner = 5;
   }
 
+  // TODO(izaak): this should probably be lifted out of here if it's going to be used in two places.
   // DynamicVal is the configuration for dynamic values for configuration.
   message DynamicVal {
     // from is the config source plugin to use

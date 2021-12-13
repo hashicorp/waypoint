@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	hcljson "github.com/hashicorp/hcl/v2/json"
+	"github.com/hashicorp/waypoint/internal/config/funcs"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
@@ -118,16 +119,17 @@ type Value struct {
 	Expr   hcl.Expression
 	// The location of the variable value if the value was provided from a file
 	Range hcl.Range
+
+	DynamicSource *pb.ConfigVar_DynamicVal
 }
 
 // DecodeVariableBlocks uses the hclConfig schema to iterate over all
 // variable blocks, validating names and types and checking for duplicates.
 // It returns the final map of Variables to store for later reference.
-func DecodeVariableBlocks(content *hcl.BodyContent) (map[string]*Variable, hcl.Diagnostics) {
-	var diags hcl.Diagnostics
+func DecodeVariableBlocks(ctx *hcl.EvalContext, content *hcl.BodyContent) (map[string]*Variable, hcl.Diagnostics) {
 	vs := map[string]*Variable{}
 	for _, block := range content.Blocks.OfType("variable") {
-		v, diags := decodeVariableBlock(block)
+		v, diags := decodeVariableBlock(ctx, block)
 		if diags.HasErrors() {
 			return nil, diags
 		}
@@ -145,12 +147,12 @@ func DecodeVariableBlocks(content *hcl.BodyContent) (map[string]*Variable, hcl.D
 		vs[block.Labels[0]] = v
 	}
 
-	return vs, diags
+	return vs, hcl.Diagnostics{}
 }
 
 // decodeVariableBlock validates each part of the variable block,
 // building out a defined *Variable
-func decodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
+func decodeVariableBlock(ctx *hcl.EvalContext, block *hcl.Block) (*Variable, hcl.Diagnostics) {
 	name := block.Labels[0]
 	v := Variable{
 		Name:  name,
@@ -194,39 +196,56 @@ func decodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 	}
 
 	if attr, exists := content.Attributes["default"]; exists {
-		val, valDiags := attr.Expr.Value(nil)
+		val, valDiags := attr.Expr.Value(ctx)
 		diags = append(diags, valDiags...)
 		if diags.HasErrors() {
 			return nil, diags
 		}
-		// Convert the default to the expected type so we can catch invalid
-		// defaults early and allow later code to assume validity.
-		// Note that this depends on us having already processed any "type"
-		// attribute above.
-		if v.Type != cty.NilType {
-			var err error
-			val, err = convert.Convert(val, v.Type)
-			if err != nil {
-				diags = append(diags, &hcl.Diagnostic{
-					Severity: hcl.DiagError,
-					Summary:  fmt.Sprintf("Invalid default value for variable %q", name),
-					Detail:   fmt.Sprintf("This default value is not compatible with the variable's type constraint: %s.", err),
-					Subject:  attr.Expr.Range().Ptr(),
-				})
-				val = cty.DynamicVal
+
+		switch val.Type() {
+		case funcs.TypeDynamicConfig:
+			// If this is a dynamic value, store the details so we can
+			// invoke the required configsourcer plugin later.
+			v.Default = &Value{
+				DynamicSource: val.EncapsulatedValue().(*pb.ConfigVar_DynamicVal),
+			}
+
+			// TODO(izaak): we're bypassing all the type-checking
+			// logic below becase we don't actually have the value yet.
+			// This means we should probably perform it later, once
+			// we have the val.
+		default:
+			// Convert the default to the expected type so we can catch invalid
+			// defaults early and allow later code to assume validity.
+			// Note that this depends on us having already processed any "type"
+			// attribute above.
+
+			if v.Type != cty.NilType {
+				var err error
+				val, err = convert.Convert(val, v.Type)
+				if err != nil {
+					diags = append(diags, &hcl.Diagnostic{
+						Severity: hcl.DiagError,
+						Summary:  fmt.Sprintf("Invalid default value for variable %q", name),
+						Detail:   fmt.Sprintf("This default value is not compatible with the variable's type constraint: %s.", err),
+						Subject:  attr.Expr.Range().Ptr(),
+					})
+					val = cty.DynamicVal
+				}
+			}
+
+			v.Default = &Value{
+				Source: sourceDefault,
+				Value:  val,
+			}
+
+			// It's possible no type attribute was assigned so lets make sure we
+			// have a valid type otherwise there could be issues parsing the value.
+			if v.Type == cty.NilType {
+				v.Type = val.Type()
 			}
 		}
 
-		v.Default = &Value{
-			Source: sourceDefault,
-			Value:  val,
-		}
-
-		// It's possible no type attribute was assigned so lets make sure we
-		// have a valid type otherwise there could be issues parsing the value.
-		if v.Type == cty.NilType {
-			v.Type = val.Type()
-		}
 	}
 
 	return &v, diags
