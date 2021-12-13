@@ -1,11 +1,15 @@
 {
+  "name": "waypoint-docs",
+  "description": "Documentation website for Waypoint",
+  "version": "1.0.0",
+  "author": "HashiCorp",
   "scripts": {
     "start": "./scripts/website-preview-start.sh",
     "dev": "npm run start",
     "clean": "rm -rf ./website-preview",
     "generate:readme": "next-hashicorp markdown-blocks README.md",
-    "format": "next-hashicorp format content/**/* data/**/*",
-    "lint": "next-hashicorp lint content/**/* data/**/*",
+    "format": "next-hashicorp format",
+    "lint": "next-hashicorp lint",
     "build": "npm i -g npm@7 && ./scripts/website-preview-build.sh"
   },
   "devDependencies": {
@@ -13,5 +17,13 @@
   },
   "dependencies": {
     "next": "^11.1.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "next-hashicorp precommit"
+    }
+  },
+  "engines": {
+    "npm": ">=7.0.0"
   }
 }
