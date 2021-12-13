@@ -159,7 +159,7 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 			var dirty bool
 			if gitDs.Git.Path != "" {
 				diffPath := filepath.Join(repoRoot, gitDs.Git.Path)
-				dirty, err = gitdirty.FileIsDirty(log, repoRoot, gitDs.Git.Url, gitDs.Git.Ref, diffPath)
+				dirty, err = gitdirty.PathIsDirty(log, repoRoot, gitDs.Git.Url, gitDs.Git.Ref, diffPath)
 				if err != nil {
 					return errors.Wrapf(err, "failed to diff repo at %q subpath %q against remote with url %q ref %q",
 						repoRoot, diffPath, gitDs.Git.Url, gitDs.Git.Ref,
