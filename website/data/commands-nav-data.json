@@ -263,6 +263,10 @@
     "path": "version"
   },
   {
+    "title": "workspace create",
+    "path": "workspace-create"
+  },
+  {
     "title": "workspace inspect",
     "path": "workspace-inspect"
   },
