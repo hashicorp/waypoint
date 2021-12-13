@@ -110,9 +110,9 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 		opStr = fmt.Sprintf("unknown operation: %T", triggerOpType)
 	}
 
-	var labels string
-	if len(trigger.Labels) > 0 {
-		labels = strings.Join(trigger.Labels[:], ", ")
+	var tags string
+	if len(trigger.Tags) > 0 {
+		tags = strings.Join(trigger.Tags[:], ", ")
 	}
 
 	c.ui.Output("Trigger URL config:", terminal.WithHeaderStyle())
@@ -142,7 +142,7 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 			Name: "Application", Value: app,
 		},
 		{
-			Name: "Labels", Value: labels,
+			Name: "Tags", Value: tags,
 		},
 		{
 			Name: "Description", Value: trigger.Description,

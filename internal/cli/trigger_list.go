@@ -16,7 +16,7 @@ import (
 type TriggerListCommand struct {
 	*baseCommand
 
-	flagTriggerLabels []string
+	flagTriggerTags []string
 
 	flagJson bool
 }
@@ -34,7 +34,7 @@ func (c *TriggerListCommand) Run(args []string) int {
 	ctx := c.Ctx
 
 	req := &pb.ListTriggerRequest{
-		Labels: c.flagTriggerLabels,
+		Tags: c.flagTriggerTags,
 	}
 
 	if c.flagWorkspace != "" {
@@ -83,14 +83,14 @@ func (c *TriggerListCommand) Run(args []string) int {
 
 	c.ui.Output("Trigger URL Configs", terminal.WithHeaderStyle())
 
-	tbl := terminal.NewTable("ID", "Name", "Workspace", "Project", "Application", "Operation", "Description", "Labels", "Last Time Active")
+	tbl := terminal.NewTable("ID", "Name", "Workspace", "Project", "Application", "Operation", "Description", "Tags", "Last Time Active")
 
 	for _, t := range resp.Triggers {
 		ws := "default"
 		if t.Workspace != nil {
 			ws = t.Workspace.Workspace
 		}
-		var proj, app, labels string
+		var proj, app, tags string
 		if t.Project != nil {
 			proj = t.Project.Project
 		}
@@ -98,8 +98,8 @@ func (c *TriggerListCommand) Run(args []string) int {
 			app = t.Application.Application
 		}
 
-		if len(t.Labels) > 0 {
-			labels = strings.Join(t.Labels[:], ",")
+		if len(t.Tags) > 0 {
+			tags = strings.Join(t.Tags[:], ",")
 		}
 
 		var opStr string
@@ -137,7 +137,7 @@ func (c *TriggerListCommand) Run(args []string) int {
 			app,
 			opStr,
 			t.Description,
-			labels,
+			tags,
 			t.ActiveTime.String(),
 		}, nil)
 	}
@@ -152,9 +152,9 @@ func (c *TriggerListCommand) Flags() *flag.Sets {
 		f := set.NewSet("Command Options")
 
 		f.StringSliceVar(&flag.StringSliceVar{
-			Name:   "trigger-label",
-			Target: &c.flagTriggerLabels,
-			Usage: "A collection of labels to filter on. If the requested label does " +
+			Name:   "trigger-tag",
+			Target: &c.flagTriggerTags,
+			Usage: "A collection of tags to filter on. If the requested tag does " +
 				"not match any defined trigger URL, it will be omitted from the results. " +
 				"Can be specified multiple times.",
 		})

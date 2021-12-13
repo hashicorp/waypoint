@@ -21,7 +21,7 @@ type TriggerApplyCommand struct {
 	flagTriggerName        string
 	flagTriggerId          string
 	flagTriggerDescription string
-	flagTriggerLabels      []string
+	flagTriggerTags        []string
 	flagTriggerOperation   string
 	flagTriggerNoAuth      bool
 
@@ -89,8 +89,8 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		if c.flagTriggerDescription == "" {
 			c.flagTriggerDescription = diffTrigger.Description
 		}
-		if len(c.flagTriggerLabels) == 0 {
-			c.flagTriggerLabels = diffTrigger.Labels
+		if len(c.flagTriggerTags) == 0 {
+			c.flagTriggerTags = diffTrigger.Tags
 		}
 
 		// Trigger target
@@ -108,7 +108,7 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 	createTrigger := &pb.Trigger{
 		Name:          c.flagTriggerName,
 		Description:   c.flagTriggerDescription,
-		Labels:        c.flagTriggerLabels,
+		Tags:          c.flagTriggerTags,
 		Authenticated: !c.flagTriggerNoAuth,
 		Workspace: &pb.Ref_Workspace{
 			Workspace: c.flagWorkspace,
@@ -300,9 +300,9 @@ func (c *TriggerApplyCommand) Flags() *flag.Sets {
 		})
 
 		f.StringSliceVar(&flag.StringSliceVar{
-			Name:   "trigger-label",
-			Target: &c.flagTriggerLabels,
-			Usage:  "A collection of labels to apply to the trigger URL configuration. Can be specified multiple times.",
+			Name:   "trigger-tag",
+			Target: &c.flagTriggerTags,
+			Usage:  "A collection of tags to apply to the trigger URL configuration. Can be specified multiple times.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
