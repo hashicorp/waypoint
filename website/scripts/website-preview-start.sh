@@ -8,8 +8,10 @@ fi
 # cd into the dev-portal project
 cd "$PREVIEW_DIR"
 # Ensure we're on the branch intended for preview mode
-# TODO: this should always be main,
-# TODO: ie no checkout command, once we're ready
-git checkout zs.refine-preview-modes
+# TODO checkout is only necessary during dev,
+# TODO: will later always be main,
+# TODO: but for now, checking out a specific
+# TODO: branch is useful for dev.
+git checkout main
 # Run the dev-portal content-repo start script
 REPO=waypoint PREVIEW_DIR="$PREVIEW_DIR" ./scripts/content-repo-preview/start.sh
