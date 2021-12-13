@@ -131,7 +131,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 		// Create more for listing
 		err := s.TriggerPut(&pb.Trigger{
 			Project: &pb.Ref_Project{Project: "p_test"},
-			Labels:  []string{"first"},
+			Tags:    []string{"first"},
 			Name:    "firsttest",
 			Id:      "t_test",
 		})
@@ -150,7 +150,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		err = s.TriggerPut(&pb.Trigger{
 			Project: &pb.Ref_Project{Project: "test_project"},
-			Labels:  []string{"test", "another"},
+			Tags:    []string{"test", "another"},
 			Name:    "more_test",
 			Id:      "t_test_part3",
 		})
@@ -204,7 +204,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Len(resp, 2)
 		}
 
-		// List by label
+		// List by tag
 		{
 			resp, err := s.TriggerList(nil, nil, nil, []string{"test"})
 			require.NoError(err)

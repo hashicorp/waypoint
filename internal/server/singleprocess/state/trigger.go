@@ -87,7 +87,7 @@ func (s *State) TriggerList(
 	refws *pb.Ref_Workspace,
 	refproj *pb.Ref_Project,
 	refapp *pb.Ref_Application,
-	labelFilter []string,
+	tagFilter []string,
 ) ([]*pb.Trigger, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
@@ -123,25 +123,25 @@ func (s *State) TriggerList(
 			}
 
 			// filter out triggers on request
-			if len(labelFilter) > 0 {
-				if len(val.Labels) == 0 {
-					// the trigger has no labels, so it's not a match
+			if len(tagFilter) > 0 {
+				if len(val.Tags) == 0 {
+					// the trigger has no tags, so it's not a match
 					continue
 				}
 
-				labelMatch := false
+				tagMatch := false
 			EXIT:
-				for _, f := range labelFilter {
-					for _, tf := range val.Labels {
+				for _, f := range tagFilter {
+					for _, tf := range val.Tags {
 						if tf == f {
-							labelMatch = true // we found a matching label on this value
+							tagMatch = true // we found a matching tag on this value
 							// break to continue to compare ws, proj, app on value
 							break EXIT
 						}
 					}
 				}
 
-				if !labelMatch {
+				if !tagMatch {
 					continue
 				}
 			}

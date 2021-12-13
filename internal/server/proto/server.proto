@@ -3244,9 +3244,9 @@ message Trigger {
   // of the trigger.
   string description = 3;
 
-  // labels that allow users to group triggers together that are
-  // related. There are no default labels.
-  repeated string labels = 4;
+  // tags that allow users to group triggers together that are
+  // related. There are no default tags.
+  repeated string tags = 4;
 
   // time of last execution.
   google.protobuf.Timestamp active_time = 5;
