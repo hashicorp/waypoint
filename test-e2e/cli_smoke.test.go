@@ -7,8 +7,8 @@ import (
 
 func TestWaypointInstall(t *testing.T) {
 	t.Logf("Testing waypoint is available...")
-	wp := NewBinary(wpBinary, ".")
-	stdout, stderr, err := wp.Run("version")
+	wp := NewBinary(t, wpBinary, ".")
+	stdout, stderr, err := wp.RunRaw("version")
 	if err != nil {
 		t.Errorf("unexpected error getting version: %s", err)
 	}

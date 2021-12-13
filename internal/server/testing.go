@@ -82,7 +82,7 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 	}
 
 	// Get our version info we'll set on the client
-	vsnInfo := testVersionInfoResponse().Info
+	vsnInfo := TestVersionInfoResponse().Info
 
 	// connect is a function since we need to connect multiple times:
 	// once to bootstrap, then again with our auth information.
@@ -134,7 +134,7 @@ func TestWithContext(ctx context.Context) TestOption {
 	}
 }
 
-// TestWithRestart specifies a channel that will be sent to to trigger
+// TestWithRestart specifies a channel that will be sent to trigger
 // a restart. The restart happens asynchronously. If you want to ensure the
 // server is shutdown first, use TestWithContext, shut it down, wait for
 // errors on the API, then restart.
@@ -144,7 +144,8 @@ func TestWithRestart(ch <-chan struct{}) TestOption {
 	}
 }
 
-func testVersionInfoResponse() *pb.GetVersionInfoResponse {
+// TestVersionInfoResponse generates a valid version info response for testing
+func TestVersionInfoResponse() *pb.GetVersionInfoResponse {
 	return &pb.GetVersionInfoResponse{
 		Info: &pb.VersionInfo{
 			Api: &pb.VersionInfo_ProtocolVersion{

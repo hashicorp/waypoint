@@ -24,7 +24,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithMultipleApp(),
+		WithMultiAppTargets(),
 	); err != nil {
 		return 1
 	}
@@ -130,8 +130,11 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 		case releaseUrl != "":
 			printInplaceInfo(inplace, app)
 			app.UI.Output("   Release URL: %s", releaseUrl, terminal.WithSuccessStyle())
-			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
-
+			if deployUrl != "" {
+				app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+			} else {
+				app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
+			}
 		case hostname != nil:
 			printInplaceInfo(inplace, app)
 			app.UI.Output("           URL: https://%s", hostname.Fqdn, terminal.WithSuccessStyle())

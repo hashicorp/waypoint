@@ -15,8 +15,9 @@ import (
 type UserTokenCommand struct {
 	*baseCommand
 
-	flagDuration time.Duration
-	flagUsername string
+	flagDuration        time.Duration
+	flagUsername        string
+	flagTriggerUrlToken bool
 }
 
 func (c *UserTokenCommand) Run(args []string) int {
@@ -25,7 +26,7 @@ func (c *UserTokenCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
-		WithNoAutoServer(), // local mode has no need for tokens
+		WithNoLocalServer(), // local mode has no need for tokens
 	); err != nil {
 		return 1
 	}
@@ -46,6 +47,7 @@ func (c *UserTokenCommand) Run(args []string) int {
 	resp, err := client.GenerateLoginToken(c.Ctx, &pb.LoginTokenRequest{
 		Duration: c.flagDuration.String(),
 		User:     refUser,
+		Trigger:  c.flagTriggerUrlToken,
 	})
 	if err != nil {
 		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -73,6 +75,14 @@ func (c *UserTokenCommand) Flags() *flag.Sets {
 			Target: &c.flagUsername,
 			Usage: "Username to generate the login token for. This defaults " +
 				"to the currently logged in user.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "trigger-url-token",
+			Target: &c.flagTriggerUrlToken,
+			Usage: "Will generate a trigger auth token. This token can only be used " +
+				"for trigger URL actions.",
+			Default: false,
 		})
 	})
 }

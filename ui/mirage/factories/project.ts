@@ -81,15 +81,13 @@ export default Factory.extend({
         }),
       ];
 
-      let prodDeployments = [
-        server.create('deployment', 'random', 'seconds-old-success', {
-          sequence: 5,
-          application,
-          workspace: prodWorkspace,
-          build: prodBuilds[0],
-          statusReport: server.create('status-report', 'alive', 'with-deployment-resources', { application }),
-        }),
-      ];
+      server.create('deployment', 'random', 'seconds-old-success', {
+        sequence: 5,
+        application,
+        workspace: prodWorkspace,
+        build: prodBuilds[0],
+        statusReport: server.create('status-report', 'alive', 'with-deployment-resources', { application }),
+      });
 
       server.create('release', 'random', 'minutes-old-success', {
         sequence: 3,

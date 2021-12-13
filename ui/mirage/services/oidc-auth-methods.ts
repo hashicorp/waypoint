@@ -1,9 +1,10 @@
-import { Request, Response, RouteHandler } from 'miragejs';
+import { Response } from 'miragejs';
+import { RouteHandler } from '../types';
 
 import { ListOIDCAuthMethodsResponse } from 'waypoint-pb';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export function list(this: RouteHandler, schema: any, { requestBody }: Request): Response {
+export function list(this: RouteHandler, schema: any): Response {
   let authMethods = schema.authMethods.all();
   let authMethodsProtos = authMethods.models?.map((model) => model?.toProtobuf());
 

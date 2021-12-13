@@ -148,7 +148,25 @@ func New(opts ...Option) (*Runner, error) {
 	runner.runner = &pb.Runner{
 		Id:       runner.id,
 		ByIdOnly: cfg.byIdOnly,
-		Odr:      cfg.odr,
+	}
+
+	// Determine what kind of remote runner we are
+	if cfg.odr {
+		runner.runner.Kind = &pb.Runner_Odr{
+			Odr: &pb.Runner_ODR{
+				ProfileId: cfg.odrProfileId,
+			},
+		}
+	} else if runner.local {
+		runner.runner.Kind = &pb.Runner_Local_{
+			Local: &pb.Runner_Local{},
+		}
+	} else {
+		// If this runner isn't ODR or Local, by process of elimination it must be a "static" remote runner.
+		// We don't currently have a method to indicate this explicitly.
+		runner.runner.Kind = &pb.Runner_Remote_{
+			Remote: &pb.Runner_Remote{},
+		}
 	}
 
 	// Setup our runner components list
@@ -267,8 +285,9 @@ func (r *Runner) setState(state *bool, v bool) {
 }
 
 type config struct {
-	byIdOnly bool
-	odr      bool
+	byIdOnly     bool
+	odr          bool
+	odrProfileId string
 }
 
 type Option func(*Runner, *config) error
@@ -323,9 +342,10 @@ func ByIdOnly() Option {
 
 // WithODR configures this runner to be an on-demand runner. This
 // will flag this to the server on registration.
-func WithODR() Option {
+func WithODR(profileId string) Option {
 	return func(r *Runner, cfg *config) error {
 		cfg.odr = true
+		cfg.odrProfileId = profileId
 		return nil
 	}
 }

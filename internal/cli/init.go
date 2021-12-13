@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	getter "github.com/hashicorp/go-getter"
+	"github.com/pkg/errors"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -42,7 +43,7 @@ func (c *InitCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
-		WithClient(false),
+		WithNoClient(),
 	); err != nil {
 		return 1
 	}
@@ -220,11 +221,19 @@ func (c *InitCommand) validateConfig() bool {
 	defer sg.Wait()
 
 	s := sg.Add("Validating configuration file...")
-	cfg, err := c.initConfig(c.fromProject, false)
+	cfg, err := c.initConfig(c.fromProject)
 	if err != nil {
 		c.stepError(s, initStepConfig, err)
 		return false
 	}
+	if cfg == nil {
+		// This should never happen, because if there is no config, init should have created
+		// it and exited earlier.
+		err = errors.New("No configuration file found")
+		c.stepError(s, initStepConfig, err)
+		return false
+	}
+
 	c.cfg = cfg
 	c.refProject = &pb.Ref_Project{Project: cfg.Project}
 

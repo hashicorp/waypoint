@@ -21,7 +21,7 @@ func (c *ContextInspectCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(flagSet),
 		WithNoConfig(),
-		WithClient(false),
+		WithNoClient(),
 	); err != nil {
 		return 1
 	}

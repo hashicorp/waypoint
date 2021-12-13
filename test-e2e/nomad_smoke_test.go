@@ -11,8 +11,8 @@ var (
 )
 
 func TestWaypointNomadInstall(t *testing.T) {
-	wp := NewBinary(wpBinary, nomadTestDir)
-	stdout, stderr, err := wp.Run("install", "-platform=nomad", "-accept-tos", fmt.Sprintf("-nomad-server-image=%s", wpServerImage))
+	wp := NewBinary(t, wpBinary, nomadTestDir)
+	stdout, stderr, err := wp.RunRaw("install", "-platform=nomad", "-accept-tos", fmt.Sprintf("-nomad-server-image=%s", wpServerImage))
 
 	if err != nil {
 		t.Errorf("unexpected error installing server to nomad: %s", err)
@@ -28,8 +28,8 @@ func TestWaypointNomadInstall(t *testing.T) {
 }
 
 func TestWaypointNomadUp(t *testing.T) {
-	wp := NewBinary(wpBinary, nomadTestDir)
-	stdout, stderr, err := wp.Run("init")
+	wp := NewBinary(t, wpBinary, nomadTestDir)
+	stdout, stderr, err := wp.RunRaw("init")
 
 	if err != nil {
 		t.Errorf("unexpected error initializing waypoint project: %s", err)
@@ -43,7 +43,7 @@ func TestWaypointNomadUp(t *testing.T) {
 		t.Errorf("No success message detected after initializing project:\n%s", stdout)
 	}
 
-	stdout, stderr, err = wp.Run("up")
+	stdout, stderr, err = wp.RunRaw("up")
 
 	if err != nil {
 		t.Errorf("unexpected error deploying waypoint project: %s", err)
@@ -59,8 +59,8 @@ func TestWaypointNomadUp(t *testing.T) {
 }
 
 func TestWaypointNomadUpgrade(t *testing.T) {
-	wp := NewBinary(wpBinary, nomadTestDir)
-	stdout, stderr, err := wp.Run("server", "upgrade", "-platform=nomad", "-auto-approve", fmt.Sprintf("-nomad-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
+	wp := NewBinary(t, wpBinary, nomadTestDir)
+	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=nomad", "-auto-approve", fmt.Sprintf("-nomad-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
 
 	if err != nil {
 		t.Errorf("unexpected error upgrading server in nomad: %s", err)
@@ -76,8 +76,8 @@ func TestWaypointNomadUpgrade(t *testing.T) {
 }
 
 func TestWaypointNomadUpAfterUpgrade(t *testing.T) {
-	wp := NewBinary(wpBinary, nomadTestDir)
-	stdout, stderr, err := wp.Run("up")
+	wp := NewBinary(t, wpBinary, nomadTestDir)
+	stdout, stderr, err := wp.RunRaw("up")
 
 	if err != nil {
 		t.Errorf("unexpected error deploying waypoint project: %s", err)
@@ -93,8 +93,8 @@ func TestWaypointNomadUpAfterUpgrade(t *testing.T) {
 }
 
 func TestWaypointNomadDestroy(t *testing.T) {
-	wp := NewBinary(wpBinary, nomadTestDir)
-	stdout, stderr, err := wp.Run("destroy")
+	wp := NewBinary(t, wpBinary, nomadTestDir)
+	stdout, stderr, err := wp.RunRaw("destroy")
 
 	if err != nil {
 		t.Errorf("unexpected error destroying waypoint project: %s", err)
@@ -110,8 +110,8 @@ func TestWaypointNomadDestroy(t *testing.T) {
 }
 
 func TestWaypointNomadUninstall(t *testing.T) {
-	wp := NewBinary(wpBinary, nomadTestDir)
-	stdout, stderr, err := wp.Run("server", "uninstall", "-platform=nomad", "-auto-approve", "-snapshot=false")
+	wp := NewBinary(t, wpBinary, nomadTestDir)
+	stdout, stderr, err := wp.RunRaw("server", "uninstall", "-platform=nomad", "-auto-approve", "-snapshot=false")
 
 	if err != nil {
 		t.Errorf("unexpected error uninstalling waypoint server: %s", err)

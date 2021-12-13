@@ -33,12 +33,14 @@ page:
     overview:
       heading: 'Overview'
       status: 'Status'
+    logs:
+      heading: Build Logs
   deployments:
     title: 'Deployments'
     destroyed_label: 'Destroyed'
     replaced_label: 'Replaced by '
     destroyed_and_hidden_state: 'Some deployments have been destroyed and are hidden'
-    display_destroyed: 'Display destroyed deployments'
+    display_destroyed: 'Show destroyed deployments'
     status_prefix:
       0: 'Deploying by ' # UNKNOWN
       1: 'Deploying by ' # RUNNING

@@ -1,0 +1,4 @@
+```release-note:improvement
+cli: Warn if about to perform a remote operation with a dirty local git state 
+```
+

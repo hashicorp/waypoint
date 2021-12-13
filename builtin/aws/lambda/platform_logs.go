@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/go-hclog"
@@ -14,8 +16,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 )
 
-// Exec creates an ECS task using the given deployments ECR image and then
-// ssh's to it to provide the shell.
+// Logs fetches logs from cloudwatch
 func (p *Platform) Logs(
 	ctx context.Context,
 	log hclog.Logger,
@@ -49,7 +50,7 @@ func (p *Platform) Logs(
 		})
 
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to describe log stream for group %q in region %q", group, p.config.Region)
 		}
 
 		if len(streams.LogStreams) == 0 {

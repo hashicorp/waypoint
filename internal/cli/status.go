@@ -9,6 +9,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/pkg/errors"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -40,7 +41,6 @@ func (c *StatusCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(flagSet),
-		WithOptionalApp(), // optional config loading, no hard requirement on an app target
 	); err != nil {
 		return 1
 	}
@@ -68,43 +68,9 @@ func (c *StatusCommand) Run(args []string) int {
 		c.ui.Output(wpNoServerContext, terminal.WithWarningStyle())
 	}
 
-	cmdArgs := flagSet.Args()
-
-	if len(cmdArgs) > 1 {
-		c.ui.Output("No more than 1 argument required.\n\n"+c.Help(), terminal.WithErrorStyle())
-		return 1
-	}
-
-	// Determine which view to show based on user input
-	var projectTarget, appTarget string
-	if len(cmdArgs) >= 1 {
-		match := reAppTarget.FindStringSubmatch(cmdArgs[0])
-
-		if match != nil {
-			projectTarget = match[1]
-			appTarget = match[2]
-		} else {
-			projectTarget = cmdArgs[0]
-		}
-	} else if len(cmdArgs) == 0 {
-		// If we're in a project dir, load the name. Otherwise we'll
-		// show a list of all projects and their status and leave projectTarget
-		// blank
-		if c.project.Ref() != nil {
-			projectTarget = c.project.Ref().Project
-		}
-	}
-
-	if appTarget == "" && c.flagApp != "" {
-		appTarget = c.flagApp
-	} else if appTarget != "" && c.flagApp != "" {
-		// setting app target and passing the flag app is a collision
-		c.ui.Output(wpAppFlagAndTargetIncludedMsg, terminal.WithWarningStyle())
-	}
-
 	// Optionally refresh status
 	if c.flagRefreshAppStatus {
-		if err := c.RefreshApplicationStatus(projectTarget, appTarget); err != nil {
+		if err := c.RefreshApplicationStatus(); err != nil {
 			c.ui.Output("CLI failed to refresh project statuses: "+clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
@@ -112,15 +78,16 @@ func (c *StatusCommand) Run(args []string) int {
 	}
 
 	// Generate a status view
-	if projectTarget == "" || c.flagAllProjects {
+	if c.refProject == nil || c.flagAllProjects {
 		// Show high-level status of all projects
 		err = c.FormatProjectStatus()
 		if err != nil {
 			c.ui.Output("CLI failed to build project statuses: "+clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
-	} else if projectTarget != "" && appTarget == "" {
+	} else if c.refProject != nil && c.flagApp == "" {
 		// Show status of apps inside project
+		projectTarget := c.refProject.Project
 		err = c.FormatProjectAppStatus(projectTarget)
 		if err != nil {
 			if status.Code(err) == codes.NotFound {
@@ -135,8 +102,10 @@ func (c *StatusCommand) Run(args []string) int {
 			}
 			return 1
 		}
-	} else if projectTarget != "" && appTarget != "" {
+	} else if c.refProject != nil && c.flagApp != "" {
 		// Advanced view of a single app status
+		projectTarget := c.refProject.Project
+		appTarget := c.flagApp
 		err = c.FormatAppStatus(projectTarget, appTarget)
 		if err != nil {
 			if status.Code(err) == codes.NotFound {
@@ -158,10 +127,10 @@ func (c *StatusCommand) Run(args []string) int {
 
 // RefreshApplicationStatus takes a project and application target and generates
 // a list of applications to refresh the status on. If all projects are requested
-// to be refreshed, the CLI will do its best to honor the request. However if
+// to be refreshed, the CLI will do its best to honor the request. However, if
 // a project is local and the CLI was not invoked inside that project dir, the
 // CLI won't be able to refresh that project's application statuses.
-func (c *StatusCommand) RefreshApplicationStatus(projectTarget, appTarget string) error {
+func (c *StatusCommand) RefreshApplicationStatus() error {
 	// Get our API client
 	client := c.project.Client()
 
@@ -175,9 +144,19 @@ func (c *StatusCommand) RefreshApplicationStatus(projectTarget, appTarget string
 		return nil
 	}
 
+	if c.refProject == nil {
+		return errors.New("No project specified - use the -project flag")
+	}
+
+	if len(c.refApps) == 0 {
+		// Technically the user could have no apps in the
+		return errors.New("No apps specified - please use the -app flag, or run from within " +
+			"a project directory that contains apps.")
+	}
+
 	projectResp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{
 		Project: &pb.Ref_Project{
-			Project: projectTarget,
+			Project: c.refProject.Project,
 		},
 	})
 	if err != nil {
@@ -187,7 +166,7 @@ func (c *StatusCommand) RefreshApplicationStatus(projectTarget, appTarget string
 				serverAddress = c.serverCtx.Server.Address
 			}
 
-			c.ui.Output(wpProjectNotFound, projectTarget, serverAddress, terminal.WithErrorStyle())
+			c.ui.Output(wpProjectNotFound, c.refProject.Project, serverAddress, terminal.WithErrorStyle())
 		}
 		return err
 	}
@@ -198,35 +177,37 @@ func (c *StatusCommand) RefreshApplicationStatus(projectTarget, appTarget string
 		return err
 	}
 
-	if appTarget != "" {
-		// Single app refresh
-		var app *pb.Application
-		for _, a := range project.Applications {
-			if a.Name == appTarget {
-				app = a
-				break
+	// Only refresh specified applications
+	var appsToRefresh []*pb.Application
+	for _, refApp := range c.refApps {
+		for _, app := range project.Applications {
+			if app.Name == refApp.Application {
+				appsToRefresh = append(appsToRefresh, app)
 			}
 		}
-		if app == nil {
-			return fmt.Errorf("Did not find application %q in project %q", appTarget, projectTarget)
-		}
+	}
 
-		appList := []*pb.Application{app}
+	// Useful for printing
+	var appNames []string
+	for _, refApp := range c.refApps {
+		appNames = append(appNames, refApp.Application)
+	}
 
-		if err = c.doRefresh(project, appList, workspace); err != nil {
-			c.ui.Output("Failed to refresh app %q status in project %q: %s",
-				app.Name,
-				project.Name,
-				clierrors.Humanize(err), terminal.WithErrorStyle())
-			return err
-		}
-	} else {
-		if err = c.doRefresh(project, project.Applications, workspace); err != nil {
-			c.ui.Output("Failed to refresh app statuses in project %q: %s",
-				project.Name,
-				clierrors.Humanize(err), terminal.WithErrorStyle())
-			return err
-		}
+	if len(appsToRefresh) == 0 {
+		// Corner case - will happen if they typo an app given to the -app flag.
+		c.ui.Output("Specified app(s) %q not found in project %q",
+			strings.Join(appNames, ", "),
+			project.Name,
+			clierrors.Humanize(err), terminal.WithErrorStyle())
+		return err
+	}
+
+	if err = c.doRefresh(project, appsToRefresh, workspace); err != nil {
+		c.ui.Output("Failed to refresh app(s) %q status in project %q: %s",
+			strings.Join(appNames, ", "),
+			project.Name,
+			clierrors.Humanize(err), terminal.WithErrorStyle())
+		return err
 	}
 
 	return nil
@@ -280,14 +261,12 @@ func (c *StatusCommand) refreshAppStatus(
 	app *pb.Application,
 	workspace string,
 ) error {
-	if c.refApp == nil {
-		// We must setup app ref so DoApp has the context for which app to execute
-		// its operations on. WithOptionalApp does not setup this ref for us.
-		c.refApp = &pb.Ref_Application{
-			Application: app.Name,
-			Project:     project.Name,
-		}
-	}
+	// We must setup app ref so DoApp has the context for which app to execute
+	// its operations on.
+	c.refApps = []*pb.Ref_Application{{
+		Application: app.Name,
+		Project:     project.Name,
+	}}
 	err := c.DoApp(c.Ctx, func(ctx context.Context, appClient *clientpkg.App) error {
 		// Get our API client
 		client := c.project.Client()
@@ -1219,7 +1198,7 @@ func (c *StatusCommand) errAPIUnimplemented(err error) error {
 }
 
 func (c *StatusCommand) Flags() *flag.Sets {
-	return c.flagSet(0, func(set *flag.Sets) {
+	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 
 		f.BoolVar(&flag.BoolVar{
@@ -1281,13 +1260,13 @@ var (
 	wpStatusSuccessMsg = strings.TrimSpace(`
 The projects listed above represent their current state known
 in the Waypoint server. For more information about a project’s applications and
-their current state, run ‘waypoint status PROJECT-NAME’.
+their current state, run ‘waypoint status -project=PROJECT-NAME’.
 `)
 
 	wpStatusProjectSuccessMsg = strings.TrimSpace(`
 The project and its apps listed above represents its current state known
 in the Waypoint server. For more information about a project’s applications and
-their current state, run ‘waypoint status -app=APP-NAME PROJECT-NAME’.
+their current state, run ‘waypoint status -app=APP-NAME -project=PROJECT-NAME’.
 `)
 
 	wpStatusAppSuccessMsg = strings.TrimSpace(`
@@ -1320,7 +1299,7 @@ The projects listed above represent their current state known
 in Waypoint server. For more information about an application defined in the
 project %[1]q can be viewed by running the command:
 
-waypoint status -app=APP-NAME %[1]s
+waypoint status -app=APP-NAME -project=%[1]s
 `)
 
 	wpProjectNotFound = strings.TrimSpace(`
@@ -1328,12 +1307,7 @@ No project named %q was found for the server context %q. To see a list of
 currently configured projects, run “waypoint project list”.
 
 If you want more information for a specific application, use the '-app' flag
-with “waypoint status -app=APP-NAME PROJECT-NAME”.
-`)
-
-	wpAppFlagAndTargetIncludedMsg = strings.TrimSpace(`
-The 'app' flag was included, but an application was also requested as an argument.
-The app flag will be ignored.
+with “waypoint status -app=APP-NAME -project=PROJECT-NAME”.
 `)
 
 	wpAppNotFound = strings.TrimSpace(`

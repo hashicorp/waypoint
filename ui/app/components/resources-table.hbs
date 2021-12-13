@@ -1,45 +1,41 @@
-<div
+<Table
   data-test-resources-table
-  class="
-    resources-table
-    {{if @withMargin "resources-table--with-margin"}}
-  "
+  @withMargin={{@withMargin}}
 >
-  <table>
-    <caption>{{yield to="caption"}}</caption>
+  <caption>{{yield to="caption"}}</caption>
 
-    <colgroup>
-      <col class="w-2/5">
-      <col>
-      <col>
-      <col>
-    </colgroup>
+  <colgroup>
+    <col class="w-2/5">
+    <col>
+    <col>
+    <col>
+  </colgroup>
 
-    <thead>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Age</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {{#each @resources key="id" as |resource|}}
       <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Age</th>
-        <th>Status</th>
+        <th scope="row">
+          <LinkTo
+            title={{resource.name}}
+            @route={{@route}}
+            @models={{append (or @models (array)) resource.id}}
+          >
+            {{resource.name}}
+          </LinkTo>
+        </th>
+        <td><Pds::Icon @type={{icon-for-component resource.platform}} /> {{resource.type}}</td>
+        <td>{{date-format-distance-to-now resource.createdTime.seconds}}</td>
+        <td><ResourceHealthIndicator @resource={{resource}} /></td>
       </tr>
-    </thead>
-
-    <tbody>
-      {{#each @resources key="id" as |resource|}}
-        <tr>
-          <th scope="row">
-            <LinkTo
-              @route={{@route}}
-              @models={{append (or @models (array)) resource.id}}
-            >
-              {{resource.name}}
-            </LinkTo>
-          </th>
-          <td><Pds::Icon @type={{icon-for-component resource.platform}} /> {{resource.type}}</td>
-          <td>{{date-format-distance-to-now resource.createdTime.seconds}}</td>
-          <td><ResourceHealthIndicator @resource={{resource}} /></td>
-        </tr>
-      {{/each}}
-    </tbody>
-  </table>
-</div>
+    {{/each}}
+  </tbody>
+</Table>

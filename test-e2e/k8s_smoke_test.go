@@ -11,8 +11,8 @@ var (
 )
 
 func TestWaypointKubernetesInstall(t *testing.T) {
-	wp := NewBinary(wpBinary, kubernetesTestDir)
-	stdout, stderr, err := wp.Run("install", "-platform=kubernetes", "-accept-tos", fmt.Sprintf("-k8s-server-image=%s", wpServerImage))
+	wp := NewBinary(t, wpBinary, kubernetesTestDir)
+	stdout, stderr, err := wp.RunRaw("install", "-platform=kubernetes", "-accept-tos", fmt.Sprintf("-k8s-server-image=%s", wpServerImage))
 
 	if err != nil {
 		t.Errorf("unexpected error installing server to kubernetes: %s", err)
@@ -28,8 +28,8 @@ func TestWaypointKubernetesInstall(t *testing.T) {
 }
 
 func TestWaypointKubernetesUp(t *testing.T) {
-	wp := NewBinary(wpBinary, kubernetesTestDir)
-	stdout, stderr, err := wp.Run("init")
+	wp := NewBinary(t, wpBinary, kubernetesTestDir)
+	stdout, stderr, err := wp.RunRaw("init")
 
 	if err != nil {
 		t.Errorf("unexpected error initializing waypoint project: %s", err)
@@ -43,7 +43,7 @@ func TestWaypointKubernetesUp(t *testing.T) {
 		t.Errorf("No success message detected after initializing project:\n%s", stdout)
 	}
 
-	stdout, stderr, err = wp.Run("up")
+	stdout, stderr, err = wp.RunRaw("up")
 
 	if err != nil {
 		t.Errorf("unexpected error deploying waypoint project: %s", err)
@@ -59,8 +59,8 @@ func TestWaypointKubernetesUp(t *testing.T) {
 }
 
 func TestWaypointKubernetesUpgrade(t *testing.T) {
-	wp := NewBinary(wpBinary, kubernetesTestDir)
-	stdout, stderr, err := wp.Run("server", "upgrade", "-platform=kubernetes", "-auto-approve", fmt.Sprintf("-k8s-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
+	wp := NewBinary(t, wpBinary, kubernetesTestDir)
+	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=kubernetes", "-auto-approve", fmt.Sprintf("-k8s-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
 
 	if err != nil {
 		t.Errorf("unexpected error upgrading server in kubernetes: %s", err)
@@ -76,8 +76,8 @@ func TestWaypointKubernetesUpgrade(t *testing.T) {
 }
 
 func TestWaypointKubernetesUpAfterUpgrade(t *testing.T) {
-	wp := NewBinary(wpBinary, kubernetesTestDir)
-	stdout, stderr, err := wp.Run("up")
+	wp := NewBinary(t, wpBinary, kubernetesTestDir)
+	stdout, stderr, err := wp.RunRaw("up")
 
 	if err != nil {
 		t.Errorf("unexpected error deploying waypoint project: %s", err)
@@ -93,8 +93,8 @@ func TestWaypointKubernetesUpAfterUpgrade(t *testing.T) {
 }
 
 func TestWaypointKubernetesDestroy(t *testing.T) {
-	wp := NewBinary(wpBinary, kubernetesTestDir)
-	stdout, stderr, err := wp.Run("destroy")
+	wp := NewBinary(t, wpBinary, kubernetesTestDir)
+	stdout, stderr, err := wp.RunRaw("destroy")
 
 	if err != nil {
 		t.Errorf("unexpected error destroying waypoint project: %s", err)
@@ -110,8 +110,8 @@ func TestWaypointKubernetesDestroy(t *testing.T) {
 }
 
 func TestWaypointKubernetesUninstall(t *testing.T) {
-	wp := NewBinary(wpBinary, kubernetesTestDir)
-	stdout, stderr, err := wp.Run("server", "uninstall", "-platform=kubernetes", "-auto-approve", "-snapshot=false")
+	wp := NewBinary(t, wpBinary, kubernetesTestDir)
+	stdout, stderr, err := wp.RunRaw("server", "uninstall", "-platform=kubernetes", "-auto-approve", "-snapshot=false")
 
 	if err != nil {
 		t.Errorf("unexpected error uninstalling waypoint server: %s", err)

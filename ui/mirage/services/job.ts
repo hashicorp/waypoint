@@ -1,4 +1,5 @@
-import { RouteHandler, Response } from 'miragejs';
+import { Response } from 'miragejs';
+import { RouteHandler } from '../types';
 import { GetJobStreamResponse } from 'waypoint-pb';
 
 export function stream(this: RouteHandler): Response {

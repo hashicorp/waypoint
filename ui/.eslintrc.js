@@ -23,6 +23,7 @@ module.exports = {
   rules: {
     'prefer-let/prefer-let': 'error',
     'prefer-const': 'off',
+    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
   },
   overrides: [
     // node files

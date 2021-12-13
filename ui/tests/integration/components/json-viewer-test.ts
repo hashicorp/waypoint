@@ -41,6 +41,6 @@ module('Integration | Component | json-viewer', function (hooks) {
       <JsonViewer @json={{this.json}} />
     `);
 
-    assert.dom('[data-test-json-viewer]').containsText('Unexpected end of JSON input');
+    assert.dom('[data-test-error-message]').exists();
   });
 });

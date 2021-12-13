@@ -29,6 +29,7 @@ Router.map(function () {
   });
   this.route('lab', { path: '/-lab' }, function () {
     this.route('runner-profiles');
+    this.route('runners');
   });
   this.route('workspaces', { path: '/' }, function () {
     this.route('projects', function () {
@@ -45,10 +46,11 @@ Router.map(function () {
           this.route('builds');
           this.route('build-id', { path: '/build/:build_id' });
           this.route('build', { path: '/build/seq/:sequence' });
-          this.route('deployments');
-          this.route('deployment-id', { path: '/deployment/:deployment_id' });
-          this.route('deployment', { path: '/deployment/seq/:sequence' }, function () {
-            this.route('resource', { path: 'resources/:resource_id' });
+          this.route('deployment', function () {
+            this.route('deployment-id', { path: '/:deployment_id' });
+            this.route('deployment-seq', { path: '/seq/:sequence' }, function () {
+              this.route('resource', { path: 'resources/:resource_id' });
+            });
           });
           this.route('releases');
           this.route('release-id', { path: '/release/:release_id' });
@@ -57,6 +59,7 @@ Router.map(function () {
           });
           this.route('logs');
           this.route('exec');
+          this.route('deployments');
         });
         this.route('settings', function () {
           this.route('repository', { path: '/' });

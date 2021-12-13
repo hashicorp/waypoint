@@ -1,43 +1,33 @@
 import Route from '@ember/routing/route';
-import { inject as service } from '@ember/service';
-import ApiService from 'waypoint/services/api';
+import Transition from '@ember/routing/-private/transition';
 import { Model as AppRouteModel } from '../app';
-import { Breadcrumb } from 'waypoint/services/breadcrumbs';
-import { DeploymentExtended, ReleaseExtended } from 'waypoint/services/api';
+import DeploymentsController from 'waypoint/controllers/workspace/projects/project/app/deployment';
+import { DeploymentExtended } from 'waypoint/services/api';
 
-type Params = { sequence: string };
-export type Model = DeploymentExtended & WithRelease;
+type Model = AppRouteModel['deployments'];
 
-interface WithRelease {
-  release?: ReleaseExtended;
-}
-
-export default class DeploymentDetail extends Route {
-  @service api!: ApiService;
-
-  breadcrumbs(model: Model): Breadcrumb[] {
-    if (!model) return [];
-    return [
-      {
-        label: model.application?.application ?? 'unknown',
-        icon: 'git-repository',
-        route: 'workspace.projects.project.app',
-      },
-    ];
+export default class Deployment extends Route {
+  async model(): Promise<Model> {
+    let app = this.modelFor('workspace.projects.project.app') as AppRouteModel;
+    return app.deployments;
   }
 
-  async model(params: Params): Promise<Model> {
-    let { deployments } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
-    let deployment = deployments.find((obj) => obj.sequence == Number(params.sequence));
-
-    if (!deployment) {
-      throw new Error(`Deployment v${params.sequence} not found`);
+  redirect(_: Model, transition: Transition): void {
+    let latestDeployment = this.modelFor(this.routeName)[0] as DeploymentExtended;
+    if (
+      latestDeployment &&
+      !transition.to.name.includes('workspace.projects.project.app.deployment.deployment-seq')
+    ) {
+      this.transitionTo(
+        'workspace.projects.project.app.deployment.deployment-seq',
+        latestDeployment.sequence
+      );
     }
+  }
 
-    let deploymentId = deployment.id;
-    let { releases } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
-    let release = releases.find((r) => r.deploymentId === deploymentId);
-
-    return { ...deployment, release };
+  resetController(controller: DeploymentsController, isExiting: boolean): void {
+    if (isExiting) {
+      controller.set('isShowingDestroyed', null);
+    }
   }
 }

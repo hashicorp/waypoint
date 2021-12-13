@@ -30,9 +30,20 @@ type Project struct {
 	cleanupFunc         func()
 	serverVersion       *pb.VersionInfo
 
-	local bool
+	// useLocalRunner indicates if a local runner should be created for new jobs. True if a local runner
+	// should be created to handle jobs, false if jobs should be left to the remote runner. If nil, a value
+	// will be determined and saved when a job is first executed.
+	useLocalRunner *bool
+
+	// noLocalServer is a config setting - it indicates the project should never create a local server.
+	// If unset, a local server may be created.
+	noLocalServer bool
 
 	localServer bool // True when a local server is created
+
+	// configPath is the path to the local directory that contains our config file (waypoint.hcl)
+	// May not be present.
+	configPath string
 
 	// These are used to manage a local runner and its job processing
 	// in a goroutine.
@@ -87,27 +98,6 @@ func New(ctx context.Context, opts ...Option) (*Project, error) {
 	// Default workspace if not specified
 	if client.workspace == nil {
 		client.workspace = &pb.Ref_Workspace{Workspace: "default"}
-	}
-
-	if client.local {
-		client.logger.Debug("starting runner to process local jobs")
-		r, err := client.startRunner()
-		if err != nil {
-			return nil, err
-		}
-
-		client.activeRunner = r
-
-		// We spin up the job processing here. Anything that spawns jobs (either locally spawned
-		// or server spawned) will be processed by this runner ONLY if the runner is directly targeted.
-		// Because this runner's lifetime is bound to a CLI context and therefore transient, we don't
-		// want to accept jobs that aren't related to local activities (job's queued or RPCs made)
-		// because they'll hang the CLI randomly as those jobs run (it's also a security issue).
-		client.wg.Add(1)
-		go func() {
-			defer client.wg.Done()
-			r.AcceptMany(client.bg)
-		}()
 	}
 
 	return client, nil
@@ -252,16 +242,6 @@ func WithSourceOverrides(m map[string]string) Option {
 	}
 }
 
-// WithLocal puts the client in local exec mode. In this mode, the client
-// will spin up a per-operation runner locally and reference the local on-disk
-// data for all operations.
-func WithLocal() Option {
-	return func(c *Project, cfg *config) error {
-		c.local = true
-		return nil
-	}
-}
-
 // WithLogger sets the logger for the client.
 func WithLogger(log hclog.Logger) Option {
 	return func(c *Project, cfg *config) error {
@@ -274,6 +254,34 @@ func WithLogger(log hclog.Logger) Option {
 func WithUI(ui terminal.UI) Option {
 	return func(c *Project, cfg *config) error {
 		c.UI = ui
+		return nil
+	}
+}
+
+// WithNoLocalServer prevents the project client from automatically
+// creating a local server.
+func WithNoLocalServer() Option {
+	return func(c *Project, cfg *config) error {
+		c.noLocalServer = true
+		return nil
+	}
+}
+
+// WithUseLocalRunner instructs this client to execute all jobs either on a local runner,
+// or on a remote runner. If unset, it will automatically determine where jobs will execute,
+// preferring remote when possible
+func WithUseLocalRunner(useLocalRunner bool) Option {
+	return func(c *Project, cfg *config) error {
+		c.useLocalRunner = &useLocalRunner
+		return nil
+	}
+}
+
+// WithConfigPath sets the path to the local directory that contains our config
+// file (waypoint.hcl).
+func WithConfigPath(configPath string) Option {
+	return func(c *Project, cfg *config) error {
+		c.configPath = configPath
 		return nil
 	}
 }

@@ -3,7 +3,8 @@ package cli
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/waypoint-plugin-sdk"
+
+	sdk "github.com/hashicorp/waypoint-plugin-sdk"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/plugin"
 )
@@ -20,8 +21,8 @@ func (c *PluginCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(flags),
-		WithClient(false),
-		WithNoAutoServer(),
+		WithNoClient(),
+		WithNoLocalServer(),
 		WithNoConfig(),
 	); err != nil {
 		return 1

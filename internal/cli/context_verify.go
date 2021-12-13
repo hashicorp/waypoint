@@ -25,7 +25,7 @@ func (c *ContextVerifyCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithClient(false),
+		WithNoClient(),
 		WithNoConfig(),
 	); err != nil {
 		return 1

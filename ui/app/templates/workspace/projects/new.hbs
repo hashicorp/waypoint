@@ -27,17 +27,17 @@
     <hr />
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
-        <label for="create-git" class="pds-fieldName">
+        <div class="pds-fieldName" id="create-git-help-text">
           <Pds::Icon @type="git-repository" class="icon" />
           {{t 'form.project_new.create_git_label'}}
-        </label>
-        <Pds::HelpText>
-          <p>{{t 'form.project_new.create_git_helptext'}}</p>
-        </Pds::HelpText>
-
+          <Pds::HelpText>
+            {{t 'form.project_new.create_git_helptext'}}
+          </Pds::HelpText>
+        </div>
         <Pds::CheckboxField
           @checked={{this.createGit}}
           @id="create-git"
+          aria-describedby="create-git-help-text"
           {{on "change" (set this "createGit" (not this.createGit))}}
         >
           {{t 'form.project_new.create_git_checkbox_label'}}

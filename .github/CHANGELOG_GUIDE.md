@@ -13,8 +13,8 @@ go get github.com/hashicorp/go-changelog/cmd/changelog-build
 ## CHANGELOG entry examples
 
 CHANGELOG entries are expected to be txt files created inside this folder
-`.changelog`. The file name is expected to be the same issue number that will
-be linked when the CHANGELOG is generated. So for example, if your issue is
+`.changelog`. The file name is expected to be the same pull request number that will
+be linked when the CHANGELOG is generated. So for example, if your pull request is
 \#1234, your file name would be `.changelog/1234.txt`.
 
 While for git commit messages, we expect the leading subject to be more specific

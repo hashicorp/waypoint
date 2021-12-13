@@ -2268,6 +2268,36 @@ func (_m *WaypointClient) UpsertStatusReport(ctx context.Context, in *gen.Upsert
 	return r0, r1
 }
 
+// UpsertWorkspace provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UpsertWorkspace(ctx context.Context, in *gen.UpsertWorkspaceRequest, opts ...grpc.CallOption) (*gen.UpsertWorkspaceResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UpsertWorkspaceResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertWorkspaceRequest, ...grpc.CallOption) *gen.UpsertWorkspaceResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertWorkspaceResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertWorkspaceRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ValidateJob provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) ValidateJob(ctx context.Context, in *gen.ValidateJobRequest, opts ...grpc.CallOption) (*gen.ValidateJobResponse, error) {
 	_va := make([]interface{}, len(opts))

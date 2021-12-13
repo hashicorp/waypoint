@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	stdflag "flag"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -22,7 +23,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
 )
 
 const (
@@ -68,9 +68,15 @@ type baseCommand struct {
 	// contextStorage is for CLI contexts.
 	contextStorage *clicontext.Storage
 
-	// refProject and refWorkspace the references for this CLI invocation.
-	refProject   *pb.Ref_Project
-	refApp       *pb.Ref_Application
+	// refProject references the project for this CLI invocation. A project
+	// reference will be looked for in config, or in the -project flag.
+	refProject *pb.Ref_Project
+
+	// refApps references the apps for this CLI invocation. An app
+	// reference will be looked for in config, or in the -app flag.
+	refApps []*pb.Ref_Application
+
+	// refWorkspace referenced the workspace for this CLI invocation
 	refWorkspace *pb.Ref_Workspace
 
 	// variables hold the values set via flags and local env vars
@@ -92,9 +98,9 @@ type baseCommand struct {
 	// for defined input variables
 	flagVarFile []string
 
-	// flagRemote is whether to execute using a remote runner or use
-	// a local runner.
-	flagRemote bool
+	// flagLocal indicates that any operations performed must happen with a local runner
+	// not a remote runner.
+	flagLocal *bool
 
 	// flagRemoteSource are the remote data source overrides for jobs.
 	flagRemoteSource map[string]string
@@ -117,12 +123,15 @@ type baseCommand struct {
 	// options passed in at the global level
 	globalOptions []Option
 
-	// autoServer will be set to true if an automatic in-memory server
-	// is allowd.
-	autoServer bool
+	// noLocalServer prevents the creation of a local in-memory server
+	noLocalServer bool
 
 	// The home directory that we loaded the waypoint config from
 	homeConfigPath string
+
+	// deprecatedFlagRemote is whether to execute using a remote runner or use
+	// a local runner.
+	deprecatedFlagRemote *bool
 }
 
 // Close cleans up any resources that the command created. This should be
@@ -142,17 +151,43 @@ func (c *baseCommand) Close() error {
 	return nil
 }
 
+// Checks for deprecated flags and args.
+func (c *baseCommand) checkDeprecatedFlags() error {
+	// Check for deprecated project/app syntax.
+	// NOTE(izaak): we should remove this in the next major (v0.8.0) because it
+	// collides with arguments that contain a single slash (i.e. `waypoint exec bin/bash`)
+	if len(c.args) > 0 {
+		match := reAppTarget.FindStringSubmatch(c.args[0])
+		if match != nil {
+			return errors.New(errDeprecatedProjectAppArg)
+		}
+	}
+
+	// Check for deprecated remote flag
+	if c.deprecatedFlagRemote != nil {
+		return fmt.Errorf("The -remote flag has been deprecated. Use -local=%t instead", !*c.deprecatedFlagRemote)
+	}
+	return nil
+}
+
 // Init initializes the command by parsing flags, parsing the configuration,
 // setting up the project, etc. You can control what is done by using the
 // options.
 //
 // Init should be called FIRST within the Run function implementation. Many
 // options will affect behavior of other functions that can be called later.
+//
+// In broad strokes, Init populates fields on the baseCommand by doing the following:
+// - Parse flags
+// - Parse input variables
+// - Creates a project client
+// - Triggers creation of the in-memory server (if necessary)
+// - Starts a local runner (if necessary)
+// - Attempts to find a waypoint.hcl config file, and parse it
+// - Determines which project/apps are being targeted, by looking at
+//   the -project and -app flags, the local config, the waypoint server.
 func (c *baseCommand) Init(opts ...Option) error {
-	baseCfg := baseConfig{
-		Config: true,
-		Client: true,
-	}
+	baseCfg := baseConfig{}
 
 	for _, opt := range c.globalOptions {
 		opt(&baseCfg)
@@ -163,7 +198,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 	}
 
 	// Set some basic internal fields
-	c.autoServer = !baseCfg.NoAutoServer
+	c.noLocalServer = baseCfg.NoLocalServer
 
 	// Init our UI first so we can write output to the user immediately.
 	ui := baseCfg.UI
@@ -182,6 +217,11 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	// Check for flags after args
 	if err := checkFlagsAfterArgs(c.args, baseCfg.Flags); err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return err
+	}
+
+	if err := c.checkDeprecatedFlags(); err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
 	}
@@ -229,119 +269,6 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	c.refWorkspace = &pb.Ref_Workspace{Workspace: workspace}
 
-	// Parse the configuration
-	c.cfg = &config.Config{}
-
-	// If we have an app target requirement, we have to get it from the args
-	// or the config.
-	if baseCfg.AppTargetRequired {
-		// If we have args, attempt to extract there first.
-		if len(c.args) > 0 {
-			match := reAppTarget.FindStringSubmatch(c.args[0])
-			if match != nil {
-				// Set our refs
-				c.refProject = &pb.Ref_Project{Project: match[1]}
-				c.refApp = &pb.Ref_Application{
-					Project:     match[1],
-					Application: match[2],
-				}
-
-				// Shift the args
-				c.args = c.args[1:]
-
-				// Explicitly set remote
-				c.flagRemote = true
-			}
-		}
-
-		// If we didn't get our ref, then we need to load config
-		if c.refApp == nil {
-			baseCfg.Config = true
-		}
-	}
-
-	// Some CLIs don't explicitly need an app, but sometimes need to load a config
-	// and setup the project client with the proper project refs.
-	if baseCfg.AppOptional || baseCfg.ProjectTargetRequired {
-		// If we have args, attempt to extract there first.
-		if len(c.args) > 0 {
-			match := reAppTarget.FindStringSubmatch(c.args[0])
-			if match != nil {
-				// Set our refs
-				c.refProject = &pb.Ref_Project{Project: match[1]}
-				c.refApp = &pb.Ref_Application{
-					Project:     match[1],
-					Application: match[2],
-				}
-
-				// Shift the args
-				c.args = c.args[1:]
-
-				// Explicitly set remote
-				c.flagRemote = true
-
-				// the below should only be used for commands that don't accept
-				// other arguments
-			} else if !baseCfg.ProjectTargetRequired {
-				// Assume the target is just project
-				p := c.args[0]
-				c.refProject = &pb.Ref_Project{Project: p}
-				// We don't explicitly set the app because there was none requested,
-				// and we might or might not be working on an app later.
-
-				// Shift the args
-				c.args = c.args[1:]
-
-				// Explicitly set remote
-				c.flagRemote = true
-			}
-		}
-
-		// If we didn't get our ref, then we need to load config
-		if c.refApp == nil && c.refProject == nil {
-			// We look at both app and project for the case where no target was specified
-			// i.e. already in a project directory
-			baseCfg.Config = true
-		}
-	}
-
-	// If we're loading the config, then get it.
-	if baseCfg.Config {
-		cfg, err := c.initConfig("", baseCfg.ConfigOptional)
-		if err != nil {
-			c.logError(c.Log, "failed to load config", err)
-			return err
-		}
-
-		c.cfg = cfg
-		if cfg != nil {
-			project := &pb.Ref_Project{Project: cfg.Project}
-
-			// If we're loading config, we'll have a project, and we set it now.
-			// If they didn't provide a value via flag, we default to
-			// the project from initConfig.
-			if c.flagProject != "" {
-				project = &pb.Ref_Project{Project: c.flagProject}
-			}
-			if c.refProject == nil {
-				c.refProject = project
-			}
-
-			// If we require an app target and we still haven't set it,
-			// and the user provided it via the CLI, set it now. This code
-			// path is only reached if it wasn't set via the args either
-			// above.
-			if baseCfg.AppTargetRequired &&
-				c.refApp == nil &&
-				c.flagApp != "" {
-				c.refApp = &pb.Ref_Application{
-					Project:     project.Project,
-					Application: c.flagApp,
-				}
-			}
-		}
-	}
-
 	// Collect variable values from -var and -varfile flags,
 	// and env vars set with WP_VAR_* and set them on the job
 	vars, diags := variables.LoadVariableValues(c.flagVars, c.flagVarFile)
@@ -353,8 +280,64 @@ func (c *baseCommand) Init(opts ...Option) error {
 	}
 	c.variables = vars
 
-	// Create our client
-	if baseCfg.Client {
+	// Now we begin parsing project and/or app values, when they are required
+	// by the command.
+	// The goal is to set c.refProject and c.refApps for the following options:
+	// WithSingleAppTarget:
+	//   - 1 app in []c.refApps
+	//   - c.refProject set
+	// WithMultiAppTargets:
+	//   - 1 or more apps in []c.refApps
+	//   - c.refProject set
+	// WithProjectTarget:
+	//   - c.refProject set
+	//   - value of []c.refApps doesn't matter; likely will be set when using
+	//     a local waypoint.hcl or if someone also includes -app flag, but not
+	//     required
+
+	// 1. Parse the configuration
+
+	if !baseCfg.NoConfig {
+		// Try parsing config
+		c.cfg, err = c.initConfig("")
+		if err != nil {
+			c.logError(c.Log, "failed to load config", err)
+			return err
+		}
+
+		// If that worked, set our refs
+		if c.cfg != nil {
+			c.refProject = &pb.Ref_Project{Project: c.cfg.Project}
+			for _, app := range c.cfg.Apps() {
+				c.refApps = append(c.refApps, &pb.Ref_Application{
+					Project:     c.cfg.Project,
+					Application: app,
+				})
+			}
+		}
+	}
+
+	// 2. Parse project flags; overwrite any c.refProject value set from
+	// config parsing, as precedence order means we take the most specific value
+	// which is the -project flag
+	if c.flagProject != "" {
+		c.refProject = &pb.Ref_Project{Project: c.flagProject}
+	}
+
+	// 2.a. if c.refProject is nil at this point but we know it's required, we fail out
+	if baseCfg.ProjectTargetRequired && c.refProject == nil {
+		// The user must not have specified a project flag, and config parsing didn't produce one either.
+
+		// NOTE(izaak) The UX here will be refined in the next pass - it's ok that this is terse for now.
+		err := errors.New("No project specified, and no waypoint.hcl found.")
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return err
+	}
+
+	// 3. Create our client
+	// We must do this after the project ref and vars are set, and we need
+	// the client to find the project for the specified app targets.
+	if !baseCfg.NoClient {
 		c.project, err = c.initClient(nil)
 		if err != nil {
 			c.logError(c.Log, "failed to create client", err)
@@ -362,36 +345,46 @@ func (c *baseCommand) Init(opts ...Option) error {
 		}
 	}
 
-	// Validate remote vs. local operations.
-	if !baseCfg.AppOptional {
-		if c.flagRemote && c.refApp == nil {
-			if c.cfg == nil || c.cfg.Runner == nil || !c.cfg.Runner.Enabled {
-				err := errors.New(
-					"The `-remote` flag was specified but remote operations are not supported\n" +
-						"for this project.\n\n" +
-						"Remote operations must be manually enabled by using setting the 'runner.enabled'\n" +
-						"setting in your Waypoint configuration file. Please see the documentation\n" +
-						"on this setting for more information.")
-				c.logError(c.Log, "", err)
-				return err
-			}
+	// 4. Parse app flags; overwrite any []c.refApps value set from
+	// config parsing, as precedence order means we take the most specific value
+	// which is the -app flag
+	if c.flagApp != "" {
+		// NOTE: we could allow app to be specified multiple times in the future
+		c.refApps = []*pb.Ref_Application{{Application: c.flagApp}}
+	}
+
+	// 4.a. If app(s) are required but not set, we do a final check to the
+	// Waypoint server to see if it knows what apps belong to the project. We
+	// set ProjectTargetRequired to `true` for both AppTarget options, so at this
+	// point, if an AppTarget option is set then we should have a c.refProject.
+	if (baseCfg.SingleAppTarget || baseCfg.MultiAppTarget) && len(c.refApps) == 0 {
+		// We must not have found an app from config or flags, so we need to resort to the API.
+		c.Log.Debug("No apps found via CLI or API - listing them from the CLI.")
+		resp, err := c.project.Client().GetProject(c.Ctx, &pb.GetProjectRequest{Project: c.refProject})
+		if err != nil {
+			c.logError(c.Log, fmt.Sprintf("Failed to get project %s", c.refProject.Project), err)
+			return err
+		}
+		for _, app := range resp.Project.Applications {
+			c.refApps = append(c.refApps, &pb.Ref_Application{
+				Application: app.Name,
+				Project:     app.Project.Project,
+			})
+		}
+
+		// This should be a very-edge case; we have done everything we possibly
+		// can to find apps, and we don't have them
+		if len(c.refApps) == 0 {
+			err = fmt.Errorf("This command requires an app to be targeted, but no apps were found in project %q.", c.refProject.Project)
+			c.logError(c.Log, "", err)
+			return err
 		}
 	}
 
-	// If this is a single app mode then make sure that we only have
-	// one app or that we have an app target.
-	if baseCfg.AppTargetRequired {
-		if c.refApp == nil {
-			if len(c.cfg.Apps()) != 1 {
-				c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
-				return ErrSentinel
-			}
-
-			c.refApp = &pb.Ref_Application{
-				Project:     c.cfg.Project,
-				Application: c.cfg.Apps()[0],
-			}
-		}
+	// 4.b. Check to ensure there is 1 and only 1 target for SingleAppTarget cmd
+	if baseCfg.SingleAppTarget && len(c.refApps) > 1 {
+		c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
+		return ErrSentinel
 	}
 
 	return nil
@@ -432,31 +425,11 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 		}
 	}
 
-	if c.flagApp != "" {
-		c.refApp = &pb.Ref_Application{
-			Application: c.flagApp,
-		}
-	}
-
-	// if we specifically target an app, we no longer care about the rest
-	// of the apps in the project that we set above
-	if c.refApp != nil {
-		appTargets = []string{c.refApp.Application}
-	} else if c.cfg != nil && len(appTargets) == 0 {
-		appTargets = append(appTargets, c.cfg.Apps()...)
-	}
-
 	var apps []*clientpkg.App
-	for _, appName := range appTargets {
-		app := c.project.App(appName)
-		c.Log.Debug("will operate on app", "name", appName)
+	for _, refApp := range c.refApps {
+		app := c.project.App(refApp.Application)
+		c.Log.Debug("will operate on app", "name", refApp.Application)
 		apps = append(apps, app)
-	}
-
-	// Inject the metadata about the client, such as the runner id if it is running
-	// a local runner.
-	if id, ok := c.project.LocalRunnerId(); ok {
-		ctx = grpcmetadata.AddRunner(ctx, id)
 	}
 
 	// Just a serialize loop for now, one day we'll parallelize.
@@ -545,12 +518,19 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 			Usage:  "Labels to set for this operation. Can be specified multiple times.",
 		})
 
-		f.BoolVar(&flag.BoolVar{
-			Name:    "remote",
-			Target:  &c.flagRemote,
-			Default: false,
-			Usage: "True to use a remote runner to execute. This defaults to false \n" +
-				"unless 'runner.default' is set in your configuration.",
+		f.BoolPtrVar(&flag.BoolPtrVar{
+			Name:   "remote",
+			Target: &c.deprecatedFlagRemote,
+			Hidden: true,
+			Usage:  "True to use a remote runner to execute the operation.",
+		})
+
+		f.BoolPtrVar(&flag.BoolPtrVar{
+			Name:   "local",
+			Target: &c.flagLocal,
+			Usage: "True to use a local runner to execute the operation, false to use a remote runner. \n" +
+				"If unset, Waypoint will automatically determine where the operation will occur, \n" +
+				"defaulting to remote if possible.",
 		})
 
 		f.StringMapVar(&flag.StringMapVar{
@@ -751,6 +731,11 @@ so you can specify the app to target using the "-app" flag.
 
 	// matches either "project" or "project/app"
 	reAppTarget = regexp.MustCompile(`^(?P<project>[-0-9A-Za-z_]+)/(?P<app>[-0-9A-Za-z_]+)$`)
+
+	errDeprecatedProjectAppArg = strings.TrimSpace(`
+The project/app argument has been deprecated. Instead, use -project and -app flags, or their
+short notation -p and -a.
+`)
 
 	snapshotUnimplementedErr = strings.TrimSpace(`
 The current Waypoint server does not support snapshots. Rerunning the command

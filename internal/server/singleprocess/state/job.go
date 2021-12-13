@@ -490,6 +490,7 @@ RETRY_ASSIGN:
 		result, err := s.jobReadAndUpdate(txn, job.Id, func(jobpb *pb.Job) error {
 			jobpb.State = job.State
 			jobpb.AssignTime, err = ptypes.TimestampProto(time.Now())
+			jobpb.AssignedRunner = &pb.Ref_RunnerId{Id: r.Id}
 			if err != nil {
 				// This should never happen since encoding a time now should be safe
 				panic("time encoding failed: " + err.Error())
@@ -572,6 +573,7 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 			job.State = pb.Job_QUEUED
 			jobpb.State = job.State
 			jobpb.AssignTime = nil
+			jobpb.AssignedRunner = nil
 		}
 
 		return nil

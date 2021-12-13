@@ -29,7 +29,7 @@ func (c *LogsCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithSingleApp(),
+		WithSingleAppTarget(),
 	); err != nil {
 		return 1
 	}
@@ -100,7 +100,7 @@ func (c *LogsCommand) Run(args []string) int {
 }
 
 func (c *LogsCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(flagSetOperation, nil)
 }
 
 func (c *LogsCommand) AutocompleteArgs() complete.Predictor {
