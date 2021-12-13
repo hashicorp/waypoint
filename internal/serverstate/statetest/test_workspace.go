@@ -126,6 +126,19 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		require.Error(err)
 	})
 
+	t.Run("Allow underscores and hyphens", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Underscores and hyphens are fine
+		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+			Name: "special_and-allowed-_",
+		}))
+		require.NoError(err)
+	})
+
 	t.Run("Multi List", func(t *testing.T) {
 		require := require.New(t)
 
