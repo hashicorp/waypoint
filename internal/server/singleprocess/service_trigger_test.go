@@ -254,7 +254,7 @@ func TestServiceTrigger_ListTriggersWithFilters(t *testing.T) {
 		require.Equal(1, len(respList.Triggers))
 	})
 
-	t.Run("filter on labels", func(t *testing.T) {
+	t.Run("filter on tags", func(t *testing.T) {
 		require := require.New(t)
 
 		_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
@@ -269,20 +269,20 @@ func TestServiceTrigger_ListTriggersWithFilters(t *testing.T) {
 				Workspace: &pb.Ref_Workspace{
 					Workspace: "staging",
 				},
-				Labels: []string{"prod", "test"},
+				Tags: []string{"prod", "test"},
 			},
 		})
 		require.NoError(err)
 
 		respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{
 			Workspace: &pb.Ref_Workspace{Workspace: "staging"},
-			Labels:    []string{"prod"},
+			Tags:      []string{"prod"},
 		})
 		require.NoError(err)
 		require.Equal(1, len(respList.Triggers))
 	})
 
-	t.Run("filter on missing labels returns nothing", func(t *testing.T) {
+	t.Run("filter on missing tags returns nothing", func(t *testing.T) {
 		require := require.New(t)
 
 		_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
@@ -297,14 +297,14 @@ func TestServiceTrigger_ListTriggersWithFilters(t *testing.T) {
 				Workspace: &pb.Ref_Workspace{
 					Workspace: "staging",
 				},
-				Labels: []string{"prod", "test"},
+				Tags: []string{"prod", "test"},
 			},
 		})
 		require.NoError(err)
 
 		respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{
 			Workspace: &pb.Ref_Workspace{Workspace: "staging"},
-			Labels:    []string{"pikachu"},
+			Tags:      []string{"pikachu"},
 		})
 		require.NoError(err)
 		require.Equal(0, len(respList.Triggers))
