@@ -21,12 +21,14 @@
         </StatusReportMetaTable>
       </:body>
     </Section>
-    <Section @isExpandable={{false}}>
-      <:heading>{{t "page.artifact.timeline.heading"}}</:heading>
-      <:body>
-        <Timeline @model={{@model.timeline}} />
-      </:body>
-  </Section>
+    {{#if @model.timeline}}
+      <Section @isExpandable={{false}}>
+        <:heading>{{t "page.artifact.timeline.heading"}}</:heading>
+        <:body>
+          <Timeline @model={{@model.timeline}} />
+        </:body>
+      </Section>
+    {{/if}}
   </div>
 {{/let}}
 

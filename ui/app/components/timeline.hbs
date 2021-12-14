@@ -1,6 +1,6 @@
 <ul class="timeline">
   {{#each this.artifacts as |artifact|}}
-    <li>
+    <li data-test-timeline-li>
       <div class="timeline__dot"></div>
       <LinkTo
         title={{concat (t artifact.type) " v" artifact.sequence}}

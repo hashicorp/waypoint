@@ -62,6 +62,7 @@ export default class Timeline extends Component<TimelineArgs> {
         isCurrentRoute: this.areWeHere(key),
       } as ArtifactModel);
     }
+    artifactsList.sort((a, b) => (a.type > b.type ? 1 : -1));
     return artifactsList;
   }
 }

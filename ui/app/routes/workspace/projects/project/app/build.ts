@@ -41,9 +41,12 @@ export default class BuildDetail extends Route {
   async model(params: Params): Promise<Model> {
     let { builds, deployments, releases } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
     let buildFromAppRoute = builds.find((obj) => obj.sequence === Number(params.sequence));
-    let deploymentFromAppRoute = deployments.find(
-      (obj) => obj.artifactId === buildFromAppRoute?.pushedArtifact?.id
-    );
+    let deploymentFromAppRoute = deployments.find((obj) => {
+      if (obj.preload && obj.preload.artifact) {
+        return obj.preload.artifact.id === buildFromAppRoute?.pushedArtifact?.id;
+      }
+      return obj.artifactId === buildFromAppRoute?.pushedArtifact?.id;
+    });
     let releaseFromAppRoute = releases.find((obj) => obj.deploymentId === deploymentFromAppRoute?.id);
 
     if (!buildFromAppRoute) {
