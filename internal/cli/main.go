@@ -613,6 +613,11 @@ func Commands(
 				HelpText:     helpText["workspace"][1],
 			}, nil
 		},
+		"workspace create": func() (cli.Command, error) {
+			return &WorkspaceCreateCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"workspace inspect": func() (cli.Command, error) {
 			return &WorkspaceInspectCommand{
 				baseCommand: baseCommand,
