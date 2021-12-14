@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -130,6 +132,11 @@ func (c *TriggerListCommand) Run(args []string) int {
 			opStr = fmt.Sprintf("unknown operation: %T", triggerOpType)
 		}
 
+		var lastActiveTime string
+		if time, err := ptypes.Timestamp(t.ActiveTime); err == nil {
+			lastActiveTime = humanize.Time(time)
+		}
+
 		tbl.Rich([]string{
 			t.Id,
 			t.Name,
@@ -139,7 +146,7 @@ func (c *TriggerListCommand) Run(args []string) int {
 			opStr,
 			t.Description,
 			tags,
-			t.ActiveTime.String(),
+			lastActiveTime,
 		}, nil)
 	}
 
