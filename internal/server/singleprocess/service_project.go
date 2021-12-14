@@ -9,7 +9,6 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
-// TODO: test
 func (s *service) UpsertProject(
 	ctx context.Context,
 	req *pb.UpsertProjectRequest,
@@ -43,7 +42,6 @@ func (s *service) UpsertProject(
 	return &pb.UpsertProjectResponse{Project: result}, nil
 }
 
-// TODO: test
 func (s *service) GetProject(
 	ctx context.Context,
 	req *pb.GetProjectRequest,
@@ -69,7 +67,6 @@ func (s *service) GetProject(
 	}, nil
 }
 
-// TODO: test
 func (s *service) ListProjects(
 	ctx context.Context,
 	req *empty.Empty,
@@ -82,7 +79,6 @@ func (s *service) ListProjects(
 	return &pb.ListProjectsResponse{Projects: result}, nil
 }
 
-// TODO: test
 func (s *service) UpsertApplication(
 	ctx context.Context,
 	req *pb.UpsertApplicationRequest,
