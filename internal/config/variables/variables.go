@@ -2,12 +2,20 @@ package variables
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
+
+	"github.com/hashicorp/go-argmapper"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	sdkpb "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
+	"google.golang.org/grpc/status"
+
+	"github.com/hashicorp/waypoint/internal/plugin"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
@@ -357,9 +365,10 @@ func LoadEnvValues(vars map[string]*Variable) ([]*pb.Variable, hcl.Diagnostics) 
 // is used to validate types and that all variables have at least one
 // assigned value.
 func EvaluateVariables(
+	ctx context.Context,
+	log hclog.Logger,
 	pbvars []*pb.Variable,
 	vs map[string]*Variable,
-	log hclog.Logger,
 ) (Values, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	iv := Values{}
@@ -480,9 +489,25 @@ func EvaluateVariables(
 		}
 	}
 
+	// TODO(izaak): Look into how hard it would be to load these
+	// the right way. If not, at least validate them like watcher.go 664
+	configPlugins := plugin.ConfigSourcers
+
 	// check that all variables have a set value, including default of null
 	for name, variable := range vs {
 		v, ok := iv[name]
+
+		// TODO(izaak) revisit this as the right locaiton for this logic
+
+		if v.DynamicSource != nil {
+			val, err := renderDynamicVal(ctx, log, configPlugins, v.DynamicSource)
+			if err != nil {
+				// TODO(izaak): do something smart here
+				panic(err)
+			}
+			v.Value = val
+		}
+
 		if !ok || v == nil {
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
@@ -496,6 +521,71 @@ func EvaluateVariables(
 	}
 
 	return iv, diags
+}
+
+func renderDynamicVal(ctx context.Context, log hclog.Logger, configPlugins map[string]*plugin.Instance, dv *pb.ConfigVar_DynamicVal) (cty.Value, error) {
+	// TODO(izaak): make sure at the end of the day the errors thrown include
+	// which dynamic variable had the problem (probaly needs to be added above here)
+
+	ret := cty.Value{}
+
+	// TODO(izaak) This is very similar to watcher.go (771). Should make common.
+
+	L := log.With("source", dv.From)
+
+	_, ok := configPlugins[dv.From]
+	if !ok {
+		return ret, fmt.Errorf("configsourcer plugin named %s not found", dv.From)
+	}
+	s := configPlugins[dv.From].Component.(component.ConfigSourcer)
+
+	creq := []*component.ConfigRequest{{
+		Name:   dv.From,
+		Config: dv.Config,
+	}}
+
+	// IZAAK: PROBLEM: the vault plugin isn't getting it's plugin config.
+	// It doesn't know what the vault addr is yet.
+
+	result, err := plugin.CallDynamicFunc(L, s.ReadFunc(),
+		argmapper.Typed(ctx),
+		argmapper.Typed(creq),
+	)
+	if err != nil {
+		return ret, err
+	}
+
+	// Get the result
+	if result.Len() != 1 {
+		return ret, fmt.Errorf("plugin %s failed to report any values", dv.From)
+	}
+
+	values, ok := result.Out(0).([]*sdkpb.ConfigSource_Value)
+	if !ok {
+		return ret, fmt.Errorf("config source %s returned invalid type: got %s", dv.From, fmt.Sprintf("%T", result.Out(0)))
+	}
+	if len(values) != 1 {
+		// TODO(izaak): I don't think this error case is likely at all
+		return ret, fmt.Errorf("config source %s returned an unexpected number of values %d (expecting 1)", dv.From, len(values))
+	}
+	value := values[0]
+
+	switch r := value.Result.(type) {
+	case *sdkpb.ConfigSource_Value_Value:
+		// TODO(izaak): think about supporting more types
+		ret = cty.StringVal(r.Value)
+
+	case *sdkpb.ConfigSource_Value_Error:
+		st := status.FromProto(r.Error)
+		return ret, fmt.Errorf("error retrieving config value: %s",
+			st.Err().Error())
+
+	default:
+		return ret, fmt.Errorf("value had unknown result type %q, ignoring",
+			fmt.Sprintf("%T", value.Result))
+	}
+
+	return ret, nil
 }
 
 // LoadAutoFiles loads any *.auto.wpvars(.json) files in the source repo
