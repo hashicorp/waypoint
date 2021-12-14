@@ -776,3 +776,81 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 		require.NotNil(open)
 	}
 }
+
+func TestServiceQueueJob_odr_noconfig(t *testing.T) {
+	require := require.New(t)
+	ctx := context.Background()
+	log := hclog.New(&hclog.LoggerOptions{
+		Name:  "odr-test",
+		Level: hclog.Trace,
+	})
+	ctx = hclog.WithContext(ctx, log)
+
+	// Create our server
+	impl, err := New(
+		WithLogger(log),
+		WithDB(testDB(t)),
+	)
+	require.NoError(err)
+	client := server.TestServer(t, impl, server.TestWithContext(ctx))
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
+		Application: &pb.Ref_Application{
+			Application: "app",
+			Project:     "proj",
+		},
+	}).Application)
+
+	// Simplify writing tests
+	type Req = pb.QueueJobRequest
+
+	// Update the project to include odr with empty name/id
+	proj := serverptypes.TestProject(t, &pb.Project{
+		Name:           "proj",
+		OndemandRunner: &pb.Ref_OnDemandRunnerConfig{},
+	})
+
+	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+		Project: proj,
+	})
+
+	// Create, should get an ID back
+	queueResp, err := client.QueueJob(ctx, &Req{
+		Job: serverptypes.TestJobNew(t, &pb.Job{
+			Application: &pb.Ref_Application{
+				Application: "app",
+				Project:     "proj",
+			},
+		}),
+	})
+	require.Error(err)
+	require.Nil(queueResp)
+	require.Contains(err.Error(), "ondemand runner config 'name' and 'id' both empty")
+
+	// Update the project to include odr id that points to nothing, but
+	// with a name this time
+	proj = serverptypes.TestProject(t, &pb.Project{
+		Name: "proj",
+		OndemandRunner: &pb.Ref_OnDemandRunnerConfig{
+			Name: "thatsnotmyname",
+		},
+	})
+
+	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+		Project: proj,
+	})
+
+	// Create, should get an ID back
+	queueResp, err = client.QueueJob(ctx, &Req{
+		Job: serverptypes.TestJobNew(t, &pb.Job{
+			Application: &pb.Ref_Application{
+				Application: "app",
+				Project:     "proj",
+			},
+		}),
+	})
+	require.Error(err)
+	require.Nil(queueResp)
+	require.Contains(err.Error(), "ondemand runner config not found")
+}
