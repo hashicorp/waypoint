@@ -30,7 +30,7 @@ func (s *State) TriggerPut(t *pb.Trigger) error {
 			return status.Error(codes.FailedPrecondition, "A Project is required to create a trigger")
 		}
 
-		if t.Workspace == nil {
+		if t.Workspace == nil || t.Workspace.Workspace == "" {
 			t.Workspace = &pb.Ref_Workspace{Workspace: "default"}
 		}
 

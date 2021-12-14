@@ -87,9 +87,10 @@ func (c *TriggerListCommand) Run(args []string) int {
 
 	for _, t := range resp.Triggers {
 		ws := "default"
-		if t.Workspace != nil {
+		if t.Workspace != nil && t.Workspace.Workspace != "" {
 			ws = t.Workspace.Workspace
 		}
+
 		var proj, app, tags string
 		if t.Project != nil {
 			proj = t.Project.Project
