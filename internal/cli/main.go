@@ -995,9 +995,9 @@ accesses a Waypoint server requires a token.
 		`
 Trigger URL management.
 
-Trigger URLs are used execute to lifecycle operations for Waypoint. They are configured
+Trigger URLs are used to execute lifecycle operations for Waypoint. They are configured
 ahead of the execution request, and Waypoint server will generate a configuration
-URL for clients to send a request to to execute the operation.
+URL for clients to send a request to execute the operation.
 `,
 	},
 
