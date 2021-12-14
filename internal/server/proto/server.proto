@@ -3317,6 +3317,8 @@ message DeleteTriggerRequest {
 message RunTriggerRequest {
   // The trigger ref to execute
   Ref.Trigger ref = 1;
+
+  // TODO(briancain): We should let people define Trigger overrides(?)
 }
 
 message RunTriggerResponse {
