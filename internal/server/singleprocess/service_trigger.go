@@ -130,14 +130,14 @@ func (s *service) RunTrigger(
 		}
 
 		for _, app := range project.Applications {
-			tJob := job
-			tJob.Application = &pb.Ref_Application{
-				Project:     runTrigger.Project.Project,
+			tempJob := *job
+			tempJob.Application = &pb.Ref_Application{
+				Project:     project.Name,
 				Application: app.Name,
 			}
 
-			j := &pb.QueueJobRequest{Job: tJob}
-			jobList = append(jobList, j)
+			jobReq := &pb.QueueJobRequest{Job: &tempJob}
+			jobList = append(jobList, jobReq)
 		}
 	} else {
 		// we're only targetting a specific application, so queue 1 job
@@ -158,7 +158,6 @@ func (s *service) RunTrigger(
 	if err != nil {
 		return nil, err
 	}
-
 	// Gather queue job request ids
 	var ids []string
 	for _, qJr := range respList {
