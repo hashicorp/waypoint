@@ -130,13 +130,18 @@ func (s *service) RunTrigger(
 		}
 
 		for _, app := range project.Applications {
-			tempJob := *job
+			tempJob := &pb.Job{
+				Workspace:    job.Workspace,
+				Operation:    job.Operation,
+				TargetRunner: job.TargetRunner,
+			}
+
 			tempJob.Application = &pb.Ref_Application{
 				Project:     project.Name,
 				Application: app.Name,
 			}
 
-			jobReq := &pb.QueueJobRequest{Job: &tempJob}
+			jobReq := &pb.QueueJobRequest{Job: tempJob}
 			jobList = append(jobList, jobReq)
 		}
 	} else {
