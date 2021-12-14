@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -115,6 +117,11 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 		tags = strings.Join(trigger.Tags[:], ", ")
 	}
 
+	var lastActiveTime string
+	if time, err := ptypes.Timestamp(trigger.ActiveTime); err == nil {
+		lastActiveTime = humanize.Time(time)
+	}
+
 	c.ui.Output("Trigger URL config:", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
@@ -124,7 +131,7 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 			Name: "ID", Value: trigger.Id,
 		},
 		{
-			Name: "Last Time Active", Value: trigger.ActiveTime.String(),
+			Name: "Last Time Active", Value: lastActiveTime,
 		},
 		{
 			Name: "Authenticated", Value: trigger.Authenticated,
