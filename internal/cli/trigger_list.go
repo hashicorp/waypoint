@@ -178,7 +178,7 @@ func (c *TriggerListCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *TriggerListCommand) Synopsis() string {
-	return "List trigger URL configurations on Waypoint server"
+	return "List registered trigger URL configurations."
 }
 
 func (c *TriggerListCommand) Help() string {

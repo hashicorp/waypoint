@@ -180,14 +180,14 @@ func (c *TriggerInspectCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *TriggerInspectCommand) Synopsis() string {
-	return "Inspect a trigger URL from Waypoint server"
+	return "Inspect a registered trigger URL configuration."
 }
 
 func (c *TriggerInspectCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint trigger inspect [options] trigger-id
+Usage: waypoint trigger inspect [options] <trigger-id>
 
-  Inspect a trigger URL from Waypoint Server.
+  Inspect a registered trigger URL configuration.
 
 ` + c.Flags().Help())
 }

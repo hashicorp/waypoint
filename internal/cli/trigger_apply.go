@@ -379,9 +379,9 @@ func (c *TriggerApplyCommand) AutocompleteFlags() complete.Flags {
 
 func (c *TriggerApplyCommand) Synopsis() string {
 	if c.Update {
-		return "Update a trigger URL and register it to Waypoint server"
+		return "Update a registered trigger URL."
 	} else {
-		return "Create and register a trigger URL and register it to Waypoint server"
+		return "Create and register a trigger URL."
 	}
 }
 

@@ -79,12 +79,12 @@ func (c *TriggerDeleteCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *TriggerDeleteCommand) Synopsis() string {
-	return "Delete a trigger URL from Waypoint server"
+	return "Delete a registered trigger URL."
 }
 
 func (c *TriggerDeleteCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint trigger delete [options] trigger-id
+Usage: waypoint trigger delete [options] <trigger-id>
 
   Delete a trigger URL from Waypoint Server.
 
