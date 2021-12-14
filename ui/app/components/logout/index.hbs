@@ -1,11 +1,11 @@
 {{#if @canLogout}}
   <button class="auth-link" type="button" {{on "click" this.logout}}>
-    <Pds::Icon @type="logout" class="nav-icon" />
+    <FlightIcon @name="sign-out" class="nav-icon" />
     Logout
   </button>
 {{else}}
   <LinkTo class="auth-link" @route="auth">
-    <Pds::Icon @type="lock-open" class="nav-icon" />
+    <FlightIcon @name="unlock" class="nav-icon" />
     Authenticate
   </LinkTo>
 {{/if}}

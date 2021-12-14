@@ -22,12 +22,12 @@ export default class BuildDetail extends Route {
     return [
       {
         label: model.application?.application ?? 'unknown',
-        icon: 'git-repository',
+        icon: 'git-repo',
         route: 'workspace.projects.project.app',
       },
       {
         label: 'Builds',
-        icon: 'build',
+        icon: 'hammer',
         route: 'workspace.projects.project.app.builds',
       },
     ];

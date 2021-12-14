@@ -15,12 +15,10 @@ export default class WorkspaceProjectsProjectSettings extends Route {
     return [
       {
         label: model.name,
-        icon: 'folder-outline',
         route: 'workspace.projects.project.index',
       },
       {
         label: 'Settings',
-        icon: 'settings',
         route: 'workspace.projects.project.settings',
       },
     ];

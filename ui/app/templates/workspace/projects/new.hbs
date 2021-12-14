@@ -1,7 +1,7 @@
 {{page-title (t 'form.project_new.title')}}
 
 <AppBreadcrumbs/>
-<PageHeader @iconName="plus-plain">
+<PageHeader @iconName="plus">
   <div class="title">
     <h1>{{t 'form.project_new.title'}}</h1>
   </div>
@@ -28,8 +28,10 @@
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
         <div class="pds-fieldName" id="create-git-help-text">
-          <Pds::Icon @type="git-repository" class="icon" />
-          {{t 'form.project_new.create_git_label'}}
+          <span>
+            <FlightIcon @name="git-repo" @size="16" class="icon" />
+            {{t 'form.project_new.create_git_label'}}
+          </span>
           <Pds::HelpText>
             {{t 'form.project_new.create_git_helptext'}}
           </Pds::HelpText>

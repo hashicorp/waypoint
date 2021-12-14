@@ -1,3 +1,15 @@
-#create-git-help-text .pds-helpText {
-  margin-top: scale.$sm--3;
+#create-git-help-text {
+
+  span {
+    display: flex;
+    align-items: center;
+
+    svg {
+      margin-right: scale.$sm-3;
+    }
+  }
+
+  &.pds-helpText {
+    margin-top: scale.$sm--3;
+  }
 }
