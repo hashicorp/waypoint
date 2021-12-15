@@ -41,14 +41,8 @@ export default class Timeline extends Component<TimelineArgs> {
   @service router!: RouterService;
 
   areWeHere(currentArtifactKey: string): boolean {
-    let entry = Object.entries(_TYPE_ROUTES).find(([_, value]) =>
-      this.router.currentRouteName.includes(value)
-    );
-
-    if (entry) {
-      return entry[0] === currentArtifactKey;
-    }
-    return false;
+    let routeForKey = _TYPE_ROUTES[currentArtifactKey];
+    return this.router.currentRouteName.includes(routeForKey);
   }
 
   get artifacts(): ArtifactModel[] {

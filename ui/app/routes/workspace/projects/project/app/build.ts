@@ -4,7 +4,7 @@ import ApiService from 'waypoint/services/api';
 import { Ref, GetBuildRequest, Build, PushedArtifact } from 'waypoint-pb';
 import { Model as AppRouteModel } from '../app';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
-import { TimelineModel } from '../../../../../components/timeline';
+import { TimelineModel } from 'waypoint/components/timeline';
 
 type Params = { sequence: string };
 type Model = Build.AsObject & WithPushedArtifact;
@@ -17,7 +17,8 @@ interface WithTimeline {
   timeline: TimelineModel;
 }
 
-type BuildWithArtifact = Build.AsObject & WithPushedArtifact & WithTimeline;
+type BuildWithArtifact = Build.AsObject & WithPushedArtifact;
+type BuildWithArtifactAndTimeline = BuildWithArtifact & WithTimeline;
 
 export default class BuildDetail extends Route {
   @service api!: ApiService;
@@ -59,9 +60,9 @@ export default class BuildDetail extends Route {
     req.setRef(ref);
 
     let build = await this.api.client.getBuild(req, this.api.WithMeta());
-    let result: BuildWithArtifact = build.toObject();
+    let buildWithArtifact: BuildWithArtifact = build.toObject();
 
-    result.pushedArtifact = buildFromAppRoute.pushedArtifact;
+    buildWithArtifact.pushedArtifact = buildFromAppRoute.pushedArtifact;
 
     let timeline: TimelineModel = {};
     timeline.build = {
@@ -83,8 +84,7 @@ export default class BuildDetail extends Route {
       };
     }
 
-    result.timeline = timeline;
-
+    let result: BuildWithArtifactAndTimeline = { ...buildWithArtifact, timeline };
     return result;
   }
 }

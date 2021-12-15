@@ -39,7 +39,8 @@ export default class DeploymentDetail extends Route {
   async model(params: Params): Promise<Model> {
     let { builds, deployments, releases } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
     let deployment = deployments.find((obj) => obj.sequence == Number(params.sequence));
-    let build = builds.find((obj) => obj.pushedArtifact.id === deployment?.pushedArtifact.id);
+    let deploymentArtifactId = deployment?.pushedArtifact?.id ?? deployment?.artifactId;
+    let build = builds.find((obj) => obj.pushedArtifact?.id === deploymentArtifactId);
 
     if (!deployment) {
       throw new Error(`Deployment v${params.sequence} not found`);

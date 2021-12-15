@@ -42,8 +42,9 @@ export default class ReleaseDetail extends Route {
       throw new Error(`Release v${params.sequence} not found`);
     }
 
-    let deployment = deployments.find((obj) => obj.id === release.deploymentId);
-    let build = builds.find((obj) => obj.pushedArtifact.id === deployment.pushedArtifact.id);
+    let deployment = deployments.find((obj) => obj.id === release?.deploymentId);
+    let deploymentArtifactId = deployment?.pushedArtifact?.id ?? deployment?.artifactId;
+    let build = builds.find((obj) => obj.pushedArtifact?.id === deploymentArtifactId);
 
     let timeline: TimelineModel = {};
     if (build) {

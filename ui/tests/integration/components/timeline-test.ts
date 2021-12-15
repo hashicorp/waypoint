@@ -11,11 +11,8 @@ class RouterStub extends Service {
 module('Integration | Component | timeline', function (hooks) {
   setupRenderingTest(hooks);
 
-  hooks.beforeEach(function (_) {
-    this.owner.register('service:router', RouterStub);
-  });
-
   test('happy path', async function (assert) {
+    this.owner.register('service:router', RouterStub);
     this.set('timeline', {
       build: {
         sequence: 3,
@@ -56,6 +53,7 @@ module('Integration | Component | timeline', function (hooks) {
   });
 
   test('it does not render timestamps if status unavailable', async function (assert) {
+    this.owner.register('service:router', RouterStub);
     this.set('timeline', {
       build: { sequence: 4 },
       deployment: { sequence: 3 },
@@ -72,6 +70,7 @@ module('Integration | Component | timeline', function (hooks) {
   });
 
   test('it does not render you are here badge if no router.currentRouteName value', async function (assert) {
+    this.owner.register('service:router', RouterStub);
     this.set('timeline', {
       build: { sequence: 4 },
       deployment: { sequence: 3 },
