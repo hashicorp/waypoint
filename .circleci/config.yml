@@ -258,7 +258,7 @@ jobs:
           docker_layer_caching: true
           # We require > 17.06 to support --mount being
           # passed to RUN
-          version: 19.03.8
+          version: 20.10.11
       - attach_workspace:
           at: .
       - run:
