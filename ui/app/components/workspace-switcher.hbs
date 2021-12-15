@@ -34,6 +34,7 @@
                 @models={{array-concat workspace.name @models}}
                 aria-current={{if (eq workspace.name @current) "page" false}}
                 {{on "click" D.close}}
+                data-test-workspace-link={{workspace.name}}
               >
                 <span class="workspace-switcher__link-contents">
                   {{#if (eq workspace.name @current)}}
