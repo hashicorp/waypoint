@@ -93,6 +93,8 @@ func (s *service) RunTrigger(
 
 	log = log.With("run_trigger", runTrigger.Id)
 
+	log.Debug("building run trigger job")
+
 	// Build the job(s)
 	job := &pb.Job{
 		Workspace: runTrigger.Workspace,
@@ -134,9 +136,8 @@ func (s *service) RunTrigger(
 			return nil, err
 		}
 
-		log.Debug("building multi-jobs")
+		log.Debug("building multi-jobs for all apps in project", "project", project.Name)
 		for _, app := range project.Applications {
-			log.Debug("building a job for %s", app.Name)
 			tempJob := &pb.Job{
 				Workspace:    job.Workspace,
 				Operation:    job.Operation,
@@ -153,7 +154,7 @@ func (s *service) RunTrigger(
 		}
 
 		// Queue the job(s)
-		log.Debug("run trigger job list", "size", len(jobList))
+		log.Debug("queueing jobs", "total_jobs", len(jobList))
 		respList, err := s.queueJobMulti(ctx, jobList)
 		if err != nil {
 			return nil, err
@@ -163,7 +164,8 @@ func (s *service) RunTrigger(
 			ids = append(ids, qJr.JobId)
 		}
 	} else {
-		log.Debug("building single job", "app", runTrigger.Application.Application)
+		log.Debug("building a single job for target", "project",
+			runTrigger.Application.Project, "app", runTrigger.Application.Application)
 		// we're only targetting a specific application, so queue 1 job
 		job.Application = runTrigger.Application
 		j := &pb.QueueJobRequest{Job: job}
@@ -176,14 +178,14 @@ func (s *service) RunTrigger(
 		ids = append(ids, resp.JobId)
 	}
 
+	log.Debug("run trigger job(s) have been queued")
+
 	// Trigger has been requested to queue jobs, update active time
 	runTrigger.ActiveTime = timestamppb.New(time.Now())
 	err = s.state.TriggerPut(runTrigger)
 	if err != nil {
 		return nil, err
 	}
-
-	log.Debug("returning ids ", "id_length", len(ids))
 
 	// maybe update to return array of RunTriggerResponses instead?
 	return &pb.RunTriggerResponse{JobIds: ids}, nil
