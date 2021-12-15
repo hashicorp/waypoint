@@ -3318,7 +3318,9 @@ message RunTriggerRequest {
   // The trigger ref to execute
   Ref.Trigger ref = 1;
 
-  // TODO(briancain): We should let people define Trigger overrides(?)
+  // This is an optional array of HCL variable overrides that can be set
+  // when requesting a trigger to execute.
+  repeated Variable variable_overrides = 2;
 }
 
 message RunTriggerResponse {

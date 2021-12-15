@@ -101,7 +101,8 @@ func (s *service) RunTrigger(
 		Labels:    map[string]string{"trigger/id": runTrigger.Id},
 	}
 
-	// TODO is there an easy way to convert this without the big switch
+	// TODO(briancain): is there an easy way to convert this without the big switch
+	// so that we don't have to add new case statements any time a new operation is supported?
 	switch op := runTrigger.Operation.(type) {
 	case *pb.Trigger_Build:
 		job.Operation = &pb.Job_Build{Build: op.Build}
@@ -122,7 +123,10 @@ func (s *service) RunTrigger(
 			"trigger %q is configured with an unsupported operation %T", runTrigger.Id, op)
 	}
 
-	// TODO: Config Variable overrides?
+	if len(req.VariableOverrides) > 0 {
+		log.Debug("variable overrides have been requested for trigger job")
+		job.Variables = req.VariableOverrides
+	}
 
 	// TODO(briancain): look up a target runner config at the project/app level and apply it to job requests
 	job.TargetRunner = &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{}}
@@ -144,6 +148,7 @@ func (s *service) RunTrigger(
 				Operation:    job.Operation,
 				TargetRunner: job.TargetRunner,
 				Labels:       job.Labels,
+				Variables:    job.Variables,
 			}
 
 			tempJob.Application = &pb.Ref_Application{
@@ -189,6 +194,7 @@ func (s *service) RunTrigger(
 		return nil, err
 	}
 
-	// maybe update to return array of RunTriggerResponses instead?
+	// TODO(briancain): The HTTP implementation will take these job ids and
+	// call the GetJobStream endpoint to stream back output from the queued jobs
 	return &pb.RunTriggerResponse{JobIds: ids}, nil
 }
