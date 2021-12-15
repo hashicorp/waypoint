@@ -98,6 +98,7 @@ func (s *service) RunTrigger(
 	// Build the job(s)
 	job := &pb.Job{
 		Workspace: runTrigger.Workspace,
+		Labels:    map[string]string{"trigger/id": runTrigger.Id},
 	}
 
 	// TODO is there an easy way to convert this without the big switch
@@ -142,6 +143,7 @@ func (s *service) RunTrigger(
 				Workspace:    job.Workspace,
 				Operation:    job.Operation,
 				TargetRunner: job.TargetRunner,
+				Labels:       job.Labels,
 			}
 
 			tempJob.Application = &pb.Ref_Application{
