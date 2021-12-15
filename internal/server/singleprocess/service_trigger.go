@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"google.golang.org/grpc/codes"
@@ -83,11 +84,14 @@ func (s *service) RunTrigger(
 	if err := serverptypes.ValidateRunTriggerRequest(req); err != nil {
 		return nil, err
 	}
+	log := hclog.FromContext(ctx)
 
 	runTrigger, err := s.state.TriggerGet(req.Ref)
 	if err != nil {
 		return nil, err
 	}
+
+	log = log.With("run_trigger", runTrigger.Id)
 
 	// Build the job(s)
 	job := &pb.Job{
@@ -122,6 +126,7 @@ func (s *service) RunTrigger(
 
 	// generate job requests
 	var jobList []*pb.QueueJobRequest
+	var ids []string
 	if runTrigger.Application == nil {
 		// we're gonna queue multiple jobs for every application in a project
 		project, err := s.state.ProjectGet(runTrigger.Project)
@@ -129,7 +134,9 @@ func (s *service) RunTrigger(
 			return nil, err
 		}
 
+		log.Debug("building multi-jobs")
 		for _, app := range project.Applications {
+			log.Debug("building a job for %s", app.Name)
 			tempJob := &pb.Job{
 				Workspace:    job.Workspace,
 				Operation:    job.Operation,
@@ -144,30 +151,39 @@ func (s *service) RunTrigger(
 			jobReq := &pb.QueueJobRequest{Job: tempJob}
 			jobList = append(jobList, jobReq)
 		}
+
+		// Queue the job(s)
+		log.Debug("run trigger job list", "size", len(jobList))
+		respList, err := s.queueJobMulti(ctx, jobList)
+		if err != nil {
+			return nil, err
+		}
+		// Gather queue job request ids
+		for _, qJr := range respList {
+			ids = append(ids, qJr.JobId)
+		}
 	} else {
+		log.Debug("building single job", "app", runTrigger.Application.Application)
 		// we're only targetting a specific application, so queue 1 job
 		job.Application = runTrigger.Application
 		j := &pb.QueueJobRequest{Job: job}
 		jobList = append(jobList, j)
+
+		resp, err := s.QueueJob(ctx, j)
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, resp.JobId)
 	}
 
-	// Trigger has been requested to queue jobs, update active time before queue
+	// Trigger has been requested to queue jobs, update active time
 	runTrigger.ActiveTime = timestamppb.New(time.Now())
 	err = s.state.TriggerPut(runTrigger)
 	if err != nil {
 		return nil, err
 	}
 
-	// Queue the job(s)
-	respList, err := s.queueJobMulti(ctx, jobList)
-	if err != nil {
-		return nil, err
-	}
-	// Gather queue job request ids
-	var ids []string
-	for _, qJr := range respList {
-		ids = append(ids, qJr.JobId)
-	}
+	log.Debug("returning ids ", "id_length", len(ids))
 
 	// maybe update to return array of RunTriggerResponses instead?
 	return &pb.RunTriggerResponse{JobIds: ids}, nil
