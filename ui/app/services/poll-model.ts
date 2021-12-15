@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import Service from '@ember/service';
 import Route from '@ember/routing/route';
+import Transition from '@ember/routing/-private/transition';
 import { task, timeout } from 'ember-concurrency';
 import { taskFor } from 'ember-concurrency-ts';
 
@@ -9,9 +10,11 @@ const INTERVAL = 15000;
 
 export default class PollModelService extends Service {
   route!: Route;
+  transition!: Transition;
 
-  setup(route: Route): void {
+  setup(route: Route, transition: Transition): void {
     this.route = route;
+    this.transition = transition;
 
     // Start polling
     this.start();
@@ -48,7 +51,11 @@ export default class PollModelService extends Service {
       await timeout(INTERVAL);
 
       try {
-        this.route.refresh();
+        let updatedRouteModel = await this.route.model(
+          this.route.paramsFor(this.route.routeName),
+          this.transition
+        );
+        this.route.controllerFor(this.route.routeName).model = updatedRouteModel;
       } catch (e) {
         console.log(e);
       }

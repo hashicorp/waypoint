@@ -8,6 +8,7 @@ import { hash } from 'rsvp';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 import AppController from 'waypoint/controllers/workspace/projects/project/app';
 import { Params as WorkspaceParams } from 'waypoint/routes/workspace';
+import Transition from '@ember/routing/-private/transition';
 
 export interface Params {
   app_id: string;
@@ -77,9 +78,9 @@ export default class App extends Route {
     });
   }
 
-  afterModel(model: Model): void {
+  afterModel(model: Model, transition: Transition): void {
     injectPushedArtifacts(model);
-    this.pollModel.setup(this);
+    this.pollModel.setup(this, transition);
     if (this.controller) {
       this.controller.isSwitchingWorkspace = false;
     }
