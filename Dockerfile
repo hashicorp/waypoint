@@ -15,7 +15,7 @@ COPY go.mod /tmp/wp-prime
 WORKDIR /tmp/wp-prime
 
 RUN go mod download
-RUN go get github.com/kevinburke/go-bindata/...
+RUN go install github.com/kevinburke/go-bindata/go-bindata
 
 COPY . /tmp/wp-src
 WORKDIR /tmp/wp-src
