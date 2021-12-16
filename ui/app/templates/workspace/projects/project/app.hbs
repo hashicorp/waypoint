@@ -10,8 +10,8 @@
       <h1>{{@model.application.application}}</h1>
       <WorkspaceSwitcher
         @current={{@model.workspaceName}}
-        @route={{this.router.currentRoute.name}}
-        @models={{array @model.project.name @model.application.application}}
+        @route={{this.workspaceSwitcherTargetRoute.name}}
+        @models={{this.workspaceSwitcherTargetModels}}
       />
       {{#if this.isSwitchingWorkspace}}
         <span class="workspace-switching-indicator">
