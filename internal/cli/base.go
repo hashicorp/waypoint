@@ -402,29 +402,8 @@ func (c *baseCommand) Init(opts ...Option) error {
 // the callback closure properties to cancel the passed in context. This
 // will stop any remaining callbacks and exit early.
 func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *clientpkg.App) error) error {
-	var appTargets []string
-
-	// If the user specified a project flag, we want only the apps
-	// that are assigned to that project
-	if c.flagProject != "" {
-		client := c.project.Client()
-		projectTarget := &pb.Ref_Project{Project: c.flagProject}
-		resp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{
-			Project: &pb.Ref_Project{
-				Project: projectTarget.Project,
-			},
-		})
-		if err != nil {
-			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-		project := resp.Project
-
-		for _, a := range project.Applications {
-			appTargets = append(appTargets, a.Name)
-		}
-	}
-
+	// c.refApps is set in c.Init(), based on the project
+	// the command is running against
 	var apps []*clientpkg.App
 	for _, refApp := range c.refApps {
 		app := c.project.App(refApp.Application)
