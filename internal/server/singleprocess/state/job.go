@@ -265,14 +265,30 @@ func (s *State) JobProjectScopedRequest(
 	}
 
 	for _, app := range project.Applications {
-		tempJob := *jobTemplate
+		// We copy by all values because copying the original job includes copying a mutux lock,
+		// which upsets the linter.
+		tempJob := &pb.Job{
+			SingletonId:           jobTemplate.SingletonId,
+			DependsOn:             jobTemplate.DependsOn,
+			DependsOnAllowFailure: jobTemplate.DependsOnAllowFailure,
+			Workspace:             jobTemplate.Workspace,
+			TargetRunner:          jobTemplate.TargetRunner,
+			Labels:                jobTemplate.Labels,
+			DataSource:            jobTemplate.DataSource,
+			DataSourceOverrides:   jobTemplate.DataSourceOverrides,
+			WaypointHcl:           jobTemplate.WaypointHcl,
+			Variables:             jobTemplate.Variables,
+			Operation:             jobTemplate.Operation,
+			DataSourceRef:         jobTemplate.DataSourceRef,
+			Config:                jobTemplate.Config,
+		}
 
 		tempJob.Application = &pb.Ref_Application{
 			Project:     project.Name,
 			Application: app.Name,
 		}
 
-		jobReq := &pb.QueueJobRequest{Job: &tempJob}
+		jobReq := &pb.QueueJobRequest{Job: tempJob}
 		result = append(result, jobReq)
 	}
 
