@@ -277,3 +277,62 @@ func TestJobsPrune(t *testing.T) {
 		require.Nil(val)
 	})
 }
+
+func TestJobsProjectScopedRequest(t *testing.T) {
+	t.Run("returns error if no project ref found", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		const name = "proj"
+		ref := &pb.Ref_Project{Project: name}
+
+		jobTemplate := &pb.Job{
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+			Operation: &pb.Job_Init{},
+		}
+
+		{
+			resp, err := s.JobProjectScopedRequest(ref, jobTemplate)
+			require.Error(err)
+			require.Nil(resp)
+		}
+	})
+
+	t.Run("returns a list of queued job request messages for all apps in project", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		const name = "proj"
+		ref := &pb.Ref_Project{Project: name}
+
+		proj := serverptypes.TestProject(t, &pb.Project{Name: name})
+		err := s.ProjectPut(proj)
+		require.NoError(err)
+		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+			Name:    "test",
+			Project: ref,
+		}))
+		require.NoError(err)
+		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+			Name:    "test2",
+			Project: ref,
+		}))
+		require.NoError(err)
+
+		jobTemplate := &pb.Job{
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+			Operation: &pb.Job_Init{},
+		}
+
+		{
+			resp, err := s.JobProjectScopedRequest(ref, jobTemplate)
+			require.NoError(err)
+			require.Len(resp, 2)
+		}
+	})
+}

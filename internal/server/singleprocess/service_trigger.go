@@ -101,8 +101,6 @@ func (s *service) RunTrigger(
 		Labels:    map[string]string{"trigger/id": runTrigger.Id},
 	}
 
-	// TODO(briancain): is there an easy way to convert this without the big switch
-	// so that we don't have to add new case statements any time a new operation is supported?
 	switch op := runTrigger.Operation.(type) {
 	case *pb.Trigger_Build:
 		job.Operation = &pb.Job_Build{Build: op.Build}
@@ -136,28 +134,10 @@ func (s *service) RunTrigger(
 	var ids []string
 	if runTrigger.Application == nil {
 		// we're gonna queue multiple jobs for every application in a project
-		project, err := s.state.ProjectGet(runTrigger.Project)
+		log.Debug("building multi-jobs for all apps in project", "project", runTrigger.Project.Project)
+		jobList, err := s.state.JobProjectScopedRequest(runTrigger.Project, job)
 		if err != nil {
 			return nil, err
-		}
-
-		log.Debug("building multi-jobs for all apps in project", "project", project.Name)
-		for _, app := range project.Applications {
-			tempJob := &pb.Job{
-				Workspace:    job.Workspace,
-				Operation:    job.Operation,
-				TargetRunner: job.TargetRunner,
-				Labels:       job.Labels,
-				Variables:    job.Variables,
-			}
-
-			tempJob.Application = &pb.Ref_Application{
-				Project:     project.Name,
-				Application: app.Name,
-			}
-
-			jobReq := &pb.QueueJobRequest{Job: tempJob}
-			jobList = append(jobList, jobReq)
 		}
 
 		// Queue the job(s)
