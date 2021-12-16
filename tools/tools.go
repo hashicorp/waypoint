@@ -1,3 +1,4 @@
+//go:build tools
 // +build tools
 
 // To install the following tools at the version used by this repo run:
