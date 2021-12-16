@@ -24,6 +24,8 @@ $button-shadow: 0 3px 2px rgba(var(--shadow), 0.2);
   --card: #{dehex(color.$white)};
   --highlighted-list-item: #{dehex(color.$ui-cool-gray-100)};
   --panel: #{dehex(color.$ui-cool-gray-050)};
+  --timeline-dot: #{dehex(color.$ui-gray-400)};
+  --timeline-dash: #{dehex(color.$ui-gray-100)};
   --badge: #{dehex(color.$ui-gray-200)};
   --badge-text: #{dehex(color.$ui-gray-800)};
   --badge-neutral: #{dehex(color.$ui-cool-gray-100)};
