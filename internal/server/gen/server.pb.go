@@ -10115,7 +10115,8 @@ type RunTriggerRequest struct {
 	// The trigger ref to execute
 	Ref *Ref_Trigger `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
 	// This is an optional array of HCL variable overrides that can be set
-	// when requesting a trigger to execute.
+	// when requesting a trigger to execute. Currently, RunTrigger only supports
+	// setting CLI level config vars, which take the top level of presidence
 	VariableOverrides []*Variable `protobuf:"bytes,2,rep,name=variable_overrides,json=variableOverrides,proto3" json:"variable_overrides,omitempty"`
 }
 

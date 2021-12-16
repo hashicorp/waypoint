@@ -123,6 +123,16 @@ func (s *service) RunTrigger(
 
 	if len(req.VariableOverrides) > 0 {
 		log.Debug("variable overrides have been requested for trigger job")
+		for i, v := range req.VariableOverrides {
+			switch vType := v.Source.(type) {
+			case *pb.Variable_Cli:
+				continue
+			default:
+				return nil, status.Errorf(codes.FailedPrecondition,
+					"Incorrect Variable type for %q given %T", req.VariableOverrides[i].Name, vType)
+			}
+		}
+
 		job.Variables = req.VariableOverrides
 	}
 
