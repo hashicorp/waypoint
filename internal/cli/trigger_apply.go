@@ -94,13 +94,13 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		}
 
 		// Trigger target
-		if diffTrigger.Workspace != nil {
+		if diffTrigger.Workspace != nil && c.flagWorkspace == "" {
 			c.flagWorkspace = diffTrigger.Workspace.Workspace
 		}
-		if diffTrigger.Project != nil {
+		if diffTrigger.Project != nil && c.flagProject == "" {
 			c.flagProject = diffTrigger.Project.Project
 		}
-		if diffTrigger.Application != nil {
+		if diffTrigger.Application != nil && c.flagApp == "" {
 			c.flagApp = diffTrigger.Application.Application
 		}
 	}
