@@ -127,17 +127,3 @@ hr {
   border: none;
   border-top: 1px solid rgb(var(--border));
 }
-
-// Set a default size for icons
-
-svg.icon {
-  width: scale.$lg-2;
-  height: scale.$lg-2;
-  flex-shrink: 0;
-}
-
-.pds-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}

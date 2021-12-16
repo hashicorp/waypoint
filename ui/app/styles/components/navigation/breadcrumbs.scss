@@ -15,22 +15,20 @@ ul.breadcrumbs {
       align-items: center;
       overflow: hidden;
 
+      svg {
+        margin-right: scale.$sm-3;
+      }
+
       &:hover {
         color: rgb(var(--link));
       }
 
       span {
+        font-weight: normal;
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
       }
-    }
-
-    .pds-icon {
-      width: 16px;
-      height: 16px;
-      margin-right: scale.$sm-3;
-      flex-shrink: 0;
     }
 
     &::after {

@@ -6,7 +6,7 @@
       {{else}}
         <LinkTo @route={{breadcrumb.route}} data-test-breadcrumb={{breadcrumb.route}}>
           {{#if breadcrumb.icon}}
-            <Pds::Icon @type={{breadcrumb.icon}} />
+            <FlightIcon @name={{breadcrumb.icon}} />
           {{/if}}
           <span>{{breadcrumb.label}}</span>
         </LinkTo>

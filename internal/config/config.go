@@ -161,3 +161,8 @@ func Load(path string, opts *LoadOptions) (*Config, error) {
 func (c *Config) HCLContext() *hcl.EvalContext {
 	return c.ctx.NewChild()
 }
+
+// ConfigPath returns the path to the directory that contains the config file (waypoint.hcl)
+func (c *Config) ConfigPath() string {
+	return c.path
+}

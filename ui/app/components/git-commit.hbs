@@ -1,6 +1,6 @@
 {{#if @commit}}
   <span class="git-commit" title="Triggered by commit: {{@commit}}">
-    <Pds::Icon @type="git-commit"/>
+    <FlightIcon @name="git-commit"/>
     {{!-- TODO: add git profile picture of user whose commit it was when possible --}}
     <CopyButton @clipboardText={{@commit}}>
      <span class="git-commit__sha">{{truncate-commit @commit}}</span>

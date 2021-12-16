@@ -214,6 +214,29 @@ func (_m *WaypointServer) DeleteHostname(_a0 context.Context, _a1 *gen.DeleteHos
 	return r0, r1
 }
 
+// DeleteTrigger provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) DeleteTrigger(_a0 context.Context, _a1 *gen.DeleteTriggerRequest) (*emptypb.Empty, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteTriggerRequest) *emptypb.Empty); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteTriggerRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteUser provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) DeleteUser(_a0 context.Context, _a1 *gen.DeleteUserRequest) (*emptypb.Empty, error) {
 	ret := _m.Called(_a0, _a1)
@@ -790,6 +813,29 @@ func (_m *WaypointServer) GetStatusReport(_a0 context.Context, _a1 *gen.GetStatu
 	return r0, r1
 }
 
+// GetTrigger provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetTrigger(_a0 context.Context, _a1 *gen.GetTriggerRequest) (*gen.GetTriggerResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetTriggerResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetTriggerRequest) *gen.GetTriggerResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetTriggerResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetTriggerRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetUser provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetUser(_a0 context.Context, _a1 *gen.GetUserRequest) (*gen.GetUserResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -1127,6 +1173,29 @@ func (_m *WaypointServer) ListStatusReports(_a0 context.Context, _a1 *gen.ListSt
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListStatusReportsRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListTriggers provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListTriggers(_a0 context.Context, _a1 *gen.ListTriggerRequest) (*gen.ListTriggerResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListTriggerResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListTriggerRequest) *gen.ListTriggerResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListTriggerResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListTriggerRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -1643,6 +1712,29 @@ func (_m *WaypointServer) UpsertStatusReport(_a0 context.Context, _a1 *gen.Upser
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertStatusReportRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpsertTrigger provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UpsertTrigger(_a0 context.Context, _a1 *gen.UpsertTriggerRequest) (*gen.UpsertTriggerResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UpsertTriggerResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertTriggerRequest) *gen.UpsertTriggerResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertTriggerResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertTriggerRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

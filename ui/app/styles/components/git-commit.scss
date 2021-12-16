@@ -2,6 +2,9 @@
   @include Typography.Interface(S);
   border-radius: 2px;
   padding: scale.$sm-4 scale.$sm-4;
+  display: flex;
+  align-items: center;
+
   &__sha {
     color: rgb(var(--text-muted));
     background: rgb(var(--badge));

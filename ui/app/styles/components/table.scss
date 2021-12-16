@@ -55,6 +55,15 @@
     }
   }
 
+  .resource-icon {
+    display: flex;
+    align-items: flex-end;
+
+    svg {
+      margin-right: scale.$sm-3;
+    }
+  }
+
   .w-1\/2 {
     width: 50%;
   }

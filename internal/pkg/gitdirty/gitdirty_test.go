@@ -21,7 +21,7 @@ func init() {
 	}
 }
 
-func TestFileIsDirty(t *testing.T) {
+func TestPathIsDirty(t *testing.T) {
 	tests := []struct {
 		Name         string
 		Fixture      string

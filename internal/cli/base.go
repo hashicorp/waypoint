@@ -296,22 +296,21 @@ func (c *baseCommand) Init(opts ...Option) error {
 	//     required
 
 	// 1. Parse the configuration
-	c.cfg = &config.Config{}
 
 	if !baseCfg.NoConfig {
 		// Try parsing config
-		cfg, err := c.initConfig("")
+		c.cfg, err = c.initConfig("")
 		if err != nil {
 			c.logError(c.Log, "failed to load config", err)
 			return err
 		}
 
 		// If that worked, set our refs
-		if cfg != nil {
-			c.refProject = &pb.Ref_Project{Project: cfg.Project}
-			for _, app := range cfg.Apps() {
+		if c.cfg != nil {
+			c.refProject = &pb.Ref_Project{Project: c.cfg.Project}
+			for _, app := range c.cfg.Apps() {
 				c.refApps = append(c.refApps, &pb.Ref_Application{
-					Project:     cfg.Project,
+					Project:     c.cfg.Project,
 					Application: app,
 				})
 			}

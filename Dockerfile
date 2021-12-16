@@ -4,7 +4,7 @@
 # builder builds the Waypoint binaries
 #--------------------------------------------------------------------
 
-FROM docker.mirror.hashicorp.services/golang:1.16.5-alpine3.13 AS builder
+FROM docker.mirror.hashicorp.services/golang:1.17.5-alpine3.15 AS builder
 
 RUN apk add --no-cache git gcc libc-dev make
 
@@ -15,7 +15,7 @@ COPY go.mod /tmp/wp-prime
 WORKDIR /tmp/wp-prime
 
 RUN go mod download
-RUN go get github.com/kevinburke/go-bindata/...
+RUN go install github.com/kevinburke/go-bindata/go-bindata
 
 COPY . /tmp/wp-src
 WORKDIR /tmp/wp-src
@@ -53,7 +53,7 @@ ENTRYPOINT ["/kaniko/waypoint"]
 # final image
 #--------------------------------------------------------------------
 
-FROM docker.mirror.hashicorp.services/alpine:3.13.5
+FROM docker.mirror.hashicorp.services/alpine:3.15.0
 
 # git is for gitrefpretty() and other calls for Waypoint
 RUN apk add --no-cache git

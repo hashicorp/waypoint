@@ -405,6 +405,40 @@ func Commands(
 			}, nil
 		},
 
+		"trigger": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["trigger"][0],
+				HelpText:     helpText["trigger"][1],
+			}, nil
+		},
+		"trigger create": func() (cli.Command, error) {
+			return &TriggerApplyCommand{
+				baseCommand: baseCommand,
+				Update:      false,
+			}, nil
+		},
+		"trigger update": func() (cli.Command, error) {
+			return &TriggerApplyCommand{
+				baseCommand: baseCommand,
+				Update:      true,
+			}, nil
+		},
+		"trigger delete": func() (cli.Command, error) {
+			return &TriggerDeleteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"trigger list": func() (cli.Command, error) {
+			return &TriggerListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"trigger inspect": func() (cli.Command, error) {
+			return &TriggerInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"runner": func() (cli.Command, error) {
 			return &helpCommand{
 				SynopsisText: helpText["runner"][0],
@@ -611,6 +645,11 @@ func Commands(
 			return &helpCommand{
 				SynopsisText: helpText["workspace"][0],
 				HelpText:     helpText["workspace"][1],
+			}, nil
+		},
+		"workspace create": func() (cli.Command, error) {
+			return &WorkspaceCreateCommand{
+				baseCommand: baseCommand,
 			}, nil
 		},
 		"workspace inspect": func() (cli.Command, error) {
@@ -954,6 +993,17 @@ Tokens are the primary form of authentication to Waypoint. Everyone who
 accesses a Waypoint server requires a token.
 
 ` + warnTokenDeprecated,
+	},
+
+	"trigger": {
+		"Trigger URL management",
+		`
+Trigger URL management.
+
+Trigger URLs are used to execute lifecycle operations for Waypoint. They are configured
+ahead of the execution request, and Waypoint server will generate a configuration
+URL for clients to send a request to execute the operation.
+`,
 	},
 
 	"user": {

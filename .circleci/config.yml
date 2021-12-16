@@ -3,7 +3,7 @@ version: 2.1
 
 references:
   images:
-    go: &GOLANG_IMAGE docker.mirror.hashicorp.services/circleci/golang:1.16
+    go: &GOLANG_IMAGE docker.mirror.hashicorp.services/circleci/golang:1.17
     middleman: &MIDDLEMAN_IMAGE docker.mirror.hashicorp.services/hashicorp/middleman-hashicorp:0.3.44
     ember: &EMBER_IMAGE docker.mirror.hashicorp.services/circleci/node:14-browsers
     website: &WEBSITE_IMAGE docker.mirror.hashicorp.services/node:14
@@ -247,7 +247,7 @@ jobs:
   image-release:
     docker:
       # Use a modern Circle image as we just need up-to-date Docker here
-      - image: docker.mirror.hashicorp.services/cimg/base:2020.07-20.04
+      - image: docker.mirror.hashicorp.services/cimg/base:2021.12
     resource_class: medium+
     environment:
       <<: *ENVIRONMENT
@@ -258,7 +258,7 @@ jobs:
           docker_layer_caching: true
           # We require > 17.06 to support --mount being
           # passed to RUN
-          version: 19.03.8
+          version: 20.10.11
       - attach_workspace:
           at: .
       - run:

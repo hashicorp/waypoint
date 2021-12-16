@@ -337,7 +337,7 @@ func (s *service) onDemandRunnerStartJob(
 
 	// Arguments for the runner image. Waypoint is ALWAYS assumed to be
 	// the entrypoint for ODR images.
-	args := []string{"runner", "agent", "-vv", "-id", runnerId, "-odr"}
+	args := []string{"runner", "agent", "-vv", "-id", runnerId, "-odr", "-odr-profile-id", od.Id}
 
 	job := &pb.Job{
 		// Inherit the workspace/application of the source job.

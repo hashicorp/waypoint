@@ -65,7 +65,9 @@ func Test_remoteOpPreferred(t *testing.T) {
 	}
 
 	// Register a remote runner
-	_, remoteRunnerClose := singleprocess.TestRunner(t, client, &pb.Runner{Odr: false})
+	_, remoteRunnerClose := singleprocess.TestRunner(t, client, &pb.Runner{
+		Kind: &pb.Runner_Remote_{Remote: &pb.Runner_Remote{}},
+	})
 	defer remoteRunnerClose()
 
 	// Register a non-default runner profile

@@ -243,6 +243,26 @@
     "path": "status"
   },
   {
+    "title": "trigger create",
+    "path": "trigger-create"
+  },
+  {
+    "title": "trigger update",
+    "path": "trigger-update"
+  },
+  {
+    "title": "trigger delete",
+    "path": "trigger-delete"
+  },
+  {
+    "title": "trigger inspect",
+    "path": "trigger-inspect"
+  },
+  {
+    "title": "trigger list",
+    "path": "trigger-list"
+  },
+  {
     "title": "user inspect",
     "path": "user-inspect"
   },
@@ -261,6 +281,10 @@
   {
     "title": "version",
     "path": "version"
+  },
+  {
+    "title": "workspace create",
+    "path": "workspace-create"
   },
   {
     "title": "workspace inspect",

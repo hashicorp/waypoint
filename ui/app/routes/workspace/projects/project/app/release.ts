@@ -17,12 +17,12 @@ export default class ReleaseDetail extends Route {
     return [
       {
         label: model.application?.application ?? 'unknown',
-        icon: 'git-repository',
+        icon: 'git-repo',
         route: 'workspace.projects.project.app',
       },
       {
         label: 'Releases',
-        icon: 'public-default',
+        icon: 'globe',
         route: 'workspace.projects.project.app.releases',
       },
     ];

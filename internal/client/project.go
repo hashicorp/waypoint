@@ -41,6 +41,10 @@ type Project struct {
 
 	localServer bool // True when a local server is created
 
+	// configPath is the path to the local directory that contains our config file (waypoint.hcl)
+	// May not be present.
+	configPath string
+
 	// These are used to manage a local runner and its job processing
 	// in a goroutine.
 	wg           sync.WaitGroup
@@ -269,6 +273,15 @@ func WithNoLocalServer() Option {
 func WithUseLocalRunner(useLocalRunner bool) Option {
 	return func(c *Project, cfg *config) error {
 		c.useLocalRunner = &useLocalRunner
+		return nil
+	}
+}
+
+// WithConfigPath sets the path to the local directory that contains our config
+// file (waypoint.hcl).
+func WithConfigPath(configPath string) Option {
+	return func(c *Project, cfg *config) error {
+		c.configPath = configPath
 		return nil
 	}
 }
