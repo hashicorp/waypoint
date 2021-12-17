@@ -64,6 +64,16 @@
     }
   }
 
+  &__icon-text-cell {
+    display: flex;
+    align-items: center;
+    height: 100%;
+
+    svg {
+      margin-right: scale.$sm-3;
+    }
+  }
+
   .w-1\/2 {
     width: 50%;
   }
@@ -81,5 +91,9 @@
   }
   .w-3\/5 {
     width: 60%;
+  }
+  .w-version-col {
+    width:7%;
+    white-space:nowrap;
   }
 }

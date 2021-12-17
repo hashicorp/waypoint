@@ -1,25 +1,49 @@
-<li class="app-item">
-  <LinkTo @route="workspace.projects.project.app.release" @models={{array @release.sequence}}>
-    <p>
+<tr>
+  {{!-- <LinkTo @route="workspace.projects.project.app.release" @models={{array @release.sequence}}> --}}
+    <th scope="row">
       <b class="badge badge--version">v{{@release.sequence}}</b>
-    </p>
-    <small class="app-item__meta__secondary">
-      <OperationStatusIndicator::Release @operation={{@release}} />
-    </small>
-  </LinkTo>
-
-  {{#if (and (not-eq @release.state 4) @release.statusReport)}}
-    <small>
-      <StatusReportIndicator @statusReport={{@release.statusReport}} />
-    </small>
-  {{/if}}
-
-  {{#if (and @isLatest @release.url)}}
-    <ExternalLink
-      href={{enforce-protocol @release.url}}
-      class="button button--primary button--external-link">
-      <span>{{@release.url}}</span>
-      <FlightIcon @name="external-link" class="icon" />
-    </ExternalLink>
-  {{/if}}
-</li>
+    </th>
+    {{#let (or @release.pushedArtifact @release) as |operation|}}
+      <td>
+        <span class="table__icon-text-cell">
+          <FlightIcon
+            @name={{or
+                (and (eq operation.status.state 1) "delay")
+                (and (eq operation.status.state 2) "check-circle")
+                (and (eq operation.status.state 3) "x-circle")
+                (and (eq operation.status.state 0) "delay")
+              }}
+            @size="16"
+          />
+          {{t
+            (concat
+              "app_item_release.status"
+              ".state-" operation.status.state
+            )
+          }}
+        </span>
+      </td>
+      <td>
+        {{!-- TODO: add popover here --}}
+        {{#if @matchingDeployment}}
+          Deployment <b class="badge badge--version">v{{@matchingDeployment}}</b>
+        {{else}}
+          {{t
+            "app_item_build.not_deployed"
+          }}
+          {{#if (or (not-eq operation.status.state 0) (not-eq operation.status.state 1))}}
+            <Pds::Button>{{t "app_item_build.deploy_now"}}</Pds::Button>
+          {{/if}}
+        {{/if}}
+      </td>
+      <td>
+        <FlightIcon
+          data-test-icon-type={{icon-for-component operation.component.name}}
+          @name={{icon-for-component operation.component.name}}
+          @size="16"
+        />
+        {{component-name operation.component.name}}
+      </td>
+    {{/let}}
+  {{!-- </LinkTo> --}}
+</tr>

@@ -1,18 +1,33 @@
 {{page-title (concat @model.application.application "Releases")}}
-
-<h2 class="list-heading">{{t "page.releases.title"}}</h2>
-
-<ul data-test-release-list class="list">
-  {{#each @model key="id" as |release releaseIndex|}}
-    <AppItem::Release @release={{release}} @isLatest={{ eq releaseIndex 0}} />
-  {{else}}
-    <EmptyState>
-      <p>There are no releases to display for this app yet</p>
-      <p>To create your first release, you can run
-        <CopyableCode @ref="empty-release" @inline="true">
-          <code id="empty-release">waypoint release</code>
-        </CopyableCode>
-        from the CLI</p>
-    </EmptyState>
-  {{/each}}
-</ul>
+{{#if @model.releases}}
+  <Table>
+    <colgroup>
+      <col class="w-version-col">
+      <col class="w-1/5">
+      <col class="w-2/5">
+      <col class="w-1/3">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Version</th>
+        <th>Status</th>
+        <th>Deployment</th>
+        <th>Provider</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each @model.releases key="id" as |release|}}
+        <AppItem::Release @release={{release}} @matchingDeployment={{get @model.releaseDeploymentPairs release.sequence}} />
+      {{/each}}
+    </tbody>
+  </Table>
+{{else}}
+  <EmptyState>
+    <p>There are no releases to display for this app yet</p>
+    <p>To create your first release, you can run
+      <CopyableCode @ref="empty-release" @inline="true">
+        <code id="empty-release">waypoint release</code>
+      </CopyableCode>
+      from the CLI</p>
+  </EmptyState>
+{{/if}}

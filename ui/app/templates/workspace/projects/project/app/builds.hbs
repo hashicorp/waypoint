@@ -1,20 +1,35 @@
 {{page-title (concat @model.application.application "Builds")}}
-
-<h2 class="list-heading">{{t "page.builds.title"}}</h2>
-
-<ul data-test-build-list class="list">
-  {{#each @model key="id" as |build|}}
-    <AppItem::Build @build={{build}} />
-  {{else}}
-    <EmptyState>
-      <p>There are no builds to display for this app yet</p>
-      <p>To create your first build, you can run
-        <CopyableCode @ref="empty-build" @inline="true">
-          <code id="empty-build">waypoint build</code>
-        </CopyableCode>
-        from the CLI</p>
-    </EmptyState>
-  {{/each}}
-</ul>
+{{#if @model.builds}}
+  <Table>
+    <colgroup>
+      <col class="w-version-col">
+      <col class="w-1/5">
+      <col class="w-2/5">
+      <col class="w-1/3">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Version</th>
+        <th>Status</th>
+        <th>Deployment</th>
+        <th>Provider</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each @model.builds key="id" as |build|}}
+        <AppItem::Build @build={{build}} @matchingDeployment={{get @model.buildDeploymentPairs build.sequence}} />
+      {{/each}}
+    </tbody>
+  </Table>
+{{else}}
+  <EmptyState>
+    <p>There are no builds to display for this app yet</p>
+    <p>To create your first build, you can run
+      <CopyableCode @ref="empty-build" @inline="true">
+        <code id="empty-build">waypoint build</code>
+      </CopyableCode>
+      from the CLI</p>
+  </EmptyState>
+{{/if}}
 
 {{outlet}}

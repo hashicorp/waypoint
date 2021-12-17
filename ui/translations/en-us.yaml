@@ -210,6 +210,22 @@ status_report_indicator:
 
 app_item_build:
   built_in: Built in {duration}
+  not_deployed: Not yet deployed
+  deploy_now: Deploy now
+  status:
+    state-0: Building... # UNKNOWN
+    state-1: Building... # RUNNING
+    state-2: Built successfully # SUCCESS
+    state-3: Build unsuccessful # ERROR
+
+app_item_release:
+  not-deployed: Not yet deployed
+  deploy_now: Deploy now
+  status:
+    state-0: Releasing... # UNKNOWN
+    state-1: Releasing... # RUNNING
+    state-2: Released successfully # SUCCESS
+    state-3: Release unsuccessful # ERROR
 
 build_status:
   type-1: # BUILDER

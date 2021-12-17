@@ -1,24 +1,61 @@
-<li class="app-item" data-test-app-item-build>
-  <LinkTo @route="workspace.projects.project.app.build" @models={{array @build.sequence}}>
-    <b class="badge badge--version">v{{@build.sequence}}</b>
-    <small class="app-item__meta__secondary">
-      {{#let (or @build.pushedArtifact @build) as |operation|}}
-        <OperationStatusIndicator::Build @operation={{operation}} @isDetailed={{true}}/>
-      {{/let}}
-    </small>
-  </LinkTo>
-
-  {{#if (and (eq @build.status.state 2) (eq @build.pushedArtifact.status.state 2))}}
-    <b class="badge badge--info">
-      <FlightIcon @name="clock" class="icon" />
-      <span>
-        {{t "app_item_build.built_in"
-          duration=(date-format-distance
-            @build.status.startTime.seconds
-            @build.status.completeTime.seconds
-          )
-        }}
-      </span>
-    </b>
-  {{/if}}
-</li>
+<tr>
+  {{!-- <LinkTo @route="workspace.projects.project.app.build" @models={{array @build.sequence}}> --}}
+    <th scope="row">
+      <b class="badge badge--version">v{{@build.sequence}}</b>
+    </th>
+    {{#let (or @build.pushedArtifact @build) as |operation|}}
+      <td>
+        <span class="table__icon-text-cell">
+          <FlightIcon
+            @name={{or
+                (and (eq operation.status.state 1) "delay")
+                (and (eq operation.status.state 2) "check-circle")
+                (and (eq operation.status.state 3) "x-circle")
+                (and (eq operation.status.state 0) "delay")
+              }}
+            @size="16"
+          />
+          {{t
+            (concat
+              "app_item_build.status"
+              ".state-" operation.status.state
+            )
+          }}
+        </span>
+      </td>
+      <td>
+        {{!-- TODO: add popover here --}}
+        {{#if @matchingDeployment}}
+          Deployment <b class="badge badge--version">v{{@matchingDeployment}}</b>
+        {{else}}
+          {{t
+            "app_item_build.not_deployed"
+          }}
+          {{#if (or (not-eq operation.status.state 0) (not-eq operation.status.state 1))}}
+            <button type="button" {{on "click" this.toggleHint}}>
+              {{t "app_item_build.deploy_now"}}
+            </button>
+            {{#if this.hintIsVisible}}
+              <div class="cli-hint">
+                <p>To deploy this build you can run the following command in the CLI</p>
+                <CopyableCode @ref="deploy-cli-hint">
+                  <pre><code id="deploy-cli-hint">waypoint deploy {{operation.sequence}}</code></pre>
+                </CopyableCode>
+                <small><ExternalLink href="https://waypointproject.io/commands/deploy">Read more in our documentation</ExternalLink></small>
+              </div>
+              <div class="cli-hint-overlay" role="button" {{on "click" this.toggleHint}}></div>
+            {{/if}}
+          {{/if}}
+        {{/if}}
+      </td>
+      <td>
+        <FlightIcon
+          data-test-icon-type={{icon-for-component operation.component.name}}
+          @name={{icon-for-component operation.component.name}}
+          @size="16"
+        />
+        {{component-name operation.component.name}}
+      </td>
+    {{/let}}
+  {{!-- </LinkTo> --}}
+</tr>
