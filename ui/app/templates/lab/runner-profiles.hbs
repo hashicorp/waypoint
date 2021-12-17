@@ -1,1 +1,68 @@
-TODO: Query and list the runner profiles.
+{{!
+  interface OnDemandRunnerConfig.AsObject {
+    id: string;
+    name: string;
+    ociUrl: string;
+    environmentVariablesMap: Array<[string, string]>;
+    pluginType: string;
+    pluginConfig: Uint8Array | string;
+    configFormat: Hcl.Format;
+    pb_default: boolean;
+  }
+}}
+<Table>
+  <caption>On-demand Runner Profiles</caption>
+  <colgroup>
+    <col class="lab/toggle-col">
+    <col class="w-1/5">
+    <col class="w-1/5">
+    <col>
+  </colgroup>
+  <thead>
+    <tr>
+      <th></th>
+      <th>Name</th>
+      <th>Plugin Type</th>
+      <th>OCI URL</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each @model as |config|}}
+      <tr>
+        <td>
+          <button
+            type="button"
+            class="lab/toggle-button focus-ring"
+            aria-expanded={{includes this.expanded config.name}}
+            {{on "click" (fn this.toggleExpanded config.name)}}
+          >
+            <FlightIcon
+              @name={{if (includes this.expanded config.name) "chevron-down" "chevron-right"}}
+              @color="var(--pds-action--base)"
+            />
+          </button>
+        </td>
+        <td>{{config.name}} {{#if config.pb_default}}<span class="badge">default</span>{{/if}}</td>
+        <td>{{config.pluginType}}</td>
+        <td>{{config.ociUrl}}</td>
+      </tr>
+      {{#if (includes this.expanded config.name)}}
+        <tr>
+          <td></td>
+          <td colspan="3">
+            {{!
+              id: string;
+              name: string;
+              ociUrl: string;
+              environmentVariablesMap: Array<[string, string]>;
+              pluginType: string;
+              pluginConfig: Uint8Array | string;
+              configFormat: Hcl.Format;
+              pb_default: boolean;
+            }}
+          </td>
+        </tr>
+      {{/if}}
+    {{/each}}
+  </tbody>
+</Table>

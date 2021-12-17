@@ -45,3 +45,15 @@
     }
   }
 }
+
+.lab\/toggle-col {
+  width: scale.$lg--5;
+}
+
+.lab\/toggle-button {
+  @include button-reset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
