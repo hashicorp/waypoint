@@ -15,7 +15,7 @@
         <th>Provider</th>
       </tr>
     </thead>
-    <tbody>
+    <tbody data-test-release-list>
       {{#each @model.releases key="id" as |release|}}
         <AppItem::Release @release={{release}} @matchingDeployment={{get @model.releaseDeploymentPairs release.sequence}} />
       {{/each}}

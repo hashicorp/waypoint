@@ -1,29 +1,39 @@
 <tr>
   {{!-- <LinkTo @route="workspace.projects.project.app.build" @models={{array @build.sequence}}> --}}
     <th scope="row">
-      <b class="badge badge--version">v{{@build.sequence}}</b>
+      <b data-test-version-badge class="badge badge--version">v{{@build.sequence}}</b>
     </th>
     {{#let (or @build.pushedArtifact @build) as |operation|}}
       <td>
-        <span class="table__icon-text-cell">
-          <FlightIcon
-            @name={{or
-                (and (eq operation.status.state 1) "delay")
-                (and (eq operation.status.state 2) "check-circle")
-                (and (eq operation.status.state 3) "x-circle")
-                (and (eq operation.status.state 0) "delay")
-              }}
-            @size="16"
-          />
-          {{t
-            (concat
-              "app_item_build.status"
-              ".state-" operation.status.state
-            )
-          }}
+        <span data-test-status class="table__icon-text-cell">
+          {{#if operation.status}}
+            <FlightIcon
+              data-test-status-icon
+              @name={{or
+                  (and (eq operation.status.state 1) "delay")
+                  (and (eq operation.status.state 2) "check-circle")
+                  (and (eq operation.status.state 3) "x-circle")
+                  (and (eq operation.status.state 0) "delay")
+                }}
+              @size="16"
+            />
+            {{t
+              (concat
+                "app_item_build.status"
+                ".state-" operation.status.state
+              )
+            }}
+          {{else}}
+            <FlightIcon
+              data-test-status-icon
+              @name="x-circle"
+              @size="16"
+            />
+            {{t "app_item_build.status.state-unavailable"}}
+          {{/if}}
         </span>
       </td>
-      <td>
+      <td data-test-matching-deployment>
         {{!-- TODO: add popover here --}}
         {{#if @matchingDeployment}}
           Deployment <b class="badge badge--version">v{{@matchingDeployment}}</b>
@@ -31,8 +41,8 @@
           {{t
             "app_item_build.not_deployed"
           }}
-          {{#if (or (not-eq operation.status.state 0) (not-eq operation.status.state 1))}}
-            <button type="button" {{on "click" this.toggleHint}}>
+          {{#if (and (not-eq operation.status.state 0) (not-eq operation.status.state 1))}}
+            <button data-test-deploy-now type="button" {{on "click" this.toggleHint}}>
               {{t "app_item_build.deploy_now"}}
             </button>
             {{#if this.hintIsVisible}}
@@ -48,7 +58,7 @@
           {{/if}}
         {{/if}}
       </td>
-      <td>
+      <td data-test-provider>
         <FlightIcon
           data-test-icon-type={{icon-for-component operation.component.name}}
           @name={{icon-for-component operation.component.name}}

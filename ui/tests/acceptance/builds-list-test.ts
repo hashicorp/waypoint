@@ -10,7 +10,7 @@ const buildsUrl = '/default/microchip/app/wp-bandwidth/builds';
 
 const page = create({
   visit: visitable(buildsUrl),
-  buildList: collection('[data-test-build-list] li'),
+  buildList: collection('[data-test-build-list] tr'),
 });
 
 module('Acceptance | builds list', function (hooks) {

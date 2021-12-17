@@ -15,7 +15,7 @@
         <th>Provider</th>
       </tr>
     </thead>
-    <tbody>
+    <tbody data-test-build-list>
       {{#each @model.builds key="id" as |build|}}
         <AppItem::Build @build={{build}} @matchingDeployment={{get @model.buildDeploymentPairs build.sequence}} />
       {{/each}}
