@@ -40,9 +40,11 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
   }
 
   disconnect(): void {
+    // send EOF message then close socket connection
     let execStreamRequest = new ExecStreamRequest();
     execStreamRequest.setInputEof(new Empty());
     this.socket.send(execStreamRequest.serializeBinary());
+    this.socket.close();
   }
 
   willDestroy(): void {

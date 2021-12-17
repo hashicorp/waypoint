@@ -25,6 +25,7 @@ export class ExecWebSocketAddon extends AttachAddon {
   private _disposables: IDisposable[] = [];
   encoder: TextEncoder;
   @tracked terminal!: Terminal;
+  // Command is used to store the current command until it gets sent over WS
   @tracked command!: string;
 
   constructor(socket: WebSocket, options?: IAttachOptions) {
@@ -59,6 +60,7 @@ export class ExecWebSocketAddon extends AttachAddon {
         let output = event.data;
         let resp = ExecStreamResponse.deserializeBinary(output);
         if (resp.hasOpen()) {
+          // remove "Connecting..." message
           terminal.clear();
           terminal.writeln(AnsiColors.bold.cyan(`Connected to deployment: ${this._deploymentId}`));
         }
@@ -114,6 +116,7 @@ export class ExecWebSocketAddon extends AttachAddon {
       this.terminal.write(BACKSPACE_ONE_CHARACTER.repeat(this.command.length));
       this.command = '';
     } else if (data === KEYS.ENTER) {
+      // We remove the characters here because since the response already contains those
       this.terminal.write(BACKSPACE_ONE_CHARACTER.repeat(this.command.length));
       this.command += KEYS.ENTER;
       this._sendData(this.command);
@@ -134,6 +137,7 @@ export class ExecWebSocketAddon extends AttachAddon {
     this._sendBinary(data);
   }
 
+  // dispose is called by the RenderTerminal component when it gets removed
   dispose(): void {
     this._disposables.forEach((d) => d.dispose());
     this._disposables.length = 0;
