@@ -21,18 +21,23 @@ page:
     switching-workspace: Loading…
   artifact:
     overview:
+      heading: 'Overview'
+      status: 'Status'
       image: 'Image'
       health-check: 'Health'
       re-run-health-check: 'Re-run'
       unavailable: 'Currently unavailable'
       commit: 'Commit'
+    timeline:
+      heading: 'Timeline'
+      build: 'Build'
+      deployment: 'Deployment'
+      release: 'Release'
+      current-marker: 'You are here'
   builds:
     title: 'Builds'
   build:
     title: 'Build'
-    overview:
-      heading: 'Overview'
-      status: 'Status'
     logs:
       heading: Build Logs
   deployments:
@@ -52,9 +57,6 @@ page:
       heading: Resources
       deployment-table-caption: Resources created by <b>this deployment</b>
       release-table-caption-prefix: Resources created by <b>Release</b>
-    overview:
-      heading: 'Overview'
-      status: 'Status'
     logs:
       heading: Deployment Logs
   releases:
@@ -64,9 +66,6 @@ page:
     resources:
       heading: Resources
       table-caption: Resources created by <b>this release</b>
-    overview:
-      heading: 'Overview'
-      status: 'Status'
     logs:
       heading: Release Logs
   unavailable:

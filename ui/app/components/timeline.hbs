@@ -1,0 +1,28 @@
+<ul class="timeline">
+  {{#each this.artifacts as |artifact|}}
+    <li data-test-timeline-li>
+      <div class="timeline__dot"></div>
+      <LinkTo
+        title={{concat (t artifact.type) " v" artifact.sequence}}
+        @route={{artifact.route}}
+        @models={{array artifact.sequence}}
+      >
+        <span><Pds::Icon @type="check-circle-outline"/> {{t artifact.type}}</span>
+        <b class="badge badge--version">v{{artifact.sequence}}</b>
+        {{#if artifact.isCurrentRoute}}
+          <span class="timeline__current-marker">{{t "page.artifact.timeline.current-marker"}}</span>
+        {{/if}}
+        {{#if artifact.status}}
+          <span class="timeline__li__timestamp">
+            {{#if (eq artifact.status.state 1)}}
+              {{date-format-distance-to-now artifact.status.startTime.seconds}}
+            {{else}}
+              {{date-format-distance-to-now artifact.status.completeTime.seconds}}
+            {{/if}}
+          </span>
+        {{/if}}
+      </LinkTo>
+      <div class="timeline__dash"/>
+    </li>
+  {{/each}}
+</ul>

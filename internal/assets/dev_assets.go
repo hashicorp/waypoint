@@ -2,6 +2,7 @@
 // sources:
 // ceb/ceb (20.086MB)
 
+//go:build !assetsembedded
 // +build !assetsembedded
 
 package assets

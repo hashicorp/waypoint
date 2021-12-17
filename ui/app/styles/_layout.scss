@@ -50,11 +50,20 @@ aside {
   padding-top: scale.$lg-6;
 }
 
-.grid--menu-with-panel {
+.grid {
   display: grid;
-  grid-gap: 36px;
-  grid-template-columns: 23vw auto;
-  grid-template-areas: 'menu panel';
+
+  &--menu-with-panel {
+    grid-gap: 36px;
+    grid-template-columns: 23vw auto;
+    grid-template-areas: 'menu panel';
+  }
+
+  &--overview-timeline {
+    width: 100%;
+    grid-gap: scale.$sm-2;
+    grid-template-columns: 50% 50%;
+  }
 }
 
 ul {

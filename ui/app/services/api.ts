@@ -46,6 +46,11 @@ const protocolVersions = {
   'client-version': 'ui-0.0.1',
 };
 
+export type BuildExtended = Build.AsObject & {
+  statusReport?: StatusReport.AsObject;
+  pushedArtifact?: PushedArtifact.AsObject;
+};
+
 // This is an adapter type. It exists to let us transition to
 // UI.DeploymentBundle incrementally.
 export type DeploymentExtended = Deployment.AsObject & {

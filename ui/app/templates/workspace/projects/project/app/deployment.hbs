@@ -1,6 +1,6 @@
 {{page-title (concat @model.application.application "Deployments")}}
 {{#let (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployment.deployment-seq.resource') as |isNotResourcePage|}}
-  <div class={{if (and isNotResourcePage this.deploymentsByGeneration) "grid--menu-with-panel"}}>
+  <div class={{if (and isNotResourcePage this.deploymentsByGeneration) "grid grid--menu-with-panel"}}>
   {{#if isNotResourcePage}}
     {{#if this.deploymentsByGeneration}}
       <ul data-test-deployment-list class="sidebar list">
