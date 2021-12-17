@@ -53,7 +53,7 @@ func ValidateStatusReportRules(v *pb.StatusReport) []*validation.FieldRules {
 	}
 }
 
-// ValidateUpsertArtifactRequest
+// ValidateUpsertStatusReportRequest
 func ValidateUpsertStatusReportRequest(v *pb.UpsertStatusReportRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
 		validation.Field(&v.StatusReport, validation.Required),

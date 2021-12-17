@@ -126,6 +126,19 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		require.Error(err)
 	})
 
+	t.Run("Allow underscores and hyphens", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Underscores and hyphens are fine
+		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+			Name: "special_and-allowed",
+		}))
+		require.NoError(err)
+	})
+
 	t.Run("Multi List", func(t *testing.T) {
 		require := require.New(t)
 
@@ -190,6 +203,33 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 			require.Len(workspace.Projects, 1)
 		}
 	})
+
+	// Enforce that workspaces cannot start or end with either hyphens and
+	// underscores, or contain spaces
+	invalidNames := []string{
+		"cannot contain spaces",
+		" cannot start with spaces",
+		"-starts_with-hyphen",
+		"_starts-with_underscore",
+		"_ends-with_underscore-_",
+		"_ends-with_underscore-_",
+	}
+
+	for _, invalidName := range invalidNames {
+		// hyphens and underscores are allowed, but names cannot start with them
+		t.Run("Invalid_"+invalidName, func(t *testing.T) {
+			require := require.New(t)
+
+			s := factory(t)
+			defer s.Close()
+
+			// Workspace names cannot start with underscore or hyphens
+			err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+				Name: invalidName,
+			}))
+			require.Error(err)
+		})
+	}
 }
 
 func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory) {

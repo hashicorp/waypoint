@@ -52,7 +52,7 @@ export function update(this: RouteHandler, schema: any, { requestBody }: Request
     .map((v) => v.toObject());
   let dataSource = requestMsg.getProject()?.getDataSource();
   let poll = requestMsg.getProject()?.getDataSourcePoll();
-  let model = schema.projects.findBy({ name });
+  let model = schema.projects.findOrCreateBy({ name });
 
   model.variables = variablesList?.map((v) => model.newVariable(v));
   model.dataSource = dataSourceFromProto(schema, dataSource);

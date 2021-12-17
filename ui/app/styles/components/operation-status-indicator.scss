@@ -1,4 +1,7 @@
 .operation-status-indicator {
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
 
   > span {
     margin-right: scale.$sm-4;
@@ -12,15 +15,12 @@
     margin-right: scale.$sm-3;
   }
 
-  .pds-icon {
-    font-size: 16px;
-  }
-
   .icon-text-group {
     display: inline-flex;
     align-items: center;
-    line-height: initial;
+    line-height: 100%;
     @include Typography.Interface(M);
+    font-weight: inherit;
 
     span {
       overflow: hidden;
@@ -32,8 +32,11 @@
   .timestamp {
     display: inline-flex;
     align-items: center;
+    line-height: 100%;
     color: rgb(var(--text-muted));
     cursor: default;
+    font-size: inherit;
+    font-weight: inherit;
 
     &--error {
       color: rgb(var(--error-text));

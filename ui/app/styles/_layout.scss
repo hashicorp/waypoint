@@ -50,11 +50,20 @@ aside {
   padding-top: scale.$lg-6;
 }
 
-.grid--menu-with-panel {
+.grid {
   display: grid;
-  grid-gap: 36px;
-  grid-template-columns: 23vw auto;
-  grid-template-areas: 'menu panel';
+
+  &--menu-with-panel {
+    grid-gap: 36px;
+    grid-template-columns: 23vw auto;
+    grid-template-areas: 'menu panel';
+  }
+
+  &--overview-timeline {
+    width: 100%;
+    grid-gap: scale.$sm-2;
+    grid-template-columns: 50% 50%;
+  }
 }
 
 ul {
@@ -126,18 +135,4 @@ hr {
   margin: scale.$lg-1 0;
   border: none;
   border-top: 1px solid rgb(var(--border));
-}
-
-// Set a default size for icons
-
-svg.icon {
-  width: scale.$lg-2;
-  height: scale.$lg-2;
-  flex-shrink: 0;
-}
-
-.pds-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }

@@ -1,0 +1,31 @@
+---
+layout: commands
+page_title: 'Commands: Workspace create'
+sidebar_title: 'workspace create'
+description: 'Create a workspace with a given name.'
+---
+
+# Waypoint Workspace create
+
+Command: `waypoint workspace create`
+
+Create a workspace with a given name.
+
+@include "commands/workspace-create_desc.mdx"
+
+## Usage
+
+Usage: `waypoint workspace create [options] <name>`
+
+Create a workspace in Waypoint with the given value. If a workspace with the
+given name already exists, no error will be returned. This command ignores
+the -workspace flag.
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-project=<string>` (`-p`) - Project to target.
+- `-workspace=<string>` (`-w`) - Workspace to operate in.
+
+@include "commands/workspace-create_more.mdx"

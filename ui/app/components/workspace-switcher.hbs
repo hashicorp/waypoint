@@ -20,7 +20,7 @@
                 data-test-workspace-switcher-error-state
                 class="workspace-switcher__error-state"
               >
-                <Pds::Icon @type="alert-triangle" />
+                <FlightIcon @name="alert-triangle" />
                 {{t "workspace-switcher.error"}}
                 ({{this.loadWorkspaces.last.value.error.message}})
               </div>
@@ -34,10 +34,11 @@
                 @models={{array-concat workspace.name @models}}
                 aria-current={{if (eq workspace.name @current) "page" false}}
                 {{on "click" D.close}}
+                data-test-workspace-link={{workspace.name}}
               >
                 <span class="workspace-switcher__link-contents">
                   {{#if (eq workspace.name @current)}}
-                    <Pds::Icon @type="check-plain" />
+                    <FlightIcon @name="check" />
                   {{/if}}
                   {{workspace.name}}
                 </span>

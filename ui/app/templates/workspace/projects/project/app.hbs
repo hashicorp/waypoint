@@ -1,17 +1,18 @@
 {{page-title @model.application.application}}
 {{#if (and
   (not-eq this.target.currentRouteName 'workspace.projects.project.app.build')
+  (not-eq this.target.currentRouteName 'workspace.projects.project.app.release.index')
   (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployment.deployment-seq.resource')
   (not-eq this.target.currentRouteName 'workspace.projects.project.app.release.resource')
 )}}
-<PageHeader @iconName="git-repository">
+<PageHeader @iconName="git-repo">
   <div class="title">
     <div class="title-wrapper">
       <h1>{{@model.application.application}}</h1>
       <WorkspaceSwitcher
         @current={{@model.workspaceName}}
-        @route={{this.router.currentRoute.name}}
-        @models={{array @model.project.name @model.application.application}}
+        @route={{this.workspaceSwitcherTargetRoute.name}}
+        @models={{this.workspaceSwitcherTargetModels}}
       />
       {{#if this.isSwitchingWorkspace}}
         <span class="workspace-switching-indicator">
@@ -49,27 +50,27 @@
 <Pds::TabNav>
   <LinkTo @route="workspace.projects.project.app.deployment"
     @models={{array @model.application.project @model.application.application }}>
-    <Pds::Icon @type="upload" class="icon" />
+    <FlightIcon @name="upload" class="tab-icon" />
     {{t "nav.deployments"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.builds"
     @models={{array @model.application.project @model.application.application }}>
-    <Pds::Icon @type="build" class="icon" />
+    <FlightIcon @name="hammer" class="tab-icon" />
     {{t "nav.builds"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.releases"
     @models={{array @model.application.project @model.application.application }}>
-    <Pds::Icon @type="public-default" class="icon" />
+    <FlightIcon @name="globe" class="tab-icon" />
     {{t "nav.releases"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.logs"
     @models={{array @model.application.project @model.application.application }}>
-    <Pds::Icon @type="page-outline" class="icon" />
+    <FlightIcon @name="outline" class="tab-icon" />
     {{t "nav.logs"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.exec"
     @models={{array @model.application.project @model.application.application }}>
-    <Pds::Icon @type="exec" class="icon" />
+    <FlightIcon @name="terminal-screen" class="tab-icon" />
     {{t "nav.exec"}}
   </LinkTo>
 </Pds::TabNav>

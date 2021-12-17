@@ -8,7 +8,7 @@
             href={{enforce-protocol @model.preload.deployUrl}}
             class="button button--secondary button--external-link">
             <span>{{lowercase @model.preload.deployUrl}}</span>
-            <Pds::Icon @type="exit" class="icon" />
+            <FlightIcon @name="external-link" class="icon" />
           </ExternalLink>
         {{/if}}
         <Actions::Release @sequence={{@model.sequence}} />
@@ -16,22 +16,32 @@
     </:actions>
   </PanelHeader>
 
-  <Section @isExpandable={{false}}>
-    <:heading>{{t "page.deployment.overview.heading"}}</:heading>
-    <:body>
-      <StatusReportMetaTable @model={{@model}} @artifactType="Deployment">
-        <tr>
-          <th scope="row">{{t "page.deployment.overview.status"}}</th>
-          <td>
-            <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
-            <span>Deployed by <b>{{component-name @model.component.name}}</b>
-              {{date-format-distance-to-now @model.status.startTime.seconds }}
-            </span>
-          </td>
-        </tr>
-      </StatusReportMetaTable>
-    </:body>
-  </Section>
+  <div class="grid grid--overview-timeline">
+    <Section @isExpandable={{false}}>
+        <:heading>{{t "page.artifact.overview.heading"}}</:heading>
+        <:body>
+          <StatusReportMetaTable @model={{@model}} @artifactType="Deployment">
+            <tr>
+              <th scope="row">{{t "page.artifact.overview.status"}}</th>
+              <td>
+                <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
+                <span>Deployed by <b>{{component-name @model.component.name}}</b>
+                  {{date-format-distance-to-now @model.status.startTime.seconds }}
+                </span>
+              </td>
+            </tr>
+          </StatusReportMetaTable>
+        </:body>
+      </Section>
+      {{#if @model.timeline}}
+        <Section @isExpandable={{false}}>
+          <:heading>{{t "page.artifact.timeline.heading"}}</:heading>
+          <:body>
+            <Timeline @model={{@model.timeline}} />
+          </:body>
+        </Section>
+      {{/if}}
+  </div>
 
   {{#let
     @model.statusReport.resourcesList

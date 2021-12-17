@@ -16,7 +16,7 @@
       class="image-ref__copy-button focus-ring"
       title={{t "image-ref.copy-button-title"}}
     >
-      <Pds::Icon @type={{if this.displayCopySuccess.isRunning "copy-success" "copy-action"}} />
+      <FlightIcon @name={{if this.displayCopySuccess.isRunning "copy-success" "copy-action"}} />
     </CopyButton>
   {{/if}}
 </span> 

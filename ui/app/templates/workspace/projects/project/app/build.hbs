@@ -7,19 +7,29 @@
     </:actions>
   </PanelHeader>
 
-  <Section @isExpandable={{false}}>
-    <:heading>{{t "page.build.overview.heading"}}</:heading>
-    <:body>
-      <StatusReportMetaTable @model={{@model}} @artifactType="Build">
-        <tr>
-          <th scope="row">{{t "page.build.overview.status"}}</th>
-          <td>
-            <OperationStatusIndicator::Build @operation={{operation}} />
-          </td>
-        </tr>
-      </StatusReportMetaTable>
-    </:body>
-  </Section>
+  <div class="grid grid--overview-timeline">
+    <Section @isExpandable={{false}}>
+      <:heading>{{t "page.artifact.overview.heading"}}</:heading>
+      <:body>
+        <StatusReportMetaTable @model={{@model}} @artifactType="Build">
+          <tr>
+            <th scope="row">{{t "page.artifact.overview.status"}}</th>
+            <td>
+              <OperationStatusIndicator::Build @operation={{operation}} />
+            </td>
+          </tr>
+        </StatusReportMetaTable>
+      </:body>
+    </Section>
+    {{#if @model.timeline}}
+      <Section @isExpandable={{false}}>
+        <:heading>{{t "page.artifact.timeline.heading"}}</:heading>
+        <:body>
+          <Timeline @model={{@model.timeline}} />
+        </:body>
+      </Section>
+    {{/if}}
+  </div>
 {{/let}}
 
 <Section>

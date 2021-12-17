@@ -31,8 +31,10 @@
 
     .icon.brand {
       display: flex;
+      width: scale.$lg-14;
+      height: scale.$lg-14;
 
-      path {
+      use {
         fill: color.$black;
         stroke: $brand-color;
       }

@@ -1,0 +1,58 @@
+.timeline {
+  li {
+    display: grid;
+    grid-template-columns: scale.$sm-1 auto;
+    grid-template-rows: max-content 20px;
+    align-items: center;
+  }
+
+  svg {
+    font-size: 16px;
+    color: rgb(var(--text-subtle));
+    margin: 0 scale.$sm-4;
+  }
+
+  a:not(.button) {
+    width: 90%;
+    color: black;
+    @include Typography.Interface(M);
+
+    >* {
+      margin-right: scale.$sm-4;
+    }
+  }
+
+  &__li__timestamp {
+    color: rgb(var(--text-muted));
+    @include Typography.Interface(S);
+  }
+
+  &__dot {
+    border-radius: 8px;
+    height: 8px;
+    width: 8px;
+    background-color: rgb(var(--timeline-dot));
+    margin-right: 20px;
+  }
+
+  &__dash {
+    width: 2px;
+    height: 25px;
+    margin: 0 3px;
+    background-color: rgb(var(--timeline-dash));
+  }
+
+  &__current-marker {
+    background-color: rgb(var(--info));
+    color: rgb(var(--info-text));
+    @include Typography.Interface(S);
+    font-weight: 700;
+    border-radius: 22px;
+    padding: scale.$sm-4 scale.$sm-2;
+  }
+
+  li:last-child>.timeline__dash {
+    width: 0;
+    height: 0;
+  }
+}
