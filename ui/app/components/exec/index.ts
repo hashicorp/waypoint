@@ -7,6 +7,7 @@ import { Terminal } from 'xterm';
 import { createTerminal } from 'waypoint/utils/create-terminal';
 import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
+import config from 'waypoint/config/environment';
 
 interface ExecComponentArgs {
   deploymentId: string;
@@ -29,9 +30,12 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
   }
 
   async startExecStream(deploymentId: string): Promise<void> {
-    let token = this.session.data.authenticated?.token;
-    let apiHost = window.location.hostname;
-    let socket = new WebSocket(`wss://${apiHost}:9702/v1/exec?token=${token}`);
+    let token = this.session.data.authenticated?.token as string;
+    let url = new URL(config.apiAddress);
+    url.protocol = 'wss:';
+    url.pathname = '/v1/exec';
+    url.searchParams.append('token', token);
+    let socket = new WebSocket(url);
     socket.binaryType = 'arraybuffer';
     this.socket = socket;
     // The socket addon handles all terminal input/output
