@@ -31,7 +31,7 @@ export default class ExecComponent extends Component<ExecComponentArgs> {
 
   async startExecStream(deploymentId: string): Promise<void> {
     let token = this.session.data.authenticated?.token as string;
-    let url = new URL(config.apiAddress);
+    let url = new URL(config.apiAddress || window.location.toString());
     url.protocol = 'wss:';
     url.pathname = '/v1/exec';
     url.searchParams.append('token', token);
