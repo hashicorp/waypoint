@@ -1,7 +1,7 @@
 module.exports = [
   // This is an example redirect, it can be removed once other redirects have been added
   {
-    source: '/__test',
+    source: '/home',
     destination: '/',
     permanent: true,
   },
