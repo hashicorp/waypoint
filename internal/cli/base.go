@@ -307,12 +307,24 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 		// If that worked, set our refs
 		if c.cfg != nil {
-			c.refProject = &pb.Ref_Project{Project: c.cfg.Project}
-			for _, app := range c.cfg.Apps() {
-				c.refApps = append(c.refApps, &pb.Ref_Application{
-					Project:     c.cfg.Project,
-					Application: app,
-				})
+			// Warn if the project from config and the project from flags conflict
+			if c.flagProject != "" && c.flagProject != c.cfg.Project {
+				c.ui.Output(warnProjectFlagMismatch, c.refProject.Project, c.flagProject, terminal.WithWarningStyle())
+
+				// NOTE(izaak): unless we force remoteness, we may spawn a local runner which will operate against
+				// the current config (which isn't relevant)
+				c.Log.Debug("Forcing any future operations to occur remotely because the relevant waypoint.hcl is not present.")
+				flagLocal := false
+				c.flagLocal = &flagLocal
+			} else {
+				// This config is good - use it to obtain our refs.
+				c.refProject = &pb.Ref_Project{Project: c.cfg.Project}
+				for _, app := range c.cfg.Apps() {
+					c.refApps = append(c.refApps, &pb.Ref_Application{
+						Project:     c.cfg.Project,
+						Application: app,
+					})
+				}
 			}
 		}
 	}
@@ -720,5 +732,10 @@ short notation -p and -a.
 The current Waypoint server does not support snapshots. Rerunning the command
 with '-snapshot=false' is required, and there will be no automatic data backups
 for the server.
+`)
+
+	warnProjectFlagMismatch = strings.TrimSpace(`
+Warning: Currently in project directory for %q, but will operate 
+against specified project %q
 `)
 )
