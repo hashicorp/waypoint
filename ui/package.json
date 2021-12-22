@@ -41,7 +41,7 @@
     "@types/ember-qunit": "^3.4.9",
     "@types/ember__test-helpers": "^1.7.0",
     "@types/faker": "^4.1.12",
-    "@types/qunit": "^2.9.1",
+    "@types/qunit": "^2.11.3",
     "@types/rsvp": "^4.0.3",
     "@types/ua-parser-js": "^0.7.33",
     "@typescript-eslint/eslint-plugin": "^4.31.1",
