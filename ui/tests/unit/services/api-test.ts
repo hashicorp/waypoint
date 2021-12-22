@@ -25,7 +25,7 @@ module('Unit | Service | api', function (hooks) {
 
       api.upsertProject(project);
 
-      assert.equal(result.request?.getProject()?.getRemoteEnabled(), true);
+      assert.true(result.request?.getProject()?.getRemoteEnabled());
     });
 
     test('leaves remote_enabled alone when data source is absent', async function (assert) {
@@ -38,7 +38,7 @@ module('Unit | Service | api', function (hooks) {
 
       api.upsertProject(project);
 
-      assert.equal(result.request?.getProject()?.getRemoteEnabled(), true);
+      assert.true(result.request?.getProject()?.getRemoteEnabled());
     });
   });
 });
