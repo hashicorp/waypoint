@@ -7,5 +7,6 @@ if [ ! -d "$PREVIEW_DIR" ]; then
 fi
 # cd into the dev-portal project
 cd "$PREVIEW_DIR"
+
 # Run the dev-portal content-repo start script
 REPO=waypoint DEV_IO=waypoint IS_CONTENT_PREVIEW=true npm run build:deploy-preview
