@@ -1,52 +1,70 @@
 <tr>
-  {{!-- <LinkTo @route="workspace.projects.project.app.release" @models={{array @release.sequence}}> --}}
-    <th scope="row">
+  <th data-test-id-column scope="row" class="table__id-column">
+    <LinkTo
+      title={{ concat (t "page.release.title") " v" @build.sequence}}
+      @route="workspace.projects.project.app.release"
+      @models={{array @release.sequence}}
+    >
       <b data-test-version-badge class="badge badge--version">v{{@release.sequence}}</b>
-    </th>
-    {{#let (or @release.pushedArtifact @release) as |operation|}}
-      <td>
-        <span data-test-status class="table__icon-text-cell">
-          {{#if operation.status}}
-            <FlightIcon
-              data-test-status-icon
-              @name={{or
-                  (and (eq operation.status.state 1) "delay")
-                  (and (eq operation.status.state 2) "check-circle")
-                  (and (eq operation.status.state 3) "x-circle")
-                  (and (eq operation.status.state 0) "delay")
-                }}
-              @size="16"
-            />
-            {{t
-              (concat
-                "app_item_release.status"
-                ".state-" operation.status.state
-              )
-            }}
-          {{else}}
-            <FlightIcon
-              data-test-status-icon
-              @name="x-circle"
-              @size="16"
-            />
-            {{t "app_item_release.status.state-unavailable"}}
-          {{/if}}
-        </span>
-      </td>
-      <td data-test-matching-deployment>
-        {{!-- TODO: add popover here --}}
-        {{#if @matchingDeployment}}
-          Deployment <b class="badge badge--version">v{{@matchingDeployment}}</b>
+      {{@release.id}}
+    </LinkTo>
+  </th>
+  {{#let (or @release.pushedArtifact @release) as |operation|}}
+    <td>
+      <span data-test-status class="table__icon-text-cell">
+        {{#if operation.status}}
+          {{!-- TODO: @sabrinako update "delay" icons to loading when animated icons added to flight --}}
+          <FlightIcon
+            data-test-status-icon
+            @name={{or
+                (and (eq operation.status.state 1) "delay")
+                (and (eq operation.status.state 2) "check-circle")
+                (and (eq operation.status.state 3) "x-circle")
+                (and (eq operation.status.state 0) "delay")
+              }}
+            @size="16"
+          />
+          {{t
+            (concat
+              "app_item_release.status"
+              ".state-" operation.status.state
+            )
+          }}
+        {{else}}
+          <FlightIcon
+            data-test-status-icon
+            @name="x-circle"
+            @size="16"
+          />
+          {{t "app_item_release.status.state-unavailable"}}
         {{/if}}
-      </td>
-      <td data-test-provider>
+      </span>
+    </td>
+    <td data-test-matching-deployment>
+      {{!-- TODO: add popover here --}}
+      {{#if @matchingDeployment}}
+        Deployment <b class="badge badge--version">v{{@matchingDeployment}}</b>
+      {{else}}
+        {{t
+          "app_item_build.not_deployed"
+        }}
+        {{!-- TODO: add back when functionality for initiating a deployment added here
+        {{#if (and (not-eq operation.status.state 0) (not-eq operation.status.state 1))}}
+          <Pds::Button data-test-deploy-now @variant="ghost" type="button" {{on "click" this.toggleHint}}>
+            {{t "app_item_build.deploy_now"}}
+          </Pds::Button>
+        {{/if}} --}}
+      {{/if}}
+    </td>
+    <td data-test-provider>
+      <span class="table__icon-text-cell-span">
         <FlightIcon
           data-test-icon-type={{icon-for-component operation.component.name}}
           @name={{icon-for-component operation.component.name}}
           @size="16"
         />
         {{component-name operation.component.name}}
-      </td>
-    {{/let}}
-  {{!-- </LinkTo> --}}
+      </span>
+    </td>
+  {{/let}}
 </tr>

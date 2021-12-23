@@ -36,6 +36,15 @@ page:
       current-marker: 'You are here'
   builds:
     title: 'Builds'
+    table:
+      row-header: 'Build'
+      status: 'Status'
+      deployment: 'Deployment'
+      provider: 'Provider'
+      empty-state:
+        line-1: 'There are no builds to display for this app yet'
+        line-2: 'To create your first build, you can run'
+        line-3: 'from the CLI'
   build:
     title: 'Build'
     logs:
@@ -61,6 +70,15 @@ page:
       heading: Deployment Logs
   releases:
     title: 'Releases'
+    table:
+      row-header: 'Release'
+      status: 'Status'
+      deployment: 'Deployment'
+      provider: 'Provider'
+      empty-state:
+        line-1: 'There are no releases to display for this app yet'
+        line-2: 'To create your first release, you can run'
+        line-3: 'from the CLI'
   release:
     title: 'Release'
     resources:

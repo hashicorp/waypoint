@@ -1,71 +1,69 @@
 <tr>
-  {{!-- <LinkTo @route="workspace.projects.project.app.build" @models={{array @build.sequence}}> --}}
-    <th scope="row">
+  <th data-test-id-column scope="row" class="table__id-column">
+    <LinkTo title={{ concat (t "page.build.title") " v" @build.sequence}}
+      @route="workspace.projects.project.app.build"
+      @models={{array @build.sequence}}
+    >
       <b data-test-version-badge class="badge badge--version">v{{@build.sequence}}</b>
-    </th>
-    {{#let (or @build.pushedArtifact @build) as |operation|}}
-      <td>
-        <span data-test-status class="table__icon-text-cell">
-          {{#if operation.status}}
-            <FlightIcon
-              data-test-status-icon
-              @name={{or
-                  (and (eq operation.status.state 1) "delay")
-                  (and (eq operation.status.state 2) "check-circle")
-                  (and (eq operation.status.state 3) "x-circle")
-                  (and (eq operation.status.state 0) "delay")
-                }}
-              @size="16"
-            />
-            {{t
-              (concat
-                "app_item_build.status"
-                ".state-" operation.status.state
-              )
-            }}
-          {{else}}
-            <FlightIcon
-              data-test-status-icon
-              @name="x-circle"
-              @size="16"
-            />
-            {{t "app_item_build.status.state-unavailable"}}
-          {{/if}}
-        </span>
-      </td>
-      <td data-test-matching-deployment>
-        {{!-- TODO: add popover here --}}
-        {{#if @matchingDeployment}}
-          Deployment <b class="badge badge--version">v{{@matchingDeployment}}</b>
-        {{else}}
+      {{@build.id}}
+    </LinkTo>
+  </th>
+  {{#let (or @build.pushedArtifact @build) as |operation|}}
+    <td>
+      <span data-test-status class="table__icon-text-cell-span">
+        {{#if operation.status}}
+        {{!-- TODO: @sabrinako update "delay" icons to loading when animated icons added to flight --}}
+          <FlightIcon
+            data-test-status-icon
+            @name={{or
+                (and (eq operation.status.state 1) "delay")
+                (and (eq operation.status.state 2) "check-circle")
+                (and (eq operation.status.state 3) "x-circle")
+                (and (eq operation.status.state 0) "delay")
+              }}
+            @size="16"
+          />
           {{t
-            "app_item_build.not_deployed"
+            (concat
+              "app_item_build.status"
+              ".state-" operation.status.state
+            )
           }}
-          {{#if (and (not-eq operation.status.state 0) (not-eq operation.status.state 1))}}
-            <button data-test-deploy-now type="button" {{on "click" this.toggleHint}}>
-              {{t "app_item_build.deploy_now"}}
-            </button>
-            {{#if this.hintIsVisible}}
-              <div class="cli-hint">
-                <p>To deploy this build you can run the following command in the CLI</p>
-                <CopyableCode @ref="deploy-cli-hint">
-                  <pre><code id="deploy-cli-hint">waypoint deploy {{operation.sequence}}</code></pre>
-                </CopyableCode>
-                <small><ExternalLink href="https://waypointproject.io/commands/deploy">Read more in our documentation</ExternalLink></small>
-              </div>
-              <div class="cli-hint-overlay" role="button" {{on "click" this.toggleHint}}></div>
-            {{/if}}
-          {{/if}}
+        {{else}}
+          <FlightIcon
+            data-test-status-icon
+            @name="x-circle"
+            @size="16"
+          />
+          {{t "app_item_build.status.state-unavailable"}}
         {{/if}}
-      </td>
-      <td data-test-provider>
+      </span>
+    </td>
+    <td data-test-matching-deployment class="table__deployment-info-cell">
+      {{!-- TODO: add popover here --}}
+      {{#if @matchingDeployment}}
+        Deployment <b class="badge badge--version">v{{@matchingDeployment}}</b>
+      {{else}}
+        {{t
+          "app_item_build.not_deployed"
+        }}
+        {{!-- TODO: add back when functionality for initiating a deployment added here
+        {{#if (and (not-eq operation.status.state 0) (not-eq operation.status.state 1))}}
+          <Pds::Button data-test-deploy-now @variant="ghost" type="button" {{on "click" this.toggleHint}}>
+            {{t "app_item_build.deploy_now"}}
+          </Pds::Button>
+        {{/if}} --}}
+      {{/if}}
+    </td>
+    <td data-test-provider>
+      <span class="table__icon-text-cell-span">
         <FlightIcon
           data-test-icon-type={{icon-for-component operation.component.name}}
           @name={{icon-for-component operation.component.name}}
           @size="16"
         />
         {{component-name operation.component.name}}
-      </td>
-    {{/let}}
-  {{!-- </LinkTo> --}}
+      </span>
+    </td>
+  {{/let}}
 </tr>

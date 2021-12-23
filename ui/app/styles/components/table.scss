@@ -64,13 +64,32 @@
     }
   }
 
-  &__icon-text-cell {
-    display: flex;
-    align-items: center;
-    height: 100%;
+  &__icon-text-cell-span {
+    display: inline-flex;
+    align-items: flex-end;
+    height: inherit;
+    margin-top: 1px;
 
     svg {
       margin-right: scale.$sm-3;
+    }
+  }
+
+  &__deployment-info-cell {
+    > .pds-button {
+      height: 1%;
+      padding: scale.$sm-4 scale.$sm-2;
+    }
+  }
+
+  &__id-column {
+    a {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 
@@ -91,9 +110,5 @@
   }
   .w-3\/5 {
     width: 60%;
-  }
-  .w-version-col {
-    width:7%;
-    white-space:nowrap;
   }
 }

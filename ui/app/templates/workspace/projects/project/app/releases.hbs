@@ -1,18 +1,18 @@
 {{page-title (concat @model.application.application "Releases")}}
 {{#if @model.releases}}
-  <Table>
+  <Table class="table--artifact-list">
     <colgroup>
-      <col class="w-version-col">
-      <col class="w-1/5">
       <col class="w-2/5">
-      <col class="w-1/3">
+      <col class="w-1/5">
+      <col class="w-1/5">
+      <col class="w-1/5">
     </colgroup>
     <thead>
       <tr>
-        <th>Version</th>
-        <th>Status</th>
-        <th>Deployment</th>
-        <th>Provider</th>
+        <th>{{t 'page.releases.table.row-header'}}</th>
+        <th>{{t 'page.releases.table.status'}}</th>
+        <th>{{t 'page.releases.table.deployment'}}</th>
+        <th>{{t 'page.releases.table.provider'}}</th>
       </tr>
     </thead>
     <tbody data-test-release-list>
@@ -23,11 +23,11 @@
   </Table>
 {{else}}
   <EmptyState>
-    <p>There are no releases to display for this app yet</p>
-    <p>To create your first release, you can run
+    <p>{{t 'page.releases.table.empty-state.line-1'}}</p>
+    <p>{{t 'page.releases.table.empty-state.line-2'}}
       <CopyableCode @ref="empty-release" @inline="true">
         <code id="empty-release">waypoint release</code>
       </CopyableCode>
-      from the CLI</p>
+      {{t 'page.releases.table.empty-state.line-3'}}</p>
   </EmptyState>
 {{/if}}

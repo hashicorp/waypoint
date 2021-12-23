@@ -9,6 +9,7 @@ module('Integration | Component | app-item/release', function (hooks) {
   test('with a release and a matching deployment', async function (assert) {
     this.set('release', {
       sequence: 3,
+      id: 'ABCD123',
       status: {
         state: 2,
         startTime: 1,
@@ -26,6 +27,7 @@ module('Integration | Component | app-item/release', function (hooks) {
     `);
 
     assert.dom('[data-test-version-badge]').includesText('v3');
+    assert.dom('[data-test-id-column]').includesText('ABCD123');
     assert.dom('[data-test-status-icon]').exists();
     assert.dom('[data-test-status]').includesText('Released successfully');
     assert.dom('[data-test-matching-deployment]').includesText('Deployment v3');
@@ -35,6 +37,7 @@ module('Integration | Component | app-item/release', function (hooks) {
   test('with an unfinished release and no matching deployment', async function (assert) {
     this.set('release', {
       sequence: 3,
+      id: 'QRSTUV098',
       status: {
         state: 0,
         startTime: 1,
@@ -52,8 +55,9 @@ module('Integration | Component | app-item/release', function (hooks) {
     `);
 
     assert.dom('[data-test-version-badge]').includesText('v3');
+    assert.dom('[data-test-id-column]').includesText('QRSTUV098');
     assert.dom('[data-test-status-icon]').exists();
     assert.dom('[data-test-status]').includesText('Releasing...');
-    assert.dom('[data-test-matching-deployment]').hasNoText();
+    assert.dom('[data-test-matching-deployment]').includesText('Not yet deployed');
   });
 });

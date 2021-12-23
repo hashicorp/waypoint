@@ -35,6 +35,7 @@ module('Integration | Component | app-item/build', function (hooks) {
   test('with a successful build and no matching deployment', async function (assert) {
     this.set('build', {
       sequence: 3,
+      id: 'QWERTY123',
       status: {
         state: 2,
         startTime: 1,
@@ -52,15 +53,16 @@ module('Integration | Component | app-item/build', function (hooks) {
     `);
 
     assert.dom('[data-test-version-badge]').includesText('v3');
+    assert.dom('[data-test-id-column]').includesText('QWERTY123');
     assert.dom('[data-test-status-icon]').exists();
     assert.dom('[data-test-status]').includesText('Built successfully');
     assert.dom('[data-test-matching-deployment]').includesText('Not yet deployed');
-    assert.dom('[data-test-deploy-now]').exists(); // difference between this and test with running/unsuccessful build
   });
 
   test('with an unfinished build and no matching deployment', async function (assert) {
     this.set('build', {
       sequence: 3,
+      id: 'ASDF098',
       status: {
         state: 0,
         startTime: 1,
@@ -78,9 +80,9 @@ module('Integration | Component | app-item/build', function (hooks) {
     `);
 
     assert.dom('[data-test-version-badge]').includesText('v3');
+    assert.dom('[data-test-id-column]').includesText('ASDF098');
     assert.dom('[data-test-status-icon]').exists();
     assert.dom('[data-test-status]').includesText('Building...');
     assert.dom('[data-test-matching-deployment]').includesText('Not yet deployed');
-    assert.dom('[data-test-deploy-now]').doesNotExist();
   });
 });
