@@ -76,7 +76,7 @@
     "ember-cli-sri": "^2.1.1",
     "ember-cli-string-helpers": "^5.0.0",
     "ember-cli-terser": "^4.0.2",
-    "ember-cli-typescript": "^3.1.4",
+    "ember-cli-typescript": "^4.2.1",
     "ember-composable-helpers": "^4.2.2",
     "ember-concurrency": "^2.1.2",
     "ember-concurrency-async": "^1.0.0",
