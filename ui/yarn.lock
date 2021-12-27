@@ -7573,7 +7573,7 @@ ember-cli-favicon@^3.0.0:
     ember-cli-babel "^7.26.6"
     lodash.merge "^4.6.2"
 
-ember-cli-flash@^2.1.1:
+ember-cli-flash@^2.2.0:
   version "2.2.2"
   resolved "https://registry.yarnpkg.com/ember-cli-flash/-/ember-cli-flash-2.2.2.tgz#19b47f7704cac91a21a790be220eb021ac37c80d"
   integrity sha512-cHjChy9jYtXiprHwAZCVh8FbsfxBvvqKmz+XlAX6kqf/9uBdrxHzGR0jE0PR8aabX9tWAmjdR0hpT2IbbAwwAg==
