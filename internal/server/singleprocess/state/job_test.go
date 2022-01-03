@@ -38,6 +38,48 @@ func TestJobAck(t *testing.T) {
 	})
 }
 
+func TestJobCreateMulti(t *testing.T) {
+	t.Run("creates one job", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		jobList := make([]*pb.Job, 0, 1)
+		jobList = append(jobList, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		}))
+
+		err := s.JobCreate(jobList...)
+		require.NoError(err)
+
+		require.Equal(1, s.indexedJobs)
+	})
+
+	t.Run("creates the same number of jobs that were requested", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		jobList := make([]*pb.Job, 0, 3)
+		jobList = append(jobList, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		}))
+		jobList = append(jobList, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "B",
+		}))
+		jobList = append(jobList, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "C",
+		}))
+
+		err := s.JobCreate(jobList...)
+		require.NoError(err)
+
+		require.Equal(3, s.indexedJobs)
+	})
+}
+
 func TestJobAssignForRunner(t *testing.T) {
 	t.Run("job assignment sets the job's assigned runner id", func(t *testing.T) {
 		require := require.New(t)
