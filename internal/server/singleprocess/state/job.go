@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hashicorp/go-memdb"
+	"github.com/mitchellh/copystructure"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -265,22 +266,15 @@ func (s *State) JobProjectScopedRequest(
 	}
 
 	for _, app := range project.Applications {
-		// We copy by all values because copying the original job includes copying a mutux lock,
-		// which upsets the linter.
-		tempJob := &pb.Job{
-			SingletonId:           jobTemplate.SingletonId,
-			DependsOn:             jobTemplate.DependsOn,
-			DependsOnAllowFailure: jobTemplate.DependsOnAllowFailure,
-			Workspace:             jobTemplate.Workspace,
-			TargetRunner:          jobTemplate.TargetRunner,
-			Labels:                jobTemplate.Labels,
-			DataSource:            jobTemplate.DataSource,
-			DataSourceOverrides:   jobTemplate.DataSourceOverrides,
-			WaypointHcl:           jobTemplate.WaypointHcl,
-			Variables:             jobTemplate.Variables,
-			Operation:             jobTemplate.Operation,
-			DataSourceRef:         jobTemplate.DataSourceRef,
-			Config:                jobTemplate.Config,
+		copyJob, err := copystructure.Copy(jobTemplate)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal,
+				"failed to copy job template for project scoped request: %s", err)
+		}
+		tempJob, ok := copyJob.(*pb.Job)
+		if !ok {
+			return nil, status.Errorf(codes.Internal,
+				"failed to convert copied job template into a Job message: %s", err)
 		}
 
 		tempJob.Application = &pb.Ref_Application{
