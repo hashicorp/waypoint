@@ -6,7 +6,6 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -117,9 +116,9 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 		tags = strings.Join(trigger.Tags[:], ", ")
 	}
 
-	var lastActiveTime string
-	if time, err := ptypes.Timestamp(trigger.ActiveTime); err == nil {
-		lastActiveTime = humanize.Time(time)
+	lastActiveTime := "unknown"
+	if trigger.ActiveTime.IsValid() {
+		lastActiveTime = humanize.Time(trigger.ActiveTime.AsTime())
 	}
 
 	c.ui.Output("Trigger URL config:", terminal.WithHeaderStyle())

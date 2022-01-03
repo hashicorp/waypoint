@@ -2,7 +2,6 @@ package singleprocess
 
 import (
 	"context"
-	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
@@ -178,7 +177,7 @@ func (s *service) RunTrigger(
 	log.Debug("run trigger job(s) have been queued")
 
 	// Trigger has been requested to queue jobs, update active time
-	runTrigger.ActiveTime = timestamppb.New(time.Now())
+	runTrigger.ActiveTime = timestamppb.Now()
 	err = s.state.TriggerPut(runTrigger)
 	if err != nil {
 		return nil, err
