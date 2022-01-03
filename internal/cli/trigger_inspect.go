@@ -116,7 +116,7 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 		tags = strings.Join(trigger.Tags[:], ", ")
 	}
 
-	lastActiveTime := "unknown"
+	lastActiveTime := "n/a"
 	if trigger.ActiveTime.IsValid() {
 		lastActiveTime = humanize.Time(trigger.ActiveTime.AsTime())
 	}

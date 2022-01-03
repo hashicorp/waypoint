@@ -141,14 +141,23 @@ func (s *service) RunTrigger(
 	// generate job requests
 	var jobList []*pb.QueueJobRequest
 	var ids []string
-	if runTrigger.Application == nil {
+	if runTrigger.Application == nil || runTrigger.Application.Application == "" {
 		// we're gonna queue multiple jobs for every application in a project
 		log.Debug("building multi-jobs for all apps in project", "project", runTrigger.Project.Project)
-		jobList, err := s.state.JobProjectScopedRequest(runTrigger.Project, job)
+		jobList, err = s.state.JobProjectScopedRequest(runTrigger.Project, job)
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		log.Debug("building a single job for target", "project",
+			runTrigger.Application.Project, "app", runTrigger.Application.Application)
+		// we're only targetting a specific application, so queue 1 job
+		job.Application = runTrigger.Application
+		j := &pb.QueueJobRequest{Job: job}
+		jobList = append(jobList, j)
+	}
 
+	if len(jobList) > 0 {
 		// Queue the job(s)
 		log.Debug("queueing jobs", "total_jobs", len(jobList))
 		respList, err := s.queueJobMulti(ctx, jobList)
@@ -160,18 +169,8 @@ func (s *service) RunTrigger(
 			ids = append(ids, qJr.JobId)
 		}
 	} else {
-		log.Debug("building a single job for target", "project",
-			runTrigger.Application.Project, "app", runTrigger.Application.Application)
-		// we're only targetting a specific application, so queue 1 job
-		job.Application = runTrigger.Application
-		j := &pb.QueueJobRequest{Job: job}
-		jobList = append(jobList, j)
-
-		resp, err := s.QueueJob(ctx, j)
-		if err != nil {
-			return nil, err
-		}
-		ids = append(ids, resp.JobId)
+		log.Warn("no jobs were queued!")
+		return nil, nil
 	}
 
 	log.Debug("run trigger job(s) have been queued")

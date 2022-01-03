@@ -535,6 +535,11 @@ func TestServiceTrigger_RunTrigger(t *testing.T) {
 			Name:    "app-three",
 		})
 		require.NoError(err)
+		_, err = client.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
+			Project: &pb.Ref_Project{Project: "multi-app"},
+			Name:    "app-four",
+		})
+		require.NoError(err)
 
 		respTrigger, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
 			Trigger: &pb.Trigger{
@@ -564,6 +569,6 @@ func TestServiceTrigger_RunTrigger(t *testing.T) {
 		})
 		require.NoError(err)
 		require.NotNil(resp)
-		require.Len(resp.JobIds, 3)
+		require.Len(resp.JobIds, 4)
 	})
 }
