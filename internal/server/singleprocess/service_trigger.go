@@ -169,7 +169,7 @@ func (s *service) RunTrigger(
 			ids = append(ids, qJr.JobId)
 		}
 	} else {
-		log.Warn("no jobs were queued!")
+		log.Warn("the RunTrigger job list was empty, no jobs to queue")
 		return nil, nil
 	}
 
