@@ -12,15 +12,36 @@ const redirectUrl = '/default/microchip/app/wp-bandwidth/deployment/seq/'; // co
 
 const page = create({
   visit: visitable(url),
-  destroyedBadges: collection('[data-test-destroyed-badge]'),
   showDestroyed: clickable('[data-test-display-destroyed-button]'),
   linkList: collection('[data-test-deployment-list-item]'),
+  statusIndicators: collection('[data-test-health-status="alive"]'),
+  deployUrls: collection('.deploy-url'),
+  operationStatuses: collection('[data-test-operation-status]'),
+  gitCommits: collection('[data-test-git-commit]'),
 });
 
 module('Acceptance | deployments list', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
   setupSession(hooks);
+
+  test('happy path', async function (assert) {
+    let project = this.server.create('project', { name: 'microchip' });
+    let application = this.server.create('application', { name: 'wp-bandwidth', project });
+    let deployments = this.server.createList('deployment', 4, 'random', { application });
+    this.server.create('status-report', 'alive', { application, target: deployments[0] });
+    this.server.create('status-report', 'alive', { application, target: deployments[1] });
+
+    await page.visit();
+
+    assert.equal(page.linkList.length, 4);
+    assert.equal(currentURL(), redirectUrl + '4');
+    assert.equal(page.statusIndicators.length, 2);
+    assert.equal(page.operationStatuses.length, 4);
+    assert.equal(page.gitCommits.length, 4);
+    // random list item url check
+    assert.equal(page.deployUrls[1].text, `wildly-intent-honeybee--v1.waypoint.run`);
+  });
 
   test('visiting deployments page redirects to latest', async function (assert) {
     let project = this.server.create('project', { name: 'microchip' });
@@ -107,6 +128,5 @@ module('Acceptance | deployments list', function (hooks) {
     await page.showDestroyed();
 
     assert.equal(page.linkList.length, 5);
-    assert.equal(page.destroyedBadges.length, 1);
   });
 });

@@ -51,15 +51,13 @@ page:
       heading: Build Logs
   deployments:
     title: 'Deployments'
-    destroyed_label: 'Destroyed'
-    replaced_label: 'Replaced by '
-    destroyed_and_hidden_state: 'Some deployments have been destroyed and are hidden'
     display_destroyed: 'Show destroyed deployments'
+    started_time_prefix: 'started'
     status_prefix:
-      0: 'Deploying by ' # UNKNOWN
-      1: 'Deploying by ' # RUNNING
-      2: 'Deployed by ' # SUCCESS
-      3: 'Failed to deploy by ' # ERROR
+      0: 'Deploying...' # UNKNOWN
+      1: 'Deploying...' # RUNNING
+      2: 'Deployed' # SUCCESS
+      3: 'Failed to deploy' # ERROR
   deployment:
     title: 'Deployment'
     resources:
