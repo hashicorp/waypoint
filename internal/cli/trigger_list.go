@@ -108,26 +108,26 @@ func (c *TriggerListCommand) Run(args []string) int {
 		var opStr string
 		switch triggerOpType := t.Operation.(type) {
 		case *pb.Trigger_Build:
-			opStr = "build operation"
+			opStr = "build"
 		case *pb.Trigger_Push:
-			opStr = "push operation"
+			opStr = "push"
 		case *pb.Trigger_Deploy:
-			opStr = "deploy operation"
+			opStr = "deploy"
 		case *pb.Trigger_Destroy:
 			switch triggerOpType.Destroy.Target.(type) {
 			case *pb.Job_DestroyOp_Workspace:
-				opStr = "destroy workspace operation"
+				opStr = "destroy workspace"
 			case *pb.Job_DestroyOp_Deployment:
-				opStr = "destroy deployment operation"
+				opStr = "destroy deployment"
 			default:
 				opStr = "unknown destroy operation target"
 			}
 		case *pb.Trigger_Release:
-			opStr = "release operation"
+			opStr = "release"
 		case *pb.Trigger_Up:
-			opStr = "up operation"
+			opStr = "up"
 		case *pb.Trigger_Init:
-			opStr = "init operation"
+			opStr = "init"
 		default:
 			opStr = fmt.Sprintf("unknown operation: %T", triggerOpType)
 		}
