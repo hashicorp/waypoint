@@ -21,6 +21,7 @@ type TriggerListCommand struct {
 	flagTriggerTags []string
 
 	flagJson bool
+	flagFull bool
 }
 
 func (c *TriggerListCommand) Run(args []string) int {
@@ -85,7 +86,11 @@ func (c *TriggerListCommand) Run(args []string) int {
 
 	c.ui.Output("Trigger URL Configs", terminal.WithHeaderStyle())
 
-	tbl := terminal.NewTable("ID", "Name", "Workspace", "Project", "Application", "Operation", "Description", "Tags", "Last Time Active")
+	tblHeaders := []string{"ID", "Name", "Workspace", "Project", "Application", "Operation"}
+	if c.flagFull {
+		tblHeaders = append(tblHeaders, "Description", "Tags", "Last Time Active")
+	}
+	tbl := terminal.NewTable(tblHeaders...)
 
 	for _, t := range resp.Triggers {
 		ws := "default"
@@ -137,17 +142,20 @@ func (c *TriggerListCommand) Run(args []string) int {
 			lastActiveTime = humanize.Time(time)
 		}
 
-		tbl.Rich([]string{
+		tblColumn := []string{
 			t.Id,
 			t.Name,
 			ws,
 			proj,
 			app,
 			opStr,
-			t.Description,
-			tags,
-			lastActiveTime,
-		}, nil)
+		}
+
+		if c.flagFull {
+			tblColumn = append(tblColumn, t.Description, tags, lastActiveTime)
+		}
+
+		tbl.Rich(tblColumn, nil)
 	}
 
 	c.ui.Table(tbl)
@@ -165,6 +173,12 @@ func (c *TriggerListCommand) Flags() *flag.Sets {
 			Usage: "A collection of tags to filter on. If the requested tag does " +
 				"not match any defined trigger URL, it will be omitted from the results. " +
 				"Can be specified multiple times.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "full",
+			Target: &c.flagFull,
+			Usage:  "Output the full list of options for a trigger configuration.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
