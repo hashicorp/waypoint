@@ -1,0 +1,3 @@
+```release-note:improvement
+ui: Improved UX of screen readers' transition between pages
+```

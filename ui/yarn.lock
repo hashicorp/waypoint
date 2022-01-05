@@ -6119,6 +6119,14 @@ elliptic@^6.0.0, elliptic@^6.5.2:
     minimalistic-assert "^1.0.1"
     minimalistic-crypto-utils "^1.0.1"
 
+ember-a11y-refocus@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/ember-a11y-refocus/-/ember-a11y-refocus-2.1.0.tgz#cc0473d15c0eb0405d848b831afd78a49cae109f"
+  integrity sha512-jF9aOviA0T6d9P+4AmVtrMRcHVQcT4uBfq5OIGsx2rYrdP6LWj/7Tb+yNLLTDbPIdZDbluzofG7UU6HZYzkJIg==
+  dependencies:
+    ember-cli-babel "^7.26.3"
+    ember-cli-htmlbars "^5.7.1"
+
 ember-a11y-testing@^4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/ember-a11y-testing/-/ember-a11y-testing-4.3.0.tgz#30bd1f206998335d621b5138a5cdc12c729a50e9"
