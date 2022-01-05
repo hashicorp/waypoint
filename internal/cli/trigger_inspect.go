@@ -34,11 +34,14 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 		return 1
 	}
 
-	if len(c.args) == 0 && c.flagTriggerId == "" {
-		c.ui.Output("Trigger ID required.\n\n%s", c.Help(), terminal.WithErrorStyle())
-		return 1
+	if c.flagTriggerId == "" {
+		if len(c.args) == 0 {
+			c.ui.Output("Trigger ID required.\n\n%s", c.Help(), terminal.WithErrorStyle())
+			return 1
+		} else {
+			c.flagTriggerId = c.args[0]
+		}
 	}
-	c.flagTriggerId = c.args[0]
 
 	ctx := c.Ctx
 
@@ -49,7 +52,7 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 	})
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
-			c.ui.Output("Trigger configuration not found", clierrors.Humanize(err),
+			c.ui.Output("Trigger configuration not found: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle())
 			return 1
 		}
