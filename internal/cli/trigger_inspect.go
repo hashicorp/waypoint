@@ -34,13 +34,11 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 		return 1
 	}
 
-	if c.flagTriggerId == "" {
-		if len(c.args) == 0 {
-			c.ui.Output("Trigger ID required.\n\n%s", c.Help(), terminal.WithErrorStyle())
-			return 1
-		} else {
-			c.flagTriggerId = c.args[0]
-		}
+	if len(c.args) == 0 {
+		c.ui.Output("Trigger ID required.\n\n%s", c.Help(), terminal.WithErrorStyle())
+		return 1
+	} else {
+		c.flagTriggerId = c.args[0]
 	}
 
 	ctx := c.Ctx
@@ -164,12 +162,6 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 func (c *TriggerInspectCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
-
-		f.StringVar(&flag.StringVar{
-			Name:   "id",
-			Target: &c.flagTriggerId,
-			Usage:  "The id of the trigger URL to inspect.",
-		})
 
 		f.BoolVar(&flag.BoolVar{
 			Name:   "json",
