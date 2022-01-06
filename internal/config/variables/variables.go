@@ -16,10 +16,13 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	hcljson "github.com/hashicorp/hcl/v2/json"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
+	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/gocty"
+
+	"github.com/hashicorp/waypoint/internal/config/dynamic"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 const (
@@ -99,7 +102,7 @@ type Variable struct {
 // to verify HCL syntax.
 type HclVariable struct {
 	Name        string         `hcl:",label"`
-	Default     cty.Value      `hcl:"default,optional"`
+	Default     hcl.Expression `hcl:"default,optional"`
 	Type        hcl.Expression `hcl:"type,optional"`
 	Description string         `hcl:"description,optional"`
 	Env         []string       `hcl:"env,optional"`
@@ -123,11 +126,14 @@ type Value struct {
 // DecodeVariableBlocks uses the hclConfig schema to iterate over all
 // variable blocks, validating names and types and checking for duplicates.
 // It returns the final map of Variables to store for later reference.
-func DecodeVariableBlocks(content *hcl.BodyContent) (map[string]*Variable, hcl.Diagnostics) {
+func DecodeVariableBlocks(
+	ctx *hcl.EvalContext,
+	content *hcl.BodyContent,
+) (map[string]*Variable, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	vs := map[string]*Variable{}
 	for _, block := range content.Blocks.OfType("variable") {
-		v, diags := decodeVariableBlock(block)
+		v, diags := decodeVariableBlock(ctx, block)
 		if diags.HasErrors() {
 			return nil, diags
 		}
@@ -150,7 +156,10 @@ func DecodeVariableBlocks(content *hcl.BodyContent) (map[string]*Variable, hcl.D
 
 // decodeVariableBlock validates each part of the variable block,
 // building out a defined *Variable
-func decodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
+func decodeVariableBlock(
+	ctx *hcl.EvalContext,
+	block *hcl.Block,
+) (*Variable, hcl.Diagnostics) {
 	name := block.Labels[0]
 	v := Variable{
 		Name:  name,
@@ -194,26 +203,52 @@ func decodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 	}
 
 	if attr, exists := content.Attributes["default"]; exists {
-		val, valDiags := attr.Expr.Value(nil)
+		defaultCtx := ctx.NewChild()
+		defaultCtx.Functions = dynamic.Register(map[string]function.Function{})
+
+		val, valDiags := attr.Expr.Value(defaultCtx)
 		diags = append(diags, valDiags...)
 		if diags.HasErrors() {
 			return nil, diags
 		}
-		// Convert the default to the expected type so we can catch invalid
-		// defaults early and allow later code to assume validity.
-		// Note that this depends on us having already processed any "type"
-		// attribute above.
-		if v.Type != cty.NilType {
-			var err error
-			val, err = convert.Convert(val, v.Type)
-			if err != nil {
+
+		// Depending on the value type, we behave differently.
+		switch val.Type() {
+		case dynamic.Type:
+			// For dynamic types we don't do conversion because we don't yet
+			// have the value. For now we require v.Type to be string so that
+			// the user isn't surprised by anything. Users can use explicit
+			// type conversion such as `tonumber`.
+			if v.Type != cty.String {
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
-					Summary:  fmt.Sprintf("Invalid default value for variable %q", name),
-					Detail:   fmt.Sprintf("This default value is not compatible with the variable's type constraint: %s.", err),
-					Subject:  attr.Expr.Range().Ptr(),
+					Summary:  fmt.Sprintf("type for variable %q must be string for dynamic values", name),
+					Detail: "When using dynamically sourced configuration values, " +
+						"the variable type must be string. You may use explicit " +
+						"type conversion functions such as `tonumber` when using " +
+						"the variable.",
+					Subject: attr.Expr.Range().Ptr(),
 				})
 				val = cty.DynamicVal
+			}
+
+		default:
+			// Convert the default to the expected type so we can catch invalid
+			// defaults early and allow later code to assume validity.
+			// Note that this depends on us having already processed any "type"
+			// attribute above.
+			if v.Type != cty.NilType {
+				var err error
+				val, err = convert.Convert(val, v.Type)
+				if err != nil {
+					diags = append(diags, &hcl.Diagnostic{
+						Severity: hcl.DiagError,
+						Summary:  fmt.Sprintf("Invalid default value for variable %q", name),
+						Detail:   fmt.Sprintf("This default value is not compatible with the variable's type constraint: %s.", err),
+						Subject:  attr.Expr.Range().Ptr(),
+					})
+					val = cty.DynamicVal
+				}
 			}
 		}
 

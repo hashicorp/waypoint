@@ -35,6 +35,10 @@ func TestVariables_DecodeVariableBlock(t *testing.T) {
 			"invalid_def.hcl",
 			"Invalid default value",
 		},
+		{
+			"invalid_type_dynamic.hcl",
+			"must be string",
+		},
 	}
 
 	for _, tt := range cases {
@@ -55,7 +59,7 @@ func TestVariables_DecodeVariableBlock(t *testing.T) {
 			for _, block := range content.Blocks {
 				switch block.Type {
 				case "variable":
-					v, decodeDiag := decodeVariableBlock(block)
+					v, decodeDiag := decodeVariableBlock(nil, block)
 					vs[block.Labels[0]] = v
 					if decodeDiag.HasErrors() {
 						diags = append(diags, decodeDiag...)
@@ -317,7 +321,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			for _, block := range content.Blocks {
 				switch block.Type {
 				case "variable":
-					v, decodeDiag := decodeVariableBlock(block)
+					v, decodeDiag := decodeVariableBlock(nil, block)
 					vs[block.Labels[0]] = v
 					if decodeDiag.HasErrors() {
 						diags = append(diags, decodeDiag...)

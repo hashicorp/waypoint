@@ -23,3 +23,8 @@ variable "envs" {
   type = number
   env = ["foo", "bar"]
 }
+
+variable "dynamic" {
+  type = string
+  default = configdynamic("vault", {})
+}
