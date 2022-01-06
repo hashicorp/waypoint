@@ -237,7 +237,8 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		}
 	case c.flagTriggerOperation == "":
 		if diffTrigger == nil {
-			c.ui.Output("Empty operation type requested. Must be one of the following values:\n%s\n\n%s",
+			c.ui.Output("Empty operation type requested. Operation must be set with "+
+				"'-op' and be one of the following values:\n%s\n\n%s",
 				strings.Join(triggerOpValues[:], ", "), c.Help(), terminal.WithErrorStyle())
 			return 1
 		} else {
