@@ -330,7 +330,11 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			}
 			require.False(diags.HasErrors())
 
-			ivs, diags := EvaluateVariables(tt.inputValues, vs, hclog.New(&hclog.LoggerOptions{}))
+			ivs, diags := EvaluateVariables(
+				hclog.New(&hclog.LoggerOptions{}),
+				tt.inputValues,
+				vs,
+			)
 			if tt.err != "" {
 				require.True(diags.HasErrors())
 				require.Contains(diags.Error(), tt.err)

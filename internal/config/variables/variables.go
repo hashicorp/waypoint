@@ -2,6 +2,7 @@ package variables
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -21,6 +22,7 @@ import (
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/gocty"
 
+	"github.com/hashicorp/waypoint/internal/appconfig"
 	"github.com/hashicorp/waypoint/internal/config/dynamic"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -36,17 +38,19 @@ const (
 	sourceEnv     = "env"
 	sourceVCS     = "vcs"
 	sourceServer  = "server"
+	sourceDynamic = "dynamic"
 	sourceDefault = "default"
 )
 
 var (
 	// sourceMap maps a variable pb source type to its string representation
 	fromSource = map[reflect.Type]string{
-		reflect.TypeOf((*pb.Variable_Cli)(nil)):    sourceCLI,
-		reflect.TypeOf((*pb.Variable_File_)(nil)):  sourceFile,
-		reflect.TypeOf((*pb.Variable_Env)(nil)):    sourceEnv,
-		reflect.TypeOf((*pb.Variable_Vcs)(nil)):    sourceVCS,
-		reflect.TypeOf((*pb.Variable_Server)(nil)): sourceServer,
+		reflect.TypeOf((*pb.Variable_Cli)(nil)):     sourceCLI,
+		reflect.TypeOf((*pb.Variable_File_)(nil)):   sourceFile,
+		reflect.TypeOf((*pb.Variable_Env)(nil)):     sourceEnv,
+		reflect.TypeOf((*pb.Variable_Vcs)(nil)):     sourceVCS,
+		reflect.TypeOf((*pb.Variable_Server)(nil)):  sourceServer,
+		reflect.TypeOf((*pb.Variable_Dynamic)(nil)): sourceDynamic,
 	}
 
 	// The attributes we expect to see in variable blocks
@@ -364,18 +368,128 @@ func LoadEnvValues(vars map[string]*Variable) ([]*pb.Variable, hcl.Diagnostics) 
 	return ret, diags
 }
 
+// LoadDynamicDefaults will load the default values for variables that have
+// dynamic configurations. This will only load the values if there isn't an
+// existing variable set in pbvars. Therefore, it is recommended that this is
+// called last and the values are _prepended_ to pbvars for priority.
+func LoadDynamicDefaults(
+	ctx context.Context,
+	log hclog.Logger,
+	pbvars []*pb.Variable,
+	vars map[string]*Variable,
+	dynamicOpts ...appconfig.Option,
+) ([]*pb.Variable, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+
+	// Get all our variables with dynamic defaults
+	dynamicVars := map[string]*Variable{}
+	for k, v := range vars {
+		if v.Default != nil {
+			val := v.Default.Value
+			if val.Type() == dynamic.Type {
+				dynamicVars[k] = v
+			}
+		}
+	}
+
+	// If we have no dynamic vars, we do nothing.
+	if len(dynamicVars) == 0 {
+		return nil, diags
+	}
+
+	// Go through our variable values and delete any dynamic vars we have
+	// values for already; we do not need to fetch those.
+	for _, pbv := range pbvars {
+		delete(dynamicVars, pbv.Name)
+	}
+
+	// If we have no dynamic vars we need values for, also do nothing.
+	if len(dynamicVars) == 0 {
+		return nil, diags
+	}
+
+	// Build our watcher
+	ch := make(chan *appconfig.UpdatedConfig)
+	w, err := appconfig.NewWatcher(append(
+		append([]appconfig.Option{}, dynamicOpts...),
+		appconfig.WithNotify(ch),
+	)...)
+	if err != nil {
+		diags = append(diags, &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Error initializing configuration watcher",
+			Detail:   err.Error(),
+			Subject: &hcl.Range{
+				Filename: "waypoint.hcl",
+			},
+		})
+		return nil, diags
+	}
+	defer w.Close()
+
+	// We have some variables we need to fetch dynamic values for.
+	configVars := make([]*pb.ConfigVar, 0, len(dynamicVars))
+	for k, v := range dynamicVars {
+		configVars = append(configVars, &pb.ConfigVar{
+			Name: k,
+			Value: &pb.ConfigVar_Dynamic{
+				Dynamic: v.Default.Value.EncapsulatedValue().(*pb.ConfigVar_DynamicVal),
+			},
+
+			// This is set to true on purpose because it forces the appconfig
+			// watcher to give us an easier to consume format (struct vs
+			// array of key=value strings for env vars).
+			NameIsPath: true,
+		})
+	}
+
+	// Send our variables. Purposely ignore the error return value because
+	// it can only ever be a context cancellation which we pick up in the
+	// select later.
+	w.UpdateVars(ctx, configVars)
+
+	// Wait for values.
+	select {
+	case <-ctx.Done():
+		diags = append(diags, &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Cancellation while waiting for configuration.",
+			Detail:   ctx.Err().Error(),
+			Subject: &hcl.Range{
+				Filename: "waypoint.hcl",
+			},
+		})
+		return nil, diags
+
+	case config := <-ch:
+		var result []*pb.Variable
+		for _, f := range config.Files {
+			result = append(result, &pb.Variable{
+				Name: f.Path,
+				Value: &pb.Variable_Str{
+					Str: string(f.Data),
+				},
+				Source: &pb.Variable_Dynamic{},
+			})
+		}
+
+		return result, diags
+	}
+}
+
 // EvaluateVariables evaluates the provided variable values and validates their
 // types per the type declared in the waypoint.hcl for that variable name.
 // The order in which values are evaluated corresponds to their precedence, with
 // higher precedence values overwriting lower precedence values.
+//
 // The supplied map of *Variable should be all defined variables (currently
 // comes from decoding all variable blocks within the waypoint.hcl), and
 // is used to validate types and that all variables have at least one
 // assigned value.
 func EvaluateVariables(
+	log hclog.Logger,
 	pbvars []*pb.Variable,
 	vs map[string]*Variable,
-	log hclog.Logger,
 ) (Values, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	iv := Values{}

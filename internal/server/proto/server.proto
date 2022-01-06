@@ -559,6 +559,9 @@ message Variable {
     // When we add support for workspace variables, we can store the workspace
     // id here.
     google.protobuf.Empty server = 8;
+
+    // Dynamic config source plugin
+    google.protobuf.Empty dynamic = 11;
   }
 
   message File {
