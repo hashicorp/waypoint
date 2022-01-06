@@ -779,7 +779,13 @@ func buildAppConfig(
 			continue
 		}
 
-		s := configPlugins[k].Component.(component.ConfigSourcer)
+		instance, ok := configPlugins[k]
+		if !ok {
+			L.Warn("configuration plugin not found", "key", k)
+			continue
+		}
+
+		s := instance.Component.(component.ConfigSourcer)
 
 		// Next, call Read
 		if L.IsTrace() {
