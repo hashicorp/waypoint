@@ -1,6 +1,7 @@
 package variables
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -12,10 +13,13 @@ import (
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
+
+	"github.com/hashicorp/waypoint/internal/appconfig"
+	"github.com/hashicorp/waypoint/internal/plugin"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 func TestVariables_DecodeVariableBlock(t *testing.T) {
@@ -176,6 +180,103 @@ func TestVariables_LoadVCSFile(t *testing.T) {
 
 			require.False(diags.HasErrors())
 			require.ElementsMatch(vars, tt.expected)
+		})
+	}
+}
+
+func TestVariables_LoadDynamicDefaults(t *testing.T) {
+	cases := []struct {
+		name     string
+		file     string
+		provided []*pb.Variable
+		needs    bool
+		expected map[string]string
+		err      string
+	}{
+		{
+			"no dynamic",
+			"no_dynamic.hcl",
+			nil,
+			false,
+			nil,
+			"",
+		},
+
+		{
+			"dynamic but provided",
+			"dynamic.hcl",
+			[]*pb.Variable{
+				{
+					Name: "teeth",
+					Value: &pb.Variable_Str{
+						Str: "pointy",
+					},
+				},
+			},
+			false,
+			nil,
+			"",
+		},
+
+		{
+			"dynamic need value",
+			"dynamic.hcl",
+			[]*pb.Variable{
+				{
+					Name: "irrelevent",
+					Value: &pb.Variable_Str{
+						Str: "NO",
+					},
+				},
+			},
+			true,
+			map[string]string{
+				"teeth": "hello",
+			},
+			"",
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			require := require.New(t)
+
+			file := filepath.Join("testdata", tt.file)
+			base := testConfig{}
+
+			err := hclsimple.DecodeFile(file, nil, &base)
+			require.NoError(err)
+
+			schema, _ := gohcl.ImpliedBodySchema(&testConfig{})
+			content, diags := base.Body.Content(schema)
+			require.False(diags.HasErrors())
+
+			vars, diags := DecodeVariableBlocks(nil, content)
+			require.False(diags.HasErrors(), diags.Error())
+
+			needs := NeedsDynamicDefaults(tt.provided, vars)
+			require.Equal(tt.needs, needs)
+
+			dynVars, diags := LoadDynamicDefaults(
+				context.Background(),
+				hclog.L(),
+				tt.provided,
+				vars,
+				appconfig.WithPlugins(map[string]*plugin.Instance{
+					"static": &plugin.Instance{
+						Component: &appconfig.StaticConfigSourcer{},
+					},
+				}),
+			)
+			require.False(diags.HasErrors())
+
+			actual := map[string]string{}
+			for _, v := range dynVars {
+				actual[v.Name] = v.Value.(*pb.Variable_Str).Str
+			}
+			if len(actual) == 0 {
+				actual = nil
+			}
+			require.Equal(tt.expected, actual)
 		})
 	}
 }
