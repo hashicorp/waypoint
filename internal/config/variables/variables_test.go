@@ -262,7 +262,7 @@ func TestVariables_LoadDynamicDefaults(t *testing.T) {
 				tt.provided,
 				vars,
 				appconfig.WithPlugins(map[string]*plugin.Instance{
-					"static": &plugin.Instance{
+					"static": {
 						Component: &appconfig.StaticConfigSourcer{},
 					},
 				}),
