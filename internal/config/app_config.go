@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -10,8 +9,8 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
 	"github.com/zclconf/go-cty/cty/function"
-	"github.com/zclconf/go-cty/cty/gocty"
 
+	"github.com/hashicorp/waypoint/internal/config/dynamic"
 	"github.com/hashicorp/waypoint/internal/pkg/partial"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serversort "github.com/hashicorp/waypoint/internal/server/sort"
@@ -140,9 +139,7 @@ func (c *genericConfig) ConfigVars() ([]*pb.ConfigVar, error) {
 	// Build our evaluation context for the config vars
 	ctx := c.ctx
 	ctx = appendContext(ctx, &hcl.EvalContext{
-		Functions: map[string]function.Function{
-			"configdynamic": configDynamicFunc,
-		},
+		Functions: dynamic.Register(map[string]function.Function{}),
 	})
 	ctx = finalizeContext(ctx)
 
@@ -282,7 +279,7 @@ func configVars(
 			// something.
 		} else {
 			switch val.Type() {
-			case typeDynamicConfig:
+			case dynamic.Type:
 				newVar.Value = &pb.ConfigVar_Dynamic{
 					Dynamic: val.EncapsulatedValue().(*pb.ConfigVar_DynamicVal),
 				}
@@ -341,34 +338,4 @@ func configVars(
 var (
 	// hclEscaper is used to escape HCL in our config values.
 	hclEscaper = strings.NewReplacer("${", "$${", "%{", "%%{")
-
-	typeDynamicConfig = cty.Capsule("configval",
-		reflect.TypeOf((*pb.ConfigVar_DynamicVal)(nil)).Elem())
-
-	// configDynamicFunc implements the configdynamic() HCL function.
-	configDynamicFunc = function.New(&function.Spec{
-		Params: []function.Parameter{
-			{
-				Name: "from",
-				Type: cty.String,
-			},
-
-			{
-				Name: "config",
-				Type: cty.Map(cty.String),
-			},
-		},
-		Type: function.StaticReturnType(typeDynamicConfig),
-		Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
-			var config map[string]string
-			if err := gocty.FromCtyValue(args[1], &config); err != nil {
-				return cty.NilVal, err
-			}
-
-			return cty.CapsuleVal(typeDynamicConfig, &pb.ConfigVar_DynamicVal{
-				From:   args[0].AsString(),
-				Config: config,
-			}), nil
-		},
-	})
 )
