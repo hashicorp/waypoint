@@ -151,8 +151,6 @@ func (s *service) RunTrigger(
 		if err != nil {
 			return nil, err
 		}
-
-		// if operation is deploy, and artifact is nil, get 'latest'
 	} else {
 		log.Debug("building a single job for target", "project",
 			runTrigger.Application.Project, "app", runTrigger.Application.Application)
@@ -162,6 +160,8 @@ func (s *service) RunTrigger(
 		jobList = append(jobList, j)
 	}
 
+	// NOTE(briancain): See https://github.com/hashicorp/waypoint/issues/2884
+	// for why we must attach the full PushedArtifact message for a deploy operation
 	if deployArtifactSet {
 		// We have to set the full artifact message on Deployment operations
 		for i, qJob := range jobList {
