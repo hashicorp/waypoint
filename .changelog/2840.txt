@@ -1,6 +1,6 @@
 ```release-note:feature
 core: Introduce RunTriggers to Waypoint Server and CLI. Triggers can be configured
 ahead of time to execute lifecycle operations on demand through the Waypoint API.
-Currently, the gRPC API is only supported, but in the future an HTTP endpoint
+Currently, only the gRPC API is supported, but in the future an HTTP endpoint
 will be added to be used within CI.
 ```
