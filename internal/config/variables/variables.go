@@ -368,6 +368,33 @@ func LoadEnvValues(vars map[string]*Variable) ([]*pb.Variable, hcl.Diagnostics) 
 	return ret, diags
 }
 
+// NeedsDynamicDefaults returns true if there are variables with a dynamic
+// default value set that must be evaluated (because the value is not
+// overridden).
+func NeedsDynamicDefaults(
+	pbvars []*pb.Variable,
+	vars map[string]*Variable,
+) bool {
+	// Get all our variables with dynamic defaults
+	dynamicVars := map[string]*Variable{}
+	for k, v := range vars {
+		if v.Default != nil {
+			val := v.Default.Value
+			if val.Type() == dynamic.Type {
+				dynamicVars[k] = v
+			}
+		}
+	}
+
+	// Go through our variable values and delete any dynamic vars we have
+	// values for already; we do not need to fetch those.
+	for _, pbv := range pbvars {
+		delete(dynamicVars, pbv.Name)
+	}
+
+	return len(dynamicVars) > 0
+}
+
 // LoadDynamicDefaults will load the default values for variables that have
 // dynamic configurations. This will only load the values if there isn't an
 // existing variable set in pbvars. Therefore, it is recommended that this is

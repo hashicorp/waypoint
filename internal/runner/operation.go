@@ -192,23 +192,37 @@ func (r *Runner) executeJob(
 	// Load any dynamic default values. This happens after the above
 	// because we only load dynamic default values for variables we do
 	// not have values for.
-	dynamicVars, diags := variables.LoadDynamicDefaults(
-		ctx,
-		log,
-		pbVars,
-		cfg.InputVariables,
-		appconfig.WithLogger(log),
-		appconfig.WithPlugins(r.configPlugins),
-	)
-	if diags.HasErrors() {
-		return nil, diags
-	}
-	if len(dynamicVars) > 0 {
-		// If we have dynamic variable values, we _prepend_ them so that
-		// they have the lowest precedence. In reality, this shouldn't
-		// matter because we only grab dynamic values for vars that have
-		// no value set, but we might as well be careful.
-		pbVars = append(dynamicVars, pbVars...)
+	if variables.NeedsDynamicDefaults(pbVars, cfg.InputVariables) {
+		// If we're a local runner, we can't support this. We don't
+		// support dynamic config sourcing on local runners since it
+		// requires config sourcing plugins, auth, etc.
+		if r.local {
+			return nil, status.Errorf(
+				codes.FailedPrecondition,
+				"Variables with dynamic defaults cannot be used with local "+
+					"runners. Projects using variables with dynamic defaults must "+
+					"be executed remotely using a remote runner.",
+			)
+		}
+
+		dynamicVars, diags := variables.LoadDynamicDefaults(
+			ctx,
+			log,
+			pbVars,
+			cfg.InputVariables,
+			appconfig.WithLogger(log),
+			appconfig.WithPlugins(r.configPlugins),
+		)
+		if diags.HasErrors() {
+			return nil, diags
+		}
+		if len(dynamicVars) > 0 {
+			// If we have dynamic variable values, we _prepend_ them so that
+			// they have the lowest precedence. In reality, this shouldn't
+			// matter because we only grab dynamic values for vars that have
+			// no value set, but we might as well be careful.
+			pbVars = append(dynamicVars, pbVars...)
+		}
 	}
 
 	// evaluate all variables against the variable blocks we just decoded
