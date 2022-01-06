@@ -26,7 +26,6 @@ type TriggerApplyCommand struct {
 	flagTriggerNoAuth      bool
 
 	// Operation options
-	flagArtifactSeq int
 	flagBuildSeq    int
 	flagDeploySeq   int
 	flagReleaseSeq  int
@@ -152,20 +151,24 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 			},
 		}
 	case c.flagTriggerOperation == "deploy":
-		// TODO/FUTURE NOTE: If no sequence number is specified (i.e. seq 0), the backend should default to using the "latest" artifact instead
+		var artifact *pb.PushedArtifact
+		if c.flagBuildSeq != 0 {
+			artifact = &pb.PushedArtifact{
+				Application: &pb.Ref_Application{
+					Application: c.flagApp,
+					Project:     c.flagProject,
+				},
+				Sequence: uint64(c.flagBuildSeq),
+				Workspace: &pb.Ref_Workspace{
+					Workspace: c.flagWorkspace,
+				},
+			}
+		}
 
+		// NOTE: nil artifact means "latest", the server will look up the latest in the DB and set it there
 		createTrigger.Operation = &pb.Trigger_Deploy{
 			Deploy: &pb.Job_DeployOp{
-				Artifact: &pb.PushedArtifact{
-					Sequence: uint64(c.flagBuildSeq),
-					Workspace: &pb.Ref_Workspace{
-						Workspace: c.flagWorkspace,
-					},
-					Application: &pb.Ref_Application{
-						Application: c.flagApp,
-						Project:     c.flagProject,
-					},
-				},
+				Artifact: artifact,
 			},
 		}
 	case c.flagTriggerOperation == "destroy-workspace":
@@ -322,12 +325,6 @@ func (c *TriggerApplyCommand) Flags() *flag.Sets {
 
 		// Operation specific flags
 		fo := set.NewSet("Operation Options")
-		fo.IntVar(&flag.IntVar{
-			Name:   "artifact-id",
-			Target: &c.flagArtifactSeq,
-			Usage:  "The sequence number (short id) for the artifact to use in an operation.",
-		})
-
 		fo.BoolVar(&flag.BoolVar{
 			Name:    "disable-push",
 			Target:  &c.flagDisablePush,

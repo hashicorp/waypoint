@@ -100,12 +100,15 @@ func (s *service) RunTrigger(
 		Labels:    map[string]string{"trigger/id": runTrigger.Id},
 	}
 
+	deployArtifactSet := false
 	switch op := runTrigger.Operation.(type) {
 	case *pb.Trigger_Build:
 		job.Operation = &pb.Job_Build{Build: op.Build}
 	case *pb.Trigger_Push:
 		job.Operation = &pb.Job_Push{Push: op.Push}
 	case *pb.Trigger_Deploy:
+		// set a bool switch to avoid looping over all jobs every time triggers are executed
+		deployArtifactSet = true
 		job.Operation = &pb.Job_Deploy{Deploy: op.Deploy}
 	case *pb.Trigger_Destroy:
 		job.Operation = &pb.Job_Destroy{Destroy: op.Destroy}
@@ -148,6 +151,8 @@ func (s *service) RunTrigger(
 		if err != nil {
 			return nil, err
 		}
+
+		// if operation is deploy, and artifact is nil, get 'latest'
 	} else {
 		log.Debug("building a single job for target", "project",
 			runTrigger.Application.Project, "app", runTrigger.Application.Application)
@@ -155,6 +160,48 @@ func (s *service) RunTrigger(
 		job.Application = runTrigger.Application
 		j := &pb.QueueJobRequest{Job: job}
 		jobList = append(jobList, j)
+	}
+
+	if deployArtifactSet {
+		// We have to set the full artifact message on Deployment operations
+		for i, qJob := range jobList {
+			switch op := qJob.Job.Operation.(type) {
+			case *pb.Job_Deploy:
+				if op.Deploy.Artifact == nil {
+					// get latest pushed artifact, then set it on the operation
+					artifactLatest, err := s.state.ArtifactLatest(runTrigger.Application, runTrigger.Workspace)
+					if err != nil {
+						return nil, status.Errorf(codes.Internal, "failed to obtain latest pushed artifact: %s", err)
+					}
+
+					jobList[i].Job.Operation = &pb.Job_Deploy{
+						Deploy: &pb.Job_DeployOp{
+							Artifact: artifactLatest,
+						},
+					}
+				} else {
+					// Set the actual pushed artifact on the operation
+					buildSeq := op.Deploy.Artifact.Sequence
+					artifact, err := s.state.ArtifactGet(&pb.Ref_Operation{
+						Target: &pb.Ref_Operation_Sequence{
+							Sequence: &pb.Ref_OperationSeq{
+								Application: job.Application,
+								Number:      buildSeq,
+							},
+						},
+					})
+					if err != nil {
+						return nil, status.Errorf(codes.Internal, "failed to obtain pushed artifact id %q: %s", buildSeq, err)
+					}
+
+					jobList[i].Job.Operation = &pb.Job_Deploy{
+						Deploy: &pb.Job_DeployOp{
+							Artifact: artifact,
+						},
+					}
+				}
+			}
+		}
 	}
 
 	if len(jobList) > 0 {
