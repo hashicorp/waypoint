@@ -6355,11 +6355,12 @@ ember-cli-favicon@^3.0.0:
     ember-cli-babel "^7.26.6"
     lodash.merge "^4.6.2"
 
-ember-cli-flash@^2.1.1:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/ember-cli-flash/-/ember-cli-flash-2.1.1.tgz#a1547676d20a8d6f5d0f523228d3e7c8a76486ee"
-  integrity sha512-JLqrc2gOwCFI8dB1hUV537Iv+yzplsgfVG3u4JSp8QAsQHPCGAT0XZR1yQDlXfoLwFGr1Akw8y72/TwN9jBW9w==
+ember-cli-flash@~2.1.1:
+  version "2.1.3"
+  resolved "https://registry.yarnpkg.com/ember-cli-flash/-/ember-cli-flash-2.1.3.tgz#b193c42e13cd934964ba0fa01720ac6ddbffc131"
+  integrity sha512-pwwZzqGXBmbDg67yDxh6KbMGEp6s4CQJUDoUgRtuA6QTm01Us39obdma6DLDokyLs2iuS8Z39VNharJbOIj3sQ==
   dependencies:
+    "@ember/render-modifiers" "^1.0.2"
     ember-cli-babel "^7.18.0"
     ember-cli-htmlbars "^4.2.3"
     ember-runtime-enumerable-includes-polyfill "^2.1.0"
