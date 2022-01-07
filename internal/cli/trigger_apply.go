@@ -28,7 +28,6 @@ type TriggerApplyCommand struct {
 	// Operation options
 	flagBuildSeq    int
 	flagDeploySeq   int
-	flagReleaseSeq  int
 	flagDisablePush bool
 
 	// Release options
@@ -335,19 +334,13 @@ func (c *TriggerApplyCommand) Flags() *flag.Sets {
 		fo.IntVar(&flag.IntVar{
 			Name:   "build-id",
 			Target: &c.flagBuildSeq,
-			Usage:  "The sequence number (short id) for the build to use in an operation.",
+			Usage:  "The sequence number (short id) for the build to use for a deployment operation.",
 		})
 
 		fo.IntVar(&flag.IntVar{
 			Name:   "deployment-id",
 			Target: &c.flagDeploySeq,
-			Usage:  "The sequence number (short id) for the deployment to use in an operation.",
-		})
-
-		fo.IntVar(&flag.IntVar{
-			Name:   "release-id",
-			Target: &c.flagReleaseSeq,
-			Usage:  "The sequence number (short id) for the release to use in an operation.",
+			Usage:  "The sequence number (short id) for the deployment to use for a release operation.",
 		})
 
 		// Release operation specific flags
