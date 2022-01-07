@@ -298,10 +298,18 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					Value:  &pb.Variable_Str{Str: "gdbee"},
 					Source: &pb.Variable_Cli{},
 				},
+				{
+					Name:   "dynamic",
+					Value:  &pb.Variable_Str{Str: "value"},
+					Source: &pb.Variable_Cli{},
+				},
 			},
 			expected: Values{
 				"art": &Value{
 					cty.StringVal("gdbee"), "cli", hcl.Expression(nil), hcl.Range{},
+				},
+				"dynamic": &Value{
+					cty.StringVal("value"), "cli", hcl.Expression(nil), hcl.Range{},
 				},
 				"is_good": &Value{
 					cty.BoolVal(false), "default", hcl.Expression(nil), hcl.Range{},
@@ -442,7 +450,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 				return
 			}
 
-			require.False(diags.HasErrors())
+			require.False(diags.HasErrors(), diags.Error())
 			for k, v := range tt.expected {
 				diff := cmp.Diff(v, ivs[k], cmpOpts...)
 				if diff != "" {
