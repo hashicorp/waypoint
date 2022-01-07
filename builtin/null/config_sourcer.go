@@ -46,6 +46,7 @@ func (cs *ConfigSourcer) read(
 
 		// Decode our configuration
 		var singleReq reqConfig
+		log.Debug("decoding config", "raw", req.Config)
 		if err := mapstructure.WeakDecode(req.Config, &singleReq); err != nil {
 			result.Result = &pb.ConfigSource_Value_Error{
 				Error: status.New(codes.Aborted, err.Error()).Proto(),
@@ -160,8 +161,8 @@ config {
 }
 
 type reqConfig struct {
-	StaticValue string `hcl:"static_value,optional"`
-	ConfigKey   string `hcl:"config_key,optional"`
+	StaticValue string `mapstructure:"static_value,optional"`
+	ConfigKey   string `mapstructure:"config_key,optional"`
 }
 
 type sourceConfig struct {
