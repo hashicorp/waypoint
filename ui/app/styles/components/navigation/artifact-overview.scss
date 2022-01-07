@@ -10,6 +10,13 @@
     padding: 0;
     font-size: 0.875rem;
     line-height: 17px;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+
+    tr {
+      width: 100%;
+    }
 
     th,
     td {
@@ -22,9 +29,8 @@
     th {
       font-weight: normal;
       color: rgb(var(--text-muted));
-      padding-right: scale.$lg--10;
       text-align: left;
-      width: 158px;
+      width: 100px;
     }
 
     .status-indicator {
@@ -40,8 +46,15 @@
       align-items: baseline;
     }
 
-    .image-ref:first-child {
-      margin-top: -1px;
+    .image-ref {
+      display: inline-flex;
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+
+      :first-child {
+        margin-top: -1px;
+      }
     }
   }
 }

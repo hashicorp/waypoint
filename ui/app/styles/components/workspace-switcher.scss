@@ -1,3 +1,25 @@
+:root {
+  --artifact-type: black;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --artifact-type: white;
+  }
+}
+
+.workspace-switcher {
+  * {
+    background: rgb(var(--button-secondary));
+    color: rgb(var(--button-secondary-text));
+    border-color: rgb(var(--button-secondary-border))
+  }
+
+  :any-link:not(.pds-button):not(.pds--external):hover {
+    --pds-backgroundColor: rgb(var(--button-secondary));
+  }
+}
+
 .workspace-switcher__dialog {
   margin-top: scale.$sm--2;
   width: auto;

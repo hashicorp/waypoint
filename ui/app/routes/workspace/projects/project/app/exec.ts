@@ -1,10 +1,27 @@
 import ApiService from 'waypoint/services/api';
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 import { Model as AppRouteModel } from '../app';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 export default class Exec extends Route {
   @service api!: ApiService;
+
+  breadcrumbs(model: AppRouteModel): Breadcrumb[] {
+    if (!model) return [];
+    return [
+      {
+        label: model.application.application ?? 'unknown',
+        icon: 'git-repo',
+        route: 'workspace.projects.project.app',
+      },
+      {
+        label: 'Exec',
+        icon: 'terminal-screen',
+        route: 'workspace.projects.project.app.exec',
+      },
+    ];
+  }
 
   async model(): Promise<AppRouteModel> {
     let app = this.modelFor('workspace.projects.project.app') as AppRouteModel;
