@@ -439,6 +439,7 @@ func LoadDynamicDefaults(
 	ch := make(chan *appconfig.UpdatedConfig)
 	w, err := appconfig.NewWatcher(append(
 		append([]appconfig.Option{}, dynamicOpts...),
+		appconfig.WithLogger(log),
 		appconfig.WithNotify(ch),
 	)...)
 	if err != nil {
@@ -522,6 +523,13 @@ func EvaluateVariables(
 	iv := Values{}
 
 	for v, def := range vs {
+		// Do not allow dynamic values as default values since they aren't valid.
+		// Dynamic values should be evaluated and overridden by LoadDynamicDefaults
+		// and provided via pbvars. If not, then an unset error will be created.
+		if def.Default != nil && def.Default.Value.Type() == dynamic.Type {
+			continue
+		}
+
 		iv[v] = def.Default
 	}
 
