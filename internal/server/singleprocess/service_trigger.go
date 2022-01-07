@@ -169,7 +169,7 @@ func (s *service) RunTrigger(
 			case *pb.Job_Deploy:
 				if op.Deploy.Artifact == nil {
 					// get latest pushed artifact, then set it on the operation
-					artifactLatest, err := s.state.ArtifactLatest(runTrigger.Application, runTrigger.Workspace)
+					artifactLatest, err := s.state.ArtifactLatest(qJob.Job.Application, qJob.Job.Workspace)
 					if err != nil {
 						return nil, status.Errorf(codes.Internal, "failed to obtain latest pushed artifact: %s", err)
 					}
@@ -185,7 +185,7 @@ func (s *service) RunTrigger(
 					artifact, err := s.state.ArtifactGet(&pb.Ref_Operation{
 						Target: &pb.Ref_Operation_Sequence{
 							Sequence: &pb.Ref_OperationSeq{
-								Application: job.Application,
+								Application: qJob.Job.Application,
 								Number:      buildSeq,
 							},
 						},
