@@ -10,7 +10,8 @@ description: |-
 # Input Variables
 
 Input variables let you customize aspects of Waypoint configuration with values
-that may change, or that need to be set per Waypoint run.
+that may change, or that need to be set per Waypoint run. Input variables can
+also be used to [fetch values from remote sources](/docs/waypoint-hcl/variables/dynamic).
 
 You can parameterize your configuration by declaring variables in the
 waypoint.hcl file, and setting their values using CLI options, environment variables,
@@ -56,7 +57,7 @@ evaluating the configuration.
 
 The name of a variable can be any valid [identifier](/docs/waypoint-hcl/syntax#identifiers).
 
-## Arguments
+### Arguments
 
 Waypoint CLI defines the following optional arguments for variable declarations:
 
