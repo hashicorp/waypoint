@@ -1,25 +1,69 @@
-<li class="app-item">
-  <LinkTo @route="workspace.projects.project.app.release" @models={{array @release.sequence}}>
-    <p>
-      <b class="badge badge--version">v{{@release.sequence}}</b>
-    </p>
-    <small class="app-item__meta__secondary">
-      <OperationStatusIndicator::Release @operation={{@release}} />
-    </small>
-  </LinkTo>
-
-  {{#if (and (not-eq @release.state 4) @release.statusReport)}}
-    <small>
-      <StatusReportIndicator @statusReport={{@release.statusReport}} />
-    </small>
-  {{/if}}
-
-  {{#if (and @isLatest @release.url)}}
-    <ExternalLink
-      href={{enforce-protocol @release.url}}
-      class="button button--primary button--external-link">
-      <span>{{@release.url}}</span>
-      <FlightIcon @name="external-link" class="icon" />
-    </ExternalLink>
-  {{/if}}
-</li>
+<tr>
+  <th data-test-id-column scope="row" class="table__id-column">
+    <LinkTo
+      title={{ concat (t "page.release.title") " v" @build.sequence}}
+      @route="workspace.projects.project.app.release"
+      @models={{array @release.sequence}}
+    >
+      <b data-test-version-badge class="badge badge--version">v{{@release.sequence}}</b>
+      {{@release.id}}
+    </LinkTo>
+  </th>
+  {{#let (or @release.pushedArtifact @release) as |operation|}}
+    <td>
+      <span data-test-status class="table__icon-text-cell-span">
+        {{#if operation.status}}
+          <FlightIcon
+            data-test-status-icon
+            @name={{or
+                (and (eq operation.status.state 1) "delay")
+                (and (eq operation.status.state 2) "check-circle")
+                (and (eq operation.status.state 3) "x-circle")
+                (and (eq operation.status.state 0) "delay")
+              }}
+            @size="16"
+          />
+          {{t
+            (concat
+              "app_item_release.status"
+              ".state-" operation.status.state
+            )
+          }}
+        {{else}}
+          <FlightIcon
+            data-test-status-icon
+            @name="x-circle"
+            @size="16"
+          />
+          {{t "app_item_release.status.state-unavailable"}}
+        {{/if}}
+      </span>
+    </td>
+    <td data-test-matching-deployment>
+      {{!-- TODO: add popover here --}}
+      {{#if @matchingDeployment}}
+        <LinkTo
+          title={{concat (t "page.deployment.title") " v" @matchingDeployment}}
+          @route="workspace.projects.project.app.deployment.deployment-seq"
+          @models={{array @matchingDeployment}}
+        >
+          Deployment <b class="badge badge--version">v{{@matchingDeployment}}</b>
+        </LinkTo>
+      {{else}}
+        {{t
+          "app_item_build.not_deployed"
+        }}
+      {{/if}}
+    </td>
+    <td data-test-provider>
+      <span class="table__icon-text-cell-span">
+        <FlightIcon
+          data-test-icon-type={{icon-for-component operation.component.name}}
+          @name={{icon-for-component operation.component.name}}
+          @size="16"
+        />
+        {{component-name operation.component.name}}
+      </span>
+    </td>
+  {{/let}}
+</tr>

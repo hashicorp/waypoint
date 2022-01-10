@@ -1,20 +1,35 @@
 {{page-title (concat @model.application.application "Builds")}}
-
-<h2 class="list-heading">{{t "page.builds.title"}}</h2>
-
-<ul data-test-build-list class="list">
-  {{#each @model key="id" as |build|}}
-    <AppItem::Build @build={{build}} />
-  {{else}}
-    <EmptyState>
-      <p>There are no builds to display for this app yet</p>
-      <p>To create your first build, you can run
-        <CopyableCode @ref="empty-build" @inline="true">
-          <code id="empty-build">waypoint build</code>
-        </CopyableCode>
-        from the CLI</p>
-    </EmptyState>
-  {{/each}}
-</ul>
+{{#if @model.builds}}
+  <Table class="table--artifact-list">
+    <colgroup>
+      <col class="w-2/5">
+      <col class="w-1/5">
+      <col class="w-1/5">
+      <col class="w-1/5">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>{{t 'page.builds.table.row-header'}}</th>
+        <th>{{t 'page.builds.table.status'}}</th>
+        <th>{{t 'page.builds.table.deployment'}}</th>
+        <th>{{t 'page.builds.table.provider'}}</th>
+      </tr>
+    </thead>
+    <tbody data-test-build-list>
+      {{#each @model.builds key="id" as |build|}}
+        <AppItem::Build @build={{build}} @matchingDeployment={{get @model.buildDeploymentPairs build.sequence}} />
+      {{/each}}
+    </tbody>
+  </Table>
+{{else}}
+  <EmptyState>
+    <p>{{t 'page.builds.table.empty-state.line-1'}}</p>
+    <p>{{t 'page.builds.table.empty-state.line-2'}}
+      <CopyableCode @ref="empty-build" @inline="true">
+        <code id="empty-build">waypoint build</code>
+      </CopyableCode>
+      {{t 'page.builds.table.empty-state.line-3'}}</p>
+  </EmptyState>
+{{/if}}
 
 {{outlet}}

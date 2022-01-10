@@ -1,18 +1,33 @@
 {{page-title (concat @model.application.application "Releases")}}
-
-<h2 class="list-heading">{{t "page.releases.title"}}</h2>
-
-<ul data-test-release-list class="list">
-  {{#each @model key="id" as |release releaseIndex|}}
-    <AppItem::Release @release={{release}} @isLatest={{ eq releaseIndex 0}} />
-  {{else}}
-    <EmptyState>
-      <p>There are no releases to display for this app yet</p>
-      <p>To create your first release, you can run
-        <CopyableCode @ref="empty-release" @inline="true">
-          <code id="empty-release">waypoint release</code>
-        </CopyableCode>
-        from the CLI</p>
-    </EmptyState>
-  {{/each}}
-</ul>
+{{#if @model.releases}}
+  <Table class="table--artifact-list">
+    <colgroup>
+      <col class="w-2/5">
+      <col class="w-1/5">
+      <col class="w-1/5">
+      <col class="w-1/5">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>{{t 'page.releases.table.row-header'}}</th>
+        <th>{{t 'page.releases.table.status'}}</th>
+        <th>{{t 'page.releases.table.deployment'}}</th>
+        <th>{{t 'page.releases.table.provider'}}</th>
+      </tr>
+    </thead>
+    <tbody data-test-release-list>
+      {{#each @model.releases key="id" as |release|}}
+        <AppItem::Release @release={{release}} @matchingDeployment={{get @model.releaseDeploymentPairs release.sequence}} />
+      {{/each}}
+    </tbody>
+  </Table>
+{{else}}
+  <EmptyState>
+    <p>{{t 'page.releases.table.empty-state.line-1'}}</p>
+    <p>{{t 'page.releases.table.empty-state.line-2'}}
+      <CopyableCode @ref="empty-release" @inline="true">
+        <code id="empty-release">waypoint release</code>
+      </CopyableCode>
+      {{t 'page.releases.table.empty-state.line-3'}}</p>
+  </EmptyState>
+{{/if}}

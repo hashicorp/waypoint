@@ -24,10 +24,7 @@
             <tr>
               <th scope="row">{{t "page.artifact.overview.status"}}</th>
               <td>
-                <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
-                <span>Deployed by <b>{{component-name @model.component.name}}</b>
-                  {{date-format-distance-to-now @model.status.startTime.seconds }}
-                </span>
+                <OperationStatusIndicator::Deployment @operation={{@model}} />
               </td>
             </tr>
           </StatusReportMetaTable>
