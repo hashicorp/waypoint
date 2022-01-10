@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
@@ -477,31 +478,37 @@ func LoadDynamicDefaults(
 	w.UpdateVars(ctx, configVars)
 
 	// Wait for values.
-	select {
-	case <-ctx.Done():
-		diags = append(diags, &hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "Cancellation while waiting for configuration.",
-			Detail:   ctx.Err().Error(),
-			Subject: &hcl.Range{
-				Filename: "waypoint.hcl",
-			},
-		})
-		return nil, diags
-
-	case config := <-ch:
-		var result []*pb.Variable
-		for _, f := range config.Files {
-			result = append(result, &pb.Variable{
-				Name: f.Path,
-				Value: &pb.Variable_Str{
-					Str: string(f.Data),
+	log.Debug("waiting for dynamic variable values", "count", len(configVars))
+	for {
+		select {
+		case <-ctx.Done():
+			diags = append(diags, &hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Cancellation while waiting for configuration.",
+				Detail:   ctx.Err().Error(),
+				Subject: &hcl.Range{
+					Filename: "waypoint.hcl",
 				},
-				Source: &pb.Variable_Dynamic{},
 			})
-		}
+			return nil, diags
 
-		return result, diags
+		case <-time.After(5 * time.Second):
+			log.Warn("waiting for dynamic variables, this delay is usually due to external systems")
+
+		case config := <-ch:
+			var result []*pb.Variable
+			for _, f := range config.Files {
+				result = append(result, &pb.Variable{
+					Name: f.Path,
+					Value: &pb.Variable_Str{
+						Str: string(f.Data),
+					},
+					Source: &pb.Variable_Dynamic{},
+				})
+			}
+
+			return result, diags
+		}
 	}
 }
 
