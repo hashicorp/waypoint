@@ -340,7 +340,7 @@ func (c *TriggerApplyCommand) Flags() *flag.Sets {
 		fo.IntVar(&flag.IntVar{
 			Name:   "deployment-id",
 			Target: &c.flagDeploySeq,
-			Usage:  "The sequence number (short id) for the deployment to use for a release operation.",
+			Usage:  "The sequence number (short id) for the deployment to use for a deployment operation.",
 		})
 
 		// Release operation specific flags
