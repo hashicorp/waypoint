@@ -129,7 +129,7 @@ func Load(path string, opts *LoadOptions) (*Config, error) {
 	if diags.HasErrors() {
 		return nil, diags
 	}
-	vs, diags := variables.DecodeVariableBlocks(content)
+	vs, diags := variables.DecodeVariableBlocks(ctx, content)
 	if diags.HasErrors() {
 		return nil, diags
 	}

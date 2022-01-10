@@ -2,12 +2,14 @@ package variables
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
@@ -16,10 +18,14 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	hcljson "github.com/hashicorp/hcl/v2/json"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
+	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/gocty"
+
+	"github.com/hashicorp/waypoint/internal/appconfig"
+	"github.com/hashicorp/waypoint/internal/config/dynamic"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 const (
@@ -33,17 +39,19 @@ const (
 	sourceEnv     = "env"
 	sourceVCS     = "vcs"
 	sourceServer  = "server"
+	sourceDynamic = "dynamic"
 	sourceDefault = "default"
 )
 
 var (
 	// sourceMap maps a variable pb source type to its string representation
 	fromSource = map[reflect.Type]string{
-		reflect.TypeOf((*pb.Variable_Cli)(nil)):    sourceCLI,
-		reflect.TypeOf((*pb.Variable_File_)(nil)):  sourceFile,
-		reflect.TypeOf((*pb.Variable_Env)(nil)):    sourceEnv,
-		reflect.TypeOf((*pb.Variable_Vcs)(nil)):    sourceVCS,
-		reflect.TypeOf((*pb.Variable_Server)(nil)): sourceServer,
+		reflect.TypeOf((*pb.Variable_Cli)(nil)):     sourceCLI,
+		reflect.TypeOf((*pb.Variable_File_)(nil)):   sourceFile,
+		reflect.TypeOf((*pb.Variable_Env)(nil)):     sourceEnv,
+		reflect.TypeOf((*pb.Variable_Vcs)(nil)):     sourceVCS,
+		reflect.TypeOf((*pb.Variable_Server)(nil)):  sourceServer,
+		reflect.TypeOf((*pb.Variable_Dynamic)(nil)): sourceDynamic,
 	}
 
 	// The attributes we expect to see in variable blocks
@@ -99,7 +107,7 @@ type Variable struct {
 // to verify HCL syntax.
 type HclVariable struct {
 	Name        string         `hcl:",label"`
-	Default     cty.Value      `hcl:"default,optional"`
+	Default     hcl.Expression `hcl:"default,optional"`
 	Type        hcl.Expression `hcl:"type,optional"`
 	Description string         `hcl:"description,optional"`
 	Env         []string       `hcl:"env,optional"`
@@ -123,11 +131,14 @@ type Value struct {
 // DecodeVariableBlocks uses the hclConfig schema to iterate over all
 // variable blocks, validating names and types and checking for duplicates.
 // It returns the final map of Variables to store for later reference.
-func DecodeVariableBlocks(content *hcl.BodyContent) (map[string]*Variable, hcl.Diagnostics) {
+func DecodeVariableBlocks(
+	ctx *hcl.EvalContext,
+	content *hcl.BodyContent,
+) (map[string]*Variable, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	vs := map[string]*Variable{}
 	for _, block := range content.Blocks.OfType("variable") {
-		v, diags := decodeVariableBlock(block)
+		v, diags := decodeVariableBlock(ctx, block)
 		if diags.HasErrors() {
 			return nil, diags
 		}
@@ -150,7 +161,10 @@ func DecodeVariableBlocks(content *hcl.BodyContent) (map[string]*Variable, hcl.D
 
 // decodeVariableBlock validates each part of the variable block,
 // building out a defined *Variable
-func decodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
+func decodeVariableBlock(
+	ctx *hcl.EvalContext,
+	block *hcl.Block,
+) (*Variable, hcl.Diagnostics) {
 	name := block.Labels[0]
 	v := Variable{
 		Name:  name,
@@ -194,26 +208,52 @@ func decodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 	}
 
 	if attr, exists := content.Attributes["default"]; exists {
-		val, valDiags := attr.Expr.Value(nil)
+		defaultCtx := ctx.NewChild()
+		defaultCtx.Functions = dynamic.Register(map[string]function.Function{})
+
+		val, valDiags := attr.Expr.Value(defaultCtx)
 		diags = append(diags, valDiags...)
 		if diags.HasErrors() {
 			return nil, diags
 		}
-		// Convert the default to the expected type so we can catch invalid
-		// defaults early and allow later code to assume validity.
-		// Note that this depends on us having already processed any "type"
-		// attribute above.
-		if v.Type != cty.NilType {
-			var err error
-			val, err = convert.Convert(val, v.Type)
-			if err != nil {
+
+		// Depending on the value type, we behave differently.
+		switch val.Type() {
+		case dynamic.Type:
+			// For dynamic types we don't do conversion because we don't yet
+			// have the value. For now we require v.Type to be string so that
+			// the user isn't surprised by anything. Users can use explicit
+			// type conversion such as `tonumber`.
+			if v.Type != cty.String {
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
-					Summary:  fmt.Sprintf("Invalid default value for variable %q", name),
-					Detail:   fmt.Sprintf("This default value is not compatible with the variable's type constraint: %s.", err),
-					Subject:  attr.Expr.Range().Ptr(),
+					Summary:  fmt.Sprintf("type for variable %q must be string for dynamic values", name),
+					Detail: "When using dynamically sourced configuration values, " +
+						"the variable type must be string. You may use explicit " +
+						"type conversion functions such as `tonumber` when using " +
+						"the variable.",
+					Subject: attr.Expr.Range().Ptr(),
 				})
 				val = cty.DynamicVal
+			}
+
+		default:
+			// Convert the default to the expected type so we can catch invalid
+			// defaults early and allow later code to assume validity.
+			// Note that this depends on us having already processed any "type"
+			// attribute above.
+			if v.Type != cty.NilType {
+				var err error
+				val, err = convert.Convert(val, v.Type)
+				if err != nil {
+					diags = append(diags, &hcl.Diagnostic{
+						Severity: hcl.DiagError,
+						Summary:  fmt.Sprintf("Invalid default value for variable %q", name),
+						Detail:   fmt.Sprintf("This default value is not compatible with the variable's type constraint: %s.", err),
+						Subject:  attr.Expr.Range().Ptr(),
+					})
+					val = cty.DynamicVal
+				}
 			}
 		}
 
@@ -329,23 +369,174 @@ func LoadEnvValues(vars map[string]*Variable) ([]*pb.Variable, hcl.Diagnostics) 
 	return ret, diags
 }
 
+// NeedsDynamicDefaults returns true if there are variables with a dynamic
+// default value set that must be evaluated (because the value is not
+// overridden).
+func NeedsDynamicDefaults(
+	pbvars []*pb.Variable,
+	vars map[string]*Variable,
+) bool {
+	// Get all our variables with dynamic defaults
+	dynamicVars := map[string]*Variable{}
+	for k, v := range vars {
+		if v.Default != nil {
+			val := v.Default.Value
+			if val.Type() == dynamic.Type {
+				dynamicVars[k] = v
+			}
+		}
+	}
+
+	// Go through our variable values and delete any dynamic vars we have
+	// values for already; we do not need to fetch those.
+	for _, pbv := range pbvars {
+		delete(dynamicVars, pbv.Name)
+	}
+
+	return len(dynamicVars) > 0
+}
+
+// LoadDynamicDefaults will load the default values for variables that have
+// dynamic configurations. This will only load the values if there isn't an
+// existing variable set in pbvars. Therefore, it is recommended that this is
+// called last and the values are _prepended_ to pbvars for priority.
+func LoadDynamicDefaults(
+	ctx context.Context,
+	log hclog.Logger,
+	pbvars []*pb.Variable,
+	vars map[string]*Variable,
+	dynamicOpts ...appconfig.Option,
+) ([]*pb.Variable, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+
+	// Get all our variables with dynamic defaults
+	dynamicVars := map[string]*Variable{}
+	for k, v := range vars {
+		if v.Default != nil {
+			val := v.Default.Value
+			if val.Type() == dynamic.Type {
+				dynamicVars[k] = v
+			}
+		}
+	}
+
+	// If we have no dynamic vars, we do nothing.
+	if len(dynamicVars) == 0 {
+		return nil, diags
+	}
+
+	// Go through our variable values and delete any dynamic vars we have
+	// values for already; we do not need to fetch those.
+	for _, pbv := range pbvars {
+		delete(dynamicVars, pbv.Name)
+	}
+
+	// If we have no dynamic vars we need values for, also do nothing.
+	if len(dynamicVars) == 0 {
+		return nil, diags
+	}
+
+	// Build our watcher
+	ch := make(chan *appconfig.UpdatedConfig)
+	w, err := appconfig.NewWatcher(append(
+		append([]appconfig.Option{}, dynamicOpts...),
+		appconfig.WithLogger(log),
+		appconfig.WithNotify(ch),
+	)...)
+	if err != nil {
+		diags = append(diags, &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Error initializing configuration watcher",
+			Detail:   err.Error(),
+			Subject: &hcl.Range{
+				Filename: "waypoint.hcl",
+			},
+		})
+		return nil, diags
+	}
+	defer w.Close()
+
+	// We have some variables we need to fetch dynamic values for.
+	configVars := make([]*pb.ConfigVar, 0, len(dynamicVars))
+	for k, v := range dynamicVars {
+		configVars = append(configVars, &pb.ConfigVar{
+			Name: k,
+			Value: &pb.ConfigVar_Dynamic{
+				Dynamic: v.Default.Value.EncapsulatedValue().(*pb.ConfigVar_DynamicVal),
+			},
+
+			// This is set to true on purpose because it forces the appconfig
+			// watcher to give us an easier to consume format (struct vs
+			// array of key=value strings for env vars).
+			NameIsPath: true,
+		})
+	}
+
+	// Send our variables. Purposely ignore the error return value because
+	// it can only ever be a context cancellation which we pick up in the
+	// select later.
+	w.UpdateVars(ctx, configVars)
+
+	// Wait for values.
+	log.Debug("waiting for dynamic variable values", "count", len(configVars))
+	for {
+		select {
+		case <-ctx.Done():
+			diags = append(diags, &hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Cancellation while waiting for configuration.",
+				Detail:   ctx.Err().Error(),
+				Subject: &hcl.Range{
+					Filename: "waypoint.hcl",
+				},
+			})
+			return nil, diags
+
+		case <-time.After(5 * time.Second):
+			log.Warn("waiting for dynamic variables, this delay is usually due to external systems")
+
+		case config := <-ch:
+			var result []*pb.Variable
+			for _, f := range config.Files {
+				result = append(result, &pb.Variable{
+					Name: f.Path,
+					Value: &pb.Variable_Str{
+						Str: string(f.Data),
+					},
+					Source: &pb.Variable_Dynamic{},
+				})
+			}
+
+			return result, diags
+		}
+	}
+}
+
 // EvaluateVariables evaluates the provided variable values and validates their
 // types per the type declared in the waypoint.hcl for that variable name.
 // The order in which values are evaluated corresponds to their precedence, with
 // higher precedence values overwriting lower precedence values.
+//
 // The supplied map of *Variable should be all defined variables (currently
 // comes from decoding all variable blocks within the waypoint.hcl), and
 // is used to validate types and that all variables have at least one
 // assigned value.
 func EvaluateVariables(
+	log hclog.Logger,
 	pbvars []*pb.Variable,
 	vs map[string]*Variable,
-	log hclog.Logger,
 ) (Values, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	iv := Values{}
 
 	for v, def := range vs {
+		// Do not allow dynamic values as default values since they aren't valid.
+		// Dynamic values should be evaluated and overridden by LoadDynamicDefaults
+		// and provided via pbvars. If not, then an unset error will be created.
+		if def.Default != nil && def.Default.Value.Type() == dynamic.Type {
+			continue
+		}
+
 		iv[v] = def.Default
 	}
 

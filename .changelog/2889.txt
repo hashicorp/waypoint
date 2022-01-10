@@ -1,0 +1,5 @@
+```release-note:feature
+**Source variable values from remote systems:** The default value for input variables
+can now use the `configdynamic` function to source data from Vault, Consul,
+Terraform Cloud, and more. This is a pluggable system.
+```
