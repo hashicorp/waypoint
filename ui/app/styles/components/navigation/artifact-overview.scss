@@ -10,13 +10,6 @@
     padding: 0;
     font-size: 0.875rem;
     line-height: 17px;
-    width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-
-    tr {
-      width: 100%;
-    }
 
     th,
     td {
@@ -48,9 +41,6 @@
 
     .image-ref {
       display: inline-flex;
-      width: 100%;
-      overflow: hidden;
-      white-space: nowrap;
 
       :first-child {
         margin-top: -1px;
