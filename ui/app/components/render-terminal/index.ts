@@ -68,8 +68,9 @@ export default class LogTerminal extends Component<TerminalComponentArgs> {
   };
 
   fitTerminal(): void {
-    // Set terminal size to 0 before calling resize to avoid reflows when sizing down
-    this.terminal?.resize(0, 0);
+    // Set terminal size to a minimum
+    // before calling resize to avoid reflows when sizing down
+    this.terminal?.resize(40, 1);
     this.fitAddon.fit();
   }
 
