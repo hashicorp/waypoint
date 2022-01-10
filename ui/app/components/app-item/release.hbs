@@ -11,9 +11,8 @@
   </th>
   {{#let (or @release.pushedArtifact @release) as |operation|}}
     <td>
-      <span data-test-status class="table__icon-text-cell">
+      <span data-test-status class="table__icon-text-cell-span">
         {{#if operation.status}}
-          {{!-- TODO: @sabrinako update "delay" icons to loading when animated icons added to flight --}}
           <FlightIcon
             data-test-status-icon
             @name={{or
@@ -43,17 +42,17 @@
     <td data-test-matching-deployment>
       {{!-- TODO: add popover here --}}
       {{#if @matchingDeployment}}
-        Deployment <b class="badge badge--version">v{{@matchingDeployment}}</b>
+        <LinkTo
+          title={{concat (t "page.deployment.title") " v" @matchingDeployment}}
+          @route="workspace.projects.project.app.deployment.deployment-seq"
+          @models={{array @matchingDeployment}}
+        >
+          Deployment <b class="badge badge--version">v{{@matchingDeployment}}</b>
+        </LinkTo>
       {{else}}
         {{t
           "app_item_build.not_deployed"
         }}
-        {{!-- TODO: add back when functionality for initiating a deployment added here
-        {{#if (and (not-eq operation.status.state 0) (not-eq operation.status.state 1))}}
-          <Pds::Button data-test-deploy-now @variant="ghost" type="button" {{on "click" this.toggleHint}}>
-            {{t "app_item_build.deploy_now"}}
-          </Pds::Button>
-        {{/if}} --}}
       {{/if}}
     </td>
     <td data-test-provider>
