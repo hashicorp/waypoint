@@ -181,10 +181,15 @@ func (s *service) RunnerConfig(
 
 		// Get the config sources we need for our vars. We only do this if
 		// at least one var has a dynamic value.
-		if varContainsDynamic(vars) {
-			// NOTE(mitchellh): For now we query all the types and always send it
-			// all down. In the future we may want to consider filtering this
-			// by only the types we actually need above.
+		//
+		// We also do this if the runner is NOT local, in case it is processing
+		// jobs that are using config variables with dynamic defaults.
+		_, isLocal := record.Kind.(*pb.Runner_Local_)
+		if varContainsDynamic(vars) || !isLocal {
+			// Important: we've discussed optimizing this to send down only the
+			// config sourcers that are needed by vars. We cannot do that because
+			// waypoint.hcl config can now source dynamic config too and we can't
+			// know those in advance perfectly. Always send down all config sources.
 			sources, err := s.state.ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
 				Scope: &pb.GetConfigSourceRequest_Global{
 					Global: &pb.Ref_Global{},

@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -65,8 +66,13 @@ func SetupTestProject(templateDir string) (projectName string, projectDir string
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to create temp dir")
 	}
-
-	cmd := exec.Command("cp", "-r", templateDir+"/", tempDir)
+	templateDir = templateDir + "/"
+	var cmd *exec.Cmd
+	if runtime.GOOS == "linux" {
+		cmd = exec.Command("rsync", "-av", templateDir, tempDir)
+	} else {
+		cmd = exec.Command("cp", "-r", templateDir, tempDir)
+	}
 	err = cmd.Run()
 	if err != nil {
 		return "", "", errors.Wrapf(err, "failed to copy %s to %s", templateDir, tempDir)

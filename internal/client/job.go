@@ -137,12 +137,16 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 				getProjectResp, err := c.client.GetProject(ctx, &pb.GetProjectRequest{Project: c.project})
 				if err != nil {
 					if status.Code(err) == codes.NotFound {
-						return fmt.Errorf("Project %q was not found! Please ensure that 'waypoint init' was run with this project.", c.project.Project)
+						return fmt.Errorf("project %q was not found! Please ensure that 'waypoint init' was run with this project.", c.project.Project)
 					} else {
 						return errors.Wrapf(err, "failed to get project %s", c.project.Project)
 					}
 				}
 				project = getProjectResp.Project
+			}
+
+			if project.DataSource == nil || project.DataSource.Source == nil {
+				return fmt.Errorf("no valid data source configured for Project %q", c.project.Project)
 			}
 
 			gitDs, ok := project.DataSource.Source.(*pb.Job_DataSource_Git)
@@ -548,12 +552,10 @@ func (c *Project) queueAndStreamJob(
 // local Docker.
 const stateEventPause = 3000 * time.Millisecond
 
-var (
-	warnGitDirty = strings.TrimSpace(`
-There are local changes that do not match the remote repository. By default, 
-Waypoint will perform this operation using a remote runner that will use the 
-remote repository’s git ref and not these local changes. For these changes 
-to be used for future operations, either commit and push, or run the operation 
+var warnGitDirty = strings.TrimSpace(`
+There are local changes that do not match the remote repository. By default,
+Waypoint will perform this operation using a remote runner that will use the
+remote repository’s git ref and not these local changes. For these changes
+to be used for future operations, either commit and push, or run the operation
 locally with the -local flag.
 `)
-)
