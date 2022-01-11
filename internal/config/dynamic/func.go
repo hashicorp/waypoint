@@ -19,7 +19,11 @@ import (
 // This function ensures that we can change the function name easily
 // and consistently or add new dynamic-related functions.
 func Register(m map[string]function.Function) map[string]function.Function {
+	m["dynamic"] = Func
+
+	// This is deprecated, but we keep this form working cause it costs nothing.
 	m["configdynamic"] = Func
+
 	return m
 }
 
