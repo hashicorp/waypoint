@@ -57,13 +57,11 @@
       {{!-- ROW: git commit information --}}
       {{#if @deployment.preload.jobDataSourceRef.git.commit}}
         {{#let @deployment.preload.jobDataSourceRef.git.commit as |commit|}}
-          {{!-- TODO: change to if statement- if user profile picture available, use that. else use flight icon --}}
           <FlightIcon @name="git-commit"/>
           <span data-test-git-commit class="git-commit" title="Triggered by commit: {{commit}}">
             <CopyButton @clipboardText={{commit}}>
             <span class="git-commit__sha">{{truncate-commit commit}}</span>
             </CopyButton>
-            {{!-- TODO: when commit message available, add to this --}}
           </span>
         {{/let}}
       {{/if}}
