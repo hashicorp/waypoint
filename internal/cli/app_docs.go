@@ -374,7 +374,7 @@ func (c *AppDocsCommand) mdxFormatConfigSourcer(name, ct string, doc *docs.Docum
 
 	required, optional := splitFields(doc.RequestFields())
 
-	use := "`configdynamic` for [dynamic configuration syncing](/docs/app-config/dynamic)."
+	use := "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
 	c.emitSection(w, "Required", use, "###", required)
 
 	fmt.Fprintf(w, "\n\n")
@@ -384,8 +384,8 @@ func (c *AppDocsCommand) mdxFormatConfigSourcer(name, ct string, doc *docs.Docum
 	if len(doc.Fields()) > 0 {
 		fmt.Fprintf(w, "\n\n### Source Parameters\n\n"+
 			"The parameters below are used with `waypoint config set-source` to configure\n"+
-			"the behavior this plugin. These are _not_ used in `configdynamic` calls. The\n"+
-			"parameters used for `configdynamic` are in the previous section.\n\n")
+			"the behavior this plugin. These are _not_ used in `dynamic` calls. The\n"+
+			"parameters used for `dynamic` are in the previous section.\n\n")
 
 		required, optional := splitFields(doc.Fields())
 
