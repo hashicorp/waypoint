@@ -100,15 +100,12 @@ func (s *service) RunTrigger(
 		Labels:    map[string]string{"trigger/id": runTrigger.Id},
 	}
 
-	deployArtifactSet := false
 	switch op := runTrigger.Operation.(type) {
 	case *pb.Trigger_Build:
 		job.Operation = &pb.Job_Build{Build: op.Build}
 	case *pb.Trigger_Push:
 		job.Operation = &pb.Job_Push{Push: op.Push}
 	case *pb.Trigger_Deploy:
-		// set a bool switch to avoid looping over all jobs every time triggers are executed
-		deployArtifactSet = true
 		job.Operation = &pb.Job_Deploy{Deploy: op.Deploy}
 	case *pb.Trigger_Destroy:
 		job.Operation = &pb.Job_Destroy{Destroy: op.Destroy}
@@ -160,47 +157,96 @@ func (s *service) RunTrigger(
 		jobList = append(jobList, j)
 	}
 
-	// NOTE(briancain): See https://github.com/hashicorp/waypoint/issues/2884
-	// for why we must attach the full PushedArtifact message for a deploy operation
-	if deployArtifactSet {
-		// We have to set the full artifact message on Deployment operations
-		for i, qJob := range jobList {
-			switch op := qJob.Job.Operation.(type) {
-			case *pb.Job_Deploy:
-				if op.Deploy.Artifact == nil {
-					// get latest pushed artifact, then set it on the operation
-					artifactLatest, err := s.state.ArtifactLatest(qJob.Job.Application, qJob.Job.Workspace)
-					if err != nil {
-						return nil, status.Errorf(codes.Internal, "failed to obtain latest pushed artifact: %s", err)
-					}
+	// NOTE(briancain): This loops is to set full messages on an operation. Certain
+	// operations don't take references and require the entire message from the database
+	// to properly perform its operation. We set those here before queueing the job
+	// TODO(briancain): Have a bool on the trigger op, enabled by default, that inserts a status report op
+	// for deployment and release operations
+	for i, qJob := range jobList {
+		switch op := qJob.Job.Operation.(type) {
+		case *pb.Job_Deploy:
+			// NOTE(briancain): See https://github.com/hashicorp/waypoint/issues/2884
+			// for why we must attach the full PushedArtifact message for a deploy operation
+			// We have to set the full artifact message on Deployment operations
+			if op.Deploy.Artifact == nil {
+				// get latest pushed artifact, then set it on the operation
+				artifactLatest, err := s.state.ArtifactLatest(qJob.Job.Application, qJob.Job.Workspace)
+				if err != nil {
+					return nil, status.Errorf(codes.Internal, "failed to obtain latest pushed artifact: %s", err)
+				}
 
-					jobList[i].Job.Operation = &pb.Job_Deploy{
-						Deploy: &pb.Job_DeployOp{
-							Artifact: artifactLatest,
+				jobList[i].Job.Operation = &pb.Job_Deploy{
+					Deploy: &pb.Job_DeployOp{
+						Artifact: artifactLatest,
+					},
+				}
+			} else {
+				// Set the actual pushed artifact on the operation
+				buildSeq := op.Deploy.Artifact.Sequence
+				artifact, err := s.state.ArtifactGet(&pb.Ref_Operation{
+					Target: &pb.Ref_Operation_Sequence{
+						Sequence: &pb.Ref_OperationSeq{
+							Application: qJob.Job.Application,
+							Number:      buildSeq,
 						},
-					}
-				} else {
-					// Set the actual pushed artifact on the operation
-					buildSeq := op.Deploy.Artifact.Sequence
-					artifact, err := s.state.ArtifactGet(&pb.Ref_Operation{
-						Target: &pb.Ref_Operation_Sequence{
-							Sequence: &pb.Ref_OperationSeq{
-								Application: qJob.Job.Application,
-								Number:      buildSeq,
-							},
-						},
-					})
-					if err != nil {
-						return nil, status.Errorf(codes.Internal, "failed to obtain pushed artifact id %q: %s", buildSeq, err)
-					}
+					},
+				})
+				if err != nil {
+					return nil, status.Errorf(codes.Internal, "failed to obtain pushed artifact id %q: %s", buildSeq, err)
+				}
 
-					jobList[i].Job.Operation = &pb.Job_Deploy{
-						Deploy: &pb.Job_DeployOp{
-							Artifact: artifact,
-						},
-					}
+				jobList[i].Job.Operation = &pb.Job_Deploy{
+					Deploy: &pb.Job_DeployOp{
+						Artifact: artifact,
+					},
 				}
 			}
+		case *pb.Job_Release:
+			// We have to set the full Deployment message on Release, it does not
+			// take a ref. This is a similar issue that Deployments have with artifacts
+			if op.Release.Deployment.Sequence == 0 {
+				// get latest deployment
+				deployLatest, err := s.state.DeploymentLatest(op.Release.Deployment.Application, op.Release.Deployment.Workspace)
+				if err != nil {
+					return nil, status.Errorf(codes.Internal,
+						"failed to obtain latest deployment for running release operation trigger: %s", err)
+				}
+
+				jobList[i].Job.Operation = &pb.Job_Release{
+					Release: &pb.Job_ReleaseOp{
+						Deployment:          deployLatest,
+						Prune:               op.Release.Prune,
+						PruneRetain:         op.Release.PruneRetain,
+						PruneRetainOverride: op.Release.PruneRetainOverride,
+					},
+				}
+			} else {
+				// get deployment by id seq
+				deploy, err := s.state.DeploymentGet(&pb.Ref_Operation{
+					Target: &pb.Ref_Operation_Sequence{
+						Sequence: &pb.Ref_OperationSeq{
+							Application: qJob.Job.Application,
+							Number:      op.Release.Deployment.Sequence,
+						},
+					},
+				})
+				if err != nil {
+					return nil, status.Errorf(codes.Internal,
+						"failed to obtain deployment for running release operation trigger by id %q: %s", op.Release.Deployment.Sequence, err)
+				}
+
+				jobList[i].Job.Operation = &pb.Job_Release{
+					Release: &pb.Job_ReleaseOp{
+						Deployment:          deploy,
+						Prune:               op.Release.Prune,
+						PruneRetain:         op.Release.PruneRetain,
+						PruneRetainOverride: op.Release.PruneRetainOverride,
+					},
+				}
+			}
+		default:
+			// We assume all jobs have the same operation, so if none match, don't loop over all jobs
+			break
 		}
 	}
 
@@ -233,6 +279,8 @@ func (s *service) RunTrigger(
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO: validate queued jobs were succesfully started before returning Ids
 
 	// TODO(briancain): The HTTP implementation will take these job ids and
 	// call the GetJobStream endpoint to stream back output from the queued jobs

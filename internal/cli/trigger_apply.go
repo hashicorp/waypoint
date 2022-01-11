@@ -103,6 +103,11 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		}
 	}
 
+	// NOTE(briancain): there's probably a better way to set default workspace now
+	if c.flagWorkspace == "" {
+		c.flagWorkspace = "default"
+	}
+
 	createTrigger := &pb.Trigger{
 		Name:          c.flagTriggerName,
 		Description:   c.flagTriggerDescription,
