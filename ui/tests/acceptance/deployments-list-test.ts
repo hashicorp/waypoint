@@ -40,7 +40,7 @@ module('Acceptance | deployments list', function (hooks) {
     assert.equal(page.operationStatuses.length, 4);
     assert.equal(page.gitCommits.length, 4);
     // random list item url check
-    assert.equal(page.deployUrls[1].text, `wildly-intent-honeybee--v1.waypoint.run`);
+    assert.equal(page.deployUrls[page.deployUrls.length - 1].text, `wildly-intent-honeybee--v1.waypoint.run`);
   });
 
   test('visiting deployments page redirects to latest', async function (assert) {
