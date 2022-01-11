@@ -115,6 +115,8 @@ func (s *service) RunTrigger(
 		job.Operation = &pb.Job_Up{Up: op.Up}
 	case *pb.Trigger_Init:
 		job.Operation = &pb.Job_Init{Init: op.Init}
+	case *pb.Trigger_StatusReport:
+		job.Operation = &pb.Job_StatusReport{StatusReport: op.StatusReport}
 	default:
 		return nil, status.Errorf(codes.Internal,
 			"trigger %q is configured with an unsupported operation %T", runTrigger.Id, op)
@@ -159,9 +161,9 @@ func (s *service) RunTrigger(
 
 	// NOTE(briancain): This loops is to set full messages on an operation. Certain
 	// operations don't take references and require the entire message from the database
-	// to properly perform its operation. We set those here before queueing the job
-	// TODO(briancain): Have a bool on the trigger op, enabled by default, that inserts a status report op
-	// for deployment and release operations
+	// to properly perform its operation. We set those here before queueing the job.
+	// Ideally, the executeXOperation would do the lookup after receiving a Ref_X rather than
+	// here when we are queueing a job.
 	for i, qJob := range jobList {
 		switch op := qJob.Job.Operation.(type) {
 		case *pb.Job_Deploy:
@@ -232,7 +234,7 @@ func (s *service) RunTrigger(
 				})
 				if err != nil {
 					return nil, status.Errorf(codes.Internal,
-						"failed to obtain deployment for running release operation trigger by id %q: %s", op.Release.Deployment.Sequence, err)
+						"failed to obtain deployment by id %q for running release operation trigger: %s", op.Release.Deployment.Sequence, err)
 				}
 
 				jobList[i].Job.Operation = &pb.Job_Release{
@@ -243,6 +245,91 @@ func (s *service) RunTrigger(
 						PruneRetainOverride: op.Release.PruneRetainOverride,
 					},
 				}
+			}
+		case *pb.Job_StatusReport:
+			// determine target, then get either deployment/release latest or by seq id
+			switch srTarget := op.StatusReport.Target.(type) {
+			case *pb.Job_StatusReportOp_Deployment:
+				if srTarget.Deployment.Sequence == 0 {
+					// get latest deployment
+					deployLatest, err := s.state.DeploymentLatest(srTarget.Deployment.Application, srTarget.Deployment.Workspace)
+					if err != nil {
+						return nil, status.Errorf(codes.Internal,
+							"failed to obtain latest deployment for running a status report operation trigger: %s", err)
+					}
+
+					jobList[i].Job.Operation = &pb.Job_StatusReport{
+						StatusReport: &pb.Job_StatusReportOp{
+							Target: &pb.Job_StatusReportOp_Deployment{
+								Deployment: deployLatest,
+							},
+						},
+					}
+				} else {
+					// get deployment by id seq
+					deploy, err := s.state.DeploymentGet(&pb.Ref_Operation{
+						Target: &pb.Ref_Operation_Sequence{
+							Sequence: &pb.Ref_OperationSeq{
+								Application: qJob.Job.Application,
+								Number:      srTarget.Deployment.Sequence,
+							},
+						},
+					})
+					if err != nil {
+						return nil, status.Errorf(codes.Internal,
+							"failed to obtain deployment by id %q for running status report operation trigger: %s", srTarget.Deployment.Sequence, err)
+					}
+
+					jobList[i].Job.Operation = &pb.Job_StatusReport{
+						StatusReport: &pb.Job_StatusReportOp{
+							Target: &pb.Job_StatusReportOp_Deployment{
+								Deployment: deploy,
+							},
+						},
+					}
+				}
+			case *pb.Job_StatusReportOp_Release:
+				if srTarget.Release.Sequence == 0 {
+					releaseLatest, err := s.state.ReleaseLatest(srTarget.Release.Application, srTarget.Release.Workspace)
+					if err != nil {
+						return nil, status.Errorf(codes.Internal,
+							"failed to obtain latest release for running a status report operation trigger: %s", err)
+					}
+
+					jobList[i].Job.Operation = &pb.Job_StatusReport{
+						StatusReport: &pb.Job_StatusReportOp{
+							Target: &pb.Job_StatusReportOp_Release{
+								Release: releaseLatest,
+							},
+						},
+					}
+				} else {
+					// get deployment by id seq
+					release, err := s.state.ReleaseGet(&pb.Ref_Operation{
+						Target: &pb.Ref_Operation_Sequence{
+							Sequence: &pb.Ref_OperationSeq{
+								Application: qJob.Job.Application,
+								Number:      srTarget.Release.Sequence,
+							},
+						},
+					})
+					if err != nil {
+						return nil, status.Errorf(codes.Internal,
+							"failed to obtain release by id %q for running status report operation trigger: %s", srTarget.Release.Sequence, err)
+					}
+
+					jobList[i].Job.Operation = &pb.Job_StatusReport{
+						StatusReport: &pb.Job_StatusReportOp{
+							Target: &pb.Job_StatusReportOp_Release{
+								Release: release,
+							},
+						},
+					}
+				}
+			default:
+				// This shouldn't happen, but let's check anyway and return an error
+				return nil, status.Errorf(codes.Internal,
+					"incorrect status report target given for running a trigger: %T", srTarget)
 			}
 		default:
 			// We assume all jobs have the same operation, so if none match, don't loop over all jobs

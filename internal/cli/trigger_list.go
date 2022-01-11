@@ -133,6 +133,13 @@ func (c *TriggerListCommand) Run(args []string) int {
 			opStr = "up"
 		case *pb.Trigger_Init:
 			opStr = "init"
+		case *pb.Trigger_StatusReport:
+			switch triggerOpType.StatusReport.Target.(type) {
+			case *pb.Job_StatusReportOp_Deployment:
+				opStr = "status report deployment"
+			case *pb.Job_StatusReportOp_Release:
+				opStr = "status report release"
+			}
 		default:
 			opStr = fmt.Sprintf("unknown operation: %T", triggerOpType)
 		}

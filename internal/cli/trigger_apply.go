@@ -26,9 +26,11 @@ type TriggerApplyCommand struct {
 	flagTriggerNoAuth      bool
 
 	// Operation options
-	flagBuildSeq    int
-	flagDeploySeq   int
-	flagDisablePush bool
+	flagBuildSeq            int
+	flagDeploySeq           int
+	flagDisablePush         bool
+	flagStatusReportDeploy  bool
+	flagStatusReportRelease bool
 
 	// Release options
 	flagReleasePrune       bool
@@ -37,7 +39,7 @@ type TriggerApplyCommand struct {
 
 // Current supported trigger operation names.
 var triggerOpValues = []string{"build", "push", "deploy", "destroy-workspace",
-	"destroy-deployment", "release", "up", "init"}
+	"destroy-deployment", "release", "up", "init", "status-report-deploy", "status-report-release"}
 
 func (c *TriggerApplyCommand) Run(args []string) int {
 	// Initialize. If we fail, we just exit since Init handles the UI.
@@ -241,6 +243,40 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 	case c.flagTriggerOperation == "init":
 		createTrigger.Operation = &pb.Trigger_Init{
 			Init: &pb.Job_InitOp{},
+		}
+	case c.flagTriggerOperation == "status-report-deploy":
+		createTrigger.Operation = &pb.Trigger_StatusReport{
+			StatusReport: &pb.Job_StatusReportOp{
+				Target: &pb.Job_StatusReportOp_Deployment{
+					Deployment: &pb.Deployment{
+						Sequence: uint64(c.flagDeploySeq),
+						Workspace: &pb.Ref_Workspace{
+							Workspace: c.flagWorkspace,
+						},
+						Application: &pb.Ref_Application{
+							Application: c.flagApp,
+							Project:     c.flagProject,
+						},
+					},
+				},
+			},
+		}
+	case c.flagTriggerOperation == "status-report-release":
+		createTrigger.Operation = &pb.Trigger_StatusReport{
+			StatusReport: &pb.Job_StatusReportOp{
+				Target: &pb.Job_StatusReportOp_Release{
+					Release: &pb.Release{
+						Sequence: uint64(c.flagDeploySeq),
+						Workspace: &pb.Ref_Workspace{
+							Workspace: c.flagWorkspace,
+						},
+						Application: &pb.Ref_Application{
+							Application: c.flagApp,
+							Project:     c.flagProject,
+						},
+					},
+				},
+			},
 		}
 	case c.flagTriggerOperation == "":
 		if diffTrigger == nil {
