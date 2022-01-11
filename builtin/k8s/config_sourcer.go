@@ -255,12 +255,12 @@ func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
 	doc.Example(`
 config {
   env = {
-    PORT = configdynamic("kubernetes", {
+    PORT = dynamic("kubernetes", {
 	  name = "my-config-map"
 	  key = "port"
 	})
 
-    DATABASE_PASSWORD = configdynamic("kubernetes", {
+    DATABASE_PASSWORD = dynamic("kubernetes", {
 	  name = "database-creds"
 	  key = "password"
 	  secret = true

@@ -23,13 +23,13 @@ output and then combines them in an environment variable:
 ```hcl
 config {
   internal = {
-    "db_host" = configdynamic("terraform-cloud", {
+    "db_host" = dynamic("terraform-cloud", {
       organization = "mycorp"
       workspace = "databases"
       output = "db_host"
     })
 
-    "db_user" = configdynamic("terraform-cloud", {
+    "db_user" = dynamic("terraform-cloud", {
       organization = "mycorp"
       workspace = "databases"
       output = "db_user"

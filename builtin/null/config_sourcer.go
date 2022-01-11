@@ -112,11 +112,11 @@ func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
 	doc.Example(`
 config {
   env = {
-    "STATIC" = configdynamic("null", {
+    "STATIC" = dynamic("null", {
       static_value = "hello"
     })
 
-    "FROM_CONFIG" = configdynamic("null", {
+    "FROM_CONFIG" = dynamic("null", {
       config_key = "foo"
     })
   }
@@ -152,7 +152,7 @@ config {
 		"A mapping of key to value of values that can be pulled with `config_key`.",
 		docs.Summary(
 			"These values can be sourced using the `config_key` attribute as",
-			"as `configdynamic` argument. See the `config_key` documentation for",
+			"as `dynamic` argument. See the `config_key` documentation for",
 			"more information on why this is useful.",
 		),
 	)
