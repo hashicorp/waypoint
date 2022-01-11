@@ -244,7 +244,7 @@ func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
 	doc.Example(`
 config {
   env = {
-    PORT = configdynamic("aws-ssm", {
+    PORT = dynamic("aws-ssm", {
 	  path = "port"
 	})
   }

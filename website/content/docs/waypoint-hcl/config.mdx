@@ -133,18 +133,32 @@ config {
 
 ### Dynamic Value
 
-A configuration value can be synced with an external system using the
-`configdynamic` function. This function can only be used within a `config`
-stanza and creates a `ConfigValue`. In the example below, we synchronize
-a value with a Kubernetes ConfigMap:
+A configuration value can be sourced from an external system using the
+`dynamic` function. This function creates a `ConfigValue` and can only be used
+within a `config` stanza or as a
+[default value for an input variable](/docs/waypoint-hcl/variables/dynamic).
+In the example below, we synchronize a value with a Kubernetes ConfigMap:
 
 ```hcl
 config {
   env = {
-    PORT = configdynamic("kubernetes", {
+    PORT = dynamic("kubernetes", {
       name = "my-app" # ConfigMap name
       key  = "port"
     })
   }
+}
+```
+
+And in another example, we use `dynamic` to source a value for a variable:
+
+```hcl
+variable "image_name" {
+  type    = string
+  default = dynamic("terraform-cloud", {
+    organization = "foocorp"
+    workspace    = "images"
+    output       = "name"
+  })
 }
 ```

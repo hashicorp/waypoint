@@ -7,7 +7,7 @@ Read configuration values from AWS SSM Parameter Store.
 ```hcl
 config {
   env = {
-    PORT = configdynamic("aws-ssm", {
+    PORT = dynamic("aws-ssm", {
 	  path = "port"
 	})
   }
