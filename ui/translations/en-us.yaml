@@ -36,6 +36,15 @@ page:
       current-marker: 'You are here'
   builds:
     title: 'Builds'
+    table:
+      row-header: 'Build'
+      status: 'Status'
+      deployment: 'Deployment'
+      provider: 'Provider'
+      empty-state:
+        line-1: 'There are no builds to display for this app yet'
+        line-2: 'To create your first build, you can run'
+        line-3: 'from the CLI'
   build:
     title: 'Build'
     logs:
@@ -61,6 +70,15 @@ page:
       heading: Deployment Logs
   releases:
     title: 'Releases'
+    table:
+      row-header: 'Release'
+      status: 'Status'
+      deployment: 'Deployment'
+      provider: 'Provider'
+      empty-state:
+        line-1: 'There are no releases to display for this app yet'
+        line-2: 'To create your first release, you can run'
+        line-3: 'from the CLI'
   release:
     title: 'Release'
     resources:
@@ -210,6 +228,22 @@ status_report_indicator:
 
 app_item_build:
   built_in: Built in {duration}
+  not_deployed: Not yet deployed
+  deploy_now: Deploy now
+  status:
+    state-0: Building... # UNKNOWN
+    state-1: Building... # RUNNING
+    state-2: Built successfully # SUCCESS
+    state-3: Build unsuccessful # ERROR
+    state-unavailable: Status unavailable
+
+app_item_release:
+  status:
+    state-0: Releasing... # UNKNOWN
+    state-1: Releasing... # RUNNING
+    state-2: Released successfully # SUCCESS
+    state-3: Release unsuccessful # ERROR
+    state-unavailable: Status unavailable
 
 build_status:
   type-1: # BUILDER

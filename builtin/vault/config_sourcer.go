@@ -323,17 +323,17 @@ func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
 	doc.Example(`
 config {
   env = {
-    "DATABASE_USERNAME" = configdynamic("vault", {
+    "DATABASE_USERNAME" = dynamic("vault", {
       path = "database/creds/my-role"
       key = "username"
     })
 
-    "DATABASE_PASSWORD" = configdynamic("vault", {
+    "DATABASE_PASSWORD" = dynamic("vault", {
       path = "database/creds/my-role"
       key = "password"
     })
 
-    "DATABASE_HOST" = configdynamic("vault", {
+    "DATABASE_HOST" = dynamic("vault", {
       path = "kv/database-host"
     })
   }

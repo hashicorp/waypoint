@@ -1,0 +1,3 @@
+```release-note:bug
+ui: Logs & Exec Terminals resize smoothly
+```

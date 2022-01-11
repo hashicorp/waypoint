@@ -1,0 +1,3 @@
+```release-note:feature
+ui: Add Exec Terminal to the web UI 
+```

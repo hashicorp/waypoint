@@ -179,6 +179,10 @@
             "path": "waypoint-hcl/variables/input"
           },
           {
+            "title": "External Data",
+            "path": "waypoint-hcl/variables/dynamic"
+          },
+          {
             "title": "<code>artifact</code>",
             "path": "waypoint-hcl/variables/artifact"
           },

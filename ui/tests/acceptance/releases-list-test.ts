@@ -10,7 +10,7 @@ const url = '/default/microchip/app/wp-bandwidth/releases';
 
 const page = create({
   visit: visitable(url),
-  list: collection('[data-test-release-list] li'),
+  list: collection('[data-test-release-list] tr'),
 });
 
 module('Acceptance | releases list', function (hooks) {
@@ -27,19 +27,5 @@ module('Acceptance | releases list', function (hooks) {
 
     assert.equal(page.list.length, 3);
     assert.equal(currentURL(), url);
-  });
-
-  test('status reports appear where available', async function (assert) {
-    let project = this.server.create('project', { name: 'microchip' });
-    let application = this.server.create('application', { name: 'wp-bandwidth', project });
-    this.server.create('release', 'random', {
-      application,
-      sequence: 1,
-      statusReport: this.server.create('status-report', 'ready', { application }),
-    });
-
-    await page.visit();
-
-    assert.dom('[data-test-release-list] [data-test-status-report-indicator="ready"]').exists();
   });
 });

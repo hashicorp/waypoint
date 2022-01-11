@@ -397,8 +397,8 @@ jobs:
           command: |
             # check if there are any changes in ui/
             # if there are, we commit the ui static asset file
-            # HEAD^! is shorthand for HEAD^..HEAD (parent of HEAD and HEAD)
-            if ! git diff --quiet --exit-code HEAD^! ui/; then
+            last_ui_commit=$(git log -n 1 --pretty=format:%H -- internal/server/gen/bindata_ui.go)
+            if ! git diff --quiet --exit-code $last_ui_commit ui/; then
               git config --local user.email "github-team-waypoint@hashicorp.com"
               git config --local user.name "hc-github-team-waypoint"
               short_sha=$(git rev-parse --short HEAD)

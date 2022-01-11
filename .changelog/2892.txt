@@ -1,0 +1,4 @@
+```release-note:breaking-change
+core: `configdynamic` has been renamed to `dynamic`. The existing function
+name continues to work but is deprecated and may be removed in a future version.
+```

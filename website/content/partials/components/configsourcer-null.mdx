@@ -1,0 +1,66 @@
+## null (configsourcer)
+
+Simple configuration values for experimentation or testing.
+
+### Examples
+
+```hcl
+config {
+  env = {
+    "STATIC" = configdynamic("null", {
+      static_value = "hello"
+    })
+
+    "FROM_CONFIG" = configdynamic("null", {
+      config_key = "foo"
+    })
+  }
+}
+```
+
+### Required Parameters
+
+This plugin has no required parameters.
+
+### Optional Parameters
+
+These parameters are used in `configdynamic` for [dynamic configuration syncing](/docs/app-config/dynamic).
+
+#### config_key
+
+Return a value from the config source configuration.
+
+This looks up the given key in the `values` configuration for the config sourcer. This can be used to actually test pulling a dynamic value, except the dynamic value is just Waypoint server-stored. This is useful for learning about and experimenting with config sourcer configuration with Waypoint.
+
+- Type: **string**
+- **Optional**
+
+#### static_value
+
+A static value to use for the dynamic configuration.
+
+This just returns the value given as the dynamic configuration. This isn't very "dynamic" but it helps to exercise the full dynamic configuration code paths which can be useful for experimentation or testing This is not expected to be used in a real-world production system.
+
+- Type: **string**
+- **Optional**
+
+### Source Parameters
+
+The parameters below are used with `waypoint config set-source` to configure
+the behavior this plugin. These are _not_ used in `configdynamic` calls. The
+parameters used for `configdynamic` are in the previous section.
+
+#### Required Source Parameters
+
+This plugin has no required source parameters.
+
+#### Optional Source Parameters
+
+##### values
+
+A mapping of key to value of values that can be pulled with `config_key`.
+
+These values can be sourced using the `config_key` attribute as as `configdynamic` argument. See the `config_key` documentation for more information on why this is useful.
+
+- Type: **map of string to string**
+- **Optional**

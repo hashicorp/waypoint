@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -15,6 +17,23 @@ func (r *Runner) executeInitOp(
 	project *core.Project,
 ) (*pb.Job_Result, error) {
 	client := project.Client()
+	// UpsertWorkspace called to ensure the workspace exists before the
+	// project/app is initialized.
+	resp, err := client.UpsertWorkspace(ctx, &pb.UpsertWorkspaceRequest{
+		Workspace: &pb.Workspace{
+			Name: project.WorkspaceRef().Workspace,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// this is unlikely to happen with a nil error above, but added here to be
+	// defensive.
+	if resp.Workspace == nil {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"unable to verify workspace (%s) exists", project.WorkspaceRef().Workspace)
+	}
 
 	// This operation upserts apps defined in the project’s waypoint.hcl
 	// into the server’s database. This is important for projects that use
@@ -25,7 +44,6 @@ func (r *Runner) executeInitOp(
 			Project: project.Ref(),
 			Name:    name,
 		})
-
 		if err != nil {
 			return nil, err
 		}
