@@ -70,8 +70,8 @@
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.resources"
     @models={{array @model.application.project @model.application.application }}>
-    <Pds::Icon @type="box" class="icon" />
-    Resources{{!-- {{t "nav.logs"}} --}}
+    <FlightIcon @name="box" class="tab-icon" />
+    {{t "nav.resources"}}
   </LinkTo>
   <LinkTo @route="workspace.projects.project.app.exec"
     @models={{array @model.application.project @model.application.application }}>

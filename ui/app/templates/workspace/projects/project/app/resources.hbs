@@ -1,15 +1,15 @@
-{{#if @model.resources.length}}
-  <ResourcesTable
-    @resources={{@model.resources}}
+{{#if @model.length}}
+  <ResourcesTableExtended
+    @resources={{@model}}
   >
-    {{!-- <:caption>
-      {{t "page.deployment.resources.release-table-caption-prefix" htmlSafe=true}}
-      <LinkTo
-        @route="workspace.projects.project.app.release"
-        @model={{@model.release.sequence}}
-      >
-        <b class="badge badge--info badge--version">v{{@model.release.sequence}}</b>
-      </LinkTo>
-    </:caption> --}}
-  </ResourcesTable>
+  </ResourcesTableExtended>
+{{else}}
+  <EmptyState>
+    <p>{{t 'page.resources.table.empty-state.line-1'}}</p>
+    <p>{{t 'page.resources.table.empty-state.line-2'}}
+      <CopyableCode @ref="empty-build" @inline="true">
+        <code id="empty-build">waypoint up</code>
+      </CopyableCode>
+      {{t 'page.resources.table.empty-state.line-3'}}</p>
+  </EmptyState>
 {{/if}}
