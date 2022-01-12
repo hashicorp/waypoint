@@ -67,6 +67,13 @@ page:
       release-table-caption-prefix: Resources created by <b>Release</b>
     logs:
       heading: Deployment Logs
+  release:
+    title: 'Release'
+    resources:
+      heading: Resources
+      table-caption: Resources created by <b>this release</b>
+    logs:
+      heading: Release Logs
   releases:
     title: 'Releases'
     table:
@@ -93,11 +100,6 @@ page:
       release: 'Release'
       deployment: 'Deployment'
     title: 'Release'
-    resources:
-      heading: Resources
-      table-caption: Resources created by <b>this release</b>
-    logs:
-      heading: Release Logs
   unavailable:
     title: ''
 
