@@ -38,7 +38,7 @@ Check out our CLI docs for the `waypoint trigger` command, such as
 ## Pre-configuring a Trigger URL
 
 As an example, we can create a Trigger URL config that deploys the latest artifact
-to the produciton workspace. We'll need to figure the Trigger to use the
+to the produciton workspace. We'll need to configure the Trigger to use the
 right project, application, and workspace. Then we can specify which [lifecycle operation](docs/lifecycle)
 we want the trigger to execute when run. We can also include a `description` or
 `tags` for extra information for the user.
@@ -68,7 +68,7 @@ trigger.
 ## Modifying an existing Trigger URL Configuration
 
 If you wish to see all of your configured triggers inside a Waypoint server,
-we can run the `waypoint trigger list` command:
+run the `waypoint trigger list` command:
 
 ```sh
 $ waypoint trigger list
@@ -87,10 +87,10 @@ $ waypoint trigger list
 In this example, we are configuring Trigger URLs for the `go-gitops-0` project.
 
 Now, let's say you have a _status report_ trigger that _only_ runs on your app
-called `go` in the default workspace, but wish for that trigger to refresh the
+called `go` in the `default` workspace, but wish for that trigger to refresh the
 status in the `production` workspace.
 
-First, we can inspect the Trigger URL configuration to see how it's configured:
+First, inspect the Trigger URL configuration to see how it's configured:
 
 ```sh
 $ waypoint trigger inspect 01FS582B3X8VW0251C1XDQ56RR
@@ -107,8 +107,8 @@ $ waypoint trigger inspect 01FS582B3X8VW0251C1XDQ56RR
 
 ```
 
-For this trigger to run in the `production` workspace, we can update the
-triggers configuration:
+For this trigger to run in the `production` workspace, update the
+trigger's configuration:
 
 ```sh
 $ waypoint trigger update -id=01FS582B3X8VW0251C1XDQ56RR -workspace=production
@@ -128,7 +128,7 @@ $ waypoint trigger inspect 01FS582B3X8VW0251C1XDQ56RR
        Application: go
 ```
 
-For now, we can use this ID to make a request to Waypoint server to execute the
+For now, you can use this ID to make a request to Waypoint server to execute the
 trigger.
 
 ## Running a Trigger URL Configuration via gRPC
@@ -154,7 +154,7 @@ give you the ability to stream the output of the job easily in CI.
 
 In an upcoming version of Waypoint, we will provide an HTTP endpoint for easy
 access to request running a configured Trigger. When you create a trigger,
-you'll also now see an HTTP url:
+you'll then see an HTTP url:
 
 ```sh
 $ waypoint trigger create \
@@ -168,7 +168,7 @@ Trigger URL:
 https://waypoint.server.address/api/v1/trigger/123ABC456DEF
 ```
 
-Then you will be able to simply add a curl request to your CI configuration
+When this upcoming feature enhancement is released, you will be able to add a curl request to your CI configuration
 to execute deploying the latest build with Waypoint:
 
 ```
