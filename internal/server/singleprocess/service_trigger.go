@@ -129,8 +129,13 @@ func (s *service) RunTrigger(
 			case *pb.Variable_Cli:
 				continue
 			default:
-				return nil, status.Errorf(codes.FailedPrecondition,
-					"Incorrect Variable type for %q given %T", req.VariableOverrides[i].Name, vType)
+				if vType == nil {
+					return nil, status.Errorf(codes.FailedPrecondition,
+						"No Variable type for %q given. Expected \"variable_cli\" type for override.", req.VariableOverrides[i].Name)
+				} else {
+					return nil, status.Errorf(codes.FailedPrecondition,
+						"Incorrect Variable type for %q given. Got %T, but expected \"variable_cli\" type.", req.VariableOverrides[i].Name, vType)
+				}
 			}
 		}
 
