@@ -1,0 +1,4 @@
+```release-note:improvements
+ui: Fixed dark mode styling, breadcrumbs, and various spacing issues
+```
+

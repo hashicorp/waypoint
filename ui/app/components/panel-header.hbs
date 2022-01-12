@@ -6,11 +6,18 @@
       (and (eq @artifact "release") "page.release.title")
       "page.unavailable.title"
     )
+    icon=(or
+      (and (eq @artifact "build") "hammer")
+      (and (eq @artifact "release") "globe")
+    )
   )
   as |vars|
 }}
-<header data-test-panel-header class="panel-header {{@className}}">
-  <div class="title">
+<header data-test-panel-header class="panel-header {{if vars.icon "icon-header"}}">
+  {{#if vars.icon}}
+    <IconTile @icon={{vars.icon}} />
+  {{/if}}
+  <div class={{if vars.icon "icon-header--title"}}>
     <h1>{{t vars.title}}
       {{#if @sequence}}
         <b class="badge badge--version">v{{@sequence}}</b>

@@ -2,8 +2,6 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  font-size: 0.9em;
-  font-weight: 400;
   color: rgb(var(--text-muted));
   
   h1 {
@@ -16,9 +14,27 @@
     @include Typography.Interface(M);
 
     .badge {
-      position: relative;
-      top: -2px;
       margin-left: scale.$sm-3;
+    }
+  }
+
+  .icon-tile {
+    margin-right: scale.$base;
+  }
+
+  &.icon-header {
+    margin-bottom: scale.$lg-4;
+
+    h1 {
+      @include Typography.Heading(1);
+      color: rgb(var(--text));
+
+      b {
+        @include Typography.Heading(2);
+        font-weight: 500;
+        margin-left: scale.$sm-2;
+        padding: scale.$sm-3 scale.$sm-1;
+      }
     }
   }
 

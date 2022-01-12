@@ -1,12 +1,45 @@
+:root {
+  --artifact-type: black;
+  --pds-backgroundColor: rgb(var(--button-secondary));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --artifact-type: white;
+  }
+}
+
+.workspace-switcher {
+  // We redefine these variables to monkey-patch dark mode into the PDS
+  // dropdown component.
+  .pds-button {
+    --pds-button-backgroundColor: rgb(var(--button-secondary));
+    --pds-button-color: rgb(var(--button-secondary-text));
+    --pds-button-borderColor: rgb(var(--button-secondary-border));
+
+    &:hover {
+      --pds-button-backgroundColor: rgb(var(--button-secondary-hover));
+    }
+  }
+}
+
 .workspace-switcher__dialog {
   margin-top: scale.$sm--2;
   width: auto;
   min-width: 100%;
   white-space: nowrap;
+
   // Pds::DropDown does not support dark mode yet, so these rules just about
   // keep it legible.
   --pds-color: black;
   --spinner-stroke: 0, 0, 0;
+  --pds-button-color: rgb(var(--button-secondary-text));
+  :any-link:not(.pds-button):not(.pds--external) {
+    color: var(--pds-button-color);
+    &:hover {
+      background-color: rgb(var(--button-secondary-hover));
+    }
+  }
 }
 
 .workspace-switcher__link-contents {

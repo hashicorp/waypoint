@@ -1,12 +1,30 @@
 import Route from '@ember/routing/route';
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 import { Model as AppRouteModel } from '../app';
 
 type Model = {
+  app: string;
   builds: AppRouteModel['builds'];
   buildDeploymentPairs: Record<number, number>;
 };
 
 export default class Builds extends Route {
+  breadcrumbs(model: Model): Breadcrumb[] {
+    if (!model) return [];
+    return [
+      {
+        label: model.app ?? 'unknown',
+        icon: 'git-repo',
+        route: 'workspace.projects.project.app',
+      },
+      {
+        label: 'Builds',
+        icon: 'hammer',
+        route: 'workspace.projects.project.app.builds',
+      },
+    ];
+  }
+
   async model(): Promise<Model> {
     let app = this.modelFor('workspace.projects.project.app') as AppRouteModel;
     let bdPairs = {};
@@ -24,6 +42,7 @@ export default class Builds extends Route {
     }
 
     return {
+      app: app.application.application,
       builds: app.builds,
       buildDeploymentPairs: bdPairs,
     };

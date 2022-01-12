@@ -7,7 +7,7 @@
         @route={{artifact.route}}
         @models={{array artifact.sequence}}
       >
-        <span><Pds::Icon @type="check-circle-outline"/> {{t artifact.type}}</span>
+        <span class="timeline__entry"><FlightIcon @name="check-circle"/> {{t artifact.type}}</span>
         <b class="badge badge--version">v{{artifact.sequence}}</b>
         {{#if artifact.isCurrentRoute}}
           <span class="timeline__current-marker">{{t "page.artifact.timeline.current-marker"}}</span>
