@@ -113,7 +113,7 @@ triggers configuration:
 ```sh
 $ waypoint trigger update -id=01FS582B3X8VW0251C1XDQ56RR -workspace=production
 Trigger "deploy-statusreport" (01FS582B3X8VW0251C1XDQ56RR) has been updated
-Trigger ID:
+Trigger ID: 01FS582B3X8VW0251C1XDQ56RR
 $ waypoint trigger inspect 01FS582B3X8VW0251C1XDQ56RR
 
 
@@ -134,7 +134,7 @@ trigger.
 ## Running a Trigger URL Configuration via gRPC
 
 ```sh
-$ grpcurl -d '{"ref": {"id": "<trigger-id>"}}' -H "Authorization: `waypoint user token`" waypoint.server.address hashicorp.waypoint.Waypoint/RunTrigger
+$ grpcurl -d '{"ref": {"id": "123ABC456DEF"}}' -H "Authorization: `waypoint user token`" waypoint.server.address hashicorp.waypoint.Waypoint/RunTrigger
 ```
 
 The gRPC `RunTrigger` endpoint will always return 3 job IDs for each job queued.
@@ -172,7 +172,7 @@ Then you will be able to simply add a curl request to your CI configuration
 to execute deploying the latest build with Waypoint:
 
 ```
-curl -X POST -H "Authorization: OAuth $WP_ACCESS_TOKEN" https://waypoint.server.address/api/v1/trigger/fDKB5nkhl66Hknh
+curl -X POST -H "Authorization: OAuth $WP_ACCESS_TOKEN" https://waypoint.server.address/api/v1/trigger/123ABC456DEF
 ```
 
 More information on this feature will come once it has been released, so
