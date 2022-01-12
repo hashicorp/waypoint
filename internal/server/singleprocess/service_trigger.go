@@ -164,12 +164,44 @@ func (s *service) RunTrigger(
 	// to properly perform its operation. We set those here before queueing the job.
 	// Ideally, the executeXOperation would do the lookup after receiving a Ref_X rather than
 	// here when we are queueing a job.
+	// NOTE(briancain): See https://github.com/hashicorp/waypoint/issues/2884
+	// for why we must attach the full PushedArtifact message for a deploy operation
+	// We have to set the full artifact message on Deployment operations
+	// This is true for other operations too like Push and Release.
 	for i, qJob := range jobList {
 		switch op := qJob.Job.Operation.(type) {
+		case *pb.Job_Push:
+			if op.Push.Build.Sequence == 0 {
+				buildLatest, err := s.state.BuildLatest(qJob.Job.Application, qJob.Job.Workspace)
+				if err != nil {
+					return nil, status.Errorf(codes.Internal, "failed to obtain latest build: %s", err)
+				}
+
+				jobList[i].Job.Operation = &pb.Job_Push{
+					Push: &pb.Job_PushOp{
+						Build: buildLatest,
+					},
+				}
+			} else {
+				build, err := s.state.BuildGet(&pb.Ref_Operation{
+					Target: &pb.Ref_Operation_Sequence{
+						Sequence: &pb.Ref_OperationSeq{
+							Application: qJob.Job.Application,
+							Number:      op.Push.Build.Sequence,
+						},
+					},
+				})
+				if err != nil {
+					return nil, status.Errorf(codes.Internal, "failed to obtain build by id %q: %s", op.Push.Build.Sequence, err)
+				}
+
+				jobList[i].Job.Operation = &pb.Job_Push{
+					Push: &pb.Job_PushOp{
+						Build: build,
+					},
+				}
+			}
 		case *pb.Job_Deploy:
-			// NOTE(briancain): See https://github.com/hashicorp/waypoint/issues/2884
-			// for why we must attach the full PushedArtifact message for a deploy operation
-			// We have to set the full artifact message on Deployment operations
 			if op.Deploy.Artifact == nil {
 				// get latest pushed artifact, then set it on the operation
 				artifactLatest, err := s.state.ArtifactLatest(qJob.Job.Application, qJob.Job.Workspace)
