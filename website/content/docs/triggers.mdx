@@ -36,7 +36,7 @@ Check out our CLI docs for the `waypoint trigger` command, such as
 ## Pre-configuring a Trigger URL
 
 As an example, we can create a Trigger URL config that deploys the latest artifact
-to the production workspace. We'll need to figure the Trigger to use the
+to the produciton workspace. We'll need to figure the Trigger to use the
 right project, application, and workspace. Then we can specify which [lifecycle operation](docs/lifecycle)
 we want the trigger to execute when run. We can also include a `description` or
 `tags` for extra information for the user.
@@ -134,5 +134,18 @@ trigger.
 ```sh
 $ grpcurl -d '{"ref": {"id": "<trigger-id>"}}' -H "Authorization: `waypoint user token`" waypoint.server.address hashicorp.waypoint.Waypoint/RunTrigger
 ```
+
+The gRPC `RunTrigger` endpoint will always return 3 job IDs for each job queued.
+
+- The StartTask job for On-Demand Runners
+- The trigger operation job
+- The StopTask job for On-Demand Runners
+
+So, if you queue a trigger that will run for _all applications inside a project_,
+you will get back StartTask and StopTask jobs wrapped around the actual Trigger
+URL job for each job queued.
+
+In the future, the HTTP implementation will handle these jobs for you, and
+give you the ability to stream the output of the job easily in CI.
 
 ## Running a Trigger URL Configuration via HTTP
