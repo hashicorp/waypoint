@@ -57,24 +57,6 @@
     background: rgb(var(--panel));
   }
 
-  .deploy-url {
-    color: rgb(var(--text-deploy-url));
-    margin-right: scale.$sm-4;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  &__state-wrapper {
-    display: inline-flex;
-    flex-direction: column;
-    width: 100%;
-    margin-right: scale.$sm-4;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
   &__deployment-state {
     display: grid;
     align-items: center;
@@ -95,6 +77,10 @@
       border-radius: 50%;
       background: color.$black;
       justify-self: center;
+
+      &--text-description {
+        color: rgb(var(--text-deploy-url));
+      }
 
       &--alive {
         background: color.$green-500;

@@ -12,57 +12,55 @@
     @models={{array @deployment.sequence}}
   >
     <b class="badge badge--version">v{{@deployment.sequence}}</b>
-    <div class="app-item__state-wrapper">
-      {{!-- ROW: deployment url --}}
-      {{#if @deployment.preload.deployUrl}}
-        <span class="deploy-url" title={{clean-up-url @deployment.preload.deployUrl}}>
-          {{clean-up-url @deployment.preload.deployUrl}}
-        </span>
-      {{/if}}
-      <div class="app-item__deployment-state">
-        {{!-- ROW: status report --}}
-        {{#if @deployment.statusReport.health}}
-          {{#let @deployment.statusReport.health.healthStatus as |deploymentHealth|}}
-            <span
-              data-test-health-status={{downcase deploymentHealth}}
-              class="health-check health-check--{{downcase deploymentHealth}}"
-            />
-            {{t (concat "status_report_indicator.label." (downcase @deployment.statusReport.health.healthStatus))}}
-          {{/let}}
-        {{/if}}
-        {{!-- ROW: operation status --}}
-        {{#let @deployment.status as |status|}}
-          <FlightIcon
-            data-test-time-icon
-            @name={{or
-              (and (eq status.state 0) "help")
-              (and (eq status.state 1) "clock")
-              (and (eq status.state 2) "check")
-              (and (eq status.state 3) "alert-triangle")
-            }}
-            @size="16"
+    <div class="app-item__deployment-state">
+      {{!-- ROW: health check + deployment URL --}}
+      {{#if @deployment.statusReport.health}}
+        {{#let @deployment.statusReport.health.healthStatus as |deploymentHealth|}}
+          <span
+            data-test-health-status={{downcase deploymentHealth}}
+            class="health-check health-check--{{downcase deploymentHealth}}"
           />
-          <span data-test-operation-status>
-            {{t (concat "page.deployments.status_prefix." status.state)}}
-            {{#if (eq status.state 1)}} {{!-- RUNNING --}}
-              {{t "page.deployments.started_time_prefix"}} {{date-format-distance-to-now status.startTime.seconds}}
+          <span class="health-check--text-description">
+            {{#if (eq (downcase deploymentHealth) "ready") }}
+              {{clean-up-url @deployment.preload.deployUrl}}
             {{else}}
-              {{date-format-distance-to-now status.completeTime.seconds}}
+              {{t (concat "status_report_indicator.label." (downcase @deployment.statusReport.health.healthStatus))}}
             {{/if}}
           </span>
         {{/let}}
-        {{!-- ROW: git commit information --}}
-        {{#if @deployment.preload.jobDataSourceRef.git.commit}}
-          {{#let @deployment.preload.jobDataSourceRef.git.commit as |commit|}}
-            <FlightIcon @name="git-commit"/>
-            <span data-test-git-commit class="git-commit" title="Triggered by commit: {{commit}}">
-              <CopyButton @clipboardText={{commit}}>
-              <span class="git-commit__sha">{{truncate-commit commit}}</span>
-              </CopyButton>
-            </span>
-          {{/let}}
-        {{/if}}
-      </div>
+      {{/if}}
+      {{!-- ROW: operation status --}}
+      {{#let @deployment.status as |status|}}
+        <FlightIcon
+          data-test-time-icon
+          @name={{or
+            (and (eq status.state 0) "help")
+            (and (eq status.state 1) "clock")
+            (and (eq status.state 2) "check")
+            (and (eq status.state 3) "alert-triangle")
+          }}
+          @size="16"
+        />
+        <span data-test-operation-status>
+          {{t (concat "page.deployments.status_prefix." status.state)}}
+          {{#if (eq status.state 1)}} {{!-- RUNNING --}}
+            {{t "page.deployments.started_time_prefix"}} {{date-format-distance-to-now status.startTime.seconds}}
+          {{else}}
+            {{date-format-distance-to-now status.completeTime.seconds}}
+          {{/if}}
+        </span>
+      {{/let}}
+      {{!-- ROW: git commit information --}}
+      {{#if @deployment.preload.jobDataSourceRef.git.commit}}
+        {{#let @deployment.preload.jobDataSourceRef.git.commit as |commit|}}
+          <FlightIcon @name="git-commit"/>
+          <span data-test-git-commit class="git-commit" title="Triggered by commit: {{commit}}">
+            <CopyButton @clipboardText={{commit}}>
+            <span class="git-commit__sha">{{truncate-commit commit}}</span>
+            </CopyButton>
+          </span>
+        {{/let}}
+      {{/if}}
     </div>
   </LinkTo>
 </li>
