@@ -18,7 +18,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "build": "./scripts/dev-portal-build.sh",
+    "build": "./scripts/website-build.sh",
     "export": "node --max-old-space-size=2048 ./node_modules/.bin/next export",
     "format": "next-hashicorp format",
     "generate:component": "next-hashicorp generate component",
