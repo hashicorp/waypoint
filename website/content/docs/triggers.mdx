@@ -12,7 +12,9 @@ Trigger URLs are pre-configured Waypoint lifecycle operations for execution
 inside Continuous Integration (CI) environments. Users can configure operations
 like deploying the latest build, running a status report on all applications in
 a project, running a Waypoint Up operation on all applications in a project,
-and more.
+and more. Trigger URLs make it easy to run Waypoint operations inside CI without
+requiring the Waypoint CLI or any other Waypoint setup in your scripts. You will
+simply need grpcurl or curl to execute a Trigger URL
 
 Trigger URLs can be invoked directly inside an environment with a gRPC request
 that tells Waypoint to execute the pre-configured action. Trigger URLs
@@ -28,7 +30,7 @@ gRPC until the HTTP implementation has been released.
 ## Waypoint Trigger CLI
 
 The Waypoint CLI comes with a subcommand that lets you configure and update
-trigger URL configurations.
+Trigger URL configurations.
 
 Check out our CLI docs for the `waypoint trigger` command, such as
 [waypoint trigger create](/commands/trigger-create).
@@ -82,13 +84,13 @@ $ waypoint trigger list
 
 ```
 
-In this example, we are configuring trigger URLs for the `go-gitops-0` project.
+In this example, we are configuring Trigger URLs for the `go-gitops-0` project.
 
 Now, let's say you have a _status report_ trigger that _only_ runs on your app
 called `go` in the default workspace, but wish for that trigger to refresh the
 status in the `production` workspace.
 
-First, we can inspect the trigger URL configuration to see how it's configured:
+First, we can inspect the Trigger URL configuration to see how it's configured:
 
 ```sh
 $ waypoint trigger inspect 01FS582B3X8VW0251C1XDQ56RR
@@ -149,3 +151,29 @@ In the future, the HTTP implementation will handle these jobs for you, and
 give you the ability to stream the output of the job easily in CI.
 
 ## Running a Trigger URL Configuration via HTTP
+
+In an upcoming version of Waypoint, we will provide an HTTP endpoint for easy
+access to request running a configured Trigger. When you create a trigger,
+you'll also now see an HTTP url:
+
+```sh
+$ waypoint trigger create \
+      -project=hcp-packer \
+      -app=backend-svc \
+      -workspace=production \
+      -name=deploy-latest \
+      -op=deploy
+Trigger ID: 123ABC456DEF
+Trigger URL:
+https://waypoint.server.address/api/v1/trigger/123ABC456DEF
+```
+
+Then you will be able to simply add a curl request to your CI configuration
+to execute deploying the latest build with Waypoint:
+
+```
+curl -X POST -H "Authorization: OAuth $WP_ACCESS_TOKEN" https://waypoint.server.address/api/v1/trigger/fDKB5nkhl66Hknh
+```
+
+More information on this feature will come once it has been released, so
+be on the lookout for future updates!
