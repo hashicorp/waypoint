@@ -3,6 +3,7 @@ package cli
 import (
 	"strings"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -181,7 +182,9 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		// NOTE(briancain): I don't think this operation actually works, takes no arguments...
 		createTrigger.Operation = &pb.Trigger_Destroy{
 			Destroy: &pb.Job_DestroyOp{
-				Target: &pb.Job_DestroyOp_Workspace{},
+				Target: &pb.Job_DestroyOp_Workspace{
+					Workspace: &empty.Empty{},
+				},
 			},
 		}
 	case c.flagTriggerOperation == "destroy-deployment":

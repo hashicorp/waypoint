@@ -201,6 +201,51 @@ func (s *service) RunTrigger(
 					},
 				}
 			}
+		case *pb.Job_Destroy:
+			switch destroyTarget := op.Destroy.Target.(type) {
+			case *pb.Job_DestroyOp_Deployment:
+				if destroyTarget.Deployment.Sequence == 0 {
+					// get latest deployment
+					deployLatest, err := s.state.DeploymentLatest(destroyTarget.Deployment.Application, destroyTarget.Deployment.Workspace)
+					if err != nil {
+						return nil, status.Errorf(codes.Internal,
+							"failed to obtain latest deployment for destroying deployment operation trigger: %s", err)
+					}
+
+					jobList[i].Job.Operation = &pb.Job_Destroy{
+						Destroy: &pb.Job_DestroyOp{
+							Target: &pb.Job_DestroyOp_Deployment{
+								Deployment: deployLatest,
+							},
+						},
+					}
+				} else {
+					// get deployment by id seq
+					deploy, err := s.state.DeploymentGet(&pb.Ref_Operation{
+						Target: &pb.Ref_Operation_Sequence{
+							Sequence: &pb.Ref_OperationSeq{
+								Application: qJob.Job.Application,
+								Number:      destroyTarget.Deployment.Sequence,
+							},
+						},
+					})
+					if err != nil {
+						return nil, status.Errorf(codes.Internal,
+							"failed to obtain deployment by id %q for destroying deployment operation trigger: %s", destroyTarget.Deployment.Sequence, err)
+					}
+
+					jobList[i].Job.Operation = &pb.Job_Destroy{
+						Destroy: &pb.Job_DestroyOp{
+							Target: &pb.Job_DestroyOp_Deployment{
+								Deployment: deploy,
+							},
+						},
+					}
+				}
+			default:
+				// We don't need any setup for destroying workspaces at the moment
+				break
+			}
 		case *pb.Job_Deploy:
 			if op.Deploy.Artifact == nil {
 				// get latest pushed artifact, then set it on the operation
