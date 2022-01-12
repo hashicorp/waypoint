@@ -37,10 +37,10 @@ Check out our CLI docs for the `waypoint trigger` command, such as
 
 ## Pre-configuring a Trigger URL
 
-As an example, we can create a Trigger URL config that deploys the latest artifact
-to the produciton workspace. We'll need to configure the Trigger to use the
-right project, application, and workspace. Then we can specify which [lifecycle operation](docs/lifecycle)
-we want the trigger to execute when run. We can also include a `description` or
+As an example, you can create a Trigger URL config that deploys the latest artifact
+to the production workspace. First, configure the Trigger to use the
+right project, application, and workspace. Then, specify which [lifecycle operation](docs/lifecycle)
+you want the trigger to execute when run. You can also include a `description` or
 `tags` for extra information for the user.
 
 ```sh
@@ -62,7 +62,7 @@ or typo, you can easily modify an existing trigger with `waypoint trigger update
 command will return a full HTTP URL that Waypoint server will be able to accept requests
 with for executing this operation.
 
-For now, we can use this ID to make a request to Waypoint server to execute the
+For now, you can use this ID to make a request to Waypoint server to execute the
 trigger.
 
 ## Modifying an existing Trigger URL Configuration
@@ -84,7 +84,7 @@ $ waypoint trigger list
 
 ```
 
-In this example, we are configuring Trigger URLs for the `go-gitops-0` project.
+In this example, you'll configure Trigger URLs for the `go-gitops-0` project.
 
 Now, let's say you have a _status report_ trigger that _only_ runs on your app
 called `go` in the `default` workspace, but wish for that trigger to refresh the
