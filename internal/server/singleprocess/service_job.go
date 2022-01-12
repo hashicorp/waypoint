@@ -167,7 +167,7 @@ func (s *service) queueJobReqToJob(
 	}
 
 	// If the job can be run any runner, then we attempt to see if we should spawn
-	// on on-demand runner for it. We only consider jobs for any runner because ones
+	// an on-demand runner for it. We only consider jobs for any runner because ones
 	// that are targeted can not target on-demand runners, because they don't yet exist.
 	var od *pb.Ref_OnDemandRunnerConfig
 	if _, anyTarget := job.TargetRunner.Target.(*pb.Ref_Runner_Any); anyTarget {

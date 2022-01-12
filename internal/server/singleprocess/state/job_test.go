@@ -38,6 +38,48 @@ func TestJobAck(t *testing.T) {
 	})
 }
 
+func TestJobCreateMulti(t *testing.T) {
+	t.Run("creates one job", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		jobList := make([]*pb.Job, 0, 1)
+		jobList = append(jobList, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		}))
+
+		err := s.JobCreate(jobList...)
+		require.NoError(err)
+
+		require.Equal(1, s.indexedJobs)
+	})
+
+	t.Run("creates the same number of jobs that were requested", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		jobList := make([]*pb.Job, 0, 3)
+		jobList = append(jobList, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		}))
+		jobList = append(jobList, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "B",
+		}))
+		jobList = append(jobList, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "C",
+		}))
+
+		err := s.JobCreate(jobList...)
+		require.NoError(err)
+
+		require.Equal(3, s.indexedJobs)
+	})
+}
+
 func TestJobAssignForRunner(t *testing.T) {
 	t.Run("job assignment sets the job's assigned runner id", func(t *testing.T) {
 		require := require.New(t)
@@ -275,5 +317,64 @@ func TestJobsPrune(t *testing.T) {
 		val, err = s.JobById("C", nil)
 		require.NoError(err)
 		require.Nil(val)
+	})
+}
+
+func TestJobsProjectScopedRequest(t *testing.T) {
+	t.Run("returns error if no project ref found", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		const name = "proj"
+		ref := &pb.Ref_Project{Project: name}
+
+		jobTemplate := &pb.Job{
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+			Operation: &pb.Job_Init{},
+		}
+
+		{
+			resp, err := s.JobProjectScopedRequest(ref, jobTemplate)
+			require.Error(err)
+			require.Nil(resp)
+		}
+	})
+
+	t.Run("returns a list of queued job request messages for all apps in project", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		const name = "proj"
+		ref := &pb.Ref_Project{Project: name}
+
+		proj := serverptypes.TestProject(t, &pb.Project{Name: name})
+		err := s.ProjectPut(proj)
+		require.NoError(err)
+		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+			Name:    "test",
+			Project: ref,
+		}))
+		require.NoError(err)
+		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+			Name:    "test2",
+			Project: ref,
+		}))
+		require.NoError(err)
+
+		jobTemplate := &pb.Job{
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+			Operation: &pb.Job_Init{},
+		}
+
+		{
+			resp, err := s.JobProjectScopedRequest(ref, jobTemplate)
+			require.NoError(err)
+			require.Len(resp, 2)
+		}
 	})
 }

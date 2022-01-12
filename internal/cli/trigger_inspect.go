@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
@@ -33,11 +34,12 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 		return 1
 	}
 
-	if len(c.args) == 0 && c.flagTriggerId == "" {
+	if len(c.args) == 0 {
 		c.ui.Output("Trigger ID required.\n\n%s", c.Help(), terminal.WithErrorStyle())
 		return 1
+	} else {
+		c.flagTriggerId = c.args[0]
 	}
-	c.flagTriggerId = c.args[0]
 
 	ctx := c.Ctx
 
@@ -48,7 +50,7 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 	})
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
-			c.ui.Output("Trigger configuration not found", clierrors.Humanize(err),
+			c.ui.Output("Trigger configuration not found: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle())
 			return 1
 		}
@@ -86,26 +88,33 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 	var opStr string
 	switch triggerOpType := trigger.Operation.(type) {
 	case *pb.Trigger_Build:
-		opStr = "build operation"
+		opStr = "build"
 	case *pb.Trigger_Push:
-		opStr = "push operation"
+		opStr = "push"
 	case *pb.Trigger_Deploy:
-		opStr = "deploy operation"
+		opStr = "deploy"
 	case *pb.Trigger_Destroy:
 		switch triggerOpType.Destroy.Target.(type) {
 		case *pb.Job_DestroyOp_Workspace:
-			opStr = "destroy workspace operation"
+			opStr = "destroy workspace"
 		case *pb.Job_DestroyOp_Deployment:
-			opStr = "destroy deployment operation"
+			opStr = "destroy deployment"
 		default:
 			opStr = "unknown destroy operation target"
 		}
 	case *pb.Trigger_Release:
-		opStr = "release operation"
+		opStr = "release"
 	case *pb.Trigger_Up:
-		opStr = "up operation"
+		opStr = "up"
 	case *pb.Trigger_Init:
-		opStr = "init operation"
+		opStr = "init"
+	case *pb.Trigger_StatusReport:
+		switch triggerOpType.StatusReport.Target.(type) {
+		case *pb.Job_StatusReportOp_Deployment:
+			opStr = "status report deployment"
+		case *pb.Job_StatusReportOp_Release:
+			opStr = "status report release"
+		}
 	default:
 		opStr = fmt.Sprintf("unknown operation: %T", triggerOpType)
 	}
@@ -113,6 +122,11 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 	var tags string
 	if len(trigger.Tags) > 0 {
 		tags = strings.Join(trigger.Tags[:], ", ")
+	}
+
+	lastActiveTime := "n/a"
+	if trigger.ActiveTime.IsValid() {
+		lastActiveTime = humanize.Time(trigger.ActiveTime.AsTime())
 	}
 
 	c.ui.Output("Trigger URL config:", terminal.WithHeaderStyle())
@@ -124,7 +138,7 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 			Name: "ID", Value: trigger.Id,
 		},
 		{
-			Name: "Last Time Active", Value: trigger.ActiveTime.String(),
+			Name: "Last Time Active", Value: lastActiveTime,
 		},
 		{
 			Name: "Authenticated", Value: trigger.Authenticated,
@@ -155,12 +169,6 @@ func (c *TriggerInspectCommand) Run(args []string) int {
 func (c *TriggerInspectCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
-
-		f.StringVar(&flag.StringVar{
-			Name:   "id",
-			Target: &c.flagTriggerId,
-			Usage:  "The id of the trigger URL to inspect.",
-		})
 
 		f.BoolVar(&flag.BoolVar{
 			Name:   "json",

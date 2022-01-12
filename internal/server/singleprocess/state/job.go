@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hashicorp/go-memdb"
+	"github.com/mitchellh/copystructure"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -250,6 +251,42 @@ func (s *State) JobCreate(jobs ...*pb.Job) error {
 	}
 
 	return err
+}
+
+// Given a Project Ref and a Job Template, this function will generate a slice
+// of QueueJobRequests for every application inside the requested Project
+func (s *State) JobProjectScopedRequest(
+	pRef *pb.Ref_Project,
+	jobTemplate *pb.Job,
+) ([]*pb.QueueJobRequest, error) {
+	var result []*pb.QueueJobRequest
+	project, err := s.ProjectGet(pRef)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, app := range project.Applications {
+		copyJob, err := copystructure.Copy(jobTemplate)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal,
+				"failed to copy job template for project scoped request: %s", err)
+		}
+		tempJob, ok := copyJob.(*pb.Job)
+		if !ok {
+			return nil, status.Errorf(codes.Internal,
+				"failed to convert copied job template into a Job message: %s", err)
+		}
+
+		tempJob.Application = &pb.Ref_Application{
+			Project:     project.Name,
+			Application: app.Name,
+		}
+
+		jobReq := &pb.QueueJobRequest{Job: tempJob}
+		result = append(result, jobReq)
+	}
+
+	return result, nil
 }
 
 // JobList returns the list of jobs.
