@@ -4,7 +4,7 @@ import { Model as AppRouteModel } from '../app';
 import Route from '@ember/routing/route';
 import { StatusReport } from 'waypoint-pb';
 
-type Model = AppRouteModel['deployments'];
+type Model = ResourceMap[];
 
 interface ResourceMap {
   resource: StatusReport.Resource.AsObject;

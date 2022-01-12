@@ -82,11 +82,18 @@ page:
         line-3: 'from the CLI'
   resources:
     table:
+      headings:
+        name: 'Name'
+        type: 'Type'
+        age: 'Age'
+        status: 'Status'
+        provisioned-by: 'Provisioned by'
       empty-state:
         line-1: 'There are no resources to display for this app yet'
         line-2: 'To create your first release, you can run'
         line-3: 'from the CLI'
-    release:
+      release: 'Release'
+      deployment: 'Deployment'
     title: 'Release'
     resources:
       heading: Resources

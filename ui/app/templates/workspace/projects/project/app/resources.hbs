@@ -1,8 +1,7 @@
 {{#if @model.length}}
   <ResourcesTableExtended
     @resources={{@model}}
-  >
-  </ResourcesTableExtended>
+  />
 {{else}}
   <EmptyState>
     <p>{{t 'page.resources.table.empty-state.line-1'}}</p>

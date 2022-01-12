@@ -13,17 +13,17 @@
 
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Age</th>
-      <th>Status</th>
-      <th>Provisioned by</th>
+      <th>{{t "page.resources.table.headings.name"}}</th>
+      <th>{{t "page.resources.table.headings.type"}}</th>
+      <th>{{t "page.resources.table.headings.age"}}</th>
+      <th>{{t "page.resources.table.headings.status"}}</th>
+      <th>{{t "page.resources.table.headings.provisioned-by"}}</th>
     </tr>
   </thead>
 
   <tbody>
-    {{#each @resources key="id" as |resourceObject|}}
-      {{#with resourceObject.resource as |resource|}}
+    {{#each @resources key="resource.id" as |resourceObject|}}
+      {{#let resourceObject.resource as |resource|}}
       <tr>
         <th scope="row">
           <LinkTo
@@ -44,7 +44,7 @@
               @route="workspace.projects.project.app.deployment.deployment-seq"
               @models={{array resourceObject.source.sequence}}
               >
-              Deployment <b class="badge badge--version">v{{resourceObject.source.sequence}}</b>
+              {{t "page.resources.table.deployment"}} <b class="badge badge--version">v{{resourceObject.source.sequence}}</b>
             </LinkTo>
           {{/if}}
           {{#if (eq resourceObject.type 'release')}}
@@ -53,12 +53,12 @@
               @route="workspace.projects.project.app.release-id"
               @models={{array resourceObject.source.sequence}}
               >
-              Release <b class="badge badge--version">v{{resourceObject.source.sequence}}</b>
+              {{t "page.resources.table.release"}}<b class="badge badge--version">v{{resourceObject.source.sequence}}</b>
             </LinkTo>
           {{/if}}
         </td>
       </tr>
-      {{/with}}
+      {{/let}}
     {{/each}}
   </tbody>
 </Table>
