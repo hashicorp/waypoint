@@ -1,15 +1,27 @@
 .artifact-overview {
   padding-bottom: 0.5rem;
+  overflow: hidden;
 
   h2 {
     border-bottom: 1px solid rgb(var(--border));
     padding-bottom: 0.5rem;
   }
 
+  table, table > tbody, tr {
+    width: 100%;
+    overflow: hidden;
+  }
+
   table {
+    display: table;
+    table-layout: fixed;
     padding: 0;
     font-size: 0.875rem;
     line-height: 17px;
+
+    :first-child > * {
+      padding-top: 0;
+    }
 
     th,
     td {
@@ -17,6 +29,11 @@
       padding-top: scale.$sm--2;
       padding-bottom: scale.$sm--2;
       vertical-align: top;
+
+      > * {
+        overflow: hidden;
+        white-space: nowrap;
+      }
     }
 
     th {
@@ -27,7 +44,7 @@
     }
 
     .status-indicator {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       padding-bottom: 0.25rem;
     }
