@@ -4,6 +4,7 @@
   margin-right: scale.$sm-2;
   width: 100%;
   border-radius: 5px;
+  @include Typography.Interface(M);
 
   hr {
     border: 0;
@@ -33,21 +34,8 @@
     font-size: 1rem;
   }
 
-  &.app-item--destroyed code {
-    color: rgb(var(--text-muted));
-  }
-
   .badge--version {
     margin-right: scale.$sm-2;
-  }
-
-  .badge--destroyed {
-    margin-left: auto;
-
-    @media (prefers-color-scheme: light) {
-      background: color.$ui-cool-gray-200;
-      color: color.$ui-cool-gray-800;
-    }
   }
 
   .button {
@@ -61,19 +49,66 @@
     }
   }
 
-  .replacement-info {
-    @include Typography.Interface(S);
-    b {
-      text-transform: inherit;
-    }
-  }
-
   .timestamp__label {
     @include Typography.Interface(S);
   }
 
   &--previous {
     background: rgb(var(--panel));
+  }
+
+  &__deployment-state {
+    display: grid;
+    align-items: center;
+    grid-template-columns: max-content 92%;
+    column-gap: scale.$sm--3;
+    row-gap: scale.$sm--3;
+
+    span {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .health-check {
+      width: scale.$sm--2;
+      height: scale.$sm--2;
+      border-radius: 50%;
+      background: color.$black;
+      justify-self: center;
+
+      &--text-description {
+        color: rgb(var(--text-deploy-url));
+      }
+
+      &--alive {
+        background: color.$green-500;
+        animation: pulse 2s infinite;
+        @media (prefers-reduced-motion: reduce) {
+          animation: none;
+        }
+      }
+
+      &--ready {
+        background: color.$green-500;
+      }
+
+      &--down {
+        background: color.$red-500;
+        @media (prefers-color-scheme: dark) {
+          background: color.$red-400;
+        }
+      }
+
+      &--partial {
+        background: color.$orange-500;
+      }
+    }
+
+    .deployment-state {
+      color: rgb(var(--text-muted));
+    }
   }
 
   .operation-status-indicator {

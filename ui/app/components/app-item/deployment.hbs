@@ -7,29 +7,60 @@
   <hr>
   <LinkTo
     data-test-deployment-list-item
-    title={{ concat
-      "v" @deployment.sequence ": "
-      (t (concat "page.deployments.status_prefix." @deployment.status.state))
-      (component-name @deployment.component.name)}}
+    title={{concat (t "page.deployment.title") " v" @deployment.sequence }}
     @route="workspace.projects.project.app.deployment.deployment-seq"
     @models={{array @deployment.sequence}}
   >
     <b class="badge badge--version">v{{@deployment.sequence}}</b>
-    <OperationStatusIndicator::Deployment @operation={{@deployment}}>
-      <:small-text>
-        {{#if (not-eq @latest.id @deployment.id)}}
-        <span class="replacement-info">
-          {{t "page.deployments.replaced_label"}}<b class="badge badge--version">v{{@latest.sequence}}</b>
+    <div class="app-item__deployment-state">
+      {{!-- ROW: health check + deployment URL --}}
+      {{#if @deployment.statusReport.health}}
+        {{#let @deployment.statusReport.health.healthStatus as |deploymentHealth|}}
+          <span
+            data-test-health-status={{downcase deploymentHealth}}
+            class="health-check health-check--{{downcase deploymentHealth}}"
+          />
+          <span class="health-check--text-description">
+            {{#if (eq (downcase deploymentHealth) "ready") }}
+              {{clean-up-url @deployment.preload.deployUrl}}
+            {{else}}
+              {{t (concat "status_report_indicator.label." (downcase @deployment.statusReport.health.healthStatus))}}
+            {{/if}}
+          </span>
+        {{/let}}
+      {{/if}}
+      {{!-- ROW: operation status --}}
+      {{#let @deployment.status as |status|}}
+        <FlightIcon
+          data-test-time-icon
+          @name={{or
+            (and (eq status.state 0) "help")
+            (and (eq status.state 1) "clock")
+            (and (eq status.state 2) "check")
+            (and (eq status.state 3) "alert-triangle")
+          }}
+          @size="16"
+        />
+        <span data-test-operation-status>
+          {{t (concat "page.deployments.status_prefix." status.state)}}
+          {{#if (eq status.state 1)}} {{!-- RUNNING --}}
+            {{t "page.deployments.started_time_prefix"}} {{date-format-distance-to-now status.startTime.seconds}}
+          {{else}}
+            {{date-format-distance-to-now status.completeTime.seconds}}
+          {{/if}}
         </span>
-        {{/if}}
-      </:small-text>
-      <:badge>
-        {{#if (eq @deployment.state 4)}}
-          <b data-test-destroyed-badge class="badge badge--destroyed">
-            <FlightIcon @name="trash" class="icon" />&nbsp; {{t "page.deployments.destroyed_label"}}
-          </b>
-        {{/if}}
-      </:badge>
-    </OperationStatusIndicator::Deployment>
+      {{/let}}
+      {{!-- ROW: git commit information --}}
+      {{#if @deployment.preload.jobDataSourceRef.git.commit}}
+        {{#let @deployment.preload.jobDataSourceRef.git.commit as |commit|}}
+          <FlightIcon @name="git-commit"/>
+          <span data-test-git-commit class="git-commit" title="Triggered by commit: {{commit}}">
+            <CopyButton @clipboardText={{commit}}>
+            <span class="git-commit__sha">{{truncate-commit commit}}</span>
+            </CopyButton>
+          </span>
+        {{/let}}
+      {{/if}}
+    </div>
   </LinkTo>
 </li>
