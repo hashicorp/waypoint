@@ -58,6 +58,7 @@ Router.map(function () {
             this.route('resource', { path: 'resources/:resource_id' });
           });
           this.route('logs');
+          this.route('resources');
           this.route('exec');
           this.route('deployments');
         });

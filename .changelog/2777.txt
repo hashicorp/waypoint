@@ -1,0 +1,3 @@
+```release-note:feature
+ui: Added a tab with an overview of the resources provisioned by operations
+```
