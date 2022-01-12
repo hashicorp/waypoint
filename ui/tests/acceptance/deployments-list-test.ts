@@ -14,8 +14,8 @@ const page = create({
   visit: visitable(url),
   showDestroyed: clickable('[data-test-display-destroyed-button]'),
   linkList: collection('[data-test-deployment-list-item]'),
-  statusIndicators: collection('[data-test-health-status="alive"]'),
-  deployUrls: collection('.deploy-url'),
+  aliveStatusIndicators: collection('[data-test-health-status="alive"]'),
+  healthCheckOrDeployUrls: collection('.health-check--text-description'),
   operationStatuses: collection('[data-test-operation-status]'),
   gitCommits: collection('[data-test-git-commit]'),
 });
@@ -28,19 +28,19 @@ module('Acceptance | deployments list', function (hooks) {
   test('happy path', async function (assert) {
     let project = this.server.create('project', { name: 'microchip' });
     let application = this.server.create('application', { name: 'wp-bandwidth', project });
-    let deployments = this.server.createList('deployment', 4, 'random', { application });
+    let deployments = this.server.createList('deployment', 3, 'random', { application });
     this.server.create('status-report', 'alive', { application, target: deployments[0] });
-    this.server.create('status-report', 'alive', { application, target: deployments[1] });
+    this.server.create('status-report', 'ready', { application, target: deployments[1] });
 
     await page.visit();
 
-    assert.equal(page.linkList.length, 4);
-    assert.equal(currentURL(), redirectUrl + '4');
-    assert.equal(page.statusIndicators.length, 2);
-    assert.equal(page.operationStatuses.length, 4);
-    assert.equal(page.gitCommits.length, 4);
-    // random list item url check
-    assert.equal(page.deployUrls[page.deployUrls.length - 1].text, `wildly-intent-honeybee--v1.waypoint.run`);
+    assert.equal(page.linkList.length, 3);
+    assert.equal(currentURL(), redirectUrl + '3');
+    assert.equal(page.aliveStatusIndicators.length, 1);
+    assert.equal(page.operationStatuses.length, 3);
+    assert.equal(page.gitCommits.length, 3);
+    assert.equal(page.healthCheckOrDeployUrls[1].text, 'Starting…');
+    assert.equal(page.healthCheckOrDeployUrls[0].text, 'wildly-intent-honeybee--v2.waypoint.run');
   });
 
   test('visiting deployments page redirects to latest', async function (assert) {
