@@ -406,6 +406,10 @@
     "path": "plugins"
   },
   {
+    "title": "Triggers",
+    "path": "triggers"
+  },
+  {
     "divider": true
   },
   {
