@@ -74,11 +74,41 @@ func userWithContext(ctx context.Context, u *pb.User) context.Context {
 }
 
 // userFromContext returns the authenticated user in the request context.
-// This will return nil if the user is not authenticated.
+// This will return nil if the user is not authenticated. Note that a user
+// may not be authenticated but the request can still be authenticated
+// using a non-user token type. The safeste way to check is tokenFromContext.
 func (s *service) userFromContext(ctx context.Context) *pb.User {
 	value, ok := ctx.Value(userKey{}).(*pb.User)
 	if !ok && s.superuser {
 		value = &pb.User{Id: DefaultUserId, Username: DefaultUser}
+	}
+
+	return value
+}
+
+type tokenKey struct{}
+
+// tokenWithContext inserts the decrypted token t into the context.
+func tokenWithContext(ctx context.Context, t *pb.Token) context.Context {
+	return context.WithValue(ctx, tokenKey{}, t)
+}
+
+// tokenFromContext returns the validated token used with the request.
+// The token is guaranteed to be valid, meaning that it successfully
+// was signed and decrypted. This will return nil if no token was present
+// for the request.
+func (s *service) tokenFromContext(ctx context.Context) *pb.Token {
+	value, ok := ctx.Value(tokenKey{}).(*pb.Token)
+	if !ok && s.superuser {
+		// We are in implicit superuser mode meaning everything is always
+		// allowed. Create a login token for the superuser.
+		value = &pb.Token{
+			Kind: &pb.Token_Login_{
+				Login: &pb.Token_Login{
+					UserId: DefaultUserId,
+				},
+			},
+		}
 	}
 
 	return value
@@ -107,13 +137,47 @@ func (s *service) Authenticate(
 		return nil, err
 	}
 
-	// trigger token auth should explicitly not be allowed for gRPC requests
-	_, ok := body.Kind.(*pb.Token_Trigger_)
-	if ok {
+	// Store the token in the context
+	ctx = tokenWithContext(ctx, body)
+
+	// "Authentication" depends on the type of token.
+	switch k := body.Kind.(type) {
+	case *pb.Token_Trigger_:
+		// trigger token auth should explicitly not be allowed for gRPC requests
 		return nil, status.Errorf(codes.PermissionDenied, "Trigger URL token not "+
 			"authorized to make requests on this endpoint.")
+
+	case *pb.Token_Login_:
+		return s.authLogin(ctx, body, endpoint)
+
+	case *pb.Token_Runner_:
+		return s.authRunner(ctx, k.Runner)
+
+	default:
+		return nil, ErrInvalidToken
+	}
+}
+
+// authRunner authenticates runner token types.
+func (s *service) authRunner(
+	ctx context.Context, tokenRunner *pb.Token_Runner,
+) (context.Context, error) {
+	// If no ID is set, then the runner is assumed at all times to be adopted.
+	// This use case is used to "pre-adopt" runners and avoid the adoption
+	// lifecycle completely, such as with infinitely autoscaled runners.
+	if tokenRunner.Id == "" {
+		// Authenticated.
+		return ctx, nil
 	}
 
+	// TODO(mitchellh): need to look up the runner to ensure it exists and is adopted
+	return ctx, nil
+}
+
+// authLogin authenticates login token types.
+func (s *service) authLogin(
+	ctx context.Context, body *pb.Token, endpoint string,
+) (context.Context, error) {
 	// Token must be a login token to be used for auth
 	login, ok := body.Kind.(*pb.Token_Login_)
 	if !ok || login == nil {
