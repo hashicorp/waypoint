@@ -4111,6 +4111,11 @@ message Token {
     // login tokens can be used for API requests
     Login login = 8;
 
+    // Runner tokens can be used to request work on behalf of a runner.
+    // They have full API access as well since the workloads that runners
+    // run currently reuse this token.
+    Runner runner = 11;
+
     // invite tokens can be exhanged for login tokens and also optionally
     // sign a new user up.
     Invite invite = 9;
@@ -4129,6 +4134,18 @@ message Token {
     // If set, this login token can only be used for entrypoint-related
     // APIs against the configured deployment.
     Entrypoint entrypoint = 2;
+  }
+
+  message Runner {
+    // Id is the exact ID to match for this token. If a runner with another
+    // ID attempts to use this token, it will reject it. This can be blank
+    // to allow any ID.
+    string id = 1;
+
+    // If non-zero, the label set of the runner must hash to the same value
+    // for this token to be active. This prevents runners changing their
+    // labels after adoption (i.e. to go from targeting dev to prod).
+    uint64 label_hash = 2;
   }
 
   message Invite {
