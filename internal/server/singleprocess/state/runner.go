@@ -121,6 +121,23 @@ func (s *State) RunnerList() ([]*pb.Runner, error) {
 	return result, nil
 }
 
+// RunnerOffline marks that a runner has gone offline. This is the preferred
+// approach to deregistering a runner, since this will keep the adoption state
+// around.
+func (s *State) RunnerOffline(id string) error {
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		return s.runnerOffline(dbTxn, txn, id)
+	})
+	if err == nil {
+		txn.Commit()
+	}
+
+	return err
+}
+
 // runnerCreate creates the runner record and inserts it into the database.
 // This operation is an upsert; it will update information if this runner
 // has been seen before.
@@ -132,7 +149,6 @@ func (s *State) runnerCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, runnerpb *pb.Run
 
 	// Zero out all the records that are server side set. These will be
 	// replaced with real values if we have them.
-	runnerpb.Online = false
 	runnerpb.FirstSeen = now
 	runnerpb.LastSeen = now
 	runnerpb.AdoptionState = pb.Runner_NEW
@@ -180,6 +196,50 @@ func (s *State) runnerDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, id string) error
 
 	// Delete from memory
 	err := memTxn.Delete(runnerTableName, &runnerIndex{Id: id})
+	if err == memdb.ErrNotFound {
+		err = nil
+	}
+
+	return nil
+}
+
+func (s *State) runnerOffline(dbTxn *bolt.Tx, memTxn *memdb.Txn, id string) error {
+	r, err := s.runnerById(dbTxn, id)
+	if status.Code(err) == codes.NotFound {
+		r = nil
+		err = nil
+	}
+	if err != nil {
+		return err
+	}
+
+	// Determine if we need to delete this runner from the persisted DB
+	//
+	// NOTE(mitchellh): One day, we may want to keep around old runners for
+	// awhile for historical purposes, to enable functions like "job history by runner",
+	// etc. That's not part of this initial scope of work I'm doing around
+	// adoption so we just delete in most cases. But, if we ever implemented that,
+	// this is where you change it.
+	del := false
+	switch r.Kind.(type) {
+	case *pb.Runner_Remote_:
+		// Delete if the state is new, because there's no reason to keep around
+		// a pending record for a non-adopted/rejected runner. But we DO want
+		// to keep around states like ADOPTED or REJECTED so that if the runner
+		// comes back, we know exactly how to handle them.
+		del = r.AdoptionState == pb.Runner_NEW
+
+	default:
+		// All other runner types like ODR and Local we don't keep records of.
+		del = true
+	}
+	if del {
+		return s.runnerDelete(dbTxn, memTxn, id)
+	}
+
+	// If we're not deleting from disk, we always delete from memory.
+	// The old value will be looked back up if it comes back online.
+	err = memTxn.Delete(runnerTableName, &runnerIndex{Id: id})
 	if err == memdb.ErrNotFound {
 		err = nil
 	}
