@@ -87,17 +87,17 @@ func (s *State) RunnerDelete(id string) error {
 }
 
 func (s *State) RunnerById(id string) (*pb.Runner, error) {
-	txn := s.inmem.Txn(false)
-	raw, err := txn.First(runnerTableName, runnerIdIndexName, id)
-	txn.Abort()
+	var result *pb.Runner
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		var err error
+		result, err = s.runnerById(dbTxn, id)
+		return err
+	})
 	if err != nil {
-		return nil, err
-	}
-	if raw == nil {
-		return nil, status.Errorf(codes.NotFound, "runner ID not found: %s", id)
+		result = nil
 	}
 
-	return raw.(*runnerIndex).Runner, nil
+	return result, err
 }
 
 // RunnerList lists all the runners. This isn't a list of only online runners;
@@ -132,6 +132,46 @@ func (s *State) RunnerOffline(id string) error {
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
 		return s.runnerOffline(dbTxn, txn, id)
+	})
+	if err == nil {
+		txn.Commit()
+	}
+
+	return err
+}
+
+// RunnerAdopt marks a runner as adopted.
+//
+// If "implicit" is true, then this runner is implicitly adopted and the
+// state goes to "PREADOPTED". This means that the runner instance itself
+// was never explicitly adopted, but it already has a valid token so it is
+// accepted.
+func (s *State) RunnerAdopt(id string, implicit bool) error {
+	state := pb.Runner_ADOPTED
+	if implicit {
+		state = pb.Runner_PREADOPTED
+	}
+
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		return s.runnerSetAdoptionState(dbTxn, txn, id, state)
+	})
+	if err == nil {
+		txn.Commit()
+	}
+
+	return err
+}
+
+// RunnerReject marks a runner as rejected.
+func (s *State) RunnerReject(id string) error {
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		return s.runnerSetAdoptionState(dbTxn, txn, id, pb.Runner_REJECTED)
 	})
 	if err == nil {
 		txn.Commit()
@@ -203,6 +243,31 @@ func (s *State) runnerDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, id string) error
 	}
 
 	return nil
+}
+
+func (s *State) runnerSetAdoptionState(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	id string,
+	state pb.Runner_AdoptionState,
+) error {
+	// Get our runner
+	r, err := s.runnerById(dbTxn, id)
+	if err != nil {
+		return err
+	}
+
+	// Set our state
+	r.AdoptionState = state
+
+	// Insert into bolt
+	if err := dbPut(dbTxn.Bucket(runnerBucket), []byte(id), r); err != nil {
+		return err
+	}
+
+	// Insert into memdb, this will replace the old value.
+	idx := newRunnerIndex(r)
+	return memTxn.Insert(runnerTableName, idx)
 }
 
 func (s *State) runnerOffline(dbTxn *bolt.Tx, memTxn *memdb.Txn, id string) error {
