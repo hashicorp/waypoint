@@ -86,7 +86,21 @@ func (s *State) RunnerDelete(id string) error {
 	return err
 }
 
-func (s *State) RunnerById(id string) (*pb.Runner, error) {
+func (s *State) RunnerById(id string, ws memdb.WatchSet) (*pb.Runner, error) {
+	// We only grab a read txn to memdb if we want a watch. Otherwise,
+	// we just load the runner from disk.
+	if ws != nil {
+		memTxn := s.inmem.Txn(false)
+		defer memTxn.Abort()
+
+		watchCh, _, err := memTxn.FirstWatch(runnerTableName, runnerIdIndexName, id)
+		if err != nil {
+			return nil, err
+		}
+		ws.Add(watchCh)
+	}
+
+	// Get our value
 	var result *pb.Runner
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
 		var err error

@@ -35,7 +35,7 @@ func TestRunner_crud(t *testing.T, factory Factory, restartF RestartFactory) {
 	require.NoError(s.RunnerCreate(rec))
 
 	// We should be able to find it
-	found, err := s.RunnerById(rec.Id)
+	found, err := s.RunnerById(rec.Id, nil)
 	require.NoError(err)
 	require.Equal(rec.Id, found.Id)
 	require.Equal(pb.Runner_NEW, found.AdoptionState)
@@ -49,7 +49,7 @@ func TestRunner_crud(t *testing.T, factory Factory, restartF RestartFactory) {
 	require.NoError(s.RunnerDelete(rec.Id))
 
 	// We should not find it
-	found, err = s.RunnerById(rec.Id)
+	found, err = s.RunnerById(rec.Id, nil)
 	require.Error(err)
 	require.Nil(found)
 	require.Equal(codes.NotFound, status.Code(err))
@@ -88,7 +88,7 @@ func TestRunnerOffline_new(t *testing.T, factory Factory, restartF RestartFactor
 	require.NoError(s.RunnerOffline(rec.Id))
 
 	// We should not find it
-	found, err := s.RunnerById(rec.Id)
+	found, err := s.RunnerById(rec.Id, nil)
 	require.Error(err)
 	require.Nil(found)
 	require.Equal(codes.NotFound, status.Code(err))
@@ -119,7 +119,7 @@ func TestRunnerAdopt(t *testing.T, factory Factory, restartF RestartFactory) {
 
 	// Should be new
 	{
-		found, err := s.RunnerById(rec.Id)
+		found, err := s.RunnerById(rec.Id, nil)
 		require.NoError(err)
 		require.Equal(pb.Runner_NEW, found.AdoptionState)
 	}
@@ -129,7 +129,7 @@ func TestRunnerAdopt(t *testing.T, factory Factory, restartF RestartFactory) {
 
 	// Should be adopted
 	{
-		found, err := s.RunnerById(rec.Id)
+		found, err := s.RunnerById(rec.Id, nil)
 		require.NoError(err)
 		require.Equal(pb.Runner_ADOPTED, found.AdoptionState)
 	}
@@ -140,7 +140,7 @@ func TestRunnerAdopt(t *testing.T, factory Factory, restartF RestartFactory) {
 
 	// Should still be adopted
 	{
-		found, err := s.RunnerById(rec.Id)
+		found, err := s.RunnerById(rec.Id, nil)
 		require.NoError(err)
 		require.Equal(pb.Runner_ADOPTED, found.AdoptionState)
 	}
@@ -151,7 +151,7 @@ func TestRunnerAdopt(t *testing.T, factory Factory, restartF RestartFactory) {
 
 	// Should NOT be adopted
 	{
-		found, err := s.RunnerById(rec.Id)
+		found, err := s.RunnerById(rec.Id, nil)
 		require.NoError(err)
 		require.Equal(pb.Runner_NEW, found.AdoptionState)
 	}
@@ -164,7 +164,7 @@ func TestRunnerById_notFound(t *testing.T, factory Factory, restartF RestartFact
 	defer s.Close()
 
 	// We should be able to find it
-	found, err := s.RunnerById("nope")
+	found, err := s.RunnerById("nope", nil)
 	require.Error(err)
 	require.Nil(found)
 	require.Equal(codes.NotFound, status.Code(err))
