@@ -3,6 +3,7 @@ package state
 import (
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
@@ -99,26 +100,27 @@ func (s *State) RunnerById(id string) (*pb.Runner, error) {
 	return raw.(*runnerIndex).Runner, nil
 }
 
+// RunnerList lists all the runners. This isn't a list of only online runners;
+// this is ALL runners the database currently knows about.
 func (s *State) RunnerList() ([]*pb.Runner, error) {
-	memTxn := s.inmem.Txn(false)
-	defer memTxn.Abort()
-
-	iter, err := memTxn.Get(runnerTableName, runnerIdIndexName+"_prefix", "")
-	if err != nil {
-		return nil, err
-	}
-
 	var result []*pb.Runner
-	for {
-		next := iter.Next()
-		if next == nil {
-			break
-		}
-		record := next.(*runnerIndex)
-		result = append(result, record.Runner)
-	}
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		bucket := dbTxn.Bucket(runnerBucket)
+		c := bucket.Cursor()
 
-	return result, nil
+		for k, v := c.Last(); k != nil; k, v = c.Prev() {
+			var value pb.Runner
+			if err := proto.Unmarshal(v, &value); err != nil {
+				return err
+			}
+
+			result = append(result, &value)
+		}
+
+		return nil
+	})
+
+	return result, err
 }
 
 // RunnerOffline marks that a runner has gone offline. This is the preferred
@@ -189,7 +191,7 @@ func (s *State) runnerCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, runnerpb *pb.Run
 
 func (s *State) runnerDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, id string) error {
 	// Delete from the database
-	bucket := dbTxn.Bucket(triggerBucket)
+	bucket := dbTxn.Bucket(runnerBucket)
 	if err := bucket.Delete([]byte(id)); err != nil {
 		return err
 	}

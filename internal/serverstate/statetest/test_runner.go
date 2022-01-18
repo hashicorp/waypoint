@@ -13,6 +13,7 @@ import (
 func init() {
 	tests["runner"] = []testFunc{
 		TestRunner_crud,
+		TestRunnerOffline_new,
 		TestRunnerById_notFound,
 	}
 }
@@ -47,6 +48,45 @@ func TestRunner_crud(t *testing.T, factory Factory, restartF RestartFactory) {
 
 	// We should not find it
 	found, err = s.RunnerById(rec.Id)
+	require.Error(err)
+	require.Nil(found)
+	require.Equal(codes.NotFound, status.Code(err))
+
+	// List should be empty again
+	list, err = s.RunnerList()
+	require.NoError(err)
+	require.Len(list, 0)
+
+	// Delete again should be fine
+	require.NoError(s.RunnerDelete(rec.Id))
+}
+
+// New runners that are unadopted should just get deleted when they go offline.
+func TestRunnerOffline_new(t *testing.T, factory Factory, restartF RestartFactory) {
+	require := require.New(t)
+
+	s := factory(t)
+	defer s.Close()
+
+	// List should be empty
+	list, err := s.RunnerList()
+	require.NoError(err)
+	require.Len(list, 0)
+
+	// Create an instance
+	rec := &pb.Runner{Id: "A"}
+	require.NoError(s.RunnerCreate(rec))
+
+	// List should include it
+	list, err = s.RunnerList()
+	require.NoError(err)
+	require.Len(list, 1)
+
+	// Offline that instance
+	require.NoError(s.RunnerOffline(rec.Id))
+
+	// We should not find it
+	found, err := s.RunnerById(rec.Id)
 	require.Error(err)
 	require.Nil(found)
 	require.Equal(codes.NotFound, status.Code(err))
