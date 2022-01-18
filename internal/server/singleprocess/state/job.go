@@ -395,10 +395,10 @@ RETRY_ASSIGN:
 	defer txn.Abort()
 
 	// Turn our runner into a runner record so we can more efficiently assign
-	runnerRec := newRunnerRecord(r)
+	runnerIdx := newRunnerIndex(r)
 
 	// candidateQuery finds candidate jobs to assign.
-	type candidateFunc func(*memdb.Txn, memdb.WatchSet, *runnerRecord, bool) (*jobIndex, error)
+	type candidateFunc func(*memdb.Txn, memdb.WatchSet, *runnerIndex, bool) (*jobIndex, error)
 	candidateQuery := []candidateFunc{
 		s.jobCandidateById,
 		s.jobCandidateAny,
@@ -415,7 +415,7 @@ RETRY_ASSIGN:
 	var candidates []*jobIndex
 	ws := memdb.NewWatchSet()
 	for _, f := range candidateQuery {
-		job, err := f(txn, ws, runnerRec, assign)
+		job, err := f(txn, ws, runnerIdx, assign)
 		if err != nil {
 			return nil, err
 		}
@@ -988,7 +988,7 @@ func (s *State) JobIsAssignable(ctx context.Context, jobpb *pb.Job) (bool, error
 			// We're out of candidates and we found none.
 			return false, nil
 		}
-		runner := raw.(*runnerRecord)
+		runner := raw.(*runnerIndex)
 
 		// Check our target-specific check
 		if targetCheck != nil {
@@ -1358,7 +1358,7 @@ func (s *State) jobCascadeDependentState(
 // jobCandidateById returns the most promising candidate job to assign
 // that is targeting a specific runner by ID.
 func (s *State) jobCandidateById(
-	memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerRecord, assign bool,
+	memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerIndex, assign bool,
 ) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
@@ -1397,7 +1397,7 @@ func (s *State) jobCandidateById(
 
 // jobCandidateAny returns the first candidate job that targets any runner.
 func (s *State) jobCandidateAny(
-	memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerRecord, assign bool,
+	memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerIndex, assign bool,
 ) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
