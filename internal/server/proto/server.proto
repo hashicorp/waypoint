@@ -2196,6 +2196,59 @@ message Runner {
     bool deprecated_is_odr = 4;
   }
 
+  // Components are the list of components that the runner supports. This
+  // is used to match jobs to this runner.
+  repeated Component components = 3;
+
+  //----------------------------------------------------------------------
+  // Server set fields. The fields below are set by the server and are
+  // ignored as part of RunnerConfig.
+  //----------------------------------------------------------------------
+
+  // True if this runner is currently online and connected.
+  bool online = 11;
+
+  // The timestamps store the time this runner was first seen and the time
+  // the runner was last seen. These values can be the same if the runner
+  // was seen exactly once. The values are updated only when a runner starts
+  // up.
+  google.protobuf.Timestamp first_seen = 9;
+  google.protobuf.Timestamp last_seen = 10;
+
+  // The state of whether this runner is adopted or not.
+  AdoptionState adoption_state = 8;
+
+  // Valid adoption states. The transitions allowed are:
+  //
+  // - ∅ => NEW
+  // - ∅ => PREADOPTED
+  // - NEW => PREADOPTED
+  // - * => ADOPTED
+  // - * => REJECTED
+  // - ADOPTED => NEW
+  // - REJECTED => NEW
+  //
+  // Both the "NEW" and "REJECTED" state are effectively "unadopted" states,
+  // but they're explicit about why they're not currently adopted. Both
+  // "ADOPTED" and "PREADOPTED" are adopted states where the runner will
+  // be given work, but are also explicit about how they were adopted.
+  enum AdoptionState {
+    // New runner we've never seen before or has been forgotten.
+    // Runners in this state will wait for adoption.
+    NEW = 0;
+
+    // Runner provided a valid runner token despite not being explicitly
+    // adopted. This type of runner can be forcibly rejected later such
+    // that pre-adoption doesn't work at all.
+    PREADOPTED = 1;
+
+    // Explicitly adopted. Runner will get a token on handshake.
+    ADOPTED = 2;
+
+    // Explicitly rejected. Runner will error immediately on startup.
+    REJECTED = 3;
+  };
+
   message ODR {
     string profile_id = 1;
   }
@@ -2203,10 +2256,6 @@ message Runner {
   message Local {}
 
   message Remote {}
-
-  // Components are the list of components that the runner supports. This
-  // is used to match jobs to this runner.
-  repeated Component components = 3;
 }
 
 message RunnerConfigRequest {
