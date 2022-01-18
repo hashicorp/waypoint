@@ -22,7 +22,7 @@
     "format": "next-hashicorp format",
     "generate:readme": "next-hashicorp markdown-blocks README.md",
     "lint": "next-hashicorp lint",
-    "start": "next-remote-watch './content/**/*.mdx'"
+    "start": "./scripts/website-start.sh"
   },
   "engines": {
     "npm": ">=7.0.0"
