@@ -30,7 +30,7 @@ func (s *service) GetRunner(
 	ctx context.Context,
 	req *pb.GetRunnerRequest,
 ) (*pb.Runner, error) {
-	return s.state.RunnerById(req.RunnerId)
+	return s.state.RunnerById(req.RunnerId, nil)
 }
 
 func (s *service) RunnerGetDeploymentConfig(
@@ -239,7 +239,7 @@ func (s *service) RunnerJobStream(
 	log = log.With("runner_id", reqEvent.Request.RunnerId)
 
 	// Get the runner to validate it is registered
-	runner, err := s.state.RunnerById(reqEvent.Request.RunnerId)
+	runner, err := s.state.RunnerById(reqEvent.Request.RunnerId, nil)
 	if err != nil {
 		log.Error("unknown runner connected", "id", reqEvent.Request.RunnerId)
 		return err
