@@ -12,7 +12,7 @@ const _TYPE_TRANSLATIONS = {
 
 const _TYPE_ROUTES = {
   build: 'workspace.projects.project.app.build',
-  deployment: 'workspace.projects.project.app.deployment.deployment-seq',
+  deployment: 'workspace.projects.project.app.deployments.deployment',
   release: 'workspace.projects.project.app.release',
 };
 interface ArtifactModel {

@@ -2,7 +2,7 @@
 {{#if (and
   (not-eq this.target.currentRouteName 'workspace.projects.project.app.build')
   (not-eq this.target.currentRouteName 'workspace.projects.project.app.release.index')
-  (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployment.deployment-seq.resource')
+  (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployments.deployment.resource')
   (not-eq this.target.currentRouteName 'workspace.projects.project.app.release.resource')
 )}}
 <PageHeader @iconName="git-repo">
@@ -48,7 +48,7 @@
 </PageHeader>
 
 <Pds::TabNav>
-  <LinkTo @route="workspace.projects.project.app.deployment"
+  <LinkTo @route="workspace.projects.project.app.deployments"
     @models={{array @model.application.project @model.application.application }}>
     <FlightIcon @name="upload" class="tab-icon" />
     {{t "nav.deployments"}}
