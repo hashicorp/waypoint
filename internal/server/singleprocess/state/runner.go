@@ -23,10 +23,8 @@ const (
 )
 
 func init() {
-	// Note: there is no dbIndexer for runners because we never have to
-	// reinit data from disk. When a runner registers, we always fetch the
-	// data from disk. We don't need to prefetch it.
 	dbBuckets = append(dbBuckets, runnerBucket)
+	dbIndexers = append(dbIndexers, (*State).runnerIndexInit)
 	schemas = append(schemas, runnerSchema)
 }
 
@@ -342,6 +340,26 @@ func (s *State) runnerEmpty(memTxn *memdb.Txn) (bool, error) {
 	}
 
 	return iter.Next() == nil, nil
+}
+
+// runnerIndexInit initializes the config index from persisted data.
+func (s *State) runnerIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
+	bucket := dbTxn.Bucket(jobBucket)
+	c := bucket.Cursor()
+
+	for k, v := c.Last(); k != nil; k, v = c.Prev() {
+		var value pb.Runner
+		if err := proto.Unmarshal(v, &value); err != nil {
+			return err
+		}
+
+		_, err := s.runnerIndexSet(memTxn, k, &value)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // runnerIndexSet writes an index record for a single runner.
