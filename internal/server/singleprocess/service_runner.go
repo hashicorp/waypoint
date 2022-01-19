@@ -93,15 +93,52 @@ func (s *service) RunnerConfig(
 		return err
 	}
 
-	// Defer deleting this.
-	// TODO(mitchellh): this is too aggressive and we want to have some grace
-	// period for reconnecting clients. We should clean this up.
+	// Mark the runner as offline if they disconnect from the config stream loop.
 	defer func() {
-		log.Trace("deleting runner")
-		if err := s.state.RunnerDelete(record.Id); err != nil {
-			log.Error("failed to delete runner data. This should not happen.", "err", err)
+		log.Trace("marking runner as offline")
+		if err := s.state.RunnerOffline(record.Id); err != nil {
+			log.Error("failed to mark runner as offline. This should not happen.", "err", err)
 		}
 	}()
+
+	// Get our token and reverify that we are adopted.
+	tok := s.tokenFromContext(ctx)
+	if tok == nil {
+		log.Error("no token, should not be possible")
+		return status.Errorf(codes.Unauthenticated, "no token")
+	}
+	switch tok.Kind.(type) {
+	case *pb.Token_Login_:
+		// Legacy (pre WP 0.8) token. We accept these as preadopted.
+		// NOTE(mitchellh): One day, we should reject these because modern
+		// preadoption should be via runner tokens.
+		if err := s.state.RunnerAdopt(record.Id, true); err != nil {
+			return err
+		}
+
+	case *pb.Token_Runner_:
+		// A runner token. We validate here that we're not explicitly rejected.
+		// We have to check again here because runner tokens can be created
+		// for ANY runner, but we can reject a SPECIFIC runner.
+		r, err := s.state.RunnerById(record.Id, nil)
+		if err != nil {
+			return err
+		}
+		if r.AdoptionState == pb.Runner_REJECTED {
+			return status.Errorf(codes.Unauthenticated,
+				"runner is explicitly rejected (unadopted)")
+		}
+
+		// Mark it as preadopted if it isn't adopted
+		if r.AdoptionState != pb.Runner_ADOPTED {
+			if err := s.state.RunnerAdopt(record.Id, true); err != nil {
+				return err
+			}
+		}
+
+	default:
+		return status.Errorf(codes.Unauthenticated, "not a valid runner token")
+	}
 
 	// Start a goroutine that listens on the recvmsg so we can detect
 	// when the client exited.
@@ -243,6 +280,13 @@ func (s *service) RunnerJobStream(
 	if err != nil {
 		log.Error("unknown runner connected", "id", reqEvent.Request.RunnerId)
 		return err
+	}
+
+	// The runner must be adopted to get a job.
+	if runner.AdoptionState != pb.Runner_ADOPTED &&
+		runner.AdoptionState != pb.Runner_PREADOPTED {
+		return status.Errorf(codes.FailedPrecondition,
+			"runner must be adopted prior to requesting jobs")
 	}
 
 	// Get a job assignment for this runner
