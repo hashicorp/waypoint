@@ -5095,6 +5095,10 @@ type RunnerTokenResponse struct {
 	// The token to use for subsequent API calls. The runner should reconnect
 	// and use this token which contains specific adoption information to allow
 	// runner APIs through.
+	//
+	// If this token is empty, that means the token sent for the API request
+	// is already valid and no reconnect is necessary; just keep using the same
+	// token.
 	Token string `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 }
 
