@@ -309,7 +309,10 @@ func (s *State) runnerOffline(dbTxn *bolt.Tx, memTxn *memdb.Txn, id string) erro
 		// a pending record for a non-adopted/rejected runner. But we DO want
 		// to keep around states like ADOPTED or REJECTED so that if the runner
 		// comes back, we know exactly how to handle them.
-		del = r.AdoptionState == pb.Runner_NEW
+		//
+		// We also delete PREADOPTED because if the runner comes back, we expect
+		// it'll have a valid token to set it back to the PREADOPTED state.
+		del = r.AdoptionState == pb.Runner_NEW || r.AdoptionState == pb.Runner_PREADOPTED
 
 	default:
 		// All other runner types like ODR and Local we don't keep records of.
