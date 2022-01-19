@@ -6,6 +6,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -22,27 +24,23 @@ func HandleTrigger(addr string) http.HandlerFunc {
 		log := hclog.FromContext(ctx)
 		log.SetLevel(hclog.Debug)
 
-		// TODO(briancain): Authless trigger URLs should be able to make a request
+		// Authless trigger URLs should be able to make a request
 		// without a token.
-		// "No token" requests should probably return http 404 on authenticated trigger URLs
-		// Get our authorization token
 		token := r.URL.Query().Get("token")
+		requireAuth := true
 		if token == "" {
-			// TODO(briancain): Not an error yet, look up trigger by id and if not
-			// authenticated, then continue
-			http.Error(w, "no token provided", 403)
-			return
+			log.Trace("no token provided, will attempt to run authless trigger")
+			requireAuth = false
+			//http.Error(w, "no token provided", 403)
 		}
 
-		// TODO(briancain): handle auth with "token user" tokens for authenticated trigger URLs
 		// Connect back to our own gRPC service.
-		// TODO(briancain): how do authless requests initiate a grpc connection
 		grpcConn, err := serverclient.Connect(ctx,
 			serverclient.Logger(log),
 			serverclient.FromContextConfig(&clicontext.Config{
 				Server: serverconfig.Client{
 					Address:     addr,
-					RequireAuth: true,
+					RequireAuth: requireAuth,
 					AuthToken:   token,
 
 					// Our gRPC server should always be listening on TLS.
@@ -63,19 +61,37 @@ func HandleTrigger(addr string) http.HandlerFunc {
 
 		requestVars := mux.Vars(r)
 		runTriggerId := requestVars["id"]
-		//triggerOverrideVars := requestVars["override_vars"]
+		//triggerOverrideVars := r.URL.Query().Get("variables")
 
-		// attempt to make a grpc request to run trigger by id
-		resp, err := client.RunTrigger(ctx, &pb.RunTriggerRequest{
+		var resp *pb.RunTriggerResponse
+		runTriggerReq := &pb.RunTriggerRequest{
 			Ref: &pb.Ref_Trigger{
 				Id: runTriggerId,
 			},
 			VariableOverrides: nil, // TODO fix me
-		})
+		}
+
+		if requireAuth {
+			// attempt to make a grpc request to run trigger by id
+			resp, err = client.RunTrigger(ctx, runTriggerReq)
+		} else {
+			// attempt to make a grpc request to run trigger by id
+			resp, err = client.AuthlessRunTrigger(ctx, runTriggerReq)
+		}
 		if err != nil {
 			log.Error("server failed to run trigger", "id", runTriggerId, "err", err)
-			// improve http error code, which is more applicable for general queue failures?
-			http.Error(w, fmt.Sprintf("server failed to run trigger: %s", err), 412)
+
+			if status.Code(err) == codes.PermissionDenied {
+				http.Error(w, fmt.Sprintf("request not authorized to run trigger: %s", err), 401)
+			} else {
+				// improve http error code, which is more applicable for general queue failures?
+				http.Error(w, fmt.Sprintf("server failed to run trigger: %s", err), 412)
+			}
+
+			return
+		}
+		if resp == nil {
+			http.Error(w, fmt.Sprintf("server returned no job ids from run trigger %q", runTriggerId), 500)
 			return
 		}
 		jobIds := resp.JobIds
