@@ -57,6 +57,7 @@ func TestServiceRunnerConfig_happy(t *testing.T) {
 		require.NoError(err)
 		require.NotNil(runner)
 		require.Equal(runner.Id, id)
+		require.Equal(pb.Runner_PREADOPTED, runner.AdoptionState)
 
 		runners, err := client.ListRunners(ctx, &pb.ListRunnersRequest{})
 		require.NoError(err)
