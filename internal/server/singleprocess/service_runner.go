@@ -67,6 +67,75 @@ func (s *service) RunnerGetDeploymentConfig(
 	}, nil
 }
 
+func (s *service) RunnerToken(
+	ctx context.Context,
+	req *pb.RunnerTokenRequest,
+) (*pb.RunnerTokenResponse, error) {
+	log := hclog.FromContext(ctx)
+	record := req.Runner
+
+	// Create our record
+	log = log.With("runner_id", record.Id)
+	log.Trace("registering runner")
+	if err := s.state.RunnerCreate(record); err != nil {
+		return nil, err
+	}
+
+	// When we exit, mark the runner as offline. This will delete the record
+	// if we're never adopted.
+	defer func() {
+		log.Trace("marking runner as offline")
+		if err := s.state.RunnerOffline(record.Id); err != nil {
+			log.Error("failed to mark runner as offline. This should not happen.", "err", err)
+		}
+	}()
+
+	for {
+		// Get the runner
+		ws := memdb.NewWatchSet()
+		r, err := s.state.RunnerById(record.Id, ws)
+		if err != nil {
+			return nil, err
+		}
+
+		switch r.AdoptionState {
+		case pb.Runner_REJECTED:
+			// Runner is explicitly rejected. Return and error.
+			return nil, status.Errorf(codes.PermissionDenied,
+				"runner adoption is explicitly rejected")
+
+		case pb.Runner_ADOPTED:
+			// Runner explicitly adopted, create token and return!
+			tok, err := s.newToken(
+				// Doesn't expire because we can expire it by unadopting.
+				// NOTE(mitchellh): At some point, we should make these
+				// expire and introduce rotation as a feature of adoption.
+				0,
+
+				DefaultKeyId,
+				nil,
+				&pb.Token{
+					Kind: &pb.Token_Runner_{
+						Runner: &pb.Token_Runner{
+							Id: record.Id,
+						},
+					},
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			return &pb.RunnerTokenResponse{Token: tok}, nil
+		}
+
+		// Wait for changes
+		if err := ws.WatchCtx(ctx); err != nil {
+			return nil, err
+		}
+	}
+}
+
 func (s *service) RunnerConfig(
 	srv pb.Waypoint_RunnerConfigServer,
 ) error {

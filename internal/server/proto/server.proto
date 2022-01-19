@@ -263,9 +263,15 @@ service Waypoint {
   // These are not meant to be public endpoints.
   //----------------------------------------------------------------------
 
-  // RunnerConfig is called to register a runner and receive the configuration
-  // for the runner. The response is a stream so that the configuration can
-  // be updated later.
+  // RunnerToken is called to register a runner and request a token for
+  // remaining runner API calls. This kicks off the "adoption" process
+  // (if necessary).
+  //
+  // This is unauthenticated (but requires a cookie in the metadata).
+  rpc RunnerToken (RunnerTokenRequest) returns (RunnerTokenResponse);
+
+  // RunnerConfig is called to receive the configuration for the runner.
+  // The response is a stream so that the configuration can be updated later.
   rpc RunnerConfig(stream RunnerConfigRequest) returns (stream RunnerConfigResponse);
 
   // RunnerJobStream is called by a runner to request a single job for
@@ -2258,13 +2264,27 @@ message Runner {
   message Remote {}
 }
 
+message RunnerTokenRequest {
+  // Runner to register. See Runner for what fields can be set.
+  Runner runner = 1;
+}
+
+message RunnerTokenResponse {
+  // The token to use for subsequent API calls. The runner should reconnect
+  // and use this token which contains specific adoption information to allow
+  // runner APIs through.
+  string token = 1;
+}
+
 message RunnerConfigRequest {
   oneof event {
     Open open = 1;
   }
 
   message Open {
-    // Runner to register. See Runner for what fields can be set.
+    // Runner to register. See Runner for what fields can be set. This
+    // should match RunnerTokenRequest. This accepts a full runner (rather
+    // than just an ID) for legacy compatbility reasons.
     Runner runner = 1;
   }
 }
