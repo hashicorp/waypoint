@@ -322,13 +322,6 @@ func (s *State) runnerOffline(dbTxn *bolt.Tx, memTxn *memdb.Txn, id string) erro
 		return s.runnerDelete(dbTxn, memTxn, id)
 	}
 
-	// If we're not deleting from disk, we always delete from memory.
-	// The old value will be looked back up if it comes back online.
-	err = memTxn.Delete(runnerTableName, &runnerIndex{Id: id})
-	if err == memdb.ErrNotFound {
-		err = nil
-	}
-
 	return nil
 }
 

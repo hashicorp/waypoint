@@ -16,6 +16,29 @@ type WaypointServer struct {
 	mock.Mock
 }
 
+// AdoptRunner provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) AdoptRunner(_a0 context.Context, _a1 *gen.AdoptRunnerRequest) (*emptypb.Empty, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.AdoptRunnerRequest) *emptypb.Empty); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.AdoptRunnerRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // BootstrapToken provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) BootstrapToken(_a0 context.Context, _a1 *emptypb.Empty) (*gen.NewTokenResponse, error) {
 	ret := _m.Called(_a0, _a1)
