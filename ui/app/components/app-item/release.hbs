@@ -44,7 +44,7 @@
       {{#if @matchingDeployment}}
         <LinkTo
           title={{concat (t "page.deployment.title") " v" @matchingDeployment}}
-          @route="workspace.projects.project.app.deployment.deployment-seq"
+          @route="workspace.projects.project.app.deployments.deployment"
           @models={{array @matchingDeployment}}
         >
           Deployment <b class="badge badge--version">v{{@matchingDeployment}}</b>

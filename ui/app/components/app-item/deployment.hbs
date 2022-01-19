@@ -2,13 +2,13 @@
   class="app-item
   {{if (not-eq @deployment.sequence @latest.sequence) "app-item--previous"}}
   {{if (eq @deployment.state 4) "app-item--destroyed"}}
-  {{if (is-active 'workspace.projects.project.app.deployment.deployment-seq' @deployment.sequence) "active"}}"
+  {{if (is-active 'workspace.projects.project.app.deployments.deployment' @deployment.sequence) "active"}}"
 >
   <hr>
   <LinkTo
     data-test-deployment-list-item
     title={{concat (t "page.deployment.title") " v" @deployment.sequence }}
-    @route="workspace.projects.project.app.deployment.deployment-seq"
+    @route="workspace.projects.project.app.deployments.deployment"
     @models={{array @deployment.sequence}}
   >
     <b class="badge badge--version">v{{@deployment.sequence}}</b>
