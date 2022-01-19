@@ -7,7 +7,7 @@ import (
 	"os/signal"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint/internal/cli"
+	"github.com/hashicorp/waypoint/internal_nomore/cli"
 	"github.com/hashicorp/waypoint/x/slack/pkg/bot"
 )
 

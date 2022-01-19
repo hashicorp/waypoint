@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	wpdocker "github.com/hashicorp/waypoint/builtin/docker"
 	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
-	"github.com/hashicorp/waypoint/internal/assets"
-	"github.com/hashicorp/waypoint/internal/pkg/epinject"
+	"github.com/hashicorp/waypoint/internal_nomore/assets"
+	"github.com/hashicorp/waypoint/internal_nomore/pkg/epinject"
 )
 
 // Builder uses `docker build` to build a Docker iamge.

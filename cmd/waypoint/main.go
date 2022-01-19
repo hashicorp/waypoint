@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hashicorp/waypoint/internal/cli"
+	"github.com/hashicorp/waypoint/internal_nomore/cli"
 )
 
 func main() {

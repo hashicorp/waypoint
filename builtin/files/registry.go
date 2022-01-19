@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/internal/pkg/copy"
+	"github.com/hashicorp/waypoint/internal_nomore/pkg/copy"
 	"github.com/oklog/ulid"
 )
 

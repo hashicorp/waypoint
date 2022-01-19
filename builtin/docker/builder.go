@@ -28,8 +28,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
-	"github.com/hashicorp/waypoint/internal/assets"
-	"github.com/hashicorp/waypoint/internal/pkg/epinject"
+	"github.com/hashicorp/waypoint/internal_nomore/assets"
+	"github.com/hashicorp/waypoint/internal_nomore/pkg/epinject"
 )
 
 const minBuildkitDockerVersion = "1.39"

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/builtin/aws/ecr"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
-	wpssh "github.com/hashicorp/waypoint/internal/ssh"
+	wpssh "github.com/hashicorp/waypoint/internal_nomore/ssh"
 	"github.com/pkg/errors"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"

@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/hashicorp/waypoint/internal/cli"
+	"github.com/hashicorp/waypoint/internal_nomore/cli"
 )
 
 func main() {
