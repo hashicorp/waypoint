@@ -203,6 +203,9 @@ service Waypoint {
   // This list does not include previous on-demand runners that have exited.
   rpc ListRunners(ListRunnersRequest) returns (ListRunnersResponse);
 
+  // AdoptRunners allows marking a runner as adopted or rejected.
+  rpc AdoptRunner(AdoptRunnerRequest) returns (google.protobuf.Empty);
+
   // GetServerConfig sets configuration for the Waypoint server.
   rpc GetServerConfig(google.protobuf.Empty) returns (GetServerConfigResponse);
 
@@ -2414,6 +2417,14 @@ message ListRunnersRequest {}
 
 message ListRunnersResponse {
   repeated Runner runners = 1;
+}
+
+message AdoptRunnerRequest {
+  // ID of the runner to change the adoption status.
+  string runner_id = 1;
+
+  // Whether to adopt or reject. True for adopt, false for reject.
+  bool adopt = 2;
 }
 
 /********************************************************************

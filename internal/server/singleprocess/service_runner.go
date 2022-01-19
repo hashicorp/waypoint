@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
@@ -66,6 +67,20 @@ func (s *service) RunnerGetDeploymentConfig(
 		ServerTls:           addr.Tls,
 		ServerTlsSkipVerify: addr.TlsSkipVerify,
 	}, nil
+}
+
+func (s *service) AdoptRunner(
+	ctx context.Context,
+	req *pb.AdoptRunnerRequest,
+) (*empty.Empty, error) {
+	var err error
+	if req.Adopt {
+		err = s.state.RunnerAdopt(req.RunnerId, false)
+	} else {
+		err = s.state.RunnerReject(req.RunnerId)
+	}
+
+	return &empty.Empty{}, err
 }
 
 func (s *service) RunnerToken(
@@ -192,6 +207,12 @@ func (s *service) RunnerConfig(
 		}
 	}()
 
+	// We'll set preadopt to true if we're in a state where we can implicitly
+	// adopt the runner if we don't have explicit adoption. This is allowed
+	// in two cases: (1) legacy login tokens for pre WP 0.8 and (2) manually
+	// created runner tokens that match this runner.
+	preadopt := false
+
 	// Get our token and reverify that we are adopted.
 	tok := s.tokenFromContext(ctx)
 	if tok == nil {
@@ -203,9 +224,7 @@ func (s *service) RunnerConfig(
 		// Legacy (pre WP 0.8) token. We accept these as preadopted.
 		// NOTE(mitchellh): One day, we should reject these because modern
 		// preadoption should be via runner tokens.
-		if err := s.state.RunnerAdopt(record.Id, true); err != nil {
-			return err
-		}
+		preadopt = true
 
 	case *pb.Token_Runner_:
 		// A runner token. We validate here that we're not explicitly rejected.
@@ -216,24 +235,26 @@ func (s *service) RunnerConfig(
 				"provided runner token is for a different runner")
 		}
 
-		r, err := s.state.RunnerById(record.Id, nil)
-		if err != nil {
-			return err
-		}
-		if r.AdoptionState == pb.Runner_REJECTED {
-			return status.Errorf(codes.PermissionDenied,
-				"runner is explicitly rejected (unadopted)")
-		}
-
-		// Mark it as preadopted if it isn't adopted
-		if r.AdoptionState != pb.Runner_ADOPTED {
-			if err := s.state.RunnerAdopt(record.Id, true); err != nil {
-				return err
-			}
-		}
+		preadopt = true
 
 	default:
 		return status.Errorf(codes.PermissionDenied, "not a valid runner token")
+	}
+
+	// If the runner we just registered is explicitly rejected then we
+	// do not allow it to continue, even with a preadoption token.
+	r, err := s.state.RunnerById(record.Id, nil)
+	if err != nil {
+		return err
+	}
+	if r.AdoptionState == pb.Runner_REJECTED {
+		return status.Errorf(codes.PermissionDenied,
+			"runner is explicitly rejected (unadopted)")
+	}
+	if preadopt && r.AdoptionState != pb.Runner_ADOPTED {
+		if err := s.state.RunnerAdopt(record.Id, true); err != nil {
+			return err
+		}
 	}
 
 	// Start a goroutine that listens on the recvmsg so we can detect
