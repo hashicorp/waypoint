@@ -8,6 +8,8 @@ import (
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/protocolversion"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -107,9 +109,13 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 
 	// Bootstrap
 	tokenResp, err := client.BootstrapToken(context.Background(), &empty.Empty{})
+	if status.Code(err) == codes.PermissionDenied {
+		// Ignore bootstrap already complete errors
+		err = nil
+		tokenResp = &pb.NewTokenResponse{Token: ""}
+	}
 	conn.Close()
 	require.NoError(err)
-	require.NotEmpty(tokenResp.Token)
 
 	// Reconnect with a token
 	token := c.token

@@ -3,6 +3,7 @@ package singleprocess
 import (
 	"context"
 	"io"
+	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
@@ -197,7 +198,7 @@ func (s *service) RunnerConfig(
 		log.Error("no token, should not be possible")
 		return status.Errorf(codes.Unauthenticated, "no token")
 	}
-	switch tok.Kind.(type) {
+	switch k := tok.Kind.(type) {
 	case *pb.Token_Login_:
 		// Legacy (pre WP 0.8) token. We accept these as preadopted.
 		// NOTE(mitchellh): One day, we should reject these because modern
@@ -210,12 +211,17 @@ func (s *service) RunnerConfig(
 		// A runner token. We validate here that we're not explicitly rejected.
 		// We have to check again here because runner tokens can be created
 		// for ANY runner, but we can reject a SPECIFIC runner.
+		if k.Runner.Id != "" && !strings.EqualFold(k.Runner.Id, record.Id) {
+			return status.Errorf(codes.PermissionDenied,
+				"provided runner token is for a different runner")
+		}
+
 		r, err := s.state.RunnerById(record.Id, nil)
 		if err != nil {
 			return err
 		}
 		if r.AdoptionState == pb.Runner_REJECTED {
-			return status.Errorf(codes.Unauthenticated,
+			return status.Errorf(codes.PermissionDenied,
 				"runner is explicitly rejected (unadopted)")
 		}
 
@@ -227,7 +233,7 @@ func (s *service) RunnerConfig(
 		}
 
 	default:
-		return status.Errorf(codes.Unauthenticated, "not a valid runner token")
+		return status.Errorf(codes.PermissionDenied, "not a valid runner token")
 	}
 
 	// Start a goroutine that listens on the recvmsg so we can detect

@@ -66,6 +66,117 @@ func TestServiceRunnerConfig_happy(t *testing.T) {
 	}
 }
 
+// Test runnerconfig with a premade runner token.
+func TestServiceRunnerConfig_preadopt(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Get the runner
+	id, err := server.Id()
+	require.NoError(err)
+
+	// Reconnect with a runner token
+	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Runner_{
+			Runner: &pb.Token_Runner{
+				Id: "",
+			},
+		},
+	})
+	require.NoError(err)
+	client = server.TestServer(t, impl, server.TestWithToken(tok))
+
+	// Open the config stream
+	stream, err := client.RunnerConfig(ctx)
+	require.NoError(err)
+	defer stream.CloseSend()
+
+	// Register
+	require.NoError(stream.Send(&pb.RunnerConfigRequest{
+		Event: &pb.RunnerConfigRequest_Open_{
+			Open: &pb.RunnerConfigRequest_Open{
+				Runner: &pb.Runner{Id: id},
+			},
+		},
+	}))
+
+	// Wait for first message to confirm we're registered
+	resp, err := stream.Recv()
+	require.NoError(err)
+	require.NotNil(resp.Config)
+	require.Empty(resp.Config.ConfigVars)
+
+	// Get and list the runner
+	{
+		runner, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: id})
+		require.NoError(err)
+		require.NotNil(runner)
+		require.Equal(runner.Id, id)
+		require.Equal(pb.Runner_PREADOPTED, runner.AdoptionState)
+
+		runners, err := client.ListRunners(ctx, &pb.ListRunnersRequest{})
+		require.NoError(err)
+		require.Len(runners.Runners, 1)
+		require.Equal(runners.Runners[0].Id, id)
+	}
+}
+
+// Test runnerconfig with a premade runner token with the wrong ID.
+func TestServiceRunnerConfig_preadoptWrongId(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Get the runner
+	id, err := server.Id()
+	require.NoError(err)
+
+	// Reconnect with a runner token
+	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Runner_{
+			Runner: &pb.Token_Runner{
+				Id: "hello",
+			},
+		},
+	})
+	require.NoError(err)
+	client = server.TestServer(t, impl, server.TestWithToken(tok))
+
+	// Open the config stream
+	stream, err := client.RunnerConfig(ctx)
+	require.NoError(err)
+	defer stream.CloseSend()
+
+	// Register
+	require.NoError(stream.Send(&pb.RunnerConfigRequest{
+		Event: &pb.RunnerConfigRequest_Open_{
+			Open: &pb.RunnerConfigRequest_Open{
+				Runner: &pb.Runner{Id: id},
+			},
+		},
+	}))
+
+	// Confirm we're rejected
+	_, err = stream.Recv()
+	require.Error(err)
+	require.Equal(codes.PermissionDenied, status.Code(err))
+}
+
 // ODR with no job is not allowed
 func TestServiceRunnerConfig_odrNoJob(t *testing.T) {
 	ctx := context.Background()
