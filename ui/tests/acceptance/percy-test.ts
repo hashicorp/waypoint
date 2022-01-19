@@ -16,4 +16,14 @@ module('Acceptance | Percy', function (hooks) {
     await percySnapshot('Empty projects list');
     assert.ok(true);
   });
+
+  test('populated projects list', async function (assert) {
+    this.server.create('project', { name: 'acme-project' });
+    this.server.create('project', { name: 'acme-marketing' });
+    this.server.create('project', { name: 'acme-anvils' });
+
+    await visit('/default');
+    await percySnapshot('Populated projects list');
+    assert.ok(true);
+  });
 });
