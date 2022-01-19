@@ -151,7 +151,7 @@ func (s *service) Authenticate(
 		return s.authLogin(ctx, body, endpoint)
 
 	case *pb.Token_Runner_:
-		return s.authRunner(ctx, k.Runner)
+		return s.authRunner(ctx, k.Runner, endpoint)
 
 	default:
 		return nil, ErrInvalidToken
@@ -160,7 +160,7 @@ func (s *service) Authenticate(
 
 // authRunner authenticates runner token types.
 func (s *service) authRunner(
-	ctx context.Context, tokenRunner *pb.Token_Runner,
+	ctx context.Context, tokenRunner *pb.Token_Runner, endpoint string,
 ) (context.Context, error) {
 	// If no ID is set, then the runner is assumed at all times to be adopted.
 	// This use case is used to "pre-adopt" runners and avoid the adoption
@@ -170,7 +170,31 @@ func (s *service) authRunner(
 		return ctx, nil
 	}
 
-	// TODO(mitchellh): need to look up the runner to ensure it exists and is adopted
+	// If this is a runner registration request, we allow it through
+	// because those APIs will verify and adopt the runner if they can.
+	if endpoint == "RunnerConfig" || endpoint == "RunnerToken" {
+		return ctx, nil
+	}
+
+	// Get our runner
+	r, err := s.state.RunnerById(tokenRunner.Id, nil)
+	if status.Code(err) == codes.NotFound {
+		err = nil
+		r = nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Runner is not adopted if it does not exist or is not in an adopted state
+	notAdopted := r == nil ||
+		(r.AdoptionState != pb.Runner_ADOPTED &&
+			r.AdoptionState != pb.Runner_PREADOPTED)
+	if notAdopted {
+		return nil, status.Errorf(codes.PermissionDenied,
+			"runner is not adopted")
+	}
+
 	return ctx, nil
 }
 

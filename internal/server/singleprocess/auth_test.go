@@ -318,11 +318,7 @@ func TestServiceAuth(t *testing.T) {
 
 		// Auth should NOT work
 		_, err = s.Authenticate(context.Background(), token, "test", nil)
-
-		// TODO(mitchellh): make this fail when runner adoption is implemented
-		// TODO(mitchellh): add another test like this where it passes
-		// TODO(mitchellh): add another test where labels are used
-		require.NoError(err)
+		require.Error(err)
 	})
 }
 
