@@ -16,6 +16,29 @@ type WaypointServer struct {
 	mock.Mock
 }
 
+// AuthlessRunTrigger provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) AuthlessRunTrigger(_a0 context.Context, _a1 *gen.RunTriggerRequest) (*gen.RunTriggerResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.RunTriggerResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.RunTriggerRequest) *gen.RunTriggerResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.RunTriggerResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.RunTriggerRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // BootstrapToken provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) BootstrapToken(_a0 context.Context, _a1 *emptypb.Empty) (*gen.NewTokenResponse, error) {
 	ret := _m.Called(_a0, _a1)

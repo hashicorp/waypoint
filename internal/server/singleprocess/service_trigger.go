@@ -76,6 +76,33 @@ func (s *service) ListTriggers(
 	return &pb.ListTriggerResponse{Triggers: result}, nil
 }
 
+func (s *service) AuthlessRunTrigger(
+	ctx context.Context,
+	req *pb.RunTriggerRequest,
+) (*pb.RunTriggerResponse, error) {
+	if err := serverptypes.ValidateRunTriggerRequest(req); err != nil {
+		return nil, err
+	}
+
+	log := hclog.FromContext(ctx)
+	log.Trace("attempting to find and run trigger from authless func", "trigger_id", req.Ref.Id)
+
+	trigger, err := s.state.TriggerGet(req.Ref)
+	if err != nil {
+		log.Error("failed to get requested trigger", "trigger_id", req.Ref.Id, "error", err)
+		return nil, status.Errorf(codes.NotFound,
+			"trigger id %q not found. check the waypoint server logs for more information", req.Ref.Id)
+	}
+
+	if trigger.Authenticated {
+		log.Error("requested trigger id requires authentication to run", "trigger_id", trigger.Id)
+		return nil, status.Error(codes.PermissionDenied, "trigger requires authentication")
+	}
+
+	resp, err := s.RunTrigger(ctx, req)
+	return resp, err
+}
+
 func (s *service) RunTrigger(
 	ctx context.Context,
 	req *pb.RunTriggerRequest,

@@ -62,6 +62,10 @@ var (
 		"ListOIDCAuthMethods": {},
 		"GetOIDCAuthURL":      {},
 		"CompleteOIDCAuth":    {},
+
+		"RunnerToken": {},
+
+		"AuthlessRunTrigger": {},
 	}
 )
 

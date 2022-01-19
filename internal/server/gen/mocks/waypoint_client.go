@@ -18,6 +18,36 @@ type WaypointClient struct {
 	mock.Mock
 }
 
+// AuthlessRunTrigger provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) AuthlessRunTrigger(ctx context.Context, in *gen.RunTriggerRequest, opts ...grpc.CallOption) (*gen.RunTriggerResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.RunTriggerResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.RunTriggerRequest, ...grpc.CallOption) *gen.RunTriggerResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.RunTriggerResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.RunTriggerRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // BootstrapToken provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) BootstrapToken(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.NewTokenResponse, error) {
 	_va := make([]interface{}, len(opts))
