@@ -51,6 +51,9 @@ type runnerIndex struct {
 
 	// Id of the runner
 	Id string
+
+	// State of adoption for this runner
+	AdoptionState pb.Runner_AdoptionState
 }
 
 func (s *State) RunnerCreate(r *pb.Runner) error {
@@ -365,8 +368,9 @@ func (s *State) runnerIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 // runnerIndexSet writes an index record for a single runner.
 func (s *State) runnerIndexSet(txn *memdb.Txn, id []byte, runnerpb *pb.Runner) (*runnerIndex, error) {
 	rec := &runnerIndex{
-		Runner: runnerpb,
-		Id:     runnerpb.Id,
+		Runner:        runnerpb,
+		Id:            runnerpb.Id,
+		AdoptionState: runnerpb.AdoptionState,
 	}
 
 	// Insert the index

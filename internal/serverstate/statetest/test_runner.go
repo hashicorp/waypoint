@@ -2,7 +2,9 @@ package statetest
 
 import (
 	"testing"
+	"time"
 
+	"github.com/hashicorp/go-memdb"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -118,18 +120,25 @@ func TestRunnerAdopt(t *testing.T, factory Factory, restartF RestartFactory) {
 	require.NoError(s.RunnerCreate(rec))
 
 	// Should be new
-	{
-		found, err := s.RunnerById(rec.Id, nil)
-		require.NoError(err)
-		require.Equal(pb.Runner_NEW, found.AdoptionState)
-	}
+	ws := memdb.NewWatchSet()
+	found, err := s.RunnerById(rec.Id, ws)
+	require.NoError(err)
+	require.Equal(pb.Runner_NEW, found.AdoptionState)
+
+	// Watch should block
+	require.True(ws.Watch(time.After(10 * time.Millisecond)))
 
 	// Adopt that instance
 	require.NoError(s.RunnerAdopt(rec.Id, false))
 
+	// Should be triggered. This is a very important test because
+	// we need to ensure that the watchers can detect adoption changes.
+	require.False(ws.Watch(time.After(100 * time.Millisecond)))
+
 	// Should be adopted
+	ws = memdb.NewWatchSet()
 	{
-		found, err := s.RunnerById(rec.Id, nil)
+		found, err := s.RunnerById(rec.Id, ws)
 		require.NoError(err)
 		require.Equal(pb.Runner_ADOPTED, found.AdoptionState)
 	}
@@ -137,6 +146,9 @@ func TestRunnerAdopt(t *testing.T, factory Factory, restartF RestartFactory) {
 	// Offline that instance, then bring it back.
 	require.NoError(s.RunnerOffline(rec.Id))
 	require.NoError(s.RunnerCreate(rec))
+
+	// Should be triggered.
+	require.False(ws.Watch(time.After(100 * time.Millisecond)))
 
 	// Should still be adopted
 	{
