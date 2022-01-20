@@ -34,7 +34,7 @@ type ConnectOption func(*connectConfig) error
 func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, error) {
 	// Defaults
 	var cfg connectConfig
-	cfg.Timeout = 5 * time.Second
+	cfg.Timeout = 10 * time.Second
 	cfg.Log = hclog.NewNullLogger()
 
 	// Set config
