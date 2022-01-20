@@ -92,7 +92,10 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 			return nil, fmt.Errorf("No token available at the WAYPOINT_SERVER_TOKEN environment variable")
 		}
 
-		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(StaticToken(token)))
+		// We allow the token of "-" to explicitly be a guest.
+		if token != "-" {
+			grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(StaticToken(token)))
+		}
 	}
 
 	cfg.Log.Debug("connection information",
