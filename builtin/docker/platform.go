@@ -950,9 +950,14 @@ deploy {
 	doc.SetField(
 		"auth",
 		"the authentication information to log into the docker repository",
-		docs.Summary(
-			"Authentication configuration",
-		),
+        docs.SubFields(func(d *docs.SubFieldDoc) {
+            d.SetField("hostname", "Hostname of Docker registry")
+            d.SetField("username", "Username of Docker registry account")
+            d.SetField("password", "Password of Docker registry account")
+            d.SetField("serverAddress", "Address of Docker registry")
+            d.SetField("identityToken", "Token used to authenticate user")
+            d.SetField("registryToken", "Bearer tokens to be sent to Docker registry")
+        }),
 	)
 
 	doc.SetField(
