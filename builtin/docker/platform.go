@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"encoding/json"
+	"encoding/base64"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -406,7 +407,7 @@ func (p *Platform) resourceContainerCreate(
 	netState *Resource_Network,
 ) error {
 	// Pull the image
-	err := p.pullImage(cli, log, ui, img, p.config.ForcePull)
+	err := p.pullImage(cli, log, ui, img, p.config.ForcePull, p.config.Auth)
 	if err != nil {
 		return status.Errorf(codes.FailedPrecondition,
 			"unable to pull image from Docker registry: %s", err)
@@ -687,7 +688,7 @@ func (p *Platform) getDockerClient(ctx context.Context) (*client.Client, error) 
 	return cli, nil
 }
 
-func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.UI, img *Image, force bool) error {
+func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.UI, img *Image, force bool, authConfig *Auth) error {
 	in := fmt.Sprintf("%s:%s", img.Image, img.Tag)
 	args := filters.NewArgs()
 	args.Add("reference", in)
@@ -716,15 +717,23 @@ func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.U
 
 	s.Update("Pulling Docker Image " + in)
 
-	ipo := types.ImagePullOptions{}
-
-	// if the username and password is not null make an authenticated
-	// image pull
-	/*
-		if image.Username != "" && image.Password != "" {
-			ipo.RegistryAuth = createRegistryAuth(image.Username, image.Password)
+	var authBase64 = ""
+	if (Auth{} != *p.config.Auth) {
+		auth := types.AuthConfig{
+			Username:      authConfig.Username,
+			Password:      authConfig.Password,
+			Email:         authConfig.Email,
+			Auth:          authConfig.Auth,
+			ServerAddress: authConfig.ServerAddress,
+			IdentityToken: authConfig.IdentityToken,
+			RegistryToken: authConfig.RegistryToken,
 		}
-	*/
+		authBytes, _ := json.Marshal(auth)
+		authBase64 = base64.URLEncoding.EncodeToString(authBytes)
+	}
+	ipo := types.ImagePullOptions{
+		RegistryAuth: authBase64,
+	}
 
 	named, err := reference.ParseNormalizedNamed(in)
 	if err != nil {
@@ -779,6 +788,9 @@ type PlatformConfig struct {
 
 	// Force pull the image from the remote repository
 	ForcePull bool `hcl:"force_pull,optional"`
+
+	// Authenticates to private registry
+	Auth *Auth `hcl:"auth,block"`
 
 	// A map of key/value pairs, stored in docker as a string. Each key/value pair must
 	// be unique. Validiation occurs at the docker layer, not in Waypoint. Label
@@ -933,6 +945,14 @@ deploy {
 		"force_pull",
 		"always pull the docker container from the registry",
 		docs.Default("false"),
+	)
+
+	doc.SetField(
+		"auth",
+		"the authentication information to log into the docker repository",
+		docs.Summary(
+			"Authentication configuration",
+		),
 	)
 
 	doc.SetField(
