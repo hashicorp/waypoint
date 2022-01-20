@@ -450,6 +450,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"runner list": func() (cli.Command, error) {
+			return &RunnerListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"context": func() (cli.Command, error) {
 			return &ContextHelpCommand{
