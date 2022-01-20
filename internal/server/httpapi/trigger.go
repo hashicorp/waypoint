@@ -1,9 +1,12 @@
 package httpapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -61,14 +64,43 @@ func HandleTrigger(addr string) http.HandlerFunc {
 
 		requestVars := mux.Vars(r)
 		runTriggerId := requestVars["id"]
-		//triggerOverrideVars := r.URL.Query().Get("variables")
+
+		overrideVarJSONRaw := r.URL.Query().Get("variables")
+		var (
+			vo                map[string]string
+			variableOverrides []*pb.Variable
+		)
+
+		if overrideVarJSONRaw != "" {
+			if err := json.Unmarshal([]byte(overrideVarJSONRaw), &vo); err != nil {
+				http.Error(w, fmt.Sprintf("failed to decode 'variables' json request param into a map: %s", err), 500)
+				return
+			}
+
+			for name, value := range vo {
+				v := &pb.Variable{
+					Name:   name,
+					Source: &pb.Variable_Cli{Cli: &empty.Empty{}},
+				}
+
+				if valBool, err := strconv.ParseBool(value); err == nil {
+					v.Value = &pb.Variable_Bool{Bool: valBool}
+				} else if valInt, err := strconv.ParseInt(value, 10, 64); err == nil {
+					v.Value = &pb.Variable_Num{Num: valInt}
+				} else {
+					v.Value = &pb.Variable_Str{Str: value}
+				}
+
+				variableOverrides = append(variableOverrides, v)
+			}
+		}
 
 		var resp *pb.RunTriggerResponse
 		runTriggerReq := &pb.RunTriggerRequest{
 			Ref: &pb.Ref_Trigger{
 				Id: runTriggerId,
 			},
-			VariableOverrides: nil, // TODO fix me
+			VariableOverrides: variableOverrides,
 		}
 
 		if requireAuth {
