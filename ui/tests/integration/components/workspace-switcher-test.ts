@@ -1,5 +1,4 @@
 import { render, waitFor, settled } from '@ember/test-helpers';
-import { a11yAudit } from 'ember-a11y-testing/test-support';
 import { setupMirage } from 'ember-cli-mirage/test-support';
 import { setupRenderingTest } from 'ember-qunit';
 import hbs from 'htmlbars-inline-precompile';
