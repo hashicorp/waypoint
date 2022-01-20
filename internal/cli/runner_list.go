@@ -59,7 +59,7 @@ func (c *RunnerListCommand) Run(args []string) int {
 		return 0
 	}
 
-	tblHeaders := []string{"State", "ID", "Kind", "Last Seen"}
+	tblHeaders := []string{"State", "ID", "Kind", "Last Registered"}
 	tbl := terminal.NewTable(tblHeaders...)
 
 	kindMap := map[reflect.Type]string{
