@@ -2,7 +2,10 @@ package docker
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 
+	"github.com/docker/docker/api/types"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -33,9 +36,21 @@ func (r *Registry) AccessInfo() (*AccessInfo, error) {
 		Insecure: r.config.Insecure,
 	}
 
-	if r.config.EncodedAuth != "" {
+	if (r.config.Auth != &Auth{}) {
+		auth, err := json.Marshal(types.AuthConfig{
+			Username:      r.config.Auth.Username,
+			Password:      r.config.Auth.Password,
+			Email:         r.config.Auth.Email,
+			Auth:          r.config.Auth.Auth,
+			ServerAddress: r.config.Auth.ServerAddress,
+			IdentityToken: r.config.Auth.IdentityToken,
+			RegistryToken: r.config.Auth.RegistryToken,
+		})
+		if err != nil {
+			return ai, status.Errorf(codes.Internal, "failed to marshal auth info to json: %s", err)
+		}
 		ai.Auth = &AccessInfo_Encoded{
-			Encoded: r.config.EncodedAuth,
+			Encoded: base64.URLEncoding.EncodeToString(auth),
 		}
 	} else if r.config.Password != "" {
 		ai.Auth = &AccessInfo_UserPass_{
@@ -45,7 +60,6 @@ func (r *Registry) AccessInfo() (*AccessInfo, error) {
 			},
 		}
 	}
-
 	return ai, nil
 }
 
@@ -79,7 +93,7 @@ func (r *Registry) Push(
 		}
 
 		// This indicates that the builder used the AccessInfo and published the image
-		// directly. Ergo we don't need to do anyhting and can just return the image as is.
+		// directly. Ergo we don't need to do anything and can just return the image as is.
 		return img, nil
 
 	case *Image_Docker, nil:
@@ -121,8 +135,8 @@ type Config struct {
 	// Local if true will not push this image to a remote registry.
 	Local bool `hcl:"local,optional"`
 
-	// The docker specific encoded authentication string to use to talk to the registry.
-	EncodedAuth string `hcl:"encoded_auth,optional"`
+	// Authenticates to private registry
+	Auth *Auth `hcl:"auth,block"`
 
 	// Insecure indicates if the registry should be accessed via http rather than https
 	Insecure bool `hcl:"insecure,optional"`
@@ -180,43 +194,10 @@ build {
 	)
 
 	doc.SetField(
-		"encoded_auth",
+		"auth",
 		"the authentication information to log into the docker repository",
 		docs.Summary(
-			"The format of this is base64-encoded JSON. The structure is the ",
-			"[`AuthConfig`](https://pkg.go.dev/github.com/docker/cli/cli/config/types#AuthConfig)",
-			"structure used by Docker.",
-			"",
-			"WARNING: be very careful to not leak the authentication information",
-			"by hardcoding it here. Use a helper function like `file()` to read",
-			"the information from a file not stored in VCS",
-		),
-	)
-
-	doc.SetField(
-		"insecure",
-		"access the registry via http rather than https",
-		docs.Summary(
-			"This indicates that the registry should be accessed via http rather than https.",
-			"Not recommended for production usage.",
-		),
-	)
-
-	doc.SetField(
-		"username",
-		"username to authenticate with the registry",
-		docs.Summary(
-			"This optional conflicts with encoded_auth and thusly only one can be used at a time.",
-			"If both are used, encoded_auth takes precedence.",
-		),
-	)
-
-	doc.SetField(
-		"password",
-		"password associated with username on the registry",
-		docs.Summary(
-			"This optional conflicts with encoded_auth and thusly only one can be used at a time.",
-			"If both are used, encoded_auth takes precedence.",
+			"Authentication configuration",
 		),
 	)
 

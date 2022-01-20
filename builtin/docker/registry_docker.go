@@ -61,25 +61,11 @@ func (r *Registry) pushWithDocker(
 		return status.Errorf(codes.Internal, "unable to parse image name: %s", err)
 	}
 
-	encodedAuth := r.config.EncodedAuth
-
-	// If there was no explicit encoded auth but there is a password, make the username+password
-	// into an encoded auth string.
-	if encodedAuth == "" && r.config.Password != "" {
-		var authConfig types.AuthConfig
-
-		authConfig.Username = r.config.Username
-		authConfig.Password = r.config.Password
-
-		buf, err := json.Marshal(authConfig)
-		if err != nil {
-			return status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
-		}
-		encodedAuth = base64.URLEncoding.EncodeToString(buf)
-	}
+	auth := r.config.Auth
+	var encodedAuth = ""
 
 	// No auth info configured, try to read some from the docker config files for the user.
-	if encodedAuth == "" {
+	if (auth == &Auth{}) {
 		// Resolve the Repository name from fqn to RepositoryInfo
 		repoInfo, err := registry.ParseRepositoryInfo(ref)
 		if err != nil {
@@ -112,6 +98,20 @@ func (r *Registry) pushWithDocker(
 			return status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
 		}
 		encodedAuth = base64.URLEncoding.EncodeToString(buf)
+	} else {
+		authBytes, err := json.Marshal(types.AuthConfig{
+			Username:      r.config.Auth.Username,
+			Password:      r.config.Auth.Password,
+			Email:         r.config.Auth.Email,
+			Auth:          r.config.Auth.Auth,
+			ServerAddress: r.config.Auth.ServerAddress,
+			IdentityToken: r.config.Auth.IdentityToken,
+			RegistryToken: r.config.Auth.RegistryToken,
+		})
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to marshal auth info to json: %s", err)
+		}
+		encodedAuth = base64.URLEncoding.EncodeToString(authBytes)
 	}
 
 	step = sg.Add("Pushing Docker image...")
