@@ -5,7 +5,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // DeploymentStartDesc sorts deployments by start time descending.

@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/internal/server"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func TestServiceTrigger(t *testing.T) {
@@ -28,7 +28,7 @@ func TestServiceTrigger(t *testing.T) {
 
 		// Create, should get an ID back
 		resp, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
-			Trigger: serverptypes.TestValidTrigger(t, nil),
+			Trigger: ptypes.TestValidTrigger(t, nil),
 		})
 		require.NoError(err)
 		require.NotNil(resp)
@@ -78,7 +78,7 @@ func TestServiceTrigger(t *testing.T) {
 
 		// Create, should get an ID back
 		resp, err := client.UpsertTrigger(ctx, &Req{
-			Trigger: serverptypes.TestValidTrigger(t, &pb.Trigger{
+			Trigger: ptypes.TestValidTrigger(t, &pb.Trigger{
 				Id: "nope",
 			}),
 		})
@@ -98,7 +98,7 @@ func TestServiceTrigger_GetTrigger(t *testing.T) {
 	client := server.TestServer(t, impl)
 
 	resp, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
-		Trigger: serverptypes.TestValidTrigger(t, nil),
+		Trigger: ptypes.TestValidTrigger(t, nil),
 	})
 	triggerId := resp.Trigger.Id
 
@@ -146,13 +146,13 @@ func TestServiceTrigger_ListTriggersSimple(t *testing.T) {
 	client := server.TestServer(t, impl)
 
 	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
-		Trigger: serverptypes.TestValidTrigger(t, nil),
+		Trigger: ptypes.TestValidTrigger(t, nil),
 	})
 	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
-		Trigger: serverptypes.TestValidTrigger(t, nil),
+		Trigger: ptypes.TestValidTrigger(t, nil),
 	})
 	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
-		Trigger: serverptypes.TestValidTrigger(t, nil),
+		Trigger: ptypes.TestValidTrigger(t, nil),
 	})
 
 	t.Run("list", func(t *testing.T) {
@@ -174,13 +174,13 @@ func TestServiceTrigger_ListTriggersWithFilters(t *testing.T) {
 	client := server.TestServer(t, impl)
 
 	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
-		Trigger: serverptypes.TestValidTrigger(t, nil),
+		Trigger: ptypes.TestValidTrigger(t, nil),
 	})
 	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
-		Trigger: serverptypes.TestValidTrigger(t, nil),
+		Trigger: ptypes.TestValidTrigger(t, nil),
 	})
 	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
-		Trigger: serverptypes.TestValidTrigger(t, nil),
+		Trigger: ptypes.TestValidTrigger(t, nil),
 	})
 
 	t.Run("list default workspace triggers", func(t *testing.T) {
@@ -330,7 +330,7 @@ func TestServiceTrigger_DeleteTrigger(t *testing.T) {
 	client := server.TestServer(t, impl)
 
 	resp, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
-		Trigger: serverptypes.TestValidTrigger(t, nil),
+		Trigger: ptypes.TestValidTrigger(t, nil),
 	})
 	triggerId := resp.Trigger.Id
 
@@ -451,7 +451,7 @@ func TestServiceTrigger_RunTrigger(t *testing.T) {
 
 		// Create a project with an application
 		respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
-			Project: serverptypes.TestProject(t, &pb.Project{
+			Project: ptypes.TestProject(t, &pb.Project{
 				Name: "secret_project",
 				DataSource: &pb.Job_DataSource{
 					Source: &pb.Job_DataSource_Local{
@@ -508,7 +508,7 @@ func TestServiceTrigger_RunTrigger(t *testing.T) {
 
 		// Create a project with an application
 		respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
-			Project: serverptypes.TestProject(t, &pb.Project{
+			Project: ptypes.TestProject(t, &pb.Project{
 				Name: "multi-app",
 				DataSource: &pb.Job_DataSource{
 					Source: &pb.Job_DataSource_Local{

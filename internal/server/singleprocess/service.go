@@ -8,12 +8,13 @@ import (
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
 	bolt "go.etcd.io/bbolt"
 
+	"github.com/hashicorp/waypoint/pkg/serverstate"
+
 	wpoidc "github.com/hashicorp/waypoint/internal/auth/oidc"
-	"github.com/hashicorp/waypoint/internal/server"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
-	"github.com/hashicorp/waypoint/internal/serverstate"
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // service implements the gRPC service for the server.

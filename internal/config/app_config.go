@@ -12,8 +12,8 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/config/dynamic"
 	"github.com/hashicorp/waypoint/internal/pkg/partial"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serversort "github.com/hashicorp/waypoint/internal/server/sort"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // genericConfig represents the `config` stanza that can be placed

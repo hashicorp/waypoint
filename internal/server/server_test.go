@@ -12,8 +12,10 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	pbmocks "github.com/hashicorp/waypoint/internal/server/gen/mocks"
+
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	pbmocks "github.com/hashicorp/waypoint/pkg/server/gen/mocks"
 )
 
 func TestComponentEnum(t *testing.T) {
@@ -35,14 +37,14 @@ func TestRun_reconnect(t *testing.T) {
 
 	m := &pbmocks.WaypointServer{}
 	m.On("BootstrapToken", mock.Anything, mock.Anything).Return(&pb.NewTokenResponse{Token: "hello"}, nil)
-	m.On("GetVersionInfo", mock.Anything, mock.Anything).Return(TestVersionInfoResponse(), nil)
+	m.On("GetVersionInfo", mock.Anything, mock.Anything).Return(server.TestVersionInfoResponse(), nil)
 	m.On("GetWorkspace", mock.Anything, mock.Anything).Return(&pb.GetWorkspaceResponse{}, nil)
 
 	// Create the server
 	restartCh := make(chan struct{})
-	client := TestServer(t, m,
-		TestWithContext(ctx),
-		TestWithRestart(restartCh),
+	client := server.TestServer(t, m,
+		server.TestWithContext(ctx),
+		server.TestWithRestart(restartCh),
 	)
 
 	// Request should work

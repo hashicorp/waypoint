@@ -14,8 +14,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	wpoidc "github.com/hashicorp/waypoint/internal/auth/oidc"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 const (

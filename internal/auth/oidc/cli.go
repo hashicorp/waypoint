@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/cap/oidc"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // CallbackServer is started with NewCallbackServer and creates an HTTP

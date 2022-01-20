@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"sort"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // ConfigName sorts config variables by name.

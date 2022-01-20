@@ -10,8 +10,8 @@ import (
 	hznpb "github.com/hashicorp/horizon/pkg/pb"
 	"github.com/pkg/errors"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/version"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 var ErrURLSetup = errors.New("error configuring url service")

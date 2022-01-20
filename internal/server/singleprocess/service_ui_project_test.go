@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/ptypes"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	ptypes2 "github.com/hashicorp/waypoint/pkg/server/ptypes"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +14,7 @@ func TestServiceUI_GetProject(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
 	client := TestServer(t)
-	project := ptypes.TestProject(t, &pb.Project{
+	project := ptypes2.TestProject(t, &pb.Project{
 		Name: "example",
 	})
 
@@ -58,7 +59,7 @@ func queueTestInitJob(
 	project *pb.Project,
 ) (*pb.QueueJobResponse, error) {
 	return client.QueueJob(ctx, &pb.QueueJobRequest{
-		Job: ptypes.TestJobNew(t, &pb.Job{
+		Job: ptypes2.TestJobNew(t, &pb.Job{
 			Application: &pb.Ref_Application{
 				Project: project.Name,
 			},

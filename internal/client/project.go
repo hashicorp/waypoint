@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/runner"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // Project is the primary structure for interacting with a Waypoint

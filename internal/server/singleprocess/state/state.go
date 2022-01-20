@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
 
-	"github.com/hashicorp/waypoint/internal/serverstate"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
 // It is very important we implement both of these.

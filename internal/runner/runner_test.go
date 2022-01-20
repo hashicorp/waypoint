@@ -13,9 +13,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/internal/server"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
+	serverpkg "github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func TestRunnerStart(t *testing.T) {
@@ -59,10 +59,10 @@ func TestRunnerStart_adoption(t *testing.T) {
 	ctx := context.Background()
 
 	serverImpl := singleprocess.TestImpl(t)
-	client := server.TestServer(t, serverImpl)
+	client := serverpkg.TestServer(t, serverImpl)
 
 	// Client with no token
-	anonClient := server.TestServer(t, serverImpl, server.TestWithToken(""))
+	anonClient := serverpkg.TestServer(t, serverImpl, serverpkg.TestWithToken(""))
 
 	// Initialize our runner
 	runner, err := New(
@@ -130,10 +130,10 @@ func TestRunnerStart_rejection(t *testing.T) {
 	ctx := context.Background()
 
 	serverImpl := singleprocess.TestImpl(t)
-	client := server.TestServer(t, serverImpl)
+	client := serverpkg.TestServer(t, serverImpl)
 
 	// Client with no token
-	anonClient := server.TestServer(t, serverImpl, server.TestWithToken(""))
+	anonClient := serverpkg.TestServer(t, serverImpl, serverpkg.TestWithToken(""))
 
 	// Initialize our runner
 	runner, err := New(
@@ -196,10 +196,10 @@ func TestRunnerStart_adoptionStateRestart(t *testing.T) {
 	defer os.RemoveAll(td)
 
 	serverImpl := singleprocess.TestImpl(t)
-	client := server.TestServer(t, serverImpl)
+	client := serverpkg.TestServer(t, serverImpl)
 
 	// Client with no token
-	anonClient := server.TestServer(t, serverImpl, server.TestWithToken(""))
+	anonClient := serverpkg.TestServer(t, serverImpl, serverpkg.TestWithToken(""))
 
 	// Initialize our runner
 	runner, err := New(

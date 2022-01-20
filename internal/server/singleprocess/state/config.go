@@ -14,8 +14,8 @@ import (
 	bolt "go.etcd.io/bbolt"
 
 	"github.com/hashicorp/waypoint/internal/config/funcs"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serversort "github.com/hashicorp/waypoint/internal/server/sort"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 var (

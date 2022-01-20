@@ -376,7 +376,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - ./internal/server/gen/bindata_ui.go
+            - ./pkg/server/gen/bindata_ui.go
       - notify_main_failure
 
   # build static-assets file and commit
@@ -393,17 +393,17 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: commit internal/server/gen/bindata_ui.go
+          name: commit pkg/server/gen/bindata_ui.go
           command: |
             # check if there are any changes in ui/
             # if there are, we commit the ui static asset file
-            last_ui_commit=$(git log -n 1 --pretty=format:%H -- internal/server/gen/bindata_ui.go)
+            last_ui_commit=$(git log -n 1 --pretty=format:%H -- pkg/server/gen/bindata_ui.go)
             if ! git diff --quiet --exit-code $last_ui_commit ui/; then
               git config --local user.email "github-team-waypoint@hashicorp.com"
               git config --local user.name "hc-github-team-waypoint"
               short_sha=$(git rev-parse --short HEAD)
-              git add internal/server/gen/bindata_ui.go
-              git commit -m "auto-updated internal/server/gen/bindata_ui.go from commit ${short_sha}"
+              git add pkg/server/gen/bindata_ui.go
+              git commit -m "auto-updated pkg/server/gen/bindata_ui.go from commit ${short_sha}"
               git push origin main
             else
               echo "no UI changes so no static assets to publish"

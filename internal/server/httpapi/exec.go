@@ -9,9 +9,9 @@ import (
 	"nhooyr.io/websocket/wspb"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // HandleExec handles the `waypoint exec` websocket API. This works by

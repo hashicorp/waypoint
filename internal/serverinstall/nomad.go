@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type NomadInstaller struct {

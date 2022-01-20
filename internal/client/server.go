@@ -14,9 +14,9 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/protocolversion"
 	"github.com/hashicorp/waypoint/internal/server"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 	"github.com/hashicorp/waypoint/internal/serverclient"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // initServerClient will initialize a gRPC connection to the Waypoint server.

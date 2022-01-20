@@ -1,9 +1,10 @@
 package sort
 
 import (
-	"github.com/golang/protobuf/ptypes"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"sort"
+
+	"github.com/golang/protobuf/ptypes"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // ReleaseBundleCompleteDesc sorts deployment bundles by completion time descending.

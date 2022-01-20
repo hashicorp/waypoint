@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/go-memdb"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // This file has the methods related to tracking assigned jobs. I pulled this

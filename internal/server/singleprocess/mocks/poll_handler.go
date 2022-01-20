@@ -4,7 +4,7 @@ package mocks
 
 import (
 	hclog "github.com/hashicorp/go-hclog"
-	gen "github.com/hashicorp/waypoint/internal/server/gen"
+	gen "github.com/hashicorp/waypoint/pkg/server/gen"
 
 	memdb "github.com/hashicorp/go-memdb"
 

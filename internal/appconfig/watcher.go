@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/config/funcs"
 	"github.com/hashicorp/waypoint/internal/pkg/condctx"
 	"github.com/hashicorp/waypoint/internal/plugin"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 var (

@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/internal/server"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/mocks"
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func TestPollQueuer_peek(t *testing.T) {
@@ -327,7 +327,7 @@ func TestServicePollQueue(t *testing.T) {
 
 	// Create a project
 	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
-		Project: serverptypes.TestProject(t, &pb.Project{
+		Project: ptypes.TestProject(t, &pb.Project{
 			Name: "A",
 			DataSource: &pb.Job_DataSource{
 				Source: &pb.Job_DataSource_Local{
@@ -391,7 +391,7 @@ func TestProjectPollHandler(t *testing.T) {
 
 	// Create a project
 	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
-		Project: serverptypes.TestProject(t, &pb.Project{
+		Project: ptypes.TestProject(t, &pb.Project{
 			Name: "Example",
 			DataSource: &pb.Job_DataSource{
 				Source: &pb.Job_DataSource_Local{
@@ -472,7 +472,7 @@ func TestApplicationPollHandler(t *testing.T) {
 
 	// Create a project with an application
 	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
-		Project: serverptypes.TestProject(t, &pb.Project{
+		Project: ptypes.TestProject(t, &pb.Project{
 			Name: "Example",
 			DataSource: &pb.Job_DataSource{
 				Source: &pb.Job_DataSource_Local{
@@ -507,7 +507,7 @@ func TestApplicationPollHandler(t *testing.T) {
 
 	// Do a deployment
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
-		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+		Deployment: ptypes.TestValidDeployment(t, &pb.Deployment{
 			Component: &pb.Component{
 				Name: "testapp",
 			},
@@ -588,7 +588,7 @@ func TestApplicationPollHandler_fullLifecycle(t *testing.T) {
 
 	// Create a project with an application
 	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
-		Project: serverptypes.TestProject(t, &pb.Project{
+		Project: ptypes.TestProject(t, &pb.Project{
 			Name: "Example",
 			DataSource: &pb.Job_DataSource{
 				Source: &pb.Job_DataSource_Local{
@@ -627,7 +627,7 @@ func TestApplicationPollHandler_fullLifecycle(t *testing.T) {
 
 	// Do a deployment
 	deployResp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
-		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+		Deployment: ptypes.TestValidDeployment(t, &pb.Deployment{
 			Component: &pb.Component{
 				Name: "testapp",
 			},
@@ -685,7 +685,7 @@ func TestApplicationPollHandler_fullLifecycle(t *testing.T) {
 
 	// Do a release
 	releaseResp, err := client.UpsertRelease(ctx, &pb.UpsertReleaseRequest{
-		Release: serverptypes.TestValidRelease(t, &pb.Release{
+		Release: ptypes.TestValidRelease(t, &pb.Release{
 			Component: &pb.Component{
 				Name: "testapp",
 			},
