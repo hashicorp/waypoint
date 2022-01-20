@@ -316,7 +316,9 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		action, terminal.WithSuccessStyle())
 
 	triggerID := resp.Trigger.Id
-	serverAddr := c.clientContext.Server.Address
+	addr := strings.Split(c.clientContext.Server.Address, ":")[0]
+	port := "9702" // TODO look this up from server cfg
+	serverAddr := fmt.Sprintf("%s:%s", addr, port)
 	serverTriggerURL := fmt.Sprintf("https://%s/v1/trigger/%s", serverAddr, triggerID)
 	c.ui.Output(" Trigger ID: %s", triggerID, terminal.WithSuccessStyle())
 	c.ui.Output("Trigger URL: %s", serverTriggerURL, terminal.WithSuccessStyle())
