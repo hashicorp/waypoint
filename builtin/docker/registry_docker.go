@@ -27,6 +27,7 @@ func (r *Registry) pushWithDocker(
 	ui terminal.UI,
 	source *Image,
 	target *Image,
+	authConfig *Auth,
 ) error {
 	stdout, _, err := ui.OutputWriters()
 	if err != nil {
@@ -61,11 +62,10 @@ func (r *Registry) pushWithDocker(
 		return status.Errorf(codes.Internal, "unable to parse image name: %s", err)
 	}
 
-	auth := r.config.Auth
 	var encodedAuth = ""
 
 	// No auth info configured, try to read some from the docker config files for the user.
-	if (auth == &Auth{}) {
+	if (Auth{} == *r.config.Auth) {
 		// Resolve the Repository name from fqn to RepositoryInfo
 		repoInfo, err := registry.ParseRepositoryInfo(ref)
 		if err != nil {
@@ -100,13 +100,13 @@ func (r *Registry) pushWithDocker(
 		encodedAuth = base64.URLEncoding.EncodeToString(buf)
 	} else {
 		authBytes, err := json.Marshal(types.AuthConfig{
-			Username:      r.config.Auth.Username,
-			Password:      r.config.Auth.Password,
-			Email:         r.config.Auth.Email,
-			Auth:          r.config.Auth.Auth,
-			ServerAddress: r.config.Auth.ServerAddress,
-			IdentityToken: r.config.Auth.IdentityToken,
-			RegistryToken: r.config.Auth.RegistryToken,
+			Username:      authConfig.Username,
+			Password:      authConfig.Password,
+			Email:         authConfig.Email,
+			Auth:          authConfig.Auth,
+			ServerAddress: authConfig.ServerAddress,
+			IdentityToken: authConfig.IdentityToken,
+			RegistryToken: authConfig.RegistryToken,
 		})
 		if err != nil {
 			return status.Errorf(codes.Internal, "failed to marshal auth info to json: %s", err)

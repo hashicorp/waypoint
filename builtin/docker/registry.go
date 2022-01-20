@@ -79,6 +79,7 @@ func (r *Registry) Push(
 		Image: r.config.Image,
 		Tag:   r.config.Tag,
 	}
+	auth := r.config.Auth
 	if !r.config.Local {
 		target.Location = &Image_Registry{Registry: &Image_RegistryLocation{}}
 	}
@@ -105,6 +106,7 @@ func (r *Registry) Push(
 			ui,
 			img,
 			target,
+			auth,
 		); err != nil {
 			return nil, err
 		}
