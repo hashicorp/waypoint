@@ -88,6 +88,10 @@ func HandleTrigger(addr string) http.HandlerFunc {
 				} else if valInt, err := strconv.ParseInt(value, 10, 64); err == nil {
 					v.Value = &pb.Variable_Num{Num: valInt}
 				} else {
+					// NOTE: for this case, it can either be a "string" or
+					// complex HCL type like an array or map. We can set this value
+					// as a Variable_Str here, and when we go to parse the variables
+					// later we do the proper string versus HCL check in variables.go
 					v.Value = &pb.Variable_Str{Str: value}
 				}
 
@@ -108,7 +112,7 @@ func HandleTrigger(addr string) http.HandlerFunc {
 			resp, err = client.RunTrigger(ctx, runTriggerReq)
 		} else {
 			// attempt to make a grpc request to run trigger by id
-			resp, err = client.AuthlessRunTrigger(ctx, runTriggerReq)
+			resp, err = client.NoAuthRunTrigger(ctx, runTriggerReq)
 		}
 		if err != nil {
 			log.Error("server failed to run trigger", "id", runTriggerId, "err", err)

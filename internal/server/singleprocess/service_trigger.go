@@ -76,7 +76,7 @@ func (s *service) ListTriggers(
 	return &pb.ListTriggerResponse{Triggers: result}, nil
 }
 
-func (s *service) AuthlessRunTrigger(
+func (s *service) NoAuthRunTrigger(
 	ctx context.Context,
 	req *pb.RunTriggerRequest,
 ) (*pb.RunTriggerResponse, error) {

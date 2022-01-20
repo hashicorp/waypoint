@@ -65,7 +65,7 @@ var (
 
 		"RunnerToken": {},
 
-		"AuthlessRunTrigger": {},
+		"NoAuthRunTrigger": {},
 	}
 )
 
