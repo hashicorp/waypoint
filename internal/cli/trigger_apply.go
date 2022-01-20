@@ -312,7 +312,7 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.ui.Output("Trigger %q (%s) has been %s", resp.Trigger.Name, resp.Trigger.Id,
+	c.ui.Output("Trigger %q (%s) has been %s\n", resp.Trigger.Name, resp.Trigger.Id,
 		action, terminal.WithSuccessStyle())
 
 	triggerID := resp.Trigger.Id
