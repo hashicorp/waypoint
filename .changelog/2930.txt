@@ -1,0 +1,3 @@
+```release-note:bug
+ui: Limit number of deployments requested
+```
