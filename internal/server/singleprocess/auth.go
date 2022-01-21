@@ -127,22 +127,33 @@ func (s *service) tokenFromContext(ctx context.Context) *pb.Token {
 func (s *service) Authenticate(
 	ctx context.Context, token, endpoint string, effects []string,
 ) (context.Context, error) {
-	// Ignore unauthenticated endpoints
-	if _, ok := unauthenticatedEndpoints[endpoint]; ok {
-		return nil, nil
-	}
+	_, anonEndpoint := unauthenticatedEndpoints[endpoint]
 
-	if token == "" {
+	// We require a token if this isn't an unauthenticated endpoint
+	if !anonEndpoint && token == "" {
 		return nil, status.Errorf(codes.Unauthenticated, "Authorization token is not supplied")
 	}
 
+	// Try to decode the token
 	_, body, err := s.decodeToken(token)
 	if err != nil {
-		return nil, err
+		body = nil
+
+		// We only return an error if this isn't an anonymous endpoint.
+		// Otherwise, we ignore token errors because they don't affect
+		// guest behavior.
+		if !anonEndpoint {
+			return nil, err
+		}
 	}
 
 	// Store the token in the context
 	ctx = tokenWithContext(ctx, body)
+
+	// If we are at an unauthenticated endpoint, no need to verify further.
+	if anonEndpoint {
+		return ctx, nil
+	}
 
 	// "Authentication" depends on the type of token.
 	switch k := body.Kind.(type) {

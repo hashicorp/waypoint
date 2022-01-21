@@ -31,6 +31,9 @@ type ConnectOption func(*connectConfig) error
 // You'll have to wrap it in NewWaypointClient to get the Waypoint client.
 // We return the raw connection so that you have control over how to close it,
 // and to support potentially alternate services in the future.
+//
+// Authentication is done using a ContextToken type. You can replace the
+// token at runtime by changing the context in use on a per-RPC basis.
 func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, error) {
 	// Defaults
 	var cfg connectConfig
@@ -81,6 +84,8 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		))
 	}
 
+	// We always add the ContextToken to the gRPC options so that it can be
+	// overridden. If the token is empty, it does nothing.
 	var token string
 	if cfg.Auth {
 		token = cfg.Token
@@ -93,10 +98,11 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		}
 
 		// We allow the token of "-" to explicitly be a guest.
-		if token != "-" {
-			grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(StaticToken(token)))
+		if token == "-" {
+			token = ""
 		}
 	}
+	grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(ContextToken(token)))
 
 	cfg.Log.Debug("connection information",
 		"address", cfg.Addr,
@@ -277,19 +283,3 @@ const (
 	// EnvContext specifies a named context to load.
 	EnvContext = "WAYPOINT_CONTEXT"
 )
-
-// This is a weird type that only exists to satisify the interface required by
-// grpc.WithPerRPCCredentials. That api is designed to incorporate things like OAuth
-// but in our case, we really just want to send this static token through, but we still
-// need to the dance.
-type StaticToken string
-
-func (t StaticToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	return map[string]string{
-		"authorization": string(t),
-	}, nil
-}
-
-func (t StaticToken) RequireTransportSecurity() bool {
-	return false
-}
