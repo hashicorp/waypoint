@@ -90,6 +90,17 @@ func (s *service) RunnerToken(
 	log := hclog.FromContext(ctx)
 	record := req.Runner
 
+	// Get the runner
+	r, err := s.state.RunnerById(record.Id, nil)
+	if status.Code(err) == codes.NotFound {
+		err = nil
+		r = nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	prevAdopted := r != nil && r.AdoptionState == pb.Runner_ADOPTED
+
 	// Create our record
 	log = log.With("runner_id", record.Id)
 	log.Trace("registering runner")
@@ -125,6 +136,15 @@ func (s *service) RunnerToken(
 		}
 
 		// Any other token type we just continue with the adoption process.
+	}
+
+	// If we reached this point and we're previously adopted, then it is an
+	// error. If we're previously adopted, we expect that runners will have
+	// the token from that adoption. If we allowed this through, then any
+	// guest with the runner ID could get a token -- a big security issue.
+	if prevAdopted {
+		return nil, status.Errorf(codes.PermissionDenied,
+			"runner is already adopted, use the previously issued runner token")
 	}
 
 	log.Debug("token provided is not a runner token, waiting for adoption")
