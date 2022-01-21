@@ -83,6 +83,14 @@ func (s *service) AdoptRunner(
 	return &empty.Empty{}, err
 }
 
+func (s *service) ForgetRunner(
+	ctx context.Context,
+	req *pb.ForgetRunnerRequest,
+) (*empty.Empty, error) {
+	err := s.state.RunnerDelete(req.RunnerId)
+	return &empty.Empty{}, err
+}
+
 func (s *service) RunnerToken(
 	ctx context.Context,
 	req *pb.RunnerTokenRequest,
