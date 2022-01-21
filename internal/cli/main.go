@@ -465,6 +465,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"runner forget": func() (cli.Command, error) {
+			return &RunnerForgetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"context": func() (cli.Command, error) {
 			return &ContextHelpCommand{
