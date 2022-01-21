@@ -362,7 +362,9 @@ func (b *Builder) buildWithImg(
 
 	step = sg.Add("Preparing Docker configuration...")
 	env := os.Environ()
-	if (docker.Auth{} != *b.config.Auth) {
+
+    //Check if auth configuration is not null
+	if (*b.config.Auth != docker.Auth{}) {
 		auth, err := json.Marshal(types.AuthConfig{
 			Username:      authConfig.Username,
 			Password:      authConfig.Password,
