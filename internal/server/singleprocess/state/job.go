@@ -391,6 +391,23 @@ RETRY_ASSIGN:
 		return nil, nil
 	}
 
+	// WatchSet we'll trigger to retry assignment
+	ws := memdb.NewWatchSet()
+
+	// If our runner exists, it must be adopted. We're lax right about allowing
+	// runners that don't exist for JobPeek. If it doesn't exist, callers should
+	// handle this. For example, RunnerJobStream handles this itself.
+	rCheck, err := s.RunnerById(r.Id, ws)
+	if err != nil && status.Code(err) != codes.NotFound {
+		return nil, err
+	}
+	if rCheck != nil {
+		if rCheck.AdoptionState != pb.Runner_ADOPTED && rCheck.AdoptionState != pb.Runner_PREADOPTED {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"cannot assign jobs to a runner that isn't adopted")
+		}
+	}
+
 	txn = s.inmem.Txn(false)
 	defer txn.Abort()
 
@@ -413,7 +430,6 @@ RETRY_ASSIGN:
 
 	// Build the list of candidates
 	var candidates []*jobIndex
-	ws := memdb.NewWatchSet()
 	for _, f := range candidateQuery {
 		job, err := f(txn, ws, runnerIdx, assign)
 		if err != nil {
