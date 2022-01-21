@@ -48,6 +48,9 @@ type BuilderConfig struct {
 	// Control whether or not to inject the entrypoint binary into the resulting image
 	DisableCEB bool `hcl:"disable_entrypoint,optional"`
 
+    // The docker specific encoded authentication string to use to talk to the registry.
+	EncodedAuth string `hcl:"encoded_auth,optional"`
+
 	// Authenticates to private registry
 	Auth *docker.Auth `hcl:"auth,block"`
 }
@@ -112,6 +115,16 @@ build {
 			"the expectation is that the image already contains it",
 		),
 	)
+
+	doc.SetField(
+		"encoded_auth",
+		"the authentication information to log into the docker repository",
+		docs.Summary(
+			"WARNING: be very careful to not leak the authentication information",
+			"by hardcoding it here. Use a helper function like `file()` to read",
+			"the information from a file not stored in VCS",
+		),
+    )
 
 	doc.SetField(
 		"auth",
