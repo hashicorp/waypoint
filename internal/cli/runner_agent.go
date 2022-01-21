@@ -82,17 +82,24 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	}
 	client := pb.NewWaypointClient(conn)
 
+	// Build the values we'll show in the runner config table
+	infoValues := []terminal.NamedValue{
+		{Name: "Server address", Value: conn.Target()},
+	}
+	if c.flagODR {
+		infoValues = append(infoValues, terminal.NamedValue{
+			Name: "Type", Value: "on-demand",
+		})
+	} else {
+		infoValues = append(infoValues, terminal.NamedValue{
+			Name: "Type", Value: "remote",
+		})
+	}
+
 	// Output information to the user
 	c.ui.Output("Runner configuration:", terminal.WithHeaderStyle())
-	c.ui.NamedValues([]terminal.NamedValue{
-		{Name: "Server address", Value: conn.Target()},
-	})
+	c.ui.NamedValues(infoValues)
 	c.ui.Output("Runner logs:", terminal.WithHeaderStyle())
-	if c.flagODR {
-		c.ui.Output("Operating as an On-demand Runner")
-	} else {
-		c.ui.Output("Operating as a static Runner")
-	}
 
 	c.ui.Output("")
 
@@ -154,7 +161,7 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 
 	// Start the runner
 	log.Info("starting runner", "id", runner.Id())
-	if err := runner.Start(); err != nil {
+	if err := runner.Start(ctx); err != nil {
 		log.Error("error starting runner", "err", err)
 		return 1
 	}

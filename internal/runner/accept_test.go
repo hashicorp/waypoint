@@ -34,7 +34,7 @@ func TestRunnerAccept(t *testing.T) {
 	// Setup our runner
 	client := singleprocess.TestServer(t)
 	runner := TestRunner(t, WithClient(client))
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Initialize our app
 	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -62,7 +62,7 @@ func TestRunnerAccept_timeout(t *testing.T) {
 	// Setup our runner
 	client := singleprocess.TestServer(t)
 	runner := TestRunner(t, WithClient(client), WithAcceptTimeout(10*time.Millisecond))
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Initialize our app
 	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -81,7 +81,7 @@ func TestRunnerAccept_closeCancelesAccept(t *testing.T) {
 	// Setup our runner
 	client := singleprocess.TestServer(t)
 	runner := TestRunner(t, WithClient(client))
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Initialize our app
 	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -114,7 +114,7 @@ func TestRunnerAccept_closeHoldingJob(t *testing.T) {
 	// Setup our runner
 	client := singleprocess.TestServer(t)
 	runner := TestRunner(t, WithClient(client))
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Initialize our app
 	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -157,7 +157,7 @@ func TestRunnerAccept_closeWaits(t *testing.T) {
 	// Setup our runner
 	client := singleprocess.TestServer(t)
 	runner := TestRunner(t, WithClient(client))
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Initialize our app
 	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -209,7 +209,7 @@ func TestRunnerAccept_cancelContext(t *testing.T) {
 	// Setup our runner
 	client := singleprocess.TestServer(t)
 	runner := TestRunner(t, WithClient(client))
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Initialize our app
 	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -247,7 +247,7 @@ func TestRunnerAccept_cancelJob(t *testing.T) {
 	// Setup our runner
 	client := singleprocess.TestServer(t)
 	runner := TestRunner(t, WithClient(client))
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Initialize our app
 	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -298,7 +298,7 @@ func TestRunnerAccept_gitData(t *testing.T) {
 	// Setup our runner
 	client := singleprocess.TestServer(t)
 	runner := TestRunner(t, WithClient(client))
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Initialize our app
 	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -335,7 +335,7 @@ func TestRunnerAccept_noConfig(t *testing.T) {
 	// Setup our runner
 	client := singleprocess.TestServer(t)
 	runner := TestRunner(t, WithClient(client))
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Change our directory to a new temp directory with no config file.
 	testChdir(t, testTempDir(t))
@@ -370,7 +370,7 @@ func TestRunnerAccept_noConfig_serverHcl(t *testing.T) {
 	// Setup our runner
 	client := singleprocess.TestServer(t)
 	runner := TestRunner(t, WithClient(client))
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Change our directory to a new temp directory with no config file.
 	testChdir(t, testTempDir(t))
@@ -418,7 +418,7 @@ func TestRunnerAccept_noConfig_serverHclJson(t *testing.T) {
 	// Setup our runner
 	client := singleprocess.TestServer(t)
 	runner := TestRunner(t, WithClient(client))
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Change our directory to a new temp directory with no config file.
 	testChdir(t, testTempDir(t))
@@ -467,7 +467,7 @@ func TestRunnerAccept_jobHcl(t *testing.T) {
 	// Setup our runner
 	client := singleprocess.TestServer(t)
 	runner := TestRunner(t, WithClient(client))
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Change our directory to a new temp directory with no config file.
 	testChdir(t, testTempDir(t))

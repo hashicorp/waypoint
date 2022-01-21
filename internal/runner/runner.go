@@ -193,7 +193,7 @@ func (r *Runner) Id() string {
 // Start starts the runner by registering the runner with the Waypoint
 // server. This will spawn goroutines for management. This will return after
 // registration so this should not be executed in a goroutine.
-func (r *Runner) Start() error {
+func (r *Runner) Start(ctx context.Context) error {
 	if r.shutdown {
 		return ErrClosed
 	}
@@ -203,7 +203,7 @@ func (r *Runner) Start() error {
 	// Register and initialize the adoption flow (if necessary) by requesting
 	// our token.
 	log.Debug("requesting token with RunnerToken (initiates adoption)")
-	tokenResp, err := r.client.RunnerToken(r.runningCtx, &pb.RunnerTokenRequest{
+	tokenResp, err := r.client.RunnerToken(ctx, &pb.RunnerTokenRequest{
 		Runner: r.runner,
 	})
 	if err != nil {
@@ -218,6 +218,11 @@ func (r *Runner) Start() error {
 	} else {
 		log.Debug("runner token is already valid, using same token")
 	}
+
+	// Note from here on forward, we purposely switch to runningCtx instead
+	// of the parameter ctx because everything here on is async and long-running
+	// and runningCtx is tied to the full struct lifecycle rather than this
+	// single func call.
 
 	// Register
 	log.Debug("starting RunnerConfig stream")

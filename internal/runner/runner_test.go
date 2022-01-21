@@ -35,7 +35,7 @@ func TestRunnerStart(t *testing.T) {
 	require.Equal(codes.NotFound, status.Code(err))
 
 	// Start it
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// The runner should be registered
 	resp, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
@@ -77,7 +77,7 @@ func TestRunnerStart_adoption(t *testing.T) {
 	// Start
 	startErr := make(chan error, 1)
 	go func() {
-		startErr <- runner.Start()
+		startErr <- runner.Start(ctx)
 	}()
 
 	// Wait for registration
@@ -147,7 +147,7 @@ func TestRunnerStart_rejection(t *testing.T) {
 	// Start
 	startErr := make(chan error, 1)
 	go func() {
-		startErr <- runner.Start()
+		startErr <- runner.Start(ctx)
 	}()
 
 	// Wait for registration
@@ -208,7 +208,7 @@ func TestRunnerStart_config(t *testing.T) {
 		// Initialize our runner
 		runner := TestRunner(t, WithClient(client))
 		defer runner.Close()
-		require.NoError(runner.Start())
+		require.NoError(runner.Start(ctx))
 
 		// Verify it is not set
 		require.Empty(os.Getenv(cfgVar.Name))
@@ -262,7 +262,7 @@ func TestRunnerStart_config(t *testing.T) {
 		// Initialize our runner
 		runner := TestRunner(t, WithClient(client))
 		defer runner.Close()
-		require.NoError(runner.Start())
+		require.NoError(runner.Start(ctx))
 
 		// Set some config
 		_, err := client.SetConfig(ctx, &pb.ConfigSetRequest{Variables: []*pb.ConfigVar{cfgVar}})
@@ -316,7 +316,7 @@ func TestRunnerStart_config(t *testing.T) {
 		// Initialize our runner
 		runner := TestRunner(t, WithClient(client))
 		defer runner.Close()
-		require.NoError(runner.Start())
+		require.NoError(runner.Start(ctx))
 
 		// Verify it does not exist
 		_, err = os.Stat(name)
