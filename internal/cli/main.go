@@ -455,6 +455,16 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"runner adopt": func() (cli.Command, error) {
+			return &RunnerAdoptCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner reject": func() (cli.Command, error) {
+			return &RunnerRejectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"context": func() (cli.Command, error) {
 			return &ContextHelpCommand{
