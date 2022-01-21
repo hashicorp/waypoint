@@ -113,6 +113,18 @@ func TestServiceRunnerToken_happy(t *testing.T) {
 		require.Len(runners.Runners, 1)
 		require.Equal(runners.Runners[0].Id, id)
 	}
+
+	// Re-requesting a token should fail immediately. Because the runner is
+	// adopted, a second token request should fail; we expect the runner to
+	// already have the token.
+	{
+		resp, err := anonClient.RunnerToken(ctx, &pb.RunnerTokenRequest{
+			Runner: r,
+		})
+		require.Error(err)
+		require.Nil(resp)
+	}
+
 }
 
 // Test that an explicitly rejected runner can't do anything
