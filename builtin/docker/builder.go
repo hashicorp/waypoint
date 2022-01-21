@@ -453,7 +453,8 @@ func (b *Builder) buildWithDocker(
 	}
 
 	var authMap = make(map[string]types.AuthConfig)
-	if (Auth{} != *b.config.Auth) {
+    //Check if auth configuration is not null
+	if (*b.config.Auth != Auth{}) {
 		authMap[authConfig.Hostname] = types.AuthConfig{
 			Username:      authConfig.Username,
 			Password:      authConfig.Password,

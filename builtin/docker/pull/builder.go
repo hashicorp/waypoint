@@ -253,7 +253,8 @@ func (b *Builder) buildWithDocker(
 
 	var encodedAuth = ""
 
-	if (docker.Auth{}) == *b.config.Auth {
+    //Check if auth configuration is null
+	if *b.config.Auth == (docker.Auth{}) {
 		// Resolve the Repository name from fqn to RepositoryInfo
 		repoInfo, err := registry.ParseRepositoryInfo(ref)
 		if err != nil {

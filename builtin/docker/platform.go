@@ -718,7 +718,8 @@ func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.U
 	s.Update("Pulling Docker Image " + in)
 
 	var authBase64 = ""
-	if (Auth{} != *p.config.Auth) {
+    //Check if auth configuration is not null
+	if (*p.config.Auth != Auth{}) {
 		auth := types.AuthConfig{
 			Username:      authConfig.Username,
 			Password:      authConfig.Password,

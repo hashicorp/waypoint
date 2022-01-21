@@ -36,6 +36,7 @@ func (r *Registry) AccessInfo() (*AccessInfo, error) {
 		Insecure: r.config.Insecure,
 	}
 
+    //Check if auth configuration is not null
 	if (r.config.Auth != &Auth{}) {
 		auth, err := json.Marshal(types.AuthConfig{
 			Username:      r.config.Auth.Username,
