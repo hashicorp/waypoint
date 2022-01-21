@@ -159,6 +159,10 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 		return 1
 	}
 
+	// We always defer the close, but in happy paths this should be a noop
+	// because we do a close later in this function more gracefully.
+	defer runner.Close()
+
 	// Start the runner
 	log.Info("starting runner", "id", runner.Id())
 	if err := runner.Start(ctx); err != nil {
@@ -237,6 +241,13 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 					// a short sleep to allow the server to come back online.
 					log.Warn("server unavailable, sleeping before retry")
 					time.Sleep(2 * time.Second)
+
+				case codes.PermissionDenied, codes.Unauthenticated:
+					// The runner was rejected after the fact or our token
+					// was revoked. We exit and expect an init process or
+					// something to restart us if they want to retry.
+					log.Error("no permission to request a job, exiting")
+					return
 				}
 			}
 		}
