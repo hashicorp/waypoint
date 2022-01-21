@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/plugin"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverclient"
 )
 
 var (
@@ -199,8 +200,27 @@ func (r *Runner) Start() error {
 
 	log := r.logger
 
+	// Register and initialize the adoption flow (if necessary) by requesting
+	// our token.
+	log.Debug("requesting token with RunnerToken (initiates adoption)")
+	tokenResp, err := r.client.RunnerToken(r.runningCtx, &pb.RunnerTokenRequest{
+		Runner: r.runner,
+	})
+	if err != nil {
+		return err
+	}
+	if tokenResp != nil && tokenResp.Token != "" {
+		// If we received a token, then we replace our token with that.
+		// It is possible that we do NOT have a token, because our current
+		// token is already valid.
+		log.Debug("runner adoption complete, new token received")
+		r.runningCtx = serverclient.TokenWithContext(r.runningCtx, tokenResp.Token)
+	} else {
+		log.Debug("runner token is already valid, using same token")
+	}
+
 	// Register
-	log.Debug("registering runner")
+	log.Debug("starting RunnerConfig stream")
 	client, err := r.client.RunnerConfig(r.runningCtx)
 	if err != nil {
 		return err
@@ -295,6 +315,10 @@ type Option func(*Runner, *config) error
 // WithClient sets the client directly. In this case, the runner won't
 // attempt any connection at all regardless of other configuration (env
 // vars or waypoint config file). This will be used.
+//
+// If this is specified, the client MUST use a serverclient.ContextToken
+// type for the PerRPCCredentials setting. This package and others will use
+// context overrides for the token. If you do not use this, things will break.
 func WithClient(client pb.WaypointClient) Option {
 	return func(r *Runner, cfg *config) error {
 		r.client = client

@@ -127,6 +127,7 @@ func (s *service) RunnerToken(
 		// Any other token type we just continue with the adoption process.
 	}
 
+	log.Debug("token provided is not a runner token, waiting for adoption")
 	for {
 		// Get the runner
 		ws := memdb.NewWatchSet()
@@ -167,6 +168,7 @@ func (s *service) RunnerToken(
 		}
 
 		// Wait for changes
+		log.Trace("runner is not adopted, waiting for state change")
 		if err := ws.WatchCtx(ctx); err != nil {
 			return nil, err
 		}
