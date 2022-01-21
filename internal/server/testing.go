@@ -94,9 +94,7 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 			grpc.WithInsecure(),
 			grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(vsnInfo)),
 			grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(vsnInfo)),
-		}
-		if token != "" {
-			opts = append(opts, grpc.WithPerRPCCredentials(serverclient.StaticToken(token)))
+			grpc.WithPerRPCCredentials(serverclient.ContextToken(token)),
 		}
 
 		return grpc.DialContext(context.Background(), ln.Addr().String(), opts...)
