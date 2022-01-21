@@ -98,7 +98,7 @@ func TestRunnerStart_adoption(t *testing.T) {
 	// Adopt the runner
 	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
 		RunnerId: runner.Id(),
-		Adopt: true,
+		Adopt:    true,
 	})
 	require.NoError(err)
 
@@ -107,7 +107,7 @@ func TestRunnerStart_adoption(t *testing.T) {
 	case <-time.After(5 * time.Second):
 		t.Fatal("runner should start")
 
-	case err :=<-startErr:
+	case err := <-startErr:
 		require.NoError(err)
 	}
 
@@ -168,7 +168,7 @@ func TestRunnerStart_rejection(t *testing.T) {
 	// Adopt the runner
 	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
 		RunnerId: runner.Id(),
-		Adopt: false,
+		Adopt:    false,
 	})
 	require.NoError(err)
 
@@ -177,7 +177,7 @@ func TestRunnerStart_rejection(t *testing.T) {
 	case <-time.After(5 * time.Second):
 		t.Fatal("runner should start")
 
-	case err :=<-startErr:
+	case err := <-startErr:
 		require.Error(err)
 	}
 }
