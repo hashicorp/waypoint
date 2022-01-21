@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	internalserver "github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -19,7 +20,7 @@ func TestServiceStatusReport(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	type Req = pb.UpsertStatusReportRequest
 
@@ -71,7 +72,7 @@ func TestServiceStatusReport_GetStatusReport(t *testing.T) {
 	db := testDB(t)
 	impl, err := New(WithDB(db))
 	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	statusReportResp, err := client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
 		StatusReport: ptypes.TestValidStatusReport(t, nil),
@@ -118,7 +119,7 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 	db := testDB(t)
 	impl, err := New(WithDB(db))
 	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	// Create a project with an application
 	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
@@ -253,7 +254,7 @@ func TestServiceStatusReport_ExpediteStatusReport(t *testing.T) {
 	db := testDB(t)
 	impl, err := New(WithDB(db))
 	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	// Create a project with an application
 	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{

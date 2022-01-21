@@ -15,8 +15,8 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/env"
-	"github.com/hashicorp/waypoint/internal/protocolversion"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
+	"github.com/hashicorp/waypoint/pkg/protocolversion"
 )
 
 // ErrNoServerConfig is the error when there is no server configuration

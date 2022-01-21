@@ -12,10 +12,10 @@ import (
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
 
-	"github.com/hashicorp/waypoint/internal/protocolversion"
 	"github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 	"github.com/hashicorp/waypoint/internal/serverclient"
+	"github.com/hashicorp/waypoint/pkg/protocolversion"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 

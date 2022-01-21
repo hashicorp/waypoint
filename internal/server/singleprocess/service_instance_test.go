@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	internalserver "github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -21,7 +22,7 @@ func TestListInstances(t *testing.T) {
 		// Create our server
 		impl, err := New(WithDB(testDB(t)))
 		require.NoError(err)
-		client := server.TestServer(t, impl)
+		client := internalserver.TestServer(t, impl)
 
 		// Create a deployment
 		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -76,7 +77,7 @@ func TestListInstances(t *testing.T) {
 		// Create our server
 		impl, err := New(WithDB(testDB(t)))
 		require.NoError(err)
-		client := server.TestServer(t, impl)
+		client := internalserver.TestServer(t, impl)
 
 		// Create a deployment
 		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{

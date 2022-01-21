@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	internalserver "github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 	"github.com/hashicorp/waypoint/pkg/server"
@@ -25,7 +26,7 @@ func TestServiceStartExecStream_badOpen(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	// Start exec with a bad starting message
 	stream, err := client.StartExecStream(ctx)
@@ -50,7 +51,7 @@ func TestServiceStartExecStream_start(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	// Create an instance
 	instanceId, deploymentId, closer := TestEntrypoint(t, client)
@@ -104,7 +105,7 @@ func TestServiceStartExecStream_eventExit(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	// Create an instance
 	instanceId, deploymentId, closer := TestEntrypoint(t, client)
@@ -179,7 +180,7 @@ func TestServiceStartExecStream_eventError(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	// Create an instance
 	instanceId, deploymentId, closer := TestEntrypoint(t, client)
@@ -255,7 +256,7 @@ func TestServiceStartExecStream_entrypointEventChClose(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	// Create an instance
 	instanceId, deploymentId, closer := TestEntrypoint(t, client)
@@ -332,7 +333,7 @@ func TestServiceStartExecStream_targeted(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	// Create an instance
 	instanceId, _, closer := TestEntrypoint(t, client)
@@ -386,7 +387,7 @@ func TestServiceStartExecStream_startPlugin(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	// Create an instance
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -444,7 +445,7 @@ func TestService_waitOnJobStarted(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	// Create an instance
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{

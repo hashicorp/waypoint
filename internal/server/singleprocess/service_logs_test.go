@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	internalserver "github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -74,7 +75,7 @@ func TestServiceGetLogStreamCases(t *testing.T) {
 		// Create our server
 		impl, err := New(WithDB(testDB(t)))
 		require.NoError(t, err)
-		client := server.TestServer(t, impl)
+		client := internalserver.TestServer(t, impl)
 
 		insts, dep := mkinsts(t, ctx, client, 1)
 
@@ -120,7 +121,7 @@ func TestServiceGetLogStreamCases(t *testing.T) {
 		// Create our server
 		impl, err := New(WithDB(testDB(t)))
 		require.NoError(t, err)
-		client := server.TestServer(t, impl)
+		client := internalserver.TestServer(t, impl)
 
 		insts, dep := mkinsts(t, ctx, client, 2)
 
@@ -190,7 +191,7 @@ func TestServiceGetLogStreamCases(t *testing.T) {
 		// Create our server
 		impl, err := New(WithDB(testDB(t)))
 		require.NoError(t, err)
-		client := server.TestServer(t, impl)
+		client := internalserver.TestServer(t, impl)
 
 		insts, dep := mkinsts(t, ctx, client, 1)
 
@@ -275,7 +276,7 @@ func TestServiceGetLogStreamCases(t *testing.T) {
 		// Create our server
 		impl, err := New(WithDB(testDB(t)))
 		require.NoError(t, err)
-		client := server.TestServer(t, impl)
+		client := internalserver.TestServer(t, impl)
 
 		insts, dep := mkinsts(t, ctx, client, 1)
 
@@ -348,7 +349,7 @@ func TestServiceGetLogStream_depPlugin(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	// Register our instances
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -493,7 +494,7 @@ func TestServiceGetLogStream_byApp(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)), WithLogger(log))
 	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	client := internalserver.TestServer(t, impl)
 
 	// Setup our references
 	refApp := &pb.Ref_Application{

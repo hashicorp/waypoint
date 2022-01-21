@@ -12,9 +12,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/internal/protocolversion"
-	"github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/internal/serverclient"
+	"github.com/hashicorp/waypoint/pkg/protocolversion"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -38,16 +37,16 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 	// We make run a function since we'll call it to restart too
 	run := func(ctx context.Context) context.CancelFunc {
 		ctx, cancel := context.WithCancel(ctx)
-		opts := []server.Option{
-			server.WithContext(ctx),
-			server.WithGRPC(ln),
-			server.WithImpl(impl),
+		opts := []Option{
+			WithContext(ctx),
+			WithGRPC(ln),
+			WithImpl(impl),
 		}
-		if ac, ok := impl.(server.AuthChecker); ok {
-			opts = append(opts, server.WithAuthentication(ac))
+		if ac, ok := impl.(AuthChecker); ok {
+			opts = append(opts, WithAuthentication(ac))
 		}
 
-		go server.Run(opts...)
+		go Run(opts...)
 		t.Cleanup(func() { cancel() })
 
 		return cancel
