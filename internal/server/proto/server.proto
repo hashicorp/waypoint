@@ -206,6 +206,13 @@ service Waypoint {
   // AdoptRunners allows marking a runner as adopted or rejected.
   rpc AdoptRunner(AdoptRunnerRequest) returns (google.protobuf.Empty);
 
+  // ForgetRunner deletes an existing runner entry and makes the server
+  // behave as if the runner no longer exists. If the runner is currently
+  // running, it will receive errors on subsequent jobs, and will have to
+  // re-register. A forgotten runner will not be assigned new jobs until
+  // re-registered.
+  rpc ForgetRunner(ForgetRunnerRequest) returns (google.protobuf.Empty);
+
   // GetServerConfig sets configuration for the Waypoint server.
   rpc GetServerConfig(google.protobuf.Empty) returns (GetServerConfigResponse);
 
@@ -271,7 +278,7 @@ service Waypoint {
   // (if necessary).
   //
   // This is unauthenticated (but requires a cookie in the metadata).
-  rpc RunnerToken (RunnerTokenRequest) returns (RunnerTokenResponse);
+  rpc RunnerToken(RunnerTokenRequest) returns (RunnerTokenResponse);
 
   // RunnerConfig is called to receive the configuration for the runner.
   // The response is a stream so that the configuration can be updated later.
@@ -2425,6 +2432,11 @@ message AdoptRunnerRequest {
 
   // Whether to adopt or reject. True for adopt, false for reject.
   bool adopt = 2;
+}
+
+message ForgetRunnerRequest {
+  // ID of the runner to forget
+  string runner_id = 1;
 }
 
 /********************************************************************
