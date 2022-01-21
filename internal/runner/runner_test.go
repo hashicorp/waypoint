@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 )
@@ -49,6 +50,136 @@ func TestRunnerStart(t *testing.T) {
 	_, err = client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
 	require.Error(err)
 	require.Equal(codes.NotFound, status.Code(err))
+}
+
+func TestRunnerStart_adoption(t *testing.T) {
+	require := require.New(t)
+	ctx := context.Background()
+
+	serverImpl := singleprocess.TestImpl(t)
+	client := server.TestServer(t, serverImpl)
+
+	// Client with no token
+	anonClient := server.TestServer(t, serverImpl, server.TestWithToken(""))
+
+	// Initialize our runner
+	runner, err := New(
+		WithClient(anonClient),
+	)
+	require.NoError(err)
+	defer runner.Close()
+
+	// The runner should not be registered
+	_, err = client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+	require.Error(err)
+	require.Equal(codes.NotFound, status.Code(err))
+
+	// Start
+	startErr := make(chan error, 1)
+	go func() {
+		startErr <- runner.Start()
+	}()
+
+	// Wait for registration
+	require.Eventually(func() bool {
+		_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+		return err == nil
+	}, 2*time.Second, 10*time.Millisecond)
+
+	// The runner should not start
+	select {
+	case <-time.After(100 * time.Millisecond):
+		// Good
+
+	case <-startErr:
+		t.Fatal("runner should not start")
+	}
+
+	// Adopt the runner
+	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: runner.Id(),
+		Adopt: true,
+	})
+	require.NoError(err)
+
+	// Runner should start
+	select {
+	case <-time.After(5 * time.Second):
+		t.Fatal("runner should start")
+
+	case err :=<-startErr:
+		require.NoError(err)
+	}
+
+	// The runner should be registered
+	resp, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+	require.NoError(err)
+	require.Equal(runner.Id(), resp.Id)
+	require.Equal(pb.Runner_ADOPTED, resp.AdoptionState)
+
+	// Close
+	require.NoError(runner.Close())
+	time.Sleep(100 * time.Millisecond)
+}
+
+func TestRunnerStart_rejection(t *testing.T) {
+	require := require.New(t)
+	ctx := context.Background()
+
+	serverImpl := singleprocess.TestImpl(t)
+	client := server.TestServer(t, serverImpl)
+
+	// Client with no token
+	anonClient := server.TestServer(t, serverImpl, server.TestWithToken(""))
+
+	// Initialize our runner
+	runner, err := New(
+		WithClient(anonClient),
+	)
+	require.NoError(err)
+	defer runner.Close()
+
+	// The runner should not be registered
+	_, err = client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+	require.Error(err)
+	require.Equal(codes.NotFound, status.Code(err))
+
+	// Start
+	startErr := make(chan error, 1)
+	go func() {
+		startErr <- runner.Start()
+	}()
+
+	// Wait for registration
+	require.Eventually(func() bool {
+		_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+		return err == nil
+	}, 2*time.Second, 10*time.Millisecond)
+
+	// The runner should not start
+	select {
+	case <-time.After(100 * time.Millisecond):
+		// Good
+
+	case <-startErr:
+		t.Fatal("runner should not start")
+	}
+
+	// Adopt the runner
+	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: runner.Id(),
+		Adopt: false,
+	})
+	require.NoError(err)
+
+	// Runner should start
+	select {
+	case <-time.After(5 * time.Second):
+		t.Fatal("runner should start")
+
+	case err :=<-startErr:
+		require.Error(err)
+	}
 }
 
 func TestRunnerStart_config(t *testing.T) {
