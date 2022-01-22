@@ -98,6 +98,13 @@ func (s *service) RunnerToken(
 	log := hclog.FromContext(ctx)
 	record := req.Runner
 
+	// We require a cookie. We only need to check emptiness cause if its
+	// set it will be validated in auth.go
+	if s.cookieFromRequest(ctx) == "" {
+		return nil, status.Errorf(codes.PermissionDenied,
+			"RunnerToken requires the 'cookie' metadata value to be set")
+	}
+
 	// Get the runner
 	r, err := s.state.RunnerById(record.Id, nil)
 	if status.Code(err) == codes.NotFound {
