@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/protocolversion"
@@ -175,4 +176,12 @@ func TestVersionInfoResponse() *pb.GetVersionInfoResponse {
 			},
 		},
 	}
+}
+
+// Returns a context with the cookie set.
+func TestCookieContext(ctx context.Context, t testing.T, c pb.WaypointClient) context.Context {
+	resp, err := c.GetServerConfig(ctx, &empty.Empty{})
+	require.NoError(t, err)
+	md := metadata.New(map[string]string{"cookie": resp.Config.Cookie})
+	return metadata.NewOutgoingContext(ctx, md)
 }

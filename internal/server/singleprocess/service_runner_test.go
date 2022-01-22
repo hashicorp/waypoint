@@ -25,6 +25,9 @@ func TestServiceRunnerToken_happy(t *testing.T) {
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
+	// Get our cookied context
+	ctx = server.TestCookieContext(ctx, t, client)
+
 	// Get the runner id
 	id, err := server.Id()
 	require.NoError(err)
@@ -137,6 +140,9 @@ func TestServiceRunnerToken_reject(t *testing.T) {
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
+	// Get our cookied context
+	ctx = server.TestCookieContext(ctx, t, client)
+
 	// Get the runner id
 	id, err := server.Id()
 	require.NoError(err)
@@ -220,6 +226,34 @@ func TestServiceRunnerToken_reject(t *testing.T) {
 		require.Len(runners.Runners, 1)
 		require.Equal(runners.Runners[0].Id, id)
 	}
+}
+
+func TestServiceRunnerToken_noCookie(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+
+	// Get the runner id
+	id, err := server.Id()
+	require.NoError(err)
+	r := &pb.Runner{
+		Id: id,
+		Kind: &pb.Runner_Remote_{
+			Remote: &pb.Runner_Remote{},
+		},
+	}
+
+	// Reconnect with no token
+	anonClient := server.TestServer(t, impl, server.TestWithToken(""))
+
+	resp, respErr := anonClient.RunnerToken(ctx, &pb.RunnerTokenRequest{
+		Runner: r,
+	})
+	require.Error(respErr)
+	require.Nil(resp)
 }
 
 // Complete happy path runner config stream
