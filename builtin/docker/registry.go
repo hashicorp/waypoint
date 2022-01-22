@@ -36,8 +36,11 @@ func (r *Registry) AccessInfo() (*AccessInfo, error) {
 		Insecure: r.config.Insecure,
 	}
 
-    //Check if auth configuration is not null
-	if (r.config.Auth != &Auth{}) {
+	if r.config.EncodedAuth != "" {
+		ai.Auth = &AccessInfo_Encoded{
+			Encoded: r.config.EncodedAuth,
+		}
+	} else if r.config.Auth != nil {
 		auth, err := json.Marshal(types.AuthConfig{
 			Username:      r.config.Auth.Username,
 			Password:      r.config.Auth.Password,
@@ -141,6 +144,9 @@ type Config struct {
 	// Authenticates to private registry
 	Auth *Auth `hcl:"auth,block"`
 
+	// The docker specific encoded authentication string to use to talk to the registry.
+	EncodedAuth string `hcl:"encoded_auth,optional"`
+
 	// Insecure indicates if the registry should be accessed via http rather than https
 	Insecure bool `hcl:"insecure,optional"`
 
@@ -197,16 +203,57 @@ build {
 	)
 
 	doc.SetField(
+		"encoded_auth",
+		"the authentication information to log into the docker repository",
+		docs.Summary(
+			"The format of this is base64-encoded JSON. The structure is the ",
+			"[`AuthConfig`](https://pkg.go.dev/github.com/docker/cli/cli/config/types#AuthConfig)",
+			"structure used by Docker.",
+			"",
+			"WARNING: be very careful to not leak the authentication information",
+			"by hardcoding it here. Use a helper function like `file()` to read",
+			"the information from a file not stored in VCS",
+		),
+	)
+
+	doc.SetField(
+		"insecure",
+		"access the registry via http rather than https",
+		docs.Summary(
+			"This indicates that the registry should be accessed via http rather than https.",
+			"Not recommended for production usage.",
+		),
+	)
+
+	doc.SetField(
+		"username",
+		"username to authenticate with the registry",
+		docs.Summary(
+			"This optional conflicts with encoded_auth and thusly only one can be used at a time.",
+			"If both are used, encoded_auth takes precedence.",
+		),
+	)
+
+	doc.SetField(
+		"password",
+		"password associated with username on the registry",
+		docs.Summary(
+			"This optional conflicts with encoded_auth and thusly only one can be used at a time.",
+			"If both are used, encoded_auth takes precedence.",
+		),
+	)
+
+	doc.SetField(
 		"auth",
 		"the authentication information to log into the docker repository",
-        docs.SubFields(func(d *docs.SubFieldDoc) {
-            d.SetField("hostname", "Hostname of Docker registry")
-            d.SetField("username", "Username of Docker registry account")
-            d.SetField("password", "Password of Docker registry account")
-            d.SetField("serverAddress", "Address of Docker registry")
-            d.SetField("identityToken", "Token used to authenticate user")
-            d.SetField("registryToken", "Bearer tokens to be sent to Docker registry")
-        }),
+		docs.SubFields(func(d *docs.SubFieldDoc) {
+			d.SetField("hostname", "Hostname of Docker registry")
+			d.SetField("username", "Username of Docker registry account")
+			d.SetField("password", "Password of Docker registry account")
+			d.SetField("serverAddress", "Address of Docker registry")
+			d.SetField("identityToken", "Token used to authenticate user")
+			d.SetField("registryToken", "Bearer tokens to be sent to Docker registry")
+		}),
 	)
 
 	return doc, nil
