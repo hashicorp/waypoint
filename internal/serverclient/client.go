@@ -280,6 +280,9 @@ const (
 	// EnvServerToken is the token for authenticated with the server.
 	EnvServerToken = "WAYPOINT_SERVER_TOKEN"
 
+	// EnvServerCookie is the optional cookie value for API requests.
+	EnvServerCookie = "WAYPOINT_SERVER_COOKIE"
+
 	// EnvContext specifies a named context to load.
 	EnvContext = "WAYPOINT_CONTEXT"
 )

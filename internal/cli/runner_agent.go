@@ -44,6 +44,9 @@ type RunnerAgentCommand struct {
 	// If this is an ODR runner, this should be the ODR profile that it was created
 	// from.
 	flagOdrProfileId string
+
+	// Cookie to use for API requests. Importantly, this enables runner adoption.
+	flagCookie string
 }
 
 // This is how long a runner in ODR mode will wait for its job assignment before
@@ -140,6 +143,10 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 
 	if c.flagId != "" {
 		options = append(options, runnerpkg.WithId(c.flagId))
+	}
+
+	if c.flagCookie != "" {
+		options = append(options, runnerpkg.WithCookie(c.flagCookie))
 	}
 
 	if c.flagODR {
@@ -302,6 +309,15 @@ func (c *RunnerAgentCommand) Flags() *flag.Sets {
 			Target: &c.flagOdrProfileId,
 			Usage:  "The ID of the odr profile used to create the task that is running this runner.",
 			Hidden: true,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "cookie",
+			Target: &c.flagCookie,
+			Usage: "The cookie value of the server to validate API requests. " +
+				"This is required for runner adoption. If you do not already have a " +
+				"runner token, this must be set.",
+			EnvVar: serverclient.EnvServerCookie,
 		})
 	})
 }
