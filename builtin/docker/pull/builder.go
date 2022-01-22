@@ -48,7 +48,7 @@ type BuilderConfig struct {
 	// Control whether or not to inject the entrypoint binary into the resulting image
 	DisableCEB bool `hcl:"disable_entrypoint,optional"`
 
-    // The docker specific encoded authentication string to use to talk to the registry.
+	// The docker specific encoded authentication string to use to talk to the registry.
 	EncodedAuth string `hcl:"encoded_auth,optional"`
 
 	// Authenticates to private registry
@@ -124,19 +124,19 @@ build {
 			"by hardcoding it here. Use a helper function like `file()` to read",
 			"the information from a file not stored in VCS",
 		),
-    )
+	)
 
 	doc.SetField(
 		"auth",
 		"the authentication information to log into the docker repository",
-        docs.SubFields(func(d *docs.SubFieldDoc) {
-            d.SetField("hostname", "Hostname of Docker registry")
-            d.SetField("username", "Username of Docker registry account")
-            d.SetField("password", "Password of Docker registry account")
-            d.SetField("serverAddress", "Address of Docker registry")
-            d.SetField("identityToken", "Token used to authenticate user")
-            d.SetField("registryToken", "Bearer tokens to be sent to Docker registry")
-        }),
+		docs.SubFields(func(d *docs.SubFieldDoc) {
+			d.SetField("hostname", "Hostname of Docker registry")
+			d.SetField("username", "Username of Docker registry account")
+			d.SetField("password", "Password of Docker registry account")
+			d.SetField("serverAddress", "Address of Docker registry")
+			d.SetField("identityToken", "Token used to authenticate user")
+			d.SetField("registryToken", "Bearer tokens to be sent to Docker registry")
+		}),
 	)
 
 	return doc, nil
@@ -266,8 +266,10 @@ func (b *Builder) buildWithDocker(
 
 	var encodedAuth = ""
 
-    //Check if auth configuration is null
-	if *b.config.Auth == (docker.Auth{}) {
+	if b.config.EncodedAuth != "" {
+		//If EncodedAuth is set, use that
+		encodedAuth = b.config.EncodedAuth
+	} else if b.config.Auth == nil && b.config.EncodedAuth == "" {
 		// Resolve the Repository name from fqn to RepositoryInfo
 		repoInfo, err := registry.ParseRepositoryInfo(ref)
 		if err != nil {
@@ -300,7 +302,8 @@ func (b *Builder) buildWithDocker(
 			return status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
 		}
 		encodedAuth = base64.URLEncoding.EncodeToString(buf)
-	} else {
+	} else if *b.config.Auth != (docker.Auth{}) {
+		//If EncodedAuth is not set, and Auth is, use Auth
 		authBytes, err := json.Marshal(types.AuthConfig{
 			Username:      authConfig.Username,
 			Password:      authConfig.Password,
@@ -363,7 +366,7 @@ func (b *Builder) buildWithImg(
 	step = sg.Add("Preparing Docker configuration...")
 	env := os.Environ()
 
-    //Check if auth configuration is not null
+	//Check if auth configuration is not null
 	if (*b.config.Auth != docker.Auth{}) {
 		auth, err := json.Marshal(types.AuthConfig{
 			Username:      authConfig.Username,
