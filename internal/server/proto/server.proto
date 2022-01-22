@@ -2461,15 +2461,23 @@ message ServerConfig {
   // addrs and more controls over which are advertised when.
   repeated AdvertiseAddr advertise_addrs = 1;
 
+  // The platform that the server is currently installed to. This is set
+  // through the CLI flag '-platform' on installation.
+  string platform = 4;
+
+  // Cookie is a unique cookie for this server. This can be sent in metadata
+  // as a semi-secret mechanism to just ensure you're talking to the correct
+  // cluster. The cookie does not enable access to data directly. Some API
+  // endpoints (such as RunnerToken) require it. This is auto-generated on
+  // startup and cannot currently be changed. Any attempts to change this
+  // value are ignored.
+  string cookie = 2;
+
   message AdvertiseAddr {
     string addr = 1;
     bool tls = 2;
     bool tls_skip_verify = 3;
   }
-
-  // The platform that the server is currently installed to. This is set
-  // through the CLI flag '-platform' on installation.
-  string platform = 4;
 }
 
 /********************************************************************
