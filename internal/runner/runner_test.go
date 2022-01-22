@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -25,6 +26,7 @@ func TestRunnerStart(t *testing.T) {
 	// Initialize our runner
 	runner, err := New(
 		WithClient(client),
+		WithCookie(testCookie(t, client)),
 	)
 	require.NoError(err)
 	defer runner.Close()
@@ -65,6 +67,7 @@ func TestRunnerStart_adoption(t *testing.T) {
 	// Initialize our runner
 	runner, err := New(
 		WithClient(anonClient),
+		WithCookie(testCookie(t, client)),
 	)
 	require.NoError(err)
 	defer runner.Close()
@@ -135,6 +138,7 @@ func TestRunnerStart_rejection(t *testing.T) {
 	// Initialize our runner
 	runner, err := New(
 		WithClient(anonClient),
+		WithCookie(testCookie(t, client)),
 	)
 	require.NoError(err)
 	defer runner.Close()
@@ -333,4 +337,10 @@ func TestRunnerStart_config(t *testing.T) {
 			return err == nil && cfgVar.Value.(*pb.ConfigVar_Static).Static == string(data)
 		}, 2000*time.Millisecond, 50*time.Millisecond)
 	})
+}
+
+func testCookie(t *testing.T, c pb.WaypointClient) string {
+	resp, err := c.GetServerConfig(context.Background(), &empty.Empty{})
+	require.NoError(t, err)
+	return resp.Config.Cookie
 }
