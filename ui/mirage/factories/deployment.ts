@@ -66,6 +66,10 @@ export default Factory.extend({
     component: association('platform', 'nomad-jobspec'),
   }),
 
+  'nomad-canary': trait({
+    component: association('platform', 'nomad-canary'),
+  }),
+
   kubernetes: trait({
     component: association('platform', 'kubernetes'),
   }),

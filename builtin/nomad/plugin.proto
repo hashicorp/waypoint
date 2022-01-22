@@ -12,6 +12,10 @@ message Deployment {
   google.protobuf.Any resource_state = 3;
 }
 
+message Release {
+  string Url = 1;
+}
+
 // Resource contains the internal resource states.
 message Resource {
   message Job {
