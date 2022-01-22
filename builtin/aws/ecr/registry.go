@@ -3,6 +3,7 @@ package ecr
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -193,10 +194,18 @@ func (r *Registry) Push(
 		return nil, err
 	}
 
-    authInfo := &docker.Auth{
-        Username: "AWS",
-        Password: info.token,
-    }
+	// Use the authorization token to create the base64 package that
+	// Docker requires to perform authentication.
+	authInfo := map[string]string{
+		"username": "AWS",
+		"password": info.token,
+	}
+
+	authData, err := json.Marshal(authInfo)
+	if err != nil {
+		return nil, err
+	}
+	encodedAuth := base64.StdEncoding.EncodeToString(authData)
 
 	// Create the Docker registry plugin. We use the Docker registry plugin
 	// directly so we can inherit all of its logic around Dockerless if necessary
@@ -208,7 +217,7 @@ func (r *Registry) Push(
 		return nil, err
 	}
 	dockerConfig := raw.(*docker.Config)
-	dockerConfig.Auth = authInfo
+	dockerConfig.EncodedAuth = encodedAuth
 	dockerConfig.Image = info.repo
 	dockerConfig.Tag = r.config.Tag
 
@@ -288,5 +297,3 @@ registry {
 }
 
 var _ component.Documented = (*Registry)(nil)
-var _ component.Registry = (*Registry)(nil)
-var _ component.RegistryAccess = (*Registry)(nil)
