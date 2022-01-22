@@ -163,14 +163,14 @@ build {
 	doc.SetField(
 		"auth",
 		"the authentication information to log into the docker repository",
-        docs.SubFields(func(d *docs.SubFieldDoc) {
-            d.SetField("hostname", "Hostname of Docker registry")
-            d.SetField("username", "Username of Docker registry account")
-            d.SetField("password", "Password of Docker registry account")
-            d.SetField("serverAddress", "Address of Docker registry")
-            d.SetField("identityToken", "Token used to authenticate user")
-            d.SetField("registryToken", "Bearer tokens to be sent to Docker registry")
-        }),
+		docs.SubFields(func(d *docs.SubFieldDoc) {
+			d.SetField("hostname", "Hostname of Docker registry")
+			d.SetField("username", "Username of Docker registry account")
+			d.SetField("password", "Password of Docker registry account")
+			d.SetField("serverAddress", "Address of Docker registry")
+			d.SetField("identityToken", "Token used to authenticate user")
+			d.SetField("registryToken", "Bearer tokens to be sent to Docker registry")
+		}),
 	)
 
 	doc.SetField(
@@ -453,8 +453,8 @@ func (b *Builder) buildWithDocker(
 	}
 
 	var authMap = make(map[string]types.AuthConfig)
-    //Check if auth configuration is not null
-	if (b.config.Auth != nil) {
+	//Check if auth configuration is not null
+	if b.config.Auth != nil {
 		authMap[authConfig.Hostname] = types.AuthConfig{
 			Username:      authConfig.Username,
 			Password:      authConfig.Password,
