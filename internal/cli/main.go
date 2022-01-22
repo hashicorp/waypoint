@@ -324,6 +324,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"server cookie": func() (cli.Command, error) {
+			return &ServerCookieCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"server config-set": func() (cli.Command, error) {
 			return &ServerConfigSetCommand{
 				baseCommand: baseCommand,
