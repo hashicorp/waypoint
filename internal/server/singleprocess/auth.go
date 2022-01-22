@@ -17,6 +17,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/blake2b"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -118,6 +119,18 @@ func (s *service) tokenFromContext(ctx context.Context) *pb.Token {
 	return value
 }
 
+// cookieFromRequest returns the server cookie value provided during the request,
+// or blank if none (or a blank cookie) is provided.
+func (s *service) cookieFromRequest(ctx context.Context) string {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if c, ok := md["cookie"]; ok && len(c) > 0 {
+			return c[0]
+		}
+	}
+
+	return ""
+}
+
 // Authenticate implements the server.AuthChecker interface.
 //
 // This checks if the given endpoint should be allowed. This is called during a
@@ -128,6 +141,18 @@ func (s *service) Authenticate(
 	ctx context.Context, token, endpoint string, effects []string,
 ) (context.Context, error) {
 	_, anonEndpoint := unauthenticatedEndpoints[endpoint]
+
+	// Check the cookie
+	if c := s.cookieFromRequest(ctx); c != "" {
+		serverConfig, err := s.state.ServerConfigGet()
+		if err != nil {
+			return nil, err
+		}
+
+		if !strings.EqualFold(serverConfig.Cookie, c) {
+			return nil, status.Errorf(codes.PermissionDenied, "server cookie does not match")
+		}
+	}
 
 	// We require a token if this isn't an unauthenticated endpoint
 	if !anonEndpoint && token == "" {
