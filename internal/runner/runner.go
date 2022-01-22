@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -55,6 +56,7 @@ type Runner struct {
 	id          string
 	logger      hclog.Logger
 	client      pb.WaypointClient
+	cookie      string
 	cleanupFunc func()
 	runner      *pb.Runner
 	factories   map[component.Type]*factory.Factory
@@ -146,6 +148,17 @@ func New(opts ...Option) (*Runner, error) {
 		runner.id = id
 	}
 
+	// If we were given a cookie, configure our context to have the cookie
+	// for all API requests.
+	if v := runner.cookie; v != "" {
+		runner.runningCtx = metadata.NewOutgoingContext(
+			runner.runningCtx,
+			metadata.New(map[string]string{
+				"cookie": v,
+			}),
+		)
+	}
+
 	runner.runner = &pb.Runner{
 		Id:       runner.id,
 		ByIdOnly: cfg.byIdOnly,
@@ -200,23 +213,35 @@ func (r *Runner) Start(ctx context.Context) error {
 
 	log := r.logger
 
-	// Register and initialize the adoption flow (if necessary) by requesting
-	// our token.
-	log.Debug("requesting token with RunnerToken (initiates adoption)")
-	tokenResp, err := r.client.RunnerToken(ctx, &pb.RunnerTokenRequest{
-		Runner: r.runner,
-	})
-	if err != nil {
-		return err
-	}
-	if tokenResp != nil && tokenResp.Token != "" {
-		// If we received a token, then we replace our token with that.
-		// It is possible that we do NOT have a token, because our current
-		// token is already valid.
-		log.Debug("runner adoption complete, new token received")
-		r.runningCtx = serverclient.TokenWithContext(r.runningCtx, tokenResp.Token)
+	if r.cookie == "" {
+		log.Warn("cookie not set for runner, will skip adoption process")
 	} else {
-		log.Debug("runner token is already valid, using same token")
+		// Set our cookie for the API request. Cookie is required for RunnerToken
+		tokenCtx := metadata.NewOutgoingContext(
+			ctx,
+			metadata.New(map[string]string{
+				"cookie": r.cookie,
+			}),
+		)
+
+		// Register and initialize the adoption flow (if necessary) by requesting
+		// our token.
+		log.Debug("requesting token with RunnerToken (initiates adoption)")
+		tokenResp, err := r.client.RunnerToken(tokenCtx, &pb.RunnerTokenRequest{
+			Runner: r.runner,
+		})
+		if err != nil {
+			return err
+		}
+		if tokenResp != nil && tokenResp.Token != "" {
+			// If we received a token, then we replace our token with that.
+			// It is possible that we do NOT have a token, because our current
+			// token is already valid.
+			log.Debug("runner adoption complete, new token received")
+			r.runningCtx = serverclient.TokenWithContext(r.runningCtx, tokenResp.Token)
+		} else {
+			log.Debug("runner token is already valid, using same token")
+		}
 	}
 
 	// Note from here on forward, we purposely switch to runningCtx instead
@@ -391,6 +416,18 @@ func WithDynamicConfig(set bool) Option {
 func WithId(id string) Option {
 	return func(r *Runner, cfg *config) error {
 		r.id = id
+		return nil
+	}
+}
+
+// WithCookie sets the cookie to send with all API requests. If this cookie
+// does not match the remote server, API requests will fail.
+//
+// A cookie is REQUIRED FOR ADOPTION. If this is not set, the adoption process
+// will be skipped and only pre-adoption (a preset token) will work.
+func WithCookie(v string) Option {
+	return func(r *Runner, cfg *config) error {
+		r.cookie = v
 		return nil
 	}
 }
