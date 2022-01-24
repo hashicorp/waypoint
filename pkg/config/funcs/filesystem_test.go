@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
 	"github.com/zclconf/go-cty/cty"
 )
 

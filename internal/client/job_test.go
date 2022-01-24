@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
-
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/grpcmetadata"
+
 	"github.com/stretchr/testify/require"
 )
 

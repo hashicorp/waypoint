@@ -21,12 +21,13 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
-	"github.com/hashicorp/waypoint/internal/config/funcs"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/plugin"
+	funcs2 "github.com/hashicorp/waypoint/pkg/config/funcs"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -607,11 +608,11 @@ func (c *AppDocsCommand) builtinMDX() int {
 func (c *AppDocsCommand) funcsMDX() int {
 	var ectx hcl.EvalContext
 
-	funcs.AddStandardFunctions(&ectx, ".")
+	funcs2.AddStandardFunctions(&ectx, ".")
 
 	all := ectx.Functions
 
-	docs := funcs.Docs()
+	docs := funcs2.Docs()
 
 	var keys []string
 

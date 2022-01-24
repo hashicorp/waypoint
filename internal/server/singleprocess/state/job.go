@@ -18,8 +18,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/pkg/graph"
-	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/logbuffer"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 

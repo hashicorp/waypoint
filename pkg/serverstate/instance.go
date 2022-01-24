@@ -3,8 +3,8 @@ package serverstate
 import (
 	"context"
 
-	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/logbuffer"
 )
 
 // Instance represents a running deployment instance for an application.

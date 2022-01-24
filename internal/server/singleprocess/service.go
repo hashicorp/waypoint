@@ -8,9 +8,9 @@ import (
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
 	bolt "go.etcd.io/bbolt"
 
+	wpoidc "github.com/hashicorp/waypoint/pkg/auth/oidc"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 
-	wpoidc "github.com/hashicorp/waypoint/internal/auth/oidc"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
 	"github.com/hashicorp/waypoint/pkg/server"

@@ -4,9 +4,10 @@ import (
 	"sync/atomic"
 
 	"github.com/hashicorp/go-memdb"
-	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/hashicorp/waypoint/pkg/server/logbuffer"
 )
 
 const (

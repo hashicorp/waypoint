@@ -8,9 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/waypoint/internal/pkg/copy"
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/hashicorp/waypoint/internal/pkg/copy"
 )
 
 var testHasGit bool

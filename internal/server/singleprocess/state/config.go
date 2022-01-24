@@ -13,9 +13,9 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	bolt "go.etcd.io/bbolt"
 
-	"github.com/hashicorp/waypoint/internal/config/funcs"
-	serversort "github.com/hashicorp/waypoint/internal/server/sort"
+	"github.com/hashicorp/waypoint/pkg/config/funcs"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	serversort "github.com/hashicorp/waypoint/pkg/server/sort"
 )
 
 var (

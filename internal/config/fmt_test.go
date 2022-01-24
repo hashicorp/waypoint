@@ -8,6 +8,8 @@ import (
 
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/require"
+
+	"github.com/hashicorp/waypoint/pkg/config"
 )
 
 func TestFormat(t *testing.T) {
@@ -35,7 +37,7 @@ func TestFormat(t *testing.T) {
 			require.NoError(err)
 
 			// Format it!
-			out, err := Format(src, entry.Name())
+			out, err := config.Format(src, entry.Name())
 			require.NoError(err)
 
 			// Compare

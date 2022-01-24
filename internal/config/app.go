@@ -9,7 +9,7 @@ import (
 	"github.com/mitchellh/copystructure"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/hashicorp/waypoint/internal/config/funcs"
+	"github.com/hashicorp/waypoint/pkg/config/funcs"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 

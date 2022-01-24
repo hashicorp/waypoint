@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"github.com/golang/protobuf/ptypes"
+
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 

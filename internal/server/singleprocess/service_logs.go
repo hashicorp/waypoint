@@ -9,11 +9,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
-	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/grpcmetadata"
+	logbuffer2 "github.com/hashicorp/waypoint/pkg/server/logbuffer"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
@@ -50,7 +50,7 @@ func (s *service) spawnLogPlugin(
 	// write logs to. In this way, we can easily coordinate the log entries
 	// from the logs plugin to here, the reading half.
 	var lo state.InstanceLogs
-	lo.LogBuffer = logbuffer.New()
+	lo.LogBuffer = logbuffer2.New()
 
 	err = inmemstate.InstanceLogsCreate(instId, &lo)
 	if err != nil {
@@ -139,7 +139,7 @@ func (s *service) spawnLogPlugin(
 type streamRec struct {
 	InstanceId   string
 	DeploymentId string
-	LogBuffer    *logbuffer.Buffer
+	LogBuffer    *logbuffer2.Buffer
 
 	InstanceLogsId int64
 	JobId          string
@@ -371,7 +371,7 @@ func (s *service) sendInstanceLogs(
 	// For values returned by LogMerge, we want to be able to map back to
 	// the stream that the reader was for, so we can include the instanceid.
 	// This map lets us do that.
-	readerToInstance := make(map[*logbuffer.Reader]*streamRec)
+	readerToInstance := make(map[*logbuffer2.Reader]*streamRec)
 
 	// Step 1: we use log merge to read all the known entries from existing
 	// instances. This will never block, it will just weave the log entries
@@ -385,7 +385,7 @@ func (s *service) sendInstanceLogs(
 	}
 	log.Trace("initial instances loaded", "len", len(records))
 
-	var readers []logbuffer.MergeReader
+	var readers []logbuffer2.MergeReader
 	for _, record := range records {
 		r := record.LogBuffer.Reader(backlog)
 		readerToInstance[r] = record
@@ -396,7 +396,7 @@ func (s *service) sendInstanceLogs(
 	// Read out all the log entries from LogMerge. This never blocks waiting
 	// for new log entries, it will simply let each reader output all known
 	// entries and then loop exits.
-	lm := logbuffer.NewMerger(readers...)
+	lm := logbuffer2.NewMerger(readers...)
 	lines := make([]*pb.LogBatch_Entry, maxEntriesPerRead)
 	for {
 		entries, err := lm.Read(len(lines))
@@ -421,7 +421,7 @@ func (s *service) sendInstanceLogs(
 		// same instance as the current one. When we detect a change, we flush
 		// lines and begin buffering again.
 		for _, v := range entries {
-			rec := readerToInstance[v.Reader.(*logbuffer.Reader)]
+			rec := readerToInstance[v.Reader.(*logbuffer2.Reader)]
 
 			if prev != nil && prev != rec {
 				// Flush current lines that were all the same instance
@@ -465,7 +465,7 @@ func (s *service) sendInstanceLogs(
 			instanceLog := log.With("instance_id", rec.InstanceId)
 			instanceLog.Debug("instance log stream starting", "instance-id", rec.InstanceId)
 
-			go func(r *logbuffer.Reader, rec *streamRec) {
+			go func(r *logbuffer2.Reader, rec *streamRec) {
 				defer func() {
 					instanceSetLock.Lock()
 					defer instanceSetLock.Unlock()
@@ -543,7 +543,7 @@ func (s *service) forwardLogBatches(
 	ctx context.Context,
 	log hclog.Logger,
 	sender batchSender,
-	r *logbuffer.Reader,
+	r *logbuffer2.Reader,
 	record *streamRec,
 ) {
 	go r.CloseContext(ctx)

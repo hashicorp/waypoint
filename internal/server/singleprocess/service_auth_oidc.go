@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	wpoidc "github.com/hashicorp/waypoint/internal/auth/oidc"
+	wpoidc "github.com/hashicorp/waypoint/pkg/auth/oidc"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )

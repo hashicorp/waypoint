@@ -3,7 +3,7 @@ package singleprocess
 import (
 	"context"
 
-	configpkg "github.com/hashicorp/waypoint/internal/config"
+	configpkg "github.com/hashicorp/waypoint/pkg/config"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
