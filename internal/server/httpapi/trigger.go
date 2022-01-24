@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -17,6 +19,13 @@ import (
 	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
+
+// Message is the message we return to the requester when streaming output
+type Message struct {
+	JobId   string `json:"jobId,omitempty"`
+	Message string `json:"message,omitempty"`
+	// TODO what other options should we send back to the user
+}
 
 // TODO(briancain): write tests
 // HandleTrigger will execute a run trigger, if the requested id exists
@@ -107,11 +116,10 @@ func HandleTrigger(addr string) http.HandlerFunc {
 			VariableOverrides: variableOverrides,
 		}
 
+		// attempt to make a grpc request to run trigger by id
 		if requireAuth {
-			// attempt to make a grpc request to run trigger by id
 			resp, err = client.RunTrigger(ctx, runTriggerReq)
 		} else {
-			// attempt to make a grpc request to run trigger by id
 			resp, err = client.NoAuthRunTrigger(ctx, runTriggerReq)
 		}
 		if err != nil {
@@ -132,13 +140,197 @@ func HandleTrigger(addr string) http.HandlerFunc {
 		}
 		jobIds := resp.JobIds
 
+		streamOutput := r.URL.Query().Get("stream")
+
 		// TODO(briancain): attempt to stream output back, on request.
-		for _, jId := range jobIds {
-			_, err := client.GetJobStream(ctx, &pb.GetJobStreamRequest{
-				JobId: jId,
-			})
-			if err != nil {
-				log.Error("server failed to get job stream output for trigger", "job_id", jId, "err", err)
+		if streamOutput != "" {
+			log.Trace("attempting to stream back queued job output from running trigger")
+
+			cn, ok := w.(http.CloseNotifier)
+			if !ok {
+				log.Error("failed to stream job output, could not create http.CloseNotifier")
+				http.NotFound(w, r)
+				return
+			}
+			flusher, ok := w.(http.Flusher)
+			if !ok {
+				log.Error("failed to stream job output, could not create http.Flusher")
+				http.NotFound(w, r)
+				return
+			}
+
+			// Send the initial headers saying we're gonna stream the response.
+			w.Header().Set("Transfer-Encoding", "chunked")
+			w.WriteHeader(http.StatusOK)
+			flusher.Flush()
+
+			enc := json.NewEncoder(w)
+
+			// TODO(briancain): can we read the job stream for all jobs and send data back for each
+			// as we receive it?
+			// ALSO, we should skip by ~2 so we can only stream back the main
+			// job id, rather than the StartTask and StopTask ODR jobs
+		OUTER:
+			for i := 1; i < len(jobIds); i += 2 {
+				jId := jobIds[i]
+				stream, err := client.GetJobStream(ctx, &pb.GetJobStreamRequest{
+					JobId: jId,
+				})
+				if err != nil {
+					log.Error("server failed to get job stream output for trigger", "job_id", jId, "err", err)
+					http.Error(w, fmt.Sprintf("server failed to obtain job stream output: %s", err), 500)
+					return
+				}
+
+				// Wait for open confirmation
+				resp, err := stream.Recv()
+				if err != nil {
+					log.Error("server failed to stream job output", "err", err)
+					http.Error(w, fmt.Sprintf("server failed to receive job stream output: %s", err), 500)
+					return
+				}
+				if _, ok := resp.Event.(*pb.GetJobStreamResponse_Open_); !ok {
+					log.Error("server failed to open job stream output, got unexpected message", "event", resp.Event)
+					http.Error(w, fmt.Sprintf("job stream failed to open, got unexpected message: %T", resp.Event), 500)
+					return
+				}
+
+				var jobComplete bool
+
+				// read and send the stream
+				for {
+					resp, err := stream.Recv()
+					if err != nil {
+						http.Error(w, fmt.Sprintf("server failed to receive job stream output: %s", err), 500)
+						return
+					}
+					if resp == nil {
+						// This shouldn't happen, but if it does, just ignore it.
+						log.Warn("nil response received, ignoring")
+						continue
+					}
+
+					select {
+					case <-cn.CloseNotify():
+						log.Trace("client closed connection to stream")
+						return
+					default:
+						// Get jobstream output and return string chunk message back
+						time.Sleep(time.Second)
+						m := "" // the message to return
+
+						switch event := resp.Event.(type) {
+						case *pb.GetJobStreamResponse_Complete_:
+							jobComplete = true
+							m = "job complete"
+
+							if event.Complete.Error == nil {
+								log.Info("job completed successfully")
+							} else {
+								st := status.FromProto(event.Complete.Error)
+								log.Warn("job failed", "code", st.Code(), "message", st.Message())
+								http.Error(w, fmt.Sprintf("job failed to complete: job code %s: %s", st.Code(), st.Message()), 500)
+							}
+						case *pb.GetJobStreamResponse_Error_:
+							jobComplete = true
+
+							st := status.FromProto(event.Error.Error)
+							log.Warn("job stream failure", "code", st.Code(), "message", st.Message())
+							http.Error(w, fmt.Sprintf("job failed to complete: job code %s: %s", st.Code(), st.Message()), 500)
+							return
+						case *pb.GetJobStreamResponse_Terminal_:
+							// We got some job output! Craft a message to be sent back
+
+							for _, ev := range event.Terminal.Events {
+								log.Trace("job terminal output", "event", ev)
+
+								switch ev := ev.Event.(type) {
+								case *pb.GetJobStreamResponse_Terminal_Event_Line_:
+									m = ev.Line.Msg
+								case *pb.GetJobStreamResponse_Terminal_Event_NamedValues_:
+									var values []terminal.NamedValue
+
+									for _, tnv := range ev.NamedValues.Values {
+										values = append(values, terminal.NamedValue{
+											Name:  tnv.Name,
+											Value: tnv.Value,
+										})
+									}
+
+									jsonNamedValues, err := json.Marshal(values)
+									if err != nil {
+										log.Warn("job stream failed to marshal NamedValues to json", "err", err)
+										http.Error(w, fmt.Sprintf("job failed to marshal NamedValues to json: %s", err), 500)
+										return
+									}
+
+									m = string(jsonNamedValues)
+								case *pb.GetJobStreamResponse_Terminal_Event_Status_:
+									// Since we're not writing to a terminal that can update in place
+									// we ignore steps and send the message directly instead
+									m = ev.Status.Msg
+								case *pb.GetJobStreamResponse_Terminal_Event_Raw_:
+									// does message need stdout/stderr??
+									m = string(ev.Raw.Data[:])
+								case *pb.GetJobStreamResponse_Terminal_Event_Table_:
+									tbl := terminal.NewTable(ev.Table.Headers...)
+
+									for _, row := range ev.Table.Rows {
+										var trow []terminal.TableEntry
+
+										for _, ent := range row.Entries {
+											trow = append(trow, terminal.TableEntry{
+												Value: ent.Value,
+												Color: ent.Color,
+											})
+										}
+									}
+
+									jsonTable, err := json.Marshal(tbl)
+									if err != nil {
+										log.Warn("job stream failed to marshal Table Event to json", "err", err)
+										http.Error(w, fmt.Sprintf("job failed to marshal Table Event to json: %s", err), 500)
+										return
+									}
+
+									m = string(jsonTable)
+								case *pb.GetJobStreamResponse_Terminal_Event_Step_:
+									m = ev.Step.Msg
+									if len(ev.Step.Output) > 0 {
+										m = m + "\n" + string(ev.Step.Output[:])
+									}
+								default:
+									log.Error("Unknown terminal event seen", "type", hclog.Fmt("%T", ev))
+								}
+							}
+						default:
+							log.Warn("unknown stream event", "event", resp.Event)
+						}
+
+						// Send a message job stream back to the client
+						if m != "" {
+							log.Trace("sending job data to client for job", "job_id", jId)
+							msg := Message{
+								JobId:   jId,
+								Message: m,
+							}
+
+							// send the message back
+							err := enc.Encode(msg)
+							if err != nil {
+								log.Error("failed to encode job stream output to send back", "err", err)
+								http.Error(w, fmt.Sprintf("server failed to encode job stream output: %s", err), 500)
+								return
+							}
+							flusher.Flush()
+						}
+
+						if jobComplete {
+							log.Trace("job complete, continuing to next job for streaming")
+							continue OUTER
+						}
+					}
+				}
 			}
 		}
 	}
