@@ -107,12 +107,14 @@ func (s *service) RunnerToken(
 			// return an empty token here meaning to not change.
 			// NOTE(mitchellh): One day, we should reject these because modern
 			// preadoption should be via runner tokens.
+			log.Debug("valid login token provided, adoption will be skipped")
 			return &pb.RunnerTokenResponse{}, nil
 
 		case *pb.Token_Runner_:
 			// A runner token. We assume they want preadoption and let them
 			// through. Note the token may still be invalid. This will be validated
 			// in RunnerConfig.
+			log.Debug("valid runner token provided, adoption will be skipped")
 			return &pb.RunnerTokenResponse{}, nil
 		}
 
