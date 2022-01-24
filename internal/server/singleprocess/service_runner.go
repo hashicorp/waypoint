@@ -101,7 +101,7 @@ func (s *service) RunnerToken(
 	// Get our token because our behavior changes a bit with different tokens.
 	// Token may be nil because this is an unauthenticated endpoint.
 	if tok := s.tokenFromContext(ctx); tok != nil {
-		switch tok.Kind.(type) {
+		switch k := tok.Kind.(type) {
 		case *pb.Token_Login_:
 			// Legacy (pre WP 0.8) token. We accept these as preadopted. We just
 			// return an empty token here meaning to not change.
@@ -111,9 +111,14 @@ func (s *service) RunnerToken(
 			return &pb.RunnerTokenResponse{}, nil
 
 		case *pb.Token_Runner_:
-			// A runner token. We assume they want preadoption and let them
-			// through. Note the token may still be invalid. This will be validated
-			// in RunnerConfig.
+			// If the runner token has an ID set and it doesn't match this one,
+			// then the token is invalid and we should kick off the adoption process.
+			if k.Runner.Id != "" && k.Runner.Id != record.Id {
+				break
+			}
+
+			// Seemingly valid runner token. If our logic is wrong its okay
+			// because RunnerConfig will reject them.
 			log.Debug("valid runner token provided, adoption will be skipped")
 			return &pb.RunnerTokenResponse{}, nil
 		}

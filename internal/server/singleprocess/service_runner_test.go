@@ -228,6 +228,102 @@ func TestServiceRunnerToken_reject(t *testing.T) {
 	}
 }
 
+func TestServiceRunnerToken_invalidRunnerToken(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Get our cookied context
+	ctx = server.TestCookieContext(ctx, t, client)
+
+	// Get the runner id
+	id, err := server.Id()
+	require.NoError(err)
+	r := &pb.Runner{
+		Id: id,
+		Kind: &pb.Runner_Remote_{
+			Remote: &pb.Runner_Remote{},
+		},
+	}
+
+	// Reconnect with a runner token
+	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Runner_{
+			Runner: &pb.Token_Runner{
+				Id: "no-match",
+			},
+		},
+	})
+	require.NoError(err)
+	runClient := server.TestServer(t, impl, server.TestWithToken(tok))
+
+	// Start getting the resp
+	var resp *pb.RunnerTokenResponse
+	var respErr error
+	doneCh := make(chan struct{})
+	go func() {
+		defer close(doneCh)
+		resp, respErr = runClient.RunnerToken(ctx, &pb.RunnerTokenRequest{
+			Runner: r,
+		})
+	}()
+
+	// Should block
+	select {
+	case <-time.After(50 * time.Millisecond):
+	case <-doneCh:
+		t.Fatal("should block")
+	}
+
+	// Adopt it
+	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: id,
+		Adopt:    true,
+	})
+	require.NoError(err)
+
+	// Should be done
+	select {
+	case <-doneCh:
+	case <-time.After(1 * time.Second):
+		t.Fatal("should return")
+	}
+
+	// Verify token resp
+	require.NoError(respErr)
+	require.NotNil(resp)
+	require.NotEmpty(resp.Token)
+
+	// Reconnect with the token
+	client = server.TestServer(t, impl, server.TestWithToken(resp.Token))
+
+	// Open the config stream
+	stream, err := client.RunnerConfig(ctx)
+	require.NoError(err)
+	defer stream.CloseSend()
+
+	// Register
+	require.NoError(stream.Send(&pb.RunnerConfigRequest{
+		Event: &pb.RunnerConfigRequest_Open_{
+			Open: &pb.RunnerConfigRequest_Open{
+				Runner: r,
+			},
+		},
+	}))
+
+	// Wait for first message to confirm we're registered
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		require.NotNil(resp.Config)
+		require.Empty(resp.Config.ConfigVars)
+	}
+}
+
 func TestServiceRunnerToken_noCookie(t *testing.T) {
 	ctx := context.Background()
 	require := require.New(t)
