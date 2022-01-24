@@ -26,6 +26,7 @@
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
+      margin-right: scale.$sm-4;
     }
   }
 
@@ -37,6 +38,10 @@
     cursor: default;
     font-size: inherit;
     font-weight: inherit;
+
+    svg {
+      margin-left: scale.$sm-4;
+    }
 
     &--error {
       color: rgb(var(--error-text));

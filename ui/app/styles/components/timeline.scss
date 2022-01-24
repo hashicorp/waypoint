@@ -1,4 +1,15 @@
+:root {
+  --artifact-type: black;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --artifact-type: white;
+  }
+}
+
 .timeline {
+  padding-left: scale.$sm-2;
   li {
     display: grid;
     grid-template-columns: scale.$sm-1 auto;
@@ -6,16 +17,13 @@
     align-items: center;
   }
 
-  svg {
-    font-size: 16px;
-    color: rgb(var(--text-subtle));
-    margin: 0 scale.$sm-4;
-  }
-
   a:not(.button) {
     width: 90%;
-    color: black;
+    color: var(--artifact-type);
     @include Typography.Interface(M);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 
     >* {
       margin-right: scale.$sm-4;
@@ -33,6 +41,17 @@
     width: 8px;
     background-color: rgb(var(--timeline-dot));
     margin-right: 20px;
+  }
+
+  &__entry {
+    display: inline-flex;
+    align-items: baseline;
+
+    svg {
+      color: rgb(var(--text-subtle));
+      margin: 0 scale.$sm-2 0 scale.$sm-3;
+      align-self: center;
+    }
   }
 
   &__dash {

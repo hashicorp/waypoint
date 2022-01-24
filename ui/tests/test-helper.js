@@ -6,6 +6,7 @@ import { setup } from 'qunit-dom';
 import { start } from 'ember-qunit';
 import { setup as setupA11yTesting } from './helpers/a11y';
 import './helpers/flash-message';
+import './helpers/xterm';
 
 setApplication(Application.create(config.APP));
 

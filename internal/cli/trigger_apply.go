@@ -3,6 +3,7 @@ package cli
 import (
 	"strings"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -26,11 +27,11 @@ type TriggerApplyCommand struct {
 	flagTriggerNoAuth      bool
 
 	// Operation options
-	flagArtifactSeq int
-	flagBuildSeq    int
-	flagDeploySeq   int
-	flagReleaseSeq  int
-	flagDisablePush bool
+	flagBuildSeq            int
+	flagDeploySeq           int
+	flagDisablePush         bool
+	flagStatusReportDeploy  bool
+	flagStatusReportRelease bool
 
 	// Release options
 	flagReleasePrune       bool
@@ -39,7 +40,7 @@ type TriggerApplyCommand struct {
 
 // Current supported trigger operation names.
 var triggerOpValues = []string{"build", "push", "deploy", "destroy-workspace",
-	"destroy-deployment", "release", "up", "init"}
+	"destroy-deployment", "release", "up", "init", "status-report-deploy", "status-report-release"}
 
 func (c *TriggerApplyCommand) Run(args []string) int {
 	// Initialize. If we fail, we just exit since Init handles the UI.
@@ -94,15 +95,20 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		}
 
 		// Trigger target
-		if diffTrigger.Workspace != nil {
+		if diffTrigger.Workspace != nil && c.flagWorkspace == "" {
 			c.flagWorkspace = diffTrigger.Workspace.Workspace
 		}
-		if diffTrigger.Project != nil {
+		if diffTrigger.Project != nil && c.flagProject == "" {
 			c.flagProject = diffTrigger.Project.Project
 		}
-		if diffTrigger.Application != nil {
+		if diffTrigger.Application != nil && c.flagApp == "" {
 			c.flagApp = diffTrigger.Application.Application
 		}
+	}
+
+	// NOTE(briancain): there's probably a better way to set default workspace now
+	if c.flagWorkspace == "" {
+		c.flagWorkspace = "default"
 	}
 
 	createTrigger := &pb.Trigger{
@@ -152,27 +158,33 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 			},
 		}
 	case c.flagTriggerOperation == "deploy":
-		// TODO/FUTURE NOTE: If no sequence number is specified (i.e. seq 0), the backend should default to using the "latest" artifact instead
+		var artifact *pb.PushedArtifact
+		if c.flagBuildSeq != 0 {
+			artifact = &pb.PushedArtifact{
+				Application: &pb.Ref_Application{
+					Application: c.flagApp,
+					Project:     c.flagProject,
+				},
+				Sequence: uint64(c.flagBuildSeq),
+				Workspace: &pb.Ref_Workspace{
+					Workspace: c.flagWorkspace,
+				},
+			}
+		}
 
+		// NOTE: nil artifact means "latest", the server will look up the latest in the DB and set it there
 		createTrigger.Operation = &pb.Trigger_Deploy{
 			Deploy: &pb.Job_DeployOp{
-				Artifact: &pb.PushedArtifact{
-					Sequence: uint64(c.flagBuildSeq),
-					Workspace: &pb.Ref_Workspace{
-						Workspace: c.flagWorkspace,
-					},
-					Application: &pb.Ref_Application{
-						Application: c.flagApp,
-						Project:     c.flagProject,
-					},
-				},
+				Artifact: artifact,
 			},
 		}
 	case c.flagTriggerOperation == "destroy-workspace":
 		// NOTE(briancain): I don't think this operation actually works, takes no arguments...
 		createTrigger.Operation = &pb.Trigger_Destroy{
 			Destroy: &pb.Job_DestroyOp{
-				Target: &pb.Job_DestroyOp_Workspace{},
+				Target: &pb.Job_DestroyOp_Workspace{
+					Workspace: &empty.Empty{},
+				},
 			},
 		}
 	case c.flagTriggerOperation == "destroy-deployment":
@@ -235,9 +247,44 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		createTrigger.Operation = &pb.Trigger_Init{
 			Init: &pb.Job_InitOp{},
 		}
+	case c.flagTriggerOperation == "status-report-deploy":
+		createTrigger.Operation = &pb.Trigger_StatusReport{
+			StatusReport: &pb.Job_StatusReportOp{
+				Target: &pb.Job_StatusReportOp_Deployment{
+					Deployment: &pb.Deployment{
+						Sequence: uint64(c.flagDeploySeq),
+						Workspace: &pb.Ref_Workspace{
+							Workspace: c.flagWorkspace,
+						},
+						Application: &pb.Ref_Application{
+							Application: c.flagApp,
+							Project:     c.flagProject,
+						},
+					},
+				},
+			},
+		}
+	case c.flagTriggerOperation == "status-report-release":
+		createTrigger.Operation = &pb.Trigger_StatusReport{
+			StatusReport: &pb.Job_StatusReportOp{
+				Target: &pb.Job_StatusReportOp_Release{
+					Release: &pb.Release{
+						Sequence: uint64(c.flagDeploySeq),
+						Workspace: &pb.Ref_Workspace{
+							Workspace: c.flagWorkspace,
+						},
+						Application: &pb.Ref_Application{
+							Application: c.flagApp,
+							Project:     c.flagProject,
+						},
+					},
+				},
+			},
+		}
 	case c.flagTriggerOperation == "":
 		if diffTrigger == nil {
-			c.ui.Output("Empty operation type requested. Must be one of the following values:\n%s\n\n%s",
+			c.ui.Output("Empty operation type requested. Operation must be set with "+
+				"'-op' and be one of the following values:\n%s\n\n%s",
 				strings.Join(triggerOpValues[:], ", "), c.Help(), terminal.WithErrorStyle())
 			return 1
 		} else {
@@ -267,7 +314,7 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 	c.ui.Output("Trigger %q (%s) has been %s", resp.Trigger.Name, resp.Trigger.Id,
 		action, terminal.WithSuccessStyle())
 
-	c.ui.Output(" Trigger ID: %s", resp.Trigger.Id, terminal.WithSuccessStyle())
+	c.ui.Output("Trigger ID: %s", resp.Trigger.Id, terminal.WithSuccessStyle())
 	// TODO(briancain): update output to show trigger URL with wp server attached once http service is implemented
 	//c.ui.Output("Trigger URL: %s", resp.TriggerURL, terminal.WithSuccessStyle())
 
@@ -321,12 +368,6 @@ func (c *TriggerApplyCommand) Flags() *flag.Sets {
 
 		// Operation specific flags
 		fo := set.NewSet("Operation Options")
-		fo.IntVar(&flag.IntVar{
-			Name:   "artifact-id",
-			Target: &c.flagArtifactSeq,
-			Usage:  "The sequence number (short id) for the artifact to use in an operation.",
-		})
-
 		fo.BoolVar(&flag.BoolVar{
 			Name:    "disable-push",
 			Target:  &c.flagDisablePush,
@@ -337,19 +378,13 @@ func (c *TriggerApplyCommand) Flags() *flag.Sets {
 		fo.IntVar(&flag.IntVar{
 			Name:   "build-id",
 			Target: &c.flagBuildSeq,
-			Usage:  "The sequence number (short id) for the build to use in an operation.",
+			Usage:  "The sequence number (short id) for the build to use for a deployment operation.",
 		})
 
 		fo.IntVar(&flag.IntVar{
 			Name:   "deployment-id",
 			Target: &c.flagDeploySeq,
-			Usage:  "The sequence number (short id) for the deployment to use in an operation.",
-		})
-
-		fo.IntVar(&flag.IntVar{
-			Name:   "release-id",
-			Target: &c.flagReleaseSeq,
-			Usage:  "The sequence number (short id) for the release to use in an operation.",
+			Usage:  "The sequence number (short id) for the deployment to use for a deployment operation.",
 		})
 
 		// Release operation specific flags

@@ -375,19 +375,19 @@ func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
 	doc.Example(`
 config {
   env = {
-    "DATABASE_USERNAME" = configdynamic("terraform-cloud", {
+    "DATABASE_USERNAME" = dynamic("terraform-cloud", {
 			organization = "foocorp"
 			workspace = "databases"
 			output = "db_username"
     })
 
-    "DATABASE_PASSWORD" = configdynamic("vault", {
+    "DATABASE_PASSWORD" = dynamic("vault", {
 			organization = "foocorp"
 			workspace = "databases"
 			output = "db_password"
     })
 
-    "DATABASE_HOST" = configdynamic("vault", {
+    "DATABASE_HOST" = dynamic("vault", {
 			organization = "foocorp"
 			workspace = "databases"
 			output = "db_hostname"

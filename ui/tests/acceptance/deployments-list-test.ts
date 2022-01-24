@@ -12,15 +12,36 @@ const redirectUrl = '/default/microchip/app/wp-bandwidth/deployment/seq/'; // co
 
 const page = create({
   visit: visitable(url),
-  destroyedBadges: collection('[data-test-destroyed-badge]'),
   showDestroyed: clickable('[data-test-display-destroyed-button]'),
   linkList: collection('[data-test-deployment-list-item]'),
+  aliveStatusIndicators: collection('[data-test-health-status="alive"]'),
+  healthCheckOrDeployUrls: collection('.health-check--text-description'),
+  operationStatuses: collection('[data-test-operation-status]'),
+  gitCommits: collection('[data-test-git-commit]'),
 });
 
 module('Acceptance | deployments list', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
   setupSession(hooks);
+
+  test('happy path', async function (assert) {
+    let project = this.server.create('project', { name: 'microchip' });
+    let application = this.server.create('application', { name: 'wp-bandwidth', project });
+    let deployments = this.server.createList('deployment', 3, 'random', { application });
+    this.server.create('status-report', 'alive', { application, target: deployments[0] });
+    this.server.create('status-report', 'ready', { application, target: deployments[1] });
+
+    await page.visit();
+
+    assert.equal(page.linkList.length, 3);
+    assert.equal(currentURL(), redirectUrl + '3');
+    assert.equal(page.aliveStatusIndicators.length, 1);
+    assert.equal(page.operationStatuses.length, 3);
+    assert.equal(page.gitCommits.length, 3);
+    assert.equal(page.healthCheckOrDeployUrls[1].text, 'Starting…');
+    assert.equal(page.healthCheckOrDeployUrls[0].text, 'wildly-intent-honeybee--v2.waypoint.run');
+  });
 
   test('visiting deployments page redirects to latest', async function (assert) {
     let project = this.server.create('project', { name: 'microchip' });
@@ -107,6 +128,5 @@ module('Acceptance | deployments list', function (hooks) {
     await page.showDestroyed();
 
     assert.equal(page.linkList.length, 5);
-    assert.equal(page.destroyedBadges.length, 1);
   });
 });

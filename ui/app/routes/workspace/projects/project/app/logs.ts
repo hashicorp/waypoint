@@ -1,14 +1,34 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 import { GetLogStreamRequest, Ref } from 'waypoint-pb';
 import { Model as AppRouteModel } from '../app';
 import { Model as WorkspaceRouteModel } from 'waypoint/routes/workspace';
 
-type Model = GetLogStreamRequest;
+type Model = {
+  app: string;
+  request: GetLogStreamRequest;
+};
 
 export default class Logs extends Route {
   @service api!: ApiService;
+
+  breadcrumbs(model: Model): Breadcrumb[] {
+    if (!model) return [];
+    return [
+      {
+        label: model.app ?? 'unknown',
+        icon: 'git-repo',
+        route: 'workspace.projects.project.app',
+      },
+      {
+        label: 'Logs',
+        icon: 'outline',
+        route: 'workspace.projects.project.app.logs',
+      },
+    ];
+  }
 
   async model(): Promise<Model> {
     let app = this.modelFor('workspace.projects.project.app') as AppRouteModel;
@@ -27,6 +47,6 @@ export default class Logs extends Route {
 
     req.setApplication(appReq);
 
-    return req;
+    return { app: app.application.application, request: req };
   }
 }

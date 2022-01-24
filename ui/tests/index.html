@@ -21,7 +21,10 @@
     <div id="qunit"></div>
     <div id="qunit-fixture">
       <div id="ember-testing-container">
-        <div id="ember-testing"></div>
+        <div id="ember-testing">
+          <!-- this is used to inject the SVG sprite -->
+          {{content-for "ember-testing-sprite-embed"}}
+        </div>
       </div>
     </div>
 

@@ -1,6 +1,76 @@
+## unreleased
+
+FEATURES:
+
+IMPROVEMENTS:
+
+BUG FIXES:
+
+
+## 0.7.0 (January 13, 2022)
+
+FEATURES:
+
+* **Source variable values from remote systems:** The default value for input variables
+can now use the `configdynamic` function to source data from Vault, Consul,
+Terraform Cloud, and more. This is a pluggable system. [[GH-2889](https://github.com/hashicorp/waypoint/issues/2889)]
+* **Workspace and Label-scoped Configuration:** Build, registry, deploy, and
+release configurations can now be changed depending on the current workspace
+or label sets. This can be used to alter configurations between environments
+(staging, production, etc.) or metadata (region, etc.). [[GH-2699](https://github.com/hashicorp/waypoint/issues/2699)]
+* **core: Introduce RunTriggers to Waypoint Server and CLI.** Triggers can be configured
+ahead of time to execute lifecycle operations on demand through the Waypoint API.
+Currently, only the gRPC API is supported, but in the future an HTTP endpoint
+will be added to be used within CI. [[GH-2840](https://github.com/hashicorp/waypoint/issues/2840)]
+* ui/auth: users can now authenticate through the UI using an OIDC provider [[GH-2688](https://github.com/hashicorp/waypoint/issues/2688)]
+* ui: Add Exec Terminal to the web UI [[GH-2849](https://github.com/hashicorp/waypoint/issues/2849)]
+* ui: Added a tab with an overview of the resources provisioned by operations [[GH-2777](https://github.com/hashicorp/waypoint/issues/2777)]
+* ui: Added timeline component to artifact details pages [[GH-2793](https://github.com/hashicorp/waypoint/issues/2793)]
+* ui: Update UI of builds and releases tab [[GH-2852](https://github.com/hashicorp/waypoint/issues/2852)]
+* ui: add workspace switcher to app pages [[GH-2674](https://github.com/hashicorp/waypoint/issues/2674)]
+* ui: reformatted app overview page and header of artifact details page [[GH-2606](https://github.com/hashicorp/waypoint/issues/2606)]
+
+IMPROVEMENTS:
+
+* cli: Add alias for -app and -workspace flags [[GH-2700](https://github.com/hashicorp/waypoint/issues/2700)]
+* cli: Add new `workspace create` command [[GH-2797](https://github.com/hashicorp/waypoint/issues/2797)]
+* cli: Deprecate -remote flag for operations, replace with -local flag [[GH-2771](https://github.com/hashicorp/waypoint/issues/2771)]
+* cli: Enhance warning for project flag mismatches when project parsed from config [[GH-2815](https://github.com/hashicorp/waypoint/issues/2815)]
+* cli: Report where each operation runs (locally vs remotely) [[GH-2795](https://github.com/hashicorp/waypoint/issues/2795)]
+* cli: Warn if about to perform a remote operation with a dirty local git state [[GH-2799](https://github.com/hashicorp/waypoint/issues/2799)]
+* install/nomad: Ensure static runner has started during install by validating its
+running status for a few seconds once it is in a "running" state. [[GH-2698](https://github.com/hashicorp/waypoint/issues/2698)]
+* plugin/docker: inject `arm64` Waypoint entrypoints for arm images [[GH-2692](https://github.com/hashicorp/waypoint/issues/2692)]
+* plugin/ecs: Implement the destruction of AWS resources created when deploying a workspace [[GH-2684](https://github.com/hashicorp/waypoint/issues/2684)]
+* plugin/pack: detect non-Intel Docker server and show a warning [[GH-2692](https://github.com/hashicorp/waypoint/issues/2692)]
+* serverinstall/ecs: Add permissions to the ECS runner IAM policy to allow the removal of security groups and de-registration of task [[GH-2684](https://github.com/hashicorp/waypoint/issues/2684)]
+* serverinstall: Set Nomad's ODR profile name to "nomad" [[GH-2713](https://github.com/hashicorp/waypoint/issues/2713)]
+* ui: Improved UX of screen readers' transition between pages [[GH-2837](https://github.com/hashicorp/waypoint/issues/2837)]
+* ui: Updated list items UI on deployments tab [[GH-2879](https://github.com/hashicorp/waypoint/issues/2879)]
+* ui: Updated the deployments tab UI/UX [[GH-2773](https://github.com/hashicorp/waypoint/issues/2773)]
+* ui: upgraded icons to flight icons library [[GH-2681](https://github.com/hashicorp/waypoint/issues/2681)]
+
+BREAKING CHANGES:
+
+* core: `configdynamic` has been renamed to `dynamic`. The existing function
+name continues to work but is deprecated and may be removed in a future version. [[GH-2892](https://github.com/hashicorp/waypoint/issues/2892)]
+* plugin/docker: `img`-based Dockerless builds are no longer supported.
+Dockerless builds are still fully supported via Kaniko and on-demand
+runners that shipped in Waypoint 0.6. Static runners without access to
+a Docker daemon can no longer build images. [[GH-2534](https://github.com/hashicorp/waypoint/issues/2534)]
+
+BUG FIXES:
+
+* cli: Added check for empty deployUrl in output for release switch case [[GH-2755](https://github.com/hashicorp/waypoint/issues/2755)]
+* cli: Fix issue where users could not disable project polling from the CLI [[GH-2673](https://github.com/hashicorp/waypoint/issues/2673)]
+* core: fix issue where runners would fail but not shut down [[GH-2571](https://github.com/hashicorp/waypoint/issues/2571)]
+* ui: Fix edge case issue where users would not be redirected to the authentication screen if no api token was set [[GH-2696](https://github.com/hashicorp/waypoint/issues/2696)]
+* ui: Logs & Exec Terminals resize smoothly [[GH-2890](https://github.com/hashicorp/waypoint/issues/2890)]
+
 ## 0.6.3 (December 10, 2021)
 
 SECURITY UPDATE:
+
 * Update Go build version to 1.16.12 per [Go security release](https://groups.google.com/g/golang-announce/c/hcmEScgc00k?pli=1)
 
 ## 0.6.2 (November 4, 2021)

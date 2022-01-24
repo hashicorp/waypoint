@@ -1,0 +1,64 @@
+<Table
+  data-test-resources-table
+  @withMargin={{@withMargin}}
+>
+  <caption>{{yield to="caption"}}</caption>
+
+  <colgroup>
+    <col class="w-2/5">
+    <col>
+    <col>
+    <col>
+  </colgroup>
+
+  <thead>
+    <tr>
+      <th>{{t "page.resources.table.headings.name"}}</th>
+      <th>{{t "page.resources.table.headings.type"}}</th>
+      <th>{{t "page.resources.table.headings.age"}}</th>
+      <th>{{t "page.resources.table.headings.status"}}</th>
+      <th>{{t "page.resources.table.headings.provisioned-by"}}</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {{#each @resources key="resource.id" as |resourceObject|}}
+      {{#let resourceObject.resource as |resource|}}
+      <tr>
+        <th scope="row">
+          <LinkTo
+            title={{resource.name}}
+            @route={{@route}}
+            @models={{append (or @models (array)) resource.id}}
+          >
+            {{resource.name}}
+          </LinkTo>
+        </th>
+        <td class="resource-icon"><FlightIcon @name={{icon-for-component resource.platform}} /> {{resource.type}}</td>
+        <td>{{date-format-distance-to-now resource.createdTime.seconds}}</td>
+        <td><ResourceHealthIndicator @resource={{resource}} /></td>
+        <td>
+          {{#if (eq resourceObject.type 'deployment')}}
+            <LinkTo
+              title={{concat (t "page.deployment.title") " v" resourceObject.source.sequence}}
+              @route="workspace.projects.project.app.deployment.deployment-seq"
+              @models={{array resourceObject.source.sequence}}
+              >
+              {{t "page.resources.table.deployment"}} <b class="badge badge--version">v{{resourceObject.source.sequence}}</b>
+            </LinkTo>
+          {{/if}}
+          {{#if (eq resourceObject.type 'release')}}
+            <LinkTo
+              title={{concat (t "page.release.title") " v" resourceObject.source.sequence}}
+              @route="workspace.projects.project.app.release-id"
+              @models={{array resourceObject.source.sequence}}
+              >
+              {{t "page.resources.table.release"}}<b class="badge badge--version">v{{resourceObject.source.sequence}}</b>
+            </LinkTo>
+          {{/if}}
+        </td>
+      </tr>
+      {{/let}}
+    {{/each}}
+  </tbody>
+</Table>

@@ -987,6 +987,11 @@ func (p *Platform) resourceAlbListenerCreate(
 
 	state *Resource_Alb_Listener,
 ) error {
+	if p.config.DisableALB {
+		log.Debug("ALB disabled - skipping alb listener creation")
+		return nil
+	}
+
 	s := sg.Add("Initiating ALB creation")
 	defer s.Abort()
 
@@ -1938,6 +1943,11 @@ func (p *Platform) resourceExternalSecurityGroupsCreate(
 	externalIngressPort ExternalIngressPort,
 	state *Resource_ExternalSecurityGroups,
 ) error {
+
+	if p.config.DisableALB {
+		return nil
+	}
+
 	name := fmt.Sprintf("%s-inbound", src.App)
 	s := sg.Add("Initiating creation of external security group named %s", name)
 	defer s.Abort()

@@ -22,7 +22,6 @@ module('Integration | Component | workspace-switcher', function (hooks) {
         @isOpen={{true}}
       />
     `);
-    await a11yAudit();
 
     assert.dom('[data-test-dropdown-trigger]').hasText('default');
     assert.dom('a[href="/default/test-project/app/test-app/builds"]').hasAttribute('aria-current', 'page');

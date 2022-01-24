@@ -8,6 +8,7 @@ import {
 
 import ApiService from 'waypoint/services/api';
 import Component from '@glimmer/component';
+import FlashMessagesService from 'waypoint/services/pds-flash-messages';
 import { inject as service } from '@ember/service';
 import { task } from 'ember-concurrency';
 
@@ -18,6 +19,7 @@ interface OIDCAuthButtonsArgs {
 export default class OIDCAuthButtonsComponent extends Component<OIDCAuthButtonsArgs> {
   model!: ListOIDCAuthMethodsResponse.AsObject;
   @service api!: ApiService;
+  @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
 
   @task
   async initializeOIDCFlow(authMethodProvider: AuthMethod.AsObject): Promise<void> {
@@ -36,8 +38,12 @@ export default class OIDCAuthButtonsComponent extends Component<OIDCAuthButtonsA
     this._storeOIDCAuthData(nonce, authMethodProviderName);
     let redirectUri = `${window.location.origin}/auth/oidc-callback`;
     urlRequest.setRedirectUri(redirectUri);
-    let authUrl = await this.api.client.getOIDCAuthURL(urlRequest, this.api.WithMeta());
-    await window.location.replace(authUrl.getUrl());
+    try {
+      let authUrl = await this.api.client.getOIDCAuthURL(urlRequest, this.api.WithMeta());
+      await window.location.replace(authUrl.getUrl());
+    } catch (err) {
+      this.flashMessages.error('Authentication failed', { content: err.message, sticky: true });
+    }
   }
 
   // Generate a 20-char nonce, using window.crypto to

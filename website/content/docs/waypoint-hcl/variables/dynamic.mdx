@@ -1,0 +1,67 @@
+---
+layout: docs
+page_title: External Data - Variables - waypoint.hcl
+description: |-
+  You can access external data from a waypoint.hcl such as Vault secrets, Kubernetes configuration, Terraform outputs, and more.
+---
+
+# External Data
+
+You can access external data from a waypoint.hcl such as Vault secrets,
+Kubernetes configuration, Terraform outputs, and more. External data is
+sourced using the
+[`dynamic` function](/docs/app-config/dynamic#setting-dynamic-values-via-waypoint-hcl)
+set as a default value for an
+[input variable](/docs/waypoint-hcl/variables/input).
+
+-> **Requirements:** External data fetching only works for jobs that run
+on [remote runners](/docs/extending-waypoint). You can still operate locally
+on waypoint.hcl files that fetch external data, but all the variables that fetch
+external values must be manually overridden.
+
+## Fetching External Data
+
+The
+[`dynamic` function](/docs/app-config/dynamic#setting-dynamic-values-via-waypoint-hcl)
+is used to fetch external data. This is the same function used to fetch
+external data as app and runner configuration. This function is used to set
+the value of the `default` argument for
+[input variables](/docs/waypoint-hcl/variables/input), and then the input
+variable is used as normal to access the value.
+
+```hcl
+variable "image_name" {
+  type    = string
+  default = dynamic("terraform-cloud", {
+    organization = "foocorp"
+    workspace    = "images"
+    output       = "name"
+  })
+}
+
+app "myapp" {
+  builder {
+    use "docker" {
+      image_name = var.image_name
+    }
+  }
+}
+```
+
+The `dynamic` function is only allowed as a default value for input variables.
+This ensures that all parametric data for a waypoint.hcl can be consumed
+and overridden using standard mechanisms such as CLI flags, `wpvars` files,
+the UI, and more. For dynamic values, this also makes it easy to use and test
+Waypoint with different values without modifying the remote system; you can
+just override it using [standard input variable mechanisms](/docs/waypoint-hcl/variables/input#assigning-values-to-custom-input-variables).
+
+## Available Data Sources
+
+The list of available data sources can be found
+[here](/docs/app-config/dynamic#configuration-sources). This list is maintained
+in the application configuration section since the same underlying system is used.
+
+**Custom data sources** can also be implemented by
+[extending Waypoint](/docs/extending-waypoint) with a config sourcer plugin.
+The plugin then needs to be installed like any other plugin described in the
+[extending Waypoint documentation](/docs/extending-waypoint).

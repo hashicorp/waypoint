@@ -3,6 +3,7 @@ import { FitAddon } from 'xterm-addon-fit';
 import { Terminal } from 'xterm';
 import { action } from '@ember/object';
 import { assert } from '@ember/debug';
+import { debounce } from '@ember/runloop';
 import { tracked } from '@glimmer/tracking';
 
 interface TerminalComponentArgs {
@@ -63,8 +64,15 @@ export default class LogTerminal extends Component<TerminalComponentArgs> {
   };
 
   didResize = (): void => {
-    this.fitAddon.fit();
+    debounce(this, this.fitTerminal, 150);
   };
+
+  fitTerminal(): void {
+    // Set terminal size to a minimum
+    // before calling resize to avoid reflows when sizing down
+    this.terminal?.resize(40, 1);
+    this.fitAddon.fit();
+  }
 
   isScrolledToBottom(): boolean {
     let viewport = this.element.querySelector('.xterm-viewport') as HTMLElement;

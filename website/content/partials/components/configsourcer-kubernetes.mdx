@@ -7,12 +7,12 @@ Read configuration values from Kubernetes ConfigMap or Secret resources.
 ```hcl
 config {
   env = {
-    PORT = configdynamic("kubernetes", {
+    PORT = dynamic("kubernetes", {
 	  name = "my-config-map"
 	  key = "port"
 	})
 
-    DATABASE_PASSWORD = configdynamic("kubernetes", {
+    DATABASE_PASSWORD = dynamic("kubernetes", {
 	  name = "database-creds"
 	  key = "password"
 	  secret = true
@@ -23,7 +23,7 @@ config {
 
 ### Required Parameters
 
-These parameters are used in `configdynamic` for [dynamic configuration syncing](/docs/app-config/dynamic).
+These parameters are used in `dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic).
 
 #### key
 
@@ -41,7 +41,7 @@ The name of the ConfigMap of Secret.
 
 ### Optional Parameters
 
-These parameters are used in `configdynamic` for [dynamic configuration syncing](/docs/app-config/dynamic).
+These parameters are used in `dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic).
 
 #### namespace
 

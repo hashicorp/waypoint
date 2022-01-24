@@ -23,6 +23,7 @@ import (
 	k8shelm "github.com/hashicorp/waypoint/builtin/k8s/helm"
 	"github.com/hashicorp/waypoint/builtin/nomad"
 	"github.com/hashicorp/waypoint/builtin/nomad/jobspec"
+	"github.com/hashicorp/waypoint/builtin/null"
 	"github.com/hashicorp/waypoint/builtin/pack"
 	"github.com/hashicorp/waypoint/builtin/tfc"
 	"github.com/hashicorp/waypoint/builtin/vault"
@@ -53,6 +54,7 @@ var (
 		"aws-lambda":               lambda.Options,
 		"vault":                    vault.Options,
 		"terraform-cloud":          tfc.Options,
+		"null":                     null.Options,
 	}
 
 	// BaseFactories is the set of base plugin factories. This will include any
@@ -77,6 +79,9 @@ var (
 		},
 		"kubernetes": {
 			Component: &k8s.ConfigSourcer{},
+		},
+		"null": {
+			Component: &null.ConfigSourcer{},
 		},
 		"vault": {
 			Component: &vault.ConfigSourcer{},

@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -19,6 +21,7 @@ type TriggerListCommand struct {
 	flagTriggerTags []string
 
 	flagJson bool
+	flagFull bool
 }
 
 func (c *TriggerListCommand) Run(args []string) int {
@@ -83,13 +86,18 @@ func (c *TriggerListCommand) Run(args []string) int {
 
 	c.ui.Output("Trigger URL Configs", terminal.WithHeaderStyle())
 
-	tbl := terminal.NewTable("ID", "Name", "Workspace", "Project", "Application", "Operation", "Description", "Tags", "Last Time Active")
+	tblHeaders := []string{"ID", "Name", "Workspace", "Project", "Application", "Operation"}
+	if c.flagFull {
+		tblHeaders = append(tblHeaders, "Description", "Tags", "Last Time Active")
+	}
+	tbl := terminal.NewTable(tblHeaders...)
 
 	for _, t := range resp.Triggers {
 		ws := "default"
-		if t.Workspace != nil {
+		if t.Workspace != nil && t.Workspace.Workspace != "" {
 			ws = t.Workspace.Workspace
 		}
+
 		var proj, app, tags string
 		if t.Project != nil {
 			proj = t.Project.Project
@@ -105,41 +113,56 @@ func (c *TriggerListCommand) Run(args []string) int {
 		var opStr string
 		switch triggerOpType := t.Operation.(type) {
 		case *pb.Trigger_Build:
-			opStr = "build operation"
+			opStr = "build"
 		case *pb.Trigger_Push:
-			opStr = "push operation"
+			opStr = "push"
 		case *pb.Trigger_Deploy:
-			opStr = "deploy operation"
+			opStr = "deploy"
 		case *pb.Trigger_Destroy:
 			switch triggerOpType.Destroy.Target.(type) {
 			case *pb.Job_DestroyOp_Workspace:
-				opStr = "destroy workspace operation"
+				opStr = "destroy workspace"
 			case *pb.Job_DestroyOp_Deployment:
-				opStr = "destroy deployment operation"
+				opStr = "destroy deployment"
 			default:
 				opStr = "unknown destroy operation target"
 			}
 		case *pb.Trigger_Release:
-			opStr = "release operation"
+			opStr = "release"
 		case *pb.Trigger_Up:
-			opStr = "up operation"
+			opStr = "up"
 		case *pb.Trigger_Init:
-			opStr = "init operation"
+			opStr = "init"
+		case *pb.Trigger_StatusReport:
+			switch triggerOpType.StatusReport.Target.(type) {
+			case *pb.Job_StatusReportOp_Deployment:
+				opStr = "status report deployment"
+			case *pb.Job_StatusReportOp_Release:
+				opStr = "status report release"
+			}
 		default:
 			opStr = fmt.Sprintf("unknown operation: %T", triggerOpType)
 		}
 
-		tbl.Rich([]string{
+		var lastActiveTime string
+		if time, err := ptypes.Timestamp(t.ActiveTime); err == nil {
+			lastActiveTime = humanize.Time(time)
+		}
+
+		tblColumn := []string{
 			t.Id,
 			t.Name,
 			ws,
 			proj,
 			app,
 			opStr,
-			t.Description,
-			tags,
-			t.ActiveTime.String(),
-		}, nil)
+		}
+
+		if c.flagFull {
+			tblColumn = append(tblColumn, t.Description, tags, lastActiveTime)
+		}
+
+		tbl.Rich(tblColumn, nil)
 	}
 
 	c.ui.Table(tbl)
@@ -157,6 +180,12 @@ func (c *TriggerListCommand) Flags() *flag.Sets {
 			Usage: "A collection of tags to filter on. If the requested tag does " +
 				"not match any defined trigger URL, it will be omitted from the results. " +
 				"Can be specified multiple times.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "full",
+			Target: &c.flagFull,
+			Usage:  "Output the full list of options for a trigger configuration.",
 		})
 
 		f.BoolVar(&flag.BoolVar{

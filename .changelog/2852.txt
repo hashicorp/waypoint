@@ -1,0 +1,4 @@
+```release-note:feature
+ui: Update UI of builds and releases tab
+```
+

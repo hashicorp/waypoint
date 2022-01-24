@@ -1,0 +1,14 @@
+{{#if @model.length}}
+  <ResourcesTableExtended
+    @resources={{@model}}
+  />
+{{else}}
+  <EmptyState>
+    <p>{{t 'page.resources.table.empty-state.line-1'}}</p>
+    <p>{{t 'page.resources.table.empty-state.line-2'}}
+      <CopyableCode @ref="empty-build" @inline="true">
+        <code id="empty-build">waypoint up</code>
+      </CopyableCode>
+      {{t 'page.resources.table.empty-state.line-3'}}</p>
+  </EmptyState>
+{{/if}}

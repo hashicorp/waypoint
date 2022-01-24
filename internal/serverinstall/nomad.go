@@ -592,6 +592,9 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 	s.Update("Waypoint job and allocations purged")
 
 	vols, _, err := client.CSIVolumes().List(&api.QueryOptions{Prefix: "waypoint"})
+	if err != nil {
+		return err
+	}
 	for _, vol := range vols {
 		if vol.ID == "waypoint" {
 			s.Update("Destroying persistent CSI volume")

@@ -1,6 +1,7 @@
 import * as AnsiColors from 'ansi-colors';
 
 import { GetJobStreamRequest, GetJobStreamResponse } from 'waypoint-pb';
+import { WaypointClient } from 'waypoint-client';
 
 import ApiService from 'waypoint/services/api';
 import Component from '@glimmer/component';
@@ -9,10 +10,13 @@ import { Terminal } from 'xterm';
 import { createTerminal } from 'waypoint/utils/create-terminal';
 import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
+import { action } from '@ember/object';
 
 interface OperationLogsArgs {
   jobId: string;
 }
+
+type JobStream = ReturnType<WaypointClient['getJobStream']>;
 
 // Mappings for message styles
 // https://github.com/hashicorp/waypoint-plugin-sdk/blob/baf566811af680c5df138f9915d756f67d271b1a/terminal/ui.go#L126-L135
@@ -33,10 +37,24 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
   @tracked hasLogs: boolean;
   @tracked terminal!: Terminal;
 
+  stream?: JobStream;
+  currentJobId?: string;
+
   constructor(owner: unknown, args: OperationLogsArgs) {
     super(owner, args);
     this.hasLogs = false;
     this.terminal = createTerminal({ inputDisabled: true });
+
+    this.startTerminalStream();
+  }
+
+  @action
+  changeJob(): void {
+    if (this.args.jobId === this.currentJobId) {
+      return;
+    }
+    this.cleanUpStream();
+    this.terminal.clear();
     this.startTerminalStream();
   }
 
@@ -88,12 +106,15 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
   }
 
   async startTerminalStream(): Promise<void> {
+    this.currentJobId = this.args.jobId;
+
     let req = new GetJobStreamRequest();
     req.setJobId(this.args.jobId);
-    let stream = this.api.client.getJobStream(req, this.api.WithMeta());
 
-    stream.on('data', this.onData);
-    stream.on('status', this.onStatus);
+    this.stream = this.api.client.getJobStream(req, this.api.WithMeta());
+
+    this.stream.on('data', this.onData);
+    this.stream.on('status', this.onStatus);
   }
 
   onData = (response: GetJobStreamResponse): void => {
@@ -107,4 +128,18 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
       this.terminal.writeln(status.details);
     }
   };
+
+  cleanUpStream(): void {
+    if (this.stream) {
+      this.stream.cancel();
+      this.stream = undefined;
+      this.currentJobId = undefined;
+    }
+  }
+
+  willDestroy(): void {
+    super.willDestroy();
+
+    this.cleanUpStream();
+  }
 }

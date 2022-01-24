@@ -39,14 +39,14 @@ source plugins.
 ## Setting Dynamic Values via `waypoint.hcl`
 
 Dynamic configuration values are set in the `waypoint.hcl` file using
-the `configdynamic` function within the same `config` stanza as
+the `dynamic` function within the same `config` stanza as
 static configurations. This specifies that a configuration value is
 synced with an external system dynamically.
 
 ```hcl
 config {
   env = {
-    PORT = configdynamic("kubernetes", {
+    PORT = dynamic("kubernetes", {
       name = "my-config-map" # ConfigMap name
       key  = "port"
     })
@@ -59,10 +59,10 @@ key in the "my-config-map" Kubernetes ConfigMap. The "sync" actively watches
 the defined source, updates the environment variable whenever the value
 changes, and [restarts your application](/docs/app-config#application-restart-behavior).
 
-The `configdynamic` function has the following signature:
+The `dynamic` function has the following signature:
 
 ```
-configdynamic(SOURCE, PARAMS)
+dynamic(SOURCE, PARAMS)
 ```
 
 The `SOURCE` parameter is a string specifying the config source to sync
@@ -88,7 +88,7 @@ require global settings to be set for them to function at all.
 For example, [Vault](/plugins/vault#vault-configsourcer) has some global
 settings around how to authenticate. Without setting these, Vault configurations
 in applications will not work. These _source settings_ are set at the server
-level and used by all `configdynamic` calls.
+level and used by all `dynamic` calls.
 
 To set configuration source settings, the `waypoint config source-set` CLI command is used:
 
