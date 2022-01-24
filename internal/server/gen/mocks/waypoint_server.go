@@ -417,6 +417,29 @@ func (_m *WaypointServer) GenerateLoginToken(_a0 context.Context, _a1 *gen.Login
 	return r0, r1
 }
 
+// GenerateRunnerToken provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GenerateRunnerToken(_a0 context.Context, _a1 *gen.GenerateRunnerTokenRequest) (*gen.NewTokenResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.NewTokenResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GenerateRunnerTokenRequest) *gen.NewTokenResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.NewTokenResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GenerateRunnerTokenRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetAuthMethod provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetAuthMethod(_a0 context.Context, _a1 *gen.GetAuthMethodRequest) (*gen.GetAuthMethodResponse, error) {
 	ret := _m.Called(_a0, _a1)

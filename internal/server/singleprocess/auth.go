@@ -482,6 +482,39 @@ func (s *service) GenerateLoginToken(
 	return &pb.NewTokenResponse{Token: token}, nil
 }
 
+// Create a new runner token.
+func (s *service) GenerateRunnerToken(
+	ctx context.Context, req *pb.GenerateRunnerTokenRequest,
+) (*pb.NewTokenResponse, error) {
+	// If we have a duration set, set the expiry
+	var dur time.Duration
+	if d := req.Duration; d != "" {
+		var err error
+		dur, err = time.ParseDuration(d)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// NOTE(mitchellh): label hash is currently ignored because runners
+	// don't have labels. We'll add support in a future PR.
+
+	createToken := &pb.Token{
+		Kind: &pb.Token_Runner_{
+			Runner: &pb.Token_Runner{
+				Id: req.Id,
+			},
+		},
+	}
+
+	token, err := s.newToken(dur, DefaultKeyId, nil, createToken)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.NewTokenResponse{Token: token}, nil
+}
+
 // newToken is the generic internal function to create and encode a new
 // token. The final parameter "body" should be set to the initial value
 // of the token body, most importantly the "Kind" field should be set.

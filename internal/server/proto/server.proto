@@ -250,6 +250,11 @@ service Waypoint {
   // This can only be called for existing users.
   rpc GenerateLoginToken(LoginTokenRequest) returns (NewTokenResponse);
 
+  // Generate a new runner token that can be used with runners so they
+  // immediately begin work. The recommended appraoch is to instead use
+  // the adoption flow but this also works.
+  rpc GenerateRunnerToken(GenerateRunnerTokenRequest) returns (NewTokenResponse);
+
   // Exchange a invite token for a login token. If the invite token is
   // for a new user, this will create a new user account with the provided
   // username hint.
@@ -4341,6 +4346,21 @@ message LoginTokenRequest {
   // The token generated will only be used for Trigger URL actions. The token
   // will not be authorized to make any other requests to any other endpoints
   bool trigger = 3;
+}
+
+message GenerateRunnerTokenRequest {
+  // How long the token should be valid from the time the request
+  // is made. If this is empty then the runner token never expires on its own.
+  string duration = 1;
+
+  // ID to restrict this token to work with. This can be empty to allow it
+  // for all runner IDs.
+  string id = 2;
+
+  // The set of labels to restrict this runner token to work for. The runner
+  // labels must match this label set exactly. If this is not set, then runners
+  // with any labels may use the resulting token.
+  map<string,string> labels = 3;
 }
 
 // Passed with GenerateInviteToken with the params on how the invite token should
