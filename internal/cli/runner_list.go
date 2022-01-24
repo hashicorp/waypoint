@@ -157,9 +157,9 @@ Usage: waypoint runner list [options]
   Runners that are "rejected" are never given jobs, and error immediately if
   they try to register.
 
-  If a runner is pending, you can adopt it using "waypoint runner adopt <id>"
-  where "<id>" comes from the output from this command. You can explicitly
-  reject a runner using "waypoint runner reject <id>". A runner can be rejected
+  If a runner is pending, you can adopt it using "waypoint runner adopt ID"
+  where "ID" comes from the output from this command. You can explicitly
+  reject a runner using "waypoint runner reject ID". A runner can be rejected
   at any time, even after it is already adopted.
 
 ` + c.Flags().Help())
