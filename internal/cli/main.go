@@ -475,6 +475,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"runner token": func() (cli.Command, error) {
+			return &RunnerTokenCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"context": func() (cli.Command, error) {
 			return &ContextHelpCommand{
