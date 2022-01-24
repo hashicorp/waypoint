@@ -239,17 +239,37 @@ func (r *Runner) Start(ctx context.Context) error {
 
 	log := r.logger
 
-	if r.cookie == "" {
-		log.Warn("cookie not set for runner, will skip adoption process")
-	} else {
-		// Set our cookie for the API request. Cookie is required for RunnerToken
-		tokenCtx := metadata.NewOutgoingContext(
-			ctx,
+	// We set this to true if we're going through the adoption process.
+	adopt := false
+	tokenCtx := ctx
+
+	// Check if we have a token in our state directory. If we do, then put
+	// it on our context (so we use it) and mark that we want to adopt. It
+	// may be counterintuitive that we want to adopt if we have a token,
+	// but we use that as a way to verify the token and in the future do rotation.
+	if t, err := r.stateGetToken(); err != nil {
+		return err
+	} else if t != "" {
+		adopt = true
+		log.Debug("will use prior token from state directory")
+		tokenCtx = serverclient.TokenWithContext(tokenCtx, t)
+		r.runningCtx = serverclient.TokenWithContext(r.runningCtx, t)
+	}
+
+	// If we have a cookie set, we always adopt.
+	if r.cookie != "" {
+		adopt = true
+		tokenCtx = metadata.NewOutgoingContext(
+			tokenCtx,
 			metadata.New(map[string]string{
 				"cookie": r.cookie,
 			}),
 		)
+	} else if !adopt {
+		log.Warn("cookie not set for runner, will skip adoption process")
+	}
 
+	if adopt {
 		// Register and initialize the adoption flow (if necessary) by requesting
 		// our token.
 		log.Debug("requesting token with RunnerToken (initiates adoption)")
@@ -265,6 +285,11 @@ func (r *Runner) Start(ctx context.Context) error {
 			// token is already valid.
 			log.Debug("runner adoption complete, new token received")
 			r.runningCtx = serverclient.TokenWithContext(r.runningCtx, tokenResp.Token)
+
+			// Persist our token
+			if err := r.statePutToken(tokenResp.Token); err != nil {
+				return err
+			}
 		} else {
 			log.Debug("runner token is already valid, using same token")
 		}

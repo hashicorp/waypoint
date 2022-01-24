@@ -186,6 +186,95 @@ func TestRunnerStart_rejection(t *testing.T) {
 	}
 }
 
+func TestRunnerStart_adoptionStateRestart(t *testing.T) {
+	require := require.New(t)
+	ctx := context.Background()
+
+	// Temp dir
+	td, err := ioutil.TempDir("", "wprunner")
+	require.NoError(err)
+	defer os.RemoveAll(td)
+
+	serverImpl := singleprocess.TestImpl(t)
+	client := server.TestServer(t, serverImpl)
+
+	// Client with no token
+	anonClient := server.TestServer(t, serverImpl, server.TestWithToken(""))
+
+	// Initialize our runner
+	runner, err := New(
+		WithClient(anonClient),
+		WithCookie(testCookie(t, client)),
+		WithStateDir(td),
+	)
+	require.NoError(err)
+	defer runner.Close()
+
+	// The runner should not be registered
+	_, err = client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+	require.Error(err)
+	require.Equal(codes.NotFound, status.Code(err))
+
+	// Start
+	startErr := make(chan error, 1)
+	go func() {
+		startErr <- runner.Start(ctx)
+	}()
+
+	// Wait for registration
+	require.Eventually(func() bool {
+		_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+		return err == nil
+	}, 2*time.Second, 10*time.Millisecond)
+
+	// The runner should not start
+	select {
+	case <-time.After(100 * time.Millisecond):
+		// Good
+
+	case <-startErr:
+		t.Fatal("runner should not start")
+	}
+
+	// Adopt the runner
+	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: runner.Id(),
+		Adopt:    true,
+	})
+	require.NoError(err)
+
+	// Runner should start
+	select {
+	case <-time.After(5 * time.Second):
+		t.Fatal("runner should start")
+
+	case err := <-startErr:
+		require.NoError(err)
+	}
+
+	// The runner should be registered
+	resp, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+	require.NoError(err)
+	require.Equal(runner.Id(), resp.Id)
+	require.Equal(pb.Runner_ADOPTED, resp.AdoptionState)
+
+	// Close
+	require.NoError(runner.Close())
+	time.Sleep(100 * time.Millisecond)
+
+	// Restart
+	runner, err = New(
+		WithClient(anonClient),
+		WithCookie(testCookie(t, client)),
+		WithStateDir(td),
+	)
+	require.NoError(err)
+	defer runner.Close()
+
+	// Should start immediately
+	require.NoError(runner.Start(ctx))
+}
+
 func TestRunnerStart_config(t *testing.T) {
 	t.Run("set and unset", func(t *testing.T) {
 		require := require.New(t)

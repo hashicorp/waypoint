@@ -61,3 +61,25 @@ func (r *Runner) stateGetId() (string, error) {
 
 	return string(data), nil
 }
+
+func (r *Runner) statePutToken(v string) error {
+	if r.stateDir == "" {
+		return nil
+	}
+
+	path := filepath.Join(r.stateDir, "token")
+	return ioutil.WriteFile(path, []byte(v), 0600)
+}
+
+func (r *Runner) stateGetToken() (string, error) {
+	path := filepath.Join(r.stateDir, "token")
+	data, err := ioutil.ReadFile(path)
+	if os.IsNotExist(err) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
+}
