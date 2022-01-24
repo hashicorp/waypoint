@@ -20,7 +20,6 @@ import (
 	"github.com/stretchr/testify/require"
 	bolt "go.etcd.io/bbolt"
 
-	internalserver "github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -30,7 +29,7 @@ import (
 // TestServer starts a singleprocess server and returns the connected client.
 // We use t.Cleanup to ensure resources are automatically cleaned up.
 func TestServer(t testing.T, opts ...Option) pb.WaypointClient {
-	return internalserver.TestServer(t, TestImpl(t, opts...))
+	return server.TestServer(t, TestImpl(t, opts...))
 }
 
 // TestImpl returns the waypoint server implementation. This can be used

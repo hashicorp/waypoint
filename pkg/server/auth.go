@@ -11,10 +11,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// An interface implemented by something that wishes to authenticate the server
+// AuthChecker - An interface implemented by something that wishes to authenticate the server
 // actions.
 type AuthChecker interface {
-	// Called before each RPC to authenticate it. The implementation may
+	// Authenticate is called before each RPC to authenticate it. The implementation may
 	// return a new context if they want to insert authentication information
 	// into it (such as the current user). The implementation may return a nil
 	// context and the existing context will be used.
@@ -27,7 +27,7 @@ type AuthChecker interface {
 
 var readonly = []string{"readonly"}
 
-// Information about the effects of endpoints that are authenticated. If an endpoint
+// Effects is information about the effects of endpoints that are authenticated. If an endpoint
 // is not listed, the DefaultEffect value is used.
 var Effects = map[string][]string{
 	"ListBuilds": readonly,
@@ -35,11 +35,11 @@ var Effects = map[string][]string{
 
 var DefaultEffects = []string{"mutable"}
 
-// authUnaryInterceptor returns a gRPC unary interceptor that inspects the metadata
+// AuthUnaryInterceptor returns a gRPC unary interceptor that inspects the metadata
 // attached to the context. A token is extracted from that metadata and the given
 // AuthChecker is invoked to guard calling the target handler. Effectively
 // it implements authentication in front of any unary call.
-func authUnaryInterceptor(checker AuthChecker) grpc.UnaryServerInterceptor {
+func AuthUnaryInterceptor(checker AuthChecker) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},
@@ -81,11 +81,11 @@ func authUnaryInterceptor(checker AuthChecker) grpc.UnaryServerInterceptor {
 	}
 }
 
-// authStreamInterceptor returns a gRPC unary interceptor that inspects the metadata
+// AuthStreamInterceptor returns a gRPC unary interceptor that inspects the metadata
 // attached to the context. A token is extract from that metadata and the given
 // AuthChecker is invoked to guard calling the target handler. Effectively
 // it implements authentication in front of any stream call.
-func authStreamInterceptor(checker AuthChecker) grpc.StreamServerInterceptor {
+func AuthStreamInterceptor(checker AuthChecker) grpc.StreamServerInterceptor {
 	return func(
 		srv interface{},
 		ss grpc.ServerStream,

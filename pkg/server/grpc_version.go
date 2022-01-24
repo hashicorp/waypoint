@@ -13,10 +13,10 @@ import (
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
-// versionUnaryInterceptor returns a gRPC unary interceptor that negotiates
+// VersionUnaryInterceptor returns a gRPC unary interceptor that negotiates
 // the protocol version to use and sets it in the context using
 // protocolversion.WithContext.
-func versionUnaryInterceptor(serverInfo *pb.VersionInfo) grpc.UnaryServerInterceptor {
+func VersionUnaryInterceptor(serverInfo *pb.VersionInfo) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},
@@ -36,10 +36,10 @@ func versionUnaryInterceptor(serverInfo *pb.VersionInfo) grpc.UnaryServerInterce
 	}
 }
 
-// versionStreamInterceptor returns a gRPC unary interceptor that negotiates
+// VersionStreamInterceptor returns a gRPC unary interceptor that negotiates
 // the protocol version to use and sets it in the context using
 // protocolversion.WithContext.
-func versionStreamInterceptor(serverInfo *pb.VersionInfo) grpc.StreamServerInterceptor {
+func VersionStreamInterceptor(serverInfo *pb.VersionInfo) grpc.StreamServerInterceptor {
 	return func(
 		srv interface{},
 		ss grpc.ServerStream,

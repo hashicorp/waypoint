@@ -29,7 +29,7 @@ func TestAuthUnaryInterceptor(t *testing.T) {
 
 	var chk trivialAuth
 
-	f := authUnaryInterceptor(&chk)
+	f := AuthUnaryInterceptor(&chk)
 
 	ctx := context.Background()
 
@@ -65,7 +65,7 @@ func TestAuthUnaryInterceptor_replaceContext(t *testing.T) {
 	var chk trivialAuth
 	chk.contextReturn = ctx2
 
-	f := authUnaryInterceptor(&chk)
+	f := AuthUnaryInterceptor(&chk)
 
 	ctx := context.Background()
 

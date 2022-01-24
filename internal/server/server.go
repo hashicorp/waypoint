@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 
+	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -113,7 +114,7 @@ type options struct {
 	HTTPListener []net.Listener
 
 	// AuthChecker, if set, activates authentication checking on the server.
-	AuthChecker AuthChecker
+	AuthChecker server.AuthChecker
 
 	// BrowserUIEnabled determines if the browser UI should be mounted
 	BrowserUIEnabled bool
@@ -155,7 +156,7 @@ func WithImpl(impl pb.WaypointServer) Option {
 }
 
 // WithAuthentication configures the server to require authentication.
-func WithAuthentication(ac AuthChecker) Option {
+func WithAuthentication(ac server.AuthChecker) Option {
 	return func(opts *options) { opts.AuthChecker = ac }
 }
 

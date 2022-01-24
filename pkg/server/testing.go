@@ -3,18 +3,16 @@ package server
 import (
 	"context"
 	"net"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/keepalive"
 
 	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/pkg/protocolversion"
-	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -38,17 +36,30 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 	// We make run a function since we'll call it to restart too
 	run := func(ctx context.Context) context.CancelFunc {
 		ctx, cancel := context.WithCancel(ctx)
-		opts := []Option{
-			WithContext(ctx),
-			WithGRPC(ln),
-			WithImpl(impl),
-		}
-		if ac, ok := impl.(server.AuthChecker); ok {
-			opts = append(opts, WithAuthentication(ac))
-		}
 
-		go Run(opts...)
-		t.Cleanup(func() { cancel() })
+		//opts := []Option{
+		//	WithContext(ctx),
+		//	WithGRPC(ln),
+		//	WithImpl(impl),
+		//}
+		//if ac, ok := impl.(AuthChecker); ok {
+		//	opts = append(opts, WithAuthentication(ac))
+		//}
+		//
+		//go Run(opts...)
+
+		server, err := newTestServer(ctx, impl)
+		require.NoError(err)
+
+		go func() {
+			err := server.Serve(ln)
+			require.NoError(err)
+		}()
+
+		t.Cleanup(func() {
+			cancel()
+			server.GracefulStop()
+		})
 
 		return cancel
 	}
@@ -96,7 +107,9 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 			grpc.WithInsecure(),
 			grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(vsnInfo)),
 			grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(vsnInfo)),
-			grpc.WithPerRPCCredentials(serverclient.ContextToken(token)),
+		}
+		if token != "" {
+			opts = append(opts, grpc.WithPerRPCCredentials(serverclient.StaticToken(token)))
 		}
 
 		return grpc.DialContext(context.Background(), ln.Addr().String(), opts...)
@@ -109,23 +122,58 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 
 	// Bootstrap
 	tokenResp, err := client.BootstrapToken(context.Background(), &empty.Empty{})
-	if status.Code(err) == codes.PermissionDenied {
-		// Ignore bootstrap already complete errors
-		err = nil
-		tokenResp = &pb.NewTokenResponse{Token: ""}
-	}
 	conn.Close()
 	require.NoError(err)
+	require.NotEmpty(tokenResp.Token)
 
 	// Reconnect with a token
-	token := c.token
-	if !c.tokenSet {
-		token = tokenResp.Token
-	}
-	conn, err = connect(token)
+	conn, err = connect(tokenResp.Token)
 	require.NoError(err)
 	t.Cleanup(func() { conn.Close() })
 	return pb.NewWaypointClient(conn)
+}
+
+func newTestServer(ctx context.Context, impl pb.WaypointServer) (*grpc.Server, error) {
+	// Create and start a new GRPC server
+
+	// Get our server info immediately
+	resp, err := impl.GetVersionInfo(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, err
+	}
+
+	var so []grpc.ServerOption
+	so = append(so,
+		grpc.ChainUnaryInterceptor(
+			// Protocol version negotiation
+			VersionUnaryInterceptor(resp.Info),
+		),
+		grpc.ChainStreamInterceptor(
+			// Protocol version negotiation
+			VersionStreamInterceptor(resp.Info),
+		),
+		grpc.KeepaliveEnforcementPolicy(
+			keepalive.EnforcementPolicy{
+				// connections need to wait at least 20s before sending a
+				// keepalive ping
+				MinTime: 20 * time.Second,
+				// allow runners to send keeplive pings even if there are no
+				// active RCP streams.
+				PermitWithoutStream: true,
+			}),
+	)
+
+	if ac, ok := impl.(AuthChecker); ok {
+		so = append(so,
+			grpc.ChainUnaryInterceptor(AuthUnaryInterceptor(ac)),
+			grpc.ChainStreamInterceptor(AuthStreamInterceptor(ac)),
+		)
+	}
+
+	server := grpc.NewServer(so...)
+
+	pb.RegisterWaypointServer(server, impl)
+	return server, nil
 }
 
 // TestOption is used with TestServer to configure test behavior.
@@ -134,8 +182,6 @@ type TestOption func(*testConfig)
 type testConfig struct {
 	ctx       context.Context
 	restartCh <-chan struct{}
-	token     string
-	tokenSet  bool
 }
 
 // TestWithContext specifies a context to use with the test server. When
@@ -156,14 +202,6 @@ func TestWithRestart(ch <-chan struct{}) TestOption {
 	}
 }
 
-// TestWithToken specifies a specific token to use for auth.
-func TestWithToken(token string) TestOption {
-	return func(c *testConfig) {
-		c.token = token
-		c.tokenSet = true
-	}
-}
-
 // TestVersionInfoResponse generates a valid version info response for testing
 func TestVersionInfoResponse() *pb.GetVersionInfoResponse {
 	return &pb.GetVersionInfoResponse{
@@ -179,12 +217,4 @@ func TestVersionInfoResponse() *pb.GetVersionInfoResponse {
 			},
 		},
 	}
-}
-
-// Returns a context with the cookie set.
-func TestCookieContext(ctx context.Context, t testing.T, c pb.WaypointClient) context.Context {
-	resp, err := c.GetServerConfig(ctx, &empty.Empty{})
-	require.NoError(t, err)
-	md := metadata.New(map[string]string{"cookie": resp.Config.Cookie})
-	return metadata.NewOutgoingContext(ctx, md)
 }

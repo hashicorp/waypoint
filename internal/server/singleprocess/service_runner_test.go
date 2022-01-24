@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	internalserver "github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -398,7 +397,7 @@ func TestServiceRunnerConfig_happy(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -561,7 +560,7 @@ func TestServiceRunnerConfig_odrNoJob(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Get the runner
 	id, err := server.Id()
@@ -599,7 +598,7 @@ func TestServiceRunnerConfig_odrScopedConfig(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Get the runner
 	id, err := server.Id()
@@ -746,7 +745,7 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -841,7 +840,7 @@ func TestServiceRunnerJobStream_badOpen(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Start exec with a bad starting message
 	stream, err := client.RunnerJobStream(ctx)
@@ -866,7 +865,7 @@ func TestServiceRunnerJobStream_errorBeforeAck(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -928,7 +927,7 @@ func TestServiceRunnerJobStream_cancel(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -1012,7 +1011,7 @@ func TestServiceRunnerGetDeploymentConfig(t *testing.T) {
 		// Create our server
 		impl, err := New(WithDB(testDB(t)))
 		require.NoError(err)
-		client := internalserver.TestServer(t, impl)
+		client := server.TestServer(t, impl)
 
 		// Request deployment config
 		resp, err := client.RunnerGetDeploymentConfig(ctx, &pb.RunnerGetDeploymentConfigRequest{})
@@ -1026,7 +1025,7 @@ func TestServiceRunnerGetDeploymentConfig(t *testing.T) {
 		// Create our server
 		impl, err := New(WithDB(testDB(t)))
 		require.NoError(err)
-		client := internalserver.TestServer(t, impl)
+		client := server.TestServer(t, impl)
 
 		// Set some config
 		_, err = client.SetServerConfig(ctx, &pb.SetServerConfigRequest{

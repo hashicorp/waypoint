@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	internalserver "github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -20,7 +19,7 @@ func TestServiceRelease(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(t, err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Simplify writing tests
 	type Req = pb.UpsertReleaseRequest
@@ -73,7 +72,7 @@ func TestServiceRelease_GetRelease(t *testing.T) {
 	db := testDB(t)
 	impl, err := New(WithDB(db))
 	require.NoError(t, err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Best way to mock for now is to make a request
 	resp, err := client.UpsertRelease(ctx, &pb.UpsertReleaseRequest{
@@ -123,7 +122,7 @@ func TestServiceRelease_ListReleases(t *testing.T) {
 	db := testDB(t)
 	impl, err := New(WithDB(db))
 	require.NoError(t, err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	buildresp, err := client.UpsertBuild(ctx, &pb.UpsertBuildRequest{
 		Build: serverptypes.TestValidBuild(t, nil),

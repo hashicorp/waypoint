@@ -11,7 +11,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	internalserver "github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -27,7 +26,7 @@ func TestServiceEntrypointConfig(t *testing.T) {
 		// Create our server
 		impl, err := New(WithDB(testDB(t)))
 		require.NoError(err)
-		client := internalserver.TestServer(t, impl)
+		client := server.TestServer(t, impl)
 
 		// Create a deployment
 		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -64,7 +63,7 @@ func TestServiceEntrypointConfig(t *testing.T) {
 		// Create our server
 		impl, err := New(WithDB(testDB(t)))
 		require.NoError(err)
-		client := internalserver.TestServer(t, impl)
+		client := server.TestServer(t, impl)
 
 		// Create a deployment
 		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -100,7 +99,7 @@ func TestServiceEntrypointConfig(t *testing.T) {
 		// Create our server
 		impl, err := New(WithDB(testDB(t)), TestWithURLService(t, nil))
 		require.NoError(err)
-		client := internalserver.TestServer(t, impl)
+		client := server.TestServer(t, impl)
 
 		// Create a deployment
 		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -146,7 +145,7 @@ func TestServiceEntrypointConfig(t *testing.T) {
 			TestWithURLServiceGuestAccount(t),
 		)
 		require.NoError(err)
-		client := internalserver.TestServer(t, impl)
+		client := server.TestServer(t, impl)
 
 		// Create a deployment
 		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -188,7 +187,7 @@ func TestServiceEntrypointConfig(t *testing.T) {
 		// Create our server
 		impl, err := New(WithDB(testDB(t)))
 		require.NoError(err)
-		client := internalserver.TestServer(t, impl)
+		client := server.TestServer(t, impl)
 
 		// Create a deployment
 		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -298,7 +297,7 @@ func TestServiceEntrypointExecStream_badOpen(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Start exec with a bad starting message
 	stream, err := client.EntrypointExecStream(ctx)
@@ -323,7 +322,7 @@ func TestServiceEntrypointExecStream_invalidInstanceId(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Start exec with a bad starting message
 	stream, err := client.EntrypointExecStream(ctx)
@@ -351,7 +350,7 @@ func TestServiceEntrypointExecStream_invalidSessionId(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	exec, closer := testRegisterExec(t, client, impl)
 	defer closer()
@@ -382,7 +381,7 @@ func TestServiceEntrypointExecStream_closeSend(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	exec, closer := testRegisterExec(t, client, impl)
 	defer closer()
@@ -419,7 +418,7 @@ func TestServiceEntrypointExecStream_doubleStart(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	exec, closer := testRegisterExec(t, client, impl)
 	defer closer()

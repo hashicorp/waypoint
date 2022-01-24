@@ -13,7 +13,7 @@ import (
 )
 
 func TestVersionUnaryInterceptor(t *testing.T) {
-	f := versionUnaryInterceptor(&pb.VersionInfo{
+	f := VersionUnaryInterceptor(&pb.VersionInfo{
 		Api: &pb.VersionInfo_ProtocolVersion{
 			Current: 10,
 			Minimum: 2,

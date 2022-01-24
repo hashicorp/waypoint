@@ -13,6 +13,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 
+	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	pbmocks "github.com/hashicorp/waypoint/pkg/server/gen/mocks"
 )
@@ -41,9 +42,9 @@ func TestRun_reconnect(t *testing.T) {
 
 	// Create the server
 	restartCh := make(chan struct{})
-	client := TestServer(t, m,
-		TestWithContext(ctx),
-		TestWithRestart(restartCh),
+	client := server.TestServer(t, m,
+		server.TestWithContext(ctx),
+		server.TestWithRestart(restartCh),
 	)
 
 	// Request should work

@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	internalserver "github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -20,7 +19,7 @@ func TestServiceDeployment(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(t, err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Simplify writing tests
 	type Req = pb.UpsertDeploymentRequest
@@ -72,7 +71,7 @@ func TestServiceDeployment_URLService(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)), TestWithURLService(t, nil))
 	require.NoError(t, err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Simplify writing tests
 	type Req = pb.UpsertDeploymentRequest
@@ -125,7 +124,7 @@ func TestServiceDeployment_GetDeployment(t *testing.T) {
 	db := testDB(t)
 	impl, err := New(WithDB(db))
 	require.NoError(t, err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	// Best way to mock for now is to make a request
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -175,7 +174,7 @@ func TestServiceDeployment_ListDeployments(t *testing.T) {
 	db := testDB(t)
 	impl, err := New(WithDB(db))
 	require.NoError(t, err)
-	client := internalserver.TestServer(t, impl)
+	client := server.TestServer(t, impl)
 
 	buildresp, err := client.UpsertBuild(ctx, &pb.UpsertBuildRequest{
 		Build: serverptypes.TestValidBuild(t, nil),
