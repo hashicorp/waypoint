@@ -63,6 +63,7 @@ type Runner struct {
 	ui          terminal.UI
 	local       bool
 	tempDir     string
+	stateDir    string
 
 	// protects whether or not the runner is active or not.
 	runningCond *sync.Cond
@@ -136,16 +137,41 @@ func New(opts ...Option) (*Runner, error) {
 		}
 	}
 
+	// If we have a state directory, then load that.
+	if dir := runner.stateDir; dir != "" {
+		if err := verifyStateDir(runner.logger, dir); err != nil {
+			return nil, err
+		}
+	}
+
 	// If the options didn't populate id, then we do so now.
 	if runner.id == "" {
-		// Create our ID
-		id, err := server.Id()
+		// If we have an ID in state, use that.
+		stateId, err := runner.stateGetId()
 		if err != nil {
-			return nil, status.Errorf(codes.Internal,
-				"failed to generate unique ID: %s", err)
+			return nil, err
+		}
+		if stateId != "" {
+			runner.logger.Info("loaded ID from state", "id", stateId)
+			runner.id = stateId
 		}
 
-		runner.id = id
+		// Create our ID if we still have no ID
+		if runner.id == "" {
+			id, err := server.Id()
+			if err != nil {
+				return nil, status.Errorf(codes.Internal,
+					"failed to generate unique ID: %s", err)
+			}
+
+			// Persist it
+			if err := runner.statePutId(id); err != nil {
+				return nil, err
+			}
+
+			runner.logger.Info("generated a new runner ID", "id", id)
+			runner.id = id
+		}
 	}
 
 	// If we were given a cookie, configure our context to have the cookie
@@ -338,6 +364,7 @@ type config struct {
 	byIdOnly     bool
 	odr          bool
 	odrProfileId string
+	token        string
 }
 
 type Option func(*Runner, *config) error
@@ -428,6 +455,21 @@ func WithId(id string) Option {
 func WithCookie(v string) Option {
 	return func(r *Runner, cfg *config) error {
 		r.cookie = v
+		return nil
+	}
+}
+
+// WithStateDir sets the state directory. This directory is used for runner
+// state between restarts. This is optional, a runner can be stateless, but
+// has some limitations. The state dir enables:
+//
+//   * persisted runner ID across restarts
+//   * persisted adoption token across restarts
+//
+// The state directory will be created if it does not exist.
+func WithStateDir(v string) Option {
+	return func(r *Runner, cfg *config) error {
+		r.stateDir = v
 		return nil
 	}
 }

@@ -339,6 +339,39 @@ func TestRunnerStart_config(t *testing.T) {
 	})
 }
 
+func TestRunner_stateId(t *testing.T) {
+	require := require.New(t)
+	client := singleprocess.TestServer(t)
+
+	// Temp dir
+	td, err := ioutil.TempDir("", "wprunner")
+	require.NoError(err)
+	defer os.RemoveAll(td)
+
+	// Initialize our runner
+	runner, err := New(
+		WithClient(client),
+		WithStateDir(td),
+	)
+	require.NoError(err)
+	defer runner.Close()
+
+	// Should have some ID
+	id := runner.Id()
+	require.NotEmpty(id)
+
+	// Init again, should have same ID
+	runner2, err := New(
+		WithClient(client),
+		WithStateDir(td),
+	)
+	require.NoError(err)
+	defer runner2.Close()
+
+	// Should have some ID
+	require.Equal(id, runner2.Id())
+}
+
 func testCookie(t *testing.T, c pb.WaypointClient) string {
 	resp, err := c.GetServerConfig(context.Background(), &empty.Empty{})
 	require.NoError(t, err)
