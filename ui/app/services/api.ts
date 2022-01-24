@@ -104,6 +104,8 @@ export default class ApiService extends Service {
 
     let order = new OperationOrder();
     order.setDesc(true);
+    // See https://github.com/hashicorp/waypoint/issues/2919 for more context on this limit
+    order.setLimit(10);
     req.setOrder(order);
 
     let resp = await this.client.uI_ListDeployments(req, this.WithMeta());
