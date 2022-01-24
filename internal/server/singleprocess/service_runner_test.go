@@ -256,6 +256,43 @@ func TestServiceRunnerToken_noCookie(t *testing.T) {
 	require.Nil(resp)
 }
 
+func TestServiceRunnerToken_noCookieValidToken(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+
+	// Get the runner id
+	id, err := server.Id()
+	require.NoError(err)
+	r := &pb.Runner{
+		Id: id,
+		Kind: &pb.Runner_Remote_{
+			Remote: &pb.Runner_Remote{},
+		},
+	}
+
+	// Reconnect with a runner token
+	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Runner_{
+			Runner: &pb.Token_Runner{
+				Id: "",
+			},
+		},
+	})
+	require.NoError(err)
+	client := server.TestServer(t, impl, server.TestWithToken(tok))
+
+	resp, respErr := client.RunnerToken(ctx, &pb.RunnerTokenRequest{
+		Runner: r,
+	})
+	require.NoError(respErr)
+	require.NotNil(resp)
+	require.Empty(resp.Token)
+}
+
 // Complete happy path runner config stream
 func TestServiceRunnerConfig_happy(t *testing.T) {
 	ctx := context.Background()
