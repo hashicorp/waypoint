@@ -118,7 +118,7 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 
 	// Reconnect with a token
 	token := c.token
-	if token == "" {
+	if !c.tokenSet {
 		token = tokenResp.Token
 	}
 	conn, err = connect(token)
@@ -134,6 +134,7 @@ type testConfig struct {
 	ctx       context.Context
 	restartCh <-chan struct{}
 	token     string
+	tokenSet  bool
 }
 
 // TestWithContext specifies a context to use with the test server. When
@@ -158,6 +159,7 @@ func TestWithRestart(ch <-chan struct{}) TestOption {
 func TestWithToken(token string) TestOption {
 	return func(c *testConfig) {
 		c.token = token
+		c.tokenSet = true
 	}
 }
 
