@@ -47,6 +47,9 @@ type RunnerAgentCommand struct {
 
 	// Cookie to use for API requests. Importantly, this enables runner adoption.
 	flagCookie string
+
+	// State directory for runner.
+	flagStateDir string
 }
 
 // This is how long a runner in ODR mode will wait for its job assignment before
@@ -139,6 +142,7 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 		runnerpkg.WithClient(client),
 		runnerpkg.WithLogger(log.Named("runner")),
 		runnerpkg.WithDynamicConfig(c.flagDynConfig),
+		runnerpkg.WithStateDir(c.flagStateDir),
 	}
 
 	if c.flagId != "" {
@@ -318,6 +322,14 @@ func (c *RunnerAgentCommand) Flags() *flag.Sets {
 				"This is required for runner adoption. If you do not already have a " +
 				"runner token, this must be set.",
 			EnvVar: serverclient.EnvServerCookie,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "state-dir",
+			Target: &c.flagStateDir,
+			Usage: "Directory to store state between restarts. This is optional. If " +
+				"this is set, then a runner can restart without re-triggering the adoption " +
+				"process.",
 		})
 	})
 }
