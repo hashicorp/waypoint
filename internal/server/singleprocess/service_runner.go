@@ -253,12 +253,6 @@ func (s *service) RunnerConfig(
 		}
 	}()
 
-	// We'll set preadopt to true if we're in a state where we can implicitly
-	// adopt the runner if we don't have explicit adoption. This is allowed
-	// in two cases: (1) legacy login tokens for pre WP 0.8 and (2) manually
-	// created runner tokens that match this runner.
-	preadopt := false
-
 	// Get our token and reverify that we are adopted.
 	tok := s.tokenFromContext(ctx)
 	if tok == nil {
@@ -270,7 +264,6 @@ func (s *service) RunnerConfig(
 		// Legacy (pre WP 0.8) token. We accept these as preadopted.
 		// NOTE(mitchellh): One day, we should reject these because modern
 		// preadoption should be via runner tokens.
-		preadopt = true
 
 	case *pb.Token_Runner_:
 		// A runner token. We validate here that we're not explicitly rejected.
@@ -280,8 +273,6 @@ func (s *service) RunnerConfig(
 			return status.Errorf(codes.PermissionDenied,
 				"provided runner token is for a different runner")
 		}
-
-		preadopt = true
 
 	default:
 		return status.Errorf(codes.PermissionDenied, "not a valid runner token")
@@ -297,7 +288,7 @@ func (s *service) RunnerConfig(
 		return status.Errorf(codes.PermissionDenied,
 			"runner is explicitly rejected (unadopted)")
 	}
-	if preadopt && r.AdoptionState != pb.Runner_ADOPTED {
+	if r.AdoptionState != pb.Runner_ADOPTED {
 		if err := s.state.RunnerAdopt(record.Id, true); err != nil {
 			return err
 		}
