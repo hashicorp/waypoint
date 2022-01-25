@@ -119,7 +119,7 @@ func (c *RunnerListCommand) Flags() *flag.Sets {
 		f.BoolVar(&flag.BoolVar{
 			Name:   "json",
 			Target: &c.flagJson,
-			Usage: "Output trigger URL configuration list information as JSON. This includes " +
+			Usage: "Output runner configuration list information as JSON. This includes " +
 				"more fields since this is the complete API structure.",
 		})
 
