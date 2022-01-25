@@ -1,0 +1,3 @@
+```release-note:bug
+build: Add arm64 ceb to released build
+```
