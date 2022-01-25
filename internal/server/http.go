@@ -2,16 +2,19 @@ package server
 
 import (
 	"context"
-	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc"
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/httpapi"
+
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 )
 
@@ -53,6 +56,39 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 	r.PathPrefix("/grpc").Handler(grpcWrapped)
 	r.PathPrefix("/").Handler(uifs)
 
+	//// TODO(izaak): TEST - start the grpc-gateway server
+	//grpcConn, err := serverclient.Connect(opts.Context,
+	//	serverclient.Logger(log),
+	//	serverclient.FromContextConfig(&clicontext.Config{
+	//		Server: serverconfig.Client{
+	//			Address:     "localhost:9711",
+	//			RequireAuth: true,
+	//			AuthToken:   "foo", // TODO(izaak) fix
+	//
+	//			// Our gRPC server should always be listening on TLS.
+	//			// We ignore it because its coming out of our own process.
+	//			Tls:           false,
+	//			TlsSkipVerify: true,
+	//		},
+	//	}),
+	//)
+	//if err != nil {
+	//	panic(err)
+	//}
+
+	grpc_gateway_router := runtime.NewServeMux()
+	err := gen.RegisterWaypointHandlerServer(opts.Context, grpc_gateway_router, opts.Service)
+	if err != nil {
+		panic(err)
+	}
+
+	go func() {
+		err := http.ListenAndServe(":8081", grpc_gateway_router)
+		if err != nil {
+			panic(err)
+		}
+	}()
+
 	// Create our root handler which is just our router. We then wrap it
 	// in various middlewares below.
 	var rootHandler http.Handler = r
@@ -81,6 +117,7 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 
 // start starts an http server
 func (s *httpServer) start() error {
+
 	// Serve traffic
 	s.log.Info("starting HTTP server", "addr", s.ln.Addr().String())
 	return s.server.Serve(s.ln)

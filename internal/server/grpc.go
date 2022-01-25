@@ -91,6 +91,43 @@ func (s *grpcServer) start() error {
 	// Serve traffic
 	ln := s.opts.GRPCListener
 	s.log.Info("starting gRPC server", "addr", ln.Addr().String())
+
+	//go func() {
+	//	time.Sleep(time.Second * 1)
+	//	// TODO(izaak): TEST - start the grpc-gateway server
+	//	grpcConn, err := serverclient.Connect(context.Background(),
+	//		serverclient.Logger(log),
+	//		serverclient.FromContextConfig(&clicontext.Config{
+	//			Server: serverconfig.Client{
+	//				Address:     "localhost:9711",
+	//				RequireAuth: true,
+	//				AuthToken:   "foo", // TODO(izaak) fix
+	//
+	//				// Our gRPC server should always be listening on TLS.
+	//				// We ignore it because its coming out of our own process.
+	//				Tls:           false,
+	//				TlsSkipVerify: true,
+	//			},
+	//		}),
+	//	)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//
+	//	grpc_gateway_router := runtime.NewServeMux()
+	//	err = RegisterW(opts.Context, grpc_gateway_router, grpcConn)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//
+	//	go func() {
+	//		err := http.ListenAndServe(":8081", grpc_gateway_router)
+	//		if err != nil {
+	//			panic(err)
+	//		}
+	//	}()
+	//}()
+
 	return s.server.Serve(ln)
 }
 
