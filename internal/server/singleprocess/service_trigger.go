@@ -477,7 +477,5 @@ func (s *service) RunTrigger(
 		return nil, err
 	}
 
-	// TODO(briancain): The HTTP implementation will take these job ids and
-	// call the GetJobStream endpoint to stream back output from the queued jobs
 	return &pb.RunTriggerResponse{JobIds: ids}, nil
 }

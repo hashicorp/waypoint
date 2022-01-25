@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -317,9 +318,10 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 
 	triggerID := resp.Trigger.Id
 	addr := strings.Split(c.clientContext.Server.Address, ":")[0]
-	port := "9702" // TODO look this up from server cfg
+	port := serverconfig.DefaultHTTPPort
 	serverAddr := fmt.Sprintf("%s:%s", addr, port)
 	serverTriggerURL := fmt.Sprintf("https://%s/v1/trigger/%s", serverAddr, triggerID)
+
 	c.ui.Output(" Trigger ID: %s", triggerID, terminal.WithSuccessStyle())
 	c.ui.Output("Trigger URL: %s", serverTriggerURL, terminal.WithSuccessStyle())
 

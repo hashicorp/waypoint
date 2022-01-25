@@ -142,7 +142,7 @@ func HandleTrigger(addr string) http.HandlerFunc {
 
 		streamOutput := r.URL.Query().Get("stream")
 
-		// TODO(briancain): attempt to stream output back, on request.
+		// Attempt to stream output back, on request.
 		if streamOutput != "" {
 			log.Trace("attempting to stream back queued job output from running trigger")
 
@@ -166,10 +166,10 @@ func HandleTrigger(addr string) http.HandlerFunc {
 
 			enc := json.NewEncoder(w)
 
-			// TODO(briancain): can we read the job stream for all jobs and send data back for each
-			// as we receive it?
-			// ALSO, we should skip by ~2 so we can only stream back the main
-			// job id, rather than the StartTask and StopTask ODR jobs
+			// NOTE(briancain): We skip every two jobs here because when we call RunTrigger
+			// via gRPC, it eventually queues the trigger jobs through on-demand runners, and
+			// queueJobMulti returns three jobs: StartTask, the job to be queued, and StopTask. People
+			// really only expect output from the job to be queued, so we only stream that back.
 		OUTER:
 			for i := 1; i < len(jobIds); i += 2 {
 				jId := jobIds[i]
@@ -222,6 +222,7 @@ func HandleTrigger(addr string) http.HandlerFunc {
 						switch event := resp.Event.(type) {
 						case *pb.GetJobStreamResponse_Complete_:
 							jobComplete = true
+							// TODO(briancain): read RFC, we agreed on a complete message at end of stream
 							m = "job complete"
 
 							if event.Complete.Error == nil {
