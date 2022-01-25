@@ -1,4 +1,4 @@
-## unreleased
+## 0.7.1 (January 25, 2022)
 
 IMPROVEMENTS:
 
