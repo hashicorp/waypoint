@@ -60,36 +60,36 @@ func (r *Releaser) Release(
 
 	jobClient := client.Jobs()
 	deploymentClient := client.Deployments()
-    st.Update("Getting job...")
+	st.Update("Getting job...")
 	jobs, _, err := jobClient.PrefixList(target.Name)
-    if err != nil {
-        return nil, status.Errorf(codes.Aborted, "Unable to fetch Nomad job: %s", err.Error())
-    }
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "Unable to fetch Nomad job: %s", err.Error())
+	}
 
 	q := &api.QueryOptions{Namespace: jobs[0].JobSummary.Namespace}
 	st.Update("Getting latest deployments for job")
 	deploy, _, err := jobClient.LatestDeployment(jobs[0].ID, q)
-    if err != nil {
-        return nil, status.Errorf(codes.Aborted, "Unable to fetch latest deployment for Nomad job: %s", err.Error())
-    }
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "Unable to fetch latest deployment for Nomad job: %s", err.Error())
+	}
 
 	if deploy == nil {
-	    st.Update("No active deployment for Nomad job")
+		st.Update("No active deployment for Nomad job")
 		return &Release{}, nil
 	}
 
-    //Check if any of the task groups are canary deployments
-    //TODO: Match up specified 'groups' in ReleaserConfig to group names found in the Deployment
-    //      Verify that they 1) exist and 2) have canaries
-    canaryDeployment := false
-    for _, taskGroup := range deploy.TaskGroups {
-        if taskGroup.DesiredCanaries != 0 {
-            canaryDeployment = true
-        }
-    }
-    if !canaryDeployment {
-        return &Release{}, nil
-    }
+	//Check if any of the task groups are canary deployments
+	//TODO: Match up specified 'groups' in ReleaserConfig to group names found in the Deployment
+	//      Verify that they 1) exist and 2) have canaries
+	canaryDeployment := false
+	for _, taskGroup := range deploy.TaskGroups {
+		if taskGroup.DesiredCanaries != 0 {
+			canaryDeployment = true
+		}
+	}
+	if !canaryDeployment {
+		return &Release{}, nil
+	}
 
 	// Set write options
 	wq := &api.WriteOptions{Namespace: jobs[0].JobSummary.Namespace}
@@ -120,7 +120,7 @@ func (r *Releaser) Release(
 
 // ReleaserConfig is the configuration structure for the Releaser.
 type ReleaserConfig struct {
-    //Groups only applies to the nomad-jobspec platform since the nomad platform (currently) uses only one task group
+	//Groups only applies to the nomad-jobspec platform since the nomad platform (currently) uses only one task group
 	Groups []string `hcl:"groups,optional"`
 	//TODO: Support option to fail canary deployment?
 	//TODO: Support option to revert to a previous version?
