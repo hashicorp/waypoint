@@ -21,9 +21,9 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/pkg/k8sauth"
 	"github.com/hashicorp/waypoint/internal/serverclient"
-	"github.com/hashicorp/waypoint/internal/serverconfig"
 	wpoidc "github.com/hashicorp/waypoint/pkg/auth/oidc"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
 type LoginCommand struct {

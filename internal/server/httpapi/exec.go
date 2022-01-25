@@ -10,8 +10,8 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/serverclient"
-	"github.com/hashicorp/waypoint/internal/serverconfig"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
 // HandleExec handles the `waypoint exec` websocket API. This works by

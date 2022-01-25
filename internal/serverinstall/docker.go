@@ -16,10 +16,11 @@ import (
 	"github.com/docker/go-connections/nat"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"github.com/hashicorp/waypoint/internal/serverconfig"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
 type DockerInstaller struct {
