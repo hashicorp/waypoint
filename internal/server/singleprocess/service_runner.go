@@ -13,6 +13,7 @@ import (
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/serverstate"
 )
 
@@ -73,6 +74,10 @@ func (s *service) AdoptRunner(
 	ctx context.Context,
 	req *pb.AdoptRunnerRequest,
 ) (*empty.Empty, error) {
+	if err := serverptypes.ValidateAdoptRunnerRequest(req); err != nil {
+		return nil, err
+	}
+
 	var err error
 	if req.Adopt {
 		err = s.state.RunnerAdopt(req.RunnerId, false)
@@ -87,6 +92,10 @@ func (s *service) ForgetRunner(
 	ctx context.Context,
 	req *pb.ForgetRunnerRequest,
 ) (*empty.Empty, error) {
+	if err := serverptypes.ValidateForgetRunnerRequest(req); err != nil {
+		return nil, err
+	}
+
 	err := s.state.RunnerDelete(req.RunnerId)
 	return &empty.Empty{}, err
 }
