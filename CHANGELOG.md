@@ -6,7 +6,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-* build: Add arm64 ceb to released build [[GH-2944](https://github.com/hashicorp/waypoint/issues/2944)]
+* build: Add arm64 ceb to released build [[GH-2945](https://github.com/hashicorp/waypoint/issues/2945)]
 * plugin/nomad: Fix Nomad job namespace when using ODRs [[GH-2896](https://github.com/hashicorp/waypoint/issues/2896)]
 * ui: Ensure logs update correctly when switching between deployments [[GH-2901](https://github.com/hashicorp/waypoint/issues/2901)]
 * ui: Limit number of deployments requested [[GH-2930](https://github.com/hashicorp/waypoint/issues/2930)]
