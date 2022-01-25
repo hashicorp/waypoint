@@ -22,8 +22,9 @@ import (
 
 // Message is the message we return to the requester when streaming output
 type Message struct {
-	JobId   string `json:"jobId,omitempty"`
-	Message string `json:"message,omitempty"`
+	JobId    string `json:"jobId,omitempty"`
+	Message  string `json:"message,omitempty"`
+	ExitCode string `json:"exitCode,omitempty"`
 	// TODO what other options should we send back to the user
 }
 
@@ -195,7 +196,10 @@ func HandleTrigger(addr string) http.HandlerFunc {
 					return
 				}
 
-				var jobComplete bool
+				var (
+					jobComplete bool
+					exitCode    string
+				)
 
 				// read and send the stream
 				for {
@@ -222,18 +226,20 @@ func HandleTrigger(addr string) http.HandlerFunc {
 						switch event := resp.Event.(type) {
 						case *pb.GetJobStreamResponse_Complete_:
 							jobComplete = true
-							// TODO(briancain): read RFC, we agreed on a complete message at end of stream
 							m = "job complete"
 
 							if event.Complete.Error == nil {
 								log.Info("job completed successfully")
+								exitCode = "0"
 							} else {
+								exitCode = "1"
 								st := status.FromProto(event.Complete.Error)
 								log.Warn("job failed", "code", st.Code(), "message", st.Message())
 								http.Error(w, fmt.Sprintf("job failed to complete: job code %s: %s", st.Code(), st.Message()), 500)
 							}
 						case *pb.GetJobStreamResponse_Error_:
 							jobComplete = true
+							exitCode = "1"
 
 							st := status.FromProto(event.Error.Error)
 							log.Warn("job stream failure", "code", st.Code(), "message", st.Message())
@@ -312,8 +318,9 @@ func HandleTrigger(addr string) http.HandlerFunc {
 						if m != "" {
 							log.Trace("sending job data to client for job", "job_id", jId)
 							msg := Message{
-								JobId:   jId,
-								Message: m,
+								JobId:    jId,
+								Message:  m,
+								ExitCode: exitCode, // will only be sent if set to non-empty string
 							}
 
 							// send the message back
