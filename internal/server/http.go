@@ -6,9 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc"
-
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-hclog"
@@ -54,8 +51,7 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 	// Create our full router
 	r := mux.NewRouter()
 	r.HandleFunc("/v1/exec", httpapi.HandleExec(grpcAddr, true))
-	// TODO(briancain): query params for job blocking and streaming
-	r.HandleFunc("/v1/trigger/{id:[a-zA-Z0-9]+}", httpapi.HandleTrigger(grpcAddr))
+	r.HandleFunc("/v1/trigger/{id:[a-zA-Z0-9]+}", httpapi.HandleTrigger(grpcAddr, true))
 	r.PathPrefix("/grpc").Handler(grpcWrapped)
 	r.PathPrefix("/").Handler(uifs)
 
