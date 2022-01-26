@@ -1,0 +1,5 @@
+```release-note:bug
+server: Cache Horizon hostname URL lookup when listing deployments in the
+UI_ListDeployments bundle. Now we look up the deployment URL once, and craft
+the deployment URLs based on the original hostname lookup.
+```
