@@ -99,36 +99,38 @@ func (s *service) UI_ListDeployments(
 
 		// Find deployment url
 		// If we had no entrypoint config it is not possible for the preload URL to work.
-		if deploy.HasEntrypointConfig && deployURLName == "" {
-			resp, err := s.ListHostnames(ctx, &pb.ListHostnamesRequest{
-				Target: &pb.Hostname_Target{
-					Target: &pb.Hostname_Target_Application{
-						Application: &pb.Hostname_TargetApp{
-							Application: deploy.Application,
-							Workspace:   deploy.Workspace,
+		if deploy.HasEntrypointConfig {
+			if deployURLName == "" {
+				resp, err := s.ListHostnames(ctx, &pb.ListHostnamesRequest{
+					Target: &pb.Hostname_Target{
+						Target: &pb.Hostname_Target_Application{
+							Application: &pb.Hostname_TargetApp{
+								Application: deploy.Application,
+								Workspace:   deploy.Workspace,
+							},
 						},
 					},
-				},
-			})
-			if err == nil && len(resp.Hostnames) > 0 {
-				hostname := resp.Hostnames[0]
+				})
+				if err == nil && len(resp.Hostnames) > 0 {
+					hostname := resp.Hostnames[0]
 
+					bundle.DeployUrl = fmt.Sprintf(
+						"%s--%s%s",
+						hostname.Hostname,
+						(&ptypes.Deployment{Deployment: deploy}).URLFragment(),
+						strings.TrimPrefix(hostname.Fqdn, hostname.Hostname),
+					)
+
+					deployURLName = hostname.Hostname
+					deployURLHost = strings.TrimPrefix(hostname.Fqdn, hostname.Hostname)
+				}
+			} else {
 				bundle.DeployUrl = fmt.Sprintf(
 					"%s--%s%s",
-					hostname.Hostname,
-					(&ptypes.Deployment{Deployment: deploy}).URLFragment(),
-					strings.TrimPrefix(hostname.Fqdn, hostname.Hostname),
-				)
-
-				deployURLName = hostname.Hostname
-				deployURLHost = strings.TrimPrefix(hostname.Fqdn, hostname.Hostname)
+					deployURLName,
+					(&ptypes.Deployment{Deployment: deploy}).URLFragment(), // Deployment Sequence Number
+					deployURLHost)
 			}
-		} else {
-			bundle.DeployUrl = fmt.Sprintf(
-				"%s--%s%s",
-				deployURLName,
-				(&ptypes.Deployment{Deployment: deploy}).URLFragment(), // Deployment Sequence Number
-				deployURLHost)
 		}
 
 		deployBundles = append(deployBundles, &bundle)
