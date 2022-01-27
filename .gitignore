@@ -7,11 +7,11 @@ tmp/
 /waypoint-entrypoint
 /doc
 
-# TODO(izaak): what generates this during the release? Can we move it somewhere else?
-/pkg/dist
-
 # System-specific
 .DS_Store
+
+pkg/dist
+pkg/bin
 
 # Default Waypoint database file
 data.db
