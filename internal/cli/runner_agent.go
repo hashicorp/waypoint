@@ -50,6 +50,9 @@ type RunnerAgentCommand struct {
 
 	// State directory for runner.
 	flagStateDir string
+
+	// Labels for the runner.
+	flagLabels map[string]string
 }
 
 // This is how long a runner in ODR mode will wait for its job assignment before
@@ -143,6 +146,7 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 		runnerpkg.WithLogger(log.Named("runner")),
 		runnerpkg.WithDynamicConfig(c.flagDynConfig),
 		runnerpkg.WithStateDir(c.flagStateDir),
+		runnerpkg.WithLabels(c.flagLabels),
 	}
 
 	if c.flagId != "" {
@@ -331,6 +335,12 @@ func (c *RunnerAgentCommand) Flags() *flag.Sets {
 				"this is set, then a runner can restart without re-triggering the adoption " +
 				"process.",
 		})
+
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "label",
+			Target: &c.flagLabels,
+			Usage:  "Labels to set for this runner in 'k=v' format. Can be specified multiple times.",
+		})
 	})
 }
 
@@ -350,7 +360,27 @@ func (c *RunnerAgentCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint runner agent [options]
 
-  Run a runner for executing remote operations.
+  Run a remote runner for executing remote operations.
+
+  Runners are named or identified via the ID and the label set. The ID
+  can be manually specified or automatically generated. The label set is
+  specified using "-label" flags.
+
+  A runner can be registered with the server in two ways. First, a
+  runner token can be created with "waypoint runner token" and used with
+  this command (using the WAYPOINT_SERVER_TOKEN environment variable,
+  "waypoint context", etc.). This will allow the runner to begin accepting
+  jobs immediately since it is preauthorized.
+
+  The second approach is to specify only the cookie value (acquired using
+  the "waypoint server cookie" command) and the server address. This will
+  trigger a process that puts the runner in a pending state until a human
+  manually verifies it. This is useful for easily installing runners.
+
+  The "-state-dir" flag is optional, but important. This flag allows runners
+  to restart gracefully without regenerating a new ID or losing a rotated
+  authentication token. Runners can be run without a state directory but it is
+  not generally recommended.
 
 ` + c.Flags().Help())
 }
