@@ -50,12 +50,12 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 
 		go func() {
 			<-ctx.Done()
-			server.GracefulStop()
+			server.Stop()
 		}()
 
 		t.Cleanup(func() {
 			cancel()
-			server.GracefulStop()
+			server.Stop()
 		})
 
 		return cancel
