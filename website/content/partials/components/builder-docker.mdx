@@ -101,6 +101,15 @@ If buildkit is enabled unused stages will be skipped.
 - Type: **string**
 - **Optional**
 
+#### no_cache
+
+Do not use cache when building the image
+
+Ensures a clean image build.
+
+- Type: **bool**
+- **Optional**
+
 ### Output Attributes
 
 Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
