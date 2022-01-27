@@ -105,12 +105,6 @@ func remoteOpPreferred(ctx context.Context, client pb.WaypointClient, project *p
 		return false, nil
 	}
 
-	// Check to see if we have a runner profile assigned to this project
-	if project.OndemandRunner != nil {
-		log.Debug("Project has an explicit ODR profile set - operation is possible remotely")
-		return true, nil
-	}
-
 	// For now, if any app has an ODR profile set, we'll prefer remote for every op
 	// NOTE: this means that it isn't possible to have one app in a project execute
 	// locally only, and another execute remotely.
@@ -120,7 +114,7 @@ func remoteOpPreferred(ctx context.Context, client pb.WaypointClient, project *p
 			continue
 		}
 		if runnerCfg.Profile != "" {
-			log.Warn("At least one app has an explicit ODR profile set - choosing remote operations for all app operations.")
+			log.Warn("An explicit ODR profile is set - choosing remote operations for all app operations.")
 			return true, nil
 		}
 	}

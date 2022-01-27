@@ -675,10 +675,6 @@ message Project {
   // poll operations and their success/failure by using the ListJobs API.
   AppStatusPoll status_report_poll = 10;
 
-  // ondemand_runner, if set, indicates the configuration on the ondemand runner
-  // that should be used for the operations of this project.
-  Ref.OnDemandRunnerConfig ondemand_runner = 11;
-
   message Poll {
     // enabled must be set to true to enable polling.
     bool enabled = 1;

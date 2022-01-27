@@ -234,6 +234,22 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 				},
 			},
 		}
+	} else {
+		var configRunner *configpkg.Runner
+		// Find runner configuration on the app
+		if job.Application != nil {
+			configRunner = c.waypointHCL.ConfigAppRunner(job.Application.Application)
+		}
+		// If not on app, try to find it on the project
+		if configRunner == nil {
+			configRunner = c.waypointHCL.ConfigRunner()
+		}
+		// If runner config is found, assign to job
+		if configRunner != nil {
+			job.OndemandRunner = &pb.Ref_OnDemandRunnerConfig{
+				Name: configRunner.Profile,
+			}
+		}
 	}
 
 	return c.queueAndStreamJob(ctx, job, ui, monCh, isLocal)

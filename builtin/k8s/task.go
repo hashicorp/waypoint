@@ -162,7 +162,7 @@ func (p *TaskLauncher) StartTask(
 	// Get our client
 	clientSet, ns, _, err := Clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to initialize k8s client set with config path %q and context %q.", p.config.KubeconfigPath, p.config.Context)
 	}
 	if p.config.Namespace != "" {
 		ns = p.config.Namespace

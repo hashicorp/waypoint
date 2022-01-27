@@ -165,12 +165,10 @@ func (s *service) queueJobReqToJob(
 		}
 	}
 
-	// If the job can be run by any runner, then we attempt to see if we should spawn
-	// an on-demand runner for it. We only consider jobs for any runner because ones
-	// that are targeted can not target on-demand runners, because they don't yet exist.
 	// If the job has any target runner, it is a remote job.
+	// We attempt to spawn an on-demand runner for the job, if it doesn't already have an ODR assigned, use a default.
 	if _, anyTarget := job.TargetRunner.Target.(*pb.Ref_Runner_Any); anyTarget {
-		if project.OndemandRunner == nil {
+		if job.OndemandRunner == nil {
 			ods, err := s.state.OnDemandRunnerConfigDefault()
 			if err != nil {
 				return nil, "", err
