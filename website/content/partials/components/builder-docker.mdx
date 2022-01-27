@@ -83,6 +83,15 @@ Set this when the Dockerfile is not APP-PATH/Dockerfile.
 - Type: **string**
 - **Optional**
 
+#### no_cache
+
+Do not use cache when building the image.
+
+Ensures a clean image build.
+
+- Type: **bool**
+- **Optional**
+
 #### platform
 
 Set target platform to build container if server is multi-platform capable.
@@ -99,15 +108,6 @@ The target build stage in a multi-stage Dockerfile.
 If buildkit is enabled unused stages will be skipped.
 
 - Type: **string**
-- **Optional**
-
-#### no_cache
-
-Do not use cache when building the image
-
-Ensures a clean image build.
-
-- Type: **bool**
 - **Optional**
 
 ### Output Attributes
