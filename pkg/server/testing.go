@@ -124,7 +124,6 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 	}
 	conn.Close()
 	require.NoError(err)
-	require.NotEmpty(tokenResp.Token)
 
 	// Reconnect with a token
 	token := c.token
