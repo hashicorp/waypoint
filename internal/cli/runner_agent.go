@@ -44,6 +44,12 @@ type RunnerAgentCommand struct {
 	// If this is an ODR runner, this should be the ODR profile that it was created
 	// from.
 	flagOdrProfileId string
+
+	// Cookie to use for API requests. Importantly, this enables runner adoption.
+	flagCookie string
+
+	// State directory for runner.
+	flagStateDir string
 }
 
 // This is how long a runner in ODR mode will wait for its job assignment before
@@ -82,17 +88,24 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	}
 	client := pb.NewWaypointClient(conn)
 
+	// Build the values we'll show in the runner config table
+	infoValues := []terminal.NamedValue{
+		{Name: "Server address", Value: conn.Target()},
+	}
+	if c.flagODR {
+		infoValues = append(infoValues, terminal.NamedValue{
+			Name: "Type", Value: "on-demand",
+		})
+	} else {
+		infoValues = append(infoValues, terminal.NamedValue{
+			Name: "Type", Value: "remote",
+		})
+	}
+
 	// Output information to the user
 	c.ui.Output("Runner configuration:", terminal.WithHeaderStyle())
-	c.ui.NamedValues([]terminal.NamedValue{
-		{Name: "Server address", Value: conn.Target()},
-	})
+	c.ui.NamedValues(infoValues)
 	c.ui.Output("Runner logs:", terminal.WithHeaderStyle())
-	if c.flagODR {
-		c.ui.Output("Operating as an On-demand Runner")
-	} else {
-		c.ui.Output("Operating as a static Runner")
-	}
 
 	c.ui.Output("")
 
@@ -129,10 +142,15 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 		runnerpkg.WithClient(client),
 		runnerpkg.WithLogger(log.Named("runner")),
 		runnerpkg.WithDynamicConfig(c.flagDynConfig),
+		runnerpkg.WithStateDir(c.flagStateDir),
 	}
 
 	if c.flagId != "" {
 		options = append(options, runnerpkg.WithId(c.flagId))
+	}
+
+	if c.flagCookie != "" {
+		options = append(options, runnerpkg.WithCookie(c.flagCookie))
 	}
 
 	if c.flagODR {
@@ -152,9 +170,13 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 		return 1
 	}
 
+	// We always defer the close, but in happy paths this should be a noop
+	// because we do a close later in this function more gracefully.
+	defer runner.Close()
+
 	// Start the runner
 	log.Info("starting runner", "id", runner.Id())
-	if err := runner.Start(); err != nil {
+	if err := runner.Start(ctx); err != nil {
 		log.Error("error starting runner", "err", err)
 		return 1
 	}
@@ -230,6 +252,13 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 					// a short sleep to allow the server to come back online.
 					log.Warn("server unavailable, sleeping before retry")
 					time.Sleep(2 * time.Second)
+
+				case codes.PermissionDenied, codes.Unauthenticated:
+					// The runner was rejected after the fact or our token
+					// was revoked. We exit and expect an init process or
+					// something to restart us if they want to retry.
+					log.Error("no permission to request a job, exiting")
+					return
 				}
 			}
 		}
@@ -284,6 +313,23 @@ func (c *RunnerAgentCommand) Flags() *flag.Sets {
 			Target: &c.flagOdrProfileId,
 			Usage:  "The ID of the odr profile used to create the task that is running this runner.",
 			Hidden: true,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "cookie",
+			Target: &c.flagCookie,
+			Usage: "The cookie value of the server to validate API requests. " +
+				"This is required for runner adoption. If you do not already have a " +
+				"runner token, this must be set.",
+			EnvVar: serverclient.EnvServerCookie,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "state-dir",
+			Target: &c.flagStateDir,
+			Usage: "Directory to store state between restarts. This is optional. If " +
+				"this is set, then a runner can restart without re-triggering the adoption " +
+				"process.",
 		})
 	})
 }

@@ -102,7 +102,7 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 	if *c.useLocalRunner {
 		if c.activeRunner == nil {
 			// we need a local runner and we haven't started it yet
-			if err := c.startRunner(); err != nil {
+			if err := c.startRunner(ctx); err != nil {
 				return false, newCtx, errors.Wrapf(err, "failed to start local runner for job %s", err)
 			}
 		}

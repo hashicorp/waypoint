@@ -8,6 +8,9 @@ import (
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/protocolversion"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -92,9 +95,7 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 			grpc.WithInsecure(),
 			grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(vsnInfo)),
 			grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(vsnInfo)),
-		}
-		if token != "" {
-			opts = append(opts, grpc.WithPerRPCCredentials(serverclient.StaticToken(token)))
+			grpc.WithPerRPCCredentials(serverclient.ContextToken(token)),
 		}
 
 		return grpc.DialContext(context.Background(), ln.Addr().String(), opts...)
@@ -107,12 +108,20 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 
 	// Bootstrap
 	tokenResp, err := client.BootstrapToken(context.Background(), &empty.Empty{})
+	if status.Code(err) == codes.PermissionDenied {
+		// Ignore bootstrap already complete errors
+		err = nil
+		tokenResp = &pb.NewTokenResponse{Token: ""}
+	}
 	conn.Close()
 	require.NoError(err)
-	require.NotEmpty(tokenResp.Token)
 
 	// Reconnect with a token
-	conn, err = connect(tokenResp.Token)
+	token := c.token
+	if !c.tokenSet {
+		token = tokenResp.Token
+	}
+	conn, err = connect(token)
 	require.NoError(err)
 	t.Cleanup(func() { conn.Close() })
 	return pb.NewWaypointClient(conn)
@@ -124,6 +133,8 @@ type TestOption func(*testConfig)
 type testConfig struct {
 	ctx       context.Context
 	restartCh <-chan struct{}
+	token     string
+	tokenSet  bool
 }
 
 // TestWithContext specifies a context to use with the test server. When
@@ -144,6 +155,14 @@ func TestWithRestart(ch <-chan struct{}) TestOption {
 	}
 }
 
+// TestWithToken specifies a specific token to use for auth.
+func TestWithToken(token string) TestOption {
+	return func(c *testConfig) {
+		c.token = token
+		c.tokenSet = true
+	}
+}
+
 // TestVersionInfoResponse generates a valid version info response for testing
 func TestVersionInfoResponse() *pb.GetVersionInfoResponse {
 	return &pb.GetVersionInfoResponse{
@@ -159,4 +178,12 @@ func TestVersionInfoResponse() *pb.GetVersionInfoResponse {
 			},
 		},
 	}
+}
+
+// Returns a context with the cookie set.
+func TestCookieContext(ctx context.Context, t testing.T, c pb.WaypointClient) context.Context {
+	resp, err := c.GetServerConfig(ctx, &empty.Empty{})
+	require.NoError(t, err)
+	md := metadata.New(map[string]string{"cookie": resp.Config.Cookie})
+	return metadata.NewOutgoingContext(ctx, md)
 }

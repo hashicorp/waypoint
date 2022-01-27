@@ -324,6 +324,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"server cookie": func() (cli.Command, error) {
+			return &ServerCookieCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"server config-set": func() (cli.Command, error) {
 			return &ServerConfigSetCommand{
 				baseCommand: baseCommand,
@@ -447,6 +452,31 @@ func Commands(
 		},
 		"runner agent": func() (cli.Command, error) {
 			return &RunnerAgentCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner list": func() (cli.Command, error) {
+			return &RunnerListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner adopt": func() (cli.Command, error) {
+			return &RunnerAdoptCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner reject": func() (cli.Command, error) {
+			return &RunnerRejectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner forget": func() (cli.Command, error) {
+			return &RunnerForgetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner token": func() (cli.Command, error) {
+			return &RunnerTokenCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},

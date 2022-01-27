@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -13,6 +14,380 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
+
+// Test the happy path of getting a runner token
+func TestServiceRunnerToken_happy(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Get our cookied context
+	ctx = server.TestCookieContext(ctx, t, client)
+
+	// Get the runner id
+	id, err := server.Id()
+	require.NoError(err)
+	r := &pb.Runner{
+		Id: id,
+		Kind: &pb.Runner_Remote_{
+			Remote: &pb.Runner_Remote{},
+		},
+	}
+
+	// Reconnect with no token
+	anonClient := server.TestServer(t, impl, server.TestWithToken(""))
+
+	// Start getting the resp
+	var resp *pb.RunnerTokenResponse
+	var respErr error
+	doneCh := make(chan struct{})
+	go func() {
+		defer close(doneCh)
+		resp, respErr = anonClient.RunnerToken(ctx, &pb.RunnerTokenRequest{
+			Runner: r,
+		})
+	}()
+
+	// Should block
+	select {
+	case <-time.After(50 * time.Millisecond):
+	case <-doneCh:
+		t.Fatal("should block")
+	}
+
+	// Adopt it
+	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: id,
+		Adopt:    true,
+	})
+	require.NoError(err)
+
+	// Should be done
+	select {
+	case <-doneCh:
+	case <-time.After(1 * time.Second):
+		t.Fatal("should return")
+	}
+
+	// Verify token resp
+	require.NoError(respErr)
+	require.NotNil(resp)
+	require.NotEmpty(resp.Token)
+
+	// Reconnect with the token
+	client = server.TestServer(t, impl, server.TestWithToken(resp.Token))
+
+	// Open the config stream
+	stream, err := client.RunnerConfig(ctx)
+	require.NoError(err)
+	defer stream.CloseSend()
+
+	// Register
+	require.NoError(stream.Send(&pb.RunnerConfigRequest{
+		Event: &pb.RunnerConfigRequest_Open_{
+			Open: &pb.RunnerConfigRequest_Open{
+				Runner: r,
+			},
+		},
+	}))
+
+	// Wait for first message to confirm we're registered
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		require.NotNil(resp.Config)
+		require.Empty(resp.Config.ConfigVars)
+	}
+
+	// Get and list the runner
+	{
+		runner, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: id})
+		require.NoError(err)
+		require.NotNil(runner)
+		require.Equal(runner.Id, id)
+		require.Equal(pb.Runner_ADOPTED, runner.AdoptionState)
+
+		runners, err := client.ListRunners(ctx, &pb.ListRunnersRequest{})
+		require.NoError(err)
+		require.Len(runners.Runners, 1)
+		require.Equal(runners.Runners[0].Id, id)
+	}
+
+	// Re-requesting a token should fail immediately. Because the runner is
+	// adopted, a second token request should fail; we expect the runner to
+	// already have the token.
+	{
+		resp, err := anonClient.RunnerToken(ctx, &pb.RunnerTokenRequest{
+			Runner: r,
+		})
+		require.Error(err)
+		require.Nil(resp)
+	}
+
+}
+
+// Test that an explicitly rejected runner can't do anything
+func TestServiceRunnerToken_reject(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Get our cookied context
+	ctx = server.TestCookieContext(ctx, t, client)
+
+	// Get the runner id
+	id, err := server.Id()
+	require.NoError(err)
+	r := &pb.Runner{
+		Id: id,
+		Kind: &pb.Runner_Remote_{
+			Remote: &pb.Runner_Remote{},
+		},
+	}
+
+	// Reconnect with no token
+	anonClient := server.TestServer(t, impl, server.TestWithToken(""))
+
+	// Start getting the resp
+	var respErr error
+	doneCh := make(chan struct{})
+	go func() {
+		defer close(doneCh)
+		_, respErr = anonClient.RunnerToken(ctx, &pb.RunnerTokenRequest{
+			Runner: r,
+		})
+	}()
+
+	// Should block
+	select {
+	case <-time.After(50 * time.Millisecond):
+	case <-doneCh:
+		t.Fatal("should block")
+	}
+
+	// Adopt it
+	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: id,
+		Adopt:    false,
+	})
+	require.NoError(err)
+
+	// Should be done
+	select {
+	case <-doneCh:
+	case <-time.After(1 * time.Second):
+		t.Fatal("should return")
+	}
+
+	// Verify token resp
+	require.Error(respErr)
+	require.Equal(codes.PermissionDenied, status.Code(respErr))
+
+	// Open the config stream
+	stream, err := client.RunnerConfig(ctx)
+	require.NoError(err)
+	defer stream.CloseSend()
+
+	// Register
+	require.NoError(stream.Send(&pb.RunnerConfigRequest{
+		Event: &pb.RunnerConfigRequest_Open_{
+			Open: &pb.RunnerConfigRequest_Open{
+				Runner: r,
+			},
+		},
+	}))
+
+	// Wait for first message to confirm we're registered
+	{
+		resp, err := stream.Recv()
+		require.Error(err)
+		require.Equal(codes.PermissionDenied, status.Code(respErr))
+		require.Nil(resp)
+	}
+
+	// Get and list the runner
+	{
+		runner, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: id})
+		require.NoError(err)
+		require.NotNil(runner)
+		require.Equal(runner.Id, id)
+		require.Equal(pb.Runner_REJECTED, runner.AdoptionState)
+
+		runners, err := client.ListRunners(ctx, &pb.ListRunnersRequest{})
+		require.NoError(err)
+		require.Len(runners.Runners, 1)
+		require.Equal(runners.Runners[0].Id, id)
+	}
+}
+
+func TestServiceRunnerToken_invalidRunnerToken(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Get our cookied context
+	ctx = server.TestCookieContext(ctx, t, client)
+
+	// Get the runner id
+	id, err := server.Id()
+	require.NoError(err)
+	r := &pb.Runner{
+		Id: id,
+		Kind: &pb.Runner_Remote_{
+			Remote: &pb.Runner_Remote{},
+		},
+	}
+
+	// Reconnect with a runner token
+	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Runner_{
+			Runner: &pb.Token_Runner{
+				Id: "no-match",
+			},
+		},
+	})
+	require.NoError(err)
+	runClient := server.TestServer(t, impl, server.TestWithToken(tok))
+
+	// Start getting the resp
+	var resp *pb.RunnerTokenResponse
+	var respErr error
+	doneCh := make(chan struct{})
+	go func() {
+		defer close(doneCh)
+		resp, respErr = runClient.RunnerToken(ctx, &pb.RunnerTokenRequest{
+			Runner: r,
+		})
+	}()
+
+	// Should block
+	select {
+	case <-time.After(50 * time.Millisecond):
+	case <-doneCh:
+		t.Fatal("should block")
+	}
+
+	// Adopt it
+	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: id,
+		Adopt:    true,
+	})
+	require.NoError(err)
+
+	// Should be done
+	select {
+	case <-doneCh:
+	case <-time.After(1 * time.Second):
+		t.Fatal("should return")
+	}
+
+	// Verify token resp
+	require.NoError(respErr)
+	require.NotNil(resp)
+	require.NotEmpty(resp.Token)
+
+	// Reconnect with the token
+	client = server.TestServer(t, impl, server.TestWithToken(resp.Token))
+
+	// Open the config stream
+	stream, err := client.RunnerConfig(ctx)
+	require.NoError(err)
+	defer stream.CloseSend()
+
+	// Register
+	require.NoError(stream.Send(&pb.RunnerConfigRequest{
+		Event: &pb.RunnerConfigRequest_Open_{
+			Open: &pb.RunnerConfigRequest_Open{
+				Runner: r,
+			},
+		},
+	}))
+
+	// Wait for first message to confirm we're registered
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		require.NotNil(resp.Config)
+		require.Empty(resp.Config.ConfigVars)
+	}
+}
+
+func TestServiceRunnerToken_noCookie(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+
+	// Get the runner id
+	id, err := server.Id()
+	require.NoError(err)
+	r := &pb.Runner{
+		Id: id,
+		Kind: &pb.Runner_Remote_{
+			Remote: &pb.Runner_Remote{},
+		},
+	}
+
+	// Reconnect with no token
+	anonClient := server.TestServer(t, impl, server.TestWithToken(""))
+
+	resp, respErr := anonClient.RunnerToken(ctx, &pb.RunnerTokenRequest{
+		Runner: r,
+	})
+	require.Error(respErr)
+	require.Nil(resp)
+}
+
+func TestServiceRunnerToken_noCookieValidToken(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+
+	// Get the runner id
+	id, err := server.Id()
+	require.NoError(err)
+	r := &pb.Runner{
+		Id: id,
+		Kind: &pb.Runner_Remote_{
+			Remote: &pb.Runner_Remote{},
+		},
+	}
+
+	// Reconnect with a runner token
+	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Runner_{
+			Runner: &pb.Token_Runner{
+				Id: "",
+			},
+		},
+	})
+	require.NoError(err)
+	client := server.TestServer(t, impl, server.TestWithToken(tok))
+
+	resp, respErr := client.RunnerToken(ctx, &pb.RunnerTokenRequest{
+		Runner: r,
+	})
+	require.NoError(respErr)
+	require.NotNil(resp)
+	require.Empty(resp.Token)
+}
 
 // Complete happy path runner config stream
 func TestServiceRunnerConfig_happy(t *testing.T) {
@@ -57,12 +432,124 @@ func TestServiceRunnerConfig_happy(t *testing.T) {
 		require.NoError(err)
 		require.NotNil(runner)
 		require.Equal(runner.Id, id)
+		require.Equal(pb.Runner_PREADOPTED, runner.AdoptionState)
 
 		runners, err := client.ListRunners(ctx, &pb.ListRunnersRequest{})
 		require.NoError(err)
 		require.Len(runners.Runners, 1)
 		require.Equal(runners.Runners[0].Id, id)
 	}
+}
+
+// Test runnerconfig with a premade runner token.
+func TestServiceRunnerConfig_preadopt(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Get the runner
+	id, err := server.Id()
+	require.NoError(err)
+
+	// Reconnect with a runner token
+	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Runner_{
+			Runner: &pb.Token_Runner{
+				Id: "",
+			},
+		},
+	})
+	require.NoError(err)
+	client = server.TestServer(t, impl, server.TestWithToken(tok))
+
+	// Open the config stream
+	stream, err := client.RunnerConfig(ctx)
+	require.NoError(err)
+	defer stream.CloseSend()
+
+	// Register
+	require.NoError(stream.Send(&pb.RunnerConfigRequest{
+		Event: &pb.RunnerConfigRequest_Open_{
+			Open: &pb.RunnerConfigRequest_Open{
+				Runner: &pb.Runner{Id: id},
+			},
+		},
+	}))
+
+	// Wait for first message to confirm we're registered
+	resp, err := stream.Recv()
+	require.NoError(err)
+	require.NotNil(resp.Config)
+	require.Empty(resp.Config.ConfigVars)
+
+	// Get and list the runner
+	{
+		runner, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: id})
+		require.NoError(err)
+		require.NotNil(runner)
+		require.Equal(runner.Id, id)
+		require.Equal(pb.Runner_PREADOPTED, runner.AdoptionState)
+
+		runners, err := client.ListRunners(ctx, &pb.ListRunnersRequest{})
+		require.NoError(err)
+		require.Len(runners.Runners, 1)
+		require.Equal(runners.Runners[0].Id, id)
+	}
+}
+
+// Test runnerconfig with a premade runner token with the wrong ID.
+func TestServiceRunnerConfig_preadoptWrongId(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Get the runner
+	id, err := server.Id()
+	require.NoError(err)
+
+	// Reconnect with a runner token
+	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Runner_{
+			Runner: &pb.Token_Runner{
+				Id: "hello",
+			},
+		},
+	})
+	require.NoError(err)
+	client = server.TestServer(t, impl, server.TestWithToken(tok))
+
+	// Open the config stream
+	stream, err := client.RunnerConfig(ctx)
+	require.NoError(err)
+	defer stream.CloseSend()
+
+	// Register
+	require.NoError(stream.Send(&pb.RunnerConfigRequest{
+		Event: &pb.RunnerConfigRequest_Open_{
+			Open: &pb.RunnerConfigRequest_Open{
+				Runner: &pb.Runner{Id: id},
+			},
+		},
+	}))
+
+	// Confirm we're rejected
+	_, err = stream.Recv()
+	require.Error(err)
+	require.Equal(codes.PermissionDenied, status.Code(err))
 }
 
 // ODR with no job is not allowed
