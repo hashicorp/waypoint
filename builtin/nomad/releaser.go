@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
@@ -30,52 +32,91 @@ func (r *Releaser) ReleaseFunc() interface{} {
 	return r.Release
 }
 
+// DestroyFunc implements component.Destroyer
+func (r *Releaser) DestroyFunc() interface{} {
+	return r.Destroy
+}
+
+// StatusFunc implements component.Status
+func (r *Releaser) StatusFunc() interface{} {
+	return r.Status
+}
+
+func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
+	return resource.NewManager(
+		resource.WithLogger(log.Named("resource_manager")),
+		resource.WithValueProvider(r.getNomadClient),
+		resource.WithDeclaredResourcesResp(dcr),
+		resource.WithResource(resource.NewResource(
+			resource.WithName(rmResourceJobName),
+			resource.WithState(&Resource_Job{}),
+			resource.WithCreate(r.resourceJobCreate),
+			resource.WithDestroy(r.resourceJobDestroy),
+			resource.WithStatus(r.resourceJobStatus),
+			resource.WithPlatform("nomad"),
+			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
+		)),
+	)
+}
+
 // getNomadClient provides
 // the client connection used by resources to interact with Nomad.
-func (r *Release) getNomadClient() (*api.Client, error) {
+func (r *Releaser) getNomadClient() (*nomadClient, error) {
 	// Get our client
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return nil, err
 	}
-	return client, nil
+	return &nomadClient{
+	    NomadClient: client,
+	}, nil
 }
 
-// Release promotes the Nomad canary deployment
-func (r *Releaser) Release(
+func (r *Releaser) resourceJobStatus(
 	ctx context.Context,
 	log hclog.Logger,
-	src *component.Source,
-	ui terminal.UI,
+	sg terminal.StepGroup,
+	state *Resource_Job,
+	sr *resource.StatusResponse,
+) error {
+	return nil
+}
+
+// might be a better name than JobCreate for promoting a canary
+func (r *Releaser) resourceJobCreate(
+	ctx context.Context,
+	log hclog.Logger,
 	target *Deployment,
-) (*Release, error) {
-	client, err := api.NewClient(api.DefaultConfig())
-	if err != nil {
-		return nil, err
-	}
+	result *Release,
+	state *Resource_Job,
+	client *nomadClient,
+	sg terminal.StepGroup,
+	st terminal.Status,
+) error {
+    step := sg.Add("Initializing Nomad client...")
+    defer func() { step.Abort() }()
 
-	// Update user in real time
-	st := ui.Status()
-	defer st.Close()
+    step.Update("Nomad client set")
 
-	jobClient := client.Jobs()
-	deploymentClient := client.Deployments()
-	st.Update("Getting job...")
+	jobClient := client.NomadClient.Jobs()
+	deploymentClient := client.NomadClient.Deployments()
+
+	step.Update("Getting job...")
 	jobs, _, err := jobClient.PrefixList(target.Name)
 	if err != nil {
-		return nil, status.Errorf(codes.Aborted, "Unable to fetch Nomad job: %s", err.Error())
+		return status.Errorf(codes.Aborted, "Unable to fetch Nomad job: %s", err.Error())
 	}
 
 	q := &api.QueryOptions{Namespace: jobs[0].JobSummary.Namespace}
-	st.Update("Getting latest deployments for job")
+	step.Update("Getting latest deployments for job")
 	deploy, _, err := jobClient.LatestDeployment(jobs[0].ID, q)
 	if err != nil {
-		return nil, status.Errorf(codes.Aborted, "Unable to fetch latest deployment for Nomad job: %s", err.Error())
+		return status.Errorf(codes.Aborted, "Unable to fetch latest deployment for Nomad job: %s", err.Error())
 	}
 
 	if deploy == nil {
-		st.Update("No active deployment for Nomad job")
-		return &Release{}, nil
+		step.Update("No active deployment for Nomad job")
+		return err
 	}
 
 	//Check if any of the task groups are canary deployments
@@ -87,22 +128,21 @@ func (r *Releaser) Release(
 			canaryDeployment = true
 		}
 	}
+	//return errorf here
 	if !canaryDeployment {
-		return &Release{}, nil
+		return nil
 	}
 
 	// Set write options
 	wq := &api.WriteOptions{Namespace: jobs[0].JobSummary.Namespace}
 
 	var u *api.DeploymentUpdateResponse
-	//TODO: Create some mechanism to loop until the canary allocs are healthy
-	//      Nomad prohibits promotion otherwise
 	//TODO: Add logic to support promotion of specific group(s)
 	u, _, err = deploymentClient.PromoteAll(deploy.ID, wq)
-	st.Update(fmt.Sprintf("Monitoring evaluation %q", u.EvalID))
+	step.Update(fmt.Sprintf("Monitoring evaluation %q", u.EvalID))
 
-	if err := NewMonitor(st, client).Monitor(u.EvalID); err != nil {
-		return nil, err
+	if err := NewMonitor(st, client.NomadClient).Monitor(u.EvalID); err != nil {
+		return err
 	}
 
 	//TODO: If applicable, get Consul service from job. If multiple services, how to determine which service to use
@@ -113,9 +153,106 @@ func (r *Releaser) Release(
 	//      tag_name.service_name.ingress/service.datacenter.consul
 	//      https://www.consul.io/docs/discovery/dns#standard-lookup
 	//      If no Consul service, select IP/Port of a random instance?
-	return &Release{
-		Url: "https://waypointproject.io",
-	}, nil
+	result.Url = "https://waypointproject.io"
+	result.Id = jobs[0].ID
+	result.Name = jobs[0].Name
+	return nil
+}
+
+func (r *Releaser) resourceJobDestroy(
+	client *api.Client,
+	state *Resource_Job,
+	st terminal.Status,
+) error {
+	st.Step("Deleting job: %s", state.Name)
+	//TODO: Would namespace be needed here?
+	_, _, err := client.Jobs().Deregister(state.Name, true, nil)
+	return err
+}
+
+// Release promotes the Nomad canary deployment
+func (r *Releaser) Release(
+	ctx context.Context,
+	log hclog.Logger,
+	src *component.Source,
+	job *component.JobInfo,
+	ui terminal.UI,
+	target *Deployment,
+	dcr *component.DeclaredResourcesResp,
+) (*Release, error) {
+    var result Release
+
+    sg := ui.StepGroup()
+    defer sg.Wait()
+
+    rm := r.resourceManager(log, dcr)
+    if err := rm.CreateAll(
+        ctx, log, sg, ui,
+        target, &result,
+    ); err != nil {
+        return nil, err
+    }
+
+	result.ResourceState = rm.State()
+
+	return &result, nil
+}
+
+func (r *Releaser) Destroy(
+	ctx context.Context,
+	log hclog.Logger,
+	release *Release,
+	ui terminal.UI,
+) error {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	rm := r.resourceManager(log, nil)
+
+    // If we don't have resource state, this state is from an older version
+    // and we need to manually recreate it.
+//     if release.ResourceState == nil {
+//         rm.Resource(rmResourceJobName).SetState(&Resource_Job{
+//             Name: release.ServiceName,
+//         })
+//     } else {
+//         // Load our set state
+//         if err := rm.LoadState(release.ResourceState); err != nil {
+//             return err
+//         }
+//     }
+
+	return rm.DestroyAll(ctx, log, sg, ui)
+}
+
+func (r *Releaser) Status(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) (*sdk.StatusReport, error) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	rm := r.resourceManager(log, nil)
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if release.ResourceState == nil {
+		rm.Resource("service").SetState(&Resource_Service{
+			Name: release.ServiceName,
+		})
+		rm.Resource("ingress").SetState(&Resource_Service{
+			Name: release.ServiceName,
+		})
+	} else {
+		// Load our set state
+		if err := rm.LoadState(release.ResourceState); err != nil {
+			return nil, err
+		}
+	}
+
+	return nil, nil
 }
 
 // ReleaserConfig is the configuration structure for the Releaser.
@@ -128,6 +265,10 @@ type ReleaserConfig struct {
 	//TODO: Support option to scale count?
 	//      This may warrant a different releaser plugin, or a more generic name for this releaser plugin
 	//      Note: Scaling a deployment doesn't require canaries (hence the generic name idea)
+}
+
+type nomadClient struct {
+    NomadClient *api.Client
 }
 
 func (r *Releaser) Documentation() (*docs.Documentation, error) {
