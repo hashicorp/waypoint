@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/server/ptypes"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func init() {
@@ -39,13 +39,13 @@ func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "1",
 		})))
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "2",
 		})))
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "3",
 			Application: &pb.Ref_Application{
 				Application: "B",
@@ -54,7 +54,7 @@ func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 		})))
 
 		// Create some other resources
-		require.NoError(s.DeploymentPut(false, ptypes.TestValidDeployment(t, &pb.Deployment{
+		require.NoError(s.DeploymentPut(false, serverptypes.TestValidDeployment(t, &pb.Deployment{
 			Id: "1",
 		})))
 
@@ -71,7 +71,7 @@ func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Create a new workspace
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "4",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "2",
@@ -100,7 +100,7 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		}
 
 		// Put
-		err := s.WorkspacePut(ptypes.TestWorkspace(t, &pb.Workspace{
+		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "default",
 		}))
 		require.NoError(err)
@@ -120,7 +120,7 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		defer s.Close()
 
 		// Put with a bad name
-		err := s.WorkspacePut(ptypes.TestWorkspace(t, &pb.Workspace{
+		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "no spaces allowed",
 		}))
 		require.Error(err)
@@ -133,7 +133,7 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		defer s.Close()
 
 		// Underscores and hyphens are fine
-		err := s.WorkspacePut(ptypes.TestWorkspace(t, &pb.Workspace{
+		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "special_and-allowed",
 		}))
 		require.NoError(err)
@@ -146,19 +146,19 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		defer s.Close()
 
 		// Put default
-		err := s.WorkspacePut(ptypes.TestWorkspace(t, &pb.Workspace{
+		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "default",
 		}))
 		require.NoError(err)
 
 		// Put dev
-		err = s.WorkspacePut(ptypes.TestWorkspace(t, &pb.Workspace{
+		err = s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "dev",
 		}))
 		require.NoError(err)
 
 		// Put staging
-		err = s.WorkspacePut(ptypes.TestWorkspace(t, &pb.Workspace{
+		err = s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "staging",
 		}))
 		require.NoError(err)
@@ -178,7 +178,7 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		defer s.Close()
 
 		// Put a Workspace with a Project
-		err := s.WorkspacePut(ptypes.TestWorkspace(t, &pb.Workspace{
+		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "staging",
 			Projects: []*pb.Workspace_Project{
 				{
@@ -190,7 +190,7 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		require.NoError(err)
 
 		// Put again, without projects
-		err = s.WorkspacePut(ptypes.TestWorkspace(t, &pb.Workspace{
+		err = s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "staging",
 		}))
 		require.NoError(err)
@@ -224,7 +224,7 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 			defer s.Close()
 
 			// Workspace names cannot start with underscore or hyphens
-			err := s.WorkspacePut(ptypes.TestWorkspace(t, &pb.Workspace{
+			err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
 				Name: invalidName,
 			}))
 			require.Error(err)
@@ -240,13 +240,13 @@ func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "1",
 		})))
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "2",
 		})))
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "3",
 			Application: &pb.Ref_Application{
 				Application: "B",
@@ -271,7 +271,7 @@ func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory
 		}
 
 		// Create a new workspace
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "4",
 			Application: &pb.Ref_Application{
 				Application: "B",
@@ -299,17 +299,17 @@ func TestWorkspaceApp(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "1",
 		})))
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "2",
 			Application: &pb.Ref_Application{
 				Application: "B",
 				Project:     "A",
 			},
 		})))
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "3",
 			Application: &pb.Ref_Application{
 				Application: "B",

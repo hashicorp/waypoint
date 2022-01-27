@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/go-memdb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/server/ptypes"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func init() {
@@ -29,7 +29,7 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "foo"}
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -42,7 +42,7 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Add
-		app, err := s.AppPut(ptypes.TestApplication(t, &pb.Application{
+		app, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 		}))
 		require.NoError(err)
@@ -76,7 +76,7 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 		ref := &pb.Ref_Project{Project: "foo"}
 
 		// Add
-		app, err := s.AppPut(ptypes.TestApplication(t, &pb.Application{
+		app, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 		}))
 		require.NoError(err)
@@ -108,15 +108,15 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "foo"}
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 			Applications: []*pb.Application{
-				ptypes.TestApplication(t, nil),
+				serverptypes.TestApplication(t, nil),
 			},
 		})))
 
 		// Add
-		_, err := s.AppPut(ptypes.TestApplication(t, &pb.Application{
+		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    "next",
 		}))
@@ -139,17 +139,17 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "foo"}
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 			Applications: []*pb.Application{
-				ptypes.TestApplication(t, &pb.Application{
+				serverptypes.TestApplication(t, &pb.Application{
 					Name: "foo",
 				}),
 			},
 		})))
 
 		// Add
-		_, err := s.AppPut(ptypes.TestApplication(t, &pb.Application{
+		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    "foo",
 		}))
@@ -172,7 +172,7 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		name := "abcde"
 		// Set
-		err := s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		err := s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: name,
 		}))
 		require.NoError(err)
@@ -183,7 +183,7 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 		})
 		require.NoError(err)
 
-		err = s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		err = s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name:             name,
 			FileChangeSignal: "HUP",
 		}))
@@ -234,14 +234,14 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 
 		// Set
 		ref := &pb.Ref_Project{Project: "apple"}
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 			StatusReportPoll: &pb.Project_AppStatusPoll{
 				Enabled:  true,
 				Interval: "10s",
 			},
 		})))
-		_, err := s.AppPut(ptypes.TestApplication(t, &pb.Application{
+		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
 		}))
@@ -250,7 +250,7 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 		// Set another later
 		time.Sleep(10 * time.Millisecond)
 		refOrg := &pb.Ref_Project{Project: "orange"}
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: refOrg.Project,
 			StatusReportPoll: &pb.Project_AppStatusPoll{
 				Enabled:  true,
@@ -288,14 +288,14 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 
 		// Set
 		ref := &pb.Ref_Project{Project: "apple"}
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 			StatusReportPoll: &pb.Project_AppStatusPoll{
 				Enabled:  true,
 				Interval: "30s",
 			},
 		})))
-		_, err = s.AppPut(ptypes.TestApplication(t, &pb.Application{
+		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
 		}))
@@ -322,14 +322,14 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 
 		// Set
 		ref := &pb.Ref_Project{Project: "apple"}
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 			StatusReportPoll: &pb.Project_AppStatusPoll{
 				Enabled:  true,
 				Interval: "5s",
 			},
 		})))
-		_, err := s.AppPut(ptypes.TestApplication(t, &pb.Application{
+		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
 		}))
@@ -337,14 +337,14 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 
 		// Set another later
 		refOrg := &pb.Ref_Project{Project: "orange"}
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: refOrg.Project,
 			StatusReportPoll: &pb.Project_AppStatusPoll{
 				Enabled:  true,
 				Interval: "5m", // 5 MINUTES, longer than A
 			},
 		})))
-		_, err = s.AppPut(ptypes.TestApplication(t, &pb.Application{
+		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: refOrg,
 			Name:    refOrg.Project,
 		}))
@@ -410,13 +410,13 @@ func TestApplicationPollComplete(t *testing.T, factory Factory, restartF Restart
 
 		// Set
 		ref := &pb.Ref_Project{Project: "apple"}
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 			StatusReportPoll: &pb.Project_AppStatusPoll{
 				Enabled: false,
 			},
 		})))
-		_, err := s.AppPut(ptypes.TestApplication(t, &pb.Application{
+		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
 		}))
@@ -444,14 +444,14 @@ func TestApplicationPollComplete(t *testing.T, factory Factory, restartF Restart
 
 		// Set
 		ref := &pb.Ref_Project{Project: "apple"}
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 			StatusReportPoll: &pb.Project_AppStatusPoll{
 				Enabled:  true,
 				Interval: "5s",
 			},
 		})))
-		_, err := s.AppPut(ptypes.TestApplication(t, &pb.Application{
+		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
 		}))
@@ -459,14 +459,14 @@ func TestApplicationPollComplete(t *testing.T, factory Factory, restartF Restart
 
 		// Set another later
 		refOrg := &pb.Ref_Project{Project: "orange"}
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: refOrg.Project,
 			StatusReportPoll: &pb.Project_AppStatusPoll{
 				Enabled:  true,
 				Interval: "5m", // 5 MINUTES, longer than A
 			},
 		})))
-		_, err = s.AppPut(ptypes.TestApplication(t, &pb.Application{
+		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: refOrg,
 			Name:    refOrg.Project,
 		}))

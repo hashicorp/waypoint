@@ -14,18 +14,17 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"
+
+	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/server/execclient"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
-
-	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"
-
-	"github.com/hashicorp/waypoint/internal/config"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func TestAppExec_happy(t *testing.T) {

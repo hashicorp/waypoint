@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/server/ptypes"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func TestServiceStatusReport(t *testing.T) {
@@ -28,7 +28,7 @@ func TestServiceStatusReport(t *testing.T) {
 
 		// Create, should get an ID back
 		resp, err := client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
-			StatusReport: ptypes.TestValidStatusReport(t, nil),
+			StatusReport: serverptypes.TestValidStatusReport(t, nil),
 		})
 		require.NoError(err)
 		require.NotNil(resp)
@@ -52,7 +52,7 @@ func TestServiceStatusReport(t *testing.T) {
 
 		// Create, should get an ID back
 		resp, err := client.UpsertStatusReport(ctx, &Req{
-			StatusReport: ptypes.TestValidStatusReport(t, &pb.StatusReport{
+			StatusReport: serverptypes.TestValidStatusReport(t, &pb.StatusReport{
 				Id: "nope",
 			}),
 		})
@@ -74,7 +74,7 @@ func TestServiceStatusReport_GetStatusReport(t *testing.T) {
 	client := server.TestServer(t, impl)
 
 	statusReportResp, err := client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
-		StatusReport: ptypes.TestValidStatusReport(t, nil),
+		StatusReport: serverptypes.TestValidStatusReport(t, nil),
 	})
 	require.NoError(t, err)
 
@@ -122,7 +122,7 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 
 	// Create a project with an application
 	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
-		Project: ptypes.TestProject(t, &pb.Project{
+		Project: serverptypes.TestProject(t, &pb.Project{
 			Name: "Example",
 			DataSource: &pb.Job_DataSource{
 				Source: &pb.Job_DataSource_Local{
@@ -141,7 +141,7 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 	require.NotNil(t, respProj)
 
 	deployResp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
-		Deployment: ptypes.TestValidDeployment(t, &pb.Deployment{
+		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
 			Component: &pb.Component{
 				Name: "testapp",
 			},
@@ -155,7 +155,7 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 	require.NotNil(t, deployResp)
 
 	resp, err := client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
-		StatusReport: ptypes.TestValidStatusReport(t, &pb.StatusReport{
+		StatusReport: serverptypes.TestValidStatusReport(t, &pb.StatusReport{
 			TargetId: &pb.StatusReport_DeploymentId{
 				DeploymentId: deployResp.Deployment.Id,
 			},
@@ -164,14 +164,14 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 	require.NoError(t, err)
 
 	releaseResp, err := client.UpsertRelease(ctx, &pb.UpsertReleaseRequest{
-		Release: ptypes.TestValidRelease(t, &pb.Release{
+		Release: serverptypes.TestValidRelease(t, &pb.Release{
 			DeploymentId: deployResp.Deployment.Id,
 		}),
 	})
 	require.NoError(t, err)
 
 	releaseStatusResp, err := client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
-		StatusReport: ptypes.TestValidStatusReport(t, &pb.StatusReport{
+		StatusReport: serverptypes.TestValidStatusReport(t, &pb.StatusReport{
 			TargetId: &pb.StatusReport_ReleaseId{
 				ReleaseId: releaseResp.Release.Id,
 			},
@@ -257,7 +257,7 @@ func TestServiceStatusReport_ExpediteStatusReport(t *testing.T) {
 
 	// Create a project with an application
 	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
-		Project: ptypes.TestProject(t, &pb.Project{
+		Project: serverptypes.TestProject(t, &pb.Project{
 			Name: "Example",
 			DataSource: &pb.Job_DataSource{
 				Source: &pb.Job_DataSource_Local{
@@ -276,7 +276,7 @@ func TestServiceStatusReport_ExpediteStatusReport(t *testing.T) {
 	require.NotNil(t, respProj)
 
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
-		Deployment: ptypes.TestValidDeployment(t, &pb.Deployment{
+		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
 			Component: &pb.Component{
 				Name: "testapp",
 			},

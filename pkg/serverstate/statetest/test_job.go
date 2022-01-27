@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	ptypes2 "github.com/hashicorp/waypoint/pkg/server/ptypes"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func init() {
@@ -39,7 +39,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a job
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:          "A",
 			SingletonId: "1",
 		})))
@@ -57,10 +57,10 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a job
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:          "A",
 			SingletonId: "1",
-		}), ptypes2.TestJobNew(t, &pb.Job{
+		}), serverptypes.TestJobNew(t, &pb.Job{
 			Id:          "B",
 			SingletonId: "2",
 		})))
@@ -78,13 +78,13 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a job
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:          "A",
 			SingletonId: "1",
 		})))
 
 		// Create a different job
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:          "B",
 			SingletonId: "1",
 		})))
@@ -128,7 +128,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a job
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:          "A",
 			SingletonId: "1",
 		})))
@@ -145,7 +145,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		}
 
 		// Create a different job
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:          "B",
 			SingletonId: "1",
 		})))
@@ -188,7 +188,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a job
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:          "A",
 			SingletonId: "1",
 		})))
@@ -203,7 +203,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		}
 
 		// Create a different job
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:          "B",
 			SingletonId: "1",
 		})))
@@ -245,13 +245,13 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create jobs
-		err := s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		err := s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "A",
 			DependsOn: []string{"C"},
-		}), ptypes2.TestJobNew(t, &pb.Job{
+		}), serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "B",
 			DependsOn: []string{"A"},
-		}), ptypes2.TestJobNew(t, &pb.Job{
+		}), serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "C",
 			DependsOn: []string{"B"},
 		}))
@@ -266,13 +266,13 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create jobs
-		err := s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		err := s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "A",
 			DependsOn: []string{"C"},
-		}), ptypes2.TestJobNew(t, &pb.Job{
+		}), serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "B",
 			DependsOn: []string{"A"},
-		}), ptypes2.TestJobNew(t, &pb.Job{
+		}), serverptypes.TestJobNew(t, &pb.Job{
 			Id: "C",
 		}))
 		require.NoError(err)
@@ -287,7 +287,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -327,7 +327,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "w1",
@@ -363,7 +363,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 			}
 
 			// Insert another job
-			require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+			require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 				Id: "B",
 				Workspace: &pb.Ref_Workspace{
 					Workspace: "w2",
@@ -391,7 +391,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create two builds for the same app/workspace
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "w1",
@@ -400,7 +400,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 				Deploy: &pb.Job_DeployOp{},
 			},
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "B",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "w1",
@@ -447,7 +447,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 			}
 
 			// Insert another job for a different workspace
-			require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+			require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 				Id: "C",
 				Workspace: &pb.Ref_Workspace{
 					Workspace: "w2",
@@ -478,7 +478,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create two builds for the same app/workspace
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "w1",
@@ -487,7 +487,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 				Deploy: &pb.Job_DeployOp{},
 			},
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "B",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "w1",
@@ -550,11 +550,11 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create two builds slightly apart
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 		time.Sleep(1 * time.Millisecond)
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "B",
 		})))
 
@@ -586,7 +586,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build by ID
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 			TargetRunner: &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Id{
@@ -597,11 +597,11 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 			},
 		})))
 		time.Sleep(1 * time.Millisecond)
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "B",
 		})))
 		time.Sleep(1 * time.Millisecond)
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "C",
 		})))
 
@@ -636,7 +636,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build by ID
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 			TargetRunner: &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Id{
@@ -678,7 +678,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		r := &pb.Runner{Id: "R_A", ByIdOnly: true}
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -691,7 +691,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		require.Equal(ctx.Err(), err)
 
 		// Create a target
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "B",
 			TargetRunner: &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Id{
@@ -716,10 +716,10 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a job
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "B",
 			DependsOn: []string{"A"},
 		})))
@@ -773,13 +773,13 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a job
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "B",
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "C",
 			DependsOn: []string{"A", "B"},
 		})))
@@ -850,10 +850,10 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "B",
 			DependsOn: []string{"A"},
 		})))
@@ -983,7 +983,7 @@ func TestJobAck(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -1013,7 +1013,7 @@ func TestJobAck(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -1048,7 +1048,7 @@ func TestJobAck(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -1080,7 +1080,7 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -1115,7 +1115,7 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -1150,10 +1150,10 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create jobs
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "B",
 			DependsOn: []string{"A"},
 		})))
@@ -1203,14 +1203,14 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create jobs
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "B",
 			DependsOn: []string{"A"},
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "C",
 			DependsOn: []string{"B"},
 		})))
@@ -1266,10 +1266,10 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create jobs
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:                    "B",
 			DependsOn:             []string{"A"},
 			DependsOnAllowFailure: []string{"A"},
@@ -1312,14 +1312,14 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create jobs
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "B",
 			DependsOn: []string{"A"},
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:                    "C",
 			DependsOn:             []string{"A", "B"},
 			DependsOnAllowFailure: []string{"B"},
@@ -1360,7 +1360,7 @@ func TestJobIsAssignable(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		result, err := s.JobIsAssignable(ctx, ptypes2.TestJobNew(t, &pb.Job{
+		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		}))
 		require.NoError(err)
@@ -1375,10 +1375,10 @@ func TestJobIsAssignable(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Register a runner
-		require.NoError(s.RunnerCreate(ptypes2.TestRunner(t, nil)))
+		require.NoError(s.RunnerCreate(serverptypes.TestRunner(t, nil)))
 
 		// Should be assignable
-		result, err := s.JobIsAssignable(ctx, ptypes2.TestJobNew(t, &pb.Job{
+		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 			TargetRunner: &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Any{
@@ -1398,12 +1398,12 @@ func TestJobIsAssignable(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Register a runner
-		require.NoError(s.RunnerCreate(ptypes2.TestRunner(t, &pb.Runner{
+		require.NoError(s.RunnerCreate(serverptypes.TestRunner(t, &pb.Runner{
 			ByIdOnly: true,
 		})))
 
 		// Should be assignable
-		result, err := s.JobIsAssignable(ctx, ptypes2.TestJobNew(t, &pb.Job{
+		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 			TargetRunner: &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Any{
@@ -1423,10 +1423,10 @@ func TestJobIsAssignable(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Register a runner
-		require.NoError(s.RunnerCreate(ptypes2.TestRunner(t, nil)))
+		require.NoError(s.RunnerCreate(serverptypes.TestRunner(t, nil)))
 
 		// Should be assignable
-		result, err := s.JobIsAssignable(ctx, ptypes2.TestJobNew(t, &pb.Job{
+		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 			TargetRunner: &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Id{
@@ -1448,11 +1448,11 @@ func TestJobIsAssignable(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Register a runner
-		runner := ptypes2.TestRunner(t, nil)
+		runner := serverptypes.TestRunner(t, nil)
 		require.NoError(s.RunnerCreate(runner))
 
 		// Should be assignable
-		result, err := s.JobIsAssignable(ctx, ptypes2.TestJobNew(t, &pb.Job{
+		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 			TargetRunner: &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Id{
@@ -1475,7 +1475,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -1497,10 +1497,10 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "B",
 			DependsOn: []string{"A"},
 		})))
@@ -1530,7 +1530,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -1558,7 +1558,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -1586,7 +1586,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "A",
 			Operation: &pb.Job_Deploy{},
 		})))
@@ -1608,7 +1608,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		require.NotEmpty(job.CancelTime)
 
 		// Create a another job
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "B",
 			Operation: &pb.Job_Deploy{},
 		})))
@@ -1631,10 +1631,10 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "B",
 			DependsOn: []string{"A"},
 		})))
@@ -1672,7 +1672,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -1714,7 +1714,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		serverstate.JobHeartbeatTimeout = 5 * time.Millisecond
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -1750,7 +1750,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -1813,7 +1813,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -1884,7 +1884,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 
@@ -1950,7 +1950,7 @@ func TestJobUpdateRef(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.JobCreate(ptypes2.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
 		})))
 

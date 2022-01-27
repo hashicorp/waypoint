@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/server/ptypes"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func init() {
@@ -47,7 +47,7 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 		name := "AbCdE"
 
 		// Set
-		err := s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		err := s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: name,
 		}))
 		require.NoError(err)
@@ -73,7 +73,7 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 		// Create another one so we're sure that List can see more than one.
 
 		// Set
-		err = s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		err = s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: name + "2",
 		}))
 		require.NoError(err)
@@ -96,15 +96,15 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		proj := ptypes.TestProject(t, &pb.Project{Name: name})
+		proj := serverptypes.TestProject(t, &pb.Project{Name: name})
 		err := s.ProjectPut(proj)
 		require.NoError(err)
-		_, err = s.AppPut(ptypes.TestApplication(t, &pb.Application{
+		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Name:    "test",
 			Project: ref,
 		}))
 		require.NoError(err)
-		_, err = s.AppPut(ptypes.TestApplication(t, &pb.Application{
+		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Name:    "test2",
 			Project: ref,
 		}))
@@ -144,7 +144,7 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		err := s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		err := s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: "AbCdE",
 		}))
 		require.NoError(err)
@@ -201,7 +201,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 		defer s.Close()
 
 		// Set
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: "A",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -211,7 +211,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 
 		// Set another later
 		time.Sleep(10 * time.Millisecond)
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: "B",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -244,7 +244,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 		require.True(ws.Watch(time.After(10 * time.Millisecond)))
 
 		// Set
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: "A",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -272,7 +272,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 		defer s.Close()
 
 		// Set
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: "A",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -281,7 +281,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 		})))
 
 		// Set another later
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: "B",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -347,7 +347,7 @@ func TestProjectPollComplete(t *testing.T, factory Factory, restartF RestartFact
 		defer s.Close()
 
 		// Set
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: "A",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled: false,
@@ -377,7 +377,7 @@ func TestProjectPollComplete(t *testing.T, factory Factory, restartF RestartFact
 		defer s.Close()
 
 		// Set
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: "A",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -386,7 +386,7 @@ func TestProjectPollComplete(t *testing.T, factory Factory, restartF RestartFact
 		})))
 
 		// Set another later
-		require.NoError(s.ProjectPut(ptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: "B",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -460,19 +460,19 @@ func TestProjectListWorkspaces(t *testing.T, factory Factory, restartF RestartFa
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "1",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "A",
 			},
 		})))
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "2",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "B",
 			},
 		})))
-		require.NoError(s.BuildPut(false, ptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "3",
 			Application: &pb.Ref_Application{
 				Application: "B",
@@ -481,7 +481,7 @@ func TestProjectListWorkspaces(t *testing.T, factory Factory, restartF RestartFa
 		})))
 
 		// Create some other resources
-		require.NoError(s.DeploymentPut(false, ptypes.TestValidDeployment(t, &pb.Deployment{
+		require.NoError(s.DeploymentPut(false, serverptypes.TestValidDeployment(t, &pb.Deployment{
 			Id: "1",
 		})))
 
