@@ -48,6 +48,11 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 			require.NoError(err)
 		}()
 
+		go func() {
+			<-ctx.Done()
+			server.GracefulStop()
+		}()
+
 		t.Cleanup(func() {
 			cancel()
 			server.GracefulStop()
