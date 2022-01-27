@@ -1,0 +1,3 @@
+```release-note:improvement
+core: runners can have labels, which are used for targeting and metadata
+```
