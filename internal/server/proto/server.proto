@@ -2224,6 +2224,11 @@ message Runner {
   // is used to match jobs to this runner.
   repeated Component components = 3;
 
+  // Labels for the runner. These are the same as labels for any other
+  // system in Waypoint (see operations such as Deployment). For runners, they
+  // can additionally be used as a targeting mechanism.
+  map<string, string> labels = 12;
+
   //----------------------------------------------------------------------
   // Server set fields. The fields below are set by the server and are
   // ignored as part of RunnerConfig.

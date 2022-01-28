@@ -188,6 +188,7 @@ func New(opts ...Option) (*Runner, error) {
 	runner.runner = &pb.Runner{
 		Id:       runner.id,
 		ByIdOnly: cfg.byIdOnly,
+		Labels:   cfg.labels,
 	}
 
 	// Determine what kind of remote runner we are
@@ -390,6 +391,7 @@ type config struct {
 	odr          bool
 	odrProfileId string
 	token        string
+	labels       map[string]string
 }
 
 type Option func(*Runner, *config) error
@@ -504,6 +506,14 @@ func WithStateDir(v string) Option {
 func WithAcceptTimeout(dur time.Duration) Option {
 	return func(r *Runner, cfg *config) error {
 		r.acceptTimeout = dur
+		return nil
+	}
+}
+
+// WithLabels sets the labels for this runner.
+func WithLabels(v map[string]string) Option {
+	return func(r *Runner, cfg *config) error {
+		cfg.labels = v
 		return nil
 	}
 }
