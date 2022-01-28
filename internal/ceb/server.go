@@ -13,8 +13,8 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/internal/protocolversion"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/pkg/protocolversion"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // client returns the Waypoint client or blocks until it is set or the

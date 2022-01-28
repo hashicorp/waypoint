@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/internal/server"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func TestListInstances(t *testing.T) {

@@ -1,4 +1,4 @@
-ASSETFS_PATH?=internal/server/gen/bindata_ui.go
+ASSETFS_PATH?=pkg/server/gen/bindata_ui.go
 
 GIT_COMMIT=$$(git rev-parse --short HEAD)
 GIT_DIRTY=$$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
@@ -93,7 +93,7 @@ gen/plugins:
 .PHONY: gen/server
 gen/server:
 	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
-	go generate ./internal/server
+	go generate ./pkg/server
 
 .PHONY: gen/ts
 gen/ts:

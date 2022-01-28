@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 var (

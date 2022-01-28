@@ -14,8 +14,8 @@ import (
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wspb"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/gen/mocks"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/gen/mocks"
 )
 
 func TestHandleExec(t *testing.T) {

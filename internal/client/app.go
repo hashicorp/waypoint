@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // App is used for application-specific operations.

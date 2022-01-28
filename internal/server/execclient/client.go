@@ -18,7 +18,7 @@ import (
 	sshterm "golang.org/x/crypto/ssh/terminal"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type Client struct {

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"
 	"github.com/hashicorp/waypoint/internal/config"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func TestAppCanDestroyDeploy(t *testing.T) {

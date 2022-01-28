@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/internal/server"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func TestServiceHostname(t *testing.T) {

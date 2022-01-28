@@ -1,8 +1,8 @@
 package state
 
 import (
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/serverstate"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
 var artifactOp = &appOperation{

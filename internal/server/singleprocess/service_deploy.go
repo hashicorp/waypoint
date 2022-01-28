@@ -10,11 +10,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/internal/server"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/ptypes"
-	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
-	"github.com/hashicorp/waypoint/internal/serverstate"
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
 func (s *service) UpsertDeployment(
@@ -122,7 +121,7 @@ func (s *service) GetDeployment(
 	ctx context.Context,
 	req *pb.GetDeploymentRequest,
 ) (*pb.Deployment, error) {
-	if err := ptypes.ValidateGetDeploymentRequest(req); err != nil {
+	if err := serverptypes.ValidateGetDeploymentRequest(req); err != nil {
 		return nil, err
 	}
 
@@ -169,7 +168,7 @@ func (s *service) deploymentPreloadUrl(
 		d.Preload.DeployUrl = fmt.Sprintf(
 			"%s--%s%s",
 			hostname.Hostname,
-			(&ptypes.Deployment{Deployment: d}).URLFragment(),
+			(&serverptypes.Deployment{Deployment: d}).URLFragment(),
 			strings.TrimPrefix(hostname.Fqdn, hostname.Hostname),
 		)
 	}

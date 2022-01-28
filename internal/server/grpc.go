@@ -10,7 +10,8 @@ import (
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type grpcServer struct {
@@ -36,14 +37,14 @@ func newGrpcServer(opts *options) (*grpcServer, error) {
 			logUnaryInterceptor(log, false),
 
 			// Protocol version negotiation
-			versionUnaryInterceptor(resp.Info),
+			server.VersionUnaryInterceptor(resp.Info),
 		),
 		grpc.ChainStreamInterceptor(
 			// Insert our logger and log
 			logStreamInterceptor(log, false),
 
 			// Protocol version negotiation
-			versionStreamInterceptor(resp.Info),
+			server.VersionStreamInterceptor(resp.Info),
 		),
 		grpc.KeepaliveEnforcementPolicy(
 			keepalive.EnforcementPolicy{
@@ -58,8 +59,8 @@ func newGrpcServer(opts *options) (*grpcServer, error) {
 
 	if opts.AuthChecker != nil {
 		so = append(so,
-			grpc.ChainUnaryInterceptor(authUnaryInterceptor(opts.AuthChecker)),
-			grpc.ChainStreamInterceptor(authStreamInterceptor(opts.AuthChecker)),
+			grpc.ChainUnaryInterceptor(server.AuthUnaryInterceptor(opts.AuthChecker)),
+			grpc.ChainStreamInterceptor(server.AuthStreamInterceptor(opts.AuthChecker)),
 		)
 	}
 

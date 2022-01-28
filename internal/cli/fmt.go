@@ -9,9 +9,11 @@ import (
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	"github.com/hashicorp/waypoint/internal/clierrors"
-	configpkg "github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	configpkg "github.com/hashicorp/waypoint/pkg/config"
 )
 
 type FmtCommand struct {
@@ -39,7 +41,7 @@ func (c *FmtCommand) Run(args []string) int {
 
 	// If we have no args, default to the filename
 	if len(c.args) == 0 {
-		c.args = []string{configpkg.Filename}
+		c.args = []string{config.Filename}
 	}
 
 	// Read the input

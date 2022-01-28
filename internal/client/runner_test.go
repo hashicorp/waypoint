@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/require"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func Test_remoteOpPreferred(t *testing.T) {

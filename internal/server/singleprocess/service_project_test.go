@@ -5,10 +5,11 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/hashicorp/waypoint/internal/server"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/stretchr/testify/require"
+
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func TestServiceProject(t *testing.T) {
