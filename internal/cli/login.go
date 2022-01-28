@@ -15,7 +15,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"

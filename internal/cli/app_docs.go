@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/plugin"
-	funcs2 "github.com/hashicorp/waypoint/pkg/config/funcs"
+	"github.com/hashicorp/waypoint/pkg/config/funcs"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -608,11 +608,11 @@ func (c *AppDocsCommand) builtinMDX() int {
 func (c *AppDocsCommand) funcsMDX() int {
 	var ectx hcl.EvalContext
 
-	funcs2.AddStandardFunctions(&ectx, ".")
+	funcs.AddStandardFunctions(&ectx, ".")
 
 	all := ectx.Functions
 
-	docs := funcs2.Docs()
+	docs := funcs.Docs()
 
 	var keys []string
 

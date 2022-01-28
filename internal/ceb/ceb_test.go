@@ -17,7 +17,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
-
 	"github.com/hashicorp/waypoint/internal/plugin"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 	"github.com/hashicorp/waypoint/pkg/server"

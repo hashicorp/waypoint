@@ -4,13 +4,12 @@ import (
 	"context"
 	"testing"
 
+	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
-
 	"github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"

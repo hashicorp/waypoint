@@ -23,7 +23,6 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	sdkpb "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
-
 	"github.com/hashicorp/waypoint/internal/pkg/condctx"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	"github.com/hashicorp/waypoint/pkg/config/funcs"

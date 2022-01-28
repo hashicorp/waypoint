@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
 	"github.com/hashicorp/waypoint/internal/clierrors"
-	configpkg "github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"github.com/hashicorp/waypoint/pkg/config"
+	configpkg "github.com/hashicorp/waypoint/pkg/config"
 )
 
 type FmtCommand struct {
@@ -41,7 +41,7 @@ func (c *FmtCommand) Run(args []string) int {
 
 	// If we have no args, default to the filename
 	if len(c.args) == 0 {
-		c.args = []string{configpkg.Filename}
+		c.args = []string{config.Filename}
 	}
 
 	// Read the input
@@ -61,7 +61,7 @@ func (c *FmtCommand) Run(args []string) int {
 		name = filepath.Base(c.args[0])
 		stdin = false
 	}
-	out, err := config.Format(src, name)
+	out, err := configpkg.Format(src, name)
 	if err != nil {
 		c.ui.Output(
 			"Error formatting: %s", clierrors.Humanize(err),

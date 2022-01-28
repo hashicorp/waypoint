@@ -8,13 +8,12 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
-	"github.com/stretchr/testify/require"
-
 	"github.com/hashicorp/go-memdb"
-	"github.com/hashicorp/waypoint/pkg/serverstate"
+	"github.com/stretchr/testify/require"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
 func TestAppOperation(t *testing.T) {
