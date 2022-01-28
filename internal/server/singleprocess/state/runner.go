@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -223,6 +224,26 @@ func (s *State) runnerCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, runnerpb *pb.Run
 	if runnerOld != nil {
 		runnerpb.FirstSeen = runnerOld.FirstSeen
 		runnerpb.AdoptionState = runnerOld.AdoptionState
+
+		// If we have non-matching labels, then we reset the adoption state to
+		// new. This prevents a runner from being adopted for one environment
+		// such as dev and then reregistering with labels for prod and retaining
+		// the adoption status.
+		hash1, err := serverptypes.RunnerLabelHash(runnerpb.Labels)
+		if err != nil {
+			return err
+		}
+		hash2, err := serverptypes.RunnerLabelHash(runnerOld.Labels)
+		if err != nil {
+			return err
+		}
+
+		// NOTE(mitchellh): in the future, we may want to have a setting that
+		// allows a runner to change their labels without affecting adoption.
+		// For now, we do not support this.
+		if hash1 != hash2 {
+			runnerpb.AdoptionState = pb.Runner_NEW
+		}
 	}
 
 	// If the runner has no first seen set, then set that.

@@ -126,6 +126,21 @@ func (s *service) RunnerToken(
 				break
 			}
 
+			// If the token has a label hash, then we need to validate it.
+			// If the label hash does not match what we know about the runner,
+			// we need to trigger adoption.
+			if expected := k.Runner.LabelHash; expected > 0 {
+				actual, err := serverptypes.RunnerLabelHash(record.Labels)
+				if err != nil {
+					return nil, err
+				}
+
+				if expected != actual {
+					log.Info("runner token has invalid label hash, restarting adoption")
+					break
+				}
+			}
+
 			// Seemingly valid runner token. If our logic is wrong its okay
 			// because RunnerConfig will reject them.
 			log.Debug("valid runner token provided, adoption will be skipped")

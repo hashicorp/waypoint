@@ -17,6 +17,7 @@ func init() {
 		TestRunner_crud,
 		TestRunnerOffline_new,
 		TestRunnerAdopt,
+		TestRunnerAdopt_changeLabels,
 		TestRunnerById_notFound,
 	}
 }
@@ -167,6 +168,115 @@ func TestRunnerAdopt(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NoError(err)
 		require.Equal(pb.Runner_NEW, found.AdoptionState)
 	}
+}
+
+func TestRunnerAdopt_changeLabels(t *testing.T, factory Factory, restartF RestartFactory) {
+	require := require.New(t)
+
+	t.Run("zero to N labels", func(t *testing.T) {
+		s := factory(t)
+		defer s.Close()
+
+		// Create an instance
+		rec := &pb.Runner{
+			Id: "A",
+			Kind: &pb.Runner_Remote_{
+				Remote: &pb.Runner_Remote{},
+			},
+		}
+		require.NoError(s.RunnerCreate(rec))
+		require.NoError(s.RunnerAdopt(rec.Id, false))
+
+		// Should be adopted
+		{
+			found, err := s.RunnerById(rec.Id, nil)
+			require.NoError(err)
+			require.Equal(pb.Runner_ADOPTED, found.AdoptionState)
+		}
+
+		// Offline that instance, then bring it back but with labels.
+		require.NoError(s.RunnerOffline(rec.Id))
+
+		// Change labels
+		rec.Labels = map[string]string{"A": "B"}
+		require.NoError(s.RunnerCreate(rec))
+
+		// Should no longer be adopted
+		{
+			found, err := s.RunnerById(rec.Id, nil)
+			require.NoError(err)
+			require.Equal(pb.Runner_NEW, found.AdoptionState)
+		}
+	})
+
+	t.Run("N to N (matching) labels", func(t *testing.T) {
+		s := factory(t)
+		defer s.Close()
+
+		// Create an instance
+		rec := &pb.Runner{
+			Id:     "A",
+			Labels: map[string]string{"A": "B"},
+			Kind: &pb.Runner_Remote_{
+				Remote: &pb.Runner_Remote{},
+			},
+		}
+		require.NoError(s.RunnerCreate(rec))
+		require.NoError(s.RunnerAdopt(rec.Id, false))
+
+		// Should be adopted
+		{
+			found, err := s.RunnerById(rec.Id, nil)
+			require.NoError(err)
+			require.Equal(pb.Runner_ADOPTED, found.AdoptionState)
+		}
+
+		// Offline that instance, then bring it back but with labels.
+		require.NoError(s.RunnerOffline(rec.Id))
+		require.NoError(s.RunnerCreate(rec))
+
+		// Should no longer be adopted
+		{
+			found, err := s.RunnerById(rec.Id, nil)
+			require.NoError(err)
+			require.Equal(pb.Runner_ADOPTED, found.AdoptionState)
+		}
+	})
+
+	t.Run("N to 0 labels", func(t *testing.T) {
+		s := factory(t)
+		defer s.Close()
+
+		// Create an instance
+		rec := &pb.Runner{
+			Id:     "A",
+			Labels: map[string]string{"A": "B"},
+			Kind: &pb.Runner_Remote_{
+				Remote: &pb.Runner_Remote{},
+			},
+		}
+		require.NoError(s.RunnerCreate(rec))
+		require.NoError(s.RunnerAdopt(rec.Id, false))
+
+		// Should be adopted
+		{
+			found, err := s.RunnerById(rec.Id, nil)
+			require.NoError(err)
+			require.Equal(pb.Runner_ADOPTED, found.AdoptionState)
+		}
+
+		// Offline that instance, then bring it back but with labels.
+		require.NoError(s.RunnerOffline(rec.Id))
+		rec.Labels = nil
+		require.NoError(s.RunnerCreate(rec))
+
+		// Should no longer be adopted
+		{
+			found, err := s.RunnerById(rec.Id, nil)
+			require.NoError(err)
+			require.Equal(pb.Runner_NEW, found.AdoptionState)
+		}
+	})
 }
 
 func TestRunnerById_notFound(t *testing.T, factory Factory, restartF RestartFactory) {
