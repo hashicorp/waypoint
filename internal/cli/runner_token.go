@@ -18,6 +18,7 @@ type RunnerTokenCommand struct {
 
 	flagDuration time.Duration
 	flagId       string
+	flagLabels   map[string]string
 }
 
 func (c *RunnerTokenCommand) Run(args []string) int {
@@ -36,6 +37,7 @@ func (c *RunnerTokenCommand) Run(args []string) int {
 	resp, err := client.GenerateRunnerToken(c.Ctx, &pb.GenerateRunnerTokenRequest{
 		Duration: c.flagDuration.String(),
 		Id:       c.flagId,
+		Labels:   c.flagLabels,
 	})
 	if err != nil {
 		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -62,6 +64,15 @@ func (c *RunnerTokenCommand) Flags() *flag.Sets {
 			Name:   "id",
 			Target: &c.flagId,
 			Usage:  "Id to restrict this token to. If empty, all runner IDs are valid.",
+		})
+
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "label",
+			Target: &c.flagLabels,
+			Usage: "Labels that must match the runner for this token to be valid. " +
+				"These are set in 'k=v' format and this flag can be repeated to " +
+				"set multiple labels. If no labels are set, runners with any labels " +
+				"are valid.",
 		})
 	})
 }
