@@ -3,9 +3,11 @@ package nomad
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
@@ -77,8 +79,46 @@ func (r *Releaser) resourceJobStatus(
 	log hclog.Logger,
 	sg terminal.StepGroup,
 	state *Resource_Job,
+	client *nomadClient,
 	sr *resource.StatusResponse,
 ) error {
+	s := sg.Add("Checking status of Nomad Job %q...", state.Name)
+	defer s.Abort()
+
+	jobClient := client.NomadClient.Jobs()
+	s.Update("Getting job...")
+    jobs, _, err := jobClient.PrefixList(state.Name)
+    q := &api.QueryOptions{Namespace: jobs[0].JobSummary.Namespace}
+
+    jobResource := sdk.StatusReport_Resource{
+        CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
+    }
+    sr.Resources = append(sr.Resources, &jobResource)
+
+    job, _, err := jobClient.Info(jobs[0].ID, q)
+
+    if jobs == nil {
+        return status.Errorf(codes.FailedPrecondition, "Nomad job response cannot be empty")
+    } else if err != nil {
+        s.Update("No job was found")
+        s.Status(terminal.StatusError)
+        s.Done()
+        s = sg.Add("")
+
+        jobResource.Name = state.Name
+        jobResource.Health = sdk.StatusReport_MISSING
+        jobResource.HealthMessage = sdk.StatusReport_MISSING.String()
+    } else {
+        jobResource.Id = *job.ID
+        jobResource.Name = *job.Name
+        jobResource.CreatedTime = timestamppb.New(time.Unix(0, *job.SubmitTime))
+        jobResource.Health = sdk.StatusReport_READY
+        jobResource.HealthMessage = fmt.Sprintf("Job %q exists and is ready", job.Name)
+        //jobResource.StateJson =
+    }
+
+    s.Update("Finished building report for Nomad job")
+    s.Done()
 	return nil
 }
 
@@ -95,8 +135,6 @@ func (r *Releaser) resourceJobCreate(
 ) error {
     step := sg.Add("Initializing Nomad client...")
     defer func() { step.Abort() }()
-
-    step.Update("Nomad client set")
 
 	jobClient := client.NomadClient.Jobs()
 	deploymentClient := client.NomadClient.Deployments()
@@ -228,7 +266,7 @@ func (r *Releaser) Destroy(
 func (r *Releaser) Status(
 	ctx context.Context,
 	log hclog.Logger,
-	deployment *Deployment,
+	release *Release,
 	ui terminal.UI,
 ) (*sdk.StatusReport, error) {
 	sg := ui.StepGroup()
@@ -239,11 +277,8 @@ func (r *Releaser) Status(
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
 	if release.ResourceState == nil {
-		rm.Resource("service").SetState(&Resource_Service{
-			Name: release.ServiceName,
-		})
-		rm.Resource("ingress").SetState(&Resource_Service{
-			Name: release.ServiceName,
+		rm.Resource(rmResourceJobName).SetState(&Resource_Job{
+			Name: release.Name,
 		})
 	} else {
 		// Load our set state
@@ -252,7 +287,59 @@ func (r *Releaser) Status(
 		}
 	}
 
-	return nil, nil
+    step := sg.Add("Getting status of Noamd release...")
+	defer step.Abort()
+
+    // TODO: Implement status
+	resources, err := rm.StatusAll(ctx, log, sg, ui)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "resource manager failed to generate resource statuses: %s", err)
+	}
+
+	if len(resources) == 0 {
+		// This shouldn't happen - the status func for the releaser should always return a resource or an error.
+		return nil, status.Errorf(codes.Internal, "no resources generated for release - cannot determine status.")
+	}
+
+	var jobResource *sdk.StatusReport_Resource
+	for _, r := range resources {
+		if r.Type == "job" {
+			jobResource = r
+			break
+		}
+	}
+	if jobResource == nil {
+		return nil, status.Errorf(codes.Internal, "no job resource found - cannot determine overall health")
+	}
+
+	// Create our status report
+	result := sdk.StatusReport{
+		External:      true,
+		GeneratedTime: timestamppb.Now(),
+		Resources:     resources,
+		Health:        jobResource.Health,
+		HealthMessage: jobResource.HealthMessage,
+	}
+
+	log.Debug("status report complete")
+
+	// update output based on main health state
+	step.Update("Finished building report for Kubernetes platform")
+	step.Done()
+
+	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
+	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
+	st := ui.Status()
+	defer st.Close()
+
+	// More UI detail for non-ready resources
+	for _, resource := range result.Resources {
+		if resource.Health != sdk.StatusReport_READY {
+			st.Step(terminal.StatusWarn, fmt.Sprintf("Resource %q is reporting %q", resource.Name, resource.Health.String()))
+		}
+	}
+
+	return &result, nil
 }
 
 // ReleaserConfig is the configuration structure for the Releaser.
