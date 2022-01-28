@@ -13,11 +13,17 @@ import (
 )
 
 // RunnerLabelHash calculates a unique hash for the set of labels on the
-// runner. If there are no labels, the hash value is always zero.
+// runner. This generates a consistent hash value for an empty set of labels.
+// The result is never 0.
 func RunnerLabelHash(v map[string]string) (uint64, error) {
-	if len(v) == 0 {
-		return 0, nil
+	if v == nil {
+		v = map[string]string{}
 	}
+
+	// We always set this special key so that even empty label sets have
+	// a non-zero hash value. This MUST NEVER BE CHANGED otherwise the
+	// hash values for all previously issued tokens will be invalidated.
+	v["waypoint.hashicorp.com/runner-hash"] = "1"
 
 	return hashstructure.Hash(v, hashstructure.FormatV2, nil)
 }

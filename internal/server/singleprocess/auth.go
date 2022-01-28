@@ -511,9 +511,13 @@ func (s *service) GenerateRunnerToken(
 		}
 	}
 
-	hash, err := serverptypes.RunnerLabelHash(req.Labels)
-	if err != nil {
-		return nil, err
+	var hash uint64 = 0
+	if len(req.Labels) > 0 {
+		var err error
+		hash, err = serverptypes.RunnerLabelHash(req.Labels)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	createToken := &pb.Token{
