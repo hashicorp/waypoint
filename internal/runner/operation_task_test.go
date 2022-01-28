@@ -36,7 +36,7 @@ func TestRunnerTaskLauncherStart(t *testing.T) {
 	defer runner.Close()
 
 	// Start it
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	job := &pb.Job{
 		Operation: &pb.Job_StartTask{

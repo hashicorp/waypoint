@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/plugin"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverclient"
 )
 
 var (
@@ -54,12 +56,14 @@ type Runner struct {
 	id          string
 	logger      hclog.Logger
 	client      pb.WaypointClient
+	cookie      string
 	cleanupFunc func()
 	runner      *pb.Runner
 	factories   map[component.Type]*factory.Factory
 	ui          terminal.UI
 	local       bool
 	tempDir     string
+	stateDir    string
 
 	// protects whether or not the runner is active or not.
 	runningCond *sync.Cond
@@ -133,16 +137,52 @@ func New(opts ...Option) (*Runner, error) {
 		}
 	}
 
+	// If we have a state directory, then load that.
+	if dir := runner.stateDir; dir != "" {
+		if err := verifyStateDir(runner.logger, dir); err != nil {
+			return nil, err
+		}
+	}
+
 	// If the options didn't populate id, then we do so now.
 	if runner.id == "" {
-		// Create our ID
-		id, err := server.Id()
+		// If we have an ID in state, use that.
+		stateId, err := runner.stateGetId()
 		if err != nil {
-			return nil, status.Errorf(codes.Internal,
-				"failed to generate unique ID: %s", err)
+			return nil, err
+		}
+		if stateId != "" {
+			runner.logger.Info("loaded ID from state", "id", stateId)
+			runner.id = stateId
 		}
 
-		runner.id = id
+		// Create our ID if we still have no ID
+		if runner.id == "" {
+			id, err := server.Id()
+			if err != nil {
+				return nil, status.Errorf(codes.Internal,
+					"failed to generate unique ID: %s", err)
+			}
+
+			// Persist it
+			if err := runner.statePutId(id); err != nil {
+				return nil, err
+			}
+
+			runner.logger.Info("generated a new runner ID", "id", id)
+			runner.id = id
+		}
+	}
+
+	// If we were given a cookie, configure our context to have the cookie
+	// for all API requests.
+	if v := runner.cookie; v != "" {
+		runner.runningCtx = metadata.NewOutgoingContext(
+			runner.runningCtx,
+			metadata.New(map[string]string{
+				"cookie": v,
+			}),
+		)
 	}
 
 	runner.runner = &pb.Runner{
@@ -192,15 +232,76 @@ func (r *Runner) Id() string {
 // Start starts the runner by registering the runner with the Waypoint
 // server. This will spawn goroutines for management. This will return after
 // registration so this should not be executed in a goroutine.
-func (r *Runner) Start() error {
+func (r *Runner) Start(ctx context.Context) error {
 	if r.shutdown {
 		return ErrClosed
 	}
 
 	log := r.logger
 
+	// We set this to true if we're going through the adoption process.
+	adopt := false
+	tokenCtx := ctx
+
+	// Check if we have a token in our state directory. If we do, then put
+	// it on our context (so we use it) and mark that we want to adopt. It
+	// may be counterintuitive that we want to adopt if we have a token,
+	// but we use that as a way to verify the token and in the future do rotation.
+	if t, err := r.stateGetToken(); err != nil {
+		return err
+	} else if t != "" {
+		adopt = true
+		log.Debug("will use prior token from state directory")
+		tokenCtx = serverclient.TokenWithContext(tokenCtx, t)
+		r.runningCtx = serverclient.TokenWithContext(r.runningCtx, t)
+	}
+
+	// If we have a cookie set, we always adopt.
+	if r.cookie != "" {
+		adopt = true
+		tokenCtx = metadata.NewOutgoingContext(
+			tokenCtx,
+			metadata.New(map[string]string{
+				"cookie": r.cookie,
+			}),
+		)
+	} else if !adopt {
+		log.Warn("cookie not set for runner, will skip adoption process")
+	}
+
+	if adopt {
+		// Register and initialize the adoption flow (if necessary) by requesting
+		// our token.
+		log.Debug("requesting token with RunnerToken (initiates adoption)")
+		tokenResp, err := r.client.RunnerToken(tokenCtx, &pb.RunnerTokenRequest{
+			Runner: r.runner,
+		})
+		if err != nil {
+			return err
+		}
+		if tokenResp != nil && tokenResp.Token != "" {
+			// If we received a token, then we replace our token with that.
+			// It is possible that we do NOT have a token, because our current
+			// token is already valid.
+			log.Debug("runner adoption complete, new token received")
+			r.runningCtx = serverclient.TokenWithContext(r.runningCtx, tokenResp.Token)
+
+			// Persist our token
+			if err := r.statePutToken(tokenResp.Token); err != nil {
+				return err
+			}
+		} else {
+			log.Debug("runner token is already valid, using same token")
+		}
+	}
+
+	// Note from here on forward, we purposely switch to runningCtx instead
+	// of the parameter ctx because everything here on is async and long-running
+	// and runningCtx is tied to the full struct lifecycle rather than this
+	// single func call.
+
 	// Register
-	log.Debug("registering runner")
+	log.Debug("starting RunnerConfig stream")
 	client, err := r.client.RunnerConfig(r.runningCtx)
 	if err != nil {
 		return err
@@ -288,6 +389,7 @@ type config struct {
 	byIdOnly     bool
 	odr          bool
 	odrProfileId string
+	token        string
 }
 
 type Option func(*Runner, *config) error
@@ -295,6 +397,10 @@ type Option func(*Runner, *config) error
 // WithClient sets the client directly. In this case, the runner won't
 // attempt any connection at all regardless of other configuration (env
 // vars or waypoint config file). This will be used.
+//
+// If this is specified, the client MUST use a serverclient.ContextToken
+// type for the PerRPCCredentials setting. This package and others will use
+// context overrides for the token. If you do not use this, things will break.
 func WithClient(client pb.WaypointClient) Option {
 	return func(r *Runner, cfg *config) error {
 		r.client = client
@@ -362,6 +468,33 @@ func WithDynamicConfig(set bool) Option {
 func WithId(id string) Option {
 	return func(r *Runner, cfg *config) error {
 		r.id = id
+		return nil
+	}
+}
+
+// WithCookie sets the cookie to send with all API requests. If this cookie
+// does not match the remote server, API requests will fail.
+//
+// A cookie is REQUIRED FOR ADOPTION. If this is not set, the adoption process
+// will be skipped and only pre-adoption (a preset token) will work.
+func WithCookie(v string) Option {
+	return func(r *Runner, cfg *config) error {
+		r.cookie = v
+		return nil
+	}
+}
+
+// WithStateDir sets the state directory. This directory is used for runner
+// state between restarts. This is optional, a runner can be stateless, but
+// has some limitations. The state dir enables:
+//
+//   * persisted runner ID across restarts
+//   * persisted adoption token across restarts
+//
+// The state directory will be created if it does not exist.
+func WithStateDir(v string) Option {
+	return func(r *Runner, cfg *config) error {
+		r.stateDir = v
 		return nil
 	}
 }

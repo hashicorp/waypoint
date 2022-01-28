@@ -13,8 +13,7 @@ import (
 // startRunner initializes and starts a local runner.
 // It stores it on the parent struct, and will deactivate it
 // when the parent is closed.
-func (c *Project) startRunner() error {
-
+func (c *Project) startRunner(ctx context.Context) error {
 	c.logger.Debug("starting runner to process local jobs")
 
 	// Initialize our runner
@@ -29,7 +28,7 @@ func (c *Project) startRunner() error {
 	}
 
 	// Start the runner
-	if err := r.Start(); err != nil {
+	if err := r.Start(ctx); err != nil {
 		return err
 	}
 

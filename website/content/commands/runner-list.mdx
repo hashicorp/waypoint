@@ -1,0 +1,62 @@
+---
+layout: commands
+page_title: 'Commands: Runner list'
+sidebar_title: 'runner list'
+description: 'List registered runners'
+---
+
+# Waypoint Runner list
+
+Command: `waypoint runner list`
+
+List registered runners
+
+@include "commands/runner-list_desc.mdx"
+
+## Usage
+
+Usage: `waypoint runner list [options]`
+
+List runners that are registered with the Waypoint server.
+
+This will list all runners that the Waypoint server currently knows
+about. This list does not guarantee each runner is online; Waypoint currently
+does not expose online/offline status. This lists runners that have registered
+at least once with the server.
+
+This can be used to find pending runners that need to be adopted. Runners
+that are pending (not adopted) will not be sent any jobs or configuration.
+Runners that are accepted (adopted) are sent jobs. Runners that are
+"preadopted" are sent jobs but have avoided the manual adoption process by
+being preconfigured with a valid runner token (see "waypoint runner token").
+Runners that are "rejected" are never given jobs, and error immediately if
+they try to register.
+
+If a runner is pending, you can adopt it using "waypoint runner adopt ID"
+where "ID" comes from the output from this command. You can explicitly
+reject a runner using "waypoint runner reject ID". A runner can be rejected
+at any time, even after it is already adopted.
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-project=<string>` (`-p`) - Project to target.
+- `-workspace=<string>` (`-w`) - Workspace to operate in.
+
+#### Operation Options
+
+- `-label=<key=value>` - Labels to set for this operation. Can be specified multiple times.
+- `-local` - True to use a local runner to execute the operation, false to use a remote runner.
+  If unset, Waypoint will automatically determine where the operation will occur,
+  defaulting to remote if possible.
+- `-remote-source=<key=value>` - Override configurations for how remote runners source data. This is specified to the data source type being used in your configuration. This is used for example to set a specific Git ref to run against.
+- `-var=<key=value>` - Variable value to set for this operation. Can be specified multiple times.
+- `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "_.auto.wpvars" or "_.auto.wpvars.json" files are present, they will be automatically loaded.
+
+#### Command Options
+
+- `-pending` - List only runners pending adoption.
+- `-json` - Output runner configuration list information as JSON. This includes more fields since this is the complete API structure.
+
+@include "commands/runner-list_more.mdx"
