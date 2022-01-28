@@ -391,31 +391,14 @@ RETRY_ASSIGN:
 		return nil, nil
 	}
 
-	// WatchSet we'll trigger to retry assignment
-	ws := memdb.NewWatchSet()
-
-	// If our runner exists, it must be adopted. We're lax right about allowing
-	// runners that don't exist for JobPeek. If it doesn't exist, callers should
-	// handle this. For example, RunnerJobStream handles this itself.
-	rCheck, err := s.RunnerById(r.Id, ws)
-	if err != nil && status.Code(err) != codes.NotFound {
-		return nil, err
-	}
-	if rCheck != nil {
-		if rCheck.AdoptionState != pb.Runner_ADOPTED && rCheck.AdoptionState != pb.Runner_PREADOPTED {
-			return nil, status.Errorf(codes.FailedPrecondition,
-				"cannot assign jobs to a runner that isn't adopted")
-		}
-	}
-
 	txn = s.inmem.Txn(false)
 	defer txn.Abort()
 
 	// Turn our runner into a runner record so we can more efficiently assign
-	runnerIdx := newRunnerIndex(r)
+	runnerRec := newRunnerRecord(r)
 
 	// candidateQuery finds candidate jobs to assign.
-	type candidateFunc func(*memdb.Txn, memdb.WatchSet, *runnerIndex, bool) (*jobIndex, error)
+	type candidateFunc func(*memdb.Txn, memdb.WatchSet, *runnerRecord, bool) (*jobIndex, error)
 	candidateQuery := []candidateFunc{
 		s.jobCandidateById,
 		s.jobCandidateAny,
@@ -430,8 +413,9 @@ RETRY_ASSIGN:
 
 	// Build the list of candidates
 	var candidates []*jobIndex
+	ws := memdb.NewWatchSet()
 	for _, f := range candidateQuery {
-		job, err := f(txn, ws, runnerIdx, assign)
+		job, err := f(txn, ws, runnerRec, assign)
 		if err != nil {
 			return nil, err
 		}
@@ -1004,7 +988,7 @@ func (s *State) JobIsAssignable(ctx context.Context, jobpb *pb.Job) (bool, error
 			// We're out of candidates and we found none.
 			return false, nil
 		}
-		runner := raw.(*runnerIndex)
+		runner := raw.(*runnerRecord)
 
 		// Check our target-specific check
 		if targetCheck != nil {
@@ -1374,7 +1358,7 @@ func (s *State) jobCascadeDependentState(
 // jobCandidateById returns the most promising candidate job to assign
 // that is targeting a specific runner by ID.
 func (s *State) jobCandidateById(
-	memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerIndex, assign bool,
+	memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerRecord, assign bool,
 ) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
@@ -1413,7 +1397,7 @@ func (s *State) jobCandidateById(
 
 // jobCandidateAny returns the first candidate job that targets any runner.
 func (s *State) jobCandidateAny(
-	memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerIndex, assign bool,
+	memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerRecord, assign bool,
 ) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,

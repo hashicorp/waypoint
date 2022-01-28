@@ -25,7 +25,7 @@ func TestRunnerInitOp(t *testing.T) {
 	)
 	require.NoError(err)
 	defer runner.Close()
-	require.NoError(runner.Start(ctx))
+	require.NoError(runner.Start())
 
 	// Create a test project and store it in the db
 	project := core.TestProject(t, core.WithClient(client))
@@ -61,7 +61,7 @@ func TestRunnerInitOp_UpserWorkspace(t *testing.T) {
 	)
 	require.NoError(err)
 	defer runner.Close()
-	require.NoError(runner.Start(ctx))
+	require.NoError(runner.Start())
 
 	// Pre-check that no workspaces exist
 	resp, err := client.ListWorkspaces(ctx, &pb.ListWorkspacesRequest{})

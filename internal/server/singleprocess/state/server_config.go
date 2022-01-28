@@ -39,12 +39,6 @@ func (s *State) ServerConfigGet() (*pb.ServerConfig, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
-	return s.serverConfigGet(memTxn)
-}
-
-func (s *State) serverConfigGet(
-	memTxn *memdb.Txn,
-) (*pb.ServerConfig, error) {
 	v, err := memTxn.First(
 		serverConfigIndexTableName,
 		serverConfigIndexIdIndexName,
@@ -66,33 +60,6 @@ func (s *State) serverConfigSet(
 	value *pb.ServerConfig,
 ) error {
 	id := serverConfigId
-
-	// If we want to delete the config, just set it to empty so we can keep
-	// the server-set settings such as cookies.
-	if value == nil {
-		value = &pb.ServerConfig{}
-	}
-
-	// Get the previous value. We do not allow overwriting the cookie and we
-	// also will initialize the cookie if it is not set.
-	old, err := s.serverConfigGet(memTxn)
-	if err != nil {
-		return err
-	}
-	value.Cookie = ""
-	if old != nil {
-		value.Cookie = old.Cookie
-	}
-
-	// Generate a cookie if we don't have one
-	if value.Cookie == "" {
-		newCookie, err := ulid()
-		if err != nil {
-			return err
-		}
-
-		value.Cookie = "WPC" + newCookie
-	}
 
 	// Get the global bucket and write the value to it.
 	b := dbTxn.Bucket(serverConfigBucket)

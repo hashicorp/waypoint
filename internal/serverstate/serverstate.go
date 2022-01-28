@@ -47,10 +47,7 @@ type Interface interface {
 
 	RunnerCreate(*pb.Runner) error
 	RunnerDelete(string) error
-	RunnerOffline(string) error
-	RunnerAdopt(string, bool) error
-	RunnerReject(string) error
-	RunnerById(string, memdb.WatchSet) (*pb.Runner, error)
+	RunnerById(string) (*pb.Runner, error)
 	RunnerList() ([]*pb.Runner, error)
 
 	OnDemandRunnerConfigPut(*pb.OnDemandRunnerConfig) error

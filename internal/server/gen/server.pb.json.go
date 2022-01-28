@@ -2836,42 +2836,6 @@ func (msg *Runner_Remote) UnmarshalJSON(b []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *RunnerTokenRequest) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	err := (&jsonpb.Marshaler{
-		EnumsAsInts:  false,
-		EmitDefaults: false,
-		OrigName:     false,
-	}).Marshal(&buf, msg)
-	return buf.Bytes(), err
-}
-
-// UnmarshalJSON implements json.Unmarshaler
-func (msg *RunnerTokenRequest) UnmarshalJSON(b []byte) error {
-	return (&jsonpb.Unmarshaler{
-		AllowUnknownFields: false,
-	}).Unmarshal(bytes.NewReader(b), msg)
-}
-
-// MarshalJSON implements json.Marshaler
-func (msg *RunnerTokenResponse) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	err := (&jsonpb.Marshaler{
-		EnumsAsInts:  false,
-		EmitDefaults: false,
-		OrigName:     false,
-	}).Marshal(&buf, msg)
-	return buf.Bytes(), err
-}
-
-// UnmarshalJSON implements json.Unmarshaler
-func (msg *RunnerTokenResponse) UnmarshalJSON(b []byte) error {
-	return (&jsonpb.Unmarshaler{
-		AllowUnknownFields: false,
-	}).Unmarshal(bytes.NewReader(b), msg)
-}
-
-// MarshalJSON implements json.Marshaler
 func (msg *RunnerConfigRequest) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
@@ -3208,42 +3172,6 @@ func (msg *ListRunnersResponse) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler
 func (msg *ListRunnersResponse) UnmarshalJSON(b []byte) error {
-	return (&jsonpb.Unmarshaler{
-		AllowUnknownFields: false,
-	}).Unmarshal(bytes.NewReader(b), msg)
-}
-
-// MarshalJSON implements json.Marshaler
-func (msg *AdoptRunnerRequest) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	err := (&jsonpb.Marshaler{
-		EnumsAsInts:  false,
-		EmitDefaults: false,
-		OrigName:     false,
-	}).Marshal(&buf, msg)
-	return buf.Bytes(), err
-}
-
-// UnmarshalJSON implements json.Unmarshaler
-func (msg *AdoptRunnerRequest) UnmarshalJSON(b []byte) error {
-	return (&jsonpb.Unmarshaler{
-		AllowUnknownFields: false,
-	}).Unmarshal(bytes.NewReader(b), msg)
-}
-
-// MarshalJSON implements json.Marshaler
-func (msg *ForgetRunnerRequest) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	err := (&jsonpb.Marshaler{
-		EnumsAsInts:  false,
-		EmitDefaults: false,
-		OrigName:     false,
-	}).Marshal(&buf, msg)
-	return buf.Bytes(), err
-}
-
-// UnmarshalJSON implements json.Unmarshaler
-func (msg *ForgetRunnerRequest) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)
@@ -5590,24 +5518,6 @@ func (msg *Token_Login) UnmarshalJSON(b []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *Token_Runner) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	err := (&jsonpb.Marshaler{
-		EnumsAsInts:  false,
-		EmitDefaults: false,
-		OrigName:     false,
-	}).Marshal(&buf, msg)
-	return buf.Bytes(), err
-}
-
-// UnmarshalJSON implements json.Unmarshaler
-func (msg *Token_Runner) UnmarshalJSON(b []byte) error {
-	return (&jsonpb.Unmarshaler{
-		AllowUnknownFields: false,
-	}).Unmarshal(bytes.NewReader(b), msg)
-}
-
-// MarshalJSON implements json.Marshaler
 func (msg *Token_Invite) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
@@ -5746,24 +5656,6 @@ func (msg *LoginTokenRequest) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler
 func (msg *LoginTokenRequest) UnmarshalJSON(b []byte) error {
-	return (&jsonpb.Unmarshaler{
-		AllowUnknownFields: false,
-	}).Unmarshal(bytes.NewReader(b), msg)
-}
-
-// MarshalJSON implements json.Marshaler
-func (msg *GenerateRunnerTokenRequest) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	err := (&jsonpb.Marshaler{
-		EnumsAsInts:  false,
-		EmitDefaults: false,
-		OrigName:     false,
-	}).Marshal(&buf, msg)
-	return buf.Bytes(), err
-}
-
-// UnmarshalJSON implements json.Unmarshaler
-func (msg *GenerateRunnerTokenRequest) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)

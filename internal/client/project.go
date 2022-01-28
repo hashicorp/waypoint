@@ -199,10 +199,6 @@ func WithWorkspaceRef(ref *pb.Ref_Workspace) Option {
 // WithClient sets the client directly. In this case, the runner won't
 // attempt any connection at all regardless of other configuration (env
 // vars or waypoint config file). This will be used.
-//
-// If this is specified, the client MUST use a serverclient.ContextToken
-// type for the PerRPCCredentials setting. This package and others will use
-// context overrides for the token. If you do not use this, things will break.
 func WithClient(client pb.WaypointClient) Option {
 	return func(c *Project, cfg *config) error {
 		c.client = client
