@@ -84,10 +84,9 @@ func Test_remoteOpPreferred(t *testing.T) {
 
 	t.Run("Choose remote if the datasource is good, a remote runner exists, and a runner profile is set for the project", func(t *testing.T) {
 		project = &pb.Project{
-			Name:           "test",
-			RemoteEnabled:  true,
-			DataSource:     remoteCapableDataSource,
-			OndemandRunner: &pb.Ref_OnDemandRunnerConfig{Name: odrProfileName},
+			Name:          "test",
+			RemoteEnabled: true,
+			DataSource:    remoteCapableDataSource,
 		}
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
 		require.Nil(err)
