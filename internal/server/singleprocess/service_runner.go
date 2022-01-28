@@ -159,17 +159,6 @@ func (s *service) RunnerToken(
 			"RunnerToken requires the 'cookie' metadata value to be set")
 	}
 
-	// Get the runner
-	r, err := s.state.RunnerById(record.Id, nil)
-	if status.Code(err) == codes.NotFound {
-		err = nil
-		r = nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	prevAdopted := r != nil && r.AdoptionState == pb.Runner_ADOPTED
-
 	// Create our record
 	log = log.With("runner_id", record.Id)
 	log.Trace("registering runner")
@@ -185,6 +174,17 @@ func (s *service) RunnerToken(
 			log.Error("failed to mark runner as offline. This should not happen.", "err", err)
 		}
 	}()
+
+	// Get the runner
+	r, err := s.state.RunnerById(record.Id, nil)
+	if status.Code(err) == codes.NotFound {
+		err = nil
+		r = nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	prevAdopted := r != nil && r.AdoptionState == pb.Runner_ADOPTED
 
 	// If we reached this point and we're previously adopted, then it is an
 	// error. If we're previously adopted, we expect that runners will have
@@ -303,6 +303,20 @@ func (s *service) RunnerConfig(
 		if k.Runner.Id != "" && !strings.EqualFold(k.Runner.Id, record.Id) {
 			return status.Errorf(codes.PermissionDenied,
 				"provided runner token is for a different runner")
+		}
+
+		// If the token has a label hash and it does not match our record,
+		// then it is an error.
+		if expected := k.Runner.LabelHash; expected > 0 {
+			actual, err := serverptypes.RunnerLabelHash(record.Labels)
+			if err != nil {
+				return err
+			}
+
+			if expected != actual {
+				return status.Errorf(codes.PermissionDenied,
+					"provided runner token is for a different set of runner labels")
+			}
 		}
 
 	default:

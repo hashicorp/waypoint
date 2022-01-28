@@ -324,6 +324,162 @@ func TestServiceRunnerToken_invalidRunnerToken(t *testing.T) {
 	}
 }
 
+func TestServiceRunnerToken_changedLabels(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Get our cookied context
+	ctx = server.TestCookieContext(ctx, t, client)
+
+	// Get the runner id
+	id, err := server.Id()
+	require.NoError(err)
+	r := &pb.Runner{
+		Id:     id,
+		Labels: map[string]string{"A": "B"},
+		Kind: &pb.Runner_Remote_{
+			Remote: &pb.Runner_Remote{},
+		},
+	}
+
+	// Reconnect with no token
+	anonClient := server.TestServer(t, impl, server.TestWithToken(""))
+
+	// Start getting the resp
+	var resp *pb.RunnerTokenResponse
+	var respErr error
+	doneCh := make(chan struct{})
+	go func() {
+		defer close(doneCh)
+		resp, respErr = anonClient.RunnerToken(ctx, &pb.RunnerTokenRequest{
+			Runner: r,
+		})
+	}()
+
+	// Should block
+	select {
+	case <-time.After(50 * time.Millisecond):
+	case <-doneCh:
+		t.Fatal("should block")
+	}
+
+	// Adopt it
+	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: id,
+		Adopt:    true,
+	})
+	require.NoError(err)
+
+	// Should be done
+	select {
+	case <-doneCh:
+	case <-time.After(1 * time.Second):
+		t.Fatal("should return")
+	}
+
+	// Verify token resp
+	require.NoError(respErr)
+	require.NotNil(resp)
+	require.NotEmpty(resp.Token)
+
+	// Change the labels, and then re-request a token
+	r.Labels["A"] = "C"
+	doneCh = make(chan struct{})
+	go func() {
+		defer close(doneCh)
+		resp, respErr = anonClient.RunnerToken(ctx, &pb.RunnerTokenRequest{
+			Runner: r,
+		})
+	}()
+
+	// Should block
+	select {
+	case <-time.After(50 * time.Millisecond):
+	case <-doneCh:
+		t.Fatal("should block")
+	}
+}
+
+func TestServiceRunnerToken_validTokenWithLabels(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Get our cookied context
+	ctx = server.TestCookieContext(ctx, t, client)
+
+	// Get the runner id
+	id, err := server.Id()
+	require.NoError(err)
+	r := &pb.Runner{
+		Id:     id,
+		Labels: map[string]string{"A": "B"},
+		Kind: &pb.Runner_Remote_{
+			Remote: &pb.Runner_Remote{},
+		},
+	}
+
+	// Reconnect with no token
+	anonClient := server.TestServer(t, impl, server.TestWithToken(""))
+
+	// Start getting the resp
+	var resp *pb.RunnerTokenResponse
+	var respErr error
+	doneCh := make(chan struct{})
+	go func() {
+		defer close(doneCh)
+		resp, respErr = anonClient.RunnerToken(ctx, &pb.RunnerTokenRequest{
+			Runner: r,
+		})
+	}()
+
+	// Should block
+	select {
+	case <-time.After(50 * time.Millisecond):
+	case <-doneCh:
+		t.Fatal("should block")
+	}
+
+	// Adopt it
+	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: id,
+		Adopt:    true,
+	})
+	require.NoError(err)
+
+	// Should be done
+	select {
+	case <-doneCh:
+	case <-time.After(1 * time.Second):
+		t.Fatal("should return")
+	}
+
+	// Verify token resp
+	require.NoError(respErr)
+	require.NotNil(resp)
+	require.NotEmpty(resp.Token)
+
+	// Reconnect with the token
+	client = server.TestServer(t, impl, server.TestWithToken(resp.Token))
+
+	// RunnerToken should return immediately
+	resp, respErr = client.RunnerToken(ctx, &pb.RunnerTokenRequest{
+		Runner: r,
+	})
+	require.NoError(respErr)
+	require.NotNil(resp)
+	require.Empty(resp.Token)
+}
+
 func TestServiceRunnerToken_noCookie(t *testing.T) {
 	ctx := context.Background()
 	require := require.New(t)
@@ -542,6 +698,105 @@ func TestServiceRunnerConfig_preadoptWrongId(t *testing.T) {
 		Event: &pb.RunnerConfigRequest_Open_{
 			Open: &pb.RunnerConfigRequest_Open{
 				Runner: &pb.Runner{Id: id},
+			},
+		},
+	}))
+
+	// Confirm we're rejected
+	_, err = stream.Recv()
+	require.Error(err)
+	require.Equal(codes.PermissionDenied, status.Code(err))
+}
+
+func TestServiceRunnerConfig_preadoptAnyLabels(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Get the runner
+	id, err := server.Id()
+	require.NoError(err)
+
+	// Reconnect with a runner token
+	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Runner_{
+			Runner: &pb.Token_Runner{
+				Id: id,
+			},
+		},
+	})
+	require.NoError(err)
+	client = server.TestServer(t, impl, server.TestWithToken(tok))
+
+	// Open the config stream
+	stream, err := client.RunnerConfig(ctx)
+	require.NoError(err)
+	defer stream.CloseSend()
+
+	// Register
+	require.NoError(stream.Send(&pb.RunnerConfigRequest{
+		Event: &pb.RunnerConfigRequest_Open_{
+			Open: &pb.RunnerConfigRequest_Open{
+				Runner: &pb.Runner{
+					Id:     id,
+					Labels: map[string]string{"A": "B"},
+				},
+			},
+		},
+	}))
+
+	_, err = stream.Recv()
+	require.NoError(err)
+}
+
+func TestServiceRunnerConfig_preadoptMismatchLabels(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Get the runner
+	id, err := server.Id()
+	require.NoError(err)
+
+	// Reconnect with a runner token
+	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Runner_{
+			Runner: &pb.Token_Runner{
+				Id:        id,
+				LabelHash: 42,
+			},
+		},
+	})
+	require.NoError(err)
+	client = server.TestServer(t, impl, server.TestWithToken(tok))
+
+	// Open the config stream
+	stream, err := client.RunnerConfig(ctx)
+	require.NoError(err)
+	defer stream.CloseSend()
+
+	// Register
+	require.NoError(stream.Send(&pb.RunnerConfigRequest{
+		Event: &pb.RunnerConfigRequest_Open_{
+			Open: &pb.RunnerConfigRequest_Open{
+				Runner: &pb.Runner{
+					Id:     id,
+					Labels: map[string]string{"A": "B"},
+				},
 			},
 		},
 	}))
