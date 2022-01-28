@@ -20,12 +20,13 @@ import (
 type RunnerProfileSetCommand struct {
 	*baseCommand
 
-	flagName         string
-	flagOCIUrl       string
-	flagEnvVars      []string
-	flagPluginType   string
-	flagPluginConfig string
-	flagDefault      bool
+	flagName           string
+	flagOCIUrl         string
+	flagEnvVars        []string
+	flagPluginType     string
+	flagPluginConfig   string
+	flagDefault        bool
+	flagTargetRunnerId string
 }
 
 func (c *RunnerProfileSetCommand) Run(args []string) int {
@@ -94,6 +95,19 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 		od = &pb.OnDemandRunnerConfig{
 			Name: c.flagName,
 		}
+	}
+
+	// Set target runner for profile
+	if c.flagTargetRunnerId != "" {
+		od.TargetRunner = &pb.Ref_Runner{
+			Target: &pb.Ref_Runner_Id{
+				Id: &pb.Ref_RunnerId{
+					Id: c.flagTargetRunnerId,
+				},
+			},
+		}
+	} else {
+		od.TargetRunner = &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{}}
 	}
 
 	// If we were specified a file then we're going to load that up.
@@ -247,8 +261,15 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 			Name:    "default",
 			Target:  &c.flagDefault,
 			Default: false,
-			Usage: "Indicates that this on-demand runner should be used by any project that doesn't " +
-				"otherwise specify its own on-demand runner.",
+			Usage: "Indicates that this remote runner profile should be the default for any project that doesn't " +
+				"otherwise specify its own remote runner.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "target-runner-id",
+			Target:  &c.flagTargetRunnerId,
+			Default: "",
+			Usage:   "ID of the remote runner to target for the profile.",
 		})
 	})
 }

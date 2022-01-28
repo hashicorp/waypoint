@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
@@ -34,7 +35,7 @@ func Test_remoteOpPreferred(t *testing.T) {
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
 		require.Nil(err)
 
-		remote, err := remoteOpPreferred(ctx, client, project, log)
+		remote, err := remoteOpPreferred(ctx, client, project, nil, log)
 		require.Nil(err)
 		require.False(remote)
 	})
@@ -50,7 +51,7 @@ func Test_remoteOpPreferred(t *testing.T) {
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
 		require.Nil(err)
 
-		remote, err := remoteOpPreferred(ctx, client, project, log)
+		remote, err := remoteOpPreferred(ctx, client, project, nil, log)
 		require.Nil(err)
 		require.False(remote)
 	})
@@ -83,15 +84,35 @@ func Test_remoteOpPreferred(t *testing.T) {
 
 	t.Run("Choose remote if the datasource is good, a remote runner exists, and a runner profile is set for the project", func(t *testing.T) {
 		project = &pb.Project{
-			Name:           "test",
-			RemoteEnabled:  true,
-			DataSource:     remoteCapableDataSource,
-			OndemandRunner: &pb.Ref_OnDemandRunnerConfig{Name: odrProfileName},
+			Name:          "test",
+			RemoteEnabled: true,
+			DataSource:    remoteCapableDataSource,
 		}
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
 		require.Nil(err)
 
-		remote, err := remoteOpPreferred(ctx, client, project, log)
+		runnerCfgs := []*configpkg.Runner{{Profile: "test"}}
+
+		remote, err := remoteOpPreferred(ctx, client, project, runnerCfgs, log)
+		require.Nil(err)
+		require.True(remote)
+	})
+
+	t.Run("Choose remote if the app on the project has a runner profile set", func(t *testing.T) {
+		project = &pb.Project{
+			Name:          "test",
+			RemoteEnabled: true,
+			DataSource:    remoteCapableDataSource,
+			Applications: []*pb.Application{{
+				Name: "test-app",
+			}},
+		}
+		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
+		require.Nil(err)
+
+		runnerCfgs := []*configpkg.Runner{{Profile: "test"}}
+
+		remote, err := remoteOpPreferred(ctx, client, project, runnerCfgs, log)
 		require.Nil(err)
 		require.True(remote)
 	})
@@ -105,22 +126,22 @@ func Test_remoteOpPreferred(t *testing.T) {
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
 		require.Nil(err)
 
-		remote, err := remoteOpPreferred(ctx, client, project, log)
+		remote, err := remoteOpPreferred(ctx, client, project, nil, log)
 		require.Nil(err)
 		require.False(remote)
 	})
 
-	// Register a default runner profile
-	_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
-		Config: &pb.OnDemandRunnerConfig{
-			Name:       "the default",
-			PluginType: "docker",
-			Default:    true,
-		},
-	})
-	require.Nil(err)
-
 	t.Run("Choose remote if the project is good and the default runner is set", func(t *testing.T) {
+		// Register a default runner profile
+		_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+			Config: &pb.OnDemandRunnerConfig{
+				Name:       "the default",
+				PluginType: "docker",
+				Default:    true,
+			},
+		})
+		require.Nil(err)
+
 		project = &pb.Project{
 			Name:          "test",
 			RemoteEnabled: true,
@@ -129,7 +150,7 @@ func Test_remoteOpPreferred(t *testing.T) {
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
 		require.Nil(err)
 
-		remote, err := remoteOpPreferred(ctx, client, project, log)
+		remote, err := remoteOpPreferred(ctx, client, project, nil, log)
 		require.Nil(err)
 		require.True(remote)
 	})

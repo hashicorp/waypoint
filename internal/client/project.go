@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/runner"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
@@ -44,6 +45,9 @@ type Project struct {
 	// configPath is the path to the local directory that contains our config file (waypoint.hcl)
 	// May not be present.
 	configPath string
+
+	// The entire waypoint config file
+	waypointHCL *configpkg.Config
 
 	// These are used to manage a local runner and its job processing
 	// in a goroutine.
@@ -277,11 +281,11 @@ func WithUseLocalRunner(useLocalRunner bool) Option {
 	}
 }
 
-// WithConfigPath sets the path to the local directory that contains our config
-// file (waypoint.hcl).
-func WithConfigPath(configPath string) Option {
+// WithConfig sets the config file (waypoint.hcl) and path.
+func WithConfig(waypointHCL *configpkg.Config) Option {
 	return func(c *Project, cfg *config) error {
-		c.configPath = configPath
+		c.waypointHCL = waypointHCL
+		c.configPath = waypointHCL.ConfigPath()
 		return nil
 	}
 }
