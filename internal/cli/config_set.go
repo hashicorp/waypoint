@@ -137,6 +137,7 @@ func (c *ConfigSetCommand) Run(args []string) int {
 				},
 			}
 		}
+		//TODO: update to add flag to target runner by workspace and labels
 
 		// If we have a workspace flag set, set that.
 		if v := c.flagWorkspaceScope; v != "" {

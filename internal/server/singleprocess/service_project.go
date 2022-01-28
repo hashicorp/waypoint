@@ -79,6 +79,24 @@ func (s *service) ListProjects(
 	return &pb.ListProjectsResponse{Projects: result}, nil
 }
 
+func (s *service) GetApplication(
+	ctx context.Context,
+	req *pb.GetApplicationRequest,
+) (*pb.GetApplicationResponse, error) {
+	if err := serverptypes.ValidateGetApplicationRequest(req); err != nil {
+		return nil, err
+	}
+
+	result, err := s.state.AppGet(req.Application)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetApplicationResponse{
+		Application: result,
+	}, nil
+}
+
 func (s *service) UpsertApplication(
 	ctx context.Context,
 	req *pb.UpsertApplicationRequest,
@@ -118,7 +136,6 @@ func (s *service) UpsertApplication(
 
 func queueInitOps(s *service, ctx context.Context, project *pb.Project) error {
 	workspaces, err := s.state.WorkspaceList()
-
 	if err != nil {
 		return err
 	}

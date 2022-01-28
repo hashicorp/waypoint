@@ -371,7 +371,7 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 			Name: c.flagOndemandRunner,
 		}
 
-		// Validate the ref is validate by looking up the runner.
+		// Validate the ref by looking up the runner.
 		_, err := c.project.Client().GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
 			Config: ref,
 		})
@@ -383,8 +383,6 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 
 			return 1
 		}
-
-		proj.OndemandRunner = ref
 	}
 
 	// Upsert

@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 type RunnerProfileListCommand struct {
@@ -35,7 +36,8 @@ func (c *RunnerProfileListCommand) Run(args []string) int {
 
 	c.ui.Output("Runner profiles")
 
-	tbl := terminal.NewTable("Name", "Plugin Type", "OCI Url", "Default")
+	tbl := terminal.NewTable("Name", "Plugin Type", "OCI Url", "Target Runner ID",
+		"Default")
 
 	for _, p := range resp.Configs {
 		def := ""
@@ -43,10 +45,21 @@ func (c *RunnerProfileListCommand) Run(args []string) int {
 			def = "yes"
 		}
 
+		var targetRunner string
+		if p.TargetRunner != nil {
+			switch t := p.TargetRunner.Target.(type) {
+			case *pb.Ref_Runner_Any:
+				targetRunner = "*"
+			case *pb.Ref_Runner_Id:
+				targetRunner = t.Id.Id
+			}
+		}
+
 		tbl.Rich([]string{
 			p.Name,
 			p.PluginType,
 			p.OciUrl,
+			targetRunner,
 			def,
 		}, nil)
 	}

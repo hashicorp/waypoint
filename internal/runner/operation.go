@@ -273,7 +273,6 @@ func (r *Runner) executeJob(
 
 		log.Debug("noop job success")
 		return nil, nil
-
 	case *pb.Job_Up:
 		return r.executeUpOp(ctx, log, job, project)
 

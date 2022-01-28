@@ -420,6 +420,7 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 	for _, refApp := range c.refApps {
 		app := c.project.App(refApp.Application)
 		c.Log.Debug("will operate on app", "name", refApp.Application)
+
 		apps = append(apps, app)
 	}
 

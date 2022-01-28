@@ -6,6 +6,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 
+	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/runner"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -56,8 +57,7 @@ func (c *Project) startRunner(ctx context.Context) error {
 //
 // Note that this cannot guarantee that an operation will succeed remotely - the remote environment
 // may not have the right auth configured, the right plugins configured, etc.
-func remoteOpPreferred(ctx context.Context, client pb.WaypointClient, project *pb.Project, log hclog.Logger) (bool, error) {
-
+func remoteOpPreferred(ctx context.Context, client pb.WaypointClient, project *pb.Project, runnerCfgs []*configpkg.Runner, log hclog.Logger) (bool, error) {
 	if !project.RemoteEnabled {
 		log.Debug("Remote operations are disabled for this project - operation cannot occur remotely")
 		return false, nil
@@ -105,14 +105,21 @@ func remoteOpPreferred(ctx context.Context, client pb.WaypointClient, project *p
 		return false, nil
 	}
 
-	// Check to see if we have a runner profile assigned to this project
-	if project.OndemandRunner != nil {
-		log.Debug("Project has an explicit ODR profile set - operation is possible remotely")
-		return true, nil
+	// For now, if any app has an ODR profile set, we'll prefer remote for every op
+	// NOTE: this means that it isn't possible to have one app in a project execute
+	// locally only, and another execute remotely.
+	// TODO(izaak): it's possible for us to fix this by invoking this once per app, instead of once per project
+	for _, runnerCfg := range runnerCfgs {
+		if runnerCfg == nil {
+			continue
+		}
+		if runnerCfg.Profile != "" {
+			log.Warn("An explicit ODR profile is set - choosing remote operations for all app operations.")
+			return true, nil
+		}
 	}
 
 	// Check to see if we have a global default ODR profile
-
 	// TODO: it would be more efficient if we had an arg to filter to just get default profiles.
 	configsResp, err := client.ListOnDemandRunnerConfigs(ctx, &empty.Empty{})
 	if err != nil {

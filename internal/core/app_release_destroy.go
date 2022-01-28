@@ -36,7 +36,7 @@ func (a *App) CanDestroyRelease() bool {
 	return ok && d.DestroyFunc() != nil
 }
 
-// DestroyRelease destroyes a specific release.
+// DestroyRelease destroys a specific release.
 func (a *App) DestroyRelease(ctx context.Context, d *pb.Release) error {
 	// If the release is destroyed already then do nothing.
 	if d.State == pb.Operation_DESTROYED {
