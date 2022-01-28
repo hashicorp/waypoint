@@ -383,8 +383,6 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 
 			return 1
 		}
-
-		proj.OndemandRunner = ref
 	}
 
 	// Upsert
