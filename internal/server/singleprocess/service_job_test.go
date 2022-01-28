@@ -495,12 +495,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	log.Info("test odr profile", "id", odr.Id)
 
 	// Update the project to include ondemand runner
-	proj := serverptypes.TestProject(t, &pb.Project{
-		Name: "proj",
-		OndemandRunner: &pb.Ref_OnDemandRunnerConfig{
-			Id: odr.Id,
-		},
-	})
+	proj := serverptypes.TestProject(t, &pb.Project{Name: "proj"})
 	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
 		Project: proj,
 	})
