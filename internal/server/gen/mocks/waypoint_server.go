@@ -16,29 +16,6 @@ type WaypointServer struct {
 	mock.Mock
 }
 
-// AdoptRunner provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) AdoptRunner(_a0 context.Context, _a1 *gen.AdoptRunnerRequest) (*emptypb.Empty, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *emptypb.Empty
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.AdoptRunnerRequest) *emptypb.Empty); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*emptypb.Empty)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.AdoptRunnerRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // BootstrapToken provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) BootstrapToken(_a0 context.Context, _a1 *emptypb.Empty) (*gen.NewTokenResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -348,29 +325,6 @@ func (_m *WaypointServer) ExpediteStatusReport(_a0 context.Context, _a1 *gen.Exp
 	return r0, r1
 }
 
-// ForgetRunner provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) ForgetRunner(_a0 context.Context, _a1 *gen.ForgetRunnerRequest) (*emptypb.Empty, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *emptypb.Empty
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.ForgetRunnerRequest) *emptypb.Empty); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*emptypb.Empty)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.ForgetRunnerRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GenerateInviteToken provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GenerateInviteToken(_a0 context.Context, _a1 *gen.InviteTokenRequest) (*gen.NewTokenResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -409,29 +363,6 @@ func (_m *WaypointServer) GenerateLoginToken(_a0 context.Context, _a1 *gen.Login
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.LoginTokenRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GenerateRunnerToken provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) GenerateRunnerToken(_a0 context.Context, _a1 *gen.GenerateRunnerTokenRequest) (*gen.NewTokenResponse, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *gen.NewTokenResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.GenerateRunnerTokenRequest) *gen.NewTokenResponse); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.NewTokenResponse)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.GenerateRunnerTokenRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -1428,29 +1359,6 @@ func (_m *WaypointServer) RunnerJobStream(_a0 gen.Waypoint_RunnerJobStreamServer
 	}
 
 	return r0
-}
-
-// RunnerToken provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) RunnerToken(_a0 context.Context, _a1 *gen.RunnerTokenRequest) (*gen.RunnerTokenResponse, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *gen.RunnerTokenResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.RunnerTokenRequest) *gen.RunnerTokenResponse); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.RunnerTokenResponse)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.RunnerTokenRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
 }
 
 // SetConfig provides a mock function with given fields: _a0, _a1

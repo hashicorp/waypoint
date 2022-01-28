@@ -3,9 +3,6 @@ package statetest
 import (
 	"crypto/rand"
 	"fmt"
-	"reflect"
-	"runtime"
-	"strings"
 	"testing"
 
 	ulidpkg "github.com/oklog/ulid"
@@ -37,14 +34,7 @@ func Test(t *testing.T, f Factory, rf RestartFactory) {
 	for name, funcs := range tests {
 		t.Run(name, func(t *testing.T) {
 			for _, tf := range funcs {
-				name := runtime.FuncForPC(reflect.ValueOf(tf).Pointer()).Name()
-				if idx := strings.LastIndexByte(name, '.'); idx >= 0 {
-					name = name[idx+1:]
-				}
-
-				t.Run(name, func(t *testing.T) {
-					tf(t, f, rf)
-				})
+				tf(t, f, rf)
 			}
 		})
 	}

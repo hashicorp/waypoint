@@ -126,17 +126,6 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 		}
 	}
 
-	// If we haven't initialized our server config before, do that once.
-	conf, err := s.state.ServerConfigGet()
-	if err != nil {
-		return nil, err
-	}
-	if conf.Cookie == "" {
-		if err := s.state.ServerConfigSet(conf); err != nil {
-			return nil, err
-		}
-	}
-
 	// Set specific server config for the deployment entrypoint binaries
 	if scfg := cfg.serverConfig; scfg != nil && scfg.CEBConfig != nil && scfg.CEBConfig.Addr != "" {
 		// only one advertise address can be configured

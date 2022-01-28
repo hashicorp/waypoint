@@ -203,16 +203,6 @@ service Waypoint {
   // This list does not include previous on-demand runners that have exited.
   rpc ListRunners(ListRunnersRequest) returns (ListRunnersResponse);
 
-  // AdoptRunners allows marking a runner as adopted or rejected.
-  rpc AdoptRunner(AdoptRunnerRequest) returns (google.protobuf.Empty);
-
-  // ForgetRunner deletes an existing runner entry and makes the server
-  // behave as if the runner no longer exists. If the runner is currently
-  // running, it will receive errors on subsequent jobs, and will have to
-  // re-register. A forgotten runner will not be assigned new jobs until
-  // re-registered.
-  rpc ForgetRunner(ForgetRunnerRequest) returns (google.protobuf.Empty);
-
   // GetServerConfig sets configuration for the Waypoint server.
   rpc GetServerConfig(google.protobuf.Empty) returns (GetServerConfigResponse);
 
@@ -250,11 +240,6 @@ service Waypoint {
   // This can only be called for existing users.
   rpc GenerateLoginToken(LoginTokenRequest) returns (NewTokenResponse);
 
-  // Generate a new runner token that can be used with runners so they
-  // immediately begin work. The recommended appraoch is to instead use
-  // the adoption flow but this also works.
-  rpc GenerateRunnerToken(GenerateRunnerTokenRequest) returns (NewTokenResponse);
-
   // Exchange a invite token for a login token. If the invite token is
   // for a new user, this will create a new user account with the provided
   // username hint.
@@ -278,15 +263,9 @@ service Waypoint {
   // These are not meant to be public endpoints.
   //----------------------------------------------------------------------
 
-  // RunnerToken is called to register a runner and request a token for
-  // remaining runner API calls. This kicks off the "adoption" process
-  // (if necessary).
-  //
-  // This is unauthenticated (but requires a cookie in the metadata).
-  rpc RunnerToken(RunnerTokenRequest) returns (RunnerTokenResponse);
-
-  // RunnerConfig is called to receive the configuration for the runner.
-  // The response is a stream so that the configuration can be updated later.
+  // RunnerConfig is called to register a runner and receive the configuration
+  // for the runner. The response is a stream so that the configuration can
+  // be updated later.
   rpc RunnerConfig(stream RunnerConfigRequest) returns (stream RunnerConfigResponse);
 
   // RunnerJobStream is called by a runner to request a single job for
@@ -2217,59 +2196,6 @@ message Runner {
     bool deprecated_is_odr = 4;
   }
 
-  // Components are the list of components that the runner supports. This
-  // is used to match jobs to this runner.
-  repeated Component components = 3;
-
-  //----------------------------------------------------------------------
-  // Server set fields. The fields below are set by the server and are
-  // ignored as part of RunnerConfig.
-  //----------------------------------------------------------------------
-
-  // True if this runner is currently online and connected.
-  bool online = 11;
-
-  // The timestamps store the time this runner was first seen and the time
-  // the runner was last seen. These values can be the same if the runner
-  // was seen exactly once. The values are updated only when a runner starts
-  // up.
-  google.protobuf.Timestamp first_seen = 9;
-  google.protobuf.Timestamp last_seen = 10;
-
-  // The state of whether this runner is adopted or not.
-  AdoptionState adoption_state = 8;
-
-  // Valid adoption states. The transitions allowed are:
-  //
-  // - ∅ => NEW
-  // - ∅ => PREADOPTED
-  // - NEW => PREADOPTED
-  // - * => ADOPTED
-  // - * => REJECTED
-  // - ADOPTED => NEW
-  // - REJECTED => NEW
-  //
-  // Both the "NEW" and "REJECTED" state are effectively "unadopted" states,
-  // but they're explicit about why they're not currently adopted. Both
-  // "ADOPTED" and "PREADOPTED" are adopted states where the runner will
-  // be given work, but are also explicit about how they were adopted.
-  enum AdoptionState {
-    // New runner we've never seen before or has been forgotten.
-    // Runners in this state will wait for adoption.
-    NEW = 0;
-
-    // Runner provided a valid runner token despite not being explicitly
-    // adopted. This type of runner can be forcibly rejected later such
-    // that pre-adoption doesn't work at all.
-    PREADOPTED = 1;
-
-    // Explicitly adopted. Runner will get a token on handshake.
-    ADOPTED = 2;
-
-    // Explicitly rejected. Runner will error immediately on startup.
-    REJECTED = 3;
-  };
-
   message ODR {
     string profile_id = 1;
   }
@@ -2277,22 +2203,10 @@ message Runner {
   message Local {}
 
   message Remote {}
-}
 
-message RunnerTokenRequest {
-  // Runner to register. See Runner for what fields can be set.
-  Runner runner = 1;
-}
-
-message RunnerTokenResponse {
-  // The token to use for subsequent API calls. The runner should reconnect
-  // and use this token which contains specific adoption information to allow
-  // runner APIs through.
-  //
-  // If this token is empty, that means the token sent for the API request
-  // is already valid and no reconnect is necessary; just keep using the same
-  // token.
-  string token = 1;
+  // Components are the list of components that the runner supports. This
+  // is used to match jobs to this runner.
+  repeated Component components = 3;
 }
 
 message RunnerConfigRequest {
@@ -2301,9 +2215,7 @@ message RunnerConfigRequest {
   }
 
   message Open {
-    // Runner to register. See Runner for what fields can be set. This
-    // should match RunnerTokenRequest. This accepts a full runner (rather
-    // than just an ID) for legacy compatbility reasons.
+    // Runner to register. See Runner for what fields can be set.
     Runner runner = 1;
   }
 }
@@ -2431,19 +2343,6 @@ message ListRunnersResponse {
   repeated Runner runners = 1;
 }
 
-message AdoptRunnerRequest {
-  // ID of the runner to change the adoption status.
-  string runner_id = 1;
-
-  // Whether to adopt or reject. True for adopt, false for reject.
-  bool adopt = 2;
-}
-
-message ForgetRunnerRequest {
-  // ID of the runner to forget
-  string runner_id = 1;
-}
-
 /********************************************************************
 * Server
 ********************************************************************/
@@ -2466,23 +2365,15 @@ message ServerConfig {
   // addrs and more controls over which are advertised when.
   repeated AdvertiseAddr advertise_addrs = 1;
 
-  // The platform that the server is currently installed to. This is set
-  // through the CLI flag '-platform' on installation.
-  string platform = 4;
-
-  // Cookie is a unique cookie for this server. This can be sent in metadata
-  // as a semi-secret mechanism to just ensure you're talking to the correct
-  // cluster. The cookie does not enable access to data directly. Some API
-  // endpoints (such as RunnerToken) require it. This is auto-generated on
-  // startup and cannot currently be changed. Any attempts to change this
-  // value are ignored.
-  string cookie = 2;
-
   message AdvertiseAddr {
     string addr = 1;
     bool tls = 2;
     bool tls_skip_verify = 3;
   }
+
+  // The platform that the server is currently installed to. This is set
+  // through the CLI flag '-platform' on installation.
+  string platform = 4;
 }
 
 /********************************************************************
@@ -4220,11 +4111,6 @@ message Token {
     // login tokens can be used for API requests
     Login login = 8;
 
-    // Runner tokens can be used to request work on behalf of a runner.
-    // They have full API access as well since the workloads that runners
-    // run currently reuse this token.
-    Runner runner = 11;
-
     // invite tokens can be exhanged for login tokens and also optionally
     // sign a new user up.
     Invite invite = 9;
@@ -4243,18 +4129,6 @@ message Token {
     // If set, this login token can only be used for entrypoint-related
     // APIs against the configured deployment.
     Entrypoint entrypoint = 2;
-  }
-
-  message Runner {
-    // Id is the exact ID to match for this token. If a runner with another
-    // ID attempts to use this token, it will reject it. This can be blank
-    // to allow any ID.
-    string id = 1;
-
-    // If non-zero, the label set of the runner must hash to the same value
-    // for this token to be active. This prevents runners changing their
-    // labels after adoption (i.e. to go from targeting dev to prod).
-    uint64 label_hash = 2;
   }
 
   message Invite {
@@ -4346,21 +4220,6 @@ message LoginTokenRequest {
   // The token generated will only be used for Trigger URL actions. The token
   // will not be authorized to make any other requests to any other endpoints
   bool trigger = 3;
-}
-
-message GenerateRunnerTokenRequest {
-  // How long the token should be valid from the time the request
-  // is made. If this is empty then the runner token never expires on its own.
-  string duration = 1;
-
-  // ID to restrict this token to work with. This can be empty to allow it
-  // for all runner IDs.
-  string id = 2;
-
-  // The set of labels to restrict this runner token to work for. The runner
-  // labels must match this label set exactly. If this is not set, then runners
-  // with any labels may use the resulting token.
-  map<string,string> labels = 3;
 }
 
 // Passed with GenerateInviteToken with the params on how the invite token should

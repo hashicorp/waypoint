@@ -26,16 +26,12 @@ func TestServerConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 			AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{},
 		}))
 
-		var cookie string
 		{
 			// Get
 			cfg, err := s.ServerConfigGet()
 			require.NoError(err)
 			require.NotNil(cfg)
 			require.NotNil(cfg.AdvertiseAddrs)
-			require.NotEmpty(cfg.Cookie)
-
-			cookie = cfg.Cookie
 		}
 
 		// Unset
@@ -47,28 +43,6 @@ func TestServerConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.NoError(err)
 			require.NotNil(cfg)
 			require.Nil(cfg.AdvertiseAddrs)
-			require.NotEmpty(cfg.Cookie)
-			require.Equal(cookie, cfg.Cookie)
-		}
-	})
-
-	t.Run("cookie cannot be overwritten", func(t *testing.T) {
-		require := require.New(t)
-
-		s := factory(t)
-		defer s.Close()
-
-		// Set
-		require.NoError(s.ServerConfigSet(&pb.ServerConfig{
-			Cookie: "hello",
-		}))
-
-		{
-			// Get
-			cfg, err := s.ServerConfigGet()
-			require.NoError(err)
-			require.NotNil(cfg)
-			require.NotEqual("hello", cfg.Cookie)
 		}
 	})
 }

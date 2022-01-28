@@ -17,7 +17,6 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/blake2b"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -56,17 +55,13 @@ var (
 	// any authentication. Authenticate doesn't even attempt to parse the
 	// token so it can be totally invalid.
 	unauthenticatedEndpoints = map[string]struct{}{
-		"BootstrapToken":     {},
-		"ConvertInviteToken": {},
-		"DecodeToken":        {},
-
-		"GetVersionInfo": {},
-
+		"BootstrapToken":      {},
+		"ConvertInviteToken":  {},
+		"DecodeToken":         {},
+		"GetVersionInfo":      {},
 		"ListOIDCAuthMethods": {},
 		"GetOIDCAuthURL":      {},
 		"CompleteOIDCAuth":    {},
-
-		"RunnerToken": {},
 	}
 )
 
@@ -79,9 +74,7 @@ func userWithContext(ctx context.Context, u *pb.User) context.Context {
 }
 
 // userFromContext returns the authenticated user in the request context.
-// This will return nil if the user is not authenticated. Note that a user
-// may not be authenticated but the request can still be authenticated
-// using a non-user token type. The safeste way to check is tokenFromContext.
+// This will return nil if the user is not authenticated.
 func (s *service) userFromContext(ctx context.Context) *pb.User {
 	value, ok := ctx.Value(userKey{}).(*pb.User)
 	if !ok && s.superuser {
@@ -89,46 +82,6 @@ func (s *service) userFromContext(ctx context.Context) *pb.User {
 	}
 
 	return value
-}
-
-type tokenKey struct{}
-
-// tokenWithContext inserts the decrypted token t into the context.
-func tokenWithContext(ctx context.Context, t *pb.Token) context.Context {
-	return context.WithValue(ctx, tokenKey{}, t)
-}
-
-// tokenFromContext returns the validated token used with the request.
-// The token is guaranteed to be valid, meaning that it successfully
-// was signed and decrypted. This will return nil if no token was present
-// for the request.
-func (s *service) tokenFromContext(ctx context.Context) *pb.Token {
-	value, ok := ctx.Value(tokenKey{}).(*pb.Token)
-	if !ok && s.superuser {
-		// We are in implicit superuser mode meaning everything is always
-		// allowed. Create a login token for the superuser.
-		value = &pb.Token{
-			Kind: &pb.Token_Login_{
-				Login: &pb.Token_Login{
-					UserId: DefaultUserId,
-				},
-			},
-		}
-	}
-
-	return value
-}
-
-// cookieFromRequest returns the server cookie value provided during the request,
-// or blank if none (or a blank cookie) is provided.
-func (s *service) cookieFromRequest(ctx context.Context) string {
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		if c, ok := md["cookie"]; ok && len(c) > 0 {
-			return c[0]
-		}
-	}
-
-	return ""
 }
 
 // Authenticate implements the server.AuthChecker interface.
@@ -140,108 +93,27 @@ func (s *service) cookieFromRequest(ctx context.Context) string {
 func (s *service) Authenticate(
 	ctx context.Context, token, endpoint string, effects []string,
 ) (context.Context, error) {
-	_, anonEndpoint := unauthenticatedEndpoints[endpoint]
-
-	// Check the cookie
-	if c := s.cookieFromRequest(ctx); c != "" {
-		serverConfig, err := s.state.ServerConfigGet()
-		if err != nil {
-			return nil, err
-		}
-
-		if !strings.EqualFold(serverConfig.Cookie, c) {
-			return nil, status.Errorf(codes.PermissionDenied, "server cookie does not match")
-		}
+	// Ignore unauthenticated endpoints
+	if _, ok := unauthenticatedEndpoints[endpoint]; ok {
+		return nil, nil
 	}
 
-	// We require a token if this isn't an unauthenticated endpoint
-	if !anonEndpoint && token == "" {
+	if token == "" {
 		return nil, status.Errorf(codes.Unauthenticated, "Authorization token is not supplied")
 	}
 
-	// Try to decode the token
 	_, body, err := s.decodeToken(token)
-	if err != nil {
-		body = nil
-
-		// We only return an error if this isn't an anonymous endpoint.
-		// Otherwise, we ignore token errors because they don't affect
-		// guest behavior.
-		if !anonEndpoint {
-			return nil, err
-		}
-	}
-
-	// Store the token in the context
-	ctx = tokenWithContext(ctx, body)
-
-	// If we are at an unauthenticated endpoint, no need to verify further.
-	if anonEndpoint {
-		return ctx, nil
-	}
-
-	// "Authentication" depends on the type of token.
-	switch k := body.Kind.(type) {
-	case *pb.Token_Trigger_:
-		// trigger token auth should explicitly not be allowed for gRPC requests
-		return nil, status.Errorf(codes.PermissionDenied, "Trigger URL token not "+
-			"authorized to make requests on this endpoint.")
-
-	case *pb.Token_Login_:
-		return s.authLogin(ctx, body, endpoint)
-
-	case *pb.Token_Runner_:
-		return s.authRunner(ctx, k.Runner, endpoint)
-
-	default:
-		return nil, ErrInvalidToken
-	}
-}
-
-// authRunner authenticates runner token types.
-func (s *service) authRunner(
-	ctx context.Context, tokenRunner *pb.Token_Runner, endpoint string,
-) (context.Context, error) {
-	// If no ID is set, then the runner is assumed at all times to be adopted.
-	// This use case is used to "pre-adopt" runners and avoid the adoption
-	// lifecycle completely, such as with infinitely autoscaled runners.
-	if tokenRunner.Id == "" {
-		// Authenticated.
-		return ctx, nil
-	}
-
-	// If this is a runner registration request, we allow it through
-	// because those APIs will verify and adopt the runner if they can.
-	if endpoint == "RunnerConfig" || endpoint == "RunnerToken" {
-		return ctx, nil
-	}
-
-	// Get our runner
-	r, err := s.state.RunnerById(tokenRunner.Id, nil)
-	if status.Code(err) == codes.NotFound {
-		err = nil
-		r = nil
-	}
 	if err != nil {
 		return nil, err
 	}
 
-	// Runner is not adopted if it does not exist or is not in an adopted state
-	notAdopted := r == nil ||
-		(r.AdoptionState != pb.Runner_ADOPTED &&
-			r.AdoptionState != pb.Runner_PREADOPTED)
-	if notAdopted {
-		return nil, status.Errorf(codes.PermissionDenied,
-			"runner is not adopted")
+	// trigger token auth should explicitly not be allowed for gRPC requests
+	_, ok := body.Kind.(*pb.Token_Trigger_)
+	if ok {
+		return nil, status.Errorf(codes.PermissionDenied, "Trigger URL token not "+
+			"authorized to make requests on this endpoint.")
 	}
 
-	return ctx, nil
-}
-
-// authLogin authenticates login token types.
-func (s *service) authLogin(
-	ctx context.Context, body *pb.Token, endpoint string,
-) (context.Context, error) {
 	// Token must be a login token to be used for auth
 	login, ok := body.Kind.(*pb.Token_Login_)
 	if !ok || login == nil {
@@ -472,39 +344,6 @@ func (s *service) GenerateLoginToken(
 	} else {
 		// Default token type
 		createToken.Kind = &pb.Token_Login_{Login: login}
-	}
-
-	token, err := s.newToken(dur, DefaultKeyId, nil, createToken)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pb.NewTokenResponse{Token: token}, nil
-}
-
-// Create a new runner token.
-func (s *service) GenerateRunnerToken(
-	ctx context.Context, req *pb.GenerateRunnerTokenRequest,
-) (*pb.NewTokenResponse, error) {
-	// If we have a duration set, set the expiry
-	var dur time.Duration
-	if d := req.Duration; d != "" {
-		var err error
-		dur, err = time.ParseDuration(d)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// NOTE(mitchellh): label hash is currently ignored because runners
-	// don't have labels. We'll add support in a future PR.
-
-	createToken := &pb.Token{
-		Kind: &pb.Token_Runner_{
-			Runner: &pb.Token_Runner{
-				Id: req.Id,
-			},
-		},
 	}
 
 	token, err := s.newToken(dur, DefaultKeyId, nil, createToken)

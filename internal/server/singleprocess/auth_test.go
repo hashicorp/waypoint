@@ -286,40 +286,6 @@ func TestServiceAuth(t *testing.T) {
 		_, _, err = s.decodeToken(rogue)
 		require.Error(err)
 	})
-
-	t.Run("validate a runner token with no ID set", func(t *testing.T) {
-		require := require.New(t)
-
-		token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
-			Kind: &pb.Token_Runner_{
-				Runner: &pb.Token_Runner{
-					// Being explicit (not setting it at all would be the same)
-					// to show what we're testing.
-					Id: "",
-				},
-			},
-		})
-
-		// Verify authing works
-		_, err = s.Authenticate(context.Background(), token, "test", nil)
-		require.NoError(err)
-	})
-
-	t.Run("validate a runner token with an ID set and not adopted", func(t *testing.T) {
-		require := require.New(t)
-
-		token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
-			Kind: &pb.Token_Runner_{
-				Runner: &pb.Token_Runner{
-					Id: "i-do-not-exist",
-				},
-			},
-		})
-
-		// Auth should NOT work
-		_, err = s.Authenticate(context.Background(), token, "test", nil)
-		require.Error(err)
-	})
 }
 
 func TestServiceAuth_TriggerToken(t *testing.T) {
