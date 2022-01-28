@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	configpkg "github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -13,11 +14,12 @@ type App struct {
 
 	project     *Project
 	application *pb.Ref_Application
+	runner      *configpkg.Runner
 }
 
 // App returns the app-specific operations client.
 func (c *Project) App(n string) *App {
-	return &App{
+	app := &App{
 		UI:      c.UI,
 		project: c,
 		application: &pb.Ref_Application{
@@ -25,6 +27,11 @@ func (c *Project) App(n string) *App {
 			Application: n,
 		},
 	}
+	if c.waypointHCL != nil {
+		app.runner = c.waypointHCL.ConfigAppRunner(n)
+	}
+
+	return app
 }
 
 // Ref returns the application reference that this client is using.
@@ -37,6 +44,11 @@ func (c *App) Ref() *pb.Ref_Application {
 func (c *App) job() *pb.Job {
 	job := c.project.job()
 	job.Application = c.application
+	if c.runner != nil && c.runner.Profile != "" {
+		job.OndemandRunner = &pb.Ref_OnDemandRunnerConfig{
+			Name: c.runner.Profile,
+		}
+	}
 	return job
 }
 

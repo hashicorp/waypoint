@@ -2,8 +2,8 @@ package runner
 
 import (
 	"context"
-
 	"github.com/hashicorp/go-hclog"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

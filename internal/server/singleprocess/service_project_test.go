@@ -27,10 +27,10 @@ func TestServiceProject(t *testing.T) {
 
 		// Creates a project
 		{
-
 			resp, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 				Project: project,
 			})
+
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Len(resp.Project.Applications, 0)
@@ -39,7 +39,6 @@ func TestServiceProject(t *testing.T) {
 
 		// Updates a project by making project remote
 		{
-
 			project.RemoteEnabled = true
 			resp, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 				Project: project,
@@ -82,6 +81,58 @@ func TestServiceProject(t *testing.T) {
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Len(resp.Projects, 1)
+		}
+	})
+}
+
+func TestServiceProject_GetApplication(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+	project := ptypes.TestProject(t, &pb.Project{
+		Name: "example",
+	})
+
+	t.Run("get", func(t *testing.T) {
+		require := require.New(t)
+
+		// Returns an error if the application doesn't exist
+		{
+			resp, err := client.GetApplication(ctx, &pb.GetApplicationRequest{
+				Application: &pb.Ref_Application{Application: "doesnt-exist"},
+			})
+			require.Error(err)
+			require.Nil(resp)
+		}
+
+		// Create a project
+		resp, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+			Project: project,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+
+		// Gets an application inside a project
+		{
+			resp, err := client.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
+				Project: &pb.Ref_Project{Project: "example"},
+				Name:    "Apple",
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+
+			respApp, err := client.GetApplication(ctx, &pb.GetApplicationRequest{
+				Application: &pb.Ref_Application{
+					Application: "Apple",
+					Project:     "example",
+				},
+			})
+			require.NoError(err)
+			require.NotNil(respApp)
+			require.Equal(respApp.Application.Name, "Apple")
 		}
 	})
 }
@@ -146,5 +197,14 @@ func TestServiceProject_UpsertApplication(t *testing.T) {
 			require.NotNil(resp)
 		}
 
+		// adds runner profile if defined
+		{
+			resp, err := client.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
+				Project: &pb.Ref_Project{Project: "example"},
+				Name:    "Apple",
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+		}
 	})
 }

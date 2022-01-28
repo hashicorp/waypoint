@@ -41,6 +41,7 @@ lifecycle operation.
 - `-env-vars=<string>` - Environment variable to expose to the on-demand runner. Typically used to introduce configuration for the plugins that the runner will execute. Can be specified multiple times.
 - `-plugin-type=<string>` - The type of the plugin to launch for the on-demand runner, such as aws-ecs, kubernetes, etc.
 - `-plugin-config=<string>` - Path to an hcl file that contains the configuration for the plugin. This is only necessary when the plugin's defaults need to be adjusted for the environment the plugin will launch the on-demand runner in.
-- `-default` - Indicates that this on-demand runner should be used by any project that doesn't otherwise specify its own on-demand runner.
+- `-default` - Indicates that this remote runner profile should be the default for any project that doesn't otherwise specify its own remote runner.
+- `-target-runner-id=<string>` - ID of the remote runner to target for the profile.
 
 @include "commands/runner-profile-set_more.mdx"

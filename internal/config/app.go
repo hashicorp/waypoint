@@ -21,6 +21,8 @@ type App struct {
 	URL    *AppURL           `hcl:"url,block" default:"{}"`
 	Config *genericConfig    `hcl:"config,block"`
 
+	Runner *Runner `hcl:"runner,block"`
+
 	BuildRaw   *hclBuild `hcl:"build,block"`
 	DeployRaw  *hclStage `hcl:"deploy,block"`
 	ReleaseRaw *hclStage `hcl:"release,block"`
@@ -44,6 +46,8 @@ type hclApp struct {
 	BuildRaw   *hclBuild `hcl:"build,block"`
 	DeployRaw  *hclStage `hcl:"deploy,block"`
 	ReleaseRaw *hclStage `hcl:"release,block"`
+
+	Runner *Runner `hcl:"runner,block"`
 
 	Body   hcl.Body `hcl:",body"`
 	Remain hcl.Body `hcl:",remain"`
@@ -107,6 +111,7 @@ func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
 	}
 	app.Name = rawApp.Name
 	app.Path = appPath
+	app.Runner = rawApp.Runner
 	app.ctx = ctx
 	app.config = c
 	if app.Config != nil {

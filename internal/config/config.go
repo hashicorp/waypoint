@@ -37,7 +37,14 @@ type hclConfig struct {
 
 // Runner is the configuration for supporting runners in this project.
 type Runner struct {
-	// Enabled is whether or not runners are enabled. If this is false
+	// Profile is the name of the on-demand runner configuration.
+	Profile string `hcl:"profile"`
+
+	// Note (XX): The other properties in this struct are only used on init,
+	// and don't really make sense being here.
+	// DataSource, for example, should be set at the project level, not with the runner...
+
+	// Enabled is whether runners are enabled. If this is false
 	// then the "-remote" flag will not work.
 	Enabled bool `hcl:"enabled,optional"`
 
@@ -165,4 +172,19 @@ func (c *Config) HCLContext() *hcl.EvalContext {
 // ConfigPath returns the path to the directory that contains the config file (waypoint.hcl)
 func (c *Config) ConfigPath() string {
 	return c.path
+}
+
+// ConfigRunner returns the runner stanza on a project
+func (c *Config) ConfigRunner() *Runner {
+	return c.Runner
+}
+
+// ConfigAppRunner returns the runner stanza on an application
+func (c *Config) ConfigAppRunner(name string) *Runner {
+	for _, app := range c.hclConfig.Apps {
+		if app.Name == name {
+			return app.Runner
+		}
+	}
+	return nil
 }
