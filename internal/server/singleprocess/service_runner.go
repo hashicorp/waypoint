@@ -197,6 +197,12 @@ func (s *service) RunnerToken(
 
 		case pb.Runner_ADOPTED:
 			// Runner explicitly adopted, create token and return!
+
+			hash, err := serverptypes.RunnerLabelHash(record.Labels)
+			if err != nil {
+				return nil, err
+			}
+
 			tok, err := s.newToken(
 				// Doesn't expire because we can expire it by unadopting.
 				// NOTE(mitchellh): At some point, we should make these
@@ -208,7 +214,8 @@ func (s *service) RunnerToken(
 				&pb.Token{
 					Kind: &pb.Token_Runner_{
 						Runner: &pb.Token_Runner{
-							Id: record.Id,
+							Id:        record.Id,
+							LabelHash: hash,
 						},
 					},
 				},
