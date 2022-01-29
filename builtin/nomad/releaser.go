@@ -70,7 +70,7 @@ func (r *Releaser) getNomadClient() (*nomadClient, error) {
 		return nil, err
 	}
 	return &nomadClient{
-	    NomadClient: client,
+		NomadClient: client,
 	}, nil
 }
 
@@ -87,38 +87,38 @@ func (r *Releaser) resourceJobStatus(
 
 	jobClient := client.NomadClient.Jobs()
 	s.Update("Getting job...")
-    jobs, _, err := jobClient.PrefixList(state.Name)
-    q := &api.QueryOptions{Namespace: jobs[0].JobSummary.Namespace}
+	jobs, _, err := jobClient.PrefixList(state.Name)
+	q := &api.QueryOptions{Namespace: jobs[0].JobSummary.Namespace}
 
-    jobResource := sdk.StatusReport_Resource{
-        CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
-    }
-    sr.Resources = append(sr.Resources, &jobResource)
+	jobResource := sdk.StatusReport_Resource{
+		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
+	}
+	sr.Resources = append(sr.Resources, &jobResource)
 
-    job, _, err := jobClient.Info(jobs[0].ID, q)
+	job, _, err := jobClient.Info(jobs[0].ID, q)
 
-    if jobs == nil {
-        return status.Errorf(codes.FailedPrecondition, "Nomad job response cannot be empty")
-    } else if err != nil {
-        s.Update("No job was found")
-        s.Status(terminal.StatusError)
-        s.Done()
-        s = sg.Add("")
+	if jobs == nil {
+		return status.Errorf(codes.FailedPrecondition, "Nomad job response cannot be empty")
+	} else if err != nil {
+		s.Update("No job was found")
+		s.Status(terminal.StatusError)
+		s.Done()
+		s = sg.Add("")
 
-        jobResource.Name = state.Name
-        jobResource.Health = sdk.StatusReport_MISSING
-        jobResource.HealthMessage = sdk.StatusReport_MISSING.String()
-    } else {
-        jobResource.Id = *job.ID
-        jobResource.Name = *job.Name
-        jobResource.CreatedTime = timestamppb.New(time.Unix(0, *job.SubmitTime))
-        jobResource.Health = sdk.StatusReport_READY
-        jobResource.HealthMessage = fmt.Sprintf("Job %q exists and is ready", job.Name)
-        //jobResource.StateJson =
-    }
+		jobResource.Name = state.Name
+		jobResource.Health = sdk.StatusReport_MISSING
+		jobResource.HealthMessage = sdk.StatusReport_MISSING.String()
+	} else {
+		jobResource.Id = *job.ID
+		jobResource.Name = *job.Name
+		jobResource.CreatedTime = timestamppb.New(time.Unix(0, *job.SubmitTime))
+		jobResource.Health = sdk.StatusReport_READY
+		jobResource.HealthMessage = fmt.Sprintf("Job %q exists and is ready", job.Name)
+		//jobResource.StateJson =
+	}
 
-    s.Update("Finished building report for Nomad job")
-    s.Done()
+	s.Update("Finished building report for Nomad job")
+	s.Done()
 	return nil
 }
 
@@ -133,8 +133,8 @@ func (r *Releaser) resourceJobCreate(
 	sg terminal.StepGroup,
 	st terminal.Status,
 ) error {
-    step := sg.Add("Initializing Nomad client...")
-    defer func() { step.Abort() }()
+	step := sg.Add("Initializing Nomad client...")
+	defer func() { step.Abort() }()
 
 	jobClient := client.NomadClient.Jobs()
 	deploymentClient := client.NomadClient.Deployments()
@@ -198,13 +198,28 @@ func (r *Releaser) resourceJobCreate(
 }
 
 func (r *Releaser) resourceJobDestroy(
-	client *api.Client,
+	ctx context.Context,
 	state *Resource_Job,
-	st terminal.Status,
+	sg terminal.StepGroup,
+	client *nomadClient,
 ) error {
-	st.Step("Deleting job: %s", state.Name)
-	//TODO: Would namespace be needed here?
-	_, _, err := client.Jobs().Deregister(state.Name, true, nil)
+	step := sg.Add("Initializing Nomad client...")
+	defer func() { step.Abort() }()
+
+	nomadClient := client.NomadClient
+	jobClient := nomadClient.Jobs()
+
+	step.Update("Getting job...")
+	jobs, _, err := jobClient.PrefixList(state.Name)
+	if err != nil {
+		return status.Errorf(codes.Aborted, "Unable to fetch Nomad job: %s", err.Error())
+	}
+
+	// Set write options
+	wq := &api.WriteOptions{Namespace: jobs[0].JobSummary.Namespace}
+
+	step.Update("Deleting job: %s", state.Name)
+	_, _, err = jobClient.Deregister(state.Name, true, wq)
 	return err
 }
 
@@ -218,18 +233,18 @@ func (r *Releaser) Release(
 	target *Deployment,
 	dcr *component.DeclaredResourcesResp,
 ) (*Release, error) {
-    var result Release
+	var result Release
 
-    sg := ui.StepGroup()
-    defer sg.Wait()
+	sg := ui.StepGroup()
+	defer sg.Wait()
 
-    rm := r.resourceManager(log, dcr)
-    if err := rm.CreateAll(
-        ctx, log, sg, ui,
-        target, &result,
-    ); err != nil {
-        return nil, err
-    }
+	rm := r.resourceManager(log, dcr)
+	if err := rm.CreateAll(
+		ctx, log, sg, ui,
+		target, &result,
+	); err != nil {
+		return nil, err
+	}
 
 	result.ResourceState = rm.State()
 
@@ -247,18 +262,18 @@ func (r *Releaser) Destroy(
 
 	rm := r.resourceManager(log, nil)
 
-    // If we don't have resource state, this state is from an older version
-    // and we need to manually recreate it.
-//     if release.ResourceState == nil {
-//         rm.Resource(rmResourceJobName).SetState(&Resource_Job{
-//             Name: release.ServiceName,
-//         })
-//     } else {
-//         // Load our set state
-//         if err := rm.LoadState(release.ResourceState); err != nil {
-//             return err
-//         }
-//     }
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if release.ResourceState == nil {
+		rm.Resource(rmResourceJobName).SetState(&Resource_Job{
+			Name: release.Name,
+		})
+	} else {
+		// Load our set state
+		if err := rm.LoadState(release.ResourceState); err != nil {
+			return err
+		}
+	}
 
 	return rm.DestroyAll(ctx, log, sg, ui)
 }
@@ -287,10 +302,9 @@ func (r *Releaser) Status(
 		}
 	}
 
-    step := sg.Add("Getting status of Noamd release...")
+	step := sg.Add("Getting status of Nomad release...")
 	defer step.Abort()
 
-    // TODO: Implement status
 	resources, err := rm.StatusAll(ctx, log, sg, ui)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "resource manager failed to generate resource statuses: %s", err)
@@ -355,7 +369,7 @@ type ReleaserConfig struct {
 }
 
 type nomadClient struct {
-    NomadClient *api.Client
+	NomadClient *api.Client
 }
 
 func (r *Releaser) Documentation() (*docs.Documentation, error) {
