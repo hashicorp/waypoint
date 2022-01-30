@@ -117,7 +117,7 @@ func (r *Releaser) resourceJobStatus(
 		//jobResource.StateJson =
 	}
 
-	s.Update("Finished building report for Nomad job")
+	s.Update("Finished building report for Nomad job resource")
 	s.Done()
 	return nil
 }
@@ -220,7 +220,15 @@ func (r *Releaser) resourceJobDestroy(
 
 	step.Update("Deleting job: %s", state.Name)
 	_, _, err = jobClient.Deregister(state.Name, true, wq)
-	return err
+
+	if err != nil {
+	  return err
+	}
+
+	step.Update("Job deleted")
+	step.Done()
+
+	return nil
 }
 
 // Release promotes the Nomad canary deployment
@@ -336,10 +344,8 @@ func (r *Releaser) Status(
 		HealthMessage: jobResource.HealthMessage,
 	}
 
-	log.Debug("status report complete")
-
 	// update output based on main health state
-	step.Update("Finished building report for Nomad job resource")
+	step.Update("Finished building report for Nomad platform")
 	step.Done()
 
 	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
