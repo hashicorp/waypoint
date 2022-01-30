@@ -44,6 +44,10 @@ export default Factory.extend({
     name: 'nomad-canary',
   }),
 
+  'nomad-jobspec-canary': trait({
+    name: 'nomad-jobspec-canary',
+  }),
+
   kubernetes: trait({
     name: 'kubernetes',
   }),

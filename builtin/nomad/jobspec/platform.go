@@ -324,7 +324,20 @@ func (p *Platform) Generation(
 		return nil, err
 	}
 
-	return []byte(*job.ID), nil
+	// If we have canaries, generate random ID, otherwise keep gen ID as job ID
+	canaryDeployment := false
+	for _, taskGroup := range job.TaskGroups {
+		if *taskGroup.Update.Canary > 0 {
+			canaryDeployment = true
+		}
+	}
+	//return errorf here
+	if !canaryDeployment {
+		return []byte(*job.ID), nil
+	} else {
+		return nil, nil
+	}
+
 }
 
 func (p *Platform) jobspec(client *api.Client, path string) (*api.Job, error) {

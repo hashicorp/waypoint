@@ -48,6 +48,7 @@ var (
 		"nomad":                    nomad.Options,
 		"nomad-jobspec":            jobspec.Options,
 		"nomad-canary":             nomad.Options,
+		"nomad-jobspec-canary":     jobspec.Options,
 		"aws-ami":                  ami.Options,
 		"aws-ec2":                  ec2.Options,
 		"aws-alb":                  alb.Options,

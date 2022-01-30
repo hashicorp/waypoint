@@ -21,6 +21,8 @@ export function iconForComponent([component]: [string]): string {
       return 'nomad-color';
     case 'nomad-canary':
       return 'nomad-color';
+    case 'nomad-jobspec-canary':
+      return 'nomad-color';
     case 'pack':
       return 'pack-color';
     default:
