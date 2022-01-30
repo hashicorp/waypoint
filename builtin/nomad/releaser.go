@@ -82,7 +82,7 @@ func (r *Releaser) resourceJobStatus(
 	client *nomadClient,
 	sr *resource.StatusResponse,
 ) error {
-	s := sg.Add("Checking status of Nomad Job %q...", state.Name)
+	s := sg.Add("Checking status of Nomad job resource %q...", state.Name)
 	defer s.Abort()
 
 	jobClient := client.NomadClient.Jobs()
@@ -130,30 +130,30 @@ func (r *Releaser) resourceJobCreate(
 	result *Release,
 	state *Resource_Job,
 	client *nomadClient,
-	sg terminal.StepGroup,
 	st terminal.Status,
 ) error {
-	step := sg.Add("Initializing Nomad client...")
-	defer func() { step.Abort() }()
+    //TODO: Use step group
+	//step := sg.Add("Initializing Nomad client...")
+	//defer func() { step.Abort() }()
 
 	jobClient := client.NomadClient.Jobs()
 	deploymentClient := client.NomadClient.Deployments()
 
-	step.Update("Getting job...")
+	st.Update("Getting job...")
 	jobs, _, err := jobClient.PrefixList(target.Name)
 	if err != nil {
 		return status.Errorf(codes.Aborted, "Unable to fetch Nomad job: %s", err.Error())
 	}
 
 	q := &api.QueryOptions{Namespace: jobs[0].JobSummary.Namespace}
-	step.Update("Getting latest deployments for job")
+	st.Update("Getting latest deployments for job")
 	deploy, _, err := jobClient.LatestDeployment(jobs[0].ID, q)
 	if err != nil {
 		return status.Errorf(codes.Aborted, "Unable to fetch latest deployment for Nomad job: %s", err.Error())
 	}
 
 	if deploy == nil {
-		step.Update("No active deployment for Nomad job")
+		st.Update("No active deployment for Nomad job")
 		return err
 	}
 
@@ -177,7 +177,7 @@ func (r *Releaser) resourceJobCreate(
 	var u *api.DeploymentUpdateResponse
 	//TODO: Add logic to support promotion of specific group(s)
 	u, _, err = deploymentClient.PromoteAll(deploy.ID, wq)
-	step.Update(fmt.Sprintf("Monitoring evaluation %q", u.EvalID))
+	st.Update(fmt.Sprintf("Monitoring evaluation %q", u.EvalID))
 
 	if err := NewMonitor(st, client.NomadClient).Monitor(u.EvalID); err != nil {
 		return err
@@ -235,12 +235,13 @@ func (r *Releaser) Release(
 ) (*Release, error) {
 	var result Release
 
-	sg := ui.StepGroup()
-	defer sg.Wait()
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
 
 	rm := r.resourceManager(log, dcr)
 	if err := rm.CreateAll(
-		ctx, log, sg, ui,
+		ctx, log, st, ui,
 		target, &result,
 	); err != nil {
 		return nil, err
@@ -338,7 +339,7 @@ func (r *Releaser) Status(
 	log.Debug("status report complete")
 
 	// update output based on main health state
-	step.Update("Finished building report for Kubernetes platform")
+	step.Update("Finished building report for Nomad job resource")
 	step.Done()
 
 	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
