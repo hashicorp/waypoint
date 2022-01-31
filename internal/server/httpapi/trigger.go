@@ -26,7 +26,6 @@ type Message struct {
 	JobId    string `json:"jobId,omitempty"`
 	Message  string `json:"message,omitempty"`
 	ExitCode string `json:"exitCode,omitempty"`
-	// TODO what other options should we send back to the user, oci url? other job metadata?
 }
 
 // HandleTrigger will execute a run trigger, if the requested id exists
@@ -144,6 +143,13 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 
 		// Attempt to stream output back, on request.
 		if streamOutput != "" {
+			if !requireAuth {
+				// We do not allow streaming job stream info if a no-auth token trigger was requested
+				log.Debug("server does not allow for streaming job stream output for no-token trigger URLs")
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+
 			log.Trace("attempting to stream back queued job output from running trigger")
 
 			cn, ok := w.(http.CloseNotifier)
@@ -295,7 +301,7 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 										// we ignore steps and send the message directly instead
 										m = ev.Status.Msg
 									case *pb.GetJobStreamResponse_Terminal_Event_Raw_:
-										// does message need stdout/stderr??
+										// does message need to preserve stdout/stderr??
 										m = string(ev.Raw.Data[:])
 									case *pb.GetJobStreamResponse_Terminal_Event_Table_:
 										tbl := terminal.NewTable(ev.Table.Headers...)
