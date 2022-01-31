@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/nomad"
 )
 
 // Releaser is the ReleaseManager implementation for Nomad.
@@ -131,18 +132,18 @@ func (r *Releaser) resourceJobStatus(
 // might be a better name than JobCreate for promoting a canary
 func (r *Releaser) resourceJobCreate(
 	ctx context.Context,
+	log hclog.Logger,
 	target *Deployment,
 	result *Release,
 	state *Resource_Job,
 	client *nomadClient,
 	st terminal.Status,
 ) error {
-	//TODO: Use step group
-	//step := sg.Add("Initializing Nomad client...")
-	//defer func() { step.Abort() }()
 
 	jobClient := client.NomadClient.Jobs()
 	deploymentClient := client.NomadClient.Deployments()
+
+	//TODO: Use step group
 	st.Update("Getting job...")
 	jobs, _, err := jobClient.PrefixList(target.Name)
 	if err != nil {
@@ -164,14 +165,18 @@ func (r *Releaser) resourceJobCreate(
 	//Check if any of the task groups are canary deployments
 	//TODO: Match up specified 'groups' in ReleaserConfig to group names found in the Deployment
 	//      Verify that they 1) exist and 2) have canaries
+	//      Note that this will become more complex in that once the deployment is
+	//      "released", the generation ID will not support a second "release" to
+	//      promote a different group of canaries
 	canaryDeployment := false
-	for _, taskGroup := range deploy.TaskGroups {
+	for taskGroupName, taskGroup := range deploy.TaskGroups {
 		if taskGroup.DesiredCanaries != 0 {
+			log.Debug(fmt.Sprintf("Canaries detected in task group %s", taskGroupName))
 			canaryDeployment = true
 		}
 	}
-	//return errorf here
 	if !canaryDeployment {
+		log.Info("Canaries not detected")
 		return nil
 	}
 
@@ -181,11 +186,13 @@ func (r *Releaser) resourceJobCreate(
 	var u *api.DeploymentUpdateResponse
 	//TODO: Add logic to support promotion of specific group(s)
 	u, _, err = deploymentClient.PromoteAll(deploy.ID, wq)
-	st.Update(fmt.Sprintf("Monitoring evaluation %q", u.EvalID))
-
-	// 	if err := NewMonitor(st, client.NomadClient).Monitor(u.EvalID); err != nil {
-	// 		return err
-	// 	}
+	if err != nil {
+		return err
+	}
+	st.Update(fmt.Sprintf("Monitoring evaluation %s", string(u.EvalID)))
+	if err := nomad.NewMonitor(st, client.NomadClient).Monitor(u.EvalID); err != nil {
+		return err
+	}
 
 	//TODO: If applicable, get Consul service from job. If multiple services, how to determine which service to use
 	//      (maybe from ReleaserConfig)? Consul service URL structure may be ambiguous here as well:
@@ -252,7 +259,7 @@ func (r *Releaser) Release(
 
 	rm := r.resourceManager(log, dcr)
 	if err := rm.CreateAll(
-		ctx, st, &result, target,
+		ctx, log, st, &result, target,
 	); err != nil {
 		return nil, err
 	}
@@ -395,6 +402,8 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 
 	return doc, nil
 }
+
+func (r *Release) URL() string { return r.Url }
 
 var (
 	_ component.ReleaseManager = (*Releaser)(nil)
