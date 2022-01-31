@@ -71,6 +71,9 @@ type BuilderConfig struct {
 
 	// Controls the passing of the target stage
 	Target string `hcl:"target,optional"`
+
+	// Disable the build cache
+	NoCache bool `hcl:"no_cache,optional"`
 }
 
 func (b *Builder) Documentation() (*docs.Documentation, error) {
@@ -164,6 +167,14 @@ build {
 		"the target build stage in a multi-stage Dockerfile",
 		docs.Summary(
 			"If buildkit is enabled unused stages will be skipped",
+		),
+	)
+
+	doc.SetField(
+		"no_cache",
+		"Do not use cache when building the image",
+		docs.Summary(
+			"Ensures a clean image build.",
 		),
 	)
 
@@ -309,7 +320,7 @@ func (b *Builder) Build(
 	// Build
 	step.Done()
 	step = nil
-	if err := b.buildWithDocker(ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.Platform, b.config.BuildArgs, b.config.Target, log); err != nil {
+	if err := b.buildWithDocker(ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.Platform, b.config.BuildArgs, b.config.Target, b.config.NoCache, log); err != nil {
 		return nil, err
 	}
 
@@ -384,6 +395,7 @@ func (b *Builder) buildWithDocker(
 	platform string,
 	buildArgs map[string]*string,
 	target string,
+	noCache bool,
 	log hclog.Logger,
 ) error {
 	excludes, err := build.ReadDockerignore(contextDir)
@@ -432,6 +444,7 @@ func (b *Builder) buildWithDocker(
 		Platform:   platform,
 		BuildArgs:  buildArgs,
 		Target:     target,
+		NoCache:    noCache,
 	}
 
 	// Buildkit builds need a session under most circumstances, but sessions are only supported in >1.39
