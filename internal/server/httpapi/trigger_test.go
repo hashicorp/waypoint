@@ -2,8 +2,10 @@ package httpapi
 
 import (
 	"net/http/httptest"
+	"sync"
 	"testing"
 
+	"github.com/hashicorp/waypoint/pkg/server/gen/mocks"
 	"github.com/stretchr/testify/require"
 )
 
@@ -11,7 +13,7 @@ func TestHandleTrigger(t *testing.T) {
 	//ctx := context.Background()
 
 	// Get our gRPC server
-	impl := &execImpl{}
+	impl := &triggerImpl{}
 	addr := testServer(t, impl)
 
 	// Start up our test HTTP server
@@ -23,4 +25,9 @@ func TestHandleTrigger(t *testing.T) {
 
 		require.Equal(1, 1)
 	})
+}
+
+type triggerImpl struct {
+	sync.Mutex
+	mocks.WaypointServer
 }
