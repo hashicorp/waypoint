@@ -129,6 +129,8 @@ func configRunnerSet(
 	return result, nil
 }
 
+// OrderRequest is the input to OrderVariables, with all the information
+// to properly calculate the order to evalutate each variable.
 type OrderRequest struct {
 	Set       [][]*pb.ConfigVar
 	Merge     bool
@@ -137,6 +139,10 @@ type OrderRequest struct {
 	Labels    map[string]string
 }
 
+// OrderVariables considers the data in the OrderRequest and calculates
+// the correct order to evalutate each ConfigVar, and then returns
+// the vars in that order. It also filters variables based on the values
+// in the OrderRequest, depending on what is set.
 func OrderVariables(req *OrderRequest) ([]*pb.ConfigVar, error) {
 	mergeSet := req.Set
 
