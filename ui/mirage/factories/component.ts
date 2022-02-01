@@ -40,10 +40,6 @@ export default Factory.extend({
     name: 'nomad-jobspec',
   }),
 
-  'nomad-canary': trait({
-    name: 'nomad-canary',
-  }),
-
   'nomad-jobspec-canary': trait({
     name: 'nomad-jobspec-canary',
   }),
