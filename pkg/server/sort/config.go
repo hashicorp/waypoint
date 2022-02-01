@@ -1,10 +1,16 @@
 package sort
 
 import (
+	"errors"
+	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 
+	"github.com/hashicorp/waypoint/pkg/config/funcs"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/mitchellh/pointerstructure"
+	"github.com/zclconf/go-cty/cty"
 )
 
 // ConfigName sorts config variables by name.
@@ -79,3 +85,194 @@ var (
 		reflect.TypeOf((*pb.ConfigVar_Target_Application)(nil)): 2,
 	}
 )
+
+// configRunnerSet splits a set of config vars into a merge set depending
+// on priority to match a runner.
+func configRunnerSet(
+	set []*pb.ConfigVar,
+	req *pb.Ref_RunnerId,
+) ([][]*pb.ConfigVar, error) {
+	// Results go into two buckets
+	result := make([][]*pb.ConfigVar, 2)
+	const (
+		idxAny = 0
+		idxId  = 1
+	)
+
+	// Go through the iterator and accumulate the results
+	for _, current := range set {
+		if current.Target.Runner == nil {
+			// We are not a config for a runner.
+			continue
+		}
+
+		idx := -1
+		switch ref := current.Target.Runner.Target.(type) {
+		case *pb.Ref_Runner_Any:
+			idx = idxAny
+
+		case *pb.Ref_Runner_Id:
+			idx = idxId
+
+			// We need to match this ID
+			if ref.Id.Id != req.Id {
+				continue
+			}
+
+		default:
+			return nil, fmt.Errorf("config has unknown target type: %T", current.Target.Runner.Target)
+		}
+
+		result[idx] = append(result[idx], current)
+	}
+
+	return result, nil
+}
+
+// OrderRequest is the input to OrderVariables, with all the information
+// to properly calculate the order to evalutate each variable.
+type OrderRequest struct {
+	Set       [][]*pb.ConfigVar
+	Merge     bool
+	Runner    *pb.Ref_RunnerId
+	Workspace *pb.Ref_Workspace
+	Labels    map[string]string
+}
+
+// OrderVariables considers the data in the OrderRequest and calculates
+// the correct order to evalutate each ConfigVar, and then returns
+// the vars in that order. It also filters variables based on the values
+// in the OrderRequest, depending on what is set.
+func OrderVariables(req *OrderRequest) ([]*pb.ConfigVar, error) {
+	mergeSet := req.Set
+
+	// Sort all of our merge sets by the resolution rules
+	for _, set := range mergeSet {
+		sort.Sort(ConfigResolution(set))
+	}
+
+	// If we have a runner set, then we want to filter all our config vars
+	// by runner. This is more complex than that though, because tighter
+	// scoped runner refs should overwrite weaker scoped (i.e. ID-ref overwrites
+	// Any-ref). So we have to split our merge set from <X, Y> to
+	// <X_any, X_id, Y_any, Y_id> so it merges properly later.
+	if req.Runner != nil {
+		var newMergeSet [][]*pb.ConfigVar
+		for _, set := range mergeSet {
+			splitSets, err := configRunnerSet(set, req.Runner)
+			if err != nil {
+				return nil, err
+			}
+
+			newMergeSet = append(newMergeSet, splitSets...)
+		}
+
+		mergeSet = newMergeSet
+	} else {
+		// If runner isn't set, then we want to ensure we're not getting
+		// any runner env vars.
+		for _, set := range mergeSet {
+			for i, v := range set {
+				if v == nil {
+					continue
+				}
+
+				if v.Target.Runner != nil {
+					set[i] = nil
+				}
+			}
+		}
+	}
+
+	// Filter based on the workspace if we have it set.
+	if req.Workspace != nil {
+		for _, set := range mergeSet {
+			for i, v := range set {
+				if v == nil {
+					continue
+				}
+
+				if v.Target.Workspace != nil &&
+					!strings.EqualFold(v.Target.Workspace.Workspace, req.Workspace.Workspace) {
+					set[i] = nil
+				}
+			}
+		}
+	}
+
+	// Filter by labels
+	ctyMap := cty.MapValEmpty(cty.String)
+	if len(req.Labels) > 0 {
+		mapValues := map[string]cty.Value{}
+		for k, v := range req.Labels {
+			mapValues[k] = cty.StringVal(v)
+		}
+		ctyMap = cty.MapVal(mapValues)
+	}
+
+	for _, set := range mergeSet {
+		for i, v := range set {
+			if v == nil {
+				continue
+			}
+
+			// If there is no selector, ignore.
+			if v.Target.LabelSelector == "" {
+				continue
+			}
+
+			// Use our selectormatch HCL function for equal logic
+			result, err := funcs.SelectorMatch(ctyMap, cty.StringVal(v.Target.LabelSelector))
+			if errors.Is(err, pointerstructure.ErrNotFound) {
+				// this means that the label selector contains a label
+				// that isn't set, this means we do not match.
+				err = nil
+				result = cty.BoolVal(false)
+			}
+			if err != nil {
+				return nil, err
+			}
+
+			if result.False() {
+				set[i] = nil
+			}
+		}
+	}
+
+	// If we aren't merging, then we're done. We just flatten the list.
+	if !req.Merge {
+		var result []*pb.ConfigVar
+		for _, set := range mergeSet {
+			for _, v := range set {
+				if v != nil {
+					result = append(result, v)
+				}
+			}
+		}
+		sort.Sort(ConfigName(result))
+		return result, nil
+	}
+
+	// Merge our merge set
+	merged := make(map[string]*pb.ConfigVar)
+	for _, set := range mergeSet {
+		for _, v := range set {
+			// Ignore nil since those are filtered out values.
+			if v == nil {
+				continue
+			}
+
+			merged[v.Name] = v
+		}
+	}
+
+	result := make([]*pb.ConfigVar, 0, len(merged))
+	for _, v := range merged {
+		result = append(result, v)
+	}
+
+	sort.Sort(ConfigName(result))
+
+	return result, nil
+
+}

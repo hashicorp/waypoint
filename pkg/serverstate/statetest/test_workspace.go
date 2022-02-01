@@ -74,7 +74,7 @@ func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "4",
 			Workspace: &pb.Ref_Workspace{
-				Workspace: "2",
+				Workspace: "w2",
 			},
 		})))
 		{
@@ -253,7 +253,7 @@ func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory
 				Project:     "B",
 			},
 			Workspace: &pb.Ref_Workspace{
-				Workspace: "1",
+				Workspace: "w1",
 			},
 		})))
 
@@ -266,7 +266,7 @@ func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory
 			require.Len(result, 1)
 
 			ws := result[0]
-			require.Equal("1", ws.Name)
+			require.Equal("w1", ws.Name)
 			require.Len(ws.Projects, 1)
 		}
 
@@ -278,7 +278,7 @@ func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory
 				Project:     "B",
 			},
 			Workspace: &pb.Ref_Workspace{
-				Workspace: "2",
+				Workspace: "w2",
 			},
 		})))
 		{
@@ -316,7 +316,7 @@ func TestWorkspaceApp(t *testing.T, factory Factory, restartF RestartFactory) {
 				Project:     "B",
 			},
 			Workspace: &pb.Ref_Workspace{
-				Workspace: "1",
+				Workspace: "w1",
 			},
 		})))
 
@@ -330,7 +330,7 @@ func TestWorkspaceApp(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Len(result, 1)
 
 			ws := result[0]
-			require.Equal("1", ws.Name)
+			require.Equal("w1", ws.Name)
 			require.Len(ws.Projects, 1)
 		}
 	})

@@ -133,7 +133,7 @@ func TestRunnerAdopt(t *testing.T, factory Factory, restartF RestartFactory) {
 
 	// Should be triggered. This is a very important test because
 	// we need to ensure that the watchers can detect adoption changes.
-	require.False(ws.Watch(time.After(100 * time.Millisecond)))
+	require.False(ws.Watch(time.After(3 * time.Second)))
 
 	// Should be adopted
 	ws = memdb.NewWatchSet()
@@ -148,7 +148,7 @@ func TestRunnerAdopt(t *testing.T, factory Factory, restartF RestartFactory) {
 	require.NoError(s.RunnerCreate(rec))
 
 	// Should be triggered.
-	require.False(ws.Watch(time.After(100 * time.Millisecond)))
+	require.False(ws.Watch(time.After(3 * time.Second)))
 
 	// Should still be adopted
 	{
