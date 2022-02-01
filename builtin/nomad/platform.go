@@ -151,47 +151,6 @@ func (p *Platform) resourceJobCreate(
 		if p.config.Namespace == "" {
 			p.config.Namespace = "default"
 		}
-		//
-		// if p.config.Update != nil {
-		// 	stagger, err := time.ParseDuration(p.config.Update.Stagger)
-		// 	if err != nil {
-		// 		//log.Warn("Unable to parse stagger value: %s. Using default value.", err)
-		// 		stagger = stagger_default
-		// 	}
-		//
-		// 	minHealthyTime, err := time.ParseDuration(p.config.Update.Min_Healthy_Time)
-		// 	if err != nil {
-		// 		//log.Warn("Unable to parse min_healthy_time value: %s. Using default value.", err)
-		// 		minHealthyTime = min_healthy_time_default
-		// 	}
-		//
-		// 	healthyDeadline, err := time.ParseDuration(p.config.Update.Healthy_Deadline)
-		// 	if err != nil {
-		// 		//log.Warn("Unable to parse healthy_deadline value: %s. Using default value.", err)
-		// 		healthyDeadline = healthy_deadline_default
-		// 	}
-		//
-		// 	progressDeadline, err := time.ParseDuration(p.config.Update.Progress_Deadline)
-		// 	if err != nil {
-		// 		//log.Warn("Unable to parse progress_deadline value: %s. Using default value.", err)
-		// 		stagger_default = stagger_default
-		// 	}
-		//
-		// 	healthCheck := "task_states"
-		//
-		// 	tg.Update = &api.UpdateStrategy{
-		// 		Stagger:          &stagger, //*time.Duration
-		// 		MaxParallel:      p.config.Update.Max_Parallel,
-		// 		HealthCheck:      &healthCheck,      //Hard-coded until checks are permitted for created service
-		// 		MinHealthyTime:   &minHealthyTime,   //*time.Duration
-		// 		HealthyDeadline:  &healthyDeadline,  //*time.Duration
-		// 		ProgressDeadline: &progressDeadline, //*time.Duration
-		// 		Canary:           p.config.Update.Canary,
-		// 		AutoRevert:       &p.config.Update.Auto_Revert,
-		// 		AutoPromote:      &p.config.Update.Auto_Promote,
-		// 	}
-		// }
-
 		job.Namespace = &p.config.Namespace
 		job.AddTaskGroup(tg)
 		task := &api.Task{
@@ -302,8 +261,6 @@ func (p *Platform) Deploy(
 
 	// TODO(briancain): Update to use sequence number instead, and also append
 	// project name to prevent any app name collisions like having two apps with two versions (go-2)
-	// TODO(joerajewski): The creation of a new job on every deploy means that a potential
-	//   `update` configuration for a Nomad job is never used, because a job isn't updated
 	result.Id = id
 	result.Name = strings.ToLower(fmt.Sprintf("%s-%s", src.App, id))
 
@@ -472,9 +429,6 @@ type Config struct {
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
-
-	// Settings for the deployment strategy of the Nomad job's task group
-	// Update *Update `hcl:"update,block"`
 }
 
 type Resources struct {
@@ -488,19 +442,6 @@ type AuthConfig struct {
 	Username string `hcl:"username"`
 	Password string `hcl:"password"`
 }
-
-// Update partially maps the Nomad `update` config block and is
-// used to set the job group's update strategy
-// type Update struct {
-// 	Max_Parallel      *int   `hcl:"max_parallel,optional"`
-// 	Min_Healthy_Time  string `hcl:"min_healthy_time,optional"`
-// 	Healthy_Deadline  string `hcl:"healthy_deadline,optional"`
-// 	Progress_Deadline string `hcl:"progress_deadline,optional"`
-// 	Auto_Revert       bool   `hcl:"auto_revert,optional"`
-// 	Auto_Promote      bool   `hcl:"auto_promote,optional"`
-// 	Canary            *int   `hcl:"canary,optional"`
-// 	Stagger           string `hcl:"stagger,optional"`
-// }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
 	doc, err := docs.New(docs.FromConfig(&Config{}), docs.FromFunc(p.DeployFunc()))
@@ -600,9 +541,4 @@ var (
 	_ component.Platform     = (*Platform)(nil)
 	_ component.Configurable = (*Platform)(nil)
 	_ component.Destroyer    = (*Platform)(nil)
-
-	// min_healthy_time_default  = 10 * time.Second
-	// healthy_deadline_default  = 5 * time.Minute
-	// progress_deadline_default = 10 * time.Minute
-	// stagger_default           = 30 * time.Second
 )
