@@ -193,8 +193,11 @@ func (r *Releaser) resourceJobCreate(
 	wq := &api.WriteOptions{Namespace: jobs[0].JobSummary.Namespace}
 
 	var u *api.DeploymentUpdateResponse
-	//TODO: Add logic to support promotion of specific group(s)
-	u, _, err = deploymentClient.PromoteGroups(deploy.ID, groupsToPromote, wq)
+	if r.config.FailDeployment {
+		u, _, err = deploymentClient.Fail(deploy.ID, wq)
+	} else {
+		u, _, err = deploymentClient.PromoteGroups(deploy.ID, groupsToPromote, wq)
+	}
 	if err != nil {
 		return err
 	}
@@ -384,8 +387,8 @@ func (r *Releaser) Status(
 
 // ReleaserConfig is the configuration structure for the Releaser.
 type ReleaserConfig struct {
-	Groups []string `hcl:"groups,optional"`
-	//TODO: Support option to fail canary deployment?
+	Groups         []string `hcl:"groups,optional"`
+	FailDeployment bool     `hcl:"fail_deployment,optional"`
 	//TODO: Support option to revert to a previous version?
 	//      Should something like this (rollbacks) be accommodated by a releaser?
 }
