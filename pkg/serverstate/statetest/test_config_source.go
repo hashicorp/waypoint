@@ -244,6 +244,6 @@ func TestConfigSourceWatch(t *testing.T, factory Factory, restartF RestartFactor
 			Config: map[string]string{},
 		}))
 
-		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+		require.False(ws.Watch(time.After(3 * time.Second)))
 	})
 }

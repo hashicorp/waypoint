@@ -39,7 +39,13 @@ func TestSnapshotRestore(t *testing.T, factory Factory, factoryRestart RestartFa
 
 	// Snapshot
 	var buf bytes.Buffer
-	require.NoError(s.CreateSnapshot(&buf))
+	err = s.CreateSnapshot(&buf)
+	if err != nil {
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.Unavailable, s.Code())
+		return
+	}
 
 	// Create more data that isn't in the snapshot
 	err = s.ProjectPut(serverptypes.TestProject(t, &pb.Project{

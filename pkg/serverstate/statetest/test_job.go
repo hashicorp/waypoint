@@ -374,7 +374,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 			select {
 			case <-doneCh:
 
-			case <-time.After(500 * time.Millisecond):
+			case <-time.After(3 * time.Second):
 				t.Fatal("should have a result")
 			}
 
@@ -461,7 +461,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 			select {
 			case <-doneCh:
 
-			case <-time.After(500 * time.Millisecond):
+			case <-time.After(3 * time.Second):
 				t.Fatal("should have a result")
 			}
 
@@ -532,7 +532,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 			select {
 			case <-doneCh:
 
-			case <-time.After(500 * time.Millisecond):
+			case <-time.After(3 * time.Second):
 				t.Fatal("should have a result")
 			}
 
@@ -898,7 +898,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		select {
 		case <-doneCh:
 
-		case <-time.After(500 * time.Millisecond):
+		case <-time.After(3 * time.Second):
 			t.Fatal("should have a result")
 		}
 
@@ -966,7 +966,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		select {
 		case <-doneCh:
 
-		case <-time.After(500 * time.Millisecond):
+		case <-time.After(3 * time.Second):
 			t.Fatal("should have a result")
 		}
 
@@ -1042,7 +1042,7 @@ func TestJobAck(t *testing.T, factory Factory, rf RestartFactory) {
 		// Set a short timeout
 		old := serverstate.JobWaitingTimeout
 		defer func() { serverstate.JobWaitingTimeout = old }()
-		serverstate.JobWaitingTimeout = 5 * time.Millisecond
+		serverstate.JobWaitingTimeout = time.Second
 
 		s := factory(t)
 		defer s.Close()
@@ -1059,7 +1059,7 @@ func TestJobAck(t *testing.T, factory Factory, rf RestartFactory) {
 		require.Equal("A", job.Id)
 
 		// Sleep too long
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(3 * time.Second)
 
 		// Verify it is queued
 		job, err = s.JobById(job.Id, nil)
@@ -1711,7 +1711,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		// Set a short timeout
 		old := serverstate.JobHeartbeatTimeout
 		defer func() { serverstate.JobHeartbeatTimeout = old }()
-		serverstate.JobHeartbeatTimeout = 5 * time.Millisecond
+		serverstate.JobHeartbeatTimeout = time.Second
 
 		// Create a build
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
@@ -1735,7 +1735,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 			job, err = s.JobById("A", nil)
 			require.NoError(err)
 			return job.Job.State == pb.Job_ERROR
-		}, 1*time.Second, 10*time.Millisecond)
+		}, 4*time.Second, time.Second)
 	})
 
 	t.Run("doesn't time out if heartbeating", func(t *testing.T) {
@@ -1744,7 +1744,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		// Set a short timeout
 		old := serverstate.JobHeartbeatTimeout
 		defer func() { serverstate.JobHeartbeatTimeout = old }()
-		serverstate.JobHeartbeatTimeout = 250 * time.Millisecond
+		serverstate.JobHeartbeatTimeout = time.Second
 
 		s := factory(t)
 		defer s.Close()
@@ -1775,7 +1775,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		go func() {
 			defer close(doneCh)
 
-			tick := time.NewTicker(20 * time.Millisecond)
+			tick := time.NewTicker(500 * time.Millisecond)
 			defer tick.Stop()
 
 			for {
@@ -1807,7 +1807,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		// Set a short timeout
 		old := serverstate.JobHeartbeatTimeout
 		defer func() { serverstate.JobHeartbeatTimeout = old }()
-		serverstate.JobHeartbeatTimeout = 250 * time.Millisecond
+		serverstate.JobHeartbeatTimeout = time.Second
 
 		s := factory(t)
 		defer s.Close()
@@ -1838,7 +1838,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		go func() {
 			defer close(doneCh)
 
-			tick := time.NewTicker(20 * time.Millisecond)
+			tick := time.NewTicker(500 * time.Millisecond)
 			defer tick.Stop()
 
 			for {
@@ -1869,7 +1869,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 			job, err = s.JobById("A", nil)
 			require.NoError(err)
 			return job.Job.State == pb.Job_ERROR
-		}, 1*time.Second, 10*time.Millisecond)
+		}, 4*time.Second, time.Second)
 	})
 
 	t.Run("times out if running state loaded on restart", func(t *testing.T) {
@@ -1878,7 +1878,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		// Set a short timeout
 		old := serverstate.JobHeartbeatTimeout
 		defer func() { serverstate.JobHeartbeatTimeout = old }()
-		serverstate.JobHeartbeatTimeout = 250 * time.Millisecond
+		serverstate.JobHeartbeatTimeout = time.Second
 
 		s := factory(t)
 		defer s.Close()
@@ -1909,7 +1909,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		go func(s serverstate.Interface) {
 			defer close(doneCh)
 
-			tick := time.NewTicker(20 * time.Millisecond)
+			tick := time.NewTicker(500 * time.Millisecond)
 			defer tick.Stop()
 
 			for {
@@ -1938,7 +1938,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 			job, err = s.JobById("A", nil)
 			require.NoError(err)
 			return job.Job.State == pb.Job_ERROR
-		}, 2*time.Second, 10*time.Millisecond)
+		}, 4*time.Second, time.Second)
 	})
 }
 
@@ -1986,7 +1986,7 @@ func TestJobUpdateRef(t *testing.T, factory Factory, rf RestartFactory) {
 
 		// Should be triggered. This is a very important test because
 		// we need to ensure that the watchers can detect ref changes.
-		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+		require.False(ws.Watch(time.After(3 * time.Second)))
 
 		// Verify it was changed
 		job, err = s.JobById(job.Id, nil)

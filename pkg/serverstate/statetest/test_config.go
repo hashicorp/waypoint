@@ -139,6 +139,8 @@ func TestConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 			})
 			require.NoError(err)
 			require.Len(vs, 1)
+
+			require.Equal("bar", vs[0].Value.(*pb.ConfigVar_Static).Static)
 		}
 
 		{
@@ -964,7 +966,7 @@ func TestConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 }
 
 func TestConfigWatch(t *testing.T, factory Factory, restartF RestartFactory) {
-	t.Run("basic put and get", func(t *testing.T) {
+	t.Run("watches for new variables", func(t *testing.T) {
 		require := require.New(t)
 
 		s := factory(t)
@@ -998,6 +1000,6 @@ func TestConfigWatch(t *testing.T, factory Factory, restartF RestartFactory) {
 			Value: &pb.ConfigVar_Static{Static: "bar"},
 		}))
 
-		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+		require.False(ws.Watch(time.After(3 * time.Second)))
 	})
 }

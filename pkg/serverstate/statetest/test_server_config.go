@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -22,9 +24,15 @@ func TestServerConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		require.NoError(s.ServerConfigSet(&pb.ServerConfig{
+		err := s.ServerConfigSet(&pb.ServerConfig{
 			AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{},
-		}))
+		})
+		if err != nil {
+			s, ok := status.FromError(err)
+			require.True(ok)
+			require.Equal(codes.Unavailable, s.Code())
+			return
+		}
 
 		var cookie string
 		{
@@ -59,9 +67,15 @@ func TestServerConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		require.NoError(s.ServerConfigSet(&pb.ServerConfig{
+		err := s.ServerConfigSet(&pb.ServerConfig{
 			Cookie: "hello",
-		}))
+		})
+		if err != nil {
+			s, ok := status.FromError(err)
+			require.True(ok)
+			require.Equal(codes.Unavailable, s.Code())
+			return
+		}
 
 		{
 			// Get

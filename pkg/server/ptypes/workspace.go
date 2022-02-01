@@ -14,7 +14,7 @@ import (
 
 // WorkspaceNameRegexp is the valid Workspace name regular expression. At this
 // time the only restriction is to not allow spaces.
-var WorkspaceNameRegexp = regexp.MustCompile(`^[\p{L}\p{N}]+[\p{L}\p{N}\-_]*[^\-_]$`)
+var WorkspaceNameRegexp = regexp.MustCompile(`^[\p{L}\p{N}]+[\p{L}\p{N}\-_]*[^\-_]?$`)
 
 // TestWorkspace returns a valid workspace for tests.
 func TestWorkspace(t testing.T, src *pb.Workspace) *pb.Workspace {
@@ -84,4 +84,11 @@ func ValidateWorkspaceRules(v *pb.Workspace) []*validation.FieldRules {
 			validation.Match(WorkspaceNameRegexp),
 			validation.Length(1, 38)),
 	}
+}
+
+func ValidateWorkspaceName(str string) error {
+	return validationext.Error(validation.Validate(str,
+		validation.Match(WorkspaceNameRegexp),
+		validation.Length(1, 38)),
+	)
 }
