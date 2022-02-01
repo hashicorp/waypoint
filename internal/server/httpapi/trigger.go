@@ -145,12 +145,12 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 		if streamOutput != "" {
 			if !requireAuth {
 				// We do not allow streaming job stream info if a no-auth token trigger was requested
-				log.Debug("server does not allow for streaming job stream output for no-token trigger URLs")
+				log.Trace("server does not allow for streaming job stream output for no-token trigger URLs")
 				w.WriteHeader(http.StatusNoContent)
 				return
 			}
 
-			log.Trace("attempting to stream back queued job output from running trigger")
+			log.Debug("attempting to stream back queued job output from running trigger")
 
 			cn, ok := w.(http.CloseNotifier)
 			if !ok {
@@ -190,6 +190,7 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 				mu sync.Mutex
 			)
 
+			log.Trace("starting job stream for jobs", "total_jobs", len(triggerJobs))
 			wg.Add(len(triggerJobs))
 
 			// NOTE(briancain): This loop starts N goroutines concurrently for
@@ -224,6 +225,8 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 						jobComplete bool
 						exitCode    string
 					)
+
+					log.Trace("reading job stream for job", "job_id", jId)
 
 					// read and send the stream
 					for {
@@ -362,7 +365,7 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 							}
 
 							if jobComplete {
-								log.Trace("job complete, continuing to next job for streaming")
+								log.Trace("job complete, continuing to next job for streaming", "job_id", jId)
 								return
 							}
 						}
