@@ -99,7 +99,7 @@ func TestStatusReport(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.NoError(err)
 			require.NotNil(resp)
 
-			require.Equal(ts, resp.Status.CompleteTime)
+			require.Equal(ts.AsTime(), resp.Status.CompleteTime.AsTime())
 		}
 
 		// Add another and see Latset change
