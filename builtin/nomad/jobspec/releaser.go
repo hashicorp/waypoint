@@ -169,10 +169,19 @@ func (r *Releaser) resourceJobCreate(
 	//      "released", the generation ID will not support a second "release" to
 	//      promote a different group of canaries
 	canaryDeployment := false
+	groupsToPromote := make([]string, len(deploy.TaskGroups))
 	for taskGroupName, taskGroup := range deploy.TaskGroups {
-		if taskGroup.DesiredCanaries != 0 {
-			log.Debug(fmt.Sprintf("Canaries detected in task group %s", taskGroupName))
+		if r.config.Groups != nil {
+			if isElementExist(r.config.Groups, taskGroupName) && taskGroup.DesiredCanaries != 0 {
+				canaryDeployment = true
+				groupsToPromote = append(groupsToPromote, taskGroupName)
+				continue
+			}
+		} else if taskGroup.DesiredCanaries != 0 {
 			canaryDeployment = true
+			// if no groups to promote are specified in the config, promote all groups
+			// that have canaries
+			groupsToPromote = append(groupsToPromote, taskGroupName)
 		}
 	}
 	if !canaryDeployment {
@@ -185,7 +194,7 @@ func (r *Releaser) resourceJobCreate(
 
 	var u *api.DeploymentUpdateResponse
 	//TODO: Add logic to support promotion of specific group(s)
-	u, _, err = deploymentClient.PromoteAll(deploy.ID, wq)
+	u, _, err = deploymentClient.PromoteGroups(deploy.ID, groupsToPromote, wq)
 	if err != nil {
 		return err
 	}
@@ -375,14 +384,10 @@ func (r *Releaser) Status(
 
 // ReleaserConfig is the configuration structure for the Releaser.
 type ReleaserConfig struct {
-	//Groups only applies to the nomad-jobspec platform since the nomad platform (currently) uses only one task group
 	Groups []string `hcl:"groups,optional"`
 	//TODO: Support option to fail canary deployment?
 	//TODO: Support option to revert to a previous version?
 	//      Should something like this (rollbacks) be accommodated by a releaser?
-	//TODO: Support option to scale count?
-	//      This may warrant a different releaser plugin, or a more generic name for this releaser plugin
-	//      Note: Scaling a deployment doesn't require canaries (hence the generic name idea)
 }
 
 type nomadClient struct {
@@ -401,6 +406,15 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 	doc.Output("nomad.Release")
 
 	return doc, nil
+}
+
+func isElementExist(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *Release) URL() string { return r.Url }
