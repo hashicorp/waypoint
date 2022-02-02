@@ -23,9 +23,10 @@ import (
 
 // Message is the message we return to the requester when streaming output
 type Message struct {
-	JobId    string `json:"jobId,omitempty"`
-	Message  string `json:"message,omitempty"`
-	ExitCode string `json:"exitCode,omitempty"`
+	JobId     string      `json:"jobId,omitempty"`
+	Value     interface{} `json:"value,omitempty"`
+	ValueType string      `json:"valueType,omitempty"`
+	ExitCode  string      `json:"exitCode,omitempty"`
 }
 
 // HandleTrigger will execute a run trigger, if the requested id exists
@@ -248,12 +249,15 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 						default:
 							// Get jobstream output and return string chunk message back
 							time.Sleep(time.Second)
-							m := "" // the message to return
+
+							// the message to return
+							var value interface{}
+							var valueType string
 
 							switch event := resp.Event.(type) {
 							case *pb.GetJobStreamResponse_Complete_:
 								jobComplete = true
-								m = "job complete"
+								valueType = "Complete"
 
 								if event.Complete.Error == nil {
 									log.Info("job completed successfully")
@@ -265,6 +269,7 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 									http.Error(w, fmt.Sprintf("job failed to complete: job code %s: %s", st.Code(), st.Message()), 500)
 								}
 							case *pb.GetJobStreamResponse_Error_:
+								// Don't send a Message, just return error code here with event message
 								jobComplete = true
 								exitCode = "1"
 
@@ -280,7 +285,8 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 
 									switch ev := ev.Event.(type) {
 									case *pb.GetJobStreamResponse_Terminal_Event_Line_:
-										m = ev.Line.Msg
+										value = ev.Line.Msg
+										valueType = "TerminalEventLine"
 									case *pb.GetJobStreamResponse_Terminal_Event_NamedValues_:
 										var values []terminal.NamedValue
 
@@ -291,21 +297,14 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 											})
 										}
 
-										jsonNamedValues, err := json.Marshal(values)
-										if err != nil {
-											log.Warn("job stream failed to marshal NamedValues to json", "err", err)
-											http.Error(w, fmt.Sprintf("job failed to marshal NamedValues to json: %s", err), 500)
-											return
-										}
-
-										m = string(jsonNamedValues)
+										value = values
+										valueType = "TerminalEventNamedValues"
 									case *pb.GetJobStreamResponse_Terminal_Event_Status_:
-										// Since we're not writing to a terminal that can update in place
-										// we ignore steps and send the message directly instead
-										m = ev.Status.Msg
+										value = ev.Status.Msg
+										valueType = "TerminalEventStatus"
 									case *pb.GetJobStreamResponse_Terminal_Event_Raw_:
-										// does message need to preserve stdout/stderr??
-										m = string(ev.Raw.Data[:])
+										value = string(ev.Raw.Data[:])
+										valueType = "TerminalEventRaw"
 									case *pb.GetJobStreamResponse_Terminal_Event_Table_:
 										tbl := terminal.NewTable(ev.Table.Headers...)
 
@@ -320,19 +319,15 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 											}
 										}
 
-										jsonTable, err := json.Marshal(tbl)
-										if err != nil {
-											log.Warn("job stream failed to marshal Table Event to json", "err", err)
-											http.Error(w, fmt.Sprintf("job failed to marshal Table Event to json: %s", err), 500)
-											return
-										}
-
-										m = string(jsonTable)
+										value = tbl
+										valueType = "TerminalEventTable"
 									case *pb.GetJobStreamResponse_Terminal_Event_Step_:
-										m = ev.Step.Msg
+										m := ev.Step.Msg
 										if len(ev.Step.Output) > 0 {
 											m = m + "\n" + string(ev.Step.Output[:])
 										}
+										value = m
+										valueType = "TerminalEventStep"
 									default:
 										log.Error("Unknown terminal event seen", "type", hclog.Fmt("%T", ev))
 									}
@@ -342,12 +337,13 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 							}
 
 							// Send a message job stream back to the client
-							if m != "" {
+							if value != nil {
 								log.Trace("sending job data to client for job", "job_id", jId)
 								msg := Message{
-									JobId:    jId,
-									Message:  m,
-									ExitCode: exitCode, // will only be sent if set to non-empty string
+									JobId:     jId,
+									ExitCode:  exitCode, // will only be sent if set to non-empty string
+									Value:     value,
+									ValueType: valueType,
 								}
 
 								// Lock to ensure multiple routines don't send back a message at the same
