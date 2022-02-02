@@ -38,7 +38,7 @@
     "semver": "7.3.4"
   },
   "devDependencies": {
-    "@hashicorp/platform-cli": "^1.2.0",
+    "@hashicorp/platform-cli": "^2.0.0",
     "@hashicorp/platform-nextjs-plugin": "^1.0.1",
     "@hashicorp/platform-types": "^0.1.1",
     "@types/node": "^14.14.40",
