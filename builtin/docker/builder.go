@@ -347,7 +347,7 @@ func (b *Builder) Build(
 	// Build
 	step.Done()
 	step = nil
-	if err := b.buildWithDocker(ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.Platform, b.config.BuildArgs, b.config.Target, b.config.NoCache, b.config.Auth, log); err != nil {
+	if err := b.buildWithDocker(ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.Platform, b.config.BuildArgs, b.config.Auth, b.config.Target, b.config.NoCache, log); err != nil {
 		return nil, err
 	}
 
