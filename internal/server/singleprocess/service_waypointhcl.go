@@ -3,8 +3,8 @@ package singleprocess
 import (
 	"context"
 
-	configpkg "github.com/hashicorp/waypoint/internal/config"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	configpkg "github.com/hashicorp/waypoint/pkg/config"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func (s *service) WaypointHclFmt(

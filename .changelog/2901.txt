@@ -1,0 +1,3 @@
+```release-note:bug
+ui: Ensure logs update correctly when switching between deployments
+```

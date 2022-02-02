@@ -3,8 +3,9 @@ package clicontext
 import (
 	"testing"
 
-	"github.com/hashicorp/waypoint/internal/serverconfig"
 	"github.com/stretchr/testify/require"
+
+	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
 func TestConfigFromURL(t *testing.T) {

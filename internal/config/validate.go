@@ -31,6 +31,7 @@ type validateApp struct {
 	Path    string            `hcl:"path,optional"`
 	Labels  map[string]string `hcl:"labels,optional"`
 	URL     *AppURL           `hcl:"url,block" default:"{}"`
+	Runner  *Runner           `hcl:"runner,block"`
 	Build   *Build            `hcl:"build,block"`
 	Deploy  *Deploy           `hcl:"deploy,block"`
 	Release *Release          `hcl:"release,block"`

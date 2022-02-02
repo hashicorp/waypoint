@@ -1,8 +1,8 @@
 package singleprocess
 
 import (
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func testServiceImpl(impl pb.WaypointServer) *service {

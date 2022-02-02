@@ -8,8 +8,8 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/internal/core"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func TestRunnerInitOp(t *testing.T) {
@@ -25,7 +25,7 @@ func TestRunnerInitOp(t *testing.T) {
 	)
 	require.NoError(err)
 	defer runner.Close()
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Create a test project and store it in the db
 	project := core.TestProject(t, core.WithClient(client))
@@ -34,7 +34,6 @@ func TestRunnerInitOp(t *testing.T) {
 			Name: project.Ref().Project,
 		},
 	})
-
 	res, err := runner.executeInitOp(ctx, runner.logger, project)
 	require.NoError(err)
 	require.NotNil(t, res.Init)
@@ -61,7 +60,7 @@ func TestRunnerInitOp_UpserWorkspace(t *testing.T) {
 	)
 	require.NoError(err)
 	defer runner.Close()
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	// Pre-check that no workspaces exist
 	resp, err := client.ListWorkspaces(ctx, &pb.ListWorkspacesRequest{})

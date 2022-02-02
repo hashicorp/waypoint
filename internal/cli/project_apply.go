@@ -17,7 +17,7 @@ import (
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/datasource"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type ProjectApplyCommand struct {
@@ -371,7 +371,7 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 			Name: c.flagOndemandRunner,
 		}
 
-		// Validate the ref is validate by looking up the runner.
+		// Validate the ref by looking up the runner.
 		_, err := c.project.Client().GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
 			Config: ref,
 		})
@@ -383,8 +383,6 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 
 			return 1
 		}
-
-		proj.OndemandRunner = ref
 	}
 
 	// Upsert

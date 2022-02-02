@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 
-	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint/internal/server"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func TestServiceQueueJob(t *testing.T) {
@@ -495,12 +495,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	log.Info("test odr profile", "id", odr.Id)
 
 	// Update the project to include ondemand runner
-	proj := serverptypes.TestProject(t, &pb.Project{
-		Name: "proj",
-		OndemandRunner: &pb.Ref_OnDemandRunnerConfig{
-			Id: odr.Id,
-		},
-	})
+	proj := serverptypes.TestProject(t, &pb.Project{Name: "proj"})
 	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
 		Project: proj,
 	})
@@ -512,6 +507,9 @@ func TestServiceQueueJob_odr(t *testing.T) {
 			Application: &pb.Ref_Application{
 				Application: "app",
 				Project:     "proj",
+			},
+			OndemandRunner: &pb.Ref_OnDemandRunnerConfig{
+				Name: odr.Name,
 			},
 		}),
 	})

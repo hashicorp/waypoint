@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
-	"github.com/hashicorp/waypoint/internal/serverconfig"
+	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
 // Config is the structure of the context configuration file. This structure

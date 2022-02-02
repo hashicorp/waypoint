@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/waypoint/internal/server/execclient"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func (c *Project) Validate(ctx context.Context, op *pb.Job_ValidateOp) (*pb.Job_ValidateResult, error) {

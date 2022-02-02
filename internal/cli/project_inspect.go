@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type ProjectInspectCommand struct {
@@ -129,12 +129,6 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 	}
 
 	fileChangeSignal := project.FileChangeSignal
-
-	var runnerProfile string
-	if project.OndemandRunner != nil {
-		runnerProfile = project.OndemandRunner.Name
-	}
-
 	// Show project info in a flat list where each project option is its
 	// own row
 	c.ui.Output("Project Info:", terminal.WithHeaderStyle())
@@ -179,9 +173,6 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 		},
 		{
 			Name: "File Change Signal", Value: fileChangeSignal,
-		},
-		{
-			Name: "Runner Profile Name", Value: runnerProfile,
 		},
 	}, terminal.WithInfoStyle())
 

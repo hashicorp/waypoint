@@ -1,5 +1,5 @@
 {{#if @canLogout}}
-  <button class="auth-link" type="button" {{on "click" this.logout}}>
+  <button data-test-logout-button class="auth-link" type="button" {{on "click" this.logout}}>
     <FlightIcon @name="sign-out" class="nav-icon" />
     Logout
   </button>

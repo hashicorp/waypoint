@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/serverconfig"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
 type NomadInstaller struct {
@@ -592,6 +592,9 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 	s.Update("Waypoint job and allocations purged")
 
 	vols, _, err := client.CSIVolumes().List(&api.QueryOptions{Prefix: "waypoint"})
+	if err != nil {
+		return err
+	}
 	for _, vol := range vols {
 		if vol.ID == "waypoint" {
 			s.Update("Destroying persistent CSI volume")

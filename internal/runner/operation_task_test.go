@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/go-hclog"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func TestRunnerTaskLauncherStart(t *testing.T) {
@@ -36,7 +36,7 @@ func TestRunnerTaskLauncherStart(t *testing.T) {
 	defer runner.Close()
 
 	// Start it
-	require.NoError(runner.Start())
+	require.NoError(runner.Start(ctx))
 
 	job := &pb.Job{
 		Operation: &pb.Job_StartTask{

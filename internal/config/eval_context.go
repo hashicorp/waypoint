@@ -5,8 +5,8 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/gocty"
 
-	"github.com/hashicorp/waypoint/internal/config/funcs"
 	"github.com/hashicorp/waypoint/internal/config/variables"
+	"github.com/hashicorp/waypoint/pkg/config/funcs"
 )
 
 // EvalContext returns the common eval context to use for parsing all

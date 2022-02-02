@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/posener/complete"
 )
 
@@ -137,6 +137,7 @@ func (c *ConfigSetCommand) Run(args []string) int {
 				},
 			}
 		}
+		//TODO: update to add flag to target runner by workspace and labels
 
 		// If we have a workspace flag set, set that.
 		if v := c.flagWorkspaceScope; v != "" {

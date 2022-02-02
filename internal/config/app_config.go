@@ -12,8 +12,8 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/config/dynamic"
 	"github.com/hashicorp/waypoint/internal/pkg/partial"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	serversort "github.com/hashicorp/waypoint/internal/server/sort"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	serversort "github.com/hashicorp/waypoint/pkg/server/sort"
 )
 
 // genericConfig represents the `config` stanza that can be placed
@@ -69,8 +69,6 @@ func (c *runnerConfig) configVars(
 	runnerScopeFunc := func(v *pb.ConfigVar) {
 		// Inherit our parent scope.
 		scopeFunc(v)
-
-		// Add that we target runners
 		v.Target.Runner = &pb.Ref_Runner{
 			Target: &pb.Ref_Runner_Any{
 				Any: &pb.Ref_RunnerAny{},

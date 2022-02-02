@@ -3,15 +3,18 @@ package singleprocess
 import (
 	"context"
 	"io"
+	"strings"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/logbuffer"
-	"github.com/hashicorp/waypoint/internal/serverstate"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/logbuffer"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
 func (s *service) ListRunners(
@@ -30,7 +33,7 @@ func (s *service) GetRunner(
 	ctx context.Context,
 	req *pb.GetRunnerRequest,
 ) (*pb.Runner, error) {
-	return s.state.RunnerById(req.RunnerId)
+	return s.state.RunnerById(req.RunnerId, nil)
 }
 
 func (s *service) RunnerGetDeploymentConfig(
@@ -67,6 +70,164 @@ func (s *service) RunnerGetDeploymentConfig(
 	}, nil
 }
 
+func (s *service) AdoptRunner(
+	ctx context.Context,
+	req *pb.AdoptRunnerRequest,
+) (*empty.Empty, error) {
+	if err := serverptypes.ValidateAdoptRunnerRequest(req); err != nil {
+		return nil, err
+	}
+
+	var err error
+	if req.Adopt {
+		err = s.state.RunnerAdopt(req.RunnerId, false)
+	} else {
+		err = s.state.RunnerReject(req.RunnerId)
+	}
+
+	return &empty.Empty{}, err
+}
+
+func (s *service) ForgetRunner(
+	ctx context.Context,
+	req *pb.ForgetRunnerRequest,
+) (*empty.Empty, error) {
+	if err := serverptypes.ValidateForgetRunnerRequest(req); err != nil {
+		return nil, err
+	}
+
+	err := s.state.RunnerDelete(req.RunnerId)
+	return &empty.Empty{}, err
+}
+
+func (s *service) RunnerToken(
+	ctx context.Context,
+	req *pb.RunnerTokenRequest,
+) (*pb.RunnerTokenResponse, error) {
+	log := hclog.FromContext(ctx)
+	record := req.Runner
+
+	// Get our token because our behavior changes a bit with different tokens.
+	// Token may be nil because this is an unauthenticated endpoint.
+	if tok := s.tokenFromContext(ctx); tok != nil {
+		switch k := tok.Kind.(type) {
+		case *pb.Token_Login_:
+			// Legacy (pre WP 0.8) token. We accept these as preadopted. We just
+			// return an empty token here meaning to not change.
+			// NOTE(mitchellh): One day, we should reject these because modern
+			// preadoption should be via runner tokens.
+			log.Debug("valid login token provided, adoption will be skipped")
+			return &pb.RunnerTokenResponse{}, nil
+
+		case *pb.Token_Runner_:
+			// If the runner token has an ID set and it doesn't match this one,
+			// then the token is invalid and we should kick off the adoption process.
+			if k.Runner.Id != "" && k.Runner.Id != record.Id {
+				break
+			}
+
+			// Seemingly valid runner token. If our logic is wrong its okay
+			// because RunnerConfig will reject them.
+			log.Debug("valid runner token provided, adoption will be skipped")
+			return &pb.RunnerTokenResponse{}, nil
+		}
+
+		// Any other token type we just continue with the adoption process.
+	}
+
+	// We require a cookie. We only need to check emptiness cause if its
+	// set it will be validated in auth.go. We do NOT require the cookie if
+	// we receive a valid token so its important to have this check after the
+	// above token check.
+	if s.cookieFromRequest(ctx) == "" {
+		return nil, status.Errorf(codes.PermissionDenied,
+			"RunnerToken requires the 'cookie' metadata value to be set")
+	}
+
+	// Get the runner
+	r, err := s.state.RunnerById(record.Id, nil)
+	if status.Code(err) == codes.NotFound {
+		err = nil
+		r = nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	prevAdopted := r != nil && r.AdoptionState == pb.Runner_ADOPTED
+
+	// Create our record
+	log = log.With("runner_id", record.Id)
+	log.Trace("registering runner")
+	if err := s.state.RunnerCreate(record); err != nil {
+		return nil, err
+	}
+
+	// When we exit, mark the runner as offline. This will delete the record
+	// if we're never adopted.
+	defer func() {
+		log.Trace("marking runner as offline")
+		if err := s.state.RunnerOffline(record.Id); err != nil {
+			log.Error("failed to mark runner as offline. This should not happen.", "err", err)
+		}
+	}()
+
+	// If we reached this point and we're previously adopted, then it is an
+	// error. If we're previously adopted, we expect that runners will have
+	// the token from that adoption. If we allowed this through, then any
+	// guest with the runner ID could get a token -- a big security issue.
+	if prevAdopted {
+		return nil, status.Errorf(codes.PermissionDenied,
+			"runner is already adopted, use the previously issued runner token")
+	}
+
+	log.Debug("token provided is not a runner token, waiting for adoption")
+	for {
+		// Get the runner
+		ws := memdb.NewWatchSet()
+		r, err := s.state.RunnerById(record.Id, ws)
+		if err != nil {
+			return nil, err
+		}
+
+		switch r.AdoptionState {
+		case pb.Runner_REJECTED:
+			// Runner is explicitly rejected. Return and error.
+			return nil, status.Errorf(codes.PermissionDenied,
+				"runner adoption is explicitly rejected")
+
+		case pb.Runner_ADOPTED:
+			// Runner explicitly adopted, create token and return!
+			tok, err := s.newToken(
+				// Doesn't expire because we can expire it by unadopting.
+				// NOTE(mitchellh): At some point, we should make these
+				// expire and introduce rotation as a feature of adoption.
+				0,
+
+				DefaultKeyId,
+				nil,
+				&pb.Token{
+					Kind: &pb.Token_Runner_{
+						Runner: &pb.Token_Runner{
+							Id: record.Id,
+						},
+					},
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			return &pb.RunnerTokenResponse{Token: tok}, nil
+		}
+
+		// Wait for changes
+		log.Trace("runner is not adopted, waiting for state change")
+		if err := ws.WatchCtx(ctx); err != nil {
+			return nil, err
+		}
+	}
+}
+
 func (s *service) RunnerConfig(
 	srv pb.Waypoint_RunnerConfigServer,
 ) error {
@@ -93,15 +254,54 @@ func (s *service) RunnerConfig(
 		return err
 	}
 
-	// Defer deleting this.
-	// TODO(mitchellh): this is too aggressive and we want to have some grace
-	// period for reconnecting clients. We should clean this up.
+	// Mark the runner as offline if they disconnect from the config stream loop.
 	defer func() {
-		log.Trace("deleting runner")
-		if err := s.state.RunnerDelete(record.Id); err != nil {
-			log.Error("failed to delete runner data. This should not happen.", "err", err)
+		log.Trace("marking runner as offline")
+		if err := s.state.RunnerOffline(record.Id); err != nil {
+			log.Error("failed to mark runner as offline. This should not happen.", "err", err)
 		}
 	}()
+
+	// Get our token and reverify that we are adopted.
+	tok := s.tokenFromContext(ctx)
+	if tok == nil {
+		log.Error("no token, should not be possible")
+		return status.Errorf(codes.Unauthenticated, "no token")
+	}
+	switch k := tok.Kind.(type) {
+	case *pb.Token_Login_:
+		// Legacy (pre WP 0.8) token. We accept these as preadopted.
+		// NOTE(mitchellh): One day, we should reject these because modern
+		// preadoption should be via runner tokens.
+
+	case *pb.Token_Runner_:
+		// A runner token. We validate here that we're not explicitly rejected.
+		// We have to check again here because runner tokens can be created
+		// for ANY runner, but we can reject a SPECIFIC runner.
+		if k.Runner.Id != "" && !strings.EqualFold(k.Runner.Id, record.Id) {
+			return status.Errorf(codes.PermissionDenied,
+				"provided runner token is for a different runner")
+		}
+
+	default:
+		return status.Errorf(codes.PermissionDenied, "not a valid runner token")
+	}
+
+	// If the runner we just registered is explicitly rejected then we
+	// do not allow it to continue, even with a preadoption token.
+	r, err := s.state.RunnerById(record.Id, nil)
+	if err != nil {
+		return err
+	}
+	if r.AdoptionState == pb.Runner_REJECTED {
+		return status.Errorf(codes.PermissionDenied,
+			"runner is explicitly rejected (unadopted)")
+	}
+	if r.AdoptionState != pb.Runner_ADOPTED {
+		if err := s.state.RunnerAdopt(record.Id, true); err != nil {
+			return err
+		}
+	}
 
 	// Start a goroutine that listens on the recvmsg so we can detect
 	// when the client exited.
@@ -239,10 +439,17 @@ func (s *service) RunnerJobStream(
 	log = log.With("runner_id", reqEvent.Request.RunnerId)
 
 	// Get the runner to validate it is registered
-	runner, err := s.state.RunnerById(reqEvent.Request.RunnerId)
+	runner, err := s.state.RunnerById(reqEvent.Request.RunnerId, nil)
 	if err != nil {
 		log.Error("unknown runner connected", "id", reqEvent.Request.RunnerId)
 		return err
+	}
+
+	// The runner must be adopted to get a job.
+	if runner.AdoptionState != pb.Runner_ADOPTED &&
+		runner.AdoptionState != pb.Runner_PREADOPTED {
+		return status.Errorf(codes.FailedPrecondition,
+			"runner must be adopted prior to requesting jobs")
 	}
 
 	// Get a job assignment for this runner

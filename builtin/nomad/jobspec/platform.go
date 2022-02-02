@@ -83,6 +83,9 @@ func (p *Platform) Deploy(
 	// Set our deployment ID on the meta.
 	job.SetMeta(metaId, result.Id)
 
+	// Update our client to use the Namespace set in the jobspec
+	client.SetNamespace(*job.Namespace)
+
 	// Register job
 	s.Update("Registering job %q...", *job.Name)
 	regResult, _, err := jobclient.Register(job, nil)

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/posener/complete"
 )
 
@@ -80,6 +80,15 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 	}
 
 	config := resp.Config
+	var targetRunner string
+	if config.TargetRunner != nil {
+		switch t := config.TargetRunner.Target.(type) {
+		case *pb.Ref_Runner_Any:
+			targetRunner = "*"
+		case *pb.Ref_Runner_Id:
+			targetRunner = t.Id.Id
+		}
+	}
 	c.ui.Output("Runner profile:", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
@@ -96,6 +105,9 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 		},
 		{
 			Name: "Plugin Type", Value: config.PluginType,
+		},
+		{
+			Name: "Target Runner ID", Value: targetRunner,
 		},
 		{
 			Name: "Environment Variables", Value: config.EnvironmentVariables,
