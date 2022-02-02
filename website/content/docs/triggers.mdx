@@ -193,18 +193,23 @@ $ curl -k -G -d "stream=true" -d "token=`waypoint user token`" https://waypoint.
 < Date: Tue, 01 Feb 2022 16:55:30 GMT
 < Transfer-Encoding: chunked
 <
-{"jobId":"01FTV3CYTZ1SGB0XH53NFAHJE3","message":"Ref: HEAD"}
-{"jobId":"01FTV3CYTZ1SGB0XH53NFAHJE3","message":"Building go..."}
-{"jobId":"01FTV3CYTZ1SGB0XH53NFAHJE3","message":"Building Buildpack with kaniko..."}
-{"jobId":"01FTV3CYTZ1SGB0XH53NFAHJE3","message":"Testing registry and uploading entrypoint layer"}
-{"jobId":"01FTV3CYTZ1SGB0XH53NFAHJE3","message":"Executing kaniko..."}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Ref: HEAD","valueType":"EventLine"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Building go...","valueType":"EventLine"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Building Buildpack with kaniko...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Testing registry and uploading entrypoint layer","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Executing kaniko...","valueType":"TerminalEventStep"}
 ...
 ...
 ...
-{"jobId":"01FTV3CYTZ1SGB0XH53NFAHJE3","message":"Waiting for service to become ready..."}
-{"jobId":"01FTV3CYTZ1SGB0XH53NFAHJE3","message":"Gathering health report for Kubernetes release..."}
-{"jobId":"01FTV3CYTZ1SGB0XH53NFAHJE3","message":"Checking status of Kubernetes service resource \"go\"..."}
-{"jobId":"01FTV3CYTZ1SGB0XH53NFAHJE3","message":"job complete","exitCode":"0"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Checking status of the Kubernetes deployment resource...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Deployment \"go-v2\" is reporting ready!","valueType":"TerminalEventStatus"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Releasing go...","valueType":"EventLine"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Preparing service...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Updating existing service...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Waiting for service to become ready...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Gathering health report for Kubernetes release...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Checking status of Kubernetes service resource \"go\"...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","valueType":"Complete","exitCode":"0"}
 * Connection #0 to host waypoint.server.address.example.com left intact
 ```
 
