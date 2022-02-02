@@ -176,6 +176,21 @@ you can provide a `variables` option.
 curl -k -G -d "variables={\"tag\":\"latest\"}" -d "token=`waypoint user token`" https://waypoint.server.address.example.com/v1/trigger/123ABC456DEF
 ```
 
+### Streaming Job Output over HTTP
+
+#### Streamed Event Types
+
+- `TerminalEventComplete`
+- `TerminalEventError`
+- `TerminalEventLine`
+- `TerminalEventNamedValues`
+- `TerminalEventStatus`
+- `TerminalEventRaw`
+- `TerminalEventStep`
+- `TerminalEventTable`
+
+#### Example
+
 Streaming output will give you the job event streamed directly to you:
 
 ```
@@ -193,8 +208,8 @@ $ curl -k -G -d "stream=true" -d "token=`waypoint user token`" https://waypoint.
 < Date: Tue, 01 Feb 2022 16:55:30 GMT
 < Transfer-Encoding: chunked
 <
-{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Ref: HEAD","valueType":"EventLine"}
-{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Building go...","valueType":"EventLine"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Ref: HEAD","valueType":"TerminalEventLine"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Building go...","valueType":"TerminalEventLine"}
 {"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Building Buildpack with kaniko...","valueType":"TerminalEventStep"}
 {"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Testing registry and uploading entrypoint layer","valueType":"TerminalEventStep"}
 {"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Executing kaniko...","valueType":"TerminalEventStep"}
@@ -203,7 +218,7 @@ $ curl -k -G -d "stream=true" -d "token=`waypoint user token`" https://waypoint.
 ...
 {"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Checking status of the Kubernetes deployment resource...","valueType":"TerminalEventStep"}
 {"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Deployment \"go-v2\" is reporting ready!","valueType":"TerminalEventStatus"}
-{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Releasing go...","valueType":"EventLine"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Releasing go...","valueType":"TerminalEventLine"}
 {"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Preparing service...","valueType":"TerminalEventStep"}
 {"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Updating existing service...","valueType":"TerminalEventStep"}
 {"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Waiting for service to become ready...","valueType":"TerminalEventStep"}
