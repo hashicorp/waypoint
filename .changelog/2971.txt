@@ -1,0 +1,3 @@
+```release-note:ui
+ui: Fix unauthenticated UI state with expired/wrong token
+```
