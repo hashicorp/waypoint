@@ -27,6 +27,7 @@ type Message struct {
 	Value     interface{} `json:"value,omitempty"`
 	ValueType string      `json:"valueType,omitempty"`
 	ExitCode  string      `json:"exitCode,omitempty"`
+	Error     string      `json:"error,omitempty"`
 }
 
 // HandleTrigger will execute a run trigger, if the requested id exists
@@ -196,6 +197,7 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 
 			// NOTE(briancain): This loop starts N goroutines concurrently for
 			// each trigger job to stream back to the requester.
+			// TODO(briancain): turn the http errors into Messages to send back
 			for _, jId := range triggerJobs {
 				go func(jId string) {
 					defer wg.Done()
