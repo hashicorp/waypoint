@@ -31,7 +31,7 @@ type Message struct {
 	// ValueType is the kind of job stream event
 	ValueType string `json:"valueType,omitempty"`
 
-	// If the job has compelted, we return a 0 for success, 1 for failure.
+	// If the job has completed, we return a 0 for success, 1 for failure.
 	ExitCode string `json:"exitCode,omitempty"`
 	// Error is set when the job failures for any reason
 	Error interface{} `json:"error,omitempty"`

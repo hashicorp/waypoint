@@ -112,7 +112,7 @@ func TestHandleTrigger_CancelStream(t *testing.T) {
 	require := require.New(t)
 
 	// Get our gRPC server
-	impl := &triggerImpl{} // use the good implemetnation which sends lots of events
+	impl := &triggerImpl{} // use the good implementation which sends lots of events
 	addr := testServer(t, impl)
 
 	// Start up our test HTTP server
