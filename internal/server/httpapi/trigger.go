@@ -21,13 +21,20 @@ import (
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
-// Message is the message we return to the requester when streaming output
+// Message is the message we return to the requester when streaming job output
 type Message struct {
-	JobId     string      `json:"jobId,omitempty"`
-	Value     interface{} `json:"value,omitempty"`
-	ValueType string      `json:"valueType,omitempty"`
-	ExitCode  string      `json:"exitCode,omitempty"`
-	Error     string      `json:"error,omitempty"`
+	// The job id that was queued when running the requested trigger
+	JobId string `json:"jobId,omitempty"`
+
+	// Value is the job stream event message to stream back to the requester
+	Value interface{} `json:"value,omitempty"`
+	// ValueType is the kind of job stream event
+	ValueType string `json:"valueType,omitempty"`
+
+	// If the job has compelted, we return a 0 for success, 1 for failure.
+	ExitCode string `json:"exitCode,omitempty"`
+	// Error is set when the job failures for any reason
+	Error interface{} `json:"error,omitempty"`
 }
 
 // HandleTrigger will execute a run trigger, if the requested id exists
@@ -271,6 +278,7 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 							// the message to return
 							var value interface{}
 							var valueType string
+							var msgErr interface{}
 
 							switch event := resp.Event.(type) {
 							case *pb.GetJobStreamResponse_Complete_:
@@ -284,21 +292,15 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 									exitCode = "1"
 									st := status.FromProto(event.Complete.Error)
 									log.Warn("job failed", "code", st.Code(), "message", st.Message())
-									http.Error(w,
-										fmt.Sprintf("job failed to complete: job code %s: %s", st.Code(), st.Message()),
-										http.StatusInternalServerError)
+									msgErr = st
 								}
 							case *pb.GetJobStreamResponse_Error_:
-								// Don't send a Message, just return error code here with event message
 								jobComplete = true
 								exitCode = "1"
 
 								st := status.FromProto(event.Error.Error)
 								log.Warn("job stream failure", "code", st.Code(), "message", st.Message())
-								http.Error(w,
-									fmt.Sprintf("job failed to complete: job code %s: %s", st.Code(), st.Message()),
-									http.StatusInternalServerError)
-								return
+								msgErr = st
 							case *pb.GetJobStreamResponse_Terminal_:
 								// We got some job output! Craft a message to be sent back
 
@@ -361,11 +363,14 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 							// Send a message job stream back to the client
 							if value != nil {
 								log.Trace("sending job data to client for job", "job_id", jId)
+
+								// Note that all empty values will be omitted
 								msg := Message{
 									JobId:     jId,
-									ExitCode:  exitCode, // will only be sent if set to non-empty string
+									ExitCode:  exitCode,
 									Value:     value,
 									ValueType: valueType,
+									Error:     msgErr,
 								}
 
 								// Lock to ensure multiple routines don't send back a message at the same
