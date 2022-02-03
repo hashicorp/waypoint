@@ -75,21 +75,21 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 		requestVars := mux.Vars(r)
 		runTriggerId := requestVars["id"]
 
-		overrideVarJSONRaw := r.URL.Query().Get("variables")
+		variablesJSONRaw := r.URL.Query().Get("variables")
 		var (
-			vo                map[string]string
+			variables         map[string]string
 			variableOverrides []*pb.Variable
 		)
 
-		if overrideVarJSONRaw != "" {
-			if err := json.Unmarshal([]byte(overrideVarJSONRaw), &vo); err != nil {
+		if variablesJSONRaw != "" {
+			if err := json.Unmarshal([]byte(variablesJSONRaw), &variables); err != nil {
 				http.Error(w,
 					fmt.Sprintf("failed to decode 'variables' json request param into a map: %s", err),
 					http.StatusInternalServerError)
 				return
 			}
 
-			for name, value := range vo {
+			for name, value := range variables {
 				v := &pb.Variable{
 					Name:   name,
 					Source: &pb.Variable_Cli{Cli: &empty.Empty{}},
