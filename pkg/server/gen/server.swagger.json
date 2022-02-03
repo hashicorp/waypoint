@@ -10,7 +10,31 @@
   "produces": [
     "application/json"
   ],
-  "paths": {},
+  "paths": {
+    "/api/v1/projects": {
+      "get": {
+        "summary": "ListProjects returns a list of all the projects. There is no equivalent\nListApplications because applications are a part of projects and you\ncan use GetProject to get more information about the project.",
+        "operationId": "Waypoint_ListProjects",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waypointListProjectsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/gatewayruntimeError"
+            }
+          }
+        },
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    }
+  },
   "definitions": {
     "ConfigVarDynamicVal": {
       "type": "object",
