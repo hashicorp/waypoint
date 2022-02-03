@@ -179,13 +179,13 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 		cn, ok := w.(http.CloseNotifier)
 		if !ok {
 			log.Error("failed to stream job output, could not create http.CloseNotifier")
-			http.NotFound(w, r)
+			http.Error(w, "server failed to create http CloseNotifier", http.StatusInternalServerError)
 			return
 		}
 		flusher, ok := w.(http.Flusher)
 		if !ok {
 			log.Error("failed to stream job output, could not create http.Flusher")
-			http.NotFound(w, r)
+			http.Error(w, "server failed to create http.Flusher", http.StatusInternalServerError)
 			return
 		}
 
