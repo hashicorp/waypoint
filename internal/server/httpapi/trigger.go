@@ -307,6 +307,7 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 					case *pb.GetJobStreamResponse_Error_:
 						jobComplete = true
 						exitCode = "1"
+						valueType = "Error"
 
 						st := status.FromProto(event.Error.Error)
 						log.Warn("job stream failure", "code", st.Code(), "message", st.Message())
