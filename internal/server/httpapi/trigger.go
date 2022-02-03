@@ -202,7 +202,7 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 		// really only expect output from the job to be queued, so we only stream that back.
 
 		// For example, a trigger that queues 2 Waypoint operation jobs returns 6 total job ids:
-		// Job List: [ {0: StartTask, 1: WP Operation 1, 2: StopTask}, {3: StartTask, 4: WP Operation 2, 5: StopTask}, ... ]
+		// Job List: [ 0: StartTask, 1: WP Operation 1, 2: StopTask, 3: StartTask, 4: WP Operation 2, 5: StopTask, ... ]
 
 		var triggerJobs []string
 		for i := 1; i < len(jobIds); i += 3 {
