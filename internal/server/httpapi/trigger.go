@@ -83,7 +83,9 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 
 		if overrideVarJSONRaw != "" {
 			if err := json.Unmarshal([]byte(overrideVarJSONRaw), &vo); err != nil {
-				http.Error(w, fmt.Sprintf("failed to decode 'variables' json request param into a map: %s", err), 500)
+				http.Error(w,
+					fmt.Sprintf("failed to decode 'variables' json request param into a map: %s", err),
+					http.StatusInternalServerError)
 				return
 			}
 
@@ -127,16 +129,22 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 			log.Error("server failed to run trigger", "id", runTriggerId, "err", err)
 
 			if status.Code(err) == codes.PermissionDenied {
-				http.Error(w, fmt.Sprintf("request not authorized to run trigger: %s", err), 401)
+				http.Error(w,
+					fmt.Sprintf("request not authorized to run trigger: %s", err),
+					http.StatusUnauthorized)
 			} else {
 				// improve http error code, which is more applicable for general queue failures?
-				http.Error(w, fmt.Sprintf("server failed to run trigger: %s", err), 412)
+				http.Error(w,
+					fmt.Sprintf("server failed to run trigger: %s", err),
+					http.StatusPreconditionFailed)
 			}
 
 			return
 		}
 		if resp == nil {
-			http.Error(w, fmt.Sprintf("server returned no job ids from run trigger %q", runTriggerId), 500)
+			http.Error(w,
+				fmt.Sprintf("server returned no job ids from run trigger %q", runTriggerId),
+				http.StatusInternalServerError)
 			return
 		}
 		jobIds := resp.JobIds
@@ -207,7 +215,9 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 					})
 					if err != nil {
 						log.Error("server failed to get job stream output for trigger", "job_id", jId, "err", err)
-						http.Error(w, fmt.Sprintf("server failed to obtain job stream output: %s", err), 500)
+						http.Error(w,
+							fmt.Sprintf("server failed to obtain job stream output: %s", err),
+							http.StatusInternalServerError)
 						return
 					}
 
@@ -215,12 +225,16 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 					resp, err := stream.Recv()
 					if err != nil {
 						log.Error("server failed to stream job output", "err", err)
-						http.Error(w, fmt.Sprintf("server failed to receive job stream output: %s", err), 500)
+						http.Error(w,
+							fmt.Sprintf("server failed to receive job stream output: %s", err),
+							http.StatusInternalServerError)
 						return
 					}
 					if _, ok := resp.Event.(*pb.GetJobStreamResponse_Open_); !ok {
 						log.Error("server failed to open job stream output, got unexpected message", "event", resp.Event)
-						http.Error(w, fmt.Sprintf("job stream failed to open, got unexpected message: %T", resp.Event), 500)
+						http.Error(w,
+							fmt.Sprintf("job stream failed to open, got unexpected message: %T", resp.Event),
+							http.StatusInternalServerError)
 						return
 					}
 
@@ -235,7 +249,9 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 					for {
 						resp, err := stream.Recv()
 						if err != nil {
-							http.Error(w, fmt.Sprintf("server failed to receive job stream output: %s", err), 500)
+							http.Error(w,
+								fmt.Sprintf("server failed to receive job stream output: %s", err),
+								http.StatusInternalServerError)
 							return
 						}
 						if resp == nil {
@@ -268,7 +284,9 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 									exitCode = "1"
 									st := status.FromProto(event.Complete.Error)
 									log.Warn("job failed", "code", st.Code(), "message", st.Message())
-									http.Error(w, fmt.Sprintf("job failed to complete: job code %s: %s", st.Code(), st.Message()), 500)
+									http.Error(w,
+										fmt.Sprintf("job failed to complete: job code %s: %s", st.Code(), st.Message()),
+										http.StatusInternalServerError)
 								}
 							case *pb.GetJobStreamResponse_Error_:
 								// Don't send a Message, just return error code here with event message
@@ -277,7 +295,9 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 
 								st := status.FromProto(event.Error.Error)
 								log.Warn("job stream failure", "code", st.Code(), "message", st.Message())
-								http.Error(w, fmt.Sprintf("job failed to complete: job code %s: %s", st.Code(), st.Message()), 500)
+								http.Error(w,
+									fmt.Sprintf("job failed to complete: job code %s: %s", st.Code(), st.Message()),
+									http.StatusInternalServerError)
 								return
 							case *pb.GetJobStreamResponse_Terminal_:
 								// We got some job output! Craft a message to be sent back
