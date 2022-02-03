@@ -170,7 +170,7 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 		if !requireAuth {
 			// We do not allow streaming job stream info if a no-auth token trigger was requested
 			log.Trace("server does not allow for streaming job stream output for no-token trigger URLs")
-			w.WriteHeader(http.StatusUnauthorized)
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
@@ -260,6 +260,15 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 
 				// read and send the stream
 				for {
+					select {
+					case <-cn.CloseNotify():
+						log.Trace("client closed connection to stream")
+						return
+					default:
+						// Get jobstream output and return Message back
+						time.Sleep(time.Second)
+					}
+
 					resp, err := stream.Recv()
 					if err != nil {
 						http.Error(w,
@@ -271,15 +280,6 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 						// This shouldn't happen, but if it does, just ignore it.
 						log.Warn("nil response received, ignoring")
 						continue
-					}
-
-					select {
-					case <-cn.CloseNotify():
-						log.Trace("client closed connection to stream")
-						return
-					default:
-						// Get jobstream output and return string chunk message back
-						time.Sleep(time.Second)
 					}
 
 					// the message to craft and return
