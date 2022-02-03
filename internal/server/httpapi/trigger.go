@@ -228,6 +228,8 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 						return
 					}
 
+					log.Trace("reading job stream for job", "job_id", jId)
+
 					// Wait for open confirmation
 					resp, err := stream.Recv()
 					if err != nil {
@@ -249,8 +251,6 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 						jobComplete bool
 						exitCode    string
 					)
-
-					log.Trace("reading job stream for job", "job_id", jId)
 
 					// read and send the stream
 					for {
@@ -361,7 +361,7 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 							}
 
 							// Send a message job stream back to the client
-							if value != nil {
+							if valueType != "" {
 								log.Trace("sending job data to client for job", "job_id", jId)
 
 								// Note that all empty values will be omitted
@@ -381,6 +381,7 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 								if err != nil {
 									log.Error("failed to encode job stream output to send back", "err", err)
 									http.Error(w, fmt.Sprintf("server failed to encode job stream output: %s", err), 500)
+									mu.Unlock()
 									return
 								}
 								flusher.Flush()
