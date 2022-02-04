@@ -76,6 +76,11 @@ func (s *service) ListTriggers(
 	return &pb.ListTriggerResponse{Triggers: result}, nil
 }
 
+// NoAuthRunTrigger is defined in our auth.go package to not need a token for
+// incoming requests. Eventually, Waypoint should have a middleware func
+// for incoming requests that can handle API endpoints that can support
+// authenticated and non-authenticated requests like this one.
+// https://github.com/hashicorp/waypoint/issues/2990
 func (s *service) NoAuthRunTrigger(
 	ctx context.Context,
 	req *pb.RunTriggerRequest,
@@ -103,6 +108,9 @@ func (s *service) NoAuthRunTrigger(
 	return resp, err
 }
 
+// RunTrigger takes a configured trigger URL, and crafts all of the appropriate
+// data into a QueuedJobRequest for Waypoint to execute. It returns a list of
+// job ids that have been queued from the result of the request.
 func (s *service) RunTrigger(
 	ctx context.Context,
 	req *pb.RunTriggerRequest,
