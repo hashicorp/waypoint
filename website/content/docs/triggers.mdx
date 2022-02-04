@@ -54,12 +54,8 @@ Note that creating a trigger does not validate the existence of a Project or
 Application. This validation happens at execution time. If you have made a mistake
 or typo, you can easily modify an existing trigger with `waypoint trigger update`.
 
-~> **NOTE**: In the future, once the HTTP implementation has been released, this
-command will return a full HTTP URL that Waypoint server will be able to accept requests
-with for executing this operation.
-
-For now, you can use this ID to make a request to Waypoint server to execute the
-trigger.
+Once a trigger has been created, you can make an HTTP request against the given
+trigger URL to start and queue a job on Waypoint server.
 
 ## Modifying an existing Trigger URL Configuration
 
