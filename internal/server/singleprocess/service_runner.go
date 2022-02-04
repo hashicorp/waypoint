@@ -269,21 +269,6 @@ func (s *service) RunnerConfig(
 	}
 	record := req.Open.Runner
 
-	// Create our record
-	log = log.With("runner_id", record.Id)
-	log.Trace("registering runner")
-	if err := s.state.RunnerCreate(record); err != nil {
-		return err
-	}
-
-	// Mark the runner as offline if they disconnect from the config stream loop.
-	defer func() {
-		log.Trace("marking runner as offline")
-		if err := s.state.RunnerOffline(record.Id); err != nil {
-			log.Error("failed to mark runner as offline. This should not happen.", "err", err)
-		}
-	}()
-
 	// Get our token and reverify that we are adopted.
 	tok := s.tokenFromContext(ctx)
 	if tok == nil {
@@ -322,6 +307,21 @@ func (s *service) RunnerConfig(
 	default:
 		return status.Errorf(codes.PermissionDenied, "not a valid runner token")
 	}
+
+	// Create our record
+	log = log.With("runner_id", record.Id)
+	log.Trace("registering runner")
+	if err := s.state.RunnerCreate(record); err != nil {
+		return err
+	}
+
+	// Mark the runner as offline if they disconnect from the config stream loop.
+	defer func() {
+		log.Trace("marking runner as offline")
+		if err := s.state.RunnerOffline(record.Id); err != nil {
+			log.Error("failed to mark runner as offline. This should not happen.", "err", err)
+		}
+	}()
 
 	// If the runner we just registered is explicitly rejected then we
 	// do not allow it to continue, even with a preadoption token.
