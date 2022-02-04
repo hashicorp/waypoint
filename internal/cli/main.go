@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/hashicorp/go-hclog"
@@ -125,6 +126,10 @@ func Main(args []string) int {
 	// Run the CLI
 	exitCode, err := cli.Run()
 	if err != nil {
+		if strings.Contains(err.Error(), "already installed") {
+			fmt.Println(err)
+			return 1
+		}
 		panic(err)
 	}
 
