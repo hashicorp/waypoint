@@ -126,6 +126,21 @@ func (s *service) RunnerToken(
 				break
 			}
 
+			// If the token has a label hash, then we need to validate it.
+			// If the label hash does not match what we know about the runner,
+			// we need to trigger adoption.
+			if expected := k.Runner.LabelHash; expected > 0 {
+				actual, err := serverptypes.RunnerLabelHash(record.Labels)
+				if err != nil {
+					return nil, err
+				}
+
+				if expected != actual {
+					log.Info("runner token has invalid label hash, restarting adoption")
+					break
+				}
+			}
+
 			// Seemingly valid runner token. If our logic is wrong its okay
 			// because RunnerConfig will reject them.
 			log.Debug("valid runner token provided, adoption will be skipped")
@@ -144,17 +159,6 @@ func (s *service) RunnerToken(
 			"RunnerToken requires the 'cookie' metadata value to be set")
 	}
 
-	// Get the runner
-	r, err := s.state.RunnerById(record.Id, nil)
-	if status.Code(err) == codes.NotFound {
-		err = nil
-		r = nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	prevAdopted := r != nil && r.AdoptionState == pb.Runner_ADOPTED
-
 	// Create our record
 	log = log.With("runner_id", record.Id)
 	log.Trace("registering runner")
@@ -170,6 +174,17 @@ func (s *service) RunnerToken(
 			log.Error("failed to mark runner as offline. This should not happen.", "err", err)
 		}
 	}()
+
+	// Get the runner
+	r, err := s.state.RunnerById(record.Id, nil)
+	if status.Code(err) == codes.NotFound {
+		err = nil
+		r = nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	prevAdopted := r != nil && r.AdoptionState == pb.Runner_ADOPTED
 
 	// If we reached this point and we're previously adopted, then it is an
 	// error. If we're previously adopted, we expect that runners will have
@@ -197,6 +212,12 @@ func (s *service) RunnerToken(
 
 		case pb.Runner_ADOPTED:
 			// Runner explicitly adopted, create token and return!
+
+			hash, err := serverptypes.RunnerLabelHash(record.Labels)
+			if err != nil {
+				return nil, err
+			}
+
 			tok, err := s.newToken(
 				// Doesn't expire because we can expire it by unadopting.
 				// NOTE(mitchellh): At some point, we should make these
@@ -208,7 +229,8 @@ func (s *service) RunnerToken(
 				&pb.Token{
 					Kind: &pb.Token_Runner_{
 						Runner: &pb.Token_Runner{
-							Id: record.Id,
+							Id:        record.Id,
+							LabelHash: hash,
 						},
 					},
 				},
@@ -281,6 +303,20 @@ func (s *service) RunnerConfig(
 		if k.Runner.Id != "" && !strings.EqualFold(k.Runner.Id, record.Id) {
 			return status.Errorf(codes.PermissionDenied,
 				"provided runner token is for a different runner")
+		}
+
+		// If the token has a label hash and it does not match our record,
+		// then it is an error.
+		if expected := k.Runner.LabelHash; expected > 0 {
+			actual, err := serverptypes.RunnerLabelHash(record.Labels)
+			if err != nil {
+				return err
+			}
+
+			if expected != actual {
+				return status.Errorf(codes.PermissionDenied,
+					"provided runner token is for a different set of runner labels")
+			}
 		}
 
 	default:

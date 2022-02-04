@@ -21,6 +21,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
@@ -233,6 +234,20 @@ func (s *service) authRunner(
 	if notAdopted {
 		return nil, status.Errorf(codes.PermissionDenied,
 			"runner is not adopted")
+	}
+
+	// If we have a label hash and it doesn't match the labels on the
+	// runner, then error.
+	if r != nil && tokenRunner.LabelHash > 0 {
+		hash, err := serverptypes.RunnerLabelHash(r.Labels)
+		if err != nil {
+			return nil, err
+		}
+
+		if tokenRunner.LabelHash != hash {
+			return nil, status.Errorf(codes.PermissionDenied,
+				"runner labels have changed since this token was issued")
+		}
 	}
 
 	return ctx, nil
@@ -496,13 +511,20 @@ func (s *service) GenerateRunnerToken(
 		}
 	}
 
-	// NOTE(mitchellh): label hash is currently ignored because runners
-	// don't have labels. We'll add support in a future PR.
+	var hash uint64 = 0
+	if len(req.Labels) > 0 {
+		var err error
+		hash, err = serverptypes.RunnerLabelHash(req.Labels)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	createToken := &pb.Token{
 		Kind: &pb.Token_Runner_{
 			Runner: &pb.Token_Runner{
-				Id: req.Id,
+				Id:        req.Id,
+				LabelHash: hash,
 			},
 		},
 	}
