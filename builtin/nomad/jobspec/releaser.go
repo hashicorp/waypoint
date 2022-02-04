@@ -189,6 +189,27 @@ func (r *Releaser) resourceJobCreate(
 		return nil
 	}
 
+	// check each task group to be promoted and if the canary allocs aren't healthy,
+	//   check again in 5 seconds
+	// TODO: Force timeout if exceeds healthy deadline or progress deadline of job
+	var currentTaskGroupState *api.DeploymentState
+	var groupHealthy bool
+	for _, group := range groupsToPromote {
+		if group != "" {
+			currentTaskGroupState = deploy.TaskGroups[group]
+			groupHealthy = false
+			for !groupHealthy {
+				if currentTaskGroupState.HealthyAllocs < len(currentTaskGroupState.PlacedCanaries) {
+					time.Sleep(5 * time.Second)
+					deploy, _, err = jobClient.LatestDeployment(jobs[0].ID, q)
+					currentTaskGroupState = deploy.TaskGroups[group]
+				} else {
+					groupHealthy = true
+				}
+			}
+		}
+	}
+
 	// Set write options
 	wq := &api.WriteOptions{Namespace: jobs[0].JobSummary.Namespace}
 
@@ -196,6 +217,7 @@ func (r *Releaser) resourceJobCreate(
 	if r.config.FailDeployment {
 		u, _, err = deploymentClient.Fail(deploy.ID, wq)
 	} else {
+		log.Debug("Promoting groups")
 		u, _, err = deploymentClient.PromoteGroups(deploy.ID, groupsToPromote, wq)
 	}
 	if err != nil {
