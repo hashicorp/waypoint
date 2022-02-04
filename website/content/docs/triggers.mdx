@@ -178,7 +178,16 @@ curl -k -G -d "variables={\"tag\":\"latest\"}" -d "token=`waypoint user token`" 
 
 ### Streaming Job Output over HTTP
 
+When starting a trigger URL request, Waypoint server supports streaming
+job output to the requester. Additionally, it supports streaming all concurrent
+jobs that are running from the result of starting a trigger URL. For trigger URLs
+that are not authenticated, Waypoint server does not allow for job streaming.
+
 #### Streamed Event Types
+
+When streaming events back from a running job, trigger URLs will return job
+stream event message types depending on the kind of output from the job. A job
+will be finished if it returns a `Complete` or `Error` value type.
 
 - `Complete`
 - `Error`
