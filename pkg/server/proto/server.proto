@@ -82,7 +82,9 @@ service Waypoint {
   rpc UpsertProject(UpsertProjectRequest) returns (UpsertProjectResponse);
 
   // GetProject returns the project.
-  rpc GetProject(GetProjectRequest) returns (GetProjectResponse);
+  rpc GetProject(GetProjectRequest) returns (GetProjectResponse) {
+    option (google.api.http) = { get: "/waypoint/projects/{project.project}" };
+  };
 
   // ListProjects returns a list of all the projects. There is no equivalent
   // ListApplications because applications are a part of projects and you
@@ -101,7 +103,9 @@ service Waypoint {
   rpc ListBuilds(ListBuildsRequest) returns (ListBuildsResponse);
 
   // GetBuild returns a build
-  rpc GetBuild(GetBuildRequest) returns (Build);
+  rpc GetBuild(GetBuildRequest) returns (Build) {
+    option (google.api.http) = { get: "/waypoint/builds/{ref.id}" };
+  };
 
   // ListPushedArtifacts returns the builds.
   rpc ListPushedArtifacts(ListPushedArtifactsRequest) returns (ListPushedArtifactsResponse);
@@ -116,7 +120,9 @@ service Waypoint {
   rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse);
 
   // GetDeployment returns a deployment
-  rpc GetDeployment(GetDeploymentRequest) returns (Deployment);
+  rpc GetDeployment(GetDeploymentRequest) returns (Deployment) {
+    option (google.api.http) = { get: "/waypoint/deployments/{ref.id}" };
+  };
 
   // GetLatestBuild returns the most recent successfully completed build
   // for an app.
@@ -130,7 +136,9 @@ service Waypoint {
   rpc ListReleases(ListReleasesRequest) returns (ListReleasesResponse);
 
   // GetRelease returns a deployment
-  rpc GetRelease(GetReleaseRequest) returns (Release);
+  rpc GetRelease(GetReleaseRequest) returns (Release) {
+    option (google.api.http) = { get: "/waypoint/releases/{ref.id}" };
+  };
 
   // GetLatestRelease returns the most recent successfully completed
   // artifact push for an app.
@@ -203,7 +211,9 @@ service Waypoint {
   rpc GetJobStream(GetJobStreamRequest) returns (stream GetJobStreamResponse);
 
   // GetRunner gets information about a single runner.
-  rpc GetRunner(GetRunnerRequest) returns (Runner);
+  rpc GetRunner(GetRunnerRequest) returns (Runner) {
+   option (google.api.http) = { get: "/waypoint/runners/{runner_id}" };
+  };
 
   // ListRunners lists runners that are currently registered with the waypoint server.
   // This list does not include previous on-demand runners that have exited.
