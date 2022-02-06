@@ -139,35 +139,38 @@ func (r *Releaser) resourceJobCreate(
 	client *nomadClient,
 	st terminal.Status,
 ) error {
-
+	// Set up clients
 	jobClient := client.NomadClient.Jobs()
 	deploymentClient := client.NomadClient.Deployments()
 
-	//TODO: Use step group
+	// TODO: Use step group
 	st.Update("Getting job...")
+	// TODO: Error if target.Name doesn't exactly match the IDs of any of the jobs returned
 	jobs, _, err := jobClient.PrefixList(target.Name)
+	if err != nil {
+		return status.Errorf(codes.Aborted, "Unable to fetch Nomad jobs: %s", err.Error())
+	}
+
+	// TODO: Add ACL token here
+	q := &api.QueryOptions{
+		Namespace: jobs[0].JobSummary.Namespace,
+	}
+
+	job, _, err := jobClient.Info(jobs[0].ID, q)
+
 	if err != nil {
 		return status.Errorf(codes.Aborted, "Unable to fetch Nomad job: %s", err.Error())
 	}
 
-	q := &api.QueryOptions{Namespace: jobs[0].JobSummary.Namespace}
 	st.Update("Getting latest deployments for job")
-	deploy, _, err := jobClient.LatestDeployment(jobs[0].ID, q)
+	deploy, _, err := jobClient.LatestDeployment(*job.ID, q)
 	if err != nil {
 		return status.Errorf(codes.Aborted, "Unable to fetch latest deployment for Nomad job: %s", err.Error())
-	}
-
-	if deploy == nil {
+	} else if deploy == nil {
 		st.Update("No active deployment for Nomad job")
 		return err
 	}
 
-	//Check if any of the task groups are canary deployments
-	//TODO: Match up specified 'groups' in ReleaserConfig to group names found in the Deployment
-	//      Verify that they 1) exist and 2) have canaries
-	//      Note that this will become more complex in that once the deployment is
-	//      "released", the generation ID will not support a second "release" to
-	//      promote a different group of canaries
 	canaryDeployment := false
 	groupsToPromote := make([]string, len(deploy.TaskGroups))
 	for taskGroupName, taskGroup := range deploy.TaskGroups {
@@ -189,7 +192,7 @@ func (r *Releaser) resourceJobCreate(
 		return nil
 	}
 
-	// check each task group to be promoted and if the canary allocs aren't healthy,
+	// check each task group to be promoted; if the canary allocs aren't healthy,
 	//   check again in 5 seconds
 	// TODO: Force timeout if exceeds healthy deadline or progress deadline of job
 	var currentTaskGroupState *api.DeploymentState
@@ -201,7 +204,7 @@ func (r *Releaser) resourceJobCreate(
 			for !groupHealthy {
 				if currentTaskGroupState.HealthyAllocs < len(currentTaskGroupState.PlacedCanaries) {
 					time.Sleep(5 * time.Second)
-					deploy, _, err = jobClient.LatestDeployment(jobs[0].ID, q)
+					deploy, _, err = jobClient.LatestDeployment(*job.ID, q)
 					currentTaskGroupState = deploy.TaskGroups[group]
 				} else {
 					groupHealthy = true
@@ -210,68 +213,38 @@ func (r *Releaser) resourceJobCreate(
 		}
 	}
 
-	// Set write options
-	wq := &api.WriteOptions{Namespace: jobs[0].JobSummary.Namespace}
+	// TODO: Add ACL token here
+	wq := &api.WriteOptions{Namespace: *job.Namespace}
 
 	var u *api.DeploymentUpdateResponse
 	if r.config.FailDeployment {
 		u, _, err = deploymentClient.Fail(deploy.ID, wq)
 	} else {
-		log.Debug("Promoting groups")
 		u, _, err = deploymentClient.PromoteGroups(deploy.ID, groupsToPromote, wq)
 	}
 	if err != nil {
 		return err
 	}
+
 	st.Update(fmt.Sprintf("Monitoring evaluation %s", string(u.EvalID)))
 	if err := nomad.NewMonitor(st, client.NomadClient).Monitor(u.EvalID); err != nil {
 		return err
 	}
 
-	//TODO: If applicable, get Consul service from job. If multiple services, how to determine which service to use
-	//      (maybe from ReleaserConfig)? Consul service URL structure may be ambiguous here as well:
-	//      'service_name.service.consul' is common; however, `.consul` is default domain for Consul, but this is not
-	//      mandatory. The service could also be an ingress gateway, where the name would be service_name.ingress.consul.
-	//      The Consul data center may also be required, and/or tags, for FQDN of:
-	//      tag_name.service_name.ingress/service.datacenter.consul
-	//      https://www.consul.io/docs/discovery/dns#standard-lookup
-	//      If no Consul service, select IP/Port of a random instance?
-	result.Url = "https://waypointproject.io"
-
+	// TODO: Automatically search for Consul service, determine FQDN for service
+	// TODO: Automatically search for ingress gateway, determine FQDN for service
+	// TODO: Automatically search for IP and port of random Nomad alloc in job
+	// If meta not set, URL is empty
+	result.Url = job.Meta["waypoint.hashicorp.com/release_url"]
 	return nil
 }
 
 func (r *Releaser) resourceJobDestroy(
-	ctx context.Context,
+	client *nomadClient,
 	state *Resource_Job,
 	sg terminal.StepGroup,
-	client *nomadClient,
 ) error {
-	step := sg.Add("Initializing Nomad client...")
-	defer func() { step.Abort() }()
-
-	nomadClient := client.NomadClient
-	jobClient := nomadClient.Jobs()
-
-	step.Update("Getting job...")
-	jobs, _, err := jobClient.PrefixList(state.Name)
-	if err != nil {
-		return status.Errorf(codes.Aborted, "Unable to fetch Nomad job: %s", err.Error())
-	}
-
-	// Set write options
-	wq := &api.WriteOptions{Namespace: jobs[0].JobSummary.Namespace}
-
-	step.Update("Deleting job: %s", state.Name)
-	_, _, err = jobClient.Deregister(state.Name, true, wq)
-
-	if err != nil {
-		return err
-	}
-
-	step.Update("Job deleted")
-	step.Done()
-
+	// Do nothing because the platform will destroy the job for us
 	return nil
 }
 
@@ -328,7 +301,7 @@ func (r *Releaser) Destroy(
 		}
 	}
 
-	return rm.DestroyAll(ctx, log, sg, ui)
+	return rm.DestroyAll(sg, ui)
 }
 
 func (r *Releaser) Status(
