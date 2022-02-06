@@ -25,7 +25,6 @@ import (
 
 const (
 	metaId            = "waypoint.hashicorp.com/id"
-	metaNonce         = "waypoint.hashicorp.com/nonce"
 	rmResourceJobName = "job"
 )
 
@@ -149,7 +148,6 @@ func (p *Platform) resourceJobDestroy(
 	defer func() { step.Abort() }()
 	step.Update("Deleting job: %s", state.Name)
 	step.Done()
-	// TODO: Add namespace here
 	_, _, err := client.NomadClient.Jobs().Deregister(state.Name, true, nil)
 	return err
 }
@@ -163,7 +161,6 @@ func (p *Platform) resourceJobStatus(
 	sr *resource.StatusResponse,
 	ui terminal.UI,
 ) error {
-	// Nomad platform flavor of status but needs to be updated
 	jobclient := client.NomadClient.Jobs()
 
 	s := sg.Add("Gathering health report for Nomad job...")
@@ -174,7 +171,6 @@ func (p *Platform) resourceJobStatus(
 		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
 	}
 	sr.Resources = append(sr.Resources, &jobResource)
-	log.Debug(fmt.Sprintf("Job name for lookup is: %s", state.Name))
 	job, _, err := jobclient.Info(state.Name, &api.QueryOptions{})
 	if err != nil {
 		return err
@@ -255,8 +251,6 @@ func (p *Platform) Deploy(
 	job, err := p.jobspec(client, p.config.Jobspec)
 	result.Name = *job.ID
 
-	//     seq := deployConfig.Sequence
-	// 	result.Name = strings.ToLower(fmt.Sprintf("%s-v%d", src.App, seq))
 	// We'll update the user in real time
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -331,7 +325,7 @@ func (p *Platform) Generation(
 			canaryDeployment = true
 		}
 	}
-	//return errorf here
+
 	if !canaryDeployment {
 		return []byte(*job.ID), nil
 	} else {

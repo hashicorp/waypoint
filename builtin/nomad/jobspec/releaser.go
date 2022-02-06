@@ -76,60 +76,6 @@ func (r *Releaser) getNomadClient() (*nomadClient, error) {
 	}, nil
 }
 
-func (r *Releaser) resourceJobStatus(
-	ctx context.Context,
-	log hclog.Logger,
-	sg terminal.StepGroup,
-	state *Resource_Job,
-	client *nomadClient,
-	sr *resource.StatusResponse,
-) error {
-	s := sg.Add("Checking status of Nomad job resource %q...", state.Name)
-	defer s.Abort()
-
-	jobClient := client.NomadClient.Jobs()
-	s.Update("Getting job...")
-	jobs, _, err := jobClient.PrefixList(state.Name)
-	q := &api.QueryOptions{Namespace: jobs[0].JobSummary.Namespace}
-
-	jobResource := sdk.StatusReport_Resource{
-		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
-	}
-	sr.Resources = append(sr.Resources, &jobResource)
-
-	job, _, err := jobClient.Info(jobs[0].ID, q)
-
-	if jobs == nil {
-		return status.Errorf(codes.FailedPrecondition, "Nomad job response cannot be empty")
-	} else if err != nil {
-		s.Update("No job was found")
-		s.Status(terminal.StatusError)
-		s.Done()
-		s = sg.Add("")
-
-		jobResource.Name = state.Name
-		jobResource.Health = sdk.StatusReport_MISSING
-		jobResource.HealthMessage = sdk.StatusReport_MISSING.String()
-	} else {
-		jobResource.Id = *job.ID
-		jobResource.Name = *job.Name
-		jobResource.CreatedTime = timestamppb.New(time.Unix(0, *job.SubmitTime))
-		jobResource.Health = sdk.StatusReport_READY
-		jobResource.HealthMessage = fmt.Sprintf("Job %q exists and is ready", *job.Name)
-		stateJson, err := json.Marshal(map[string]interface{}{
-			"deployment": job,
-		})
-		if err != nil {
-			jobResource.StateJson = string(stateJson)
-		}
-	}
-
-	s.Update("Finished building report for Nomad job resource")
-	s.Done()
-	return nil
-}
-
-// might be a better name than JobCreate for promoting a canary
 func (r *Releaser) resourceJobCreate(
 	ctx context.Context,
 	log hclog.Logger,
@@ -143,15 +89,14 @@ func (r *Releaser) resourceJobCreate(
 	jobClient := client.NomadClient.Jobs()
 	deploymentClient := client.NomadClient.Deployments()
 
-	// TODO: Use step group
 	st.Update("Getting job...")
-	// TODO: Error if target.Name doesn't exactly match the IDs of any of the jobs returned
 	jobs, _, err := jobClient.PrefixList(target.Name)
 	if err != nil {
 		return status.Errorf(codes.Aborted, "Unable to fetch Nomad jobs: %s", err.Error())
+	} else if target.Name != jobs[0].ID {
+		return status.Errorf(codes.Aborted, "Job not found: %s", err.Error())
 	}
 
-	// TODO: Add ACL token here
 	q := &api.QueryOptions{
 		Namespace: jobs[0].JobSummary.Namespace,
 	}
@@ -213,8 +158,9 @@ func (r *Releaser) resourceJobCreate(
 		}
 	}
 
-	// TODO: Add ACL token here
-	wq := &api.WriteOptions{Namespace: *job.Namespace}
+	wq := &api.WriteOptions{
+		Namespace: *job.Namespace,
+	}
 
 	var u *api.DeploymentUpdateResponse
 	if r.config.FailDeployment {
@@ -248,6 +194,59 @@ func (r *Releaser) resourceJobDestroy(
 	return nil
 }
 
+func (r *Releaser) resourceJobStatus(
+	ctx context.Context,
+	log hclog.Logger,
+	sg terminal.StepGroup,
+	state *Resource_Job,
+	client *nomadClient,
+	sr *resource.StatusResponse,
+) error {
+	s := sg.Add("Checking status of Nomad job resource %q...", state.Name)
+	defer s.Abort()
+
+	jobClient := client.NomadClient.Jobs()
+	s.Update("Getting job...")
+	jobs, _, err := jobClient.PrefixList(state.Name)
+	q := &api.QueryOptions{Namespace: jobs[0].JobSummary.Namespace}
+
+	jobResource := sdk.StatusReport_Resource{
+		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
+	}
+	sr.Resources = append(sr.Resources, &jobResource)
+
+	job, _, err := jobClient.Info(jobs[0].ID, q)
+
+	if jobs == nil {
+		return status.Errorf(codes.FailedPrecondition, "Nomad job response cannot be empty")
+	} else if err != nil {
+		s.Update("No job was found")
+		s.Status(terminal.StatusError)
+		s.Done()
+		s = sg.Add("")
+
+		jobResource.Name = state.Name
+		jobResource.Health = sdk.StatusReport_MISSING
+		jobResource.HealthMessage = sdk.StatusReport_MISSING.String()
+	} else {
+		jobResource.Id = *job.ID
+		jobResource.Name = *job.Name
+		jobResource.CreatedTime = timestamppb.New(time.Unix(0, *job.SubmitTime))
+		jobResource.Health = sdk.StatusReport_READY
+		jobResource.HealthMessage = fmt.Sprintf("Job %q exists and is ready", *job.Name)
+		stateJson, err := json.Marshal(map[string]interface{}{
+			"deployment": job,
+		})
+		if err != nil {
+			jobResource.StateJson = string(stateJson)
+		}
+	}
+
+	s.Update("Finished building report for Nomad job resource")
+	s.Done()
+	return nil
+}
+
 // Release promotes the Nomad canary deployment
 func (r *Releaser) Release(
 	ctx context.Context,
@@ -261,6 +260,8 @@ func (r *Releaser) Release(
 	var result Release
 
 	// We'll update the user in real time
+	// TODO: Replace ui.Status with StepGroups once this bug
+	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
 	st := ui.Status()
 	defer st.Close()
 
@@ -384,8 +385,6 @@ func (r *Releaser) Status(
 type ReleaserConfig struct {
 	Groups         []string `hcl:"groups,optional"`
 	FailDeployment bool     `hcl:"fail_deployment,optional"`
-	//TODO: Support option to revert to a previous version?
-	//      Should something like this (rollbacks) be accommodated by a releaser?
 }
 
 type nomadClient struct {
@@ -398,10 +397,135 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 		return nil, err
 	}
 
-	doc.Description("Promotes a Nomad canary deployment")
+	doc.Description(`
+Promotes a Nomad canary deployment initiated by a Nomad jobspec deployment.
 
-	doc.Input("nomad.Deployment")
-	doc.Output("nomad.Release")
+If your Nomad deployment is configured to use canaries, this releaser plugin lets
+you promote (or fail) the canary deployment. You may also target specific task
+groups within your job for promotion, if you have multiple task groups in your canary
+deployment.
+
+-> **Note:** Using the ` + "`-prune=false`" + ` flag is recommended for this releaser. By default,
+Waypoint prunes and destroys all unreleased deployments and keeps only one previous
+deployment. Therefore, if ` + "`-prune=false`" + ` is not set, Waypoint may delete
+your job via "pruning" a previous version. See [deployment pruning](/docs/lifecycle/release#deployment-pruning)
+for more information.
+
+### Release URL
+
+If you want the URL of the release of your deployment to be published in Waypoint,
+you must set the meta 'waypoint.hashicorp.com/release_url' in your jobspec. The
+value specified in this meta field will be published as the release URL for your
+application. In the future, this may source from Consul.
+
+`)
+
+	doc.Example(`
+// The waypoint.hcl file
+release {
+	use "nomad-jobspec-canary" {
+		groups = [
+			"app"
+		]
+		fail_deployment = false
+	}
+}
+
+// The app.nomad.tpl file
+job "web" {
+  datacenters = ["dc1"]
+
+  group "app" {
+		network {
+      mode = "bridge"
+      port "http" {
+        to = 80
+      }
+		}
+
+		// Setting a canary in the update stanza indicates a canary deployment
+		update {
+			max_parallel = 1
+			canary       = 1
+			auto_revert  = true
+			auto_promote = false
+			health_check = "task_states"
+		}
+
+		service {
+			name = "app"
+			port = 80
+			connect {
+				sidecar_service {}
+			}
+		}
+
+    task "app" {
+      driver = "docker"
+      config {
+        image = "${artifact.image}:${artifact.tag}"
+				ports  = ["http"]
+      }
+
+      env {
+        %{ for k,v in entrypoint.env ~}
+        ${k} = "${v}"
+        %{ endfor ~}
+
+        // Ensure we set PORT for the URL service. This is only necessary
+        // if we want the URL service to function.
+        PORT = 80
+      }
+    }
+  }
+
+	group "app-gateway" {
+    network {
+      mode = "bridge"
+      port "inbound" {
+        static = 8080
+        to     = 8080
+      }
+    }
+
+    service {
+      name = "gateway"
+      port = "8080"
+
+      connect {
+        gateway {
+          proxy {}
+
+          ingress {
+            listener {
+              port = 8080
+              protocol = "http"
+              service {
+                name  = "app"
+                hosts = [ "*" ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+	meta = {
+		// Ensure we set meta for Waypoint to detect the release URL
+		"waypoint.hashicorp.com/release_url" = "http://app.ingress.dc1.consul:8080"
+	}
+}
+`)
+
+	doc.SetField(
+		"groups",
+		"List of task group names which are to be promoted.",
+	)
+
+	doc.SetField(
+		"fail_deployment",
+		"If false, fails the canary deployment.",
+	)
 
 	return doc, nil
 }
