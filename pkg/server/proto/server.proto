@@ -8,6 +8,7 @@ import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "google/rpc/status.proto";
+import "google/api/annotations.proto";
 
 // The service that is implemented for the server backend.
 service Waypoint {
@@ -86,7 +87,9 @@ service Waypoint {
   // ListProjects returns a list of all the projects. There is no equivalent
   // ListApplications because applications are a part of projects and you
   // can use GetProject to get more information about the project.
-  rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse);
+  rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse) {
+    option (google.api.http) = { get: "/api/v1/projects" };
+  };
 
   // GetApplication returns one application on the project.
   rpc GetApplication(GetApplicationRequest) returns (GetApplicationResponse);
