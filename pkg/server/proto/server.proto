@@ -33,6 +33,11 @@ service Waypoint {
   // OIDC provider.
   rpc CompleteOIDCAuth(CompleteOIDCAuthRequest) returns (CompleteOIDCAuthResponse);
 
+  // Attempts to run a trigger given a trigger ID reference. If the trigger does
+  // not exist, we return not found. If the trigger exists but requires authentication
+  // we return an error.
+  rpc NoAuthRunTrigger(RunTriggerRequest) returns (RunTriggerResponse);
+
   //----------------------------------------------------------------------
   // Authenticated endpoints for general API use.
   //----------------------------------------------------------------------

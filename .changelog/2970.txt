@@ -1,0 +1,5 @@
+```release-note:feature
+**core: Introduce executing Trigger URL configurations via HTTP**. Users can
+start a trigger via HTTP and stream the job event stream output directly over
+http.
+```

@@ -68,6 +68,8 @@ var (
 		"CompleteOIDCAuth":    {},
 
 		"RunnerToken": {},
+
+		"NoAuthRunTrigger": {},
 	}
 )
 
