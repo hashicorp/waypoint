@@ -367,7 +367,7 @@ func (p *Platform) Deploy(
 	}
 
 	if ver == nil {
-		return nil, fmt.Errorf("Lambda was unable to prepare the function in the aloted time")
+		return nil, fmt.Errorf("Lambda was unable to prepare the function in the allotted time")
 	}
 
 	verarn := *ver.FunctionArn
