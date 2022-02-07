@@ -20,5 +20,8 @@ import _ "github.com/golang/protobuf/protoc-gen-go"
 //go:generate go install github.com/mitchellh/protoc-gen-go-json
 import _ "github.com/mitchellh/protoc-gen-go-json"
 
+//go:generate go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+import _ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger"
+
 //go:generate go install "-ldflags=-s -w -X github.com/vektra/mockery/mockery.SemVer=1.1.2" github.com/vektra/mockery/cmd/mockery
 import _ "github.com/vektra/mockery"
