@@ -34,6 +34,8 @@ type LoginCommand struct {
 	flagK8SService     string
 	flagK8STokenSecret string
 	flagK8SNamespace   string
+	flagK8SContext     string
+	flagK8SKubeconfig  string
 }
 
 func (c *LoginCommand) Run(args []string) int {
@@ -322,7 +324,7 @@ func (c *LoginCommand) loginOIDC(ctx context.Context) (string, int) {
 
 func (c *LoginCommand) loginK8S(ctx context.Context) (string, int) {
 	// Get our Kubernetes client
-	clientset, ns, _, err := k8sauth.Clientset("", "")
+	clientset, ns, _, err := k8sauth.Clientset(c.flagK8SKubeconfig, c.flagK8SContext)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return "", 1
@@ -353,7 +355,7 @@ func (c *LoginCommand) loginK8S(ctx context.Context) (string, int) {
 
 func (c *LoginCommand) k8sServerAddr(ctx context.Context) (string, error) {
 	// Get our Kubernetes client
-	clientset, ns, _, err := k8sauth.Clientset("", "")
+	clientset, ns, _, err := k8sauth.Clientset(c.flagK8SKubeconfig, c.flagK8SContext)
 	if err != nil {
 		return "", err
 	}
@@ -462,6 +464,20 @@ func (c *LoginCommand) Flags() *flag.Sets {
 			Name:   "from-kubernetes-namespace",
 			Target: &c.flagK8SNamespace,
 			Usage: "The name of the Kubernetes namespace that has the Waypoint token " +
+				"when using the -from-kubernetes flag.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "from-kubernetes-kubeconfig",
+			Target: &c.flagK8SKubeconfig,
+			Usage: "Path to the kubeconfig file for the cluster Waypoint was installed into " +
+				"when using the -from-kubernetes flag.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "from-kubernetes-context",
+			Target: &c.flagK8SContext,
+			Usage: "The name of the Kubernetes context that Waypoint was installed into " +
 				"when using the -from-kubernetes flag.",
 		})
 	})
