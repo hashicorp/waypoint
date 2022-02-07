@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/hashicorp/go-hclog"
@@ -125,6 +126,15 @@ func Main(args []string) int {
 	// Run the CLI
 	exitCode, err := cli.Run()
 	if err != nil {
+		// If the autocomplete options have already been installed the package
+		// used by mitchellh/cli will return an untyped error containing this
+		// message. We check here simply to avoid presenting a panic to the user
+		// in the event autocomplete has already been installed.
+		// See https://github.com/hashicorp/waypoint/pull/2986
+		if strings.Contains(err.Error(), "already installed") {
+			fmt.Println(err)
+			return 1
+		}
 		panic(err)
 	}
 
