@@ -44,7 +44,6 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.3
 	github.com/hashicorp/aws-sdk-go-base v0.7.0
 	github.com/hashicorp/cap v0.1.1
 	github.com/hashicorp/go-argmapper v0.2.3
