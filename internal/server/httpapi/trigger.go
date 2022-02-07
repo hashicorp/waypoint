@@ -16,9 +16,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/serverconfig"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 // Message is the message we return to the requester when streaming job output
