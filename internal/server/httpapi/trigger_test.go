@@ -8,11 +8,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/hashicorp/waypoint/pkg/server/gen/mocks"
 	"github.com/stretchr/testify/require"
 	pbstatus "google.golang.org/genproto/googleapis/rpc/status"
 
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/gen/mocks"
 )
 
 func TestHandleTrigger(t *testing.T) {
