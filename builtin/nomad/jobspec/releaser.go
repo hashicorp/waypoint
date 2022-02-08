@@ -524,7 +524,7 @@ job "web" {
 
 	doc.SetField(
 		"fail_deployment",
-		"If false, fails the canary deployment.",
+		"If true, fails the canary deployment.",
 	)
 
 	return doc, nil
