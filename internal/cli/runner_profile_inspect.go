@@ -66,10 +66,11 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 		}
 	}
 
+	config := resp.Config
 	if c.flagJson {
 		var m jsonpb.Marshaler
 		m.Indent = "\t"
-		str, err := m.MarshalToString(resp.Config)
+		str, err := m.MarshalToString(config)
 		if err != nil {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
@@ -79,7 +80,6 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 		return 0
 	}
 
-	config := resp.Config
 	var targetRunner string
 	if config.TargetRunner != nil {
 		switch t := config.TargetRunner.Target.(type) {
