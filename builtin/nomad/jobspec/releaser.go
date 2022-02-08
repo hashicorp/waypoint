@@ -479,7 +479,7 @@ job "web" {
     }
   }
 
-	group "app-gateway" {
+  group "app-gateway" {
     network {
       mode = "bridge"
       port "inbound" {
@@ -510,10 +510,10 @@ job "web" {
       }
     }
   }
-	meta = {
-		// Ensure we set meta for Waypoint to detect the release URL
-		"waypoint.hashicorp.com/release_url" = "http://app.ingress.dc1.consul:8080"
-	}
+  meta = {
+    // Ensure we set meta for Waypoint to detect the release URL
+    "waypoint.hashicorp.com/release_url" = "http://app.ingress.dc1.consul:8080"
+  }
 }
 `)
 
