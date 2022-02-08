@@ -33,6 +33,246 @@
           "Waypoint"
         ]
       }
+    },
+    "/waypoint/builds/{ref.id}": {
+      "get": {
+        "summary": "GetBuild returns a build",
+        "operationId": "Waypoint_GetBuild",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.Build"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ref.id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ref.sequence.application.application",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ref.sequence.application.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ref.sequence.number",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/waypoint/deployments/{ref.id}": {
+      "get": {
+        "summary": "GetDeployment returns a deployment",
+        "operationId": "Waypoint_GetDeployment",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.Deployment"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ref.id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ref.sequence.application.application",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ref.sequence.application.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ref.sequence.number",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "load_details",
+            "description": "Indicate if the fetched deployments should include additional information\nabout each deployment.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NONE",
+              "ARTIFACT",
+              "BUILD"
+            ],
+            "default": "NONE"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/waypoint/projects/{project.project}": {
+      "get": {
+        "summary": "GetProject returns the project.",
+        "operationId": "Waypoint_GetProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/waypoint/releases/{ref.id}": {
+      "get": {
+        "summary": "GetRelease returns a deployment",
+        "operationId": "Waypoint_GetRelease",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.Release"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ref.id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ref.sequence.application.application",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ref.sequence.application.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ref.sequence.number",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "load_details",
+            "description": "Load additional details about the release. These will become available\nin the Preload section.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NONE",
+              "DEPLOYMENT",
+              "ARTIFACT",
+              "BUILD"
+            ],
+            "default": "NONE"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/waypoint/runners/{runner_id}": {
+      "get": {
+        "summary": "GetRunner gets information about a single runner.",
+        "operationId": "Waypoint_GetRunner",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.Runner"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "runner_id",
+            "description": "ID of the runner to request.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
     }
   },
   "definitions": {
