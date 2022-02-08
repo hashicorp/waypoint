@@ -54,13 +54,11 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 				Id: name,
 			},
 		})
-
-		if status.Code(err) == codes.NotFound {
-			c.ui.Output("runner profile not found", terminal.WithErrorStyle())
-			return 1
-		}
-
 		if err != nil {
+			if status.Code(err) != codes.NotFound {
+				c.ui.Output("runner profile not found", terminal.WithErrorStyle())
+				return 1
+			}
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
@@ -75,7 +73,6 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
-
 		fmt.Println(str)
 		return 0
 	}
@@ -152,7 +149,7 @@ func (c *RunnerProfileInspectCommand) Synopsis() string {
 
 func (c *RunnerProfileInspectCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint runner profile inspect NAME
+Usage: waypoint runner profile inspect <name>
 
   Show detailed information about a runner profile.
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/ptypes"
-	"reflect"
 	"strings"
 
 	"github.com/golang/protobuf/jsonpb"
@@ -42,7 +41,11 @@ func (c *RunnerInspectCommand) Run(args []string) int {
 	id := c.args[0]
 
 	resp, err := c.project.Client().GetRunner(c.Ctx, &pb.GetRunnerRequest{RunnerId: id})
-	if err != nil && status.Code(err) != codes.NotFound {
+	if err != nil {
+		if status.Code(err) != codes.NotFound {
+			c.ui.Output("runner not found", terminal.WithErrorStyle())
+			return 1
+		}
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
@@ -60,21 +63,27 @@ func (c *RunnerInspectCommand) Run(args []string) int {
 		return 0
 	}
 
-	kindMap := map[reflect.Type]string{
-		reflect.TypeOf((*pb.Runner_Odr)(nil)):     "on-demand",
-		reflect.TypeOf((*pb.Runner_Local_)(nil)):  "local",
-		reflect.TypeOf((*pb.Runner_Remote_)(nil)): "remote",
+	var kindStr string
+	switch resp.Kind.(type) {
+	case *pb.Runner_Odr:
+		kindStr = "on-demand"
+	case *pb.Runner_Local_:
+		kindStr = "local"
+	case *pb.Runner_Remote_:
+		kindStr = "remote"
+	default:
+		kindStr = "unknown"
 	}
-	var kindStr = "unknown"
-	if v, ok := kindMap[reflect.TypeOf(resp.Kind)]; ok {
-		kindStr = v
-	}
+
 	var lastSeenStr string
 	if v, err := ptypes.Timestamp(resp.LastSeen); err == nil {
 		lastSeenStr = humanize.Time(v)
 	}
-	var stateStr = "unknown"
-	stateStr = strings.ToLower(resp.AdoptionState.String())
+
+	stateStr := strings.ToLower(resp.AdoptionState.String())
+	if stateStr == "" {
+		stateStr = "unknown"
+	}
 
 	c.ui.Output("Runner:", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
@@ -128,7 +137,7 @@ func (c *RunnerInspectCommand) Synopsis() string {
 
 func (c *RunnerInspectCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint runner inspect ID
+Usage: waypoint runner inspect <id>
 
   Show detailed information about a runner.
 
