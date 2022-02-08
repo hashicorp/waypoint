@@ -1,9 +1,15 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "pkg/server/proto/server.proto",
-    "version": "version not set"
+    "title": "HashiCorp Cloud Platform Waypoint",
+    "description": "Service for manage applications.",
+    "version": "2021-04-30"
   },
+  "host": "api.cloud.hashicorp.com",
+  "schemes": [
+    "http",
+    "https"
+  ],
   "consumes": [
     "application/json"
   ],
@@ -11,7 +17,7 @@
     "application/json"
   ],
   "paths": {
-    "/api/v1/projects": {
+    "/waypoint/2022-02-03/organizations/{location.organization_id}/projects/{location.project_id}/projects": {
       "get": {
         "summary": "ListProjects returns a list of all the projects. There is no equivalent\nListApplications because applications are a part of projects and you\ncan use GetProject to get more information about the project.",
         "operationId": "Waypoint_ListProjects",
@@ -19,30 +25,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.ListProjectsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/grpc.gateway.runtime.Error"
-            }
-          }
-        },
-        "tags": [
-          "Waypoint"
-        ]
-      }
-    },
-    "/waypoint/builds/{ref.id}": {
-      "get": {
-        "summary": "GetBuild returns a build",
-        "operationId": "Waypoint_GetBuild",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.Build"
+              "$ref": "#/definitions/hashicorp.cloud.waypoint.ListProjectsResponse"
             }
           },
           "default": {
@@ -53,6 +36,59 @@
           }
         },
         "parameters": [
+          {
+            "name": "location.organization_id",
+            "description": "organization_id is the id of the organization.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "location.project_id",
+            "description": "project_id is the projects id.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/waypoint/2022-02-03/organizations/{location.organization_id}/projects/{location.project_id}/builds/{ref.id}": {
+      "get": {
+        "summary": "GetBuild returns a build",
+        "operationId": "Waypoint_GetBuild",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.cloud.waypoint.Build"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "location.organization_id",
+            "description": "organization_id is the id of the organization.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "location.project_id",
+            "description": "project_id is the projects id.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
           {
             "name": "ref.id",
             "in": "path",
@@ -84,7 +120,7 @@
         ]
       }
     },
-    "/waypoint/deployments/{ref.id}": {
+    "/waypoint/2022-02-03/organizations/{location.organization_id}/projects/{location.project_id}/deployments/{ref.id}": {
       "get": {
         "summary": "GetDeployment returns a deployment",
         "operationId": "Waypoint_GetDeployment",
@@ -92,7 +128,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.Deployment"
+              "$ref": "#/definitions/hashicorp.cloud.waypoint.Deployment"
             }
           },
           "default": {
@@ -103,6 +139,20 @@
           }
         },
         "parameters": [
+          {
+            "name": "location.organization_id",
+            "description": "organization_id is the id of the organization.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "location.project_id",
+            "description": "project_id is the projects id.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
           {
             "name": "ref.id",
             "in": "path",
@@ -147,7 +197,7 @@
         ]
       }
     },
-    "/waypoint/projects/{project.project}": {
+    "/waypoint/2022-02-03/organizations/{location.organization_id}/projects/{location.project_id}/projects/{project.project}": {
       "get": {
         "summary": "GetProject returns the project.",
         "operationId": "Waypoint_GetProject",
@@ -155,7 +205,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.GetProjectResponse"
+              "$ref": "#/definitions/hashicorp.cloud.waypoint.GetProjectResponse"
             }
           },
           "default": {
@@ -166,6 +216,20 @@
           }
         },
         "parameters": [
+          {
+            "name": "location.organization_id",
+            "description": "organization_id is the id of the organization.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "location.project_id",
+            "description": "project_id is the projects id.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
           {
             "name": "project.project",
             "in": "path",
@@ -178,7 +242,7 @@
         ]
       }
     },
-    "/waypoint/releases/{ref.id}": {
+    "/waypoint/2022-02-03/organizations/{location.organization_id}/projects/{location.project_id}/releases/{ref.id}": {
       "get": {
         "summary": "GetRelease returns a deployment",
         "operationId": "Waypoint_GetRelease",
@@ -186,7 +250,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.Release"
+              "$ref": "#/definitions/hashicorp.cloud.waypoint.Release"
             }
           },
           "default": {
@@ -197,6 +261,20 @@
           }
         },
         "parameters": [
+          {
+            "name": "location.organization_id",
+            "description": "organization_id is the id of the organization.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "location.project_id",
+            "description": "project_id is the projects id.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
           {
             "name": "ref.id",
             "in": "path",
@@ -242,7 +320,7 @@
         ]
       }
     },
-    "/waypoint/runners/{runner_id}": {
+    "/waypoint/2022-02-03/organizations/{location.organization_id}/projects/{location.project_id}/runners/{runner_id}": {
       "get": {
         "summary": "GetRunner gets information about a single runner.",
         "operationId": "Waypoint_GetRunner",
@@ -250,7 +328,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.Runner"
+              "$ref": "#/definitions/hashicorp.cloud.waypoint.Runner"
             }
           },
           "default": {
@@ -261,6 +339,20 @@
           }
         },
         "parameters": [
+          {
+            "name": "location.organization_id",
+            "description": "organization_id is the id of the organization.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "location.project_id",
+            "description": "project_id is the projects id.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
           {
             "name": "runner_id",
             "description": "ID of the runner to request.",
@@ -359,11 +451,11 @@
         }
       }
     },
-    "hashicorp.waypoint.Application": {
+    "hashicorp.cloud.waypoint.Application": {
       "type": "object",
       "properties": {
         "project": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Project"
         },
         "name": {
           "type": "string"
@@ -374,7 +466,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Artifact": {
+    "hashicorp.cloud.waypoint.Artifact": {
       "type": "object",
       "properties": {
         "artifact": {
@@ -388,7 +480,7 @@
       },
       "description": "Artifact is the result of a build or registry. This is the metadata only.\nThe binary contents of an artifact are expected to be stored in a registry."
     },
-    "hashicorp.waypoint.AuthMethod": {
+    "hashicorp.cloud.waypoint.AuthMethod": {
       "type": "object",
       "properties": {
         "name": {
@@ -407,13 +499,13 @@
           "description": "A selector to determine whether a user who authenticates using this\nis allowed to authenticate at all. This runs before authentication\ncompletes. This can be used to check group membership and so on.\nAvailable variables depend on the auth method used.\n\nThe syntax of this is this:\nhttps://github.com/hashicorp/go-bexpr\n(better docs to follow)"
         },
         "oidc": {
-          "$ref": "#/definitions/hashicorp.waypoint.AuthMethod.OIDC",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.AuthMethod.OIDC",
           "description": "OIDC uses OpenID Connect for auth. OIDC is supported by most\nmajor identity providers."
         }
       },
       "description": "AuthMethod is a mechanism for authenticating to the Waypoint server.\nAn AuthMethod deals with AuthN only: it provides identity and trades\nthat for a Waypoint token."
     },
-    "hashicorp.waypoint.AuthMethod.OIDC": {
+    "hashicorp.cloud.waypoint.AuthMethod.OIDC": {
       "type": "object",
       "properties": {
         "client_id": {
@@ -477,15 +569,15 @@
         }
       }
     },
-    "hashicorp.waypoint.Build": {
+    "hashicorp.cloud.waypoint.Build": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application",
           "description": "The application that this build is part of."
         },
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Workspace",
           "title": "The workspace that this exists in"
         },
         "sequence": {
@@ -498,15 +590,15 @@
           "title": "id is the unique ID of the build"
         },
         "status": {
-          "$ref": "#/definitions/hashicorp.waypoint.Status",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Status",
           "title": "status of the build"
         },
         "component": {
-          "$ref": "#/definitions/hashicorp.waypoint.Component",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Component",
           "title": "component is the component that was used for this build"
         },
         "artifact": {
-          "$ref": "#/definitions/hashicorp.waypoint.Artifact",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Artifact",
           "title": "artifact is the result of the build if the status.state == SUCCESS"
         },
         "labels": {
@@ -526,29 +618,29 @@
           "description": "ID of the job that created this build. This may be empty."
         },
         "preload": {
-          "$ref": "#/definitions/hashicorp.waypoint.Build.Preload",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Build.Preload",
           "description": "Preload is information that is available via further queries but it\nsometimes pre-populated in the initial load (see the field docs for more\ninfo)."
         }
       },
       "description": "Build represents a process of creating an artifact that can be in any state,\nsuch as complete. A successful complete build produces an artifact."
     },
-    "hashicorp.waypoint.Build.Preload": {
+    "hashicorp.cloud.waypoint.Build.Preload": {
       "type": "object",
       "properties": {
         "job_data_source_ref": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DataSource.Ref",
           "description": "The ref that was used in the job to run this operation. This is\nalso accessible by querying the job via the job_id and should always\nmatch.\n\nThis may be null under multiple circumstances: (1) the job was\nmanually triggered with local data (no datasource) or (2) the job\nwas run in earlier versions of Waypoint before we tracked this or\n(3) the job hasn't yet loaded the data.\n\nThis is always pre-populated if it is exists."
         }
       }
     },
-    "hashicorp.waypoint.CompleteOIDCAuthResponse": {
+    "hashicorp.cloud.waypoint.CompleteOIDCAuthResponse": {
       "type": "object",
       "properties": {
         "token": {
           "type": "string"
         },
         "user": {
-          "$ref": "#/definitions/hashicorp.waypoint.User",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.User",
           "description": "The user that was authenticated. This is the same as if GetUser\nwas called with the token returned. This is eager returned because\nit is commonly useful and also readily available as part of auth."
         },
         "id_claims_json": {
@@ -560,11 +652,11 @@
         }
       }
     },
-    "hashicorp.waypoint.Component": {
+    "hashicorp.cloud.waypoint.Component": {
       "type": "object",
       "properties": {
         "type": {
-          "$ref": "#/definitions/hashicorp.waypoint.Component.Type",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Component.Type",
           "title": "type of the component"
         },
         "name": {
@@ -574,7 +666,7 @@
       },
       "description": "Component represents metadata about a component. A component is the\ngeneric name for a builder, registry, platform, etc."
     },
-    "hashicorp.waypoint.Component.Type": {
+    "hashicorp.cloud.waypoint.Component.Type": {
       "type": "string",
       "enum": [
         "UNKNOWN",
@@ -586,21 +678,21 @@
       "default": "UNKNOWN",
       "description": "Supported component types, the values here MUST match the enum values\nin the Go sdk/component package exactly. A test in internal/server\nvalidates this."
     },
-    "hashicorp.waypoint.ConfigGetResponse": {
+    "hashicorp.cloud.waypoint.ConfigGetResponse": {
       "type": "object",
       "properties": {
         "variables": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.ConfigVar"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.ConfigVar"
           }
         }
       }
     },
-    "hashicorp.waypoint.ConfigSetResponse": {
+    "hashicorp.cloud.waypoint.ConfigSetResponse": {
       "type": "object"
     },
-    "hashicorp.waypoint.ConfigSource": {
+    "hashicorp.cloud.waypoint.ConfigSource": {
       "type": "object",
       "properties": {
         "delete": {
@@ -608,7 +700,7 @@
           "description": "delete may be set to true on SetConfigSource to delete this config source.\nThis is a field on ConfigSource since there are a variety of ways to\nidentify a ConfigSource. Therefore, the recommend deletion process is\nto query the ConfigSource using GetConfigSource and then set delete\non a return value to ensure the correct value is deleted."
         },
         "global": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Global"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Global"
         },
         "type": {
           "type": "string",
@@ -628,11 +720,11 @@
         }
       }
     },
-    "hashicorp.waypoint.ConfigVar": {
+    "hashicorp.cloud.waypoint.ConfigVar": {
       "type": "object",
       "properties": {
         "target": {
-          "$ref": "#/definitions/hashicorp.waypoint.ConfigVar.Target",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.ConfigVar.Target",
           "description": "Target is the target environment where this config var will take effect."
         },
         "name": {
@@ -648,7 +740,7 @@
           "description": "static, direct value."
         },
         "dynamic": {
-          "$ref": "#/definitions/hashicorp.waypoint.ConfigVar.DynamicVal",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.ConfigVar.DynamicVal",
           "title": "dynamically sourced value"
         },
         "internal": {
@@ -660,19 +752,19 @@
           "description": "Indicates that this is actually be written as a file, with the name\nfield being the filename."
         },
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application",
           "description": "These fields used to have docs but removed since they shouldn't be\nused. If you're really trying to figure how to use these old fields,\nsee a Waypoint 0.5 or earlier git checkout."
         },
         "project": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Project"
         },
         "runner": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Runner"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Runner"
         }
       },
       "description": "ConfigVars represent configuration variables for applications and runners.\nConfiguration variables can be exposed via env vars, files, and more. They\nare a way to inject configuration into a Waypoint-managed process.\n\nNote that config vars are different from input variables. Input variables\nare a way to parameterize a Waypoint project/app. This is a different feature.\n\n== Conflict Resolution\n\nWhen two configuration variables share the same name and are both\nvalid for a given target environment (for example, config \"foo\" set for\nboth the project and app scope), the following rules are applied to determine\nwhich variable value is used:\n\n  1. If a workspace is set one one but not the other, the variable\n     with the workspace sorts higher than no workspace.\n\n  2. The most specific \"scope\" is used: app over project over global.\n\n  3. If scopes match, the variable with a label selector set is used.\n\n  4. If both have label selectors, the config variable with the longer\n     label selector by string length is used. This is arbitrary but makes\n     the process deterministic."
     },
-    "hashicorp.waypoint.ConfigVar.DynamicVal": {
+    "hashicorp.cloud.waypoint.ConfigVar.DynamicVal": {
       "type": "object",
       "properties": {
         "from": {
@@ -689,20 +781,20 @@
       },
       "description": "DynamicVal is the configuration for dynamic values for configuration."
     },
-    "hashicorp.waypoint.ConfigVar.Target": {
+    "hashicorp.cloud.waypoint.ConfigVar.Target": {
       "type": "object",
       "properties": {
         "global": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Global"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Global"
         },
         "project": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Project"
         },
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application"
         },
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Workspace",
           "description": "workspace, if set, will limit this config variable to a specific\nworkspace. This is in addition to the app scoping above. For example,\nif you specify project scoping above, and set this too, then only\nmatching projects in the matching workspace will have this config var\nset."
         },
         "label_selector": {
@@ -710,26 +802,26 @@
           "description": "Label selector specifies an additional filtering mechanism. If this is\nset, then the labels of the current environment must match for this\nconfig variable to be set. Labels are determined by the operation: the\nlabels of the deploy, for example."
         },
         "runner": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Runner",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Runner",
           "description": "If this is set, then this configuration value will be set on runners\ninstead of deployed applications. This determines the runners that\nwill get this config var. If this config var is for an application,\nleave this unset (null)."
         }
       },
       "description": "Target sets the target where this configuration variable will be set.\n\nThis has multiple dimensions that filtering can be based on (app scope,\nrunner, workspace, label selectors, etc.). Each of these is optional. If\nyou specify any, they must ALL match.\n\nThe simplest type of targeting is just for a project. For example, setting\nan environment variable that is present for all apps in a project, regardless\nof what workspace it may be in. For this, you'd just set `app_scope` to\n`project` and leave everything else empty."
     },
-    "hashicorp.waypoint.CreateHostnameResponse": {
+    "hashicorp.cloud.waypoint.CreateHostnameResponse": {
       "type": "object",
       "properties": {
         "hostname": {
-          "$ref": "#/definitions/hashicorp.waypoint.Hostname",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Hostname",
           "title": "Created hostname"
         }
       }
     },
-    "hashicorp.waypoint.CreateSnapshotResponse": {
+    "hashicorp.cloud.waypoint.CreateSnapshotResponse": {
       "type": "object",
       "properties": {
         "open": {
-          "$ref": "#/definitions/hashicorp.waypoint.CreateSnapshotResponse.Open",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.CreateSnapshotResponse.Open",
           "description": "Open is sent as the opening message with information about the\nsnapshot. This is always sent first (before any data)."
         },
         "chunk": {
@@ -739,11 +831,11 @@
         }
       }
     },
-    "hashicorp.waypoint.CreateSnapshotResponse.Open": {
+    "hashicorp.cloud.waypoint.CreateSnapshotResponse.Open": {
       "type": "object",
       "description": "One day we may add information here. For now we are reserving this."
     },
-    "hashicorp.waypoint.DeclaredResource": {
+    "hashicorp.cloud.waypoint.DeclaredResource": {
       "type": "object",
       "properties": {
         "name": {
@@ -767,34 +859,34 @@
           "description": "Any additional information a plugin wants to expose on this resource.\nEX: Availability zones on a load balancer, concurrency limit on a lambda function, etc."
         },
         "category_display_hint": {
-          "$ref": "#/definitions/hashicorp.waypoint.ResourceCategoryDisplayHint",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.ResourceCategoryDisplayHint",
           "description": "high level type of the resource, used for display purposes."
         }
       },
       "description": "A platform resource that an operation (release/deployment) has created, depends on, or manages."
     },
-    "hashicorp.waypoint.DecodeTokenResponse": {
+    "hashicorp.cloud.waypoint.DecodeTokenResponse": {
       "type": "object",
       "properties": {
         "token": {
-          "$ref": "#/definitions/hashicorp.waypoint.Token",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Token",
           "description": "The decoded token."
         },
         "transport": {
-          "$ref": "#/definitions/hashicorp.waypoint.TokenTransport",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.TokenTransport",
           "description": "Transport is the wrapper around the token. This may be useful\nto look into the metadata around the token."
         }
       }
     },
-    "hashicorp.waypoint.Deployment": {
+    "hashicorp.cloud.waypoint.Deployment": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application",
           "title": "application that this deployment belongs to"
         },
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Workspace",
           "title": "The workspace that this exists in"
         },
         "sequence": {
@@ -811,19 +903,19 @@
           "description": "url is the URL to the Deployment\nthis URL might be empty, indicating that the deployment doesn't have\nthe possibility to be contacted directly (e.g: Kubernetes pod)\nand thus the URL Service (Hashicorp Horizon) will be used instead, if enabled."
         },
         "generation": {
-          "$ref": "#/definitions/hashicorp.waypoint.Generation",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Generation",
           "description": "See the docs for Generation."
         },
         "state": {
-          "$ref": "#/definitions/hashicorp.waypoint.Operation.PhysicalState",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Operation.PhysicalState",
           "description": "state is the state of this deployment."
         },
         "status": {
-          "$ref": "#/definitions/hashicorp.waypoint.Status",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Status",
           "description": "status tracks the status of the most recent operation (creation,\ndestroy, etc. NOTE(mitchellh): I want to separate these out so that\nyou can keep history of the status of multiple operations."
         },
         "component": {
-          "$ref": "#/definitions/hashicorp.waypoint.Component",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Component",
           "title": "component that initiated this deployment"
         },
         "artifact_id": {
@@ -869,17 +961,17 @@
         "declared_resources": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.DeclaredResource"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.DeclaredResource"
           },
           "description": "Resources that this deployment has created or manages."
         },
         "preload": {
-          "$ref": "#/definitions/hashicorp.waypoint.Deployment.Preload",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Deployment.Preload",
           "description": "This is the populated preload data. Most of this data can be retrieved\nthrough additional API calls or manually computed, but certain API\ncalls will pre-populate some of these fields for convenience. The exact\npre-populated fields depend on the API."
         }
       }
     },
-    "hashicorp.waypoint.Deployment.LoadDetails": {
+    "hashicorp.cloud.waypoint.Deployment.LoadDetails": {
       "type": "string",
       "enum": [
         "NONE",
@@ -888,15 +980,15 @@
       ],
       "default": "NONE"
     },
-    "hashicorp.waypoint.Deployment.Preload": {
+    "hashicorp.cloud.waypoint.Deployment.Preload": {
       "type": "object",
       "properties": {
         "artifact": {
-          "$ref": "#/definitions/hashicorp.waypoint.PushedArtifact",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.PushedArtifact",
           "title": "Populated when a Deployment is read with LoadDetails set\nto ARTIFACT or BUILD"
         },
         "build": {
-          "$ref": "#/definitions/hashicorp.waypoint.Build",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Build",
           "title": "Populated when a Deployment is read with LoadDetails set to BUILD"
         },
         "deploy_url": {
@@ -904,12 +996,12 @@
           "description": "The deployment-specific URL from the URL service. This is set on\nall deployment API calls. This will be empty if the URL service\nis not enabled or there was an error loading this information."
         },
         "job_data_source_ref": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DataSource.Ref",
           "description": "The ref that was used in the job to run this operation. This is\nalso accessible by querying the job via the job_id and should always\nmatch.\n\nThis may be null under multiple circumstances: (1) the job was\nmanually triggered with local data (no datasource) or (2) the job\nwas run in earlier versions of Waypoint before we tracked this or\n(3) the job hasn't yet loaded the data.\n\nThis is always pre-populated if it is exists."
         }
       }
     },
-    "hashicorp.waypoint.Documentation": {
+    "hashicorp.cloud.waypoint.Documentation": {
       "type": "object",
       "properties": {
         "description": {
@@ -927,18 +1019,18 @@
         "fields": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/hashicorp.waypoint.Documentation.Field"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Documentation.Field"
           }
         },
         "mappers": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Documentation.Mapper"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Documentation.Mapper"
           }
         }
       }
     },
-    "hashicorp.waypoint.Documentation.Field": {
+    "hashicorp.cloud.waypoint.Documentation.Field": {
       "type": "object",
       "properties": {
         "name": {
@@ -964,7 +1056,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Documentation.Mapper": {
+    "hashicorp.cloud.waypoint.Documentation.Mapper": {
       "type": "object",
       "properties": {
         "input": {
@@ -978,27 +1070,27 @@
         }
       }
     },
-    "hashicorp.waypoint.EntrypointConfig": {
+    "hashicorp.cloud.waypoint.EntrypointConfig": {
       "type": "object",
       "properties": {
         "exec": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.EntrypointConfig.Exec"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.EntrypointConfig.Exec"
           },
           "description": "Exec are requested exec sessions for this instance."
         },
         "env_vars": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.ConfigVar"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.ConfigVar"
           },
           "description": "The environment variables to set in the entrypoint."
         },
         "config_sources": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.ConfigSource"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.ConfigSource"
           },
           "description": "The configuration for any config sources that may be used in the\nconfig vars sent down. The server may send down extra configs that\naren't used so consumers should filter these based on what env vars\nare actually in use."
         },
@@ -1007,20 +1099,20 @@
           "description": "The signal to send the application when config files change."
         },
         "url_service": {
-          "$ref": "#/definitions/hashicorp.waypoint.EntrypointConfig.URLService",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.EntrypointConfig.URLService",
           "description": "The URL service configuration. This might be nil. If this is nil,\nthen the URL service is disabled."
         },
         "deployment": {
-          "$ref": "#/definitions/hashicorp.waypoint.EntrypointConfig.DeploymentInfo",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.EntrypointConfig.DeploymentInfo",
           "description": "Deployment is the deployment information for this instance. This may\nbe nil if the user is running an old enough server so always nil-check this."
         }
       }
     },
-    "hashicorp.waypoint.EntrypointConfig.DeploymentInfo": {
+    "hashicorp.cloud.waypoint.EntrypointConfig.DeploymentInfo": {
       "type": "object",
       "properties": {
         "component": {
-          "$ref": "#/definitions/hashicorp.waypoint.Component",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Component",
           "description": "component is the deployment plugin information that launched this instance."
         },
         "labels": {
@@ -1032,7 +1124,7 @@
         }
       }
     },
-    "hashicorp.waypoint.EntrypointConfig.Exec": {
+    "hashicorp.cloud.waypoint.EntrypointConfig.Exec": {
       "type": "object",
       "properties": {
         "index": {
@@ -1046,11 +1138,11 @@
           }
         },
         "pty": {
-          "$ref": "#/definitions/hashicorp.waypoint.ExecStreamRequest.PTY"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.ExecStreamRequest.PTY"
         }
       }
     },
-    "hashicorp.waypoint.EntrypointConfig.URLService": {
+    "hashicorp.cloud.waypoint.EntrypointConfig.URLService": {
       "type": "object",
       "properties": {
         "control_addr": {
@@ -1066,15 +1158,15 @@
         }
       }
     },
-    "hashicorp.waypoint.EntrypointConfigResponse": {
+    "hashicorp.cloud.waypoint.EntrypointConfigResponse": {
       "type": "object",
       "properties": {
         "config": {
-          "$ref": "#/definitions/hashicorp.waypoint.EntrypointConfig"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.EntrypointConfig"
         }
       }
     },
-    "hashicorp.waypoint.EntrypointExecRequest.Error": {
+    "hashicorp.cloud.waypoint.EntrypointExecRequest.Error": {
       "type": "object",
       "properties": {
         "error": {
@@ -1082,7 +1174,7 @@
         }
       }
     },
-    "hashicorp.waypoint.EntrypointExecRequest.Exit": {
+    "hashicorp.cloud.waypoint.EntrypointExecRequest.Exit": {
       "type": "object",
       "properties": {
         "code": {
@@ -1091,7 +1183,7 @@
         }
       }
     },
-    "hashicorp.waypoint.EntrypointExecRequest.Open": {
+    "hashicorp.cloud.waypoint.EntrypointExecRequest.Open": {
       "type": "object",
       "properties": {
         "instance_id": {
@@ -1103,11 +1195,11 @@
         }
       }
     },
-    "hashicorp.waypoint.EntrypointExecRequest.Output": {
+    "hashicorp.cloud.waypoint.EntrypointExecRequest.Output": {
       "type": "object",
       "properties": {
         "channel": {
-          "$ref": "#/definitions/hashicorp.waypoint.EntrypointExecRequest.Output.Channel"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.EntrypointExecRequest.Output.Channel"
         },
         "data": {
           "type": "string",
@@ -1115,7 +1207,7 @@
         }
       }
     },
-    "hashicorp.waypoint.EntrypointExecRequest.Output.Channel": {
+    "hashicorp.cloud.waypoint.EntrypointExecRequest.Output.Channel": {
       "type": "string",
       "enum": [
         "UNKNOWN",
@@ -1124,7 +1216,7 @@
       ],
       "default": "UNKNOWN"
     },
-    "hashicorp.waypoint.EntrypointExecResponse": {
+    "hashicorp.cloud.waypoint.EntrypointExecResponse": {
       "type": "object",
       "properties": {
         "input": {
@@ -1137,7 +1229,7 @@
           "title": "input_eof means that stdin is now closed"
         },
         "winch": {
-          "$ref": "#/definitions/hashicorp.waypoint.ExecStreamRequest.WindowSize",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.ExecStreamRequest.WindowSize",
           "title": "winch is SIGWNCH information for window sizing"
         },
         "opened": {
@@ -1146,7 +1238,7 @@
         }
       }
     },
-    "hashicorp.waypoint.ExecStreamRequest.Input": {
+    "hashicorp.cloud.waypoint.ExecStreamRequest.Input": {
       "type": "object",
       "properties": {
         "data": {
@@ -1155,7 +1247,7 @@
         }
       }
     },
-    "hashicorp.waypoint.ExecStreamRequest.PTY": {
+    "hashicorp.cloud.waypoint.ExecStreamRequest.PTY": {
       "type": "object",
       "properties": {
         "enable": {
@@ -1166,12 +1258,12 @@
           "description": "term is the TERM value to request on the remote side. This should be set."
         },
         "window_size": {
-          "$ref": "#/definitions/hashicorp.waypoint.ExecStreamRequest.WindowSize",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.ExecStreamRequest.WindowSize",
           "title": "window_size is the initial window size"
         }
       }
     },
-    "hashicorp.waypoint.ExecStreamRequest.Start": {
+    "hashicorp.cloud.waypoint.ExecStreamRequest.Start": {
       "type": "object",
       "properties": {
         "deployment_id": {
@@ -1190,12 +1282,12 @@
           "description": "Args including the command at args[0] to execute."
         },
         "pty": {
-          "$ref": "#/definitions/hashicorp.waypoint.ExecStreamRequest.PTY",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.ExecStreamRequest.PTY",
           "description": "Pty is set if we should allocate a PTY for this exec stream."
         }
       }
     },
-    "hashicorp.waypoint.ExecStreamRequest.WindowSize": {
+    "hashicorp.cloud.waypoint.ExecStreamRequest.WindowSize": {
       "type": "object",
       "properties": {
         "rows": {
@@ -1216,22 +1308,22 @@
         }
       }
     },
-    "hashicorp.waypoint.ExecStreamResponse": {
+    "hashicorp.cloud.waypoint.ExecStreamResponse": {
       "type": "object",
       "properties": {
         "open": {
-          "$ref": "#/definitions/hashicorp.waypoint.ExecStreamResponse.Open",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.ExecStreamResponse.Open",
           "description": "Open is always sent first no matter what (unless there is an error\nin which case the stream will exit). This should be used to validate\nthat the exec process started properly."
         },
         "output": {
-          "$ref": "#/definitions/hashicorp.waypoint.ExecStreamResponse.Output"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.ExecStreamResponse.Output"
         },
         "exit": {
-          "$ref": "#/definitions/hashicorp.waypoint.ExecStreamResponse.Exit"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.ExecStreamResponse.Exit"
         }
       }
     },
-    "hashicorp.waypoint.ExecStreamResponse.Exit": {
+    "hashicorp.cloud.waypoint.ExecStreamResponse.Exit": {
       "type": "object",
       "properties": {
         "code": {
@@ -1240,14 +1332,14 @@
         }
       }
     },
-    "hashicorp.waypoint.ExecStreamResponse.Open": {
+    "hashicorp.cloud.waypoint.ExecStreamResponse.Open": {
       "type": "object"
     },
-    "hashicorp.waypoint.ExecStreamResponse.Output": {
+    "hashicorp.cloud.waypoint.ExecStreamResponse.Output": {
       "type": "object",
       "properties": {
         "channel": {
-          "$ref": "#/definitions/hashicorp.waypoint.ExecStreamResponse.Output.Channel"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.ExecStreamResponse.Output.Channel"
         },
         "data": {
           "type": "string",
@@ -1255,7 +1347,7 @@
         }
       }
     },
-    "hashicorp.waypoint.ExecStreamResponse.Output.Channel": {
+    "hashicorp.cloud.waypoint.ExecStreamResponse.Output.Channel": {
       "type": "string",
       "enum": [
         "UNKNOWN",
@@ -1264,7 +1356,7 @@
       ],
       "default": "UNKNOWN"
     },
-    "hashicorp.waypoint.ExpediteStatusReportResponse": {
+    "hashicorp.cloud.waypoint.ExpediteStatusReportResponse": {
       "type": "object",
       "properties": {
         "job_id": {
@@ -1273,7 +1365,7 @@
       },
       "title": "id of job expedited by the request"
     },
-    "hashicorp.waypoint.Generation": {
+    "hashicorp.cloud.waypoint.Generation": {
       "type": "object",
       "properties": {
         "id": {
@@ -1288,67 +1380,67 @@
       },
       "description": "Generation is a shared message type used by operations to denote the\n\"generation\" they're a part of. A generation denotes whether shared\nphysical resources were used or whether new resources were created.\nAnother way to conceptualize generations: immutable deployment models\nwill create new generations each operation, whereas mutable models will\nreuse a generation.\n\nThe concept of a \"Generation\" was introduced in Waypoint 0.4. Operations\nfrom earlier versions will have nil generations and callers must handle\nthat scenario.\n\n== Read/Write Notes\n\nCallers inserting operations should ONLY set the generation ID. Remaining\nfields will be automatically populated.\n\nUpdates should never modify the generation."
     },
-    "hashicorp.waypoint.GetApplicationResponse": {
+    "hashicorp.cloud.waypoint.GetApplicationResponse": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Application"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Application"
         }
       }
     },
-    "hashicorp.waypoint.GetAuthMethodResponse": {
+    "hashicorp.cloud.waypoint.GetAuthMethodResponse": {
       "type": "object",
       "properties": {
         "auth_method": {
-          "$ref": "#/definitions/hashicorp.waypoint.AuthMethod"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.AuthMethod"
         }
       }
     },
-    "hashicorp.waypoint.GetConfigSourceResponse": {
+    "hashicorp.cloud.waypoint.GetConfigSourceResponse": {
       "type": "object",
       "properties": {
         "config_sources": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.ConfigSource"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.ConfigSource"
           }
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse": {
       "type": "object",
       "properties": {
         "open": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Open",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Open",
           "description": "Open is sent as confirmation that the job stream successfully opened.\nThis will be sent immediately by the server if the job ID is valid.\nThis is useful since other events such as terminal output may not\nhappen for a long time while the job is executing, queued, etc.\n\nThis is ALWAYS sent. If the job is already completed, this will be\nsent first followed immediately by a Complete."
         },
         "state": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.State",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.State",
           "description": "state is sent when there is a job state change event. This event is\nalso used if there is job metadata changes. In this case, the state\nmay be the same but the job is different."
         },
         "job": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.JobChange",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.JobChange",
           "description": "Job is sent whenever the job information changes. This is similar to\nstate but is sent when ANY field in the Job structure changes. This\ncan be used to listen for any updates to fields.\n\nThe updated job is also sent when the state changes. In that case,\nboth \"state\" and \"job\" will trigger."
         },
         "terminal": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Terminal",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal",
           "description": "terminal output. On initial connection, the server may send buffered\nhistorical terminal data so there isn't a race between queueing a job\nand getting its first byte output. You can determine this based on the\nflag on Terminal."
         },
         "download": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Download",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Download",
           "description": "data downloaded for the job. This is sent after the state is RUNNING\nwhen the runner has cloned any data (if necessary) containing information\nabout the data. This is an optional event and may not be sent, indicating\nthat the runner is either older and doesn't support this event or that\nthere was no data download necessary and it is using local data."
         },
         "error": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Error",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Error",
           "description": "an error regarding the stream itself, rather than the executing job.\nFor example, if you request a job stream for an invalid job ID,\nthis will be sent back. If this is sent, no further messages will\nbe sent and the stream is terminated.\n\nFor errors in job execution, see \"complete\"."
         },
         "complete": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Complete",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Complete",
           "description": "job completion, no more events will follow this one. This can be\nboth success or failure, the event must be checked. Any errors\nin complete are errors from the job execution itself."
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Complete": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Complete": {
       "type": "object",
       "properties": {
         "error": {
@@ -1356,21 +1448,21 @@
           "description": "error, if set, is an error that occurred as part of the job execution\nand resulted in job termination. This is different than the \"error\"\nevent which is an error in the stream itself."
         },
         "result": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.Result",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.Result",
           "description": "Result will be set to the final result of the job execution, if any."
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Download": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Download": {
       "type": "object",
       "properties": {
         "data_source_ref": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DataSource.Ref",
           "description": "The ref for the data that was downloaded. This can be nil if no\ndata was downloaded (though it'd be more reasonable to just not\nsend a download event in that case)."
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Error": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Error": {
       "type": "object",
       "properties": {
         "error": {
@@ -1378,30 +1470,30 @@
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.JobChange": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.JobChange": {
       "type": "object",
       "properties": {
         "job": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job",
           "description": "The full updated job."
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Open": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Open": {
       "type": "object"
     },
-    "hashicorp.waypoint.GetJobStreamResponse.State": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.State": {
       "type": "object",
       "properties": {
         "previous": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.State",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.State",
           "description": "previous and current are the previous and current states, respectively."
         },
         "current": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.State"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.State"
         },
         "job": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job",
           "title": "The full updated job is also sent because additional fields may be\nset depending on the state (such as the assigned runner, assignment\ntimes, etc.)"
         },
         "canceling": {
@@ -1410,13 +1502,13 @@
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Terminal": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal": {
       "type": "object",
       "properties": {
         "events": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Terminal.Event"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event"
           }
         },
         "buffered": {
@@ -1425,7 +1517,7 @@
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Terminal.Event": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event": {
       "type": "object",
       "properties": {
         "timestamp": {
@@ -1434,29 +1526,29 @@
           "description": "timestamp of the event as seen by the runner. This might be\nskewed from the server or the client but relative to all other\nline output, it will be accurate."
         },
         "line": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Line"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.Line"
         },
         "status": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Status"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.Status"
         },
         "named_values": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValues"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.NamedValues"
         },
         "raw": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Raw"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.Raw"
         },
         "table": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Table"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.Table"
         },
         "step_group": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.StepGroup"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.StepGroup"
         },
         "step": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Step"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.Step"
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Line": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.Line": {
       "type": "object",
       "properties": {
         "msg": {
@@ -1467,7 +1559,7 @@
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValue": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.NamedValue": {
       "type": "object",
       "properties": {
         "name": {
@@ -1478,18 +1570,18 @@
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValues": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.NamedValues": {
       "type": "object",
       "properties": {
         "values": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValue"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.NamedValue"
           }
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Raw": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.Raw": {
       "type": "object",
       "properties": {
         "data": {
@@ -1501,7 +1593,7 @@
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Status": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.Status": {
       "type": "object",
       "properties": {
         "status": {
@@ -1515,7 +1607,7 @@
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Step": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.Step": {
       "type": "object",
       "properties": {
         "id": {
@@ -1537,7 +1629,7 @@
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.StepGroup": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.StepGroup": {
       "type": "object",
       "properties": {
         "close": {
@@ -1545,7 +1637,7 @@
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Table": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.Table": {
       "type": "object",
       "properties": {
         "headers": {
@@ -1557,12 +1649,12 @@
         "rows": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableRow"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.TableRow"
           }
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableEntry": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.TableEntry": {
       "type": "object",
       "properties": {
         "value": {
@@ -1573,29 +1665,29 @@
         }
       }
     },
-    "hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableRow": {
+    "hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.TableRow": {
       "type": "object",
       "properties": {
         "entries": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableEntry"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.GetJobStreamResponse.Terminal.Event.TableEntry"
           }
         }
       }
     },
-    "hashicorp.waypoint.GetLogStreamRequest.Application": {
+    "hashicorp.cloud.waypoint.GetLogStreamRequest.Application": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application"
         },
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Workspace"
         }
       }
     },
-    "hashicorp.waypoint.GetOIDCAuthURLResponse": {
+    "hashicorp.cloud.waypoint.GetOIDCAuthURLResponse": {
       "type": "object",
       "properties": {
         "url": {
@@ -1604,70 +1696,70 @@
         }
       }
     },
-    "hashicorp.waypoint.GetOnDemandRunnerConfigResponse": {
+    "hashicorp.cloud.waypoint.GetOnDemandRunnerConfigResponse": {
       "type": "object",
       "properties": {
         "config": {
-          "$ref": "#/definitions/hashicorp.waypoint.OnDemandRunnerConfig"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.OnDemandRunnerConfig"
         }
       }
     },
-    "hashicorp.waypoint.GetProjectResponse": {
+    "hashicorp.cloud.waypoint.GetProjectResponse": {
       "type": "object",
       "properties": {
         "project": {
-          "$ref": "#/definitions/hashicorp.waypoint.Project"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Project"
         },
         "workspaces": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Workspace.Project"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Workspace.Project"
           },
           "description": "The list of workspaces that this project is part of."
         }
       }
     },
-    "hashicorp.waypoint.GetServerConfigResponse": {
+    "hashicorp.cloud.waypoint.GetServerConfigResponse": {
       "type": "object",
       "properties": {
         "config": {
-          "$ref": "#/definitions/hashicorp.waypoint.ServerConfig"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.ServerConfig"
         }
       }
     },
-    "hashicorp.waypoint.GetTriggerResponse": {
+    "hashicorp.cloud.waypoint.GetTriggerResponse": {
       "type": "object",
       "properties": {
         "trigger": {
-          "$ref": "#/definitions/hashicorp.waypoint.Trigger"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Trigger"
         }
       }
     },
-    "hashicorp.waypoint.GetUserResponse": {
+    "hashicorp.cloud.waypoint.GetUserResponse": {
       "type": "object",
       "properties": {
         "user": {
-          "$ref": "#/definitions/hashicorp.waypoint.User"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.User"
         }
       }
     },
-    "hashicorp.waypoint.GetVersionInfoResponse": {
+    "hashicorp.cloud.waypoint.GetVersionInfoResponse": {
       "type": "object",
       "properties": {
         "info": {
-          "$ref": "#/definitions/hashicorp.waypoint.VersionInfo"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.VersionInfo"
         }
       }
     },
-    "hashicorp.waypoint.GetWorkspaceResponse": {
+    "hashicorp.cloud.waypoint.GetWorkspaceResponse": {
       "type": "object",
       "properties": {
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Workspace"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Workspace"
         }
       }
     },
-    "hashicorp.waypoint.Hcl": {
+    "hashicorp.cloud.waypoint.Hcl": {
       "type": "object",
       "properties": {
         "contents": {
@@ -1676,13 +1768,13 @@
           "description": "Raw contents of the HCL file."
         },
         "format": {
-          "$ref": "#/definitions/hashicorp.waypoint.Hcl.Format",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Hcl.Format",
           "title": "Format of HCL contents"
         }
       },
       "description": "Hcl is a message used to encapsulate the contents of an HCL\nfile. Note that this was introduced later so there are some message types\nthat reproduce this functionality without actually using this in order\nto maintain backwards compatibility."
     },
-    "hashicorp.waypoint.Hcl.Format": {
+    "hashicorp.cloud.waypoint.Hcl.Format": {
       "type": "string",
       "enum": [
         "HCL",
@@ -1691,7 +1783,7 @@
       "default": "HCL",
       "description": "HCL files can be in either HCL or JSON syntax. We need to know ahead of\ntime in order to parse it properly. We could perform heuristics but\nwe prefer to be explicit."
     },
-    "hashicorp.waypoint.Hostname": {
+    "hashicorp.cloud.waypoint.Hostname": {
       "type": "object",
       "properties": {
         "hostname": {
@@ -1711,27 +1803,27 @@
         }
       }
     },
-    "hashicorp.waypoint.Hostname.Target": {
+    "hashicorp.cloud.waypoint.Hostname.Target": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Hostname.TargetApp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Hostname.TargetApp"
         }
       }
     },
-    "hashicorp.waypoint.Hostname.TargetApp": {
+    "hashicorp.cloud.waypoint.Hostname.TargetApp": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application"
         },
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Workspace"
         }
       },
       "description": "TargetApp targets an application in a specific workspace. With\nthis target type, you can still target specific deployments by\nappending `--\u003cdeployment id\u003e` to the hostname after registration."
     },
-    "hashicorp.waypoint.Instance": {
+    "hashicorp.cloud.waypoint.Instance": {
       "type": "object",
       "properties": {
         "id": {
@@ -1743,21 +1835,21 @@
           "description": "The ID of the deployment that this instance belongs to."
         },
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application",
           "title": "application that this instance belongs to"
         },
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Workspace",
           "title": "The workspace that this exists in"
         },
         "type": {
-          "$ref": "#/definitions/hashicorp.waypoint.Instance.Type",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Instance.Type",
           "title": "Which type of instance this is"
         }
       },
       "description": "An instance is a single running process for a deployment. A deployment\nmay have many instances (for example Kubernetes ReplicaSets spawn many pods).\nAn instance is only represented if you're using the Waypoint Entrypoint.\nOtherwise, the Waypoint server will never be notified of running instances."
     },
-    "hashicorp.waypoint.Instance.Type": {
+    "hashicorp.cloud.waypoint.Instance.Type": {
       "type": "string",
       "enum": [
         "LONG_RUNNING",
@@ -1767,7 +1859,7 @@
       "default": "LONG_RUNNING",
       "description": "Instances are one of a these types.\n\n - LONG_RUNNING: The \"traditional\" instance type, a process that is running\nconstantly for a long period of time.\n - ON_DEMAND: An instance that was launched in response to a request and will\ndisappear quickly.\n - VIRTUAL: An instance that is not actually running any code, but registers\nitself as an instance for the purposes of interacting with the\nexec and logs functionality"
     },
-    "hashicorp.waypoint.Job": {
+    "hashicorp.cloud.waypoint.Job": {
       "type": "object",
       "properties": {
         "id": {
@@ -1793,19 +1885,19 @@
           "description": "List of IDs that are in depends_on that are ignored if they error.\nNormally, when a dependency fails, this job also fails. If the ID\nis specified in both depends_on AND here, then the dependency is\nallowed to fail and this task will still run. This is good for jobs\nthat should run no matter what.\n\nAll IDs in this value must ALSO be present in \"depends_on\". This field\nonly specifies which of those values can fail."
         },
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application",
           "description": "The application to target for the operation. Some operations may allow\ncertain fields of this to be empty, so check with the operation\ndocumentation to determine what needs to be set. Generally, project\nmust be set.\nThis is required."
         },
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Workspace",
           "description": "The workspace to perform the operation in.\nThis is required."
         },
         "target_runner": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Runner",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Runner",
           "description": "The runner that should execute this job.\nThis is required."
         },
         "ondemand_runner": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.OnDemandRunnerConfig",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.OnDemandRunnerConfig",
           "description": "If target_runner is Any and this is set, the job will be executed\non an ODR spawned from this config."
         },
         "labels": {
@@ -1816,7 +1908,7 @@
           "description": "Labels are the labels to set for this operation.\nThis is optional."
         },
         "data_source": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DataSource",
           "description": "data_source determines where the data to operate on (such as the\napplication source code and Waypoint configuration) comes from.\nIf this is not set then QueueJob will populate this if a default\ndata source is configured for the target project.\n\nThe overrides will set overrides of configs for the data source. This is\ndata source dependent but this allows for example setting the Git ref\nwithout knowing the full data source. Invalid overrides will fail the\njob.\nErgo, this is optional."
         },
         "data_source_overrides": {
@@ -1826,79 +1918,79 @@
           }
         },
         "waypoint_hcl": {
-          "$ref": "#/definitions/hashicorp.waypoint.Hcl",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Hcl",
           "description": "Waypoint.hcl file contents. This is OPTIONAL and not typically supplied.\nIf this is not provided, the job will source the waypoint.hcl file\nfrom the server or the data source. This can be used to override those\nand force a specific waypoint.hcl to be used."
         },
         "variables": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Variable"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Variable"
           },
           "title": "variables store the key/value pairs of parsed variables; the parse\nprior to running a job only verifies syntax correctness. Verifying type\nchecks and the presence of required values will both need to be done\nin the job's validation"
         },
         "noop": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.Noop"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.Noop"
         },
         "build": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.BuildOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.BuildOp"
         },
         "push": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.PushOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.PushOp"
         },
         "deploy": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DeployOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DeployOp"
         },
         "destroy": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DestroyOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DestroyOp"
         },
         "release": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.ReleaseOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.ReleaseOp"
         },
         "validate": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.ValidateOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.ValidateOp"
         },
         "auth": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.AuthOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.AuthOp"
         },
         "docs": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DocsOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DocsOp"
         },
         "config_sync": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.ConfigSyncOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.ConfigSyncOp"
         },
         "exec": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.ExecOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.ExecOp"
         },
         "up": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.UpOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.UpOp"
         },
         "logs": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.LogsOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.LogsOp"
         },
         "queue_project": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.QueueProjectOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.QueueProjectOp"
         },
         "poll": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.PollOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.PollOp"
         },
         "status_report": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.StatusReportOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.StatusReportOp"
         },
         "start_task": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.StartTaskLaunchOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.StartTaskLaunchOp"
         },
         "stop_task": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.StopTaskLaunchOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.StopTaskLaunchOp"
         },
         "init": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.InitOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.InitOp"
         },
         "state": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.State",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.State",
           "title": "state of the job"
         },
         "assigned_runner": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.RunnerId",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.RunnerId",
           "description": "The runner that was assigned to execute this job. Note that the\nrunner may have been ephemeral and may no longer exist."
         },
         "queue_time": {
@@ -1919,11 +2011,11 @@
           "format": "date-time"
         },
         "data_source_ref": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DataSource.Ref",
           "description": "Ref of the data was fetched for this job. This is available after\nthe Ref event is sent down by GetJobStream. This is NOT used to specify\nthe ref that should be downloaded. That level of configuration should be\nexposed via the data_source parameter itself."
         },
         "config": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.Config",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.Config",
           "description": "Config is information about the Waypoint configuration (waypoint.hcl)\nfor this job. This is only available once the configuration is loaded.\nIf this is nil and the job is RUNNING, then it may not be loaded yet.\nAPI users can wait on the Job event on the JobStream to listen for\njob updates."
         },
         "error": {
@@ -1931,7 +2023,7 @@
           "title": "error is set if state == ERROR"
         },
         "result": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.Result",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.Result",
           "description": "result is set based on the operation specified. A nil result is possible\nfor some operations."
         },
         "cancel_time": {
@@ -1947,7 +2039,7 @@
       },
       "description": "A Job is a job that executes on a runner and is queued by QueueOperation."
     },
-    "hashicorp.waypoint.Job.AuthOp": {
+    "hashicorp.cloud.waypoint.Job.AuthOp": {
       "type": "object",
       "properties": {
         "check_only": {
@@ -1955,29 +2047,29 @@
           "description": "if true, auth will only be checked but not attempted. Currently\nthis must ALWAYS be true. Only authentication checking is supported."
         },
         "component": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Component",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Component",
           "description": "if set, only the component matching this reference will be authed.\nIf this component doesn't exist, an error will be returned. If this is\nunset, all components wll be authed."
         }
       },
       "description": "AuthOp is the configuration to authenticate any plugins."
     },
-    "hashicorp.waypoint.Job.AuthResult": {
+    "hashicorp.cloud.waypoint.Job.AuthResult": {
       "type": "object",
       "properties": {
         "results": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Job.AuthResult.Result"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.AuthResult.Result"
           },
           "title": "results are the list of components that were checked"
         }
       }
     },
-    "hashicorp.waypoint.Job.AuthResult.Result": {
+    "hashicorp.cloud.waypoint.Job.AuthResult.Result": {
       "type": "object",
       "properties": {
         "component": {
-          "$ref": "#/definitions/hashicorp.waypoint.Component",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Component",
           "title": "component that was checked"
         },
         "check_result": {
@@ -2000,7 +2092,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Job.BuildOp": {
+    "hashicorp.cloud.waypoint.Job.BuildOp": {
       "type": "object",
       "properties": {
         "disable_push": {
@@ -2009,29 +2101,29 @@
         }
       }
     },
-    "hashicorp.waypoint.Job.BuildResult": {
+    "hashicorp.cloud.waypoint.Job.BuildResult": {
       "type": "object",
       "properties": {
         "build": {
-          "$ref": "#/definitions/hashicorp.waypoint.Build",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Build",
           "title": "The resulting build"
         },
         "push": {
-          "$ref": "#/definitions/hashicorp.waypoint.PushedArtifact",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.PushedArtifact",
           "description": "The artifact that was pushed. This will be nil if DisablePush was set."
         }
       }
     },
-    "hashicorp.waypoint.Job.Config": {
+    "hashicorp.cloud.waypoint.Job.Config": {
       "type": "object",
       "properties": {
         "source": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.Config.Source",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.Config.Source",
           "description": "Source is the location where the configuration was loaded from."
         }
       }
     },
-    "hashicorp.waypoint.Job.Config.Source": {
+    "hashicorp.cloud.waypoint.Job.Config.Source": {
       "type": "string",
       "enum": [
         "UNKNOWN",
@@ -2042,26 +2134,26 @@
       "default": "UNKNOWN",
       "description": "Source is the location where the configuration was loaded from.\n\n - UNKNOWN: Unknown should never be set, but represents a zero value.\n - FILE: File is when the waypoint.hcl was loaded from a file either\non disk (local actions) or the attached repository (GitOps).\n - SERVER: Server is when the waypoint.hcl was loaded from the server\nfrom being written directly in the project settings.\n - JOB: Job is when the waypoint.hcl was loaded directly from the job by\nbeing embedded in the \"waypoint_hcl\" field (tag 12)."
     },
-    "hashicorp.waypoint.Job.ConfigSyncOp": {
+    "hashicorp.cloud.waypoint.Job.ConfigSyncOp": {
       "type": "object"
     },
-    "hashicorp.waypoint.Job.ConfigSyncResult": {
+    "hashicorp.cloud.waypoint.Job.ConfigSyncResult": {
       "type": "object"
     },
-    "hashicorp.waypoint.Job.DataSource": {
+    "hashicorp.cloud.waypoint.Job.DataSource": {
       "type": "object",
       "properties": {
         "local": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.Local",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.Local",
           "description": "local means the runner has access to the data locally and will\nknow what to do. This is primarily only useful if the target_runner\nis a specific runner and should not be used by any runner unless your\nrunners are configured to have access to the proper data."
         },
         "git": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.Git",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.Git",
           "description": "git will check out the data from a Git repository."
         }
       }
     },
-    "hashicorp.waypoint.Job.DataSource.Ref": {
+    "hashicorp.cloud.waypoint.Job.DataSource.Ref": {
       "type": "object",
       "properties": {
         "unknown": {
@@ -2069,30 +2161,30 @@
           "description": "unknown is set if the ref is not known or not supported, such\nas for local data sources where we have no way to uniquely identify."
         },
         "git": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.Git.Ref",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.Git.Ref",
           "title": "git commit"
         }
       },
       "description": "Ref is a reference to the exact set of data used by a data source."
     },
-    "hashicorp.waypoint.Job.DeployOp": {
+    "hashicorp.cloud.waypoint.Job.DeployOp": {
       "type": "object",
       "properties": {
         "artifact": {
-          "$ref": "#/definitions/hashicorp.waypoint.PushedArtifact",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.PushedArtifact",
           "title": "Artifact to deploy"
         }
       }
     },
-    "hashicorp.waypoint.Job.DeployResult": {
+    "hashicorp.cloud.waypoint.Job.DeployResult": {
       "type": "object",
       "properties": {
         "deployment": {
-          "$ref": "#/definitions/hashicorp.waypoint.Deployment"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Deployment"
         }
       }
     },
-    "hashicorp.waypoint.Job.DestroyOp": {
+    "hashicorp.cloud.waypoint.Job.DestroyOp": {
       "type": "object",
       "properties": {
         "workspace": {
@@ -2100,38 +2192,38 @@
           "description": "workspace will delete the app in the workspace that the job\nis targeting."
         },
         "deployment": {
-          "$ref": "#/definitions/hashicorp.waypoint.Deployment"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Deployment"
         }
       }
     },
-    "hashicorp.waypoint.Job.DocsOp": {
+    "hashicorp.cloud.waypoint.Job.DocsOp": {
       "type": "object"
     },
-    "hashicorp.waypoint.Job.DocsResult": {
+    "hashicorp.cloud.waypoint.Job.DocsResult": {
       "type": "object",
       "properties": {
         "results": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Job.DocsResult.Result"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DocsResult.Result"
           },
           "title": "results are the list of components that were checked"
         }
       }
     },
-    "hashicorp.waypoint.Job.DocsResult.Result": {
+    "hashicorp.cloud.waypoint.Job.DocsResult.Result": {
       "type": "object",
       "properties": {
         "component": {
-          "$ref": "#/definitions/hashicorp.waypoint.Component",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Component",
           "title": "component that the docs are for"
         },
         "docs": {
-          "$ref": "#/definitions/hashicorp.waypoint.Documentation"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Documentation"
         }
       }
     },
-    "hashicorp.waypoint.Job.ExecOp": {
+    "hashicorp.cloud.waypoint.Job.ExecOp": {
       "type": "object",
       "properties": {
         "instance_id": {
@@ -2139,13 +2231,13 @@
           "title": "Id to assign the virtual instance created"
         },
         "deployment": {
-          "$ref": "#/definitions/hashicorp.waypoint.Deployment",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Deployment",
           "description": "The deployment to create the exec session context. Ie, what\napplication code will be available within the exec session."
         }
       },
       "description": "Used to start a platform's exec function within a runner. This is only used\nthere are no long running instances for a deployment and can fail if the\nplatform plugin does not provide an exec function."
     },
-    "hashicorp.waypoint.Job.Git": {
+    "hashicorp.cloud.waypoint.Job.Git": {
       "type": "object",
       "properties": {
         "url": {
@@ -2165,14 +2257,14 @@
           "description": "This setting only takes effect if both \"path\" is true AND the\nGit polling is enabled. Under those conditions, if this option\nis true, then only changes in Git commits within the \"path\" will\ntrigger a deploy. Changes outside the \"path\" will be ignored."
         },
         "basic": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.Git.Basic"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.Git.Basic"
         },
         "ssh": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.Git.SSH"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.Git.SSH"
         }
       }
     },
-    "hashicorp.waypoint.Job.Git.Basic": {
+    "hashicorp.cloud.waypoint.Job.Git.Basic": {
       "type": "object",
       "properties": {
         "username": {
@@ -2186,7 +2278,7 @@
       },
       "title": "Basic auth"
     },
-    "hashicorp.waypoint.Job.Git.Ref": {
+    "hashicorp.cloud.waypoint.Job.Git.Ref": {
       "type": "object",
       "properties": {
         "commit": {
@@ -2201,7 +2293,7 @@
       },
       "title": "Ref is used to populate DataSource.Ref"
     },
-    "hashicorp.waypoint.Job.Git.SSH": {
+    "hashicorp.cloud.waypoint.Job.Git.SSH": {
       "type": "object",
       "properties": {
         "private_key_pem": {
@@ -2220,17 +2312,17 @@
       },
       "title": "SSH private key auth"
     },
-    "hashicorp.waypoint.Job.InitOp": {
+    "hashicorp.cloud.waypoint.Job.InitOp": {
       "type": "object",
       "description": "InitOp triggers an init action for a project (the equivalent of `waypoint\ninit`). The job will fail if there is no data source configured for the\nproject. As with `waypoint init`, this operation is idempotent."
     },
-    "hashicorp.waypoint.Job.InitResult": {
+    "hashicorp.cloud.waypoint.Job.InitResult": {
       "type": "object"
     },
-    "hashicorp.waypoint.Job.Local": {
+    "hashicorp.cloud.waypoint.Job.Local": {
       "type": "object"
     },
-    "hashicorp.waypoint.Job.LogsOp": {
+    "hashicorp.cloud.waypoint.Job.LogsOp": {
       "type": "object",
       "properties": {
         "instance_id": {
@@ -2238,7 +2330,7 @@
           "title": "Id to assign the virtual instance created"
         },
         "deployment": {
-          "$ref": "#/definitions/hashicorp.waypoint.Deployment",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Deployment",
           "description": "The deployment to create the exec session context. Ie, what\napplication code will be available within the exec session."
         },
         "start_time": {
@@ -2254,15 +2346,15 @@
       },
       "description": "Used to start a platform's log function within a runner. API users\ninterested in viewing logs should use the GetLogStream API. This\nis only meant for implementing custom log handling by plugins."
     },
-    "hashicorp.waypoint.Job.Noop": {
+    "hashicorp.cloud.waypoint.Job.Noop": {
       "type": "object",
       "description": "Noop operations do nothing. This is primarily used for testing.\nThis operation will still download the data from the data source.\nA noop may be useful outside of testing to verify a runner is\nexecuting properly or can access data properly."
     },
-    "hashicorp.waypoint.Job.PollOp": {
+    "hashicorp.cloud.waypoint.Job.PollOp": {
       "type": "object",
       "description": "PollOp triggers a poll action for a project. The job will fail if there\nis no data source configured for the project.\n\nA poll operation can be queued even if a project has polling disabled.\nIf a project has polling enabled, a manually queued poll operation will\nhave no effect on the poll timer or intervals."
     },
-    "hashicorp.waypoint.Job.PollResult": {
+    "hashicorp.cloud.waypoint.Job.PollResult": {
       "type": "object",
       "properties": {
         "job_id": {
@@ -2270,58 +2362,58 @@
           "description": "This field will be non-empty if and only if polling resulted in\nnew data that needs to be deployed. This will be the ID of the job\nthat queues the \"up\" operation."
         },
         "old_ref": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DataSource.Ref",
           "description": "If the poll resulted in new data, old_ref and new_ref will contain\nthe two refs that were currently in use. These are nil if the polling\ndidn't find new data."
         },
         "new_ref": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DataSource.Ref"
         }
       }
     },
-    "hashicorp.waypoint.Job.PushOp": {
+    "hashicorp.cloud.waypoint.Job.PushOp": {
       "type": "object",
       "properties": {
         "build": {
-          "$ref": "#/definitions/hashicorp.waypoint.Build",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Build",
           "title": "Build to push"
         }
       }
     },
-    "hashicorp.waypoint.Job.PushResult": {
+    "hashicorp.cloud.waypoint.Job.PushResult": {
       "type": "object",
       "properties": {
         "artifact": {
-          "$ref": "#/definitions/hashicorp.waypoint.PushedArtifact"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.PushedArtifact"
         }
       }
     },
-    "hashicorp.waypoint.Job.QueueProjectOp": {
+    "hashicorp.cloud.waypoint.Job.QueueProjectOp": {
       "type": "object",
       "properties": {
         "job_template": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job",
           "description": "The template for the job to queue for each application. The \"application\"\nfield will be overwritten for each application. All other fields are\nuntouched."
         }
       },
       "description": "QueueProjectOp queues a job for all applications in a project. The\napplications queued may not directly align with what can be found in\nListProjects because the application list will be based on the config\nand not the database."
     },
-    "hashicorp.waypoint.Job.QueueProjectResult": {
+    "hashicorp.cloud.waypoint.Job.QueueProjectResult": {
       "type": "object",
       "properties": {
         "applications": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Job.QueueProjectResult.Application"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.QueueProjectResult.Application"
           },
           "description": "All applications that had jobs queued. This may be empty even if the\njob was a success. If this is empty, it means that no applications were\nfound to have jobs queued."
         }
       }
     },
-    "hashicorp.waypoint.Job.QueueProjectResult.Application": {
+    "hashicorp.cloud.waypoint.Job.QueueProjectResult.Application": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application",
           "description": "Application that was queued."
         },
         "job_id": {
@@ -2330,11 +2422,11 @@
         }
       }
     },
-    "hashicorp.waypoint.Job.ReleaseOp": {
+    "hashicorp.cloud.waypoint.Job.ReleaseOp": {
       "type": "object",
       "properties": {
         "deployment": {
-          "$ref": "#/definitions/hashicorp.waypoint.Deployment"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Deployment"
         },
         "prune": {
           "type": "boolean",
@@ -2350,76 +2442,76 @@
         }
       }
     },
-    "hashicorp.waypoint.Job.ReleaseResult": {
+    "hashicorp.cloud.waypoint.Job.ReleaseResult": {
       "type": "object",
       "properties": {
         "release": {
-          "$ref": "#/definitions/hashicorp.waypoint.Release",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Release",
           "description": "The release that was just created. If the release operation was a noop,\nfor example if the target deployment shares a generation with the\npreviously released deployment, then this may be an existing release.\nCallers can verify by checking if the target deployment changed\nor not."
         }
       }
     },
-    "hashicorp.waypoint.Job.Result": {
+    "hashicorp.cloud.waypoint.Job.Result": {
       "type": "object",
       "properties": {
         "build": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.BuildResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.BuildResult"
         },
         "push": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.PushResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.PushResult"
         },
         "deploy": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DeployResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DeployResult"
         },
         "release": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.ReleaseResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.ReleaseResult"
         },
         "validate": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.ValidateResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.ValidateResult"
         },
         "auth": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.AuthResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.AuthResult"
         },
         "docs": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DocsResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DocsResult"
         },
         "config_sync": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.ConfigSyncResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.ConfigSyncResult"
         },
         "up": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.UpResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.UpResult"
         },
         "queue_project": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.QueueProjectResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.QueueProjectResult"
         },
         "poll": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.PollResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.PollResult"
         },
         "status_report": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.StatusReportResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.StatusReportResult"
         },
         "start_task": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.StartTaskResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.StartTaskResult"
         },
         "init": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.InitResult"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.InitResult"
         }
       }
     },
-    "hashicorp.waypoint.Job.StartTaskLaunchOp": {
+    "hashicorp.cloud.waypoint.Job.StartTaskLaunchOp": {
       "type": "object",
       "properties": {
         "info": {
-          "$ref": "#/definitions/hashicorp.waypoint.TaskLaunchInfo",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.TaskLaunchInfo",
           "title": "The info to use to create the task"
         },
         "params": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.TaskPluginParams",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.TaskPluginParams",
           "description": "Params is needed to spawn the plugin so we can send it the start."
         }
       }
     },
-    "hashicorp.waypoint.Job.StartTaskResult": {
+    "hashicorp.cloud.waypoint.Job.StartTaskResult": {
       "type": "object",
       "properties": {
         "state": {
@@ -2428,7 +2520,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Job.State": {
+    "hashicorp.cloud.waypoint.Job.State": {
       "type": "string",
       "enum": [
         "UNKNOWN",
@@ -2440,33 +2532,33 @@
       ],
       "default": "UNKNOWN"
     },
-    "hashicorp.waypoint.Job.StatusReportOp": {
+    "hashicorp.cloud.waypoint.Job.StatusReportOp": {
       "type": "object",
       "properties": {
         "deployment": {
-          "$ref": "#/definitions/hashicorp.waypoint.Deployment",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Deployment",
           "title": "The deployment that should be associated with this status report\noperation"
         },
         "release": {
-          "$ref": "#/definitions/hashicorp.waypoint.Release",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Release",
           "title": "The release that should be associated with this status report\noperation"
         }
       }
     },
-    "hashicorp.waypoint.Job.StatusReportResult": {
+    "hashicorp.cloud.waypoint.Job.StatusReportResult": {
       "type": "object",
       "properties": {
         "status_report": {
-          "$ref": "#/definitions/hashicorp.waypoint.StatusReport",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.StatusReport",
           "title": "The status report that was just created"
         }
       }
     },
-    "hashicorp.waypoint.Job.StopTaskLaunchOp": {
+    "hashicorp.cloud.waypoint.Job.StopTaskLaunchOp": {
       "type": "object",
       "properties": {
         "params": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.TaskPluginParams",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.TaskPluginParams",
           "description": "Params is needed to spawn the plugin so we can send it the stop."
         },
         "direct": {
@@ -2479,7 +2571,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Job.TaskPluginParams": {
+    "hashicorp.cloud.waypoint.Job.TaskPluginParams": {
       "type": "object",
       "properties": {
         "plugin_type": {
@@ -2492,22 +2584,22 @@
           "title": "The configuration information for the task. This is HCL that is\ndecoded to figure out the task plugin and then provide that\ntask plugin with configuration"
         },
         "hcl_format": {
-          "$ref": "#/definitions/hashicorp.waypoint.Hcl.Format"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Hcl.Format"
         }
       },
       "title": "TaskPluginParams contains the information about a specific task plugin\nthat is used by both StartTask and StopTask"
     },
-    "hashicorp.waypoint.Job.UpOp": {
+    "hashicorp.cloud.waypoint.Job.UpOp": {
       "type": "object",
       "properties": {
         "release": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.ReleaseOp",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.ReleaseOp",
           "description": "Options for the release stage. The \"deployment\" field in this will\nbe ignored since we'll always use the deployment from the deploy\nstep in Up."
         }
       },
       "description": "UpOp runs the \"waypoint up\" logic: it does a build (with push),\ndeploy, and release all in one. The results for each child operation\nwill be set directly on the Release message (i.e. \"build\" will be\npopulated in addition to \"up\")."
     },
-    "hashicorp.waypoint.Job.UpResult": {
+    "hashicorp.cloud.waypoint.Job.UpResult": {
       "type": "object",
       "properties": {
         "release_url": {
@@ -2525,206 +2617,206 @@
       },
       "description": "UpResult is the result of an UpOp. Because \"up\" calls other operations,\nthe Result message will set the build, deploy, push, and release results."
     },
-    "hashicorp.waypoint.Job.ValidateOp": {
+    "hashicorp.cloud.waypoint.Job.ValidateOp": {
       "type": "object",
       "description": "ValidateOp validates various aspects of a configuration."
     },
-    "hashicorp.waypoint.Job.ValidateResult": {
+    "hashicorp.cloud.waypoint.Job.ValidateResult": {
       "type": "object"
     },
-    "hashicorp.waypoint.ListAuthMethodsResponse": {
+    "hashicorp.cloud.waypoint.ListAuthMethodsResponse": {
       "type": "object",
       "properties": {
         "auth_methods": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.AuthMethod"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.AuthMethod"
           }
         }
       }
     },
-    "hashicorp.waypoint.ListBuildsResponse": {
+    "hashicorp.cloud.waypoint.ListBuildsResponse": {
       "type": "object",
       "properties": {
         "builds": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Build"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Build"
           },
           "description": "builds is the list of builds."
         }
       }
     },
-    "hashicorp.waypoint.ListDeploymentsResponse": {
+    "hashicorp.cloud.waypoint.ListDeploymentsResponse": {
       "type": "object",
       "properties": {
         "deployments": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Deployment"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Deployment"
           },
           "description": "deployments is the list of deployments."
         }
       }
     },
-    "hashicorp.waypoint.ListHostnamesResponse": {
+    "hashicorp.cloud.waypoint.ListHostnamesResponse": {
       "type": "object",
       "properties": {
         "hostnames": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Hostname"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Hostname"
           }
         }
       }
     },
-    "hashicorp.waypoint.ListInstancesRequest.Application": {
+    "hashicorp.cloud.waypoint.ListInstancesRequest.Application": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application",
           "description": "Application to query. This must have both a project/app set."
         },
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Workspace",
           "description": "Workspace to filter by. If this isn't set, then all workspaces for\nthe app are returned."
         }
       }
     },
-    "hashicorp.waypoint.ListInstancesResponse": {
+    "hashicorp.cloud.waypoint.ListInstancesResponse": {
       "type": "object",
       "properties": {
         "instances": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Instance"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Instance"
           }
         }
       }
     },
-    "hashicorp.waypoint.ListJobsResponse": {
+    "hashicorp.cloud.waypoint.ListJobsResponse": {
       "type": "object",
       "properties": {
         "jobs": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Job"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Job"
           }
         }
       }
     },
-    "hashicorp.waypoint.ListOIDCAuthMethodsResponse": {
+    "hashicorp.cloud.waypoint.ListOIDCAuthMethodsResponse": {
       "type": "object",
       "properties": {
         "auth_methods": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.OIDCAuthMethod"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.OIDCAuthMethod"
           }
         }
       }
     },
-    "hashicorp.waypoint.ListOnDemandRunnerConfigsResponse": {
+    "hashicorp.cloud.waypoint.ListOnDemandRunnerConfigsResponse": {
       "type": "object",
       "properties": {
         "configs": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.OnDemandRunnerConfig"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.OnDemandRunnerConfig"
           }
         }
       }
     },
-    "hashicorp.waypoint.ListProjectsResponse": {
+    "hashicorp.cloud.waypoint.ListProjectsResponse": {
       "type": "object",
       "properties": {
         "projects": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Ref.Project"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Project"
           }
         }
       }
     },
-    "hashicorp.waypoint.ListPushedArtifactsResponse": {
+    "hashicorp.cloud.waypoint.ListPushedArtifactsResponse": {
       "type": "object",
       "properties": {
         "artifacts": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.PushedArtifact"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.PushedArtifact"
           },
           "description": "artifacts is the list of artifacts."
         }
       }
     },
-    "hashicorp.waypoint.ListReleasesResponse": {
+    "hashicorp.cloud.waypoint.ListReleasesResponse": {
       "type": "object",
       "properties": {
         "releases": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Release"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Release"
           }
         }
       }
     },
-    "hashicorp.waypoint.ListRunnersResponse": {
+    "hashicorp.cloud.waypoint.ListRunnersResponse": {
       "type": "object",
       "properties": {
         "runners": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Runner"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Runner"
           }
         }
       }
     },
-    "hashicorp.waypoint.ListStatusReportsResponse": {
+    "hashicorp.cloud.waypoint.ListStatusReportsResponse": {
       "type": "object",
       "properties": {
         "status_reports": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.StatusReport"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.StatusReport"
           }
         }
       }
     },
-    "hashicorp.waypoint.ListTriggerResponse": {
+    "hashicorp.cloud.waypoint.ListTriggerResponse": {
       "type": "object",
       "properties": {
         "triggers": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Trigger"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Trigger"
           }
         }
       }
     },
-    "hashicorp.waypoint.ListUsersResponse": {
+    "hashicorp.cloud.waypoint.ListUsersResponse": {
       "type": "object",
       "properties": {
         "users": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.User"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.User"
           }
         }
       }
     },
-    "hashicorp.waypoint.ListWorkspacesResponse": {
+    "hashicorp.cloud.waypoint.ListWorkspacesResponse": {
       "type": "object",
       "properties": {
         "workspaces": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Workspace"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Workspace"
           }
         }
       }
     },
-    "hashicorp.waypoint.LogBatch": {
+    "hashicorp.cloud.waypoint.LogBatch": {
       "type": "object",
       "properties": {
         "deployment_id": {
@@ -2736,16 +2828,16 @@
         "lines": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.LogBatch.Entry"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.LogBatch.Entry"
           }
         }
       }
     },
-    "hashicorp.waypoint.LogBatch.Entry": {
+    "hashicorp.cloud.waypoint.LogBatch.Entry": {
       "type": "object",
       "properties": {
         "source": {
-          "$ref": "#/definitions/hashicorp.waypoint.LogBatch.Entry.Source"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.LogBatch.Entry.Source"
         },
         "timestamp": {
           "type": "string",
@@ -2756,7 +2848,7 @@
         }
       }
     },
-    "hashicorp.waypoint.LogBatch.Entry.Source": {
+    "hashicorp.cloud.waypoint.LogBatch.Entry.Source": {
       "type": "string",
       "enum": [
         "APP",
@@ -2765,7 +2857,7 @@
       "default": "APP",
       "description": " - APP: App is zero for backwards compatibility since Source was\nadded later this allows the default to just work.\n - ENTRYPOINT: Entrypoint logs."
     },
-    "hashicorp.waypoint.NewTokenResponse": {
+    "hashicorp.cloud.waypoint.NewTokenResponse": {
       "type": "object",
       "properties": {
         "token": {
@@ -2775,7 +2867,7 @@
       },
       "description": "Returned by any action that creates a token."
     },
-    "hashicorp.waypoint.OIDCAuthMethod": {
+    "hashicorp.cloud.waypoint.OIDCAuthMethod": {
       "type": "object",
       "properties": {
         "name": {
@@ -2787,13 +2879,13 @@
           "title": "human friendly name"
         },
         "kind": {
-          "$ref": "#/definitions/hashicorp.waypoint.OIDCAuthMethod.Kind",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.OIDCAuthMethod.Kind",
           "description": "kind is a well known kind of OIDC provider. This is sniffed by\nthe server heuristically and is only here to assist in the UI."
         }
       },
       "description": "This is used by ListOIDCAuthMethods to return the minimal information\nfor an OIDC auth method in an unauthenticated setting."
     },
-    "hashicorp.waypoint.OIDCAuthMethod.Kind": {
+    "hashicorp.cloud.waypoint.OIDCAuthMethod.Kind": {
       "type": "string",
       "enum": [
         "UNKNOWN",
@@ -2802,7 +2894,7 @@
       ],
       "default": "UNKNOWN"
     },
-    "hashicorp.waypoint.OnDemandRunnerConfig": {
+    "hashicorp.cloud.waypoint.OnDemandRunnerConfig": {
       "type": "object",
       "properties": {
         "id": {
@@ -2814,7 +2906,7 @@
           "title": "name is the unique name for this config"
         },
         "target_runner": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Runner",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Runner",
           "title": "target_runner is the id of the runner to target for this profile.\nIf not set, defaults to use any runner available"
         },
         "oci_url": {
@@ -2838,7 +2930,7 @@
           "description": "plugin config is the configuration for the plugin that is created. It\nis usually HCL and is decoded like the other plugins, and is plugin\nspecific."
         },
         "config_format": {
-          "$ref": "#/definitions/hashicorp.waypoint.Hcl.Format",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Hcl.Format",
           "title": "config format specifies the format of plugin_config"
         },
         "default": {
@@ -2848,7 +2940,7 @@
       },
       "title": "*******************************************************************\nOnDemand Runners\n******************************************************************"
     },
-    "hashicorp.waypoint.Operation.PhysicalState": {
+    "hashicorp.cloud.waypoint.Operation.PhysicalState": {
       "type": "string",
       "enum": [
         "UNKNOWN",
@@ -2859,11 +2951,11 @@
       "default": "UNKNOWN",
       "description": "PhysicalState is the state of any physical resources associated with\nan operation. A physical resource for example is the actual container\nthat might be created alongside an operation."
     },
-    "hashicorp.waypoint.OperationOrder": {
+    "hashicorp.cloud.waypoint.OperationOrder": {
       "type": "object",
       "properties": {
         "order": {
-          "$ref": "#/definitions/hashicorp.waypoint.OperationOrder.Order",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.OperationOrder.Order",
           "description": "Order for the results."
         },
         "desc": {
@@ -2877,7 +2969,7 @@
       },
       "description": "OperationOrder is a shared message type used for controlling the order\nof results in queries for app operations such as build, deploys, etc."
     },
-    "hashicorp.waypoint.OperationOrder.Order": {
+    "hashicorp.cloud.waypoint.OperationOrder.Order": {
       "type": "string",
       "enum": [
         "UNSET",
@@ -2886,7 +2978,7 @@
       ],
       "default": "UNSET"
     },
-    "hashicorp.waypoint.Project": {
+    "hashicorp.cloud.waypoint.Project": {
       "type": "object",
       "properties": {
         "name": {
@@ -2895,7 +2987,7 @@
         "applications": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Application"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Application"
           },
           "description": "The set of applications that are known about this project. Note that\nthis may not exactly represent the project configuration if a user hasn't\nrun `waypoint init` yet.\n\nThe applications cannot be modified in any Project APIs. You must\nuse the dedicated Application APIs."
         },
@@ -2904,11 +2996,11 @@
           "description": "If true, then the `-remote` flag or the `waypoint build project/app`\nsyntax can be used with a remote runner. If this is false, then\nthis is not allowed. This is typically configured using the\n`runner {}` block in the waypoint config."
         },
         "data_source": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DataSource",
           "description": "Where data is sourced for remote operations. If this isn't set, then\nthere is no default data source and it will be an error if a job is\nqueued for this project without a data source set. This is usually\nset using the `runner {}` block in the waypoint config."
         },
         "data_source_poll": {
-          "$ref": "#/definitions/hashicorp.waypoint.Project.Poll",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Project.Poll",
           "description": "Polling settings. Polling will trigger a \"waypoint up\" whenever a\nnew data is detected on the data source. For now, polling is only done\non the `default` workspace. A future version of Waypoint will expand\npolling to other workspaces.\n\nEach polling event is tracked as a separate job. You can query the\npoll operations and their success/failure by using the ListJobs API."
         },
         "waypoint_hcl": {
@@ -2917,7 +3009,7 @@
           "title": "The contents of a default waypoint.hcl file. This will be used ONLY IF\nthis project does not have a waypoint.hcl file when an operation is\nexecuted. When this is used, local operations can't be run any more\nsince the CLI usually determines the project based on the waypoint.hcl\nfile. The CLI may still be used for remote operations by executing\ni.e. waypoint up \u003cproject\u003e"
         },
         "waypoint_hcl_format": {
-          "$ref": "#/definitions/hashicorp.waypoint.Hcl.Format"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Hcl.Format"
         },
         "file_change_signal": {
           "type": "string",
@@ -2926,17 +3018,17 @@
         "variables": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Variable"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Variable"
           },
           "description": "NOTE: Variables are WIP and experimental; currently\nthese are not used, and don't do anything\nWIP: Variable values stored on the server. These values are set in the UI."
         },
         "status_report_poll": {
-          "$ref": "#/definitions/hashicorp.waypoint.Project.AppStatusPoll",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Project.AppStatusPoll",
           "description": "Application polling settings. Polling will trigger a \"StatusFunc\" for collecting a\nreport on the current status of the application.\nFor now, polling is only done on the `default` workspace. A future\nversion of Waypoint will expand polling to other workspaces.\n\nEach polling event is tracked as a separate job. You can query the\npoll operations and their success/failure by using the ListJobs API."
         }
       }
     },
-    "hashicorp.waypoint.Project.AppStatusPoll": {
+    "hashicorp.cloud.waypoint.Project.AppStatusPoll": {
       "type": "object",
       "properties": {
         "enabled": {
@@ -2949,7 +3041,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Project.Poll": {
+    "hashicorp.cloud.waypoint.Project.Poll": {
       "type": "object",
       "properties": {
         "enabled": {
@@ -2962,15 +3054,15 @@
         }
       }
     },
-    "hashicorp.waypoint.PushedArtifact": {
+    "hashicorp.cloud.waypoint.PushedArtifact": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application",
           "title": "application that this belongs to"
         },
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Workspace",
           "title": "The workspace that this exists in"
         },
         "sequence": {
@@ -2983,15 +3075,15 @@
           "title": "id is a unique ID for this push"
         },
         "status": {
-          "$ref": "#/definitions/hashicorp.waypoint.Status",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Status",
           "title": "status of the push operation"
         },
         "component": {
-          "$ref": "#/definitions/hashicorp.waypoint.Component",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Component",
           "title": "component that pushed this artifact"
         },
         "artifact": {
-          "$ref": "#/definitions/hashicorp.waypoint.Artifact",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Artifact",
           "description": "artifact is the artifact that was a result from the push."
         },
         "build_id": {
@@ -3011,7 +3103,7 @@
           "title": "template data for HCL variables and template functions, json-encoded"
         },
         "build": {
-          "$ref": "#/definitions/hashicorp.waypoint.Build",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Build",
           "description": "If include_build was set on the list request, this will include\nthe Build value associated with the given build_id."
         },
         "job_id": {
@@ -3019,21 +3111,21 @@
           "description": "ID of the job that created this. This may be empty."
         },
         "preload": {
-          "$ref": "#/definitions/hashicorp.waypoint.PushedArtifact.Preload",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.PushedArtifact.Preload",
           "description": "Preload is information that is available via further queries but it\nsometimes pre-populated in the initial load (see the field docs for more\ninfo)."
         }
       }
     },
-    "hashicorp.waypoint.PushedArtifact.Preload": {
+    "hashicorp.cloud.waypoint.PushedArtifact.Preload": {
       "type": "object",
       "properties": {
         "job_data_source_ref": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DataSource.Ref",
           "description": "The ref that was used in the job to run this operation. This is\nalso accessible by querying the job via the job_id and should always\nmatch.\n\nThis may be null under multiple circumstances: (1) the job was\nmanually triggered with local data (no datasource) or (2) the job\nwas run in earlier versions of Waypoint before we tracked this or\n(3) the job hasn't yet loaded the data.\n\nThis is always pre-populated if it is exists."
         }
       }
     },
-    "hashicorp.waypoint.QueueJobResponse": {
+    "hashicorp.cloud.waypoint.QueueJobResponse": {
       "type": "object",
       "properties": {
         "job_id": {
@@ -3042,7 +3134,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Ref.Application": {
+    "hashicorp.cloud.waypoint.Ref.Application": {
       "type": "object",
       "properties": {
         "application": {
@@ -3054,7 +3146,7 @@
       },
       "description": "Application references an application. To uniquely identify an\napplication, this must encapsulate the full hierarchy to the application."
     },
-    "hashicorp.waypoint.Ref.AuthMethod": {
+    "hashicorp.cloud.waypoint.Ref.AuthMethod": {
       "type": "object",
       "properties": {
         "name": {
@@ -3063,11 +3155,11 @@
       },
       "description": "AuthMethod references an auth method."
     },
-    "hashicorp.waypoint.Ref.Component": {
+    "hashicorp.cloud.waypoint.Ref.Component": {
       "type": "object",
       "properties": {
         "type": {
-          "$ref": "#/definitions/hashicorp.waypoint.Component.Type"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Component.Type"
         },
         "name": {
           "type": "string"
@@ -3075,7 +3167,7 @@
       },
       "description": "Component references a component."
     },
-    "hashicorp.waypoint.Ref.DeclaredResource": {
+    "hashicorp.cloud.waypoint.Ref.DeclaredResource": {
       "type": "object",
       "properties": {
         "name": {
@@ -3084,11 +3176,11 @@
       },
       "description": "DeclaredResource references a declared resource."
     },
-    "hashicorp.waypoint.Ref.Global": {
+    "hashicorp.cloud.waypoint.Ref.Global": {
       "type": "object",
       "description": "Global references the entire server. This is used in some APIs\nas a way to read/write values that are server-global."
     },
-    "hashicorp.waypoint.Ref.OnDemandRunnerConfig": {
+    "hashicorp.cloud.waypoint.Ref.OnDemandRunnerConfig": {
       "type": "object",
       "properties": {
         "id": {
@@ -3100,23 +3192,23 @@
       },
       "description": "OnDemandRunnerConfig references an OnDemandRunnerConfig value to be used for contextual\noperation. The reference can by via id or name, with id taking priority if both are set."
     },
-    "hashicorp.waypoint.Ref.Operation": {
+    "hashicorp.cloud.waypoint.Ref.Operation": {
       "type": "object",
       "properties": {
         "id": {
           "type": "string"
         },
         "sequence": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.OperationSeq"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.OperationSeq"
         }
       },
       "description": "Operation references an operation (build, deploy, etc.). This can reference\nan operation in multiple ways so you must use the oneof to choose."
     },
-    "hashicorp.waypoint.Ref.OperationSeq": {
+    "hashicorp.cloud.waypoint.Ref.OperationSeq": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application"
         },
         "number": {
           "type": "string",
@@ -3125,7 +3217,7 @@
       },
       "description": "OperationSeq references an operation by sequence number."
     },
-    "hashicorp.waypoint.Ref.Project": {
+    "hashicorp.cloud.waypoint.Ref.Project": {
       "type": "object",
       "properties": {
         "project": {
@@ -3134,23 +3226,23 @@
       },
       "description": "Project references a project."
     },
-    "hashicorp.waypoint.Ref.Runner": {
+    "hashicorp.cloud.waypoint.Ref.Runner": {
       "type": "object",
       "properties": {
         "any": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.RunnerAny"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.RunnerAny"
         },
         "id": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.RunnerId"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.RunnerId"
         }
       },
       "description": "Runner references a runner process which executes operations. This\ncan reference a runner by any of the more specific types, such as\nby ID. If you want to constrain which runners can be targeted,\na different ref type should be used."
     },
-    "hashicorp.waypoint.Ref.RunnerAny": {
+    "hashicorp.cloud.waypoint.Ref.RunnerAny": {
       "type": "object",
       "description": "RunnerAny will reference any runner."
     },
-    "hashicorp.waypoint.Ref.RunnerId": {
+    "hashicorp.cloud.waypoint.Ref.RunnerId": {
       "type": "object",
       "properties": {
         "id": {
@@ -3159,7 +3251,7 @@
       },
       "description": "RunenrId references a runner by ID."
     },
-    "hashicorp.waypoint.Ref.Trigger": {
+    "hashicorp.cloud.waypoint.Ref.Trigger": {
       "type": "object",
       "properties": {
         "id": {
@@ -3168,19 +3260,19 @@
       },
       "description": "Trigger references a Trigger message value to be used for a given operation.\nIt can be looked up by id."
     },
-    "hashicorp.waypoint.Ref.User": {
+    "hashicorp.cloud.waypoint.Ref.User": {
       "type": "object",
       "properties": {
         "id": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.UserId"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.UserId"
         },
         "username": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.UserUsername"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.UserUsername"
         }
       },
       "description": "User references a user by either ID or username, it is up to the caller.\nThis generic form makes it easy for APIs to accept multiple values, whatever\nis easiest for the caller."
     },
-    "hashicorp.waypoint.Ref.UserId": {
+    "hashicorp.cloud.waypoint.Ref.UserId": {
       "type": "object",
       "properties": {
         "id": {
@@ -3189,7 +3281,7 @@
       },
       "description": "UserId references a user by their ID (ULID-formatted)."
     },
-    "hashicorp.waypoint.Ref.UserUsername": {
+    "hashicorp.cloud.waypoint.Ref.UserUsername": {
       "type": "object",
       "properties": {
         "username": {
@@ -3198,7 +3290,7 @@
       },
       "description": "UserUsername references a user by their username. Note that usernames\nare unique but can be changed at anytime, so for long-living refs\nthe ID should be used."
     },
-    "hashicorp.waypoint.Ref.Workspace": {
+    "hashicorp.cloud.waypoint.Ref.Workspace": {
       "type": "object",
       "properties": {
         "workspace": {
@@ -3207,15 +3299,15 @@
       },
       "description": "Workspace references a workspace."
     },
-    "hashicorp.waypoint.Release": {
+    "hashicorp.cloud.waypoint.Release": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application",
           "title": "application that this release belongs to"
         },
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Workspace",
           "title": "The workspace that this exists in"
         },
         "sequence": {
@@ -3228,15 +3320,15 @@
           "description": "id is the unique ID for this release."
         },
         "status": {
-          "$ref": "#/definitions/hashicorp.waypoint.Status",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Status",
           "description": "status of the release operation."
         },
         "state": {
-          "$ref": "#/definitions/hashicorp.waypoint.Operation.PhysicalState",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Operation.PhysicalState",
           "description": "The physical state of the release resources."
         },
         "component": {
-          "$ref": "#/definitions/hashicorp.waypoint.Component",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Component",
           "description": "component managing the release process."
         },
         "release": {
@@ -3278,17 +3370,17 @@
         "declared_resources": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.DeclaredResource"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.DeclaredResource"
           },
           "description": "A platform resource that this release has created, depends on, or manages."
         },
         "preload": {
-          "$ref": "#/definitions/hashicorp.waypoint.Release.Preload",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Release.Preload",
           "description": "This is the populated preload data. Most of this data can be retrieved\nthrough additional API calls or manually computed, but certain API\ncalls will pre-populate some of these fields for convenience. The exact\npre-populated fields depend on the API."
         }
       }
     },
-    "hashicorp.waypoint.Release.LoadDetails": {
+    "hashicorp.cloud.waypoint.Release.LoadDetails": {
       "type": "string",
       "enum": [
         "NONE",
@@ -3298,28 +3390,28 @@
       ],
       "default": "NONE"
     },
-    "hashicorp.waypoint.Release.Preload": {
+    "hashicorp.cloud.waypoint.Release.Preload": {
       "type": "object",
       "properties": {
         "deployment": {
-          "$ref": "#/definitions/hashicorp.waypoint.Deployment",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Deployment",
           "description": "Populated when LoadDetails is set."
         },
         "artifact": {
-          "$ref": "#/definitions/hashicorp.waypoint.PushedArtifact",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.PushedArtifact",
           "description": "Populated when LoadDetails is set."
         },
         "build": {
-          "$ref": "#/definitions/hashicorp.waypoint.Build",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Build",
           "description": "Populated when LoadDetails is set."
         },
         "job_data_source_ref": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DataSource.Ref",
           "description": "The ref that was used in the job to run this operation. This is\nalso accessible by querying the job via the job_id and should always\nmatch.\n\nThis may be null under multiple circumstances: (1) the job was\nmanually triggered with local data (no datasource) or (2) the job\nwas run in earlier versions of Waypoint before we tracked this or\n(3) the job hasn't yet loaded the data.\n\nThis is always pre-populated if it is exists."
         }
       }
     },
-    "hashicorp.waypoint.ResourceCategoryDisplayHint": {
+    "hashicorp.cloud.waypoint.ResourceCategoryDisplayHint": {
       "type": "string",
       "enum": [
         "UNKNOWN",
@@ -3334,7 +3426,7 @@
       ],
       "default": "UNKNOWN"
     },
-    "hashicorp.waypoint.RestoreSnapshotRequest.Open": {
+    "hashicorp.cloud.waypoint.RestoreSnapshotRequest.Open": {
       "type": "object",
       "properties": {
         "exit": {
@@ -3343,7 +3435,7 @@
         }
       }
     },
-    "hashicorp.waypoint.RunTriggerResponse": {
+    "hashicorp.cloud.waypoint.RunTriggerResponse": {
       "type": "object",
       "properties": {
         "job_ids": {
@@ -3355,7 +3447,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Runner": {
+    "hashicorp.cloud.waypoint.Runner": {
       "type": "object",
       "properties": {
         "id": {
@@ -3367,16 +3459,16 @@
           "description": "The runner will only be assigned jobs that directly target this\nrunner by ID. This is used by local runners to prevent external\njobs from being assigned to them."
         },
         "odr": {
-          "$ref": "#/definitions/hashicorp.waypoint.Runner.ODR",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Runner.ODR",
           "description": "* The server will give ODRs project/app-scoped config if it exists.\n  * The server will never assign more than one job to this runner.\n    This is also enforced in the runner client-side but the server also\n    does this out of caution.",
           "title": "odr is set if this runner as an on-demand runner. For ODRs, we expect\nthey will accept exactly one job and then exit. This is used by the\nserver to change some other behavior:"
         },
         "local": {
-          "$ref": "#/definitions/hashicorp.waypoint.Runner.Local",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Runner.Local",
           "title": "local indicates this runner was created by a cli instantiation"
         },
         "remote": {
-          "$ref": "#/definitions/hashicorp.waypoint.Runner.Remote",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Runner.Remote",
           "title": "remote indicates this is a \"static\" remote runner"
         },
         "deprecated_is_odr": {
@@ -3386,7 +3478,7 @@
         "components": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Component"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Component"
           },
           "description": "Components are the list of components that the runner supports. This\nis used to match jobs to this runner."
         },
@@ -3411,12 +3503,12 @@
           "format": "date-time"
         },
         "adoption_state": {
-          "$ref": "#/definitions/hashicorp.waypoint.Runner.AdoptionState",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Runner.AdoptionState",
           "description": "The state of whether this runner is adopted or not."
         }
       }
     },
-    "hashicorp.waypoint.Runner.AdoptionState": {
+    "hashicorp.cloud.waypoint.Runner.AdoptionState": {
       "type": "string",
       "enum": [
         "NEW",
@@ -3428,10 +3520,10 @@
       "description": "- ∅ =\u003e NEW\n- ∅ =\u003e PREADOPTED\n- NEW =\u003e PREADOPTED\n- * =\u003e ADOPTED\n- * =\u003e REJECTED\n- ADOPTED =\u003e NEW\n- REJECTED =\u003e NEW\n\nBoth the \"NEW\" and \"REJECTED\" state are effectively \"unadopted\" states,\nbut they're explicit about why they're not currently adopted. Both\n\"ADOPTED\" and \"PREADOPTED\" are adopted states where the runner will\nbe given work, but are also explicit about how they were adopted.\n\n - NEW: New runner we've never seen before or has been forgotten.\nRunners in this state will wait for adoption.\n - PREADOPTED: Runner provided a valid runner token despite not being explicitly\nadopted. This type of runner can be forcibly rejected later such\nthat pre-adoption doesn't work at all.\n - ADOPTED: Explicitly adopted. Runner will get a token on handshake.\n - REJECTED: Explicitly rejected. Runner will error immediately on startup.",
       "title": "Valid adoption states. The transitions allowed are:"
     },
-    "hashicorp.waypoint.Runner.Local": {
+    "hashicorp.cloud.waypoint.Runner.Local": {
       "type": "object"
     },
-    "hashicorp.waypoint.Runner.ODR": {
+    "hashicorp.cloud.waypoint.Runner.ODR": {
       "type": "object",
       "properties": {
         "profile_id": {
@@ -3439,47 +3531,47 @@
         }
       }
     },
-    "hashicorp.waypoint.Runner.Remote": {
+    "hashicorp.cloud.waypoint.Runner.Remote": {
       "type": "object"
     },
-    "hashicorp.waypoint.RunnerConfig": {
+    "hashicorp.cloud.waypoint.RunnerConfig": {
       "type": "object",
       "properties": {
         "config_vars": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.ConfigVar"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.ConfigVar"
           },
           "description": "The configuration for the runner. Any locally set runner config will\ntake priority in a conflict. This allows operators to setup runners\nwith specific configuration without fear that the server will override\nthem."
         },
         "config_sources": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.ConfigSource"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.ConfigSource"
           },
           "description": "The configuration for any config sources that may be used in the\nconfig vars sent down. The server may send down extra configs that\naren't used so consumers should filter these based on what env vars\nare actually in use."
         }
       }
     },
-    "hashicorp.waypoint.RunnerConfigRequest.Open": {
+    "hashicorp.cloud.waypoint.RunnerConfigRequest.Open": {
       "type": "object",
       "properties": {
         "runner": {
-          "$ref": "#/definitions/hashicorp.waypoint.Runner",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Runner",
           "description": "Runner to register. See Runner for what fields can be set. This\nshould match RunnerTokenRequest. This accepts a full runner (rather\nthan just an ID) for legacy compatbility reasons."
         }
       }
     },
-    "hashicorp.waypoint.RunnerConfigResponse": {
+    "hashicorp.cloud.waypoint.RunnerConfigResponse": {
       "type": "object",
       "properties": {
         "config": {
-          "$ref": "#/definitions/hashicorp.waypoint.RunnerConfig",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.RunnerConfig",
           "description": "config is any updated configuration for the runner."
         }
       }
     },
-    "hashicorp.waypoint.RunnerGetDeploymentConfigResponse": {
+    "hashicorp.cloud.waypoint.RunnerGetDeploymentConfigResponse": {
       "type": "object",
       "properties": {
         "server_addr": {
@@ -3493,27 +3585,27 @@
         }
       }
     },
-    "hashicorp.waypoint.RunnerJobStreamRequest.Ack": {
+    "hashicorp.cloud.waypoint.RunnerJobStreamRequest.Ack": {
       "type": "object"
     },
-    "hashicorp.waypoint.RunnerJobStreamRequest.Complete": {
+    "hashicorp.cloud.waypoint.RunnerJobStreamRequest.Complete": {
       "type": "object",
       "properties": {
         "result": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.Result"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.Result"
         }
       }
     },
-    "hashicorp.waypoint.RunnerJobStreamRequest.ConfigLoad": {
+    "hashicorp.cloud.waypoint.RunnerJobStreamRequest.ConfigLoad": {
       "type": "object",
       "properties": {
         "config": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.Config",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.Config",
           "description": "Config is the configuration information for the loaded config."
         }
       }
     },
-    "hashicorp.waypoint.RunnerJobStreamRequest.Error": {
+    "hashicorp.cloud.waypoint.RunnerJobStreamRequest.Error": {
       "type": "object",
       "properties": {
         "error": {
@@ -3521,10 +3613,10 @@
         }
       }
     },
-    "hashicorp.waypoint.RunnerJobStreamRequest.Heartbeat": {
+    "hashicorp.cloud.waypoint.RunnerJobStreamRequest.Heartbeat": {
       "type": "object"
     },
-    "hashicorp.waypoint.RunnerJobStreamRequest.Request": {
+    "hashicorp.cloud.waypoint.RunnerJobStreamRequest.Request": {
       "type": "object",
       "properties": {
         "runner_id": {
@@ -3532,28 +3624,28 @@
         }
       }
     },
-    "hashicorp.waypoint.RunnerJobStreamResponse": {
+    "hashicorp.cloud.waypoint.RunnerJobStreamResponse": {
       "type": "object",
       "properties": {
         "assignment": {
-          "$ref": "#/definitions/hashicorp.waypoint.RunnerJobStreamResponse.JobAssignment",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.RunnerJobStreamResponse.JobAssignment",
           "description": "assignment is when a job is assigned to this job stream. This\nwill happen ONLY in response to a \"Request\" message from the client."
         },
         "cancel": {
-          "$ref": "#/definitions/hashicorp.waypoint.RunnerJobStreamResponse.JobCancel",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.RunnerJobStreamResponse.JobCancel",
           "description": "cancel is sent when a cancel request is made."
         }
       }
     },
-    "hashicorp.waypoint.RunnerJobStreamResponse.JobAssignment": {
+    "hashicorp.cloud.waypoint.RunnerJobStreamResponse.JobAssignment": {
       "type": "object",
       "properties": {
         "job": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job"
         }
       }
     },
-    "hashicorp.waypoint.RunnerJobStreamResponse.JobCancel": {
+    "hashicorp.cloud.waypoint.RunnerJobStreamResponse.JobCancel": {
       "type": "object",
       "properties": {
         "force": {
@@ -3561,7 +3653,7 @@
         }
       }
     },
-    "hashicorp.waypoint.RunnerTokenResponse": {
+    "hashicorp.cloud.waypoint.RunnerTokenResponse": {
       "type": "object",
       "properties": {
         "token": {
@@ -3570,13 +3662,13 @@
         }
       }
     },
-    "hashicorp.waypoint.ServerConfig": {
+    "hashicorp.cloud.waypoint.ServerConfig": {
       "type": "object",
       "properties": {
         "advertise_addrs": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.ServerConfig.AdvertiseAddr"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.ServerConfig.AdvertiseAddr"
           },
           "description": "The addresses that are advertised for entrypoints. These define how\napplications reach back to the server. Currently you may only set\nEXACTLY ONE address. In the future, we'll support multiple advertise\naddrs and more controls over which are advertised when."
         },
@@ -3591,7 +3683,7 @@
       },
       "description": "ServerConfig is the configuration for the server that can be read and\nset online. This differs from the configuration used to start the server\nsince some settings can only be set via the file vs. the API."
     },
-    "hashicorp.waypoint.ServerConfig.AdvertiseAddr": {
+    "hashicorp.cloud.waypoint.ServerConfig.AdvertiseAddr": {
       "type": "object",
       "properties": {
         "addr": {
@@ -3605,11 +3697,11 @@
         }
       }
     },
-    "hashicorp.waypoint.Status": {
+    "hashicorp.cloud.waypoint.Status": {
       "type": "object",
       "properties": {
         "state": {
-          "$ref": "#/definitions/hashicorp.waypoint.Status.State",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Status.State",
           "description": "state is the state of this operation."
         },
         "details": {
@@ -3633,7 +3725,7 @@
       },
       "description": "Status represents the status of an async operation."
     },
-    "hashicorp.waypoint.Status.State": {
+    "hashicorp.cloud.waypoint.Status.State": {
       "type": "string",
       "enum": [
         "UNKNOWN",
@@ -3643,36 +3735,36 @@
       ],
       "default": "UNKNOWN"
     },
-    "hashicorp.waypoint.StatusFilter": {
+    "hashicorp.cloud.waypoint.StatusFilter": {
       "type": "object",
       "properties": {
         "filters": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.StatusFilter.Filter"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.StatusFilter.Filter"
           },
           "description": "Filters are ANDed together."
         }
       }
     },
-    "hashicorp.waypoint.StatusFilter.Filter": {
+    "hashicorp.cloud.waypoint.StatusFilter.Filter": {
       "type": "object",
       "properties": {
         "state": {
-          "$ref": "#/definitions/hashicorp.waypoint.Status.State",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Status.State",
           "description": "state will match any status that has the given state."
         }
       }
     },
-    "hashicorp.waypoint.StatusReport": {
+    "hashicorp.cloud.waypoint.StatusReport": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application",
           "description": "The application that this build is part of."
         },
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Workspace",
           "title": "The workspace that this exists in"
         },
         "deployment_id": {
@@ -3684,7 +3776,7 @@
           "title": "the release id that this status report was generated on"
         },
         "status": {
-          "$ref": "#/definitions/hashicorp.waypoint.Status",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Status",
           "title": "Status of the StatusReport operation executed by the server.\nNote that this status is not related to the status report, but the current\nstate of the StatusReport operation"
         },
         "id": {
@@ -3699,7 +3791,7 @@
           "type": "string"
         },
         "health": {
-          "$ref": "#/definitions/hashicorp.waypoint.StatusReport.Health",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.StatusReport.Health",
           "description": "The overall health of the deployment or release as reported by the plugin.\nCopied from the plugin generated raw SDK status report for convenient API access."
         },
         "generated_time": {
@@ -3714,21 +3806,21 @@
         "resources": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.StatusReport.Resource"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.StatusReport.Resource"
           },
           "description": "a collection of resources, e.x. platform resources generated and monitored by a deployment."
         },
         "deprecated_resources_health": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.StatusReport.Health"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.StatusReport.Health"
           },
           "description": "Deprecated in favor of resources\nA health report of all of the resources that make up the report.\nCopied from the plugin generated raw SDK status report for convenient API access."
         }
       },
       "description": "StatusReport is the report genrated when querying the overall health of\na deployed or released application. This report is generated after the\nan Up Operation, DeployOp or ReleaseOp. In the future Waypoint will be able\nto generate these reports on demand in the UI, or on an interval using a poller.\n\nNOTE: This is not related to Status or StatusFilter messages but a message\nused to run the StatusReport job operation for Waypoint Server. The raw SDK\nStatusReport message is stored as an option on this message"
     },
-    "hashicorp.waypoint.StatusReport.Health": {
+    "hashicorp.cloud.waypoint.StatusReport.Health": {
       "type": "object",
       "properties": {
         "health_status": {
@@ -3747,7 +3839,7 @@
         }
       }
     },
-    "hashicorp.waypoint.StatusReport.Resource": {
+    "hashicorp.cloud.waypoint.StatusReport.Resource": {
       "type": "object",
       "properties": {
         "id": {
@@ -3755,7 +3847,7 @@
           "description": "The id of the resource, according to the platform."
         },
         "declared_resource": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.DeclaredResource",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.DeclaredResource",
           "description": "declared resource that this directly references."
         },
         "parent_resource_id": {
@@ -3779,7 +3871,7 @@
           "description": "A link directly to the resource in the platform, if applicable."
         },
         "category_display_hint": {
-          "$ref": "#/definitions/hashicorp.waypoint.ResourceCategoryDisplayHint",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.ResourceCategoryDisplayHint",
           "description": "The high level category of the resource, used as a hint to the UI on how to display the resource."
         },
         "created_time": {
@@ -3792,7 +3884,7 @@
           "title": "any additional metadata about the resource, encoded as JSON"
         },
         "health": {
-          "$ref": "#/definitions/hashicorp.waypoint.StatusReport.Resource.Health",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.StatusReport.Resource.Health",
           "title": "the current health state for a single resource"
         },
         "health_message": {
@@ -3800,13 +3892,13 @@
           "title": "a simple human readable message detailing the Health state"
         },
         "deprecated_health": {
-          "$ref": "#/definitions/hashicorp.waypoint.StatusReport.Health",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.StatusReport.Health",
           "description": "deprecated in favor of the Health enum and message to match the plugin protos. Was never used."
         }
       },
       "title": "A resource as observed in a platform"
     },
-    "hashicorp.waypoint.StatusReport.Resource.Health": {
+    "hashicorp.cloud.waypoint.StatusReport.Resource.Health": {
       "type": "string",
       "enum": [
         "UNKNOWN",
@@ -3819,7 +3911,7 @@
       "default": "UNKNOWN",
       "title": "the state of overall health of a deployed application"
     },
-    "hashicorp.waypoint.TaskLaunchInfo": {
+    "hashicorp.cloud.waypoint.TaskLaunchInfo": {
       "type": "object",
       "properties": {
         "oci_url": {
@@ -3849,7 +3941,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Token": {
+    "hashicorp.cloud.waypoint.Token": {
       "type": "object",
       "properties": {
         "accessor_id": {
@@ -3868,19 +3960,19 @@
           "description": "When the token was issued. This may be used for revocation using a\n\"no earlier than\" rule."
         },
         "login": {
-          "$ref": "#/definitions/hashicorp.waypoint.Token.Login",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Token.Login",
           "title": "login tokens can be used for API requests"
         },
         "runner": {
-          "$ref": "#/definitions/hashicorp.waypoint.Token.Runner",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Token.Runner",
           "description": "Runner tokens can be used to request work on behalf of a runner.\nThey have full API access as well since the workloads that runners\nrun currently reuse this token."
         },
         "invite": {
-          "$ref": "#/definitions/hashicorp.waypoint.Token.Invite",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Token.Invite",
           "description": "invite tokens can be exhanged for login tokens and also optionally\nsign a new user up."
         },
         "trigger": {
-          "$ref": "#/definitions/hashicorp.waypoint.Token.Trigger",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Token.Trigger",
           "title": "trigger tokens can be used to trigger lifecycle actions via HTTP"
         },
         "unused_user": {
@@ -3895,13 +3987,13 @@
           "type": "boolean"
         },
         "unused_entrypoint": {
-          "$ref": "#/definitions/hashicorp.waypoint.Token.Entrypoint",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Token.Entrypoint",
           "description": "Same as Login.entrypoint, we just moved it."
         }
       },
       "description": "The authenticated Token information. This is used to authenticate requests."
     },
-    "hashicorp.waypoint.Token.Entrypoint": {
+    "hashicorp.cloud.waypoint.Token.Entrypoint": {
       "type": "object",
       "properties": {
         "deployment_id": {
@@ -3910,7 +4002,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Token.Invite": {
+    "hashicorp.cloud.waypoint.Token.Invite": {
       "type": "object",
       "properties": {
         "from_user_id": {
@@ -3918,16 +4010,16 @@
           "title": "The user that initiated the invite"
         },
         "login": {
-          "$ref": "#/definitions/hashicorp.waypoint.Token.Login",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Token.Login",
           "description": "The login token we'd like to create. This can be used to setup\nall the policy attachments and other restrictions. If this is a\nsignup-only invite token, then \"user_id\" in this login field will\nbe ignored and set to the newly created user ID."
         },
         "signup": {
-          "$ref": "#/definitions/hashicorp.waypoint.Token.Invite.Signup",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Token.Invite.Signup",
           "description": "Signup, if non-nil, makes this invite a signup-only invite token. This\nmeans that this token can only be used to create a new account, not\nto exchange for a token for an existing account."
         }
       }
     },
-    "hashicorp.waypoint.Token.Invite.Signup": {
+    "hashicorp.cloud.waypoint.Token.Invite.Signup": {
       "type": "object",
       "properties": {
         "initial_username": {
@@ -3936,7 +4028,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Token.Login": {
+    "hashicorp.cloud.waypoint.Token.Login": {
       "type": "object",
       "properties": {
         "user_id": {
@@ -3944,12 +4036,12 @@
           "description": "User that this token represents. This is the internal user ID (ULID),\nnot the username/email/etc. The special value of \"waypoint\" means the\nsuperuser (default user) that is setup on bootstrap. This is for\nhistorical reasons only and is the only valid non-ULID value."
         },
         "entrypoint": {
-          "$ref": "#/definitions/hashicorp.waypoint.Token.Entrypoint",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Token.Entrypoint",
           "description": "If set, this login token can only be used for entrypoint-related\nAPIs against the configured deployment."
         }
       }
     },
-    "hashicorp.waypoint.Token.Runner": {
+    "hashicorp.cloud.waypoint.Token.Runner": {
       "type": "object",
       "properties": {
         "id": {
@@ -3963,7 +4055,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Token.Trigger": {
+    "hashicorp.cloud.waypoint.Token.Trigger": {
       "type": "object",
       "properties": {
         "from_user_id": {
@@ -3973,7 +4065,7 @@
       },
       "description": "The Trigger message is a kind of token type that is only used for\nauthenticated trigger URL requests. It should not have any other\nauthorized access to make requests in any other API endpoint."
     },
-    "hashicorp.waypoint.TokenTransport": {
+    "hashicorp.cloud.waypoint.TokenTransport": {
       "type": "object",
       "properties": {
         "body": {
@@ -4000,7 +4092,7 @@
       },
       "description": "The outer structure of the token that is directly Marshaled and\nASCII armored."
     },
-    "hashicorp.waypoint.Trigger": {
+    "hashicorp.cloud.waypoint.Trigger": {
       "type": "object",
       "properties": {
         "id": {
@@ -4032,57 +4124,57 @@
           "description": "whether or not this is authenticated. defaults to true."
         },
         "build": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.BuildOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.BuildOp"
         },
         "push": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.PushOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.PushOp"
         },
         "deploy": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DeployOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DeployOp"
         },
         "destroy": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DestroyOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DestroyOp"
         },
         "release": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.ReleaseOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.ReleaseOp"
         },
         "up": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.UpOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.UpOp"
         },
         "init": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.InitOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.InitOp"
         },
         "status_report": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.StatusReportOp"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.StatusReportOp"
         },
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Workspace",
           "description": "Defaults to the default workspace if unset."
         },
         "project": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Project",
           "description": "Required. Project ref must be set to be valid trigger URL."
         },
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application",
           "description": "The application to use. Can be empty, this trigger will run on every app\nif not set."
         }
       },
       "description": "The Trigger message is a representation of a URL that can be requested\nfor invoking specific lifecycle operations on a projects applications. These\ntrigger URLs are intended to be used in a CI system for easy configuration.\nThe user is expected to configure and generate the URL ahead of time, and\nWaypoint will generate a trigger based on the configuration here and return\na URL to make requests with."
     },
-    "hashicorp.waypoint.UI.DeploymentBundle": {
+    "hashicorp.cloud.waypoint.UI.DeploymentBundle": {
       "type": "object",
       "properties": {
         "deployment": {
-          "$ref": "#/definitions/hashicorp.waypoint.Deployment",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Deployment",
           "description": "The deployment in question."
         },
         "artifact": {
-          "$ref": "#/definitions/hashicorp.waypoint.PushedArtifact",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.PushedArtifact",
           "title": "Populated when a Deployment is read with LoadDetails set\nto ARTIFACT or BUILD"
         },
         "build": {
-          "$ref": "#/definitions/hashicorp.waypoint.Build",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Build",
           "title": "Populated when a Deployment is read with LoadDetails set to BUILD"
         },
         "deploy_url": {
@@ -4090,98 +4182,98 @@
           "description": "The deployment-specific URL from the URL service. This is set on\nall deployment API calls. This will be empty if the URL service\nis not enabled or there was an error loading this information."
         },
         "job_data_source_ref": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DataSource.Ref",
           "description": "The ref that was used in the job to run this operation. This is\nalso accessible by querying the job via the job_id and should always\nmatch.\n\nThis may be null under multiple circumstances: (1) the job was\nmanually triggered with local data (no datasource) or (2) the job\nwas run in earlier versions of Waypoint before we tracked this or\n(3) the job hasn't yet loaded the data.\n\nThis is always pre-populated if it is exists."
         },
         "latest_status_report": {
-          "$ref": "#/definitions/hashicorp.waypoint.StatusReport",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.StatusReport",
           "description": "The most recent status report generated for this deployment."
         }
       },
       "description": "A deployment packaged alongside prefetched related messages."
     },
-    "hashicorp.waypoint.UI.GetProjectResponse": {
+    "hashicorp.cloud.waypoint.UI.GetProjectResponse": {
       "type": "object",
       "properties": {
         "project": {
-          "$ref": "#/definitions/hashicorp.waypoint.Project"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Project"
         },
         "latest_init_job": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job"
         }
       }
     },
-    "hashicorp.waypoint.UI.ListDeploymentsResponse": {
+    "hashicorp.cloud.waypoint.UI.ListDeploymentsResponse": {
       "type": "object",
       "properties": {
         "deployments": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.UI.DeploymentBundle"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.UI.DeploymentBundle"
           },
           "description": "The list of deployments with related messages prefetched."
         }
       }
     },
-    "hashicorp.waypoint.UI.ListReleasesResponse": {
+    "hashicorp.cloud.waypoint.UI.ListReleasesResponse": {
       "type": "object",
       "properties": {
         "releases": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.UI.ReleaseBundle"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.UI.ReleaseBundle"
           },
           "description": "The list of releases with related messages prefetched."
         }
       }
     },
-    "hashicorp.waypoint.UI.ReleaseBundle": {
+    "hashicorp.cloud.waypoint.UI.ReleaseBundle": {
       "type": "object",
       "properties": {
         "release": {
-          "$ref": "#/definitions/hashicorp.waypoint.Release",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Release",
           "description": "The release in question."
         },
         "latest_status_report": {
-          "$ref": "#/definitions/hashicorp.waypoint.StatusReport",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.StatusReport",
           "description": "The most recent status report generated for this release."
         }
       },
       "description": "A release packaged alongside prefetched related messages."
     },
-    "hashicorp.waypoint.UpdateUserResponse": {
+    "hashicorp.cloud.waypoint.UpdateUserResponse": {
       "type": "object",
       "properties": {
         "user": {
-          "$ref": "#/definitions/hashicorp.waypoint.User"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.User"
         }
       }
     },
-    "hashicorp.waypoint.UpsertApplicationResponse": {
+    "hashicorp.cloud.waypoint.UpsertApplicationResponse": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Application"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Application"
         }
       }
     },
-    "hashicorp.waypoint.UpsertAuthMethodResponse": {
+    "hashicorp.cloud.waypoint.UpsertAuthMethodResponse": {
       "type": "object",
       "properties": {
         "auth_method": {
-          "$ref": "#/definitions/hashicorp.waypoint.AuthMethod"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.AuthMethod"
         }
       }
     },
-    "hashicorp.waypoint.UpsertBuildResponse": {
+    "hashicorp.cloud.waypoint.UpsertBuildResponse": {
       "type": "object",
       "properties": {
         "build": {
-          "$ref": "#/definitions/hashicorp.waypoint.Build"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Build"
         }
       }
     },
-    "hashicorp.waypoint.UpsertDeploymentRequest.Tristate": {
+    "hashicorp.cloud.waypoint.UpsertDeploymentRequest.Tristate": {
       "type": "string",
       "enum": [
         "UNSET",
@@ -4190,77 +4282,77 @@
       ],
       "default": "UNSET"
     },
-    "hashicorp.waypoint.UpsertDeploymentResponse": {
+    "hashicorp.cloud.waypoint.UpsertDeploymentResponse": {
       "type": "object",
       "properties": {
         "deployment": {
-          "$ref": "#/definitions/hashicorp.waypoint.Deployment",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Deployment",
           "title": "resulting object, you should replace this with what was sent in the request\nsince the update operation may touch up the input data (i.e. update\ntimestamps)"
         }
       }
     },
-    "hashicorp.waypoint.UpsertOnDemandRunnerConfigResponse": {
+    "hashicorp.cloud.waypoint.UpsertOnDemandRunnerConfigResponse": {
       "type": "object",
       "properties": {
         "config": {
-          "$ref": "#/definitions/hashicorp.waypoint.OnDemandRunnerConfig",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.OnDemandRunnerConfig",
           "description": "The resulting ondemand runner value. It should replace the one that was\nsent in the request."
         }
       }
     },
-    "hashicorp.waypoint.UpsertProjectResponse": {
+    "hashicorp.cloud.waypoint.UpsertProjectResponse": {
       "type": "object",
       "properties": {
         "project": {
-          "$ref": "#/definitions/hashicorp.waypoint.Project"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Project"
         }
       }
     },
-    "hashicorp.waypoint.UpsertPushedArtifactResponse": {
+    "hashicorp.cloud.waypoint.UpsertPushedArtifactResponse": {
       "type": "object",
       "properties": {
         "artifact": {
-          "$ref": "#/definitions/hashicorp.waypoint.PushedArtifact",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.PushedArtifact",
           "title": "resulting push object, you should replace this with what was sent\nsince the update operation may touch up the input data (i.e. update\ntimestamps)"
         }
       }
     },
-    "hashicorp.waypoint.UpsertReleaseResponse": {
+    "hashicorp.cloud.waypoint.UpsertReleaseResponse": {
       "type": "object",
       "properties": {
         "release": {
-          "$ref": "#/definitions/hashicorp.waypoint.Release",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Release",
           "title": "resulting object, you should replace this with what was sent in the request\nsince the update operation may touch up the input data (i.e. update\ntimestamps)"
         }
       }
     },
-    "hashicorp.waypoint.UpsertStatusReportResponse": {
+    "hashicorp.cloud.waypoint.UpsertStatusReportResponse": {
       "type": "object",
       "properties": {
         "status_report": {
-          "$ref": "#/definitions/hashicorp.waypoint.StatusReport",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.StatusReport",
           "title": "resulting object, you should replace this with what was sent in the request\nsince the update operation may touch up the input data (i.e. update\ntimestamps)"
         }
       }
     },
-    "hashicorp.waypoint.UpsertTriggerResponse": {
+    "hashicorp.cloud.waypoint.UpsertTriggerResponse": {
       "type": "object",
       "properties": {
         "trigger": {
-          "$ref": "#/definitions/hashicorp.waypoint.Trigger",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Trigger",
           "description": "The resulting created trigger object after an Upsert."
         }
       }
     },
-    "hashicorp.waypoint.UpsertWorkspaceResponse": {
+    "hashicorp.cloud.waypoint.UpsertWorkspaceResponse": {
       "type": "object",
       "properties": {
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Workspace"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Workspace"
         }
       }
     },
-    "hashicorp.waypoint.User": {
+    "hashicorp.cloud.waypoint.User": {
       "type": "object",
       "properties": {
         "id": {
@@ -4282,23 +4374,23 @@
         "links": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.User.Link"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.User.Link"
           },
           "description": "Links is the list of account links with 3rd party\nidentity systems."
         }
       },
       "description": "User represents a single user identity within the Waypoint server. A\nuser account may represent multiple authentication methods (OIDC from\nmultiple sources, tokens, etc.)."
     },
-    "hashicorp.waypoint.User.Link": {
+    "hashicorp.cloud.waypoint.User.Link": {
       "type": "object",
       "properties": {
         "oidc": {
-          "$ref": "#/definitions/hashicorp.waypoint.User.Link.OIDC"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.User.Link.OIDC"
         }
       },
       "description": "Link is a connection between an authentication provider and\nthe user identity. This is used to lookup a unique user account\nwithin Waypoint from multiple auth sources (i.e. GitHub auth,\nuser/pass, etc.)."
     },
-    "hashicorp.waypoint.User.Link.OIDC": {
+    "hashicorp.cloud.waypoint.User.Link.OIDC": {
       "type": "object",
       "properties": {
         "iss": {
@@ -4310,7 +4402,7 @@
         }
       }
     },
-    "hashicorp.waypoint.ValidateJobResponse": {
+    "hashicorp.cloud.waypoint.ValidateJobResponse": {
       "type": "object",
       "properties": {
         "valid": {
@@ -4326,7 +4418,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Variable": {
+    "hashicorp.cloud.waypoint.Variable": {
       "type": "object",
       "properties": {
         "name": {
@@ -4351,7 +4443,7 @@
           "title": "Cli is set if a variable value is set via a -var flag"
         },
         "file": {
-          "$ref": "#/definitions/hashicorp.waypoint.Variable.File",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Variable.File",
           "title": "File is set if a variable value is set via a -var-file flag"
         },
         "env": {
@@ -4359,7 +4451,7 @@
           "title": "Env is set if a variable value is set in the local\nenvironment via a WP_VAR_*"
         },
         "vcs": {
-          "$ref": "#/definitions/hashicorp.waypoint.Variable.VCS",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Variable.VCS",
           "title": "VCS is set if git polling is enabled and an\n*.auto.wpvars.hcl/json file is found in the repo"
         },
         "server": {
@@ -4373,18 +4465,18 @@
       },
       "title": "Variable stores a variable's value, and metadata to allow for precedence\nsorting and source-specific error messaging"
     },
-    "hashicorp.waypoint.Variable.File": {
+    "hashicorp.cloud.waypoint.Variable.File": {
       "type": "object",
       "properties": {
         "fileName": {
           "type": "string"
         },
         "hcl_range": {
-          "$ref": "#/definitions/hashicorp.waypoint.Variable.HclRange"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Variable.HclRange"
         }
       }
     },
-    "hashicorp.waypoint.Variable.HclPos": {
+    "hashicorp.cloud.waypoint.Variable.HclPos": {
       "type": "object",
       "properties": {
         "line": {
@@ -4402,39 +4494,39 @@
       },
       "title": "Types mapped from https://pkg.go.dev/github.com/hashicorp/hcl/v2#Pos"
     },
-    "hashicorp.waypoint.Variable.HclRange": {
+    "hashicorp.cloud.waypoint.Variable.HclRange": {
       "type": "object",
       "properties": {
         "filename": {
           "type": "string"
         },
         "start": {
-          "$ref": "#/definitions/hashicorp.waypoint.Variable.HclPos"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Variable.HclPos"
         },
         "end": {
-          "$ref": "#/definitions/hashicorp.waypoint.Variable.HclPos"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Variable.HclPos"
         }
       }
     },
-    "hashicorp.waypoint.Variable.VCS": {
+    "hashicorp.cloud.waypoint.Variable.VCS": {
       "type": "object",
       "properties": {
         "fileName": {
           "type": "string"
         },
         "hcl_range": {
-          "$ref": "#/definitions/hashicorp.waypoint.Variable.HclRange"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Variable.HclRange"
         }
       }
     },
-    "hashicorp.waypoint.VersionInfo": {
+    "hashicorp.cloud.waypoint.VersionInfo": {
       "type": "object",
       "properties": {
         "api": {
-          "$ref": "#/definitions/hashicorp.waypoint.VersionInfo.ProtocolVersion"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.VersionInfo.ProtocolVersion"
         },
         "entrypoint": {
-          "$ref": "#/definitions/hashicorp.waypoint.VersionInfo.ProtocolVersion"
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.VersionInfo.ProtocolVersion"
         },
         "version": {
           "type": "string",
@@ -4442,7 +4534,7 @@
         }
       }
     },
-    "hashicorp.waypoint.VersionInfo.ProtocolVersion": {
+    "hashicorp.cloud.waypoint.VersionInfo.ProtocolVersion": {
       "type": "object",
       "properties": {
         "current": {
@@ -4455,7 +4547,7 @@
         }
       }
     },
-    "hashicorp.waypoint.WaypointHclFmtResponse": {
+    "hashicorp.cloud.waypoint.WaypointHclFmtResponse": {
       "type": "object",
       "properties": {
         "waypoint_hcl": {
@@ -4464,7 +4556,7 @@
         }
       }
     },
-    "hashicorp.waypoint.Workspace": {
+    "hashicorp.cloud.waypoint.Workspace": {
       "type": "object",
       "properties": {
         "name": {
@@ -4473,7 +4565,7 @@
         "projects": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Workspace.Project"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Workspace.Project"
           },
           "description": "The list of projects that have executed at least one operation within\nthe context of this workspace."
         },
@@ -4484,11 +4576,11 @@
         }
       }
     },
-    "hashicorp.waypoint.Workspace.Application": {
+    "hashicorp.cloud.waypoint.Workspace.Application": {
       "type": "object",
       "properties": {
         "application": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Application",
           "description": "Application that this is referencing."
         },
         "active_time": {
@@ -4498,19 +4590,19 @@
         }
       }
     },
-    "hashicorp.waypoint.Workspace.Project": {
+    "hashicorp.cloud.waypoint.Workspace.Project": {
       "type": "object",
       "properties": {
         "project": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Project",
           "description": "Project that this is referencing."
         },
         "workspace": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Ref.Workspace",
           "description": "Workspace that this project is part of. This will only be set\nwhen using the GetProject API. This will ALWAYS BE NIL on workspace\nlist and get APIs."
         },
         "data_source_ref": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref",
+          "$ref": "#/definitions/hashicorp.cloud.waypoint.Job.DataSource.Ref",
           "description": "The last non-local ref that was used for any operation."
         },
         "active_time": {
@@ -4521,7 +4613,7 @@
         "applications": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Workspace.Application"
+            "$ref": "#/definitions/hashicorp.cloud.waypoint.Workspace.Application"
           },
           "description": "The list of applications that have executed at least one operation\nwithin the context of this workspace. To determine which operations\nyou must call the respect list API for that operation, such as\nListDeployments."
         }

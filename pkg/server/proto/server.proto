@@ -95,7 +95,7 @@ service Waypoint {
   // ListApplications because applications are a part of projects and you
   // can use GetProject to get more information about the project.
   rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse) {
-    option (google.api.http) = { get: "/api/v1/projects" };
+    option (google.api.http) = { get: "/waypoint/projects" };
   };
 
   // GetApplication returns one application on the project.
