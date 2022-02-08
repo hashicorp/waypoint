@@ -59,7 +59,7 @@ func (c *RunnerListCommand) Run(args []string) int {
 		return 0
 	}
 
-	tblHeaders := []string{"State", "ID", "Kind", "Last Registered"}
+	tblHeaders := []string{"ID", "State", "Kind", "Last Registered"}
 	tbl := terminal.NewTable(tblHeaders...)
 
 	kindMap := map[reflect.Type]string{
@@ -92,8 +92,8 @@ func (c *RunnerListCommand) Run(args []string) int {
 		}
 
 		tblColumn := []string{
-			stateStr,
 			r.Id,
+			stateStr,
 			kindStr,
 			lastSeenStr,
 		}
