@@ -17,7 +17,7 @@
     "application/json"
   ],
   "paths": {
-    "/waypoint/2022-02-03/organizations/{location.organization_id}/projects/{location.project_id}/projects": {
+    "/waypoint/2022-02-03/namespace/{namespace_id}/projects": {
       "get": {
         "summary": "ListProjects returns a list of all the projects. There is no equivalent\nListApplications because applications are a part of projects and you\ncan use GetProject to get more information about the project.",
         "operationId": "Waypoint_ListProjects",
@@ -37,15 +37,8 @@
         },
         "parameters": [
           {
-            "name": "location.organization_id",
-            "description": "organization_id is the id of the organization.",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "location.project_id",
-            "description": "project_id is the projects id.",
+            "name": "namespace_id",
+            "description": "namespace_id is the id of the namespace.",
             "in": "path",
             "required": true,
             "type": "string"
@@ -56,7 +49,7 @@
         ]
       }
     },
-    "/waypoint/2022-02-03/organizations/{location.organization_id}/projects/{location.project_id}/builds/{ref.id}": {
+    "/waypoint/2022-02-03/namespace/{namespace_id}/builds/{ref.id}": {
       "get": {
         "summary": "GetBuild returns a build",
         "operationId": "Waypoint_GetBuild",
@@ -76,15 +69,8 @@
         },
         "parameters": [
           {
-            "name": "location.organization_id",
-            "description": "organization_id is the id of the organization.",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "location.project_id",
-            "description": "project_id is the projects id.",
+            "name": "namespace_id",
+            "description": "namespace_id is the id of the namespace.",
             "in": "path",
             "required": true,
             "type": "string"
@@ -120,7 +106,7 @@
         ]
       }
     },
-    "/waypoint/2022-02-03/organizations/{location.organization_id}/projects/{location.project_id}/deployments/{ref.id}": {
+    "/waypoint/2022-02-03/namespace/{namespace_id}/deployments/{ref.id}": {
       "get": {
         "summary": "GetDeployment returns a deployment",
         "operationId": "Waypoint_GetDeployment",
@@ -140,15 +126,8 @@
         },
         "parameters": [
           {
-            "name": "location.organization_id",
-            "description": "organization_id is the id of the organization.",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "location.project_id",
-            "description": "project_id is the projects id.",
+            "name": "namespace_id",
+            "description": "namespace_id is the id of the namespace.",
             "in": "path",
             "required": true,
             "type": "string"
@@ -197,7 +176,7 @@
         ]
       }
     },
-    "/waypoint/2022-02-03/organizations/{location.organization_id}/projects/{location.project_id}/projects/{project.project}": {
+    "/waypoint/2022-02-03/namespace/{namespace_id}/projects/{project.project}": {
       "get": {
         "summary": "GetProject returns the project.",
         "operationId": "Waypoint_GetProject",
@@ -217,15 +196,8 @@
         },
         "parameters": [
           {
-            "name": "location.organization_id",
-            "description": "organization_id is the id of the organization.",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "location.project_id",
-            "description": "project_id is the projects id.",
+            "name": "namespace_id",
+            "description": "namespace_id is the id of the namespace.",
             "in": "path",
             "required": true,
             "type": "string"
@@ -242,7 +214,7 @@
         ]
       }
     },
-    "/waypoint/2022-02-03/organizations/{location.organization_id}/projects/{location.project_id}/releases/{ref.id}": {
+    "/waypoint/2022-02-03/namespace/{namespace_id}/releases/{ref.id}": {
       "get": {
         "summary": "GetRelease returns a deployment",
         "operationId": "Waypoint_GetRelease",
@@ -262,15 +234,8 @@
         },
         "parameters": [
           {
-            "name": "location.organization_id",
-            "description": "organization_id is the id of the organization.",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "location.project_id",
-            "description": "project_id is the projects id.",
+            "name": "namespace_id",
+            "description": "namespace_id is the id of the namespace.",
             "in": "path",
             "required": true,
             "type": "string"
@@ -320,7 +285,7 @@
         ]
       }
     },
-    "/waypoint/2022-02-03/organizations/{location.organization_id}/projects/{location.project_id}/runners/{runner_id}": {
+    "/waypoint/2022-02-03/namespace/{namespace_id}/runners/{runner_id}": {
       "get": {
         "summary": "GetRunner gets information about a single runner.",
         "operationId": "Waypoint_GetRunner",
@@ -340,15 +305,8 @@
         },
         "parameters": [
           {
-            "name": "location.organization_id",
-            "description": "organization_id is the id of the organization.",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "location.project_id",
-            "description": "project_id is the projects id.",
+            "name": "namespace_id",
+            "description": "namespace_id is the id of the namespace.",
             "in": "path",
             "required": true,
             "type": "string"
