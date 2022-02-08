@@ -3,6 +3,7 @@ FROM golang:1.17.6
 RUN apt-get update; apt-get install unzip
 
 # Protoc
+# TODO(izaak): discover the protoc version from the nix files
 RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-x86_64.zip -O /tmp/protoc.zip && \
     unzip /tmp/protoc.zip -d /tmp && \
     mv /tmp/bin/protoc /usr/local/bin/ && \
