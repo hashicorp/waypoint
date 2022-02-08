@@ -38,7 +38,7 @@ type hclConfig struct {
 // Runner is the configuration for supporting runners in this project.
 type Runner struct {
 	// Profile is the name of the on-demand runner configuration.
-	Profile string `hcl:"profile"`
+	Profile string `hcl:"profile,optional"`
 
 	// Note (XX): The other properties in this struct are only used on init,
 	// and don't really make sense being here.
