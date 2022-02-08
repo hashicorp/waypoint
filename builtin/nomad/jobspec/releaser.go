@@ -120,12 +120,12 @@ func (r *Releaser) resourceJobCreate(
 	groupsToPromote := make([]string, len(deploy.TaskGroups))
 	for taskGroupName, taskGroup := range deploy.TaskGroups {
 		if r.config.Groups != nil {
-			if isElementExist(r.config.Groups, taskGroupName) && taskGroup.DesiredCanaries != 0 {
+			if isElementExist(r.config.Groups, taskGroupName) && taskGroup.DesiredCanaries > 0 {
 				canaryDeployment = true
 				groupsToPromote = append(groupsToPromote, taskGroupName)
 				continue
 			}
-		} else if taskGroup.DesiredCanaries != 0 {
+		} else if taskGroup.DesiredCanaries > 0 {
 			canaryDeployment = true
 			// if no groups to promote are specified in the config, promote all groups
 			// that have canaries
