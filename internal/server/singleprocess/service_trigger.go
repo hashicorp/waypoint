@@ -76,6 +76,41 @@ func (s *service) ListTriggers(
 	return &pb.ListTriggerResponse{Triggers: result}, nil
 }
 
+// NoAuthRunTrigger is defined in our auth.go package to not need a token for
+// incoming requests. Eventually, Waypoint should have a middleware func
+// for incoming requests that can handle API endpoints that can support
+// authenticated and non-authenticated requests like this one.
+// https://github.com/hashicorp/waypoint/issues/2990
+func (s *service) NoAuthRunTrigger(
+	ctx context.Context,
+	req *pb.RunTriggerRequest,
+) (*pb.RunTriggerResponse, error) {
+	if err := serverptypes.ValidateRunTriggerRequest(req); err != nil {
+		return nil, err
+	}
+
+	log := hclog.FromContext(ctx)
+	log.Trace("attempting to find and run trigger from authless func", "trigger_id", req.Ref.Id)
+
+	trigger, err := s.state.TriggerGet(req.Ref)
+	if err != nil {
+		log.Error("failed to get requested trigger", "trigger_id", req.Ref.Id, "error", err)
+		return nil, status.Errorf(codes.NotFound,
+			"trigger id %q not found. check the waypoint server logs for more information", req.Ref.Id)
+	}
+
+	if trigger.Authenticated {
+		log.Error("requested trigger id requires authentication to run", "trigger_id", trigger.Id)
+		return nil, status.Error(codes.PermissionDenied, "trigger requires authentication")
+	}
+
+	resp, err := s.RunTrigger(ctx, req)
+	return resp, err
+}
+
+// RunTrigger takes a configured trigger URL, and crafts all of the appropriate
+// data into a QueuedJobRequest for Waypoint to execute. It returns a list of
+// job ids that have been queued from the result of the request.
 func (s *service) RunTrigger(
 	ctx context.Context,
 	req *pb.RunTriggerRequest,
@@ -449,7 +484,5 @@ func (s *service) RunTrigger(
 		return nil, err
 	}
 
-	// TODO(briancain): The HTTP implementation will take these job ids and
-	// call the GetJobStream endpoint to stream back output from the queued jobs
 	return &pb.RunTriggerResponse{JobIds: ids}, nil
 }

@@ -50,6 +50,7 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 	// Create our full router
 	r := mux.NewRouter()
 	r.HandleFunc("/v1/exec", httpapi.HandleExec(grpcAddr, true))
+	r.HandleFunc("/v1/trigger/{id:[a-zA-Z0-9]+}", httpapi.HandleTrigger(grpcAddr, true))
 	r.PathPrefix("/grpc").Handler(grpcWrapped)
 	r.PathPrefix("/").Handler(uifs)
 

@@ -7,25 +7,18 @@ description: |-
 
 # About Waypoint Triggers
 
-Waypoint 0.7 introduces a new core piece of functionality called Trigger URLs.
 Trigger URLs are pre-configured Waypoint lifecycle operations for execution
 inside Continuous Integration (CI) environments. Users can configure operations
 like deploying the latest build, running a status report on all applications in
 a project, running a Waypoint Up operation on all applications in a project,
 and more. Trigger URLs make it easy to run Waypoint operations inside CI without
 requiring the Waypoint CLI or any other Waypoint setup in your scripts. You will
-simply need grpcurl or curl to execute a Trigger URL
+simply need curl to execute a Trigger URL via HTTP.
 
-Trigger URLs can be invoked directly inside an environment with a gRPC request
+Trigger URLs can be invoked directly inside an environment with a http request
 that tells Waypoint to execute the pre-configured action. Trigger URLs
 configurations are project-scoped, where their actions can operate on every
 application defined in a project or target a single application inside a project.
-
-~> **NOTE**: With this first iteration in Waypoint 0.7, the Waypoint server will only
-support executing Triggers through gRPC. However, in a future version, we will
-support HTTP requests to initiate running Triggers, making Waypoint use in CI
-even more accessible than it is today. We recommend trying this feature through
-gRPC until the HTTP implementation has been released.
 
 ## Waypoint Trigger CLI
 
@@ -50,20 +43,19 @@ $ waypoint trigger create \
       -workspace=production \
       -name=deploy-latest \
       -op=deploy
+
 Trigger "deploy-latest" (123ABC456DEF) has been created
-Trigger ID: 123ABC456DEF
+
+ Trigger ID: 123ABC456DEF
+Trigger URL: https://waypoint.server.address.example.com/v1/trigger/123ABC456DEF
 ```
 
 Note that creating a trigger does not validate the existence of a Project or
 Application. This validation happens at execution time. If you have made a mistake
 or typo, you can easily modify an existing trigger with `waypoint trigger update`.
 
-~> **NOTE**: In the future, once the HTTP implementation has been released, this
-command will return a full HTTP URL that Waypoint server will be able to accept requests
-with for executing this operation.
-
-For now, you can use this ID to make a request to Waypoint server to execute the
-trigger.
+Once a trigger has been created, you can make an HTTP request against the given
+trigger URL to start and queue a job on Waypoint server.
 
 ## Modifying an existing Trigger URL Configuration
 
@@ -131,26 +123,22 @@ $ waypoint trigger inspect 01FS582B3X8VW0251C1XDQ56RR
 For now, you can use this ID to make a request to Waypoint server to execute the
 trigger.
 
-## Running a Trigger URL Configuration via gRPC
-
-```sh
-$ grpcurl -d '{"ref": {"id": "123ABC456DEF"}}' -H "Authorization: `waypoint user token`" waypoint.server.address hashicorp.waypoint.Waypoint/RunTrigger
-```
-
-The gRPC `RunTrigger` endpoint will always return 3 job IDs for each job queued.
-
-- The StartTask job for On-Demand Runners
-- The trigger operation job
-- The StopTask job for On-Demand Runners
-
-So, if you queue a trigger that will run for _all applications inside a project_,
-you will get back StartTask and StopTask jobs wrapped around the actual Trigger
-URL job for each job queued.
-
-In the future, the HTTP implementation will handle these jobs for you, and
-give you the ability to stream the output of the job easily in CI.
-
 ## Running a Trigger URL Configuration via HTTP
+
+### /v1/trigger/:trigger-id
+
+The `/v1/trigger` endpoint takes a trigger id parameter when initiating a request.
+It also accepts 3 request parameters:
+
+- `token` (string) - For authenticated triggers, providing a token will authorize the
+  request to be executed
+- `stream` (string) - If stream is set to anything other than empty string, the server
+  will stream back the job event stream for all queued jobs. Triggers that are not
+  configured for authentication cannot stream back job event streams.
+- `variables` (string map)- If set, these variables will be set as input variable overrides
+  for the requested operation (i.e. set a new tag). This must be valid JSON.
+
+### Example
 
 In an upcoming version of Waypoint, we will provide an HTTP endpoint for easy
 access to request running a configured Trigger. When you create a trigger,
@@ -163,17 +151,87 @@ $ waypoint trigger create \
       -workspace=production \
       -name=deploy-latest \
       -op=deploy
+
+Trigger "deploy-latest" (123ABC456DEF) has been created
+
 Trigger ID: 123ABC456DEF
-Trigger URL:
-https://waypoint.server.address/api/v1/trigger/123ABC456DEF
+Trigger URL: https://waypoint.server.address.example.com/v1/trigger/123ABC456DEF
 ```
 
-When this upcoming feature enhancement is released, you will be able to add a curl request to your CI configuration
-to execute deploying the latest build with Waypoint:
+Once a trigger has been created, you can request it start via `curl` or any other
+http request.
 
 ```
-curl -X POST -H "Authorization: OAuth $WP_ACCESS_TOKEN" https://waypoint.server.address/api/v1/trigger/123ABC456DEF
+curl -k -G -d "token=`waypoint user token`" https://waypoint.server.address.example.com/v1/trigger/123ABC456DEF
 ```
 
-More information on this feature will come once it has been released, so
-be on the lookout for future updates!
+If your project includes an input variable that you wish to override on the request,
+you can provide a `variables` option.
+
+```
+curl -k -G -d "variables={\"tag\":\"latest\"}" -d "token=`waypoint user token`" https://waypoint.server.address.example.com/v1/trigger/123ABC456DEF
+```
+
+### Streaming Job Output over HTTP
+
+When starting a trigger URL request, Waypoint server supports streaming
+job output to the requester. Additionally, it supports streaming all concurrent
+jobs that are running from the result of starting a trigger URL. For trigger URLs
+that are not authenticated, Waypoint server does not allow for job streaming.
+
+#### Streamed Event Types
+
+When streaming events back from a running job, trigger URLs will return job
+stream event message types depending on the kind of output from the job. A job
+will be finished if it returns a `Complete` or `Error` value type.
+
+- `Complete`
+- `Error`
+- `TerminalEventLine`
+- `TerminalEventNamedValues`
+- `TerminalEventStatus`
+- `TerminalEventRaw`
+- `TerminalEventStep`
+- `TerminalEventTable`
+
+#### Example
+
+Streaming output will give you the job event streamed directly to you:
+
+```
+$ curl -k -G -d "stream=true" -d "token=`waypoint user token`" https://waypoint.server.address.example.com/v1/trigger/01FTS1A6H3EH4H4W1XY89AWZ84
+...
+...
+> GET /v1/trigger/123ABC456DEF?stream=true&token=tokenstring HTTP/1.1
+> Host: waypoint.server.address.example.com
+> User-Agent: curl/7.68.0
+> Accept: */*
+>
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Date: Tue, 01 Feb 2022 16:55:30 GMT
+< Transfer-Encoding: chunked
+<
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Ref: HEAD","valueType":"TerminalEventLine"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Building go...","valueType":"TerminalEventLine"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Building Buildpack with kaniko...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Testing registry and uploading entrypoint layer","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Executing kaniko...","valueType":"TerminalEventStep"}
+...
+...
+...
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Checking status of the Kubernetes deployment resource...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Deployment \"go-v2\" is reporting ready!","valueType":"TerminalEventStatus"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Releasing go...","valueType":"TerminalEventLine"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Preparing service...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Updating existing service...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Waiting for service to become ready...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Gathering health report for Kubernetes release...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","value":"Checking status of Kubernetes service resource \"go\"...","valueType":"TerminalEventStep"}
+{"jobId":"01FTXNMJ28WKXHBGQ74AH4DMM0","valueType":"Complete","exitCode":"0"}
+* Connection #0 to host waypoint.server.address.example.com left intact
+```
+
+Note that if you cancel watching a job stream, the job will still execute
+on the server. This does not cancel the queued job.
