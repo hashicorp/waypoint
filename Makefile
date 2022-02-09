@@ -73,6 +73,16 @@ docker/odr:
 					-t waypoint-odr:dev \
 					.
 
+.PHONY: docker/tools
+docker/tools:
+	@echo "Building docker tools image"
+	docker build -f tools.Dockerfile -t waypoint-tools:dev .
+
+.PHONY: docker/gen/server
+docker/gen/server:
+	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
+	docker run -v `pwd`:/waypoint -it docker.io/library/waypoint-tools:dev make gen/server
+
 # expected to be invoked by make gen/changelog LAST_RELEASE=gitref THIS_RELEASE=gitref
 .PHONY: gen/changelog
 gen/changelog:
@@ -151,13 +161,3 @@ tools: # install dependencies and tools required to build
 	$(GO_CMD) generate -tags tools tools/tools.go
 	@echo
 	@echo "Done!"
-
-.PHONY: docker/tools
-docker/tools:
-	@ echo "Building docker tools image"
-	docker build -f tools.Dockerfile -t waypoint-tools:dev .
-
-.PHONY: docker/gen/server
-docker/gen/server:
-	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
-	docker run -v `pwd`:/waypoint -it docker.io/library/waypoint-tools:dev make gen/server
