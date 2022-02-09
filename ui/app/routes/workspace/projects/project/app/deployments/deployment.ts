@@ -75,7 +75,7 @@ export default class DeploymentDetail extends Route {
   resetController(_: Controller, isExiting: boolean, transition: Transition): void {
     if (isExiting && transition.to.name === 'workspace.projects.project.app.deployment.index') {
       this.transitionTo(
-        'workspace.projects.project.app.deployment.deployment-seq',
+        'workspace.projects.project.app.deployments.deployment',
         (this.modelFor(this.routeName) as Model).sequence
       );
     }

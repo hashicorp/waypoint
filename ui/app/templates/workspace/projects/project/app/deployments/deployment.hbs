@@ -1,5 +1,5 @@
 {{page-title (concat "Deployment" " v" @model.sequence)}}
-{{#if (not-eq this.target.currentRouteName "workspace.projects.project.app.deployment.deployment-seq.resource")}}
+{{#if (not-eq this.target.currentRouteName "workspace.projects.project.app.deployments.deployment.resource")}}
   <PanelHeader @artifact="deployment" @sequence={{@model.sequence}}>
     <:actions>
       <div class="button-group">
@@ -52,7 +52,7 @@
           {{#if deploymentResources.length}}
             <ResourcesTable
               @resources={{deploymentResources}}
-              @route="workspace.projects.project.app.deployment.deployment-seq.resource"
+              @route="workspace.projects.project.app.deployments.deployment.resource"
               @models={{array @model.sequence}}
               @withMargin={{true}}
             >

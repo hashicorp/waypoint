@@ -17,11 +17,11 @@ module('Acceptance | deployment resource list', function (hooks) {
     let statusReport = this.server.create('status-report', 'ready', { application, target: deployment });
     let resource = this.server.create('resource', { statusReport, name: 'example-pod' });
 
-    await visit(`/default/${project.name}/app/${application.name}/deployment/seq/${deployment.sequence}`);
+    await visit(`/default/${project.name}/app/${application.name}/deployments/${deployment.sequence}`);
     assert.dom('[data-test-resources-table]').containsText('example-pod');
     assert
       .dom(
-        `[href="/default/${project.name}/app/${application.name}/deployment/seq/${deployment.sequence}/resources/${resource.id}"`
+        `[href="/default/${project.name}/app/${application.name}/deployments/${deployment.sequence}/resources/${resource.id}"`
       )
       .exists();
   });
@@ -32,7 +32,7 @@ module('Acceptance | deployment resource list', function (hooks) {
     let deployment = this.server.create('deployment', 'random', { application, sequence: 1 });
     this.server.create('status-report', 'ready', { application, target: deployment });
 
-    await visit(`/default/${project.name}/app/${application.name}/deployment/seq/${deployment.sequence}`);
+    await visit(`/default/${project.name}/app/${application.name}/deployments/${deployment.sequence}`);
 
     assert.dom('[data-test-resources-table]').doesNotExist();
   });
