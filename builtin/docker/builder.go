@@ -39,6 +39,17 @@ type Builder struct {
 	config BuilderConfig
 }
 
+type Auth struct {
+	Hostname      string `hcl:"hostname,optional"`
+	Username      string `hcl:"username,optional"`
+	Password      string `hcl:"password,optional"`
+	Email         string `hcl:"email,optional"`
+	Auth          string `hcl:"auth,optional"`
+	ServerAddress string `hcl:"serverAddress,optional"`
+	IdentityToken string `hcl:"identityToken,optional"`
+	RegistryToken string `hcl:"registryToken,optional"`
+}
+
 // BuildFunc implements component.Builder
 func (b *Builder) BuildFunc() interface{} {
 	return b.Build
@@ -68,6 +79,9 @@ type BuilderConfig struct {
 
 	// Controls the passing of build context
 	Context string `hcl:"context,optional"`
+
+	// Authenticates to private registry
+	Auth *Auth `hcl:"auth,block"`
 
 	// Controls the passing of the target stage
 	Target string `hcl:"target,optional"`
@@ -147,6 +161,19 @@ build {
 			"An array of strings of build-time variables passed as build-arg to docker",
 			" for the build step.",
 		),
+	)
+
+	doc.SetField(
+		"auth",
+		"the authentication information to log into the docker repository",
+		docs.SubFields(func(d *docs.SubFieldDoc) {
+			d.SetField("hostname", "Hostname of Docker registry")
+			d.SetField("username", "Username of Docker registry account")
+			d.SetField("password", "Password of Docker registry account")
+			d.SetField("serverAddress", "Address of Docker registry")
+			d.SetField("identityToken", "Token used to authenticate user")
+			d.SetField("registryToken", "Bearer tokens to be sent to Docker registry")
+		}),
 	)
 
 	doc.SetField(
@@ -320,7 +347,7 @@ func (b *Builder) Build(
 	// Build
 	step.Done()
 	step = nil
-	if err := b.buildWithDocker(ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.Platform, b.config.BuildArgs, b.config.Target, b.config.NoCache, log); err != nil {
+	if err := b.buildWithDocker(ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.Platform, b.config.BuildArgs, b.config.Auth, b.config.Target, b.config.NoCache, log); err != nil {
 		return nil, err
 	}
 
@@ -394,6 +421,7 @@ func (b *Builder) buildWithDocker(
 	tag string,
 	platform string,
 	buildArgs map[string]*string,
+	authConfig *Auth,
 	target string,
 	noCache bool,
 	log hclog.Logger,
@@ -436,15 +464,30 @@ func (b *Builder) buildWithDocker(
 		return status.Errorf(codes.InvalidArgument, "buildkit is required to use platform option")
 	}
 
+	var authMap = make(map[string]types.AuthConfig)
+	//Check if auth configuration is not null
+	if b.config.Auth != nil {
+		authMap[authConfig.Hostname] = types.AuthConfig{
+			Username:      authConfig.Username,
+			Password:      authConfig.Password,
+			Email:         authConfig.Email,
+			Auth:          authConfig.Auth,
+			ServerAddress: authConfig.ServerAddress,
+			IdentityToken: authConfig.IdentityToken,
+			RegistryToken: authConfig.RegistryToken,
+		}
+	}
+
 	buildOpts := types.ImageBuildOptions{
-		Version:    ver,
-		Dockerfile: relDockerfile,
-		Tags:       []string{tag},
-		Remove:     true,
-		Platform:   platform,
-		BuildArgs:  buildArgs,
-		Target:     target,
-		NoCache:    noCache,
+		Version:     ver,
+		Dockerfile:  relDockerfile,
+		Tags:        []string{tag},
+		Remove:      true,
+		Platform:    platform,
+		BuildArgs:   buildArgs,
+		Target:      target,
+		NoCache:     noCache,
+		AuthConfigs: authMap,
 	}
 
 	// Buildkit builds need a session under most circumstances, but sessions are only supported in >1.39
