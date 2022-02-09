@@ -431,7 +431,6 @@ jobs:
     environment:
       EMBER_TEST_REPORT: test-results/report-oss.xml #outputs test report for CircleCI test summary
       EMBER_TEST_PARALLEL: true #enables test parallelization with ember-exam
-    parallelism: 2
     steps:
       - checkout
       - md5uilib
