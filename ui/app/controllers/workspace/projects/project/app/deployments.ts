@@ -2,7 +2,8 @@ import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 import { Deployment } from 'waypoint-pb';
 import { action } from '@ember/object';
-export default class WorkspaceProjectsProjectAppDeployments extends Controller {
+
+export default class extends Controller {
   queryParams = [
     {
       isShowingDestroyed: {

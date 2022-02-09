@@ -46,9 +46,8 @@ Router.map(function () {
           this.route('builds');
           this.route('build-id', { path: '/build/:build_id' });
           this.route('build', { path: '/build/seq/:sequence' });
-          this.route('deployment', function () {
-            this.route('deployment-id', { path: '/:deployment_id' });
-            this.route('deployment-seq', { path: '/seq/:sequence' }, function () {
+          this.route('deployments', function () {
+            this.route('deployment', { path: '/:sequence' }, function () {
               this.route('resource', { path: 'resources/:resource_id' });
             });
           });
@@ -60,7 +59,6 @@ Router.map(function () {
           this.route('logs');
           this.route('resources');
           this.route('exec');
-          this.route('deployments');
         });
         this.route('settings', function () {
           this.route('repository', { path: '/' });
