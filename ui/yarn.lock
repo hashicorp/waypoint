@@ -7265,13 +7265,13 @@ elliptic@^6.0.0, elliptic@^6.5.2:
     minimalistic-assert "^1.0.1"
     minimalistic-crypto-utils "^1.0.1"
 
-ember-a11y-refocus@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/ember-a11y-refocus/-/ember-a11y-refocus-2.1.0.tgz#cc0473d15c0eb0405d848b831afd78a49cae109f"
-  integrity sha512-jF9aOviA0T6d9P+4AmVtrMRcHVQcT4uBfq5OIGsx2rYrdP6LWj/7Tb+yNLLTDbPIdZDbluzofG7UU6HZYzkJIg==
+ember-a11y-refocus@^2.3.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/ember-a11y-refocus/-/ember-a11y-refocus-2.3.0.tgz#c7c0b00506ca55d2670c028683fdd952e5d76a76"
+  integrity sha512-gbD9IiSPSbXnCh6YFQ5iJUwbsFvvI/0rwQy+tXrH2d/5dfOnBT3rV2XhCmCrWsK1UTBL8HNYhuKNN74vllSQDA==
   dependencies:
-    ember-cli-babel "^7.26.3"
-    ember-cli-htmlbars "^5.7.1"
+    ember-cli-babel "^7.26.11"
+    ember-cli-htmlbars "^6.0.1"
 
 ember-a11y-testing@^4.3.0:
   version "4.3.0"
@@ -7487,7 +7487,7 @@ ember-cli-babel@^7.0.0, ember-cli-babel@^7.1.0, ember-cli-babel@^7.1.2, ember-cl
     rimraf "^3.0.1"
     semver "^5.5.0"
 
-ember-cli-babel@^7.26.10:
+ember-cli-babel@^7.26.10, ember-cli-babel@^7.26.11:
   version "7.26.11"
   resolved "https://registry.yarnpkg.com/ember-cli-babel/-/ember-cli-babel-7.26.11.tgz#50da0fe4dcd99aada499843940fec75076249a9f"
   integrity sha512-JJYeYjiz/JTn34q7F5DSOjkkZqy8qwFOOxXfE6pe9yEJqWGu4qErKxlz8I22JoVEQ/aBUO+OcKTpmctvykM9YA==
