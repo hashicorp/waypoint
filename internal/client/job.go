@@ -127,7 +127,6 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 		gitDirtyErr := func() error {
 			// Running this inside of an anonymous func so that we can
 			// return early
-
 			if c.configPath == "" {
 				// No local project dir, so nothing is dirty!
 				return nil

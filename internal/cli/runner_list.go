@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"reflect"
+	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
@@ -59,41 +59,37 @@ func (c *RunnerListCommand) Run(args []string) int {
 		return 0
 	}
 
-	tblHeaders := []string{"State", "ID", "Kind", "Last Registered"}
+	tblHeaders := []string{"ID", "State", "Kind", "Last Registered"}
 	tbl := terminal.NewTable(tblHeaders...)
 
-	kindMap := map[reflect.Type]string{
-		reflect.TypeOf((*pb.Runner_Odr)(nil)):     "on-demand",
-		reflect.TypeOf((*pb.Runner_Local_)(nil)):  "local",
-		reflect.TypeOf((*pb.Runner_Remote_)(nil)): "remote",
-	}
-
-	stateMap := map[pb.Runner_AdoptionState]string{
-		pb.Runner_NEW:        "pending",
-		pb.Runner_PREADOPTED: "pre-adopted",
-		pb.Runner_ADOPTED:    "adopted",
-		pb.Runner_REJECTED:   "rejected",
-	}
+	var kindStr string
+	var lastSeenStr string
+	var stateStr string
 
 	for _, r := range resp.Runners {
-		var kindStr = "unknown"
-		if v, ok := kindMap[reflect.TypeOf(r.Kind)]; ok {
-			kindStr = v
+		switch r.Kind.(type) {
+		case *pb.Runner_Odr:
+			kindStr = "on-demand"
+		case *pb.Runner_Local_:
+			kindStr = "local"
+		case *pb.Runner_Remote_:
+			kindStr = "remote"
+		default:
+			kindStr = "unknown"
 		}
 
-		var lastSeenStr string
 		if v, err := ptypes.Timestamp(r.LastSeen); err == nil {
 			lastSeenStr = humanize.Time(v)
 		}
 
-		var stateStr = "unknown"
-		if v, ok := stateMap[r.AdoptionState]; ok {
-			stateStr = v
+		stateStr = strings.ToLower(r.AdoptionState.String())
+		if stateStr == "" {
+			stateStr = "unknown"
 		}
 
 		tblColumn := []string{
-			stateStr,
 			r.Id,
+			stateStr,
 			kindStr,
 			lastSeenStr,
 		}
