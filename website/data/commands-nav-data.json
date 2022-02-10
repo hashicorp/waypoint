@@ -191,20 +191,24 @@
     "path": "release-list"
   },
   {
-    "title": "runner adopt",
-    "path": "runner-adopt"
-  },
-  {
     "title": "runner agent",
     "path": "runner-agent"
   },
   {
-    "title": "runner forget",
-    "path": "runner-forget"
-  },
-  {
     "title": "runner list",
     "path": "runner-list"
+  },
+  {
+    "title": "runner inspect",
+    "path": "runner-inspect"
+  },
+  {
+    "title": "runner adopt",
+    "path": "runner-adopt"
+  },
+  {
+    "title": "runner forget",
+    "path": "runner-forget"
   },
   {
     "title": "runner reject",
