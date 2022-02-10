@@ -120,6 +120,8 @@ func (r *Releaser) resourceJobCreate(
 	} else if deploy == nil {
 		st.Update("No active deployment for Nomad job")
 		return err
+	} else if deploy.JobVersion != *job.Version {
+		return status.Errorf(codes.Aborted, "Job version does not match deployment's job version.")
 	}
 
 	canaryDeployment := false
