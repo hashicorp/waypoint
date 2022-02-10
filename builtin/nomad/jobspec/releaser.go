@@ -93,8 +93,14 @@ func (r *Releaser) resourceJobCreate(
 	jobs, _, err := jobClient.PrefixList(target.Name)
 	if err != nil {
 		return status.Errorf(codes.Aborted, "Unable to fetch Nomad jobs: %s", err.Error())
-	} else if target.Name != jobs[0].ID {
-		return status.Errorf(codes.Aborted, "Job not found: %s", err.Error())
+	}
+
+	if len(jobs) > 0 {
+		if target.Name != jobs[0].ID {
+			return status.Errorf(codes.Aborted, "Job not found: %s", err.Error())
+		}
+	} else {
+		status.Errorf(codes.Aborted, "Job not found: %s", err.Error())
 	}
 
 	q := &api.QueryOptions{
