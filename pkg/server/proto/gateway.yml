@@ -32,7 +32,7 @@ http:
   - selector: hashicorp.waypoint.Waypoint.GetUser
     get: /v1/user/by-username/{user.username.username}
 
-  - selector: hashicorp.waypoint.Waypoint.ListUser
+  - selector: hashicorp.waypoint.Waypoint.ListUsers
     get: /v1/users
 
   - selector: hashicorp.waypoint.Waypoint.UpdateUser
