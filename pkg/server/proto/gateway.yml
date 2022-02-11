@@ -46,7 +46,7 @@ http:
     delete: /v1/user/by-username/{user.username.username}
 
   - selector: hashicorp.waypoint.Waypoint.UpsertAuthMethod
-    post: /v1/auth-method/{auth_method.name}
+    post: /v1/auth-method
     body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.GetAuthMethod
@@ -73,11 +73,11 @@ http:
     get: /v1/workspace/{workspace.workspace}
     
   - selector: hashicorp.waypoint.Waypoint.UpsertWorkspace
-    post: /v1/workspace/{workspace.name}
+    post: /v1/workspace
     body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.UpsertProject
-    post: /v1/project/{project.name}
+    post: /v1/project
     body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.GetProject
@@ -90,7 +90,7 @@ http:
     get: /v1/project/{application.project}/application/{application.application}
 
   - selector: hashicorp.waypoint.Waypoint.UpsertApplication
-    post: /v1/project/{project.project}/application/{name}
+    post: /v1/project/{project.project}/application
     body: "*"
 
 

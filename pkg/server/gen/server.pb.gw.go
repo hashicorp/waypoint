@@ -316,24 +316,6 @@ func request_Waypoint_UpsertAuthMethod_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["auth_method.name"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "auth_method.name")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "auth_method.name", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "auth_method.name", err)
-	}
-
 	msg, err := client.UpsertAuthMethod(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -581,24 +563,6 @@ func request_Waypoint_UpsertWorkspace_0(ctx context.Context, marshaler runtime.M
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["workspace.name"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workspace.name")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "workspace.name", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspace.name", err)
-	}
-
 	msg, err := client.UpsertWorkspace(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -614,24 +578,6 @@ func request_Waypoint_UpsertProject_0(ctx context.Context, marshaler runtime.Mar
 	}
 	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["project.name"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "project.name")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "project.name", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "project.name", err)
 	}
 
 	msg, err := client.UpsertProject(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -763,17 +709,6 @@ func request_Waypoint_UpsertApplication_0(ctx context.Context, marshaler runtime
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "project.project", err)
-	}
-
-	val, ok = pathParams["name"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
-	}
-
-	protoReq.Name, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 
 	msg, err := client.UpsertApplication(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -5406,7 +5341,7 @@ var (
 
 	pattern_Waypoint_DeleteUser_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "user", "by-username", "user.username.username"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Waypoint_UpsertAuthMethod_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "auth-method", "auth_method.name"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Waypoint_UpsertAuthMethod_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "auth-method"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Waypoint_GetAuthMethod_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "auth-method", "auth_method.name"}, "", runtime.AssumeColonVerbOpt(true)))
 
@@ -5422,9 +5357,9 @@ var (
 
 	pattern_Waypoint_GetWorkspace_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "workspace", "workspace.workspace"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Waypoint_UpsertWorkspace_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "workspace", "workspace.name"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Waypoint_UpsertWorkspace_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "workspace"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Waypoint_UpsertProject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "project", "project.name"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Waypoint_UpsertProject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "project"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Waypoint_GetProject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "project", "project.project"}, "", runtime.AssumeColonVerbOpt(true)))
 
@@ -5432,7 +5367,7 @@ var (
 
 	pattern_Waypoint_GetApplication_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "project", "application.project", "application", "application.application"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Waypoint_UpsertApplication_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "project", "project.project", "application", "name"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Waypoint_UpsertApplication_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "project", "project.project", "application"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Waypoint_ListBuilds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"v1", "project", "application.project", "application", "application.application", "builds"}, "", runtime.AssumeColonVerbOpt(true)))
 
