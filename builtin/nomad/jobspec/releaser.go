@@ -145,20 +145,29 @@ func (r *Releaser) resourceJobCreate(
 		return nil
 	}
 
-	// check each task group to be promoted; if the canary allocs aren't healthy,
-	//   check again in 5 seconds
-	// TODO: Force timeout if exceeds healthy deadline or progress deadline of job
 	var currentTaskGroupState *api.DeploymentState
-	var groupHealthy bool
 	for _, group := range groupsToPromote {
 		if group != "" {
-			currentTaskGroupState = deploy.TaskGroups[group]
-			groupHealthy = false
+			st.Update(fmt.Sprintf("Checking task group: %s", group))
+			// TODO: Update to pair a task group's name with its healthy deadline, so
+			//       we can set the deadline accordingly
+			//       d := time.Now().Add(time.Nanosecond * time.Duration(*job.TaskGroups[indexOfTaskGroupInSliceOfTaskGroupsOfJob].Update.HealthyDeadline))
+			d := time.Now().Add(time.Minute * time.Duration(5))
+			log.Debug(fmt.Sprintf("Healthy deadline: %s", d.String()))
+			ctx, cancel := context.WithDeadline(ctx, d)
+			defer cancel()
+			groupHealthy := false
 			for !groupHealthy {
+				currentTaskGroupState = deploy.TaskGroups[group]
 				if currentTaskGroupState.HealthyAllocs < len(currentTaskGroupState.PlacedCanaries) {
-					time.Sleep(5 * time.Second)
+					select {
+					case <-time.After(5 * time.Second): // forces sleep for 5 seconds
+					case <-ctx.Done(): // cancelled
+						return status.Errorf(codes.Aborted, "Healthy deadline reached: %s", ctx.Err())
+					}
 					deploy, _, err = jobClient.LatestDeployment(*job.ID, q)
 					currentTaskGroupState = deploy.TaskGroups[group]
+					log.Info(fmt.Sprintf("Task group not healthy: %s", group))
 				} else {
 					groupHealthy = true
 				}
