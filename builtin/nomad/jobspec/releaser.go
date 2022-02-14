@@ -118,10 +118,14 @@ func (r *Releaser) resourceJobCreate(
 	if err != nil {
 		return status.Errorf(codes.Aborted, "Unable to fetch latest deployment for Nomad job: %s", err.Error())
 	} else if deploy == nil {
-		st.Update("No active deployment for Nomad job")
-		return err
+		st.Update("No active deployment for Nomad job.")
+		return nil
 	} else if deploy.JobVersion != *job.Version {
-		return status.Errorf(codes.Aborted, "Job version does not match deployment's job version.")
+		st.Update("Job version does not match deployment's job version.")
+		return nil
+	} else if deploy.Status != "running" {
+		st.Update("Deployment for job is no longer running.")
+		return nil
 	}
 
 	canaryDeployment := false
@@ -135,8 +139,8 @@ func (r *Releaser) resourceJobCreate(
 			}
 		} else if taskGroup.DesiredCanaries > 0 {
 			canaryDeployment = true
-			// if no groups to promote are specified in the config, promote all groups
-			// that have canaries
+			// If no groups to promote are specified in the config, promote all groups
+			//   that have canaries
 			groupsToPromote = append(groupsToPromote, taskGroupName)
 		}
 	}
@@ -224,19 +228,24 @@ func (r *Releaser) resourceJobStatus(
 
 	jobClient := client.NomadClient.Jobs()
 	s.Update("Getting job...")
+	// TODO: Because we don't have the namespace from the jobspec, we rely on the
+	//   NOMAD_NAMESPACE env var/searching for job via prefix- consider passing namespace
+	//   from deploy phase
 	jobs, _, err := jobClient.PrefixList(state.Name)
-	q := &api.QueryOptions{Namespace: jobs[0].JobSummary.Namespace}
+	if err != nil {
+		return err
+	}
 
 	jobResource := sdk.StatusReport_Resource{
 		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
 	}
 	sr.Resources = append(sr.Resources, &jobResource)
 
+	s.Update("Getting job info...")
+	q := &api.QueryOptions{Namespace: jobs[0].JobSummary.Namespace}
 	job, _, err := jobClient.Info(jobs[0].ID, q)
 
-	if jobs == nil {
-		return status.Errorf(codes.FailedPrecondition, "Nomad job response cannot be empty")
-	} else if err != nil {
+	if err != nil {
 		s.Update("No job was found")
 		s.Status(terminal.StatusError)
 		s.Done()
@@ -245,6 +254,8 @@ func (r *Releaser) resourceJobStatus(
 		jobResource.Name = state.Name
 		jobResource.Health = sdk.StatusReport_MISSING
 		jobResource.HealthMessage = sdk.StatusReport_MISSING.String()
+	} else if job == nil {
+		return status.Errorf(codes.FailedPrecondition, "Nomad job response cannot be empty")
 	} else {
 		jobResource.Id = *job.ID
 		jobResource.Name = *job.Name
