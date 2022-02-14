@@ -97,7 +97,8 @@ func (r *Releaser) resourceJobCreate(
 
 	if len(jobs) > 0 {
 		if target.Name != jobs[0].ID {
-			return status.Errorf(codes.Aborted, "Job not found: %s", err.Error())
+			st.Step(terminal.StatusError, fmt.Sprintf("Job could not be found, did you mean to promote %s?", jobs[0].ID))
+			return nil
 		}
 	} else {
 		status.Errorf(codes.Aborted, "Job not found: %s", err.Error())
