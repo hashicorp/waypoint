@@ -161,17 +161,26 @@ func (p *Platform) resourceJobStatus(
 	sr *resource.StatusResponse,
 	ui terminal.UI,
 ) error {
-	jobclient := client.NomadClient.Jobs()
-
 	s := sg.Add("Gathering health report for Nomad job...")
-	defer func() { s.Abort() }()
+	defer s.Abort()
+
+	jobClient := client.NomadClient.Jobs()
+
+	s.Update("Parsing the job specification...")
+	jobspec, err := p.jobspec(client.NomadClient, p.config.Jobspec)
+	if err != nil {
+		return err
+	}
 
 	jobResource := sdk.StatusReport_Resource{
 		Type:                "job",
 		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
 	}
 	sr.Resources = append(sr.Resources, &jobResource)
-	job, _, err := jobclient.Info(state.Name, &api.QueryOptions{})
+
+	s.Update("Getting job info...")
+	q := &api.QueryOptions{Namespace: *jobspec.Namespace}
+	job, _, err := jobClient.Info(state.Name, q)
 	if err != nil {
 		return err
 	}
@@ -184,21 +193,47 @@ func (p *Platform) resourceJobStatus(
 	})
 	jobResource.StateJson = string(stateJson)
 
+	// If job is running, start checking allocs
 	if *job.Status == "running" {
-		jobResource.Health = sdk.StatusReport_READY
-		jobResource.HealthMessage = fmt.Sprintf("Job %q is reporting ready!", state.Name)
-	} else if *job.Status == "queued" || *job.Status == "started" {
-		jobResource.Health = sdk.StatusReport_ALIVE
-		jobResource.HealthMessage = fmt.Sprintf("Job %q is reporting alive!", state.Name)
-	} else if *job.Status == "completed" {
-		jobResource.Health = sdk.StatusReport_PARTIAL
-		jobResource.HealthMessage = fmt.Sprintf("Job %q is reporting partially available!", state.Name)
-	} else if *job.Status == "failed" || *job.Status == "lost" {
-		jobResource.Health = sdk.StatusReport_DOWN
-		jobResource.HealthMessage = fmt.Sprintf("Job %q is reporting down!", state.Name)
-	} else {
+		allocs, _, err := jobClient.Allocations(*job.ID, false, q)
+		if err != nil {
+			return err
+		}
+		pending, running, complete, failed, lost, currentJobVersionAllocs := 0, 0, 0, 0, 0, 0
+		for _, alloc := range allocs {
+			// Check alloc only if it is for the current job version
+			if *job.Version == alloc.JobVersion {
+				if alloc.ClientStatus == "pending" {
+					pending += 1
+				} else if alloc.ClientStatus == "complete" {
+					complete += 1
+				} else if alloc.ClientStatus == "running" {
+					running += 1
+				} else if alloc.ClientStatus == "failed" {
+					failed += 1
+				} else if alloc.ClientStatus == "lost" {
+					lost += 1
+				}
+				currentJobVersionAllocs += 1
+			}
+		}
+
+		if running == currentJobVersionAllocs {
+			jobResource.Health = sdk.StatusReport_READY
+			jobResource.HealthMessage = fmt.Sprintf("Job %q is reporting ready!", state.Name)
+		} else if running > 0 && (complete > 0 || failed > 0 || pending > 0 || lost > 0) {
+			jobResource.Health = sdk.StatusReport_PARTIAL
+			jobResource.HealthMessage = fmt.Sprintf("Some allocations are running for Job %q!", state.Name)
+		} else if (complete + pending + failed + lost) == currentJobVersionAllocs {
+			jobResource.Health = sdk.StatusReport_DOWN
+			jobResource.HealthMessage = fmt.Sprintf("No allocations for Job %q are running!", state.Name)
+		}
+	} else if *job.Status == "pending" {
 		jobResource.Health = sdk.StatusReport_UNKNOWN
-		jobResource.HealthMessage = fmt.Sprintf("Job %q is reporting unknown!", state.Name)
+		jobResource.HealthMessage = fmt.Sprintf("Job %q is not scheduled!", state.Name)
+	} else if *job.Status == "dead" {
+		jobResource.Health = sdk.StatusReport_DOWN
+		jobResource.HealthMessage = fmt.Sprintf("Job %q is down!", state.Name)
 	}
 
 	if *job.StatusDescription != "" {
