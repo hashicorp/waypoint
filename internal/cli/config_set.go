@@ -141,7 +141,6 @@ func (c *ConfigSetCommand) Run(args []string) int {
 				},
 			}
 		}
-		//TODO: update to add flag to target runner by workspace and labels
 
 		// If we have a workspace flag set, set that.
 		if v := c.flagWorkspaceScope; v != "" {
@@ -153,7 +152,10 @@ func (c *ConfigSetCommand) Run(args []string) int {
 		// If we have a label flag set, set that.
 		if v := c.flagLabelScope; v != "" {
 			configVar.Target.LabelSelector = v
+			// If configs are set on runner instead of application, target runner
 		}
+
+		//TODO: update to add flag to target runner by workspace and labels
 
 		req.Variables = append(req.Variables, configVar)
 	}
