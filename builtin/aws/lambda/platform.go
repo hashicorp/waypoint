@@ -107,6 +107,9 @@ const (
 
 	// How long the function should run before terminating it.
 	DefaultTimeout = 60
+
+	// The instruction set architecture that the function supports.
+	DefaultArchitecture = lambda.ArchitectureX8664
 )
 
 const lambdaRolePolicy = `{
@@ -233,6 +236,11 @@ func (p *Platform) Deploy(
 		timeout = DefaultTimeout
 	}
 
+	architecture := p.config.Architecture
+	if architecture == "" {
+		architecture = DefaultArchitecture
+	}
+
 	step.Done()
 
 	step = sg.Add("Reading Lambda function: %s", src.App)
@@ -271,11 +279,22 @@ func (p *Platform) Deploy(
 		}
 
 		funcCfg, err := lamSvc.UpdateFunctionCode(&lambda.UpdateFunctionCodeInput{
-			FunctionName: aws.String(src.App),
-			ImageUri:     aws.String(img.Name()),
+			FunctionName:  aws.String(src.App),
+			ImageUri:      aws.String(img.Name()),
+			Architectures: aws.StringSlice([]string{architecture}),
 		})
 
 		if err != nil {
+			if aerr, ok := err.(awserr.Error); ok {
+				switch aerr.Code() {
+				case "ValidationException":
+					// likely here if Architectures was invalid
+					if architecture != lambda.ArchitectureX8664 && architecture != lambda.ArchitectureArm64 {
+						return nil, fmt.Errorf("architecture must be either x86_64 or arm64")
+					}
+					return nil, err
+				}
+			}
 			return nil, err
 		}
 
@@ -305,7 +324,8 @@ func (p *Platform) Deploy(
 				Code: &lambda.FunctionCode{
 					ImageUri: aws.String(img.Name()),
 				},
-				ImageConfig: &lambda.ImageConfig{},
+				ImageConfig:   &lambda.ImageConfig{},
+				Architectures: aws.StringSlice([]string{architecture}),
 			})
 
 			if err != nil {
@@ -313,6 +333,12 @@ func (p *Platform) Deploy(
 				if aerr, ok := err.(awserr.Error); ok {
 					switch aerr.Code() {
 					case "ResourceConflictException":
+						return nil, err
+					case "ValidationException":
+						// likely here if Architectures was an invalid
+						if architecture != lambda.ArchitectureX8664 && architecture != lambda.ArchitectureArm64 {
+							return nil, fmt.Errorf("architecture must be either x86_64 or arm64")
+						}
 						return nil, err
 					}
 				}
@@ -792,6 +818,11 @@ type Config struct {
 	// The number of seconds to wait for a function to complete it's work.
 	// Defaults to 256
 	Timeout int `hcl:"timeout,optional"`
+
+	// The instruction set architecture that the function supports.
+	// Valid values are: "x86_64", "arm64"
+	// Defaults to "x86_64".
+	Architecture string `hcl:"architecture,optional"`
 }
 
 var (
