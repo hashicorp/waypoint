@@ -797,6 +797,12 @@ deploy {
 		docs.Default("60"),
 	)
 
+	doc.SetField(
+		"architecture",
+		"The instruction set architecture that the function supports. Valid values are: \"x86_64\", \"arm64\"",
+		docs.Default("x86_64"),
+	)
+
 	return doc, nil
 }
 
