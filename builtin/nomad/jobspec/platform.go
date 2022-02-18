@@ -195,7 +195,7 @@ func (p *Platform) resourceJobStatus(
 	jobResource.StateJson = string(stateJson)
 
 	// If job is running, start checking evals, then allocs
-	if *job.Status == "running" {
+	if *job.Status == structs.JobStatusRunning {
 		// Get list of evaluations for job
 		evals, _, err := jobClient.Evaluations(*job.ID, q)
 		evalStatus := "unblocked"
@@ -262,10 +262,10 @@ func (p *Platform) resourceJobStatus(
 			jobResource.Health = sdk.StatusReport_UNKNOWN
 			jobResource.HealthMessage = fmt.Sprintf("Unknown eval status for job %q!", state.Name)
 		}
-	} else if *job.Status == "pending" {
+	} else if *job.Status == structs.JobStatusPending {
 		jobResource.Health = sdk.StatusReport_PARTIAL
 		jobResource.HealthMessage = fmt.Sprintf("Job %q is not scheduled!", state.Name)
-	} else if *job.Status == "dead" {
+	} else if *job.Status == structs.JobStatusDead {
 		jobResource.Health = sdk.StatusReport_DOWN
 		jobResource.HealthMessage = fmt.Sprintf("Job %q is down!", state.Name)
 	}
