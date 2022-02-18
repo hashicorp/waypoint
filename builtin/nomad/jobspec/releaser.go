@@ -161,12 +161,13 @@ func (r *Releaser) resourceJobCreate(
 			log.Debug(fmt.Sprintf("Healthy deadline: %s", d.String()))
 			ctx, cancel := context.WithDeadline(ctx, d)
 			defer cancel()
+			ticker := time.NewTicker(5 * time.Second)
 			groupHealthy := false
 			for !groupHealthy {
 				currentTaskGroupState = deploy.TaskGroups[group]
 				if currentTaskGroupState.HealthyAllocs < len(currentTaskGroupState.PlacedCanaries) {
 					select {
-					case <-time.After(5 * time.Second): // forces sleep for 5 seconds
+					case <-ticker.C:
 					case <-ctx.Done(): // cancelled
 						return status.Errorf(codes.Aborted, "Healthy deadline reached: %s", ctx.Err())
 					}
