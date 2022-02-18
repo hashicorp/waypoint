@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
+	"github.com/hashicorp/nomad/nomad/structs"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
@@ -193,43 +194,76 @@ func (p *Platform) resourceJobStatus(
 	})
 	jobResource.StateJson = string(stateJson)
 
-	// If job is running, start checking allocs
+	// If job is running, start checking evals, then allocs
 	if *job.Status == "running" {
+		// Get list of evaluations for job
+		evals, _, err := jobClient.Evaluations(*job.ID, q)
+		evalStatus := "unblocked"
+		for _, eval := range evals {
+			switch eval.Status {
+			case structs.EvalStatusBlocked:
+				evalStatus = "blocked"
+				break
+			case structs.EvalStatusPending:
+				break
+			case structs.EvalStatusComplete:
+				break
+			case structs.EvalStatusFailed:
+				break
+			case structs.EvalStatusCancelled:
+				break
+			default:
+				evalStatus = "unknown"
+			}
+		}
+
 		allocs, _, err := jobClient.Allocations(*job.ID, false, q)
 		if err != nil {
 			return err
 		}
-		pending, running, complete, failed, lost, currentJobVersionAllocs := 0, 0, 0, 0, 0, 0
+		pending, running, complete, failed, lost, unknown, currentJobVersionAllocs := 0, 0, 0, 0, 0, 0, 0
 		for _, alloc := range allocs {
 			// Check alloc only if it is for the current job version
 			if *job.Version == alloc.JobVersion {
-				if alloc.ClientStatus == "pending" {
+				switch alloc.ClientStatus {
+				case structs.AllocClientStatusPending:
 					pending += 1
-				} else if alloc.ClientStatus == "complete" {
+				case structs.AllocClientStatusComplete:
 					complete += 1
-				} else if alloc.ClientStatus == "running" {
+				case structs.AllocClientStatusRunning:
 					running += 1
-				} else if alloc.ClientStatus == "failed" {
+				case structs.AllocClientStatusFailed:
 					failed += 1
-				} else if alloc.ClientStatus == "lost" {
+				case structs.AllocClientStatusLost:
 					lost += 1
+				default:
+					unknown += 1
 				}
 				currentJobVersionAllocs += 1
 			}
 		}
 
-		if running == currentJobVersionAllocs {
+		if running == currentJobVersionAllocs && evalStatus == "unblocked" {
 			jobResource.Health = sdk.StatusReport_READY
 			jobResource.HealthMessage = fmt.Sprintf("Job %q is reporting ready!", state.Name)
+		} else if running == currentJobVersionAllocs && evalStatus == "blocked" {
+			jobResource.Health = sdk.StatusReport_PARTIAL
+			jobResource.HealthMessage = fmt.Sprintf("Allocs for job %q are running, but there is at least one blocked evaluation!", state.Name)
 		} else if running > 0 && (complete > 0 || failed > 0 || pending > 0 || lost > 0) {
 			jobResource.Health = sdk.StatusReport_PARTIAL
-			jobResource.HealthMessage = fmt.Sprintf("Some allocations are running for Job %q!", state.Name)
+			jobResource.HealthMessage = fmt.Sprintf("Some allocations are running for job %q!", state.Name)
 		} else if (complete + pending + failed + lost) == currentJobVersionAllocs {
 			jobResource.Health = sdk.StatusReport_DOWN
-			jobResource.HealthMessage = fmt.Sprintf("No allocations for Job %q are running!", state.Name)
+			jobResource.HealthMessage = fmt.Sprintf("No allocations for job %q are running!", state.Name)
+		} else if unknown > 0 {
+			jobResource.Health = sdk.StatusReport_UNKNOWN
+			jobResource.HealthMessage = fmt.Sprintf("Unknown allocation status for job %q!", state.Name)
+		} else if evalStatus == "unknown" {
+			jobResource.Health = sdk.StatusReport_UNKNOWN
+			jobResource.HealthMessage = fmt.Sprintf("Unknown eval status for job %q!", state.Name)
 		}
 	} else if *job.Status == "pending" {
-		jobResource.Health = sdk.StatusReport_UNKNOWN
+		jobResource.Health = sdk.StatusReport_PARTIAL
 		jobResource.HealthMessage = fmt.Sprintf("Job %q is not scheduled!", state.Name)
 	} else if *job.Status == "dead" {
 		jobResource.Health = sdk.StatusReport_DOWN
