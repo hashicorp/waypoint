@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/alb: Handle DuplicateListener errors from aws-alb releaser
+```
