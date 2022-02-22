@@ -57,7 +57,7 @@ func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithCreate(r.resourceJobCreate),
 			resource.WithDestroy(r.resourceJobDestroy),
 			resource.WithStatus(r.resourceJobStatus),
-			resource.WithPlatform("nomad"),
+			resource.WithPlatform("nomad-jobspec"),
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
 		)),
 	)
