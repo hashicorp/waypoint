@@ -69,7 +69,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithCreate(p.resourceJobCreate),
 			resource.WithDestroy(p.resourceJobDestroy),
 			resource.WithStatus(p.resourceJobStatus),
-			resource.WithPlatform("jobspec"),
+			resource.WithPlatform("nomad-jobspec"),
 		)),
 	)
 }
