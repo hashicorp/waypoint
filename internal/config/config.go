@@ -40,6 +40,9 @@ type Runner struct {
 	// Profile is the name of the on-demand runner configuration.
 	Profile string `hcl:"profile,optional"`
 
+	// Labels are the labels attached to the runner
+	Labels map[string]string `hcl:"labels,optional"`
+
 	// Note (XX): The other properties in this struct are only used on init,
 	// and don't really make sense being here.
 	// DataSource, for example, should be set at the project level, not with the runner...

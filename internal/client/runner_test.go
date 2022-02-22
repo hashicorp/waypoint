@@ -117,7 +117,26 @@ func Test_remoteOpPreferred(t *testing.T) {
 		require.True(remote)
 	})
 
-	t.Run("Choose local if no runner profile is set for the project, and there is no default", func(t *testing.T) {
+	t.Run("Choose remote if the app or project has runner labels set", func(t *testing.T) {
+		project = &pb.Project{
+			Name:          "test",
+			RemoteEnabled: true,
+			DataSource:    remoteCapableDataSource,
+			Applications: []*pb.Application{{
+				Name: "test-app",
+			}},
+		}
+		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
+		require.Nil(err)
+
+		runnerCfgs := []*configpkg.Runner{{Labels: map[string]string{"env": "test"}}}
+
+		remote, err := remoteOpPreferred(ctx, client, project, runnerCfgs, log)
+		require.Nil(err)
+		require.True(remote)
+	})
+
+	t.Run("Choose local if no runner profile or odr labels are set for the project, and there is no default", func(t *testing.T) {
 		project = &pb.Project{
 			Name:          "test",
 			RemoteEnabled: true,
