@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Replace panic with message when attempting to `config get -app` without a `-project` flag while outside a project directory
+```
