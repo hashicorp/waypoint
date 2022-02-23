@@ -105,7 +105,8 @@ func (r *Releaser) resourceJobCreate(
 			return nil
 		}
 	} else {
-		status.Errorf(codes.Aborted, "Job not found: %s", err.Error())
+		st.Step(terminal.StatusError, "Job not found.")
+		return nil
 	}
 
 	q := &api.QueryOptions{
@@ -242,6 +243,10 @@ func (r *Releaser) resourceJobStatus(
 	jobs, _, err := jobClient.PrefixList(state.Name)
 	if err != nil {
 		return err
+	} else if len(jobs) == 0 {
+		s.Status(terminal.StatusError)
+		s.Update("Job not found.")
+		return nil
 	}
 
 	jobResource := sdk.StatusReport_Resource{
