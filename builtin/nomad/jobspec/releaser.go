@@ -209,11 +209,12 @@ func (r *Releaser) resourceJobCreate(
 }
 
 func (r *Releaser) resourceJobDestroy(
+	log hclog.Logger,
 	client *nomadClient,
 	state *Resource_Job,
 	sg terminal.StepGroup,
 ) error {
-	// Do nothing because the platform will destroy the job for us
+	log.Trace("No resource destroyed")
 	return nil
 }
 
@@ -332,7 +333,7 @@ func (r *Releaser) Destroy(
 		}
 	}
 
-	return rm.DestroyAll(sg, ui)
+	return rm.DestroyAll(log, sg, ui)
 }
 
 func (r *Releaser) Status(
