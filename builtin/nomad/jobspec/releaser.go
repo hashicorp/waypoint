@@ -146,6 +146,7 @@ func (r *Releaser) resourceJobCreate(
 		}
 	}
 	if !canaryDeployment {
+		st.Step(terminal.StatusWarn, "Nomad canary allocations not detected in job task groups.")
 		log.Info("Canaries not detected")
 		return nil
 	}
