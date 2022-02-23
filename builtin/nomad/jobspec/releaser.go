@@ -52,7 +52,7 @@ func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 		resource.WithValueProvider(r.getNomadClient),
 		resource.WithDeclaredResourcesResp(dcr),
 		resource.WithResource(resource.NewResource(
-			resource.WithName(rmResourceJobName),
+			resource.WithName("promoted-job"),
 			resource.WithState(&Resource_Job{}),
 			resource.WithCreate(r.resourceJobCreate),
 			resource.WithDestroy(r.resourceJobDestroy),
