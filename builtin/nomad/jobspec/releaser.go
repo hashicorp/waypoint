@@ -258,7 +258,14 @@ func (r *Releaser) resourceJobStatus(
 		jobResource.Health = sdk.StatusReport_MISSING
 		jobResource.HealthMessage = sdk.StatusReport_MISSING.String()
 	} else if job == nil {
-		return status.Errorf(codes.FailedPrecondition, "Nomad job response cannot be empty")
+		s.Update("No job was found")
+		s.Status(terminal.StatusError)
+		s.Done()
+		s = sg.Add("")
+
+		jobResource.Name = state.Name
+		jobResource.Health = sdk.StatusReport_UNKNOWN
+		jobResource.HealthMessage = sdk.StatusReport_UNKNOWN.String()
 	} else {
 		jobResource.Id = *job.ID
 		jobResource.Name = *job.Name
