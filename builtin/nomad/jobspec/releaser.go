@@ -169,7 +169,7 @@ func (r *Releaser) resourceJobCreate(
 					select {
 					case <-ticker.C:
 					case <-ctx.Done(): // cancelled
-						return status.Errorf(codes.Aborted, "Healthy deadline reached: %s", ctx.Err())
+						return status.Errorf(codes.Aborted, "Context cancelled from timeout checking health of task group %q: %s", group, ctx.Err())
 					}
 					deploy, _, err = jobClient.LatestDeployment(*job.ID, q)
 					currentTaskGroupState = deploy.TaskGroups[group]
