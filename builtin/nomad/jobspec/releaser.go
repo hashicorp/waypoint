@@ -20,6 +20,10 @@ import (
 	"github.com/hashicorp/waypoint/builtin/nomad"
 )
 
+const (
+	rmResourcePromotedJobName = "promoted-job"
+)
+
 // Releaser is the ReleaseManager implementation for Nomad.
 type Releaser struct {
 	p      *Platform
@@ -52,7 +56,7 @@ func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 		resource.WithValueProvider(r.getNomadClient),
 		resource.WithDeclaredResourcesResp(dcr),
 		resource.WithResource(resource.NewResource(
-			resource.WithName("promoted-job"),
+			resource.WithName(rmResourcePromotedJobName),
 			resource.WithState(&Resource_Job{}),
 			resource.WithCreate(r.resourceJobCreate),
 			resource.WithDestroy(r.resourceJobDestroy),
@@ -331,8 +335,8 @@ func (r *Releaser) Destroy(
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
 	if release.ResourceState == nil {
-		rm.Resource(rmResourceJobName).SetState(&Resource_Job{
-			Name: rmResourceJobName,
+		rm.Resource(rmResourcePromotedJobName).SetState(&Resource_Job{
+			Name: rmResourcePromotedJobName,
 		})
 	} else {
 		// Load our set state
@@ -358,8 +362,8 @@ func (r *Releaser) Status(
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
 	if release.ResourceState == nil {
-		rm.Resource(rmResourceJobName).SetState(&Resource_Job{
-			Name: rmResourceJobName,
+		rm.Resource(rmResourcePromotedJobName).SetState(&Resource_Job{
+			Name: rmResourcePromotedJobName,
 		})
 	} else {
 		// Load our set state
@@ -383,7 +387,7 @@ func (r *Releaser) Status(
 
 	var jobResource *sdk.StatusReport_Resource
 	for _, r := range resources {
-		if r.Type == "job" {
+		if r.Type == rmResourcePromotedJobName {
 			jobResource = r
 			break
 		}
