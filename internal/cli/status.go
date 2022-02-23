@@ -267,6 +267,7 @@ func (c *StatusCommand) refreshAppStatus(
 		Application: app.Name,
 		Project:     project.Name,
 	}}
+
 	err := c.DoApp(c.Ctx, func(ctx context.Context, appClient *clientpkg.App) error {
 		// Get our API client
 		client := c.project.Client()
@@ -567,9 +568,14 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		return err
 	}
 
-	deployHeaders := []string{
+	// deployment and releases use the same headers, with the exception that
+	// deployment lists an additional item for instances count
+	releaseHeaders := []string{
 		"App Name", "Version", "Workspace", "Platform", "Artifact", "Lifecycle State",
 	}
+
+	// Add "Instance Count" for deployment summary headers
+	deployHeaders := append(releaseHeaders, "Instances Count")
 
 	deployTbl := terminal.NewTable(deployHeaders...)
 
@@ -585,7 +591,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	if len(respDeployList.Deployments) > 0 {
 		deployBundle := respDeployList.Deployments[0]
 		deploy := deployBundle.Deployment
-		appDeployStatus := respDeployList.Deployments[0].LatestStatusReport
+		appDeployStatus := deployBundle.LatestStatusReport
 		statusColor := ""
 
 		var details string
@@ -608,6 +614,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 			deploy.Component.Name,
 			details,
 			deploy.Status.State.String(),
+			fmt.Sprintf("%d", appDeployStatus.InstancesCount),
 		}
 
 		// Add column data to table
@@ -675,7 +682,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	}
 
 	// Same headers as deploy
-	releaseTbl := terminal.NewTable(deployHeaders...)
+	releaseTbl := terminal.NewTable(releaseHeaders...)
 	releaseResourcesTbl := terminal.NewTable(resourcesHeaders...)
 
 	releaseUnimplemented := true
