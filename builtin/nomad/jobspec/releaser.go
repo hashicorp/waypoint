@@ -422,8 +422,11 @@ func (r *Releaser) Status(
 
 // ReleaserConfig is the configuration structure for the Releaser.
 type ReleaserConfig struct {
-	Groups         []string `hcl:"groups,optional"`
-	FailDeployment bool     `hcl:"fail_deployment,optional"`
+	// List of task group names which are to be promoted
+	Groups []string `hcl:"groups,optional"`
+
+	// If true, fails the canary deployment
+	FailDeployment bool `hcl:"fail_deployment,optional"`
 }
 
 type nomadClient struct {
