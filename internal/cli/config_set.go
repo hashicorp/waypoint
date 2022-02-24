@@ -116,6 +116,10 @@ func (c *ConfigSetCommand) Run(args []string) int {
 			}
 
 		case "app":
+			if c.flagApp == "" {
+				fmt.Fprintf(os.Stderr, "-scope requires -app set if scope is 'app'")
+				return 1
+			}
 			configVar.Target.AppScope = &pb.ConfigVar_Target_Application{
 				Application: &pb.Ref_Application{
 					Project:     projectRef.Project,
