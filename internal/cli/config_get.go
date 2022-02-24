@@ -49,12 +49,6 @@ func (c *ConfigGetCommand) Run(args []string) int {
 		return 1
 	}
 
-	// Pre-calculate our project ref since we reuse this.
-	projectRef := &pb.Ref_Project{Project: c.flagProject}
-	if c.flagProject == "" && c.project != nil {
-		projectRef = c.project.Ref()
-	}
-
 	// Get our API client
 	client := c.project.Client()
 
@@ -69,15 +63,20 @@ func (c *ConfigGetCommand) Run(args []string) int {
 		return 1
 	}
 
+	if c.refProject == nil {
+		fmt.Fprintf(os.Stderr, "config-get requires project flag outside the project directory")
+		return 1
+	}
+
 	req := &pb.ConfigGetRequest{
 		Prefix: prefix,
-		Scope:  &pb.ConfigGetRequest_Project{Project: projectRef},
+		Scope:  &pb.ConfigGetRequest_Project{Project: c.refProject},
 	}
 
 	if c.flagApp != "" {
 		req.Scope = &pb.ConfigGetRequest_Application{
 			Application: &pb.Ref_Application{
-				Project:     c.project.Ref().Project,
+				Project:     c.refProject.Project,
 				Application: c.flagApp,
 			},
 		}
