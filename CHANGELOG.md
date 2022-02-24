@@ -2,10 +2,25 @@
 
 FEATURES:
 
+* **Targetable Runners:** Allow apps and projects to target specific runner profiles.
+Allow runner profiles to target specific remote runners. [[GH-2862](https://github.com/hashicorp/waypoint/issues/2862)]
+* **Introduce executing Trigger URL configurations via HTTP**. Users can
+start a trigger via HTTP and stream the job event stream output directly over
+http. [[GH-2970](https://github.com/hashicorp/waypoint/issues/2970)]
+
 IMPROVEMENTS:
+
+* plugin/docker: Add parameter to disable the build cache [[GH-2953](https://github.com/hashicorp/waypoint/issues/2953)]
 
 BUG FIXES:
 
+* cli: Fix panic on nil value for project [[GH-2968](https://github.com/hashicorp/waypoint/issues/2968)]
+* cli: Replace panic with message when attempting to `config get -app` without a `-project` flag while outside a project directory [[GH-3039](https://github.com/hashicorp/waypoint/issues/3039)]
+* cli: requires -app flag if `config set -scope=app` is set [[GH-3040](https://github.com/hashicorp/waypoint/issues/3040)]
+* server: Cache Horizon hostname URL lookup when listing deployments in the
+`UI_ListDeployments bundle`. Now we look up the deployment URL once, and craft
+the deployment URLs based on the original hostname lookup. [[GH-2950](https://github.com/hashicorp/waypoint/issues/2950)]
+* ui: fixed issue with focus jumping back to the skip link on automatic refresh [[GH-3019](https://github.com/hashicorp/waypoint/issues/3019)]
 
 ## 0.7.1 (January 25, 2022)
 
