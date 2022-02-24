@@ -1,0 +1,3 @@
+```release-note:bug
+cli: requires -app flag if `config set -scope=app` is set
+```
