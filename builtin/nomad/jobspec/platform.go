@@ -117,7 +117,7 @@ func (p *Platform) resourceJobCreate(
 	client.NomadClient.SetNamespace(*job.Namespace)
 
 	// Register job
-	st.Update(fmt.Sprintf("Registering job %q...", *job.Name))
+	st.Update("Registering job " + *job.Name + "...")
 	regResult, _, err := jobclient.Register(job, nil)
 	if err != nil {
 		return err
@@ -129,7 +129,7 @@ func (p *Platform) resourceJobCreate(
 
 	// Wait on the allocation
 	evalID := regResult.EvalID
-	st.Update(fmt.Sprintf("Monitoring evaluation %q", evalID))
+	st.Update("Monitoring evaluation " + evalID)
 	if err := nomad.NewMonitor(st, client.NomadClient).Monitor(evalID); err != nil {
 		return err
 	}

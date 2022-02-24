@@ -159,7 +159,7 @@ func (r *Releaser) resourceJobCreate(
 	var currentTaskGroupState *api.DeploymentState
 	for _, group := range groupsToPromote {
 		if group != "" {
-			st.Update(fmt.Sprintf("Checking task group: %s", group))
+			st.Update("Checking task group: " + group)
 			// TODO: Update to pair a task group's name with its healthy deadline, so
 			//       we can set the deadline accordingly
 			//       d := time.Now().Add(time.Nanosecond * time.Duration(*job.TaskGroups[indexOfTaskGroupInSliceOfTaskGroupsOfJob].Update.HealthyDeadline))
@@ -201,7 +201,7 @@ func (r *Releaser) resourceJobCreate(
 		return err
 	}
 
-	st.Update(fmt.Sprintf("Monitoring evaluation %s", string(u.EvalID)))
+	st.Update("Monitoring evaluation " + u.EvalID)
 	if err := nomad.NewMonitor(st, client.NomadClient).Monitor(u.EvalID); err != nil {
 		return err
 	}
