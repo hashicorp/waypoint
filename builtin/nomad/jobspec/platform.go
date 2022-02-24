@@ -268,7 +268,6 @@ func (p *Platform) resourceJobStatus(
 		jobResource.HealthMessage = *job.StatusDescription
 	}
 
-	s.Update("Finished building report for Nomad platform")
 	s.Done()
 
 	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
