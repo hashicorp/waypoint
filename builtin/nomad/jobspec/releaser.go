@@ -119,6 +119,12 @@ func (r *Releaser) resourceJobCreate(
 		return status.Errorf(codes.Aborted, "Unable to fetch Nomad job: %s", err.Error())
 	}
 
+	// if first deployment of the job, no chance of it being a canary deployment
+	if *job.Version == 0 {
+		st.Step(terminal.StatusOK, "This is the first deployment of the job - no canaries to promote.")
+		return nil
+	}
+
 	st.Update("Getting latest deployments for job")
 	deploy, _, err := jobClient.LatestDeployment(*job.ID, q)
 	if err != nil {
