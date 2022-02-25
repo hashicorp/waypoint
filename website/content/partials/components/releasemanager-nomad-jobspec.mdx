@@ -27,11 +27,11 @@ application. In the future, this may source from Consul.
 ```hcl
 // The waypoint.hcl file
 release {
-	use "nomad-jobspec-canary" {
-		groups = [
-			"app"
-		]
-	}
+  use "nomad-jobspec-canary" {
+    groups = [
+      "app"
+    ]
+  }
 }
 
 // The app.nomad.tpl file
@@ -44,7 +44,7 @@ job "web" {
       port "http" {
         to = 80
       }
-		}
+    }
 
     // Setting a canary in the update stanza indicates a canary deployment
     update {
