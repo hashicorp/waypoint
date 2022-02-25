@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+	"strconv"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -178,6 +179,7 @@ func (r *Releaser) resourceJobCreate(
 			for !groupHealthy {
 				currentTaskGroupState = deploy.TaskGroups[group]
 				if currentTaskGroupState.HealthyAllocs < len(currentTaskGroupState.PlacedCanaries) {
+					st.Update("Waiting on allocations to become healthy: healthy allocs=" + strconv.Itoa(currentTaskGroupState.HealthyAllocs) + " placed canaries=" + strconv.Itoa(len(currentTaskGroupState.PlacedCanaries)))
 					select {
 					case <-ticker.C:
 					case <-ctx.Done(): // cancelled
