@@ -180,7 +180,7 @@ func New(opts ...Option) (*Runner, error) {
 		runner.runningCtx = metadata.NewOutgoingContext(
 			runner.runningCtx,
 			metadata.New(map[string]string{
-				"cookie": v,
+				"wpcookie": v,
 			}),
 		)
 	}
@@ -263,7 +263,7 @@ func (r *Runner) Start(ctx context.Context) error {
 		tokenCtx = metadata.NewOutgoingContext(
 			tokenCtx,
 			metadata.New(map[string]string{
-				"cookie": r.cookie,
+				"wpcookie": r.cookie,
 			}),
 		)
 	} else if !adopt {

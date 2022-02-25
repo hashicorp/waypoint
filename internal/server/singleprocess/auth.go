@@ -126,7 +126,7 @@ func (s *service) tokenFromContext(ctx context.Context) *pb.Token {
 // or blank if none (or a blank cookie) is provided.
 func (s *service) cookieFromRequest(ctx context.Context) string {
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		if c, ok := md["cookie"]; ok && len(c) > 0 {
+		if c, ok := md["wpcookie"]; ok && len(c) > 0 {
 			return c[0]
 		}
 	}

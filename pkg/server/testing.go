@@ -236,6 +236,6 @@ func TestVersionInfoResponse() *pb.GetVersionInfoResponse {
 func TestCookieContext(ctx context.Context, t testing.T, c pb.WaypointClient) context.Context {
 	resp, err := c.GetServerConfig(ctx, &empty.Empty{})
 	require.NoError(t, err)
-	md := metadata.New(map[string]string{"cookie": resp.Config.Cookie})
+	md := metadata.New(map[string]string{"wpcookie": resp.Config.Cookie})
 	return metadata.NewOutgoingContext(ctx, md)
 }
