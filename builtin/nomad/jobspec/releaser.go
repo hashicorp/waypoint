@@ -440,7 +440,7 @@ type ReleaserConfig struct {
 	// List of task group names which are to be promoted
 	Groups []string `hcl:"groups,optional"`
 
-	// If true, fails the canary deployment
+	// If true, marks the deployment as failed 
 	FailDeployment bool `hcl:"fail_deployment,optional"`
 }
 
@@ -480,12 +480,11 @@ application. In the future, this may source from Consul.
 	doc.Example(`
 // The waypoint.hcl file
 release {
-	use "nomad-jobspec-canary" {
-		groups = [
-			"app"
-		]
-		fail_deployment = false
-	}
+  use "nomad-jobspec-canary" {
+    groups = [
+      "app"
+    ]
+  }
 }
 
 // The app.nomad.tpl file
@@ -493,35 +492,35 @@ job "web" {
   datacenters = ["dc1"]
 
   group "app" {
-		network {
+    network {
       mode = "bridge"
       port "http" {
         to = 80
       }
-		}
+    }
 
-		// Setting a canary in the update stanza indicates a canary deployment
-		update {
-			max_parallel = 1
-			canary       = 1
-			auto_revert  = true
-			auto_promote = false
-			health_check = "task_states"
-		}
+    // Setting a canary in the update stanza indicates a canary deployment
+    update {
+      max_parallel = 1
+      canary       = 1
+      auto_revert  = true
+      auto_promote = false
+      health_check = "task_states"
+    }
 
-		service {
-			name = "app"
-			port = 80
-			connect {
-				sidecar_service {}
-			}
-		}
+    service {
+      name = "app"
+      port = 80
+      connect {
+        sidecar_service {}
+      }
+    }
 
     task "app" {
       driver = "docker"
       config {
         image = "${artifact.image}:${artifact.tag}"
-				ports  = ["http"]
+        ports  = ["http"]
       }
 
       env {
@@ -581,7 +580,7 @@ job "web" {
 
 	doc.SetField(
 		"fail_deployment",
-		"If true, fails the canary deployment.",
+		"If true, marks the deployment as failed.",
 	)
 
 	return doc, nil
