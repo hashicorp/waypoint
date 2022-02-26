@@ -193,7 +193,7 @@ func (s *State) onDemandRunnerGet(
 		next := iter.Next()
 		if next == nil {
 			// Indicates that there isn't one of the given name.
-			return nil, status.Errorf(codes.NotFound, "ondemand runner config not found")
+			return nil, status.Errorf(codes.NotFound, "ondemand runner config %q, not found", ref.Name)
 		}
 
 		idx := next.(*onDemandRunnerIndexRecord)

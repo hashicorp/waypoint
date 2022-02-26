@@ -377,14 +377,6 @@ func (s *service) onDemandRunnerStartJob(
 		return nil, "", status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
 	}
 
-	_, err = s.GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
-		Config: job.OndemandRunner,
-	})
-	if err != nil {
-		return nil, "", status.Errorf(codes.FailedPrecondition,
-			"Failed to get on-demand runner config by name %q, id %q: %s",
-			job.OndemandRunner.Name, job.OndemandRunner.Id, err)
-	}
 	// This will be either "Any" or a specific static runner.
 	job.TargetRunner = od.TargetRunner
 
