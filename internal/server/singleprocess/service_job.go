@@ -165,6 +165,8 @@ func (s *service) queueJobReqToJob(
 		}
 	}
 
+	// THIS IS THE PART WE NEED TO CHANGE.
+
 	// If the job has any target runner, it is a remote job.
 	// We attempt to spawn an on-demand runner for the job, if it doesn't already have an ODR assigned, use a default.
 	if _, anyTarget := job.TargetRunner.Target.(*pb.Ref_Runner_Any); anyTarget {
@@ -375,6 +377,9 @@ func (s *service) onDemandRunnerStartJob(
 		return nil, "", status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
 	}
 
+	_, err = s.GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
+		Config: job.OndemandRunner,
+	})
 	if err != nil {
 		return nil, "", status.Errorf(codes.FailedPrecondition,
 			"Failed to get on-demand runner config by name %q, id %q: %s",

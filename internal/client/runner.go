@@ -117,7 +117,7 @@ func remoteOpPreferred(ctx context.Context, client pb.WaypointClient, project *p
 			log.Warn("An explicit ODR profile is set - choosing remote operations for all app operations.")
 			return true, nil
 		}
-		if runnerCfg.Labels != nil {
+		if runnerCfg.TargetLabels != nil {
 			log.Warn("On-demand runner labels are set - choosing remote operations for all app operations.")
 			return true, nil
 		}

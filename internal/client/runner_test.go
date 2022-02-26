@@ -129,7 +129,7 @@ func Test_remoteOpPreferred(t *testing.T) {
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
 		require.Nil(err)
 
-		runnerCfgs := []*configpkg.Runner{{Labels: map[string]string{"env": "test"}}}
+		runnerCfgs := []*configpkg.Runner{{TargetLabels: map[string]string{"env": "test"}}}
 
 		remote, err := remoteOpPreferred(ctx, client, project, runnerCfgs, log)
 		require.Nil(err)

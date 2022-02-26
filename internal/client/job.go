@@ -202,6 +202,7 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 // The receiver must be careful to not block sending to mon as it will
 // block the job state processing loop.
 func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.UI, monCh chan pb.Job_State) (*pb.Job_Result, error) {
+	log := c.logger.Named("doJobMonitored")
 	isLocal, ctx, err := c.setupLocalJobSystem(ctx)
 	if err != nil {
 		return nil, err
@@ -245,8 +246,20 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 		}
 		// If runner config is found, assign to job
 		if configRunner != nil {
-			job.OndemandRunner = &pb.Ref_OnDemandRunnerConfig{
-				Name: configRunner.Profile,
+			if configRunner.Profile != "" {
+				job.OndemandRunner = &pb.Ref_OnDemandRunnerConfig{
+					Name: configRunner.Profile,
+				}
+			}
+			if configRunner.TargetLabels != nil {
+				if job.OndemandRunner != nil {
+					log.Warn("Both runner profile and target labels are set, profile takes precedence.")
+				} else {
+					//	runners, err := c.client.ListRunners(ctx, &pb.ListRunnersRequest{})
+					//	if err != nil {
+					//		errors.Wrapf(err, "no runners found.")
+					//	}
+				}
 			}
 		}
 	}

@@ -41,7 +41,7 @@ type Runner struct {
 	Profile string `hcl:"profile,optional"`
 
 	// Labels are the labels attached to the runner
-	Labels map[string]string `hcl:"labels,optional"`
+	TargetLabels map[string]string `hcl:"target_labels,optional"`
 
 	// Note (XX): The other properties in this struct are only used on init,
 	// and don't really make sense being here.
