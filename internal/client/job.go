@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
@@ -236,15 +237,19 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 		}
 	} else {
 		var configRunner *configpkg.Runner
-		// Find runner configuration on the app
+		// Find runner config on the app
 		if job.Application != nil {
 			configRunner = c.waypointHCL.ConfigAppRunner(job.Application.Application)
 		}
-		// If not on app, try to find it on the project
-		if configRunner == nil {
+		// Find runner config on the project
+		if configRunner != nil {
+			if c.waypointHCL.ConfigRunner() != nil {
+				log.Warn("runner configurations found on both app and project, app takes precedence.")
+			}
+		} else {
 			configRunner = c.waypointHCL.ConfigRunner()
 		}
-		// If runner config is found, assign to job
+		// If runner config exists, assign to job
 		if configRunner != nil {
 			if configRunner.Profile != "" {
 				job.OndemandRunner = &pb.Ref_OnDemandRunnerConfig{
@@ -253,12 +258,23 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 			}
 			if configRunner.TargetLabels != nil {
 				if job.OndemandRunner != nil {
-					log.Warn("Both runner profile and target labels are set, profile takes precedence.")
+					log.Warn("both runner profile and target labels are set, profile takes precedence.")
 				} else {
-					//	runners, err := c.client.ListRunners(ctx, &pb.ListRunnersRequest{})
-					//	if err != nil {
-					//		errors.Wrapf(err, "no runners found.")
-					//	}
+					runners, err := c.client.ListRunners(ctx, &pb.ListRunnersRequest{})
+					if err != nil {
+						errors.Wrapf(err, "no runners found.")
+					}
+					for _, r := range runners.Runners {
+						if reflect.DeepEqual(r.Labels, configRunner.TargetLabels) {
+							job.TargetRunner = &pb.Ref_Runner{
+								Target: &pb.Ref_Runner_Id{
+									Id: &pb.Ref_RunnerId{
+										Id: r.Id,
+									},
+								},
+							}
+						}
+					}
 				}
 			}
 		}
