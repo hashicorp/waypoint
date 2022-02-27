@@ -408,6 +408,8 @@ func (b *Builder) Build(
 	ui.Output("Image built: %s (%s)", result.Name(), inspect.Architecture,
 		terminal.WithSuccessStyle())
 
+	result.Architecture = inspect.Architecture
+
 	return result, nil
 }
 
