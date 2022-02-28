@@ -165,10 +165,8 @@ func (s *service) queueJobReqToJob(
 		}
 	}
 
-	// THIS IS THE PART WE NEED TO CHANGE.
-
-	// If the job has any target runner, it is a remote job.
-	// We attempt to spawn an on-demand runner for the job, if it doesn't already have an ODR assigned, use a default.
+	// If the job has 'any' as a target runner, it is a remote job that wasn't targeted with labels
+	// We spawn an on-demand runner for the job; if it doesn't already have a profile assigned, use a default.
 	if _, anyTarget := job.TargetRunner.Target.(*pb.Ref_Runner_Any); anyTarget {
 		if job.OndemandRunner == nil {
 			ods, err := s.state.OnDemandRunnerConfigDefault()
