@@ -262,7 +262,11 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 				} else {
 					runners, err := c.client.ListRunners(ctx, &pb.ListRunnersRequest{})
 					if err != nil {
-						errors.Wrapf(err, "no runners found.")
+						return nil, err
+					}
+					if len(runners.Runners) == 0 {
+						return nil, status.Errorf(codes.NotFound,
+							"no targetable runners found.")
 					}
 					for _, r := range runners.Runners {
 						if reflect.DeepEqual(r.Labels, configRunner.TargetLabels) {
