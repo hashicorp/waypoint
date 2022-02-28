@@ -61,7 +61,7 @@ func (c *ContextCreateCommand) Flags() *flag.Sets {
 			Name:    "set-default",
 			Target:  &c.flagSetDefault,
 			Default: true,
-			Usage:   "Set this context as the new default for the CLI. Defaults to true.",
+			Usage:   "Set this context as the new default for the CLI.",
 		})
 		f.StringVar(&flag.StringVar{
 			Name:   "server-addr",
