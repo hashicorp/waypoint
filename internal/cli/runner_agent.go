@@ -178,14 +178,10 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	// because we do a close later in this function more gracefully.
 	defer runner.Close()
 
-	// Start the runner
-	log.Info("starting runner", "id", runner.Id())
-	if err := runner.Start(ctx); err != nil {
-		log.Error("error starting runner", "err", err)
-		return 1
-	}
-
 	// If we have a liveness address setup, start the liveness server.
+	// We need to do this before starting the runner, because the runner
+	// startup might block on waiting for adoption, and we need
+	// the underlying platform to keep the runner alive until that completes
 	if addr := c.flagLivenessTCPAddr; addr != "" {
 		ln, err := net.Listen("tcp", addr)
 		if err != nil {
@@ -216,6 +212,13 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 				conn.Close()
 			}
 		}()
+	}
+
+	// Start the runner
+	log.Info("starting runner", "id", runner.Id())
+	if err := runner.Start(ctx); err != nil {
+		log.Error("error starting runner", "err", err)
+		return 1
 	}
 
 	// Accept jobs in goroutine so that we can interrupt it.
