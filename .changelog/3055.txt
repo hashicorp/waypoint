@@ -1,3 +1,3 @@
 ```release-note:improvement
-cli: Add a way to `waypoint context create` to set the Waypoint server platform
+cli: Add a way for `waypoint context create` to set the Waypoint server platform
 ```
