@@ -337,7 +337,7 @@ func (p *Platform) Deploy(
 					case "ValidationException":
 						// likely here if Architectures was an invalid
 						if architecture != lambda.ArchitectureX8664 && architecture != lambda.ArchitectureArm64 {
-							return nil, fmt.Errorf("architecture must be either x86_64 or arm64")
+							return nil, fmt.Errorf("architecture must be either \"x86_64\" or \"arm64\"")
 						}
 						return nil, err
 					}
