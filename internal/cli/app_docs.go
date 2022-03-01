@@ -383,7 +383,7 @@ func (c *AppDocsCommand) mdxFormatConfigSourcer(name, ct string, doc *docs.Docum
 
 	if len(doc.Fields()) > 0 {
 		fmt.Fprintf(w, "\n\n### Source Parameters\n\n"+
-			"The parameters below are used with `waypoint config set-source` to configure\n"+
+			"The parameters below are used with `waypoint config source-set` to configure\n"+
 			"the behavior this plugin. These are _not_ used in `dynamic` calls. The\n"+
 			"parameters used for `dynamic` are in the previous section.\n\n")
 
