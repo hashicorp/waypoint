@@ -232,6 +232,11 @@ func (s *service) wrapJobWithRunner(
 	if err != nil {
 		return nil, err
 	}
+	if od == nil {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"the on-demand runner config for id %q and job %q was nil",
+			source.OndemandRunner.Id, source.Id)
+	}
 
 	// Generate our job to start the ODR
 	startJob, runnerId, err := s.onDemandRunnerStartJob(ctx, source, od)
