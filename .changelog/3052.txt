@@ -1,0 +1,3 @@
+```release-note:bug
+runner: start health check before blocking on adoption
+```
