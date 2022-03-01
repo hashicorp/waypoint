@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 	"strconv"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -89,6 +89,7 @@ func (r *Releaser) resourceJobCreate(
 	state *Resource_Job,
 	client *nomadClient,
 	st terminal.Status,
+	sg terminal.StepGroup,
 ) error {
 	// Set up clients
 	jobClient := client.NomadClient.Jobs()
@@ -319,11 +320,13 @@ func (r *Releaser) Release(
 	// TODO: Replace ui.Status with StepGroups once this bug
 	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
 	st := ui.Status()
+	sg := ui.StepGroup()
 	defer st.Close()
+	defer sg.Wait()
 
 	rm := r.resourceManager(log, dcr)
 	if err := rm.CreateAll(
-		ctx, log, st, &result, target,
+		ctx, log, st, sg, &result, target,
 	); err != nil {
 		return nil, err
 	}
@@ -442,7 +445,7 @@ type ReleaserConfig struct {
 	// List of task group names which are to be promoted
 	Groups []string `hcl:"groups,optional"`
 
-	// If true, marks the deployment as failed 
+	// If true, marks the deployment as failed
 	FailDeployment bool `hcl:"fail_deployment,optional"`
 }
 
