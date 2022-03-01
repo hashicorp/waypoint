@@ -12,7 +12,8 @@ func DockerArchitectureMapper(src string, log hclog.Logger) string {
 		return lambda.ArchitectureX8664
 	case "arm64", "aarch64":
 		return lambda.ArchitectureArm64
+	default:
+		log.Warn("unsupported docker architecture", "arch", src, "defaulting to:", lambda.ArchitectureX8664)
+		return lambda.ArchitectureX8664
 	}
-	log.Warn("unsupported docker architecture", "arch", src, "defaulting to:", lambda.ArchitectureX8664)
-	return lambda.ArchitectureX8664
 }
