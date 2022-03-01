@@ -65,6 +65,12 @@ func (c *ContextCreateCommand) Flags() *flag.Sets {
 			Target: &c.flagConfig.Server.AuthToken,
 			Usage:  "Authentication token to use to connect to the server.",
 		})
+		f.StringVar(&flag.StringVar{
+			Name:    "server-platform",
+			Target:  &c.flagConfig.Server.Platform,
+			Default: "n/a",
+			Usage:   "The current platform that Waypoint server is running on.",
+		})
 		f.BoolVar(&flag.BoolVar{
 			Name:    "server-tls",
 			Target:  &c.flagConfig.Server.Tls,
