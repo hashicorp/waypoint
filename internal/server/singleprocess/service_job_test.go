@@ -480,6 +480,21 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	// Simplify writing tests
 	type Req = pb.QueueJobRequest
 
+	// Create with no ODR should error
+	queueResp, err := client.QueueJob(ctx, &Req{
+		Job: serverptypes.TestJobNew(t, &pb.Job{
+			Application: &pb.Ref_Application{
+				Application: "app",
+				Project:     "proj",
+			},
+			OndemandRunner: &pb.Ref_OnDemandRunnerConfig{
+				Name: "fake",
+			},
+		}),
+	})
+	require.Error(err)
+	require.Empty(queueResp)
+
 	// Create an ODR profile
 	odr := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
 		PluginType:   "magic-carpet",
@@ -502,7 +517,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	require.NoError(err)
 
 	// Create, should get an ID back
-	queueResp, err := client.QueueJob(ctx, &Req{
+	queueResp, err = client.QueueJob(ctx, &Req{
 		Job: serverptypes.TestJobNew(t, &pb.Job{
 			Application: &pb.Ref_Application{
 				Application: "app",
