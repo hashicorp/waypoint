@@ -1,0 +1,3 @@
+```release-note:improvements
+plugin/aws-lambda: add support for lambda `architecture` ("x86_64" or "arm64")
+```
