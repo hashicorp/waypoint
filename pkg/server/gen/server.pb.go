@@ -496,7 +496,7 @@ type Runner_AdoptionState int32
 const (
 	// New runner we've never seen before or has been forgotten.
 	// Runners in this state will wait for adoption.
-	Runner_NEW Runner_AdoptionState = 0
+	Runner_PENDING Runner_AdoptionState = 0
 	// Runner provided a valid runner token despite not being explicitly
 	// adopted. This type of runner can be forcibly rejected later such
 	// that pre-adoption doesn't work at all.
@@ -5007,7 +5007,7 @@ func (x *Runner) GetAdoptionState() Runner_AdoptionState {
 	if x != nil {
 		return x.AdoptionState
 	}
-	return Runner_NEW
+	return Runner_PENDING
 }
 
 type isRunner_Kind interface {

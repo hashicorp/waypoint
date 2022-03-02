@@ -2269,8 +2269,8 @@ message Runner {
   // be given work, but are also explicit about how they were adopted.
   enum AdoptionState {
     // New runner we've never seen before or has been forgotten.
-    // Runners in this state will wait for adoption.
-    NEW = 0;
+    // Runners in this state are pending adoption.
+    PENDING = 0;
 
     // Runner provided a valid runner token despite not being explicitly
     // adopted. This type of runner can be forcibly rejected later such
@@ -4386,7 +4386,7 @@ message GenerateRunnerTokenRequest {
   // The set of labels to restrict this runner token to work for. The runner
   // labels must match this label set exactly. If this is not set, then runners
   // with any labels may use the resulting token.
-  map<string,string> labels = 3;
+  map<string, string> labels = 3;
 }
 
 // Passed with GenerateInviteToken with the params on how the invite token should
