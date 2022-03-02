@@ -279,6 +279,12 @@ func (s *service) onDemandRunnerStartJob(
 ) (*pb.Job, string, error) {
 	log := hclog.FromContext(ctx)
 
+	if od == nil {
+		return nil, "", status.Errorf(codes.FailedPrecondition,
+			"the on-demand runner config for id %q and job %q was nil",
+			source.OndemandRunner.Id, source.Id)
+	}
+
 	// Generate a unique ID for the runner
 	runnerId, err := server.Id()
 	if err != nil {
