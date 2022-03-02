@@ -36,6 +36,10 @@ export default Factory.extend({
     component: association('release-manager', { name: 'nomad-jobspec' }),
   }),
 
+  'nomad-jobspec-canary': trait({
+    component: association('release-manager', { name: 'nomad-jobspec-canary' }),
+  }),
+
   kubernetes: trait({
     component: association('release-manager', { name: 'kubernetes' }),
   }),

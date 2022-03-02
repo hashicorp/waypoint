@@ -2,23 +2,30 @@ package jobspec
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strings"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint/builtin/nomad"
 )
 
 const (
-	metaId = "waypoint.hashicorp.com/id"
+	metaId            = "waypoint.hashicorp.com/id"
+	rmResourceJobName = "job"
 )
 
 // Platform is the Platform implementation for Nomad.
@@ -46,37 +53,60 @@ func (p *Platform) GenerationFunc() interface{} {
 	return p.Generation
 }
 
-// Deploy deploys an image to Nomad.
-func (p *Platform) Deploy(
-	ctx context.Context,
-	log hclog.Logger,
-	src *component.Source,
-	img *docker.Image,
-	deployConfig *component.DeploymentConfig,
-	ui terminal.UI,
-) (*nomad.Deployment, error) {
-	// We'll update the user in real time
-	sg := ui.StepGroup()
-	defer sg.Wait()
-	s := sg.Add("Initializing the Nomad client...")
-	defer func() { s.Abort() }()
+// StatusFunc implements component.Status
+func (p *Platform) StatusFunc() interface{} {
+	return p.Status
+}
 
+func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
+	return resource.NewManager(
+		resource.WithLogger(log.Named("resource_manager")),
+		resource.WithValueProvider(p.getNomadClient),
+		resource.WithDeclaredResourcesResp(dcr),
+		resource.WithResource(resource.NewResource(
+			resource.WithName(rmResourceJobName),
+			resource.WithState(&Resource_Job{}),
+			resource.WithCreate(p.resourceJobCreate),
+			resource.WithDestroy(p.resourceJobDestroy),
+			resource.WithStatus(p.resourceJobStatus),
+			resource.WithPlatform("nomad-jobspec"),
+		)),
+	)
+}
+
+// getNomadJobspecClient is a value provider for our resource manager and provides
+// the client connection used by resources to interact with Nomad.
+func (p *Platform) getNomadClient() (*nomadClient, error) {
 	// Get our client
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return nil, err
 	}
-	jobclient := client.Jobs()
+	return &nomadClient{
+		NomadClient: client,
+	}, nil
+}
+
+func (p *Platform) resourceJobCreate(
+	ctx context.Context,
+	client *nomadClient,
+	result *Deployment,
+	deployConfig *component.DeploymentConfig,
+	img *docker.Image,
+	ui terminal.UI,
+	state *Resource_Job,
+) error {
+	st := ui.Status()
+	defer st.Close()
+	jobclient := client.NomadClient.Jobs()
 
 	// Parse the HCL
-	s.Update("Parsing the job specification...")
-	job, err := p.jobspec(client, p.config.Jobspec)
+	st.Update("Parsing the job specification...")
+	job, err := p.jobspec(client.NomadClient, p.config.Jobspec)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// Create our deployment and set an initial ID
-	var result nomad.Deployment
 	result.Id = deployConfig.Id
 	result.Name = *job.ID
 
@@ -84,25 +114,218 @@ func (p *Platform) Deploy(
 	job.SetMeta(metaId, result.Id)
 
 	// Update our client to use the Namespace set in the jobspec
-	client.SetNamespace(*job.Namespace)
+	client.NomadClient.SetNamespace(*job.Namespace)
 
 	// Register job
-	s.Update("Registering job %q...", *job.Name)
+	st.Update("Registering job " + *job.Name + "...")
 	regResult, _, err := jobclient.Register(job, nil)
+	if err != nil {
+		return err
+	}
+
+	// Store our state so we can destroy it properly
+	state.Name = result.Name
+	st.Step(terminal.StatusOK, "Job registration successful")
+
+	// Wait on the allocation
+	evalID := regResult.EvalID
+	st.Update("Monitoring evaluation " + evalID)
+	if err := nomad.NewMonitor(st, client.NomadClient).Monitor(evalID); err != nil {
+		return err
+	}
+	st.Step(terminal.StatusOK, "Deployment successfully rolled out!")
+
+	return nil
+}
+
+func (p *Platform) resourceJobDestroy(
+	ctx context.Context,
+	state *Resource_Job,
+	sg terminal.StepGroup,
+	client *nomadClient,
+) error {
+	step := sg.Add("")
+	defer func() { step.Abort() }()
+	step.Update("Deleting job: %s", state.Name)
+	step.Done()
+	_, _, err := client.NomadClient.Jobs().Deregister(state.Name, true, nil)
+	return err
+}
+
+func (p *Platform) resourceJobStatus(
+	ctx context.Context,
+	log hclog.Logger,
+	sg terminal.StepGroup,
+	state *Resource_Job,
+	client *nomadClient,
+	sr *resource.StatusResponse,
+	ui terminal.UI,
+) error {
+	s := sg.Add("Gathering health report for Nomad job...")
+	defer s.Abort()
+
+	jobClient := client.NomadClient.Jobs()
+
+	s.Update("Parsing the job specification...")
+	jobspec, err := p.jobspec(client.NomadClient, p.config.Jobspec)
+	if err != nil {
+		return err
+	}
+
+	jobResource := sdk.StatusReport_Resource{
+		Type:                "job",
+		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
+	}
+	sr.Resources = append(sr.Resources, &jobResource)
+
+	s.Update("Getting job info...")
+	q := &api.QueryOptions{Namespace: *jobspec.Namespace}
+	job, _, err := jobClient.Info(state.Name, q)
+	if err != nil {
+		return err
+	}
+
+	jobResource.Id = *job.ID
+	jobResource.Name = *job.Name
+	jobResource.CreatedTime = timestamppb.New(time.Unix(0, *job.SubmitTime))
+	stateJson, err := json.Marshal(map[string]interface{}{
+		"deployment": job,
+	})
+	jobResource.StateJson = string(stateJson)
+
+	// If job is running, start checking evals, then allocs
+	if *job.Status == "running" {
+		// Get list of evaluations for job
+		evals, _, err := jobClient.Evaluations(*job.ID, q)
+		hasSquashedEvals := false
+		for _, eval := range evals {
+			switch eval.Status {
+			case "blocked":
+				hasSquashedEvals = true
+				break
+			case "pending":
+				break
+			case "complete":
+				break
+			case "failed":
+				break
+			case "canceled":
+				break
+			}
+		}
+
+		allocs, _, err := jobClient.Allocations(*job.ID, false, q)
+		if err != nil {
+			return err
+		}
+		pending, running, complete, failed, lost, unknown, currentJobVersionAllocs := 0, 0, 0, 0, 0, 0, 0
+		for _, alloc := range allocs {
+			// Check alloc only if it is for the current job version
+			if *job.Version == alloc.JobVersion {
+				switch alloc.ClientStatus {
+				case api.AllocClientStatusPending:
+					pending += 1
+				case api.AllocClientStatusComplete:
+					complete += 1
+				case api.AllocClientStatusRunning:
+					running += 1
+				case api.AllocClientStatusFailed:
+					failed += 1
+				case api.AllocClientStatusLost:
+					lost += 1
+				default:
+					unknown += 1
+				}
+				currentJobVersionAllocs += 1
+			}
+		}
+
+		if running == currentJobVersionAllocs && hasSquashedEvals == false {
+			jobResource.Health = sdk.StatusReport_READY
+			jobResource.HealthMessage = fmt.Sprintf("Job %q is reporting ready!", state.Name)
+		} else if running == currentJobVersionAllocs && hasSquashedEvals == true {
+			jobResource.Health = sdk.StatusReport_PARTIAL
+			jobResource.HealthMessage = fmt.Sprintf("Allocs for job %q are running, but there is at least one blocked evaluation!", state.Name)
+		} else if running > 0 && (complete > 0 || failed > 0 || pending > 0 || lost > 0) {
+			jobResource.Health = sdk.StatusReport_PARTIAL
+			jobResource.HealthMessage = fmt.Sprintf("Some allocations are running for job %q!", state.Name)
+		} else if (complete + pending + failed + lost) == currentJobVersionAllocs {
+			jobResource.Health = sdk.StatusReport_DOWN
+			jobResource.HealthMessage = fmt.Sprintf("No allocations for job %q are running!", state.Name)
+		} else if unknown > 0 {
+			jobResource.Health = sdk.StatusReport_UNKNOWN
+			jobResource.HealthMessage = fmt.Sprintf("Unknown allocation status for job %q!", state.Name)
+		}
+	} else if *job.Status == "pending" {
+		jobResource.Health = sdk.StatusReport_PARTIAL
+		jobResource.HealthMessage = fmt.Sprintf("Job %q is not scheduled!", state.Name)
+	} else if *job.Status == "dead" {
+		jobResource.Health = sdk.StatusReport_DOWN
+		jobResource.HealthMessage = fmt.Sprintf("Job %q is down!", state.Name)
+	}
+
+	if *job.StatusDescription != "" {
+		jobResource.HealthMessage = *job.StatusDescription
+	}
+
+	s.Done()
+
+	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
+	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
+	st := ui.Status()
+	defer st.Close()
+
+	st.Update("Determining overall container health...")
+	if jobResource.Health == sdk.StatusReport_READY {
+		st.Step(terminal.StatusOK, jobResource.HealthMessage)
+	} else {
+		if jobResource.Health == sdk.StatusReport_PARTIAL {
+			st.Step(terminal.StatusWarn, jobResource.HealthMessage)
+		} else {
+			st.Step(terminal.StatusError, jobResource.HealthMessage)
+		}
+
+		// Extra advisory wording to let user know that the deployment could be still starting up
+		// if the report was generated immediately after it was deployed or released.
+		st.Step(terminal.StatusWarn, mixedHealthWarn)
+	}
+
+	return nil
+}
+
+// Deploy deploys an image to Nomad.
+func (p *Platform) Deploy(
+	ctx context.Context,
+	log hclog.Logger,
+	src *component.Source,
+	img *docker.Image,
+	deployConfig *component.DeploymentConfig,
+	dcr *component.DeclaredResourcesResp,
+	ui terminal.UI,
+) (*Deployment, error) {
+	var result Deployment
+	// Get our client
+	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return nil, err
 	}
-	s.Done()
+	// Parse the HCL
+	job, err := p.jobspec(client, p.config.Jobspec)
+	result.Name = *job.ID
 
-	// Wait on the allocation
-	st := ui.Status()
-	defer st.Close()
-	evalID := regResult.EvalID
-	st.Update(fmt.Sprintf("Monitoring evaluation %q", evalID))
-	if err := nomad.NewMonitor(st, client).Monitor(evalID); err != nil {
+	// We'll update the user in real time
+	sg := ui.StepGroup()
+	defer sg.Wait()
+	rm := p.resourceManager(log, dcr)
+	if err := rm.CreateAll(
+		ctx, log, sg, ui,
+		src, img, deployConfig, &result,
+	); err != nil {
 		return nil, err
 	}
-	st.Step(terminal.StatusOK, "Deployment successfully rolled out!")
+
+	// Store our resource state
+	result.ResourceState = rm.State()
 
 	return &result, nil
 }
@@ -111,21 +334,27 @@ func (p *Platform) Deploy(
 func (p *Platform) Destroy(
 	ctx context.Context,
 	log hclog.Logger,
-	deployment *nomad.Deployment,
+	deployment *Deployment,
 	ui terminal.UI,
 ) error {
-	// We'll update the user in real time
-	st := ui.Status()
-	defer st.Close()
+	sg := ui.StepGroup()
+	defer sg.Wait()
+	rm := p.resourceManager(log, nil)
 
-	client, err := api.NewClient(api.DefaultConfig())
-	if err != nil {
-		return err
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if deployment.ResourceState == nil {
+		rm.Resource(rmResourceJobName).SetState(&Resource_Job{
+			Name: deployment.Name,
+		})
+	} else {
+		// Load state
+		if err := rm.LoadState(deployment.ResourceState); err != nil {
+			return err
+		}
 	}
 
-	st.Update("Deleting job...")
-	_, _, err = client.Jobs().Deregister(deployment.Name, true, nil)
-	return err
+	return rm.DestroyAll(ctx, log, sg, ui)
 }
 
 // Generation returns the generation ID. The ID we use is the name of the
@@ -151,7 +380,20 @@ func (p *Platform) Generation(
 		return nil, err
 	}
 
-	return []byte(*job.ID), nil
+	// If we have canaries, generate random ID, otherwise keep gen ID as job ID
+	canaryDeployment := false
+	for _, taskGroup := range job.TaskGroups {
+		if *taskGroup.Update.Canary > 0 {
+			canaryDeployment = true
+		}
+	}
+
+	if !canaryDeployment {
+		return []byte(*job.ID), nil
+	} else {
+		return nil, nil
+	}
+
 }
 
 func (p *Platform) jobspec(client *api.Client, path string) (*api.Job, error) {
@@ -171,6 +413,84 @@ func (p *Platform) jobspec(client *api.Client, path string) (*api.Job, error) {
 	}
 
 	return job, nil
+}
+
+func (p *Platform) Status(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) (*sdk.StatusReport, error) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	rm := p.resourceManager(log, nil)
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if deployment.ResourceState == nil {
+		rm.Resource("job").SetState(&Resource_Job{
+			Name: deployment.Name,
+		})
+	} else {
+		// Load our set state
+		if err := rm.LoadState(deployment.ResourceState); err != nil {
+			return nil, err
+		}
+	}
+
+	step := sg.Add("Gathering health report for Nomad platform...")
+	defer step.Abort()
+
+	resources, err := rm.StatusAll(ctx, log, sg, ui)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "resource manager failed to generate resource statuses: %s", err)
+	}
+
+	if len(resources) == 0 {
+		// This shouldn't happen - the status func for the releaser should always return a resource or an error.
+		return nil, status.Errorf(codes.Internal, "no resources generated for release - cannot determine status.")
+	}
+
+	var jobResource *sdk.StatusReport_Resource
+	for _, r := range resources {
+		if r.Type == "job" {
+			jobResource = r
+			break
+		}
+	}
+	if jobResource == nil {
+		return nil, status.Errorf(codes.Internal, "no job resource found - cannot determine overall health")
+	}
+
+	// Create our status report
+	result := sdk.StatusReport{
+		External:      true,
+		GeneratedTime: timestamppb.Now(),
+		Resources:     resources,
+		Health:        jobResource.Health,
+		HealthMessage: jobResource.HealthMessage,
+	}
+
+	log.Debug("status report complete")
+
+	// update output based on main health state
+	step.Update("Finished building report for Nomad platform")
+	step.Done()
+
+	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
+	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
+	st := ui.Status()
+	defer st.Close()
+
+	// More UI detail for non-ready resources
+	for _, resource := range result.Resources {
+		if resource.Health != sdk.StatusReport_READY {
+			st.Step(terminal.StatusWarn, fmt.Sprintf("Resource %q is reporting %q", resource.Name, resource.Health.String()))
+		}
+	}
+
+	return &result, nil
 }
 
 // Config is the configuration structure for the Platform.
@@ -283,6 +603,13 @@ job "web" {
 
 	return doc, nil
 }
+
+var (
+	mixedHealthWarn = strings.TrimSpace(`
+Waypoint detected that the current deployment is not ready, however your application
+might be available or still starting up.
+`)
+)
 
 var (
 	_ component.Generation   = (*Platform)(nil)
