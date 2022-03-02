@@ -13,9 +13,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/pkg/errors"
+
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/serverclient"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 var heartbeatDuration = 5 * time.Second
@@ -101,6 +103,13 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	// We use this for timeouts.
 	streamCtx, streamCancel := context.WithCancel(r.runningCtx)
 	defer streamCancel()
+
+	// The runningCtx has the token that is set during runner adoption.
+	// This is required for API calls to succeed. Put the token into ctx
+	// as well so that this can be used for API calls.
+	if tok := serverclient.TokenFromContext(r.runningCtx); tok != "" {
+		ctx = serverclient.TokenWithContext(ctx, tok)
+	}
 
 	// Open a new job stream. NOTE: we purposely do NOT use ctx above
 	// since if the context is cancelled we want to continue reporting

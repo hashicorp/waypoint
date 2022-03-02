@@ -15,6 +15,7 @@ import (
 
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
+	serverpkg "github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
@@ -35,6 +36,68 @@ func TestRunnerAccept(t *testing.T) {
 	client := singleprocess.TestServer(t)
 	runner := TestRunner(t, WithClient(client))
 	require.NoError(runner.Start(ctx))
+
+	// Initialize our app
+	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Queue a job
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(err)
+	jobId := queueResp.JobId
+
+	// Accept should complete
+	require.NoError(runner.Accept(ctx))
+
+	// Verify that the job is completed
+	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId})
+	require.NoError(err)
+	require.Equal(pb.Job_SUCCESS, job.State)
+}
+
+// Test runner accept and job execution with an adopted token.
+func TestRunnerAccept_adopt(t *testing.T) {
+	require := require.New(t)
+	ctx := context.Background()
+
+	// Start runner
+	serverImpl := singleprocess.TestImpl(t)
+	client := serverpkg.TestServer(t, serverImpl)
+	anonClient := serverpkg.TestServer(t, serverImpl, serverpkg.TestWithToken(""))
+	runner := TestRunner(t,
+		WithClient(anonClient),
+		WithCookie(testCookie(t, client)),
+	)
+	defer runner.Close()
+
+	// Start runner
+	startErr := make(chan error, 1)
+	go func() {
+		startErr <- runner.Start(ctx)
+	}()
+
+	// Wait for runner to show up
+	require.Eventually(func() bool {
+		_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+		return err == nil
+	}, 2*time.Second, 10*time.Millisecond)
+
+	// Adopt the runner
+	_, err := client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: runner.Id(),
+		Adopt:    true,
+	})
+	require.NoError(err)
+
+	// Runner should start
+	select {
+	case <-time.After(5 * time.Second):
+		t.Fatal("runner should start")
+
+	case err := <-startErr:
+		require.NoError(err)
+	}
 
 	// Initialize our app
 	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)

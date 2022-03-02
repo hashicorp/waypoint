@@ -2,9 +2,11 @@ package runner
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -100,13 +102,17 @@ func (r *Runner) executeStopTaskOp(
 			JobId: v.StartJobId,
 		})
 
+		log.Trace(fmt.Sprintf("Got this job back: %+v", job))
+
 		// If the job is not found, this is not an error. This means the
-		// start job never ran for wahtever reason and we should not stop
+		// start job never ran for whatever reason and we should not stop
 		// anything.
 		if status.Code(err) == codes.NotFound {
 			log.Warn("start job not found, not stopping anything",
 				"start-id", v.StartJobId)
 			return nil, nil
+		} else if err != nil {
+			return nil, errors.Wrapf(err, "failed to look up job with id %s", v.StartJobId)
 		}
 
 		// If the job is not in a terminal state, then its an error.
