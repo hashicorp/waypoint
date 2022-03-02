@@ -2,17 +2,18 @@ package server
 
 import (
 	"context"
-	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc"
 	"net"
 	"net/http"
 	"time"
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
-	"github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/httpapi"
+	"github.com/hashicorp/go-hclog"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	"google.golang.org/grpc"
+
+	"github.com/hashicorp/waypoint/internal/server/httpapi"
+	"github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type httpServer struct {
@@ -50,6 +51,7 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 	// Create our full router
 	r := mux.NewRouter()
 	r.HandleFunc("/v1/exec", httpapi.HandleExec(grpcAddr, true))
+	r.HandleFunc("/v1/trigger/{id:[a-zA-Z0-9]+}", httpapi.HandleTrigger(grpcAddr, true))
 	r.PathPrefix("/grpc").Handler(grpcWrapped)
 	r.PathPrefix("/").Handler(uifs)
 

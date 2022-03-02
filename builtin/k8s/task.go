@@ -60,6 +60,9 @@ type TaskLauncherConfig struct {
 	// we use "PullIfNotPresent" unless the image tag is "latest" when we
 	// use "Always".
 	PullPolicy string `hcl:"image_pull_policy,optional"`
+
+	// The namespace to use for launching this task in Kubernetes
+	Namespace string `hcl:"namespace,optional"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -121,6 +124,11 @@ task {
 		"pull policy to use for the task container image",
 	)
 
+	doc.SetField(
+		"namespace",
+		"namespace in which to launch task",
+	)
+
 	return doc, nil
 }
 
@@ -155,6 +163,9 @@ func (p *TaskLauncher) StartTask(
 	clientSet, ns, _, err := Clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
 		return nil, err
+	}
+	if p.config.Namespace != "" {
+		ns = p.config.Namespace
 	}
 
 	// Generate an ID for our pod name.

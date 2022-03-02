@@ -5,11 +5,13 @@ tmp/
 .waypoint/
 /waypoint
 /waypoint-entrypoint
-/pkg
 /doc
 
 # System-specific
 .DS_Store
+
+pkg/dist
+pkg/bin
 
 # Default Waypoint database file
 data.db

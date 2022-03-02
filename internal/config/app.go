@@ -9,8 +9,8 @@ import (
 	"github.com/mitchellh/copystructure"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/hashicorp/waypoint/internal/config/funcs"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/pkg/config/funcs"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // App represents a single application.
@@ -20,6 +20,8 @@ type App struct {
 	Labels map[string]string `hcl:"labels,optional"`
 	URL    *AppURL           `hcl:"url,block" default:"{}"`
 	Config *genericConfig    `hcl:"config,block"`
+
+	Runner *Runner `hcl:"runner,block"`
 
 	BuildRaw   *hclBuild `hcl:"build,block"`
 	DeployRaw  *hclStage `hcl:"deploy,block"`
@@ -44,6 +46,8 @@ type hclApp struct {
 	BuildRaw   *hclBuild `hcl:"build,block"`
 	DeployRaw  *hclStage `hcl:"deploy,block"`
 	ReleaseRaw *hclStage `hcl:"release,block"`
+
+	Runner *Runner `hcl:"runner,block"`
 
 	Body   hcl.Body `hcl:",body"`
 	Remain hcl.Body `hcl:",remain"`
@@ -107,6 +111,7 @@ func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
 	}
 	app.Name = rawApp.Name
 	app.Path = appPath
+	app.Runner = rawApp.Runner
 	app.ctx = ctx
 	app.config = c
 	if app.Config != nil {

@@ -1,4 +1,4 @@
-ASSETFS_PATH?=internal/server/gen/bindata_ui.go
+ASSETFS_PATH?=pkg/server/gen/bindata_ui.go
 
 GIT_COMMIT=$$(git rev-parse --short HEAD)
 GIT_DIRTY=$$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
@@ -47,6 +47,7 @@ bin/entrypoint: # create the entrypoint for the current platform
 
 .PHONY: install
 install: bin # build and copy binaries to $GOPATH/bin/waypoint
+	rm $(GOPATH)/bin/waypoint
 	mkdir -p $(GOPATH)/bin
 	cp ./waypoint $(GOPATH)/bin/waypoint
 
@@ -73,6 +74,16 @@ docker/odr:
 					-t waypoint-odr:dev \
 					.
 
+.PHONY: docker/tools
+docker/tools:
+	@echo "Building docker tools image"
+	docker build -f tools.Dockerfile -t waypoint-tools:dev .
+
+.PHONY: docker/gen/server
+docker/gen/server:
+	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
+	docker run -v `pwd`:/waypoint -it docker.io/library/waypoint-tools:dev make gen/server
+
 # expected to be invoked by make gen/changelog LAST_RELEASE=gitref THIS_RELEASE=gitref
 .PHONY: gen/changelog
 gen/changelog:
@@ -93,7 +104,7 @@ gen/plugins:
 .PHONY: gen/server
 gen/server:
 	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
-	go generate ./internal/server
+	go generate ./pkg/server
 
 .PHONY: gen/ts
 gen/ts:

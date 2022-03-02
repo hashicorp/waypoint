@@ -22,6 +22,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/docker"
 	wpdocker "github.com/hashicorp/waypoint/builtin/docker"
 	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
 	"github.com/hashicorp/waypoint/internal/assets"
@@ -49,6 +50,9 @@ type BuilderConfig struct {
 
 	// The docker specific encoded authentication string to use to talk to the registry.
 	EncodedAuth string `hcl:"encoded_auth,optional"`
+
+	// Authenticates to private registry
+	Auth *docker.Auth `hcl:"auth,block"`
 }
 
 func (b *Builder) Documentation() (*docs.Documentation, error) {
@@ -122,6 +126,19 @@ build {
 		),
 	)
 
+	doc.SetField(
+		"auth",
+		"the authentication information to log into the docker repository",
+		docs.SubFields(func(d *docs.SubFieldDoc) {
+			d.SetField("hostname", "Hostname of Docker registry")
+			d.SetField("username", "Username of Docker registry account")
+			d.SetField("password", "Password of Docker registry account")
+			d.SetField("serverAddress", "Address of Docker registry")
+			d.SetField("identityToken", "Token used to authenticate user")
+			d.SetField("registryToken", "Bearer tokens to be sent to Docker registry")
+		}),
+	)
+
 	return doc, nil
 }
 
@@ -164,6 +181,8 @@ func (b *Builder) Build(args buildArgs) (*wpdocker.Image, error) {
 		Location: &wpdocker.Image_Docker{Docker: &empty.Empty{}},
 	}
 
+	auth := b.config.Auth
+
 	// If we aren't injected the entrypoint AND we don't have a registry
 	// defined, then we don't pull the image at all. We do this so that
 	// Waypoint can work in an environment where Docker doesn't exist, img
@@ -188,7 +207,7 @@ func (b *Builder) Build(args buildArgs) (*wpdocker.Image, error) {
 	step.Done()
 	step = nil
 	if err := b.buildWithDocker(
-		ctx, log, ui, sg, cli, result,
+		ctx, log, ui, sg, cli, result, auth,
 	); err != nil {
 		return nil, err
 	}
@@ -238,14 +257,19 @@ func (b *Builder) buildWithDocker(
 	sg terminal.StepGroup,
 	cli *client.Client,
 	result *wpdocker.Image,
+	authConfig *docker.Auth,
 ) error {
 	ref, err := reference.ParseNormalizedNamed(result.Name())
 	if err != nil {
 		return status.Errorf(codes.Internal, "unable to parse image name: %s", err)
 	}
 
-	encodedAuth := b.config.EncodedAuth
-	if encodedAuth == "" {
+	var encodedAuth = ""
+
+	if b.config.EncodedAuth != "" {
+		//If EncodedAuth is set, use that
+		encodedAuth = b.config.EncodedAuth
+	} else if b.config.Auth == nil && b.config.EncodedAuth == "" {
 		// Resolve the Repository name from fqn to RepositoryInfo
 		repoInfo, err := registry.ParseRepositoryInfo(ref)
 		if err != nil {
@@ -278,6 +302,21 @@ func (b *Builder) buildWithDocker(
 			return status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
 		}
 		encodedAuth = base64.URLEncoding.EncodeToString(buf)
+	} else if *b.config.Auth != (docker.Auth{}) {
+		//If EncodedAuth is not set, and Auth is, use Auth
+		authBytes, err := json.Marshal(types.AuthConfig{
+			Username:      authConfig.Username,
+			Password:      authConfig.Password,
+			Email:         authConfig.Email,
+			Auth:          authConfig.Auth,
+			ServerAddress: authConfig.ServerAddress,
+			IdentityToken: authConfig.IdentityToken,
+			RegistryToken: authConfig.RegistryToken,
+		})
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to marshal auth info to json: %s", err)
+		}
+		encodedAuth = base64.URLEncoding.EncodeToString(authBytes)
 	}
 
 	step := sg.Add("Pulling image...")
@@ -315,6 +354,7 @@ func (b *Builder) buildWithImg(
 	log hclog.Logger,
 	sg terminal.StepGroup,
 	target *wpdocker.Image,
+	authConfig *docker.Auth,
 ) error {
 	var step terminal.Step
 	defer func() {
@@ -325,13 +365,28 @@ func (b *Builder) buildWithImg(
 
 	step = sg.Add("Preparing Docker configuration...")
 	env := os.Environ()
-	if path, err := wpdocker.TempDockerConfig(log, target, b.config.EncodedAuth); err != nil {
-		return err
-	} else if path != "" {
-		defer os.RemoveAll(path)
-		env = append(env, "DOCKER_CONFIG="+path)
-	}
 
+	//Check if auth configuration is not null
+	if (*b.config.Auth != docker.Auth{}) {
+		auth, err := json.Marshal(types.AuthConfig{
+			Username:      authConfig.Username,
+			Password:      authConfig.Password,
+			Email:         authConfig.Email,
+			Auth:          authConfig.Auth,
+			ServerAddress: authConfig.ServerAddress,
+			IdentityToken: authConfig.IdentityToken,
+			RegistryToken: authConfig.RegistryToken,
+		})
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to marshal auth info to json: %s", err)
+		}
+		if path, err := wpdocker.TempDockerConfig(log, target, base64.URLEncoding.EncodeToString(auth)); err != nil {
+			return err
+		} else if path != "" {
+			defer os.RemoveAll(path)
+			env = append(env, "DOCKER_CONFIG="+path)
+		}
+	}
 	step.Done()
 	step = sg.Add("Pulling Docker image with img...")
 

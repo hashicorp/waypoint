@@ -9,6 +9,11 @@ module('Acceptance | auth', function (hooks: NestedHooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
+  test('redirects to /auth from index route when logged out', async function (assert) {
+    await visit(`/`);
+    assert.equal(currentURL(), `/auth`);
+  });
+
   test('redirects to /auth from authenticated routes when logged out', async function (assert) {
     await visit(`/default`);
     assert.equal(currentURL(), `/auth`);

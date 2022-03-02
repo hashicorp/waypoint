@@ -2,7 +2,10 @@ package docker
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 
+	"github.com/docker/docker/api/types"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -37,6 +40,22 @@ func (r *Registry) AccessInfo() (*AccessInfo, error) {
 		ai.Auth = &AccessInfo_Encoded{
 			Encoded: r.config.EncodedAuth,
 		}
+	} else if r.config.Auth != nil {
+		auth, err := json.Marshal(types.AuthConfig{
+			Username:      r.config.Auth.Username,
+			Password:      r.config.Auth.Password,
+			Email:         r.config.Auth.Email,
+			Auth:          r.config.Auth.Auth,
+			ServerAddress: r.config.Auth.ServerAddress,
+			IdentityToken: r.config.Auth.IdentityToken,
+			RegistryToken: r.config.Auth.RegistryToken,
+		})
+		if err != nil {
+			return ai, status.Errorf(codes.Internal, "failed to marshal auth info to json: %s", err)
+		}
+		ai.Auth = &AccessInfo_Encoded{
+			Encoded: base64.URLEncoding.EncodeToString(auth),
+		}
 	} else if r.config.Password != "" {
 		ai.Auth = &AccessInfo_UserPass_{
 			UserPass: &AccessInfo_UserPass{
@@ -45,7 +64,6 @@ func (r *Registry) AccessInfo() (*AccessInfo, error) {
 			},
 		}
 	}
-
 	return ai, nil
 }
 
@@ -65,6 +83,7 @@ func (r *Registry) Push(
 		Image: r.config.Image,
 		Tag:   r.config.Tag,
 	}
+	auth := r.config.Auth
 	if !r.config.Local {
 		target.Location = &Image_Registry{Registry: &Image_RegistryLocation{}}
 	}
@@ -79,7 +98,7 @@ func (r *Registry) Push(
 		}
 
 		// This indicates that the builder used the AccessInfo and published the image
-		// directly. Ergo we don't need to do anyhting and can just return the image as is.
+		// directly. Ergo we don't need to do anything and can just return the image as is.
 		return img, nil
 
 	case *Image_Docker, nil:
@@ -91,6 +110,7 @@ func (r *Registry) Push(
 			ui,
 			img,
 			target,
+			auth,
 		); err != nil {
 			return nil, err
 		}
@@ -120,6 +140,9 @@ type Config struct {
 
 	// Local if true will not push this image to a remote registry.
 	Local bool `hcl:"local,optional"`
+
+	// Authenticates to private registry
+	Auth *Auth `hcl:"auth,block"`
 
 	// The docker specific encoded authentication string to use to talk to the registry.
 	EncodedAuth string `hcl:"encoded_auth,optional"`
@@ -218,6 +241,19 @@ build {
 			"This optional conflicts with encoded_auth and thusly only one can be used at a time.",
 			"If both are used, encoded_auth takes precedence.",
 		),
+	)
+
+	doc.SetField(
+		"auth",
+		"the authentication information to log into the docker repository",
+		docs.SubFields(func(d *docs.SubFieldDoc) {
+			d.SetField("hostname", "Hostname of Docker registry")
+			d.SetField("username", "Username of Docker registry account")
+			d.SetField("password", "Password of Docker registry account")
+			d.SetField("serverAddress", "Address of Docker registry")
+			d.SetField("identityToken", "Token used to authenticate user")
+			d.SetField("registryToken", "Bearer tokens to be sent to Docker registry")
+		}),
 	)
 
 	return doc, nil

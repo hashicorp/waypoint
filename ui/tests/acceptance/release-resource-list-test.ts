@@ -35,7 +35,7 @@ module('Acceptance | release resource list', function (hooks) {
     let statusReport = this.server.create('status-report', 'ready', { application, target: release });
     let resource = this.server.create('resource', { statusReport, name: 'example-service' });
 
-    await visit(`/default/${project.name}/app/${application.name}/deployment/seq/${deployment.sequence}`);
+    await visit(`/default/${project.name}/app/${application.name}/deployments/${deployment.sequence}`);
 
     assert.dom('[data-test-resources-table]').containsText('example-service');
     assert

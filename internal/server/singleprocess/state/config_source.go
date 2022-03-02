@@ -8,7 +8,7 @@ import (
 	"github.com/mitchellh/hashstructure/v2"
 	bolt "go.etcd.io/bbolt"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 var configSourceBucket = []byte("config_source")

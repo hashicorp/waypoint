@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/hashicorp/go-hclog"
@@ -125,6 +126,15 @@ func Main(args []string) int {
 	// Run the CLI
 	exitCode, err := cli.Run()
 	if err != nil {
+		// If the autocomplete options have already been installed the package
+		// used by mitchellh/cli will return an untyped error containing this
+		// message. We check here simply to avoid presenting a panic to the user
+		// in the event autocomplete has already been installed.
+		// See https://github.com/hashicorp/waypoint/pull/2986
+		if strings.Contains(err.Error(), "already installed") {
+			fmt.Println(err)
+			return 1
+		}
 		panic(err)
 	}
 
@@ -170,30 +180,27 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"init": func() (cli.Command, error) {
 			return &InitCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"up": func() (cli.Command, error) {
 			return &UpCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"destroy": func() (cli.Command, error) {
 			return &DestroyCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"exec": func() (cli.Command, error) {
 			return &ExecCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
+
 		"config": func() (cli.Command, error) {
 			return &helpCommand{
 				SynopsisText: helpText["config"][0],
@@ -225,6 +232,7 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
 		"logs": func() (cli.Command, error) {
 			return &LogsCommand{
 				baseCommand: baseCommand,
@@ -242,19 +250,16 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"artifact list": func() (cli.Command, error) {
 			return &ArtifactListCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"artifact list-builds": func() (cli.Command, error) {
 			return &BuildListCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"artifact push": func() (cli.Command, error) {
 			return &ArtifactPushCommand{
 				baseCommand: baseCommand,
@@ -267,19 +272,16 @@ func Commands(
 				HelpText:     helpText["deployment"][1],
 			}, nil
 		},
-
 		"deployment deploy": func() (cli.Command, error) {
 			return &DeploymentCreateCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"deployment destroy": func() (cli.Command, error) {
 			return &DeploymentDestroyCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"deployment list": func() (cli.Command, error) {
 			return &DeploymentListCommand{
 				baseCommand: baseCommand,
@@ -291,7 +293,6 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"release list": func() (cli.Command, error) {
 			return &ReleaseListCommand{
 				baseCommand: baseCommand,
@@ -324,6 +325,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"server cookie": func() (cli.Command, error) {
+			return &ServerCookieCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"server config-set": func() (cli.Command, error) {
 			return &ServerConfigSetCommand{
 				baseCommand: baseCommand,
@@ -344,6 +350,7 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
 		"status": func() (cli.Command, error) {
 			return &StatusCommand{
 				baseCommand: baseCommand,
@@ -367,7 +374,6 @@ func Commands(
 				HelpText:     helpText["hostname"][1],
 			}, nil
 		},
-
 		"hostname register": func() (cli.Command, error) {
 			return &HostnameRegisterCommand{
 				baseCommand: baseCommand,
@@ -383,6 +389,7 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
 		"token": func() (cli.Command, error) {
 			return &helpCommand{
 				SynopsisText: helpText["token"][0],
@@ -450,6 +457,58 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"runner list": func() (cli.Command, error) {
+			return &RunnerListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner inspect": func() (cli.Command, error) {
+			return &RunnerInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner adopt": func() (cli.Command, error) {
+			return &RunnerAdoptCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner reject": func() (cli.Command, error) {
+			return &RunnerRejectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner forget": func() (cli.Command, error) {
+			return &RunnerForgetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner token": func() (cli.Command, error) {
+			return &RunnerTokenCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"runner profile": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["runner-profile"][0],
+				HelpText:     helpText["runner-profile"][1],
+			}, nil
+		},
+		"runner profile set": func() (cli.Command, error) {
+			return &RunnerProfileSetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner profile inspect": func() (cli.Command, error) {
+			return &RunnerProfileInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner profile list": func() (cli.Command, error) {
+			return &RunnerProfileListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"context": func() (cli.Command, error) {
 			return &ContextHelpCommand{
@@ -509,7 +568,6 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"docs": func() (cli.Command, error) {
 			return &AppDocsCommand{
 				baseCommand: baseCommand,
@@ -550,32 +608,27 @@ func Commands(
 				HelpText:     helpText["auth-method"][1],
 			}, nil
 		},
-
 		"auth-method set": func() (cli.Command, error) {
 			return &helpCommand{
 				SynopsisText: helpText["auth-method-set"][0],
 				HelpText:     helpText["auth-method-set"][1],
 			}, nil
 		},
-
 		"auth-method set oidc": func() (cli.Command, error) {
 			return &AuthMethodSetOIDCCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"auth-method inspect": func() (cli.Command, error) {
 			return &AuthMethodInspectCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"auth-method delete": func() (cli.Command, error) {
 			return &AuthMethodDeleteCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"auth-method list": func() (cli.Command, error) {
 			return &AuthMethodListCommand{
 				baseCommand: baseCommand,
@@ -588,19 +641,16 @@ func Commands(
 				HelpText:     helpText["user"][1],
 			}, nil
 		},
-
 		"user inspect": func() (cli.Command, error) {
 			return &UserInspectCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"user modify": func() (cli.Command, error) {
 			return &UserModifyCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"user invite": func() (cli.Command, error) {
 			return &UserInviteCommand{
 				baseCommand: baseCommand,
@@ -611,36 +661,13 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-		"runner profile": func() (cli.Command, error) {
-			return &helpCommand{
-				SynopsisText: helpText["runner-profile"][0],
-				HelpText:     helpText["runner-profile"][1],
-			}, nil
-		},
-
-		"runner profile set": func() (cli.Command, error) {
-			return &RunnerProfileSetCommand{
-				baseCommand: baseCommand,
-			}, nil
-		},
-
-		"runner profile inspect": func() (cli.Command, error) {
-			return &RunnerProfileInspectCommand{
-				baseCommand: baseCommand,
-			}, nil
-		},
-
-		"runner profile list": func() (cli.Command, error) {
-			return &RunnerProfileListCommand{
-				baseCommand: baseCommand,
-			}, nil
-		},
 
 		"k8s bootstrap": func() (cli.Command, error) {
 			return &K8SBootstrapCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
+
 		"workspace": func() (cli.Command, error) {
 			return &helpCommand{
 				SynopsisText: helpText["workspace"][0],

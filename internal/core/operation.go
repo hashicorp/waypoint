@@ -13,10 +13,11 @@ import (
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
+
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/finalcontext"
-	"github.com/hashicorp/waypoint/internal/server"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // operation is a private interface that we implement for "operations" such

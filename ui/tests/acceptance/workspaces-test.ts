@@ -26,7 +26,7 @@ module('Acceptance | workspaces', function (hooks) {
     await click('[data-test-workspace-switcher] [data-test-dropdown-trigger]');
     await click(`[data-test-workspace-link="production"]`);
 
-    assert.equal(currentURL(), `/production/test-project/app/test-app/deployment/seq/2`);
+    assert.equal(currentURL(), `/production/test-project/app/test-app/deployments/2`);
     assert.dom('[data-test-workspace-switcher]').containsText('production');
   });
 

@@ -372,7 +372,7 @@ func (r *Releaser) resourceListenerCreate(
 
 	tgs := []*elbv2.TargetGroupTuple{
 		{
-			TargetGroupArn: &target.Arn,
+			TargetGroupArn: aws.String(target.Arn),
 			Weight:         aws.Int64(100),
 		},
 	}
@@ -380,7 +380,7 @@ func (r *Releaser) resourceListenerCreate(
 	if shouldCreateListener {
 		// create the listener to forward traffic to the target group
 		lo, err := elbsrv.CreateListener(&elbv2.CreateListenerInput{
-			LoadBalancerArn: &lbState.Arn,
+			LoadBalancerArn: aws.String(lbState.Arn),
 			Port:            aws.Int64(port),
 			Protocol:        aws.String(protocol),
 			Certificates:    certs,
@@ -394,6 +394,57 @@ func (r *Releaser) resourceListenerCreate(
 			},
 		})
 		if err != nil {
+			log.Warn("error creating listener", "error", err)
+			if aerr, ok := err.(awserr.Error); ok {
+				// CreateListener is idempotent, but if params change, such as `DefaultActions`,
+				// it will return a DuplicateListener error
+				switch aerr.Code() {
+				case elbv2.ErrCodeDuplicateListenerException:
+					// if DuplicateListener, we actually want to ModifyListener to use
+					// the newly created TargetGroup & Target pair.
+					//
+					// this requires us to fetch the listener ARN from the load balancer
+					log.Info("duplicate listener found, attempting to modify listener")
+					dlo, err := elbsrv.DescribeListeners(&elbv2.DescribeListenersInput{
+						LoadBalancerArn: aws.String(lbState.Arn),
+					})
+					if err != nil {
+						return err
+					}
+
+					// find the listener on our port
+					for _, ln := range dlo.Listeners {
+						if *ln.Port == port {
+							listener = ln
+						}
+					}
+
+					mlo, err := elbsrv.ModifyListener(&elbv2.ModifyListenerInput{
+						ListenerArn:  listener.ListenerArn,
+						Port:         aws.Int64(port),
+						Protocol:     aws.String(protocol),
+						Certificates: certs,
+						DefaultActions: []*elbv2.Action{
+							{
+								ForwardConfig: &elbv2.ForwardActionConfig{
+									TargetGroups: tgs,
+								},
+								Type: aws.String("forward"),
+							},
+						},
+					})
+					if err != nil {
+						return err
+					}
+
+					listener = mlo.Listeners[0]
+					state.Arn = *listener.ListenerArn
+
+					log.Info("modified listener", "arn", state.Arn)
+					// exit
+					return nil
+				}
+			}
 			return err
 		}
 		listener = lo.Listeners[0]

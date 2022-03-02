@@ -41,7 +41,7 @@
           {{#if (eq resourceObject.type 'deployment')}}
             <LinkTo
               title={{concat (t "page.deployment.title") " v" resourceObject.source.sequence}}
-              @route="workspace.projects.project.app.deployment.deployment-seq"
+              @route="workspace.projects.project.app.deployments.deployment"
               @models={{array resourceObject.source.sequence}}
               >
               {{t "page.resources.table.deployment"}} <b class="badge badge--version">v{{resourceObject.source.sequence}}</b>
@@ -53,7 +53,7 @@
               @route="workspace.projects.project.app.release-id"
               @models={{array resourceObject.source.sequence}}
               >
-              {{t "page.resources.table.release"}}<b class="badge badge--version">v{{resourceObject.source.sequence}}</b>
+              {{t "page.resources.table.release"}} <b class="badge badge--version">v{{resourceObject.source.sequence}}</b>
             </LinkTo>
           {{/if}}
         </td>

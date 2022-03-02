@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/plugin"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // CanDestroyRelease returns true if this app supports destroying releases.
@@ -36,7 +36,7 @@ func (a *App) CanDestroyRelease() bool {
 	return ok && d.DestroyFunc() != nil
 }
 
-// DestroyRelease destroyes a specific release.
+// DestroyRelease destroys a specific release.
 func (a *App) DestroyRelease(ctx context.Context, d *pb.Release) error {
 	// If the release is destroyed already then do nothing.
 	if d.State == pb.Operation_DESTROYED {

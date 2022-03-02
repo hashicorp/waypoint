@@ -195,6 +195,30 @@
     "path": "runner-agent"
   },
   {
+    "title": "runner list",
+    "path": "runner-list"
+  },
+  {
+    "title": "runner inspect",
+    "path": "runner-inspect"
+  },
+  {
+    "title": "runner adopt",
+    "path": "runner-adopt"
+  },
+  {
+    "title": "runner forget",
+    "path": "runner-forget"
+  },
+  {
+    "title": "runner reject",
+    "path": "runner-reject"
+  },
+  {
+    "title": "runner token",
+    "path": "runner-token"
+  },
+  {
     "title": "runner profile list",
     "path": "runner-profile-list"
   },
@@ -209,6 +233,10 @@
   {
     "title": "server bootstrap",
     "path": "server-bootstrap"
+  },
+  {
+    "title": "server cookie",
+    "path": "server-cookie"
   },
   {
     "title": "server config-set",

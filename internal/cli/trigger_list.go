@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -12,7 +13,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type TriggerListCommand struct {
@@ -88,7 +89,7 @@ func (c *TriggerListCommand) Run(args []string) int {
 
 	tblHeaders := []string{"ID", "Name", "Workspace", "Project", "Application", "Operation"}
 	if c.flagFull {
-		tblHeaders = append(tblHeaders, "Description", "Tags", "Last Time Active")
+		tblHeaders = append(tblHeaders, "Authenticated", "Description", "Tags", "Last Time Active")
 	}
 	tbl := terminal.NewTable(tblHeaders...)
 
@@ -159,7 +160,7 @@ func (c *TriggerListCommand) Run(args []string) int {
 		}
 
 		if c.flagFull {
-			tblColumn = append(tblColumn, t.Description, tags, lastActiveTime)
+			tblColumn = append(tblColumn, strconv.FormatBool(t.Authenticated), t.Description, tags, lastActiveTime)
 		}
 
 		tbl.Rich(tblColumn, nil)

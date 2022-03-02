@@ -7,10 +7,11 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/hashicorp/waypoint/internal/server"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 	"github.com/stretchr/testify/require"
+
+	"github.com/hashicorp/waypoint/internal/server/singleprocess"
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func TestLogs_basic(t *testing.T) {

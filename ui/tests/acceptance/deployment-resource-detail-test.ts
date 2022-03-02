@@ -25,7 +25,7 @@ module('Acceptance | deployment resource detail', function (hooks) {
     });
 
     await visit(
-      `/default/${project.name}/app/${application.name}/deployment/seq/${deployment.sequence}/resources/${resource.id}`
+      `/default/${project.name}/app/${application.name}/deployments/${deployment.sequence}/resources/${resource.id}`
     );
 
     assert.dom('h1').containsText('example-pod');
@@ -39,7 +39,7 @@ module('Acceptance | deployment resource detail', function (hooks) {
     let deployment = this.server.create('deployment', 'random', { application, sequence: 1 });
 
     await visit(
-      `/default/${project.name}/app/${application.name}/deployment/seq/${deployment.sequence}/resources/nope`
+      `/default/${project.name}/app/${application.name}/deployments/${deployment.sequence}/resources/nope`
     );
 
     assert.dom('main').containsText('Resource nope not found');

@@ -1,6 +1,7 @@
 'use strict';
 
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
+const webpack = require('webpack');
 
 module.exports = function (defaults) {
   let app = new EmberApp(defaults, {
@@ -39,12 +40,13 @@ module.exports = function (defaults) {
       forbidEval: true,
 
       webpack: {
-        // uncomment this to see a tree view of what ember-cli-auto-import builds
-        // plugins: [new (require('webpack-bundle-analyzer').BundleAnalyzerPlugin)()],
-        // required for ansi-colors to work in the browser
-        node: {
-          process: true,
-        },
+        plugins: [
+          // required for ansi-colors to work in the browser
+          new webpack.ProvidePlugin({ process: 'process/browser' }),
+
+          // uncomment this to see a tree view of what ember-cli-auto-import builds
+          // new (require('webpack-bundle-analyzer').BundleAnalyzerPlugin)(),
+        ],
       },
       skipBabel: [
         {

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 const (
@@ -309,7 +309,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 		if c.cfg != nil {
 			// Warn if the project from config and the project from flags conflict
 			if c.flagProject != "" && c.flagProject != c.cfg.Project {
-				c.ui.Output(warnProjectFlagMismatch, c.refProject.Project, c.flagProject, terminal.WithWarningStyle())
+				c.ui.Output(warnProjectFlagMismatch, c.cfg.Project, c.flagProject, terminal.WithWarningStyle())
 
 				// NOTE(izaak): unless we force remoteness, we may spawn a local runner which will operate against
 				// the current config (which isn't relevant)
@@ -420,6 +420,7 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 	for _, refApp := range c.refApps {
 		app := c.project.App(refApp.Application)
 		c.Log.Debug("will operate on app", "name", refApp.Application)
+
 		apps = append(apps, app)
 	}
 

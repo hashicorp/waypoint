@@ -14,13 +14,14 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/finalcontext"
 	"github.com/hashicorp/waypoint/internal/pkg/gitdirty"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/grpcmetadata"
 )
 
-// job returns the basic job skeleton prepoulated with the correct
+// job returns the basic job skeleton pre-populated with the correct
 // defaults based on how the client is configured. For example, for local
 // operations, this will already have the targeting for the local runner.
 func (c *Project) job() *pb.Job {
@@ -42,8 +43,7 @@ func (c *Project) job() *pb.Job {
 	return job
 }
 
-// doJob will queue and execute the job. If the client is configured for
-// local mode, this will start and target the proper runner.
+// doJob will queue and execute the job, and target the proper runner.
 func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.Job_Result, error) {
 	return c.doJobMonitored(ctx, job, ui, nil)
 }
@@ -89,7 +89,17 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 			}
 		}
 		project = getProjectResp.Project
-		remotePreferred, err := remoteOpPreferred(ctx, c.client, project, c.logger)
+
+		var runnerCfgs []*configpkg.Runner
+		// Note(XX): temp (?) workaround the issue where runner is only upserted to profile on the first `waypoint init`
+		if c.waypointHCL != nil {
+			runnerCfgs = append(runnerCfgs, c.waypointHCL.ConfigRunner())
+			for _, app := range project.Applications {
+				runnerCfgs = append(runnerCfgs, c.waypointHCL.ConfigAppRunner(app.Name))
+			}
+		}
+
+		remotePreferred, err := remoteOpPreferred(ctx, c.client, project, runnerCfgs, c.logger)
 		if err != nil {
 			return false, newCtx, errors.Wrapf(err, "failed to determine if job should run locally or remotely")
 		}
@@ -102,7 +112,7 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 	if *c.useLocalRunner {
 		if c.activeRunner == nil {
 			// we need a local runner and we haven't started it yet
-			if err := c.startRunner(); err != nil {
+			if err := c.startRunner(ctx); err != nil {
 				return false, newCtx, errors.Wrapf(err, "failed to start local runner for job %s", err)
 			}
 		}
@@ -117,7 +127,6 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 		gitDirtyErr := func() error {
 			// Running this inside of an anonymous func so that we can
 			// return early
-
 			if c.configPath == "" {
 				// No local project dir, so nothing is dirty!
 				return nil
@@ -206,7 +215,6 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 
 	// In local mode we have to target the local runner.
 	if isLocal {
-
 		// If we're local, we set a local data source. Otherwise, it
 		// defaults to whatever the project has remotely.
 		job.DataSource = &pb.Job_DataSource{
@@ -224,6 +232,22 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 					Id: c.activeRunner.Id(),
 				},
 			},
+		}
+	} else {
+		var configRunner *configpkg.Runner
+		// Find runner configuration on the app
+		if job.Application != nil {
+			configRunner = c.waypointHCL.ConfigAppRunner(job.Application.Application)
+		}
+		// If not on app, try to find it on the project
+		if configRunner == nil {
+			configRunner = c.waypointHCL.ConfigRunner()
+		}
+		// If runner config is found, assign to job
+		if configRunner != nil {
+			job.OndemandRunner = &pb.Ref_OnDemandRunnerConfig{
+				Name: configRunner.Profile,
+			}
 		}
 	}
 

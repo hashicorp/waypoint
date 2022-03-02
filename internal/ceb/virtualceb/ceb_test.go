@@ -11,11 +11,13 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint/internal/server"
+
 	"github.com/hashicorp/waypoint/internal/server/execclient"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

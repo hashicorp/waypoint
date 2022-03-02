@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/pkg/gatedwriter"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // initSystemLogger initializes ceb.logger and sets up all the fields

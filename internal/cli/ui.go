@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/posener/complete"
 	"github.com/skratchdot/open-golang/open"
 )
@@ -68,7 +68,7 @@ func (c *UICommand) Run(args []string) int {
 	// todo(mitchellh: current default port is hardcoded, cannot configure http address)
 	addr := strings.Split(ctxConfig.Server.Address, ":")[0]
 	// Default Docker platform HTTP port, for now
-	port := 9702
+	port := 9702 // TODO(briancain): properly look this up from server cfg
 	if err != nil {
 		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1

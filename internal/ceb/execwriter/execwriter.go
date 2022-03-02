@@ -10,7 +10,7 @@ import (
 	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
 	"google.golang.org/grpc"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // Writer returns an io.Writer for writing the given channel of exec

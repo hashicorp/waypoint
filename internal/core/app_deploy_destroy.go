@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/plugin"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // CanDestroyDeploy returns true if this app supports destroying deployments.
@@ -28,7 +28,7 @@ func (a *App) CanDestroyDeploy() bool {
 	return ok
 }
 
-// DestroyDeploy destroyes a specific deployment.
+// DestroyDeploy destroys a specific deployment.
 func (a *App) DestroyDeploy(ctx context.Context, d *pb.Deployment) error {
 	return a.destroyDeploy(ctx, d, nil)
 }
@@ -67,7 +67,7 @@ func (a *App) destroyAllDeploys(ctx context.Context) error {
 	return nil
 }
 
-// destroyDeploy destroyes a specific deployment. "d" is the deployment
+// destroyDeploy destroys a specific deployment. "d" is the deployment
 // to destroy. "configD" is the deployment to use to render the configuration.
 // If configD is nil, then "d" is used.
 //

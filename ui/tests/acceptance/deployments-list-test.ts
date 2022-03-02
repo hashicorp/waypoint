@@ -7,8 +7,8 @@ import { setupMirage } from 'ember-cli-mirage/test-support';
 import { setupSession } from 'waypoint/tests/helpers/login';
 
 const url = '/default/microchip/app/wp-bandwidth/deployments';
-const emptyStateUrl = '/default/microchip/app/wp-bandwidth/deployment';
-const redirectUrl = '/default/microchip/app/wp-bandwidth/deployment/seq/'; // concat with length of deployments array in test
+const emptyStateUrl = '/default/microchip/app/wp-bandwidth/deployments';
+const redirectUrl = '/default/microchip/app/wp-bandwidth/deployments/'; // concat with length of deployments array in test
 
 const page = create({
   visit: visitable(url),

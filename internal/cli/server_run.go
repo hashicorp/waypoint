@@ -23,13 +23,17 @@ import (
 	hznhub "github.com/hashicorp/horizon/pkg/hub"
 	hzntest "github.com/hashicorp/horizon/pkg/testutils/central"
 	wphzn "github.com/hashicorp/waypoint-hzn/pkg/server"
+
 	"github.com/hashicorp/waypoint/internal/telemetry"
+	serverpkg "github.com/hashicorp/waypoint/pkg/server"
+
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/posener/complete"
 	"github.com/stretchr/testify/require"
 	bolt "go.etcd.io/bbolt"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	"github.com/hashicorp/waypoint/internal/pkg/cert"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/server"
@@ -232,7 +236,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 		options = append(options, server.WithHTTP(httpInsecureLn))
 	}
 	auth := false
-	if ac, ok := impl.(server.AuthChecker); ok {
+	if ac, ok := impl.(serverpkg.AuthChecker); ok {
 		options = append(options, server.WithAuthentication(ac))
 		auth = true
 	}

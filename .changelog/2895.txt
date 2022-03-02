@@ -1,0 +1,5 @@
+
+```release-note:bug
+plugin/docker: Add Docker auth support for builder and platform, and add config options for
+docker-pull auth and registry auth
+```

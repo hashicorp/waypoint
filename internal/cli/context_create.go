@@ -43,6 +43,13 @@ func (c *ContextCreateCommand) Run(args []string) int {
 		return 1
 	}
 
+	if c.flagSetDefault {
+		if err := c.contextStorage.SetDefault(name); err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+	}
+
 	c.ui.Output("Context %q created.", name, terminal.WithSuccessStyle())
 	return 0
 }
@@ -51,9 +58,10 @@ func (c *ContextCreateCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.BoolVar(&flag.BoolVar{
-			Name:   "set-default",
-			Target: &c.flagSetDefault,
-			Usage:  "Set this context as the new default for the CLI.",
+			Name:    "set-default",
+			Target:  &c.flagSetDefault,
+			Default: true,
+			Usage:   "Set this context as the new default for the CLI.",
 		})
 		f.StringVar(&flag.StringVar{
 			Name:   "server-addr",
@@ -64,6 +72,12 @@ func (c *ContextCreateCommand) Flags() *flag.Sets {
 			Name:   "server-auth-token",
 			Target: &c.flagConfig.Server.AuthToken,
 			Usage:  "Authentication token to use to connect to the server.",
+		})
+		f.StringVar(&flag.StringVar{
+			Name:    "server-platform",
+			Target:  &c.flagConfig.Server.Platform,
+			Default: "n/a",
+			Usage:   "The current platform that Waypoint server is running on.",
 		})
 		f.BoolVar(&flag.BoolVar{
 			Name:    "server-tls",

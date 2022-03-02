@@ -6,7 +6,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func Deployment(v *pb.Deployment) component.Deployment {

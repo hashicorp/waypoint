@@ -14,7 +14,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func TestServiceAuth(t *testing.T) {
@@ -285,6 +286,102 @@ func TestServiceAuth(t *testing.T) {
 
 		_, _, err = s.decodeToken(rogue)
 		require.Error(err)
+	})
+
+	t.Run("validate a runner token with no ID set", func(t *testing.T) {
+		require := require.New(t)
+
+		token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
+			Kind: &pb.Token_Runner_{
+				Runner: &pb.Token_Runner{
+					// Being explicit (not setting it at all would be the same)
+					// to show what we're testing.
+					Id: "",
+				},
+			},
+		})
+
+		// Verify authing works
+		_, err = s.Authenticate(context.Background(), token, "test", nil)
+		require.NoError(err)
+	})
+
+	t.Run("validate a runner token with an ID set and not adopted", func(t *testing.T) {
+		require := require.New(t)
+
+		token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
+			Kind: &pb.Token_Runner_{
+				Runner: &pb.Token_Runner{
+					Id: "i-do-not-exist",
+				},
+			},
+		})
+
+		// Auth should NOT work
+		_, err = s.Authenticate(context.Background(), token, "test", nil)
+		require.Error(err)
+	})
+
+	t.Run("validate a runner token with an ID set and label hash mismatch", func(t *testing.T) {
+		require := require.New(t)
+
+		labels := map[string]string{"foo": "bar"}
+
+		// Create a runner and adopt it.
+		require.NoError(s.state.RunnerCreate(&pb.Runner{
+			Id:     "A",
+			Labels: labels,
+			Kind: &pb.Runner_Remote_{
+				Remote: &pb.Runner_Remote{},
+			},
+		}))
+		defer s.state.RunnerDelete("A")
+		require.NoError(s.state.RunnerAdopt("A", false))
+
+		token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
+			Kind: &pb.Token_Runner_{
+				Runner: &pb.Token_Runner{
+					Id:        "A",
+					LabelHash: 42,
+				},
+			},
+		})
+
+		// Auth should NOT work
+		_, err = s.Authenticate(context.Background(), token, "test", nil)
+		require.Error(err)
+	})
+
+	t.Run("validate a runner token with an ID set and label hash good match", func(t *testing.T) {
+		require := require.New(t)
+
+		labels := map[string]string{"foo": "bar"}
+		hash, err := serverptypes.RunnerLabelHash(labels)
+		require.NoError(err)
+
+		// Create a runner and adopt it.
+		require.NoError(s.state.RunnerCreate(&pb.Runner{
+			Id:     "A",
+			Labels: labels,
+			Kind: &pb.Runner_Remote_{
+				Remote: &pb.Runner_Remote{},
+			},
+		}))
+		defer s.state.RunnerDelete("A")
+		require.NoError(s.state.RunnerAdopt("A", false))
+
+		token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
+			Kind: &pb.Token_Runner_{
+				Runner: &pb.Token_Runner{
+					Id:        "A",
+					LabelHash: hash,
+				},
+			},
+		})
+
+		// Auth should work
+		_, err = s.Authenticate(context.Background(), token, "test", nil)
+		require.NoError(err)
 	})
 }
 

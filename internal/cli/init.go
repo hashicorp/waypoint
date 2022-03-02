@@ -8,21 +8,22 @@ import (
 	"path/filepath"
 	"strings"
 
-	getter "github.com/hashicorp/go-getter"
+	"github.com/hashicorp/go-getter"
 	"github.com/pkg/errors"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	"github.com/hashicorp/waypoint/internal/cli/datagen"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/datasource"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 type InitCommand struct {

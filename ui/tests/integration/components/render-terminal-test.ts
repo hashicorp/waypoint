@@ -1,3 +1,4 @@
+/* eslint-disable qunit/require-expect */
 import { clearRender, render } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 

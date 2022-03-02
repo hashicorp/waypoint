@@ -19,8 +19,8 @@ import (
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/version"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type StatusCommand struct {

@@ -21,13 +21,14 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
-	"github.com/hashicorp/waypoint/internal/config/funcs"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/plugin"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/pkg/config/funcs"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type AppDocsCommand struct {
@@ -383,7 +384,7 @@ func (c *AppDocsCommand) mdxFormatConfigSourcer(name, ct string, doc *docs.Docum
 
 	if len(doc.Fields()) > 0 {
 		fmt.Fprintf(w, "\n\n### Source Parameters\n\n"+
-			"The parameters below are used with `waypoint config set-source` to configure\n"+
+			"The parameters below are used with `waypoint config source-set` to configure\n"+
 			"the behavior this plugin. These are _not_ used in `dynamic` calls. The\n"+
 			"parameters used for `dynamic` are in the previous section.\n\n")
 

@@ -6,12 +6,10 @@ import (
 	"sync"
 
 	"github.com/hashicorp/go-hclog"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-)
 
-//go:generate sh -c "protoc -I../../thirdparty/proto/api-common-protos -I ../.. ../../internal/server/proto/server.proto --go_out=plugins=grpc:../.. --go-json_out=../.."
-//go:generate mv ./proto/server.pb.json.go ./gen
-//go:generate mockery -all -case underscore -dir ./gen -output ./gen/mocks
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+)
 
 // Run initializes and starts the server. This will block until the server
 // exits (by cancelling the associated context set with WithContext or due
@@ -116,7 +114,7 @@ type options struct {
 	HTTPListener []net.Listener
 
 	// AuthChecker, if set, activates authentication checking on the server.
-	AuthChecker AuthChecker
+	AuthChecker server.AuthChecker
 
 	// BrowserUIEnabled determines if the browser UI should be mounted
 	BrowserUIEnabled bool
@@ -158,7 +156,7 @@ func WithImpl(impl pb.WaypointServer) Option {
 }
 
 // WithAuthentication configures the server to require authentication.
-func WithAuthentication(ac AuthChecker) Option {
+func WithAuthentication(ac server.AuthChecker) Option {
 	return func(opts *options) { opts.AuthChecker = ac }
 }
 

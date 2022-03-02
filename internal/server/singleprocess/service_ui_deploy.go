@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/ptypes"
-	"github.com/hashicorp/waypoint/internal/serverstate"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/ptypes"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
 func (s *service) UI_ListDeployments(
@@ -39,7 +39,12 @@ func (s *service) UI_ListDeployments(
 		return nil, err
 	}
 
-	var deployBundles []*pb.UI_DeploymentBundle
+	var (
+		deployBundles []*pb.UI_DeploymentBundle
+
+		deployURLName string
+		deployURLHost string
+	)
 
 	for _, deploy := range deployList {
 
@@ -84,28 +89,47 @@ func (s *service) UI_ListDeployments(
 			}
 		}
 
+		// NOTE(briancain): Look up horizon URL ONCE, then for each deployment, append the deploy sequence
+		// This assumes every app deployment has the same URL, which it generally always does. We don't
+		// need to look up the hostname for every deployment for an application.
+		// We do this because `ListHostnames` service makes an HTTP request to Horizon. Doing
+		// this here means _for each_ deployment, we'd query Horizon for the same data, the horizon URL
+		// and vanity handle. We can grab it once off the first deployment, and use it for the rest of
+		// the bundle instead.
+
 		// Find deployment url
 		// If we had no entrypoint config it is not possible for the preload URL to work.
 		if deploy.HasEntrypointConfig {
-			resp, err := s.ListHostnames(ctx, &pb.ListHostnamesRequest{
-				Target: &pb.Hostname_Target{
-					Target: &pb.Hostname_Target_Application{
-						Application: &pb.Hostname_TargetApp{
-							Application: deploy.Application,
-							Workspace:   deploy.Workspace,
+			if deployURLName == "" {
+				resp, err := s.ListHostnames(ctx, &pb.ListHostnamesRequest{
+					Target: &pb.Hostname_Target{
+						Target: &pb.Hostname_Target_Application{
+							Application: &pb.Hostname_TargetApp{
+								Application: deploy.Application,
+								Workspace:   deploy.Workspace,
+							},
 						},
 					},
-				},
-			})
-			if err == nil && len(resp.Hostnames) > 0 {
-				hostname := resp.Hostnames[0]
+				})
+				if err == nil && len(resp.Hostnames) > 0 {
+					hostname := resp.Hostnames[0]
 
+					bundle.DeployUrl = fmt.Sprintf(
+						"%s--%s%s",
+						hostname.Hostname,
+						(&ptypes.Deployment{Deployment: deploy}).URLFragment(),
+						strings.TrimPrefix(hostname.Fqdn, hostname.Hostname),
+					)
+
+					deployURLName = hostname.Hostname
+					deployURLHost = strings.TrimPrefix(hostname.Fqdn, hostname.Hostname)
+				}
+			} else {
 				bundle.DeployUrl = fmt.Sprintf(
 					"%s--%s%s",
-					hostname.Hostname,
-					(&ptypes.Deployment{Deployment: deploy}).URLFragment(),
-					strings.TrimPrefix(hostname.Fqdn, hostname.Hostname),
-				)
+					deployURLName,
+					(&ptypes.Deployment{Deployment: deploy}).URLFragment(), // Deployment Sequence Number
+					deployURLHost)
 			}
 		}
 

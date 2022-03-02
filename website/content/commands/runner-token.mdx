@@ -1,0 +1,43 @@
+---
+layout: commands
+page_title: 'Commands: Runner token'
+sidebar_title: 'runner token'
+description: 'Request a new token to run a runner'
+---
+
+# Waypoint Runner token
+
+Command: `waypoint runner token`
+
+Request a new token to run a runner
+
+@include "commands/runner-token_desc.mdx"
+
+## Usage
+
+Usage: `waypoint runner token [options]`
+
+Generate a new runner token used for runners.
+
+This generates a new token that can be used for "waypoint runner agent".
+Generating a token in advance enables the "pre-adoption" mode where a runner
+avoids the manual adoption process and begins accepting work immediately.
+
+While this makes it possible to do things such as automate runners all the
+way to running, it is generally not recommended since it requires a higher
+level of security to transfer a token around.
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-project=<string>` (`-p`) - Project to target.
+- `-workspace=<string>` (`-w`) - Workspace to operate in.
+
+#### Command Options
+
+- `-expires-in=<duration>` - The duration until the token expires. i.e. '5m'.
+- `-id=<string>` - Id to restrict this token to. If empty, all runner IDs are valid.
+- `-label=<key=value>` - Labels that must match the runner for this token to be valid. These are set in 'k=v' format and this flag can be repeated to set multiple labels. If no labels are set, runners with any labels are valid.
+
+@include "commands/runner-token_more.mdx"

@@ -21,14 +21,11 @@
     <div id="qunit"></div>
     <div id="qunit-fixture">
       <div id="ember-testing-container">
-        <div id="ember-testing">
-          <!-- this is used to inject the SVG sprite -->
-          {{content-for "ember-testing-sprite-embed"}}
-        </div>
+        <div id="ember-testing"></div>
       </div>
     </div>
 
-    <script src="/testem.js" integrity=""></script>
+    <script src="/testem.js" integrity="" data-embroider-ignore></script>
     <script src="{{rootURL}}assets/vendor.js"></script>
     <script src="{{rootURL}}assets/test-support.js"></script>
     <script src="{{rootURL}}assets/waypoint.js"></script>

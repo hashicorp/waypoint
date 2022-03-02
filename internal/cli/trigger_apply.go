@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -9,7 +10,8 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
 type TriggerApplyCommand struct {
@@ -311,12 +313,17 @@ func (c *TriggerApplyCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.ui.Output("Trigger %q (%s) has been %s", resp.Trigger.Name, resp.Trigger.Id,
+	c.ui.Output("Trigger %q (%s) has been %s\n", resp.Trigger.Name, resp.Trigger.Id,
 		action, terminal.WithSuccessStyle())
 
-	c.ui.Output("Trigger ID: %s", resp.Trigger.Id, terminal.WithSuccessStyle())
-	// TODO(briancain): update output to show trigger URL with wp server attached once http service is implemented
-	//c.ui.Output("Trigger URL: %s", resp.TriggerURL, terminal.WithSuccessStyle())
+	triggerID := resp.Trigger.Id
+	addr := strings.Split(c.clientContext.Server.Address, ":")[0]
+	port := serverconfig.DefaultHTTPPort
+	serverAddr := fmt.Sprintf("%s:%s", addr, port)
+	serverTriggerURL := fmt.Sprintf("https://%s/v1/trigger/%s", serverAddr, triggerID)
+
+	c.ui.Output(" Trigger ID: %s", triggerID, terminal.WithSuccessStyle())
+	c.ui.Output("Trigger URL: %s", serverTriggerURL, terminal.WithSuccessStyle())
 
 	return 0
 }

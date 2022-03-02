@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/internal/serverstate"
-	"github.com/hashicorp/waypoint/internal/serverstate/statetest"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
+	"github.com/hashicorp/waypoint/pkg/serverstate/statetest"
 )
 
 func init() {

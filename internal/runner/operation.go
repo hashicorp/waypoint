@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // executeJob executes an assigned job. This will source the data (if necessary),
@@ -273,7 +273,6 @@ func (r *Runner) executeJob(
 
 		log.Debug("noop job success")
 		return nil, nil
-
 	case *pb.Job_Up:
 		return r.executeUpOp(ctx, log, job, project)
 

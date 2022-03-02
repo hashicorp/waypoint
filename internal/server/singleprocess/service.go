@@ -5,15 +5,15 @@ import (
 	"sync"
 
 	"github.com/hashicorp/go-hclog"
-	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
 	bolt "go.etcd.io/bbolt"
 
-	wpoidc "github.com/hashicorp/waypoint/internal/auth/oidc"
-	"github.com/hashicorp/waypoint/internal/server"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
-	"github.com/hashicorp/waypoint/internal/serverstate"
+	wpoidc "github.com/hashicorp/waypoint/pkg/auth/oidc"
+	"github.com/hashicorp/waypoint/pkg/server"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
 // service implements the gRPC service for the server.
@@ -122,6 +122,17 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 			cfg.acceptUrlTerms,
 			&cfgCopy,
 		); err != nil {
+			return nil, err
+		}
+	}
+
+	// If we haven't initialized our server config before, do that once.
+	conf, err := s.state.ServerConfigGet()
+	if err != nil {
+		return nil, err
+	}
+	if conf.Cookie == "" {
+		if err := s.state.ServerConfigSet(conf); err != nil {
 			return nil, err
 		}
 	}
