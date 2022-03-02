@@ -1,0 +1,3 @@
+```release-note:bug
+core: Fix panic where on-demand runner config was nil before starting task
+```
