@@ -238,7 +238,7 @@ func (p *Platform) Deploy(
 
 	architecture := p.config.Architecture
 	if architecture == "" {
-		architecture = DefaultArchitecture
+		architecture = DockerArchitectureMapper(img.Architecture, log)
 	}
 
 	step.Done()

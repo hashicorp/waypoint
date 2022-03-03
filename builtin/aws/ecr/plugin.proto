@@ -8,4 +8,5 @@ option go_package = "waypoint/builtin/aws/ecr";
 message Image {
   string image = 1;
   string tag = 2;
+  string architecture = 3;
 }
