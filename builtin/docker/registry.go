@@ -80,8 +80,9 @@ func (r *Registry) Push(
 	log hclog.Logger,
 ) (*Image, error) {
 	target := &Image{
-		Image: r.config.Image,
-		Tag:   r.config.Tag,
+		Image:        r.config.Image,
+		Tag:          r.config.Tag,
+		Architecture: img.Architecture,
 	}
 	auth := r.config.Auth
 	if !r.config.Local {

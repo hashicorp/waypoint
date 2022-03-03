@@ -228,8 +228,9 @@ func (r *Registry) Push(
 	}
 
 	return &Image{
-		Image: dockerImg.Image,
-		Tag:   dockerImg.Tag,
+		Image:        dockerImg.Image,
+		Tag:          dockerImg.Tag,
+		Architecture: dockerImg.Architecture,
 	}, nil
 }
 

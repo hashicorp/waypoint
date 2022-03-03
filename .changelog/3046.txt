@@ -1,0 +1,11 @@
+```release-note:improvement
+plugin/docker: Output `architecture` from Docker builder
+```
+
+```release-note:improvement
+plugin/aws-ecr: Output `architecture` from Docker image input
+```
+
+```release-note:improvement
+plugin/aws-lambda: Default lambda architecture to Docker/ECR image architecture
+```
