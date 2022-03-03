@@ -390,6 +390,33 @@ func Commands(
 			}, nil
 		},
 
+		"job": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["job"][0],
+				HelpText:     helpText["job"][1],
+			}, nil
+		},
+		"job list": func() (cli.Command, error) {
+			return &JobListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"job inspect": func() (cli.Command, error) {
+			return &JobInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"job cancel": func() (cli.Command, error) {
+			return &JobCancelCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"job get-stream": func() (cli.Command, error) {
+			return &JobGetStreamCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"token": func() (cli.Command, error) {
 			return &helpCommand{
 				SynopsisText: helpText["token"][0],
@@ -974,6 +1001,13 @@ deployments. These can be used to share previews with teammates, see
 unreleased deployments, and more.
 
 For more information see: https://waypointproject.io/docs/url
+`,
+	},
+
+	"job": {
+		"Job introspection and management",
+		`
+Manage and check the status of jobs in Waypoint.
 `,
 	},
 
