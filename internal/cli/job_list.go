@@ -3,7 +3,9 @@ package cli
 import (
 	"fmt"
 
+	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/ptypes"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -14,7 +16,9 @@ import (
 type JobListCommand struct {
 	*baseCommand
 
-	flagJson bool
+	flagJson  bool
+	flagLimit int
+	flagDesc  bool
 }
 
 func (c *JobListCommand) Run(args []string) int {
@@ -36,10 +40,24 @@ func (c *JobListCommand) Run(args []string) int {
 		return 1
 	}
 
+	jobs := resp.Jobs
+
+	if c.flagDesc {
+		var reverse []*pb.Job
+		for i := len(jobs) - 1; i >= 0; i-- {
+			reverse = append(reverse, jobs[i])
+		}
+		jobs = reverse
+	}
+
+	if c.flagLimit > 0 && c.flagLimit <= len(jobs) {
+		jobs = jobs[len(jobs)-c.flagLimit:]
+	}
+
 	if c.flagJson {
 		var m jsonpb.Marshaler
 		m.Indent = "\t"
-		for _, t := range resp.Jobs {
+		for _, t := range jobs {
 			str, err := m.MarshalToString(t)
 			if err != nil {
 				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -53,10 +71,10 @@ func (c *JobListCommand) Run(args []string) int {
 
 	c.ui.Output("Waypoint Jobs", terminal.WithHeaderStyle())
 
-	tblHeaders := []string{"ID", "Operation", "State", "Target Runner", "Workspace", "Project", "Application"}
+	tblHeaders := []string{"ID", "Operation", "State", "Time Completed", "Target Runner", "Workspace", "Project", "Application"}
 	tbl := terminal.NewTable(tblHeaders...)
 
-	for _, j := range resp.Jobs {
+	for _, j := range jobs {
 		var op string
 		// Job_Noop seems to be missing the isJob_operation method
 		switch j.Operation.(type) {
@@ -126,10 +144,16 @@ func (c *JobListCommand) Run(args []string) int {
 			targetRunner = target.Id.Id
 		}
 
+		var completeTime string
+		if time, err := ptypes.Timestamp(j.CompleteTime); err == nil {
+			completeTime = humanize.Time(time)
+		}
+
 		tblColumn := []string{
 			j.Id,
 			op,
 			jobState,
+			completeTime,
 			targetRunner,
 			j.Workspace.Workspace,
 			j.Application.Project,
@@ -148,10 +172,24 @@ func (c *JobListCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.BoolVar(&flag.BoolVar{
+			Name:    "desc",
+			Target:  &c.flagDesc,
+			Default: false,
+			Usage:   "Output the list of jobs from newest to oldest.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
 			Name:    "json",
 			Target:  &c.flagJson,
 			Default: false,
 			Usage:   "Output the list of jobs as json.",
+		})
+
+		f.IntVar(&flag.IntVar{
+			Name:    "limit",
+			Target:  &c.flagLimit,
+			Default: 0,
+			Usage:   "If set, will limit the number of jobs to list.",
 		})
 	})
 }
