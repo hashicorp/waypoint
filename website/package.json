@@ -5,6 +5,7 @@
   "author": "HashiCorp",
   "dependencies": {},
   "devDependencies": {
+    "next": "^12.1.0",
     "@hashicorp/platform-cli": "^1.2.0",
     "husky": "4.3.8",
     "prettier": "2.2.1"
