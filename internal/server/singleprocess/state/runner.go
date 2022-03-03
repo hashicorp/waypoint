@@ -209,7 +209,7 @@ func (s *State) runnerCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, runnerpb *pb.Run
 	// replaced with real values if we have them.
 	runnerpb.FirstSeen = now
 	runnerpb.LastSeen = now
-	runnerpb.AdoptionState = pb.Runner_NEW
+	runnerpb.AdoptionState = pb.Runner_PENDING
 
 	// Look up the runner in our database. If it exists, override the
 	// values that are persistently stored.
@@ -242,7 +242,7 @@ func (s *State) runnerCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, runnerpb *pb.Run
 		// allows a runner to change their labels without affecting adoption.
 		// For now, we do not support this.
 		if hash1 != hash2 {
-			runnerpb.AdoptionState = pb.Runner_NEW
+			runnerpb.AdoptionState = pb.Runner_PENDING
 		}
 	}
 
@@ -333,7 +333,7 @@ func (s *State) runnerOffline(dbTxn *bolt.Tx, memTxn *memdb.Txn, id string) erro
 		//
 		// We also delete PREADOPTED because if the runner comes back, we expect
 		// it'll have a valid token to set it back to the PREADOPTED state.
-		del = r.AdoptionState == pb.Runner_NEW || r.AdoptionState == pb.Runner_PREADOPTED
+		del = r.AdoptionState == pb.Runner_PENDING || r.AdoptionState == pb.Runner_PREADOPTED
 
 	default:
 		// All other runner types like ODR and Local we don't keep records of.
