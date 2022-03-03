@@ -183,10 +183,6 @@
     "path": "job-cancel"
   },
   {
-    "title": "job inspect",
-    "path": "job-inspect"
-  },
-  {
     "title": "job get-stream",
     "path": "job-get-stream"
   },
