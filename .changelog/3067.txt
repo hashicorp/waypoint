@@ -1,0 +1,4 @@
+```release-note:feature
+**cli:** Introduce a new CLI command for job management and inspection
+`waypoint job`.
+```
