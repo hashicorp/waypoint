@@ -264,8 +264,7 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 						return nil, err
 					}
 					if len(runners.Runners) == 0 {
-						return nil, status.Errorf(codes.NotFound,
-							"no targetable runners found.")
+						return nil, status.Errorf(codes.NotFound, "no runners found.")
 					}
 					targeted := false
 					for _, r := range runners.Runners {
@@ -288,9 +287,9 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 							targeted = true
 						}
 					}
-					if targeted == false {
+					if !targeted {
 						return nil, status.Errorf(codes.NotFound,
-							"no targetable runner found with labels %v.", configRunner.TargetLabels)
+							"no runner found with labels %v.", configRunner.TargetLabels)
 					}
 				}
 			}
