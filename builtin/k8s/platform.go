@@ -417,8 +417,8 @@ func configureContainer(
 	}
 
 	// Get container resource limits and requests
-	var resourceLimits = make(map[corev1.ResourceName]k8sresource.Quantity)
-	var resourceRequests = make(map[corev1.ResourceName]k8sresource.Quantity)
+	resourceLimits := make(map[corev1.ResourceName]k8sresource.Quantity)
+	resourceRequests := make(map[corev1.ResourceName]k8sresource.Quantity)
 
 	if c.CPU != nil {
 		if c.CPU.Requested != "" {
@@ -874,7 +874,6 @@ func (p *Platform) resourceDeploymentCreate(
 		pods, err := ps.List(ctx, metav1.ListOptions{
 			LabelSelector: podLabelId,
 		})
-
 		if err != nil {
 			return false, nil
 		}
@@ -971,15 +970,18 @@ func (p *Platform) resourceDeploymentDestroy(
 
 	del := metav1.DeletePropagationBackground
 
+	msg := "Deployment deleted"
 	deployclient := csinfo.Clientset.AppsV1().Deployments(ns)
 	if err := deployclient.Delete(ctx, state.Name, metav1.DeleteOptions{
 		GracePeriodSeconds: &deleteGrace,
 		PropagationPolicy:  &del,
 	}); err != nil {
-		return err
+		if !errors.IsNotFound(err) {
+			return err
+		}
+		msg = fmt.Sprintf("Deployment (%s) not found, continuing..", state.Name)
 	}
-
-	step.Update("Deployment deleted")
+	step.Update(msg)
 	step.Done()
 
 	return nil
@@ -1702,7 +1704,6 @@ deploy "kubernetes" {
 						),
 						docs.Default("5"),
 					)
-
 				}),
 			)
 		},
@@ -1852,7 +1853,6 @@ deploy "kubernetes" {
 				),
 				docs.Default("30"),
 			)
-
 		}),
 	)
 
@@ -1984,12 +1984,10 @@ deploy "kubernetes" {
 	return doc, nil
 }
 
-var (
-	mixedHealthWarn = strings.TrimSpace(`
+var mixedHealthWarn = strings.TrimSpace(`
 Waypoint detected that the current deployment is not ready, however your application
 might be available or still starting up.
 `)
-)
 
 var (
 	_ component.Platform         = (*Platform)(nil)
