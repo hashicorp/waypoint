@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"time"
 
@@ -268,8 +267,17 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 						return nil, status.Errorf(codes.NotFound,
 							"no targetable runners found.")
 					}
+					targeted := false
 					for _, r := range runners.Runners {
-						if reflect.DeepEqual(r.Labels, configRunner.TargetLabels) {
+						n := len(configRunner.TargetLabels)
+						// Check whether a runner matches every target label
+						// If multiple runners match labels, this will take the first that matches
+						for k, v := range configRunner.TargetLabels {
+							if val, ok := r.Labels[k]; ok && v == val {
+								n -= 1
+							}
+						}
+						if n == 0 {
 							job.TargetRunner = &pb.Ref_Runner{
 								Target: &pb.Ref_Runner_Id{
 									Id: &pb.Ref_RunnerId{
@@ -277,7 +285,12 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 									},
 								},
 							}
+							targeted = true
 						}
+					}
+					if targeted == false {
+						return nil, status.Errorf(codes.NotFound,
+							"no targetable runner found with labels %v.", configRunner.TargetLabels)
 					}
 				}
 			}

@@ -155,8 +155,6 @@ func (c *ConfigSetCommand) Run(args []string) int {
 			// If configs are set on runner instead of application, target runner
 		}
 
-		//TODO: update to add flag to target runner by workspace and labels
-
 		req.Variables = append(req.Variables, configVar)
 	}
 
