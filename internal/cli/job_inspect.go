@@ -3,7 +3,9 @@ package cli
 import (
 	"fmt"
 
+	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -137,16 +139,34 @@ func (c *JobInspectCommand) Run(args []string) int {
 		targetRunner = target.Id.Id
 	}
 
+	var completeTime string
+	if time, err := ptypes.Timestamp(resp.CompleteTime); err == nil {
+		completeTime = humanize.Time(time)
+	}
+	var cancelTime string
+	if time, err := ptypes.Timestamp(resp.CancelTime); err == nil {
+		cancelTime = humanize.Time(time)
+	}
+
 	c.ui.Output("Job Configuration", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
 			Name: "ID", Value: resp.Id,
 		},
 		{
+			Name: "Singleton ID", Value: resp.SingletonId,
+		},
+		{
 			Name: "Operation", Value: op,
 		},
 		{
 			Name: "State", Value: jobState,
+		},
+		{
+			Name: "Complete Time", Value: completeTime,
+		},
+		{
+			Name: "Cancel Time", Value: cancelTime,
 		},
 		{
 			Name: "Target Runner", Value: targetRunner,
