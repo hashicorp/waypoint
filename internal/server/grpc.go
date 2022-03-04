@@ -38,6 +38,10 @@ func newGrpcServer(opts *options) (*grpcServer, error) {
 
 			// Protocol version negotiation
 			server.VersionUnaryInterceptor(resp.Info),
+
+			// Nil protobuf "any" fields for gRPC-gateway since the JSON
+			// encoding tries to decode the any.
+			gwNullAnyUnaryInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
 			// Insert our logger and log
