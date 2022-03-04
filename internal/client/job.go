@@ -245,8 +245,10 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 		}
 		// If runner config is found, assign to job
 		if configRunner != nil {
-			job.OndemandRunner = &pb.Ref_OnDemandRunnerConfig{
-				Name: configRunner.Profile,
+			if configRunner.Profile != "" {
+				job.OndemandRunner = &pb.Ref_OnDemandRunnerConfig{
+					Name: configRunner.Profile,
+				}
 			}
 		}
 	}
