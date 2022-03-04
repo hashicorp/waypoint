@@ -203,7 +203,7 @@ func (c *JobInspectCommand) Synopsis() string {
 
 func (c *JobInspectCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint job list [options]
+Usage: waypoint job inspect [options] <job-id>
 
   Inspect the details of a job by id in Waypoint server.
 
