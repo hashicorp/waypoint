@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	anypb "google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func TestGwNullAnyUnaryInterceptor(t *testing.T) {
-	f := gwNullAnyUnaryInterceptor()
+	f := GWNullAnyUnaryInterceptor()
 
 	t.Run("with gw metadata", func(t *testing.T) {
 		require := require.New(t)

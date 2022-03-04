@@ -41,7 +41,7 @@ func newGrpcServer(opts *options) (*grpcServer, error) {
 
 			// Nil protobuf "any" fields for gRPC-gateway since the JSON
 			// encoding tries to decode the any.
-			gwNullAnyUnaryInterceptor(),
+			server.GWNullAnyUnaryInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
 			// Insert our logger and log

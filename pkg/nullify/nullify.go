@@ -36,11 +36,18 @@ func (n *nullifier) Struct(v reflect.Value) error {
 }
 
 func (n *nullifier) StructField(sf reflect.StructField, v reflect.Value) error {
+	if sf.PkgPath != "" {
+		return reflectwalk.SkipEntry
+	}
+
 	// If is null already or not addressable, can't do anything.
 	// NOTE the "not address" or CanSet check is a result of many reasons why
 	// this might not work. The user must pass in an addressable value, meaning
 	// a pointer, non-const, etc.
-	if !v.IsValid() || !v.CanSet() {
+	if !v.IsValid() {
+		return nil
+	}
+	if !v.CanSet() {
 		return nil
 	}
 

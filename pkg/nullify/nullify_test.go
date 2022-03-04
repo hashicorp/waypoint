@@ -52,6 +52,24 @@ func TestNullify(t *testing.T) {
 				B: 42,
 			},
 		},
+		{
+			"unexported fields are ignored",
+			&struct {
+				a *int
+				B int
+			}{
+				a: &intVal,
+				B: 42,
+			},
+			[]interface{}{(*int)(nil)},
+			&struct {
+				a *int
+				B int
+			}{
+				a: &intVal,
+				B: 42,
+			},
+		},
 	}
 
 	for _, tt := range cases {

@@ -7,17 +7,17 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	anypb "google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/hashicorp/waypoint/internal/pkg/nullify"
+	"github.com/hashicorp/waypoint/pkg/nullify"
 )
 
-// gwNullAnyUnaryInterceptor returns a gRPC unary interceptor that replaces all
+// GWNullAnyUnaryInterceptor returns a gRPC unary interceptor that replaces all
 // *any.Any fields in structs with null ONLY FOR grpc-gateway requests.
 //
 // grpc-gateway requests are detected by the presence of any metadata that
 // starts with the grpc-gateway prefix (HTTP headers).
-func gwNullAnyUnaryInterceptor() grpc.UnaryServerInterceptor {
+func GWNullAnyUnaryInterceptor() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},
