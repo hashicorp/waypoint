@@ -47,6 +47,7 @@ bin/entrypoint: # create the entrypoint for the current platform
 
 .PHONY: install
 install: bin # build and copy binaries to $GOPATH/bin/waypoint
+	rm $(GOPATH)/bin/waypoint
 	mkdir -p $(GOPATH)/bin
 	cp ./waypoint $(GOPATH)/bin/waypoint
 

@@ -32,6 +32,14 @@ The AWS region for the ECS cluster.
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### architecture
+
+The instruction set architecture that the function supports. Valid values are: "x86_64", "arm64".
+
+- Type: **string**
+- **Optional**
+- Default: x86_64
+
 #### iam_role
 
 An IAM Role specified by ARN that will be used by the Lambda at execution time.

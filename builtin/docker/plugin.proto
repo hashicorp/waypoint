@@ -11,6 +11,7 @@ import "google/protobuf/empty.proto";
 message Image {
   string image = 1;
   string tag = 2;
+  string architecture = 6;
 
   // location is where this image is currently. This can be used to
   // determine if the image is pulled or not based on this proto rather

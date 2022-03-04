@@ -41,7 +41,7 @@ func TestRunner_crud(t *testing.T, factory Factory, restartF RestartFactory) {
 	found, err := s.RunnerById(rec.Id, nil)
 	require.NoError(err)
 	require.Equal(rec.Id, found.Id)
-	require.Equal(pb.Runner_NEW, found.AdoptionState)
+	require.Equal(pb.Runner_PENDING, found.AdoptionState)
 
 	// List should include it
 	list, err = s.RunnerList()
@@ -124,7 +124,7 @@ func TestRunnerAdopt(t *testing.T, factory Factory, restartF RestartFactory) {
 	ws := memdb.NewWatchSet()
 	found, err := s.RunnerById(rec.Id, ws)
 	require.NoError(err)
-	require.Equal(pb.Runner_NEW, found.AdoptionState)
+	require.Equal(pb.Runner_PENDING, found.AdoptionState)
 
 	// Watch should block
 	require.True(ws.Watch(time.After(10 * time.Millisecond)))
@@ -166,7 +166,7 @@ func TestRunnerAdopt(t *testing.T, factory Factory, restartF RestartFactory) {
 	{
 		found, err := s.RunnerById(rec.Id, nil)
 		require.NoError(err)
-		require.Equal(pb.Runner_NEW, found.AdoptionState)
+		require.Equal(pb.Runner_PENDING, found.AdoptionState)
 	}
 }
 
@@ -205,7 +205,7 @@ func TestRunnerAdopt_changeLabels(t *testing.T, factory Factory, restartF Restar
 		{
 			found, err := s.RunnerById(rec.Id, nil)
 			require.NoError(err)
-			require.Equal(pb.Runner_NEW, found.AdoptionState)
+			require.Equal(pb.Runner_PENDING, found.AdoptionState)
 		}
 	})
 
@@ -274,7 +274,7 @@ func TestRunnerAdopt_changeLabels(t *testing.T, factory Factory, restartF Restar
 		{
 			found, err := s.RunnerById(rec.Id, nil)
 			require.NoError(err)
-			require.Equal(pb.Runner_NEW, found.AdoptionState)
+			require.Equal(pb.Runner_PENDING, found.AdoptionState)
 		}
 	})
 }

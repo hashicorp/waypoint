@@ -1,0 +1,6 @@
+```release-note:feature
+plugin/nomad: Nomad jobspec canary promotion releaser
+```
+```release-note:improvement
+plugin/nomad: Resource manager for Nomad jobspec
+```
