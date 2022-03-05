@@ -244,6 +244,15 @@ On Fargate, possible values for this are configured by the amount of memory the 
 - Type: **int**
 - **Optional**
 
+#### cpu_architecture
+
+The CPU architecture.
+
+You can run your Linux tasks on an ARM-based platform by setting the value to `ARM64`. this option is avaiable for tasks that run on Linuc Amazon EC2 instance or Linux containers on Fargate.
+
+- Type: **string**
+- **Optional**
+
 #### disable_alb
 
 Do not create a load balancer assigned to the service.
