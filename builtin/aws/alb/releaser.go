@@ -649,7 +649,7 @@ func (r *Releaser) resourceRecordSetDestroy(
 	r53 := route53.New(sess)
 
 	records, err := r53.ListResourceRecordSets(&route53.ListResourceRecordSetsInput{
-		HostedZoneId:    aws.String(lbState.ZoneId),
+		HostedZoneId:    aws.String(r.config.ZoneId),
 		StartRecordName: aws.String(state.FQDN),
 		StartRecordType: aws.String("A"),
 		MaxItems:        aws.String("1"),
@@ -671,7 +671,7 @@ func (r *Releaser) resourceRecordSetDestroy(
 		return nil
 	}
 
-	log.Debug("removing route53 record", "zone-id", lbState.ZoneId)
+	log.Debug("removing route53 record", "zone-id", r.config.ZoneId)
 	input := &route53.ChangeResourceRecordSetsInput{
 		ChangeBatch: &route53.ChangeBatch{
 			Changes: []*route53.Change{
@@ -690,7 +690,7 @@ func (r *Releaser) resourceRecordSetDestroy(
 			},
 			Comment: aws.String("managed by waypoint"),
 		},
-		HostedZoneId: aws.String(lbState.ZoneId),
+		HostedZoneId: aws.String(r.config.ZoneId),
 	}
 
 	result, err := r53.ChangeResourceRecordSets(input)
