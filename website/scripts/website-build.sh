@@ -3,7 +3,7 @@ PREVIEW_DIR=website-preview
 # Clone the dev-portal project, if needed
 if [ ! -d "$PREVIEW_DIR" ]; then
     echo "⏳ Cloning the dev-portal repo, this might take a while..."
-    git clone --branch brk.feat/project-preview-config --depth=1 https://github.com/hashicorp/dev-portal.git "$PREVIEW_DIR"
+    git clone --branch brk.feat/io-preview-cache --depth=1 https://github.com/hashicorp/dev-portal.git "$PREVIEW_DIR"
 fi
 # cd into the dev-portal project
 cd "$PREVIEW_DIR"
