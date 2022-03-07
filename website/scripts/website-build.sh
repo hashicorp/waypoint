@@ -9,4 +9,4 @@ fi
 cd "$PREVIEW_DIR"
 
 # Run the dev-portal content-repo start script
-REPO=waypoint DEV_IO=waypoint IS_CONTENT_PREVIEW=true HASHI_ENV=project-preview npm run build:deploy-preview
+REPO=waypoint DEV_IO=waypoint IS_CONTENT_PREVIEW=true HASHI_ENV=preview npm run build:deploy-preview
