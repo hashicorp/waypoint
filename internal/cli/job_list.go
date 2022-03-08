@@ -44,16 +44,14 @@ func (c *JobListCommand) Run(args []string) int {
 	jobs := resp.Jobs
 
 	// sort by complete time
-	sort.Slice(jobs, func(i, j int) bool {
-		return jobs[i].CompleteTime.AsTime().Before(jobs[j].CompleteTime.AsTime())
-	})
-
 	if c.flagDesc {
-		var reverse []*pb.Job
-		for i := len(jobs) - 1; i >= 0; i-- {
-			reverse = append(reverse, jobs[i])
-		}
-		jobs = reverse
+		sort.Slice(jobs, func(i, j int) bool {
+			return jobs[i].CompleteTime.AsTime().Before(jobs[j].CompleteTime.AsTime())
+		})
+	} else {
+		sort.Slice(jobs, func(i, j int) bool {
+			return jobs[i].CompleteTime.AsTime().After(jobs[j].CompleteTime.AsTime())
+		})
 	}
 
 	if c.flagLimit > 0 && c.flagLimit <= len(jobs) {
