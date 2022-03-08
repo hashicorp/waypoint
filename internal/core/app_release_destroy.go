@@ -236,6 +236,11 @@ func (op *releaseDestroyOperation) Upsert(
 	return resp.Release, nil
 }
 
+// Name returns the name of the operation
+func (op *releaseDestroyOperation) Name() string {
+	return "release destroy"
+}
+
 func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
 	// If we have no releaser then we're done.
 	if op.Component == nil {

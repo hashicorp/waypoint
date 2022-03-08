@@ -71,6 +71,11 @@ func (a *App) Build(ctx context.Context, optFuncs ...BuildOption) (
 	return build, artifact, err
 }
 
+// Name returns the name of the operation
+func (op *buildOperation) Name() string {
+	return "build"
+}
+
 // BuildOption is used to configure a Build
 type BuildOption func(*buildOptions) error
 

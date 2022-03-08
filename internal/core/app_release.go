@@ -211,6 +211,11 @@ func (op *releaseOperation) Upsert(
 	return resp.Release, nil
 }
 
+// Name returns the name of the operation
+func (op *releaseOperation) Name() string {
+	return "release"
+}
+
 func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App, msg proto.Message) (interface{}, error) {
 	// If we have no releaser, we do nothing since we just update the
 	// blank release metadata.

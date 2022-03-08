@@ -154,6 +154,11 @@ func (op *pushBuildOperation) Upsert(
 	return resp.Artifact, nil
 }
 
+// Name returns the name of the operation
+func (op *pushBuildOperation) Name() string {
+	return "push build"
+}
+
 func (op *pushBuildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
 	// If we have no registry, we just push the local build.
 	if op.ComponentRegistry == nil {

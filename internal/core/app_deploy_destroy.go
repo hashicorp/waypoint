@@ -193,6 +193,11 @@ type deployDestroyOperation struct {
 	Deployment *pb.Deployment
 }
 
+// Name returns the name of the operation
+func (op *deployDestroyOperation) Name() string {
+	return "deployment destroy"
+}
+
 func (op *deployDestroyOperation) Init(app *App) (proto.Message, error) {
 	return op.Deployment, nil
 }
