@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
@@ -41,6 +42,11 @@ func (c *JobListCommand) Run(args []string) int {
 	}
 
 	jobs := resp.Jobs
+
+	// sort by complete time
+	sort.Slice(jobs, func(i, j int) bool {
+		return jobs[i].CompleteTime.AsTime().Before(jobs[j].CompleteTime.AsTime())
+	})
 
 	if c.flagDesc {
 		var reverse []*pb.Job
