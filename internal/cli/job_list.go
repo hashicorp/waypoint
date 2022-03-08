@@ -54,8 +54,9 @@ func (c *JobListCommand) Run(args []string) int {
 		})
 	}
 
+	// limit to the first n jobs
 	if c.flagLimit > 0 && c.flagLimit <= len(jobs) {
-		jobs = jobs[len(jobs)-c.flagLimit:]
+		jobs = jobs[:c.flagLimit]
 	}
 
 	if c.flagJson {
