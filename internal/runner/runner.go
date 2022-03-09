@@ -301,29 +301,17 @@ func (r *Runner) Start(ctx context.Context) error {
 	// and runningCtx is tied to the full struct lifecycle rather than this
 	// single func call.
 
-	// Register
+	// Start our configuration
 	log.Debug("starting RunnerConfig stream")
-	client, err := r.client.RunnerConfig(r.runningCtx)
-	if err != nil {
-		return err
-	}
-	r.cleanup(func() { client.CloseSend() })
-
-	// Send request
-	if err := client.Send(&pb.RunnerConfigRequest{
-		Event: &pb.RunnerConfigRequest_Open_{
-			Open: &pb.RunnerConfigRequest_Open{
-				Runner: r.runner,
-			},
-		},
-	}); err != nil {
+	if err := r.initConfigStream(r.runningCtx); err != nil {
 		return err
 	}
 
-	// Start the watcher and the goroutine that receives configs
-	ch := make(chan *pb.RunnerConfig)
-	go r.watchConfig(r.runningCtx, ch)
-	go r.recvConfig(r.runningCtx, client, ch)
+	// Wait for initial registration
+	log.Debug("waiting for registration")
+	if r.waitState(&r.stateConfig, true) {
+		return status.Errorf(codes.Internal, "early exit while waiting for first config")
+	}
 
 	// Wait for the initial configuration to be set
 	log.Debug("runner registered, waiting for first config processing")
