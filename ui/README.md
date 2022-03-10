@@ -53,7 +53,7 @@ that are static and are re-loaded on page refresh.
 
 Troubleshooting:
 
-- If you run into issues with `ember serve`, try deleting the directory `ui/node_modules/` and rerunning an `ember serve`.
+- If you run into issues with `ember serve`, try deleting the directory `ui/node_modules/`, rerunning `yarn install`, and rerunning an `ember serve`.
 - You will need a Waypoint CLI token to log in, e.g. the output of `waypoint user token`. To achieve this, run Docker and the Waypoint CLI.
 
 ### Running with a local Waypoint Server
