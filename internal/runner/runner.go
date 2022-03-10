@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -273,26 +274,37 @@ func (r *Runner) Start(ctx context.Context) error {
 	if adopt {
 		// Register and initialize the adoption flow (if necessary) by requesting
 		// our token.
-		log.Debug("requesting token with RunnerToken (initiates adoption)")
-		tokenResp, err := r.client.RunnerToken(tokenCtx, &pb.RunnerTokenRequest{
-			Runner: r.runner,
-		})
-		if err != nil {
-			return err
-		}
-		if tokenResp != nil && tokenResp.Token != "" {
-			// If we received a token, then we replace our token with that.
-			// It is possible that we do NOT have a token, because our current
-			// token is already valid.
-			log.Debug("runner adoption complete, new token received")
-			r.runningCtx = serverclient.TokenWithContext(r.runningCtx, tokenResp.Token)
-
-			// Persist our token
-			if err := r.statePutToken(tokenResp.Token); err != nil {
+		retry := false
+		for {
+			log.Debug("requesting token with RunnerToken (initiates adoption)")
+			tokenResp, err := r.client.RunnerToken(tokenCtx, &pb.RunnerTokenRequest{
+				Runner: r.runner,
+			}, grpc.WaitForReady(retry))
+			if err != nil {
+				if status.Code(err) == codes.Unavailable {
+					log.Warn("server down during adoption, will attempt reconnect")
+					retry = true
+					continue
+				}
 				return err
 			}
-		} else {
-			log.Debug("runner token is already valid, using same token")
+
+			if tokenResp != nil && tokenResp.Token != "" {
+				// If we received a token, then we replace our token with that.
+				// It is possible that we do NOT have a token, because our current
+				// token is already valid.
+				log.Debug("runner adoption complete, new token received")
+				r.runningCtx = serverclient.TokenWithContext(r.runningCtx, tokenResp.Token)
+
+				// Persist our token
+				if err := r.statePutToken(tokenResp.Token); err != nil {
+					return err
+				}
+			} else {
+				log.Debug("runner token is already valid, using same token")
+			}
+
+			break
 		}
 	}
 
@@ -301,29 +313,17 @@ func (r *Runner) Start(ctx context.Context) error {
 	// and runningCtx is tied to the full struct lifecycle rather than this
 	// single func call.
 
-	// Register
+	// Start our configuration
 	log.Debug("starting RunnerConfig stream")
-	client, err := r.client.RunnerConfig(r.runningCtx)
-	if err != nil {
-		return err
-	}
-	r.cleanup(func() { client.CloseSend() })
-
-	// Send request
-	if err := client.Send(&pb.RunnerConfigRequest{
-		Event: &pb.RunnerConfigRequest_Open_{
-			Open: &pb.RunnerConfigRequest_Open{
-				Runner: r.runner,
-			},
-		},
-	}); err != nil {
+	if err := r.initConfigStream(r.runningCtx); err != nil {
 		return err
 	}
 
-	// Start the watcher and the goroutine that receives configs
-	ch := make(chan *pb.RunnerConfig)
-	go r.watchConfig(r.runningCtx, ch)
-	go r.recvConfig(r.runningCtx, client, ch)
+	// Wait for initial registration
+	log.Debug("waiting for registration")
+	if r.waitState(&r.stateConfig, true) {
+		return status.Errorf(codes.Internal, "early exit while waiting for first config")
+	}
 
 	// Wait for the initial configuration to be set
 	log.Debug("runner registered, waiting for first config processing")
