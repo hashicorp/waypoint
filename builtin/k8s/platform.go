@@ -1246,8 +1246,6 @@ func (p *Platform) Deploy(
 	tfcToken := os.Getenv("TFC_TOKEN")
 	tfcWorkspace := os.Getenv("TFC_WORKSPACE")
 	config := &tfe.Config{
-		// I pushed this token on accident and it has been revoked for anyone
-		// curious
 		Token: tfcToken,
 	}
 	tfclient, err := tfe.NewClient(config)
@@ -1265,41 +1263,16 @@ func (p *Platform) Deploy(
 	if err != nil {
 		q.Q("=>=> error getting state stuff:", err)
 	}
-	q.Q("=> outputs:", currentState.Outputs)
 
-	outputList, err := tfclient.StateVersions.ListOutputs(ctx, currentState.ID, &tfe.StateVersionOutputsListOptions{})
-	if err != nil {
-		q.Q("=>=> error getting state stuff:", err)
-	}
-	// outputs, err := tfclient.StateVersions.Outputs(ctx, currentState.ID, tfe.StateVersionOutputsListOptions{})
-	// if err != nil {
-	// 	q.Q("=>=> error getting state stuff:", err)
-	// }
-	if len(outputList.Items) == 0 {
-		q.Q("=> no state or zero outputs")
-	} else {
-		q.Q("-> state version id:", currentState.ID)
-		for _, output := range outputList.Items {
-			q.Q("=>=> =>", output.ID, output.Type, output.Name, output.Value)
+	tfcValues := make(map[string]string)
+
+	for _, output := range currentState.Outputs {
+		if strings.HasPrefix(output.Name, "wp_") {
+			tfcValues[strings.TrimPrefix(output.Name, "wp_")] = output.Value.(string)
 		}
 	}
-
-	//
-	// this approach requires an API call to actually get the value
-	//
-	// if currentState == nil || len(currentState.Outputs) == 0 {
-	// 	q.Q("=> no state or zero outputs")
-	// } else {
-	// 	q.Q("-> state version id:", currentState.ID)
-	// 	for _, output := range currentState.Outputs {
-	// 		// re-read?
-	// 		out, err := tfclient.StateVersionOutputs.Read(ctx, output.ID)
-	// 		if err != nil {
-	// 			q.Q("=>=> error getting state output data stuff:", err)
-	// 		}
-	// 		q.Q("=>=> =>", out.ID, out.Type, out.Name, out.Value)
-	// 	}
-	// }
+	q.Q("=> tfc values:")
+	q.Q(tfcValues)
 
 	// Create our resource manager and create
 	rm := p.resourceManager(log, dcr)
