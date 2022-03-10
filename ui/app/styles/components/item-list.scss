@@ -1,0 +1,18 @@
+.waypoint-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  &--item {
+    margin-bottom: scale.$lg--2;
+  }
+
+  &--item-link {
+    display: grid;
+    grid-gap: scale.$base;
+    grid-template-columns: scale.$lg--7 auto;
+    justify-items: start;
+    align-items: center;
+    border-bottom: 0 !important; // Override Structure’s pervasive link styles
+  }
+}
