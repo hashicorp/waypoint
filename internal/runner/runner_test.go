@@ -54,6 +54,61 @@ func TestRunnerStart(t *testing.T) {
 	require.Equal(codes.NotFound, status.Code(err))
 }
 
+// Test that the runner reconnects after it successfully registered initially.
+func TestRunnerStart_reconnect(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	restartCh := make(chan struct{})
+	impl := singleprocess.TestImpl(t)
+	client := serverpkg.TestServer(t, impl,
+		serverpkg.TestWithContext(ctx),
+		serverpkg.TestWithRestart(restartCh),
+	)
+
+	// Initialize our runner
+	runner, err := New(
+		WithClient(client),
+		WithCookie(testCookie(t, client)),
+	)
+	require.NoError(err)
+	defer runner.Close()
+
+	// The runner should not be registered
+	_, err = client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+	require.Error(err)
+	require.Equal(codes.NotFound, status.Code(err))
+
+	// Start it
+	require.NoError(runner.Start(ctx))
+
+	// The runner should be registered
+	resp, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+	require.NoError(err)
+	require.Equal(runner.Id(), resp.Id)
+
+	// Shut down the server
+	cancel()
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	// We should get deregistered
+	require.Eventually(func() bool {
+		_, err = impl.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+		return err != nil && status.Code(err) == codes.NotFound
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// Restart
+	restartCh <- struct{}{}
+
+	// We should get re-registered
+	require.Eventually(func() bool {
+		_, err = impl.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+		return err == nil
+	}, 5*time.Second, 10*time.Millisecond)
+}
+
 func TestRunnerStart_adoption(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
