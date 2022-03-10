@@ -1273,19 +1273,22 @@ func (p *Platform) Deploy(
 	for _, output := range currentState.Outputs {
 		if strings.HasPrefix(output.Name, "wp_") {
 			name := strings.TrimPrefix(output.Name, "wp_")
-			if name == "default_subnets" {
+			switch output.Type {
+			case "array":
 				if v, ok := output.Value.([]interface{}); ok {
 					q.Q("=> => => found slice")
-					var subnets []string
+					var list []string
 					for _, i := range v {
-						subnets = append(subnets, i.(string))
+						list = append(list, i.(string))
 					}
-					tfcValues[name] = strings.Join(subnets, ",")
+					tfcValues[name] = strings.Join(list, ",")
 				} else {
 					// ??
 				}
-			} else {
+			case "string":
 				tfcValues[name] = output.Value.(string)
+			default:
+				/// ??? just move on
 			}
 		}
 	}
