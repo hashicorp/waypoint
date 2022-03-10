@@ -358,16 +358,16 @@ config {
 
 	doc.SetRequestField(
 		"key",
-		"The key in the structured response from the secret to read the value.",
+		"The key name that exists at the specified Vault `path` parameter.",
 		docs.Summary(
-			"This value can be a direct key such as `password` or it can be a",
-			"[JSON pointer](https://tools.ietf.org/html/rfc6901) string to retrieve",
-			"a nested value. This is because Vault secrets can be any arbitrary",
-			"structure, not just simple key/value mappings. An example of a JSON pointer",
-			"value would be `/data/username/`.",
-			"\n\nWhen using the Vault KV secret backend, the key typically has to be",
-			"prefixed with `/data` because the Vault KV API returns the data nested under",
-			"the `data` key. For example: `/data/username`.",
+			"When using the Vault KV [Version 1](https://www.vaultproject.io/docs/secrets/kv/kv-v1)",
+			"secret backend, the key can be a direct key name such as `password`.",
+			"\n\nHowever, when using the Vault KV [Version 2](https://www.vaultproject.io/docs/secrets/kv/kv-v2)",
+			"secret backend, the key must be prefixed with an additional string of `/data`. For example, `/data/password`.",
+			"\n\nThis is because the Vault KV API returns different data structures in its response depending on",
+			"the Vault KV version the key is stored in. Therefore, the `/data` prefix is required for keys stored in",
+			"the Vault KV `Version 2` secret backend in order to retrieve its nested value using",
+			"[JSON pointer](https://tools.ietf.org/html/rfc6901) string.",
 		),
 	)
 
