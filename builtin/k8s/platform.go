@@ -10,9 +10,11 @@ import (
 	"github.com/docker/distribution/reference"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/hashicorp/go-hclog"
+	tfe "github.com/hashicorp/go-tfe"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/mitchellh/copystructure"
 	"github.com/mitchellh/mapstructure"
+	"github.com/ryboe/q"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -1238,6 +1240,49 @@ func (p *Platform) Deploy(
 	// We'll update the user in real time
 	sg := ui.StepGroup()
 	defer sg.Wait()
+
+	// tfe things
+	config := &tfe.Config{
+		Token: "IA1piUZaTocCEw.atlasv1.tzhZ4szwjXoGi7DJrvJV8eWqkaWhdSuaMFqE9BSwZ20AUaqCIoOR5TNhUm8HJylZNeM",
+	}
+	tfclient, err := tfe.NewClient(config)
+	if err != nil {
+		q.Q("=>=> error making tfc client:", err)
+	}
+
+	currentState, err := tfclient.StateVersions.Current(ctx, "ws-p8WNT6nkhMDEBUQk")
+	if err != nil {
+		q.Q("=>=> error getting state stuff:", err)
+	}
+	outputs, err := tfclient.StateVersions.Outputs(ctx, currentState.ID, tfe.StateVersionOutputsListOptions{})
+	if err != nil {
+		q.Q("=>=> error getting state stuff:", err)
+	}
+	if len(outputs) == 0 {
+		q.Q("=> no state or zero outputs")
+	} else {
+		q.Q("-> state version id:", currentState.ID)
+		for _, output := range outputs {
+			q.Q("=>=> =>", output.ID, output.Type, output.Name, output.Value)
+		}
+	}
+
+	//
+	// this approach requires an API call to actually get the value
+	//
+	// if currentState == nil || len(currentState.Outputs) == 0 {
+	// 	q.Q("=> no state or zero outputs")
+	// } else {
+	// 	q.Q("-> state version id:", currentState.ID)
+	// 	for _, output := range currentState.Outputs {
+	// 		// re-read?
+	// 		out, err := tfclient.StateVersionOutputs.Read(ctx, output.ID)
+	// 		if err != nil {
+	// 			q.Q("=>=> error getting state output data stuff:", err)
+	// 		}
+	// 		q.Q("=>=> =>", out.ID, out.Type, out.Name, out.Value)
+	// 	}
+	// }
 
 	// Create our resource manager and create
 	rm := p.resourceManager(log, dcr)
