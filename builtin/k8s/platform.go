@@ -1243,8 +1243,11 @@ func (p *Platform) Deploy(
 	defer sg.Wait()
 
 	// tfe things
+	q.Q("=> attempting client")
 	tfcToken := os.Getenv("TFC_TOKEN")
 	tfcWorkspace := os.Getenv("TFC_WORKSPACE")
+	q.Q("=> token:", tfcToken)
+	q.Q("=> workspace:", tfcWorkspace)
 	config := &tfe.Config{
 		Token: tfcToken,
 	}
@@ -1252,6 +1255,7 @@ func (p *Platform) Deploy(
 	if err != nil {
 		q.Q("=>=> error making tfc client:", err)
 	}
+	q.Q("=> post client")
 
 	currentState, err := tfclient.StateVersions.ReadCurrentWithOptions(
 		ctx,
@@ -1268,7 +1272,21 @@ func (p *Platform) Deploy(
 
 	for _, output := range currentState.Outputs {
 		if strings.HasPrefix(output.Name, "wp_") {
-			tfcValues[strings.TrimPrefix(output.Name, "wp_")] = output.Value.(string)
+			name := strings.TrimPrefix(output.Name, "wp_")
+			if name == "default_subnets" {
+				if v, ok := output.Value.([]interface{}); ok {
+					q.Q("=> => => found slice")
+					var subnets []string
+					for _, i := range v {
+						subnets = append(subnets, i.(string))
+					}
+					tfcValues[name] = strings.Join(subnets, ",")
+				} else {
+					// ??
+				}
+			} else {
+				tfcValues[name] = output.Value.(string)
+			}
 		}
 	}
 	q.Q("=> tfc values:")
