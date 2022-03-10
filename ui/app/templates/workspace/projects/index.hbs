@@ -24,13 +24,19 @@
 </PageHeader>
 
 <div data-test-project-list>
-  {{#if @model.length}}
-    <ItemList
-      @items={{@model}}
-      @key="project"
-      @route="workspace.projects.project"
-      @icon="folder"
-    />
+  {{#each @model as |project|}}
+  <Card>
+    <LinkTo @route="workspace.projects.project" @model={{project.project}}>
+      <div class="row">
+        <Hds::IconTile @icon="folder" class="spacer-right" />
+        <div class="meta">
+          <h2>{{project.project}}</h2>
+          {{!-- todo(pearkes): get full project objects from list api --}}
+          {{!-- <small>{{pluralize project.applicationsList.length "application"}}</small> --}}
+        </div>
+      </div>
+    </LinkTo>
+  </Card>
   {{else}}
     <EmptyState>
     <p>There are no projects to display yet. <LinkTo @route="workspace.projects.new">Create your first project here</LinkTo>.</p>
