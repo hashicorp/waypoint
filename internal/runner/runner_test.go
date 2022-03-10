@@ -109,6 +109,64 @@ func TestRunnerStart_reconnect(t *testing.T) {
 	}, 5*time.Second, 10*time.Millisecond)
 }
 
+// Test how the runner behaves on start if the server is down immediately.
+func TestRunnerStart_serverDown(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	restartCh := make(chan struct{})
+	impl := singleprocess.TestImpl(t)
+	client := serverpkg.TestServer(t, impl,
+		serverpkg.TestWithContext(ctx),
+		serverpkg.TestWithRestart(restartCh),
+	)
+	cookie := testCookie(t, client)
+
+	// Shut it down
+	cancel()
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	// Wait to get an unavailable error so we know the server is down
+	require.Eventually(func() bool {
+		_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: "A"})
+		return status.Code(err) == codes.Unavailable
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// Initialize our runner
+	runner, err := New(
+		WithClient(client),
+		WithCookie(cookie),
+	)
+	require.NoError(err)
+	defer runner.Close()
+
+	// Start it
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- runner.Start(ctx)
+	}()
+
+	// Restart
+	restartCh <- struct{}{}
+
+	// Start should return
+	select {
+	case err := <-errCh:
+		require.NoError(err)
+
+	case <-time.After(5 * time.Second):
+		t.Fatal("start never returned")
+	}
+
+	// We should get re-registered eventually
+	require.Eventually(func() bool {
+		_, err = impl.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+		return err == nil
+	}, 5*time.Second, 10*time.Millisecond)
+}
+
 func TestRunnerStart_adoption(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()

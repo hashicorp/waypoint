@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -276,7 +277,7 @@ func (r *Runner) Start(ctx context.Context) error {
 		log.Debug("requesting token with RunnerToken (initiates adoption)")
 		tokenResp, err := r.client.RunnerToken(tokenCtx, &pb.RunnerTokenRequest{
 			Runner: r.runner,
-		})
+		}, grpc.WaitForReady(true))
 		if err != nil {
 			return err
 		}
