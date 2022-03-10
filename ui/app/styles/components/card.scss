@@ -89,6 +89,13 @@
       }
     }
   }
+
+  .auth-a11y {
+    a {
+      color: white;
+      font-weight: bold;
+    }
+  }
 }
 
 .row {
@@ -109,3 +116,4 @@
 .card-header {
   font-size: scale.$sm-1;
 }
+
