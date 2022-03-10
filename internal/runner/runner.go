@@ -274,26 +274,37 @@ func (r *Runner) Start(ctx context.Context) error {
 	if adopt {
 		// Register and initialize the adoption flow (if necessary) by requesting
 		// our token.
-		log.Debug("requesting token with RunnerToken (initiates adoption)")
-		tokenResp, err := r.client.RunnerToken(tokenCtx, &pb.RunnerTokenRequest{
-			Runner: r.runner,
-		}, grpc.WaitForReady(true))
-		if err != nil {
-			return err
-		}
-		if tokenResp != nil && tokenResp.Token != "" {
-			// If we received a token, then we replace our token with that.
-			// It is possible that we do NOT have a token, because our current
-			// token is already valid.
-			log.Debug("runner adoption complete, new token received")
-			r.runningCtx = serverclient.TokenWithContext(r.runningCtx, tokenResp.Token)
-
-			// Persist our token
-			if err := r.statePutToken(tokenResp.Token); err != nil {
+		retry := false
+		for {
+			log.Debug("requesting token with RunnerToken (initiates adoption)")
+			tokenResp, err := r.client.RunnerToken(tokenCtx, &pb.RunnerTokenRequest{
+				Runner: r.runner,
+			}, grpc.WaitForReady(retry))
+			if err != nil {
+				if status.Code(err) == codes.Unavailable {
+					log.Warn("server down during adoption, will attempt reconnect")
+					retry = true
+					continue
+				}
 				return err
 			}
-		} else {
-			log.Debug("runner token is already valid, using same token")
+
+			if tokenResp != nil && tokenResp.Token != "" {
+				// If we received a token, then we replace our token with that.
+				// It is possible that we do NOT have a token, because our current
+				// token is already valid.
+				log.Debug("runner adoption complete, new token received")
+				r.runningCtx = serverclient.TokenWithContext(r.runningCtx, tokenResp.Token)
+
+				// Persist our token
+				if err := r.statePutToken(tokenResp.Token); err != nil {
+					return err
+				}
+			} else {
+				log.Debug("runner token is already valid, using same token")
+			}
+
+			break
 		}
 	}
 

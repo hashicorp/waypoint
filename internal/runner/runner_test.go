@@ -238,6 +238,194 @@ func TestRunnerStart_adoption(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 }
 
+// Test adoption works when the server is down on start
+func TestRunnerStart_adoptionDownOnStart(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	restartCh := make(chan struct{})
+	impl := singleprocess.TestImpl(t)
+	client := serverpkg.TestServer(t, impl,
+		serverpkg.TestWithContext(ctx),
+		serverpkg.TestWithRestart(restartCh),
+	)
+	cookie := testCookie(t, client)
+	anonClient := serverpkg.TestServer(t, impl, serverpkg.TestWithToken(""))
+
+	// Shut it down
+	cancel()
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	// Wait to get an unavailable error so we know the server is down
+	require.Eventually(func() bool {
+		_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: "A"})
+		return status.Code(err) == codes.Unavailable
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// Initialize our runner
+	runner, err := New(
+		WithClient(anonClient),
+		WithCookie(cookie),
+	)
+	require.NoError(err)
+	defer runner.Close()
+
+	// Start
+	startErr := make(chan error, 1)
+	go func() {
+		startErr <- runner.Start(ctx)
+	}()
+
+	// Restart
+	restartCh <- struct{}{}
+
+	// Wait for registration
+	require.Eventually(func() bool {
+		_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+		return err == nil
+	}, 2*time.Second, 10*time.Millisecond)
+
+	// The runner should not start
+	select {
+	case <-time.After(100 * time.Millisecond):
+		// Good
+
+	case <-startErr:
+		t.Fatal("runner should not start")
+	}
+
+	// Adopt the runner
+	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: runner.Id(),
+		Adopt:    true,
+	})
+	require.NoError(err)
+
+	// Runner should start
+	select {
+	case <-time.After(5 * time.Second):
+		t.Fatal("runner should start")
+
+	case err := <-startErr:
+		require.NoError(err)
+	}
+
+	// The runner should be registered
+	resp, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+	require.NoError(err)
+	require.Equal(runner.Id(), resp.Id)
+	require.Equal(pb.Runner_ADOPTED, resp.AdoptionState)
+
+	// Close
+	require.NoError(runner.Close())
+	time.Sleep(100 * time.Millisecond)
+}
+
+// Test adoption works when the server goes down while blocked on adoption.
+func TestRunnerStart_adoptionWaitDown(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	restartCh := make(chan struct{})
+	impl := singleprocess.TestImpl(t)
+	client := serverpkg.TestServer(t, impl,
+		serverpkg.TestWithContext(ctx),
+		serverpkg.TestWithRestart(restartCh),
+	)
+	cookie := testCookie(t, client)
+	anonClient := serverpkg.TestServer(t, impl, serverpkg.TestWithToken(""))
+
+	// Initialize our runner
+	runner, err := New(
+		WithClient(anonClient),
+		WithCookie(cookie),
+	)
+	require.NoError(err)
+	defer runner.Close()
+
+	// Start. We need a new context so our server shutdown doesn't cancel
+	// the context we use for Start.
+	startCtx, startCancel := context.WithCancel(context.Background())
+	defer startCancel()
+	startErr := make(chan error, 1)
+	go func() {
+		startErr <- runner.Start(startCtx)
+	}()
+
+	// Wait for registration
+	require.Eventually(func() bool {
+		_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+		return err == nil
+	}, 2*time.Second, 10*time.Millisecond)
+
+	// The runner should not start
+	select {
+	case <-time.After(100 * time.Millisecond):
+		// Good
+
+	case <-startErr:
+		t.Fatal("runner should not start")
+	}
+
+	// Shut it down
+	cancel()
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	// Wait to get an unavailable error so we know the server is down
+	require.Eventually(func() bool {
+		_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+		return status.Code(err) == codes.Unavailable
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// The runner should not error on start
+	select {
+	case <-time.After(100 * time.Millisecond):
+		// Good
+
+	case err := <-startErr:
+		t.Logf("err: %s %#[1]v", err)
+		t.Fatal("runner should not error on start")
+	}
+
+	// Restart
+	restartCh <- struct{}{}
+
+	// Wait for registration
+	require.Eventually(func() bool {
+		_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+		return err == nil
+	}, 2*time.Second, 10*time.Millisecond)
+
+	// Adopt the runner
+	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: runner.Id(),
+		Adopt:    true,
+	})
+	require.NoError(err)
+
+	// Runner should start
+	select {
+	case <-time.After(5 * time.Second):
+		t.Fatal("runner should start")
+
+	case err := <-startErr:
+		require.NoError(err)
+	}
+
+	// The runner should be registered
+	resp, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+	require.NoError(err)
+	require.Equal(runner.Id(), resp.Id)
+	require.Equal(pb.Runner_ADOPTED, resp.AdoptionState)
+
+	// Close
+	require.NoError(runner.Close())
+	time.Sleep(100 * time.Millisecond)
+}
 func TestRunnerStart_rejection(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
