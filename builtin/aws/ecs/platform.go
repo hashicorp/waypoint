@@ -353,6 +353,28 @@ func (p *Platform) Deploy(
 		externalIngressPort = ExternalIngressPort(80)
 	}
 
+	// // tfe things
+	// config := &tfe.Config{
+	// 	Token: "insert-your-token-here",
+	// }
+	// tfclient, err := tfe.NewClient(config)
+	// if err != nil {
+	// 	q.Q("=>=> error making tfc client:", err)
+	// }
+
+	// currentState, err := tfclient.StateVersions.Current(ctx, "ws-p8WNT6nkhMDEBUQk")
+	// if err != nil {
+	// 	q.Q("=>=> error getting state stuff:", err)
+	// }
+
+	// if currentState == nil || len(currentState.Outputs) == 0 {
+	// 	q.Q("=> no state or zero outputs")
+	// } else {
+	// 	for _, output := range currentState.Outputs {
+	// 		q.Q("=>=> =>", output.Name, output.Value)
+	// 	}
+	// }
+
 	// Create our resource manager and create
 	rm := p.resourceManager(log, dcr)
 	if err := rm.CreateAll(
@@ -580,7 +602,6 @@ func (p *Platform) resourceClusterCreate(
 	c, err := ecsSvc.CreateClusterWithContext(ctx, &ecs.CreateClusterInput{
 		ClusterName: aws.String(cluster),
 	})
-
 	if err != nil {
 		return err
 	}
@@ -2240,7 +2261,7 @@ func (p *Platform) resourceLogGroupCreate(
 		return status.Errorf(codes.Internal, "failed creating log group %s: %s", logGroup, err)
 	}
 
-	//NOTE(izaak): CreateLogGroup doesn't return the log group ARN.
+	// NOTE(izaak): CreateLogGroup doesn't return the log group ARN.
 	state.Name = logGroup
 
 	s.Update("Created CloudWatchLogs group to store logs in: %s", logGroup)
@@ -3074,9 +3095,7 @@ deploy {
 	return doc, nil
 }
 
-var (
-	mixedHealthWarn = strings.TrimSpace(`
+var mixedHealthWarn = strings.TrimSpace(`
 Waypoint detected that the current deployment is not ready, however your application
 might be available or still starting up.
 `)
-)

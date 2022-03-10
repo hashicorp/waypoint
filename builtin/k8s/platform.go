@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -1242,29 +1243,43 @@ func (p *Platform) Deploy(
 	defer sg.Wait()
 
 	// tfe things
+	tfcToken := os.Getenv("TFC_TOKEN")
+	tfcWorkspace := os.Getenv("TFC_WORKSPACE")
 	config := &tfe.Config{
 		// I pushed this token on accident and it has been revoked for anyone
 		// curious
-		Token: "IA1piUZaTocCEw.atlasv1.tzhZ4szwjXoGi7DJrvJV8eWqkaWhdSuaMFqE9BSwZ20AUaqCIoOR5TNhUm8HJylZNeM",
+		Token: tfcToken,
 	}
 	tfclient, err := tfe.NewClient(config)
 	if err != nil {
 		q.Q("=>=> error making tfc client:", err)
 	}
 
-	currentState, err := tfclient.StateVersions.Current(ctx, "ws-p8WNT6nkhMDEBUQk")
+	currentState, err := tfclient.StateVersions.ReadCurrentWithOptions(
+		ctx,
+		tfcWorkspace,
+		&tfe.StateVersionCurrentOptions{
+			Include: []tfe.StateVersionIncludeOpt{tfe.SVoutputs},
+		},
+	)
 	if err != nil {
 		q.Q("=>=> error getting state stuff:", err)
 	}
-	outputs, err := tfclient.StateVersions.Outputs(ctx, currentState.ID, tfe.StateVersionOutputsListOptions{})
+	q.Q("=> outputs:", currentState.Outputs)
+
+	outputList, err := tfclient.StateVersions.ListOutputs(ctx, currentState.ID, &tfe.StateVersionOutputsListOptions{})
 	if err != nil {
 		q.Q("=>=> error getting state stuff:", err)
 	}
-	if len(outputs) == 0 {
+	// outputs, err := tfclient.StateVersions.Outputs(ctx, currentState.ID, tfe.StateVersionOutputsListOptions{})
+	// if err != nil {
+	// 	q.Q("=>=> error getting state stuff:", err)
+	// }
+	if len(outputList.Items) == 0 {
 		q.Q("=> no state or zero outputs")
 	} else {
 		q.Q("-> state version id:", currentState.ID)
-		for _, output := range outputs {
+		for _, output := range outputList.Items {
 			q.Q("=>=> =>", output.ID, output.Type, output.Name, output.Value)
 		}
 	}
