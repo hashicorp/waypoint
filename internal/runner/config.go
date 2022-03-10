@@ -41,7 +41,7 @@ func (r *Runner) initConfigStream(ctx context.Context) error {
 	ch := make(chan *pb.RunnerConfig)
 	go r.watchConfig(ctx, log, ch)
 
-	// Start the config receiver. This will connect ot the RunnerConfig
+	// Start the config receiver. This will connect to the RunnerConfig
 	// endpoint and start receiving data. This will reconnect on failure.
 	go r.initConfigStreamReceiver(ctx, log, ch, false)
 
