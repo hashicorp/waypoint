@@ -1,26 +1,28 @@
-<h1>{{t 'auth.title'}}</h1>
-<p>{{t 'auth.subtitle'}}</p>
-{{#if @model.authMethodsList}}
-  <OidcAuthButtons @model={{@model}}/>
-{{else}}
-  <p>
-    <LinkTo @route="auth.token" class="button button--primary">
-      {{t 'auth.button'}}
-    </LinkTo>
-  </p>
+<div class="auth-a11y">
+  <h1>{{t 'auth.title'}}</h1>
+  <p>{{t 'auth.subtitle'}}</p>
+  <div class="auth-a11y">
+  {{#if @model.authMethodsList}}
+    <OidcAuthButtons @model={{@model}}/>
+  {{else}}
+    <p class="hds-linkto-parent">
+      <Hds::LinkTo::Standalone @text='Authenticate' @icon="arrow-right" @iconPosition="trailing" @route="auth.token" />
+    </p>
+    <hr />
+    <p>
+      <small>
+        <ExternalLink href="https://www.waypointproject.io/docs/server/auth/oidc">
+          {{t 'auth.oidc_docs_link'}}
+        </ExternalLink>
+      </small>
+    </p>
+  {{/if}}
   <hr />
   <p>
     <small>
-      <ExternalLink href="https://www.waypointproject.io/docs/server/auth/oidc">
-        {{t 'auth.oidc_docs_link'}}
-      </ExternalLink>
+      Received an invite?
+      <LinkTo @route="auth.invite">Redeem invite</LinkTo>
     </small>
   </p>
-{{/if}}
-<hr />
-<p>
-  <small>
-    Received an invite?
-    <LinkTo @route="auth.invite">Redeem invite</LinkTo>
-  </small>
-</p>
+  </div>
+</div>

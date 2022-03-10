@@ -89,6 +89,49 @@
       }
     }
   }
+
+  // BEGIN: Temporary overrides for HDS hack to illustrate look & feel
+  .hds-linkto-parent {
+    display: flex;
+    justify-content: center;
+  }
+
+  .hds-link-standalone {
+    align-items: center;
+    background-color: transparent; // needs to exist for a11y
+    // border: $hds-link-standalone-border-width solid transparent; // needs to exist AND be transparent for a11y
+    display: flex; // Amynote: A global display: block is causing issues
+    font-family: var(--token-typography-font-stack-text);
+    justify-content: center;
+    // notice: the text decoration is applied directly to the "text" container because of a bug in Safari (see https://github.com/hashicorp/design-system-components/issues/159)
+    text-decoration-color: transparent;
+    width: fit-content;
+  }
+  
+  .hds-link-standalone__text {
+    flex: 1 0 0;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: text-decoration-color 0.25s ease-in;
+  
+    .hds-link-standalone__icon + & {
+      margin-left: 0.375rem;
+    }
+  
+    & +.hds-link-standalone__icon {
+      margin-left: 0.375rem;
+      height: 1rem;
+      width: 1rem;
+    }
+  }
+  // END: Temporary overrides for HDS hack to illustrate look & feel
+
+  .auth-a11y {
+    a {
+      color: white;
+      font-weight: bold;
+    }
+  }
 }
 
 .row {
