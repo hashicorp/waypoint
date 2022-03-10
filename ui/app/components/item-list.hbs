@@ -1,0 +1,18 @@
+<ul class='waypoint-item-list'>
+  {{#each @items as |item|}}
+    <li data-test-item-list-item class='waypoint-item-list--item'>
+      <Card>
+        <LinkTo
+          @route={{@route}}
+          @model={{get item (or @key 'name')}}
+          class='waypoint-item-list--item-link'
+        >
+          <Hds::IconTile @icon={{@icon}} @size='medium' @color='neutral' />
+          <h2>
+            {{get item (or @key 'name')}}
+          </h2>
+        </LinkTo>
+      </Card>
+    </li>
+  {{/each}}
+</ul>

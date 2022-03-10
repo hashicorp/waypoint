@@ -27,21 +27,15 @@
 </PageHeader>
 
 <div data-test-project-list>
-  {{#each @model as |project|}}
-  <Card>
-    <LinkTo @route="workspace.projects.project" @model={{project.project}}>
-      <div class="row">
-        <IconTile @icon="folder" />
-        <div class="meta">
-          <h2>{{project.project}}</h2>
-          {{!-- todo(pearkes): get full project objects from list api --}}
-          {{!-- <small>{{pluralize project.applicationsList.length "application"}}</small> --}}
-        </div>
-      </div>
-    </LinkTo>
-  </Card>
+  {{#if @model.length}}
+    <ItemList
+      @items={{@model}}
+      @key="project"
+      @route="workspace.projects.project"
+      @icon="folder"
+    />
   {{else}}
-  <EmptyState>
+    <EmptyState>
     <p>There are no projects to display yet. <LinkTo @route="workspace.projects.new">Create your first project here</LinkTo>.</p>
     <p>Alternatively, you can run
       <CopyableCode @ref="empty-init" @inline="true">
@@ -50,5 +44,5 @@
       from the CLI</p>
     <p>For more help getting started, refer to the <ExternalLink href="https://waypointproject.io/docs/getting-started">Waypoint documentation</ExternalLink></p>
   </EmptyState>
-  {{/each}}
+  {{/if}}
 </div>

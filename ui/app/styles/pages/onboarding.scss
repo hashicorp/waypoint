@@ -23,12 +23,6 @@
       box-shadow: 0 0 0 1px rgb(var(--outline));
     }
 
-    .icon-tile {
-      color: $brand-color;
-      background: transparent;
-      box-shadow: inset 0 0 0 1px rgba($brand-color, 0.6);
-    }
-
     .onboarding-header-content {
       margin-left: scale.$lg-1;
     }
