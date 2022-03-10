@@ -333,8 +333,16 @@ config {
       key = "password"
     })
 
-    "DATABASE_HOST" = dynamic("vault", {
-      path = "kv/database-host"
+    # KV Version 2
+    "PASSWORD_FOO" = dynamic("vault", {
+      path = "secret/data/my-secret
+      key = "/data/password"  # key must be prefixed with "/data" (see below)
+    })
+
+    # KV Version 1
+    "PASSWORD_BAR" = dynamic("vault", {
+      path = "kv1/my-secret
+      key = "password"
     })
   }
 }
@@ -360,14 +368,16 @@ config {
 		"key",
 		"The key name that exists at the specified Vault `path` parameter.",
 		docs.Summary(
-			"When using the Vault KV [Version 1](https://www.vaultproject.io/docs/secrets/kv/kv-v1)",
-			"secret backend, the key can be a direct key name such as `password`.",
-			"\n\nHowever, when using the Vault KV [Version 2](https://www.vaultproject.io/docs/secrets/kv/kv-v2)",
+			"The value can be a direct key such as `password` or it can be a",
+			"[JSON pointer](https://tools.ietf.org/html/rfc6901) string to retrieve a nested value.",
+			"\n\nWhen using the Vault KV [Version 2](https://www.vaultproject.io/docs/secrets/kv/kv-v2)",
 			"secret backend, the key must be prefixed with an additional string of `/data`. For example, `/data/password`.",
+			"\n\nWhen using the Vault KV [Version 1](https://www.vaultproject.io/docs/secrets/kv/kv-v1)",
+			"secret backend, the key can be a direct key name such as `password`.",
 			"\n\nThis is because the Vault KV API returns different data structures in its response depending on",
 			"the Vault KV version the key is stored in. Therefore, the `/data` prefix is required for keys stored in",
 			"the Vault KV `Version 2` secret backend in order to retrieve its nested value using",
-			"[JSON pointer](https://tools.ietf.org/html/rfc6901) string.",
+			"JSON pointer string.",
 		),
 	)
 
