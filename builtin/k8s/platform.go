@@ -1292,6 +1292,7 @@ func (p *Platform) Deploy(
 			}
 		}
 	}
+	//testing
 	q.Q("=> tfc values:")
 	q.Q(tfcValues)
 
