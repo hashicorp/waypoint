@@ -136,7 +136,7 @@ func (c *JobListCommand) Run(args []string) int {
 		case pb.Job_ERROR:
 			jobState = "Error"
 		case pb.Job_SUCCESS:
-			jobState = "Sucecss"
+			jobState = "Success"
 		default:
 			jobState = "Unknown"
 		}
