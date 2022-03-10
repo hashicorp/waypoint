@@ -1243,6 +1243,8 @@ func (p *Platform) Deploy(
 
 	// tfe things
 	config := &tfe.Config{
+		// I pushed this token on accident and it has been revoked for anyone
+		// curious
 		Token: "IA1piUZaTocCEw.atlasv1.tzhZ4szwjXoGi7DJrvJV8eWqkaWhdSuaMFqE9BSwZ20AUaqCIoOR5TNhUm8HJylZNeM",
 	}
 	tfclient, err := tfe.NewClient(config)
