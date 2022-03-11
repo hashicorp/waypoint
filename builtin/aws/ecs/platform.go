@@ -3,7 +3,9 @@ package ecs
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -20,6 +22,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-tfe"
+	"github.com/ryboe/q"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -353,27 +357,15 @@ func (p *Platform) Deploy(
 		externalIngressPort = ExternalIngressPort(80)
 	}
 
-	// // tfe things
-	// config := &tfe.Config{
-	// 	Token: "insert-your-token-here",
-	// }
-	// tfclient, err := tfe.NewClient(config)
-	// if err != nil {
-	// 	q.Q("=>=> error making tfc client:", err)
-	// }
+	tfcValues, err := getTFCStateOutputValues(ctx)
 
-	// currentState, err := tfclient.StateVersions.Current(ctx, "ws-p8WNT6nkhMDEBUQk")
-	// if err != nil {
-	// 	q.Q("=>=> error getting state stuff:", err)
-	// }
+	if err != nil {
+		return nil, err
+	}
 
-	// if currentState == nil || len(currentState.Outputs) == 0 {
-	// 	q.Q("=> no state or zero outputs")
-	// } else {
-	// 	for _, output := range currentState.Outputs {
-	// 		q.Q("=>=> =>", output.Name, output.Value)
-	// 	}
-	// }
+	if len(tfcValues) > 0 {
+		p.updatePlatformConfigVals(tfcValues)
+	}
 
 	// Create our resource manager and create
 	rm := p.resourceManager(log, dcr)
@@ -406,6 +398,112 @@ func (p *Platform) Deploy(
 	s.Update("Deployment resources created")
 	s.Done()
 	return &result, nil
+}
+
+func (p *Platform) updatePlatformConfigVals(tfcValues map[string]string) {
+	if logGroupVal, isLogGroupPresent := tfcValues["cloudwatch_logs_name"]; isLogGroupPresent {
+		p.config.LogGroup = logGroupVal
+	}
+
+	if albARNVal, isAlbARNPresent := tfcValues["alb_arn"]; isAlbARNPresent {
+		p.config.ALB.ListenerARN = albARNVal
+	}
+
+	if clusterVal, isClusterPresent := tfcValues["cluster_name"]; isClusterPresent {
+		p.config.Cluster = clusterVal
+	}
+
+	if subnetVals, isSubnetsPresent := tfcValues["default_subnets"]; isSubnetsPresent {
+		sanitizedSubnetVals := strings.TrimSpace(subnetVals)
+		p.config.Subnets = strings.Split(sanitizedSubnetVals, ",")
+	}
+
+	//Here I am sort of guessing that "execution_role_arn":"arn:aws:iam::206958406631:role/ecr-example-nodejs" represents IAM Policy ARNs for attaching to task role?
+	if executionRoleARNVals, isRoleARNPresent := tfcValues["execution_role_arn"]; isRoleARNPresent {
+		sanitizedRoleARNVals := strings.TrimSpace(executionRoleARNVals)
+		p.config.TaskRolePolicyArns = strings.Split(sanitizedRoleARNVals, ",")
+	}
+
+	if iamRoleVal, isIamRolePresent := tfcValues["iam_role_name"]; isIamRolePresent {
+		p.config.ExecutionRoleName = iamRoleVal
+	}
+
+	groupIDs := []*string{}
+
+	if securityGroupAppVal, isGroupAppPresent := tfcValues["security_group_app"]; isGroupAppPresent {
+		groupIDs = append(groupIDs, &securityGroupAppVal)
+	}
+
+	if securityInboundInternalVal, isInboundInternalPresent := tfcValues["security_inbound_internal"]; isInboundInternalPresent {
+		groupIDs = append(groupIDs, &securityInboundInternalVal)
+	}
+
+	if len(groupIDs) > 0 {
+		p.config.SecurityGroupIDs = groupIDs
+	}
+}
+
+func getTFCStateOutputValues(ctx context.Context) (map[string]string, error) {
+	tfcValues := make(map[string]string)
+
+	// initialize client
+	tfcToken := os.Getenv("TFC_TOKEN")
+	tfcWorkspace := os.Getenv("TFC_WORKSPACE")
+
+	config := &tfe.Config{
+		Token: tfcToken,
+	}
+
+	tfclient, err := tfe.NewClient(config)
+	if err != nil {
+		q.Q("=>=> error making tfc client:", err)
+		return tfcValues, err
+	}
+	q.Q("=> post client")
+
+	currentState, err := tfclient.StateVersions.ReadCurrentWithOptions(
+		ctx,
+		tfcWorkspace,
+		&tfe.StateVersionCurrentOptions{
+			Include: []tfe.StateVersionIncludeOpt{tfe.SVoutputs},
+		},
+	)
+
+	if err != nil {
+		q.Q("=>=> error getting state stuff:", err)
+		return tfcValues, err
+	}
+
+	for _, output := range currentState.Outputs {
+		if strings.HasPrefix(output.Name, "wp_") {
+			name := strings.TrimPrefix(output.Name, "wp_")
+			switch output.Type {
+			case "array":
+				if vals, ok := output.Value.([]interface{}); ok {
+					q.Q("=> => => found slice")
+					var list []string
+					for _, val := range vals {
+						v, ok := val.(string)
+						if !ok {
+							return tfcValues, errors.New("failed at type assertion for val.(string)")
+						}
+						list = append(list, v)
+					}
+					tfcValues[name] = strings.Join(list, ",")
+				} else {
+					// ??
+				}
+			case "string":
+				tfcValues[name] = output.Value.(string)
+			default:
+				/// ??? just move on
+			}
+		}
+	}
+	q.Q("=> tfc values:")
+	q.Q(tfcValues)
+
+	return tfcValues, nil
 }
 
 func (p *Platform) Status(
