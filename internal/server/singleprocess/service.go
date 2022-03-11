@@ -184,6 +184,23 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	return &s, nil
 }
 
+// State implements pkg/server/handlers/service Service
+func (s *service) State(ctx context.Context) serverstate.Interface {
+	return s.state
+}
+
+func (s *service) SuperUser() bool {
+	return s.superuser
+}
+
+func (s *service) DecodeId(id string) (string, error) {
+	return id, nil
+}
+
+func (s *service) EncodeId(ctx context.Context, id string) string {
+	return id
+}
+
 // Close shuts down any background processes and resources that may
 // be used by the service. This should be called after the service
 // is no longer responding to requests.

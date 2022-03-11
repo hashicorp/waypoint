@@ -6,6 +6,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/handlers"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
@@ -13,58 +14,14 @@ func (s *service) UpsertProject(
 	ctx context.Context,
 	req *pb.UpsertProjectRequest,
 ) (*pb.UpsertProjectResponse, error) {
-	if err := serverptypes.ValidateUpsertProjectRequest(req); err != nil {
-		return nil, err
-	}
-
-	result := req.Project
-	if err := s.state.ProjectPut(result); err != nil {
-		return nil, err
-	}
-
-	if projectNeedsRemoteInit(result) {
-		// The project is connected to a data source but doesn’t use
-		// automatic polling, so let’s queue some remote init operations
-		// to ensure the application list is populated.
-
-		// TODO(jgwhite): only queue init ops if the relevant fields have *changed*
-
-		err := queueInitOps(s, ctx, result)
-
-		if err != nil {
-			// An error here indicates a failure to enqueue an
-			// InitOp, not a failure during the operation itself,
-			// which happen out-of-band.
-			return nil, err
-		}
-	}
-
-	return &pb.UpsertProjectResponse{Project: result}, nil
+	return handlers.UpsertProject(s, ctx, req)
 }
 
 func (s *service) GetProject(
 	ctx context.Context,
 	req *pb.GetProjectRequest,
 ) (*pb.GetProjectResponse, error) {
-	if err := serverptypes.ValidateGetProjectRequest(req); err != nil {
-		return nil, err
-	}
-
-	result, err := s.state.ProjectGet(req.Project)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get all the workspaces that this project is part of
-	workspaces, err := s.state.ProjectListWorkspaces(req.Project)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pb.GetProjectResponse{
-		Project:    result,
-		Workspaces: workspaces,
-	}, nil
+	return handlers.GetProject(s, ctx, req)
 }
 
 func (s *service) ListProjects(
