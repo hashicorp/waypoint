@@ -12,11 +12,11 @@ import (
 
 func init() {
 	tests["tracktask"] = []testFunc{
-		TestTrackTask,
+		TestTask,
 	}
 }
 
-func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
+func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 	t.Run("Get returns not found error if not exist", func(t *testing.T) {
 		require := require.New(t)
 
@@ -24,8 +24,8 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		_, err := s.TrackTaskGet(&pb.Ref_TrackTask{
-			Ref: &pb.Ref_TrackTask_Id{
+		_, err := s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
 				Id: "foo",
 			},
 		})
@@ -33,21 +33,21 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.Equal(codes.NotFound, status.Code(err))
 	})
 
-	t.Run("Put and Get by TrackTask Id and Ref Job Id", func(t *testing.T) {
+	t.Run("Put and Get by Task Id and Ref Job Id", func(t *testing.T) {
 		require := require.New(t)
 
 		s := factory(t)
 		defer s.Close()
 
 		// Set
-		err := s.TrackTaskPut(&pb.TrackTask{
+		err := s.TaskPut(&pb.Task{
 			Id: "t_test",
 		})
 		require.Error(err) // no job id set
 		err = nil
 
 		// Set again
-		err = s.TrackTaskPut(&pb.TrackTask{
+		err = s.TaskPut(&pb.Task{
 			Id:      "t_test",
 			TaskJob: &pb.Ref_Job{Id: "j_test"},
 		})
@@ -56,8 +56,8 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact by id
 		{
-			resp, err := s.TrackTaskGet(&pb.Ref_TrackTask{
-				Ref: &pb.Ref_TrackTask_Id{
+			resp, err := s.TaskGet(&pb.Ref_Task{
+				Ref: &pb.Ref_Task_Id{
 					Id: "t_test",
 				},
 			})
@@ -67,8 +67,8 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact by job id
 		{
-			resp, err := s.TrackTaskGet(&pb.Ref_TrackTask{
-				Ref: &pb.Ref_TrackTask_JobId{
+			resp, err := s.TaskGet(&pb.Ref_Task{
+				Ref: &pb.Ref_Task_JobId{
 					JobId: "j_test",
 				},
 			})
@@ -77,7 +77,7 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Update
-		err = s.TrackTaskPut(&pb.TrackTask{
+		err = s.TaskPut(&pb.Task{
 			Id:       "t_test",
 			TaskJob:  &pb.Ref_Job{Id: "j_test"},
 			StartJob: &pb.Ref_Job{Id: "start_job"},
@@ -87,8 +87,8 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact by id
 		{
-			resp, err := s.TrackTaskGet(&pb.Ref_TrackTask{
-				Ref: &pb.Ref_TrackTask_Id{
+			resp, err := s.TaskGet(&pb.Ref_Task{
+				Ref: &pb.Ref_Task_Id{
 					Id: "t_test",
 				},
 			})
@@ -98,14 +98,14 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 	})
 
-	t.Run("Deletion by TrackTask Id and Job Id Ref", func(t *testing.T) {
+	t.Run("Deletion by Task Id and Job Id Ref", func(t *testing.T) {
 		require := require.New(t)
 
 		s := factory(t)
 		defer s.Close()
 
 		// Set
-		err := s.TrackTaskPut(&pb.TrackTask{
+		err := s.TaskPut(&pb.Task{
 			Id:      "t_test",
 			TaskJob: &pb.Ref_Job{Id: "j_test"},
 		})
@@ -114,8 +114,8 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact by id
 		{
-			resp, err := s.TrackTaskGet(&pb.Ref_TrackTask{
-				Ref: &pb.Ref_TrackTask_Id{
+			resp, err := s.TaskGet(&pb.Ref_Task{
+				Ref: &pb.Ref_Task_Id{
 					Id: "t_test",
 				},
 			})
@@ -124,8 +124,8 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Delete it
-		err = s.TrackTaskDelete(&pb.Ref_TrackTask{
-			Ref: &pb.Ref_TrackTask_Id{
+		err = s.TaskDelete(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
 				Id: "t_test",
 			},
 		})
@@ -133,8 +133,8 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// It's gone
 		{
-			_, err := s.TrackTaskGet(&pb.Ref_TrackTask{
-				Ref: &pb.Ref_TrackTask_Id{
+			_, err := s.TaskGet(&pb.Ref_Task{
+				Ref: &pb.Ref_Task_Id{
 					Id: "t_test",
 				},
 			})
@@ -143,7 +143,7 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		err = nil
 
 		// Set again
-		err = s.TrackTaskPut(&pb.TrackTask{
+		err = s.TaskPut(&pb.Task{
 			Id:      "t_test",
 			TaskJob: &pb.Ref_Job{Id: "j_test"},
 		})
@@ -152,8 +152,8 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact by job id
 		{
-			resp, err := s.TrackTaskGet(&pb.Ref_TrackTask{
-				Ref: &pb.Ref_TrackTask_JobId{
+			resp, err := s.TaskGet(&pb.Ref_Task{
+				Ref: &pb.Ref_Task_JobId{
 					JobId: "j_test",
 				},
 			})
@@ -162,8 +162,8 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Delete it
-		err = s.TrackTaskDelete(&pb.Ref_TrackTask{
-			Ref: &pb.Ref_TrackTask_JobId{
+		err = s.TaskDelete(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_JobId{
 				JobId: "j_test",
 			},
 		})
@@ -171,8 +171,8 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// It's gone
 		{
-			_, err := s.TrackTaskGet(&pb.Ref_TrackTask{
-				Ref: &pb.Ref_TrackTask_JobId{
+			_, err := s.TaskGet(&pb.Ref_Task{
+				Ref: &pb.Ref_Task_JobId{
 					JobId: "j_test",
 				},
 			})
@@ -187,19 +187,19 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Create more for listing
-		err := s.TrackTaskPut(&pb.TrackTask{
+		err := s.TaskPut(&pb.Task{
 			Id:      "t_test",
 			TaskJob: &pb.Ref_Job{Id: "j_test"},
 		})
 		require.NoError(err)
 
-		err = s.TrackTaskPut(&pb.TrackTask{
+		err = s.TaskPut(&pb.Task{
 			Id:      "t_test_part2",
 			TaskJob: &pb.Ref_Job{Id: "j2_test"},
 		})
 		require.NoError(err)
 
-		err = s.TrackTaskPut(&pb.TrackTask{
+		err = s.TaskPut(&pb.Task{
 			Id:      "t_test_part3",
 			TaskJob: &pb.Ref_Job{Id: "j3_test"},
 		})
@@ -207,7 +207,7 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// List all
 		{
-			resp, err := s.TrackTaskList()
+			resp, err := s.TaskList()
 			require.NoError(err)
 			require.Len(resp, 3)
 		}

@@ -838,7 +838,7 @@ func (msg *Ref_Job) UnmarshalJSON(b []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *Ref_TrackTask) MarshalJSON() ([]byte, error) {
+func (msg *Ref_Task) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
 		EnumsAsInts:  false,
@@ -849,7 +849,7 @@ func (msg *Ref_TrackTask) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (msg *Ref_TrackTask) UnmarshalJSON(b []byte) error {
+func (msg *Ref_Task) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)
@@ -1018,7 +1018,7 @@ func (msg *TaskLaunchInfo) UnmarshalJSON(b []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *TrackTask) MarshalJSON() ([]byte, error) {
+func (msg *Task) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
 		EnumsAsInts:  false,
@@ -1029,7 +1029,7 @@ func (msg *TrackTask) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (msg *TrackTask) UnmarshalJSON(b []byte) error {
+func (msg *Task) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)
