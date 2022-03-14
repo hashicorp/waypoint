@@ -2447,12 +2447,15 @@ type Task struct {
 	// specified and the state pkg will autogenerate an id. Specifying an id
 	// assumes the Task message already exists in the database.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// task_job represents the "run" job the runner will execute, i.e. the operation
+	// that was requested to run on the runner.
 	// The referred job stores data like ODR config, the target runner used,
 	// timestamp for when job started or completed, operation state for task, etc.
 	// Currently the only required field when Upserting a Task.
 	TaskJob *Ref_Job `protobuf:"bytes,2,opt,name=task_job,json=taskJob,proto3" json:"task_job,omitempty"`
-	// Both start_job and stop_job relate to task_job as these jobs were
-	// responsibile for starting and stopping the task job.
+	// Both start_job and stop_job relate to task_job.These jobs were
+	// responsibile for starting and stopping the runner which executed the task
+	// job.
 	StartJob *Ref_Job `protobuf:"bytes,3,opt,name=start_job,json=startJob,proto3" json:"start_job,omitempty"`
 	StopJob  *Ref_Job `protobuf:"bytes,4,opt,name=stop_job,json=stopJob,proto3" json:"stop_job,omitempty"`
 	// This task info message represented as json format
