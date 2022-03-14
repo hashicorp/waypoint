@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/hashicorp/waypoint-plugin-sdk"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/plugin"
 )
@@ -29,11 +30,17 @@ func (c *PluginCommand) Run(args []string) int {
 	}
 	args = flags.Args()
 
+	if len(args) == 0 {
+		c.ui.Output("No argument specified.\n"+c.Flags().Help(), terminal.WithErrorStyle())
+		return 1
+	}
+
 	pluginName := args[0]
 
 	plugin, ok := plugin.Builtins[pluginName]
 	if !ok {
-		panic("no such plugin: " + pluginName)
+		c.ui.Output("No such plugin: "+pluginName, terminal.WithErrorStyle())
+		return 1
 	}
 
 	// Run the plugin
@@ -42,7 +49,8 @@ func (c *PluginCommand) Run(args []string) int {
 	} else {
 		err := sdk.Debug(context.Background(), pluginName, plugin...)
 		if err != nil {
-			panic(fmt.Sprintf("Failed to launch plugin in debug mode: %s", err))
+			c.ui.Output(fmt.Sprintf("Failed to launch plugin in debug mode: %s", err), terminal.WithErrorStyle())
+			return 1
 		}
 	}
 
@@ -56,7 +64,7 @@ func (c *PluginCommand) Flags() *flag.Sets {
 			Name:    "debug",
 			Default: false,
 			Target:  &c.debugMode,
-			Usage:   "set to true to run the plugin with support for debuggers like delve",
+			Usage:   "Set to true to run the plugin with support for debuggers like delve.",
 		})
 	})
 }
@@ -66,5 +74,10 @@ func (c *PluginCommand) Synopsis() string {
 }
 
 func (c *PluginCommand) Help() string {
-	return ""
+	return formatHelp(`
+Usage: waypoint plugin [options] <plugin>
+
+  Runs a specified plugin directly.
+
+` + c.Flags().Help())
 }
