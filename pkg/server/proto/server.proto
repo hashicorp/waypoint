@@ -914,7 +914,7 @@ message Ref {
       // the id of the tracktask record
       string id = 1;
 
-      // The job ID that the StartTask initiated
+      // The main job ID that the task initiated
       string job_id = 2;
     }
   }

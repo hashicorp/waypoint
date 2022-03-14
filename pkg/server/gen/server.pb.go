@@ -16766,7 +16766,7 @@ type Ref_TrackTask_Id struct {
 }
 
 type Ref_TrackTask_JobId struct {
-	// The job ID that the StartTask initiated
+	// The main job ID that the task initiated
 	JobId string `protobuf:"bytes,2,opt,name=job_id,json=jobId,proto3,oneof"`
 }
 
