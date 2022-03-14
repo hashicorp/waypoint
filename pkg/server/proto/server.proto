@@ -902,6 +902,22 @@ message Ref {
   message Trigger {
     string id = 1;
   }
+
+  // Job references a Job message value by job id.
+  message Job {
+    string id = 1;
+  }
+
+  // TrackTask references a TrackTask message by its id or the job id it queued
+  message TrackTask {
+    oneof ref {
+      // the id of the tracktask record
+      string id = 1;
+
+      // The job ID the task initiated
+      string job_id = 2;
+    }
+  }
 }
 
 // Component represents metadata about a component. A component is the
@@ -1070,6 +1086,8 @@ enum ResourceCategoryDisplayHint {
 * Tasks
 ********************************************************************/
 
+// TaskLaunchInfo gets stored on the job/operation when queued for execution.
+// It details various options required for the task it will launch.
 message TaskLaunchInfo {
   // The URL of the OCI image to execute the task under.
   string oci_url = 1;
@@ -1085,6 +1103,29 @@ message TaskLaunchInfo {
   // The arguments that will be passed to the new container on boot.
   // These are arguments and should not overwrite the entrypoint.
   repeated string arguments = 3;
+}
+
+// TrackTask tracks the life of an on-demand runner task that spawns Start
+// and Stop tasks for any kind of job/operation in Waypoint. Automatic jobs
+// such as project polling or status report generation spawn on-demand
+// runner tasks, and this message can be used to track the life of those
+// automated jobs.
+message TrackTask {
+  // The ID of this message
+  string id = 1;
+
+  // The referred job stores data like ODR config, the target runner used,
+  // timestamp for when job started or completed, operation state for task, etc.
+  Ref.Job task_job = 2;
+
+  // Both start_job and stop_job relate to task_job as these jobs were
+  // responsibile for starting and stopping the task job.
+  Ref.Job start_job = 3;
+  Ref.Job stop_job = 4;
+
+  // This task info message represented as json format
+  string task_json = 5;
+
 }
 
 /********************************************************************
