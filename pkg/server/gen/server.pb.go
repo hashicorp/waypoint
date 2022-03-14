@@ -2436,7 +2436,8 @@ func (x *TaskLaunchInfo) GetArguments() []string {
 // and Stop tasks for any kind of job/operation in Waypoint. Automatic jobs
 // such as project polling or status report generation spawn on-demand
 // runner tasks, and this message can be used to track the life of those
-// automated jobs.
+// automated jobs. Note that every task is wrapped with a Start and Stop task,
+// which we track here as well.
 type TrackTask struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

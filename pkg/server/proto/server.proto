@@ -914,7 +914,7 @@ message Ref {
       // the id of the tracktask record
       string id = 1;
 
-      // The job ID the task initiated
+      // The job ID that the StartTask initiated
       string job_id = 2;
     }
   }
@@ -1109,7 +1109,8 @@ message TaskLaunchInfo {
 // and Stop tasks for any kind of job/operation in Waypoint. Automatic jobs
 // such as project polling or status report generation spawn on-demand
 // runner tasks, and this message can be used to track the life of those
-// automated jobs.
+// automated jobs. Note that every task is wrapped with a Start and Stop task,
+// which we track here as well.
 message TrackTask {
   // The ID of this message
   string id = 1;
@@ -1125,7 +1126,6 @@ message TrackTask {
 
   // This task info message represented as json format
   string task_json = 5;
-
 }
 
 /********************************************************************
