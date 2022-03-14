@@ -132,7 +132,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 				// RunnerConfig stream to re-establish. We wait for the config
 				// generation to increment.
 				if r.waitStateGreater(&r.stateConfig, stateGen) {
-					return status.Errorf(codes.Internal, "early exit while waiting for reconnect")
+					return status.Error(codes.Internal, "early exit while waiting for reconnect")
 				}
 
 				continue

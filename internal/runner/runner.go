@@ -81,10 +81,9 @@ type Runner struct {
 	// also verify the context didn't cancel. The stateCond will be broadcasted
 	// when the root context cancels.
 	stateCond       *sync.Cond
-	stateConfig     uint64 // config stream is connected
-	stateConfigOnce uint64 // true once we process config once, success or error
-	stateJobReady   uint64 // ready to start accepting jobs
-	stateExit       uint64 // true when exiting
+	stateConfig     uint64 // config stream is connected, increments for each reconnect
+	stateConfigOnce uint64 // >0 once we process config once, success or error
+	stateExit       uint64 // >0 when exiting
 
 	// config is the current runner config.
 	config      *pb.RunnerConfig
