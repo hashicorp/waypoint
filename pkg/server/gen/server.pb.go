@@ -2436,17 +2436,20 @@ func (x *TaskLaunchInfo) GetArguments() []string {
 // and Stop tasks for any kind of job/operation in Waypoint. Automatic jobs
 // such as project polling or status report generation spawn on-demand
 // runner tasks, and this message can be used to track the life of those
-// automated jobs. Note that every task is wrapped with a Start and Stop task,
-// which we track here as well.
+// automated jobs. Note that every on-demand runner task is wrapped with a
+// Start and Stop task, which we track here as well.
 type TrackTask struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// The ID of this message
+	// The ID of this message. If on first upsert, the id does not need to be
+	// specified and the state pkg will autogenerate an id. Specifying an id
+	// assumes the TrackTask message already exists in the database.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// The referred job stores data like ODR config, the target runner used,
 	// timestamp for when job started or completed, operation state for task, etc.
+	// Currently the only required field when Upserting a TrackTask.
 	TaskJob *Ref_Job `protobuf:"bytes,2,opt,name=task_job,json=taskJob,proto3" json:"task_job,omitempty"`
 	// Both start_job and stop_job relate to task_job as these jobs were
 	// responsibile for starting and stopping the task job.
@@ -16763,7 +16766,7 @@ type Ref_TrackTask_Id struct {
 }
 
 type Ref_TrackTask_JobId struct {
-	// The job ID the task initiated
+	// The job ID that the StartTask initiated
 	JobId string `protobuf:"bytes,2,opt,name=job_id,json=jobId,proto3,oneof"`
 }
 

@@ -1109,14 +1109,17 @@ message TaskLaunchInfo {
 // and Stop tasks for any kind of job/operation in Waypoint. Automatic jobs
 // such as project polling or status report generation spawn on-demand
 // runner tasks, and this message can be used to track the life of those
-// automated jobs. Note that every task is wrapped with a Start and Stop task,
-// which we track here as well.
+// automated jobs. Note that every on-demand runner task is wrapped with a
+// Start and Stop task, which we track here as well.
 message TrackTask {
-  // The ID of this message
+  // The ID of this message. If on first upsert, the id does not need to be
+  // specified and the state pkg will autogenerate an id. Specifying an id
+  // assumes the TrackTask message already exists in the database.
   string id = 1;
 
   // The referred job stores data like ODR config, the target runner used,
   // timestamp for when job started or completed, operation state for task, etc.
+  // Currently the only required field when Upserting a TrackTask.
   Ref.Job task_job = 2;
 
   // Both start_job and stop_job relate to task_job as these jobs were
