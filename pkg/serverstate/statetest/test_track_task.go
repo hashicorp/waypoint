@@ -65,6 +65,17 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.NotNil(resp)
 		}
 
+		// Get exact by job id
+		{
+			resp, err := s.TrackTaskGet(&pb.Ref_TrackTask{
+				Ref: &pb.Ref_TrackTask_JobId{
+					JobId: "j_test",
+				},
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+		}
+
 		// Update
 		err = s.TrackTaskPut(&pb.TrackTask{
 			Id:       "t_test",
@@ -87,7 +98,7 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 	})
 
-	t.Run("Deletion by TrackTask Id", func(t *testing.T) {
+	t.Run("Deletion by TrackTask Id and Job Id Ref", func(t *testing.T) {
 		require := require.New(t)
 
 		s := factory(t)
@@ -125,6 +136,44 @@ func TestTrackTask(t *testing.T, factory Factory, restartF RestartFactory) {
 			_, err := s.TrackTaskGet(&pb.Ref_TrackTask{
 				Ref: &pb.Ref_TrackTask_Id{
 					Id: "t_test",
+				},
+			})
+			require.Error(err)
+		}
+		err = nil
+
+		// Set again
+		err = s.TrackTaskPut(&pb.TrackTask{
+			Id:      "t_test",
+			TaskJob: &pb.Ref_Job{Id: "j_test"},
+		})
+		require.NoError(err)
+		// Get job id
+
+		// Get exact by job id
+		{
+			resp, err := s.TrackTaskGet(&pb.Ref_TrackTask{
+				Ref: &pb.Ref_TrackTask_JobId{
+					JobId: "j_test",
+				},
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+		}
+
+		// Delete it
+		err = s.TrackTaskDelete(&pb.Ref_TrackTask{
+			Ref: &pb.Ref_TrackTask_JobId{
+				JobId: "j_test",
+			},
+		})
+		require.NoError(err)
+
+		// It's gone
+		{
+			_, err := s.TrackTaskGet(&pb.Ref_TrackTask{
+				Ref: &pb.Ref_TrackTask_JobId{
+					JobId: "j_test",
 				},
 			})
 			require.Error(err)

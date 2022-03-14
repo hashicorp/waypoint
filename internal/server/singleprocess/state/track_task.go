@@ -136,15 +136,26 @@ func (s *State) tracktaskGet(
 	var result pb.TrackTask
 	b := dbTxn.Bucket(tracktaskBucket)
 
+	var taskId string
 	switch r := ref.Ref.(type) {
 	case *pb.Ref_TrackTask_Id:
 		s.log.Info("looking up tracktask by id", "id", r.Id)
-		return &result, dbGet(b, []byte(strings.ToLower(r.Id)), &result)
+		taskId = r.Id
 	case *pb.Ref_TrackTask_JobId:
-		return nil, status.Error(codes.Unavailable, "tracktaskGet does not implement looking up by job id yet")
+		s.log.Info("looking up tracktask by job id", "job_id", r.JobId)
+		// Look up TrackTask by jobid
+		task, err := s.tracktaskByJobId(r.JobId)
+		if err != nil {
+			return nil, err
+		}
+
+		s.log.Info("found tracktask id", "id", task.Id)
+		taskId = task.Id
 	default:
 		return nil, status.Error(codes.FailedPrecondition, "No valid ref id provided in TrackTask ref to tracktaskGet")
 	}
+
+	return &result, dbGet(b, []byte(strings.ToLower(taskId)), &result)
 }
 
 func (s *State) tracktaskList(
@@ -244,12 +255,32 @@ func (s *State) tracktaskIdByRef(ref *pb.Ref_TrackTask) ([]byte, error) {
 		taskId = t.Id
 	case *pb.Ref_TrackTask_JobId:
 		// Look up TrackTask by jobid
-		return nil, status.Error(codes.Unavailable, "tracktaskGet does not implement looking up by job id yet")
+		task, err := s.tracktaskByJobId(t.JobId)
+		if err != nil {
+			return nil, err
+		}
+
+		taskId = task.Id
 	default:
 		return nil, status.Error(codes.FailedPrecondition, "No valid ref id provided in TrackTask ref to trackTaskIdByRef")
 	}
 
 	return []byte(strings.ToLower(taskId)), nil
+}
+
+func (s *State) tracktaskByJobId(jobId string) (*pb.TrackTask, error) {
+	trackedTasks, err := s.TrackTaskList()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, t := range trackedTasks {
+		if t.TaskJob.Id == jobId {
+			return t, nil
+		}
+	}
+
+	return nil, status.Errorf(codes.NotFound, "A TrackTask with job id %q was not found", jobId)
 }
 
 func tracktaskIndexSchema() *memdb.TableSchema {
