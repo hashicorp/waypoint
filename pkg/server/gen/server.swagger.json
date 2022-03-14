@@ -4022,6 +4022,29 @@
         ]
       }
     },
+    "/v1/users": {
+      "get": {
+        "summary": "List all users in the system.",
+        "operationId": "Waypoint_ListUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ListUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/v1/version": {
       "get": {
         "summary": "GetVersionInfo returns information about the server. This RPC call does\nNOT require authentication. It can be used by clients to determine if they\nare capable of talking to this server.",
@@ -7474,13 +7497,13 @@
     "hashicorp.waypoint.Runner.AdoptionState": {
       "type": "string",
       "enum": [
-        "NEW",
+        "PENDING",
         "PREADOPTED",
         "ADOPTED",
         "REJECTED"
       ],
-      "default": "NEW",
-      "description": "- ∅ =\u003e NEW\n- ∅ =\u003e PREADOPTED\n- NEW =\u003e PREADOPTED\n- * =\u003e ADOPTED\n- * =\u003e REJECTED\n- ADOPTED =\u003e NEW\n- REJECTED =\u003e NEW\n\nBoth the \"NEW\" and \"REJECTED\" state are effectively \"unadopted\" states,\nbut they're explicit about why they're not currently adopted. Both\n\"ADOPTED\" and \"PREADOPTED\" are adopted states where the runner will\nbe given work, but are also explicit about how they were adopted.\n\n - NEW: New runner we've never seen before or has been forgotten.\nRunners in this state will wait for adoption.\n - PREADOPTED: Runner provided a valid runner token despite not being explicitly\nadopted. This type of runner can be forcibly rejected later such\nthat pre-adoption doesn't work at all.\n - ADOPTED: Explicitly adopted. Runner will get a token on handshake.\n - REJECTED: Explicitly rejected. Runner will error immediately on startup.",
+      "default": "PENDING",
+      "description": "- ∅ =\u003e NEW\n- ∅ =\u003e PREADOPTED\n- NEW =\u003e PREADOPTED\n- * =\u003e ADOPTED\n- * =\u003e REJECTED\n- ADOPTED =\u003e NEW\n- REJECTED =\u003e NEW\n\nBoth the \"NEW\" and \"REJECTED\" state are effectively \"unadopted\" states,\nbut they're explicit about why they're not currently adopted. Both\n\"ADOPTED\" and \"PREADOPTED\" are adopted states where the runner will\nbe given work, but are also explicit about how they were adopted.\n\n - PENDING: New runner we've never seen before or has been forgotten.\nRunners in this state are pending adoption.\n - PREADOPTED: Runner provided a valid runner token despite not being explicitly\nadopted. This type of runner can be forcibly rejected later such\nthat pre-adoption doesn't work at all.\n - ADOPTED: Explicitly adopted. Runner will get a token on handshake.\n - REJECTED: Explicitly rejected. Runner will error immediately on startup.",
       "title": "Valid adoption states. The transitions allowed are:"
     },
     "hashicorp.waypoint.Runner.Local": {
