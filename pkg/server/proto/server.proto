@@ -8,7 +8,6 @@ import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "google/rpc/status.proto";
-import "google/api/annotations.proto";
 
 // The service that is implemented for the server backend.
 service Waypoint {
