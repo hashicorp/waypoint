@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -89,11 +90,7 @@ func (r *Runner) AcceptExact(ctx context.Context, id string) error {
 var testRecvDelay time.Duration
 
 func (r *Runner) accept(ctx context.Context, id string) error {
-	r.runningCond.L.Lock()
-	shutdown := r.shutdown
-	r.runningCond.L.Unlock()
-
-	if shutdown {
+	if r.readState(&r.stateExit) > 0 {
 		return ErrClosed
 	}
 
@@ -114,10 +111,37 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	// Open a new job stream. NOTE: we purposely do NOT use ctx above
 	// since if the context is cancelled we want to continue reporting
 	// errors.
-	log.Debug("opening job stream")
-	client, err := r.client.RunnerJobStream(streamCtx)
-	if err != nil {
-		return err
+	retry := false
+	var client pb.Waypoint_RunnerJobStreamClient
+	for {
+		// Get our configuration state value. We use this so that we can detect
+		// when we've reconnected during failures.
+		stateGen := r.readState(&r.stateConfig)
+
+		log.Debug("opening job stream", "retry", retry)
+		var err error
+		client, err = r.client.RunnerJobStream(streamCtx, grpc.WaitForReady(retry))
+		if err != nil {
+			// If we decide to retry, then it'll be a retry, so mark it
+			retry = true
+
+			if status.Code(err) == codes.Unavailable || status.Code(err) == codes.NotFound {
+				log.Warn("server down during job stream open, will attempt reconnect")
+
+				// Since this is a disconnect, we have to wait for our
+				// RunnerConfig stream to re-establish. We wait for the config
+				// generation to increment.
+				if r.waitStateGreater(&r.stateConfig, stateGen) {
+					return status.Errorf(codes.Internal, "early exit while waiting for reconnect")
+				}
+
+				continue
+			}
+
+			return err
+		}
+
+		break
 	}
 	defer client.CloseSend()
 
@@ -193,7 +217,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	// and return.
 
 	r.runningCond.L.Lock()
-	shutdown = r.shutdown
+	shutdown := r.readState(&r.stateExit) > 0
 	if !shutdown {
 		r.runningJobs++
 	}

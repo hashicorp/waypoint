@@ -68,7 +68,6 @@ type Runner struct {
 
 	// protects whether or not the runner is active or not.
 	runningCond *sync.Cond
-	shutdown    bool
 	runningJobs int
 
 	runningCtx    context.Context
@@ -82,10 +81,10 @@ type Runner struct {
 	// also verify the context didn't cancel. The stateCond will be broadcasted
 	// when the root context cancels.
 	stateCond       *sync.Cond
-	stateConfig     bool // config stream is connected
-	stateConfigOnce bool // true once we process config once, success or error
-	stateJobReady   bool // ready to start accepting jobs
-	stateExit       bool // true when exiting
+	stateConfig     uint64 // config stream is connected
+	stateConfigOnce uint64 // true once we process config once, success or error
+	stateJobReady   uint64 // ready to start accepting jobs
+	stateExit       uint64 // true when exiting
 
 	// config is the current runner config.
 	config      *pb.RunnerConfig
@@ -235,7 +234,7 @@ func (r *Runner) Id() string {
 // server. This will spawn goroutines for management. This will return after
 // registration so this should not be executed in a goroutine.
 func (r *Runner) Start(ctx context.Context) error {
-	if r.shutdown {
+	if r.readState(&r.stateExit) > 0 {
 		return ErrClosed
 	}
 
@@ -321,13 +320,13 @@ func (r *Runner) Start(ctx context.Context) error {
 
 	// Wait for initial registration
 	log.Debug("waiting for registration")
-	if r.waitState(&r.stateConfig, true) {
+	if r.waitState(&r.stateConfig) {
 		return status.Errorf(codes.Internal, "early exit while waiting for first config")
 	}
 
 	// Wait for the initial configuration to be set
 	log.Debug("runner registered, waiting for first config processing")
-	if r.waitState(&r.stateConfigOnce, true) {
+	if r.waitState(&r.stateConfigOnce) {
 		return status.Errorf(codes.Internal, "early exit while waiting for first config processing")
 	}
 
@@ -348,7 +347,8 @@ func (r *Runner) Close() error {
 		r.runningCond.Wait()
 	}
 
-	r.shutdown = true
+	// Mark we're exiting
+	r.incrState(&r.stateExit)
 
 	// Cancel the context that is used by Accept to wait on the RunnerJobStream.
 	// This interrupts the Recv() call so that any goroutine running Accept()
@@ -364,25 +364,45 @@ func (r *Runner) Close() error {
 	return nil
 }
 
-// waitState waits for the given state boolean to go true. This boolean
-// must be a pointer to a state field on runner. This will also return if
-// stateExit flips true. The return value notes whether we should exit.
-func (r *Runner) waitState(state *bool, v bool) (exit bool) {
+// waitState waits for the given state to be set to an initial value.
+func (r *Runner) waitState(state *uint64) bool {
+	return r.waitStateGreater(state, 0)
+}
+
+// waitStateGreater waits for the given state to increment above the value
+// v. This can be used with the fields such as stateConfig to detect
+// when a reconnect occurs.
+func (r *Runner) waitStateGreater(state *uint64, v uint64) bool {
 	r.stateCond.L.Lock()
 	defer r.stateCond.L.Unlock()
-	for *state != v && !r.stateExit {
+	for *state <= v && r.stateExit == 0 {
 		r.stateCond.Wait()
 	}
 
-	return r.stateExit
+	return r.stateExit > 0
 }
 
-// setState sets the value of a state var on the runner struct and broadcasts
-// the condition variable.
-func (r *Runner) setState(state *bool, v bool) {
+// readState reads the current state value. This can be used with
+// waitStateGreater to detect a change in state.
+func (r *Runner) readState(state *uint64) uint64 {
 	r.stateCond.L.Lock()
 	defer r.stateCond.L.Unlock()
-	*state = v
+
+	// note: we don't use sync/atomic because the writer can't use
+	// sync/atomic (see incrState)
+	return *state
+}
+
+// incrState increments the value of a state variable. The first time
+// this is called will also trigger waitState.
+func (r *Runner) incrState(state *uint64) {
+	r.stateCond.L.Lock()
+	defer r.stateCond.L.Unlock()
+
+	// Note: we don't use sync/atomic because we want to pair the increment
+	// with the condition variable broadcast. The broadcast requires a lock
+	// anyways so there is no need to bring in atomic ops.
+	*state += 1
 	r.stateCond.Broadcast()
 }
 

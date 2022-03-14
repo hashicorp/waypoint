@@ -105,10 +105,6 @@ func (r *Runner) watchConfig(
 	log = log.Named("watcher")
 	defer log.Trace("exiting goroutine")
 
-	// If we exit, the job is no longer ready since we can't be sure we're
-	// processing our config.
-	defer r.setState(&r.stateJobReady, false)
-
 	// Start the app config watcher. This runs in its own goroutine so that
 	// stuff like dynamic config fetching doesn't block starting things like
 	// exec sessions.
@@ -164,15 +160,10 @@ func (r *Runner) watchConfig(
 				merr = multierror.Append(merr, err)
 			}
 
-			// If we had no errors, then we note that we're ready to process a job.
-			if merr == nil {
-				r.setState(&r.stateJobReady, true)
-			}
-
 			// Note that we processed our config at least once. People can
 			// wait on this state to know that success or fail, one config
 			// was received.
-			r.setState(&r.stateConfigOnce, true)
+			r.incrState(&r.stateConfigOnce)
 
 			// If we have an error, then we exit our loop. For runners,
 			// not being able to set config is a fatal error. We do this so
@@ -276,19 +267,9 @@ func (r *Runner) recvConfig(
 
 	// Keep track of our first receive
 	first := true
-	reconnected := false
 
-	defer func() {
-		// Any reason we exit, this client is done so we mark we're done sending, too.
-		client.CloseSend()
-
-		// On exit, we note that we're no longer connected to the config stream.
-		// We only do this if we didn't reconnect, since reconnection will
-		// transfer ownership of stateConfig.
-		if !reconnected {
-			r.setState(&r.stateConfig, false)
-		}
-	}()
+	// Any reason we exit, this client is done so we mark we're done sending, too.
+	defer client.CloseSend()
 
 	for {
 		// If the context is closed, exit
@@ -299,11 +280,6 @@ func (r *Runner) recvConfig(
 		// Wait for the next configuration
 		resp, err := client.Recv()
 		if err != nil {
-			// Note immediately that we have disconnected regardless of
-			// error type, since we've failed to receive. If we reconnect,
-			// it will reset this to true.
-			r.setState(&r.stateConfig, false)
-
 			// EOF means a graceful close, don't reconnect.
 			if err == io.EOF || clierrors.IsCanceled(err) {
 				log.Warn("EOF or cancellation received, graceful close of runner config stream")
@@ -318,7 +294,6 @@ func (r *Runner) recvConfig(
 
 				// If we successfully reconnected, then exit this.
 				if err == nil {
-					reconnected = true
 					return
 				}
 			}
@@ -331,7 +306,7 @@ func (r *Runner) recvConfig(
 		if first {
 			log.Debug("first config received, switching config state to true")
 			first = false
-			r.setState(&r.stateConfig, true)
+			r.incrState(&r.stateConfig)
 		}
 
 		log.Info("new configuration received")
