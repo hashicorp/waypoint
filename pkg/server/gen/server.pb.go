@@ -16694,7 +16694,7 @@ func (x *Ref_Job) GetId() string {
 	return ""
 }
 
-// Task references a Task message by its id or the job id it queued
+// Task references a Task message by its id or the main run job id it queued
 type Ref_Task struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -16769,7 +16769,7 @@ type Ref_Task_Id struct {
 }
 
 type Ref_Task_JobId struct {
-	// The main job ID that the task initiated
+	// The main "run" job ID that the task initiated
 	JobId string `protobuf:"bytes,2,opt,name=job_id,json=jobId,proto3,oneof"`
 }
 

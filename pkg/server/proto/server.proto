@@ -908,13 +908,13 @@ message Ref {
     string id = 1;
   }
 
-  // Task references a Task message by its id or the job id it queued
+  // Task references a Task message by its id or the main run job id it queued
   message Task {
     oneof ref {
       // the id of the tracktask record
       string id = 1;
 
-      // The main job ID that the task initiated
+      // The main "run" job ID that the task initiated
       string job_id = 2;
     }
   }
