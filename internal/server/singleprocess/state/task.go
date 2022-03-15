@@ -220,7 +220,8 @@ func (s *State) taskDelete(
 // taskIndexSet writes an index record for a single task.
 func (s *State) taskIndexSet(txn *memdb.Txn, id []byte, value *pb.Task) error {
 	record := &taskIndexRecord{
-		Id: string(id),
+		Id:    string(id),
+		JobId: value.TaskJob.Id,
 	}
 
 	// Insert the index
@@ -296,6 +297,15 @@ func taskIndexSchema() *memdb.TableSchema {
 					Lowercase: true,
 				},
 			},
+			taskIndexJobId: {
+				Name:         taskIndexJobId,
+				AllowMissing: false,
+				Unique:       true,
+				Indexer: &memdb.StringFieldIndex{
+					Field:     "JobId",
+					Lowercase: true,
+				},
+			},
 		},
 	}
 }
@@ -303,10 +313,12 @@ func taskIndexSchema() *memdb.TableSchema {
 const (
 	taskIndexTableName = "task-index"
 	taskIndexId        = "id"
+	taskIndexJobId     = "jobid"
 )
 
 type taskIndexRecord struct {
-	Id string
+	Id    string
+	JobId string
 }
 
 // Copy should be called prior to any modifications to an existing record.
