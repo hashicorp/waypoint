@@ -108,9 +108,11 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		ctx = serverclient.TokenWithContext(ctx, tok)
 	}
 
-	// Open a new job stream. NOTE: we purposely do NOT use ctx above
-	// since if the context is cancelled we want to continue reporting
-	// errors.
+	// Open a new job stream. This retries on connection errors. Note that
+	// this loop doesn't respect the accept timeout because gRPC has no way
+	// to time out of a "WaitForReady" RPC call (it ignores context cancellation,
+	// too). TODO: do a manual backoff with WaitForReady(false) so we can
+	// weave in accept timeout.
 	retry := false
 	var client pb.Waypoint_RunnerJobStreamClient
 	for {
@@ -118,13 +120,12 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		// when we've reconnected during failures.
 		stateGen := r.readState(&r.stateConfig)
 
+		// NOTE: we purposely do NOT use ctx above since if the context is
+		// cancelled we want to continue reporting errors.
 		log.Debug("opening job stream", "retry", retry)
 		var err error
 		client, err = r.client.RunnerJobStream(streamCtx, grpc.WaitForReady(retry))
 		if err != nil {
-			// If we decide to retry, then it'll be a retry, so mark it
-			retry = true
-
 			if status.Code(err) == codes.Unavailable || status.Code(err) == codes.NotFound {
 				log.Warn("server down during job stream open, will attempt reconnect")
 
@@ -135,6 +136,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 					return status.Error(codes.Internal, "early exit while waiting for reconnect")
 				}
 
+				retry = true
 				continue
 			}
 
