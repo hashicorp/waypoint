@@ -1130,8 +1130,13 @@ message Task {
   Ref.Job start_job = 3;
   Ref.Job stop_job = 4;
 
-  // This task info message represented as json format
-  string task_json = 5;
+  // This task info message represented as JSON-encoded protobuf structure of
+  // the Any field below. It does not modify any of the structure.
+  string state_json = 5;
+
+  // This task info message represented as an Any format. This is the full
+  // task encoded directly by the server that has access to the proto to decode it.
+  google.protobuf.Any state = 6;
 }
 
 /********************************************************************
