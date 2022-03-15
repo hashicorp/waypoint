@@ -13,7 +13,7 @@ import (
 type JobCancelCommand struct {
 	*baseCommand
 
-	flagJson bool
+	flagForce bool
 }
 
 func (c *JobCancelCommand) Run(args []string) int {
@@ -43,6 +43,7 @@ func (c *JobCancelCommand) Run(args []string) int {
 
 	_, err := c.project.Client().CancelJob(ctx, &pb.CancelJobRequest{
 		JobId: jobId,
+		Force: c.flagForce,
 	})
 	if err != nil {
 		s.Update("Failed to marked job %q for cancellation", jobId)
@@ -59,7 +60,12 @@ func (c *JobCancelCommand) Run(args []string) int {
 		return 1
 	}
 
-	s.Update("Marked job %q for cancellation", jobId)
+	if !c.flagForce {
+		s.Update("Marked job %q for cancellation", jobId)
+	} else {
+		s.Update("Forcefully marked job %q for cancellation", jobId)
+		s.Status(terminal.StatusWarn)
+	}
 	s.Done()
 
 	return 0
@@ -67,6 +73,13 @@ func (c *JobCancelCommand) Run(args []string) int {
 
 func (c *JobCancelCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.BoolVar(&flag.BoolVar{
+			Name:    "force",
+			Target:  &c.flagForce,
+			Default: false,
+			Usage:   "Will attempt to forcefully cancel a job.",
+		})
 	})
 }
 

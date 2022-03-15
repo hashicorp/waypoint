@@ -1373,6 +1373,9 @@ message QueueJobResponse {
 message CancelJobRequest {
   // The job to cancel
   string job_id = 1;
+
+  // Forcefully attempt to cancel the job
+  bool force = 2;
 }
 
 message ValidateJobRequest {

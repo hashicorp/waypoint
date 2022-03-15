@@ -36,4 +36,8 @@ Cancel a running job by id from Waypoint server.
 - `-var=<key=value>` - Variable value to set for this operation. Can be specified multiple times.
 - `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "_.auto.wpvars" or "_.auto.wpvars.json" files are present, they will be automatically loaded.
 
+#### Command Options
+
+- `-force` - Will attempt to forcefully cancel a job.
+
 @include "commands/job-cancel_more.mdx"
