@@ -2385,6 +2385,8 @@ message RunnerJobStreamRequest {
   }
 
   message Request {
+    // The ID of the runner opening the job stream. This ID must match
+    // the ID of the runner token in use.
     string runner_id = 1;
   }
 
