@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	tests["tracktask"] = []testFunc{
+	tests["task"] = []testFunc{
 		TestTask,
 	}
 }
