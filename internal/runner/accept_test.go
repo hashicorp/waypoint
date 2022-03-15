@@ -136,6 +136,78 @@ func TestRunnerAccept_timeout(t *testing.T) {
 	require.True(errors.Is(err, ErrTimeout))
 }
 
+// Test how accept behaves when the server is down to begin with.
+func TestRunnerAccept_serverDown(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Setup the server
+	restartCh := make(chan struct{})
+	impl := singleprocess.TestImpl(t)
+	client := serverpkg.TestServer(t, impl,
+		serverpkg.TestWithContext(ctx),
+		serverpkg.TestWithRestart(restartCh),
+	)
+
+	// Setup our runner
+	runner := TestRunner(t, WithClient(client))
+	require.NoError(runner.Start(ctx))
+
+	// Initialize our app
+	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Queue a job
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(err)
+	jobId := queueResp.JobId
+
+	// Shut it down
+	cancel()
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	// Wait to get an unavailable error so we know the server is down
+	require.Eventually(func() bool {
+		_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: "A"})
+		return status.Code(err) == codes.Unavailable
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// Start accept
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- runner.Accept(ctx)
+	}()
+
+	// The runner should not error
+	select {
+	case <-time.After(100 * time.Millisecond):
+		// Good
+
+	case <-errCh:
+		t.Fatal("runner should not return")
+	}
+
+	// Restart
+	restartCh <- struct{}{}
+
+	// Accept should return
+	select {
+	case err := <-errCh:
+		require.NoError(err)
+
+	case <-time.After(5 * time.Second):
+		t.Fatal("accept never returned")
+	}
+
+	// Verify that the job is completed
+	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId})
+	require.NoError(err)
+	require.Equal(pb.Job_SUCCESS, job.State)
+}
+
 func TestRunnerAccept_closeCancelesAccept(t *testing.T) {
 	require := require.New(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
