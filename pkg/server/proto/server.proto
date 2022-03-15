@@ -902,6 +902,22 @@ message Ref {
   message Trigger {
     string id = 1;
   }
+
+  // Job references a Job message value by job id.
+  message Job {
+    string id = 1;
+  }
+
+  // Task references a Task message by its id or the main run job id it queued
+  message Task {
+    oneof ref {
+      // the id of the tracktask record
+      string id = 1;
+
+      // The main "run" job ID that the task initiated
+      string job_id = 2;
+    }
+  }
 }
 
 // Component represents metadata about a component. A component is the
@@ -1070,6 +1086,8 @@ enum ResourceCategoryDisplayHint {
 * Tasks
 ********************************************************************/
 
+// TaskLaunchInfo gets stored on the job/operation when queued for execution.
+// It details various options required for the task it will launch.
 message TaskLaunchInfo {
   // The URL of the OCI image to execute the task under.
   string oci_url = 1;
@@ -1085,6 +1103,44 @@ message TaskLaunchInfo {
   // The arguments that will be passed to the new container on boot.
   // These are arguments and should not overwrite the entrypoint.
   repeated string arguments = 3;
+}
+
+// TODO(briancain): Note that there is still work to be done here to properly
+// leverage this message in Waypoint. Once the implementation phase comes
+// to actually use this, we will be mindful in how these Task messages
+// are pruned and deleted since they are directly associated with jobs. /end todo
+// Task tracks the life of an on-demand runner task that spawns Start
+// and Stop tasks for any kind of job/operation in Waypoint. Automatic jobs
+// such as project polling or status report generation spawn on-demand
+// runner tasks, and this message can be used to track the life of those
+// automated jobs. Note that every on-demand runner task is wrapped with a
+// Start and Stop task, which we track here as well.
+message Task {
+  // The ID of this message. If on first upsert, the id does not need to be
+  // specified and the state pkg will autogenerate an id. Specifying an id
+  // assumes the Task message already exists in the database.
+  string id = 1;
+
+  // task_job represents the "run" job the runner will execute, i.e. the operation
+  // that was requested to run on the runner.
+  // The referred job stores data like ODR config, the target runner used,
+  // timestamp for when job started or completed, operation state for task, etc.
+  // Currently the only required field when Upserting a Task.
+  Ref.Job task_job = 2;
+
+  // Both start_job and stop_job relate to task_job.These jobs were
+  // responsibile for starting and stopping the runner which executed the task
+  // job.
+  Ref.Job start_job = 3;
+  Ref.Job stop_job = 4;
+
+  // This task info message represented as JSON-encoded protobuf structure of
+  // the Any field below. It does not modify any of the structure.
+  string state_json = 5;
+
+  // This task info message represented as an Any format. This is the full
+  // task encoded directly by the server that has access to the proto to decode it.
+  google.protobuf.Any state = 6;
 }
 
 /********************************************************************

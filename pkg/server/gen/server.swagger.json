@@ -7934,7 +7934,8 @@
           },
           "description": "The arguments that will be passed to the new container on boot.\nThese are arguments and should not overwrite the entrypoint."
         }
-      }
+      },
+      "description": "TaskLaunchInfo gets stored on the job/operation when queued for execution.\nIt details various options required for the task it will launch."
     },
     "hashicorp.waypoint.Token": {
       "type": "object",

@@ -167,6 +167,14 @@ type Interface interface {
 	JobHeartbeat(string) error
 	JobExpire(string) error
 	JobIsAssignable(context.Context, *pb.Job) (bool, error)
+
+	//---------------------------------------------------------------
+	// Task Tracking
+
+	TaskPut(*pb.Task) error
+	TaskGet(*pb.Ref_Task) (*pb.Task, error)
+	TaskDelete(*pb.Ref_Task) error
+	TaskList() ([]*pb.Task, error)
 }
 
 // Pruner is implemented by state storage implementations that require
