@@ -11,6 +11,7 @@
 , go-mockery
 , go-protobuf
 , go-protobuf-json
+, go-protobuf-swagger
 , go-tools
 , grpcurl
 , kubectl
@@ -47,6 +48,7 @@ mkShell rec {
     protobufPin
     go-protobuf
     go-protobuf-json
+    go-protobuf-swagger
     go-tools
     go-mockery
     go-changelog

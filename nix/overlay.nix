@@ -11,6 +11,8 @@ final: prev: {
 
   go-protobuf-json = prev.callPackage ./go-protobuf-json.nix { };
 
+  go-protobuf-swagger = prev.callPackage ./go-protobuf-swagger.nix { };
+
   go-tools = prev.callPackage ./go-tools.nix { };
 
   go-mockery = prev.callPackage ./go-mockery.nix { };
