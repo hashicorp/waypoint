@@ -2432,6 +2432,10 @@ func (x *TaskLaunchInfo) GetArguments() []string {
 	return nil
 }
 
+// TODO(briancain): Note that there is still work to be done here to properly
+// leverage this message in Waypoint. Once the implementation phase comes
+// to actually use this, we will be mindful in how these Task messages
+// are pruned and deleted since they are directly associated with jobs. /end todo
 // Task tracks the life of an on-demand runner task that spawns Start
 // and Stop tasks for any kind of job/operation in Waypoint. Automatic jobs
 // such as project polling or status report generation spawn on-demand
