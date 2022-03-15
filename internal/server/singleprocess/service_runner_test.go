@@ -1340,6 +1340,44 @@ func TestServiceRunnerJobStream_cancel(t *testing.T) {
 	require.NotEmpty(job.CancelTime)
 }
 
+// Verify that the runner ID must match the token in use.
+func TestServiceRunnerJobStream_adoptCantImpersonate(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Create a job
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{Job: serverptypes.TestJobNew(t, nil)})
+	require.NoError(err)
+	require.NotNil(queueResp)
+	require.NotEmpty(queueResp.JobId)
+
+	// Create two separate runners via adoption
+	id1, _ := TestRunnerAdopted(t, impl, client, nil)
+	_, client2 := TestRunnerAdopted(t, impl, client, nil)
+
+	// Start a job request for runner 1 using runner 2's connection.
+	stream, err := client2.RunnerJobStream(ctx)
+	require.NoError(err)
+	require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Request_{
+			Request: &pb.RunnerJobStreamRequest_Request{
+				RunnerId: id1, // important: mismatched ID with client
+			},
+		},
+	}))
+
+	// We should error with unauthorized
+	_, err = stream.Recv()
+	require.Error(err)
+	require.Equal(codes.PermissionDenied, status.Code(err))
+}
+
 func TestServiceRunnerGetDeploymentConfig(t *testing.T) {
 	ctx := context.Background()
 

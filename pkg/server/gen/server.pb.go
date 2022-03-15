@@ -21031,6 +21031,8 @@ type RunnerJobStreamRequest_Request struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// The ID of the runner opening the job stream. This ID must match
+	// the ID of the runner token in use.
 	RunnerId string `protobuf:"bytes,1,opt,name=runner_id,json=runnerId,proto3" json:"runner_id,omitempty"`
 }
 

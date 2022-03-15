@@ -270,42 +270,8 @@ func (s *service) RunnerConfig(
 	record := req.Open.Runner
 
 	// Get our token and reverify that we are adopted.
-	tok := s.tokenFromContext(ctx)
-	if tok == nil {
-		log.Error("no token, should not be possible")
-		return status.Errorf(codes.Unauthenticated, "no token")
-	}
-	switch k := tok.Kind.(type) {
-	case *pb.Token_Login_:
-		// Legacy (pre WP 0.8) token. We accept these as preadopted.
-		// NOTE(mitchellh): One day, we should reject these because modern
-		// preadoption should be via runner tokens.
-
-	case *pb.Token_Runner_:
-		// A runner token. We validate here that we're not explicitly rejected.
-		// We have to check again here because runner tokens can be created
-		// for ANY runner, but we can reject a SPECIFIC runner.
-		if k.Runner.Id != "" && !strings.EqualFold(k.Runner.Id, record.Id) {
-			return status.Errorf(codes.PermissionDenied,
-				"provided runner token is for a different runner")
-		}
-
-		// If the token has a label hash and it does not match our record,
-		// then it is an error.
-		if expected := k.Runner.LabelHash; expected > 0 {
-			actual, err := serverptypes.RunnerLabelHash(record.Labels)
-			if err != nil {
-				return err
-			}
-
-			if expected != actual {
-				return status.Errorf(codes.PermissionDenied,
-					"provided runner token is for a different set of runner labels")
-			}
-		}
-
-	default:
-		return status.Errorf(codes.PermissionDenied, "not a valid runner token")
+	if err := s.runnerVerifyToken(log, ctx, record.Id, record.Labels); err != nil {
+		return err
 	}
 
 	// Create our record
@@ -486,6 +452,11 @@ func (s *service) RunnerJobStream(
 		runner.AdoptionState != pb.Runner_PREADOPTED {
 		return status.Errorf(codes.FailedPrecondition,
 			"runner must be adopted prior to requesting jobs")
+	}
+
+	// Verify our token matches the request
+	if err := s.runnerVerifyToken(log, ctx, runner.Id, runner.Labels); err != nil {
+		return err
 	}
 
 	// Get a job assignment for this runner
@@ -748,6 +719,57 @@ func (s *service) handleJobStreamRequest(
 
 	default:
 		log.Warn("unexpected event received", "event", hclog.Fmt("%T", req.Event))
+	}
+
+	return nil
+}
+
+// This verifies that the token present in the context "ctx" is valid
+// for the runner ID specified in the function arguments.
+func (s *service) runnerVerifyToken(
+	log hclog.Logger,
+	ctx context.Context,
+	runnerId string, // real runner ID
+	runnerLabels map[string]string, // real runner labels
+) error {
+	// Get our token and reverify that we are adopted.
+	tok := s.tokenFromContext(ctx)
+	if tok == nil {
+		log.Error("no token, should not be possible")
+		return status.Errorf(codes.Unauthenticated, "no token")
+	}
+
+	switch k := tok.Kind.(type) {
+	case *pb.Token_Login_:
+		// Legacy (pre WP 0.8) token. We accept these as preadopted.
+		// NOTE(mitchellh): One day, we should reject these because modern
+		// preadoption should be via runner tokens.
+
+	case *pb.Token_Runner_:
+		// A runner token. We validate here that we're not explicitly rejected.
+		// We have to check again here because runner tokens can be created
+		// for ANY runner, but we can reject a SPECIFIC runner.
+		if k.Runner.Id != "" && !strings.EqualFold(k.Runner.Id, runnerId) {
+			return status.Errorf(codes.PermissionDenied,
+				"provided runner token is for a different runner")
+		}
+
+		// If the token has a label hash and it does not match our record,
+		// then it is an error.
+		if expected := k.Runner.LabelHash; expected > 0 {
+			actual, err := serverptypes.RunnerLabelHash(runnerLabels)
+			if err != nil {
+				return err
+			}
+
+			if expected != actual {
+				return status.Errorf(codes.PermissionDenied,
+					"provided runner token is for a different set of runner labels")
+			}
+		}
+
+	default:
+		return status.Errorf(codes.PermissionDenied, "not a valid runner token")
 	}
 
 	return nil

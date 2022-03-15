@@ -7606,7 +7606,8 @@
       "type": "object",
       "properties": {
         "runner_id": {
-          "type": "string"
+          "type": "string",
+          "description": "The ID of the runner opening the job stream. This ID must match\nthe ID of the runner token in use."
         }
       }
     },
