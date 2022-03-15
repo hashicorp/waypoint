@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"time"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -33,6 +35,15 @@ func (c *JobCancelCommand) Run(args []string) int {
 		return 1
 	} else {
 		jobId = c.args[0]
+	}
+
+	if c.flagForce {
+		c.ui.Output("You requested to use force to cancel a job! Be aware that this "+
+			"operation is dangerous and could result in some bad behavior or failure modes in Waypoint.",
+			terminal.WithWarningStyle())
+		c.ui.Output("If this is not your intention, ctrl-c now! The CLI will sleep for 3 seconds...",
+			terminal.WithWarningStyle())
+		time.Sleep(3 * time.Second)
 	}
 
 	sg := c.ui.StepGroup()
@@ -75,10 +86,13 @@ func (c *JobCancelCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.BoolVar(&flag.BoolVar{
-			Name:    "force",
+			Name:    "dangerously-force",
 			Target:  &c.flagForce,
 			Default: false,
-			Usage:   "Will attempt to forcefully cancel a job.",
+			Usage: "Will forcefully cancel the job. This will immediately mark the " +
+				"job as complete in the server, regardless of the real job status. This " +
+				"may leave dangling resources or cause concurrency issues if the underlying " +
+				"job doesn't gracefully cancel. USE WITH CAUTION.",
 		})
 	})
 }

@@ -38,6 +38,6 @@ Cancel a running job by id from Waypoint server.
 
 #### Command Options
 
-- `-force` - Will attempt to forcefully cancel a job.
+- `-dangerously-force` - Will forcefully cancel the job. This will immediately mark the job as complete in the server, regardless of the real job status. This may leave dangling resources or cause concurrency issues if the underlying job doesn't gracefully cancel. USE WITH CAUTION.
 
 @include "commands/job-cancel_more.mdx"
