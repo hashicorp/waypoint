@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -155,6 +156,39 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 				deploy.Component.Name,
 				terminal.WithWarningStyle())
 		}
+
+		// Show input variable values used in build
+		// We do this here so that if the list is long, it doesn't
+		// push the deploy/release URLs off the top of the terminal.
+		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
+		headers := []string{
+			"Variable", "Value", "Type", "Source",
+		}
+
+		tbl := terminal.NewTable(headers...)
+		// sort alphabetically for joy
+		inputVars := make([]string, 0, len(result.Release.VariableRefs))
+		for iv := range result.Release.VariableRefs {
+			inputVars = append(inputVars, iv)
+		}
+		sort.Strings(inputVars)
+		for _, iv := range inputVars {
+			columns := []string{
+				iv,
+				result.Release.VariableRefs[iv].Value,
+				result.Release.VariableRefs[iv].Type,
+				result.Release.VariableRefs[iv].Source,
+			}
+			// TODO krantzinator: figure out howt do display complex types
+
+			tbl.Rich(
+				columns,
+				[]string{
+					terminal.Green,
+				},
+			)
+		}
+		c.ui.Table(tbl)
 
 		// Status Report
 		app.UI.Output("")

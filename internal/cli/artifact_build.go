@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"sort"
 
 	"github.com/posener/complete"
 
@@ -40,6 +41,37 @@ func (c *ArtifactBuildCommand) Run(args []string) int {
 		if buildResult.Push != nil {
 			app.UI.Output("\nCreated artifact v%d", buildResult.Push.Sequence)
 		}
+
+		// Show input variable values used in build
+		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
+		headers := []string{
+			"Variable", "Value", "Type", "Source",
+		}
+
+		tbl := terminal.NewTable(headers...)
+		// sort alphabetically for joy
+		inputVars := make([]string, 0, len(buildResult.Build.VariableRefs))
+		for iv := range buildResult.Build.VariableRefs {
+			inputVars = append(inputVars, iv)
+		}
+		sort.Strings(inputVars)
+		for _, iv := range inputVars {
+			columns := []string{
+				iv,
+				buildResult.Build.VariableRefs[iv].Value,
+				buildResult.Build.VariableRefs[iv].Type,
+				buildResult.Build.VariableRefs[iv].Source,
+			}
+			// TODO krantzinator: figure out howt do display complex types
+
+			tbl.Rich(
+				columns,
+				[]string{
+					terminal.Green,
+				},
+			)
+		}
+		c.ui.Table(tbl)
 
 		return nil
 	})

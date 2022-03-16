@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"sort"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -49,6 +50,41 @@ func (c *UpCommand) Run(args []string) int {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
+
+		// Show input variable values used in build
+		// We do this here so that if the list is long, it doesn't
+		// push the deploy/release URLs off the top of the terminal.
+		// BuildResult, DeployResult, and ReleaseResult all store
+		// used VariableRefs. We use Release just because it's last.
+		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
+		headers := []string{
+			"Variable", "Value", "Type", "Source",
+		}
+
+		tbl := terminal.NewTable(headers...)
+		// sort alphabetically for joy
+		inputVars := make([]string, 0, len(result.Release.Release.VariableRefs))
+		for iv := range result.Release.Release.VariableRefs {
+			inputVars = append(inputVars, iv)
+		}
+		sort.Strings(inputVars)
+		for _, iv := range inputVars {
+			columns := []string{
+				iv,
+				result.Release.Release.VariableRefs[iv].Value,
+				result.Release.Release.VariableRefs[iv].Type,
+				result.Release.Release.VariableRefs[iv].Source,
+			}
+			// TODO krantzinator: figure out howt do display complex types
+
+			tbl.Rich(
+				columns,
+				[]string{
+					terminal.Green,
+				},
+			)
+		}
+		c.ui.Table(tbl)
 
 		// Common reused values
 		releaseUrl := result.Up.ReleaseUrl

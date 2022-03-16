@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"sort"
 	"strings"
 
 	"github.com/posener/complete"
@@ -117,6 +118,41 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 				}
 			}
 		}
+
+		// Show input variable values used in build
+		// We do this here so that if the list is long, it doesn't
+		// push the deploy/release URLs off the top of the terminal.
+		// We also use the deploy result and not the release result,
+		// because the data will be the same and this is the deployment command.
+		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
+		headers := []string{
+			"Variable", "Value", "Type", "Source",
+		}
+
+		tbl := terminal.NewTable(headers...)
+		// sort alphabetically for joy
+		inputVars := make([]string, 0, len(deployment.VariableRefs))
+		for iv := range deployment.VariableRefs {
+			inputVars = append(inputVars, iv)
+		}
+		sort.Strings(inputVars)
+		for _, iv := range inputVars {
+			columns := []string{
+				iv,
+				deployment.VariableRefs[iv].Value,
+				deployment.VariableRefs[iv].Type,
+				deployment.VariableRefs[iv].Source,
+			}
+			// TODO krantzinator: figure out howt do display complex types
+
+			tbl.Rich(
+				columns,
+				[]string{
+					terminal.Green,
+				},
+			)
+		}
+		c.ui.Table(tbl)
 
 		// inplace is true if this was an in-place deploy. We detect this
 		// if we have a generation that uses a non-matching sequence number
