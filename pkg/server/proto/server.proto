@@ -1186,6 +1186,12 @@ message GetTaskRequest {
 message GetTaskResponse {
   // The requested Task
   Task task = 1;
+
+  // the Job triple that the task is associated with. These jobs are the full
+  // message for each based on the Ref_Job id found inside Task
+  Job task_job = 2;
+  Job start_job = 3;
+  Job stop_job = 4;
 }
 
 message DeleteTaskRequest {
@@ -1197,8 +1203,8 @@ message ListTaskRequest {
 }
 
 message ListTaskResponse {
-  // An array of all available Tasks
-  repeated Task tasks = 1;
+  // An array of all available Tasks and their jobs
+  repeated GetTaskResponse tasks = 1;
 }
 
 /********************************************************************

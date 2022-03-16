@@ -5664,6 +5664,16 @@
         "task": {
           "$ref": "#/definitions/hashicorp.waypoint.Task",
           "title": "The requested Task"
+        },
+        "task_job": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job",
+          "title": "the Job triple that the task is associated with. These jobs are the full\nmessage for each based on the Ref_Job id found inside Task"
+        },
+        "start_job": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job"
+        },
+        "stop_job": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job"
         }
       }
     },
@@ -6751,9 +6761,9 @@
         "tasks": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.Task"
+            "$ref": "#/definitions/hashicorp.waypoint.GetTaskResponse"
           },
-          "title": "An array of all available Tasks"
+          "title": "An array of all available Tasks and their jobs"
         }
       }
     },
