@@ -27,5 +27,5 @@ type Service interface {
 	// EncodeId takes a waypoint ID (user id, runner id, etc.),
 	// uses the provided context to encode additional metadata
 	// (if present), and returns an ID that can be decoded by DecodeId.
-	EncodeId(ctx context.Context, id string) (encodedId string)
+	EncodeId(ctx context.Context, id string) (encodedId string, err error)
 }

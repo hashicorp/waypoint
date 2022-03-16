@@ -232,6 +232,11 @@ func RunnerToken(
 				return nil, err
 			}
 
+			encodedId, err := s.EncodeId(ctx, record.Id)
+			if err != nil {
+				return nil, status.Errorf(codes.InvalidArgument, "failed to encode runner id %q: %v", record, err)
+			}
+
 			tok, err := newToken(
 				s.State(ctx),
 				// Doesn't expire because we can expire it by unadopting.
@@ -244,7 +249,7 @@ func RunnerToken(
 				&pb.Token{
 					Kind: &pb.Token_Runner_{
 						Runner: &pb.Token_Runner{
-							Id:        s.EncodeId(ctx, record.Id),
+							Id:        encodedId,
 							LabelHash: hash,
 						},
 					},

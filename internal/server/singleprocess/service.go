@@ -184,21 +184,24 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	return &s, nil
 }
 
-// State implements pkg/server/handlers/service Service
-func (s *service) State(ctx context.Context) serverstate.Interface {
+// State implements handlers.Service
+func (s *service) State(_ context.Context) serverstate.Interface {
 	return s.state
 }
 
+// SuperUser implements handlers.Service
 func (s *service) SuperUser() bool {
 	return s.superuser
 }
 
+// DecodeId implements handlers.Service
 func (s *service) DecodeId(id string) (string, error) {
 	return id, nil
 }
 
-func (s *service) EncodeId(ctx context.Context, id string) string {
-	return id
+// EncodeId implements handlers.Service
+func (s *service) EncodeId(_ context.Context, id string) (string, error) {
+	return id, nil
 }
 
 // Close shuts down any background processes and resources that may
