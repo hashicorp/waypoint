@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
-// TODO: test
 func (s *Service) GetJob(
 	ctx context.Context,
 	req *pb.GetJobRequest,
@@ -38,8 +37,7 @@ func (s *Service) GetJob(
 	return job.Job, nil
 }
 
-// TODO: test
-func (s *Service) ListJobs(
+func (s *Service) XListJobs(
 	ctx context.Context,
 	req *pb.ListJobsRequest,
 ) (*pb.ListJobsResponse, error) {
