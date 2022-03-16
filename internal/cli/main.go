@@ -695,6 +695,23 @@ func Commands(
 			}, nil
 		},
 
+		"task": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["task"][0],
+				HelpText:     helpText["task"][1],
+			}, nil
+		},
+		"task list": func() (cli.Command, error) {
+			return &TaskListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"task inspect": func() (cli.Command, error) {
+			return &TaskInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"workspace": func() (cli.Command, error) {
 			return &helpCommand{
 				SynopsisText: helpText["workspace"][0],
@@ -1042,6 +1059,13 @@ Waypoint server is required for logs, exec, config, and more to work.
 The recommended way to run a server is "waypoint install".
 
 This command contains further subcommands to work with servers.
+`,
+	},
+
+	"task": {
+		"Task introspection and management",
+		`
+Manage and check the status of On-Demand Runner Tasks in Waypoint.
 `,
 	},
 
