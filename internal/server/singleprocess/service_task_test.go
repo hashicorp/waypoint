@@ -72,15 +72,53 @@ func TestServiceTask_GetTask(t *testing.T) {
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
 
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
+		Application: &pb.Ref_Application{
+			Application: "a_test",
+			Project:     "p_test",
+		},
+	}).Application)
+
+	// Create, should get an ID back
+	jobResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, jobResp)
+	require.NotEmpty(t, jobResp.JobId)
+	startJobId := jobResp.JobId
+
+	jobResp, err = client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, jobResp)
+	require.NotEmpty(t, jobResp.JobId)
+	runJobId := jobResp.JobId
+
+	jobResp, err = client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, jobResp)
+	require.NotEmpty(t, jobResp.JobId)
+	stopJobId := jobResp.JobId
+
 	resp, err := client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: serverptypes.TestValidTask(t, &pb.Task{TaskJob: &pb.Ref_Job{Id: "run_job"}}),
+		Task: serverptypes.TestValidTask(t, &pb.Task{
+			TaskJob:  &pb.Ref_Job{Id: runJobId},
+			StartJob: &pb.Ref_Job{Id: startJobId},
+			StopJob:  &pb.Ref_Job{Id: stopJobId},
+		}),
 	})
 	taskId := resp.Task.Id
 
-	type Req = pb.UpsertTaskRequest
-
+	// Create, should get an ID back
 	t.Run("get existing by task id", func(t *testing.T) {
 		require := require.New(t)
+
+		type JobReq = pb.QueueJobRequest
 
 		// Get, should return a task
 		resp, err := client.GetTask(ctx, &pb.GetTaskRequest{
@@ -103,7 +141,7 @@ func TestServiceTask_GetTask(t *testing.T) {
 		resp, err := client.GetTask(ctx, &pb.GetTaskRequest{
 			Ref: &pb.Ref_Task{
 				Ref: &pb.Ref_Task_JobId{
-					JobId: "run_job",
+					JobId: runJobId,
 				},
 			},
 		})
@@ -159,14 +197,59 @@ func TestServiceTask_ListTaskSimple(t *testing.T) {
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
 
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
+		Application: &pb.Ref_Application{
+			Application: "a_test",
+			Project:     "p_test",
+		},
+	}).Application)
+
+	// Create, should get an ID back
+	jobResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, jobResp)
+	require.NotEmpty(t, jobResp.JobId)
+	startJobId := jobResp.JobId
+
+	jobResp, err = client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, jobResp)
+	require.NotEmpty(t, jobResp.JobId)
+	runJobId := jobResp.JobId
+
+	jobResp, err = client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, jobResp)
+	require.NotEmpty(t, jobResp.JobId)
+	stopJobId := jobResp.JobId
+
 	_, err = client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: serverptypes.TestValidTask(t, &pb.Task{TaskJob: &pb.Ref_Job{Id: "run_job"}}),
+		Task: serverptypes.TestValidTask(t, &pb.Task{
+			TaskJob:  &pb.Ref_Job{Id: runJobId},
+			StartJob: &pb.Ref_Job{Id: startJobId},
+			StopJob:  &pb.Ref_Job{Id: stopJobId},
+		}),
 	})
 	_, err = client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: serverptypes.TestValidTask(t, &pb.Task{TaskJob: &pb.Ref_Job{Id: "run_job_two"}}),
+		Task: serverptypes.TestValidTask(t, &pb.Task{
+			TaskJob:  &pb.Ref_Job{Id: runJobId},
+			StartJob: &pb.Ref_Job{Id: startJobId},
+			StopJob:  &pb.Ref_Job{Id: stopJobId},
+		}),
 	})
 	_, err = client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: serverptypes.TestValidTask(t, &pb.Task{TaskJob: &pb.Ref_Job{Id: "run_job_three"}}),
+		Task: serverptypes.TestValidTask(t, &pb.Task{
+			TaskJob:  &pb.Ref_Job{Id: runJobId},
+			StartJob: &pb.Ref_Job{Id: startJobId},
+			StopJob:  &pb.Ref_Job{Id: stopJobId},
+		}),
 	})
 
 	t.Run("list", func(t *testing.T) {
@@ -187,12 +270,47 @@ func TestServiceTask_DeleteTask(t *testing.T) {
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
 
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
+		Application: &pb.Ref_Application{
+			Application: "a_test",
+			Project:     "p_test",
+		},
+	}).Application)
+
+	// Create, should get an ID back
+	jobResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, jobResp)
+	require.NotEmpty(t, jobResp.JobId)
+	startJobId := jobResp.JobId
+
+	jobResp, err = client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, jobResp)
+	require.NotEmpty(t, jobResp.JobId)
+	runJobId := jobResp.JobId
+
+	jobResp, err = client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, jobResp)
+	require.NotEmpty(t, jobResp.JobId)
+	stopJobId := jobResp.JobId
+
 	resp, err := client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: serverptypes.TestValidTask(t, &pb.Task{TaskJob: &pb.Ref_Job{Id: "run_job"}}),
+		Task: serverptypes.TestValidTask(t, &pb.Task{
+			TaskJob:  &pb.Ref_Job{Id: runJobId},
+			StartJob: &pb.Ref_Job{Id: startJobId},
+			StopJob:  &pb.Ref_Job{Id: stopJobId},
+		}),
 	})
 	taskId := resp.Task.Id
-
-	type Req = pb.UpsertTaskRequest
 
 	t.Run("get existing then delete", func(t *testing.T) {
 		require := require.New(t)

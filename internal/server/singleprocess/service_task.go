@@ -39,7 +39,13 @@ func (s *service) GetTask(
 		return nil, err
 	}
 
-	return &pb.GetTaskResponse{Task: t}, nil
+	// Get the Start, Run, and Stop jobs
+	resp, err := s.getJobsByTaskRef(ctx, t)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // DeleteTask deletes a Task based on ID
@@ -70,9 +76,51 @@ func (s *service) ListTask(
 		return nil, err
 	}
 
-	return &pb.ListTaskResponse{Tasks: result}, nil
+	var tasks []*pb.GetTaskResponse
+	for _, t := range result {
+		tsk, err := s.getJobsByTaskRef(ctx, t)
+		if err != nil {
+			return nil, err
+		}
+
+		tasks = append(tasks, tsk)
+	}
+
+	return &pb.ListTaskResponse{Tasks: tasks}, nil
 }
 
-func getJobByRef(ref *pb.Ref_Job) (*pb.Job, error) {
-	return nil, nil
+func (s *service) getJobsByTaskRef(
+	ctx context.Context,
+	t *pb.Task,
+) (*pb.GetTaskResponse, error) {
+	var taskJob, startJob, stopJob *pb.Job
+
+	if t.TaskJob != nil {
+		var err error
+		taskJob, err = s.GetJob(ctx, &pb.GetJobRequest{JobId: t.TaskJob.Id})
+		if err != nil {
+			return nil, err
+		}
+	} else {
+	}
+
+	if t.StartJob == nil {
+		var err error
+		startJob, err = s.GetJob(ctx, &pb.GetJobRequest{JobId: t.StartJob.Id})
+		if err != nil {
+			return nil, err
+		}
+	} else {
+	}
+
+	if t.StopJob == nil {
+		var err error
+		stopJob, err = s.GetJob(ctx, &pb.GetJobRequest{JobId: t.StopJob.Id})
+		if err != nil {
+			return nil, err
+		}
+	} else {
+	}
+
+	return &pb.GetTaskResponse{Task: t, TaskJob: taskJob, StartJob: startJob, StopJob: stopJob}, nil
 }
