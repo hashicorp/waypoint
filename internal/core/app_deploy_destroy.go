@@ -210,6 +210,10 @@ func (op *deployDestroyOperation) Labels(app *App) map[string]string {
 	return op.Deployment.Labels
 }
 
+func (op *deployDestroyOperation) VariableRefs(app *App) map[string]*pb.Variable_Ref {
+	return op.Deployment.VariableRefs
+}
+
 func (op *deployDestroyOperation) Upsert(
 	ctx context.Context,
 	client pb.WaypointClient,

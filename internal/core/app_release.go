@@ -152,8 +152,9 @@ func (a *App) createReleaser(ctx context.Context, hclCtx *hcl.EvalContext) (*Com
 }
 
 type releaseOperation struct {
-	Component *Component
-	Target    *pb.Deployment
+	Component     *Component
+	Target        *pb.Deployment
+	UsedVariables map[string]*pb.Variable_Ref
 
 	result component.Release
 }
@@ -162,6 +163,7 @@ func (op *releaseOperation) Init(app *App) (proto.Message, error) {
 	release := &pb.Release{
 		Application:   app.ref,
 		Workspace:     app.workspace,
+		VariableRefs:  op.UsedVariables,
 		DeploymentId:  op.Target.Id,
 		State:         pb.Operation_CREATED,
 		Component:     op.Target.Component,
@@ -194,6 +196,10 @@ func (op *releaseOperation) Labels(app *App) map[string]string {
 	}
 
 	return op.Component.labels
+}
+
+func (op *releaseOperation) VariableRefs(app *App) map[string]*pb.Variable_Ref {
+	return op.UsedVariables
 }
 
 func (op *releaseOperation) Upsert(

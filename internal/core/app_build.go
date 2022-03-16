@@ -52,9 +52,10 @@ func (a *App) Build(ctx context.Context, optFuncs ...BuildOption) (
 
 	// First we do the build
 	_, msg, err := a.doOperation(ctx, a.logger.Named("build"), &buildOperation{
-		Component:   c,
-		Registry:    cr,
-		HasRegistry: cr != nil,
+		Component:     c,
+		Registry:      cr,
+		HasRegistry:   cr != nil,
+		UsedVariables: a.project.variableRefs,
 	})
 	if err != nil {
 		return nil, nil, err
@@ -119,14 +120,16 @@ type buildOperation struct {
 	Registry  *Component
 	Build     *pb.Build
 
-	HasRegistry bool
+	HasRegistry   bool
+	UsedVariables map[string]*pb.Variable_Ref
 }
 
 func (op *buildOperation) Init(app *App) (proto.Message, error) {
 	return &pb.Build{
-		Application: app.ref,
-		Workspace:   app.workspace,
-		Component:   op.Component.Info,
+		Application:  app.ref,
+		Workspace:    app.workspace,
+		Component:    op.Component.Info,
+		VariableRefs: op.UsedVariables,
 	}, nil
 }
 
@@ -136,6 +139,10 @@ func (op *buildOperation) Hooks(app *App) map[string][]*config.Hook {
 
 func (op *buildOperation) Labels(app *App) map[string]string {
 	return op.Component.labels
+}
+
+func (op *buildOperation) VariableRefs(app *App) map[string]*pb.Variable_Ref {
+	return op.UsedVariables
 }
 
 func (op *buildOperation) Upsert(

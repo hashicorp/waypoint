@@ -133,6 +133,7 @@ type deployOperation struct {
 	EvalContext      *hcl.EvalContext
 	Push             *pb.PushedArtifact
 	DeploymentConfig *component.DeploymentConfig
+	UsedVariables    map[string]*pb.Variable_Ref
 
 	// Set by init
 	autoHostname pb.UpsertDeploymentRequest_Tristate
@@ -243,13 +244,14 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 	}
 
 	deployment := &pb.Deployment{
-		Generation:  &pb.Generation{Id: generationId},
-		Application: app.ref,
-		Workspace:   app.workspace,
-		Component:   op.component.Info,
-		Labels:      op.component.labels,
-		ArtifactId:  op.Push.Id,
-		State:       pb.Operation_CREATED,
+		Generation:   &pb.Generation{Id: generationId},
+		Application:  app.ref,
+		Workspace:    app.workspace,
+		Component:    op.component.Info,
+		Labels:       op.component.labels,
+		VariableRefs: op.UsedVariables,
+		ArtifactId:   op.Push.Id,
+		State:        pb.Operation_CREATED,
 		HasEntrypointConfig: op.DeploymentConfig != nil &&
 			op.DeploymentConfig.ServerAddr != "",
 	}
@@ -263,6 +265,10 @@ func (op *deployOperation) Hooks(app *App) map[string][]*config.Hook {
 
 func (op *deployOperation) Labels(app *App) map[string]string {
 	return op.component.labels
+}
+
+func (op *deployOperation) VariableRefs(app *App) map[string]*pb.Variable_Ref {
+	return op.UsedVariables
 }
 
 func (op *deployOperation) Upsert(

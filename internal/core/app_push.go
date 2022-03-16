@@ -97,6 +97,7 @@ type pushBuildOperation struct {
 	ComponentRegistry *Component
 	ComponentBuilder  *Component
 	Build             *pb.Build
+	UsedVariables     map[string]*pb.Variable_Ref
 }
 
 func (opts *pushBuildOptions) Validate() error {
@@ -137,6 +138,10 @@ func (op *pushBuildOperation) Labels(app *App) map[string]string {
 	}
 
 	return op.ComponentRegistry.labels
+}
+
+func (op *pushBuildOperation) VariableRefs(app *App) map[string]*pb.Variable_Ref {
+	return op.UsedVariables
 }
 
 func (op *pushBuildOperation) Upsert(

@@ -70,6 +70,9 @@ var (
 			{
 				Name: "env",
 			},
+			{
+				Name: "sensitive",
+			},
 		},
 	}
 )
@@ -93,6 +96,8 @@ type Variable struct {
 	// declaration, the type of the default variable will be used.
 	Type cty.Type
 
+	Sensitive bool
+
 	// Description of the variable
 	Description string
 
@@ -111,6 +116,7 @@ type HclVariable struct {
 	Type        hcl.Expression `hcl:"type,optional"`
 	Description string         `hcl:"description,optional"`
 	Env         []string       `hcl:"env,optional"`
+	Sensitive   bool           `hcl:"sensitive,optional"`
 }
 
 // Values are used to store values collected from various sources.
@@ -121,9 +127,10 @@ type Values map[string]*Value
 // Value contain the value of the variable along with associated metada,
 // including the source it was set from: cli, file, env, vcs, server/ui
 type Value struct {
-	Value  cty.Value
-	Source string
-	Expr   hcl.Expression
+	Value     cty.Value
+	Source    string
+	Sensitive bool
+	Expr      hcl.Expression
 	// The location of the variable value if the value was provided from a file
 	Range hcl.Range
 }
@@ -205,6 +212,11 @@ func decodeVariableBlock(
 		if diags.HasErrors() {
 			return nil, diags
 		}
+	}
+
+	if attr, exists := content.Attributes["sensitive"]; exists {
+		valDiags := gohcl.DecodeExpression(attr.Expr, nil, &v.Sensitive)
+		diags = append(diags, valDiags...)
 	}
 
 	if attr, exists := content.Attributes["default"]; exists {
@@ -538,6 +550,7 @@ func EvaluateVariables(
 		}
 
 		iv[v] = def.Default
+		iv[v].Sensitive = def.Sensitive
 	}
 
 	for _, pbv := range pbvars {
@@ -563,6 +576,8 @@ func EvaluateVariables(
 			source = "unknown"
 			log.Debug("No source found for value given for variable %q", pbv.Name)
 		}
+
+		sensitive := vs[pbv.Name].Sensitive
 
 		// We have to specify the three different simple types we support -- string,
 		// bool, number -- when doing the below evaluation of hcl expressions
@@ -649,6 +664,7 @@ func EvaluateVariables(
 			Source: source,
 			Value:  val,
 			Expr:   expr,
+			Sensitive: sensitive,
 		}
 	}
 
@@ -667,7 +683,66 @@ func EvaluateVariables(
 		}
 	}
 
+	// TODO krantzinator: don't think I want this
+	// jobVals, diags := setJobValues(iv)
+	// if diags.HasErrors() {
+	// 	return nil, nil, diags
+	// }
 	return iv, diags
+}
+
+func SetJobValues(values Values) (map[string]*pb.Variable_Ref, hcl.Diagnostics) {
+	varRefs := make(map[string]*pb.Variable_Ref, len(values))
+	var diags hcl.Diagnostics
+	for v, value := range values {
+		var val string
+		var t string
+		switch value.Value.Type() {
+		case cty.String:
+			val = value.Value.AsString()
+			t = "string"
+		case cty.Bool:
+			b := value.Value.True()
+			val = fmt.Sprintf("%t", b)
+			t = "bool"
+		case cty.Number:
+			var num int64
+			err := gocty.FromCtyValue(value.Value, &num)
+			if err != nil {
+				diags = append(diags, &hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Invalid number",
+					Detail:   err.Error(),
+				})
+				return nil, diags
+			}
+			val = fmt.Sprintf("%d", num)
+			t = "int"
+		default:
+			// TODO krantzinator -- best way?
+			// if it's not a primitive/simple type, we set as bytes here to be later
+			// parsed as an hcl expression; any errors at evaluating the hcl type will
+			// be handled at that time
+			bv := hclwrite.TokensForValue(value.Value).Bytes()
+			buf := bytes.NewBuffer(bv)
+			val = buf.String()
+			t = "complex"
+		}
+
+		if value.Sensitive {
+			// TODO krantzinator - make it better
+			val = "sensitive"
+		}
+
+		varRefs[v] = &pb.Variable_Ref{
+			Variable: v,
+			Value:    val,
+			Source:   value.Source,
+			Type:     t,
+		}
+	}
+
+	return varRefs, nil
 }
 
 // LoadAutoFiles loads any *.auto.wpvars(.json) files in the source repo

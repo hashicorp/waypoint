@@ -306,16 +306,16 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			},
 			expected: Values{
 				"art": &Value{
-					cty.StringVal("gdbee"), "cli", hcl.Expression(nil), hcl.Range{},
+					cty.StringVal("gdbee"), "cli", false, hcl.Expression(nil), hcl.Range{},
 				},
 				"dynamic": &Value{
-					cty.StringVal("value"), "cli", hcl.Expression(nil), hcl.Range{},
+					cty.StringVal("value"), "cli", false, hcl.Expression(nil), hcl.Range{},
 				},
 				"is_good": &Value{
-					cty.BoolVal(false), "default", hcl.Expression(nil), hcl.Range{},
+					cty.BoolVal(false), "default", false, hcl.Expression(nil), hcl.Range{},
 				},
 				"whatdoesittaketobenumber": &Value{
-					cty.NumberIntVal(1), "default", hcl.Expression(nil), hcl.Range{},
+					cty.NumberIntVal(1), "default", false, hcl.Expression(nil), hcl.Range{},
 				},
 			},
 			err: "",
@@ -326,7 +326,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			inputValues: []*pb.Variable{},
 			expected: Values{
 				"testdata": &Value{
-					stringListVal("pancakes"), "default", hcl.Expression(nil), hcl.Range{},
+					stringListVal("pancakes"), "default", false, hcl.Expression(nil), hcl.Range{},
 				},
 			},
 			err: "",
@@ -343,7 +343,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			},
 			expected: Values{
 				"testdata": &Value{
-					stringListVal("waffles"), "server", hcl.Expression(nil), hcl.Range{},
+					stringListVal("waffles"), "server", false, hcl.Expression(nil), hcl.Range{},
 				},
 			},
 			err: "",
@@ -360,7 +360,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			},
 			expected: Values{
 				"testdata": &Value{
-					stringListVal("waffles"), "cli", hcl.Expression(nil), hcl.Range{},
+					stringListVal("waffles"), "cli", false, hcl.Expression(nil), hcl.Range{},
 				},
 			},
 			err: "",

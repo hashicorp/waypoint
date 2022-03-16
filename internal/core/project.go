@@ -64,6 +64,10 @@ type Project struct {
 
 	// variables is the final map of values to use when evaluating config vars
 	variables variables.Values
+
+	// variableRefs is the map of variable values used for logging and outputs
+	// It will have any `sensitive` values obfuscated
+	variableRefs map[string]*pb.Variable_Ref
 }
 
 // NewProject creates a new Project with the given options.
@@ -313,6 +317,11 @@ func WithLabels(m map[string]string) Option {
 // WithVariables sets the final set of variable values for the operation.
 func WithVariables(vs variables.Values) Option {
 	return func(p *Project, opts *options) { p.variables = vs }
+}
+
+// WithVariableRefs sets the final set of variable values for the operation.
+func WithVariableRefs(vrs map[string]*pb.Variable_Ref) Option {
+	return func(p *Project, opts *options) { p.variableRefs = vrs }
 }
 
 // WithWorkspace sets the workspace we'll be working in.

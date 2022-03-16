@@ -230,6 +230,13 @@ func (r *Runner) executeJob(
 	if diags.HasErrors() {
 		return nil, diags
 	}
+	// Set final variable values on the job
+	// TODO krantzinator: make more better
+	vals, diags := variables.SetJobValues(inputVars)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+	job.VariableRefs = vals
 
 	// Build our job info
 	jobInfo := &component.JobInfo{
@@ -248,6 +255,7 @@ func (r *Runner) executeJob(
 		core.WithDataDir(projDir),
 		core.WithLabels(job.Labels),
 		core.WithVariables(inputVars),
+		core.WithVariableRefs(vals),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),
 	)

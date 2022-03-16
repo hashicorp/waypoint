@@ -338,6 +338,10 @@ func (op *statusReportOperation) Labels(app *App) map[string]string {
 	return nil
 }
 
+func (op *statusReportOperation) VariableRefs(app *App) map[string]*pb.Variable_Ref {
+	return nil
+}
+
 func (op *statusReportOperation) Upsert(
 	ctx context.Context,
 	client pb.WaypointClient,
