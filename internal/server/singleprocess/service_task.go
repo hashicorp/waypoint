@@ -101,7 +101,6 @@ func (s *service) getJobsByTaskRef(
 		if err != nil {
 			return nil, err
 		}
-	} else {
 	}
 
 	if t.StartJob == nil {
@@ -110,7 +109,6 @@ func (s *service) getJobsByTaskRef(
 		if err != nil {
 			return nil, err
 		}
-	} else {
 	}
 
 	if t.StopJob == nil {
@@ -119,7 +117,6 @@ func (s *service) getJobsByTaskRef(
 		if err != nil {
 			return nil, err
 		}
-	} else {
 	}
 
 	return &pb.GetTaskResponse{Task: t, TaskJob: taskJob, StartJob: startJob, StopJob: stopJob}, nil
