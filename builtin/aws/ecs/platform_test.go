@@ -205,4 +205,15 @@ func TestPlatformConfig(t *testing.T) {
 
 		require.Error(t, p.ConfigSet(cfg))
 	})
+
+	t.Run("disallows unsupported architecture", func(t *testing.T) {
+		var p Platform
+
+		cfg := &Config{
+			Memory:       512,
+			Architecture: "foo",
+		}
+
+		require.Error(t, p.ConfigSet(cfg))
+	})
 }

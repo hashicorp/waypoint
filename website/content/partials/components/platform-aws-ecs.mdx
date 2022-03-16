@@ -201,6 +201,13 @@ Environment variables to expose to this container.
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### architecture
+
+The instruction set CPU architecture that the Amazon ECS supports. Valid values are: "x86_64", "arm64".
+
+- Type: **string**
+- **Optional**
+
 #### assign_public_ip
 
 Assign a public ip address to tasks. Defaults to true. Ignored if using an ec2 cluster.
