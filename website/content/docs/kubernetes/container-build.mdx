@@ -58,14 +58,14 @@ file. You can test this using the Waypoint CLI by running `waypoint build`. This
 command will perform the build only, so it can be used for testing. The
 `waypoint build` command should be run in the same directory as your project
 (with the `waypoint.hcl`). If you want to force a
-[remote run](#local-vs-remote-builds), use the `-remote` flag.
+[remote run](#local-vs-remote-builds), use the `-local=false` option.
 
 ```shell-session
 $ waypoint build
 ...
 
 # or, to run it remotely in your Kubernetes cluster
-$ waypoint build -remote
+$ waypoint build -local=false
 ...
 ```
 

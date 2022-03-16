@@ -44,10 +44,10 @@ $ waypoint up my-project/web
 
 If you have the local source checked out and your terminal working directory
 is in your project source code, you can omit the project name and use the
-`-remote` flag:
+`-local=false` option:
 
 ```shell-session
-$ waypoint up -remote
+$ waypoint up -local=false
 ```
 
 You can substitute any operation for `up` such as `build`, `deploy`, `release`, etc.
@@ -60,7 +60,7 @@ logic is executing remotely.
 
 Waypoint only allows a single operation per distinct `(workspace, project, app)`
 combination. This applies to both local and remote operations. Therefore,
-if one user runs `waypoint up` locally and another runs `waypoint up -remote`,
+if one user runs `waypoint up` locally and another runs `waypoint up -local=false`,
 one of the operations will wait for the other to complete before continuing.
 
 However, if a second user runs `waypoint up` in a _different project_ or
