@@ -69,9 +69,23 @@ func (c *JobInspectCommand) Run(args []string) int {
 		return 0
 	}
 
+	c.ui.Output("Job Configuration", terminal.WithHeaderStyle())
+
+	vals, err := c.FormatJob(resp)
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return 1
+	}
+
+	c.ui.NamedValues(vals, terminal.WithInfoStyle())
+
+	return 0
+}
+
+func (c *JobInspectCommand) FormatJob(job *pb.Job) ([]terminal.NamedValue, error) {
 	var op string
 	// Job_Noop seems to be missing the isJob_operation method
-	switch resp.Operation.(type) {
+	switch job.Operation.(type) {
 	case *pb.Job_Build:
 		op = "Build"
 	case *pb.Job_Push:
@@ -113,7 +127,7 @@ func (c *JobInspectCommand) Run(args []string) int {
 	}
 
 	var jobState string
-	switch resp.State {
+	switch job.State {
 	case pb.Job_UNKNOWN:
 		jobState = "Unknown"
 	case pb.Job_QUEUED:
@@ -131,7 +145,7 @@ func (c *JobInspectCommand) Run(args []string) int {
 	}
 
 	var targetRunner string
-	switch target := resp.TargetRunner.Target.(type) {
+	switch target := job.TargetRunner.Target.(type) {
 	case *pb.Ref_Runner_Any:
 		targetRunner = "*"
 	case *pb.Ref_Runner_Id:
@@ -142,18 +156,18 @@ func (c *JobInspectCommand) Run(args []string) int {
 	if resp.CompleteTime != nil {
 		completeTime = humanize.Time(resp.CompleteTime.AsTime())
 	}
+
 	var cancelTime string
 	if resp.CancelTime != nil {
 		cancelTime = humanize.Time(resp.CancelTime.AsTime())
 	}
 
-	c.ui.Output("Job Configuration", terminal.WithHeaderStyle())
-	c.ui.NamedValues([]terminal.NamedValue{
+	result := []terminal.NamedValue{
 		{
-			Name: "ID", Value: resp.Id,
+			Name: "ID", Value: job.Id,
 		},
 		{
-			Name: "Singleton ID", Value: resp.SingletonId,
+			Name: "Singleton ID", Value: job.SingletonId,
 		},
 		{
 			Name: "Operation", Value: op,
@@ -171,17 +185,17 @@ func (c *JobInspectCommand) Run(args []string) int {
 			Name: "Target Runner", Value: targetRunner,
 		},
 		{
-			Name: "Workspace", Value: resp.Workspace.Workspace,
+			Name: "Workspace", Value: job.Workspace.Workspace,
 		},
 		{
-			Name: "Project", Value: resp.Application.Project,
+			Name: "Project", Value: job.Application.Project,
 		},
 		{
-			Name: "Application", Value: resp.Application.Application,
+			Name: "Application", Value: job.Application.Application,
 		},
-	}, terminal.WithInfoStyle())
+	}
 
-	return 0
+	return result, nil
 }
 
 func (c *JobInspectCommand) Flags() *flag.Sets {
