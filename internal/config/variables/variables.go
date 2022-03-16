@@ -127,10 +127,9 @@ type Values map[string]*Value
 // Value contain the value of the variable along with associated metada,
 // including the source it was set from: cli, file, env, vcs, server/ui
 type Value struct {
-	Value     cty.Value
-	Source    string
-	Sensitive bool
-	Expr      hcl.Expression
+	Value  cty.Value
+	Source string
+	Expr   hcl.Expression
 	// The location of the variable value if the value was provided from a file
 	Range hcl.Range
 }
@@ -537,7 +536,7 @@ func EvaluateVariables(
 	log hclog.Logger,
 	pbvars []*pb.Variable,
 	vs map[string]*Variable,
-) (Values, hcl.Diagnostics) {
+) (Values, map[string]*pb.Variable_Ref, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	iv := Values{}
 
@@ -550,7 +549,6 @@ func EvaluateVariables(
 		}
 
 		iv[v] = def.Default
-		iv[v].Sensitive = def.Sensitive
 	}
 
 	for _, pbv := range pbvars {
@@ -576,8 +574,6 @@ func EvaluateVariables(
 			source = "unknown"
 			log.Debug("No source found for value given for variable %q", pbv.Name)
 		}
-
-		sensitive := vs[pbv.Name].Sensitive
 
 		// We have to specify the three different simple types we support -- string,
 		// bool, number -- when doing the below evaluation of hcl expressions
@@ -611,13 +607,13 @@ func EvaluateVariables(
 				Detail:   "The variable type was not set as a string, number, bool, or hcl expression",
 				Subject:  &variable.Range,
 			})
-			return nil, diags
+			return nil, nil, diags
 		}
 
 		val, valDiags := expr.Value(nil)
 		if valDiags.HasErrors() {
 			diags = append(diags, valDiags...)
-			return nil, diags
+			return nil, nil, diags
 		}
 
 		if variable.Type != cty.NilType {
@@ -637,7 +633,7 @@ func EvaluateVariables(
 					val, valDiags = expr.Value(nil)
 					if valDiags.HasErrors() {
 						diags = append(diags, valDiags...)
-						return nil, diags
+						return nil, nil, diags
 					}
 				}
 			}
@@ -664,7 +660,6 @@ func EvaluateVariables(
 			Source: source,
 			Value:  val,
 			Expr:   expr,
-			Sensitive: sensitive,
 		}
 	}
 
@@ -682,16 +677,20 @@ func EvaluateVariables(
 			})
 		}
 	}
+	// Error here if we have them from parsing
+	if diags.HasErrors() {
+		return nil, nil, diags
+	}
 
-	// TODO krantzinator: don't think I want this
-	// jobVals, diags := setJobValues(iv)
-	// if diags.HasErrors() {
-	// 	return nil, nil, diags
-	// }
-	return iv, diags
+	jobVals, diags := getJobValues(vs, iv)
+	if diags.HasErrors() {
+		return nil, nil, diags
+	}
+	return iv, jobVals, diags
 }
 
-func SetJobValues(values Values) (map[string]*pb.Variable_Ref, hcl.Diagnostics) {
+// TODO krantzinator: doc
+func getJobValues(vs map[string]*Variable, values Values) (map[string]*pb.Variable_Ref, hcl.Diagnostics) {
 	varRefs := make(map[string]*pb.Variable_Ref, len(values))
 	var diags hcl.Diagnostics
 	for v, value := range values {
@@ -729,7 +728,7 @@ func SetJobValues(values Values) (map[string]*pb.Variable_Ref, hcl.Diagnostics) 
 			t = "complex"
 		}
 
-		if value.Sensitive {
+		if vs[v].Sensitive {
 			// TODO krantzinator - make it better
 			val = "sensitive"
 		}

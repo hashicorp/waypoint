@@ -71,8 +71,9 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 	defer c.Close()
 
 	result, releasepb, err := a.doOperation(ctx, a.logger.Named("release"), &releaseOperation{
-		Component: c,
-		Target:    target,
+		Component:     c,
+		Target:        target,
+		UsedVariables: a.project.variableRefs,
 	})
 	if err != nil {
 		return nil, nil, err

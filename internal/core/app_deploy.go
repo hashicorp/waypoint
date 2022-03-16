@@ -41,6 +41,7 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 		EvalContext:      &evalCtx,
 		Push:             push,
 		DeploymentConfig: deployConfig,
+		UsedVariables:    a.project.variableRefs,
 	}
 	defer op.Close()
 

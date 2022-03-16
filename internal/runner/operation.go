@@ -226,17 +226,19 @@ func (r *Runner) executeJob(
 	}
 
 	// evaluate all variables against the variable blocks we just decoded
-	inputVars, diags := variables.EvaluateVariables(log, pbVars, cfg.InputVariables)
+	inputVars, jobVars, diags := variables.EvaluateVariables(log, pbVars, cfg.InputVariables)
 	if diags.HasErrors() {
 		return nil, diags
 	}
-	// Set final variable values on the job
-	// TODO krantzinator: make more better
-	vals, diags := variables.SetJobValues(inputVars)
-	if diags.HasErrors() {
-		return nil, diags
-	}
-	job.VariableRefs = vals
+	// Set variable refs on the job that match the final set of
+	// values passed to the hcl context evaluation, but with any
+	// sensitive values obfuscated.
+	// These are the values we use for user-facing feedback that
+	// we save on the build/deploy/release/etc op.
+	// We also set these on the project.
+	// TODO krantzinator: we shouldn't need this AND setting on
+	// the project; pick one
+	job.VariableRefs = jobVars
 
 	// Build our job info
 	jobInfo := &component.JobInfo{
@@ -255,7 +257,7 @@ func (r *Runner) executeJob(
 		core.WithDataDir(projDir),
 		core.WithLabels(job.Labels),
 		core.WithVariables(inputVars),
-		core.WithVariableRefs(vals),
+		core.WithVariableRefs(jobVars),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),
 	)
