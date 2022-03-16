@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"reflect"
 	"time"
@@ -22,11 +23,13 @@ import (
 )
 
 // TODO: test
-func (s *service) GetJob(
+func (s *ProtoService) GetJob(
 	ctx context.Context,
 	req *pb.GetJobRequest,
 ) (*pb.Job, error) {
-	job, err := s.state.JobById(req.JobId, nil)
+	fmt.Println(s.Impl.(*service).superuser)
+
+	job, err := s.State(ctx).JobById(req.JobId, nil)
 	if err != nil {
 		return nil, err
 	}

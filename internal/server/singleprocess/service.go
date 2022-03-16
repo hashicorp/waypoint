@@ -16,6 +16,22 @@ import (
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
+type WaypointService interface {
+	State(ctx context.Context) serverstate.Interface
+}
+
+type ProtoService struct {
+	Impl WaypointService
+}
+
+func (s *ProtoService) State(ctx context.Context) serverstate.Interface {
+	return s.Impl.State(ctx)
+}
+
+func (s *service) State(_ context.Context) serverstate.Interface {
+	return s.state
+}
+
 // service implements the gRPC service for the server.
 type service struct {
 	// state is the state management interface that provides functions for
@@ -181,7 +197,11 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	s.bgWg.Add(1)
 	go s.runPrune(s.bgCtx, &s.bgWg, log.Named("prune"))
 
-	return &s, nil
+	protoService := &ProtoService{
+		Impl: &s,
+	}
+
+	return protoService, nil
 }
 
 // Close shuts down any background processes and resources that may

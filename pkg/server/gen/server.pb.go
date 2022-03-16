@@ -8,6 +8,9 @@ package gen
 
 import (
 	context "context"
+	reflect "reflect"
+	sync "sync"
+
 	status "google.golang.org/genproto/googleapis/rpc/status"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -17,8 +20,6 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -34816,269 +34817,269 @@ func (c *waypointClient) UI_ListReleases(ctx context.Context, in *UI_ListRelease
 
 // WaypointServer is the server API for Waypoint service.
 type WaypointServer interface {
-	// GetVersionInfo returns information about the server. This RPC call does
-	// NOT require authentication. It can be used by clients to determine if they
-	// are capable of talking to this server.
-	GetVersionInfo(context.Context, *emptypb.Empty) (*GetVersionInfoResponse, error)
-	// List the available OIDC providers for authentication. The "name" of the
-	// OIDC provider can be used with GetOIDCAuthURL and CompleteOIDCAuth to
-	// perform OIDC-based authentication.
-	ListOIDCAuthMethods(context.Context, *emptypb.Empty) (*ListOIDCAuthMethodsResponse, error)
-	// Get the URL to visit to start authentication with OIDC.
-	GetOIDCAuthURL(context.Context, *GetOIDCAuthURLRequest) (*GetOIDCAuthURLResponse, error)
-	// Complete the OIDC auth cycle after receiving the callback from the
-	// OIDC provider.
-	CompleteOIDCAuth(context.Context, *CompleteOIDCAuthRequest) (*CompleteOIDCAuthResponse, error)
-	// Attempts to run a trigger given a trigger ID reference. If the trigger does
-	// not exist, we return not found. If the trigger exists but requires authentication
-	// we return an error.
-	NoAuthRunTrigger(context.Context, *RunTriggerRequest) (*RunTriggerResponse, error)
-	// GetUser returns the current logged in user or some other user.
-	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
-	// List all users in the system.
-	ListUsers(context.Context, *emptypb.Empty) (*ListUsersResponse, error)
-	// Update the details about an existing user.
-	UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
-	// Delete a user. This will invalidate all authentication for this user
-	// as well since they no longer exist.
-	DeleteUser(context.Context, *DeleteUserRequest) (*emptypb.Empty, error)
-	// UpsertAuthMethod upserts the auth method. All users logged in with
-	// this auth method will remain logged in even if settings change.
-	UpsertAuthMethod(context.Context, *UpsertAuthMethodRequest) (*UpsertAuthMethodResponse, error)
-	// GetAuthMethod returns the auth method.
-	GetAuthMethod(context.Context, *GetAuthMethodRequest) (*GetAuthMethodResponse, error)
-	// ListAuthMethods returns a list of all the auth methods.
-	ListAuthMethods(context.Context, *emptypb.Empty) (*ListAuthMethodsResponse, error)
-	// Delete an auth method. This will invalidate all users authenticated
-	// using this auth method and they will have to reauthenticate some other
-	// way.
-	DeleteAuthMethod(context.Context, *DeleteAuthMethodRequest) (*emptypb.Empty, error)
-	// ListWorkspaces returns a list of all workspaces.
-	//
-	// Note that currently this list is never pruned, even if a workspace is
-	// no longer in use. We plan to prune this in a future improvement.
-	ListWorkspaces(context.Context, *ListWorkspacesRequest) (*ListWorkspacesResponse, error)
-	// GetWorkspace returns the workspace.
-	GetWorkspace(context.Context, *GetWorkspaceRequest) (*GetWorkspaceResponse, error)
-	// UpsertWorkspace upserts the workspace. Changes to a Workspace's Projects
-	// are ignored at this time.
-	UpsertWorkspace(context.Context, *UpsertWorkspaceRequest) (*UpsertWorkspaceResponse, error)
-	// UpsertProject upserts the project.
-	UpsertProject(context.Context, *UpsertProjectRequest) (*UpsertProjectResponse, error)
-	// GetProject returns the project.
-	GetProject(context.Context, *GetProjectRequest) (*GetProjectResponse, error)
-	// ListProjects returns a list of all the projects. There is no equivalent
-	// ListApplications because applications are a part of projects and you
-	// can use GetProject to get more information about the project.
-	ListProjects(context.Context, *emptypb.Empty) (*ListProjectsResponse, error)
-	// GetApplication returns one application on the project.
-	GetApplication(context.Context, *GetApplicationRequest) (*GetApplicationResponse, error)
-	// UpsertApplication upserts an application with a project.
-	UpsertApplication(context.Context, *UpsertApplicationRequest) (*UpsertApplicationResponse, error)
-	// ListBuilds returns the builds.
-	ListBuilds(context.Context, *ListBuildsRequest) (*ListBuildsResponse, error)
-	// GetBuild returns a build
-	GetBuild(context.Context, *GetBuildRequest) (*Build, error)
-	// ListPushedArtifacts returns the builds.
-	ListPushedArtifacts(context.Context, *ListPushedArtifactsRequest) (*ListPushedArtifactsResponse, error)
-	// GetPushedArtifact returns a deployment
-	GetPushedArtifact(context.Context, *GetPushedArtifactRequest) (*PushedArtifact, error)
-	// ListDeployments returns the deployments.
-	ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error)
-	// ListInstances returns the running instances of deployments.
-	ListInstances(context.Context, *ListInstancesRequest) (*ListInstancesResponse, error)
-	// GetDeployment returns a deployment
-	GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error)
-	// GetLatestBuild returns the most recent successfully completed build
-	// for an app.
-	GetLatestBuild(context.Context, *GetLatestBuildRequest) (*Build, error)
-	// GetLatestPushedArtifact returns the most recent successfully completed
-	// artifact push for an app.
-	GetLatestPushedArtifact(context.Context, *GetLatestPushedArtifactRequest) (*PushedArtifact, error)
-	// ListReleases returns the deployments.
-	ListReleases(context.Context, *ListReleasesRequest) (*ListReleasesResponse, error)
-	// GetRelease returns a deployment
-	GetRelease(context.Context, *GetReleaseRequest) (*Release, error)
-	// GetLatestRelease returns the most recent successfully completed
-	// artifact push for an app.
-	GetLatestRelease(context.Context, *GetLatestReleaseRequest) (*Release, error)
-	// GetLogStream reads the log stream for a deployment. This will immediately
-	// send a single LogEntry with the lines we have so far. If there are no
-	// available lines this will NOT block and instead will return an error.
-	// The client can choose to retry or not.
-	GetLogStream(*GetLogStreamRequest, Waypoint_GetLogStreamServer) error
-	// StartExecStream starts an exec session.
-	StartExecStream(Waypoint_StartExecStreamServer) error
-	// Set one or more configuration variables for applications or runners.
-	SetConfig(context.Context, *ConfigSetRequest) (*ConfigSetResponse, error)
-	// Retrieve merged configuration values for a specific scope. You can determine
-	// where a configuration variable was set by looking at the scope field on
-	// each variable.
-	GetConfig(context.Context, *ConfigGetRequest) (*ConfigGetResponse, error)
-	// Set the configuration for a dynamic configuration source. If you're looking
-	// to set application configuration, you probably want SetConfig instead.
-	SetConfigSource(context.Context, *SetConfigSourceRequest) (*emptypb.Empty, error)
-	// Get the matching configuration source for the request. This will return
-	// the most specific matching config source given the scope in the request.
-	// For example, if you search for an app-specific config source and only
-	// a global config exists, the global config will be returned.
-	GetConfigSource(context.Context, *GetConfigSourceRequest) (*GetConfigSourceResponse, error)
-	// Create a hostname with the URL service.
-	CreateHostname(context.Context, *CreateHostnameRequest) (*CreateHostnameResponse, error)
-	// Delete a hostname with the URL service.
-	DeleteHostname(context.Context, *DeleteHostnameRequest) (*emptypb.Empty, error)
-	// List all our registered hostnames.
-	ListHostnames(context.Context, *ListHostnamesRequest) (*ListHostnamesResponse, error)
-	// QueueJob queues a job for execution by a runner. This will return as
-	// soon as the job is queued, it will not wait for execution.
-	QueueJob(context.Context, *QueueJobRequest) (*QueueJobResponse, error)
-	// CancelJob cancels a job. If the job is still queued this is a quick
-	// and easy operation. If the job is already completed, then this does
-	// nothing. If the job is assigned or running, then this will signal
-	// the runner about the cancellation but it may take time.
-	//
-	// This RPC always returns immediately. You must use GetJob or GetJobStream
-	// to wait on the status of the cancellation.
-	CancelJob(context.Context, *CancelJobRequest) (*emptypb.Empty, error)
+	//// GetVersionInfo returns information about the server. This RPC call does
+	//// NOT require authentication. It can be used by clients to determine if they
+	//// are capable of talking to this server.
+	//GetVersionInfo(context.Context, *emptypb.Empty) (*GetVersionInfoResponse, error)
+	//// List the available OIDC providers for authentication. The "name" of the
+	//// OIDC provider can be used with GetOIDCAuthURL and CompleteOIDCAuth to
+	//// perform OIDC-based authentication.
+	//ListOIDCAuthMethods(context.Context, *emptypb.Empty) (*ListOIDCAuthMethodsResponse, error)
+	//// Get the URL to visit to start authentication with OIDC.
+	//GetOIDCAuthURL(context.Context, *GetOIDCAuthURLRequest) (*GetOIDCAuthURLResponse, error)
+	//// Complete the OIDC auth cycle after receiving the callback from the
+	//// OIDC provider.
+	//CompleteOIDCAuth(context.Context, *CompleteOIDCAuthRequest) (*CompleteOIDCAuthResponse, error)
+	//// Attempts to run a trigger given a trigger ID reference. If the trigger does
+	//// not exist, we return not found. If the trigger exists but requires authentication
+	//// we return an error.
+	//NoAuthRunTrigger(context.Context, *RunTriggerRequest) (*RunTriggerResponse, error)
+	//// GetUser returns the current logged in user or some other user.
+	//GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
+	//// List all users in the system.
+	//ListUsers(context.Context, *emptypb.Empty) (*ListUsersResponse, error)
+	//// Update the details about an existing user.
+	//UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
+	//// Delete a user. This will invalidate all authentication for this user
+	//// as well since they no longer exist.
+	//DeleteUser(context.Context, *DeleteUserRequest) (*emptypb.Empty, error)
+	//// UpsertAuthMethod upserts the auth method. All users logged in with
+	//// this auth method will remain logged in even if settings change.
+	//UpsertAuthMethod(context.Context, *UpsertAuthMethodRequest) (*UpsertAuthMethodResponse, error)
+	//// GetAuthMethod returns the auth method.
+	//GetAuthMethod(context.Context, *GetAuthMethodRequest) (*GetAuthMethodResponse, error)
+	//// ListAuthMethods returns a list of all the auth methods.
+	//ListAuthMethods(context.Context, *emptypb.Empty) (*ListAuthMethodsResponse, error)
+	//// Delete an auth method. This will invalidate all users authenticated
+	//// using this auth method and they will have to reauthenticate some other
+	//// way.
+	//DeleteAuthMethod(context.Context, *DeleteAuthMethodRequest) (*emptypb.Empty, error)
+	//// ListWorkspaces returns a list of all workspaces.
+	////
+	//// Note that currently this list is never pruned, even if a workspace is
+	//// no longer in use. We plan to prune this in a future improvement.
+	//ListWorkspaces(context.Context, *ListWorkspacesRequest) (*ListWorkspacesResponse, error)
+	//// GetWorkspace returns the workspace.
+	//GetWorkspace(context.Context, *GetWorkspaceRequest) (*GetWorkspaceResponse, error)
+	//// UpsertWorkspace upserts the workspace. Changes to a Workspace's Projects
+	//// are ignored at this time.
+	//UpsertWorkspace(context.Context, *UpsertWorkspaceRequest) (*UpsertWorkspaceResponse, error)
+	//// UpsertProject upserts the project.
+	//UpsertProject(context.Context, *UpsertProjectRequest) (*UpsertProjectResponse, error)
+	//// GetProject returns the project.
+	//GetProject(context.Context, *GetProjectRequest) (*GetProjectResponse, error)
+	//// ListProjects returns a list of all the projects. There is no equivalent
+	//// ListApplications because applications are a part of projects and you
+	//// can use GetProject to get more information about the project.
+	//ListProjects(context.Context, *emptypb.Empty) (*ListProjectsResponse, error)
+	//// GetApplication returns one application on the project.
+	//GetApplication(context.Context, *GetApplicationRequest) (*GetApplicationResponse, error)
+	//// UpsertApplication upserts an application with a project.
+	//UpsertApplication(context.Context, *UpsertApplicationRequest) (*UpsertApplicationResponse, error)
+	//// ListBuilds returns the builds.
+	//ListBuilds(context.Context, *ListBuildsRequest) (*ListBuildsResponse, error)
+	//// GetBuild returns a build
+	//GetBuild(context.Context, *GetBuildRequest) (*Build, error)
+	//// ListPushedArtifacts returns the builds.
+	//ListPushedArtifacts(context.Context, *ListPushedArtifactsRequest) (*ListPushedArtifactsResponse, error)
+	//// GetPushedArtifact returns a deployment
+	//GetPushedArtifact(context.Context, *GetPushedArtifactRequest) (*PushedArtifact, error)
+	//// ListDeployments returns the deployments.
+	//ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error)
+	//// ListInstances returns the running instances of deployments.
+	//ListInstances(context.Context, *ListInstancesRequest) (*ListInstancesResponse, error)
+	//// GetDeployment returns a deployment
+	//GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error)
+	//// GetLatestBuild returns the most recent successfully completed build
+	//// for an app.
+	//GetLatestBuild(context.Context, *GetLatestBuildRequest) (*Build, error)
+	//// GetLatestPushedArtifact returns the most recent successfully completed
+	//// artifact push for an app.
+	//GetLatestPushedArtifact(context.Context, *GetLatestPushedArtifactRequest) (*PushedArtifact, error)
+	//// ListReleases returns the deployments.
+	//ListReleases(context.Context, *ListReleasesRequest) (*ListReleasesResponse, error)
+	//// GetRelease returns a deployment
+	//GetRelease(context.Context, *GetReleaseRequest) (*Release, error)
+	//// GetLatestRelease returns the most recent successfully completed
+	//// artifact push for an app.
+	//GetLatestRelease(context.Context, *GetLatestReleaseRequest) (*Release, error)
+	//// GetLogStream reads the log stream for a deployment. This will immediately
+	//// send a single LogEntry with the lines we have so far. If there are no
+	//// available lines this will NOT block and instead will return an error.
+	//// The client can choose to retry or not.
+	//GetLogStream(*GetLogStreamRequest, Waypoint_GetLogStreamServer) error
+	//// StartExecStream starts an exec session.
+	//StartExecStream(Waypoint_StartExecStreamServer) error
+	//// Set one or more configuration variables for applications or runners.
+	//SetConfig(context.Context, *ConfigSetRequest) (*ConfigSetResponse, error)
+	//// Retrieve merged configuration values for a specific scope. You can determine
+	//// where a configuration variable was set by looking at the scope field on
+	//// each variable.
+	//GetConfig(context.Context, *ConfigGetRequest) (*ConfigGetResponse, error)
+	//// Set the configuration for a dynamic configuration source. If you're looking
+	//// to set application configuration, you probably want SetConfig instead.
+	//SetConfigSource(context.Context, *SetConfigSourceRequest) (*emptypb.Empty, error)
+	//// Get the matching configuration source for the request. This will return
+	//// the most specific matching config source given the scope in the request.
+	//// For example, if you search for an app-specific config source and only
+	//// a global config exists, the global config will be returned.
+	//GetConfigSource(context.Context, *GetConfigSourceRequest) (*GetConfigSourceResponse, error)
+	//// Create a hostname with the URL service.
+	//CreateHostname(context.Context, *CreateHostnameRequest) (*CreateHostnameResponse, error)
+	//// Delete a hostname with the URL service.
+	//DeleteHostname(context.Context, *DeleteHostnameRequest) (*emptypb.Empty, error)
+	//// List all our registered hostnames.
+	//ListHostnames(context.Context, *ListHostnamesRequest) (*ListHostnamesResponse, error)
+	//// QueueJob queues a job for execution by a runner. This will return as
+	//// soon as the job is queued, it will not wait for execution.
+	//QueueJob(context.Context, *QueueJobRequest) (*QueueJobResponse, error)
+	//// CancelJob cancels a job. If the job is still queued this is a quick
+	//// and easy operation. If the job is already completed, then this does
+	//// nothing. If the job is assigned or running, then this will signal
+	//// the runner about the cancellation but it may take time.
+	////
+	//// This RPC always returns immediately. You must use GetJob or GetJobStream
+	//// to wait on the status of the cancellation.
+	//CancelJob(context.Context, *CancelJobRequest) (*emptypb.Empty, error)
 	// GetJob queries a job by ID.
 	GetJob(context.Context, *GetJobRequest) (*Job, error)
-	// INTERNAL: ListJobs lists all the jobs the server has processed. This
-	// is not yet ready for public use.
-	XListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
-	// ValidateJob checks if a job appears valid. This will check the job
-	// structure itself (i.e. missing fields) and can also check to ensure
-	// the job is assignable to a runner.
-	ValidateJob(context.Context, *ValidateJobRequest) (*ValidateJobResponse, error)
-	// GetJobStream opens a job event stream for a running job. This can be
-	// used to listen for terminal output and other events of a running job.
-	// Multiple listeners can open a job stream.
-	GetJobStream(*GetJobStreamRequest, Waypoint_GetJobStreamServer) error
-	// GetRunner gets information about a single runner.
-	GetRunner(context.Context, *GetRunnerRequest) (*Runner, error)
-	// ListRunners lists runners that are currently registered with the waypoint server.
-	// This list does not include previous on-demand runners that have exited.
-	ListRunners(context.Context, *ListRunnersRequest) (*ListRunnersResponse, error)
-	// AdoptRunners allows marking a runner as adopted or rejected.
-	AdoptRunner(context.Context, *AdoptRunnerRequest) (*emptypb.Empty, error)
-	// ForgetRunner deletes an existing runner entry and makes the server
-	// behave as if the runner no longer exists. If the runner is currently
-	// running, it will receive errors on subsequent jobs, and will have to
-	// re-register. A forgotten runner will not be assigned new jobs until
-	// re-registered.
-	ForgetRunner(context.Context, *ForgetRunnerRequest) (*emptypb.Empty, error)
-	// GetServerConfig sets configuration for the Waypoint server.
-	GetServerConfig(context.Context, *emptypb.Empty) (*GetServerConfigResponse, error)
-	// SetServerConfig sets configuration for the Waypoint server.
-	SetServerConfig(context.Context, *SetServerConfigRequest) (*emptypb.Empty, error)
-	// CreateSnapshot creates a new database snapshot.
-	CreateSnapshot(*emptypb.Empty, Waypoint_CreateSnapshotServer) error
-	// RestoreSnapshot performs a database restore with the given snapshot.
-	// This API doesn't do a full online restore, it only stages the restore
-	// for the next server start to finalize the restore. See the arguments for
-	// more information.
-	RestoreSnapshot(Waypoint_RestoreSnapshotServer) error
-	// BootstrapToken returns the initial token for the server. This can only
-	// be requested once on first startup. After initial request this will
-	// always return a PermissionDenied error.
-	BootstrapToken(context.Context, *emptypb.Empty) (*NewTokenResponse, error)
-	// DecodeToken takes a token string and returns the structured information
-	// about the given token. This is useful for frontends (CLI, UI, etc.) to
-	// learn more about a token before using it. For example, if a UI wants to
-	// create a signup flow around signup tokens, they can validate the token
-	// ahead of time.
-	//
-	// This endpoint does NOT require authentication.
-	DecodeToken(context.Context, *DecodeTokenRequest) (*DecodeTokenResponse, error)
-	// Generate a new invite token that users can exchange for a login token.
-	// This can be used to also invite new users to the Waypoint server.
-	GenerateInviteToken(context.Context, *InviteTokenRequest) (*NewTokenResponse, error)
-	// Generate a new login token that users can use to login directly.
-	// This can only be called for existing users.
-	GenerateLoginToken(context.Context, *LoginTokenRequest) (*NewTokenResponse, error)
-	// Generate a new runner token that can be used with runners so they
-	// immediately begin work. The recommended appraoch is to instead use
-	// the adoption flow but this also works.
-	GenerateRunnerToken(context.Context, *GenerateRunnerTokenRequest) (*NewTokenResponse, error)
-	// Exchange a invite token for a login token. If the invite token is
-	// for a new user, this will create a new user account with the provided
-	// username hint.
-	ConvertInviteToken(context.Context, *ConvertInviteTokenRequest) (*NewTokenResponse, error)
-	// GetStatusReport returns a StatusReport
-	GetStatusReport(context.Context, *GetStatusReportRequest) (*StatusReport, error)
-	// GetLatestStatusReport returns the most recent successfully completed
-	// health report for an app
-	GetLatestStatusReport(context.Context, *GetLatestStatusReportRequest) (*StatusReport, error)
-	// ListStatusReports returns the deployments.
-	ListStatusReports(context.Context, *ListStatusReportsRequest) (*ListStatusReportsResponse, error)
-	// ExpediteStatusReport returns the queued status report job id
-	ExpediteStatusReport(context.Context, *ExpediteStatusReportRequest) (*ExpediteStatusReportResponse, error)
-	// RunnerToken is called to register a runner and request a token for
-	// remaining runner API calls. This kicks off the "adoption" process
-	// (if necessary).
-	//
-	// This is unauthenticated (but requires a cookie in the metadata).
-	RunnerToken(context.Context, *RunnerTokenRequest) (*RunnerTokenResponse, error)
-	// RunnerConfig is called to receive the configuration for the runner.
-	// The response is a stream so that the configuration can be updated later.
-	RunnerConfig(Waypoint_RunnerConfigServer) error
-	// RunnerJobStream is called by a runner to request a single job for
-	// execution and update the status of that job.
-	RunnerJobStream(Waypoint_RunnerJobStreamServer) error
-	// RunnerGetDeploymentConfig is called by a runner for a deployment operation
-	// to determine the settings to use for a deployment.
-	RunnerGetDeploymentConfig(context.Context, *RunnerGetDeploymentConfigRequest) (*RunnerGetDeploymentConfigResponse, error)
-	// EntrypointConfig is called to get the configuration for the entrypoint
-	// and also to get any potential updates.
-	//
-	// This endpoint also registers the instance with the server. This MUST be
-	// called first otherwise other RPCs related to the entrypoint may fail
-	// with FailedPrecondition.
-	EntrypointConfig(*EntrypointConfigRequest, Waypoint_EntrypointConfigServer) error
-	// EntrypointLogStream is called to open the stream that logs are sent to.
-	EntrypointLogStream(Waypoint_EntrypointLogStreamServer) error
-	// EntrypointExecStream is called to open the data stream for the exec session.
-	EntrypointExecStream(Waypoint_EntrypointExecStreamServer) error
-	// WaypointHclFmt formats a waypoint.hcl file. This must be in HCL format.
-	// JSON formatting is not supported.
-	WaypointHclFmt(context.Context, *WaypointHclFmtRequest) (*WaypointHclFmtResponse, error)
-	// UpsertOnDemandRunnerConfig updates or inserts a on-demand runner
-	// configuration. This configuration can be used by projects for running
-	// operations on just-in-time launched runners.
-	UpsertOnDemandRunnerConfig(context.Context, *UpsertOnDemandRunnerConfigRequest) (*UpsertOnDemandRunnerConfigResponse, error)
-	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
-	GetOnDemandRunnerConfig(context.Context, *GetOnDemandRunnerConfigRequest) (*GetOnDemandRunnerConfigResponse, error)
-	// ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
-	ListOnDemandRunnerConfigs(context.Context, *emptypb.Empty) (*ListOnDemandRunnerConfigsResponse, error)
-	// UpsertBuild updates or inserts a build. A build is responsible for
-	// taking some set of source information and turning it into an initial
-	// artifact. This artifact is considered "local" until it is pushed.
-	UpsertBuild(context.Context, *UpsertBuildRequest) (*UpsertBuildResponse, error)
-	// UpsertPushedArtifact updates or inserts a pushed artifact. This is
-	// useful for local operations to work on a pushed artifact.
-	UpsertPushedArtifact(context.Context, *UpsertPushedArtifactRequest) (*UpsertPushedArtifactResponse, error)
-	// UpsertDeployment updates or inserts a deployment.
-	UpsertDeployment(context.Context, *UpsertDeploymentRequest) (*UpsertDeploymentResponse, error)
-	// UpsertRelease updates or inserts a release.
-	UpsertRelease(context.Context, *UpsertReleaseRequest) (*UpsertReleaseResponse, error)
-	// UpsertStatusReport updates or inserts a statusreport.
-	UpsertStatusReport(context.Context, *UpsertStatusReportRequest) (*UpsertStatusReportResponse, error)
-	// UpsertTrigger updates or inserts a trigger URL configuration.
-	UpsertTrigger(context.Context, *UpsertTriggerRequest) (*UpsertTriggerResponse, error)
-	// GetTrigger returns a requested trigger message. Or an error if it does not exist.
-	GetTrigger(context.Context, *GetTriggerRequest) (*GetTriggerResponse, error)
-	// DeleteTrigger takes a trigger id and deletes it, if it exists.
-	DeleteTrigger(context.Context, *DeleteTriggerRequest) (*emptypb.Empty, error)
-	// ListTriggers takes a request filter, and returns any matching existing triggers
-	ListTriggers(context.Context, *ListTriggerRequest) (*ListTriggerResponse, error)
-	// RunTrigger will look up the referenced trigger and attempt to queue a job
-	// based on the trigger configuration.
-	RunTrigger(context.Context, *RunTriggerRequest) (*RunTriggerResponse, error)
-	// Get a given project with useful related records.
-	UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error)
-	// List deployments for a given application.
-	UI_ListDeployments(context.Context, *UI_ListDeploymentsRequest) (*UI_ListDeploymentsResponse, error)
-	// List releases for a given application.
-	UI_ListReleases(context.Context, *UI_ListReleasesRequest) (*UI_ListReleasesResponse, error)
+	//// INTERNAL: ListJobs lists all the jobs the server has processed. This
+	//// is not yet ready for public use.
+	//XListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
+	//// ValidateJob checks if a job appears valid. This will check the job
+	//// structure itself (i.e. missing fields) and can also check to ensure
+	//// the job is assignable to a runner.
+	//ValidateJob(context.Context, *ValidateJobRequest) (*ValidateJobResponse, error)
+	//// GetJobStream opens a job event stream for a running job. This can be
+	//// used to listen for terminal output and other events of a running job.
+	//// Multiple listeners can open a job stream.
+	//GetJobStream(*GetJobStreamRequest, Waypoint_GetJobStreamServer) error
+	//// GetRunner gets information about a single runner.
+	//GetRunner(context.Context, *GetRunnerRequest) (*Runner, error)
+	//// ListRunners lists runners that are currently registered with the waypoint server.
+	//// This list does not include previous on-demand runners that have exited.
+	//ListRunners(context.Context, *ListRunnersRequest) (*ListRunnersResponse, error)
+	//// AdoptRunners allows marking a runner as adopted or rejected.
+	//AdoptRunner(context.Context, *AdoptRunnerRequest) (*emptypb.Empty, error)
+	//// ForgetRunner deletes an existing runner entry and makes the server
+	//// behave as if the runner no longer exists. If the runner is currently
+	//// running, it will receive errors on subsequent jobs, and will have to
+	//// re-register. A forgotten runner will not be assigned new jobs until
+	//// re-registered.
+	//ForgetRunner(context.Context, *ForgetRunnerRequest) (*emptypb.Empty, error)
+	//// GetServerConfig sets configuration for the Waypoint server.
+	//GetServerConfig(context.Context, *emptypb.Empty) (*GetServerConfigResponse, error)
+	//// SetServerConfig sets configuration for the Waypoint server.
+	//SetServerConfig(context.Context, *SetServerConfigRequest) (*emptypb.Empty, error)
+	//// CreateSnapshot creates a new database snapshot.
+	//CreateSnapshot(*emptypb.Empty, Waypoint_CreateSnapshotServer) error
+	//// RestoreSnapshot performs a database restore with the given snapshot.
+	//// This API doesn't do a full online restore, it only stages the restore
+	//// for the next server start to finalize the restore. See the arguments for
+	//// more information.
+	//RestoreSnapshot(Waypoint_RestoreSnapshotServer) error
+	//// BootstrapToken returns the initial token for the server. This can only
+	//// be requested once on first startup. After initial request this will
+	//// always return a PermissionDenied error.
+	//BootstrapToken(context.Context, *emptypb.Empty) (*NewTokenResponse, error)
+	//// DecodeToken takes a token string and returns the structured information
+	//// about the given token. This is useful for frontends (CLI, UI, etc.) to
+	//// learn more about a token before using it. For example, if a UI wants to
+	//// create a signup flow around signup tokens, they can validate the token
+	//// ahead of time.
+	////
+	//// This endpoint does NOT require authentication.
+	//DecodeToken(context.Context, *DecodeTokenRequest) (*DecodeTokenResponse, error)
+	//// Generate a new invite token that users can exchange for a login token.
+	//// This can be used to also invite new users to the Waypoint server.
+	//GenerateInviteToken(context.Context, *InviteTokenRequest) (*NewTokenResponse, error)
+	//// Generate a new login token that users can use to login directly.
+	//// This can only be called for existing users.
+	//GenerateLoginToken(context.Context, *LoginTokenRequest) (*NewTokenResponse, error)
+	//// Generate a new runner token that can be used with runners so they
+	//// immediately begin work. The recommended appraoch is to instead use
+	//// the adoption flow but this also works.
+	//GenerateRunnerToken(context.Context, *GenerateRunnerTokenRequest) (*NewTokenResponse, error)
+	//// Exchange a invite token for a login token. If the invite token is
+	//// for a new user, this will create a new user account with the provided
+	//// username hint.
+	//ConvertInviteToken(context.Context, *ConvertInviteTokenRequest) (*NewTokenResponse, error)
+	//// GetStatusReport returns a StatusReport
+	//GetStatusReport(context.Context, *GetStatusReportRequest) (*StatusReport, error)
+	//// GetLatestStatusReport returns the most recent successfully completed
+	//// health report for an app
+	//GetLatestStatusReport(context.Context, *GetLatestStatusReportRequest) (*StatusReport, error)
+	//// ListStatusReports returns the deployments.
+	//ListStatusReports(context.Context, *ListStatusReportsRequest) (*ListStatusReportsResponse, error)
+	//// ExpediteStatusReport returns the queued status report job id
+	//ExpediteStatusReport(context.Context, *ExpediteStatusReportRequest) (*ExpediteStatusReportResponse, error)
+	//// RunnerToken is called to register a runner and request a token for
+	//// remaining runner API calls. This kicks off the "adoption" process
+	//// (if necessary).
+	////
+	//// This is unauthenticated (but requires a cookie in the metadata).
+	//RunnerToken(context.Context, *RunnerTokenRequest) (*RunnerTokenResponse, error)
+	//// RunnerConfig is called to receive the configuration for the runner.
+	//// The response is a stream so that the configuration can be updated later.
+	//RunnerConfig(Waypoint_RunnerConfigServer) error
+	//// RunnerJobStream is called by a runner to request a single job for
+	//// execution and update the status of that job.
+	//RunnerJobStream(Waypoint_RunnerJobStreamServer) error
+	//// RunnerGetDeploymentConfig is called by a runner for a deployment operation
+	//// to determine the settings to use for a deployment.
+	//RunnerGetDeploymentConfig(context.Context, *RunnerGetDeploymentConfigRequest) (*RunnerGetDeploymentConfigResponse, error)
+	//// EntrypointConfig is called to get the configuration for the entrypoint
+	//// and also to get any potential updates.
+	////
+	//// This endpoint also registers the instance with the server. This MUST be
+	//// called first otherwise other RPCs related to the entrypoint may fail
+	//// with FailedPrecondition.
+	//EntrypointConfig(*EntrypointConfigRequest, Waypoint_EntrypointConfigServer) error
+	//// EntrypointLogStream is called to open the stream that logs are sent to.
+	//EntrypointLogStream(Waypoint_EntrypointLogStreamServer) error
+	//// EntrypointExecStream is called to open the data stream for the exec session.
+	//EntrypointExecStream(Waypoint_EntrypointExecStreamServer) error
+	//// WaypointHclFmt formats a waypoint.hcl file. This must be in HCL format.
+	//// JSON formatting is not supported.
+	//WaypointHclFmt(context.Context, *WaypointHclFmtRequest) (*WaypointHclFmtResponse, error)
+	//// UpsertOnDemandRunnerConfig updates or inserts a on-demand runner
+	//// configuration. This configuration can be used by projects for running
+	//// operations on just-in-time launched runners.
+	//UpsertOnDemandRunnerConfig(context.Context, *UpsertOnDemandRunnerConfigRequest) (*UpsertOnDemandRunnerConfigResponse, error)
+	//// GetOnDemandRunnerConfig returns the on-demand runner configuration.
+	//GetOnDemandRunnerConfig(context.Context, *GetOnDemandRunnerConfigRequest) (*GetOnDemandRunnerConfigResponse, error)
+	//// ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
+	//ListOnDemandRunnerConfigs(context.Context, *emptypb.Empty) (*ListOnDemandRunnerConfigsResponse, error)
+	//// UpsertBuild updates or inserts a build. A build is responsible for
+	//// taking some set of source information and turning it into an initial
+	//// artifact. This artifact is considered "local" until it is pushed.
+	//UpsertBuild(context.Context, *UpsertBuildRequest) (*UpsertBuildResponse, error)
+	//// UpsertPushedArtifact updates or inserts a pushed artifact. This is
+	//// useful for local operations to work on a pushed artifact.
+	//UpsertPushedArtifact(context.Context, *UpsertPushedArtifactRequest) (*UpsertPushedArtifactResponse, error)
+	//// UpsertDeployment updates or inserts a deployment.
+	//UpsertDeployment(context.Context, *UpsertDeploymentRequest) (*UpsertDeploymentResponse, error)
+	//// UpsertRelease updates or inserts a release.
+	//UpsertRelease(context.Context, *UpsertReleaseRequest) (*UpsertReleaseResponse, error)
+	//// UpsertStatusReport updates or inserts a statusreport.
+	//UpsertStatusReport(context.Context, *UpsertStatusReportRequest) (*UpsertStatusReportResponse, error)
+	//// UpsertTrigger updates or inserts a trigger URL configuration.
+	//UpsertTrigger(context.Context, *UpsertTriggerRequest) (*UpsertTriggerResponse, error)
+	//// GetTrigger returns a requested trigger message. Or an error if it does not exist.
+	//GetTrigger(context.Context, *GetTriggerRequest) (*GetTriggerResponse, error)
+	//// DeleteTrigger takes a trigger id and deletes it, if it exists.
+	//DeleteTrigger(context.Context, *DeleteTriggerRequest) (*emptypb.Empty, error)
+	//// ListTriggers takes a request filter, and returns any matching existing triggers
+	//ListTriggers(context.Context, *ListTriggerRequest) (*ListTriggerResponse, error)
+	//// RunTrigger will look up the referenced trigger and attempt to queue a job
+	//// based on the trigger configuration.
+	//RunTrigger(context.Context, *RunTriggerRequest) (*RunTriggerResponse, error)
+	//// Get a given project with useful related records.
+	//UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error)
+	//// List deployments for a given application.
+	//UI_ListDeployments(context.Context, *UI_ListDeploymentsRequest) (*UI_ListDeploymentsResponse, error)
+	//// List releases for a given application.
+	//UI_ListReleases(context.Context, *UI_ListReleasesRequest) (*UI_ListReleasesResponse, error)
 }
 
 // UnimplementedWaypointServer can be embedded to have forward compatible implementations.
