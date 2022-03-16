@@ -1,7 +1,14 @@
 package cli
 
 import (
+	"fmt"
+
+	"github.com/golang/protobuf/jsonpb"
+
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type TaskListCommand struct {
@@ -20,6 +27,76 @@ func (c *TaskListCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
+	ctx := c.Ctx
+
+	resp, err := c.project.Client().ListTask(ctx, &pb.ListTaskRequest{})
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return 1
+	}
+
+	if len(resp.Tasks) == 0 {
+		return 0
+	}
+	tasks := resp.Tasks
+
+	// reverse task list if requested
+	if c.flagDesc {
+		var reverse []*pb.GetTaskResponse
+		for i := len(tasks) - 1; i >= 0; i-- {
+			reverse = append(reverse, tasks[i])
+		}
+		tasks = reverse
+	}
+
+	// limit to the first n jobs
+	if c.flagLimit > 0 && c.flagLimit <= len(tasks) {
+		tasks = tasks[:c.flagLimit]
+	}
+
+	if c.flagJson {
+		var m jsonpb.Marshaler
+		m.Indent = "\t"
+		for _, t := range resp.Tasks {
+			str, err := m.MarshalToString(t)
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+
+			fmt.Println(str)
+		}
+		return 0
+	}
+
+	c.ui.Output("Waypoint On-Demand Runner Tasks", terminal.WithHeaderStyle())
+
+	tblHeaders := []string{"ID", "Start Job Id", "Run Job Id", "Stop Job Id"}
+	tbl := terminal.NewTable(tblHeaders...)
+
+	for _, t := range tasks {
+		var taskJobId, startJobId, stopJobId string
+		if t.TaskJob != nil {
+			taskJobId = t.TaskJob.Id
+		}
+		if t.StartJob != nil {
+			startJobId = t.StartJob.Id
+		}
+		if t.StopJob != nil {
+			stopJobId = t.StopJob.Id
+		}
+
+		tblColumn := []string{
+			t.Task.Id,
+			startJobId,
+			taskJobId,
+			stopJobId,
+		}
+
+		tbl.Rich(tblColumn, nil)
+	}
+
+	c.ui.Table(tbl)
 
 	return 0
 }
@@ -58,7 +135,8 @@ func (c *TaskListCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint task list [options]
 
-  List all known On-Demand Runner Tasks from Waypoint server.
+  List all known On-Demand Runner Tasks from Waypoint server. Each task is a
+  Waypoint Job Tuple made up of a StartTask, RunTask, and StopTask.
 
 ` + c.Flags().Help())
 }
