@@ -163,6 +163,18 @@ func TestValidTrigger(t testing.T, src *pb.Trigger) *pb.Trigger {
 	return src
 }
 
+func TestValidTask(t testing.T, src *pb.Task) *pb.Task {
+	t.Helper()
+
+	if src == nil {
+		src = &pb.Task{}
+	}
+
+	require.NoError(t, mergo.Merge(src, &pb.Task{}))
+
+	return src
+}
+
 func testStatus(t testing.T) *pb.Status {
 	pt := timestamppb.Now()
 
