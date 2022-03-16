@@ -28,4 +28,4 @@ fi
 cd "$PREVIEW_DIR"
 
 # Run the build:deploy-preview start script
-REPO=$PRODUCT DEV_IO=$PRODUCT IS_CONTENT_PREVIEW=true HASHI_ENV=preview npm run build:deploy-preview
+REPO=$PRODUCT DEV_IO=$PRODUCT IS_CONTENT_PREVIEW=true HASHI_ENV=project-preview npm run build:deploy-preview
