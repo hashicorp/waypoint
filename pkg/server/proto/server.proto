@@ -393,6 +393,22 @@ service Waypoint {
   rpc RunTrigger(RunTriggerRequest) returns (RunTriggerResponse);
 
   //----------------------------------------------------------------------
+  // Task functions
+  //----------------------------------------------------------------------
+
+  // UpsertTask updates or inserts a Task
+  rpc UpsertTask(UpsertTaskRequest) returns (UpsertTaskResponse);
+
+  // GetTask returns a requested Task message. Or an error if it does not exist.
+  rpc GetTask(GetTaskRequest) returns (GetTaskResponse);
+
+  // DeleteTask takes a Task id and deletes it, if it exists.
+  rpc DeleteTask(DeleteTaskRequest) returns (google.protobuf.Empty);
+
+  // ListTask will return a list of all existing Tasks
+  rpc ListTask(ListTaskRequest) returns (ListTaskResponse);
+
+  //----------------------------------------------------------------------
   // UI endpoints. The endpoints below are convenience methods for Waypoint's
   // various UIs (web GUI and CLI). They contain no unique functionality, i.e.
   // anything achievable through these endpoints should also be achievable through
@@ -1148,6 +1164,41 @@ message Task {
   // This task info message represented as an Any format. This is the full
   // task encoded directly by the server that has access to the proto to decode it.
   opaqueany.Any state = 6;
+}
+
+message UpsertTaskRequest {
+  // The Task to upsert. If the id in the Task message is empty, then this will
+  // be an insert in the db. Otherwise if an id was requested, this will act
+  // as an update. If the ID isn't found, it will be an error.
+  Task task = 1;
+}
+
+message UpsertTaskResponse {
+  // The resulting Task that was Upserted.
+  Task task = 1;
+}
+
+message GetTaskRequest {
+  // Can be oneof Task id or by the Run job id.
+  Ref.Task ref = 1;
+}
+
+message GetTaskResponse {
+  // The requested Task
+  Task task = 1;
+}
+
+message DeleteTaskRequest {
+  // The referenced task to delete by task id or Run job id.
+  Ref.Task ref = 1;
+}
+
+message ListTaskRequest {
+}
+
+message ListTaskResponse {
+  // An array of all available Tasks
+  repeated Task tasks = 1;
 }
 
 /********************************************************************

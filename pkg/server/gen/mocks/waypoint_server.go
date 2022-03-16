@@ -237,6 +237,29 @@ func (_m *WaypointServer) DeleteHostname(_a0 context.Context, _a1 *gen.DeleteHos
 	return r0, r1
 }
 
+// DeleteTask provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) DeleteTask(_a0 context.Context, _a1 *gen.DeleteTaskRequest) (*emptypb.Empty, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteTaskRequest) *emptypb.Empty); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteTaskRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteTrigger provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) DeleteTrigger(_a0 context.Context, _a1 *gen.DeleteTriggerRequest) (*emptypb.Empty, error) {
 	ret := _m.Called(_a0, _a1)
@@ -905,6 +928,29 @@ func (_m *WaypointServer) GetStatusReport(_a0 context.Context, _a1 *gen.GetStatu
 	return r0, r1
 }
 
+// GetTask provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetTask(_a0 context.Context, _a1 *gen.GetTaskRequest) (*gen.GetTaskResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetTaskResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetTaskRequest) *gen.GetTaskResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetTaskResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetTaskRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTrigger provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetTrigger(_a0 context.Context, _a1 *gen.GetTriggerRequest) (*gen.GetTriggerResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -1265,6 +1311,29 @@ func (_m *WaypointServer) ListStatusReports(_a0 context.Context, _a1 *gen.ListSt
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListStatusReportsRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListTask provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListTask(_a0 context.Context, _a1 *gen.ListTaskRequest) (*gen.ListTaskResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListTaskResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListTaskRequest) *gen.ListTaskResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListTaskResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListTaskRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -1873,6 +1942,29 @@ func (_m *WaypointServer) UpsertStatusReport(_a0 context.Context, _a1 *gen.Upser
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertStatusReportRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpsertTask provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UpsertTask(_a0 context.Context, _a1 *gen.UpsertTaskRequest) (*gen.UpsertTaskResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UpsertTaskResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertTaskRequest) *gen.UpsertTaskResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertTaskResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertTaskRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
