@@ -53,13 +53,13 @@ func TestServiceTask(t *testing.T) {
 		// Create, should get an ID back
 		resp, err := client.UpsertTask(ctx, &Req{
 			Task: serverptypes.TestValidTask(t, &pb.Task{
-				Id:      "nope",
-				TaskJob: &pb.Ref_Job{Id: "nope_pt2"},
+				Id:      "newone",
+				TaskJob: &pb.Ref_Job{Id: "newone"},
 			}),
 		})
 		require.NoError(err)
 		require.NotNil(resp)
-		require.Equal(resp.Task.Id, "nope")
+		require.Equal(resp.Task.Id, "newone")
 	})
 }
 
