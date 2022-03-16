@@ -34933,14 +34933,14 @@ type WaypointServer interface {
 	//// QueueJob queues a job for execution by a runner. This will return as
 	//// soon as the job is queued, it will not wait for execution.
 	//QueueJob(context.Context, *QueueJobRequest) (*QueueJobResponse, error)
-	//// CancelJob cancels a job. If the job is still queued this is a quick
-	//// and easy operation. If the job is already completed, then this does
-	//// nothing. If the job is assigned or running, then this will signal
-	//// the runner about the cancellation but it may take time.
-	////
-	//// This RPC always returns immediately. You must use GetJob or GetJobStream
-	//// to wait on the status of the cancellation.
-	//CancelJob(context.Context, *CancelJobRequest) (*emptypb.Empty, error)
+	// CancelJob cancels a job. If the job is still queued this is a quick
+	// and easy operation. If the job is already completed, then this does
+	// nothing. If the job is assigned or running, then this will signal
+	// the runner about the cancellation but it may take time.
+	//
+	// This RPC always returns immediately. You must use GetJob or GetJobStream
+	// to wait on the status of the cancellation.
+	CancelJob(context.Context, *CancelJobRequest) (*emptypb.Empty, error)
 	// GetJob queries a job by ID.
 	GetJob(context.Context, *GetJobRequest) (*Job, error)
 	//// INTERNAL: ListJobs lists all the jobs the server has processed. This

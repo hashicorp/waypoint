@@ -197,7 +197,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	s.bgWg.Add(1)
 	go s.runPrune(s.bgCtx, &s.bgWg, log.Named("prune"))
 
-	protoService := &ProtoService{
+	protoService := &server.ProtoService{
 		Impl: &s,
 	}
 
@@ -270,4 +270,4 @@ func WithAcceptURLTerms(accept bool) Option {
 	}
 }
 
-var _ pb.WaypointServer = (*service)(nil)
+//var _ pb.WaypointServer = (*service)(nil)

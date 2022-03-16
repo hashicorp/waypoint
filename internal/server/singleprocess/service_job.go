@@ -27,6 +27,8 @@ func (s *ProtoService) GetJob(
 	ctx context.Context,
 	req *pb.GetJobRequest,
 ) (*pb.Job, error) {
+
+	// Do something singleprocess-specific
 	fmt.Println(s.Impl.(*service).superuser)
 
 	job, err := s.State(ctx).JobById(req.JobId, nil)
@@ -55,11 +57,11 @@ func (s *service) XListJobs(
 	}, nil
 }
 
-func (s *service) CancelJob(
+func (s *ProtoService) CancelJob(
 	ctx context.Context,
 	req *pb.CancelJobRequest,
 ) (*empty.Empty, error) {
-	if err := s.state.JobCancel(req.JobId, req.Force); err != nil {
+	if err := s.State(ctx).JobCancel(req.JobId, req.Force); err != nil {
 		return nil, err
 	}
 
