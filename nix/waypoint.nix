@@ -10,7 +10,9 @@
 , go-changelog
 , go-mockery
 , go-protobuf
+, go-protobuf-grpc-gateway
 , go-protobuf-json
+, go-protobuf-swagger
 , go-tools
 , grpcurl
 , kubectl
@@ -46,7 +48,9 @@ mkShell rec {
     # Custom packages, added to overlay
     protobufPin
     go-protobuf
+    go-protobuf-grpc-gateway
     go-protobuf-json
+    go-protobuf-swagger
     go-tools
     go-mockery
     go-changelog

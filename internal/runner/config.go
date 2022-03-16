@@ -10,6 +10,9 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/appconfig"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -26,15 +29,81 @@ import (
 // this refresh.
 var appConfigRefreshPeriod = 15 * time.Second
 
+// initConfigStream starts the RunnerConfig stream in the background. This will
+// automatically retry if the server is currently unavailable or goes down
+// mid-stream.
+func (r *Runner) initConfigStream(ctx context.Context) error {
+	log := r.logger.Named("config")
+
+	// Start the watcher. This will do nothing until anything is sent on the
+	// channel so we can start it early. We share the same channel across
+	// config reconnects.
+	ch := make(chan *pb.RunnerConfig)
+	go r.watchConfig(ctx, log, ch)
+
+	// Start the config receiver. This will connect to the RunnerConfig
+	// endpoint and start receiving data. This will reconnect on failure.
+	go r.initConfigStreamReceiver(ctx, log, ch, false)
+
+	return nil
+}
+
+func (r *Runner) initConfigStreamReceiver(
+	ctx context.Context,
+	log hclog.Logger,
+	ch chan<- *pb.RunnerConfig,
+	isRetry bool,
+) error {
+	// Open our log stream
+	log.Debug("registering instance, requesting config")
+	client, err := r.client.RunnerConfig(ctx, grpc.WaitForReady(isRetry))
+	if err != nil {
+		// If the connection failed, we'll just log that and retry in the
+		// background so the remainder of runner startup can continue.
+		if status.Code(err) == codes.Unavailable {
+			log.Error("error connecting to Waypoint server, will retry")
+			go r.initConfigStreamReceiver(ctx, log, ch, true)
+			return nil
+		}
+
+		return err
+	}
+
+	// Start the goroutine that receives messages from the stream.
+	// This will detect any stream disconections and perform a retry.
+	go r.recvConfig(ctx, client, ch, func() error {
+		return r.initConfigStreamReceiver(ctx, log, ch, true)
+	})
+
+	// Send our open request.
+	if err := client.Send(&pb.RunnerConfigRequest{
+		Event: &pb.RunnerConfigRequest_Open_{
+			Open: &pb.RunnerConfigRequest_Open{
+				Runner: r.runner,
+			},
+		},
+	}); err != nil {
+		if status.Code(err) == codes.Unavailable {
+			// Ignore this error, recvConfig will get it too and will
+			// trigger the reconnect.
+			return nil
+		}
+
+		return err
+	}
+
+	return nil
+}
+
 // watchConfig sits in a goroutine receiving the new configurations from the
 // server.
-func (r *Runner) watchConfig(ctx context.Context, ch <-chan *pb.RunnerConfig) {
-	log := r.logger.Named("watch_config")
+func (r *Runner) watchConfig(
+	ctx context.Context,
+	log hclog.Logger,
+	ch <-chan *pb.RunnerConfig,
+) {
+	log = log.Named("watcher")
 	defer log.Trace("exiting goroutine")
-
-	// If we exit, the job is no longer ready since we can't be sure we're
-	// processing our config.
-	defer r.setState(&r.stateJobReady, false)
 
 	// Start the app config watcher. This runs in its own goroutine so that
 	// stuff like dynamic config fetching doesn't block starting things like
@@ -91,15 +160,10 @@ func (r *Runner) watchConfig(ctx context.Context, ch <-chan *pb.RunnerConfig) {
 				merr = multierror.Append(merr, err)
 			}
 
-			// If we had no errors, then we note that we're ready to process a job.
-			if merr == nil {
-				r.setState(&r.stateJobReady, true)
-			}
-
 			// Note that we processed our config at least once. People can
 			// wait on this state to know that success or fail, one config
 			// was received.
-			r.setState(&r.stateConfigOnce, true)
+			r.incrState(&r.stateConfigOnce)
 
 			// If we have an error, then we exit our loop. For runners,
 			// not being able to set config is a fatal error. We do this so
@@ -196,17 +260,16 @@ func (r *Runner) recvConfig(
 	ctx context.Context,
 	client pb.Waypoint_RunnerConfigClient,
 	ch chan<- *pb.RunnerConfig,
+	reconnect func() error,
 ) {
 	log := r.logger.Named("config_recv")
 	defer log.Trace("exiting receive goroutine")
 
-	// On exit, we note that we're no longer connected to the config stream.
-	r.setState(&r.stateConfig, true)
-	defer r.setState(&r.stateConfig, false)
-	// On exit set the Runner state to stateExit to ensure the runner blocking
-	// on waitState is unblocked.
-	// See https://github.com/hashicorp/waypoint/pull/2571 for more information.
-	defer r.setState(&r.stateExit, true)
+	// Keep track of our first receive
+	first := true
+
+	// Any reason we exit, this client is done so we mark we're done sending, too.
+	defer client.CloseSend()
 
 	for {
 		// If the context is closed, exit
@@ -217,12 +280,33 @@ func (r *Runner) recvConfig(
 		// Wait for the next configuration
 		resp, err := client.Recv()
 		if err != nil {
+			// EOF means a graceful close, don't reconnect.
 			if err == io.EOF || clierrors.IsCanceled(err) {
+				log.Warn("EOF or cancellation received, graceful close of runner config stream")
 				return
+			}
+
+			// If we get the unavailable error then the connection died.
+			// We restablish the connection.
+			if status.Code(err) == codes.Unavailable {
+				log.Error("runner disconnected from server, attempting reconnect")
+				err = reconnect()
+
+				// If we successfully reconnected, then exit this.
+				if err == nil {
+					return
+				}
 			}
 
 			log.Error("error receiving configuration, exiting", "err", err)
 			return
+		}
+
+		// If this is our first receive, then mark that we're connected.
+		if first {
+			log.Debug("first config received, switching config state to true")
+			first = false
+			r.incrState(&r.stateConfig)
 		}
 
 		log.Info("new configuration received")

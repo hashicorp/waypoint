@@ -30,12 +30,15 @@ func (c *ArtifactBuildCommand) Run(args []string) int {
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		app.UI.Output("Building %s...", app.Ref().Application, terminal.WithHeaderStyle())
-		_, err := app.Build(ctx, &pb.Job_BuildOp{
+		buildResult, err := app.Build(ctx, &pb.Job_BuildOp{
 			DisablePush: !c.flagPush,
 		})
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
+		}
+		if buildResult.Push != nil {
+			app.UI.Output("\nCreated artifact v%d", buildResult.Push.Sequence)
 		}
 
 		return nil

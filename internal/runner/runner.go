@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -67,7 +68,6 @@ type Runner struct {
 
 	// protects whether or not the runner is active or not.
 	runningCond *sync.Cond
-	shutdown    bool
 	runningJobs int
 
 	runningCtx    context.Context
@@ -81,10 +81,9 @@ type Runner struct {
 	// also verify the context didn't cancel. The stateCond will be broadcasted
 	// when the root context cancels.
 	stateCond       *sync.Cond
-	stateConfig     bool // config stream is connected
-	stateConfigOnce bool // true once we process config once, success or error
-	stateJobReady   bool // ready to start accepting jobs
-	stateExit       bool // true when exiting
+	stateConfig     uint64 // config stream is connected, increments for each reconnect
+	stateConfigOnce uint64 // >0 once we process config once, success or error
+	stateExit       uint64 // >0 when exiting
 
 	// config is the current runner config.
 	config      *pb.RunnerConfig
@@ -234,7 +233,7 @@ func (r *Runner) Id() string {
 // server. This will spawn goroutines for management. This will return after
 // registration so this should not be executed in a goroutine.
 func (r *Runner) Start(ctx context.Context) error {
-	if r.shutdown {
+	if r.readState(&r.stateExit) > 0 {
 		return ErrClosed
 	}
 
@@ -273,26 +272,37 @@ func (r *Runner) Start(ctx context.Context) error {
 	if adopt {
 		// Register and initialize the adoption flow (if necessary) by requesting
 		// our token.
-		log.Debug("requesting token with RunnerToken (initiates adoption)")
-		tokenResp, err := r.client.RunnerToken(tokenCtx, &pb.RunnerTokenRequest{
-			Runner: r.runner,
-		})
-		if err != nil {
-			return err
-		}
-		if tokenResp != nil && tokenResp.Token != "" {
-			// If we received a token, then we replace our token with that.
-			// It is possible that we do NOT have a token, because our current
-			// token is already valid.
-			log.Debug("runner adoption complete, new token received")
-			r.runningCtx = serverclient.TokenWithContext(r.runningCtx, tokenResp.Token)
-
-			// Persist our token
-			if err := r.statePutToken(tokenResp.Token); err != nil {
+		retry := false
+		for {
+			log.Debug("requesting token with RunnerToken (initiates adoption)")
+			tokenResp, err := r.client.RunnerToken(tokenCtx, &pb.RunnerTokenRequest{
+				Runner: r.runner,
+			}, grpc.WaitForReady(retry))
+			if err != nil {
+				if status.Code(err) == codes.Unavailable {
+					log.Warn("server down during adoption, will attempt reconnect")
+					retry = true
+					continue
+				}
 				return err
 			}
-		} else {
-			log.Debug("runner token is already valid, using same token")
+
+			if tokenResp != nil && tokenResp.Token != "" {
+				// If we received a token, then we replace our token with that.
+				// It is possible that we do NOT have a token, because our current
+				// token is already valid.
+				log.Debug("runner adoption complete, new token received")
+				r.runningCtx = serverclient.TokenWithContext(r.runningCtx, tokenResp.Token)
+
+				// Persist our token
+				if err := r.statePutToken(tokenResp.Token); err != nil {
+					return err
+				}
+			} else {
+				log.Debug("runner token is already valid, using same token")
+			}
+
+			break
 		}
 	}
 
@@ -301,33 +311,21 @@ func (r *Runner) Start(ctx context.Context) error {
 	// and runningCtx is tied to the full struct lifecycle rather than this
 	// single func call.
 
-	// Register
+	// Start our configuration
 	log.Debug("starting RunnerConfig stream")
-	client, err := r.client.RunnerConfig(r.runningCtx)
-	if err != nil {
-		return err
-	}
-	r.cleanup(func() { client.CloseSend() })
-
-	// Send request
-	if err := client.Send(&pb.RunnerConfigRequest{
-		Event: &pb.RunnerConfigRequest_Open_{
-			Open: &pb.RunnerConfigRequest_Open{
-				Runner: r.runner,
-			},
-		},
-	}); err != nil {
+	if err := r.initConfigStream(r.runningCtx); err != nil {
 		return err
 	}
 
-	// Start the watcher and the goroutine that receives configs
-	ch := make(chan *pb.RunnerConfig)
-	go r.watchConfig(r.runningCtx, ch)
-	go r.recvConfig(r.runningCtx, client, ch)
+	// Wait for initial registration
+	log.Debug("waiting for registration")
+	if r.waitState(&r.stateConfig) {
+		return status.Errorf(codes.Internal, "early exit while waiting for first config")
+	}
 
 	// Wait for the initial configuration to be set
 	log.Debug("runner registered, waiting for first config processing")
-	if r.waitState(&r.stateConfigOnce, true) {
+	if r.waitState(&r.stateConfigOnce) {
 		return status.Errorf(codes.Internal, "early exit while waiting for first config processing")
 	}
 
@@ -348,7 +346,8 @@ func (r *Runner) Close() error {
 		r.runningCond.Wait()
 	}
 
-	r.shutdown = true
+	// Mark we're exiting
+	r.incrState(&r.stateExit)
 
 	// Cancel the context that is used by Accept to wait on the RunnerJobStream.
 	// This interrupts the Recv() call so that any goroutine running Accept()
@@ -364,25 +363,45 @@ func (r *Runner) Close() error {
 	return nil
 }
 
-// waitState waits for the given state boolean to go true. This boolean
-// must be a pointer to a state field on runner. This will also return if
-// stateExit flips true. The return value notes whether we should exit.
-func (r *Runner) waitState(state *bool, v bool) (exit bool) {
+// waitState waits for the given state to be set to an initial value.
+func (r *Runner) waitState(state *uint64) bool {
+	return r.waitStateGreater(state, 0)
+}
+
+// waitStateGreater waits for the given state to increment above the value
+// v. This can be used with the fields such as stateConfig to detect
+// when a reconnect occurs.
+func (r *Runner) waitStateGreater(state *uint64, v uint64) bool {
 	r.stateCond.L.Lock()
 	defer r.stateCond.L.Unlock()
-	for *state != v && !r.stateExit {
+	for *state <= v && r.stateExit == 0 {
 		r.stateCond.Wait()
 	}
 
-	return r.stateExit
+	return r.stateExit > 0
 }
 
-// setState sets the value of a state var on the runner struct and broadcasts
-// the condition variable.
-func (r *Runner) setState(state *bool, v bool) {
+// readState reads the current state value. This can be used with
+// waitStateGreater to detect a change in state.
+func (r *Runner) readState(state *uint64) uint64 {
 	r.stateCond.L.Lock()
 	defer r.stateCond.L.Unlock()
-	*state = v
+
+	// note: we don't use sync/atomic because the writer can't use
+	// sync/atomic (see incrState)
+	return *state
+}
+
+// incrState increments the value of a state variable. The first time
+// this is called will also trigger waitState.
+func (r *Runner) incrState(state *uint64) {
+	r.stateCond.L.Lock()
+	defer r.stateCond.L.Unlock()
+
+	// Note: we don't use sync/atomic because we want to pair the increment
+	// with the condition variable broadcast. The broadcast requires a lock
+	// anyways so there is no need to bring in atomic ops.
+	*state += 1
 	r.stateCond.Broadcast()
 }
 

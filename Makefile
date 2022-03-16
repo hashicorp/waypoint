@@ -47,7 +47,9 @@ bin/entrypoint: # create the entrypoint for the current platform
 
 .PHONY: install
 install: bin # build and copy binaries to $GOPATH/bin/waypoint
+ifneq ("$(wildcard $(GOPATH)/bin/waypoint)","")
 	rm $(GOPATH)/bin/waypoint
+endif
 	mkdir -p $(GOPATH)/bin
 	cp ./waypoint $(GOPATH)/bin/waypoint
 
@@ -111,12 +113,12 @@ gen/ts:
 	@rm -rf ./ui/lib/api-common-protos/google 2> /dev/null
 	protoc -I=. \
 		-I=./thirdparty/proto/api-common-protos/ \
-		./internal/server/proto/server.proto \
+		./pkg/server/proto/server.proto \
 		--js_out=import_style=commonjs:ui/lib/waypoint-pb/ \
 		--grpc-web_out=import_style=typescript,mode=grpcwebtext:ui/lib/waypoint-client/
-	@mv ./ui/lib/waypoint-client/internal/server/proto/* ./ui/lib/waypoint-client/
+	@mv ./ui/lib/waypoint-client/pkg/server/proto/* ./ui/lib/waypoint-client/
 	@mv ./ui/lib/waypoint-client/server_pb.d.ts ./ui/lib/waypoint-pb/
-	@mv ./ui/lib/waypoint-pb/internal/server/proto/* ./ui/lib/waypoint-pb/
+	@mv ./ui/lib/waypoint-pb/pkg/server/proto/* ./ui/lib/waypoint-pb/
 	# Hack: fix import of api-common-protos and various JS/TS imports
 	# These issues below will help:
 	#   https://github.com/protocolbuffers/protobuf/issues/5119
@@ -148,7 +150,7 @@ gen/doc:
 	protoc -I=. \
 		-I=./thirdparty/proto/api-common-protos/ \
 		--doc_out=./doc --doc_opt=html,index.html \
-		./internal/server/proto/server.proto
+		./pkg/server/proto/server.proto
 
 .PHONY: gen/website-mdx
 gen/website-mdx:

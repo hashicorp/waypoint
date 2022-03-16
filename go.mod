@@ -79,6 +79,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/mitchellh/pointerstructure v1.2.0
 	github.com/mitchellh/protoc-gen-go-json v0.0.0-20200917194518-364b693410ae
+	github.com/mitchellh/reflectwalk v1.0.1
 	github.com/moby/buildkit v0.8.3
 	github.com/mr-tron/base58 v1.2.0
 	github.com/natefinch/atomic v0.0.0-20200526193002-18c0533a5b09
@@ -244,7 +245,6 @@ require (
 	github.com/mitchellh/go-server-timing v1.0.0 // indirect
 	github.com/mitchellh/ioprogress v0.0.0-20180201004757-6a23b12fa88e // indirect
 	github.com/mitchellh/protostructure v0.0.0-20200814180458-3cfccdb015ce // indirect
-	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/moby/sys/mount v0.2.0 // indirect

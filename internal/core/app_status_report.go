@@ -308,6 +308,11 @@ func (op *statusReportOperation) Upsert(
 	return resp.StatusReport, nil
 }
 
+// Name returns the name of the operation
+func (op *statusReportOperation) Name() string {
+	return "status report"
+}
+
 func (op *statusReportOperation) Do(
 	ctx context.Context,
 	log hclog.Logger,

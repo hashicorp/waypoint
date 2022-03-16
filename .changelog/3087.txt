@@ -1,0 +1,4 @@
+```release-note:improvement
+core: runners automatically reconnect on startup if the server is unavailable
+or becomes unavailable during the startup process
+```

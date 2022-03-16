@@ -171,6 +171,22 @@
     "path": "hostname-register"
   },
   {
+    "title": "job list",
+    "path": "job-list"
+  },
+  {
+    "title": "job inspect",
+    "path": "job-inspect"
+  },
+  {
+    "title": "job cancel",
+    "path": "job-cancel"
+  },
+  {
+    "title": "job get-stream",
+    "path": "job-get-stream"
+  },
+  {
     "title": "plugin",
     "path": "plugin"
   },

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	hznhub "github.com/hashicorp/horizon/pkg/hub"
@@ -226,6 +227,93 @@ func TestRunner(t testing.T, client pb.WaypointClient, r *pb.Runner) (string, fu
 	require.NoError(err)
 
 	return id, func() { stream.CloseSend() }
+}
+
+// TestRunnerAdopted registers a runner using the adoption process and
+// returns a client that uses the token for this specific runner. This
+// uses t.Cleanup so the runner will be cleaned up on completion.
+func TestRunnerAdopted(
+	t testing.T,
+	impl pb.WaypointServer,
+	client pb.WaypointClient,
+	r *pb.Runner,
+) (string, pb.WaypointClient) {
+	require := require.New(t)
+	ctx := context.Background()
+
+	// Get the runner
+	if r == nil {
+		r = &pb.Runner{}
+	}
+	id, err := server.Id()
+	require.NoError(err)
+	require.NoError(mergo.Merge(r, &pb.Runner{Id: id}))
+
+	// Get our cookied context
+	ctx = server.TestCookieContext(ctx, t, client)
+
+	// Reconnect with no token
+	anonClient := server.TestServer(t, impl, server.TestWithToken(""))
+
+	// Start getting the resp
+	var resp *pb.RunnerTokenResponse
+	var respErr error
+	doneCh := make(chan struct{})
+	go func() {
+		defer close(doneCh)
+		resp, respErr = anonClient.RunnerToken(ctx, &pb.RunnerTokenRequest{
+			Runner: r,
+		})
+	}()
+
+	// Should block
+	select {
+	case <-time.After(50 * time.Millisecond):
+	case <-doneCh:
+		t.Fatal("should block")
+	}
+
+	// Adopt it
+	_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: id,
+		Adopt:    true,
+	})
+	require.NoError(err)
+
+	// Should be done
+	select {
+	case <-doneCh:
+	case <-time.After(1 * time.Second):
+		t.Fatal("should return")
+	}
+
+	// Verify token resp
+	require.NoError(respErr)
+	require.NotNil(resp)
+	require.NotEmpty(resp.Token)
+
+	// Reconnect with the token
+	authedClient := server.TestServer(t, impl, server.TestWithToken(resp.Token))
+
+	// Open the config stream
+	stream, err := authedClient.RunnerConfig(ctx)
+	require.NoError(err)
+	t.Cleanup(func() { stream.CloseSend() })
+
+	// Register
+	require.NoError(stream.Send(&pb.RunnerConfigRequest{
+		Event: &pb.RunnerConfigRequest_Open_{
+			Open: &pb.RunnerConfigRequest_Open{
+				Runner: r,
+			},
+		},
+	}))
+
+	// Wait for first message to confirm we're registered
+	_, err = stream.Recv()
+	require.NoError(err)
+
+	return id, authedClient
 }
 
 // TestApp creates the app in the DB.

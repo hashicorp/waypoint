@@ -155,6 +155,11 @@ type deployOperation struct {
 	result interface{}
 }
 
+// Name returns the name of the operation
+func (op *deployOperation) Name() string {
+	return "deploy"
+}
+
 func (op *deployOperation) Close() error {
 	if op.component != nil {
 		return op.component.Close()

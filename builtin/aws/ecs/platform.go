@@ -96,6 +96,22 @@ func (p *Platform) ConfigSet(config interface{}) error {
 		return err
 	}
 
+	if c.Architecture != "" {
+		c.Architecture = strings.ToUpper(c.Architecture)
+		cpuArchitectures := make([]interface{}, len(ecs.CPUArchitecture_Values()))
+		for i, ca := range ecs.CPUArchitecture_Values() {
+			cpuArchitectures[i] = ca
+		}
+		err := utils.Error(validation.ValidateStruct(c,
+			validation.Field(&c.Architecture,
+				validation.In(cpuArchitectures...).Error("unsupported CPU architecture"),
+			),
+		))
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, cc := range c.ContainersConfig {
 		err := utils.Error(validation.ValidateStruct(cc,
 			validation.Field(&cc.Memory, validation.Required, validation.Min(4)),
@@ -1506,6 +1522,9 @@ func (p *Platform) resourceTaskDefinitionCreate(
 		Cpu:              cpus,
 		Memory:           aws.String(mems),
 		Family:           aws.String(family),
+		RuntimePlatform: &ecs.RuntimePlatform{
+			CpuArchitecture: aws.String(p.config.Architecture),
+		},
 
 		NetworkMode:             aws.String("awsvpc"),
 		RequiresCompatibilities: []*string{runtime},
@@ -2703,6 +2722,8 @@ type Config struct {
 	// How much CPU to assign to the containers
 	CPU int `hcl:"cpu,optional"`
 
+	Architecture string `hcl:"architecture,optional"`
+
 	// The environment variables to pass to the main container
 	Environment map[string]string `hcl:"static_environment,optional"`
 
@@ -3069,6 +3090,11 @@ deploy {
 			"If this is set to false, deployments will fail unless tasks are able to egress to the",
 			"container registry by some other means (i.e. a subnet default route to a NAT gateway).",
 		),
+	)
+
+	doc.SetField(
+		"architecture",
+		"the instruction set CPU architecture that the Amazon ECS supports. Valid values are: \"x86_64\", \"arm64\"",
 	)
 
 	return doc, nil

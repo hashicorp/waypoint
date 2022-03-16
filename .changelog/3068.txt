@@ -1,0 +1,4 @@
+```release-note:improvement
+builtin/aws/ecs: Add `cpu_architecture` aws-ecs parameter
+to support deploying Docker images built by the Apple M1 chip on ECS
+```

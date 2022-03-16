@@ -245,8 +245,10 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 		}
 		// If runner config is found, assign to job
 		if configRunner != nil {
-			job.OndemandRunner = &pb.Ref_OnDemandRunnerConfig{
-				Name: configRunner.Profile,
+			if configRunner.Profile != "" {
+				job.OndemandRunner = &pb.Ref_OnDemandRunnerConfig{
+					Name: configRunner.Profile,
+				}
 			}
 		}
 	}
@@ -540,7 +542,8 @@ func (c *Project) queueAndStreamJob(
 			switch event.State.Current {
 			case pb.Job_QUEUED:
 				stateEventTimer = time.AfterFunc(stateEventPause, func() {
-					ui.Output("Operation is queued. Waiting for runner assignment...",
+					ui.Output("Operation is queued waiting for job %q. Waiting for runner assignment...",
+						queueResp.JobId,
 						terminal.WithHeaderStyle())
 					ui.Output("If you interrupt this command, the job will still run in the background.",
 						terminal.WithInfoStyle())

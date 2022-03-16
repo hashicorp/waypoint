@@ -24,6 +24,10 @@ import (
 // as build, deploy, push, etc. This lets us share logic around creating
 // server metadata, error checking, etc.
 type operation interface {
+
+	// Name returns the name of the operation for display purposes
+	Name() string
+
 	// Init returns a new metadata message we'll upsert. This is the first
 	// function called before any other operation logic is executed and so
 	// can be used to initialize state for the other callbacks.
@@ -96,6 +100,15 @@ func (a *App) doOperation(
 	}
 	if id := msgId(msg); id != "" {
 		log = log.With("id", id)
+	}
+
+	if sequence, err := msgSequence(msg); err == nil {
+		sg := a.UI.StepGroup()
+		s := sg.Add("Running %s v%d", op.Name(), sequence)
+		defer s.Done()
+	} else {
+		// Not all operation upsert responses have sequence ids (i.e. status report).
+		// For now, just ignore in that case.
 	}
 
 	// Reset the status pointer because we might have a new message type
@@ -329,6 +342,18 @@ func msgId(msg proto.Message) string {
 	}
 
 	return val.String()
+}
+
+// msgSequence gets the sequence number of the message by looking for the
+// "Sequence" field. This will return an error if the Sequence field
+// can't be found for any reason.
+func msgSequence(msg proto.Message) (uint64, error) {
+	val := msgField(msg, "Sequence")
+	if !val.IsValid() || val.Kind() != reflect.Uint64 {
+		return 0, fmt.Errorf("Sequence field not found")
+	}
+
+	return val.Uint(), nil
 }
 
 // msgField gets the field from the given message. This will return an
