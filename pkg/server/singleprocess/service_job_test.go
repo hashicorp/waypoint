@@ -16,6 +16,109 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
+func TestServiceJob(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Simplify writing tests
+	type Req = pb.QueueJobRequest
+
+	t.Run("create and get success", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		resp, err := client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// Job should exist and be queued
+		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: resp.JobId})
+		require.NoError(err)
+		require.Equal(pb.Job_QUEUED, job.State)
+	})
+
+	t.Run("non-existent job get is a failure", func(t *testing.T) {
+		require := require.New(t)
+
+		// Job should exist and be queued
+		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: "NotRealJobId"})
+		require.Error(err)
+		require.Nil(job)
+	})
+}
+
+func TestServiceJob_List(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Simplify writing tests
+	type Req = pb.QueueJobRequest
+
+	t.Run("create and list jobs", func(t *testing.T) {
+		require := require.New(t)
+
+		// No jobs
+		jobList, err := client.XListJobs(ctx, &pb.ListJobsRequest{})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 0)
+
+		// Create, should get an ID back
+		resp, err := client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// Create, should get an ID back
+		resp, err = client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// Create, should get an ID back
+		resp, err = client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// Three jobs
+		jobList, err = client.XListJobs(ctx, &pb.ListJobsRequest{})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 3)
+	})
+
+	t.Run("non-existent job get is a failure", func(t *testing.T) {
+		require := require.New(t)
+
+		// Job should exist and be queued
+		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: "NotRealJobId"})
+		require.Error(err)
+		require.Nil(job)
+	})
+}
+
 func TestServiceQueueJob(t *testing.T) {
 	ctx := context.Background()
 
