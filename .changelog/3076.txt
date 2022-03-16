@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/aws-alb: Use Route53 zone id when destroying a resource record
+```
