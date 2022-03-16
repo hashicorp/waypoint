@@ -72,3 +72,7 @@ func (s *service) ListTask(
 
 	return &pb.ListTaskResponse{Tasks: result}, nil
 }
+
+func getJobByRef(ref *pb.Ref_Job) (*pb.Job, error) {
+	return nil, nil
+}
