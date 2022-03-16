@@ -96,13 +96,14 @@ func (p *Platform) ConfigSet(config interface{}) error {
 		return err
 	}
 
-	if c.CpuArchitecture != "" {
+	if c.Architecture != "" {
+		c.Architecture = strings.ToUpper(c.Architecture)
 		cpuArchitectures := make([]interface{}, len(ecs.CPUArchitecture_Values()))
 		for i, ca := range ecs.CPUArchitecture_Values() {
 			cpuArchitectures[i] = ca
 		}
 		err := utils.Error(validation.ValidateStruct(c,
-			validation.Field(&c.CpuArchitecture,
+			validation.Field(&c.Architecture,
 				validation.In(cpuArchitectures...).Error("unsupported CPU architecture"),
 			),
 		))
@@ -1522,7 +1523,7 @@ func (p *Platform) resourceTaskDefinitionCreate(
 		Memory:           aws.String(mems),
 		Family:           aws.String(family),
 		RuntimePlatform: &ecs.RuntimePlatform{
-			CpuArchitecture: aws.String(p.config.CpuArchitecture),
+			CpuArchitecture: aws.String(p.config.Architecture),
 		},
 
 		NetworkMode:             aws.String("awsvpc"),
@@ -2721,7 +2722,7 @@ type Config struct {
 	// How much CPU to assign to the containers
 	CPU int `hcl:"cpu,optional"`
 
-	CpuArchitecture string `hcl:"cpu_architecture,optional"`
+	Architecture string `hcl:"architecture,optional"`
 
 	// The environment variables to pass to the main container
 	Environment map[string]string `hcl:"static_environment,optional"`
@@ -3092,13 +3093,8 @@ deploy {
 	)
 
 	doc.SetField(
-		"cpu_architecture",
-		"the CPU architecture",
-		docs.Summary(
-			"you can run your Linux tasks on an ARM-based platform by setting the value to `ARM64`.",
-			"this option is avaiable for tasks that run on Linuc Amazon EC2 instance",
-			"or Linux containers on Fargate.",
-		),
+		"architecture",
+		"the instruction set CPU architecture that the Amazon ECS supports. Valid values are: \"x86_64\", \"arm64\"",
 	)
 
 	return doc, nil

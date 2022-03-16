@@ -201,6 +201,13 @@ Environment variables to expose to this container.
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### architecture
+
+The instruction set CPU architecture that the Amazon ECS supports. Valid values are: "x86_64", "arm64".
+
+- Type: **string**
+- **Optional**
+
 #### assign_public_ip
 
 Assign a public ip address to tasks. Defaults to true. Ignored if using an ec2 cluster.
@@ -242,15 +249,6 @@ On Fargate, possible values for this are configured by the amount of memory the 
 8192MB: 1024.
 
 - Type: **int**
-- **Optional**
-
-#### cpu_architecture
-
-The CPU architecture.
-
-You can run your Linux tasks on an ARM-based platform by setting the value to `ARM64`. this option is avaiable for tasks that run on Linuc Amazon EC2 instance or Linux containers on Fargate.
-
-- Type: **string**
 - **Optional**
 
 #### disable_alb
