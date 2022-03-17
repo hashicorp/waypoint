@@ -484,6 +484,10 @@ func (s *service) RunnerJobStream(
 			return status.Errorf(codes.InvalidArgument,
 				"reattach job is not assigned to this runner")
 		}
+
+		// NOTE(mitchellh): things we should check in the future:
+		// * job stream already open for this job ID
+		// * job already in a terminal state
 	} else {
 		// Get a job assignment for this runner. This will block until
 		// a job is available for the runner.
