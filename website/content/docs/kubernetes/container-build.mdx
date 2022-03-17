@@ -57,15 +57,20 @@ This will use a `Dockerfile` in the same directory as your `waypoint.hcl`
 file. You can test this using the Waypoint CLI by running `waypoint build`. This
 command will perform the build only, so it can be used for testing. The
 `waypoint build` command should be run in the same directory as your project
-(with the `waypoint.hcl`). If you want to force a
-[remote run](#local-vs-remote-builds), use the `-local=false` option.
+(with the `waypoint.hcl`).
+
+Waypoint will automatically run your build remotely if you have a git repo
+configured for your project and a runner and runner profile configured.
+If you want to force a build to happen locally, use the `-local` flag.
+
 
 ```shell-session
+# let waypoint choose to run your build remotely if possible (recommended):
 $ waypoint build
 ...
 
-# or, to run it remotely in your Kubernetes cluster
-$ waypoint build -local=false
+# or, force it to run locally on your development machine:
+$ waypoint build -local
 ...
 ```
 
@@ -184,7 +189,9 @@ setting the variables in the web UI, or by setting
 
 Waypoint can run builds locally where you run the `waypoint` CLI, or
 remotely in your Kubernetes cluster in pods that are launched on demand.
-Builds triggered by Git polling or the UI happen remotely.
+By default, Waypoint will automatically run your operations remotely when
+[certain conditions](/docs/projects/remote#requirements) are met.
+Builds triggered by Git polling or the UI also happen remotely.
 
 To build Docker images within Kubernetes, Waypoint uses
 [Kaniko](https://github.com/GoogleContainerTools/kaniko). Waypoint
@@ -193,14 +200,9 @@ All you need to know is that Kaniko supports almost all modern `Dockerfile`
 syntax, and it lets you do container image builds without any special
 privileges in your Kubernetes cluster.
 
-Remote builds are recommended. To use a remote build, ensure your
-project is [configured for remote operations](/docs/projects/remote),
-then use the `<project>/<app>` syntax to invoke a build:
+Remote builds are recommended.
+If you want to force a build to happen locally, use the `-local` flag.
 
 ```shell-session
-$ waypoint build <project>/<app>
+$ waypoint build -local
 ```
-
--> Note that this will clone your project source, so any local changes won't
-be reflected until you push them to your repository. This is a common source
-of errors!
