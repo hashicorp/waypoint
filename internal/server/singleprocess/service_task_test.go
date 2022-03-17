@@ -112,6 +112,7 @@ func TestServiceTask_GetTask(t *testing.T) {
 			StopJob:  &pb.Ref_Job{Id: stopJobId},
 		}),
 	})
+	require.NoError(t, err)
 	taskId := resp.Task.Id
 
 	// Create, should get an ID back
