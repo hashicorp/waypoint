@@ -47,7 +47,7 @@ func TestServiceTask(t *testing.T) {
 		require.Equal(result.StartJob.Id, "start_job")
 	})
 
-	t.Run("update non-existent creates a new task", func(t *testing.T) {
+	t.Run("create on non-existent task with id creates a new task by requested id", func(t *testing.T) {
 		require := require.New(t)
 
 		// Create, should get an ID back
