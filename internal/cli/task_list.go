@@ -136,7 +136,7 @@ func (c *TaskListCommand) Help() string {
 Usage: waypoint task list [options]
 
   List all known On-Demand Runner Tasks from Waypoint server. Each task is a
-  Waypoint Job Tuple made up of a StartTask, RunTask, and StopTask.
+  Waypoint Job tuple made up of a StartTask, RunTask, and StopTask.
 
 ` + c.Flags().Help())
 }
