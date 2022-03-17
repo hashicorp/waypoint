@@ -2,13 +2,14 @@ package client
 
 import (
 	"context"
-	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"testing"
+
+	configpkg "github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/pkg/server/singleprocess"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
