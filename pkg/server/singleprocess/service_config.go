@@ -1,0 +1,68 @@
+package singleprocess
+
+import (
+	"context"
+
+	"github.com/golang/protobuf/ptypes/empty"
+
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/ptypes"
+)
+
+func (s *Service) SetConfig(
+	ctx context.Context,
+	req *pb.ConfigSetRequest,
+) (*pb.ConfigSetResponse, error) {
+	if err := s.state(ctx).ConfigSet(req.Variables...); err != nil {
+		return nil, err
+	}
+
+	return &pb.ConfigSetResponse{}, nil
+}
+
+func (s *Service) GetConfig(
+	ctx context.Context,
+	req *pb.ConfigGetRequest,
+) (*pb.ConfigGetResponse, error) {
+	if err := ptypes.ValidateGetConfigRequest(req); err != nil {
+		return nil, err
+	}
+
+	vars, err := s.state(ctx).ConfigGet(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.ConfigGetResponse{Variables: vars}, nil
+}
+
+func (s *Service) SetConfigSource(
+	ctx context.Context,
+	req *pb.SetConfigSourceRequest,
+) (*empty.Empty, error) {
+	if err := ptypes.ValidateSetConfigSourceRequest(req); err != nil {
+		return nil, err
+	}
+
+	if err := s.state(ctx).ConfigSourceSet(req.ConfigSource); err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
+}
+
+func (s *Service) GetConfigSource(
+	ctx context.Context,
+	req *pb.GetConfigSourceRequest,
+) (*pb.GetConfigSourceResponse, error) {
+	if err := ptypes.ValidateGetConfigSourceRequest(req); err != nil {
+		return nil, err
+	}
+
+	vars, err := s.state(ctx).ConfigSourceGet(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetConfigSourceResponse{ConfigSources: vars}, nil
+}
