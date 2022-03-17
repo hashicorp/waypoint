@@ -5578,8 +5578,7 @@ type RunnerJobStreamRequest_Ack_ struct {
 	// reassigned and duplicated.
 	//
 	// In the reattach use case, this should still be sent to the
-	// server in response to job assignment. If Nack is specified
-	// during reattach, the job is cancelled; it will not be requeued.
+	// server in response to job assignment.
 	Ack *RunnerJobStreamRequest_Ack `protobuf:"bytes,2,opt,name=ack,proto3,oneof"`
 }
 

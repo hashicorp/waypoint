@@ -1511,6 +1511,162 @@ func TestServiceRunnerJobStream_reattachHappy(t *testing.T) {
 	}
 }
 
+// Reattach with an invalid job ID
+func TestServiceRunnerJobStream_reattachInvalidJobId(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Create a job
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{Job: serverptypes.TestJobNew(t, nil)})
+	require.NoError(err)
+	require.NotNil(queueResp)
+	require.NotEmpty(queueResp.JobId)
+
+	// Register our runner
+	id, _ := TestRunner(t, client, nil)
+
+	// New context so we can cancel the stream
+	streamCtx, streamCtxCancel := context.WithCancel(ctx)
+	defer streamCtxCancel()
+
+	// Start a job request
+	stream, err := client.RunnerJobStream(streamCtx)
+	require.NoError(err)
+	require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Request_{
+			Request: &pb.RunnerJobStreamRequest_Request{
+				RunnerId: id,
+			},
+		},
+	}))
+
+	// Wait for assignment and ack
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		assignment, ok := resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
+		require.True(ok, "should be an assignment")
+		require.NotNil(assignment)
+		require.Equal(queueResp.JobId, assignment.Assignment.Job.Id)
+
+		require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
+			Event: &pb.RunnerJobStreamRequest_Ack_{
+				Ack: &pb.RunnerJobStreamRequest_Ack{},
+			},
+		}))
+	}
+
+	// Disconnect
+	streamCtxCancel()
+	streamCtx, streamCtxCancel = context.WithCancel(ctx)
+	defer streamCtxCancel()
+
+	// Start a new job stream with reattach
+	stream, err = client.RunnerJobStream(streamCtx)
+	require.NoError(err)
+	require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Request_{
+			Request: &pb.RunnerJobStreamRequest_Request{
+				RunnerId:      id,
+				ReattachJobId: queueResp.JobId + "nope",
+			},
+		},
+	}))
+
+	// Wait for assignment and ack
+	{
+		_, err := stream.Recv()
+		require.Error(err)
+		require.Equal(codes.InvalidArgument, status.Code(err))
+	}
+}
+
+func TestServiceRunnerJobStream_reattachInvalidRunner(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Create a job
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{Job: serverptypes.TestJobNew(t, nil)})
+	require.NoError(err)
+	require.NotNil(queueResp)
+	require.NotEmpty(queueResp.JobId)
+
+	// Register our runner
+	id, _ := TestRunner(t, client, nil)
+	id2, _ := TestRunner(t, client, nil)
+
+	// New context so we can cancel the stream
+	streamCtx, streamCtxCancel := context.WithCancel(ctx)
+	defer streamCtxCancel()
+
+	// Start a job request
+	stream, err := client.RunnerJobStream(streamCtx)
+	require.NoError(err)
+	require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Request_{
+			Request: &pb.RunnerJobStreamRequest_Request{
+				RunnerId: id,
+			},
+		},
+	}))
+
+	// Wait for assignment and ack
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		assignment, ok := resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
+		require.True(ok, "should be an assignment")
+		require.NotNil(assignment)
+		require.Equal(queueResp.JobId, assignment.Assignment.Job.Id)
+
+		require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
+			Event: &pb.RunnerJobStreamRequest_Ack_{
+				Ack: &pb.RunnerJobStreamRequest_Ack{},
+			},
+		}))
+	}
+
+	// Disconnect
+	streamCtxCancel()
+	streamCtx, streamCtxCancel = context.WithCancel(ctx)
+	defer streamCtxCancel()
+
+	// Start a new job stream with reattach
+	stream, err = client.RunnerJobStream(streamCtx)
+	require.NoError(err)
+	require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Request_{
+			Request: &pb.RunnerJobStreamRequest_Request{
+				RunnerId:      id2,
+				ReattachJobId: queueResp.JobId,
+			},
+		},
+	}))
+
+	// Wait for assignment and ack
+	{
+		_, err := stream.Recv()
+		require.Error(err)
+		require.Equal(codes.InvalidArgument, status.Code(err))
+	}
+}
+
 func TestServiceRunnerGetDeploymentConfig(t *testing.T) {
 	ctx := context.Background()
 
