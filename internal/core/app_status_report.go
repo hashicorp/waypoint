@@ -74,7 +74,54 @@ func (a *App) DeploymentStatusReport(
 	}
 	defer c.Close()
 
-	return a.statusReport(ctx, "deploy_statusreport", c, deployTarget, lastResp)
+	// Create the initial report. Assuming no error, we'll query ListInstances
+	// to find how many active instance connections are registered for this
+	// deployment. If there is a non-nil error, just return immediately.
+	report, rErr := a.statusReport(ctx, "deploy_statusreport", c, deployTarget, lastResp)
+	if rErr != nil {
+		return report, rErr
+	}
+
+	// Currently the statusReport() call above will only return a nil report if
+	// the error is NOT nil, but it is not an exported method so we guard here
+	// in case that changes.
+	if report != nil {
+		// check if we have any connected instances
+		resp, err := a.client.ListInstances(ctx, &pb.ListInstancesRequest{
+			Scope: &pb.ListInstancesRequest_DeploymentId{
+				DeploymentId: deployTarget.Id,
+			},
+		})
+		if err != nil {
+			a.logger.Warn("error retrieving connected instances", "error", err)
+			// we intentionally do not return the error from ListInstances, and
+			// instead simply log the error and return the original report and
+			// report error (if any)
+			return report, rErr
+		}
+
+		// Modify the status report with the active instance count. The
+		// statusReport() method called above both creates the report and saves
+		// it to state, so modifying it here requires us to re-upsert the report
+		// with the updated count.
+		report.InstancesCount = uint32(len(resp.Instances))
+		newReport, err := a.client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
+			StatusReport: report,
+		})
+		if err != nil {
+			a.logger.Warn("error upserting updated status report", "error", err)
+			// we intentionally do not return the error from UpsertStatusReport,
+			// and instead simply log the error and return the original report
+			// and report error (if any)
+			return report, rErr
+		}
+
+		if newReport != nil && newReport.StatusReport != nil {
+			report = newReport.StatusReport
+		}
+	}
+
+	return report, rErr
 }
 
 func (a *App) ReleaseStatusReport(
