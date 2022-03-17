@@ -50,7 +50,7 @@ func TestServiceJob(t *testing.T) {
 	t.Run("non-existent job get is a failure", func(t *testing.T) {
 		require := require.New(t)
 
-		// Job should exist and be queued
+		// Job should not exist
 		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: "NotRealJobId"})
 		require.Error(err)
 		require.Nil(job)
@@ -107,15 +107,6 @@ func TestServiceJob_List(t *testing.T) {
 		jobList, err = client.XListJobs(ctx, &pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobList.Jobs, 3)
-	})
-
-	t.Run("non-existent job get is a failure", func(t *testing.T) {
-		require := require.New(t)
-
-		// Job should exist and be queued
-		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: "NotRealJobId"})
-		require.Error(err)
-		require.Nil(job)
 	})
 }
 
