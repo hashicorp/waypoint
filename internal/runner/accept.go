@@ -147,7 +147,11 @@ RESTART_JOB_STREAM:
 
 	// Setup a new context that we can cancel at any time to close the stream.
 	// We use this for timeouts.
-	streamCtx, streamCancel = context.WithCancel(r.runningCtx)
+	//
+	// Note: we disable the lostcancel linter for streamCancel because
+	// golangci-lint is not detecting that we have the defer above the
+	// label as well as the retry block above.
+	streamCtx, streamCancel = context.WithCancel(r.runningCtx) //nolint:lostcancel
 
 	// Get our configuration state value. We use this so that we can detect
 	// when we've reconnected during failures.
@@ -169,7 +173,8 @@ RESTART_JOB_STREAM:
 			goto RESTART_JOB_STREAM
 		}
 
-		return err
+		// see note above for the nolint directive here
+		return err //nolint:lostcancel
 	}
 
 	// Send our request
