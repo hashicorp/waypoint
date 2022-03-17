@@ -168,6 +168,9 @@ type jobIndex struct {
 	// TargetRunnerId is the ID of the runner to target.
 	TargetRunnerId string
 
+	// TargetRunnerLabes are the labels of the runner to target.
+	TargetRunnerLabels map[string]string
+
 	// State is the current state of this job.
 	State pb.Job_State
 
@@ -1060,6 +1063,9 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex
 
 	case *pb.Ref_Runner_Id:
 		rec.TargetRunnerId = v.Id.Id
+
+	case *pb.Ref_Runner_Labels:
+		rec.TargetRunnerLabels = v.Labels.Label
 
 	default:
 		return nil, fmt.Errorf("unknown runner target value: %#v", jobpb.TargetRunner.Target)

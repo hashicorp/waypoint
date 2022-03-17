@@ -847,6 +847,7 @@ message Ref {
     oneof target {
       RunnerAny any = 1;
       RunnerId id = 2;
+      RunnerLabels labels = 3;
     }
   }
 
@@ -857,6 +858,11 @@ message Ref {
 
   // RunnerAny will reference any runner.
   message RunnerAny {}
+
+  // RunnerLabels will reference a runner by labels.
+  message RunnerLabels {
+    map<string, string> labels = 1;
+  }
 
   // User references a user by either ID or username, it is up to the caller.
   // This generic form makes it easy for APIs to accept multiple values, whatever
