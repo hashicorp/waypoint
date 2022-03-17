@@ -96,11 +96,6 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 
 	log := r.logger
 
-	// Setup a new context that we can cancel at any time to close the stream.
-	// We use this for timeouts.
-	streamCtx, streamCancel := context.WithCancel(r.runningCtx)
-	defer streamCancel()
-
 	// The runningCtx has the token that is set during runner adoption.
 	// This is required for API calls to succeed. Put the token into ctx
 	// as well so that this can be used for API calls.
@@ -108,44 +103,74 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		ctx = serverclient.TokenWithContext(ctx, tok)
 	}
 
+	// Retry tracks whether we're trying a job stream connection or not.
+	// We use this so that the first attempt fails fast so we can log it.
+	// Subsequent attempts block.
+	retry := false
+
+	// State we want to initialize outside the retry label.
+	var client pb.Waypoint_RunnerJobStreamClient
+	var streamCtx context.Context
+	var streamCancel context.CancelFunc
+	var stateGen uint64
+	var err error
+
+	// We wrap this in a func() so that we use the latest client value
+	// and don't stack defers on retry.
+	defer func() {
+		if client != nil {
+			client.CloseSend()
+		}
+		if streamCancel != nil {
+			// Wrap in a func() so that if we retry, we don't stack defers.
+			streamCancel()
+		}
+	}()
+
+RESTART_JOB_STREAM:
+	// If we're retrying, these might be non-nil and we want to do some clean-up
+	if retry {
+		if client != nil {
+			client.CloseSend()
+		}
+		if streamCancel != nil {
+			streamCancel()
+		}
+
+		// Since this is a disconnect, we have to wait for our
+		// RunnerConfig stream to re-establish. We wait for the config
+		// generation to increment.
+		if r.waitStateGreater(&r.stateConfig, stateGen) {
+			return status.Error(codes.Internal, "early exit while waiting for reconnect")
+		}
+	}
+
+	// Setup a new context that we can cancel at any time to close the stream.
+	// We use this for timeouts.
+	streamCtx, streamCancel = context.WithCancel(r.runningCtx)
+
+	// Get our configuration state value. We use this so that we can detect
+	// when we've reconnected during failures.
+	stateGen = r.readState(&r.stateConfig)
+
 	// Open a new job stream. This retries on connection errors. Note that
-	// this loop doesn't respect the accept timeout because gRPC has no way
+	// this retry loop doesn't respect the accept timeout because gRPC has no way
 	// to time out of a "WaitForReady" RPC call (it ignores context cancellation,
 	// too). TODO: do a manual backoff with WaitForReady(false) so we can
 	// weave in accept timeout.
-	retry := false
-	var client pb.Waypoint_RunnerJobStreamClient
-	for {
-		// Get our configuration state value. We use this so that we can detect
-		// when we've reconnected during failures.
-		stateGen := r.readState(&r.stateConfig)
-
-		// NOTE: we purposely do NOT use ctx above since if the context is
-		// cancelled we want to continue reporting errors.
-		log.Debug("opening job stream", "retry", retry)
-		var err error
-		client, err = r.client.RunnerJobStream(streamCtx, grpc.WaitForReady(retry))
-		if err != nil {
-			if status.Code(err) == codes.Unavailable || status.Code(err) == codes.NotFound {
-				log.Warn("server down during job stream open, will attempt reconnect")
-
-				// Since this is a disconnect, we have to wait for our
-				// RunnerConfig stream to re-establish. We wait for the config
-				// generation to increment.
-				if r.waitStateGreater(&r.stateConfig, stateGen) {
-					return status.Error(codes.Internal, "early exit while waiting for reconnect")
-				}
-
-				retry = true
-				continue
-			}
-
-			return err
+	// NOTE: we purposely do NOT use ctx above since if the context is
+	// cancelled we want to continue reporting errors.
+	log.Debug("opening job stream", "retry", retry)
+	client, err = r.client.RunnerJobStream(streamCtx, grpc.WaitForReady(retry))
+	retry = true
+	if err != nil {
+		if status.Code(err) == codes.Unavailable || status.Code(err) == codes.NotFound {
+			log.Warn("server down during job stream open, will attempt reconnect")
+			goto RESTART_JOB_STREAM
 		}
 
-		break
+		return err
 	}
-	defer client.CloseSend()
 
 	// Send our request
 	log.Trace("sending job request")
