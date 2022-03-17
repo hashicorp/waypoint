@@ -358,7 +358,9 @@ func (r *Releaser) resourceServiceDestroy(
 
 	step = sg.Add("Deleting service...")
 	if err := serviceclient.Delete(ctx, state.Name, metav1.DeleteOptions{}); err != nil {
-		return err
+		if !errors.IsNotFound(err) {
+			return err
+		}
 	}
 
 	step.Update("Service deleted")
