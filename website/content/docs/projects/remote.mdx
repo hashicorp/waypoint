@@ -26,28 +26,24 @@ Remote operations require:
 
 - At least one [runner is installed and running](/docs/runner). Waypoint
   automatically installs a runner with `waypoint install`.
-
 - Your project is configured with a [data source](/docs/waypoint-hcl/runner)
   so that the runners can clone the project source code.
-
 - Your project has [remote operations enabled](/docs/waypoint-hcl/runner).
+
+Waypoint will automatically run your operations remotely if all these conditions are met, and that you have a [runner profile](/docs/runner/profiles) configured.
 
 ## Usage
 
 ### CLI
 
-To execute a remote operation via the CLI, specify the project and application:
-
 ```shell-session
-$ waypoint up my-project/web
-```
+# let waypoint choose to run your operation remotely if possible (recommended):
+$ waypoint up
+...
 
-If you have the local source checked out and your terminal working directory
-is in your project source code, you can omit the project name and use the
-`-remote` flag:
-
-```shell-session
-$ waypoint up -remote
+# or, force it to run locally on your development machine:
+$ waypoint up -local
+...
 ```
 
 You can substitute any operation for `up` such as `build`, `deploy`, `release`, etc.
@@ -59,8 +55,8 @@ logic is executing remotely.
 ## Concurrency
 
 Waypoint only allows a single operation per distinct `(workspace, project, app)`
-combination. This applies to both local and remote operations. Therefore,
-if one user runs `waypoint up` locally and another runs `waypoint up -remote`,
+combination. This applies to both local and remote operations. Therefore, if two
+users attempt run `waypoint up` at the same time, even if they add the `-local` flag,
 one of the operations will wait for the other to complete before continuing.
 
 However, if a second user runs `waypoint up` in a _different project_ or
