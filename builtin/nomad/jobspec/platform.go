@@ -191,12 +191,19 @@ func (p *Platform) resourceJobStatus(
 	stateJson, err := json.Marshal(map[string]interface{}{
 		"deployment": job,
 	})
+	if err != nil {
+		return err
+	}
+
 	jobResource.StateJson = string(stateJson)
 
 	// If job is running, start checking evals, then allocs
 	if *job.Status == "running" {
 		// Get list of evaluations for job
 		evals, _, err := jobClient.Evaluations(*job.ID, q)
+		if err != nil {
+			return err
+		}
 		hasSquashedEvals := false
 		for _, eval := range evals {
 			switch eval.Status {
@@ -311,6 +318,10 @@ func (p *Platform) Deploy(
 	}
 	// Parse the HCL
 	job, err := p.jobspec(client, p.config.Jobspec)
+	if err != nil {
+		return nil, err
+	}
+
 	result.Name = *job.ID
 
 	// We'll update the user in real time
