@@ -260,6 +260,14 @@ func TestServiceTask_ListTaskSimple(t *testing.T) {
 		respList, err := client.ListTask(ctx, &pb.ListTaskRequest{})
 		require.NoError(err)
 		require.Equal(len(respList.Tasks), 3)
+
+		for _, t := range respList.Tasks {
+			run := false
+			if t.TaskJob.Id == runJobId {
+				run = true
+			}
+			require.True(run)
+		}
 	})
 }
 
