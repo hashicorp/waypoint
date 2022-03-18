@@ -338,6 +338,7 @@ func (r *Releaser) resourceServiceCreate(
 
 func (r *Releaser) resourceServiceDestroy(
 	ctx context.Context,
+	log hclog.Logger,
 	state *Resource_Service,
 	sg terminal.StepGroup,
 	csinfo *clientsetInfo,
@@ -361,6 +362,7 @@ func (r *Releaser) resourceServiceDestroy(
 		if !errors.IsNotFound(err) {
 			return err
 		}
+		log.Debug("no service found, continuing")
 	}
 
 	step.Update("Service deleted")
