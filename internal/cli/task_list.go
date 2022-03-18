@@ -40,13 +40,12 @@ func (c *TaskListCommand) Run(args []string) int {
 	}
 	tasks := resp.Tasks
 
-	// reverse task list if requested
+	// Reverse task list if requested
 	if c.flagDesc {
-		var reverse []*pb.GetTaskResponse
-		for i := len(tasks) - 1; i >= 0; i-- {
-			reverse = append(reverse, tasks[i])
+		// reverse in place
+		for i, j := 0, len(tasks)-1; i < j; i, j = i+1, j-1 {
+			tasks[i], tasks[j] = tasks[j], tasks[i]
 		}
-		tasks = reverse
 	}
 
 	// limit to the first n jobs
