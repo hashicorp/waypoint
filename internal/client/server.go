@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"

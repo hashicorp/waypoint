@@ -1,9 +1,9 @@
 package state
 
 import (
-	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
+	"google.golang.org/protobuf/proto"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )

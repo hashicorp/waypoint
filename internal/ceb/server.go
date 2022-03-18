@@ -5,13 +5,13 @@ import (
 	"crypto/tls"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint/pkg/protocolversion"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"

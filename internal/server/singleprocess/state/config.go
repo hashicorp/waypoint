@@ -6,13 +6,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/hashicorp/go-memdb"
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/mitchellh/pointerstructure"
 	"github.com/zclconf/go-cty/cty"
 	bolt "go.etcd.io/bbolt"
+	"google.golang.org/protobuf/proto"
 
+	"github.com/hashicorp/go-memdb"
 	"github.com/hashicorp/waypoint/pkg/config/funcs"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serversort "github.com/hashicorp/waypoint/pkg/server/sort"

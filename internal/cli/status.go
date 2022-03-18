@@ -7,12 +7,11 @@ import (
 	"strings"
 
 	"github.com/dustin/go-humanize"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/pkg/errors"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -641,11 +640,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 			for _, dr := range appDeployStatus.Resources {
 				var createdTime string
 				if dr.CreatedTime != nil {
-					t, err := ptypes.Timestamp(dr.CreatedTime)
-					if err != nil {
-						return err
-					}
-					createdTime = humanize.Time(t)
+					createdTime = humanize.Time(dr.CreatedTime.AsTime())
 				}
 
 				columns := []string{
@@ -741,11 +736,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 				for _, rr := range appReleaseStatus.Resources {
 					var createdTime string
 					if rr.CreatedTime != nil {
-						t, err := ptypes.Timestamp(rr.CreatedTime)
-						if err != nil {
-							return err
-						}
-						createdTime = humanize.Time(t)
+						createdTime = humanize.Time(rr.CreatedTime.AsTime())
 					}
 
 					columns := []string{

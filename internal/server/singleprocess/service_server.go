@@ -3,7 +3,7 @@ package singleprocess
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

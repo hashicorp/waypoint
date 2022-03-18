@@ -3,9 +3,9 @@ package cli
 import (
 	"fmt"
 
-	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -66,14 +66,14 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 
 	config := resp.Config
 	if c.flagJson {
-		var m jsonpb.Marshaler
-		m.Indent = "\t"
-		str, err := m.MarshalToString(config)
+		data, err := protojson.MarshalOptions{
+			Indent: "\t",
+		}.Marshal(config)
 		if err != nil {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
-		fmt.Println(str)
+		fmt.Println(string(data))
 		return 0
 	}
 

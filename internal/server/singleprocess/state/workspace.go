@@ -4,12 +4,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -239,10 +239,7 @@ func (s *State) workspaceTouchApp(
 	}
 
 	// Update our timestamps
-	tsProto, err := ptypes.TimestampProto(ts)
-	if err != nil {
-		return err
-	}
+	tsProto := timestamppb.New(ts)
 	ws.ActiveTime = tsProto
 	wsP.ActiveTime = tsProto
 	wsApp.ActiveTime = tsProto

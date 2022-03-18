@@ -3,8 +3,8 @@ package runner
 import (
 	"context"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"

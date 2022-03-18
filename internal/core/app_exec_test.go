@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/evanphx/opaqueany"
-	"github.com/golang/protobuf/ptypes/empty"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"

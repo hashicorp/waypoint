@@ -4,10 +4,9 @@ import (
 	"fmt"
 
 	"github.com/dustin/go-humanize"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -58,15 +57,15 @@ func (c *JobInspectCommand) Run(args []string) int {
 	}
 
 	if c.flagJson {
-		var m jsonpb.Marshaler
-		m.Indent = "\t"
-		str, err := m.MarshalToString(resp)
+		data, err := protojson.MarshalOptions{
+			Indent: "\t",
+		}.Marshal(resp)
 		if err != nil {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
 
-		fmt.Println(str)
+		fmt.Println(string(data))
 		return 0
 	}
 
@@ -140,12 +139,12 @@ func (c *JobInspectCommand) Run(args []string) int {
 	}
 
 	var completeTime string
-	if time, err := ptypes.Timestamp(resp.CompleteTime); err == nil {
-		completeTime = humanize.Time(time)
+	if resp.CompleteTime != nil {
+		completeTime = humanize.Time(resp.CompleteTime.AsTime())
 	}
 	var cancelTime string
-	if time, err := ptypes.Timestamp(resp.CancelTime); err == nil {
-		cancelTime = humanize.Time(time)
+	if resp.CancelTime != nil {
+		cancelTime = humanize.Time(resp.CancelTime.AsTime())
 	}
 
 	c.ui.Output("Job Configuration", terminal.WithHeaderStyle())

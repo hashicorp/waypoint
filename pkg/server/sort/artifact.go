@@ -3,8 +3,6 @@ package sort
 import (
 	"sort"
 
-	"github.com/golang/protobuf/ptypes"
-
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -15,15 +13,8 @@ type ArtifactStartDesc []*pb.PushedArtifact
 func (s ArtifactStartDesc) Len() int      { return len(s) }
 func (s ArtifactStartDesc) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s ArtifactStartDesc) Less(i, j int) bool {
-	t1, err := ptypes.Timestamp(s[i].Status.StartTime)
-	if err != nil {
-		return false
-	}
-
-	t2, err := ptypes.Timestamp(s[j].Status.StartTime)
-	if err != nil {
-		return false
-	}
+	t1 := s[i].Status.StartTime.AsTime()
+	t2 := s[j].Status.StartTime.AsTime()
 
 	return t2.Before(t1)
 }

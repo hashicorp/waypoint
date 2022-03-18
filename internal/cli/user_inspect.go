@@ -3,7 +3,6 @@ package cli
 import (
 	"strings"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -49,7 +48,7 @@ func (c *UserInspectCommand) Run(args []string) int {
 	user := userResp.User
 
 	// This isn't the most user friendly output but it gets the job done at the moment.
-	c.ui.Output(proto.MarshalTextString(user))
+	c.ui.Output(user.String())
 	return 0
 }
 

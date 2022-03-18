@@ -4,12 +4,11 @@ import (
 	"context"
 
 	"github.com/evanphx/opaqueany"
-	"github.com/golang/protobuf/proto"
 	"github.com/mitchellh/mapstructure"
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	newproto "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
@@ -482,7 +481,7 @@ func serverToSDKStatusReport(from *pb.StatusReport) (*sdk.StatusReport, error) {
 	// the original.
 	var result sdk.StatusReport
 	return &result, opaqueany.UnmarshalTo(
-		from.StatusReport, &result, newproto.UnmarshalOptions{})
+		from.StatusReport, &result, proto.UnmarshalOptions{})
 }
 
 var _ operation = (*statusReportOperation)(nil)

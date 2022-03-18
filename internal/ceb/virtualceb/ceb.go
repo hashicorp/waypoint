@@ -6,12 +6,12 @@ import (
 	"io"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/hashicorp/waypoint/internal/appconfig"
 	"github.com/hashicorp/waypoint/internal/ceb/execwriter"
@@ -404,10 +404,7 @@ func (v *Virtual) RunLogs(
 				return nil
 			}
 
-			ts, err := ptypes.TimestampProto(lev.Timestamp)
-			if err == nil {
-				ts = ptypes.TimestampNow()
-			}
+			ts := timestamppb.New(lev.Timestamp)
 
 			entry := &pb.LogBatch_Entry{
 				Source:    pb.LogBatch_Entry_APP,

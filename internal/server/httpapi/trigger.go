@@ -8,12 +8,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/serverclient"

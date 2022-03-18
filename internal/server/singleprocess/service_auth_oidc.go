@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 	"github.com/hashicorp/cap/oidc"
 	"github.com/hashicorp/go-bexpr"
 	"github.com/hashicorp/go-hclog"

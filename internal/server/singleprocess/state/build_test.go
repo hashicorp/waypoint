@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -54,8 +54,7 @@ func TestBuild(t *testing.T) {
 
 		// Create a build for each time
 		for _, ts := range times {
-			pt, err := ptypes.TimestampProto(ts)
-			require.NoError(err)
+			pt := timestamppb.New(ts)
 
 			require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id: strconv.FormatInt(ts.Unix(), 10),
@@ -90,8 +89,7 @@ func TestBuild(t *testing.T) {
 		// Lists should be in descending order by completion time
 		var lastTime time.Time
 		for _, build := range builds {
-			timeVal, err := ptypes.Timestamp(build.Status.CompleteTime)
-			require.NoError(err)
+			timeVal := build.Status.CompleteTime.AsTime()
 
 			if !lastTime.IsZero() && timeVal.After(lastTime) {
 				t.Fatal("timestamp should be descending")
@@ -113,8 +111,7 @@ func TestBuild(t *testing.T) {
 		}
 
 		ts := time.Now().Add(5 * time.Hour)
-		pt, err := ptypes.TimestampProto(ts)
-		require.NoError(err)
+		pt := timestamppb.New(ts)
 
 		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id:          strconv.FormatInt(ts.Unix(), 10),

@@ -1,13 +1,12 @@
 package validationext
 
 import (
-	"bytes"
 	"errors"
 	"reflect"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // StructField returns a *validation.FieldRules (can be used as an arg to
@@ -164,9 +163,7 @@ func (s *structJSONPBRule) Validate(v interface{}) error {
 		return errors.New("should be byte slice")
 	}
 
-	// Reset the value so we're empty then decode
-	s.v.Reset()
-	if err := jsonpb.Unmarshal(bytes.NewReader(bs), s.v); err != nil {
+	if err := protojson.Unmarshal(bs, s.v); err != nil {
 		return err
 	}
 

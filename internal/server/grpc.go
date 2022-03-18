@@ -3,12 +3,12 @@ package server
 import (
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"

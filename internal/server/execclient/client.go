@@ -11,11 +11,11 @@ import (
 	"sync"
 
 	"github.com/containerd/console"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/empty"
+	protoV1 "github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-hclog"
 	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
 	sshterm "golang.org/x/crypto/ssh/terminal"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -193,7 +193,7 @@ func (c *Client) Run() (int, error) {
 				Stream:       client,
 				Request:      &pb.ExecStreamRequest{},
 				ResponseLock: &streamLock,
-				Encode: grpc_net_conn.SimpleEncoder(func(msg proto.Message) *[]byte {
+				Encode: grpc_net_conn.SimpleEncoder(func(msg protoV1.Message) *[]byte {
 					req := msg.(*pb.ExecStreamRequest)
 					if req.Event == nil {
 						req.Event = &pb.ExecStreamRequest_Input_{

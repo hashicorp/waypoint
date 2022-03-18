@@ -5,7 +5,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -13,6 +12,7 @@ import (
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/pkg/protocolversion"

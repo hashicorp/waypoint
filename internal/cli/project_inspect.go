@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/posener/complete"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -77,15 +77,15 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 
 	if c.flagJson {
 		// Note that this won't show keys with unset values in Project
-		var m jsonpb.Marshaler
-		m.Indent = "\t"
-		str, err := m.MarshalToString(project)
+		data, err := protojson.MarshalOptions{
+			Indent: "\t",
+		}.Marshal(project)
 		if err != nil {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return err
 		}
 
-		c.ui.Output(str)
+		c.ui.Output(string(data))
 		return nil
 	}
 

@@ -1,14 +1,12 @@
 package state
 
 import (
-	"time"
-
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -200,10 +198,7 @@ func (s *State) RunnerReject(id string) error {
 // This operation is an upsert; it will update information if this runner
 // has been seen before.
 func (s *State) runnerCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, runnerpb *pb.Runner) error {
-	now, err := ptypes.TimestampProto(time.Now())
-	if err != nil {
-		return err
-	}
+	now := timestamppb.Now()
 
 	// Zero out all the records that are server side set. These will be
 	// replaced with real values if we have them.

@@ -1,14 +1,12 @@
 package ptypes
 
 import (
-	"time"
-
 	"github.com/evanphx/opaqueany"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
+	empty "google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -166,8 +164,7 @@ func TestValidTrigger(t testing.T, src *pb.Trigger) *pb.Trigger {
 }
 
 func testStatus(t testing.T) *pb.Status {
-	pt, err := ptypes.TimestampProto(time.Now())
-	require.NoError(t, err)
+	pt := timestamppb.Now()
 
 	return &pb.Status{
 		State:        pb.Status_SUCCESS,

@@ -8,9 +8,9 @@ import (
 	"reflect"
 
 	"github.com/evanphx/opaqueany"
-	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 

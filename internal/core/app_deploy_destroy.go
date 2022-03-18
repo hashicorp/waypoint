@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/evanphx/opaqueany"
-	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"

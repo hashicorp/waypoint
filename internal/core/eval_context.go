@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/waypoint/internal/pkg/ctystructure"
 )

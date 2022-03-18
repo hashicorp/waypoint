@@ -4,11 +4,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )

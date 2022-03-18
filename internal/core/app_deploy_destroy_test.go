@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/evanphx/opaqueany"
-	"github.com/golang/protobuf/ptypes/empty"
 	mockpkg "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"

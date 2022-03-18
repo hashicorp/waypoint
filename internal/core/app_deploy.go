@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/evanphx/opaqueany"
-	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
@@ -14,6 +13,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"

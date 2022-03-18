@@ -14,11 +14,11 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/registry"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"

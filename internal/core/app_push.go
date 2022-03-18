@@ -5,11 +5,11 @@ import (
 
 	"github.com/evanphx/opaqueany"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"

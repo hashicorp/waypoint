@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Releaser struct {
@@ -779,7 +779,7 @@ func (r *Releaser) Status(
 	var report sdk.StatusReport
 	report.External = true
 	defer func() {
-		report.GeneratedTime = ptypes.TimestampNow()
+		report.GeneratedTime = timestamppb.Now()
 	}()
 
 	if release.Region == "" {

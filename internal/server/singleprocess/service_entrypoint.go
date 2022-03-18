@@ -7,12 +7,12 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"

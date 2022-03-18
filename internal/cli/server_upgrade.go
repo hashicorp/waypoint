@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

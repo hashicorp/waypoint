@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -215,8 +214,7 @@ func TestGitSourceGet(t *testing.T) {
 		ref := refRaw.Ref.(*pb.Job_DataSource_Ref_Git).Git
 		require.Equal("b6bf15100c570f2be6a231a095d395ed16dfed81", ref.Commit)
 
-		ts, err := ptypes.Timestamp(ref.Timestamp)
-		require.NoError(err)
+		ts := ref.Timestamp.AsTime()
 		require.False(ts.IsZero())
 	})
 

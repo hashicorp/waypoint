@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -101,8 +100,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 			require.NoError(err)
 			require.Equal(pb.Job_ERROR, job.State)
 
-			oldQueueTime, err = ptypes.Timestamp(job.QueueTime)
-			require.NoError(err)
+			oldQueueTime = job.QueueTime.AsTime()
 		}
 
 		// Job "B" should be queued
@@ -113,8 +111,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 
 			// The queue time should be that of the old job, so that
 			// we retain our position in the queue
-			queueTime, err := ptypes.Timestamp(job.QueueTime)
-			require.NoError(err)
+			queueTime := job.QueueTime.AsTime()
 			require.False(oldQueueTime.IsZero())
 			require.True(oldQueueTime.Equal(queueTime))
 		}
@@ -162,8 +159,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 			require.NoError(err)
 			require.Equal(pb.Job_SUCCESS, job.State)
 
-			oldQueueTime, err = ptypes.Timestamp(job.QueueTime)
-			require.NoError(err)
+			oldQueueTime = job.QueueTime.AsTime()
 		}
 
 		// Job "B" should be queued
@@ -173,7 +169,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 			require.Equal(pb.Job_QUEUED, job.State)
 
 			// The queue time should NOT be equal
-			queueTime, err := ptypes.Timestamp(job.QueueTime)
+			queueTime := job.QueueTime.AsTime()
 			require.NoError(err)
 			require.False(queueTime.IsZero())
 			require.False(oldQueueTime.Equal(queueTime))
@@ -220,8 +216,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 			require.NoError(err)
 			require.Equal(pb.Job_WAITING, job.State)
 
-			oldQueueTime, err = ptypes.Timestamp(job.QueueTime)
-			require.NoError(err)
+			oldQueueTime = job.QueueTime.AsTime()
 		}
 
 		// Job "B" should be queued
@@ -231,7 +226,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 			require.Equal(pb.Job_QUEUED, job.State)
 
 			// The queue time should NOT be equal
-			queueTime, err := ptypes.Timestamp(job.QueueTime)
+			queueTime := job.QueueTime.AsTime()
 			require.NoError(err)
 			require.False(queueTime.IsZero())
 			require.False(oldQueueTime.Equal(queueTime))

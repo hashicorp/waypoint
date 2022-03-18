@@ -5,7 +5,6 @@ import (
 	"sort"
 
 	"github.com/dustin/go-humanize"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -77,11 +76,11 @@ func (c *BuildListCommand) Run(args []string) int {
 
 			// Parse our times
 			var startTime, completeTime string
-			if t, err := ptypes.Timestamp(b.Status.StartTime); err == nil {
-				startTime = humanize.Time(t)
+			if b.Status.StartTime != nil {
+				startTime = humanize.Time(b.Status.StartTime.AsTime())
 			}
-			if t, err := ptypes.Timestamp(b.Status.CompleteTime); err == nil {
-				completeTime = humanize.Time(t)
+			if b.Status.CompleteTime != nil {
+				completeTime = humanize.Time(b.Status.CompleteTime.AsTime())
 			}
 
 			table.Rich([]string{
