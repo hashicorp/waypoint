@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	empty "google.golang.org/protobuf/types/known/emptypb"
 	"github.com/hashicorp/cap/util"
 	"github.com/posener/complete"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
