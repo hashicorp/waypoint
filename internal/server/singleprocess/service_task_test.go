@@ -45,6 +45,7 @@ func TestServiceTask(t *testing.T) {
 		require.NotNil(resp)
 		result = resp.Task
 		require.Equal(result.StartJob.Id, "start_job")
+		require.Equal(result.Id, resp.Task.Id)
 	})
 
 	t.Run("create on non-existent task with id creates a new task by requested id", func(t *testing.T) {
@@ -356,14 +357,30 @@ func TestServiceTask_DeleteTask(t *testing.T) {
 	t.Run("delete non-existing", func(t *testing.T) {
 		require := require.New(t)
 
-		resp, err := client.DeleteTask(ctx, &pb.DeleteTaskRequest{
+		taskId := "asdfhjlk"
+
+		// get, should fail to be extra sure it doesn't exist
+		resp, err := client.GetTask(ctx, &pb.GetTaskRequest{
 			Ref: &pb.Ref_Task{
 				Ref: &pb.Ref_Task_Id{
-					Id: "nope",
+					Id: taskId,
 				},
 			},
 		})
+		require.Error(err)
+		require.Nil(resp)
+		st, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.NotFound, st.Code())
+
+		respDel, err := client.DeleteTask(ctx, &pb.DeleteTaskRequest{
+			Ref: &pb.Ref_Task{
+				Ref: &pb.Ref_Task_Id{
+					Id: taskId,
+				},
+			},
+		})
+		require.NotNil(respDel) // We return a proto empty, we don't compare the two empty protos
 		require.NoError(err)
-		require.NotNil(resp)
 	})
 }
