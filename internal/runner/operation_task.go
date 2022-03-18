@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/golang/protobuf/ptypes/any"
+	"github.com/evanphx/opaqueany"
 	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
@@ -89,7 +89,7 @@ func (r *Runner) executeStopTaskOp(
 	}
 
 	// Get our state first
-	var state *any.Any
+	var state *opaqueany.Any
 	switch v := op.StopTask.State.(type) {
 	case *pb.Job_StopTaskLaunchOp_Direct:
 		log.Debug("using directly provided state")

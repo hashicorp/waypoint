@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/evanphx/opaqueany"
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -166,7 +166,7 @@ func (op *buildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ 
 				args = append(args, argmapper.Typed(raw))
 
 				if pm, ok := raw.(interface {
-					TypedAny() *any.Any
+					TypedAny() *opaqueany.Any
 				}); ok {
 					any := pm.TypedAny()
 
@@ -203,7 +203,7 @@ func (op *buildOperation) StatusPtr(msg proto.Message) **pb.Status {
 	return &(msg.(*pb.Build).Status)
 }
 
-func (op *buildOperation) ValuePtr(msg proto.Message) (**any.Any, *string) {
+func (op *buildOperation) ValuePtr(msg proto.Message) (**opaqueany.Any, *string) {
 	v := msg.(*pb.Build)
 	if v.Artifact == nil {
 		v.Artifact = &pb.Artifact{}

@@ -3,14 +3,13 @@ package core
 import (
 	"context"
 
+	"github.com/evanphx/opaqueany"
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/mitchellh/mapstructure"
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	newproto "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
@@ -400,7 +399,7 @@ func (op *statusReportOperation) Do(
 	report := result.(*sdk.StatusReport)
 
 	// Load Status Report message compiled by the plugin into the overall generated report
-	reportAny, err := anypb.New(report)
+	reportAny, err := opaqueany.New(report)
 	if err != nil {
 		return nil, err
 	}
@@ -473,7 +472,7 @@ func (op *statusReportOperation) StatusPtr(msg proto.Message) **pb.Status {
 	return &(msg.(*pb.StatusReport).Status)
 }
 
-func (op *statusReportOperation) ValuePtr(msg proto.Message) (**any.Any, *string) {
+func (op *statusReportOperation) ValuePtr(msg proto.Message) (**opaqueany.Any, *string) {
 	return &(msg.(*pb.StatusReport).StatusReport), &(msg.(*pb.StatusReport).StatusReportJson)
 }
 
@@ -482,7 +481,7 @@ func serverToSDKStatusReport(from *pb.StatusReport) (*sdk.StatusReport, error) {
 	// We embed the status report in the message so we just unmarshal
 	// the original.
 	var result sdk.StatusReport
-	return &result, anypb.UnmarshalTo(
+	return &result, opaqueany.UnmarshalTo(
 		from.StatusReport, &result, newproto.UnmarshalOptions{})
 }
 

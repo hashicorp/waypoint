@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
+	"github.com/evanphx/opaqueany"
 	"github.com/golang/protobuf/ptypes/empty"
 	mockpkg "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -86,9 +85,9 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 	), "test")
 
 	// Expect to have the destroy function called
-	deployment, err := ptypes.MarshalAny(&empty.Empty{})
+	deployment, err := opaqueany.New(&empty.Empty{})
 	require.NoError(err)
-	mock.Destroyer.On("DestroyFunc").Return(func(v *any.Any) error {
+	mock.Destroyer.On("DestroyFunc").Return(func(v *opaqueany.Any) error {
 		if v == nil || v != deployment {
 			return fmt.Errorf("value didn't match")
 		}

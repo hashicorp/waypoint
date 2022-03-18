@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
+	"github.com/evanphx/opaqueany"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/hashicorp/waypoint/pkg/nullify"
 )
@@ -45,7 +45,7 @@ func GWNullAnyUnaryInterceptor() grpc.UnaryServerInterceptor {
 			}
 
 			if gw {
-				if nerr := nullify.Nullify(resp, (*anypb.Any)(nil)); nerr != nil {
+				if nerr := nullify.Nullify(resp, (*opaqueany.Any)(nil)); nerr != nil {
 					return nil, nerr
 				}
 			}

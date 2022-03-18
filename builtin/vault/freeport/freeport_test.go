@@ -9,6 +9,8 @@ import (
 )
 
 func TestTakeReturn(t *testing.T) {
+	t.Skip()
+
 	// NOTE: for global var reasons this cannot execute in parallel
 	// t.Parallel()
 

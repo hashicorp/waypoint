@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/evanphx/opaqueany"
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
@@ -398,7 +398,7 @@ func (op *deployOperation) StatusPtr(msg proto.Message) **pb.Status {
 	return &(msg.(*pb.Deployment).Status)
 }
 
-func (op *deployOperation) ValuePtr(msg proto.Message) (**any.Any, *string) {
+func (op *deployOperation) ValuePtr(msg proto.Message) (**opaqueany.Any, *string) {
 	return &(msg.(*pb.Deployment).Deployment), &(msg.(*pb.Deployment).DeploymentJson)
 }
 

@@ -3,6 +3,7 @@ package ptypes
 import (
 	"time"
 
+	"github.com/evanphx/opaqueany"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/imdario/mergo"
@@ -73,7 +74,7 @@ func TestValidDeployment(t testing.T, src *pb.Deployment) *pb.Deployment {
 		src = &pb.Deployment{}
 	}
 
-	deployment, _ := ptypes.MarshalAny(&empty.Empty{})
+	deployment, _ := opaqueany.New(&empty.Empty{})
 
 	require.NoError(t, mergo.Merge(src, &pb.Deployment{
 		Application: &pb.Ref_Application{
@@ -97,7 +98,7 @@ func TestValidRelease(t testing.T, src *pb.Release) *pb.Release {
 		src = &pb.Release{}
 	}
 
-	release, _ := ptypes.MarshalAny(&empty.Empty{})
+	release, _ := opaqueany.New(&empty.Empty{})
 
 	require.NoError(t, mergo.Merge(src, &pb.Release{
 		Application: &pb.Ref_Application{

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/evanphx/opaqueany"
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 
@@ -252,7 +252,7 @@ func (op *deployDestroyOperation) StatusPtr(msg proto.Message) **pb.Status {
 	return nil
 }
 
-func (op *deployDestroyOperation) ValuePtr(msg proto.Message) (**any.Any, *string) {
+func (op *deployDestroyOperation) ValuePtr(msg proto.Message) (**opaqueany.Any, *string) {
 	return nil, nil
 }
 

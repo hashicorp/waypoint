@@ -10,8 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
+	"github.com/evanphx/opaqueany"
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -54,11 +53,11 @@ func TestAppExec_happy(t *testing.T) {
 	ctx := context.Background()
 
 	// We're using GetVersionInfoResponse here just because it is a proto message
-	// that can be converted to an any.Any easily. We never use it, it's just to keep
+	// that can be converted to an opaqueany.Any easily. We never use it, it's just to keep
 	// the tests from blowing up with a nil reference.
 	mockPluginArtifact := &pb.GetVersionInfoResponse{}
 
-	anyval, err := ptypes.MarshalAny(mockPluginArtifact)
+	anyval, err := opaqueany.New(mockPluginArtifact)
 	require.NoError(err)
 
 	aresp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{
@@ -79,12 +78,12 @@ func TestAppExec_happy(t *testing.T) {
 
 	var stdin bytes.Buffer
 
-	anyd, err := ptypes.MarshalAny(&empty.Empty{})
+	anyd, err := opaqueany.New(&empty.Empty{})
 	require.NoError(err)
 
 	// Expect to have the destroy function called
 	require.NoError(err)
-	mock.Execer.On("ExecFunc").Return(func(d *any.Any, esi *component.ExecSessionInfo) error {
+	mock.Execer.On("ExecFunc").Return(func(d *opaqueany.Any, esi *component.ExecSessionInfo) error {
 		app.logger.Info("called mock ExecFunc")
 
 		io.Copy(&stdin, esi.Input)
