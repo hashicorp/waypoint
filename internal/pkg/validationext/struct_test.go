@@ -1,11 +1,9 @@
 package validationext
 
 import (
-	"bytes"
 	"testing"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/stretchr/testify/require"
 )
 
@@ -292,6 +290,7 @@ func TestStructOneof(t *testing.T) {
 	}
 }
 
+/*
 func TestStructJSONPB(t *testing.T) {
 	m := func(p *PersonPB) []byte {
 		var m jsonpb.Marshaler
@@ -369,6 +368,7 @@ func TestStructJSONPB(t *testing.T) {
 		})
 	}
 }
+*/
 
 // PersonPB is a proto.Message used for testing.
 type PersonPB struct {
