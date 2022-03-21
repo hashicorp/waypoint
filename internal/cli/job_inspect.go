@@ -153,13 +153,13 @@ func (c *JobInspectCommand) FormatJob(job *pb.Job) ([]terminal.NamedValue, error
 	}
 
 	var completeTime string
-	if resp.CompleteTime != nil {
-		completeTime = humanize.Time(resp.CompleteTime.AsTime())
+	if job.CompleteTime != nil {
+		completeTime = humanize.Time(job.CompleteTime.AsTime())
 	}
 
 	var cancelTime string
-	if resp.CancelTime != nil {
-		cancelTime = humanize.Time(resp.CancelTime.AsTime())
+	if job.CancelTime != nil {
+		cancelTime = humanize.Time(job.CancelTime.AsTime())
 	}
 
 	result := []terminal.NamedValue{
