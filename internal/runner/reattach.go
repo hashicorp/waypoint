@@ -165,6 +165,12 @@ func (c *reattachClient) do(f func(client pb.Waypoint_RunnerJobStreamClient) err
 			continue
 		}
 
+		// This is the label that should be jumped to if reconnection
+		// fails below. THE LOCK MUST STILL BE HELD when this is jumped to.
+		// This lets us retry the reconnect without having to retry
+		// the argument `f()` logic.
+	RETRY_RECONNECT:
+
 		// Since this is a disconnect, we have to wait for our
 		// RunnerConfig stream to re-establish. We wait for the config
 		// generation to increment.
@@ -183,7 +189,7 @@ func (c *reattachClient) do(f func(client pb.Waypoint_RunnerJobStreamClient) err
 			log.Warn("ERROR", "ERROR", err)
 			if status.Code(err) == codes.Unavailable ||
 				status.Code(err) == codes.NotFound {
-				continue
+				goto RETRY_RECONNECT
 			}
 
 			return err
@@ -201,7 +207,7 @@ func (c *reattachClient) do(f func(client pb.Waypoint_RunnerJobStreamClient) err
 		}); err != nil {
 			if status.Code(err) == codes.Unavailable ||
 				status.Code(err) == codes.NotFound {
-				continue
+				goto RETRY_RECONNECT
 			}
 
 			return err
@@ -213,7 +219,7 @@ func (c *reattachClient) do(f func(client pb.Waypoint_RunnerJobStreamClient) err
 		if err != nil {
 			if status.Code(err) == codes.Unavailable ||
 				status.Code(err) == codes.NotFound {
-				continue
+				goto RETRY_RECONNECT
 			}
 
 			return err
@@ -244,7 +250,7 @@ func (c *reattachClient) do(f func(client pb.Waypoint_RunnerJobStreamClient) err
 		}); err != nil {
 			if status.Code(err) == codes.Unavailable ||
 				status.Code(err) == codes.NotFound {
-				continue
+				goto RETRY_RECONNECT
 			}
 
 			return err

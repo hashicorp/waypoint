@@ -126,7 +126,6 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		streamCtxLock.Lock()
 		defer streamCtxLock.Unlock()
 		if streamCancel != nil {
-			// Wrap in a func() so that if we retry, we don't stack defers.
 			streamCancel()
 		}
 	}()
@@ -150,7 +149,9 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			atomic.StoreInt32(&canceled, 1)
 
 			// Cancel the context
-			streamCancel()
+			if streamCancel != nil {
+				streamCancel()
+			}
 		})
 	}
 
@@ -199,8 +200,6 @@ RESTART_JOB_STREAM:
 	// to time out of a "WaitForReady" RPC call (it ignores context cancellation,
 	// too). TODO: do a manual backoff with WaitForReady(false) so we can
 	// weave in accept timeout.
-	// NOTE: we purposely do NOT use ctx above since if the context is
-	// cancelled we want to continue reporting errors.
 	log.Debug("opening job stream", "retry", retry)
 	client, err = r.client.RunnerJobStream(streamCtx, grpc.WaitForReady(retry))
 	retry = true
