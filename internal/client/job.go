@@ -447,10 +447,6 @@ func (c *Project) queueAndStreamJob(
 
 					ui.Table(tbl)
 				case *pb.GetJobStreamResponse_Terminal_Event_StepGroup_:
-					if sg != nil {
-						sg.Wait()
-					}
-
 					if !ev.StepGroup.Close {
 						sg = ui.StepGroup()
 					}
