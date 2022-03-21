@@ -7,7 +7,7 @@
 package docker
 
 import (
-	opaqueany "github.com/evanphx/opaqueany"
+	opaqueany "github.com/hashicorp/opaqueany"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"

@@ -3,7 +3,7 @@ package core
 import (
 	"context"
 
-	"github.com/evanphx/opaqueany"
+	"github.com/hashicorp/opaqueany"
 	"github.com/mitchellh/mapstructure"
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/grpc/codes"

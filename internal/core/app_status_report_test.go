@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/evanphx/opaqueany"
+	"github.com/hashicorp/opaqueany"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"

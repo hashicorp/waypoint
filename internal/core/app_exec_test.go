@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/evanphx/opaqueany"
+	"github.com/hashicorp/opaqueany"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"

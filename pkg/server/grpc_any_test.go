@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/evanphx/opaqueany"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/hashicorp/opaqueany"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

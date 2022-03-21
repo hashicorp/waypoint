@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/evanphx/opaqueany"
+	"github.com/hashicorp/opaqueany"
 	mockpkg "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	empty "google.golang.org/protobuf/types/known/emptypb"

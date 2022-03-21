@@ -1,7 +1,7 @@
 package ptypes
 
 import (
-	"github.com/evanphx/opaqueany"
+	"github.com/hashicorp/opaqueany"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"

@@ -6,9 +6,9 @@ package execwriter
 import (
 	"io"
 
-	protoV1 "github.com/golang/protobuf/proto"
-	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
+	grpc_net_conn "github.com/hashicorp/go-grpc-net-conn"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -23,7 +23,7 @@ func Writer(
 	return &grpc_net_conn.Conn{
 		Stream:  client,
 		Request: &pb.EntrypointExecRequest{},
-		Encode: grpc_net_conn.SimpleEncoder(func(msg protoV1.Message) *[]byte {
+		Encode: grpc_net_conn.SimpleEncoder(func(msg proto.Message) *[]byte {
 			req := msg.(*pb.EntrypointExecRequest)
 			if req.Event == nil {
 				req.Event = &pb.EntrypointExecRequest_Output_{

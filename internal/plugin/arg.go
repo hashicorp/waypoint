@@ -1,8 +1,8 @@
 package plugin
 
 import (
-	"github.com/evanphx/opaqueany"
 	"github.com/hashicorp/go-argmapper"
+	"github.com/hashicorp/opaqueany"
 )
 
 // ArgNamedAny returns an argmapper.Arg that specifies the Any value

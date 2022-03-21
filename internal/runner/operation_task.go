@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/evanphx/opaqueany"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/opaqueany"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

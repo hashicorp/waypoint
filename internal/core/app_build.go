@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/evanphx/opaqueany"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/opaqueany"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"

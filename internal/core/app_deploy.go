@@ -4,11 +4,11 @@ import (
 	"context"
 	"strings"
 
-	"github.com/evanphx/opaqueany"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/opaqueany"
 	"github.com/mitchellh/mapstructure"
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/grpc/codes"
