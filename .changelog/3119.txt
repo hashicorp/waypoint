@@ -1,0 +1,4 @@
+```release-note:improvement
+core: runners can tolerate a server outage during job execution and will
+wait for the server to come back online
+```
