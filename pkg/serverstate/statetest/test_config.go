@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-memdb"
 	"github.com/stretchr/testify/require"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )

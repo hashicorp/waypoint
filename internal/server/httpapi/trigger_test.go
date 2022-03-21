@@ -154,11 +154,13 @@ func TestHandleTrigger_CancelStream(t *testing.T) {
 type triggerImpl struct {
 	sync.Mutex
 	mocks.WaypointServer
+	pb.UnsafeWaypointServer
 }
 
 type triggerBadImpl struct {
 	sync.Mutex
 	mocks.WaypointServer
+	pb.UnsafeWaypointServer
 }
 
 // RunTrigger mocks out a "good" RunTrigger execution and returns a slice

@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-memdb"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -154,8 +154,7 @@ func TestAppOperation(t *testing.T) {
 
 		// Create a build for each time
 		for _, timeVal := range times {
-			pt, err := ptypes.TimestampProto(timeVal)
-			require.NoError(err)
+			pt := timestamppb.New(timeVal)
 
 			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id: strconv.FormatInt(timeVal.Unix(), 10),
@@ -203,8 +202,7 @@ func TestAppOperation(t *testing.T) {
 		var lastTime time.Time
 		for _, raw := range builds {
 			build := raw.(*pb.Build)
-			timeVal, err := ptypes.Timestamp(build.Status.CompleteTime)
-			require.NoError(err)
+			timeVal := build.Status.CompleteTime.AsTime()
 
 			if !lastTime.IsZero() && timeVal.After(lastTime) {
 				t.Fatal("timestamp should be descending")
@@ -226,8 +224,7 @@ func TestAppOperation(t *testing.T) {
 		}
 
 		ts := time.Now().Add(5 * time.Hour)
-		pt, err := ptypes.TimestampProto(ts)
-		require.NoError(err)
+		pt := timestamppb.New(ts)
 
 		require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id:          strconv.FormatInt(ts.Unix(), 10),
@@ -267,8 +264,7 @@ func TestAppOperation(t *testing.T) {
 
 		{
 			ts := time.Now().Add(5 * time.Hour)
-			pt, err := ptypes.TimestampProto(ts)
-			require.NoError(err)
+			pt := timestamppb.New(ts)
 
 			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id:          "A",
@@ -281,8 +277,7 @@ func TestAppOperation(t *testing.T) {
 		}
 		{
 			ts := time.Now().Add(6 * time.Hour)
-			pt, err := ptypes.TimestampProto(ts)
-			require.NoError(err)
+			pt := timestamppb.New(ts)
 
 			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id:          "B",
@@ -295,8 +290,7 @@ func TestAppOperation(t *testing.T) {
 		}
 		{
 			ts := time.Now().Add(7 * time.Hour)
-			pt, err := ptypes.TimestampProto(ts)
-			require.NoError(err)
+			pt := timestamppb.New(ts)
 
 			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id:          "C",
@@ -460,8 +454,7 @@ func TestAppOperation(t *testing.T) {
 
 		{
 			ts := time.Now().Add(5 * time.Hour)
-			pt, err := ptypes.TimestampProto(ts)
-			require.NoError(err)
+			pt := timestamppb.New(ts)
 
 			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id:          "A",
@@ -474,8 +467,7 @@ func TestAppOperation(t *testing.T) {
 		}
 		{
 			ts := time.Now().Add(6 * time.Hour)
-			pt, err := ptypes.TimestampProto(ts)
-			require.NoError(err)
+			pt := timestamppb.New(ts)
 
 			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id:          "B",
@@ -505,8 +497,7 @@ func TestAppOperation(t *testing.T) {
 
 		// Now add new item to fire the watch channel
 		ts := time.Now().Add(8 * time.Hour)
-		pt, err := ptypes.TimestampProto(ts)
-		require.NoError(err)
+		pt := timestamppb.New(ts)
 
 		require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id:          "D",

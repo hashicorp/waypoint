@@ -1,9 +1,9 @@
 package server
 
 import (
-	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -12,7 +12,7 @@ import (
 func NewStatus(init pb.Status_State) *pb.Status {
 	return &pb.Status{
 		State:     init,
-		StartTime: ptypes.TimestampNow(),
+		StartTime: timestamppb.Now(),
 	}
 }
 
@@ -26,12 +26,12 @@ func StatusSetError(s *pb.Status, err error) {
 
 	s.State = pb.Status_ERROR
 	s.Error = st.Proto()
-	s.CompleteTime = ptypes.TimestampNow()
+	s.CompleteTime = timestamppb.Now()
 }
 
 // StatusSetSuccess sets state of the status to success and marks the
 // completion time.
 func StatusSetSuccess(s *pb.Status) {
 	s.State = pb.Status_SUCCESS
-	s.CompleteTime = ptypes.TimestampNow()
+	s.CompleteTime = timestamppb.Now()
 }

@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/opaqueany"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 
@@ -49,7 +49,7 @@ type operation interface {
 	// a pointer to store the raw message as well as a pointer to store the JSON
 	// of the message. The JSON pointer can be nil and it won't be stored.
 	StatusPtr(proto.Message) **pb.Status
-	ValuePtr(proto.Message) (**any.Any, *string)
+	ValuePtr(proto.Message) (**opaqueany.Any, *string)
 
 	// Hooks are the hooks to execute as part of this operation keyed by "when"
 	Hooks(*App) map[string][]*config.Hook
@@ -120,7 +120,7 @@ func (a *App) doOperation(
 	// to a local value if we get nil so that we can avoid nil checks.
 	valuePtr, valueJsonPtr := op.ValuePtr(msg)
 	if valuePtr == nil {
-		var value *any.Any
+		var value *opaqueany.Any
 		valuePtr = &value
 	}
 	if valueJsonPtr == nil {
@@ -375,4 +375,4 @@ func msgField(msg proto.Message, f string) reflect.Value {
 }
 
 // anyType is used to compare types.
-var anyType = reflect.TypeOf((*any.Any)(nil))
+var anyType = reflect.TypeOf((*opaqueany.Any)(nil))

@@ -1,23 +1,18 @@
 package plugin
 
 import (
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-argmapper"
+	"github.com/hashicorp/opaqueany"
 )
 
 // ArgNamedAny returns an argmapper.Arg that specifies the Any value
 // with the proper subtype.
-func ArgNamedAny(n string, v *any.Any) argmapper.Arg {
+func ArgNamedAny(n string, v *opaqueany.Any) argmapper.Arg {
 	if v == nil {
 		return nil
 	}
 
-	msg, err := ptypes.AnyMessageName(v)
-	if err != nil {
-		// This should never happen.
-		panic(err)
-	}
+	msg := v.MessageName()
 
-	return argmapper.NamedSubtype(n, v, msg)
+	return argmapper.NamedSubtype(n, v, string(msg))
 }

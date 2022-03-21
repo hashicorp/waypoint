@@ -4,7 +4,7 @@ package google.cloudrun;
 
 option go_package = "waypoint/builtin/google/cloudrun";
 
-import "google/protobuf/any.proto";
+import "any.proto";
 
 message Deployment {
   string url = 1;
@@ -12,7 +12,7 @@ message Deployment {
   string revision_id = 3;
   string region = 4;
   string id = 5;
-  google.protobuf.Any resource_state = 6;
+  opaqueany.Any resource_state = 6;
 
   message Resource {
     string location = 1;

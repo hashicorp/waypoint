@@ -6,12 +6,12 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	empty "google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -159,10 +159,7 @@ func (s *service) queueJobReqToJob(
 			return nil, "", status.Errorf(codes.FailedPrecondition,
 				"Invalid expiry duration: %s", err.Error())
 		}
-		job.ExpireTime, err = ptypes.TimestampProto(time.Now().Add(dur))
-		if err != nil {
-			return nil, "", status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
-		}
+		job.ExpireTime = timestamppb.New(time.Now().Add(dur))
 	}
 
 	// If the job has any target runner, it is a remote job.
@@ -381,10 +378,7 @@ func (s *service) onDemandRunnerStartJob(
 			"Invalid expiry duration: %s", err.Error())
 	}
 
-	job.ExpireTime, err = ptypes.TimestampProto(time.Now().Add(dur))
-	if err != nil {
-		return nil, "", status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
-	}
+	job.ExpireTime = timestamppb.New(time.Now().Add(dur))
 
 	if err != nil {
 		return nil, "", status.Errorf(codes.FailedPrecondition,

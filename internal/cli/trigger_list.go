@@ -6,9 +6,8 @@ import (
 	"strings"
 
 	"github.com/dustin/go-humanize"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -71,16 +70,17 @@ func (c *TriggerListCommand) Run(args []string) int {
 	}
 
 	if c.flagJson {
-		var m jsonpb.Marshaler
-		m.Indent = "\t"
+		m := protojson.MarshalOptions{
+			Indent: "\t",
+		}
 		for _, t := range resp.Triggers {
-			str, err := m.MarshalToString(t)
+			data, err := m.Marshal(t)
 			if err != nil {
 				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 				return 1
 			}
 
-			fmt.Println(str)
+			fmt.Println(string(data))
 		}
 		return 0
 	}
@@ -146,8 +146,8 @@ func (c *TriggerListCommand) Run(args []string) int {
 		}
 
 		var lastActiveTime string
-		if time, err := ptypes.Timestamp(t.ActiveTime); err == nil {
-			lastActiveTime = humanize.Time(time)
+		if t.ActiveTime != nil {
+			lastActiveTime = humanize.Time(t.ActiveTime.AsTime())
 		}
 
 		tblColumn := []string{

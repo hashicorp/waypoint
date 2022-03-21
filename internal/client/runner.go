@@ -3,8 +3,8 @@ package client
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/runner"

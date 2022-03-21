@@ -5,8 +5,7 @@ import (
 	"sort"
 
 	"github.com/dustin/go-humanize"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -60,16 +59,17 @@ func (c *JobListCommand) Run(args []string) int {
 	}
 
 	if c.flagJson {
-		var m jsonpb.Marshaler
-		m.Indent = "\t"
+		m := protojson.MarshalOptions{
+			Indent: "\t",
+		}
 		for _, t := range jobs {
-			str, err := m.MarshalToString(t)
+			data, err := m.Marshal(t)
 			if err != nil {
 				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 				return 1
 			}
 
-			fmt.Println(str)
+			fmt.Println(string(data))
 		}
 		return 0
 	}
@@ -150,8 +150,8 @@ func (c *JobListCommand) Run(args []string) int {
 		}
 
 		var completeTime string
-		if time, err := ptypes.Timestamp(j.CompleteTime); err == nil {
-			completeTime = humanize.Time(time)
+		if j.CompleteTime != nil {
+			completeTime = humanize.Time(j.CompleteTime.AsTime())
 		}
 
 		tblColumn := []string{

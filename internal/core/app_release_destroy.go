@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/opaqueany"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -271,7 +271,7 @@ func (op *releaseDestroyOperation) StatusPtr(msg proto.Message) **pb.Status {
 	return nil
 }
 
-func (op *releaseDestroyOperation) ValuePtr(msg proto.Message) (**any.Any, *string) {
+func (op *releaseDestroyOperation) ValuePtr(msg proto.Message) (**opaqueany.Any, *string) {
 	return nil, nil
 }
 

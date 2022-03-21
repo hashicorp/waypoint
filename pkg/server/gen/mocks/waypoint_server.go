@@ -1995,3 +1995,8 @@ func (_m *WaypointServer) XListJobs(_a0 context.Context, _a1 *gen.ListJobsReques
 
 	return r0, r1
 }
+
+// mustEmbedUnimplementedWaypointServer provides a mock function with given fields:
+func (_m *WaypointServer) mustEmbedUnimplementedWaypointServer() {
+	_m.Called()
+}

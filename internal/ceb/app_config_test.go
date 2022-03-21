@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/stretchr/testify/require"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	sdkpb "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"

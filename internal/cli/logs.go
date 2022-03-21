@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -63,7 +62,7 @@ func (c *LogsCommand) Run(args []string) int {
 				// We use this format rather than regular RFC3339Nano because we use .0
 				// instead of .9, which preserves the spacing so the output is always
 				// lined up
-				tsRaw, _ := ptypes.Timestamp(event.Timestamp)
+				tsRaw := event.Timestamp.AsTime()
 				ts := tsRaw.Format("2006-01-02T15:04:05.000Z07:00")
 				short := batch.InstanceId
 				if len(short) > 6 {

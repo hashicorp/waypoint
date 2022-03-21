@@ -4293,7 +4293,7 @@
       "type": "object",
       "properties": {
         "artifact": {
-          "$ref": "#/definitions/google.protobuf.Any",
+          "$ref": "#/definitions/opaqueany.Any",
           "description": "artifact is the full artifact encoded directly from the component plugin.\nThe receiving end must have access to the component proto files to\nknow how to decode this."
         },
         "artifact_json": {
@@ -4719,7 +4719,7 @@
           "description": "The platform on which the resource should exist, i.e. docker, gcp, k8s, etc."
         },
         "state": {
-          "$ref": "#/definitions/google.protobuf.Any",
+          "$ref": "#/definitions/opaqueany.Any",
           "description": "Internal ResourceManager representation of the resource."
         },
         "state_json": {
@@ -4800,7 +4800,7 @@
           "description": "ID of the PushedArtifact that was deployed."
         },
         "deployment": {
-          "$ref": "#/definitions/google.protobuf.Any",
+          "$ref": "#/definitions/opaqueany.Any",
           "description": "deployment is the full raw deployment object encoded directly from\nthe plugin. The client must have all the plugins setup to properly\ndecode this."
         },
         "deployment_json": {
@@ -6468,7 +6468,7 @@
       "type": "object",
       "properties": {
         "state": {
-          "$ref": "#/definitions/google.protobuf.Any",
+          "$ref": "#/definitions/opaqueany.Any",
           "description": "The state of the create task, used to identify it later."
         }
       }
@@ -6515,7 +6515,7 @@
           "description": "Params is needed to spawn the plugin so we can send it the stop."
         },
         "direct": {
-          "$ref": "#/definitions/google.protobuf.Any",
+          "$ref": "#/definitions/opaqueany.Any",
           "description": "The state can be directly provided."
         },
         "start_job_id": {
@@ -7302,7 +7302,7 @@
           "description": "component managing the release process."
         },
         "release": {
-          "$ref": "#/definitions/google.protobuf.Any",
+          "$ref": "#/definitions/opaqueany.Any",
           "description": "release is the raw release object encoded directly from the plugin."
         },
         "release_json": {
@@ -7779,7 +7779,7 @@
           "description": "id is the unique ID for this status report."
         },
         "status_report": {
-          "$ref": "#/definitions/google.protobuf.Any",
+          "$ref": "#/definitions/opaqueany.Any",
           "title": "StatusReport is the raw SDK report object encoded directly from the plugin.\nThis message is a StatusReport proto that exists inside the SDK"
         },
         "status_report_json": {
@@ -8696,6 +8696,20 @@
             "$ref": "#/definitions/hashicorp.waypoint.Workspace.Application"
           },
           "description": "The list of applications that have executed at least one operation\nwithin the context of this workspace. To determine which operations\nyou must call the respect list API for that operation, such as\nListDeployments."
+        }
+      }
+    },
+    "opaqueany.Any": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       }
     }

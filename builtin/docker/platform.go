@@ -2,8 +2,8 @@ package docker
 
 import (
 	"context"
-	"encoding/json"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -718,7 +718,7 @@ func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.U
 	s.Update("Pulling Docker Image " + in)
 
 	var authBase64 = ""
-    //Check if auth configuration is not null
+	//Check if auth configuration is not null
 	if (*p.config.Auth != Auth{}) {
 		auth := types.AuthConfig{
 			Username:      authConfig.Username,
@@ -951,14 +951,14 @@ deploy {
 	doc.SetField(
 		"auth",
 		"the authentication information to log into the docker repository",
-        docs.SubFields(func(d *docs.SubFieldDoc) {
-            d.SetField("hostname", "Hostname of Docker registry")
-            d.SetField("username", "Username of Docker registry account")
-            d.SetField("password", "Password of Docker registry account")
-            d.SetField("serverAddress", "Address of Docker registry")
-            d.SetField("identityToken", "Token used to authenticate user")
-            d.SetField("registryToken", "Bearer tokens to be sent to Docker registry")
-        }),
+		docs.SubFields(func(d *docs.SubFieldDoc) {
+			d.SetField("hostname", "Hostname of Docker registry")
+			d.SetField("username", "Username of Docker registry account")
+			d.SetField("password", "Password of Docker registry account")
+			d.SetField("serverAddress", "Address of Docker registry")
+			d.SetField("identityToken", "Token used to authenticate user")
+			d.SetField("registryToken", "Bearer tokens to be sent to Docker registry")
+		}),
 	)
 
 	doc.SetField(

@@ -5,9 +5,8 @@ import (
 	"strings"
 
 	"github.com/dustin/go-humanize"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -45,16 +44,17 @@ func (c *RunnerListCommand) Run(args []string) int {
 	}
 
 	if c.flagJson {
-		var m jsonpb.Marshaler
-		m.Indent = "\t"
+		m := protojson.MarshalOptions{
+			Indent: "\t",
+		}
 		for _, t := range resp.Runners {
-			str, err := m.MarshalToString(t)
+			data, err := m.Marshal(t)
 			if err != nil {
 				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 				return 1
 			}
 
-			fmt.Println(str)
+			fmt.Println(string(data))
 		}
 		return 0
 	}
@@ -78,8 +78,8 @@ func (c *RunnerListCommand) Run(args []string) int {
 			kindStr = "unknown"
 		}
 
-		if v, err := ptypes.Timestamp(r.LastSeen); err == nil {
-			lastSeenStr = humanize.Time(v)
+		if r.LastSeen != nil {
+			lastSeenStr = humanize.Time(r.LastSeen.AsTime())
 		}
 
 		stateStr = strings.ToLower(r.AdoptionState.String())

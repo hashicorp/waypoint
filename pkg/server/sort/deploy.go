@@ -3,8 +3,6 @@ package sort
 import (
 	"sort"
 
-	"github.com/golang/protobuf/ptypes"
-
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -14,15 +12,8 @@ type DeploymentStartDesc []*pb.Deployment
 func (s DeploymentStartDesc) Len() int      { return len(s) }
 func (s DeploymentStartDesc) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s DeploymentStartDesc) Less(i, j int) bool {
-	t1, err := ptypes.Timestamp(s[i].Status.StartTime)
-	if err != nil {
-		return false
-	}
-
-	t2, err := ptypes.Timestamp(s[j].Status.StartTime)
-	if err != nil {
-		return false
-	}
+	t1 := s[i].Status.StartTime.AsTime()
+	t2 := s[j].Status.StartTime.AsTime()
 
 	return t2.Before(t1)
 }
@@ -33,15 +24,8 @@ type DeploymentCompleteDesc []*pb.Deployment
 func (s DeploymentCompleteDesc) Len() int      { return len(s) }
 func (s DeploymentCompleteDesc) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s DeploymentCompleteDesc) Less(i, j int) bool {
-	t1, err := ptypes.Timestamp(s[i].Status.CompleteTime)
-	if err != nil {
-		return false
-	}
-
-	t2, err := ptypes.Timestamp(s[j].Status.CompleteTime)
-	if err != nil {
-		return false
-	}
+	t1 := s[i].Status.CompleteTime.AsTime()
+	t2 := s[j].Status.CompleteTime.AsTime()
 
 	return t2.Before(t1)
 }
@@ -52,15 +36,8 @@ type DeploymentBundleStartDesc []*pb.UI_DeploymentBundle
 func (s DeploymentBundleStartDesc) Len() int      { return len(s) }
 func (s DeploymentBundleStartDesc) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s DeploymentBundleStartDesc) Less(i, j int) bool {
-	t1, err := ptypes.Timestamp(s[i].Deployment.Status.StartTime)
-	if err != nil {
-		return false
-	}
-
-	t2, err := ptypes.Timestamp(s[j].Deployment.Status.StartTime)
-	if err != nil {
-		return false
-	}
+	t1 := s[i].Deployment.Status.StartTime.AsTime()
+	t2 := s[j].Deployment.Status.StartTime.AsTime()
 
 	return t2.Before(t1)
 }
@@ -71,15 +48,8 @@ type DeploymentBundleCompleteDesc []*pb.UI_DeploymentBundle
 func (s DeploymentBundleCompleteDesc) Len() int      { return len(s) }
 func (s DeploymentBundleCompleteDesc) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s DeploymentBundleCompleteDesc) Less(i, j int) bool {
-	t1, err := ptypes.Timestamp(s[i].Deployment.Status.CompleteTime)
-	if err != nil {
-		return false
-	}
-
-	t2, err := ptypes.Timestamp(s[j].Deployment.Status.CompleteTime)
-	if err != nil {
-		return false
-	}
+	t1 := s[i].Deployment.Status.CompleteTime.AsTime()
+	t2 := s[j].Deployment.Status.CompleteTime.AsTime()
 
 	return t2.Before(t1)
 }

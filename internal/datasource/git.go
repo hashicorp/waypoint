@@ -17,8 +17,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/go-git/go-git/v5/storage/memory"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -26,6 +24,7 @@ import (
 	cryptossh "golang.org/x/crypto/ssh"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -250,14 +249,9 @@ func (s *GitSource) Get(
 		return "", nil, nil, status.Errorf(codes.Aborted,
 			"Failed to inspect commit information: %s", err)
 	}
-	var commitTs *timestamp.Timestamp
+	var commitTs *timestamppb.Timestamp
 	if v := commit.Author.When; !v.IsZero() {
-		commitTs, err = ptypes.TimestampProto(v)
-		if err != nil {
-			closer()
-			return "", nil, nil, status.Errorf(codes.Aborted,
-				"Failed to inspect commit information: %s", err)
-		}
+		commitTs = timestamppb.New(v)
 	}
 
 	// If we have a path, set it.

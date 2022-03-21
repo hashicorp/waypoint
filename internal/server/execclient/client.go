@@ -11,11 +11,11 @@ import (
 	"sync"
 
 	"github.com/containerd/console"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/empty"
+	grpc_net_conn "github.com/hashicorp/go-grpc-net-conn"
 	"github.com/hashicorp/go-hclog"
-	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
 	sshterm "golang.org/x/crypto/ssh/terminal"
+	"google.golang.org/protobuf/proto"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"

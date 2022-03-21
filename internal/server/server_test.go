@@ -30,12 +30,18 @@ func TestComponentEnum(t *testing.T) {
 	}
 }
 
+type mockServer struct {
+	pbmocks.WaypointServer
+
+	pb.UnsafeWaypointServer
+}
+
 func TestRun_reconnect(t *testing.T) {
 	require := require.New(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	m := &pbmocks.WaypointServer{}
+	m := &mockServer{}
 	m.On("BootstrapToken", mock.Anything, mock.Anything).Return(&pb.NewTokenResponse{Token: "hello"}, nil)
 	m.On("GetVersionInfo", mock.Anything, mock.Anything).Return(serverpkg.TestVersionInfoResponse(), nil)
 	m.On("GetWorkspace", mock.Anything, mock.Anything).Return(&pb.GetWorkspaceResponse{}, nil)

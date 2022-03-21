@@ -4,16 +4,16 @@ import (
 	"context"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/opaqueany"
 	"github.com/mitchellh/mapstructure"
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
@@ -398,7 +398,7 @@ func (op *deployOperation) StatusPtr(msg proto.Message) **pb.Status {
 	return &(msg.(*pb.Deployment).Status)
 }
 
-func (op *deployOperation) ValuePtr(msg proto.Message) (**any.Any, *string) {
+func (op *deployOperation) ValuePtr(msg proto.Message) (**opaqueany.Any, *string) {
 	return &(msg.(*pb.Deployment).Deployment), &(msg.(*pb.Deployment).DeploymentJson)
 }
 

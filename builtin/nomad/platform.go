@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 )
@@ -368,7 +368,7 @@ func (p *Platform) Status(
 		result.HealthMessage = *job.StatusDescription
 	}
 
-	result.GeneratedTime = ptypes.TimestampNow()
+	result.GeneratedTime = timestamppb.Now()
 
 	s.Update("Finished building report for Nomad platform")
 	s.Done()

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -196,11 +195,12 @@ func (c *DeploymentListCommand) Run(args []string) int {
 
 			// Parse our times
 			var startTime, completeTime string
-			if t, err := ptypes.Timestamp(b.Status.StartTime); err == nil {
-				startTime = humanize.Time(t)
+			if b.Status.StartTime != nil {
+				startTime = humanize.Time(b.Status.StartTime.AsTime())
 			}
-			if t, err := ptypes.Timestamp(b.Status.CompleteTime); err == nil {
-				completeTime = humanize.Time(t)
+
+			if b.Status.CompleteTime != nil {
+				completeTime = humanize.Time(b.Status.CompleteTime.AsTime())
 			}
 
 			// Add status report information if we have any
@@ -220,7 +220,8 @@ func (c *DeploymentListCommand) Run(args []string) int {
 					statusReportComplete = "?"
 				}
 
-				if t, err := ptypes.Timestamp(statusReport.GeneratedTime); err == nil {
+				if statusReport.GeneratedTime != nil {
+					t := statusReport.GeneratedTime.AsTime()
 					statusReportComplete = fmt.Sprintf("%s - %s", statusReportComplete, humanize.Time(t))
 				}
 			}

@@ -5,10 +5,10 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"

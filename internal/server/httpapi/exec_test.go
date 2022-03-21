@@ -80,6 +80,7 @@ func testServer(t *testing.T, impl pb.WaypointServer) string {
 type execImpl struct {
 	sync.Mutex
 	mocks.WaypointServer
+	pb.UnsafeWaypointServer
 
 	// Send is the list of responses to send
 	Send []*pb.ExecStreamResponse

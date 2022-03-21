@@ -4,12 +4,12 @@ import (
 	"context"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/opaqueany"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
@@ -178,7 +178,7 @@ func (op *pushBuildOperation) StatusPtr(msg proto.Message) **pb.Status {
 	return &(msg.(*pb.PushedArtifact).Status)
 }
 
-func (op *pushBuildOperation) ValuePtr(msg proto.Message) (**any.Any, *string) {
+func (op *pushBuildOperation) ValuePtr(msg proto.Message) (**opaqueany.Any, *string) {
 	v := msg.(*pb.PushedArtifact)
 	if v.Artifact == nil {
 		v.Artifact = &pb.Artifact{}

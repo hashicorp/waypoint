@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/posener/complete"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"

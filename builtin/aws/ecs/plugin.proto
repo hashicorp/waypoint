@@ -4,7 +4,7 @@ package ecs;
 
 option go_package = "waypoint/builtin/aws/ecs";
 
-import "google/protobuf/any.proto";
+import "opaqueany/any.proto";
 
 message Deployment {
   string url = 1;
@@ -13,7 +13,7 @@ message Deployment {
   string target_group_arn = 4;
   string load_balancer_arn = 5;
   string cluster = 6;
-  google.protobuf.Any resource_state = 7;
+  opaqueany.Any resource_state = 7;
 }
 
 message Release {

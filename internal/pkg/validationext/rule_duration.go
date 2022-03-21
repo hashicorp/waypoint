@@ -5,8 +5,7 @@ import (
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/golang/protobuf/ptypes"
-	durationpb "github.com/golang/protobuf/ptypes/duration"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 var (
@@ -36,11 +35,7 @@ func (r *isDurationRule) duration(value interface{}) (time.Duration, error) {
 		if v == nil {
 			return 0, nil
 		}
-		d, err := ptypes.Duration(v)
-		if err != nil {
-			return 0, fmt.Errorf("must be a valid duration: %s", err)
-		}
-		return d, nil
+		return v.AsDuration(), nil
 	case string:
 		// Support non-required duration.
 		if v == "" {

@@ -3,7 +3,7 @@ package cli
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"

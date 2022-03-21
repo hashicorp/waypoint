@@ -8,14 +8,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-memdb"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
@@ -674,21 +673,11 @@ func (op *appOperation) indexPut(
 		statusVal := statusRaw.(*pb.Status)
 		if statusVal != nil {
 			if t := statusVal.StartTime; t != nil {
-				st, err := ptypes.Timestamp(t)
-				if err != nil {
-					return nil, status.Errorf(codes.Internal, "time for build can't be parsed")
-				}
-
-				startTime = st
+				startTime = t.AsTime()
 			}
 
 			if t := statusVal.CompleteTime; t != nil {
-				ct, err := ptypes.Timestamp(statusVal.CompleteTime)
-				if err != nil {
-					return nil, status.Errorf(codes.Internal, "time for build can't be parsed")
-				}
-
-				completeTime = ct
+				completeTime = statusVal.CompleteTime.AsTime()
 			}
 		}
 	}

@@ -8,14 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hashicorp/go-memdb"
 	"github.com/mitchellh/copystructure"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/hashicorp/waypoint/internal/pkg/graph"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -542,12 +541,8 @@ RETRY_ASSIGN:
 		job.State = pb.Job_WAITING
 		result, err := s.jobReadAndUpdate(txn, job.Id, func(jobpb *pb.Job) error {
 			jobpb.State = job.State
-			jobpb.AssignTime, err = ptypes.TimestampProto(time.Now())
+			jobpb.AssignTime = timestamppb.Now()
 			jobpb.AssignedRunner = &pb.Ref_RunnerId{Id: r.Id}
-			if err != nil {
-				// This should never happen since encoding a time now should be safe
-				panic("time encoding failed: " + err.Error())
-			}
 
 			return nil
 		})
@@ -612,11 +607,7 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 			// Set to accepted
 			job.State = pb.Job_RUNNING
 			jobpb.State = job.State
-			jobpb.AckTime, err = ptypes.TimestampProto(time.Now())
-			if err != nil {
-				// This should never happen since encoding a time now should be safe
-				panic("time encoding failed: " + err.Error())
-			}
+			jobpb.AckTime = timestamppb.Now()
 
 			// We also initialize the output buffer here because we can
 			// expect output to begin streaming in.
@@ -752,11 +743,7 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 		job.State = pb.Job_SUCCESS
 		jobpb.State = job.State
 		jobpb.Result = result
-		jobpb.CompleteTime, err = ptypes.TimestampProto(time.Now())
-		if err != nil {
-			// This should never happen since encoding a time now should be safe
-			panic("time encoding failed: " + err.Error())
-		}
+		jobpb.CompleteTime = timestamppb.Now()
 
 		if cerr != nil {
 			job.State = pb.Job_ERROR
@@ -847,13 +834,8 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 
 	// Persist the on-disk data
 	_, err := s.jobReadAndUpdate(txn, job.Id, func(jobpb *pb.Job) error {
-		var err error
 		jobpb.State = job.State
-		jobpb.CancelTime, err = ptypes.TimestampProto(time.Now())
-		if err != nil {
-			// This should never happen since encoding a time now should be safe
-			panic("time encoding failed: " + err.Error())
-		}
+		jobpb.CancelTime = timestamppb.Now()
 
 		// If we transitioned to the error state we note that we were force
 		// cancelled. We can only be in the error state under that scenario
@@ -1086,17 +1068,12 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex
 	// Timestamps
 	timestamps := []struct {
 		Field *time.Time
-		Src   *timestamp.Timestamp
+		Src   *timestamppb.Timestamp
 	}{
 		{&rec.QueueTime, jobpb.QueueTime},
 	}
 	for _, ts := range timestamps {
-		t, err := ptypes.Timestamp(ts.Src)
-		if err != nil {
-			return nil, err
-		}
-
-		*ts.Field = t
+		*ts.Field = ts.Src.AsTime()
 	}
 
 	// If this job is assigned. Then we have to start a nacking timer.
@@ -1121,10 +1098,7 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex
 	if jobpb.ExpireTime != nil {
 		now := time.Now()
 
-		t, err := ptypes.Timestamp(jobpb.ExpireTime)
-		if err != nil {
-			return nil, err
-		}
+		t := jobpb.ExpireTime.AsTime()
 
 		dur := t.Sub(now)
 		if dur < 0 {
@@ -1142,10 +1116,7 @@ func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) erro
 	// Setup our initial job state
 	var err error
 	jobpb.State = pb.Job_QUEUED
-	jobpb.QueueTime, err = ptypes.TimestampProto(time.Now())
-	if err != nil {
-		return err
-	}
+	jobpb.QueueTime = timestamppb.Now()
 
 	id := []byte(jobpb.Id)
 	bucket := dbTxn.Bucket(jobBucket)

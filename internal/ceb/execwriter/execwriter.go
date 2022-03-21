@@ -6,9 +6,9 @@ package execwriter
 import (
 	"io"
 
-	"github.com/golang/protobuf/proto"
-	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
+	grpc_net_conn "github.com/hashicorp/go-grpc-net-conn"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )

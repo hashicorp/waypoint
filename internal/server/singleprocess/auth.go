@@ -9,16 +9,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/mr-tron/base58"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/blake2b"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+	empty "google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -548,12 +547,12 @@ func (s *service) newToken(
 	metadata map[string]string,
 	body *pb.Token,
 ) (string, error) {
-	body.IssuedTime = ptypes.TimestampNow()
+	body.IssuedTime = timestamppb.Now()
 
 	// If this token expires at some point, set an expiry
 	if duration > 0 {
 		now := time.Now().UTC().Add(duration)
-		body.ValidUntil = &timestamp.Timestamp{
+		body.ValidUntil = &timestamppb.Timestamp{
 			Seconds: now.Unix(),
 			Nanos:   int32(now.Nanosecond()),
 		}

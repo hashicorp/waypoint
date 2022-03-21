@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/cap/oidc"
 	"github.com/hashicorp/go-bexpr"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	wpoidc "github.com/hashicorp/waypoint/pkg/auth/oidc"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
