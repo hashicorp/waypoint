@@ -25,6 +25,7 @@ import (
 // This client is tested via the accept tests testing server down behavior.
 type reattachClient struct {
 	// Set these
+	ctx    context.Context
 	client pb.Waypoint_RunnerJobStreamClient
 	log    hclog.Logger
 	runner *Runner
@@ -184,9 +185,8 @@ func (c *reattachClient) do(f func(client pb.Waypoint_RunnerJobStreamClient) err
 		stateGen = r.readState(&r.stateConfig)
 
 		log.Info("opening job stream")
-		client, err = r.client.RunnerJobStream(context.Background(), grpc.WaitForReady(true))
+		client, err = r.client.RunnerJobStream(c.ctx, grpc.WaitForReady(true))
 		if err != nil {
-			log.Warn("ERROR", "ERROR", err)
 			if status.Code(err) == codes.Unavailable ||
 				status.Code(err) == codes.NotFound {
 				goto RETRY_RECONNECT

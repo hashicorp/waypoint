@@ -341,17 +341,21 @@ RESTART_JOB_STREAM:
 		return err
 	}
 
-	// Create a cancelable context so we can stop if job is canceled
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
 	// Now that we've acked the job, we can create the re-attachable client.
+	// Note: we use this context and not the new one below so that we
+	// continue to reconnect even if our job is done since we need to still
+	// send job complete messages.
 	client = &reattachClient{
+		ctx:    ctx,
 		client: client,
 		log:    log.Named("job_stream").With("job_id", jobId),
 		runner: r,
 		jobId:  jobId,
 	}
+
+	// Create a cancelable context so we can stop if job is canceled
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	// We need a mutex to protect against simultaneous sends to the client.
 	var sendMutex sync.Mutex
