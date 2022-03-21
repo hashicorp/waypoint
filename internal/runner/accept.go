@@ -10,11 +10,10 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/pkg/errors"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/serverclient"
@@ -262,8 +261,9 @@ RESTART_JOB_STREAM:
 			"expected job assignment, server sent %T",
 			resp.Event)
 	}
+	jobId := assignment.Assignment.Job.Id
 	log = log.With(
-		"job_id", assignment.Assignment.Job.Id,
+		"job_id", jobId,
 		"job_op", fmt.Sprintf("%T", assignment.Assignment.Job.Operation),
 	)
 	log.Info("job assignment received")
@@ -294,12 +294,12 @@ RESTART_JOB_STREAM:
 	}()
 
 	if shutdown {
-		return errors.Wrapf(ErrClosed, "runner shutdown, dropped job: %s", assignment.Assignment.Job.Id)
+		return errors.Wrapf(ErrClosed, "runner shutdown, dropped job: %s", jobId)
 	}
 
 	// If this isn't the job we expected then we nack and error.
 	if id != "" {
-		if assignment.Assignment.Job.Id != id {
+		if jobId != id {
 			log.Warn("unexpected job id for exact match, nacking")
 			if err := client.Send(&pb.RunnerJobStreamRequest{
 				Event: &pb.RunnerJobStreamRequest_Error_{
@@ -342,11 +342,17 @@ RESTART_JOB_STREAM:
 		return err
 	}
 
-	// TODO: do we setup the reattach client here? now?
-
 	// Create a cancelable context so we can stop if job is canceled
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
+	// Now that we've acked the job, we can create the re-attachable client.
+	client = &reattachClient{
+		client: client,
+		log:    log.Named("job_stream").With("job_id", jobId),
+		runner: r,
+		jobId:  jobId,
+	}
 
 	// We need a mutex to protect against simultaneous sends to the client.
 	var sendMutex sync.Mutex
