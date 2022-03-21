@@ -21,6 +21,8 @@ import (
 //
 // This maintains the same concurrency requirements as a normal gRPC
 // stream client. See the gRPC docs for specific details.
+//
+// This client is tested via the accept tests testing server down behavior.
 type reattachClient struct {
 	// Set these
 	client pb.Waypoint_RunnerJobStreamClient
