@@ -85,12 +85,14 @@ if you've made API changes in `/internal/server` and want to use those on the fr
 
 - MacOS only: `brew install gnu-sed` then follow the instructions to replace the default `sed`
 - Download [the 1.1.2 release of `mockery`](https://github.com/vektra/mockery/releases/tag/v1.1.2) and install in your `/go/bin` directory
-- install `ts-protoc-gen`: `yarn global add ts-protoc-gen` or `npm i -g ts-protoc-gen`
-- install `protoc-gen-grpc-web`: `brew install protoc-gen-grpc-web`
+- Install [`protoc` 3.17.3](https://github.com/protocolbuffers/protobuf/releases/tag/v3.17.3)
+- Install `ts-protoc-gen`: `yarn global add ts-protoc-gen` or `npm i -g ts-protoc-gen`
+- Install `protoc-gen-grpc-web`: `brew install protoc-gen-grpc-web`
 
 #### Generate the API definitions
 
-- `go generate ./internal/server`
+- `make docker/tools`
+- `make docker/gen/server`
 - `make gen/ts`
 
 ### Code Generators
@@ -144,4 +146,3 @@ Specify what it takes to deploy your app.
 - Development Browser Extensions
   - [ember inspector for chrome](https://chrome.google.com/webstore/detail/ember-inspector/bmdblncegkenkacieihfhpjfppoconhi)
   - [ember inspector for firefox](https://addons.mozilla.org/en-US/firefox/addon/ember-inspector/)
-
