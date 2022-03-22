@@ -273,8 +273,6 @@ type WaypointClient interface {
 	UpsertTask(ctx context.Context, in *UpsertTaskRequest, opts ...grpc.CallOption) (*UpsertTaskResponse, error)
 	// GetTask returns a requested Task message. Or an error if it does not exist.
 	GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*GetTaskResponse, error)
-	// DeleteTask takes a Task id and deletes it, if it exists.
-	DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// ListTask will return a list of all existing Tasks
 	ListTask(ctx context.Context, in *ListTaskRequest, opts ...grpc.CallOption) (*ListTaskResponse, error)
 	// UpsertTrigger updates or inserts a trigger URL configuration.
@@ -1290,15 +1288,6 @@ func (c *waypointClient) GetTask(ctx context.Context, in *GetTaskRequest, opts .
 	return out, nil
 }
 
-func (c *waypointClient) DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteTask", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *waypointClient) ListTask(ctx context.Context, in *ListTaskRequest, opts ...grpc.CallOption) (*ListTaskResponse, error) {
 	out := new(ListTaskResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListTask", in, out, opts...)
@@ -1634,8 +1623,6 @@ type WaypointServer interface {
 	UpsertTask(context.Context, *UpsertTaskRequest) (*UpsertTaskResponse, error)
 	// GetTask returns a requested Task message. Or an error if it does not exist.
 	GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error)
-	// DeleteTask takes a Task id and deletes it, if it exists.
-	DeleteTask(context.Context, *DeleteTaskRequest) (*emptypb.Empty, error)
 	// ListTask will return a list of all existing Tasks
 	ListTask(context.Context, *ListTaskRequest) (*ListTaskResponse, error)
 	// UpsertTrigger updates or inserts a trigger URL configuration.
@@ -1913,9 +1900,6 @@ func (UnimplementedWaypointServer) UpsertTask(context.Context, *UpsertTaskReques
 }
 func (UnimplementedWaypointServer) GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTask not implemented")
-}
-func (UnimplementedWaypointServer) DeleteTask(context.Context, *DeleteTaskRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteTask not implemented")
 }
 func (UnimplementedWaypointServer) ListTask(context.Context, *ListTaskRequest) (*ListTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTask not implemented")
@@ -3529,24 +3513,6 @@ func _Waypoint_GetTask_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Waypoint_DeleteTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteTaskRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).DeleteTask(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteTask",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).DeleteTask(ctx, req.(*DeleteTaskRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Waypoint_ListTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTaskRequest)
 	if err := dec(in); err != nil {
@@ -4011,10 +3977,6 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTask",
 			Handler:    _Waypoint_GetTask_Handler,
-		},
-		{
-			MethodName: "DeleteTask",
-			Handler:    _Waypoint_DeleteTask_Handler,
 		},
 		{
 			MethodName: "ListTask",
