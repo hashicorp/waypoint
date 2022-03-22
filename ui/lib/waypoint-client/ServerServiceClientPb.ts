@@ -14,7 +14,7 @@
 import * as grpcWeb from 'grpc-web';
 
 import * as google_protobuf_empty_pb from 'google-protobuf/google/protobuf/empty_pb';
-import * as internal_server_proto_server_pb from 'waypoint-pb';
+import * as pkg_server_proto_server_pb from 'waypoint-pb';
 
 
 export class WaypointClient {
@@ -36,36 +36,39 @@ export class WaypointClient {
     this.options_ = options;
   }
 
-  methodInfoGetVersionInfo = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.GetVersionInfoResponse,
+  methodDescriptorGetVersionInfo = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetVersionInfo',
+    grpcWeb.MethodType.UNARY,
+    google_protobuf_empty_pb.Empty,
+    pkg_server_proto_server_pb.GetVersionInfoResponse,
     (request: google_protobuf_empty_pb.Empty) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.GetVersionInfoResponse.deserializeBinary
+    pkg_server_proto_server_pb.GetVersionInfoResponse.deserializeBinary
   );
 
   getVersionInfo(
     request: google_protobuf_empty_pb.Empty,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.GetVersionInfoResponse>;
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetVersionInfoResponse>;
 
   getVersionInfo(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetVersionInfoResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.GetVersionInfoResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetVersionInfoResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetVersionInfoResponse>;
 
   getVersionInfo(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetVersionInfoResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetVersionInfoResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetVersionInfo',
         request,
         metadata || {},
-        this.methodInfoGetVersionInfo,
+        this.methodDescriptorGetVersionInfo,
         callback);
     }
     return this.client_.unaryCall(
@@ -73,39 +76,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetVersionInfo',
     request,
     metadata || {},
-    this.methodInfoGetVersionInfo);
+    this.methodDescriptorGetVersionInfo);
   }
 
-  methodInfoListOIDCAuthMethods = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListOIDCAuthMethodsResponse,
+  methodDescriptorListOIDCAuthMethods = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListOIDCAuthMethods',
+    grpcWeb.MethodType.UNARY,
+    google_protobuf_empty_pb.Empty,
+    pkg_server_proto_server_pb.ListOIDCAuthMethodsResponse,
     (request: google_protobuf_empty_pb.Empty) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListOIDCAuthMethodsResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListOIDCAuthMethodsResponse.deserializeBinary
   );
 
   listOIDCAuthMethods(
     request: google_protobuf_empty_pb.Empty,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListOIDCAuthMethodsResponse>;
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListOIDCAuthMethodsResponse>;
 
   listOIDCAuthMethods(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListOIDCAuthMethodsResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListOIDCAuthMethodsResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListOIDCAuthMethodsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListOIDCAuthMethodsResponse>;
 
   listOIDCAuthMethods(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListOIDCAuthMethodsResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListOIDCAuthMethodsResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListOIDCAuthMethods',
         request,
         metadata || {},
-        this.methodInfoListOIDCAuthMethods,
+        this.methodDescriptorListOIDCAuthMethods,
         callback);
     }
     return this.client_.unaryCall(
@@ -113,39 +119,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListOIDCAuthMethods',
     request,
     metadata || {},
-    this.methodInfoListOIDCAuthMethods);
+    this.methodDescriptorListOIDCAuthMethods);
   }
 
-  methodInfoGetOIDCAuthURL = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.GetOIDCAuthURLResponse,
-    (request: internal_server_proto_server_pb.GetOIDCAuthURLRequest) => {
+  methodDescriptorGetOIDCAuthURL = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetOIDCAuthURL',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetOIDCAuthURLRequest,
+    pkg_server_proto_server_pb.GetOIDCAuthURLResponse,
+    (request: pkg_server_proto_server_pb.GetOIDCAuthURLRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.GetOIDCAuthURLResponse.deserializeBinary
+    pkg_server_proto_server_pb.GetOIDCAuthURLResponse.deserializeBinary
   );
 
   getOIDCAuthURL(
-    request: internal_server_proto_server_pb.GetOIDCAuthURLRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.GetOIDCAuthURLResponse>;
+    request: pkg_server_proto_server_pb.GetOIDCAuthURLRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetOIDCAuthURLResponse>;
 
   getOIDCAuthURL(
-    request: internal_server_proto_server_pb.GetOIDCAuthURLRequest,
+    request: pkg_server_proto_server_pb.GetOIDCAuthURLRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetOIDCAuthURLResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.GetOIDCAuthURLResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetOIDCAuthURLResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetOIDCAuthURLResponse>;
 
   getOIDCAuthURL(
-    request: internal_server_proto_server_pb.GetOIDCAuthURLRequest,
+    request: pkg_server_proto_server_pb.GetOIDCAuthURLRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetOIDCAuthURLResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetOIDCAuthURLResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetOIDCAuthURL',
         request,
         metadata || {},
-        this.methodInfoGetOIDCAuthURL,
+        this.methodDescriptorGetOIDCAuthURL,
         callback);
     }
     return this.client_.unaryCall(
@@ -153,39 +162,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetOIDCAuthURL',
     request,
     metadata || {},
-    this.methodInfoGetOIDCAuthURL);
+    this.methodDescriptorGetOIDCAuthURL);
   }
 
-  methodInfoCompleteOIDCAuth = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.CompleteOIDCAuthResponse,
-    (request: internal_server_proto_server_pb.CompleteOIDCAuthRequest) => {
+  methodDescriptorCompleteOIDCAuth = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/CompleteOIDCAuth',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.CompleteOIDCAuthRequest,
+    pkg_server_proto_server_pb.CompleteOIDCAuthResponse,
+    (request: pkg_server_proto_server_pb.CompleteOIDCAuthRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.CompleteOIDCAuthResponse.deserializeBinary
+    pkg_server_proto_server_pb.CompleteOIDCAuthResponse.deserializeBinary
   );
 
   completeOIDCAuth(
-    request: internal_server_proto_server_pb.CompleteOIDCAuthRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.CompleteOIDCAuthResponse>;
+    request: pkg_server_proto_server_pb.CompleteOIDCAuthRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.CompleteOIDCAuthResponse>;
 
   completeOIDCAuth(
-    request: internal_server_proto_server_pb.CompleteOIDCAuthRequest,
+    request: pkg_server_proto_server_pb.CompleteOIDCAuthRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.CompleteOIDCAuthResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.CompleteOIDCAuthResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.CompleteOIDCAuthResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.CompleteOIDCAuthResponse>;
 
   completeOIDCAuth(
-    request: internal_server_proto_server_pb.CompleteOIDCAuthRequest,
+    request: pkg_server_proto_server_pb.CompleteOIDCAuthRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.CompleteOIDCAuthResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.CompleteOIDCAuthResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/CompleteOIDCAuth',
         request,
         metadata || {},
-        this.methodInfoCompleteOIDCAuth,
+        this.methodDescriptorCompleteOIDCAuth,
         callback);
     }
     return this.client_.unaryCall(
@@ -193,39 +205,85 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/CompleteOIDCAuth',
     request,
     metadata || {},
-    this.methodInfoCompleteOIDCAuth);
+    this.methodDescriptorCompleteOIDCAuth);
   }
 
-  methodInfoGetUser = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.GetUserResponse,
-    (request: internal_server_proto_server_pb.GetUserRequest) => {
+  methodDescriptorNoAuthRunTrigger = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/NoAuthRunTrigger',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.RunTriggerRequest,
+    pkg_server_proto_server_pb.RunTriggerResponse,
+    (request: pkg_server_proto_server_pb.RunTriggerRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.GetUserResponse.deserializeBinary
+    pkg_server_proto_server_pb.RunTriggerResponse.deserializeBinary
+  );
+
+  noAuthRunTrigger(
+    request: pkg_server_proto_server_pb.RunTriggerRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.RunTriggerResponse>;
+
+  noAuthRunTrigger(
+    request: pkg_server_proto_server_pb.RunTriggerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.RunTriggerResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.RunTriggerResponse>;
+
+  noAuthRunTrigger(
+    request: pkg_server_proto_server_pb.RunTriggerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.RunTriggerResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/NoAuthRunTrigger',
+        request,
+        metadata || {},
+        this.methodDescriptorNoAuthRunTrigger,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/NoAuthRunTrigger',
+    request,
+    metadata || {},
+    this.methodDescriptorNoAuthRunTrigger);
+  }
+
+  methodDescriptorGetUser = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetUser',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetUserRequest,
+    pkg_server_proto_server_pb.GetUserResponse,
+    (request: pkg_server_proto_server_pb.GetUserRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.GetUserResponse.deserializeBinary
   );
 
   getUser(
-    request: internal_server_proto_server_pb.GetUserRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.GetUserResponse>;
+    request: pkg_server_proto_server_pb.GetUserRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetUserResponse>;
 
   getUser(
-    request: internal_server_proto_server_pb.GetUserRequest,
+    request: pkg_server_proto_server_pb.GetUserRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetUserResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.GetUserResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetUserResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetUserResponse>;
 
   getUser(
-    request: internal_server_proto_server_pb.GetUserRequest,
+    request: pkg_server_proto_server_pb.GetUserRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetUserResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetUserResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetUser',
         request,
         metadata || {},
-        this.methodInfoGetUser,
+        this.methodDescriptorGetUser,
         callback);
     }
     return this.client_.unaryCall(
@@ -233,39 +291,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetUser',
     request,
     metadata || {},
-    this.methodInfoGetUser);
+    this.methodDescriptorGetUser);
   }
 
-  methodInfoListUsers = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListUsersResponse,
+  methodDescriptorListUsers = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListUsers',
+    grpcWeb.MethodType.UNARY,
+    google_protobuf_empty_pb.Empty,
+    pkg_server_proto_server_pb.ListUsersResponse,
     (request: google_protobuf_empty_pb.Empty) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListUsersResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListUsersResponse.deserializeBinary
   );
 
   listUsers(
     request: google_protobuf_empty_pb.Empty,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListUsersResponse>;
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListUsersResponse>;
 
   listUsers(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListUsersResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListUsersResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListUsersResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListUsersResponse>;
 
   listUsers(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListUsersResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListUsersResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListUsers',
         request,
         metadata || {},
-        this.methodInfoListUsers,
+        this.methodDescriptorListUsers,
         callback);
     }
     return this.client_.unaryCall(
@@ -273,39 +334,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListUsers',
     request,
     metadata || {},
-    this.methodInfoListUsers);
+    this.methodDescriptorListUsers);
   }
 
-  methodInfoUpdateUser = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.UpdateUserResponse,
-    (request: internal_server_proto_server_pb.UpdateUserRequest) => {
+  methodDescriptorUpdateUser = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UpdateUser',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UpdateUserRequest,
+    pkg_server_proto_server_pb.UpdateUserResponse,
+    (request: pkg_server_proto_server_pb.UpdateUserRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.UpdateUserResponse.deserializeBinary
+    pkg_server_proto_server_pb.UpdateUserResponse.deserializeBinary
   );
 
   updateUser(
-    request: internal_server_proto_server_pb.UpdateUserRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UpdateUserResponse>;
+    request: pkg_server_proto_server_pb.UpdateUserRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UpdateUserResponse>;
 
   updateUser(
-    request: internal_server_proto_server_pb.UpdateUserRequest,
+    request: pkg_server_proto_server_pb.UpdateUserRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpdateUserResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UpdateUserResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpdateUserResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UpdateUserResponse>;
 
   updateUser(
-    request: internal_server_proto_server_pb.UpdateUserRequest,
+    request: pkg_server_proto_server_pb.UpdateUserRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpdateUserResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpdateUserResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/UpdateUser',
         request,
         metadata || {},
-        this.methodInfoUpdateUser,
+        this.methodDescriptorUpdateUser,
         callback);
     }
     return this.client_.unaryCall(
@@ -313,31 +377,34 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/UpdateUser',
     request,
     metadata || {},
-    this.methodInfoUpdateUser);
+    this.methodDescriptorUpdateUser);
   }
 
-  methodInfoDeleteUser = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodDescriptorDeleteUser = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/DeleteUser',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.DeleteUserRequest,
     google_protobuf_empty_pb.Empty,
-    (request: internal_server_proto_server_pb.DeleteUserRequest) => {
+    (request: pkg_server_proto_server_pb.DeleteUserRequest) => {
       return request.serializeBinary();
     },
     google_protobuf_empty_pb.Empty.deserializeBinary
   );
 
   deleteUser(
-    request: internal_server_proto_server_pb.DeleteUserRequest,
+    request: pkg_server_proto_server_pb.DeleteUserRequest,
     metadata: grpcWeb.Metadata | null): Promise<google_protobuf_empty_pb.Empty>;
 
   deleteUser(
-    request: internal_server_proto_server_pb.DeleteUserRequest,
+    request: pkg_server_proto_server_pb.DeleteUserRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
+    callback: (err: grpcWeb.RpcError,
                response: google_protobuf_empty_pb.Empty) => void): grpcWeb.ClientReadableStream<google_protobuf_empty_pb.Empty>;
 
   deleteUser(
-    request: internal_server_proto_server_pb.DeleteUserRequest,
+    request: pkg_server_proto_server_pb.DeleteUserRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
+    callback?: (err: grpcWeb.RpcError,
                response: google_protobuf_empty_pb.Empty) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -345,7 +412,7 @@ export class WaypointClient {
           '/hashicorp.waypoint.Waypoint/DeleteUser',
         request,
         metadata || {},
-        this.methodInfoDeleteUser,
+        this.methodDescriptorDeleteUser,
         callback);
     }
     return this.client_.unaryCall(
@@ -353,39 +420,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/DeleteUser',
     request,
     metadata || {},
-    this.methodInfoDeleteUser);
+    this.methodDescriptorDeleteUser);
   }
 
-  methodInfoUpsertAuthMethod = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.UpsertAuthMethodResponse,
-    (request: internal_server_proto_server_pb.UpsertAuthMethodRequest) => {
+  methodDescriptorUpsertAuthMethod = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UpsertAuthMethod',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UpsertAuthMethodRequest,
+    pkg_server_proto_server_pb.UpsertAuthMethodResponse,
+    (request: pkg_server_proto_server_pb.UpsertAuthMethodRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.UpsertAuthMethodResponse.deserializeBinary
+    pkg_server_proto_server_pb.UpsertAuthMethodResponse.deserializeBinary
   );
 
   upsertAuthMethod(
-    request: internal_server_proto_server_pb.UpsertAuthMethodRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UpsertAuthMethodResponse>;
+    request: pkg_server_proto_server_pb.UpsertAuthMethodRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UpsertAuthMethodResponse>;
 
   upsertAuthMethod(
-    request: internal_server_proto_server_pb.UpsertAuthMethodRequest,
+    request: pkg_server_proto_server_pb.UpsertAuthMethodRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertAuthMethodResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UpsertAuthMethodResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertAuthMethodResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UpsertAuthMethodResponse>;
 
   upsertAuthMethod(
-    request: internal_server_proto_server_pb.UpsertAuthMethodRequest,
+    request: pkg_server_proto_server_pb.UpsertAuthMethodRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertAuthMethodResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertAuthMethodResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/UpsertAuthMethod',
         request,
         metadata || {},
-        this.methodInfoUpsertAuthMethod,
+        this.methodDescriptorUpsertAuthMethod,
         callback);
     }
     return this.client_.unaryCall(
@@ -393,39 +463,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/UpsertAuthMethod',
     request,
     metadata || {},
-    this.methodInfoUpsertAuthMethod);
+    this.methodDescriptorUpsertAuthMethod);
   }
 
-  methodInfoGetAuthMethod = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.GetAuthMethodResponse,
-    (request: internal_server_proto_server_pb.GetAuthMethodRequest) => {
+  methodDescriptorGetAuthMethod = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetAuthMethod',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetAuthMethodRequest,
+    pkg_server_proto_server_pb.GetAuthMethodResponse,
+    (request: pkg_server_proto_server_pb.GetAuthMethodRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.GetAuthMethodResponse.deserializeBinary
+    pkg_server_proto_server_pb.GetAuthMethodResponse.deserializeBinary
   );
 
   getAuthMethod(
-    request: internal_server_proto_server_pb.GetAuthMethodRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.GetAuthMethodResponse>;
+    request: pkg_server_proto_server_pb.GetAuthMethodRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetAuthMethodResponse>;
 
   getAuthMethod(
-    request: internal_server_proto_server_pb.GetAuthMethodRequest,
+    request: pkg_server_proto_server_pb.GetAuthMethodRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetAuthMethodResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.GetAuthMethodResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetAuthMethodResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetAuthMethodResponse>;
 
   getAuthMethod(
-    request: internal_server_proto_server_pb.GetAuthMethodRequest,
+    request: pkg_server_proto_server_pb.GetAuthMethodRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetAuthMethodResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetAuthMethodResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetAuthMethod',
         request,
         metadata || {},
-        this.methodInfoGetAuthMethod,
+        this.methodDescriptorGetAuthMethod,
         callback);
     }
     return this.client_.unaryCall(
@@ -433,39 +506,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetAuthMethod',
     request,
     metadata || {},
-    this.methodInfoGetAuthMethod);
+    this.methodDescriptorGetAuthMethod);
   }
 
-  methodInfoListAuthMethods = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListAuthMethodsResponse,
+  methodDescriptorListAuthMethods = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListAuthMethods',
+    grpcWeb.MethodType.UNARY,
+    google_protobuf_empty_pb.Empty,
+    pkg_server_proto_server_pb.ListAuthMethodsResponse,
     (request: google_protobuf_empty_pb.Empty) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListAuthMethodsResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListAuthMethodsResponse.deserializeBinary
   );
 
   listAuthMethods(
     request: google_protobuf_empty_pb.Empty,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListAuthMethodsResponse>;
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListAuthMethodsResponse>;
 
   listAuthMethods(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListAuthMethodsResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListAuthMethodsResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListAuthMethodsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListAuthMethodsResponse>;
 
   listAuthMethods(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListAuthMethodsResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListAuthMethodsResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListAuthMethods',
         request,
         metadata || {},
-        this.methodInfoListAuthMethods,
+        this.methodDescriptorListAuthMethods,
         callback);
     }
     return this.client_.unaryCall(
@@ -473,31 +549,34 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListAuthMethods',
     request,
     metadata || {},
-    this.methodInfoListAuthMethods);
+    this.methodDescriptorListAuthMethods);
   }
 
-  methodInfoDeleteAuthMethod = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodDescriptorDeleteAuthMethod = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/DeleteAuthMethod',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.DeleteAuthMethodRequest,
     google_protobuf_empty_pb.Empty,
-    (request: internal_server_proto_server_pb.DeleteAuthMethodRequest) => {
+    (request: pkg_server_proto_server_pb.DeleteAuthMethodRequest) => {
       return request.serializeBinary();
     },
     google_protobuf_empty_pb.Empty.deserializeBinary
   );
 
   deleteAuthMethod(
-    request: internal_server_proto_server_pb.DeleteAuthMethodRequest,
+    request: pkg_server_proto_server_pb.DeleteAuthMethodRequest,
     metadata: grpcWeb.Metadata | null): Promise<google_protobuf_empty_pb.Empty>;
 
   deleteAuthMethod(
-    request: internal_server_proto_server_pb.DeleteAuthMethodRequest,
+    request: pkg_server_proto_server_pb.DeleteAuthMethodRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
+    callback: (err: grpcWeb.RpcError,
                response: google_protobuf_empty_pb.Empty) => void): grpcWeb.ClientReadableStream<google_protobuf_empty_pb.Empty>;
 
   deleteAuthMethod(
-    request: internal_server_proto_server_pb.DeleteAuthMethodRequest,
+    request: pkg_server_proto_server_pb.DeleteAuthMethodRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
+    callback?: (err: grpcWeb.RpcError,
                response: google_protobuf_empty_pb.Empty) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -505,7 +584,7 @@ export class WaypointClient {
           '/hashicorp.waypoint.Waypoint/DeleteAuthMethod',
         request,
         metadata || {},
-        this.methodInfoDeleteAuthMethod,
+        this.methodDescriptorDeleteAuthMethod,
         callback);
     }
     return this.client_.unaryCall(
@@ -513,39 +592,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/DeleteAuthMethod',
     request,
     metadata || {},
-    this.methodInfoDeleteAuthMethod);
+    this.methodDescriptorDeleteAuthMethod);
   }
 
-  methodInfoListWorkspaces = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListWorkspacesResponse,
-    (request: internal_server_proto_server_pb.ListWorkspacesRequest) => {
+  methodDescriptorListWorkspaces = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListWorkspaces',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListWorkspacesRequest,
+    pkg_server_proto_server_pb.ListWorkspacesResponse,
+    (request: pkg_server_proto_server_pb.ListWorkspacesRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListWorkspacesResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListWorkspacesResponse.deserializeBinary
   );
 
   listWorkspaces(
-    request: internal_server_proto_server_pb.ListWorkspacesRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListWorkspacesResponse>;
+    request: pkg_server_proto_server_pb.ListWorkspacesRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListWorkspacesResponse>;
 
   listWorkspaces(
-    request: internal_server_proto_server_pb.ListWorkspacesRequest,
+    request: pkg_server_proto_server_pb.ListWorkspacesRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListWorkspacesResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListWorkspacesResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListWorkspacesResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListWorkspacesResponse>;
 
   listWorkspaces(
-    request: internal_server_proto_server_pb.ListWorkspacesRequest,
+    request: pkg_server_proto_server_pb.ListWorkspacesRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListWorkspacesResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListWorkspacesResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListWorkspaces',
         request,
         metadata || {},
-        this.methodInfoListWorkspaces,
+        this.methodDescriptorListWorkspaces,
         callback);
     }
     return this.client_.unaryCall(
@@ -553,39 +635,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListWorkspaces',
     request,
     metadata || {},
-    this.methodInfoListWorkspaces);
+    this.methodDescriptorListWorkspaces);
   }
 
-  methodInfoGetWorkspace = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.GetWorkspaceResponse,
-    (request: internal_server_proto_server_pb.GetWorkspaceRequest) => {
+  methodDescriptorGetWorkspace = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetWorkspace',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetWorkspaceRequest,
+    pkg_server_proto_server_pb.GetWorkspaceResponse,
+    (request: pkg_server_proto_server_pb.GetWorkspaceRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.GetWorkspaceResponse.deserializeBinary
+    pkg_server_proto_server_pb.GetWorkspaceResponse.deserializeBinary
   );
 
   getWorkspace(
-    request: internal_server_proto_server_pb.GetWorkspaceRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.GetWorkspaceResponse>;
+    request: pkg_server_proto_server_pb.GetWorkspaceRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetWorkspaceResponse>;
 
   getWorkspace(
-    request: internal_server_proto_server_pb.GetWorkspaceRequest,
+    request: pkg_server_proto_server_pb.GetWorkspaceRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetWorkspaceResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.GetWorkspaceResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetWorkspaceResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetWorkspaceResponse>;
 
   getWorkspace(
-    request: internal_server_proto_server_pb.GetWorkspaceRequest,
+    request: pkg_server_proto_server_pb.GetWorkspaceRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetWorkspaceResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetWorkspaceResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetWorkspace',
         request,
         metadata || {},
-        this.methodInfoGetWorkspace,
+        this.methodDescriptorGetWorkspace,
         callback);
     }
     return this.client_.unaryCall(
@@ -593,39 +678,85 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetWorkspace',
     request,
     metadata || {},
-    this.methodInfoGetWorkspace);
+    this.methodDescriptorGetWorkspace);
   }
 
-  methodInfoUpsertProject = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.UpsertProjectResponse,
-    (request: internal_server_proto_server_pb.UpsertProjectRequest) => {
+  methodDescriptorUpsertWorkspace = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UpsertWorkspace',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UpsertWorkspaceRequest,
+    pkg_server_proto_server_pb.UpsertWorkspaceResponse,
+    (request: pkg_server_proto_server_pb.UpsertWorkspaceRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.UpsertProjectResponse.deserializeBinary
+    pkg_server_proto_server_pb.UpsertWorkspaceResponse.deserializeBinary
+  );
+
+  upsertWorkspace(
+    request: pkg_server_proto_server_pb.UpsertWorkspaceRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UpsertWorkspaceResponse>;
+
+  upsertWorkspace(
+    request: pkg_server_proto_server_pb.UpsertWorkspaceRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertWorkspaceResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UpsertWorkspaceResponse>;
+
+  upsertWorkspace(
+    request: pkg_server_proto_server_pb.UpsertWorkspaceRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertWorkspaceResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/UpsertWorkspace',
+        request,
+        metadata || {},
+        this.methodDescriptorUpsertWorkspace,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/UpsertWorkspace',
+    request,
+    metadata || {},
+    this.methodDescriptorUpsertWorkspace);
+  }
+
+  methodDescriptorUpsertProject = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UpsertProject',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UpsertProjectRequest,
+    pkg_server_proto_server_pb.UpsertProjectResponse,
+    (request: pkg_server_proto_server_pb.UpsertProjectRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.UpsertProjectResponse.deserializeBinary
   );
 
   upsertProject(
-    request: internal_server_proto_server_pb.UpsertProjectRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UpsertProjectResponse>;
+    request: pkg_server_proto_server_pb.UpsertProjectRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UpsertProjectResponse>;
 
   upsertProject(
-    request: internal_server_proto_server_pb.UpsertProjectRequest,
+    request: pkg_server_proto_server_pb.UpsertProjectRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertProjectResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UpsertProjectResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertProjectResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UpsertProjectResponse>;
 
   upsertProject(
-    request: internal_server_proto_server_pb.UpsertProjectRequest,
+    request: pkg_server_proto_server_pb.UpsertProjectRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertProjectResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertProjectResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/UpsertProject',
         request,
         metadata || {},
-        this.methodInfoUpsertProject,
+        this.methodDescriptorUpsertProject,
         callback);
     }
     return this.client_.unaryCall(
@@ -633,39 +764,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/UpsertProject',
     request,
     metadata || {},
-    this.methodInfoUpsertProject);
+    this.methodDescriptorUpsertProject);
   }
 
-  methodInfoGetProject = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.GetProjectResponse,
-    (request: internal_server_proto_server_pb.GetProjectRequest) => {
+  methodDescriptorGetProject = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetProject',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetProjectRequest,
+    pkg_server_proto_server_pb.GetProjectResponse,
+    (request: pkg_server_proto_server_pb.GetProjectRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.GetProjectResponse.deserializeBinary
+    pkg_server_proto_server_pb.GetProjectResponse.deserializeBinary
   );
 
   getProject(
-    request: internal_server_proto_server_pb.GetProjectRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.GetProjectResponse>;
+    request: pkg_server_proto_server_pb.GetProjectRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetProjectResponse>;
 
   getProject(
-    request: internal_server_proto_server_pb.GetProjectRequest,
+    request: pkg_server_proto_server_pb.GetProjectRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetProjectResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.GetProjectResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetProjectResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetProjectResponse>;
 
   getProject(
-    request: internal_server_proto_server_pb.GetProjectRequest,
+    request: pkg_server_proto_server_pb.GetProjectRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetProjectResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetProjectResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetProject',
         request,
         metadata || {},
-        this.methodInfoGetProject,
+        this.methodDescriptorGetProject,
         callback);
     }
     return this.client_.unaryCall(
@@ -673,39 +807,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetProject',
     request,
     metadata || {},
-    this.methodInfoGetProject);
+    this.methodDescriptorGetProject);
   }
 
-  methodInfoListProjects = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListProjectsResponse,
+  methodDescriptorListProjects = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListProjects',
+    grpcWeb.MethodType.UNARY,
+    google_protobuf_empty_pb.Empty,
+    pkg_server_proto_server_pb.ListProjectsResponse,
     (request: google_protobuf_empty_pb.Empty) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListProjectsResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListProjectsResponse.deserializeBinary
   );
 
   listProjects(
     request: google_protobuf_empty_pb.Empty,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListProjectsResponse>;
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListProjectsResponse>;
 
   listProjects(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListProjectsResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListProjectsResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListProjectsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListProjectsResponse>;
 
   listProjects(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListProjectsResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListProjectsResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListProjects',
         request,
         metadata || {},
-        this.methodInfoListProjects,
+        this.methodDescriptorListProjects,
         callback);
     }
     return this.client_.unaryCall(
@@ -713,39 +850,85 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListProjects',
     request,
     metadata || {},
-    this.methodInfoListProjects);
+    this.methodDescriptorListProjects);
   }
 
-  methodInfoUpsertApplication = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.UpsertApplicationResponse,
-    (request: internal_server_proto_server_pb.UpsertApplicationRequest) => {
+  methodDescriptorGetApplication = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetApplication',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetApplicationRequest,
+    pkg_server_proto_server_pb.GetApplicationResponse,
+    (request: pkg_server_proto_server_pb.GetApplicationRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.UpsertApplicationResponse.deserializeBinary
+    pkg_server_proto_server_pb.GetApplicationResponse.deserializeBinary
+  );
+
+  getApplication(
+    request: pkg_server_proto_server_pb.GetApplicationRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetApplicationResponse>;
+
+  getApplication(
+    request: pkg_server_proto_server_pb.GetApplicationRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetApplicationResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetApplicationResponse>;
+
+  getApplication(
+    request: pkg_server_proto_server_pb.GetApplicationRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetApplicationResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/GetApplication',
+        request,
+        metadata || {},
+        this.methodDescriptorGetApplication,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/GetApplication',
+    request,
+    metadata || {},
+    this.methodDescriptorGetApplication);
+  }
+
+  methodDescriptorUpsertApplication = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UpsertApplication',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UpsertApplicationRequest,
+    pkg_server_proto_server_pb.UpsertApplicationResponse,
+    (request: pkg_server_proto_server_pb.UpsertApplicationRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.UpsertApplicationResponse.deserializeBinary
   );
 
   upsertApplication(
-    request: internal_server_proto_server_pb.UpsertApplicationRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UpsertApplicationResponse>;
+    request: pkg_server_proto_server_pb.UpsertApplicationRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UpsertApplicationResponse>;
 
   upsertApplication(
-    request: internal_server_proto_server_pb.UpsertApplicationRequest,
+    request: pkg_server_proto_server_pb.UpsertApplicationRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertApplicationResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UpsertApplicationResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertApplicationResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UpsertApplicationResponse>;
 
   upsertApplication(
-    request: internal_server_proto_server_pb.UpsertApplicationRequest,
+    request: pkg_server_proto_server_pb.UpsertApplicationRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertApplicationResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertApplicationResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/UpsertApplication',
         request,
         metadata || {},
-        this.methodInfoUpsertApplication,
+        this.methodDescriptorUpsertApplication,
         callback);
     }
     return this.client_.unaryCall(
@@ -753,39 +936,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/UpsertApplication',
     request,
     metadata || {},
-    this.methodInfoUpsertApplication);
+    this.methodDescriptorUpsertApplication);
   }
 
-  methodInfoListBuilds = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListBuildsResponse,
-    (request: internal_server_proto_server_pb.ListBuildsRequest) => {
+  methodDescriptorListBuilds = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListBuilds',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListBuildsRequest,
+    pkg_server_proto_server_pb.ListBuildsResponse,
+    (request: pkg_server_proto_server_pb.ListBuildsRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListBuildsResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListBuildsResponse.deserializeBinary
   );
 
   listBuilds(
-    request: internal_server_proto_server_pb.ListBuildsRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListBuildsResponse>;
+    request: pkg_server_proto_server_pb.ListBuildsRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListBuildsResponse>;
 
   listBuilds(
-    request: internal_server_proto_server_pb.ListBuildsRequest,
+    request: pkg_server_proto_server_pb.ListBuildsRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListBuildsResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListBuildsResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListBuildsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListBuildsResponse>;
 
   listBuilds(
-    request: internal_server_proto_server_pb.ListBuildsRequest,
+    request: pkg_server_proto_server_pb.ListBuildsRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListBuildsResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListBuildsResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListBuilds',
         request,
         metadata || {},
-        this.methodInfoListBuilds,
+        this.methodDescriptorListBuilds,
         callback);
     }
     return this.client_.unaryCall(
@@ -793,39 +979,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListBuilds',
     request,
     metadata || {},
-    this.methodInfoListBuilds);
+    this.methodDescriptorListBuilds);
   }
 
-  methodInfoGetBuild = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.Build,
-    (request: internal_server_proto_server_pb.GetBuildRequest) => {
+  methodDescriptorGetBuild = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetBuild',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetBuildRequest,
+    pkg_server_proto_server_pb.Build,
+    (request: pkg_server_proto_server_pb.GetBuildRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.Build.deserializeBinary
+    pkg_server_proto_server_pb.Build.deserializeBinary
   );
 
   getBuild(
-    request: internal_server_proto_server_pb.GetBuildRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.Build>;
+    request: pkg_server_proto_server_pb.GetBuildRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.Build>;
 
   getBuild(
-    request: internal_server_proto_server_pb.GetBuildRequest,
+    request: pkg_server_proto_server_pb.GetBuildRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Build) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.Build>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Build) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.Build>;
 
   getBuild(
-    request: internal_server_proto_server_pb.GetBuildRequest,
+    request: pkg_server_proto_server_pb.GetBuildRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Build) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Build) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetBuild',
         request,
         metadata || {},
-        this.methodInfoGetBuild,
+        this.methodDescriptorGetBuild,
         callback);
     }
     return this.client_.unaryCall(
@@ -833,39 +1022,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetBuild',
     request,
     metadata || {},
-    this.methodInfoGetBuild);
+    this.methodDescriptorGetBuild);
   }
 
-  methodInfoListPushedArtifacts = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListPushedArtifactsResponse,
-    (request: internal_server_proto_server_pb.ListPushedArtifactsRequest) => {
+  methodDescriptorListPushedArtifacts = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListPushedArtifacts',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListPushedArtifactsRequest,
+    pkg_server_proto_server_pb.ListPushedArtifactsResponse,
+    (request: pkg_server_proto_server_pb.ListPushedArtifactsRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListPushedArtifactsResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListPushedArtifactsResponse.deserializeBinary
   );
 
   listPushedArtifacts(
-    request: internal_server_proto_server_pb.ListPushedArtifactsRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListPushedArtifactsResponse>;
+    request: pkg_server_proto_server_pb.ListPushedArtifactsRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListPushedArtifactsResponse>;
 
   listPushedArtifacts(
-    request: internal_server_proto_server_pb.ListPushedArtifactsRequest,
+    request: pkg_server_proto_server_pb.ListPushedArtifactsRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListPushedArtifactsResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListPushedArtifactsResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListPushedArtifactsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListPushedArtifactsResponse>;
 
   listPushedArtifacts(
-    request: internal_server_proto_server_pb.ListPushedArtifactsRequest,
+    request: pkg_server_proto_server_pb.ListPushedArtifactsRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListPushedArtifactsResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListPushedArtifactsResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListPushedArtifacts',
         request,
         metadata || {},
-        this.methodInfoListPushedArtifacts,
+        this.methodDescriptorListPushedArtifacts,
         callback);
     }
     return this.client_.unaryCall(
@@ -873,39 +1065,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListPushedArtifacts',
     request,
     metadata || {},
-    this.methodInfoListPushedArtifacts);
+    this.methodDescriptorListPushedArtifacts);
   }
 
-  methodInfoGetPushedArtifact = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.PushedArtifact,
-    (request: internal_server_proto_server_pb.GetPushedArtifactRequest) => {
+  methodDescriptorGetPushedArtifact = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetPushedArtifact',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetPushedArtifactRequest,
+    pkg_server_proto_server_pb.PushedArtifact,
+    (request: pkg_server_proto_server_pb.GetPushedArtifactRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.PushedArtifact.deserializeBinary
+    pkg_server_proto_server_pb.PushedArtifact.deserializeBinary
   );
 
   getPushedArtifact(
-    request: internal_server_proto_server_pb.GetPushedArtifactRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.PushedArtifact>;
+    request: pkg_server_proto_server_pb.GetPushedArtifactRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.PushedArtifact>;
 
   getPushedArtifact(
-    request: internal_server_proto_server_pb.GetPushedArtifactRequest,
+    request: pkg_server_proto_server_pb.GetPushedArtifactRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.PushedArtifact) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.PushedArtifact>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.PushedArtifact) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.PushedArtifact>;
 
   getPushedArtifact(
-    request: internal_server_proto_server_pb.GetPushedArtifactRequest,
+    request: pkg_server_proto_server_pb.GetPushedArtifactRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.PushedArtifact) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.PushedArtifact) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetPushedArtifact',
         request,
         metadata || {},
-        this.methodInfoGetPushedArtifact,
+        this.methodDescriptorGetPushedArtifact,
         callback);
     }
     return this.client_.unaryCall(
@@ -913,39 +1108,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetPushedArtifact',
     request,
     metadata || {},
-    this.methodInfoGetPushedArtifact);
+    this.methodDescriptorGetPushedArtifact);
   }
 
-  methodInfoListDeployments = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListDeploymentsResponse,
-    (request: internal_server_proto_server_pb.ListDeploymentsRequest) => {
+  methodDescriptorListDeployments = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListDeployments',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListDeploymentsRequest,
+    pkg_server_proto_server_pb.ListDeploymentsResponse,
+    (request: pkg_server_proto_server_pb.ListDeploymentsRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListDeploymentsResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListDeploymentsResponse.deserializeBinary
   );
 
   listDeployments(
-    request: internal_server_proto_server_pb.ListDeploymentsRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListDeploymentsResponse>;
+    request: pkg_server_proto_server_pb.ListDeploymentsRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListDeploymentsResponse>;
 
   listDeployments(
-    request: internal_server_proto_server_pb.ListDeploymentsRequest,
+    request: pkg_server_proto_server_pb.ListDeploymentsRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListDeploymentsResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListDeploymentsResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListDeploymentsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListDeploymentsResponse>;
 
   listDeployments(
-    request: internal_server_proto_server_pb.ListDeploymentsRequest,
+    request: pkg_server_proto_server_pb.ListDeploymentsRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListDeploymentsResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListDeploymentsResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListDeployments',
         request,
         metadata || {},
-        this.methodInfoListDeployments,
+        this.methodDescriptorListDeployments,
         callback);
     }
     return this.client_.unaryCall(
@@ -953,39 +1151,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListDeployments',
     request,
     metadata || {},
-    this.methodInfoListDeployments);
+    this.methodDescriptorListDeployments);
   }
 
-  methodInfoListInstances = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListInstancesResponse,
-    (request: internal_server_proto_server_pb.ListInstancesRequest) => {
+  methodDescriptorListInstances = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListInstances',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListInstancesRequest,
+    pkg_server_proto_server_pb.ListInstancesResponse,
+    (request: pkg_server_proto_server_pb.ListInstancesRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListInstancesResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListInstancesResponse.deserializeBinary
   );
 
   listInstances(
-    request: internal_server_proto_server_pb.ListInstancesRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListInstancesResponse>;
+    request: pkg_server_proto_server_pb.ListInstancesRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListInstancesResponse>;
 
   listInstances(
-    request: internal_server_proto_server_pb.ListInstancesRequest,
+    request: pkg_server_proto_server_pb.ListInstancesRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListInstancesResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListInstancesResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListInstancesResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListInstancesResponse>;
 
   listInstances(
-    request: internal_server_proto_server_pb.ListInstancesRequest,
+    request: pkg_server_proto_server_pb.ListInstancesRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListInstancesResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListInstancesResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListInstances',
         request,
         metadata || {},
-        this.methodInfoListInstances,
+        this.methodDescriptorListInstances,
         callback);
     }
     return this.client_.unaryCall(
@@ -993,39 +1194,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListInstances',
     request,
     metadata || {},
-    this.methodInfoListInstances);
+    this.methodDescriptorListInstances);
   }
 
-  methodInfoGetDeployment = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.Deployment,
-    (request: internal_server_proto_server_pb.GetDeploymentRequest) => {
+  methodDescriptorGetDeployment = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetDeployment',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetDeploymentRequest,
+    pkg_server_proto_server_pb.Deployment,
+    (request: pkg_server_proto_server_pb.GetDeploymentRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.Deployment.deserializeBinary
+    pkg_server_proto_server_pb.Deployment.deserializeBinary
   );
 
   getDeployment(
-    request: internal_server_proto_server_pb.GetDeploymentRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.Deployment>;
+    request: pkg_server_proto_server_pb.GetDeploymentRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.Deployment>;
 
   getDeployment(
-    request: internal_server_proto_server_pb.GetDeploymentRequest,
+    request: pkg_server_proto_server_pb.GetDeploymentRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Deployment) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.Deployment>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Deployment) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.Deployment>;
 
   getDeployment(
-    request: internal_server_proto_server_pb.GetDeploymentRequest,
+    request: pkg_server_proto_server_pb.GetDeploymentRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Deployment) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Deployment) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetDeployment',
         request,
         metadata || {},
-        this.methodInfoGetDeployment,
+        this.methodDescriptorGetDeployment,
         callback);
     }
     return this.client_.unaryCall(
@@ -1033,39 +1237,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetDeployment',
     request,
     metadata || {},
-    this.methodInfoGetDeployment);
+    this.methodDescriptorGetDeployment);
   }
 
-  methodInfoGetLatestBuild = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.Build,
-    (request: internal_server_proto_server_pb.GetLatestBuildRequest) => {
+  methodDescriptorGetLatestBuild = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetLatestBuild',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetLatestBuildRequest,
+    pkg_server_proto_server_pb.Build,
+    (request: pkg_server_proto_server_pb.GetLatestBuildRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.Build.deserializeBinary
+    pkg_server_proto_server_pb.Build.deserializeBinary
   );
 
   getLatestBuild(
-    request: internal_server_proto_server_pb.GetLatestBuildRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.Build>;
+    request: pkg_server_proto_server_pb.GetLatestBuildRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.Build>;
 
   getLatestBuild(
-    request: internal_server_proto_server_pb.GetLatestBuildRequest,
+    request: pkg_server_proto_server_pb.GetLatestBuildRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Build) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.Build>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Build) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.Build>;
 
   getLatestBuild(
-    request: internal_server_proto_server_pb.GetLatestBuildRequest,
+    request: pkg_server_proto_server_pb.GetLatestBuildRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Build) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Build) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetLatestBuild',
         request,
         metadata || {},
-        this.methodInfoGetLatestBuild,
+        this.methodDescriptorGetLatestBuild,
         callback);
     }
     return this.client_.unaryCall(
@@ -1073,39 +1280,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetLatestBuild',
     request,
     metadata || {},
-    this.methodInfoGetLatestBuild);
+    this.methodDescriptorGetLatestBuild);
   }
 
-  methodInfoGetLatestPushedArtifact = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.PushedArtifact,
-    (request: internal_server_proto_server_pb.GetLatestPushedArtifactRequest) => {
+  methodDescriptorGetLatestPushedArtifact = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetLatestPushedArtifactRequest,
+    pkg_server_proto_server_pb.PushedArtifact,
+    (request: pkg_server_proto_server_pb.GetLatestPushedArtifactRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.PushedArtifact.deserializeBinary
+    pkg_server_proto_server_pb.PushedArtifact.deserializeBinary
   );
 
   getLatestPushedArtifact(
-    request: internal_server_proto_server_pb.GetLatestPushedArtifactRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.PushedArtifact>;
+    request: pkg_server_proto_server_pb.GetLatestPushedArtifactRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.PushedArtifact>;
 
   getLatestPushedArtifact(
-    request: internal_server_proto_server_pb.GetLatestPushedArtifactRequest,
+    request: pkg_server_proto_server_pb.GetLatestPushedArtifactRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.PushedArtifact) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.PushedArtifact>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.PushedArtifact) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.PushedArtifact>;
 
   getLatestPushedArtifact(
-    request: internal_server_proto_server_pb.GetLatestPushedArtifactRequest,
+    request: pkg_server_proto_server_pb.GetLatestPushedArtifactRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.PushedArtifact) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.PushedArtifact) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact',
         request,
         metadata || {},
-        this.methodInfoGetLatestPushedArtifact,
+        this.methodDescriptorGetLatestPushedArtifact,
         callback);
     }
     return this.client_.unaryCall(
@@ -1113,39 +1323,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact',
     request,
     metadata || {},
-    this.methodInfoGetLatestPushedArtifact);
+    this.methodDescriptorGetLatestPushedArtifact);
   }
 
-  methodInfoListReleases = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListReleasesResponse,
-    (request: internal_server_proto_server_pb.ListReleasesRequest) => {
+  methodDescriptorListReleases = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListReleases',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListReleasesRequest,
+    pkg_server_proto_server_pb.ListReleasesResponse,
+    (request: pkg_server_proto_server_pb.ListReleasesRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListReleasesResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListReleasesResponse.deserializeBinary
   );
 
   listReleases(
-    request: internal_server_proto_server_pb.ListReleasesRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListReleasesResponse>;
+    request: pkg_server_proto_server_pb.ListReleasesRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListReleasesResponse>;
 
   listReleases(
-    request: internal_server_proto_server_pb.ListReleasesRequest,
+    request: pkg_server_proto_server_pb.ListReleasesRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListReleasesResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListReleasesResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListReleasesResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListReleasesResponse>;
 
   listReleases(
-    request: internal_server_proto_server_pb.ListReleasesRequest,
+    request: pkg_server_proto_server_pb.ListReleasesRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListReleasesResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListReleasesResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListReleases',
         request,
         metadata || {},
-        this.methodInfoListReleases,
+        this.methodDescriptorListReleases,
         callback);
     }
     return this.client_.unaryCall(
@@ -1153,39 +1366,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListReleases',
     request,
     metadata || {},
-    this.methodInfoListReleases);
+    this.methodDescriptorListReleases);
   }
 
-  methodInfoGetRelease = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.Release,
-    (request: internal_server_proto_server_pb.GetReleaseRequest) => {
+  methodDescriptorGetRelease = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetRelease',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetReleaseRequest,
+    pkg_server_proto_server_pb.Release,
+    (request: pkg_server_proto_server_pb.GetReleaseRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.Release.deserializeBinary
+    pkg_server_proto_server_pb.Release.deserializeBinary
   );
 
   getRelease(
-    request: internal_server_proto_server_pb.GetReleaseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.Release>;
+    request: pkg_server_proto_server_pb.GetReleaseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.Release>;
 
   getRelease(
-    request: internal_server_proto_server_pb.GetReleaseRequest,
+    request: pkg_server_proto_server_pb.GetReleaseRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Release) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.Release>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Release) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.Release>;
 
   getRelease(
-    request: internal_server_proto_server_pb.GetReleaseRequest,
+    request: pkg_server_proto_server_pb.GetReleaseRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Release) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Release) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetRelease',
         request,
         metadata || {},
-        this.methodInfoGetRelease,
+        this.methodDescriptorGetRelease,
         callback);
     }
     return this.client_.unaryCall(
@@ -1193,39 +1409,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetRelease',
     request,
     metadata || {},
-    this.methodInfoGetRelease);
+    this.methodDescriptorGetRelease);
   }
 
-  methodInfoGetLatestRelease = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.Release,
-    (request: internal_server_proto_server_pb.GetLatestReleaseRequest) => {
+  methodDescriptorGetLatestRelease = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetLatestRelease',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetLatestReleaseRequest,
+    pkg_server_proto_server_pb.Release,
+    (request: pkg_server_proto_server_pb.GetLatestReleaseRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.Release.deserializeBinary
+    pkg_server_proto_server_pb.Release.deserializeBinary
   );
 
   getLatestRelease(
-    request: internal_server_proto_server_pb.GetLatestReleaseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.Release>;
+    request: pkg_server_proto_server_pb.GetLatestReleaseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.Release>;
 
   getLatestRelease(
-    request: internal_server_proto_server_pb.GetLatestReleaseRequest,
+    request: pkg_server_proto_server_pb.GetLatestReleaseRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Release) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.Release>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Release) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.Release>;
 
   getLatestRelease(
-    request: internal_server_proto_server_pb.GetLatestReleaseRequest,
+    request: pkg_server_proto_server_pb.GetLatestReleaseRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Release) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Release) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetLatestRelease',
         request,
         metadata || {},
-        this.methodInfoGetLatestRelease,
+        this.methodDescriptorGetLatestRelease,
         callback);
     }
     return this.client_.unaryCall(
@@ -1233,58 +1452,64 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetLatestRelease',
     request,
     metadata || {},
-    this.methodInfoGetLatestRelease);
+    this.methodDescriptorGetLatestRelease);
   }
 
-  methodInfoGetLogStream = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.LogBatch,
-    (request: internal_server_proto_server_pb.GetLogStreamRequest) => {
+  methodDescriptorGetLogStream = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetLogStream',
+    grpcWeb.MethodType.SERVER_STREAMING,
+    pkg_server_proto_server_pb.GetLogStreamRequest,
+    pkg_server_proto_server_pb.LogBatch,
+    (request: pkg_server_proto_server_pb.GetLogStreamRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.LogBatch.deserializeBinary
+    pkg_server_proto_server_pb.LogBatch.deserializeBinary
   );
 
   getLogStream(
-    request: internal_server_proto_server_pb.GetLogStreamRequest,
-    metadata?: grpcWeb.Metadata) {
+    request: pkg_server_proto_server_pb.GetLogStreamRequest,
+    metadata?: grpcWeb.Metadata): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.LogBatch> {
     return this.client_.serverStreaming(
       this.hostname_ +
         '/hashicorp.waypoint.Waypoint/GetLogStream',
       request,
       metadata || {},
-      this.methodInfoGetLogStream);
+      this.methodDescriptorGetLogStream);
   }
 
-  methodInfoSetConfig = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ConfigSetResponse,
-    (request: internal_server_proto_server_pb.ConfigSetRequest) => {
+  methodDescriptorSetConfig = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/SetConfig',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ConfigSetRequest,
+    pkg_server_proto_server_pb.ConfigSetResponse,
+    (request: pkg_server_proto_server_pb.ConfigSetRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ConfigSetResponse.deserializeBinary
+    pkg_server_proto_server_pb.ConfigSetResponse.deserializeBinary
   );
 
   setConfig(
-    request: internal_server_proto_server_pb.ConfigSetRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ConfigSetResponse>;
+    request: pkg_server_proto_server_pb.ConfigSetRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ConfigSetResponse>;
 
   setConfig(
-    request: internal_server_proto_server_pb.ConfigSetRequest,
+    request: pkg_server_proto_server_pb.ConfigSetRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ConfigSetResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ConfigSetResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ConfigSetResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ConfigSetResponse>;
 
   setConfig(
-    request: internal_server_proto_server_pb.ConfigSetRequest,
+    request: pkg_server_proto_server_pb.ConfigSetRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ConfigSetResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ConfigSetResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/SetConfig',
         request,
         metadata || {},
-        this.methodInfoSetConfig,
+        this.methodDescriptorSetConfig,
         callback);
     }
     return this.client_.unaryCall(
@@ -1292,39 +1517,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/SetConfig',
     request,
     metadata || {},
-    this.methodInfoSetConfig);
+    this.methodDescriptorSetConfig);
   }
 
-  methodInfoGetConfig = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ConfigGetResponse,
-    (request: internal_server_proto_server_pb.ConfigGetRequest) => {
+  methodDescriptorGetConfig = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetConfig',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ConfigGetRequest,
+    pkg_server_proto_server_pb.ConfigGetResponse,
+    (request: pkg_server_proto_server_pb.ConfigGetRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ConfigGetResponse.deserializeBinary
+    pkg_server_proto_server_pb.ConfigGetResponse.deserializeBinary
   );
 
   getConfig(
-    request: internal_server_proto_server_pb.ConfigGetRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ConfigGetResponse>;
+    request: pkg_server_proto_server_pb.ConfigGetRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ConfigGetResponse>;
 
   getConfig(
-    request: internal_server_proto_server_pb.ConfigGetRequest,
+    request: pkg_server_proto_server_pb.ConfigGetRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ConfigGetResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ConfigGetResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ConfigGetResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ConfigGetResponse>;
 
   getConfig(
-    request: internal_server_proto_server_pb.ConfigGetRequest,
+    request: pkg_server_proto_server_pb.ConfigGetRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ConfigGetResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ConfigGetResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetConfig',
         request,
         metadata || {},
-        this.methodInfoGetConfig,
+        this.methodDescriptorGetConfig,
         callback);
     }
     return this.client_.unaryCall(
@@ -1332,31 +1560,34 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetConfig',
     request,
     metadata || {},
-    this.methodInfoGetConfig);
+    this.methodDescriptorGetConfig);
   }
 
-  methodInfoSetConfigSource = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodDescriptorSetConfigSource = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/SetConfigSource',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.SetConfigSourceRequest,
     google_protobuf_empty_pb.Empty,
-    (request: internal_server_proto_server_pb.SetConfigSourceRequest) => {
+    (request: pkg_server_proto_server_pb.SetConfigSourceRequest) => {
       return request.serializeBinary();
     },
     google_protobuf_empty_pb.Empty.deserializeBinary
   );
 
   setConfigSource(
-    request: internal_server_proto_server_pb.SetConfigSourceRequest,
+    request: pkg_server_proto_server_pb.SetConfigSourceRequest,
     metadata: grpcWeb.Metadata | null): Promise<google_protobuf_empty_pb.Empty>;
 
   setConfigSource(
-    request: internal_server_proto_server_pb.SetConfigSourceRequest,
+    request: pkg_server_proto_server_pb.SetConfigSourceRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
+    callback: (err: grpcWeb.RpcError,
                response: google_protobuf_empty_pb.Empty) => void): grpcWeb.ClientReadableStream<google_protobuf_empty_pb.Empty>;
 
   setConfigSource(
-    request: internal_server_proto_server_pb.SetConfigSourceRequest,
+    request: pkg_server_proto_server_pb.SetConfigSourceRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
+    callback?: (err: grpcWeb.RpcError,
                response: google_protobuf_empty_pb.Empty) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1364,7 +1595,7 @@ export class WaypointClient {
           '/hashicorp.waypoint.Waypoint/SetConfigSource',
         request,
         metadata || {},
-        this.methodInfoSetConfigSource,
+        this.methodDescriptorSetConfigSource,
         callback);
     }
     return this.client_.unaryCall(
@@ -1372,39 +1603,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/SetConfigSource',
     request,
     metadata || {},
-    this.methodInfoSetConfigSource);
+    this.methodDescriptorSetConfigSource);
   }
 
-  methodInfoGetConfigSource = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.GetConfigSourceResponse,
-    (request: internal_server_proto_server_pb.GetConfigSourceRequest) => {
+  methodDescriptorGetConfigSource = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetConfigSource',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetConfigSourceRequest,
+    pkg_server_proto_server_pb.GetConfigSourceResponse,
+    (request: pkg_server_proto_server_pb.GetConfigSourceRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.GetConfigSourceResponse.deserializeBinary
+    pkg_server_proto_server_pb.GetConfigSourceResponse.deserializeBinary
   );
 
   getConfigSource(
-    request: internal_server_proto_server_pb.GetConfigSourceRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.GetConfigSourceResponse>;
+    request: pkg_server_proto_server_pb.GetConfigSourceRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetConfigSourceResponse>;
 
   getConfigSource(
-    request: internal_server_proto_server_pb.GetConfigSourceRequest,
+    request: pkg_server_proto_server_pb.GetConfigSourceRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetConfigSourceResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.GetConfigSourceResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetConfigSourceResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetConfigSourceResponse>;
 
   getConfigSource(
-    request: internal_server_proto_server_pb.GetConfigSourceRequest,
+    request: pkg_server_proto_server_pb.GetConfigSourceRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetConfigSourceResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetConfigSourceResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetConfigSource',
         request,
         metadata || {},
-        this.methodInfoGetConfigSource,
+        this.methodDescriptorGetConfigSource,
         callback);
     }
     return this.client_.unaryCall(
@@ -1412,39 +1646,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetConfigSource',
     request,
     metadata || {},
-    this.methodInfoGetConfigSource);
+    this.methodDescriptorGetConfigSource);
   }
 
-  methodInfoCreateHostname = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.CreateHostnameResponse,
-    (request: internal_server_proto_server_pb.CreateHostnameRequest) => {
+  methodDescriptorCreateHostname = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/CreateHostname',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.CreateHostnameRequest,
+    pkg_server_proto_server_pb.CreateHostnameResponse,
+    (request: pkg_server_proto_server_pb.CreateHostnameRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.CreateHostnameResponse.deserializeBinary
+    pkg_server_proto_server_pb.CreateHostnameResponse.deserializeBinary
   );
 
   createHostname(
-    request: internal_server_proto_server_pb.CreateHostnameRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.CreateHostnameResponse>;
+    request: pkg_server_proto_server_pb.CreateHostnameRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.CreateHostnameResponse>;
 
   createHostname(
-    request: internal_server_proto_server_pb.CreateHostnameRequest,
+    request: pkg_server_proto_server_pb.CreateHostnameRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.CreateHostnameResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.CreateHostnameResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.CreateHostnameResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.CreateHostnameResponse>;
 
   createHostname(
-    request: internal_server_proto_server_pb.CreateHostnameRequest,
+    request: pkg_server_proto_server_pb.CreateHostnameRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.CreateHostnameResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.CreateHostnameResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/CreateHostname',
         request,
         metadata || {},
-        this.methodInfoCreateHostname,
+        this.methodDescriptorCreateHostname,
         callback);
     }
     return this.client_.unaryCall(
@@ -1452,31 +1689,34 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/CreateHostname',
     request,
     metadata || {},
-    this.methodInfoCreateHostname);
+    this.methodDescriptorCreateHostname);
   }
 
-  methodInfoDeleteHostname = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodDescriptorDeleteHostname = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/DeleteHostname',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.DeleteHostnameRequest,
     google_protobuf_empty_pb.Empty,
-    (request: internal_server_proto_server_pb.DeleteHostnameRequest) => {
+    (request: pkg_server_proto_server_pb.DeleteHostnameRequest) => {
       return request.serializeBinary();
     },
     google_protobuf_empty_pb.Empty.deserializeBinary
   );
 
   deleteHostname(
-    request: internal_server_proto_server_pb.DeleteHostnameRequest,
+    request: pkg_server_proto_server_pb.DeleteHostnameRequest,
     metadata: grpcWeb.Metadata | null): Promise<google_protobuf_empty_pb.Empty>;
 
   deleteHostname(
-    request: internal_server_proto_server_pb.DeleteHostnameRequest,
+    request: pkg_server_proto_server_pb.DeleteHostnameRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
+    callback: (err: grpcWeb.RpcError,
                response: google_protobuf_empty_pb.Empty) => void): grpcWeb.ClientReadableStream<google_protobuf_empty_pb.Empty>;
 
   deleteHostname(
-    request: internal_server_proto_server_pb.DeleteHostnameRequest,
+    request: pkg_server_proto_server_pb.DeleteHostnameRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
+    callback?: (err: grpcWeb.RpcError,
                response: google_protobuf_empty_pb.Empty) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1484,7 +1724,7 @@ export class WaypointClient {
           '/hashicorp.waypoint.Waypoint/DeleteHostname',
         request,
         metadata || {},
-        this.methodInfoDeleteHostname,
+        this.methodDescriptorDeleteHostname,
         callback);
     }
     return this.client_.unaryCall(
@@ -1492,39 +1732,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/DeleteHostname',
     request,
     metadata || {},
-    this.methodInfoDeleteHostname);
+    this.methodDescriptorDeleteHostname);
   }
 
-  methodInfoListHostnames = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListHostnamesResponse,
-    (request: internal_server_proto_server_pb.ListHostnamesRequest) => {
+  methodDescriptorListHostnames = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListHostnames',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListHostnamesRequest,
+    pkg_server_proto_server_pb.ListHostnamesResponse,
+    (request: pkg_server_proto_server_pb.ListHostnamesRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListHostnamesResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListHostnamesResponse.deserializeBinary
   );
 
   listHostnames(
-    request: internal_server_proto_server_pb.ListHostnamesRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListHostnamesResponse>;
+    request: pkg_server_proto_server_pb.ListHostnamesRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListHostnamesResponse>;
 
   listHostnames(
-    request: internal_server_proto_server_pb.ListHostnamesRequest,
+    request: pkg_server_proto_server_pb.ListHostnamesRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListHostnamesResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListHostnamesResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListHostnamesResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListHostnamesResponse>;
 
   listHostnames(
-    request: internal_server_proto_server_pb.ListHostnamesRequest,
+    request: pkg_server_proto_server_pb.ListHostnamesRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListHostnamesResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListHostnamesResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListHostnames',
         request,
         metadata || {},
-        this.methodInfoListHostnames,
+        this.methodDescriptorListHostnames,
         callback);
     }
     return this.client_.unaryCall(
@@ -1532,39 +1775,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListHostnames',
     request,
     metadata || {},
-    this.methodInfoListHostnames);
+    this.methodDescriptorListHostnames);
   }
 
-  methodInfoQueueJob = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.QueueJobResponse,
-    (request: internal_server_proto_server_pb.QueueJobRequest) => {
+  methodDescriptorQueueJob = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/QueueJob',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.QueueJobRequest,
+    pkg_server_proto_server_pb.QueueJobResponse,
+    (request: pkg_server_proto_server_pb.QueueJobRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.QueueJobResponse.deserializeBinary
+    pkg_server_proto_server_pb.QueueJobResponse.deserializeBinary
   );
 
   queueJob(
-    request: internal_server_proto_server_pb.QueueJobRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.QueueJobResponse>;
+    request: pkg_server_proto_server_pb.QueueJobRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.QueueJobResponse>;
 
   queueJob(
-    request: internal_server_proto_server_pb.QueueJobRequest,
+    request: pkg_server_proto_server_pb.QueueJobRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.QueueJobResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.QueueJobResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.QueueJobResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.QueueJobResponse>;
 
   queueJob(
-    request: internal_server_proto_server_pb.QueueJobRequest,
+    request: pkg_server_proto_server_pb.QueueJobRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.QueueJobResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.QueueJobResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/QueueJob',
         request,
         metadata || {},
-        this.methodInfoQueueJob,
+        this.methodDescriptorQueueJob,
         callback);
     }
     return this.client_.unaryCall(
@@ -1572,31 +1818,34 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/QueueJob',
     request,
     metadata || {},
-    this.methodInfoQueueJob);
+    this.methodDescriptorQueueJob);
   }
 
-  methodInfoCancelJob = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodDescriptorCancelJob = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/CancelJob',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.CancelJobRequest,
     google_protobuf_empty_pb.Empty,
-    (request: internal_server_proto_server_pb.CancelJobRequest) => {
+    (request: pkg_server_proto_server_pb.CancelJobRequest) => {
       return request.serializeBinary();
     },
     google_protobuf_empty_pb.Empty.deserializeBinary
   );
 
   cancelJob(
-    request: internal_server_proto_server_pb.CancelJobRequest,
+    request: pkg_server_proto_server_pb.CancelJobRequest,
     metadata: grpcWeb.Metadata | null): Promise<google_protobuf_empty_pb.Empty>;
 
   cancelJob(
-    request: internal_server_proto_server_pb.CancelJobRequest,
+    request: pkg_server_proto_server_pb.CancelJobRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
+    callback: (err: grpcWeb.RpcError,
                response: google_protobuf_empty_pb.Empty) => void): grpcWeb.ClientReadableStream<google_protobuf_empty_pb.Empty>;
 
   cancelJob(
-    request: internal_server_proto_server_pb.CancelJobRequest,
+    request: pkg_server_proto_server_pb.CancelJobRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
+    callback?: (err: grpcWeb.RpcError,
                response: google_protobuf_empty_pb.Empty) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1604,7 +1853,7 @@ export class WaypointClient {
           '/hashicorp.waypoint.Waypoint/CancelJob',
         request,
         metadata || {},
-        this.methodInfoCancelJob,
+        this.methodDescriptorCancelJob,
         callback);
     }
     return this.client_.unaryCall(
@@ -1612,39 +1861,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/CancelJob',
     request,
     metadata || {},
-    this.methodInfoCancelJob);
+    this.methodDescriptorCancelJob);
   }
 
-  methodInfoGetJob = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.Job,
-    (request: internal_server_proto_server_pb.GetJobRequest) => {
+  methodDescriptorGetJob = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetJob',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetJobRequest,
+    pkg_server_proto_server_pb.Job,
+    (request: pkg_server_proto_server_pb.GetJobRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.Job.deserializeBinary
+    pkg_server_proto_server_pb.Job.deserializeBinary
   );
 
   getJob(
-    request: internal_server_proto_server_pb.GetJobRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.Job>;
+    request: pkg_server_proto_server_pb.GetJobRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.Job>;
 
   getJob(
-    request: internal_server_proto_server_pb.GetJobRequest,
+    request: pkg_server_proto_server_pb.GetJobRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Job) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.Job>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Job) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.Job>;
 
   getJob(
-    request: internal_server_proto_server_pb.GetJobRequest,
+    request: pkg_server_proto_server_pb.GetJobRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Job) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Job) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetJob',
         request,
         metadata || {},
-        this.methodInfoGetJob,
+        this.methodDescriptorGetJob,
         callback);
     }
     return this.client_.unaryCall(
@@ -1652,39 +1904,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetJob',
     request,
     metadata || {},
-    this.methodInfoGetJob);
+    this.methodDescriptorGetJob);
   }
 
-  methodInfo_ListJobs = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListJobsResponse,
-    (request: internal_server_proto_server_pb.ListJobsRequest) => {
+  methodDescriptor_ListJobs = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/_ListJobs',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListJobsRequest,
+    pkg_server_proto_server_pb.ListJobsResponse,
+    (request: pkg_server_proto_server_pb.ListJobsRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListJobsResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListJobsResponse.deserializeBinary
   );
 
   _ListJobs(
-    request: internal_server_proto_server_pb.ListJobsRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListJobsResponse>;
+    request: pkg_server_proto_server_pb.ListJobsRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListJobsResponse>;
 
   _ListJobs(
-    request: internal_server_proto_server_pb.ListJobsRequest,
+    request: pkg_server_proto_server_pb.ListJobsRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListJobsResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListJobsResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListJobsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListJobsResponse>;
 
   _ListJobs(
-    request: internal_server_proto_server_pb.ListJobsRequest,
+    request: pkg_server_proto_server_pb.ListJobsRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListJobsResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListJobsResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/_ListJobs',
         request,
         metadata || {},
-        this.methodInfo_ListJobs,
+        this.methodDescriptor_ListJobs,
         callback);
     }
     return this.client_.unaryCall(
@@ -1692,39 +1947,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/_ListJobs',
     request,
     metadata || {},
-    this.methodInfo_ListJobs);
+    this.methodDescriptor_ListJobs);
   }
 
-  methodInfoValidateJob = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ValidateJobResponse,
-    (request: internal_server_proto_server_pb.ValidateJobRequest) => {
+  methodDescriptorValidateJob = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ValidateJob',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ValidateJobRequest,
+    pkg_server_proto_server_pb.ValidateJobResponse,
+    (request: pkg_server_proto_server_pb.ValidateJobRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ValidateJobResponse.deserializeBinary
+    pkg_server_proto_server_pb.ValidateJobResponse.deserializeBinary
   );
 
   validateJob(
-    request: internal_server_proto_server_pb.ValidateJobRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ValidateJobResponse>;
+    request: pkg_server_proto_server_pb.ValidateJobRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ValidateJobResponse>;
 
   validateJob(
-    request: internal_server_proto_server_pb.ValidateJobRequest,
+    request: pkg_server_proto_server_pb.ValidateJobRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ValidateJobResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ValidateJobResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ValidateJobResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ValidateJobResponse>;
 
   validateJob(
-    request: internal_server_proto_server_pb.ValidateJobRequest,
+    request: pkg_server_proto_server_pb.ValidateJobRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ValidateJobResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ValidateJobResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ValidateJob',
         request,
         metadata || {},
-        this.methodInfoValidateJob,
+        this.methodDescriptorValidateJob,
         callback);
     }
     return this.client_.unaryCall(
@@ -1732,58 +1990,64 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ValidateJob',
     request,
     metadata || {},
-    this.methodInfoValidateJob);
+    this.methodDescriptorValidateJob);
   }
 
-  methodInfoGetJobStream = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.GetJobStreamResponse,
-    (request: internal_server_proto_server_pb.GetJobStreamRequest) => {
+  methodDescriptorGetJobStream = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetJobStream',
+    grpcWeb.MethodType.SERVER_STREAMING,
+    pkg_server_proto_server_pb.GetJobStreamRequest,
+    pkg_server_proto_server_pb.GetJobStreamResponse,
+    (request: pkg_server_proto_server_pb.GetJobStreamRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.GetJobStreamResponse.deserializeBinary
+    pkg_server_proto_server_pb.GetJobStreamResponse.deserializeBinary
   );
 
   getJobStream(
-    request: internal_server_proto_server_pb.GetJobStreamRequest,
-    metadata?: grpcWeb.Metadata) {
+    request: pkg_server_proto_server_pb.GetJobStreamRequest,
+    metadata?: grpcWeb.Metadata): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetJobStreamResponse> {
     return this.client_.serverStreaming(
       this.hostname_ +
         '/hashicorp.waypoint.Waypoint/GetJobStream',
       request,
       metadata || {},
-      this.methodInfoGetJobStream);
+      this.methodDescriptorGetJobStream);
   }
 
-  methodInfoGetRunner = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.Runner,
-    (request: internal_server_proto_server_pb.GetRunnerRequest) => {
+  methodDescriptorGetRunner = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetRunner',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetRunnerRequest,
+    pkg_server_proto_server_pb.Runner,
+    (request: pkg_server_proto_server_pb.GetRunnerRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.Runner.deserializeBinary
+    pkg_server_proto_server_pb.Runner.deserializeBinary
   );
 
   getRunner(
-    request: internal_server_proto_server_pb.GetRunnerRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.Runner>;
+    request: pkg_server_proto_server_pb.GetRunnerRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.Runner>;
 
   getRunner(
-    request: internal_server_proto_server_pb.GetRunnerRequest,
+    request: pkg_server_proto_server_pb.GetRunnerRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Runner) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.Runner>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Runner) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.Runner>;
 
   getRunner(
-    request: internal_server_proto_server_pb.GetRunnerRequest,
+    request: pkg_server_proto_server_pb.GetRunnerRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.Runner) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Runner) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetRunner',
         request,
         metadata || {},
-        this.methodInfoGetRunner,
+        this.methodDescriptorGetRunner,
         callback);
     }
     return this.client_.unaryCall(
@@ -1791,39 +2055,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetRunner',
     request,
     metadata || {},
-    this.methodInfoGetRunner);
+    this.methodDescriptorGetRunner);
   }
 
-  methodInfoListRunners = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListRunnersResponse,
-    (request: internal_server_proto_server_pb.ListRunnersRequest) => {
+  methodDescriptorListRunners = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListRunners',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListRunnersRequest,
+    pkg_server_proto_server_pb.ListRunnersResponse,
+    (request: pkg_server_proto_server_pb.ListRunnersRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListRunnersResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListRunnersResponse.deserializeBinary
   );
 
   listRunners(
-    request: internal_server_proto_server_pb.ListRunnersRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListRunnersResponse>;
+    request: pkg_server_proto_server_pb.ListRunnersRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListRunnersResponse>;
 
   listRunners(
-    request: internal_server_proto_server_pb.ListRunnersRequest,
+    request: pkg_server_proto_server_pb.ListRunnersRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListRunnersResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListRunnersResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListRunnersResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListRunnersResponse>;
 
   listRunners(
-    request: internal_server_proto_server_pb.ListRunnersRequest,
+    request: pkg_server_proto_server_pb.ListRunnersRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListRunnersResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListRunnersResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListRunners',
         request,
         metadata || {},
-        this.methodInfoListRunners,
+        this.methodDescriptorListRunners,
         callback);
     }
     return this.client_.unaryCall(
@@ -1831,39 +2098,128 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListRunners',
     request,
     metadata || {},
-    this.methodInfoListRunners);
+    this.methodDescriptorListRunners);
   }
 
-  methodInfoGetServerConfig = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.GetServerConfigResponse,
+  methodDescriptorAdoptRunner = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/AdoptRunner',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.AdoptRunnerRequest,
+    google_protobuf_empty_pb.Empty,
+    (request: pkg_server_proto_server_pb.AdoptRunnerRequest) => {
+      return request.serializeBinary();
+    },
+    google_protobuf_empty_pb.Empty.deserializeBinary
+  );
+
+  adoptRunner(
+    request: pkg_server_proto_server_pb.AdoptRunnerRequest,
+    metadata: grpcWeb.Metadata | null): Promise<google_protobuf_empty_pb.Empty>;
+
+  adoptRunner(
+    request: pkg_server_proto_server_pb.AdoptRunnerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: google_protobuf_empty_pb.Empty) => void): grpcWeb.ClientReadableStream<google_protobuf_empty_pb.Empty>;
+
+  adoptRunner(
+    request: pkg_server_proto_server_pb.AdoptRunnerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: google_protobuf_empty_pb.Empty) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/AdoptRunner',
+        request,
+        metadata || {},
+        this.methodDescriptorAdoptRunner,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/AdoptRunner',
+    request,
+    metadata || {},
+    this.methodDescriptorAdoptRunner);
+  }
+
+  methodDescriptorForgetRunner = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ForgetRunner',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ForgetRunnerRequest,
+    google_protobuf_empty_pb.Empty,
+    (request: pkg_server_proto_server_pb.ForgetRunnerRequest) => {
+      return request.serializeBinary();
+    },
+    google_protobuf_empty_pb.Empty.deserializeBinary
+  );
+
+  forgetRunner(
+    request: pkg_server_proto_server_pb.ForgetRunnerRequest,
+    metadata: grpcWeb.Metadata | null): Promise<google_protobuf_empty_pb.Empty>;
+
+  forgetRunner(
+    request: pkg_server_proto_server_pb.ForgetRunnerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: google_protobuf_empty_pb.Empty) => void): grpcWeb.ClientReadableStream<google_protobuf_empty_pb.Empty>;
+
+  forgetRunner(
+    request: pkg_server_proto_server_pb.ForgetRunnerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: google_protobuf_empty_pb.Empty) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/ForgetRunner',
+        request,
+        metadata || {},
+        this.methodDescriptorForgetRunner,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/ForgetRunner',
+    request,
+    metadata || {},
+    this.methodDescriptorForgetRunner);
+  }
+
+  methodDescriptorGetServerConfig = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetServerConfig',
+    grpcWeb.MethodType.UNARY,
+    google_protobuf_empty_pb.Empty,
+    pkg_server_proto_server_pb.GetServerConfigResponse,
     (request: google_protobuf_empty_pb.Empty) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.GetServerConfigResponse.deserializeBinary
+    pkg_server_proto_server_pb.GetServerConfigResponse.deserializeBinary
   );
 
   getServerConfig(
     request: google_protobuf_empty_pb.Empty,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.GetServerConfigResponse>;
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetServerConfigResponse>;
 
   getServerConfig(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetServerConfigResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.GetServerConfigResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetServerConfigResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetServerConfigResponse>;
 
   getServerConfig(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetServerConfigResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetServerConfigResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetServerConfig',
         request,
         metadata || {},
-        this.methodInfoGetServerConfig,
+        this.methodDescriptorGetServerConfig,
         callback);
     }
     return this.client_.unaryCall(
@@ -1871,31 +2227,34 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetServerConfig',
     request,
     metadata || {},
-    this.methodInfoGetServerConfig);
+    this.methodDescriptorGetServerConfig);
   }
 
-  methodInfoSetServerConfig = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodDescriptorSetServerConfig = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/SetServerConfig',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.SetServerConfigRequest,
     google_protobuf_empty_pb.Empty,
-    (request: internal_server_proto_server_pb.SetServerConfigRequest) => {
+    (request: pkg_server_proto_server_pb.SetServerConfigRequest) => {
       return request.serializeBinary();
     },
     google_protobuf_empty_pb.Empty.deserializeBinary
   );
 
   setServerConfig(
-    request: internal_server_proto_server_pb.SetServerConfigRequest,
+    request: pkg_server_proto_server_pb.SetServerConfigRequest,
     metadata: grpcWeb.Metadata | null): Promise<google_protobuf_empty_pb.Empty>;
 
   setServerConfig(
-    request: internal_server_proto_server_pb.SetServerConfigRequest,
+    request: pkg_server_proto_server_pb.SetServerConfigRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
+    callback: (err: grpcWeb.RpcError,
                response: google_protobuf_empty_pb.Empty) => void): grpcWeb.ClientReadableStream<google_protobuf_empty_pb.Empty>;
 
   setServerConfig(
-    request: internal_server_proto_server_pb.SetServerConfigRequest,
+    request: pkg_server_proto_server_pb.SetServerConfigRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
+    callback?: (err: grpcWeb.RpcError,
                response: google_protobuf_empty_pb.Empty) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
@@ -1903,7 +2262,7 @@ export class WaypointClient {
           '/hashicorp.waypoint.Waypoint/SetServerConfig',
         request,
         metadata || {},
-        this.methodInfoSetServerConfig,
+        this.methodDescriptorSetServerConfig,
         callback);
     }
     return this.client_.unaryCall(
@@ -1911,58 +2270,64 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/SetServerConfig',
     request,
     metadata || {},
-    this.methodInfoSetServerConfig);
+    this.methodDescriptorSetServerConfig);
   }
 
-  methodInfoCreateSnapshot = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.CreateSnapshotResponse,
+  methodDescriptorCreateSnapshot = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/CreateSnapshot',
+    grpcWeb.MethodType.SERVER_STREAMING,
+    google_protobuf_empty_pb.Empty,
+    pkg_server_proto_server_pb.CreateSnapshotResponse,
     (request: google_protobuf_empty_pb.Empty) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.CreateSnapshotResponse.deserializeBinary
+    pkg_server_proto_server_pb.CreateSnapshotResponse.deserializeBinary
   );
 
   createSnapshot(
     request: google_protobuf_empty_pb.Empty,
-    metadata?: grpcWeb.Metadata) {
+    metadata?: grpcWeb.Metadata): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.CreateSnapshotResponse> {
     return this.client_.serverStreaming(
       this.hostname_ +
         '/hashicorp.waypoint.Waypoint/CreateSnapshot',
       request,
       metadata || {},
-      this.methodInfoCreateSnapshot);
+      this.methodDescriptorCreateSnapshot);
   }
 
-  methodInfoBootstrapToken = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.NewTokenResponse,
+  methodDescriptorBootstrapToken = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/BootstrapToken',
+    grpcWeb.MethodType.UNARY,
+    google_protobuf_empty_pb.Empty,
+    pkg_server_proto_server_pb.NewTokenResponse,
     (request: google_protobuf_empty_pb.Empty) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.NewTokenResponse.deserializeBinary
+    pkg_server_proto_server_pb.NewTokenResponse.deserializeBinary
   );
 
   bootstrapToken(
     request: google_protobuf_empty_pb.Empty,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.NewTokenResponse>;
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.NewTokenResponse>;
 
   bootstrapToken(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.NewTokenResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.NewTokenResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.NewTokenResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.NewTokenResponse>;
 
   bootstrapToken(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.NewTokenResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.NewTokenResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/BootstrapToken',
         request,
         metadata || {},
-        this.methodInfoBootstrapToken,
+        this.methodDescriptorBootstrapToken,
         callback);
     }
     return this.client_.unaryCall(
@@ -1970,39 +2335,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/BootstrapToken',
     request,
     metadata || {},
-    this.methodInfoBootstrapToken);
+    this.methodDescriptorBootstrapToken);
   }
 
-  methodInfoDecodeToken = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.DecodeTokenResponse,
-    (request: internal_server_proto_server_pb.DecodeTokenRequest) => {
+  methodDescriptorDecodeToken = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/DecodeToken',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.DecodeTokenRequest,
+    pkg_server_proto_server_pb.DecodeTokenResponse,
+    (request: pkg_server_proto_server_pb.DecodeTokenRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.DecodeTokenResponse.deserializeBinary
+    pkg_server_proto_server_pb.DecodeTokenResponse.deserializeBinary
   );
 
   decodeToken(
-    request: internal_server_proto_server_pb.DecodeTokenRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.DecodeTokenResponse>;
+    request: pkg_server_proto_server_pb.DecodeTokenRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.DecodeTokenResponse>;
 
   decodeToken(
-    request: internal_server_proto_server_pb.DecodeTokenRequest,
+    request: pkg_server_proto_server_pb.DecodeTokenRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.DecodeTokenResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.DecodeTokenResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.DecodeTokenResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.DecodeTokenResponse>;
 
   decodeToken(
-    request: internal_server_proto_server_pb.DecodeTokenRequest,
+    request: pkg_server_proto_server_pb.DecodeTokenRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.DecodeTokenResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.DecodeTokenResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/DecodeToken',
         request,
         metadata || {},
-        this.methodInfoDecodeToken,
+        this.methodDescriptorDecodeToken,
         callback);
     }
     return this.client_.unaryCall(
@@ -2010,39 +2378,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/DecodeToken',
     request,
     metadata || {},
-    this.methodInfoDecodeToken);
+    this.methodDescriptorDecodeToken);
   }
 
-  methodInfoGenerateInviteToken = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.NewTokenResponse,
-    (request: internal_server_proto_server_pb.InviteTokenRequest) => {
+  methodDescriptorGenerateInviteToken = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GenerateInviteToken',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.InviteTokenRequest,
+    pkg_server_proto_server_pb.NewTokenResponse,
+    (request: pkg_server_proto_server_pb.InviteTokenRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.NewTokenResponse.deserializeBinary
+    pkg_server_proto_server_pb.NewTokenResponse.deserializeBinary
   );
 
   generateInviteToken(
-    request: internal_server_proto_server_pb.InviteTokenRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.NewTokenResponse>;
+    request: pkg_server_proto_server_pb.InviteTokenRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.NewTokenResponse>;
 
   generateInviteToken(
-    request: internal_server_proto_server_pb.InviteTokenRequest,
+    request: pkg_server_proto_server_pb.InviteTokenRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.NewTokenResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.NewTokenResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.NewTokenResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.NewTokenResponse>;
 
   generateInviteToken(
-    request: internal_server_proto_server_pb.InviteTokenRequest,
+    request: pkg_server_proto_server_pb.InviteTokenRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.NewTokenResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.NewTokenResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GenerateInviteToken',
         request,
         metadata || {},
-        this.methodInfoGenerateInviteToken,
+        this.methodDescriptorGenerateInviteToken,
         callback);
     }
     return this.client_.unaryCall(
@@ -2050,39 +2421,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GenerateInviteToken',
     request,
     metadata || {},
-    this.methodInfoGenerateInviteToken);
+    this.methodDescriptorGenerateInviteToken);
   }
 
-  methodInfoGenerateLoginToken = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.NewTokenResponse,
-    (request: internal_server_proto_server_pb.LoginTokenRequest) => {
+  methodDescriptorGenerateLoginToken = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GenerateLoginToken',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.LoginTokenRequest,
+    pkg_server_proto_server_pb.NewTokenResponse,
+    (request: pkg_server_proto_server_pb.LoginTokenRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.NewTokenResponse.deserializeBinary
+    pkg_server_proto_server_pb.NewTokenResponse.deserializeBinary
   );
 
   generateLoginToken(
-    request: internal_server_proto_server_pb.LoginTokenRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.NewTokenResponse>;
+    request: pkg_server_proto_server_pb.LoginTokenRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.NewTokenResponse>;
 
   generateLoginToken(
-    request: internal_server_proto_server_pb.LoginTokenRequest,
+    request: pkg_server_proto_server_pb.LoginTokenRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.NewTokenResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.NewTokenResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.NewTokenResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.NewTokenResponse>;
 
   generateLoginToken(
-    request: internal_server_proto_server_pb.LoginTokenRequest,
+    request: pkg_server_proto_server_pb.LoginTokenRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.NewTokenResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.NewTokenResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GenerateLoginToken',
         request,
         metadata || {},
-        this.methodInfoGenerateLoginToken,
+        this.methodDescriptorGenerateLoginToken,
         callback);
     }
     return this.client_.unaryCall(
@@ -2090,39 +2464,85 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GenerateLoginToken',
     request,
     metadata || {},
-    this.methodInfoGenerateLoginToken);
+    this.methodDescriptorGenerateLoginToken);
   }
 
-  methodInfoConvertInviteToken = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.NewTokenResponse,
-    (request: internal_server_proto_server_pb.ConvertInviteTokenRequest) => {
+  methodDescriptorGenerateRunnerToken = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GenerateRunnerToken',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GenerateRunnerTokenRequest,
+    pkg_server_proto_server_pb.NewTokenResponse,
+    (request: pkg_server_proto_server_pb.GenerateRunnerTokenRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.NewTokenResponse.deserializeBinary
+    pkg_server_proto_server_pb.NewTokenResponse.deserializeBinary
+  );
+
+  generateRunnerToken(
+    request: pkg_server_proto_server_pb.GenerateRunnerTokenRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.NewTokenResponse>;
+
+  generateRunnerToken(
+    request: pkg_server_proto_server_pb.GenerateRunnerTokenRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.NewTokenResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.NewTokenResponse>;
+
+  generateRunnerToken(
+    request: pkg_server_proto_server_pb.GenerateRunnerTokenRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.NewTokenResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/GenerateRunnerToken',
+        request,
+        metadata || {},
+        this.methodDescriptorGenerateRunnerToken,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/GenerateRunnerToken',
+    request,
+    metadata || {},
+    this.methodDescriptorGenerateRunnerToken);
+  }
+
+  methodDescriptorConvertInviteToken = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ConvertInviteToken',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ConvertInviteTokenRequest,
+    pkg_server_proto_server_pb.NewTokenResponse,
+    (request: pkg_server_proto_server_pb.ConvertInviteTokenRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.NewTokenResponse.deserializeBinary
   );
 
   convertInviteToken(
-    request: internal_server_proto_server_pb.ConvertInviteTokenRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.NewTokenResponse>;
+    request: pkg_server_proto_server_pb.ConvertInviteTokenRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.NewTokenResponse>;
 
   convertInviteToken(
-    request: internal_server_proto_server_pb.ConvertInviteTokenRequest,
+    request: pkg_server_proto_server_pb.ConvertInviteTokenRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.NewTokenResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.NewTokenResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.NewTokenResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.NewTokenResponse>;
 
   convertInviteToken(
-    request: internal_server_proto_server_pb.ConvertInviteTokenRequest,
+    request: pkg_server_proto_server_pb.ConvertInviteTokenRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.NewTokenResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.NewTokenResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ConvertInviteToken',
         request,
         metadata || {},
-        this.methodInfoConvertInviteToken,
+        this.methodDescriptorConvertInviteToken,
         callback);
     }
     return this.client_.unaryCall(
@@ -2130,39 +2550,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ConvertInviteToken',
     request,
     metadata || {},
-    this.methodInfoConvertInviteToken);
+    this.methodDescriptorConvertInviteToken);
   }
 
-  methodInfoGetStatusReport = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.StatusReport,
-    (request: internal_server_proto_server_pb.GetStatusReportRequest) => {
+  methodDescriptorGetStatusReport = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetStatusReport',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetStatusReportRequest,
+    pkg_server_proto_server_pb.StatusReport,
+    (request: pkg_server_proto_server_pb.GetStatusReportRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.StatusReport.deserializeBinary
+    pkg_server_proto_server_pb.StatusReport.deserializeBinary
   );
 
   getStatusReport(
-    request: internal_server_proto_server_pb.GetStatusReportRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.StatusReport>;
+    request: pkg_server_proto_server_pb.GetStatusReportRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.StatusReport>;
 
   getStatusReport(
-    request: internal_server_proto_server_pb.GetStatusReportRequest,
+    request: pkg_server_proto_server_pb.GetStatusReportRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.StatusReport) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.StatusReport>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.StatusReport) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.StatusReport>;
 
   getStatusReport(
-    request: internal_server_proto_server_pb.GetStatusReportRequest,
+    request: pkg_server_proto_server_pb.GetStatusReportRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.StatusReport) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.StatusReport) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetStatusReport',
         request,
         metadata || {},
-        this.methodInfoGetStatusReport,
+        this.methodDescriptorGetStatusReport,
         callback);
     }
     return this.client_.unaryCall(
@@ -2170,39 +2593,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetStatusReport',
     request,
     metadata || {},
-    this.methodInfoGetStatusReport);
+    this.methodDescriptorGetStatusReport);
   }
 
-  methodInfoGetLatestStatusReport = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.StatusReport,
-    (request: internal_server_proto_server_pb.GetLatestStatusReportRequest) => {
+  methodDescriptorGetLatestStatusReport = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetLatestStatusReport',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetLatestStatusReportRequest,
+    pkg_server_proto_server_pb.StatusReport,
+    (request: pkg_server_proto_server_pb.GetLatestStatusReportRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.StatusReport.deserializeBinary
+    pkg_server_proto_server_pb.StatusReport.deserializeBinary
   );
 
   getLatestStatusReport(
-    request: internal_server_proto_server_pb.GetLatestStatusReportRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.StatusReport>;
+    request: pkg_server_proto_server_pb.GetLatestStatusReportRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.StatusReport>;
 
   getLatestStatusReport(
-    request: internal_server_proto_server_pb.GetLatestStatusReportRequest,
+    request: pkg_server_proto_server_pb.GetLatestStatusReportRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.StatusReport) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.StatusReport>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.StatusReport) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.StatusReport>;
 
   getLatestStatusReport(
-    request: internal_server_proto_server_pb.GetLatestStatusReportRequest,
+    request: pkg_server_proto_server_pb.GetLatestStatusReportRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.StatusReport) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.StatusReport) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetLatestStatusReport',
         request,
         metadata || {},
-        this.methodInfoGetLatestStatusReport,
+        this.methodDescriptorGetLatestStatusReport,
         callback);
     }
     return this.client_.unaryCall(
@@ -2210,39 +2636,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetLatestStatusReport',
     request,
     metadata || {},
-    this.methodInfoGetLatestStatusReport);
+    this.methodDescriptorGetLatestStatusReport);
   }
 
-  methodInfoListStatusReports = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListStatusReportsResponse,
-    (request: internal_server_proto_server_pb.ListStatusReportsRequest) => {
+  methodDescriptorListStatusReports = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListStatusReports',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListStatusReportsRequest,
+    pkg_server_proto_server_pb.ListStatusReportsResponse,
+    (request: pkg_server_proto_server_pb.ListStatusReportsRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListStatusReportsResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListStatusReportsResponse.deserializeBinary
   );
 
   listStatusReports(
-    request: internal_server_proto_server_pb.ListStatusReportsRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListStatusReportsResponse>;
+    request: pkg_server_proto_server_pb.ListStatusReportsRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListStatusReportsResponse>;
 
   listStatusReports(
-    request: internal_server_proto_server_pb.ListStatusReportsRequest,
+    request: pkg_server_proto_server_pb.ListStatusReportsRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListStatusReportsResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListStatusReportsResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListStatusReportsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListStatusReportsResponse>;
 
   listStatusReports(
-    request: internal_server_proto_server_pb.ListStatusReportsRequest,
+    request: pkg_server_proto_server_pb.ListStatusReportsRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListStatusReportsResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListStatusReportsResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListStatusReports',
         request,
         metadata || {},
-        this.methodInfoListStatusReports,
+        this.methodDescriptorListStatusReports,
         callback);
     }
     return this.client_.unaryCall(
@@ -2250,39 +2679,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListStatusReports',
     request,
     metadata || {},
-    this.methodInfoListStatusReports);
+    this.methodDescriptorListStatusReports);
   }
 
-  methodInfoExpediteStatusReport = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ExpediteStatusReportResponse,
-    (request: internal_server_proto_server_pb.ExpediteStatusReportRequest) => {
+  methodDescriptorExpediteStatusReport = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ExpediteStatusReport',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ExpediteStatusReportRequest,
+    pkg_server_proto_server_pb.ExpediteStatusReportResponse,
+    (request: pkg_server_proto_server_pb.ExpediteStatusReportRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ExpediteStatusReportResponse.deserializeBinary
+    pkg_server_proto_server_pb.ExpediteStatusReportResponse.deserializeBinary
   );
 
   expediteStatusReport(
-    request: internal_server_proto_server_pb.ExpediteStatusReportRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ExpediteStatusReportResponse>;
+    request: pkg_server_proto_server_pb.ExpediteStatusReportRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ExpediteStatusReportResponse>;
 
   expediteStatusReport(
-    request: internal_server_proto_server_pb.ExpediteStatusReportRequest,
+    request: pkg_server_proto_server_pb.ExpediteStatusReportRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ExpediteStatusReportResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ExpediteStatusReportResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ExpediteStatusReportResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ExpediteStatusReportResponse>;
 
   expediteStatusReport(
-    request: internal_server_proto_server_pb.ExpediteStatusReportRequest,
+    request: pkg_server_proto_server_pb.ExpediteStatusReportRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ExpediteStatusReportResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ExpediteStatusReportResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ExpediteStatusReport',
         request,
         metadata || {},
-        this.methodInfoExpediteStatusReport,
+        this.methodDescriptorExpediteStatusReport,
         callback);
     }
     return this.client_.unaryCall(
@@ -2290,39 +2722,85 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ExpediteStatusReport',
     request,
     metadata || {},
-    this.methodInfoExpediteStatusReport);
+    this.methodDescriptorExpediteStatusReport);
   }
 
-  methodInfoRunnerGetDeploymentConfig = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.RunnerGetDeploymentConfigResponse,
-    (request: internal_server_proto_server_pb.RunnerGetDeploymentConfigRequest) => {
+  methodDescriptorRunnerToken = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/RunnerToken',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.RunnerTokenRequest,
+    pkg_server_proto_server_pb.RunnerTokenResponse,
+    (request: pkg_server_proto_server_pb.RunnerTokenRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.RunnerGetDeploymentConfigResponse.deserializeBinary
+    pkg_server_proto_server_pb.RunnerTokenResponse.deserializeBinary
+  );
+
+  runnerToken(
+    request: pkg_server_proto_server_pb.RunnerTokenRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.RunnerTokenResponse>;
+
+  runnerToken(
+    request: pkg_server_proto_server_pb.RunnerTokenRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.RunnerTokenResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.RunnerTokenResponse>;
+
+  runnerToken(
+    request: pkg_server_proto_server_pb.RunnerTokenRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.RunnerTokenResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/RunnerToken',
+        request,
+        metadata || {},
+        this.methodDescriptorRunnerToken,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/RunnerToken',
+    request,
+    metadata || {},
+    this.methodDescriptorRunnerToken);
+  }
+
+  methodDescriptorRunnerGetDeploymentConfig = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/RunnerGetDeploymentConfig',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.RunnerGetDeploymentConfigRequest,
+    pkg_server_proto_server_pb.RunnerGetDeploymentConfigResponse,
+    (request: pkg_server_proto_server_pb.RunnerGetDeploymentConfigRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.RunnerGetDeploymentConfigResponse.deserializeBinary
   );
 
   runnerGetDeploymentConfig(
-    request: internal_server_proto_server_pb.RunnerGetDeploymentConfigRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.RunnerGetDeploymentConfigResponse>;
+    request: pkg_server_proto_server_pb.RunnerGetDeploymentConfigRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.RunnerGetDeploymentConfigResponse>;
 
   runnerGetDeploymentConfig(
-    request: internal_server_proto_server_pb.RunnerGetDeploymentConfigRequest,
+    request: pkg_server_proto_server_pb.RunnerGetDeploymentConfigRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.RunnerGetDeploymentConfigResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.RunnerGetDeploymentConfigResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.RunnerGetDeploymentConfigResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.RunnerGetDeploymentConfigResponse>;
 
   runnerGetDeploymentConfig(
-    request: internal_server_proto_server_pb.RunnerGetDeploymentConfigRequest,
+    request: pkg_server_proto_server_pb.RunnerGetDeploymentConfigRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.RunnerGetDeploymentConfigResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.RunnerGetDeploymentConfigResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/RunnerGetDeploymentConfig',
         request,
         metadata || {},
-        this.methodInfoRunnerGetDeploymentConfig,
+        this.methodDescriptorRunnerGetDeploymentConfig,
         callback);
     }
     return this.client_.unaryCall(
@@ -2330,58 +2808,64 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/RunnerGetDeploymentConfig',
     request,
     metadata || {},
-    this.methodInfoRunnerGetDeploymentConfig);
+    this.methodDescriptorRunnerGetDeploymentConfig);
   }
 
-  methodInfoEntrypointConfig = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.EntrypointConfigResponse,
-    (request: internal_server_proto_server_pb.EntrypointConfigRequest) => {
+  methodDescriptorEntrypointConfig = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/EntrypointConfig',
+    grpcWeb.MethodType.SERVER_STREAMING,
+    pkg_server_proto_server_pb.EntrypointConfigRequest,
+    pkg_server_proto_server_pb.EntrypointConfigResponse,
+    (request: pkg_server_proto_server_pb.EntrypointConfigRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.EntrypointConfigResponse.deserializeBinary
+    pkg_server_proto_server_pb.EntrypointConfigResponse.deserializeBinary
   );
 
   entrypointConfig(
-    request: internal_server_proto_server_pb.EntrypointConfigRequest,
-    metadata?: grpcWeb.Metadata) {
+    request: pkg_server_proto_server_pb.EntrypointConfigRequest,
+    metadata?: grpcWeb.Metadata): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.EntrypointConfigResponse> {
     return this.client_.serverStreaming(
       this.hostname_ +
         '/hashicorp.waypoint.Waypoint/EntrypointConfig',
       request,
       metadata || {},
-      this.methodInfoEntrypointConfig);
+      this.methodDescriptorEntrypointConfig);
   }
 
-  methodInfoWaypointHclFmt = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.WaypointHclFmtResponse,
-    (request: internal_server_proto_server_pb.WaypointHclFmtRequest) => {
+  methodDescriptorWaypointHclFmt = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/WaypointHclFmt',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.WaypointHclFmtRequest,
+    pkg_server_proto_server_pb.WaypointHclFmtResponse,
+    (request: pkg_server_proto_server_pb.WaypointHclFmtRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.WaypointHclFmtResponse.deserializeBinary
+    pkg_server_proto_server_pb.WaypointHclFmtResponse.deserializeBinary
   );
 
   waypointHclFmt(
-    request: internal_server_proto_server_pb.WaypointHclFmtRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.WaypointHclFmtResponse>;
+    request: pkg_server_proto_server_pb.WaypointHclFmtRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.WaypointHclFmtResponse>;
 
   waypointHclFmt(
-    request: internal_server_proto_server_pb.WaypointHclFmtRequest,
+    request: pkg_server_proto_server_pb.WaypointHclFmtRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.WaypointHclFmtResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.WaypointHclFmtResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.WaypointHclFmtResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.WaypointHclFmtResponse>;
 
   waypointHclFmt(
-    request: internal_server_proto_server_pb.WaypointHclFmtRequest,
+    request: pkg_server_proto_server_pb.WaypointHclFmtRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.WaypointHclFmtResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.WaypointHclFmtResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/WaypointHclFmt',
         request,
         metadata || {},
-        this.methodInfoWaypointHclFmt,
+        this.methodDescriptorWaypointHclFmt,
         callback);
     }
     return this.client_.unaryCall(
@@ -2389,39 +2873,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/WaypointHclFmt',
     request,
     metadata || {},
-    this.methodInfoWaypointHclFmt);
+    this.methodDescriptorWaypointHclFmt);
   }
 
-  methodInfoUpsertOnDemandRunnerConfig = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.UpsertOnDemandRunnerConfigResponse,
-    (request: internal_server_proto_server_pb.UpsertOnDemandRunnerConfigRequest) => {
+  methodDescriptorUpsertOnDemandRunnerConfig = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UpsertOnDemandRunnerConfig',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UpsertOnDemandRunnerConfigRequest,
+    pkg_server_proto_server_pb.UpsertOnDemandRunnerConfigResponse,
+    (request: pkg_server_proto_server_pb.UpsertOnDemandRunnerConfigRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.UpsertOnDemandRunnerConfigResponse.deserializeBinary
+    pkg_server_proto_server_pb.UpsertOnDemandRunnerConfigResponse.deserializeBinary
   );
 
   upsertOnDemandRunnerConfig(
-    request: internal_server_proto_server_pb.UpsertOnDemandRunnerConfigRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UpsertOnDemandRunnerConfigResponse>;
+    request: pkg_server_proto_server_pb.UpsertOnDemandRunnerConfigRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UpsertOnDemandRunnerConfigResponse>;
 
   upsertOnDemandRunnerConfig(
-    request: internal_server_proto_server_pb.UpsertOnDemandRunnerConfigRequest,
+    request: pkg_server_proto_server_pb.UpsertOnDemandRunnerConfigRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertOnDemandRunnerConfigResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UpsertOnDemandRunnerConfigResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertOnDemandRunnerConfigResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UpsertOnDemandRunnerConfigResponse>;
 
   upsertOnDemandRunnerConfig(
-    request: internal_server_proto_server_pb.UpsertOnDemandRunnerConfigRequest,
+    request: pkg_server_proto_server_pb.UpsertOnDemandRunnerConfigRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertOnDemandRunnerConfigResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertOnDemandRunnerConfigResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/UpsertOnDemandRunnerConfig',
         request,
         metadata || {},
-        this.methodInfoUpsertOnDemandRunnerConfig,
+        this.methodDescriptorUpsertOnDemandRunnerConfig,
         callback);
     }
     return this.client_.unaryCall(
@@ -2429,39 +2916,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/UpsertOnDemandRunnerConfig',
     request,
     metadata || {},
-    this.methodInfoUpsertOnDemandRunnerConfig);
+    this.methodDescriptorUpsertOnDemandRunnerConfig);
   }
 
-  methodInfoGetOnDemandRunnerConfig = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.GetOnDemandRunnerConfigResponse,
-    (request: internal_server_proto_server_pb.GetOnDemandRunnerConfigRequest) => {
+  methodDescriptorGetOnDemandRunnerConfig = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetOnDemandRunnerConfigRequest,
+    pkg_server_proto_server_pb.GetOnDemandRunnerConfigResponse,
+    (request: pkg_server_proto_server_pb.GetOnDemandRunnerConfigRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.GetOnDemandRunnerConfigResponse.deserializeBinary
+    pkg_server_proto_server_pb.GetOnDemandRunnerConfigResponse.deserializeBinary
   );
 
   getOnDemandRunnerConfig(
-    request: internal_server_proto_server_pb.GetOnDemandRunnerConfigRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.GetOnDemandRunnerConfigResponse>;
+    request: pkg_server_proto_server_pb.GetOnDemandRunnerConfigRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetOnDemandRunnerConfigResponse>;
 
   getOnDemandRunnerConfig(
-    request: internal_server_proto_server_pb.GetOnDemandRunnerConfigRequest,
+    request: pkg_server_proto_server_pb.GetOnDemandRunnerConfigRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetOnDemandRunnerConfigResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.GetOnDemandRunnerConfigResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetOnDemandRunnerConfigResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetOnDemandRunnerConfigResponse>;
 
   getOnDemandRunnerConfig(
-    request: internal_server_proto_server_pb.GetOnDemandRunnerConfigRequest,
+    request: pkg_server_proto_server_pb.GetOnDemandRunnerConfigRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.GetOnDemandRunnerConfigResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetOnDemandRunnerConfigResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig',
         request,
         metadata || {},
-        this.methodInfoGetOnDemandRunnerConfig,
+        this.methodDescriptorGetOnDemandRunnerConfig,
         callback);
     }
     return this.client_.unaryCall(
@@ -2469,39 +2959,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig',
     request,
     metadata || {},
-    this.methodInfoGetOnDemandRunnerConfig);
+    this.methodDescriptorGetOnDemandRunnerConfig);
   }
 
-  methodInfoListOnDemandRunnerConfigs = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.ListOnDemandRunnerConfigsResponse,
+  methodDescriptorListOnDemandRunnerConfigs = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListOnDemandRunnerConfigs',
+    grpcWeb.MethodType.UNARY,
+    google_protobuf_empty_pb.Empty,
+    pkg_server_proto_server_pb.ListOnDemandRunnerConfigsResponse,
     (request: google_protobuf_empty_pb.Empty) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.ListOnDemandRunnerConfigsResponse.deserializeBinary
+    pkg_server_proto_server_pb.ListOnDemandRunnerConfigsResponse.deserializeBinary
   );
 
   listOnDemandRunnerConfigs(
     request: google_protobuf_empty_pb.Empty,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListOnDemandRunnerConfigsResponse>;
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListOnDemandRunnerConfigsResponse>;
 
   listOnDemandRunnerConfigs(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListOnDemandRunnerConfigsResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListOnDemandRunnerConfigsResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListOnDemandRunnerConfigsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListOnDemandRunnerConfigsResponse>;
 
   listOnDemandRunnerConfigs(
     request: google_protobuf_empty_pb.Empty,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.ListOnDemandRunnerConfigsResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListOnDemandRunnerConfigsResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/ListOnDemandRunnerConfigs',
         request,
         metadata || {},
-        this.methodInfoListOnDemandRunnerConfigs,
+        this.methodDescriptorListOnDemandRunnerConfigs,
         callback);
     }
     return this.client_.unaryCall(
@@ -2509,39 +3002,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/ListOnDemandRunnerConfigs',
     request,
     metadata || {},
-    this.methodInfoListOnDemandRunnerConfigs);
+    this.methodDescriptorListOnDemandRunnerConfigs);
   }
 
-  methodInfoUpsertBuild = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.UpsertBuildResponse,
-    (request: internal_server_proto_server_pb.UpsertBuildRequest) => {
+  methodDescriptorUpsertBuild = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UpsertBuild',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UpsertBuildRequest,
+    pkg_server_proto_server_pb.UpsertBuildResponse,
+    (request: pkg_server_proto_server_pb.UpsertBuildRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.UpsertBuildResponse.deserializeBinary
+    pkg_server_proto_server_pb.UpsertBuildResponse.deserializeBinary
   );
 
   upsertBuild(
-    request: internal_server_proto_server_pb.UpsertBuildRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UpsertBuildResponse>;
+    request: pkg_server_proto_server_pb.UpsertBuildRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UpsertBuildResponse>;
 
   upsertBuild(
-    request: internal_server_proto_server_pb.UpsertBuildRequest,
+    request: pkg_server_proto_server_pb.UpsertBuildRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertBuildResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UpsertBuildResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertBuildResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UpsertBuildResponse>;
 
   upsertBuild(
-    request: internal_server_proto_server_pb.UpsertBuildRequest,
+    request: pkg_server_proto_server_pb.UpsertBuildRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertBuildResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertBuildResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/UpsertBuild',
         request,
         metadata || {},
-        this.methodInfoUpsertBuild,
+        this.methodDescriptorUpsertBuild,
         callback);
     }
     return this.client_.unaryCall(
@@ -2549,39 +3045,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/UpsertBuild',
     request,
     metadata || {},
-    this.methodInfoUpsertBuild);
+    this.methodDescriptorUpsertBuild);
   }
 
-  methodInfoUpsertPushedArtifact = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.UpsertPushedArtifactResponse,
-    (request: internal_server_proto_server_pb.UpsertPushedArtifactRequest) => {
+  methodDescriptorUpsertPushedArtifact = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UpsertPushedArtifact',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UpsertPushedArtifactRequest,
+    pkg_server_proto_server_pb.UpsertPushedArtifactResponse,
+    (request: pkg_server_proto_server_pb.UpsertPushedArtifactRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.UpsertPushedArtifactResponse.deserializeBinary
+    pkg_server_proto_server_pb.UpsertPushedArtifactResponse.deserializeBinary
   );
 
   upsertPushedArtifact(
-    request: internal_server_proto_server_pb.UpsertPushedArtifactRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UpsertPushedArtifactResponse>;
+    request: pkg_server_proto_server_pb.UpsertPushedArtifactRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UpsertPushedArtifactResponse>;
 
   upsertPushedArtifact(
-    request: internal_server_proto_server_pb.UpsertPushedArtifactRequest,
+    request: pkg_server_proto_server_pb.UpsertPushedArtifactRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertPushedArtifactResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UpsertPushedArtifactResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertPushedArtifactResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UpsertPushedArtifactResponse>;
 
   upsertPushedArtifact(
-    request: internal_server_proto_server_pb.UpsertPushedArtifactRequest,
+    request: pkg_server_proto_server_pb.UpsertPushedArtifactRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertPushedArtifactResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertPushedArtifactResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/UpsertPushedArtifact',
         request,
         metadata || {},
-        this.methodInfoUpsertPushedArtifact,
+        this.methodDescriptorUpsertPushedArtifact,
         callback);
     }
     return this.client_.unaryCall(
@@ -2589,39 +3088,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/UpsertPushedArtifact',
     request,
     metadata || {},
-    this.methodInfoUpsertPushedArtifact);
+    this.methodDescriptorUpsertPushedArtifact);
   }
 
-  methodInfoUpsertDeployment = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.UpsertDeploymentResponse,
-    (request: internal_server_proto_server_pb.UpsertDeploymentRequest) => {
+  methodDescriptorUpsertDeployment = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UpsertDeployment',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UpsertDeploymentRequest,
+    pkg_server_proto_server_pb.UpsertDeploymentResponse,
+    (request: pkg_server_proto_server_pb.UpsertDeploymentRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.UpsertDeploymentResponse.deserializeBinary
+    pkg_server_proto_server_pb.UpsertDeploymentResponse.deserializeBinary
   );
 
   upsertDeployment(
-    request: internal_server_proto_server_pb.UpsertDeploymentRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UpsertDeploymentResponse>;
+    request: pkg_server_proto_server_pb.UpsertDeploymentRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UpsertDeploymentResponse>;
 
   upsertDeployment(
-    request: internal_server_proto_server_pb.UpsertDeploymentRequest,
+    request: pkg_server_proto_server_pb.UpsertDeploymentRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertDeploymentResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UpsertDeploymentResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertDeploymentResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UpsertDeploymentResponse>;
 
   upsertDeployment(
-    request: internal_server_proto_server_pb.UpsertDeploymentRequest,
+    request: pkg_server_proto_server_pb.UpsertDeploymentRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertDeploymentResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertDeploymentResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/UpsertDeployment',
         request,
         metadata || {},
-        this.methodInfoUpsertDeployment,
+        this.methodDescriptorUpsertDeployment,
         callback);
     }
     return this.client_.unaryCall(
@@ -2629,39 +3131,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/UpsertDeployment',
     request,
     metadata || {},
-    this.methodInfoUpsertDeployment);
+    this.methodDescriptorUpsertDeployment);
   }
 
-  methodInfoUpsertRelease = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.UpsertReleaseResponse,
-    (request: internal_server_proto_server_pb.UpsertReleaseRequest) => {
+  methodDescriptorUpsertRelease = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UpsertRelease',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UpsertReleaseRequest,
+    pkg_server_proto_server_pb.UpsertReleaseResponse,
+    (request: pkg_server_proto_server_pb.UpsertReleaseRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.UpsertReleaseResponse.deserializeBinary
+    pkg_server_proto_server_pb.UpsertReleaseResponse.deserializeBinary
   );
 
   upsertRelease(
-    request: internal_server_proto_server_pb.UpsertReleaseRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UpsertReleaseResponse>;
+    request: pkg_server_proto_server_pb.UpsertReleaseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UpsertReleaseResponse>;
 
   upsertRelease(
-    request: internal_server_proto_server_pb.UpsertReleaseRequest,
+    request: pkg_server_proto_server_pb.UpsertReleaseRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertReleaseResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UpsertReleaseResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertReleaseResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UpsertReleaseResponse>;
 
   upsertRelease(
-    request: internal_server_proto_server_pb.UpsertReleaseRequest,
+    request: pkg_server_proto_server_pb.UpsertReleaseRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertReleaseResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertReleaseResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/UpsertRelease',
         request,
         metadata || {},
-        this.methodInfoUpsertRelease,
+        this.methodDescriptorUpsertRelease,
         callback);
     }
     return this.client_.unaryCall(
@@ -2669,39 +3174,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/UpsertRelease',
     request,
     metadata || {},
-    this.methodInfoUpsertRelease);
+    this.methodDescriptorUpsertRelease);
   }
 
-  methodInfoUpsertStatusReport = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.UpsertStatusReportResponse,
-    (request: internal_server_proto_server_pb.UpsertStatusReportRequest) => {
+  methodDescriptorUpsertStatusReport = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UpsertStatusReport',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UpsertStatusReportRequest,
+    pkg_server_proto_server_pb.UpsertStatusReportResponse,
+    (request: pkg_server_proto_server_pb.UpsertStatusReportRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.UpsertStatusReportResponse.deserializeBinary
+    pkg_server_proto_server_pb.UpsertStatusReportResponse.deserializeBinary
   );
 
   upsertStatusReport(
-    request: internal_server_proto_server_pb.UpsertStatusReportRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UpsertStatusReportResponse>;
+    request: pkg_server_proto_server_pb.UpsertStatusReportRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UpsertStatusReportResponse>;
 
   upsertStatusReport(
-    request: internal_server_proto_server_pb.UpsertStatusReportRequest,
+    request: pkg_server_proto_server_pb.UpsertStatusReportRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertStatusReportResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UpsertStatusReportResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertStatusReportResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UpsertStatusReportResponse>;
 
   upsertStatusReport(
-    request: internal_server_proto_server_pb.UpsertStatusReportRequest,
+    request: pkg_server_proto_server_pb.UpsertStatusReportRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UpsertStatusReportResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertStatusReportResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/UpsertStatusReport',
         request,
         metadata || {},
-        this.methodInfoUpsertStatusReport,
+        this.methodDescriptorUpsertStatusReport,
         callback);
     }
     return this.client_.unaryCall(
@@ -2709,39 +3217,257 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/UpsertStatusReport',
     request,
     metadata || {},
-    this.methodInfoUpsertStatusReport);
+    this.methodDescriptorUpsertStatusReport);
   }
 
-  methodInfoUI_GetProject = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.UI.GetProjectResponse,
-    (request: internal_server_proto_server_pb.UI.GetProjectRequest) => {
+  methodDescriptorUpsertTrigger = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UpsertTrigger',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UpsertTriggerRequest,
+    pkg_server_proto_server_pb.UpsertTriggerResponse,
+    (request: pkg_server_proto_server_pb.UpsertTriggerRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.UI.GetProjectResponse.deserializeBinary
+    pkg_server_proto_server_pb.UpsertTriggerResponse.deserializeBinary
+  );
+
+  upsertTrigger(
+    request: pkg_server_proto_server_pb.UpsertTriggerRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UpsertTriggerResponse>;
+
+  upsertTrigger(
+    request: pkg_server_proto_server_pb.UpsertTriggerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertTriggerResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UpsertTriggerResponse>;
+
+  upsertTrigger(
+    request: pkg_server_proto_server_pb.UpsertTriggerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertTriggerResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/UpsertTrigger',
+        request,
+        metadata || {},
+        this.methodDescriptorUpsertTrigger,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/UpsertTrigger',
+    request,
+    metadata || {},
+    this.methodDescriptorUpsertTrigger);
+  }
+
+  methodDescriptorGetTrigger = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetTrigger',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetTriggerRequest,
+    pkg_server_proto_server_pb.GetTriggerResponse,
+    (request: pkg_server_proto_server_pb.GetTriggerRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.GetTriggerResponse.deserializeBinary
+  );
+
+  getTrigger(
+    request: pkg_server_proto_server_pb.GetTriggerRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetTriggerResponse>;
+
+  getTrigger(
+    request: pkg_server_proto_server_pb.GetTriggerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetTriggerResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetTriggerResponse>;
+
+  getTrigger(
+    request: pkg_server_proto_server_pb.GetTriggerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetTriggerResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/GetTrigger',
+        request,
+        metadata || {},
+        this.methodDescriptorGetTrigger,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/GetTrigger',
+    request,
+    metadata || {},
+    this.methodDescriptorGetTrigger);
+  }
+
+  methodDescriptorDeleteTrigger = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/DeleteTrigger',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.DeleteTriggerRequest,
+    google_protobuf_empty_pb.Empty,
+    (request: pkg_server_proto_server_pb.DeleteTriggerRequest) => {
+      return request.serializeBinary();
+    },
+    google_protobuf_empty_pb.Empty.deserializeBinary
+  );
+
+  deleteTrigger(
+    request: pkg_server_proto_server_pb.DeleteTriggerRequest,
+    metadata: grpcWeb.Metadata | null): Promise<google_protobuf_empty_pb.Empty>;
+
+  deleteTrigger(
+    request: pkg_server_proto_server_pb.DeleteTriggerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: google_protobuf_empty_pb.Empty) => void): grpcWeb.ClientReadableStream<google_protobuf_empty_pb.Empty>;
+
+  deleteTrigger(
+    request: pkg_server_proto_server_pb.DeleteTriggerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: google_protobuf_empty_pb.Empty) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/DeleteTrigger',
+        request,
+        metadata || {},
+        this.methodDescriptorDeleteTrigger,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/DeleteTrigger',
+    request,
+    metadata || {},
+    this.methodDescriptorDeleteTrigger);
+  }
+
+  methodDescriptorListTriggers = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListTriggers',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListTriggerRequest,
+    pkg_server_proto_server_pb.ListTriggerResponse,
+    (request: pkg_server_proto_server_pb.ListTriggerRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.ListTriggerResponse.deserializeBinary
+  );
+
+  listTriggers(
+    request: pkg_server_proto_server_pb.ListTriggerRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListTriggerResponse>;
+
+  listTriggers(
+    request: pkg_server_proto_server_pb.ListTriggerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListTriggerResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListTriggerResponse>;
+
+  listTriggers(
+    request: pkg_server_proto_server_pb.ListTriggerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListTriggerResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/ListTriggers',
+        request,
+        metadata || {},
+        this.methodDescriptorListTriggers,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/ListTriggers',
+    request,
+    metadata || {},
+    this.methodDescriptorListTriggers);
+  }
+
+  methodDescriptorRunTrigger = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/RunTrigger',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.RunTriggerRequest,
+    pkg_server_proto_server_pb.RunTriggerResponse,
+    (request: pkg_server_proto_server_pb.RunTriggerRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.RunTriggerResponse.deserializeBinary
+  );
+
+  runTrigger(
+    request: pkg_server_proto_server_pb.RunTriggerRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.RunTriggerResponse>;
+
+  runTrigger(
+    request: pkg_server_proto_server_pb.RunTriggerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.RunTriggerResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.RunTriggerResponse>;
+
+  runTrigger(
+    request: pkg_server_proto_server_pb.RunTriggerRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.RunTriggerResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/RunTrigger',
+        request,
+        metadata || {},
+        this.methodDescriptorRunTrigger,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/RunTrigger',
+    request,
+    metadata || {},
+    this.methodDescriptorRunTrigger);
+  }
+
+  methodDescriptorUI_GetProject = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UI_GetProject',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UI.GetProjectRequest,
+    pkg_server_proto_server_pb.UI.GetProjectResponse,
+    (request: pkg_server_proto_server_pb.UI.GetProjectRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.UI.GetProjectResponse.deserializeBinary
   );
 
   uI_GetProject(
-    request: internal_server_proto_server_pb.UI.GetProjectRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UI.GetProjectResponse>;
+    request: pkg_server_proto_server_pb.UI.GetProjectRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UI.GetProjectResponse>;
 
   uI_GetProject(
-    request: internal_server_proto_server_pb.UI.GetProjectRequest,
+    request: pkg_server_proto_server_pb.UI.GetProjectRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UI.GetProjectResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UI.GetProjectResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UI.GetProjectResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UI.GetProjectResponse>;
 
   uI_GetProject(
-    request: internal_server_proto_server_pb.UI.GetProjectRequest,
+    request: pkg_server_proto_server_pb.UI.GetProjectRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UI.GetProjectResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UI.GetProjectResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/UI_GetProject',
         request,
         metadata || {},
-        this.methodInfoUI_GetProject,
+        this.methodDescriptorUI_GetProject,
         callback);
     }
     return this.client_.unaryCall(
@@ -2749,39 +3475,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/UI_GetProject',
     request,
     metadata || {},
-    this.methodInfoUI_GetProject);
+    this.methodDescriptorUI_GetProject);
   }
 
-  methodInfoUI_ListDeployments = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.UI.ListDeploymentsResponse,
-    (request: internal_server_proto_server_pb.UI.ListDeploymentsRequest) => {
+  methodDescriptorUI_ListDeployments = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UI_ListDeployments',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UI.ListDeploymentsRequest,
+    pkg_server_proto_server_pb.UI.ListDeploymentsResponse,
+    (request: pkg_server_proto_server_pb.UI.ListDeploymentsRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.UI.ListDeploymentsResponse.deserializeBinary
+    pkg_server_proto_server_pb.UI.ListDeploymentsResponse.deserializeBinary
   );
 
   uI_ListDeployments(
-    request: internal_server_proto_server_pb.UI.ListDeploymentsRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UI.ListDeploymentsResponse>;
+    request: pkg_server_proto_server_pb.UI.ListDeploymentsRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UI.ListDeploymentsResponse>;
 
   uI_ListDeployments(
-    request: internal_server_proto_server_pb.UI.ListDeploymentsRequest,
+    request: pkg_server_proto_server_pb.UI.ListDeploymentsRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UI.ListDeploymentsResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UI.ListDeploymentsResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UI.ListDeploymentsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UI.ListDeploymentsResponse>;
 
   uI_ListDeployments(
-    request: internal_server_proto_server_pb.UI.ListDeploymentsRequest,
+    request: pkg_server_proto_server_pb.UI.ListDeploymentsRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UI.ListDeploymentsResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UI.ListDeploymentsResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/UI_ListDeployments',
         request,
         metadata || {},
-        this.methodInfoUI_ListDeployments,
+        this.methodDescriptorUI_ListDeployments,
         callback);
     }
     return this.client_.unaryCall(
@@ -2789,39 +3518,42 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/UI_ListDeployments',
     request,
     metadata || {},
-    this.methodInfoUI_ListDeployments);
+    this.methodDescriptorUI_ListDeployments);
   }
 
-  methodInfoUI_ListReleases = new grpcWeb.AbstractClientBase.MethodInfo(
-    internal_server_proto_server_pb.UI.ListReleasesResponse,
-    (request: internal_server_proto_server_pb.UI.ListReleasesRequest) => {
+  methodDescriptorUI_ListReleases = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UI_ListReleases',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UI.ListReleasesRequest,
+    pkg_server_proto_server_pb.UI.ListReleasesResponse,
+    (request: pkg_server_proto_server_pb.UI.ListReleasesRequest) => {
       return request.serializeBinary();
     },
-    internal_server_proto_server_pb.UI.ListReleasesResponse.deserializeBinary
+    pkg_server_proto_server_pb.UI.ListReleasesResponse.deserializeBinary
   );
 
   uI_ListReleases(
-    request: internal_server_proto_server_pb.UI.ListReleasesRequest,
-    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UI.ListReleasesResponse>;
+    request: pkg_server_proto_server_pb.UI.ListReleasesRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UI.ListReleasesResponse>;
 
   uI_ListReleases(
-    request: internal_server_proto_server_pb.UI.ListReleasesRequest,
+    request: pkg_server_proto_server_pb.UI.ListReleasesRequest,
     metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UI.ListReleasesResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UI.ListReleasesResponse>;
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UI.ListReleasesResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UI.ListReleasesResponse>;
 
   uI_ListReleases(
-    request: internal_server_proto_server_pb.UI.ListReleasesRequest,
+    request: pkg_server_proto_server_pb.UI.ListReleasesRequest,
     metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.Error,
-               response: internal_server_proto_server_pb.UI.ListReleasesResponse) => void) {
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UI.ListReleasesResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
           '/hashicorp.waypoint.Waypoint/UI_ListReleases',
         request,
         metadata || {},
-        this.methodInfoUI_ListReleases,
+        this.methodDescriptorUI_ListReleases,
         callback);
     }
     return this.client_.unaryCall(
@@ -2829,7 +3561,7 @@ export class WaypointClient {
       '/hashicorp.waypoint.Waypoint/UI_ListReleases',
     request,
     metadata || {},
-    this.methodInfoUI_ListReleases);
+    this.methodDescriptorUI_ListReleases);
   }
 
 }
