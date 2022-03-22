@@ -110,33 +110,51 @@ gen/server:
 
 .PHONY: gen/ts
 gen/ts:
+	# Clear existing generated files
 	@rm -rf ./ui/lib/api-common-protos/google 2> /dev/null
-	protoc -I=. \
+	@rm -rf ./ui/lib/opaqueany/*.{js,ts} 2> /dev/null
+	@rm -rf ./ui/lib/waypoint-client/*.ts 2> /dev/null
+	@rm -rf ./ui/lib/waypoint-pb/*.{js,d.ts} 2> /dev/null
+
+	# Generate JS and gRPCWeb libraries from pkg/server/proto/server.proto
+	protoc \
+		-I=. \
 		-I=./thirdparty/proto/api-common-protos/ \
+		-I=./thirdparty/proto/opaqueany/ \
 		./pkg/server/proto/server.proto \
 		--js_out=import_style=commonjs:ui/lib/waypoint-pb/ \
 		--grpc-web_out=import_style=typescript,mode=grpcwebtext:ui/lib/waypoint-client/
+
+	# Rearrange generated libraries
 	@mv ./ui/lib/waypoint-client/pkg/server/proto/* ./ui/lib/waypoint-client/
+	@rm -rf ./ui/lib/waypoint-client/pkg
 	@mv ./ui/lib/waypoint-client/server_pb.d.ts ./ui/lib/waypoint-pb/
 	@mv ./ui/lib/waypoint-pb/pkg/server/proto/* ./ui/lib/waypoint-pb/
+	@rm -rf ./ui/lib/waypoint-pb/pkg
+
 	# Hack: fix import of api-common-protos and various JS/TS imports
 	# These issues below will help:
 	#   https://github.com/protocolbuffers/protobuf/issues/5119
 	#   https://github.com/protocolbuffers/protobuf/issues/6341
-	find . -type f -wholename './ui/lib/waypoint-pb/*' | xargs sed -i 's/..\/..\/..\/google\/rpc\/status/api-common-protos\/google\/rpc\/status/g'
-	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/..\/..\/..\/google\/rpc\/status/api-common-protos\/google\/rpc\/status/g'
-	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/.\/server_pb/waypoint-pb/g'
-	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/..\/..\/..\/internal\/server\/protwaypoint-pb/waypoint-pb/g'
+	find . -type f -wholename './ui/lib/waypoint-pb/*' | xargs sed -i 's/\.\.\/\.\.\/\.\.\/google/api-common-protos\/google/g'
+	find . -type f -wholename './ui/lib/waypoint-pb/*' | xargs sed -i 's/\.\.\/\.\.\/\.\.\/any_pb/opaqueany\/any_pb/g'
+	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/\.\.\/\.\.\/\.\.\/google/api-common-protos\/google/g'
+	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/\.\/server_pb/waypoint-pb/g'
+	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/\.\.\/\.\.\/\.\.\/pkg\/server\/proto\/server_pb/waypoint-pb/g'
 
+	# Generate JS and TS from thirdparty/proto/api-common-protos
 	protoc \
 		-I=./thirdparty/proto/api-common-protos/ \
 		./thirdparty/proto/api-common-protos/google/**/*.proto \
 		--js_out=import_style=commonjs,binary:ui/lib/api-common-protos/ \
 		--ts_out=ui/lib/api-common-protos/
-	@rm -rf ./ui/lib/waypoint-pb/internal
-	@rm -rf ./ui/lib/waypoint-client/internal
-	@rm -rf ./ui/vendor/vendor
-	@rm -rf ./google
+
+	# Generate JS and TS from thirdparty/proto/opaqueany
+	protoc \
+		-I=./thirdparty/proto/opaqueany/ \
+		./thirdparty/proto/opaqueany/*.proto \
+		--js_out=import_style=commonjs,binary:ui/lib/opaqueany/ \
+		--ts_out=ui/lib/opaqueany/
 
 # This currently assumes you have run `ember build` in the ui/ directory
 static-assets:
