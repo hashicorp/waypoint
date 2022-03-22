@@ -6,7 +6,7 @@ RUN apt-get update; apt-get install unzip
 
 # Protoc
 # TODO(izaak): discover the protoc version from the nix files
-RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip -O /tmp/protoc.zip && \
+RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-$(uname -m).zip -O /tmp/protoc.zip && \
     unzip /tmp/protoc.zip -d /tmp && \
     mv /tmp/bin/protoc /usr/local/bin/ && \
     chmod +x /usr/local/bin/protoc && \
