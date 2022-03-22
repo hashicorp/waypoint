@@ -269,6 +269,14 @@ type WaypointClient interface {
 	UpsertRelease(ctx context.Context, in *UpsertReleaseRequest, opts ...grpc.CallOption) (*UpsertReleaseResponse, error)
 	// UpsertStatusReport updates or inserts a statusreport.
 	UpsertStatusReport(ctx context.Context, in *UpsertStatusReportRequest, opts ...grpc.CallOption) (*UpsertStatusReportResponse, error)
+	// UpsertTask updates or inserts a Task
+	UpsertTask(ctx context.Context, in *UpsertTaskRequest, opts ...grpc.CallOption) (*UpsertTaskResponse, error)
+	// GetTask returns a requested Task message. Or an error if it does not exist.
+	GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*GetTaskResponse, error)
+	// DeleteTask takes a Task id and deletes it, if it exists.
+	DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// ListTask will return a list of all existing Tasks
+	ListTask(ctx context.Context, in *ListTaskRequest, opts ...grpc.CallOption) (*ListTaskResponse, error)
 	// UpsertTrigger updates or inserts a trigger URL configuration.
 	UpsertTrigger(ctx context.Context, in *UpsertTriggerRequest, opts ...grpc.CallOption) (*UpsertTriggerResponse, error)
 	// GetTrigger returns a requested trigger message. Or an error if it does not exist.
@@ -280,14 +288,6 @@ type WaypointClient interface {
 	// RunTrigger will look up the referenced trigger and attempt to queue a job
 	// based on the trigger configuration.
 	RunTrigger(ctx context.Context, in *RunTriggerRequest, opts ...grpc.CallOption) (*RunTriggerResponse, error)
-	// UpsertTask updates or inserts a Task
-	UpsertTask(ctx context.Context, in *UpsertTaskRequest, opts ...grpc.CallOption) (*UpsertTaskResponse, error)
-	// GetTask returns a requested Task message. Or an error if it does not exist.
-	GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*GetTaskResponse, error)
-	// DeleteTask takes a Task id and deletes it, if it exists.
-	DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// ListTask will return a list of all existing Tasks
-	ListTask(ctx context.Context, in *ListTaskRequest, opts ...grpc.CallOption) (*ListTaskResponse, error)
 	// Get a given project with useful related records.
 	UI_GetProject(ctx context.Context, in *UI_GetProjectRequest, opts ...grpc.CallOption) (*UI_GetProjectResponse, error)
 	// List deployments for a given application.
@@ -1272,6 +1272,42 @@ func (c *waypointClient) UpsertStatusReport(ctx context.Context, in *UpsertStatu
 	return out, nil
 }
 
+func (c *waypointClient) UpsertTask(ctx context.Context, in *UpsertTaskRequest, opts ...grpc.CallOption) (*UpsertTaskResponse, error) {
+	out := new(UpsertTaskResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpsertTask", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*GetTaskResponse, error) {
+	out := new(GetTaskResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetTask", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteTask", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) ListTask(ctx context.Context, in *ListTaskRequest, opts ...grpc.CallOption) (*ListTaskResponse, error) {
+	out := new(ListTaskResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListTask", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) UpsertTrigger(ctx context.Context, in *UpsertTriggerRequest, opts ...grpc.CallOption) (*UpsertTriggerResponse, error) {
 	out := new(UpsertTriggerResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpsertTrigger", in, out, opts...)
@@ -1311,42 +1347,6 @@ func (c *waypointClient) ListTriggers(ctx context.Context, in *ListTriggerReques
 func (c *waypointClient) RunTrigger(ctx context.Context, in *RunTriggerRequest, opts ...grpc.CallOption) (*RunTriggerResponse, error) {
 	out := new(RunTriggerResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/RunTrigger", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *waypointClient) UpsertTask(ctx context.Context, in *UpsertTaskRequest, opts ...grpc.CallOption) (*UpsertTaskResponse, error) {
-	out := new(UpsertTaskResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpsertTask", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *waypointClient) GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*GetTaskResponse, error) {
-	out := new(GetTaskResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetTask", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *waypointClient) DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteTask", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *waypointClient) ListTask(ctx context.Context, in *ListTaskRequest, opts ...grpc.CallOption) (*ListTaskResponse, error) {
-	out := new(ListTaskResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListTask", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1630,6 +1630,14 @@ type WaypointServer interface {
 	UpsertRelease(context.Context, *UpsertReleaseRequest) (*UpsertReleaseResponse, error)
 	// UpsertStatusReport updates or inserts a statusreport.
 	UpsertStatusReport(context.Context, *UpsertStatusReportRequest) (*UpsertStatusReportResponse, error)
+	// UpsertTask updates or inserts a Task
+	UpsertTask(context.Context, *UpsertTaskRequest) (*UpsertTaskResponse, error)
+	// GetTask returns a requested Task message. Or an error if it does not exist.
+	GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error)
+	// DeleteTask takes a Task id and deletes it, if it exists.
+	DeleteTask(context.Context, *DeleteTaskRequest) (*emptypb.Empty, error)
+	// ListTask will return a list of all existing Tasks
+	ListTask(context.Context, *ListTaskRequest) (*ListTaskResponse, error)
 	// UpsertTrigger updates or inserts a trigger URL configuration.
 	UpsertTrigger(context.Context, *UpsertTriggerRequest) (*UpsertTriggerResponse, error)
 	// GetTrigger returns a requested trigger message. Or an error if it does not exist.
@@ -1641,14 +1649,6 @@ type WaypointServer interface {
 	// RunTrigger will look up the referenced trigger and attempt to queue a job
 	// based on the trigger configuration.
 	RunTrigger(context.Context, *RunTriggerRequest) (*RunTriggerResponse, error)
-	// UpsertTask updates or inserts a Task
-	UpsertTask(context.Context, *UpsertTaskRequest) (*UpsertTaskResponse, error)
-	// GetTask returns a requested Task message. Or an error if it does not exist.
-	GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error)
-	// DeleteTask takes a Task id and deletes it, if it exists.
-	DeleteTask(context.Context, *DeleteTaskRequest) (*emptypb.Empty, error)
-	// ListTask will return a list of all existing Tasks
-	ListTask(context.Context, *ListTaskRequest) (*ListTaskResponse, error)
 	// Get a given project with useful related records.
 	UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error)
 	// List deployments for a given application.
@@ -1908,6 +1908,18 @@ func (UnimplementedWaypointServer) UpsertRelease(context.Context, *UpsertRelease
 func (UnimplementedWaypointServer) UpsertStatusReport(context.Context, *UpsertStatusReportRequest) (*UpsertStatusReportResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertStatusReport not implemented")
 }
+func (UnimplementedWaypointServer) UpsertTask(context.Context, *UpsertTaskRequest) (*UpsertTaskResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertTask not implemented")
+}
+func (UnimplementedWaypointServer) GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTask not implemented")
+}
+func (UnimplementedWaypointServer) DeleteTask(context.Context, *DeleteTaskRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTask not implemented")
+}
+func (UnimplementedWaypointServer) ListTask(context.Context, *ListTaskRequest) (*ListTaskResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTask not implemented")
+}
 func (UnimplementedWaypointServer) UpsertTrigger(context.Context, *UpsertTriggerRequest) (*UpsertTriggerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertTrigger not implemented")
 }
@@ -1922,18 +1934,6 @@ func (UnimplementedWaypointServer) ListTriggers(context.Context, *ListTriggerReq
 }
 func (UnimplementedWaypointServer) RunTrigger(context.Context, *RunTriggerRequest) (*RunTriggerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RunTrigger not implemented")
-}
-func (UnimplementedWaypointServer) UpsertTask(context.Context, *UpsertTaskRequest) (*UpsertTaskResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpsertTask not implemented")
-}
-func (UnimplementedWaypointServer) GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTask not implemented")
-}
-func (UnimplementedWaypointServer) DeleteTask(context.Context, *DeleteTaskRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteTask not implemented")
-}
-func (UnimplementedWaypointServer) ListTask(context.Context, *ListTaskRequest) (*ListTaskResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListTask not implemented")
 }
 func (UnimplementedWaypointServer) UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_GetProject not implemented")
@@ -3493,6 +3493,78 @@ func _Waypoint_UpsertStatusReport_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_UpsertTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertTaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).UpsertTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/UpsertTask",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).UpsertTask(ctx, req.(*UpsertTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetTask",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetTask(ctx, req.(*GetTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_DeleteTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DeleteTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteTask",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DeleteTask(ctx, req.(*DeleteTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_ListTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).ListTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/ListTask",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).ListTask(ctx, req.(*ListTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_UpsertTrigger_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpsertTriggerRequest)
 	if err := dec(in); err != nil {
@@ -3579,78 +3651,6 @@ func _Waypoint_RunTrigger_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).RunTrigger(ctx, req.(*RunTriggerRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Waypoint_UpsertTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpsertTaskRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).UpsertTask(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/UpsertTask",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).UpsertTask(ctx, req.(*UpsertTaskRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Waypoint_GetTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTaskRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).GetTask(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/GetTask",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).GetTask(ctx, req.(*GetTaskRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Waypoint_DeleteTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteTaskRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).DeleteTask(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteTask",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).DeleteTask(ctx, req.(*DeleteTaskRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Waypoint_ListTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListTaskRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).ListTask(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/ListTask",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).ListTask(ctx, req.(*ListTaskRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4005,6 +4005,22 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_UpsertStatusReport_Handler,
 		},
 		{
+			MethodName: "UpsertTask",
+			Handler:    _Waypoint_UpsertTask_Handler,
+		},
+		{
+			MethodName: "GetTask",
+			Handler:    _Waypoint_GetTask_Handler,
+		},
+		{
+			MethodName: "DeleteTask",
+			Handler:    _Waypoint_DeleteTask_Handler,
+		},
+		{
+			MethodName: "ListTask",
+			Handler:    _Waypoint_ListTask_Handler,
+		},
+		{
 			MethodName: "UpsertTrigger",
 			Handler:    _Waypoint_UpsertTrigger_Handler,
 		},
@@ -4023,22 +4039,6 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RunTrigger",
 			Handler:    _Waypoint_RunTrigger_Handler,
-		},
-		{
-			MethodName: "UpsertTask",
-			Handler:    _Waypoint_UpsertTask_Handler,
-		},
-		{
-			MethodName: "GetTask",
-			Handler:    _Waypoint_GetTask_Handler,
-		},
-		{
-			MethodName: "DeleteTask",
-			Handler:    _Waypoint_DeleteTask_Handler,
-		},
-		{
-			MethodName: "ListTask",
-			Handler:    _Waypoint_ListTask_Handler,
 		},
 		{
 			MethodName: "UI_GetProject",
