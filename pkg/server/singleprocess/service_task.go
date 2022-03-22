@@ -84,7 +84,7 @@ func (s *Service) getJobsByTaskRef(
 		}
 	}
 
-	if t.StartJob == nil {
+	if t.StartJob != nil {
 		var err error
 		startJob, err = s.GetJob(ctx, &pb.GetJobRequest{JobId: t.StartJob.Id})
 		if err != nil {
@@ -92,7 +92,7 @@ func (s *Service) getJobsByTaskRef(
 		}
 	}
 
-	if t.StopJob == nil {
+	if t.StopJob != nil {
 		var err error
 		stopJob, err = s.GetJob(ctx, &pb.GetJobRequest{JobId: t.StopJob.Id})
 		if err != nil {

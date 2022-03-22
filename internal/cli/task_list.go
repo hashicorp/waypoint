@@ -68,6 +68,7 @@ func (c *TaskListCommand) Run(args []string) int {
 		return 0
 	}
 
+	// TODO(briancain): this isn't really useful yet
 	c.ui.Output("Waypoint On-Demand Runner Tasks", terminal.WithHeaderStyle())
 
 	tblHeaders := []string{"ID", "Start Job Id", "Run Job Id", "Stop Job Id"}
@@ -75,14 +76,14 @@ func (c *TaskListCommand) Run(args []string) int {
 
 	for _, t := range tasks {
 		var taskJobId, startJobId, stopJobId string
-		if t.TaskJob != nil {
+		if t.Task.TaskJob != nil {
 			taskJobId = t.TaskJob.Id
 		}
-		if t.StartJob != nil {
-			startJobId = t.StartJob.Id
+		if t.Task.StartJob != nil {
+			startJobId = t.Task.StartJob.Id
 		}
-		if t.StopJob != nil {
-			stopJobId = t.StopJob.Id
+		if t.Task.StopJob != nil {
+			stopJobId = t.Task.StopJob.Id
 		}
 
 		tblColumn := []string{

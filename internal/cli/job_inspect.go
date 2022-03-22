@@ -69,23 +69,9 @@ func (c *JobInspectCommand) Run(args []string) int {
 		return 0
 	}
 
-	c.ui.Output("Job Configuration", terminal.WithHeaderStyle())
-
-	vals, err := c.FormatJob(resp)
-	if err != nil {
-		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return 1
-	}
-
-	c.ui.NamedValues(vals, terminal.WithInfoStyle())
-
-	return 0
-}
-
-func (c *JobInspectCommand) FormatJob(job *pb.Job) ([]terminal.NamedValue, error) {
 	var op string
 	// Job_Noop seems to be missing the isJob_operation method
-	switch job.Operation.(type) {
+	switch resp.Operation.(type) {
 	case *pb.Job_Build:
 		op = "Build"
 	case *pb.Job_Push:
@@ -127,7 +113,7 @@ func (c *JobInspectCommand) FormatJob(job *pb.Job) ([]terminal.NamedValue, error
 	}
 
 	var jobState string
-	switch job.State {
+	switch resp.State {
 	case pb.Job_UNKNOWN:
 		jobState = "Unknown"
 	case pb.Job_QUEUED:
@@ -145,7 +131,7 @@ func (c *JobInspectCommand) FormatJob(job *pb.Job) ([]terminal.NamedValue, error
 	}
 
 	var targetRunner string
-	switch target := job.TargetRunner.Target.(type) {
+	switch target := resp.TargetRunner.Target.(type) {
 	case *pb.Ref_Runner_Any:
 		targetRunner = "*"
 	case *pb.Ref_Runner_Id:
@@ -153,13 +139,12 @@ func (c *JobInspectCommand) FormatJob(job *pb.Job) ([]terminal.NamedValue, error
 	}
 
 	var completeTime string
-	if job.CompleteTime != nil {
-		completeTime = humanize.Time(job.CompleteTime.AsTime())
+	if resp.CompleteTime != nil {
+		completeTime = humanize.Time(resp.CompleteTime.AsTime())
 	}
-
 	var cancelTime string
-	if job.CancelTime != nil {
-		cancelTime = humanize.Time(job.CancelTime.AsTime())
+	if resp.CancelTime != nil {
+		cancelTime = humanize.Time(resp.CancelTime.AsTime())
 	}
 
 	// job had an error! Let's show the message
@@ -171,10 +156,10 @@ func (c *JobInspectCommand) FormatJob(job *pb.Job) ([]terminal.NamedValue, error
 	c.ui.Output("Job Configuration", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
-			Name: "ID", Value: job.Id,
+			Name: "ID", Value: resp.Id,
 		},
 		{
-			Name: "Singleton ID", Value: job.SingletonId,
+			Name: "Singleton ID", Value: resp.SingletonId,
 		},
 		{
 			Name: "Operation", Value: op,
@@ -207,9 +192,9 @@ func (c *JobInspectCommand) FormatJob(job *pb.Job) ([]terminal.NamedValue, error
 		{
 			Name: "Error Message", Value: errMsg,
 		},
-	})
+	}, terminal.WithInfoStyle())
 
-	return result, nil
+	return 0
 }
 
 func (c *JobInspectCommand) Flags() *flag.Sets {
