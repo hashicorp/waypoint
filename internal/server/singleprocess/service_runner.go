@@ -459,11 +459,48 @@ func (s *service) RunnerJobStream(
 		return err
 	}
 
-	// Get a job assignment for this runner
-	job, err := s.state.JobAssignForRunner(ctx, runner)
-	if err != nil {
-		return err
+	// Get the job for this runner. If this is a reattach, we lookup
+	// the preexisting job. Otherwise, we assign a new job.
+	var job *serverstate.Job
+	reattach := false
+	if jobId := reqEvent.Request.ReattachJobId; jobId != "" {
+		reattach = true
+
+		log.Info("runner reattaching to an existing job", "job_id", jobId)
+		job, err = s.state.JobById(jobId, nil)
+		if err != nil {
+			return err
+		}
+
+		// If the job is not found, that is an error.
+		if job == nil {
+			return status.Errorf(codes.InvalidArgument,
+				"reattach job ID does not exist")
+		}
+
+		// The runner reattaching must be the assigned runner.
+		assigned := job.Job.AssignedRunner
+		if assigned == nil || assigned.Id != runner.Id {
+			return status.Errorf(codes.InvalidArgument,
+				"reattach job is not assigned to this runner")
+		}
+
+		// NOTE(mitchellh): things we should check in the future:
+		// * job stream already open for this job ID
+		// * job already in a terminal state
+	} else {
+		// Get a job assignment for this runner. This will block until
+		// a job is available for the runner.
+		log.Info("waiting for job assignment")
+		job, err = s.state.JobAssignForRunner(ctx, runner)
+		if err != nil {
+			return err
+		}
 	}
+	if job == nil || job.Job == nil {
+		panic("job is nil, should never be nil at this point")
+	}
+	log = log.With("job_id", job.Id)
 
 	// Send the job assignment.
 	//
@@ -506,17 +543,31 @@ func (s *service) RunnerJobStream(
 		}
 	}
 
-	// Send the ack OR nack, based on the value of +ack+.
-	job, ackerr := s.state.JobAck(job.Id, ack)
-	if ackerr != nil {
-		// If this fails, we just log, there is nothing more we can do.
-		log.Warn("job ack failed", "outer_error", err, "error", ackerr)
+	// We only ack if we're not reattached. If we reattached, then we can
+	// only reattach to an already-acked job.
+	if !reattach {
+		// Send the ack OR nack, based on the value of +ack+.
+		var ackerr error
+		job, ackerr = s.state.JobAck(job.Id, ack)
+		if ackerr != nil {
+			// If this fails, we just log, there is nothing more we can do.
+			log.Warn("job ack failed", "outer_error", err, "error", ackerr)
 
-		// If we had no outer error, set the ackerr so that we exit. If
-		// we do have an outer error, then the ack error only shows up in
-		// the log.
-		if err == nil {
-			err = ackerr
+			// If we had no outer error, set the ackerr so that we exit. If
+			// we do have an outer error, then the ack error only shows up in
+			// the log.
+			if err == nil {
+				err = ackerr
+			}
+		}
+	} else {
+		// If we acked, we do nothing, cause reattachment only works
+		// with already-acked job. We still require the ack from the client
+		// to sync progress, but it has no state impact. If we nack, however,
+		// we cancel the job.
+		if !ack {
+			log.Warn("reattach job was nacked, force cancelling")
+			err = s.state.JobCancel(job.Id, true)
 		}
 	}
 

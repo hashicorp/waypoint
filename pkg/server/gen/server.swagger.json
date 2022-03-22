@@ -7608,6 +7608,10 @@
         "runner_id": {
           "type": "string",
           "description": "The ID of the runner opening the job stream. This ID must match\nthe ID of the runner token in use."
+        },
+        "reattach_job_id": {
+          "type": "string",
+          "description": "If the runner is reconnecting to a dropped connection, it can specify\nthe job ID it is continuing. This can only be specified when the runner\nis reconnecting to a dropped connection due to network issues or\nthe server process disappearing. This can't currently be safely used\nfor reconnecting after a runner crash, because that case hasn't been\nthought of yet."
         }
       }
     },
@@ -7616,7 +7620,7 @@
       "properties": {
         "assignment": {
           "$ref": "#/definitions/hashicorp.waypoint.RunnerJobStreamResponse.JobAssignment",
-          "description": "assignment is when a job is assigned to this job stream. This\nwill happen ONLY in response to a \"Request\" message from the client."
+          "description": "assignment is when a job is assigned to this job stream. This\nwill happen ONLY in response to a \"Request\" message from the client.\n\nThis is sent down for the reattach use case (if reattach is set\nin Request), too, and the client is expected to Ack it. This\nverifies that both sides are ready to continue with the job."
         },
         "cancel": {
           "$ref": "#/definitions/hashicorp.waypoint.RunnerJobStreamResponse.JobCancel",

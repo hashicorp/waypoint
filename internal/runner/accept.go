@@ -10,11 +10,10 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/pkg/errors"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/serverclient"
@@ -89,17 +88,13 @@ func (r *Runner) AcceptExact(ctx context.Context, id string) error {
 
 var testRecvDelay time.Duration
 
+//nolint:lostcancel
 func (r *Runner) accept(ctx context.Context, id string) error {
 	if r.readState(&r.stateExit) > 0 {
 		return ErrClosed
 	}
 
 	log := r.logger
-
-	// Setup a new context that we can cancel at any time to close the stream.
-	// We use this for timeouts.
-	streamCtx, streamCancel := context.WithCancel(r.runningCtx)
-	defer streamCancel()
 
 	// The runningCtx has the token that is set during runner adoption.
 	// This is required for API calls to succeed. Put the token into ctx
@@ -108,44 +103,115 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		ctx = serverclient.TokenWithContext(ctx, tok)
 	}
 
+	// Retry tracks whether we're trying a job stream connection or not.
+	// We use this so that the first attempt fails fast so we can log it.
+	// Subsequent attempts block.
+	retry := false
+
+	// State we want to initialize outside the retry label.
+	var client pb.Waypoint_RunnerJobStreamClient
+	var streamCtx context.Context
+	var streamCancel context.CancelFunc
+	var streamCtxLock sync.Mutex
+	var stateGen uint64
+	var err error
+
+	// We wrap this in a func() so that we use the latest client value
+	// and don't stack defers on retry.
+	defer func() {
+		if client != nil {
+			client.CloseSend()
+		}
+
+		streamCtxLock.Lock()
+		defer streamCtxLock.Unlock()
+		if streamCancel != nil {
+			streamCancel()
+		}
+	}()
+
+	// If we have a timeout, then we setup a timer for accepting.
+	var acceptTimer *time.Timer
+	var canceled int32
+	if r.acceptTimeout > 0 {
+		acceptTimer = time.AfterFunc(r.acceptTimeout, func() {
+			log.Error("runner timed out waiting for a job",
+				"timeout", r.acceptTimeout.String())
+
+			// Grab this lock before updating canceled. You don't
+			// need to have this lock to touch canceled (we use atomic ops)
+			// but it is used when the streamCancel is being reset so that
+			// we don't set it up and race with cancelation.
+			streamCtxLock.Lock()
+			defer streamCtxLock.Unlock()
+
+			// Mark that we canceled
+			atomic.StoreInt32(&canceled, 1)
+
+			// Cancel the context
+			if streamCancel != nil {
+				streamCancel()
+			}
+		})
+	}
+
+RESTART_JOB_STREAM:
+	// If we're retrying, these might be non-nil and we want to do some clean-up
+	if retry {
+		log.Warn("server down before accepting a job, will reconnect")
+
+		if client != nil {
+			client.CloseSend()
+		}
+	}
+
+	// Setup a new context that we can cancel at any time to close the stream.
+	// We use this for timeouts.
+	//
+	// Note: we disable the lostcancel linter for streamCancel because
+	// golangci-lint is not detecting that we have the defer above the
+	// label as well as the retry block above.
+	streamCtxLock.Lock()
+	if streamCancel != nil {
+		streamCancel()
+	}
+	if atomic.LoadInt32(&canceled) > 0 {
+		streamCtxLock.Unlock()
+		return ErrTimeout
+	}
+	streamCtx, streamCancel = context.WithCancel(r.runningCtx)
+	streamCtxLock.Unlock()
+
+	// Since this is a disconnect, we have to wait for our
+	// RunnerConfig stream to re-establish. We wait for the config
+	// generation to increment.
+	if retry {
+		if r.waitStateGreater(&r.stateConfig, stateGen) {
+			return status.Error(codes.Internal, "early exit while waiting for reconnect")
+		}
+	}
+
+	// Get our configuration state value. We use this so that we can detect
+	// when we've reconnected during failures.
+	stateGen = r.readState(&r.stateConfig)
+
 	// Open a new job stream. This retries on connection errors. Note that
-	// this loop doesn't respect the accept timeout because gRPC has no way
+	// this retry loop doesn't respect the accept timeout because gRPC has no way
 	// to time out of a "WaitForReady" RPC call (it ignores context cancellation,
 	// too). TODO: do a manual backoff with WaitForReady(false) so we can
 	// weave in accept timeout.
-	retry := false
-	var client pb.Waypoint_RunnerJobStreamClient
-	for {
-		// Get our configuration state value. We use this so that we can detect
-		// when we've reconnected during failures.
-		stateGen := r.readState(&r.stateConfig)
-
-		// NOTE: we purposely do NOT use ctx above since if the context is
-		// cancelled we want to continue reporting errors.
-		log.Debug("opening job stream", "retry", retry)
-		var err error
-		client, err = r.client.RunnerJobStream(streamCtx, grpc.WaitForReady(retry))
-		if err != nil {
-			if status.Code(err) == codes.Unavailable || status.Code(err) == codes.NotFound {
-				log.Warn("server down during job stream open, will attempt reconnect")
-
-				// Since this is a disconnect, we have to wait for our
-				// RunnerConfig stream to re-establish. We wait for the config
-				// generation to increment.
-				if r.waitStateGreater(&r.stateConfig, stateGen) {
-					return status.Error(codes.Internal, "early exit while waiting for reconnect")
-				}
-
-				retry = true
-				continue
-			}
-
-			return err
+	log.Debug("opening job stream", "retry", retry)
+	client, err = r.client.RunnerJobStream(streamCtx, grpc.WaitForReady(retry))
+	retry = true
+	if err != nil {
+		if atomic.LoadInt32(&canceled) > 0 ||
+			status.Code(err) == codes.Unavailable ||
+			status.Code(err) == codes.NotFound {
+			goto RESTART_JOB_STREAM
 		}
 
-		break
+		return err
 	}
-	defer client.CloseSend()
 
 	// Send our request
 	log.Trace("sending job request")
@@ -156,35 +222,27 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			},
 		},
 	}); err != nil {
+		if atomic.LoadInt32(&canceled) > 0 ||
+			status.Code(err) == codes.Unavailable ||
+			status.Code(err) == codes.NotFound {
+			goto RESTART_JOB_STREAM
+		}
+
 		return err
 	}
 
 	// Wait for an assignment
 	log.Info("waiting for job assignment")
 
-	// If we have a timeout, then we setup a timer for accepting.
-	var acceptTimer *time.Timer
-	var canceled int32
-	if r.acceptTimeout > 0 {
-		acceptTimer = time.AfterFunc(r.acceptTimeout, func() {
-			log.Error("runner timed out waiting for a job",
-				"timeout", r.acceptTimeout.String())
-
-			// Mark that we canceled
-			atomic.StoreInt32(&canceled, 1)
-
-			// Cancel the context
-			streamCancel()
-		})
-	}
-
 	// NOTE: if r.runningCtx is canceled, because the runner has finished closing,
 	// any job sent won't be acked, but the server will see an error on waiting
 	// for us to ack the job, and auto-nack it.
 	resp, err := client.Recv()
 	if err != nil {
-		if atomic.LoadInt32(&canceled) > 0 {
-			return ErrTimeout
+		if atomic.LoadInt32(&canceled) > 0 ||
+			status.Code(err) == codes.Unavailable ||
+			status.Code(err) == codes.NotFound {
+			goto RESTART_JOB_STREAM
 		}
 
 		return err
@@ -202,8 +260,9 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			"expected job assignment, server sent %T",
 			resp.Event)
 	}
+	jobId := assignment.Assignment.Job.Id
 	log = log.With(
-		"job_id", assignment.Assignment.Job.Id,
+		"job_id", jobId,
 		"job_op", fmt.Sprintf("%T", assignment.Assignment.Job.Operation),
 	)
 	log.Info("job assignment received")
@@ -225,10 +284,6 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	}
 	r.runningCond.L.Unlock()
 
-	if shutdown {
-		return errors.Wrapf(ErrClosed, "runner shutdown, dropped job: %s", assignment.Assignment.Job.Id)
-	}
-
 	defer func() {
 		r.runningCond.L.Lock()
 		defer r.runningCond.L.Unlock()
@@ -237,15 +292,24 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		r.runningCond.Broadcast()
 	}()
 
+	if shutdown {
+		return errors.Wrapf(ErrClosed, "runner shutdown, dropped job: %s", jobId)
+	}
+
 	// If this isn't the job we expected then we nack and error.
 	if id != "" {
-		if assignment.Assignment.Job.Id != id {
+		if jobId != id {
 			log.Warn("unexpected job id for exact match, nacking")
 			if err := client.Send(&pb.RunnerJobStreamRequest{
 				Event: &pb.RunnerJobStreamRequest_Error_{
 					Error: &pb.RunnerJobStreamRequest_Error{},
 				},
 			}); err != nil {
+				// We don't restart the accept here on disconnect because
+				// we already know we're in an error state that was truly
+				// unexpected and erroneous: the server gave us a job that
+				// wasn't assignd to us! Let's return.
+
 				return err
 			}
 
@@ -262,7 +326,31 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			Ack: &pb.RunnerJobStreamRequest_Ack{},
 		},
 	}); err != nil {
+		// This is sort of sketchy situation, but this comment is here to tell
+		// you why its safe. At this point, the error should only be if the ack
+		// failed to send so the server shouldn't have received the ack. However,
+		// if they did, this goto will abandon the job. That's okay, it'll be
+		// stuck for the heartbeat period and then the job manager will kill
+		// it. That's unfortunate but unlikely to happen in practice and not
+		// a bad outcome since no logic is ever executed for the job.
+		if status.Code(err) == codes.Unavailable ||
+			status.Code(err) == codes.NotFound {
+			goto RESTART_JOB_STREAM
+		}
+
 		return err
+	}
+
+	// Now that we've acked the job, we can create the re-attachable client.
+	// Note: we use this context and not the new one below so that we
+	// continue to reconnect even if our job is done since we need to still
+	// send job complete messages.
+	client = &reattachClient{
+		ctx:    ctx,
+		client: client,
+		log:    log.Named("job_stream").With("job_id", jobId),
+		runner: r,
+		jobId:  jobId,
 	}
 
 	// Create a cancelable context so we can stop if job is canceled

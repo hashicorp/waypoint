@@ -2410,6 +2410,9 @@ message RunnerJobStreamRequest {
     // ack is sent to accept a job assignment from the server. This
     // should be sent soon after the job is assigned to avoid the job being
     // reassigned and duplicated.
+    //
+    // In the reattach use case, this should still be sent to the
+    // server in response to job assignment.
     Ack ack = 2;
 
     // complete is sent on job completion. This is only sent if there
@@ -2447,6 +2450,14 @@ message RunnerJobStreamRequest {
     // The ID of the runner opening the job stream. This ID must match
     // the ID of the runner token in use.
     string runner_id = 1;
+
+    // If the runner is reconnecting to a dropped connection, it can specify
+    // the job ID it is continuing. This can only be specified when the runner
+    // is reconnecting to a dropped connection due to network issues or
+    // the server process disappearing. This can't currently be safely used
+    // for reconnecting after a runner crash, because that case hasn't been
+    // thought of yet.
+    string reattach_job_id = 2;
   }
 
   message Ack {}
@@ -2471,6 +2482,10 @@ message RunnerJobStreamResponse {
   oneof event {
     // assignment is when a job is assigned to this job stream. This
     // will happen ONLY in response to a "Request" message from the client.
+    //
+    // This is sent down for the reattach use case (if reattach is set
+    // in Request), too, and the client is expected to Ack it. This
+    // verifies that both sides are ready to continue with the job.
     JobAssignment assignment = 1;
 
     // cancel is sent when a cancel request is made.
