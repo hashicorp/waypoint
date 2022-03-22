@@ -1187,6 +1187,23 @@ message GetTaskResponse {
   Job task_job = 2;
   Job start_job = 3;
   Job stop_job = 4;
+
+  // The overall state of the Task triple. See the enum def for details for
+  // each possible Task state. This will be computed for each GetTaskResponse
+  // based on the Task job ids receieved from the database.
+  State state = 5;
+
+  enum State {
+    UNKNOWN = 0; // no state defined, the default
+    PENDING = 1; // no stops have been ran yet
+    STARTING = 2; // start_job is running
+    STARTED  = 3; // start_job complete, task is not running yet
+    RUNNING = 4; // task is running
+    COMPLETED = 5; // task is done
+    STOPPING = 6; // stop_job is running
+    STOPPED = 7; // every job in Task triple is stopped
+    MIXED = 8; // jobs are in an undefined state that don't match our expectation
+  }
 }
 
 message DeleteTaskRequest {
