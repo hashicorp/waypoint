@@ -3,8 +3,6 @@ package singleprocess
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
-
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
@@ -46,23 +44,6 @@ func (s *service) GetTask(
 	}
 
 	return resp, nil
-}
-
-// DeleteTask deletes a Task based on ID
-func (s *service) DeleteTask(
-	ctx context.Context,
-	req *pb.DeleteTaskRequest,
-) (*empty.Empty, error) {
-	if err := serverptypes.ValidateDeleteTaskRequest(req); err != nil {
-		return nil, err
-	}
-
-	err := s.state.TaskDelete(req.Ref)
-	if err != nil {
-		return nil, err
-	}
-
-	return &empty.Empty{}, nil
 }
 
 func (s *service) ListTask(
