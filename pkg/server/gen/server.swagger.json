@@ -5667,7 +5667,7 @@
         },
         "task_job": {
           "$ref": "#/definitions/hashicorp.waypoint.Job",
-          "title": "the Job triple that the task is associated with. These jobs are the full\nmessage for each based on the Ref_Job id found inside Task"
+          "title": "The Job triple that the task is associated with. These jobs are the full\nmessage for each based on the Ref_Job id found inside Task"
         },
         "start_job": {
           "$ref": "#/definitions/hashicorp.waypoint.Job"
@@ -8054,9 +8054,28 @@
         "state": {
           "$ref": "#/definitions/opaqueany.Any",
           "description": "This task info message represented as an Any format. This is the full\ntask encoded directly by the server that has access to the proto to decode it."
+        },
+        "job_state": {
+          "$ref": "#/definitions/hashicorp.waypoint.Task.State",
+          "description": "The overall state of the Task triple. See the enum def for details for\neach possible Task state. This will be computed for each GetTaskResponse\nbased on the Task job ids receieved from the database."
         }
       },
-      "description": "TODO(briancain): Note that there is still work to be done here to properly\nleverage this message in Waypoint. Once the implementation phase comes\nto actually use this, we will be mindful in how these Task messages\nare pruned and deleted since they are directly associated with jobs. /end todo\nTask tracks the life of an on-demand runner task that spawns Start\nand Stop tasks for any kind of job/operation in Waypoint. Automatic jobs\nsuch as project polling or status report generation spawn on-demand\nrunner tasks, and this message can be used to track the life of those\nautomated jobs. Note that every on-demand runner task is wrapped with a\nStart and Stop task, which we track here as well."
+      "title": "TODO(briancain): Note that there is still work to be done here to properly\nleverage this message in Waypoint. Once the implementation phase comes\nto actually use this, we will be mindful in how these Task messages\nare pruned and deleted since they are directly associated with jobs. /end todo\nTask tracks the life of an on-demand runner task that spawns Start\nand Stop tasks for any kind of job/operation in Waypoint. Automatic jobs\nsuch as project polling or status report generation spawn on-demand\nrunner tasks, and this message can be used to track the life of those\nautomated jobs. Note that every on-demand runner task is wrapped with a\nStart and Stop task, which we track here as well.\nTODO(briancain): Add the \"resource\" this task launched to i.e. \"pod/task-123-abc\""
+    },
+    "hashicorp.waypoint.Task.State": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "PENDING",
+        "STARTING",
+        "STARTED",
+        "RUNNING",
+        "COMPLETED",
+        "STOPPING",
+        "STOPPED",
+        "MIXED"
+      ],
+      "default": "UNKNOWN"
     },
     "hashicorp.waypoint.TaskLaunchInfo": {
       "type": "object",

@@ -1164,6 +1164,7 @@ message TaskLaunchInfo {
 // runner tasks, and this message can be used to track the life of those
 // automated jobs. Note that every on-demand runner task is wrapped with a
 // Start and Stop task, which we track here as well.
+// TODO(briancain): Add the "resource" this task launched to i.e. "pod/task-123-abc"
 message Task {
   // The ID of this message. If on first upsert, the id does not need to be
   // specified and the state pkg will autogenerate an id. Specifying an id
@@ -1190,6 +1191,23 @@ message Task {
   // This task info message represented as an Any format. This is the full
   // task encoded directly by the server that has access to the proto to decode it.
   opaqueany.Any state = 6;
+
+  // The overall state of the Task triple. See the enum def for details for
+  // each possible Task state. This will be computed for each GetTaskResponse
+  // based on the Task job ids receieved from the database.
+  State job_state = 7;
+
+  enum State {
+    UNKNOWN = 0; // no state defined, the default
+    PENDING = 1; // no jobs have been ran yet
+    STARTING = 2; // start_job is running
+    STARTED  = 3; // start_job complete, task is not running yet
+    RUNNING = 4; // task is running
+    COMPLETED = 5; // task is done
+    STOPPING = 6; // stop_job is running
+    STOPPED = 7; // every job in Task triple is stopped
+    MIXED = 8; // jobs are in an undefined state that don't match our expectation
+  }
 }
 
 message UpsertTaskRequest {
@@ -1213,7 +1231,7 @@ message GetTaskResponse {
   // The requested Task
   Task task = 1;
 
-  // the Job triple that the task is associated with. These jobs are the full
+  // The Job triple that the task is associated with. These jobs are the full
   // message for each based on the Ref_Job id found inside Task
   Job task_job = 2;
   Job start_job = 3;
