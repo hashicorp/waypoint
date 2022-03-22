@@ -237,29 +237,6 @@ func (_m *WaypointServer) DeleteHostname(_a0 context.Context, _a1 *gen.DeleteHos
 	return r0, r1
 }
 
-// DeleteTask provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) DeleteTask(_a0 context.Context, _a1 *gen.DeleteTaskRequest) (*emptypb.Empty, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *emptypb.Empty
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteTaskRequest) *emptypb.Empty); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*emptypb.Empty)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteTaskRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // DeleteTrigger provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) DeleteTrigger(_a0 context.Context, _a1 *gen.DeleteTriggerRequest) (*emptypb.Empty, error) {
 	ret := _m.Called(_a0, _a1)
