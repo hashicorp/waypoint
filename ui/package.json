@@ -140,6 +140,7 @@
     "ember-cli-typescript-blueprints": "^3.0.0",
     "google-protobuf": "^3.12.2",
     "grpc-web": "link:./lib/grpc-web",
+    "opaqueany": "link:./lib/opaqueany",
     "waypoint-client": "link:./lib/waypoint-client",
     "waypoint-pb": "link:./lib/waypoint-pb"
   },
