@@ -37,7 +37,7 @@ func (s *Service) GetJob(
 	return job.Job, nil
 }
 
-func (s *Service) XListJobs(
+func (s *Service) ListJobs(
 	ctx context.Context,
 	req *pb.ListJobsRequest,
 ) (*pb.ListJobsResponse, error) {
@@ -258,6 +258,20 @@ func (s *Service) wrapJobWithRunner(
 		return nil, err
 	}
 
+	// Write a Task state with the On-Demand Runner job triple
+	// TODO what if the Task id matches the source job id? could make determining
+	// which main source job relates to a task easier
+	if _, err := s.UpsertTask(ctx, &pb.UpsertTaskRequest{
+		Task: &pb.Task{
+			StartJob: &pb.Ref_Job{Id: startJob.Id},
+			TaskJob:  &pb.Ref_Job{Id: source.Id},
+			StopJob:  &pb.Ref_Job{Id: stopJob.Id},
+			JobState: pb.Task_PENDING,
+		},
+	}); err != nil {
+		return nil, err
+	}
+
 	// These must be in order of dependency currently. This is a limitation
 	// of the state.JobCreate API and we should fix it one day. If we get
 	// this wrong it'll just error, so we'll know quickly.
@@ -268,6 +282,7 @@ func (s *Service) wrapJobWithRunner(
 	}, nil
 }
 
+// onDemandRunnerStartJob generates a StartJob template for a Task.
 func (s *Service) onDemandRunnerStartJob(
 	ctx context.Context,
 	source *pb.Job,
@@ -394,6 +409,7 @@ func (s *Service) onDemandRunnerStartJob(
 	return job, runnerId, nil
 }
 
+// onDemandRunnerStopJob generates a StopJob template for a Task.
 func (s *Service) onDemandRunnerStopJob(
 	ctx context.Context,
 	startJob *pb.Job,

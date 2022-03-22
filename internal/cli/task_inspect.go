@@ -95,46 +95,48 @@ func (c *TaskInspectCommand) Run(args []string) int {
 		return 0
 	}
 
+	taskState, ok := pb.Task_State_name[int32(taskResp.Task.JobState)]
+	if !ok {
+		c.ui.Output("Unrecognized task state defined for task: ", taskResp.Task.JobState, terminal.WithErrorStyle())
+		return 1
+	}
+
 	c.ui.Output("On-Demand Runner Task Configuration", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
 			Name: "ID", Value: taskResp.Task.Id,
 		},
 		{
-			Name: "Run Job ID", Value: taskResp.TaskJob.Id,
+			Name: "Task State", Value: taskState,
 		},
 		{
-			Name: "Start Job ID", Value: taskResp.StartJob.Id,
+			Name: "Run Job ID", Value: taskResp.Task.TaskJob.Id,
 		},
 		{
-			Name: "Stop Job ID", Value: taskResp.StopJob.Id,
+			Name: "Start Job ID", Value: taskResp.Task.StartJob.Id,
+		},
+		{
+			Name: "Stop Job ID", Value: taskResp.Task.StopJob.Id,
 		},
 	}, terminal.WithInfoStyle())
 
 	c.ui.Output("Run Job Configuration", terminal.WithHeaderStyle())
-	vals, err := c.FormatJob(taskResp.TaskJob)
-	if err != nil {
+	if err := c.FormatJob(taskResp.TaskJob); err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
-
-	c.ui.NamedValues(vals, terminal.WithInfoStyle())
 
 	c.ui.Output("Start Job Configuration", terminal.WithHeaderStyle())
-	vals, err = c.FormatJob(taskResp.StartJob)
-	if err != nil {
+	if err := c.FormatJob(taskResp.StartJob); err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
-	c.ui.NamedValues(vals, terminal.WithInfoStyle())
 
 	c.ui.Output("Stop Job Configuration", terminal.WithHeaderStyle())
-	vals, err = c.FormatJob(taskResp.StopJob)
-	if err != nil {
+	if err := c.FormatJob(taskResp.StopJob); err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
-	c.ui.NamedValues(vals, terminal.WithInfoStyle())
 
 	return 0
 }
@@ -143,7 +145,11 @@ func (c *TaskInspectCommand) Run(args []string) int {
 // to read to the user.
 // TODO(briancain): We should take this function as well as the one in `waypoint job inspect`
 // and have them use the same util format function.
-func (c *TaskInspectCommand) FormatJob(job *pb.Job) ([]terminal.NamedValue, error) {
+func (c *TaskInspectCommand) FormatJob(job *pb.Job) error {
+	if job == nil {
+		return nil
+	}
+
 	var op string
 	// Job_Noop seems to be missing the isJob_operation method
 	switch job.Operation.(type) {
@@ -222,7 +228,14 @@ func (c *TaskInspectCommand) FormatJob(job *pb.Job) ([]terminal.NamedValue, erro
 		cancelTime = humanize.Time(time)
 	}
 
-	result := []terminal.NamedValue{
+	// job had an error! Let's show the message
+	var errMsg string
+	if job.Error != nil {
+		errMsg = job.Error.Message
+	}
+
+	c.ui.Output("Job Configuration", terminal.WithHeaderStyle())
+	c.ui.NamedValues([]terminal.NamedValue{
 		{
 			Name: "ID", Value: job.Id,
 		},
@@ -231,15 +244,6 @@ func (c *TaskInspectCommand) FormatJob(job *pb.Job) ([]terminal.NamedValue, erro
 		},
 		{
 			Name: "Operation", Value: op,
-		},
-		{
-			Name: "State", Value: jobState,
-		},
-		{
-			Name: "Complete Time", Value: completeTime,
-		},
-		{
-			Name: "Cancel Time", Value: cancelTime,
 		},
 		{
 			Name: "Target Runner", Value: targetRunner,
@@ -253,9 +257,25 @@ func (c *TaskInspectCommand) FormatJob(job *pb.Job) ([]terminal.NamedValue, erro
 		{
 			Name: "Application", Value: job.Application.Application,
 		},
-	}
+	}, terminal.WithInfoStyle())
 
-	return result, nil
+	c.ui.Output("Job Results", terminal.WithHeaderStyle())
+	c.ui.NamedValues([]terminal.NamedValue{
+		{
+			Name: "State", Value: jobState,
+		},
+		{
+			Name: "Complete Time", Value: completeTime,
+		},
+		{
+			Name: "Cancel Time", Value: cancelTime,
+		},
+		{
+			Name: "Error Messsage", Value: errMsg,
+		},
+	}, terminal.WithInfoStyle())
+
+	return nil
 }
 
 func (c *TaskInspectCommand) Flags() *flag.Sets {
