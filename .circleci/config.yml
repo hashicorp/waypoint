@@ -405,19 +405,6 @@ jobs:
             fi
       - notify_main_failure
 
-  algolia-index:
-    docker:
-      - image: *WEBSITE_IMAGE
-    steps:
-      - checkout
-      - run:
-          name: Push content to Algolia Index
-          command: |
-            cd website/
-            npm install -g npm@latest
-            npm install
-            node scripts/index_search_content.js
-
   # run ember frontend tests
   ember-test:
     docker:
@@ -529,14 +516,6 @@ workflows:
               ignore:
                 - main
 
-  website:
-    jobs:
-      - algolia-index:
-          filters:
-            branches:
-              only:
-                - stable-website
-
   frontend:
     jobs:
       - frontend-cache
@@ -549,15 +528,6 @@ workflows:
       - ember-test:
           requires:
             - ember-build-tests
-
-  # website:
-  #   jobs:
-  #     - build-website-docker-image:
-  #         context: website-docker-image
-  #         filters:
-  #           branches:
-  #             only:
-  #               - main
 
 commands:
   md5uilib:

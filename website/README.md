@@ -1,6 +1,6 @@
 # Waypoint Documentation Website
 
-This subdirectory contains the entire source for the [Waypoint Website](https://waypointproject.io/). This is a [NextJS](https://nextjs.org/) project, which builds a static site from these source files.
+This subdirectory contains the content for the [Waypoint Website](https://waypointproject.io/).
 
 <!--
   This readme file contains several blocks of generated text, to make it easier to share common information
@@ -33,14 +33,14 @@ If you find a typo or you feel like you can improve the HTML, CSS, or JavaScript
 
 ## Running the Site Locally
 
-Make sure your local development environment has a supported version (v10.0.0+) of [node installed](https://nodejs.org/en/) you can run:
+Make sure your local development environment has a supported version (v14.0.0+) of [node installed](https://nodejs.org/en/) you can run:
 
 - `npm install`
 - `npm start`
 
 ...and then visit `http://localhost:3000`.
 
-There's no need to re-run `npm install` each time the site is run, only the first time. Going forward, you can just run `npm start` to get it going.
+There's no need to re-run `npm install` each time the site is run, only the first time. Going forward, you can just run `npm start` to get it going. We also provide a Docker-based workflow to run the site locally. Just run `make`!
 
 <!-- BEGIN: editing-markdown -->
 <!-- Generated text, do not edit directly -->
