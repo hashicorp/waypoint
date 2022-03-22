@@ -1,6 +1,6 @@
 final: prev: {
   # This is the pinned protoc version we have for this project.
-  protobufPin = prev.protobuf3_15;
+  protobufPin = prev.protobuf3_17;
 
   devShell = final.callPackage ./waypoint.nix { };
 
@@ -8,6 +8,8 @@ final: prev: {
   go = final.go_1_17;
 
   go-protobuf = prev.callPackage ./go-protobuf.nix { };
+
+  go-protobuf-grpc = prev.callPackage ./go-protobuf-grpc.nix { };
 
   go-protobuf-grpc-gateway = prev.callPackage ./go-protobuf-grpc-gateway.nix { };
 

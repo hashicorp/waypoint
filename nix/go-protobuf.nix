@@ -1,18 +1,18 @@
-{ buildGoModule, fetchFromGitHub }:
+{ buildGoModule, fetchFromGitHub, lib }:
 
 buildGoModule rec {
   pname = "go-protobuf";
-  version = "1.5.2";
+  version = "1.27.1";
 
   src = fetchFromGitHub {
-    owner = "golang";
-    repo = "protobuf";
+    owner = "protocolbuffers";
+    repo = "protobuf-go";
     rev = "v${version}";
-    sha256 = "1mh5fyim42dn821nsd3afnmgscrzzhn3h8rag635d2jnr23r1zhk";
+    sha256 = "sha256-wkUvMsoJP38KMD5b3Fz65R1cnpeTtDcVqgE7tNlZXys=";
   };
 
-  modSha256 = "0lnk2zpl6y9vnq6h3l42ssghq6iqvmixd86g2drpa4z8xxk116wf";
-  vendorSha256 = "1qbndn7k0qqwxqk4ynkjrih7f7h56z1jq2yd62clhj95rca67hh9";
+  modSha256 = "sha256-yb8l4ooZwqfvenlxDRg95rqiL+hmsn0weS/dPv/oD2Y=";
+  vendorSha256 = "sha256-yb8l4ooZwqfvenlxDRg95rqiL+hmsn0weS/dPv/oD2Y=";
 
-  subPackages = [ "protoc-gen-go" ];
+  subPackages = [ "cmd/protoc-gen-go" ];
 }
