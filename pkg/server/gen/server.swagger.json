@@ -5674,8 +5674,27 @@
         },
         "stop_job": {
           "$ref": "#/definitions/hashicorp.waypoint.Job"
+        },
+        "state": {
+          "$ref": "#/definitions/hashicorp.waypoint.GetTaskResponse.State",
+          "description": "The overall state of the Task triple. See the enum def for details for\neach possible Task state. This will be computed for each GetTaskResponse\nbased on the Task job ids receieved from the database."
         }
       }
+    },
+    "hashicorp.waypoint.GetTaskResponse.State": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "PENDING",
+        "STARTING",
+        "STARTED",
+        "RUNNING",
+        "COMPLETED",
+        "STOPPING",
+        "STOPPED",
+        "MIXED"
+      ],
+      "default": "UNKNOWN"
     },
     "hashicorp.waypoint.GetTriggerResponse": {
       "type": "object",
