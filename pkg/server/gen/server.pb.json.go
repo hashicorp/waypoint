@@ -655,6 +655,7 @@ func (msg *Ref_Runner) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)
+<<<<<<< HEAD
 }
 
 // MarshalJSON implements json.Marshaler
@@ -673,6 +674,8 @@ func (msg *Ref_RunnerAny) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)
+=======
+>>>>>>> 75edb3685 (gen website and server)
 }
 
 // MarshalJSON implements json.Marshaler
@@ -694,7 +697,11 @@ func (msg *Ref_RunnerId) UnmarshalJSON(b []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler
+<<<<<<< HEAD
 func (msg *Ref_RunnerLabels) MarshalJSON() ([]byte, error) {
+=======
+func (msg *Ref_RunnerAny) MarshalJSON() ([]byte, error) {
+>>>>>>> 75edb3685 (gen website and server)
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
 		EnumsAsInts:  false,
@@ -705,7 +712,11 @@ func (msg *Ref_RunnerLabels) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
+<<<<<<< HEAD
 func (msg *Ref_RunnerLabels) UnmarshalJSON(b []byte) error {
+=======
+func (msg *Ref_RunnerAny) UnmarshalJSON(b []byte) error {
+>>>>>>> 75edb3685 (gen website and server)
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)
