@@ -1,0 +1,4 @@
+```
+release-note:improvement
+cli: `runner list` shows runner labels
+```
