@@ -59,7 +59,7 @@ func (c *RunnerListCommand) Run(args []string) int {
 		return 0
 	}
 
-	tblHeaders := []string{"ID", "State", "Kind", "Last Registered"}
+	tblHeaders := []string{"ID", "State", "Kind", "Labels", "Last Registered"}
 	tbl := terminal.NewTable(tblHeaders...)
 
 	var kindStr string
@@ -87,10 +87,16 @@ func (c *RunnerListCommand) Run(args []string) int {
 			stateStr = "unknown"
 		}
 
+		var labelStr string
+		for k, v := range r.Labels {
+			labelStr += k + ":" + v + " "
+		}
+
 		tblColumn := []string{
 			r.Id,
 			stateStr,
 			kindStr,
+			labelStr,
 			lastSeenStr,
 		}
 
