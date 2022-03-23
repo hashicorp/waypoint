@@ -168,6 +168,9 @@ type jobIndex struct {
 	// TargetRunnerId is the ID of the runner to target.
 	TargetRunnerId string
 
+	// TargetRunnerLabels are the labels of the runner to target.
+	TargetRunnerLabels map[string]string
+
 	// State is the current state of this job.
 	State pb.Job_State
 
@@ -417,6 +420,7 @@ RETRY_ASSIGN:
 	type candidateFunc func(*memdb.Txn, memdb.WatchSet, *runnerIndex, bool) (*jobIndex, error)
 	candidateQuery := []candidateFunc{
 		s.jobCandidateById,
+		s.jobCandidateByLabels,
 		s.jobCandidateAny,
 	}
 
@@ -973,6 +977,17 @@ func (s *State) JobIsAssignable(ctx context.Context, jobpb *pb.Job) (bool, error
 	case *pb.Ref_Runner_Id:
 		iter, err = memTxn.Get(runnerTableName, runnerIdIndexName, v.Id.Id)
 
+	case *pb.Ref_Runner_Labels:
+		targetCheck = func(r *pb.Runner) (bool, error) {
+			for k, v := range v.Labels.Labels {
+				if val, ok := r.Labels[k]; ok && v != val {
+					return false, nil
+				}
+			}
+			return true, nil
+		}
+		iter, err = memTxn.LowerBound(runnerTableName, runnerIdIndexName, "")
+
 	default:
 		return false, fmt.Errorf("unknown runner target value: %#v", jobpb.TargetRunner.Target)
 	}
@@ -1060,6 +1075,9 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex
 
 	case *pb.Ref_Runner_Id:
 		rec.TargetRunnerId = v.Id.Id
+
+	case *pb.Ref_Runner_Labels:
+		rec.TargetRunnerLabels = v.Labels.Labels
 
 	default:
 		return nil, fmt.Errorf("unknown runner target value: %#v", jobpb.TargetRunner.Target)
@@ -1373,6 +1391,59 @@ func (s *State) jobCandidateById(
 		if blocked, err := s.jobIsBlocked(memTxn, job, ws); err != nil {
 			return nil, err
 		} else if blocked && assign {
+			continue
+		}
+
+		return job, nil
+	}
+
+	return nil, nil
+}
+
+// jobCandidateByLabels returns the most promising candidate job to assign
+// that is targeting a specific runner by labels.
+func (s *State) jobCandidateByLabels(
+	memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerIndex, assign bool,
+) (*jobIndex, error) {
+	// NOTE(xx): This query forces us to search all queued jobs for matching labels.
+	// A more efficient query for label searching would be preferable in the future.
+	iter, err := memTxn.LowerBound(
+		jobTableName,
+		jobQueueTimeIndexName,
+		pb.Job_QUEUED,
+		time.Unix(0, 0),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		raw := iter.Next()
+		if raw == nil {
+			break
+		}
+
+		job := raw.(*jobIndex)
+		if job.State != pb.Job_QUEUED || job.TargetRunnerLabels == nil {
+			continue
+		}
+
+		// If this job is blocked, it is not a candidate.
+		if blocked, err := s.jobIsBlocked(memTxn, job, ws); err != nil {
+			return nil, err
+		} else if blocked && assign {
+			continue
+		}
+
+		// Check whether job target labels match with runner labels
+		match := true
+		for k, v := range job.TargetRunnerLabels {
+			if val, ok := r.Runner.Labels[k]; !ok || v != val {
+				match = false
+				break
+			}
+		}
+		if !match {
 			continue
 		}
 
