@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/version"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	serversort "github.com/hashicorp/waypoint/pkg/server/sort"
 )
 
 type DeploymentListCommand struct {
@@ -144,7 +143,6 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			)
 			return nil
 		}
-		sort.Sort(serversort.DeploymentBundleCompleteDesc(resp.Deployments))
 
 		if c.flagJson {
 			return c.displayJson(resp.Deployments)
