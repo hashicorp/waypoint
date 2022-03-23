@@ -1407,9 +1407,8 @@ func (s *State) jobCandidateByLabels(
 ) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
-		jobTargetIdIndexName,
+		jobQueueTimeIndexName,
 		pb.Job_QUEUED,
-		r.Id,
 		time.Unix(0, 0),
 	)
 	if err != nil {
@@ -1437,7 +1436,7 @@ func (s *State) jobCandidateByLabels(
 		// Check whether job target labels match with runner labels
 		match := true
 		for k, v := range job.TargetRunnerLabels {
-			if val, ok := r.Runner.Labels[k]; ok && v != val {
+			if val, ok := r.Runner.Labels[k]; !ok || v != val {
 				match = false
 				break
 			}
