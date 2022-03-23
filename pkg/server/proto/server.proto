@@ -851,16 +851,16 @@ message Ref {
     }
   }
 
-  // RunenrId references a runner by ID.
+  // RunnerAny will reference any runner.
+  message RunnerAny {}
+
+  // RunnerId references a runner by ID.
   message RunnerId {
     string id = 1;
   }
 
-  // RunnerAny will reference any runner.
-  message RunnerAny {}
-
-  // RunnerLabels will reference a runner by labels. The labels are a subset
-  // match, not an exact match.
+  // RunnerLabels references a runner by labels.
+  // The labels can be a subset match or an exact match.
   message RunnerLabels {
     map<string, string> labels = 1;
   }

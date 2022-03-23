@@ -7222,7 +7222,7 @@
           "type": "string"
         }
       },
-      "description": "RunenrId references a runner by ID."
+      "description": "RunnerId references a runner by ID."
     },
     "hashicorp.waypoint.Ref.RunnerLabels": {
       "type": "object",
@@ -7234,7 +7234,7 @@
           }
         }
       },
-      "description": "RunnerLabels will reference a runner by labels. The labels are a subset\nmatch, not an exact match."
+      "description": "RunnerLabels references a runner by labels.\nThe labels can be a subset match or an exact match."
     },
     "hashicorp.waypoint.Ref.Trigger": {
       "type": "object",

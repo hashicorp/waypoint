@@ -168,7 +168,7 @@ type jobIndex struct {
 	// TargetRunnerId is the ID of the runner to target.
 	TargetRunnerId string
 
-	// TargetRunnerLabes are the labels of the runner to target.
+	// TargetRunnerLabels are the labels of the runner to target.
 	TargetRunnerLabels map[string]string
 
 	// State is the current state of this job.
@@ -1405,9 +1405,8 @@ func (s *State) jobCandidateById(
 func (s *State) jobCandidateByLabels(
 	memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerIndex, assign bool,
 ) (*jobIndex, error) {
-	// NOTE(xx): This query forces us to search at all queued jobs for matching
-	// labels. In the future, would be better to have a more efficient query for
-	// label searching.
+	// NOTE(xx): This query forces us to search all queued jobs for matching labels.
+	// A more efficient query for label searching would be preferable in the future.
 	iter, err := memTxn.LowerBound(
 		jobTableName,
 		jobQueueTimeIndexName,

@@ -16227,54 +16227,6 @@ func (*Ref_Runner_Id) isRef_Runner_Target() {}
 
 func (*Ref_Runner_Labels) isRef_Runner_Target() {}
 
-// RunenrId references a runner by ID.
-type Ref_RunnerId struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-}
-
-func (x *Ref_RunnerId) Reset() {
-	*x = Ref_RunnerId{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_pkg_server_proto_server_proto_msgTypes[208]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Ref_RunnerId) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Ref_RunnerId) ProtoMessage() {}
-
-func (x *Ref_RunnerId) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_server_proto_server_proto_msgTypes[208]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Ref_RunnerId.ProtoReflect.Descriptor instead.
-func (*Ref_RunnerId) Descriptor() ([]byte, []int) {
-	return file_pkg_server_proto_server_proto_rawDescGZIP(), []int{8, 8}
-}
-
-func (x *Ref_RunnerId) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
 // RunnerAny will reference any runner.
 type Ref_RunnerAny struct {
 	state         protoimpl.MessageState
@@ -16285,7 +16237,7 @@ type Ref_RunnerAny struct {
 func (x *Ref_RunnerAny) Reset() {
 	*x = Ref_RunnerAny{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pkg_server_proto_server_proto_msgTypes[209]
+		mi := &file_pkg_server_proto_server_proto_msgTypes[208]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16298,7 +16250,7 @@ func (x *Ref_RunnerAny) String() string {
 func (*Ref_RunnerAny) ProtoMessage() {}
 
 func (x *Ref_RunnerAny) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_server_proto_server_proto_msgTypes[209]
+	mi := &file_pkg_server_proto_server_proto_msgTypes[208]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16311,11 +16263,59 @@ func (x *Ref_RunnerAny) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Ref_RunnerAny.ProtoReflect.Descriptor instead.
 func (*Ref_RunnerAny) Descriptor() ([]byte, []int) {
+	return file_pkg_server_proto_server_proto_rawDescGZIP(), []int{8, 8}
+}
+
+// RunnerId references a runner by ID.
+type Ref_RunnerId struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (x *Ref_RunnerId) Reset() {
+	*x = Ref_RunnerId{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pkg_server_proto_server_proto_msgTypes[209]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Ref_RunnerId) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Ref_RunnerId) ProtoMessage() {}
+
+func (x *Ref_RunnerId) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_server_proto_server_proto_msgTypes[209]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Ref_RunnerId.ProtoReflect.Descriptor instead.
+func (*Ref_RunnerId) Descriptor() ([]byte, []int) {
 	return file_pkg_server_proto_server_proto_rawDescGZIP(), []int{8, 9}
 }
 
-// RunnerLabels will reference a runner by labels. The labels are a subset
-// match, not an exact match.
+func (x *Ref_RunnerId) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+// RunnerLabels references a runner by labels.
+// The labels can be a subset match or an exact match.
 type Ref_RunnerLabels struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -24616,10 +24616,10 @@ var file_pkg_server_proto_server_proto_rawDesc = []byte{
 	0x01, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
 	0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x52, 0x75, 0x6e,
 	0x6e, 0x65, 0x72, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x73, 0x48, 0x00, 0x52, 0x06, 0x6c, 0x61, 0x62,
-	0x65, 0x6c, 0x73, 0x42, 0x08, 0x0a, 0x06, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x1a, 0x1a, 0x0a,
-	0x08, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x49, 0x64, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x1a, 0x0b, 0x0a, 0x09, 0x52, 0x75, 0x6e,
-	0x6e, 0x65, 0x72, 0x41, 0x6e, 0x79, 0x1a, 0x93, 0x01, 0x0a, 0x0c, 0x52, 0x75, 0x6e, 0x6e, 0x65,
+	0x65, 0x6c, 0x73, 0x42, 0x08, 0x0a, 0x06, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x1a, 0x0b, 0x0a,
+	0x09, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x41, 0x6e, 0x79, 0x1a, 0x1a, 0x0a, 0x08, 0x52, 0x75,
+	0x6e, 0x6e, 0x65, 0x72, 0x49, 0x64, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x1a, 0x93, 0x01, 0x0a, 0x0c, 0x52, 0x75, 0x6e, 0x6e, 0x65,
 	0x72, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x73, 0x12, 0x48, 0x0a, 0x06, 0x6c, 0x61, 0x62, 0x65, 0x6c,
 	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x30, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
 	0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66,
@@ -28389,8 +28389,8 @@ var file_pkg_server_proto_server_proto_goTypes = []interface{}{
 	(*Ref_Operation)(nil),                      // 224: hashicorp.waypoint.Ref.Operation
 	(*Ref_OperationSeq)(nil),                   // 225: hashicorp.waypoint.Ref.OperationSeq
 	(*Ref_Runner)(nil),                         // 226: hashicorp.waypoint.Ref.Runner
-	(*Ref_RunnerId)(nil),                       // 227: hashicorp.waypoint.Ref.RunnerId
-	(*Ref_RunnerAny)(nil),                      // 228: hashicorp.waypoint.Ref.RunnerAny
+	(*Ref_RunnerAny)(nil),                      // 227: hashicorp.waypoint.Ref.RunnerAny
+	(*Ref_RunnerId)(nil),                       // 228: hashicorp.waypoint.Ref.RunnerId
 	(*Ref_RunnerLabels)(nil),                   // 229: hashicorp.waypoint.Ref.RunnerLabels
 	(*Ref_User)(nil),                           // 230: hashicorp.waypoint.Ref.User
 	(*Ref_UserId)(nil),                         // 231: hashicorp.waypoint.Ref.UserId
@@ -28631,7 +28631,7 @@ var file_pkg_server_proto_server_proto_depIdxs = []int32{
 	274, // 80: hashicorp.waypoint.Job.stop_task:type_name -> hashicorp.waypoint.Job.StopTaskLaunchOp
 	283, // 81: hashicorp.waypoint.Job.init:type_name -> hashicorp.waypoint.Job.InitOp
 	6,   // 82: hashicorp.waypoint.Job.state:type_name -> hashicorp.waypoint.Job.State
-	227, // 83: hashicorp.waypoint.Job.assigned_runner:type_name -> hashicorp.waypoint.Ref.RunnerId
+	228, // 83: hashicorp.waypoint.Job.assigned_runner:type_name -> hashicorp.waypoint.Ref.RunnerId
 	381, // 84: hashicorp.waypoint.Job.queue_time:type_name -> google.protobuf.Timestamp
 	381, // 85: hashicorp.waypoint.Job.assign_time:type_name -> google.protobuf.Timestamp
 	381, // 86: hashicorp.waypoint.Job.ack_time:type_name -> google.protobuf.Timestamp
@@ -28859,7 +28859,7 @@ var file_pkg_server_proto_server_proto_depIdxs = []int32{
 	167, // 308: hashicorp.waypoint.ConfigSetRequest.variables:type_name -> hashicorp.waypoint.ConfigVar
 	220, // 309: hashicorp.waypoint.ConfigGetRequest.application:type_name -> hashicorp.waypoint.Ref.Application
 	221, // 310: hashicorp.waypoint.ConfigGetRequest.project:type_name -> hashicorp.waypoint.Ref.Project
-	227, // 311: hashicorp.waypoint.ConfigGetRequest.runner:type_name -> hashicorp.waypoint.Ref.RunnerId
+	228, // 311: hashicorp.waypoint.ConfigGetRequest.runner:type_name -> hashicorp.waypoint.Ref.RunnerId
 	222, // 312: hashicorp.waypoint.ConfigGetRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
 	349, // 313: hashicorp.waypoint.ConfigGetRequest.labels:type_name -> hashicorp.waypoint.ConfigGetRequest.LabelsEntry
 	167, // 314: hashicorp.waypoint.ConfigGetResponse.variables:type_name -> hashicorp.waypoint.ConfigVar
@@ -28944,8 +28944,8 @@ var file_pkg_server_proto_server_proto_depIdxs = []int32{
 	1,   // 393: hashicorp.waypoint.Ref.Component.type:type_name -> hashicorp.waypoint.Component.Type
 	225, // 394: hashicorp.waypoint.Ref.Operation.sequence:type_name -> hashicorp.waypoint.Ref.OperationSeq
 	220, // 395: hashicorp.waypoint.Ref.OperationSeq.application:type_name -> hashicorp.waypoint.Ref.Application
-	228, // 396: hashicorp.waypoint.Ref.Runner.any:type_name -> hashicorp.waypoint.Ref.RunnerAny
-	227, // 397: hashicorp.waypoint.Ref.Runner.id:type_name -> hashicorp.waypoint.Ref.RunnerId
+	227, // 396: hashicorp.waypoint.Ref.Runner.any:type_name -> hashicorp.waypoint.Ref.RunnerAny
+	228, // 397: hashicorp.waypoint.Ref.Runner.id:type_name -> hashicorp.waypoint.Ref.RunnerId
 	229, // 398: hashicorp.waypoint.Ref.Runner.labels:type_name -> hashicorp.waypoint.Ref.RunnerLabels
 	239, // 399: hashicorp.waypoint.Ref.RunnerLabels.labels:type_name -> hashicorp.waypoint.Ref.RunnerLabels.LabelsEntry
 	231, // 400: hashicorp.waypoint.Ref.User.id:type_name -> hashicorp.waypoint.Ref.UserId
@@ -31770,7 +31770,7 @@ func file_pkg_server_proto_server_proto_init() {
 			}
 		}
 		file_pkg_server_proto_server_proto_msgTypes[208].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Ref_RunnerId); i {
+			switch v := v.(*Ref_RunnerAny); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -31782,7 +31782,7 @@ func file_pkg_server_proto_server_proto_init() {
 			}
 		}
 		file_pkg_server_proto_server_proto_msgTypes[209].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Ref_RunnerAny); i {
+			switch v := v.(*Ref_RunnerId); i {
 			case 0:
 				return &v.state
 			case 1:
