@@ -78,12 +78,15 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 	}
 
 	var targetRunner string
+	var targetRunnerLabels map[string]string
 	if config.TargetRunner != nil {
 		switch t := config.TargetRunner.Target.(type) {
 		case *pb.Ref_Runner_Any:
 			targetRunner = "*"
 		case *pb.Ref_Runner_Id:
 			targetRunner = t.Id.Id
+		case *pb.Ref_Runner_Labels:
+			targetRunnerLabels = t.Labels.Labels
 		}
 	}
 	c.ui.Output("Runner profile:", terminal.WithHeaderStyle())
@@ -105,6 +108,9 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 		},
 		{
 			Name: "Target Runner ID", Value: targetRunner,
+		},
+		{
+			Name: "Target Runner Labels", Value: targetRunnerLabels,
 		},
 		{
 			Name: "Environment Variables", Value: config.EnvironmentVariables,
