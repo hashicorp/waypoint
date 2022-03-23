@@ -56,14 +56,23 @@ func (c *ArtifactBuildCommand) Run(args []string) int {
 		}
 		sort.Strings(inputVars)
 		for _, iv := range inputVars {
+			// We add a line break in the value here because the Table word wrap
+			// alone can't accomodate the column headers to a long value
+			val := buildResult.Build.VariableRefs[iv].Value
+			if len(val) > 45 {
+				for i := range val {
+					// line break every 45 characters
+					if i%46 == 0 && i != 0 {
+						val = val[:i] + "\n" + val[i:]
+					}
+				}
+			}
 			columns := []string{
 				iv,
-				buildResult.Build.VariableRefs[iv].Value,
+				val,
 				buildResult.Build.VariableRefs[iv].Type,
 				buildResult.Build.VariableRefs[iv].Source,
 			}
-			// TODO krantzinator: figure out howt do display complex types
-
 			tbl.Rich(
 				columns,
 				[]string{

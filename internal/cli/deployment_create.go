@@ -137,9 +137,20 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 		}
 		sort.Strings(inputVars)
 		for _, iv := range inputVars {
+			// We add a line break in the value here because the Table word wrap
+			// alone can't accomodate the column headers to a long value
+			val := deployment.VariableRefs[iv].Value
+			if len(val) > 45 {
+				for i := range val {
+					// line break every 45 characters
+					if i%46 == 0 && i != 0 {
+						val = val[:i] + "\n" + val[i:]
+					}
+				}
+			}
 			columns := []string{
 				iv,
-				deployment.VariableRefs[iv].Value,
+				val,
 				deployment.VariableRefs[iv].Type,
 				deployment.VariableRefs[iv].Source,
 			}

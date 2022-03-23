@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
 	goplugin "github.com/hashicorp/go-plugin"
@@ -226,7 +227,9 @@ func (r *Runner) executeJob(
 	}
 
 	// evaluate all variables against the variable blocks we just decoded
-	inputVars, jobVars, diags := variables.EvaluateVariables(log, pbVars, cfg.InputVariables)
+	// TODO krantzinator doc cookie things
+	resp2, _ := r.client.GetServerConfig(context.Background(), &empty.Empty{})
+	inputVars, jobVars, diags := variables.EvaluateVariables(log, pbVars, cfg.InputVariables, resp2.Config.Cookie)
 	if diags.HasErrors() {
 		return nil, diags
 	}
@@ -238,7 +241,7 @@ func (r *Runner) executeJob(
 	// We also set these on the project.
 	// TODO krantzinator: we shouldn't need this AND setting on
 	// the project; pick one
-	job.VariableRefs = jobVars
+	// job.VariableRefs = jobVars
 
 	// Build our job info
 	jobInfo := &component.JobInfo{

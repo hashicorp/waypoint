@@ -66,7 +66,7 @@ type Project struct {
 	variables variables.Values
 
 	// variableRefs is the map of variable values used for logging and outputs
-	// It will have any `sensitive` values obfuscated
+	// It will have any `sensitive` values obfuscated via SHA256 encoding
 	variableRefs map[string]*pb.Variable_Ref
 }
 
@@ -158,10 +158,9 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	// Output all the variables that this project will use along with
 	// the source of that variable. This can be used to debug unexpected
 	// variable values.
-	for name, value := range p.variables {
-		// We purposely do NOT log the value because it may be sensitive
-		// and we have no way currently to mark a variable sensitive or not.
-		p.logger.Debug("variable info", "name", name, "source", value.Source)
+	for name, value := range p.variableRefs {
+		// We log the variableRefs as the sensitive values are obfuscated
+		p.logger.Debug("variable info", "name", name, "value", value.Value, "source", value.Source, "type", value.Type)
 	}
 
 	return p, nil

@@ -3,6 +3,8 @@ package variables
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -55,7 +57,7 @@ var (
 	}
 
 	// The attributes we expect to see in variable blocks
-	// Future expansion here could include `sensitive`, `validations`, etc
+	// Future expansion here could include `validations`, etc
 	variableBlockSchema = &hcl.BodySchema{
 		Attributes: []hcl.AttributeSchema{
 			{
@@ -536,6 +538,7 @@ func EvaluateVariables(
 	log hclog.Logger,
 	pbvars []*pb.Variable,
 	vs map[string]*Variable,
+	salt string,
 ) (Values, map[string]*pb.Variable_Ref, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	iv := Values{}
@@ -682,7 +685,7 @@ func EvaluateVariables(
 		return nil, nil, diags
 	}
 
-	jobVals, diags := getJobValues(vs, iv)
+	jobVals, diags := getJobValues(vs, iv, salt)
 	if diags.HasErrors() {
 		return nil, nil, diags
 	}
@@ -690,7 +693,7 @@ func EvaluateVariables(
 }
 
 // TODO krantzinator: doc
-func getJobValues(vs map[string]*Variable, values Values) (map[string]*pb.Variable_Ref, hcl.Diagnostics) {
+func getJobValues(vs map[string]*Variable, values Values, salt string) (map[string]*pb.Variable_Ref, hcl.Diagnostics) {
 	varRefs := make(map[string]*pb.Variable_Ref, len(values))
 	var diags hcl.Diagnostics
 	for v, value := range values {
@@ -730,14 +733,17 @@ func getJobValues(vs map[string]*Variable, values Values) (map[string]*pb.Variab
 
 		if vs[v].Sensitive {
 			// TODO krantzinator - make it better
-			val = "sensitive"
+			// salt shaker
+			saltedVal := salt + val
+			h := sha256.Sum256([]byte(saltedVal))
+			hVal := h[:]
+			val = hex.EncodeToString(hVal)
 		}
 
 		varRefs[v] = &pb.Variable_Ref{
-			Variable: v,
-			Value:    val,
-			Source:   value.Source,
-			Type:     t,
+			Value:  val,
+			Source: value.Source,
+			Type:   t,
 		}
 	}
 
