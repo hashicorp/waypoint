@@ -28,7 +28,7 @@ type RunnerProfileSetCommand struct {
 	flagPluginConfig       string
 	flagDefault            bool
 	flagTargetRunnerId     string
-	flagTargetRunnerLabels []string
+	flagTargetRunnerLabels map[string]string
 }
 
 func (c *RunnerProfileSetCommand) Run(args []string) int {
@@ -109,18 +109,10 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 			},
 		}
 	} else if c.flagTargetRunnerLabels != nil {
-		labels := map[string]string{}
-		for _, kv := range c.flagTargetRunnerLabels {
-			idx := strings.IndexByte(kv, '=')
-			if idx != -1 {
-				labels[kv[:idx]] = kv[idx+1:]
-			}
-		}
-
 		od.TargetRunner = &pb.Ref_Runner{
 			Target: &pb.Ref_Runner_Labels{
 				Labels: &pb.Ref_RunnerLabels{
-					Labels: labels,
+					Labels: c.flagTargetRunnerLabels,
 				},
 			},
 		}
@@ -305,11 +297,11 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 			Usage:   "ID of the runner to target for this remote runner profile.",
 		})
 
-		f.StringSliceVar(&flag.StringSliceVar{
-			Name:   "target-runner-labels",
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "target-runner-label",
 			Target: &c.flagTargetRunnerLabels,
-			Usage: "Labels on the runner to target for this remote runner profile. Can be specified multiple times, " +
-				"or at once like `-target-runner-labels=\"foo:bar,bar:baz\".",
+			Usage: "Labels on the runner to target for this remote runner profile. " +
+				"e.g. `-target-runner-labels=k=v`. Can be specified multiple times.",
 		})
 	})
 }
