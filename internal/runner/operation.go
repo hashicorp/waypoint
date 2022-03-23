@@ -226,22 +226,22 @@ func (r *Runner) executeJob(
 		}
 	}
 
-	// evaluate all variables against the variable blocks we just decoded
-	// TODO krantzinator doc cookie things
-	resp2, _ := r.client.GetServerConfig(context.Background(), &empty.Empty{})
-	inputVars, jobVars, diags := variables.EvaluateVariables(log, pbVars, cfg.InputVariables, resp2.Config.Cookie)
+	// Evaluate all variables against the variable blocks we just decoded:
+	// We grab the server cookie here to pass along for the variables
+	// evaluation to use a salt for sensitive values
+	clientResp, _ := r.client.GetServerConfig(context.Background(), &empty.Empty{})
+	var serverCookie string
+	if clientResp != nil && clientResp.Config != nil {
+		serverCookie = clientResp.Config.Cookie
+	}
+	// We set both inputVars and jobVars on the project.
+	// inputVars is the set of cty.Values to use in our hcl evaluation
+	// and jobVars is the matching set of variable refs to store on the job that
+	// has sensitive values obfuscated and is used for user-facing feedback/output.
+	inputVars, jobVars, diags := variables.EvaluateVariables(log, pbVars, cfg.InputVariables, serverCookie)
 	if diags.HasErrors() {
 		return nil, diags
 	}
-	// Set variable refs on the job that match the final set of
-	// values passed to the hcl context evaluation, but with any
-	// sensitive values obfuscated.
-	// These are the values we use for user-facing feedback that
-	// we save on the build/deploy/release/etc op.
-	// We also set these on the project.
-	// TODO krantzinator: we shouldn't need this AND setting on
-	// the project; pick one
-	// job.VariableRefs = jobVars
 
 	// Build our job info
 	jobInfo := &component.JobInfo{
