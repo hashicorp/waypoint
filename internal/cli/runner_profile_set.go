@@ -19,9 +19,10 @@ import (
 
 type RunnerProfileSetCommand struct {
 	*baseCommand
-
+	//TODO(XX): after `-env-vars` as a slice is deprecated, rename flagEnvVar to flagEnvVars
 	flagName           string
 	flagOCIUrl         string
+	flagEnvVar         map[string]string
 	flagEnvVars        []string
 	flagPluginType     string
 	flagPluginConfig   string
@@ -175,11 +176,20 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 	od.EnvironmentVariables = map[string]string{}
 	od.Default = c.flagDefault
 
-	for _, kv := range c.flagEnvVars {
-		idx := strings.IndexByte(kv, '=')
-		if idx != -1 {
-			od.EnvironmentVariables[kv[:idx]] = kv[idx+1:]
+	if c.flagEnvVars != nil {
+		//TODO(XX): Deprecate -env-vars and this logic
+		c.ui.Output(
+			"Flag '-env-vars' is deprecated, please use flag `-env-var=k=v`",
+			terminal.WithWarningStyle(),
+		)
+		for _, kv := range c.flagEnvVars {
+			idx := strings.IndexByte(kv, '=')
+			if idx != -1 {
+				od.EnvironmentVariables[kv[:idx]] = kv[idx+1:]
+			}
 		}
+	} else {
+		od.EnvironmentVariables = c.flagEnvVar
 	}
 
 	if c.flagPluginType == "" {
@@ -188,7 +198,6 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 			c.Help(),
 			terminal.WithErrorStyle(),
 		)
-
 		return 1
 	}
 
@@ -234,11 +243,18 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 			Usage:   "The url for the OCI image to launch for the on-demand runner.",
 		})
 
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "env-var",
+			Target: &c.flagEnvVar,
+			Usage: "Environment variable to expose to the on-demand runner set in 'k=v' format. Typically used to " +
+				"introduce configuration for the plugins that the runner will execute. Can be specified multiple times.",
+		})
+
+		//TODO(XX): deprecate and remove this
 		f.StringSliceVar(&flag.StringSliceVar{
 			Name:   "env-vars",
 			Target: &c.flagEnvVars,
-			Usage: "Environment variable to expose to the on-demand runner. Typically used to " +
-				"introduce configuration for the plugins that the runner will execute. Can be specified multiple times.",
+			Usage:  "DEPRECATED. Please see `-env-var`.",
 		})
 
 		f.StringVar(&flag.StringVar{
