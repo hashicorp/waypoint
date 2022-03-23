@@ -1,4 +1,3 @@
-```
-release-note:improvement
+```release-note:improvement
 cli: `runner list` shows runner labels
 ```
