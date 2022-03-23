@@ -64,6 +64,35 @@ func TestServiceOnDemandRunnerConfig(t *testing.T) {
 		require.True(ok)
 		require.Equal(codes.NotFound, st.Code())
 	})
+
+	t.Run("create with target runner labels", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		resp, err := client.UpsertOnDemandRunnerConfig(ctx, &Req{
+			Config: serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
+				TargetRunner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Labels{
+						Labels: &pb.Ref_RunnerLabels{
+							Labels: map[string]string{
+								"test": "test",
+							},
+						},
+					},
+				},
+			}),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		result := resp.Config
+		require.NotEmpty(result.Id)
+
+		resp, err = client.UpsertOnDemandRunnerConfig(ctx, &Req{
+			Config: result,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+	})
 }
 
 func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T) {
