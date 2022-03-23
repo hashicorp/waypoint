@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/version"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	serversort "github.com/hashicorp/waypoint/pkg/server/sort"
 )
 
 type ReleaseListCommand struct {
@@ -91,7 +90,6 @@ func (c *ReleaseListCommand) Run(args []string) int {
 			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
-		sort.Sort(serversort.ReleaseBundleCompleteDesc(resp.Releases))
 
 		if c.flagJson {
 			return c.displayJson(resp.Releases)

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	serversort "github.com/hashicorp/waypoint/pkg/server/sort"
 )
 
 type ArtifactListCommand struct {
@@ -75,7 +74,6 @@ func (c *ArtifactListCommand) Run(args []string) int {
 			)
 			return nil
 		}
-		sort.Sort(serversort.ArtifactStartDesc(resp.Artifacts))
 
 		if c.flagJson {
 			return c.displayJson(resp.Artifacts)
