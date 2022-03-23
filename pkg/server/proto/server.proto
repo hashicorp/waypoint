@@ -599,6 +599,8 @@ message Variable {
 
   Ref ref = 12;
 
+  bool sensitive = 13;
+
   message File {
     string fileName = 1;
     HclRange hcl_range = 2;

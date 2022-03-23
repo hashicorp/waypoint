@@ -183,7 +183,7 @@ kind of value is expected.
 If set to true, the variable value will be obfuscated in outputs. This should not
 be relied on as a security measure on its own, but can be used as a way to hide
 literal variable values from logging, CLI output, and the UI. Variable values
-shared with the user via these methods will create SHA256 encoded value using
+shared with the user via these methods will generate a SHA256 encoded value using
 the server cookie as the salt along with the set value. Therefore the user running an
 operation can verify if the value they expected to be used was used, with the output
 SHA256 encoded value.
