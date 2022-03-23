@@ -859,7 +859,8 @@ message Ref {
   // RunnerAny will reference any runner.
   message RunnerAny {}
 
-  // RunnerLabels will reference a runner by labels.
+  // RunnerLabels will reference a runner by labels. The labels are a subset
+  // match, not an exact match.
   message RunnerLabels {
     map<string, string> labels = 1;
   }
