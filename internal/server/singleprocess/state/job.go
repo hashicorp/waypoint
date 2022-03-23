@@ -1405,6 +1405,9 @@ func (s *State) jobCandidateById(
 func (s *State) jobCandidateByLabels(
 	memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerIndex, assign bool,
 ) (*jobIndex, error) {
+        // NOTE(xx): This query forces us to search at all queued jobs for matching
+        // labels. In the future, would be better to have a more efficient query for
+        // label searching.
 	iter, err := memTxn.LowerBound(
 		jobTableName,
 		jobQueueTimeIndexName,
