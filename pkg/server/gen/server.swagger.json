@@ -7204,6 +7204,9 @@
         },
         "id": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.RunnerId"
+        },
+        "labels": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.RunnerLabels"
         }
       },
       "description": "Runner references a runner process which executes operations. This\ncan reference a runner by any of the more specific types, such as\nby ID. If you want to constrain which runners can be targeted,\na different ref type should be used."
@@ -7220,6 +7223,18 @@
         }
       },
       "description": "RunenrId references a runner by ID."
+    },
+    "hashicorp.waypoint.Ref.RunnerLabels": {
+      "type": "object",
+      "properties": {
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "RunnerLabels will reference a runner by labels."
     },
     "hashicorp.waypoint.Ref.Trigger": {
       "type": "object",

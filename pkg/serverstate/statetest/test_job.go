@@ -664,6 +664,69 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		}
 	})
 
+	t.Run("assignment by Labels", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Create a build by labels
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: map[string]string{
+							"env": "test",
+						},
+					},
+				},
+			},
+		})))
+		time.Sleep(1 * time.Millisecond)
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "B",
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: map[string]string{
+							"region": "testland-1",
+						},
+					},
+				},
+			},
+		})))
+
+		// Assign for runner with completely matching labels
+		{
+			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{
+				Labels: map[string]string{
+					"env": "test",
+				}})
+			require.NoError(err)
+			require.NotNil(job)
+			require.Equal("A", job.Id)
+			_, err = s.JobAck(job.Id, true)
+			require.NoError(err)
+			require.NoError(s.JobComplete(job.Id, nil, nil))
+		}
+
+		// Assign for runner with partially matching labels
+		{
+			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{
+				Labels: map[string]string{
+					"env":    "test",
+					"region": "testland-1",
+				}})
+			require.NoError(err)
+			require.NotNil(job)
+			require.Equal("B", job.Id)
+			_, err = s.JobAck(job.Id, true)
+			require.NoError(err)
+			require.NoError(s.JobComplete(job.Id, nil, nil))
+		}
+	})
+
 	t.Run("any cannot be assigned to ByIdOnly runner", func(t *testing.T) {
 		require := require.New(t)
 
@@ -1459,6 +1522,103 @@ func TestJobIsAssignable(t *testing.T, factory Factory, rf RestartFactory) {
 		}))
 		require.NoError(err)
 		require.True(result)
+	})
+
+	t.Run("Labels target, all labels", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		s := factory(t)
+		defer s.Close()
+
+		// Register a runner with labels
+		runner := serverptypes.TestRunner(t, &pb.Runner{
+			Labels: map[string]string{
+				"env":    "test",
+				"region": "testland-1",
+			},
+		})
+		require.NoError(s.RunnerCreate(runner))
+
+		// Should be assignable
+		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: runner.Labels,
+					},
+				},
+			},
+		}))
+		require.NoError(err)
+		require.True(result)
+	})
+
+	t.Run("Labels target, partial", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		s := factory(t)
+		defer s.Close()
+
+		// Register a runner with labels
+		runner := serverptypes.TestRunner(t, &pb.Runner{
+			Labels: map[string]string{
+				"env":    "test",
+				"region": "testland-1",
+			},
+		})
+		require.NoError(s.RunnerCreate(runner))
+
+		// Should be assignable
+		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: map[string]string{
+							"env": "test",
+						},
+					},
+				},
+			},
+		}))
+		require.NoError(err)
+		require.True(result)
+	})
+
+	t.Run("Labels target, no match", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		s := factory(t)
+		defer s.Close()
+
+		// Register a runner with labels
+		runner := serverptypes.TestRunner(t, &pb.Runner{
+			Labels: map[string]string{
+				"env":    "test",
+				"region": "testland-1",
+			},
+		})
+		require.NoError(s.RunnerCreate(runner))
+
+		// Should be assignable
+		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: map[string]string{
+							"region": "outer-space",
+						},
+					},
+				},
+			},
+		}))
+		require.NoError(err)
+		require.False(result)
 	})
 }
 
