@@ -7234,7 +7234,7 @@
           }
         }
       },
-      "description": "RunnerLabels will reference a runner by labels."
+      "description": "RunnerLabels will reference a runner by labels. The labels are a subset\nmatch, not an exact match."
     },
     "hashicorp.waypoint.Ref.Trigger": {
       "type": "object",

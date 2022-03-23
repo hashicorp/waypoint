@@ -16314,7 +16314,8 @@ func (*Ref_RunnerAny) Descriptor() ([]byte, []int) {
 	return file_pkg_server_proto_server_proto_rawDescGZIP(), []int{8, 9}
 }
 
-// RunnerLabels will reference a runner by labels.
+// RunnerLabels will reference a runner by labels. The labels are a subset
+// match, not an exact match.
 type Ref_RunnerLabels struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

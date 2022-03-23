@@ -696,6 +696,34 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 				},
 			},
 		})))
+		time.Sleep(1 * time.Millisecond)
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "C",
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: map[string]string{
+							"useless": "label",
+						},
+					},
+				},
+			},
+		})))
+		time.Sleep(1 * time.Millisecond)
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{Id: "D"})))
+		time.Sleep(1 * time.Millisecond)
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "E",
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: map[string]string{
+							"region": "testland-2",
+						},
+					},
+				},
+			},
+		})))
 
 		// Assign for runner with completely matching labels
 		{
@@ -721,6 +749,33 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 			require.NoError(err)
 			require.NotNil(job)
 			require.Equal("B", job.Id)
+			_, err = s.JobAck(job.Id, true)
+			require.NoError(err)
+			require.NoError(s.JobComplete(job.Id, nil, nil))
+		}
+
+		// Runner with no labels. Should skip a job with labels and pick up a job with no labels.
+		{
+			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{})
+			require.NoError(err)
+			require.NotNil(job)
+			require.NotEqual("C", job.Id)
+			require.Equal("D", job.Id)
+			_, err = s.JobAck(job.Id, true)
+			require.NoError(err)
+			require.NoError(s.JobComplete(job.Id, nil, nil))
+		}
+
+		// Runner with no matching labels. Should skip a job with mismatched labels and pick up a later job with matching labels.
+		{
+			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{
+				Labels: map[string]string{
+					"region": "testland-2",
+				}})
+			require.NoError(err)
+			require.NotNil(job)
+			require.NotEqual("C", job.Id)
+			require.Equal("E", job.Id)
 			_, err = s.JobAck(job.Id, true)
 			require.NoError(err)
 			require.NoError(s.JobComplete(job.Id, nil, nil))
