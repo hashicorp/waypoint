@@ -480,7 +480,6 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			}
 			require.False(diags.HasErrors())
 
-			// TODO krantzinator: test jobVals
 			ivs, jvs, diags := EvaluateVariables(
 				hclog.New(&hclog.LoggerOptions{}),
 				tt.inputValues,

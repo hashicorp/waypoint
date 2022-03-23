@@ -190,7 +190,6 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 				result.Release.VariableRefs[iv].Type,
 				result.Release.VariableRefs[iv].Source,
 			}
-			// TODO krantzinator: figure out howt do display complex types
 
 			tbl.Rich(
 				columns,

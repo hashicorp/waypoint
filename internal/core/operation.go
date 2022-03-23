@@ -58,9 +58,6 @@ type operation interface {
 	// operation. This should include the component labels. These will be merged
 	// with any resulting labels from the operation.
 	Labels(*App) map[string]string
-
-	// TODO krantzinator
-	VariableRefs(*App) map[string]*pb.Variable_Ref
 }
 
 func (a *App) doOperation(

@@ -154,7 +154,6 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 				deployment.VariableRefs[iv].Type,
 				deployment.VariableRefs[iv].Source,
 			}
-			// TODO krantzinator: figure out howt do display complex types
 
 			tbl.Rich(
 				columns,

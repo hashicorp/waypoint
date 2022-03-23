@@ -692,7 +692,8 @@ func EvaluateVariables(
 	return iv, jobVals, diags
 }
 
-// TODO krantzinator: doc
+// getJobValues combines the Variable and Value into a VariableRef,
+// encoding any 'sensitive' values as SHA256 values with the given salt.
 func getJobValues(vs map[string]*Variable, values Values, salt string) (map[string]*pb.Variable_Ref, hcl.Diagnostics) {
 	varRefs := make(map[string]*pb.Variable_Ref, len(values))
 	var diags hcl.Diagnostics
@@ -721,10 +722,7 @@ func getJobValues(vs map[string]*Variable, values Values, salt string) (map[stri
 			val = fmt.Sprintf("%d", num)
 			t = "int"
 		default:
-			// TODO krantzinator -- best way?
-			// if it's not a primitive/simple type, we set as bytes here to be later
-			// parsed as an hcl expression; any errors at evaluating the hcl type will
-			// be handled at that time
+			// handle any HCL complex types
 			bv := hclwrite.TokensForValue(value.Value).Bytes()
 			buf := bytes.NewBuffer(bv)
 			val = buf.String()
@@ -732,7 +730,6 @@ func getJobValues(vs map[string]*Variable, values Values, salt string) (map[stri
 		}
 
 		if vs[v].Sensitive {
-			// TODO krantzinator - make it better
 			// salt shaker
 			saltedVal := salt + val
 			h := sha256.Sum256([]byte(saltedVal))

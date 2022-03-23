@@ -86,7 +86,6 @@ func (c *UpCommand) Run(args []string) int {
 				result.Release.Release.VariableRefs[iv].Type,
 				result.Release.Release.VariableRefs[iv].Source,
 			}
-			// TODO krantzinator: figure out howt do display complex types
 
 			tbl.Rich(
 				columns,

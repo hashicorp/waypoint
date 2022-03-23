@@ -1550,7 +1550,10 @@ message Job {
   // exposed via the data_source parameter itself.
   DataSource.Ref data_source_ref = 110;
 
-  // refs provides basic output info for variables after a job has run
+  // Variable refs store the final value used on the operation for each variable
+  // defined in the waypoint.hcl. Any variables with `sensitive` set in the
+  // waypoint.hcl will have a value encoded as SHA256 so the user can verify
+  // the value used.
   map<string, Variable.Ref> variable_refs = 113;
 
   // Config is information about the Waypoint configuration (waypoint.hcl)
@@ -2841,6 +2844,10 @@ message Build {
     Job.DataSource.Ref job_data_source_ref = 1;
   }
 
+  // Variable refs store the final value used on the operation for each variable
+  // defined in the waypoint.hcl. Any variables with `sensitive` set in the
+  // waypoint.hcl will have a value encoded as SHA256 so the user can verify
+  // the value used.
   map<string, Variable.Ref> variable_refs = 12;
 }
 
@@ -3012,7 +3019,10 @@ message PushedArtifact {
   // ID of the job that created this. This may be empty.
   string job_id = 11;
 
-  // TODO krantzinator: doc
+  // Variable refs store the final value used on the operation for each variable
+  // defined in the waypoint.hcl. Any variables with `sensitive` set in the
+  // waypoint.hcl will have a value encoded as SHA256 so the user can verify
+  // the value used.
   map<string, Variable.Ref> variable_refs = 14;
 
   // Preload is information that is available via further queries but it
@@ -3181,6 +3191,11 @@ message Deployment {
 
   // Resources that this deployment has created or manages.
   repeated DeclaredResource declared_resources = 19;
+
+  // Variable refs store the final value used on the operation for each variable
+  // defined in the waypoint.hcl. Any variables with `sensitive` set in the
+  // waypoint.hcl will have a value encoded as SHA256 so the user can verify
+  // the value used.
   map<string, Variable.Ref> variable_refs = 21;
 
   // This is the populated preload data. Most of this data can be retrieved
@@ -3416,7 +3431,10 @@ message Release {
   // A platform resource that this release has created, depends on, or manages.
   repeated DeclaredResource declared_resources = 19;
 
-  // TODO kranztinator: comment!
+  // Variable refs store the final value used on the operation for each variable
+  // defined in the waypoint.hcl. Any variables with `sensitive` set in the
+  // waypoint.hcl will have a value encoded as SHA256 so the user can verify
+  // the value used.
   map<string, Variable.Ref> variable_refs = 20;
 
   // This is the populated preload data. Most of this data can be retrieved
