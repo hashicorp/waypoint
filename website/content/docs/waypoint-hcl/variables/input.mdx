@@ -17,6 +17,9 @@ You can parameterize your configuration by declaring variables in the
 waypoint.hcl file, and setting their values using CLI options, environment variables,
 `auto` files, and the Waypoint server UI.
 
+Values used during a `build`, `deploy`, `release`, or `up` operation will output
+to the CLI.
+
 > **Hands-on:** Try the [Input Variables](https://learn.hashicorp.com/tutorials/waypoint/input-variables)
 > tutorial on HashiCorp Learn.
 
@@ -65,6 +68,7 @@ Waypoint CLI defines the following optional arguments for variable declarations:
 - [`type`][inpage-type] - This specifies what value types are accepted for the variable.
 - [`description`][inpage-description] - This specifies the input variable's documentation.
 - [`env`][inpage-env] - Default value sourced from an environment variable.
+- [`sensitive`][inpage-sensitive] - If set to true, the variables value will be obfuscated in outputs.
 
 ### Default values
 
@@ -171,6 +175,18 @@ variable "image_tag" {
 
 The description should concisely explain the purpose of the variable and what
 kind of value is expected.
+
+### Sensitive Values
+
+[inpage-sensitive]: #sensitive-values
+
+If set to true, the variable value will be obfuscated in outputs. This should not
+be relied on as a security measure on its own, but can be used as a way to hide
+literal variable values from logging, CLI output, and the UI. Variable values
+shared with the user via these methods will create SHA256 encoded value using
+the server cookie as the salt along with the set value. Therefore the user running an
+operation can verify if the value they expected to be used was used, with the output
+SHA256 encoded value.
 
 ## Using Input Variable Values
 
