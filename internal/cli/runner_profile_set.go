@@ -20,14 +20,15 @@ import (
 type RunnerProfileSetCommand struct {
 	*baseCommand
 	//TODO(XX): after `-env-vars` as a slice is deprecated, rename flagEnvVar to flagEnvVars
-	flagName           string
-	flagOCIUrl         string
-	flagEnvVar         map[string]string
-	flagEnvVars        []string
-	flagPluginType     string
-	flagPluginConfig   string
-	flagDefault        bool
-	flagTargetRunnerId string
+	flagName               string
+	flagOCIUrl             string
+	flagEnvVar             map[string]string
+	flagEnvVars            []string
+	flagPluginType         string
+	flagPluginConfig       string
+	flagDefault            bool
+	flagTargetRunnerId     string
+	flagTargetRunnerLabels []string
 }
 
 func (c *RunnerProfileSetCommand) Run(args []string) int {
@@ -104,6 +105,22 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 			Target: &pb.Ref_Runner_Id{
 				Id: &pb.Ref_RunnerId{
 					Id: c.flagTargetRunnerId,
+				},
+			},
+		}
+	} else if c.flagTargetRunnerLabels != nil {
+		labels := map[string]string{}
+		for _, kv := range c.flagTargetRunnerLabels {
+			idx := strings.IndexByte(kv, '=')
+			if idx != -1 {
+				labels[kv[:idx]] = kv[idx+1:]
+			}
+		}
+
+		od.TargetRunner = &pb.Ref_Runner{
+			Target: &pb.Ref_Runner_Labels{
+				Labels: &pb.Ref_RunnerLabels{
+					Labels: labels,
 				},
 			},
 		}
@@ -285,7 +302,14 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 			Name:    "target-runner-id",
 			Target:  &c.flagTargetRunnerId,
 			Default: "",
-			Usage:   "ID of the remote runner to target for the profile.",
+			Usage:   "ID of the runner to target for this remote runner profile.",
+		})
+
+		f.StringSliceVar(&flag.StringSliceVar{
+			Name:   "target-runner-labels",
+			Target: &c.flagTargetRunnerLabels,
+			Usage: "Labels on the runner to target for this remote runner profile. Can be specified multiple times, " +
+				"or at once like `-target-runner-labels=\"foo:bar,bar:baz\".",
 		})
 	})
 }
