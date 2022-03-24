@@ -98,6 +98,8 @@ type Variable struct {
 	// declaration, the type of the default variable will be used.
 	Type cty.Type
 
+	// Variables with this set will be hashed as SHA256 values for
+	// the purposes of output and logging
 	Sensitive bool
 
 	// Description of the variable
@@ -693,7 +695,7 @@ func EvaluateVariables(
 }
 
 // getJobValues combines the Variable and Value into a VariableRef,
-// encoding any 'sensitive' values as SHA256 values with the given salt.
+// hashing any 'sensitive' values as SHA256 values with the given salt.
 func getJobValues(vs map[string]*Variable, values Values, salt string) (map[string]*pb.Variable_Ref, hcl.Diagnostics) {
 	varRefs := make(map[string]*pb.Variable_Ref, len(values))
 	var diags hcl.Diagnostics
@@ -733,8 +735,7 @@ func getJobValues(vs map[string]*Variable, values Values, salt string) (map[stri
 			// salt shaker
 			saltedVal := salt + val
 			h := sha256.Sum256([]byte(saltedVal))
-			hVal := h[:]
-			val = hex.EncodeToString(hVal)
+			val = hex.EncodeToString(h[:])
 		}
 
 		varRefs[v] = &pb.Variable_Ref{
