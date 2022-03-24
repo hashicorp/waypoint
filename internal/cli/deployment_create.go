@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"sort"
 	"strings"
 
 	"github.com/posener/complete"
@@ -125,43 +124,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 		// We also use the deploy result and not the release result,
 		// because the data will be the same and this is the deployment command.
 		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
-		headers := []string{
-			"Variable", "Value", "Type", "Source",
-		}
-
-		tbl := terminal.NewTable(headers...)
-		// sort alphabetically for joy
-		inputVars := make([]string, 0, len(deployment.VariableRefs))
-		for iv := range deployment.VariableRefs {
-			inputVars = append(inputVars, iv)
-		}
-		sort.Strings(inputVars)
-		for _, iv := range inputVars {
-			// We add a line break in the value here because the Table word wrap
-			// alone can't accomodate the column headers to a long value
-			val := deployment.VariableRefs[iv].Value
-			if len(val) > 45 {
-				for i := range val {
-					// line break every 45 characters
-					if i%46 == 0 && i != 0 {
-						val = val[:i] + "\n" + val[i:]
-					}
-				}
-			}
-			columns := []string{
-				iv,
-				val,
-				deployment.VariableRefs[iv].Type,
-				deployment.VariableRefs[iv].Source,
-			}
-
-			tbl.Rich(
-				columns,
-				[]string{
-					terminal.Green,
-				},
-			)
-		}
+		tbl := fmtVariablesOutput(deployment.VariableRefs)
 		c.ui.Table(tbl)
 
 		// inplace is true if this was an in-place deploy. We detect this

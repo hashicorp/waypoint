@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -161,43 +160,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 		// We do this here so that if the list is long, it doesn't
 		// push the deploy/release URLs off the top of the terminal.
 		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
-		headers := []string{
-			"Variable", "Value", "Type", "Source",
-		}
-
-		tbl := terminal.NewTable(headers...)
-		// sort alphabetically for joy
-		inputVars := make([]string, 0, len(result.Release.VariableRefs))
-		for iv := range result.Release.VariableRefs {
-			inputVars = append(inputVars, iv)
-		}
-		sort.Strings(inputVars)
-		for _, iv := range inputVars {
-			// We add a line break in the value here because the Table word wrap
-			// alone can't accomodate the column headers to a long value
-			val := result.Release.VariableRefs[iv].Value
-			if len(val) > 45 {
-				for i := range val {
-					// line break every 45 characters
-					if i%46 == 0 && i != 0 {
-						val = val[:i] + "\n" + val[i:]
-					}
-				}
-			}
-			columns := []string{
-				iv,
-				val,
-				result.Release.VariableRefs[iv].Type,
-				result.Release.VariableRefs[iv].Source,
-			}
-
-			tbl.Rich(
-				columns,
-				[]string{
-					terminal.Green,
-				},
-			)
-		}
+		tbl := fmtVariablesOutput(result.Release.VariableRefs)
 		c.ui.Table(tbl)
 
 		// Status Report
