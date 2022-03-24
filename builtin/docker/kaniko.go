@@ -130,6 +130,7 @@ func (b *Builder) buildWithKaniko(
 	// Start constructing our arg string for img
 	args := []string{
 		"/kaniko/executor",
+		"--snapshotMode=redo",
 		"--context", "dir://" + contextDir,
 		"-f", dockerfilePath,
 		"-d", localRef,
