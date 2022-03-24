@@ -338,6 +338,7 @@ func (r *Releaser) resourceServiceCreate(
 
 func (r *Releaser) resourceServiceDestroy(
 	ctx context.Context,
+	log hclog.Logger,
 	state *Resource_Service,
 	sg terminal.StepGroup,
 	csinfo *clientsetInfo,
@@ -358,7 +359,10 @@ func (r *Releaser) resourceServiceDestroy(
 
 	step = sg.Add("Deleting service...")
 	if err := serviceclient.Delete(ctx, state.Name, metav1.DeleteOptions{}); err != nil {
-		return err
+		if !errors.IsNotFound(err) {
+			return err
+		}
+		log.Debug("no service found, continuing")
 	}
 
 	step.Update("Service deleted")
