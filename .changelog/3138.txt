@@ -1,0 +1,6 @@
+ ```release-note:feature
+core, cli: Support including the final values used for variables in a job's output
+```
+```release-note:feature
+core, cli: Support setting variables to `sensitive` and obfuscate those values in outputs
+```
