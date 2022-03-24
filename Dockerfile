@@ -32,7 +32,7 @@ RUN touch /tmp/.keep
 #--------------------------------------------------------------------
 # This target is explicitly invoked from the command line, it's not used
 # by the non-odr stages.
-FROM gcr.io/kaniko-project/executor:v1.6.0 as odr
+FROM gcr.io/kaniko-project/executor:v1.8.0 as odr
 
 COPY --from=builder /tmp/wp-src/waypoint /kaniko/waypoint
 COPY --from=busybox /bin/busybox /kaniko/busybox
