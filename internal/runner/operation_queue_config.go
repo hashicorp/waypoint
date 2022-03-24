@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"strings"
 
 	//"fmt"
@@ -15,6 +16,7 @@ import (
 func (r *Runner) executeQueueConfigOp(
 	ctx context.Context,
 	log hclog.Logger,
+	ui terminal.UI,
 	job *pb.Job,
 ) (*pb.Job_Result, error) {
 	sourcer, err := r.dataSourcer(ctx, log, job.DataSource, job.DataSourceOverrides)
@@ -53,6 +55,13 @@ func (r *Runner) executeQueueConfigOp(
 
 	// TODO(XX): HOW DO WE GET THE HCL?!?!
 
+	// Get any changes
+	newRef, ignore, err := sourcer.Changes(ctx, log, ui, job.DataSource, currentRef, r.tempDir)
+	if err != nil {
+		return nil, err
+	}
+	log.Debug("result of Changes, nil means no changes", "result", newRef, "ignore", ignore)
+
 	// If we have no changes, then we're done.
 	if newRef == nil {
 		return &pb.Job_Result{}, nil
@@ -73,20 +82,17 @@ func (r *Runner) executeQueueConfigOp(
 				Any: &pb.Ref_RunnerAny{},
 			},
 		},
+		// NOTE(mitchellh): default workspace only for now
+		Workspace: &pb.Ref_Workspace{Workspace: "default"},
+
 		// Reuse the same data source and bring in our overrides to set the ref
 		DataSource:          job.DataSource,
 		DataSourceOverrides: overrides,
-	}
 
-	// If we're ignoring, we change the job to a noop job. This will
-	// still trigger the machinery to update the ref associated with
-	// the project/app and avoids the poll job from having to have too
-	// much access or require new APIs to do this.
-	if ignore {
-		log.Debug("changes marked as ignorable, scheduling a noop job to update our data ref")
-		jobTemplate.Operation = &pb.Job_Noop_{
-			Noop: &pb.Job_Noop{},
-		}
+		// Doing a plain old "up"
+		Operation: &pb.Job_Up{
+			Up: &pb.Job_UpOp{},
+		},
 	}
 
 	log.Debug("queueing job")
@@ -127,12 +133,12 @@ func (r *Runner) executeQueueConfigOp(
 	}
 	log.Debug("job queued", "job_id", queueResp.JobId)
 
-	return &pb.Job_Result{
-		Poll: &pb.Job_PollResult{
-			JobId:  queueResp.JobId,
-			OldRef: currentRef,
-			NewRef: newRef,
-		},
-	}, nil
+	//return &pb.Job_Result{
+	//	Poll: &pb.Job_PollResult{
+	//		JobId:  queueResp.JobId,
+	//		OldRef: currentRef,
+	//		NewRef: newRef,
+	//	},
+	//}, nil
 	return nil, nil
 }

@@ -27,18 +27,7 @@ func (s *State) OnDemandRunnerConfigPut(o *pb.OnDemandRunnerConfig) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
-	ws := memdb.NewWatchSet()
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
-		// validate static runner exists on profile creation?
-		if o.TargetRunner != nil {
-			if t, ok := o.TargetRunner.Target.(*pb.Ref_Runner_Id); ok {
-				_, err := s.RunnerById(t.Id.Id, ws)
-				if err != nil {
-					return status.Errorf(codes.FailedPrecondition, "Target runner %q must exist.", t.Id.Id)
-				}
-			}
-		}
-
 		if o.Id != "" {
 			_, err := s.onDemandRunnerGet(dbTxn, memTxn, &pb.Ref_OnDemandRunnerConfig{Id: o.Id})
 			if err != nil {
@@ -49,7 +38,6 @@ func (s *State) OnDemandRunnerConfigPut(o *pb.OnDemandRunnerConfig) error {
 			if err != nil {
 				return err
 			}
-
 			o.Id = id
 		}
 

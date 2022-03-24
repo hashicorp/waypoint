@@ -677,12 +677,7 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 	log.Info("test odr", "id", odr.Id)
 
 	// Update the project to include ondemand runner
-	proj := serverptypes.TestProject(t, &pb.Project{
-		Name: "proj",
-		// Note, not setting OnDemandRunnerConfig here. This is the difference between
-		// this test and the previous one.
-	})
-
+	proj := serverptypes.TestProject(t, &pb.Project{Name: "proj"})
 	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
 		Project: proj,
 	})
@@ -694,6 +689,8 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 				Application: "app",
 				Project:     "proj",
 			},
+			// Note, not setting OnDemandRunnerConfig here. This is the difference between
+			// this test and the previous one.
 		}),
 	})
 	require.NoError(err)
@@ -728,7 +725,6 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 	require.NotEqual(queueResp.JobId, assignment.Assignment.Job.Id)
 
 	require.IsType(&pb.Job_StartTask{}, assignment.Assignment.Job.Operation)
-
 	st := assignment.Assignment.Job.Operation.(*pb.Job_StartTask).StartTask
 	require.Equal(odr.PluginConfig, st.Params.HclConfig)
 	require.Equal(odr.PluginType, st.Params.PluginType)
@@ -793,4 +789,132 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 		require.True(ok, "should be an open")
 		require.NotNil(open)
 	}
+}
+
+func TestServiceQueueJob_odr_target_id(t *testing.T) {
+	require := require.New(t)
+
+	ctx := context.Background()
+
+	log := hclog.New(&hclog.LoggerOptions{
+		Name:  "odr-test",
+		Level: hclog.Trace,
+	})
+
+	ctx = hclog.WithContext(ctx, log)
+
+	// Create our server
+	impl, err := New(
+		WithLogger(log),
+		WithDB(testDB(t)),
+	)
+
+	require.NoError(err)
+	client := server.TestServer(t, impl, server.TestWithContext(ctx))
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
+		Application: &pb.Ref_Application{
+			Application: "app",
+			Project:     "proj",
+		},
+	}).Application)
+
+	// Simplify writing tests
+	type Req = pb.QueueJobRequest
+
+	// Create an ODR profile
+	runnerId := "test_r"
+	odr := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
+		PluginType:   "magic-carpet",
+		PluginConfig: []byte("foo = 1"),
+		EnvironmentVariables: map[string]string{
+			"CARPET_DRIVER": "apu",
+		},
+		TargetRunner: &pb.Ref_Runner{
+			Target: &pb.Ref_Runner_Id{
+				Id: &pb.Ref_RunnerId{
+					Id: runnerId,
+				},
+			},
+		},
+	})
+	cfgResp, err := client.UpsertOnDemandRunnerConfig(context.Background(), &pb.UpsertOnDemandRunnerConfigRequest{
+		Config: odr,
+	})
+	odr = cfgResp.Config
+	log.Info("test odr profile", "id", odr.Id)
+
+	// Update the project to include ondemand runner
+	proj := serverptypes.TestProject(t, &pb.Project{Name: "proj"})
+	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+		Project: proj,
+	})
+	require.NoError(err)
+
+	// Create, should get an ID back
+	queueResp, err := client.QueueJob(ctx, &Req{
+		Job: serverptypes.TestJobNew(t, &pb.Job{
+			Application: &pb.Ref_Application{
+				Application: "app",
+				Project:     "proj",
+			},
+			OndemandRunner: &pb.Ref_OnDemandRunnerConfig{
+				Name: odr.Name,
+			},
+		}),
+	})
+	require.NoError(err)
+	require.NotEmpty(queueResp)
+
+	// Job should exist and be queued
+	job, err := testServiceImpl(impl).state.JobById(queueResp.JobId, nil)
+	require.NoError(err)
+	require.Equal(pb.Job_QUEUED, job.State)
+
+	// Register our runner
+	TestRunner(t, client, &pb.Runner{Id: runnerId})
+
+	// Start a job request
+	runnerStream, err := client.RunnerJobStream(ctx)
+	require.NoError(err)
+	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Request_{
+			Request: &pb.RunnerJobStreamRequest_Request{
+				RunnerId: runnerId,
+			},
+		},
+	}))
+
+	// Wait for assignment and ack.
+	resp, err := runnerStream.Recv()
+	require.NoError(err)
+	assignment, ok := resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
+	require.True(ok, "should be an assignment")
+	require.NotNil(assignment)
+	require.Equal(runnerId, assignment.Assignment.Job.TargetRunner.Target.(*pb.Ref_Runner_Id).Id.Id)
+	require.Equal(runnerId, assignment.Assignment.Job.AssignedRunner.Id)
+	require.NotEqual(queueResp.JobId, assignment.Assignment.Job.Id)
+
+	require.IsType(&pb.Job_StartTask{}, assignment.Assignment.Job.Operation)
+	st := assignment.Assignment.Job.Operation.(*pb.Job_StartTask).StartTask
+	require.Equal(odr.PluginConfig, st.Params.HclConfig)
+	require.Equal(odr.PluginType, st.Params.PluginType)
+
+	for k, v := range odr.EnvironmentVariables {
+		require.Equal(v, st.Info.EnvironmentVariables[k])
+	}
+
+	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Ack_{
+			Ack: &pb.RunnerJobStreamRequest_Ack{},
+		},
+	}))
+
+	// Complete our launch task job
+	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Complete_{
+			Complete: &pb.RunnerJobStreamRequest_Complete{},
+		},
+	}))
 }
