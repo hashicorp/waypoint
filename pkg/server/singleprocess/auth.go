@@ -133,12 +133,6 @@ func CookieFromRequest(ctx context.Context) string {
 	return ""
 }
 
-func (s *Service) AuthenticateCookie(
-	ctx context.Context, token, endpoint string, effects []string,
-) {
-
-}
-
 // Authenticate implements the server.AuthChecker interface.
 //
 // This checks if the given endpoint should be allowed. This is called during a
