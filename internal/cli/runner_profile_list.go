@@ -2,14 +2,14 @@ package cli
 
 import (
 	"encoding/json"
+
+	"github.com/posener/complete"
+	empty "google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-
-	"github.com/posener/complete"
-
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	empty "google.golang.org/protobuf/types/known/emptypb"
 )
 
 type RunnerProfileListCommand struct {
