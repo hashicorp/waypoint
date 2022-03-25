@@ -19,18 +19,7 @@ var (
 	SourceDefault = "default"
 	SourceUnknown = "unknown"
 
-	FromSourceToFV = map[string]pb.Variable_FinalValue_Source{
-		SourceCLI:     pb.Variable_FinalValue_CLI,
-		SourceFile:    pb.Variable_FinalValue_FILE,
-		SourceEnv:     pb.Variable_FinalValue_ENV,
-		SourceVCS:     pb.Variable_FinalValue_VCS,
-		SourceServer:  pb.Variable_FinalValue_SERVER,
-		SourceDynamic: pb.Variable_FinalValue_DYNAMIC,
-		SourceDefault: pb.Variable_FinalValue_DEFAULT,
-		SourceUnknown: pb.Variable_FinalValue_UNKNOWN,
-	}
-
-	FromFVtoSource = map[pb.Variable_FinalValue_Source]string{
+	fromFVtoSource = map[pb.Variable_FinalValue_Source]string{
 		pb.Variable_FinalValue_UNKNOWN: SourceUnknown,
 		pb.Variable_FinalValue_DEFAULT: SourceDefault,
 		pb.Variable_FinalValue_FILE:    SourceFile,
@@ -78,7 +67,7 @@ func ValuesForOutput(values map[string]*pb.Variable_FinalValue) map[string]*Outp
 				o.Type = "complex"
 			}
 
-			o.Source = FromFVtoSource[values[iv].Source]
+			o.Source = fromFVtoSource[values[iv].Source]
 
 		}
 	}

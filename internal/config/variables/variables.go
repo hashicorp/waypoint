@@ -47,6 +47,17 @@ var (
 		reflect.TypeOf((*pb.Variable_Dynamic)(nil)): formatter.SourceDynamic,
 	}
 
+	fromSourceToFV = map[string]pb.Variable_FinalValue_Source{
+		formatter.SourceCLI:     pb.Variable_FinalValue_CLI,
+		formatter.SourceFile:    pb.Variable_FinalValue_FILE,
+		formatter.SourceEnv:     pb.Variable_FinalValue_ENV,
+		formatter.SourceVCS:     pb.Variable_FinalValue_VCS,
+		formatter.SourceServer:  pb.Variable_FinalValue_SERVER,
+		formatter.SourceDynamic: pb.Variable_FinalValue_DYNAMIC,
+		formatter.SourceDefault: pb.Variable_FinalValue_DEFAULT,
+		formatter.SourceUnknown: pb.Variable_FinalValue_UNKNOWN,
+	}
+
 	// The attributes we expect to see in variable blocks
 	// Future expansion here could include `validations`, etc
 	variableBlockSchema = &hcl.BodySchema{
@@ -759,7 +770,7 @@ func getJobValues(vs map[string]*Variable, values Values, salt string) (map[stri
 			}
 		}
 
-		source := formatter.FromSourceToFV[value.Source]
+		source := fromSourceToFV[value.Source]
 		varRefs[v].Source = source
 	}
 
