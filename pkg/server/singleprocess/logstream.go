@@ -32,7 +32,6 @@ type singleProcessLogStreamTracker struct {
 
 func (l *singleProcessLogStreamTracker) Flush(ctx context.Context) {
 	// No work required
-	return
 }
 
 func (l *singleProcessLogStreamTracker) NewEvent(ctx context.Context, event *pb.RunnerJobStreamRequest_Terminal) error {
