@@ -129,6 +129,17 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 			}
 		}
 		s.id = id
+
+		// If we haven't initialized our server config before, do that once.
+		conf, err := state.ServerConfigGet()
+		if err != nil {
+			return nil, err
+		}
+		if conf.Cookie == "" {
+			if err := state.ServerConfigSet(conf); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	// Setup our URL service config if it is enabled.
@@ -155,17 +166,6 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 			cfg.acceptUrlTerms,
 			&cfgCopy,
 		); err != nil {
-			return nil, err
-		}
-	}
-
-	// If we haven't initialized our server config before, do that once.
-	conf, err := state.ServerConfigGet()
-	if err != nil {
-		return nil, err
-	}
-	if conf.Cookie == "" {
-		if err := state.ServerConfigSet(conf); err != nil {
 			return nil, err
 		}
 	}

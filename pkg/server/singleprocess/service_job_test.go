@@ -42,7 +42,7 @@ func TestServiceQueueJob(t *testing.T) {
 		require.NotEmpty(resp.JobId)
 
 		// Job should exist and be queued
-		job, err := testServiceImpl(impl).state.JobById(resp.JobId, nil)
+		job, err := testServiceImpl(impl).state(ctx).JobById(resp.JobId, nil)
 		require.NoError(err)
 		require.Equal(pb.Job_QUEUED, job.State)
 	})
@@ -61,7 +61,7 @@ func TestServiceQueueJob(t *testing.T) {
 
 		// Job should exist and be queued
 		require.Eventually(func() bool {
-			job, err := testServiceImpl(impl).state.JobById(resp.JobId, nil)
+			job, err := testServiceImpl(impl).state(ctx).JobById(resp.JobId, nil)
 			require.NoError(err)
 			return job.State == pb.Job_ERROR && job.CancelTime != nil
 		}, 2*time.Second, 10*time.Millisecond)
@@ -532,7 +532,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	require.NotEmpty(queueResp)
 
 	// Job should exist and be queued
-	job, err := testServiceImpl(impl).state.JobById(queueResp.JobId, nil)
+	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 
@@ -698,7 +698,7 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 	require.NotEmpty(queueResp)
 
 	// Job should exist and be queued
-	job, err := testServiceImpl(impl).state.JobById(queueResp.JobId, nil)
+	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 

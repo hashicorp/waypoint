@@ -379,7 +379,7 @@ func TestServiceGetLogStream_depPlugin(t *testing.T) {
 	// Should have the job to spawn the logs plugin
 	var job *pb.Job
 	require.Eventually(t, func() bool {
-		jobs, err := testServiceImpl(impl).state.JobList()
+		jobs, err := testServiceImpl(impl).state(ctx).JobList()
 		if err != nil {
 			t.Logf("error getting job list: %s", err)
 			return false

@@ -251,7 +251,7 @@ func TestServiceRunnerToken_invalidRunnerToken(t *testing.T) {
 	}
 
 	// Reconnect with a runner token
-	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+	tok, err := testServiceImpl(impl).newToken(ctx, 0, DefaultKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Runner_{
 			Runner: &pb.Token_Runner{
 				Id: "no-match",
@@ -610,7 +610,7 @@ func TestServiceRunnerToken_noCookieValidToken(t *testing.T) {
 	}
 
 	// Reconnect with a runner token
-	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+	tok, err := testServiceImpl(impl).newToken(ctx, 0, DefaultKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Runner_{
 			Runner: &pb.Token_Runner{
 				Id: "",
@@ -698,7 +698,7 @@ func TestServiceRunnerConfig_preadopt(t *testing.T) {
 	require.NoError(err)
 
 	// Reconnect with a runner token
-	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+	tok, err := testServiceImpl(impl).newToken(ctx, 0, DefaultKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Runner_{
 			Runner: &pb.Token_Runner{
 				Id: "",
@@ -761,7 +761,7 @@ func TestServiceRunnerConfig_preadoptWrongId(t *testing.T) {
 	require.NoError(err)
 
 	// Reconnect with a runner token
-	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+	tok, err := testServiceImpl(impl).newToken(ctx, 0, DefaultKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Runner_{
 			Runner: &pb.Token_Runner{
 				Id: "hello",
@@ -808,7 +808,7 @@ func TestServiceRunnerConfig_preadoptAnyLabels(t *testing.T) {
 	require.NoError(err)
 
 	// Reconnect with a runner token
-	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+	tok, err := testServiceImpl(impl).newToken(ctx, 0, DefaultKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Runner_{
 			Runner: &pb.Token_Runner{
 				Id: id,
@@ -856,7 +856,7 @@ func TestServiceRunnerConfig_preadoptMismatchLabels(t *testing.T) {
 	require.NoError(err)
 
 	// Reconnect with a runner token
-	tok, err := testServiceImpl(impl).newToken(0, DefaultKeyId, nil, &pb.Token{
+	tok, err := testServiceImpl(impl).newToken(ctx, 0, DefaultKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Runner_{
 			Runner: &pb.Token_Runner{
 				Id:        id,
@@ -1152,7 +1152,7 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 	require.Equal(io.EOF, err)
 
 	// Query our job and it should be done
-	job, err := testServiceImpl(impl).state.JobById(queueResp.JobId, nil)
+	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_SUCCESS, job.State)
 
@@ -1163,7 +1163,7 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 
 	// Verify that we update the project last data ref
 	{
-		ws, err := testServiceImpl(impl).state.WorkspaceGet(job.Workspace.Workspace)
+		ws, err := testServiceImpl(impl).state(ctx).WorkspaceGet(job.Workspace.Workspace)
 		require.NoError(err)
 		require.NotNil(ws)
 		require.Len(ws.Projects, 1)
@@ -1252,7 +1252,7 @@ func TestServiceRunnerJobStream_errorBeforeAck(t *testing.T) {
 	require.Equal(io.EOF, err)
 
 	// Query our job and it should be queued again
-	job, err := testServiceImpl(impl).state.JobById(queueResp.JobId, nil)
+	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 }
@@ -1334,7 +1334,7 @@ func TestServiceRunnerJobStream_cancel(t *testing.T) {
 	require.Equal(io.EOF, err, err.Error())
 
 	// Query our job and it should be done
-	job, err := testServiceImpl(impl).state.JobById(queueResp.JobId, nil)
+	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_SUCCESS, job.State)
 	require.NotEmpty(job.CancelTime)
@@ -1492,7 +1492,7 @@ func TestServiceRunnerJobStream_reattachHappy(t *testing.T) {
 	require.Equal(io.EOF, err)
 
 	// Query our job and it should be done
-	job, err := testServiceImpl(impl).state.JobById(queueResp.JobId, nil)
+	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_SUCCESS, job.State)
 
@@ -1503,7 +1503,7 @@ func TestServiceRunnerJobStream_reattachHappy(t *testing.T) {
 
 	// Verify that we update the project last data ref
 	{
-		ws, err := testServiceImpl(impl).state.WorkspaceGet(job.Workspace.Workspace)
+		ws, err := testServiceImpl(impl).state(ctx).WorkspaceGet(job.Workspace.Workspace)
 		require.NoError(err)
 		require.NotNil(ws)
 		require.Len(ws.Projects, 1)
