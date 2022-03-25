@@ -21,7 +21,7 @@ export default Factory.extend({
       'common/vcs-ref': '0d56a9f8456b088dd0e4a7b689b842876fd47352',
       'common/vcs-ref-path': 'https://github.com/hashicorp/waypoint/commit/',
     }),
-    url: 'https://wildly-intent-honeybee.waypoint.run',
+    url: 'https://wp-matrix.example',
   }),
 
   nomad: trait({
