@@ -1303,7 +1303,7 @@
     },
     "/v1/project/{application.project}/application/{application.application}/release/latest": {
       "get": {
-        "summary": "GetLatestRelease returns the most recent successfully completed\nartifact push for an app.",
+        "summary": "GetLatestRelease returns the most recent successfully completed\nrelease for an app.",
         "operationId": "Waypoint_GetLatestRelease",
         "responses": {
           "200": {
@@ -1360,7 +1360,7 @@
     },
     "/v1/project/{application.project}/application/{application.application}/releases": {
       "get": {
-        "summary": "ListReleases returns the deployments.",
+        "summary": "ListReleases returns the releases.",
         "operationId": "Waypoint_ListReleases",
         "responses": {
           "200": {
@@ -1999,7 +1999,7 @@
     },
     "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/release/latest": {
       "get": {
-        "summary": "GetLatestRelease returns the most recent successfully completed\nartifact push for an app.",
+        "summary": "GetLatestRelease returns the most recent successfully completed\nrelease for an app.",
         "operationId": "Waypoint_GetLatestRelease2",
         "responses": {
           "200": {
@@ -2056,7 +2056,7 @@
     },
     "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/releases": {
       "get": {
-        "summary": "ListReleases returns the deployments.",
+        "summary": "ListReleases returns the releases.",
         "operationId": "Waypoint_ListReleases2",
         "responses": {
           "200": {
@@ -2798,7 +2798,7 @@
     },
     "/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/release/{ref.sequence.number}": {
       "get": {
-        "summary": "GetRelease returns a deployment",
+        "summary": "GetRelease returns a release",
         "operationId": "Waypoint_GetRelease2",
         "responses": {
           "200": {
@@ -3169,7 +3169,7 @@
     },
     "/v1/release/{ref.id}": {
       "get": {
-        "summary": "GetRelease returns a deployment",
+        "summary": "GetRelease returns a release",
         "operationId": "Waypoint_GetRelease",
         "responses": {
           "200": {

@@ -102,12 +102,12 @@ type WaypointClient interface {
 	// GetLatestPushedArtifact returns the most recent successfully completed
 	// artifact push for an app.
 	GetLatestPushedArtifact(ctx context.Context, in *GetLatestPushedArtifactRequest, opts ...grpc.CallOption) (*PushedArtifact, error)
-	// ListReleases returns the deployments.
+	// ListReleases returns the releases.
 	ListReleases(ctx context.Context, in *ListReleasesRequest, opts ...grpc.CallOption) (*ListReleasesResponse, error)
-	// GetRelease returns a deployment
+	// GetRelease returns a release
 	GetRelease(ctx context.Context, in *GetReleaseRequest, opts ...grpc.CallOption) (*Release, error)
 	// GetLatestRelease returns the most recent successfully completed
-	// artifact push for an app.
+	// release for an app.
 	GetLatestRelease(ctx context.Context, in *GetLatestReleaseRequest, opts ...grpc.CallOption) (*Release, error)
 	// GetLogStream reads the log stream for a deployment. This will immediately
 	// send a single LogEntry with the lines we have so far. If there are no
@@ -1419,12 +1419,12 @@ type WaypointServer interface {
 	// GetLatestPushedArtifact returns the most recent successfully completed
 	// artifact push for an app.
 	GetLatestPushedArtifact(context.Context, *GetLatestPushedArtifactRequest) (*PushedArtifact, error)
-	// ListReleases returns the deployments.
+	// ListReleases returns the releases.
 	ListReleases(context.Context, *ListReleasesRequest) (*ListReleasesResponse, error)
-	// GetRelease returns a deployment
+	// GetRelease returns a release
 	GetRelease(context.Context, *GetReleaseRequest) (*Release, error)
 	// GetLatestRelease returns the most recent successfully completed
-	// artifact push for an app.
+	// release for an app.
 	GetLatestRelease(context.Context, *GetLatestReleaseRequest) (*Release, error)
 	// GetLogStream reads the log stream for a deployment. This will immediately
 	// send a single LogEntry with the lines we have so far. If there are no
