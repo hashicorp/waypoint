@@ -40,4 +40,33 @@ module('Acceptance | release detail', function (hooks) {
 
     assert.equal(currentURL(), `/default/acme-project/app/acme-app/release/seq/${release.sequence}`);
   });
+
+  test('displays the URL where appropriate', async function (assert) {
+    let project = this.server.create('project', { name: 'acme-project' });
+    let application = this.server.create('application', { name: 'acme-app', project });
+    // Old superceded release
+    this.server.create('release', 'random', {
+      application,
+      sequence: 1,
+      state: 'CREATED',
+      url: 'https://acme-app.test',
+    });
+    // New active release
+    this.server.create('release', 'random', {
+      application,
+      sequence: 2,
+      state: 'CREATED',
+      url: 'https://acme-app.test',
+    });
+
+    await visit('/default/acme-project/app/acme-app/release/seq/1');
+
+    assert.dom('[data-test-release-url]').doesNotExist('Doesn’t show the URL for an old release');
+
+    await visit('/default/acme-project/app/acme-app/release/seq/2');
+
+    assert
+      .dom('[data-test-release-url]')
+      .hasText('https://acme-app.test', 'Shows the URL for the active release');
+  });
 });

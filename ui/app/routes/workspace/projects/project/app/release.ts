@@ -5,6 +5,7 @@ import { Model as AppRouteModel } from '../app';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 import { ReleaseExtended } from 'waypoint/services/api';
 import { TimelineModel } from '../../../../../components/timeline';
+import { Operation } from 'waypoint-pb';
 
 type Params = { sequence: string };
 
@@ -12,7 +13,11 @@ interface WithTimeline {
   timeline: TimelineModel;
 }
 
-export type Model = ReleaseExtended & WithTimeline;
+interface WithLatest {
+  latestRelease?: ReleaseExtended;
+}
+
+export type Model = ReleaseExtended & WithTimeline & WithLatest;
 
 export default class ReleaseDetail extends Route {
   @service api!: ApiService;
@@ -45,6 +50,7 @@ export default class ReleaseDetail extends Route {
     let deployment = deployments.find((obj) => obj.id === release?.deploymentId);
     let deploymentArtifactId = deployment?.pushedArtifact?.id ?? deployment?.artifactId;
     let build = builds.find((obj) => obj.pushedArtifact?.id === deploymentArtifactId);
+    let latestRelease = releases.find((r) => r.state === Operation.PhysicalState.CREATED);
 
     let timeline: TimelineModel = {};
     if (build) {
@@ -68,6 +74,6 @@ export default class ReleaseDetail extends Route {
     };
     timeline.release = releaseObj;
 
-    return { ...release, timeline };
+    return { ...release, timeline, latestRelease };
   }
 }
