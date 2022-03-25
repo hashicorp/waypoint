@@ -2,8 +2,6 @@ package cli
 
 import (
 	"context"
-	"fmt"
-	"sort"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -12,6 +10,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/config/variables/formatter"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -267,69 +266,30 @@ Usage: waypoint up [options]
 }
 
 // Helper functions for formatting variable final value output
-var fromFVtoSource = map[pb.Variable_FinalValue_Source]string{
-	pb.Variable_FinalValue_UNKNOWN: "unknown",
-	pb.Variable_FinalValue_DEFAULT: "default",
-	pb.Variable_FinalValue_FILE:    "file",
-	pb.Variable_FinalValue_CLI:     "cli",
-	pb.Variable_FinalValue_ENV:     "env",
-	pb.Variable_FinalValue_VCS:     "vcs",
-	pb.Variable_FinalValue_SERVER:  "server",
-	pb.Variable_FinalValue_DYNAMIC: "dynamic",
-}
-
 func fmtVariablesOutput(values map[string]*pb.Variable_FinalValue) *terminal.Table {
 	headers := []string{
 		"Variable", "Value", "Type", "Source",
 	}
 	tbl := terminal.NewTable(headers...)
-	// sort alphabetically for joy
-	inputVars := make([]string, 0, len(values))
-	for iv := range values {
-		inputVars = append(inputVars, iv)
-	}
-	sort.Strings(inputVars)
-
-	// move value and inferred type into strings for outputting
-	for _, iv := range inputVars {
-		var v, t, s string
-		switch vt := values[iv].Value.(type) {
-		case *pb.Variable_FinalValue_Sensitive:
-			v = vt.Sensitive
-			t = "sensitive"
-		case *pb.Variable_FinalValue_Str:
-			v = vt.Str
-			t = "string"
-		case *pb.Variable_FinalValue_Bool:
-			v = fmt.Sprintf("%t", vt.Bool)
-			t = "bool"
-		case *pb.Variable_FinalValue_Num:
-			v = fmt.Sprintf("%d", vt.Num)
-			t = "int"
-		case *pb.Variable_FinalValue_Hcl:
-			v = vt.Hcl
-			t = "complex"
-		}
+	output := formatter.ValuesForOutput(values)
+	var columns []string
+	for iv, v := range output {
 		// We add a line break in the value here because the Table word wrap
 		// alone can't accomodate the column headers to a long value
-		if len(v) > 45 {
-			for i := range v {
+		if len(v.Value) > 45 {
+			for i := range v.Value {
 				// line break every 45 characters
 				if i%46 == 0 && i != 0 {
-					v = v[:i] + "\n" + v[i:]
+					v.Value = v.Value[:i] + "\n" + v.Value[i:]
 				}
 			}
 		}
-
-		s = fromFVtoSource[values[iv].Source]
-
-		columns := []string{
+		columns = []string{
 			iv,
-			v,
-			t,
-			s,
+			v.Value,
+			v.Type,
+			v.Source,
 		}
-
 		tbl.Rich(
 			columns,
 			[]string{

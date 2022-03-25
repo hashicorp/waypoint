@@ -636,9 +636,6 @@ message Variable {
       string hcl = 5;
     }
 
-    // TODO krantzinator; might be implied by the value
-    // string type = 3;
-
     Source source = 6;
     enum Source {
       // TODO: comments

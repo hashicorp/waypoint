@@ -27,45 +27,24 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/appconfig"
 	"github.com/hashicorp/waypoint/internal/config/dynamic"
+	"github.com/hashicorp/waypoint/internal/config/variables/formatter"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 const (
 	// Prefix for collecting variable values from environment variables
 	varEnvPrefix = "WP_VAR_"
-
-	// Variable value sources
-	// listed in descending precedence order for ease of reference
-	sourceCLI     = "cli"
-	sourceFile    = "file"
-	sourceEnv     = "env"
-	sourceVCS     = "vcs"
-	sourceServer  = "server"
-	sourceDynamic = "dynamic"
-	sourceDefault = "default"
-	sourceUnknown = "unknown"
 )
 
 var (
 	// sourceMap maps a variable pb source type to its string representation
 	fromSource = map[reflect.Type]string{
-		reflect.TypeOf((*pb.Variable_Cli)(nil)):     sourceCLI,
-		reflect.TypeOf((*pb.Variable_File_)(nil)):   sourceFile,
-		reflect.TypeOf((*pb.Variable_Env)(nil)):     sourceEnv,
-		reflect.TypeOf((*pb.Variable_Vcs)(nil)):     sourceVCS,
-		reflect.TypeOf((*pb.Variable_Server)(nil)):  sourceServer,
-		reflect.TypeOf((*pb.Variable_Dynamic)(nil)): sourceDynamic,
-	}
-
-	fromSourceToFV = map[string]pb.Variable_FinalValue_Source{
-		sourceCLI:     pb.Variable_FinalValue_CLI,
-		sourceFile:    pb.Variable_FinalValue_FILE,
-		sourceEnv:     pb.Variable_FinalValue_ENV,
-		sourceVCS:     pb.Variable_FinalValue_VCS,
-		sourceServer:  pb.Variable_FinalValue_SERVER,
-		sourceDynamic: pb.Variable_FinalValue_DYNAMIC,
-		sourceDefault: pb.Variable_FinalValue_DEFAULT,
-		sourceUnknown: pb.Variable_FinalValue_UNKNOWN,
+		reflect.TypeOf((*pb.Variable_Cli)(nil)):     formatter.SourceCLI,
+		reflect.TypeOf((*pb.Variable_File_)(nil)):   formatter.SourceFile,
+		reflect.TypeOf((*pb.Variable_Env)(nil)):     formatter.SourceEnv,
+		reflect.TypeOf((*pb.Variable_Vcs)(nil)):     formatter.SourceVCS,
+		reflect.TypeOf((*pb.Variable_Server)(nil)):  formatter.SourceServer,
+		reflect.TypeOf((*pb.Variable_Dynamic)(nil)): formatter.SourceDynamic,
 	}
 
 	// The attributes we expect to see in variable blocks
@@ -285,7 +264,7 @@ func decodeVariableBlock(
 		}
 
 		v.Default = &Value{
-			Source: sourceDefault,
+			Source: formatter.SourceDefault,
 			Value:  val,
 		}
 
@@ -342,7 +321,7 @@ func LoadVariableValues(vars map[string]string, files []string) ([]*pb.Variable,
 	// process -var-file args ("file" source)
 	for _, file := range files {
 		if file != "" {
-			pbv, diags := parseFileValues(file, sourceFile)
+			pbv, diags := parseFileValues(file, formatter.SourceFile)
 			if diags.HasErrors() {
 				return nil, diags
 			}
@@ -588,7 +567,7 @@ func EvaluateVariables(
 		// set our source for error messaging
 		source := fromSource[reflect.TypeOf(pbv.Source)]
 		if source == "" {
-			source = sourceUnknown
+			source = formatter.SourceUnknown
 			log.Debug("No source found for value given for variable %q", pbv.Name)
 		}
 
@@ -643,7 +622,7 @@ func EvaluateVariables(
 			// map/list/etc.
 			// Now that we know the expected type, we'll check here for that
 			// and, if necessary, repeat the expression parsing for HCL syntax
-			if source == sourceCLI || source == sourceEnv {
+			if source == formatter.SourceCLI || source == formatter.SourceEnv {
 				if !variable.Type.IsPrimitiveType() {
 					fakeFilename := fmt.Sprintf("<value for var.%s from source %q>", pbv.Name, source)
 					expr, diags = hclsyntax.ParseExpression([]byte(val.AsString()), fakeFilename, hcl.Pos{Line: 1, Column: 1})
@@ -780,7 +759,7 @@ func getJobValues(vs map[string]*Variable, values Values, salt string) (map[stri
 			}
 		}
 
-		source := fromSourceToFV[value.Source]
+		source := formatter.FromSourceToFV[value.Source]
 		varRefs[v].Source = source
 	}
 
@@ -806,7 +785,7 @@ func LoadAutoFiles(wd string) ([]*pb.Variable, hcl.Diagnostics) {
 
 	for _, f := range varFiles {
 		if f != "" {
-			pbv, diags = parseFileValues(f, sourceVCS)
+			pbv, diags = parseFileValues(f, formatter.SourceVCS)
 			if diags.HasErrors() {
 				return nil, diags
 			}
@@ -866,9 +845,9 @@ func parseFileValues(filename string, source string) ([]*pb.Variable, hcl.Diagno
 
 		// Set source
 		switch source {
-		case sourceFile:
+		case formatter.SourceFile:
 			v.Source = &pb.Variable_File_{}
-		case sourceVCS:
+		case formatter.SourceVCS:
 			v.Source = &pb.Variable_Vcs{}
 		}
 		pbv = append(pbv, v)

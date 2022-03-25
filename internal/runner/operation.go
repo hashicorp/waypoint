@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/appconfig"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/config/variables"
+	"github.com/hashicorp/waypoint/internal/config/variables/formatter"
 	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
@@ -257,6 +258,11 @@ func (r *Runner) executeJob(
 	clientMutex.Unlock()
 	if err != nil {
 		return nil, err
+	}
+	// log outputtable values
+	output := formatter.ValuesForOutput(jobVars)
+	for name, value := range output {
+		log.Debug("set variable", "name", name, "value", value.Value, "type", value.Type, "source", value.Source)
 	}
 
 	// Build our job info
