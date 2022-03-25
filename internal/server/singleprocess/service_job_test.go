@@ -793,7 +793,6 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 
 func TestServiceQueueJob_odr_target_id(t *testing.T) {
 	require := require.New(t)
-
 	ctx := context.Background()
 
 	log := hclog.New(&hclog.LoggerOptions{
@@ -823,9 +822,10 @@ func TestServiceQueueJob_odr_target_id(t *testing.T) {
 	// Simplify writing tests
 	type Req = pb.QueueJobRequest
 
-	// Create an ODR profile
+	// Create an ODR profile with target runner ID
 	runnerId := "test_r"
 	odr := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
+		Name:         "test",
 		PluginType:   "magic-carpet",
 		PluginConfig: []byte("foo = 1"),
 		EnvironmentVariables: map[string]string{
@@ -843,16 +843,15 @@ func TestServiceQueueJob_odr_target_id(t *testing.T) {
 		Config: odr,
 	})
 	odr = cfgResp.Config
-	log.Info("test odr profile", "id", odr.Id)
+	log.Info("test odr profile", "name", odr.Name)
 
-	// Update the project to include ondemand runner
 	proj := serverptypes.TestProject(t, &pb.Project{Name: "proj"})
 	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
 		Project: proj,
 	})
 	require.NoError(err)
 
-	// Create, should get an ID back
+	// Create and queue job
 	queueResp, err := client.QueueJob(ctx, &Req{
 		Job: serverptypes.TestJobNew(t, &pb.Job{
 			Application: &pb.Ref_Application{
@@ -872,7 +871,7 @@ func TestServiceQueueJob_odr_target_id(t *testing.T) {
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 
-	// Register our runner
+	// Register our static runner
 	TestRunner(t, client, &pb.Runner{Id: runnerId})
 
 	// Start a job request
@@ -886,17 +885,16 @@ func TestServiceQueueJob_odr_target_id(t *testing.T) {
 		},
 	}))
 
-	// Wait for assignment and ack.
+	// We should get a task to start the job first.
 	resp, err := runnerStream.Recv()
 	require.NoError(err)
 	assignment, ok := resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
 	require.True(ok, "should be an assignment")
 	require.NotNil(assignment)
-	require.Equal(runnerId, assignment.Assignment.Job.TargetRunner.Target.(*pb.Ref_Runner_Id).Id.Id)
 	require.Equal(runnerId, assignment.Assignment.Job.AssignedRunner.Id)
 	require.NotEqual(queueResp.JobId, assignment.Assignment.Job.Id)
-
 	require.IsType(&pb.Job_StartTask{}, assignment.Assignment.Job.Operation)
+
 	st := assignment.Assignment.Job.Operation.(*pb.Job_StartTask).StartTask
 	require.Equal(odr.PluginConfig, st.Params.HclConfig)
 	require.Equal(odr.PluginType, st.Params.PluginType)
@@ -905,16 +903,59 @@ func TestServiceQueueJob_odr_target_id(t *testing.T) {
 		require.Equal(v, st.Info.EnvironmentVariables[k])
 	}
 
+	// Ack and complete it
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Ack_{
 			Ack: &pb.RunnerJobStreamRequest_Ack{},
 		},
 	}))
 
-	// Complete our launch task job
+	// Register on-demand runner
+	odrId := st.Info.EnvironmentVariables["WAYPOINT_RUNNER_ID"]
+	TestRunner(t, client, &pb.Runner{Id: odrId})
+
+	// Start a job request
+	rs2, err := client.RunnerJobStream(ctx)
+	require.NoError(err)
+	require.NoError(rs2.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Request_{
+			Request: &pb.RunnerJobStreamRequest_Request{
+				RunnerId: odrId,
+			},
+		},
+	}))
+
+	// Complete our launch task job so that we can move on
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Complete_{
 			Complete: &pb.RunnerJobStreamRequest_Complete{},
 		},
 	}))
+
+	// Wait for assignment and ack.
+	resp, err = rs2.Recv()
+	require.NoError(err)
+	assignment, ok = resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
+	require.True(ok, "should be an assignment")
+	require.NotNil(assignment)
+	require.Equal(queueResp.JobId, assignment.Assignment.Job.Id)
+	require.Equal(odrId, assignment.Assignment.Job.TargetRunner.Target.(*pb.Ref_Runner_Id).Id.Id)
+	require.Equal(odrId, assignment.Assignment.Job.AssignedRunner.Id)
+
+	require.NoError(rs2.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Ack_{
+			Ack: &pb.RunnerJobStreamRequest_Ack{},
+		},
+	}))
+
+	// Get our job stream and verify we open
+	stream, err := client.GetJobStream(ctx, &pb.GetJobStreamRequest{JobId: queueResp.JobId})
+	require.NoError(err)
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		open, ok := resp.Event.(*pb.GetJobStreamResponse_Open_)
+		require.True(ok, "should be an open")
+		require.NotNil(open)
+	}
 }
