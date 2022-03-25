@@ -2,15 +2,16 @@ package singleprocess
 
 import (
 	"context"
+	"io"
+	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 
-	"io"
-	"strings"
-
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -43,10 +44,12 @@ func (s *Service) RunnerGetDeploymentConfig(
 	req *pb.RunnerGetDeploymentConfigRequest,
 ) (*pb.RunnerGetDeploymentConfigResponse, error) {
 	// Get our server config
-	cfg, err := s.state(ctx).ServerConfigGet()
+	serverConfig, err := s.GetServerConfig(ctx, &emptypb.Empty{})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to get server config to populate runner start job server addr")
 	}
+
+	cfg := serverConfig.Config
 
 	// If we have no config set yet, this is an error.
 	if cfg == nil {
