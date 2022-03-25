@@ -43,6 +43,7 @@ const (
 	sourceServer  = "server"
 	sourceDynamic = "dynamic"
 	sourceDefault = "default"
+	sourceUnknown = "unknown"
 )
 
 var (
@@ -54,6 +55,17 @@ var (
 		reflect.TypeOf((*pb.Variable_Vcs)(nil)):     sourceVCS,
 		reflect.TypeOf((*pb.Variable_Server)(nil)):  sourceServer,
 		reflect.TypeOf((*pb.Variable_Dynamic)(nil)): sourceDynamic,
+	}
+
+	fromSourceFV = map[string]pb.Variable_FinalValue_Source{
+		sourceCLI:     pb.Variable_FinalValue_CLI,
+		sourceFile:    pb.Variable_FinalValue_FILE,
+		sourceEnv:     pb.Variable_FinalValue_ENV,
+		sourceVCS:     pb.Variable_FinalValue_VCS,
+		sourceServer:  pb.Variable_FinalValue_SERVER,
+		sourceDynamic: pb.Variable_FinalValue_DYNAMIC,
+		sourceDefault: pb.Variable_FinalValue_DEFAULT,
+		sourceUnknown: pb.Variable_FinalValue_UNKNOWN,
 	}
 
 	// The attributes we expect to see in variable blocks
@@ -541,7 +553,7 @@ func EvaluateVariables(
 	pbvars []*pb.Variable,
 	vs map[string]*Variable,
 	salt string,
-) (Values, map[string]*pb.Variable_Ref, hcl.Diagnostics) {
+) (Values, map[string]*pb.Variable_FinalValue, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	iv := Values{}
 
@@ -576,7 +588,7 @@ func EvaluateVariables(
 		// set our source for error messaging
 		source := fromSource[reflect.TypeOf(pbv.Source)]
 		if source == "" {
-			source = "unknown"
+			source = sourceUnknown
 			log.Debug("No source found for value given for variable %q", pbv.Name)
 		}
 
@@ -696,53 +708,80 @@ func EvaluateVariables(
 
 // getJobValues combines the Variable and Value into a VariableRef,
 // hashing any 'sensitive' values as SHA256 values with the given salt.
-func getJobValues(vs map[string]*Variable, values Values, salt string) (map[string]*pb.Variable_Ref, hcl.Diagnostics) {
-	varRefs := make(map[string]*pb.Variable_Ref, len(values))
+func getJobValues(vs map[string]*Variable, values Values, salt string) (map[string]*pb.Variable_FinalValue, hcl.Diagnostics) {
+	varRefs := make(map[string]*pb.Variable_FinalValue, len(values))
 	var diags hcl.Diagnostics
+
 	for v, value := range values {
-		var val string
-		var t string
-		switch value.Value.Type() {
-		case cty.String:
-			val = value.Value.AsString()
-			t = "string"
-		case cty.Bool:
-			b := value.Value.True()
-			val = fmt.Sprintf("%t", b)
-			t = "bool"
-		case cty.Number:
-			var num int64
-			err := gocty.FromCtyValue(value.Value, &num)
-			if err != nil {
-				diags = append(diags, &hcl.Diagnostic{
-					Severity: hcl.DiagError,
-					Summary:  "Invalid number",
-					Detail:   err.Error(),
-				})
-				return nil, diags
-			}
-			val = fmt.Sprintf("%d", num)
-			t = "int"
-		default:
-			// handle any HCL complex types
-			bv := hclwrite.TokensForValue(value.Value).Bytes()
-			buf := bytes.NewBuffer(bv)
-			val = buf.String()
-			t = "complex"
-		}
+		varRefs[v] = &pb.Variable_FinalValue{}
 
+		// check for sensitive, and salt if so
 		if vs[v].Sensitive {
+			var sval string
+			switch value.Value.Type() {
+			case cty.String:
+				sval = value.Value.AsString()
+			case cty.Bool:
+				b := value.Value.True()
+				sval = fmt.Sprintf("%t", b)
+			case cty.Number:
+				var num int64
+				err := gocty.FromCtyValue(value.Value, &num)
+				// We really shouldn't hit this since we just created the value
+				// but for posterity I guess
+				if err != nil {
+					diags = append(diags, &hcl.Diagnostic{
+						Severity: hcl.DiagError,
+						Summary:  "Invalid number",
+						Detail:   err.Error(),
+					})
+					return nil, diags
+				}
+				sval = fmt.Sprintf("%d", num)
+			default:
+				// handle any HCL complex types
+				bv := hclwrite.TokensForValue(value.Value).Bytes()
+				buf := bytes.NewBuffer(bv)
+				sval = buf.String()
+			}
 			// salt shaker
-			saltedVal := salt + val
+			saltedVal := salt + sval
 			h := sha256.Sum256([]byte(saltedVal))
-			val = hex.EncodeToString(h[:])
+			sval = hex.EncodeToString(h[:])
+
+			varRefs[v].Value = &pb.Variable_FinalValue_Sensitive{Sensitive: sval}
+		} else {
+			switch value.Value.Type() {
+			case cty.String:
+				varRefs[v].Value = &pb.Variable_FinalValue_Str{Str: value.Value.AsString()}
+			case cty.Bool:
+				varRefs[v].Value = &pb.Variable_FinalValue_Bool{Bool: value.Value.True()}
+			case cty.Number:
+				var num int64
+				err := gocty.FromCtyValue(value.Value, &num)
+				// We really shouldn't hit this since we just created the value
+				// but for posterity I guess
+				if err != nil {
+					diags = append(diags, &hcl.Diagnostic{
+						Severity: hcl.DiagError,
+						Summary:  "Invalid number",
+						Detail:   err.Error(),
+					})
+					return nil, diags
+				}
+				varRefs[v].Value = &pb.Variable_FinalValue_Num{Num: num}
+			default:
+				// if it's not a primitive/simple type, we set as bytes here to be later
+				// parsed as an hcl expression; any errors at evaluating the hcl type will
+				// be handled at that time
+				bv := hclwrite.TokensForValue(value.Value).Bytes()
+				buf := bytes.NewBuffer(bv)
+				varRefs[v].Value = &pb.Variable_FinalValue_Hcl{Hcl: buf.String()}
+			}
 		}
 
-		varRefs[v] = &pb.Variable_Ref{
-			Value:  val,
-			Source: value.Source,
-			Type:   t,
-		}
+		source := fromSourceFV[value.Source]
+		varRefs[v].Source = source
 	}
 
 	return varRefs, nil

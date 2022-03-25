@@ -64,10 +64,6 @@ type Project struct {
 
 	// variables is the final map of values to use when evaluating config vars
 	variables variables.Values
-
-	// variableRefs is the map of variable values used for logging and outputs
-	// It will have any `sensitive` values obfuscated via SHA256 encoding
-	variableRefs map[string]*pb.Variable_Ref
 }
 
 // NewProject creates a new Project with the given options.
@@ -158,9 +154,10 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	// Output all the variables that this project will use along with
 	// the source of that variable. This can be used to debug unexpected
 	// variable values.
-	for name, value := range p.variableRefs {
-		// We log the variableRefs as the sensitive values are obfuscated
-		p.logger.Debug("variable info", "name", name, "value", value.Value, "source", value.Source, "type", value.Type)
+	for name, value := range p.variables {
+		// We log the variables used at this point; we'll log the final values
+		// later when we have access to them including the obfuscated sensitive values
+		p.logger.Debug("variable info", "name", name, "source", value.Source)
 	}
 
 	return p, nil
@@ -316,11 +313,6 @@ func WithLabels(m map[string]string) Option {
 // WithVariables sets the final set of variable values for the operation.
 func WithVariables(vs variables.Values) Option {
 	return func(p *Project, opts *options) { p.variables = vs }
-}
-
-// WithVariableRefs sets the final set of variable values for the operation.
-func WithVariableRefs(vrs map[string]*pb.Variable_Ref) Option {
-	return func(p *Project, opts *options) { p.variableRefs = vrs }
 }
 
 // WithWorkspace sets the workspace we'll be working in.

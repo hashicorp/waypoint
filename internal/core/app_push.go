@@ -139,10 +139,6 @@ func (op *pushBuildOperation) Labels(app *App) map[string]string {
 	return op.ComponentRegistry.labels
 }
 
-func (op *pushBuildOperation) VariableRefs(app *App) map[string]*pb.Variable_Ref {
-	return op.Build.VariableRefs
-}
-
 func (op *pushBuildOperation) Upsert(
 	ctx context.Context,
 	client pb.WaypointClient,

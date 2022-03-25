@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"sort"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -22,43 +21,44 @@ type UpCommand struct {
 	flagPruneRetain int
 }
 
-func fmtVariablesOutput(values map[string]*pb.Variable_Ref) *terminal.Table {
+func fmtVariablesOutput(values map[string]*pb.Variable_FinalValue) *terminal.Table {
 	headers := []string{
 		"Variable", "Value", "Type", "Source",
 	}
 	tbl := terminal.NewTable(headers...)
 	// sort alphabetically for joy
-	inputVars := make([]string, 0, len(values))
-	for iv := range values {
-		inputVars = append(inputVars, iv)
-	}
-	sort.Strings(inputVars)
-	for _, iv := range inputVars {
-		// We add a line break in the value here because the Table word wrap
-		// alone can't accomodate the column headers to a long value
-		val := values[iv].Value
-		if len(val) > 45 {
-			for i := range val {
-				// line break every 45 characters
-				if i%46 == 0 && i != 0 {
-					val = val[:i] + "\n" + val[i:]
-				}
-			}
-		}
-		columns := []string{
-			iv,
-			val,
-			values[iv].Type,
-			values[iv].Source,
-		}
+	// TODO krantzinator
+	// inputVars := make([]string, 0, len(values))
+	// for iv := range values {
+	// 	inputVars = append(inputVars, iv)
+	// }
+	// sort.Strings(inputVars)
+	// for _, iv := range inputVars {
+	// 	// We add a line break in the value here because the Table word wrap
+	// 	// alone can't accomodate the column headers to a long value
+	// 	val := values[iv].Value
+	// 	if len(val) > 45 {
+	// 		for i := range val {
+	// 			// line break every 45 characters
+	// 			if i%46 == 0 && i != 0 {
+	// 				val = val[:i] + "\n" + val[i:]
+	// 			}
+	// 		}
+	// 	}
+	// 	columns := []string{
+	// 		iv,
+	// 		val,
+	// 		values[iv].Type,
+	// 		values[iv].Source,
+	// 	}
 
-		tbl.Rich(
-			columns,
-			[]string{
-				terminal.Green,
-			},
-		)
-	}
+	// 	tbl.Rich(
+	// 		columns,
+	// 		[]string{
+	// 			terminal.Green,
+	// 		},
+	// 	)
+	// }
 	return tbl
 }
 
@@ -97,8 +97,8 @@ func (c *UpCommand) Run(args []string) int {
 		// BuildResult, DeployResult, and ReleaseResult all store
 		// used VariableRefs. We use Release just because it's last.
 		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
-		tbl := fmtVariablesOutput(result.Release.Release.VariableRefs)
-		c.ui.Table(tbl)
+		// tbl := fmtVariablesOutput(result.Release.Release.VariableRefs)
+		// c.ui.Table(tbl)
 
 		// Common reused values
 		releaseUrl := result.Up.ReleaseUrl

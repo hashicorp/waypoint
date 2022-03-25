@@ -233,6 +233,8 @@ func (r *Runner) executeJob(
 	var serverCookie string
 	if clientResp != nil && clientResp.Config != nil {
 		serverCookie = clientResp.Config.Cookie
+	} else {
+		panic("server config does not exist")
 	}
 	// We set both inputVars and jobVars on the project.
 	// inputVars is the set of cty.Values to use in our hcl evaluation
@@ -242,6 +244,8 @@ func (r *Runner) executeJob(
 	if diags.HasErrors() {
 		return nil, diags
 	}
+	// TODO krantzinator probably do this fancier
+	job.VariableFinalValues = jobVars
 
 	// Build our job info
 	jobInfo := &component.JobInfo{
@@ -260,7 +264,6 @@ func (r *Runner) executeJob(
 		core.WithDataDir(projDir),
 		core.WithLabels(job.Labels),
 		core.WithVariables(inputVars),
-		core.WithVariableRefs(jobVars),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),
 	)

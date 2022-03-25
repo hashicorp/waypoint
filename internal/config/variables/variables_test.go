@@ -284,12 +284,12 @@ func TestVariables_LoadDynamicDefaults(t *testing.T) {
 
 func TestVariables_EvalInputValues(t *testing.T) {
 	cases := []struct {
-		name         string
-		file         string
-		inputValues  []*pb.Variable
-		expected     Values
-		expectedRefs map[string]*pb.Variable_Ref
-		err          string
+		name        string
+		file        string
+		inputValues []*pb.Variable
+		expected    Values
+		expectedfvs map[string]*pb.Variable_FinalValue
+		err         string
 	}{
 		{
 			name: "valid",
@@ -323,21 +323,21 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					cty.NumberIntVal(1), "default", hcl.Expression(nil), hcl.Range{},
 				},
 			},
-			expectedRefs: map[string]*pb.Variable_Ref{
+			expectedfvs: map[string]*pb.Variable_FinalValue{
 				"art": {
-					Value: "gdbee", Type: "string", Source: "cli",
+					Value: &pb.Variable_FinalValue_Str{Str: "gdbee"}, Source: pb.Variable_FinalValue_CLI,
 				},
 				"dynamic": {
-					Value: "value", Type: "string", Source: "cli",
+					Value: &pb.Variable_FinalValue_Str{Str: "value"}, Source: pb.Variable_FinalValue_CLI,
 				},
 				"is_good": {
-					Value: "false", Type: "bool", Source: "default",
+					Value: &pb.Variable_FinalValue_Bool{Bool: false}, Source: pb.Variable_FinalValue_DEFAULT,
 				},
 				"whatdoesittaketobenumber": {
-					Value: "dc90cf07de907ccc64636ceddb38e552a1a0d984743b1f36a447b73877012c39", Type: "int", Source: "default",
+					Value: &pb.Variable_FinalValue_Sensitive{Sensitive: "dc90cf07de907ccc64636ceddb38e552a1a0d984743b1f36a447b73877012c39"}, Source: pb.Variable_FinalValue_DEFAULT,
 				},
 				"envs": {
-					Value: "1", Type: "int", Source: "default",
+					Value: &pb.Variable_FinalValue_Num{Num: 1}, Source: pb.Variable_FinalValue_DEFAULT,
 				},
 			},
 			err: "",
@@ -351,9 +351,9 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					stringListVal("pancakes"), "default", hcl.Expression(nil), hcl.Range{},
 				},
 			},
-			expectedRefs: map[string]*pb.Variable_Ref{
+			expectedfvs: map[string]*pb.Variable_FinalValue{
 				"testdata": {
-					Value: "[\"pancakes\"]", Type: "complex", Source: "default",
+					Value: &pb.Variable_FinalValue_Hcl{Hcl: "[\"pancakes\"]"}, Source: pb.Variable_FinalValue_DEFAULT,
 				},
 			},
 			err: "",
@@ -373,9 +373,9 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					stringListVal("waffles"), "server", hcl.Expression(nil), hcl.Range{},
 				},
 			},
-			expectedRefs: map[string]*pb.Variable_Ref{
+			expectedfvs: map[string]*pb.Variable_FinalValue{
 				"testdata": {
-					Value: "[\"waffles\"]", Type: "complex", Source: "server",
+					Value: &pb.Variable_FinalValue_Hcl{Hcl: "[\"waffles\"]"}, Source: pb.Variable_FinalValue_SERVER,
 				},
 			},
 			err: "",
@@ -395,9 +395,10 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					stringListVal("waffles"), "cli", hcl.Expression(nil), hcl.Range{},
 				},
 			},
-			expectedRefs: map[string]*pb.Variable_Ref{
+			expectedfvs: map[string]*pb.Variable_FinalValue{
 				"testdata": {
-					Value: "[\"waffles\"]", Type: "complex", Source: "cli",
+					Value:  &pb.Variable_FinalValue_Hcl{Hcl: "[\"waffles\"]"},
+					Source: pb.Variable_FinalValue_CLI,
 				},
 			},
 			err: "",
@@ -412,9 +413,9 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expected:     Values{},
-			expectedRefs: map[string]*pb.Variable_Ref{},
-			err:          "Undefined variable",
+			expected:    Values{},
+			expectedfvs: map[string]*pb.Variable_FinalValue{},
+			err:         "Undefined variable",
 		},
 		{
 			name: "invalid value type",
@@ -426,9 +427,9 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expected:     Values{},
-			expectedRefs: map[string]*pb.Variable_Ref{},
-			err:          "Invalid value for variable",
+			expected:    Values{},
+			expectedfvs: map[string]*pb.Variable_FinalValue{},
+			err:         "Invalid value for variable",
 		},
 		{
 			name: "undefined var for file value",
@@ -440,17 +441,17 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expected:     Values{},
-			expectedRefs: map[string]*pb.Variable_Ref{},
-			err:          "Undefined variable",
+			expected:    Values{},
+			expectedfvs: map[string]*pb.Variable_FinalValue{},
+			err:         "Undefined variable",
 		},
 		{
-			name:         "no assigned or default value",
-			file:         "no_default.hcl",
-			inputValues:  []*pb.Variable{},
-			expected:     Values{},
-			expectedRefs: map[string]*pb.Variable_Ref{},
-			err:          "Unset variable",
+			name:        "no assigned or default value",
+			file:        "no_default.hcl",
+			inputValues: []*pb.Variable{},
+			expected:    Values{},
+			expectedfvs: map[string]*pb.Variable_FinalValue{},
+			err:         "Unset variable",
 		},
 	}
 	for _, tt := range cases {
@@ -500,9 +501,9 @@ func TestVariables_EvalInputValues(t *testing.T) {
 				}
 			}
 
-			ers := reflect.DeepEqual(jvs, tt.expectedRefs)
+			ers := reflect.DeepEqual(jvs, tt.expectedfvs)
 			if !ers {
-				t.Fatalf("Expected: \n%v\nActual: \n%v", tt.expectedRefs, jvs)
+				t.Fatalf("Expected: \n%v\nActual: \n%v", tt.expectedfvs, jvs)
 			}
 		})
 	}

@@ -160,8 +160,8 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 		// We do this here so that if the list is long, it doesn't
 		// push the deploy/release URLs off the top of the terminal.
 		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
-		tbl := fmtVariablesOutput(result.Release.VariableRefs)
-		c.ui.Table(tbl)
+		// tbl := fmtVariablesOutput(result.Release.VariableRefs)
+		// c.ui.Table(tbl)
 
 		// Status Report
 		app.UI.Output("")

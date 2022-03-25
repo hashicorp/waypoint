@@ -124,8 +124,8 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 		// We also use the deploy result and not the release result,
 		// because the data will be the same and this is the deployment command.
 		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
-		tbl := fmtVariablesOutput(deployment.VariableRefs)
-		c.ui.Table(tbl)
+		// tbl := fmtVariablesOutput(deployment.VariableRefs)
+		// c.ui.Table(tbl)
 
 		// inplace is true if this was an in-place deploy. We detect this
 		// if we have a generation that uses a non-matching sequence number

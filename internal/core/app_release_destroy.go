@@ -218,10 +218,6 @@ func (op *releaseDestroyOperation) Labels(app *App) map[string]string {
 	return op.Release.Labels
 }
 
-func (op *releaseDestroyOperation) VariableRefs(app *App) map[string]*pb.Variable_Ref {
-	return op.Release.VariableRefs
-}
-
 func (op *releaseDestroyOperation) Upsert(
 	ctx context.Context,
 	client pb.WaypointClient,

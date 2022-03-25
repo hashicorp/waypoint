@@ -597,7 +597,7 @@ message Variable {
     google.protobuf.Empty dynamic = 11;
   }
 
-  Ref ref = 12;
+  FinalValue final_value = 12;
 
   bool sensitive = 13;
 
@@ -624,10 +624,33 @@ message Variable {
     HclPos end = 3;
   }
 
-  message Ref {
-    string value = 2;
-    string type = 3;
-    string source = 4;
+  message FinalValue {
+    // value stores one of three simple types (string, number, bool) as their
+    // matching protobuf format, or any complex hcl type as a raw string.
+    oneof value {
+      string sensitive = 1;
+      string str = 2;
+      bool bool = 3;
+      int64 num = 4;
+      // hcl stores values of any complex type in a raw string format
+      string hcl = 5;
+    }
+
+    // TODO krantzinator; might be implied by the value
+    // string type = 3;
+
+    Source source = 6;
+    enum Source {
+      // TODO: comments
+      UNKNOWN = 0;
+      DEFAULT = 1;
+      FILE = 2;
+      CLI = 3;
+      ENV = 4;
+      VCS = 5;
+      SERVER = 6;
+      DYNAMIC = 7;
+    }
   }
 }
 
@@ -734,9 +757,6 @@ message Workspace {
 
     // The last non-local ref that was used for any operation.
     Job.DataSource.Ref data_source_ref = 2;
-
-    // The last set of variable values used for any operation
-    map<string, Variable.Ref> variables_refs = 6;
 
     // active_time is the last time that this project had activity in
     // this workspace.
@@ -1556,7 +1576,7 @@ message Job {
   // defined in the waypoint.hcl. Any variables with `sensitive` set in the
   // waypoint.hcl will have a value encoded as SHA256 so the user can verify
   // the value used.
-  map<string, Variable.Ref> variable_refs = 113;
+  map<string, Variable.FinalValue> variable_final_values = 113;
 
   // Config is information about the Waypoint configuration (waypoint.hcl)
   // for this job. This is only available once the configuration is loaded.
@@ -2845,12 +2865,6 @@ message Build {
     // This is always pre-populated if it is exists.
     Job.DataSource.Ref job_data_source_ref = 1;
   }
-
-  // Variable refs store the final value used on the operation for each variable
-  // defined in the waypoint.hcl. Any variables with `sensitive` set in the
-  // waypoint.hcl will have a value encoded as SHA256 so the user can verify
-  // the value used.
-  map<string, Variable.Ref> variable_refs = 12;
 }
 
 // Artifact is the result of a build or registry. This is the metadata only.
@@ -3021,12 +3035,6 @@ message PushedArtifact {
   // ID of the job that created this. This may be empty.
   string job_id = 11;
 
-  // Variable refs store the final value used on the operation for each variable
-  // defined in the waypoint.hcl. Any variables with `sensitive` set in the
-  // waypoint.hcl will have a value encoded as SHA256 so the user can verify
-  // the value used.
-  map<string, Variable.Ref> variable_refs = 14;
-
   // Preload is information that is available via further queries but it
   // sometimes pre-populated in the initial load (see the field docs for more
   // info).
@@ -3193,12 +3201,6 @@ message Deployment {
 
   // Resources that this deployment has created or manages.
   repeated DeclaredResource declared_resources = 19;
-
-  // Variable refs store the final value used on the operation for each variable
-  // defined in the waypoint.hcl. Any variables with `sensitive` set in the
-  // waypoint.hcl will have a value encoded as SHA256 so the user can verify
-  // the value used.
-  map<string, Variable.Ref> variable_refs = 21;
 
   // This is the populated preload data. Most of this data can be retrieved
   // through additional API calls or manually computed, but certain API
@@ -3432,12 +3434,6 @@ message Release {
 
   // A platform resource that this release has created, depends on, or manages.
   repeated DeclaredResource declared_resources = 19;
-
-  // Variable refs store the final value used on the operation for each variable
-  // defined in the waypoint.hcl. Any variables with `sensitive` set in the
-  // waypoint.hcl will have a value encoded as SHA256 so the user can verify
-  // the value used.
-  map<string, Variable.Ref> variable_refs = 20;
 
   // This is the populated preload data. Most of this data can be retrieved
   // through additional API calls or manually computed, but certain API

@@ -43,8 +43,8 @@ func (c *ArtifactBuildCommand) Run(args []string) int {
 
 		// Show input variable values used in build
 		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
-		tbl := fmtVariablesOutput(buildResult.Build.VariableRefs)
-		c.ui.Table(tbl)
+		// tbl := fmtVariablesOutput(buildResult.Build.VariableRefs)
+		// c.ui.Table(tbl)
 
 		return nil
 	})
