@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	boltdbstate2 "github.com/hashicorp/waypoint/internal/server/boltdbstate"
+	"github.com/hashicorp/waypoint/internal/server/boltdbstate"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/grpcmetadata"
@@ -25,7 +25,7 @@ func (s *Service) StartExecStream(
 
 	// TODO(mitchellh): We only support exec if we're using the in-memory
 	// state store. We will add support for our other stores later.
-	inmemstate, ok := s.state(ctx).(*boltdbstate2.State)
+	inmemstate, ok := s.state(ctx).(*boltdbstate.State)
 	if !ok {
 		return status.Errorf(codes.Unimplemented,
 			"state storage doesn't support exec streaming")
@@ -51,7 +51,7 @@ func (s *Service) StartExecStream(
 	// a change and the instance should try to connect to us.
 	clientEventCh := make(chan *pb.ExecStreamRequest)
 	eventCh := make(chan *pb.EntrypointExecRequest)
-	execRec := &boltdbstate2.InstanceExec{
+	execRec := &boltdbstate.InstanceExec{
 		Args:              start.Start.Args,
 		Pty:               start.Start.Pty,
 		ClientEventCh:     clientEventCh,

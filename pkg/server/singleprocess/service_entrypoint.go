@@ -14,7 +14,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
-	boltdbstate2 "github.com/hashicorp/waypoint/internal/server/boltdbstate"
+	"github.com/hashicorp/waypoint/internal/server/boltdbstate"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/logbuffer"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -59,7 +59,7 @@ func (s *Service) EntrypointConfig(
 
 	// TODO(mitchellh): We only support exec if we're using the in-memory
 	// state store. We will add support for our other stores later.
-	inmemstate, ok := s.state(ctx).(*boltdbstate2.State)
+	inmemstate, ok := s.state(ctx).(*boltdbstate.State)
 	if !ok {
 		inmemstate = nil
 	}
@@ -99,7 +99,7 @@ func (s *Service) EntrypointConfig(
 		ws := memdb.NewWatchSet()
 
 		// Get our exec requests
-		var execs []*boltdbstate2.InstanceExec
+		var execs []*boltdbstate.InstanceExec
 		if inmemstate != nil {
 			execs, err = inmemstate.InstanceExecListByInstanceId(req.InstanceId, ws)
 			if err != nil {
@@ -226,7 +226,7 @@ func (s *Service) EntrypointLogStream(
 
 	// TODO(mitchellh): We only support logs if we're using the in-memory
 	// state store. We will add support for our other stores later.
-	inmemstate, ok := s.state(ctx).(*boltdbstate2.State)
+	inmemstate, ok := s.state(ctx).(*boltdbstate.State)
 	if !ok {
 		return status.Errorf(codes.Unimplemented,
 			"state storage doesn't support log streaming")
@@ -299,7 +299,7 @@ func (s *Service) EntrypointExecStream(
 
 	// TODO(mitchellh): We only support exec if we're using the in-memory
 	// state store. We will add support for our other stores later.
-	inmemstate, ok := s.state(ctx).(*boltdbstate2.State)
+	inmemstate, ok := s.state(ctx).(*boltdbstate.State)
 	if !ok {
 		return status.Errorf(codes.Unimplemented,
 			"state storage doesn't support exec streaming")

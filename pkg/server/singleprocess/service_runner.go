@@ -167,7 +167,7 @@ func (s *Service) RunnerToken(
 	// set it will be validated in auth.go. We do NOT require the cookie if
 	// we receive a valid token so its important to have this check after the
 	// above token check.
-	if s.cookieFromRequest(ctx) == "" {
+	if CookieFromRequest(ctx) == "" {
 		return nil, status.Errorf(codes.PermissionDenied,
 			"RunnerToken requires the 'cookie' metadata value to be set")
 	}

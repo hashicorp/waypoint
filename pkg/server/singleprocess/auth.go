@@ -123,7 +123,7 @@ func (s *Service) tokenFromContext(ctx context.Context) *pb.Token {
 
 // cookieFromRequest returns the server cookie value provided during the request,
 // or blank if none (or a blank cookie) is provided.
-func (s *Service) cookieFromRequest(ctx context.Context) string {
+func CookieFromRequest(ctx context.Context) string {
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		if c, ok := md["wpcookie"]; ok && len(c) > 0 {
 			return c[0]
@@ -131,6 +131,12 @@ func (s *Service) cookieFromRequest(ctx context.Context) string {
 	}
 
 	return ""
+}
+
+func (s *Service) AuthenticateCookie(
+	ctx context.Context, token, endpoint string, effects []string,
+) {
+
 }
 
 // Authenticate implements the server.AuthChecker interface.
@@ -145,7 +151,7 @@ func (s *Service) Authenticate(
 	_, anonEndpoint := unauthenticatedEndpoints[endpoint]
 
 	// Check the cookie
-	if c := s.cookieFromRequest(ctx); c != "" {
+	if c := CookieFromRequest(ctx); c != "" {
 		serverConfig, err := s.state(ctx).ServerConfigGet()
 		if err != nil {
 			return nil, err

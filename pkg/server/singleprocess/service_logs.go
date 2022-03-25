@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	boltdbstate2 "github.com/hashicorp/waypoint/internal/server/boltdbstate"
+	"github.com/hashicorp/waypoint/internal/server/boltdbstate"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/grpcmetadata"
@@ -29,10 +29,10 @@ func (s *Service) spawnLogPlugin(
 	ctx context.Context,
 	log hclog.Logger,
 	deployment *pb.Deployment,
-) (*boltdbstate2.InstanceLogs, string, error) {
+) (*boltdbstate.InstanceLogs, string, error) {
 	// TODO(mitchellh): We only support logs if we're using the in-memory
 	// state store. We will add support for our other stores later.
-	inmemstate, ok := s.state(ctx).(*boltdbstate2.State)
+	inmemstate, ok := s.state(ctx).(*boltdbstate.State)
 	if !ok {
 		return nil, "", status.Errorf(codes.Unimplemented,
 			"state storage doesn't support log streaming")
@@ -49,7 +49,7 @@ func (s *Service) spawnLogPlugin(
 	// Create an InstanceLogs entry for EntrypointLogStream to detect and
 	// write logs to. In this way, we can easily coordinate the log entries
 	// from the logs plugin to here, the reading half.
-	var lo boltdbstate2.InstanceLogs
+	var lo boltdbstate.InstanceLogs
 	lo.LogBuffer = logbuffer.New()
 
 	err = inmemstate.InstanceLogsCreate(instId, &lo)
@@ -154,7 +154,7 @@ func (s *Service) GetLogStream(
 
 	// TODO(mitchellh): We only support logs if we're using the in-memory
 	// state store. We will add support for our other stores later.
-	inmemstate, ok := s.state(ctx).(*boltdbstate2.State)
+	inmemstate, ok := s.state(ctx).(*boltdbstate.State)
 	if !ok {
 		return status.Errorf(codes.Unimplemented,
 			"state storage doesn't support log streaming")
