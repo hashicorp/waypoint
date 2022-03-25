@@ -330,6 +330,7 @@ func WithIdDecoder(decoder func(encodedId string) (id string, err error)) Option
 	}
 }
 
+// WithOidcDisabled disables all OIDC related background jobs
 func WithOidcDisabled(disabled bool) Option {
 	return func(s *Service, cfg *config) error {
 		cfg.oidcDisabled = disabled
@@ -337,6 +338,7 @@ func WithOidcDisabled(disabled bool) Option {
 	}
 }
 
+// WithPollingDisabled disables polling background jobs
 func WithPollingDisabled(disabled bool) Option {
 	return func(s *Service, cfg *config) error {
 		cfg.pollingDisabled = disabled
@@ -344,6 +346,9 @@ func WithPollingDisabled(disabled bool) Option {
 	}
 }
 
+// WithLogStreamProvider gives the server a custom log stream provider,
+// which is invoked to transport logs from waypoint runners
+// to any listening clients and to persist them.
 func WithLogStreamProvider(logStreamProvider logstream.Provider) Option {
 	return func(s *Service, cfg *config) error {
 		cfg.logStreamProvider = logStreamProvider
