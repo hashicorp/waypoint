@@ -69,6 +69,17 @@ func New() *Buffer {
 	}
 }
 
+// TODO(izaak): evan demo code, delete
+//func (b *Buffer) NewEvents(entries ...interface{}) {
+//	ee := make([]Entry, len(entries))
+//
+//	for i, e := range entries {
+//		ee[i] = e
+//	}
+//
+//	b.Write(ee)
+//}
+
 // Write writes the set of entries into the buffer.
 //
 // This is safe for concurrent access.

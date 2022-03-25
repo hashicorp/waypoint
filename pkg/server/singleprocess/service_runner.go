@@ -15,7 +15,7 @@ import (
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/server/logbuffer"
+	"github.com/hashicorp/waypoint/pkg/server/logstream"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
@@ -125,10 +125,18 @@ func (s *Service) RunnerToken(
 			return &pb.RunnerTokenResponse{}, nil
 
 		case *pb.Token_Runner_:
-			// If the runner token has an ID set and it doesn't match this one,
-			// then the token is invalid and we should kick off the adoption process.
-			if k.Runner.Id != "" && k.Runner.Id != record.Id {
-				break
+			if k.Runner.Id != "" {
+				runnerId, err := s.decodeId(k.Runner.Id)
+				if err != nil {
+					log.Error("Failed to parse hcp id", "id", k.Runner.Id, "err", err)
+					return nil, status.Errorf(codes.InvalidArgument, "invalid runner id format")
+				}
+
+				// If the runner token has an ID set and it doesn't match this one,
+				// then the token is invalid and we should kick off the adoption process.
+				if runnerId != record.Id {
+					break
+				}
 			}
 
 			// If the token has a label hash, then we need to validate it.
@@ -223,6 +231,11 @@ func (s *Service) RunnerToken(
 				return nil, err
 			}
 
+			encodedId, err := s.encodeId(ctx, record.Id)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to encode runner id %s", record.Id)
+			}
+
 			tok, err := s.newToken(ctx,
 				// Doesn't expire because we can expire it by unadopting.
 				// NOTE(mitchellh): At some point, we should make these
@@ -234,7 +247,7 @@ func (s *Service) RunnerToken(
 				&pb.Token{
 					Kind: &pb.Token_Runner_{
 						Runner: &pb.Token_Runner{
-							Id:        record.Id,
+							Id:        encodedId,
 							LabelHash: hash,
 						},
 					},
@@ -446,9 +459,16 @@ func (s *Service) RunnerJobStream(
 	log = log.With("runner_id", reqEvent.Request.RunnerId)
 
 	// Get the runner to validate it is registered
-	runner, err := s.state(ctx).RunnerById(reqEvent.Request.RunnerId, nil)
+
+	runnerId, err := s.decodeId(reqEvent.Request.RunnerId)
 	if err != nil {
-		log.Error("unknown runner connected", "id", reqEvent.Request.RunnerId)
+		log.Error("Failed to decode runner ID when processing job stream", "id", reqEvent.Request.RunnerId, "err", err)
+		return status.Errorf(codes.InvalidArgument, "invalid runner id")
+	}
+
+	runner, err := s.state(ctx).RunnerById(runnerId, nil)
+	if err != nil {
+		log.Error("unknown runner connected", "id", runnerId)
 		return err
 	}
 
@@ -582,6 +602,16 @@ func (s *Service) RunnerJobStream(
 		return err
 	}
 
+	var logStreamTracker logstream.Tracker
+	if s.logStreamProvider != nil {
+		logStreamTracker, err = s.logStreamProvider.StartWriter(ctx, log, s.state(ctx), job)
+		if err != nil {
+			return errors.Wrapf(err, "failed to start a log writer to handle jog logs")
+		}
+	}
+
+	defer logStreamTracker.Flush(ctx)
+
 	// Start a goroutine that watches for job changes
 	jobCh := make(chan *serverstate.Job, 1)
 	errCh := make(chan error, 1)
@@ -669,7 +699,7 @@ func (s *Service) RunnerJobStream(
 			for {
 				select {
 				case req := <-eventCh:
-					if err := s.handleJobStreamRequest(log, job, server, req); err != nil {
+					if err := s.handleJobStreamRequest(log, job, server, req, logStreamTracker); err != nil {
 						return err
 					}
 				default:
@@ -681,7 +711,7 @@ func (s *Service) RunnerJobStream(
 			return err
 
 		case req := <-eventCh:
-			if err := s.handleJobStreamRequest(log, job, server, req); err != nil {
+			if err := s.handleJobStreamRequest(log, job, server, req, logStreamTracker); err != nil {
 				return err
 			}
 
@@ -727,6 +757,7 @@ func (s *Service) handleJobStreamRequest(
 	job *serverstate.Job,
 	srv pb.Waypoint_RunnerJobStreamServer,
 	req *pb.RunnerJobStreamRequest,
+	logStreamTracker logstream.Tracker,
 ) error {
 	ctx := srv.Context()
 	log.Trace("event received", "event", req.Event)
@@ -756,21 +787,9 @@ func (s *Service) handleJobStreamRequest(
 		})
 
 	case *pb.RunnerJobStreamRequest_Terminal:
-		// This shouldn't happen but we want to protect against it to prevent
-		// a panic.
-		if job.OutputBuffer == nil {
-			log.Warn("got terminal event but internal output buffer is nil, dropping lines")
-			return nil
-		}
-
-		// Write the entries to the output buffer
-		entries := make([]logbuffer.Entry, len(event.Terminal.Events))
-		for i, ev := range event.Terminal.Events {
-			entries[i] = ev
-		}
 
 		// Write the events
-		job.OutputBuffer.Write(entries...)
+		logStreamTracker.NewEvent(ctx, event)
 
 		return nil
 
@@ -786,7 +805,7 @@ func (s *Service) handleJobStreamRequest(
 func (s *Service) runnerVerifyToken(
 	log hclog.Logger,
 	ctx context.Context,
-	runnerId string, // real runner ID
+	realRunnerId string, // real runner ID
 	runnerLabels map[string]string, // real runner labels
 ) error {
 	// Get our token and reverify that we are adopted.
@@ -803,10 +822,16 @@ func (s *Service) runnerVerifyToken(
 		// preadoption should be via runner tokens.
 
 	case *pb.Token_Runner_:
+		runnerId, err := s.decodeId(k.Runner.Id)
+		if err != nil {
+			log.Error("Failed to decode runner id while verifying runner token", "id", k.Runner.Id, "error", err)
+			return status.Errorf(codes.Internal, "invalid runner id within token")
+		}
+
 		// A runner token. We validate here that we're not explicitly rejected.
 		// We have to check again here because runner tokens can be created
 		// for ANY runner, but we can reject a SPECIFIC runner.
-		if k.Runner.Id != "" && !strings.EqualFold(k.Runner.Id, runnerId) {
+		if runnerId != "" && !strings.EqualFold(runnerId, realRunnerId) {
 			return status.Errorf(codes.PermissionDenied,
 				"provided runner token is for a different runner")
 		}

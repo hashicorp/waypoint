@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
@@ -295,10 +296,12 @@ func (s *Service) onDemandRunnerStartJob(
 	// multiple addresses yet. In the future we will want to support more
 	// advanced choicing.
 	var addr *pb.ServerConfig_AdvertiseAddr
-	cfg, err := s.state(ctx).ServerConfigGet()
+	serverConfig, err := s.GetServerConfig(ctx, &empty.Empty{})
 	if err != nil {
-		return nil, "", err
+		return nil, "", errors.Wrapf(err, "failed to get server config to populate runner start job server addr")
 	}
+
+	cfg := serverConfig.Config
 
 	// This should only happen during tests
 	if len(cfg.AdvertiseAddrs) == 0 {
@@ -310,12 +313,18 @@ func (s *Service) onDemandRunnerStartJob(
 		addr = cfg.AdvertiseAddrs[0]
 	}
 
+	encodedDefaultUserId, err := s.encodeId(ctx, DefaultUserId)
+	if err != nil {
+		log.Error("failed to encode the default user id", "id", DefaultUserId, "err", err)
+		return nil, "", status.Error(codes.Internal, "failed to encode the default user id")
+	}
+
 	// We generate a new login token for each ondemand-runner used. This will inherit
 	// the user of the token to be the user that queued the original job, which is
 	// the correct behavior.
 	token, err := s.newToken(ctx, 60*time.Minute, DefaultKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Login_{Login: &pb.Token_Login{
-			UserId: DefaultUserId,
+			UserId: encodedDefaultUserId,
 		}},
 	})
 	if err != nil {

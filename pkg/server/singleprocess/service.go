@@ -12,6 +12,7 @@ import (
 	wpoidc "github.com/hashicorp/waypoint/pkg/auth/oidc"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/logstream"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
@@ -26,8 +27,15 @@ type Service struct {
 	// id is our unique server ID.
 	id string
 
-	idEncoder func(ctx context.Context, id string) (encodedId string, err error)
-	idDecoder func(encodedId string) (id string, err error)
+	// encodeId uses the provided context to encode additional metadata
+	// (if present), and returns an ID that can be decoded by DecodeId.
+	encodeId func(ctx context.Context, id string) (encodedId string, err error)
+
+	// decodeId takes a string that contains an ID (likely created
+	// with EncodeId), and returns only the waypoint-relevant ID.
+	decodeId func(encodedId string) (id string, err error)
+
+	logStreamProvider logstream.Provider
 
 	// urlConfig is not nil if the URL service is enabled. This is guaranteed
 	// to have the configs set.
@@ -73,6 +81,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 		idDecoder: func(encodedId string) (id string, err error) {
 			return encodedId, nil
 		},
+		logStreamProvider: &singleProcessLogStreamProvider{},
 	}
 
 	for _, opt := range opts {
@@ -81,11 +90,15 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 		}
 	}
 
-	s.idEncoder = cfg.idEncoder
-	s.idDecoder = cfg.idDecoder
+	s.encodeId = cfg.idEncoder
+	s.decodeId = cfg.idDecoder
 
 	if !cfg.oidcDisabled {
 		s.oidcCache = wpoidc.NewProviderCache()
+	}
+
+	if cfg.logStreamProvider != nil {
+		s.logStreamProvider = cfg.logStreamProvider
 	}
 
 	log := cfg.log
@@ -228,11 +241,12 @@ type config struct {
 	idEncoder func(ctx context.Context, id string) (encodedId string, err error)
 	idDecoder func(encodedId string) (id string, err error)
 
-	serverConfig    *serverconfig.Config
-	log             hclog.Logger
-	superuser       bool
-	oidcDisabled    bool
-	pollingDisabled bool
+	serverConfig      *serverconfig.Config
+	log               hclog.Logger
+	superuser         bool
+	oidcDisabled      bool
+	pollingDisabled   bool
+	logStreamProvider logstream.Provider
 
 	acceptUrlTerms bool
 }
@@ -326,6 +340,13 @@ func WithOidcDisabled(disabled bool) Option {
 func WithPollingDisabled(disabled bool) Option {
 	return func(s *Service, cfg *config) error {
 		cfg.pollingDisabled = disabled
+		return nil
+	}
+}
+
+func WithLogStreamProvider(logStreamProvider logstream.Provider) Option {
+	return func(s *Service, cfg *config) error {
+		cfg.logStreamProvider = logStreamProvider
 		return nil
 	}
 }
