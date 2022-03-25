@@ -245,7 +245,7 @@ func (r *Runner) executeJob(
 		return nil, diags
 	}
 	// Update the job with the final set of variable values
-	log.Trace("setting final set of variable values on the job")
+	log.Debug("setting final set of variable values on the job")
 	clientMutex.Lock()
 	err = client.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_VariableValuesSet_{
