@@ -2,6 +2,8 @@ package cli
 
 import (
 	"context"
+	"fmt"
+	"sort"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -19,47 +21,6 @@ type UpCommand struct {
 
 	flagPrune       bool
 	flagPruneRetain int
-}
-
-func fmtVariablesOutput(values map[string]*pb.Variable_FinalValue) *terminal.Table {
-	headers := []string{
-		"Variable", "Value", "Type", "Source",
-	}
-	tbl := terminal.NewTable(headers...)
-	// sort alphabetically for joy
-	// TODO krantzinator
-	// inputVars := make([]string, 0, len(values))
-	// for iv := range values {
-	// 	inputVars = append(inputVars, iv)
-	// }
-	// sort.Strings(inputVars)
-	// for _, iv := range inputVars {
-	// 	// We add a line break in the value here because the Table word wrap
-	// 	// alone can't accomodate the column headers to a long value
-	// 	val := values[iv].Value
-	// 	if len(val) > 45 {
-	// 		for i := range val {
-	// 			// line break every 45 characters
-	// 			if i%46 == 0 && i != 0 {
-	// 				val = val[:i] + "\n" + val[i:]
-	// 			}
-	// 		}
-	// 	}
-	// 	columns := []string{
-	// 		iv,
-	// 		val,
-	// 		values[iv].Type,
-	// 		values[iv].Source,
-	// 	}
-
-	// 	tbl.Rich(
-	// 		columns,
-	// 		[]string{
-	// 			terminal.Green,
-	// 		},
-	// 	)
-	// }
-	return tbl
 }
 
 func (c *UpCommand) Run(args []string) int {
@@ -97,8 +58,15 @@ func (c *UpCommand) Run(args []string) int {
 		// BuildResult, DeployResult, and ReleaseResult all store
 		// used VariableRefs. We use Release just because it's last.
 		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
-		// tbl := fmtVariablesOutput(result.Release.Release.VariableRefs)
-		// c.ui.Table(tbl)
+		resp, err := c.project.Client().GetJob(ctx, &pb.GetJobRequest{
+			JobId: result.Release.Release.JobId,
+		})
+		if err != nil {
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+		tbl := fmtVariablesOutput(resp.VariableFinalValues)
+		c.ui.Table(tbl)
 
 		// Common reused values
 		releaseUrl := result.Up.ReleaseUrl
@@ -296,4 +264,78 @@ Usage: waypoint up [options]
   Perform the build, deploy, and release steps.
 
 ` + c.Flags().Help())
+}
+
+// Helper functions for formatting variable final value output
+var fromFVtoSource = map[pb.Variable_FinalValue_Source]string{
+	pb.Variable_FinalValue_UNKNOWN: "unknown",
+	pb.Variable_FinalValue_DEFAULT: "default",
+	pb.Variable_FinalValue_FILE:    "file",
+	pb.Variable_FinalValue_CLI:     "cli",
+	pb.Variable_FinalValue_ENV:     "env",
+	pb.Variable_FinalValue_VCS:     "vcs",
+	pb.Variable_FinalValue_SERVER:  "server",
+	pb.Variable_FinalValue_DYNAMIC: "dynamic",
+}
+
+func fmtVariablesOutput(values map[string]*pb.Variable_FinalValue) *terminal.Table {
+	headers := []string{
+		"Variable", "Value", "Type", "Source",
+	}
+	tbl := terminal.NewTable(headers...)
+	// sort alphabetically for joy
+	inputVars := make([]string, 0, len(values))
+	for iv := range values {
+		inputVars = append(inputVars, iv)
+	}
+	sort.Strings(inputVars)
+
+	// move value and inferred type into strings for outputting
+	for _, iv := range inputVars {
+		var v, t, s string
+		switch vt := values[iv].Value.(type) {
+		case *pb.Variable_FinalValue_Sensitive:
+			v = vt.Sensitive
+			t = "sensitive"
+		case *pb.Variable_FinalValue_Str:
+			v = vt.Str
+			t = "string"
+		case *pb.Variable_FinalValue_Bool:
+			v = fmt.Sprintf("%t", vt.Bool)
+			t = "bool"
+		case *pb.Variable_FinalValue_Num:
+			v = fmt.Sprintf("%d", vt.Num)
+			t = "int"
+		case *pb.Variable_FinalValue_Hcl:
+			v = vt.Hcl
+			t = "complex"
+		}
+		// We add a line break in the value here because the Table word wrap
+		// alone can't accomodate the column headers to a long value
+		if len(v) > 45 {
+			for i := range v {
+				// line break every 45 characters
+				if i%46 == 0 && i != 0 {
+					v = v[:i] + "\n" + v[i:]
+				}
+			}
+		}
+
+		s = fromFVtoSource[values[iv].Source]
+
+		columns := []string{
+			iv,
+			v,
+			t,
+			s,
+		}
+
+		tbl.Rich(
+			columns,
+			[]string{
+				terminal.Green,
+			},
+		)
+	}
+	return tbl
 }

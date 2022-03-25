@@ -2486,6 +2486,9 @@ message RunnerJobStreamRequest {
     // for a job.
     ConfigLoad config_load = 8;
 
+    // update variables
+    VariableValuesSet variable_values_set = 9;
+
     // heartbeat that the job is still running.
     Heartbeat heartbeat = 6;
   }
@@ -2519,6 +2522,10 @@ message RunnerJobStreamRequest {
   message ConfigLoad {
     // Config is the configuration information for the loaded config.
     Job.Config config = 1;
+  }
+
+  message VariableValuesSet {
+    map<string, Variable.FinalValue> final_values = 1;
   }
 }
 

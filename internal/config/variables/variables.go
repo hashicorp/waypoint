@@ -57,7 +57,7 @@ var (
 		reflect.TypeOf((*pb.Variable_Dynamic)(nil)): sourceDynamic,
 	}
 
-	fromSourceFV = map[string]pb.Variable_FinalValue_Source{
+	fromSourceToFV = map[string]pb.Variable_FinalValue_Source{
 		sourceCLI:     pb.Variable_FinalValue_CLI,
 		sourceFile:    pb.Variable_FinalValue_FILE,
 		sourceEnv:     pb.Variable_FinalValue_ENV,
@@ -780,7 +780,7 @@ func getJobValues(vs map[string]*Variable, values Values, salt string) (map[stri
 			}
 		}
 
-		source := fromSourceFV[value.Source]
+		source := fromSourceToFV[value.Source]
 		varRefs[v].Source = source
 	}
 

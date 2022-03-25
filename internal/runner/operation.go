@@ -244,8 +244,20 @@ func (r *Runner) executeJob(
 	if diags.HasErrors() {
 		return nil, diags
 	}
-	// TODO krantzinator probably do this fancier
-	job.VariableFinalValues = jobVars
+	// Update the job with the final set of variable values
+	log.Trace("setting final set of variable values on the job")
+	clientMutex.Lock()
+	err = client.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_VariableValuesSet_{
+			VariableValuesSet: &pb.RunnerJobStreamRequest_VariableValuesSet{
+				FinalValues: jobVars,
+			},
+		},
+	})
+	clientMutex.Unlock()
+	if err != nil {
+		return nil, err
+	}
 
 	// Build our job info
 	jobInfo := &component.JobInfo{
