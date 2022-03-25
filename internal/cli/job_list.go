@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/dustin/go-humanize"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -19,6 +20,8 @@ type JobListCommand struct {
 	flagJson  bool
 	flagLimit int
 	flagDesc  bool
+
+	flagState []string
 }
 
 func (c *JobListCommand) Run(args []string) int {
@@ -41,6 +44,37 @@ func (c *JobListCommand) Run(args []string) int {
 	}
 
 	jobs := resp.Jobs
+
+	// filter jobs out of list on request
+	var tmpj []*pb.Job
+	for _, job := range jobs {
+		if c.flagWorkspace != "" && c.flagWorkspace != job.Workspace.Workspace {
+			continue
+		}
+
+		if c.flagProject != "" && c.flagProject != job.Application.Project {
+			continue
+		}
+
+		if c.flagApp != "" && c.flagApp != job.Application.Application {
+			continue
+		}
+
+		if len(c.flagState) > 0 {
+			found := false
+			for _, state := range c.flagState {
+				if pb.Job_State_name[int32(job.State)] == strings.ToUpper(state) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				continue
+			}
+		}
+		tmpj = append(tmpj, job)
+	}
+	jobs = tmpj
 
 	// sort by complete time
 	if c.flagDesc {
@@ -173,9 +207,18 @@ func (c *JobListCommand) Run(args []string) int {
 	return 0
 }
 
+var jobStateValues = []string{"Success", "Error", "Running", "Waiting", "Queued", "Unknown"}
+
 func (c *JobListCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
+		f.EnumVar(&flag.EnumVar{
+			Name:   "state",
+			Target: &c.flagState,
+			Values: jobStateValues,
+			Usage:  "List jobs that only match the requested state. Can be repeated multiple times.",
+		})
+
 		f.BoolVar(&flag.BoolVar{
 			Name:    "desc",
 			Target:  &c.flagDesc,
