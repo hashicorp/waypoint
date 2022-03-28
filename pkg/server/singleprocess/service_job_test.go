@@ -75,7 +75,7 @@ func TestServiceJob_List(t *testing.T) {
 		require := require.New(t)
 
 		// No jobs
-		jobList, err := client.XListJobs(ctx, &pb.ListJobsRequest{})
+		jobList, err := client.ListJobs(ctx, &pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobList.Jobs, 0)
 
@@ -104,7 +104,7 @@ func TestServiceJob_List(t *testing.T) {
 		require.NotEmpty(resp.JobId)
 
 		// Three jobs
-		jobList, err = client.XListJobs(ctx, &pb.ListJobsRequest{})
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobList.Jobs, 3)
 	})

@@ -36,8 +36,7 @@ func (c *JobListCommand) Run(args []string) int {
 
 	req := &pb.ListJobsRequest{}
 
-	// NOTE(briancain): This is technically not a "public API" function
-	resp, err := c.project.Client().XListJobs(ctx, req)
+	resp, err := c.project.Client().ListJobs(ctx, req)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1

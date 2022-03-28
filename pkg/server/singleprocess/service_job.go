@@ -39,7 +39,7 @@ func (s *Service) GetJob(
 }
 
 // TODO: test
-func (s *Service) XListJobs(
+func (s *Service) ListJobs(
 	ctx context.Context,
 	req *pb.ListJobsRequest,
 ) (*pb.ListJobsResponse, error) {
