@@ -276,14 +276,11 @@ func fmtVariablesOutput(values map[string]*pb.Variable_FinalValue) *terminal.Tab
 	for iv, v := range output {
 		// We add a line break in the value here because the Table word wrap
 		// alone can't accomodate the column headers to a long value
-		if len(v.Value) > 45 {
-			for i := range v.Value {
-				// line break every 45 characters
-				if i%46 == 0 && i != 0 {
-					v.Value = v.Value[:i] + "\n" + v.Value[i:]
-				}
-			}
+	if len(v.Value) > 45 {
+		for i := 45; i < len(v.Value); i += 46 {
+			v.Value = v.Value[:i] + "\n" + v.Value[i:]
 		}
+	}
 		columns = []string{
 			iv,
 			v.Value,
