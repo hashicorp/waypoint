@@ -21,7 +21,9 @@ type JobListCommand struct {
 	flagLimit int
 	flagDesc  bool
 
-	flagState []string
+	flagState              []string
+	flagTargetRunner       string
+	flagTargetRunnerLabels map[string]string
 }
 
 func (c *JobListCommand) Run(args []string) int {
@@ -61,7 +63,7 @@ func (c *JobListCommand) Run(args []string) int {
 			if !ok {
 				// this shouldn't happen given the State flag is an enum var, but protect
 				// against it anyway
-				c.ui.Output("Undefined job state value: ", s, terminal.WithErrorStyle())
+				c.ui.Output("Undefined job state value: "+s, terminal.WithErrorStyle())
 				return 1
 			} else {
 				states = append(states, pb.Job_State(js))
@@ -72,6 +74,27 @@ func (c *JobListCommand) Run(args []string) int {
 	}
 
 	// TODO target runner
+	if len(c.flagTargetRunnerLabels) > 0 && c.flagTargetRunner != "" {
+		c.ui.Output("Cannot define both 'target-runner' and 'target-runner-label' flags.\n"+c.Help(), terminal.WithErrorStyle())
+		return 1
+	} else if c.flagTargetRunner != "" {
+		if c.flagTargetRunner == "*" {
+			req.TargetRunner = &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{}}
+		} else {
+			req.TargetRunner = &pb.Ref_Runner{Target: &pb.Ref_Runner_Id{
+				Id: &pb.Ref_RunnerId{
+					Id: c.flagTargetRunner,
+				},
+			},
+			}
+		}
+	} else if len(c.flagTargetRunnerLabels) > 0 {
+		req.TargetRunner = &pb.Ref_Runner{Target: &pb.Ref_Runner_Labels{
+			Labels: &pb.Ref_RunnerLabels{
+				Labels: c.flagTargetRunnerLabels,
+			},
+		}}
+	}
 
 	resp, err := c.project.Client().ListJobs(ctx, req)
 	if err != nil {
@@ -222,6 +245,20 @@ func (c *JobListCommand) Flags() *flag.Sets {
 			Target: &c.flagState,
 			Values: jobStateValues,
 			Usage:  "List jobs that only match the requested state. Can be repeated multiple times.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "target-runner",
+			Target:  &c.flagTargetRunner,
+			Default: "",
+			Usage:   "List jobs that were only assigned to the target runner.",
+		})
+
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "target-runner-label",
+			Target: &c.flagTargetRunnerLabels,
+			Usage: "List jobs that were only assigned to the target runner by labels. " +
+				"Can be repeated multiple times.",
 		})
 
 		f.BoolVar(&flag.BoolVar{

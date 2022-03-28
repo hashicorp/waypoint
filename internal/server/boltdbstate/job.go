@@ -350,15 +350,55 @@ func (s *State) JobList(
 			}
 		}
 
-		/*
-			if req.TargetRunner != nil {
-				switch tr := job.TargetRunner.Target.(type) {
-				case *pb.Ref_Runner_Any:
-				case *pb.Ref_Runner_Id:
-				case *pb.Ref_Runner_Labels:
+		if req.TargetRunner != nil {
+			switch tr := job.TargetRunner.Target.(type) {
+			case *pb.Ref_Runner_Any:
+				// job was set to Any runner
+				_, ok := req.TargetRunner.Target.(*pb.Ref_Runner_Any)
+				if !ok {
+					// request is not targeted to Any runner, so don't include in list
+					continue
+				}
+			case *pb.Ref_Runner_Id:
+				// the job is targed to a specific runner id
+
+				id, ok := req.TargetRunner.Target.(*pb.Ref_Runner_Id)
+				if !ok {
+					// request was not for a target runner by id
+					continue
+				} else if id.Id.Id != tr.Id.Id {
+					// the requested id doesn't match the target runner id on the job
+					continue
+				}
+			case *pb.Ref_Runner_Labels:
+				// the job is targeted by runner labels
+
+				// if _any_ label matches, include it
+				reqLabels, ok := req.TargetRunner.Target.(*pb.Ref_Runner_Labels)
+				if !ok {
+					// Request was not for target runner by labels
+					continue
+				}
+
+				// look for any matching label from the request on the job
+				match := false
+				for key, value := range reqLabels.Labels.Labels {
+					v, ok := tr.Labels.Labels[key]
+					if !ok {
+						// requested key not found in job, continue searching through label loop
+						continue
+					}
+					if v == value {
+						// a key was found, and its value matches
+						match = true
+						break
+					}
+				}
+				if !match {
+					continue
 				}
 			}
-		*/
+		}
 
 		result = append(result, job)
 	}
