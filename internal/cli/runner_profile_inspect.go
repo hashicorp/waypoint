@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 
+	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -11,7 +13,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/posener/complete"
 )
 
 type RunnerProfileInspectCommand struct {
@@ -84,6 +85,9 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 			targetRunner = "*"
 		case *pb.Ref_Runner_Id:
 			targetRunner = t.Id.Id
+		case *pb.Ref_Runner_Labels:
+			s, _ := json.Marshal(t.Labels.Labels)
+			targetRunner = "labels: " + string(s)
 		}
 	}
 	c.ui.Output("Runner profile:", terminal.WithHeaderStyle())
@@ -104,7 +108,7 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 			Name: "Plugin Type", Value: config.PluginType,
 		},
 		{
-			Name: "Target Runner ID", Value: targetRunner,
+			Name: "Target Runner", Value: targetRunner,
 		},
 		{
 			Name: "Environment Variables", Value: config.EnvironmentVariables,

@@ -163,8 +163,8 @@ func (s *service) queueJobReqToJob(
 	}
 
 	// If the job has any target runner, it is a remote job.
-	// We attempt to spawn an on-demand runner for the job, if it doesn't already have an ODR assigned, use a default.
-	if _, anyTarget := job.TargetRunner.Target.(*pb.Ref_Runner_Any); anyTarget {
+	// Use a default ODR profile if it doesn't already have one assigned.
+	if _, ok := job.TargetRunner.Target.(*pb.Ref_Runner_Any); ok {
 		if job.OndemandRunner == nil {
 			ods, err := s.state.OnDemandRunnerConfigDefault()
 			if err != nil {
@@ -178,7 +178,7 @@ func (s *service) queueJobReqToJob(
 				job.OndemandRunner = ods[0]
 			default:
 				job.OndemandRunner = ods[rand.Intn(len(ods))]
-				log.Debug("multiple default on-demand runners detected, chose a random one",
+				log.Debug("multiple default on-demand runner profiles detected, chose a random one",
 					"runner-config-id", job.OndemandRunner.Id)
 			}
 		}
@@ -241,7 +241,7 @@ func (s *service) wrapJobWithRunner(
 		return nil, err
 	}
 
-	// Change our source job to require being run on the launched ODR.
+	// Change our source job to run on the launched ODR.
 	source.TargetRunner = &pb.Ref_Runner{
 		Target: &pb.Ref_Runner_Id{
 			Id: &pb.Ref_RunnerId{
@@ -311,7 +311,7 @@ func (s *service) onDemandRunnerStartJob(
 	}
 
 	// We generate a new login token for each ondemand-runner used. This will inherit
-	// the user of the token to be the user that queue'd the original job, which is
+	// the user of the token to be the user that queued the original job, which is
 	// the correct behavior.
 	token, err := s.newToken(60*time.Minute, DefaultKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Login_{Login: &pb.Token_Login{
@@ -380,11 +380,6 @@ func (s *service) onDemandRunnerStartJob(
 
 	job.ExpireTime = timestamppb.New(time.Now().Add(dur))
 
-	if err != nil {
-		return nil, "", status.Errorf(codes.FailedPrecondition,
-			"Failed to get on-demand runner config by name %q, id %q: %s",
-			job.OndemandRunner.Name, job.OndemandRunner.Id, err)
-	}
 	// This will be either "Any" or a specific static runner.
 	job.TargetRunner = od.TargetRunner
 

@@ -1,0 +1,8 @@
+```release-note:feature
+**Targetable Runners with Labels**: Waypoint now supports runner profiles that target specific on-demand runners by labels.
+Projects and/or Apps can be configured to use a specific runner profile, identified by name.
+The runner profile will target all operations to a specific on-demand runner by ID, or labels on the runner.
+```
+```release-note:improvement
+cli: `runner profile` command set now supports target runner labels
+```

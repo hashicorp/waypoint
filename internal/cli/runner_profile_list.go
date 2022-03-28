@@ -1,14 +1,15 @@
 package cli
 
 import (
+	"encoding/json"
+
+	"github.com/posener/complete"
+	empty "google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-
-	"github.com/posener/complete"
-
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	empty "google.golang.org/protobuf/types/known/emptypb"
 )
 
 type RunnerProfileListCommand struct {
@@ -37,7 +38,7 @@ func (c *RunnerProfileListCommand) Run(args []string) int {
 
 	c.ui.Output("Runner profiles")
 
-	tbl := terminal.NewTable("Name", "Plugin Type", "OCI Url", "Target Runner ID",
+	tbl := terminal.NewTable("Name", "Plugin Type", "OCI Url", "Target Runner",
 		"Default")
 
 	for _, p := range resp.Configs {
@@ -53,6 +54,9 @@ func (c *RunnerProfileListCommand) Run(args []string) int {
 				targetRunner = "*"
 			case *pb.Ref_Runner_Id:
 				targetRunner = t.Id.Id
+			case *pb.Ref_Runner_Labels:
+				s, _ := json.Marshal(t.Labels.Labels)
+				targetRunner = "labels: " + string(s)
 			}
 		}
 
