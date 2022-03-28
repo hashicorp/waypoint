@@ -7,7 +7,9 @@
     padding-bottom: 0.5rem;
   }
 
-  table, table > tbody, tr {
+  table,
+  table > tbody,
+  tr {
     width: 100%;
     overflow: hidden;
   }
@@ -19,7 +21,7 @@
     font-size: 0.875rem;
     line-height: 17px;
 
-    :first-child > * {
+    > :first-child > * {
       padding-top: 0;
     }
 
@@ -29,10 +31,6 @@
       padding-top: scale.$sm--2;
       padding-bottom: scale.$sm--2;
       vertical-align: top;
-
-      > * {
-        white-space: nowrap;
-      }
     }
 
     th {
@@ -55,12 +53,8 @@
       align-items: baseline;
     }
 
-    .image-ref {
-      display: inline-flex;
-
-      &:first-child {
-        margin-top: -1px;
-      }
+    .container-image-tag {
+      margin-top: -1px;
     }
   }
 }
