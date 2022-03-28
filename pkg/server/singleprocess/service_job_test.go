@@ -208,6 +208,98 @@ func TestServiceJob_List(t *testing.T) {
 		})
 		require.NoError(err)
 		require.Len(jobList.Jobs, 5)
+
+		// Default mocked jobs target Any runners
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Any{},
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 5)
+
+		resp, err = client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, &pb.Job{
+				TargetRunner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Id{
+						Id: &pb.Ref_RunnerId{
+							Id: "123",
+						},
+					},
+				},
+			}),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Id{
+					Id: &pb.Ref_RunnerId{
+						Id: "123",
+					},
+				},
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 1)
+		require.Equal(resp.JobId, jobList.Jobs[0].Id)
+
+		resp, err = client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, &pb.Job{
+				TargetRunner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Labels{
+						Labels: &pb.Ref_RunnerLabels{
+							Labels: map[string]string{"123": "yes", "456": "maybe", "789": "perhaps"},
+						},
+					},
+				},
+			}),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// A job with target runner labels will match
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: map[string]string{"123": "yes"},
+					},
+				},
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 1)
+		require.Equal(resp.JobId, jobList.Jobs[0].Id)
+
+		// A job with target runner labels but different value does not match
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: map[string]string{"123": "no"},
+					},
+				},
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 0)
+
+		// A job with target runner labels but requested label key does not exist
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: map[string]string{"abc": "its easy as"},
+					},
+				},
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 0)
 	})
 }
 
