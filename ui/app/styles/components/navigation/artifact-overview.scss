@@ -59,7 +59,7 @@
     .image-ref {
       display: inline-flex;
 
-      :first-child {
+      &:first-child {
         margin-top: -1px;
       }
     }
