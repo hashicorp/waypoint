@@ -1,4 +1,4 @@
-{{#each this.imageRefs as |imageRef|}}
+{{#each this.imageRefs key="uri" as |imageRef|}}
   <ImageRef @imageRef={{imageRef}} />
 {{else}}
   n/a
