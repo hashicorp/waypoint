@@ -177,9 +177,23 @@ func TestServiceJob_List(t *testing.T) {
 		require.NoError(err)
 		require.Len(jobList.Jobs, 1)
 
+		// No "new" Project apps in prod workspace.
 		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "prod",
+			},
+			Application: &pb.Ref_Application{
+				Application: "new",
+				Project:     "new",
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 0)
+
+		// "new" project is in dev workspace
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "dev",
 			},
 			Application: &pb.Ref_Application{
 				Application: "new",

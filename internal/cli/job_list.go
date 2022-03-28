@@ -36,6 +36,43 @@ func (c *JobListCommand) Run(args []string) int {
 
 	req := &pb.ListJobsRequest{}
 
+	if c.flagWorkspace != "" {
+		req.Workspace = &pb.Ref_Workspace{
+			Workspace: c.flagWorkspace,
+		}
+	}
+
+	if c.flagProject != "" {
+		req.Project = &pb.Ref_Project{
+			Project: c.flagProject,
+		}
+	}
+
+	if c.flagApp != "" {
+		req.Application = &pb.Ref_Application{
+			Application: c.flagApp,
+		}
+	}
+
+	if len(c.flagState) > 0 {
+		var states []pb.Job_State
+		for _, s := range c.flagState {
+			js, ok := pb.Job_State_value[strings.ToUpper(s)]
+			if !ok {
+				// this shouldn't happen given the State flag is an enum var, but protect
+				// against it anyway
+				c.ui.Output("Undefined job state value: ", s, terminal.WithErrorStyle())
+				return 1
+			} else {
+				states = append(states, pb.Job_State(js))
+			}
+		}
+
+		req.JobState = states
+	}
+
+	// TODO target runner
+
 	resp, err := c.project.Client().ListJobs(ctx, req)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -43,37 +80,6 @@ func (c *JobListCommand) Run(args []string) int {
 	}
 
 	jobs := resp.Jobs
-
-	// filter jobs out of list on request
-	var tmpj []*pb.Job
-	for _, job := range jobs {
-		if c.flagWorkspace != "" && c.flagWorkspace != job.Workspace.Workspace {
-			continue
-		}
-
-		if c.flagProject != "" && c.flagProject != job.Application.Project {
-			continue
-		}
-
-		if c.flagApp != "" && c.flagApp != job.Application.Application {
-			continue
-		}
-
-		if len(c.flagState) > 0 {
-			found := false
-			for _, state := range c.flagState {
-				if pb.Job_State_name[int32(job.State)] == strings.ToUpper(state) {
-					found = true
-					break
-				}
-			}
-			if !found {
-				continue
-			}
-		}
-		tmpj = append(tmpj, job)
-	}
-	jobs = tmpj
 
 	// sort by complete time
 	if c.flagDesc {

@@ -327,7 +327,12 @@ func (s *State) JobList(
 		if req.Project != nil {
 			if job.Application.Project != req.Project.Project {
 				continue
-			} else if job.Application.Application != req.Application.Application {
+			}
+		}
+
+		if req.Application != nil {
+			if job.Application.Application != req.Application.Application ||
+				job.Application.Project != req.Application.Project {
 				continue
 			}
 		}
