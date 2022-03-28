@@ -230,7 +230,10 @@ func (r *Runner) executeJob(
 	// Evaluate all variables against the variable blocks we just decoded:
 	// We grab the server cookie here to pass along for the variables
 	// evaluation to use a salt for sensitive values
-	clientResp, _ := r.client.GetServerConfig(context.Background(), &empty.Empty{})
+	clientResp, err := r.client.GetServerConfig(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, err
+	}
 	var serverCookie string
 	if clientResp != nil && clientResp.Config != nil {
 		serverCookie = clientResp.Config.Cookie
