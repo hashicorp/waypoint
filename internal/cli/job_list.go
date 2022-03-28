@@ -73,7 +73,6 @@ func (c *JobListCommand) Run(args []string) int {
 		req.JobState = states
 	}
 
-	// TODO target runner
 	if len(c.flagTargetRunnerLabels) > 0 && c.flagTargetRunner != "" {
 		c.ui.Output("Cannot define both 'target-runner' and 'target-runner-label' flags.\n"+c.Help(), terminal.WithErrorStyle())
 		return 1
