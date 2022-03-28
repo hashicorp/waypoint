@@ -867,7 +867,7 @@ func TestServiceQueueJob_odr_target_id(t *testing.T) {
 	require.NotEmpty(queueResp)
 
 	// Job should exist and be queued
-	job, err := testServiceImpl(impl).state.JobById(queueResp.JobId, nil)
+	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 
@@ -1038,7 +1038,7 @@ func TestServiceQueueJob_odr_target_labels(t *testing.T) {
 	require.NotEmpty(queueResp)
 
 	// Job should exist and be queued
-	job, err := testServiceImpl(impl).state.JobById(queueResp.JobId, nil)
+	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 
