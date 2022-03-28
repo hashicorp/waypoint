@@ -147,6 +147,12 @@ func (c *JobInspectCommand) Run(args []string) int {
 		cancelTime = humanize.Time(resp.CancelTime.AsTime())
 	}
 
+	// job had an error! Let's show the message
+	var errMsg string
+	if resp.Error != nil {
+		errMsg = resp.Error.Message
+	}
+
 	c.ui.Output("Job Configuration", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
@@ -160,6 +166,9 @@ func (c *JobInspectCommand) Run(args []string) int {
 		},
 		{
 			Name: "State", Value: jobState,
+		},
+		{
+			Name: "Error Messsage", Value: errMsg,
 		},
 		{
 			Name: "Complete Time", Value: completeTime,
