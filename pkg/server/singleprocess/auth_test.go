@@ -26,7 +26,7 @@ func TestServiceAuth(t *testing.T) {
 	ctx := context.Background()
 
 	// "Log in" a default user
-	ctx = userWithContext(ctx, &pb.User{Id: DefaultUserId})
+	ctx = UserWithContext(ctx, &pb.User{Id: DefaultUserId})
 
 	// Bootstrap
 	var bootstrapToken string
@@ -226,7 +226,7 @@ func TestServiceAuth(t *testing.T) {
 		require := require.New(t)
 
 		// Log in as some other user
-		ctx = userWithContext(ctx, &pb.User{Id: DefaultUserId + "0"})
+		ctx = UserWithContext(ctx, &pb.User{Id: DefaultUserId + "0"})
 
 		// Get our invite token for the entrypoint
 		resp, err := s.GenerateInviteToken(ctx, &pb.InviteTokenRequest{
@@ -393,7 +393,7 @@ func TestServiceAuth_TriggerToken(t *testing.T) {
 	ctx := context.Background()
 
 	// "Log in" a default user
-	ctx = userWithContext(ctx, &pb.User{Id: DefaultUserId})
+	ctx = UserWithContext(ctx, &pb.User{Id: DefaultUserId})
 
 	t.Run("create and validate new token cannot authenticate grpc endpoint", func(t *testing.T) {
 		require := require.New(t)
