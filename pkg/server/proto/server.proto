@@ -1571,7 +1571,7 @@ message Job {
 
   // Variable refs store the final value used on the operation for each variable
   // defined in the waypoint.hcl. Any variables with `sensitive` set in the
-  // waypoint.hcl will have a value encoded as SHA256 so the user can verify
+  // waypoint.hcl will have a value hashed with SHA256 so the user can verify
   // the value used.
   map<string, Variable.FinalValue> variable_final_values = 113;
 
