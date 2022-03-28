@@ -62,6 +62,9 @@ type Interface interface {
 	ServerURLTokenSet(string) error
 	ServerURLTokenGet() (string, error)
 
+	ServerIdSet(id string) error
+	ServerIdGet() (string, error)
+
 	CreateSnapshot(io.Writer) error
 	StageRestoreSnapshot(io.Reader) error
 

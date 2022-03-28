@@ -5,9 +5,10 @@ import (
 	"sync"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
-	"github.com/hashicorp/waypoint/internal/server/boltdbstate"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
 	wpoidc "github.com/hashicorp/waypoint/pkg/auth/oidc"
 	"github.com/hashicorp/waypoint/pkg/server"
@@ -113,8 +114,17 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	// TODO(izaak): the serverstate interface doesn't currently support
 	// the ServerId methods, but I think it probably needs to.
 	state := s.state(context.Background())
-	if boltdbstate, ok := state.(*boltdbstate.State); ok {
-		id, err := boltdbstate.ServerIdGet()
+
+	// If a server ID was configured, set that
+	if cfg.serverId != "" {
+		if err := state.ServerIdSet(cfg.serverId); err != nil {
+			return nil, err
+		}
+		s.id = cfg.serverId
+	} else {
+		// If no server ID was configured, check if we already have one.
+		// If not, generate a new random one and set it.
+		id, err := state.ServerIdGet()
 		if err != nil {
 			return nil, err
 		}
@@ -124,21 +134,22 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 				return nil, err
 			}
 
-			if err := boltdbstate.ServerIdSet(id); err != nil {
+			if err := state.ServerIdSet(id); err != nil {
 				return nil, err
 			}
 		}
 		s.id = id
+	}
 
-		// If we haven't initialized our server config before, do that once.
-		conf, err := state.ServerConfigGet()
-		if err != nil {
+	// If we haven't initialized our server config before, do that once.
+	conf, err := state.ServerConfigGet()
+	if err != nil {
+		return nil, err
+	}
+	if conf.Cookie == "" {
+		err := state.ServerConfigSet(conf)
+		if err != nil && status.Convert(err).Code() != codes.Unimplemented {
 			return nil, err
-		}
-		if conf.Cookie == "" {
-			if err := state.ServerConfigSet(conf); err != nil {
-				return nil, err
-			}
 		}
 	}
 
@@ -247,6 +258,7 @@ type config struct {
 	oidcDisabled      bool
 	pollingDisabled   bool
 	logStreamProvider logstream.Provider
+	serverId          string
 
 	acceptUrlTerms bool
 }
@@ -352,6 +364,15 @@ func WithPollingDisabled(disabled bool) Option {
 func WithLogStreamProvider(logStreamProvider logstream.Provider) Option {
 	return func(s *Service, cfg *config) error {
 		cfg.logStreamProvider = logStreamProvider
+		return nil
+	}
+}
+
+// WithServerId starts this server with a given id, rather than
+// a randomly generated id.
+func WithServerId(serverId string) Option {
+	return func(s *Service, cfg *config) error {
+		cfg.serverId = serverId
 		return nil
 	}
 }
