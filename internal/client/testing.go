@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	configpkg "github.com/hashicorp/waypoint/internal/config"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/singleprocess"
 )
 
 // TestProject returns an initialized client pointing to an in-memory test

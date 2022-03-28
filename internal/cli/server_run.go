@@ -22,7 +22,10 @@ import (
 	"github.com/hashicorp/go-hclog"
 	hznhub "github.com/hashicorp/horizon/pkg/hub"
 	hzntest "github.com/hashicorp/horizon/pkg/testutils/central"
+
 	wphzn "github.com/hashicorp/waypoint-hzn/pkg/server"
+	"github.com/hashicorp/waypoint/internal/server/boltdbstate"
+	"github.com/hashicorp/waypoint/pkg/server/singleprocess"
 
 	"github.com/hashicorp/waypoint/internal/telemetry"
 	serverpkg "github.com/hashicorp/waypoint/pkg/server"
@@ -37,7 +40,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/cert"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/server"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
@@ -164,9 +166,19 @@ func (c *ServerRunCommand) Run(args []string) int {
 		TLSSkipVerify: c.flagAdvertiseTLSSkipVerify,
 	}
 
+	// Initialize our state
+	state, err := boltdbstate.New(log, db)
+	if err != nil {
+		c.ui.Output(
+			"Error initializing boltdb state backend: %s", err.Error(),
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
+
 	// Create our server
 	impl, err := singleprocess.New(
-		singleprocess.WithDB(db),
+		singleprocess.WithState(state),
 		singleprocess.WithConfig(&c.config),
 		singleprocess.WithLogger(log.Named("singleprocess")),
 		singleprocess.WithAcceptURLTerms(c.flagAcceptTOS),
