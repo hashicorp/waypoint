@@ -204,9 +204,6 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 		// Setup the background context that is used for internal tasks
 		s.bgCtx, s.bgCtxCancel = context.WithCancel(context.Background())
 
-		// TODO: When more items are added, move this else where
-		// pollableItems is a map of potential items Waypoint can queue a poll for.
-		// Each item should implement the pollHandler interface
 		pollableItems := map[string]pollHandler{
 			"project":                  &projectPoll{state: state},
 			"application_statusreport": &applicationPoll{state: state, workspace: "default"},
