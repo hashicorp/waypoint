@@ -292,7 +292,9 @@ func (s *State) JobProjectScopedRequest(
 }
 
 // JobList returns the list of jobs.
-func (s *State) JobList() ([]*pb.Job, error) {
+func (s *State) JobList(
+	req *pb.ListJobsRequest,
+) ([]*pb.Job, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -314,6 +316,44 @@ func (s *State) JobList() ([]*pb.Job, error) {
 			job, err = s.jobById(dbTxn, idx.Id)
 			return err
 		})
+
+		// filter job list by request
+		if req.Workspace != nil {
+			if job.Workspace.Workspace != req.Workspace.Workspace {
+				continue
+			}
+		}
+
+		if req.Project != nil {
+			if job.Application.Project != req.Project.Project {
+				continue
+			} else if job.Application.Application != req.Application.Application {
+				continue
+			}
+		}
+
+		if len(req.JobState) > 0 {
+			found := false
+			for _, state := range req.JobState {
+				if job.State == state {
+					found = true
+					break
+				}
+			}
+			if !found {
+				continue
+			}
+		}
+
+		/*
+			if req.TargetRunner != nil {
+				switch tr := job.TargetRunner.Target.(type) {
+				case *pb.Ref_Runner_Any:
+				case *pb.Ref_Runner_Id:
+				case *pb.Ref_Runner_Labels:
+				}
+			}
+		*/
 
 		result = append(result, job)
 	}

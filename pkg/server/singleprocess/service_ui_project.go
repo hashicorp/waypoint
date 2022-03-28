@@ -22,7 +22,7 @@ func (s *Service) UI_GetProject(
 		return nil, err
 	}
 
-	jobs, err := s.state(ctx).JobList()
+	jobs, err := s.state(ctx).JobList(&pb.ListJobsRequest{})
 
 	if err != nil {
 		return nil, err

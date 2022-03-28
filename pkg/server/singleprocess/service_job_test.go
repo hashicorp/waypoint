@@ -108,6 +108,93 @@ func TestServiceJob_List(t *testing.T) {
 		require.NoError(err)
 		require.Len(jobList.Jobs, 3)
 	})
+
+	t.Run("list jobs with filters", func(t *testing.T) {
+		require := require.New(t)
+
+		// 3 jobs from previous test
+		jobList, err := client.ListJobs(ctx, &pb.ListJobsRequest{})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 3)
+
+		// Three jobs filtered on workspace
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "w_test",
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 3)
+
+		// Create, should get an ID back
+		resp, err := client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, &pb.Job{
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "prod",
+				},
+			}),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// One job filtered on workspace
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "prod",
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 1)
+
+		proj := serverptypes.TestProject(t, &pb.Project{Name: "new"})
+		_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+			Project: proj,
+		})
+		require.NoError(err)
+
+		resp, err = client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, &pb.Job{
+				Application: &pb.Ref_Application{
+					Application: "new",
+					Project:     "new",
+				},
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "dev",
+				},
+			}),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// Two job filtered on workspace
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "prod",
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 1)
+
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "prod",
+			},
+			Application: &pb.Ref_Application{
+				Application: "new",
+				Project:     "new",
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 1)
+
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			JobState: []pb.Job_State{pb.Job_QUEUED},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 5)
+	})
 }
 
 func TestServiceQueueJob(t *testing.T) {
