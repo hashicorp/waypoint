@@ -44,7 +44,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		})))
 
 		// Exactly one job should exist
-		jobs, err := s.JobList()
+		jobs, err := s.JobList(&pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobs, 1)
 	})
@@ -65,7 +65,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		})))
 
 		// Exactly one job should exist
-		jobs, err := s.JobList()
+		jobs, err := s.JobList(&pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobs, 2)
 	})
@@ -89,7 +89,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		})))
 
 		// Should have both jobs
-		jobs, err := s.JobList()
+		jobs, err := s.JobList(&pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobs, 2)
 
@@ -148,7 +148,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		})))
 
 		// Should have both jobs
-		jobs, err := s.JobList()
+		jobs, err := s.JobList(&pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobs, 2)
 
@@ -205,7 +205,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		})))
 
 		// Should have both jobs
-		jobs, err := s.JobList()
+		jobs, err := s.JobList(&pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobs, 2)
 
