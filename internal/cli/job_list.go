@@ -53,6 +53,7 @@ func (c *JobListCommand) Run(args []string) int {
 	if c.flagApp != "" {
 		req.Application = &pb.Ref_Application{
 			Application: c.flagApp,
+			Project:     c.flagProject,
 		}
 	}
 
