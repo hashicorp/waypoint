@@ -165,18 +165,6 @@ func (c *JobInspectCommand) Run(args []string) int {
 			Name: "Operation", Value: op,
 		},
 		{
-			Name: "State", Value: jobState,
-		},
-		{
-			Name: "Error Messsage", Value: errMsg,
-		},
-		{
-			Name: "Complete Time", Value: completeTime,
-		},
-		{
-			Name: "Cancel Time", Value: cancelTime,
-		},
-		{
 			Name: "Target Runner", Value: targetRunner,
 		},
 		{
@@ -187,6 +175,22 @@ func (c *JobInspectCommand) Run(args []string) int {
 		},
 		{
 			Name: "Application", Value: resp.Application.Application,
+		},
+	}, terminal.WithInfoStyle())
+
+	c.ui.Output("Job Results", terminal.WithHeaderStyle())
+	c.ui.NamedValues([]terminal.NamedValue{
+		{
+			Name: "State", Value: jobState,
+		},
+		{
+			Name: "Complete Time", Value: completeTime,
+		},
+		{
+			Name: "Cancel Time", Value: cancelTime,
+		},
+		{
+			Name: "Error Messsage", Value: errMsg,
 		},
 	}, terminal.WithInfoStyle())
 
