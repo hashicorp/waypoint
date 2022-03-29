@@ -111,7 +111,7 @@ func (r *Runner) executePollOp(
 	))
 	// Not all jobs set an application
 	if job.Application.Application != "" {
-		singletonId = "/" + job.Application.Application
+		singletonId = "/" + strings.ToLower(job.Application.Application)
 	}
 
 	log.Debug("queueing job")
