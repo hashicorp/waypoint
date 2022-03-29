@@ -168,10 +168,10 @@ func TestServiceJob_List(t *testing.T) {
 		require.NotNil(resp)
 		require.NotEmpty(resp.JobId)
 
-		// Two job filtered on workspace
+		// One job filtered on dev workspace
 		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
 			Workspace: &pb.Ref_Workspace{
-				Workspace: "prod",
+				Workspace: "dev",
 			},
 		})
 		require.NoError(err)
@@ -218,6 +218,7 @@ func TestServiceJob_List(t *testing.T) {
 		require.NoError(err)
 		require.Len(jobList.Jobs, 5)
 
+		// Target a specific runner by id
 		resp, err = client.QueueJob(ctx, &Req{
 			Job: serverptypes.TestJobNew(t, &pb.Job{
 				TargetRunner: &pb.Ref_Runner{
@@ -233,6 +234,7 @@ func TestServiceJob_List(t *testing.T) {
 		require.NotNil(resp)
 		require.NotEmpty(resp.JobId)
 
+		// Filter all jobs on those who target the 123 runner
 		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
 			TargetRunner: &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Id{
@@ -246,6 +248,7 @@ func TestServiceJob_List(t *testing.T) {
 		require.Len(jobList.Jobs, 1)
 		require.Equal(resp.JobId, jobList.Jobs[0].Id)
 
+		// Queue a job who targets a runner with labels
 		resp, err = client.QueueJob(ctx, &Req{
 			Job: serverptypes.TestJobNew(t, &pb.Job{
 				TargetRunner: &pb.Ref_Runner{
