@@ -2,9 +2,17 @@
   display: flex;
   align-items: center;
 
+  &__uri {
+    display: block;
+    flex-shrink: 0;
+  }
+
   &__tag {
+    display: block;
     margin-left: 7px;
-    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
 
   &__copy-button {
@@ -12,11 +20,11 @@
     align-items: center;
     justify-content: center;
     background: transparent;
-    color: inherit;
+    color: rgb(var(--text-muted));
     font-size: inherit;
     line-height: inherit;
 
-    padding: scale.$sm--4;
+    padding: 0;
     border: 0;
     margin: 0;
     margin-left: 0.25rem;
