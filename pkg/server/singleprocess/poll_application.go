@@ -178,7 +178,7 @@ func (a *applicationPoll) buildPollJobs(
 		}
 		// SingletonId so that we only have one poll operation at
 		// any time queued per app/operation.
-		deploymentJob.Job.SingletonId = appStatusPollSingletonId(app.Name, appStatusPollOperationTypeDeployment)
+		deploymentJob.Job.SingletonId = appStatusPollSingletonId(a.workspace, app.Project.Project, app.Name, appStatusPollOperationTypeDeployment)
 
 		jobs = append(jobs, deploymentJob)
 	}
@@ -197,7 +197,7 @@ func (a *applicationPoll) buildPollJobs(
 		}
 		// SingletonId so that we only have one poll operation at
 		// any time queued per app/operation.
-		releaseJob.Job.SingletonId = appStatusPollSingletonId(app.Name, appStatusPollOperationTypeRelease)
+		releaseJob.Job.SingletonId = appStatusPollSingletonId(a.workspace, app.Project.Project, app.Name, appStatusPollOperationTypeRelease)
 
 		jobs = append(jobs, releaseJob)
 	}
@@ -240,7 +240,18 @@ const (
 )
 
 // appStatusPollSingletonId generates an application status polling job singleton ID
-// for the given app and operation type.
-func appStatusPollSingletonId(appName string, operationType appStatusPollOperationType) string {
-	return fmt.Sprintf("app-status-poll/%s/%s", appName, operationType)
+// for the given workspace, project, app and operation type.
+// NOTE(briancain): We set a singleton ID for a poll application operation to ensure that the
+// poll handler does not fire off many operations of the same kind more than once,
+// clogging up the job system. By setting a singleton ID that is unique to this
+// application, we can ensure only 1 operation will be active at once rather than
+// many operations (such as in the case where a poll interval is shorter than it
+// takes to run the operation)
+func appStatusPollSingletonId(
+	workspaceName string,
+	projectName string,
+	appName string,
+	operationType appStatusPollOperationType,
+) string {
+	return fmt.Sprintf("app-status-poll/%s/%s/%s/%s", workspaceName, projectName, appName, operationType)
 }

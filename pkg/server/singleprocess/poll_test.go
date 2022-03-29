@@ -549,7 +549,7 @@ func TestApplicationPollHandler(t *testing.T) {
 
 		raw, err := testServiceImpl(impl).state(ctx).JobList()
 		for _, j := range raw {
-			if j.State != pb.Job_ERROR && j.SingletonId == appStatusPollSingletonId(appName, appStatusPollOperationTypeDeployment) {
+			if j.State != pb.Job_ERROR && j.SingletonId == appStatusPollSingletonId("default", "Example", appName, appStatusPollOperationTypeDeployment) {
 				jobs = append(jobs, j)
 			}
 		}
@@ -669,7 +669,7 @@ func TestApplicationPollHandler_fullLifecycle(t *testing.T) {
 		raw, err := testServiceImpl(impl).state(ctx).JobList()
 		for _, j := range raw {
 			if j.State != pb.Job_ERROR &&
-				j.SingletonId == appStatusPollSingletonId(appName, appStatusPollOperationTypeDeployment) {
+				j.SingletonId == appStatusPollSingletonId("default", "Example", appName, appStatusPollOperationTypeDeployment) {
 				// App status polling should only have this singleton id
 				jobs = append(jobs, j)
 			}
@@ -716,10 +716,10 @@ func TestApplicationPollHandler_fullLifecycle(t *testing.T) {
 		for _, j := range raw {
 			t.Logf("Found job in state %s with id %s", j.State, j.SingletonId)
 			if j.State != pb.Job_ERROR {
-				if j.SingletonId == appStatusPollSingletonId(appName, appStatusPollOperationTypeRelease) {
+				if j.SingletonId == appStatusPollSingletonId("default", "Example", appName, appStatusPollOperationTypeRelease) {
 					releaseJobs++
 				}
-				if j.SingletonId == appStatusPollSingletonId(appName, appStatusPollOperationTypeDeployment) {
+				if j.SingletonId == appStatusPollSingletonId("default", "Example", appName, appStatusPollOperationTypeDeployment) {
 					deployJobs++
 				}
 			}
