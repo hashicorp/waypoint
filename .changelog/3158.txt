@@ -1,0 +1,4 @@
+```release-note:bug
+server: Fix project poll job singleton id to only include application on project
+poll jobs if exist. Otherwise, only include the workspace and project.
+```
