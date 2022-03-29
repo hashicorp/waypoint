@@ -7,7 +7,7 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func (s *service) UpsertTask(
+func (s *Service) UpsertTask(
 	ctx context.Context,
 	req *pb.UpsertTaskRequest,
 ) (*pb.UpsertTaskResponse, error) {
@@ -16,7 +16,7 @@ func (s *service) UpsertTask(
 	}
 
 	result := req.Task
-	if err := s.state.TaskPut(result); err != nil {
+	if err := s.state(ctx).TaskPut(result); err != nil {
 		return nil, err
 	}
 
@@ -24,7 +24,7 @@ func (s *service) UpsertTask(
 }
 
 // GetTask returns a Task based on ID
-func (s *service) GetTask(
+func (s *Service) GetTask(
 	ctx context.Context,
 	req *pb.GetTaskRequest,
 ) (*pb.GetTaskResponse, error) {
@@ -32,7 +32,7 @@ func (s *service) GetTask(
 		return nil, err
 	}
 
-	t, err := s.state.TaskGet(req.Ref)
+	t, err := s.state(ctx).TaskGet(req.Ref)
 	if err != nil {
 		return nil, err
 	}
@@ -46,13 +46,13 @@ func (s *service) GetTask(
 	return resp, nil
 }
 
-func (s *service) ListTask(
+func (s *Service) ListTask(
 	ctx context.Context,
 	req *pb.ListTaskRequest,
 ) (*pb.ListTaskResponse, error) {
 	// NOTE: no ptype validation at the moment, there are no request params
 
-	result, err := s.state.TaskList()
+	result, err := s.state(ctx).TaskList()
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (s *service) ListTask(
 	return &pb.ListTaskResponse{Tasks: tasks}, nil
 }
 
-func (s *service) getJobsByTaskRef(
+func (s *Service) getJobsByTaskRef(
 	ctx context.Context,
 	t *pb.Task,
 ) (*pb.GetTaskResponse, error) {
