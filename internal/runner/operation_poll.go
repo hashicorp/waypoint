@@ -103,6 +103,13 @@ func (r *Runner) executePollOp(
 		}
 	}
 
+	// NOTE(briancain): We set a singleton ID for a poll project operation to ensure that the
+	// poll handler does not fire off many operations of the same kind more than once,
+	// clogging up the job system. By setting a singleton ID that is unique to this
+	// application or project, we can ensure only 1 operation will be active at once rather than
+	// many operations (such as in the case where a poll interval is shorter than it
+	// takes to run the operation)
+
 	// We assume a project and workspace is set given this is Project polling
 	singletonId := strings.ToLower(fmt.Sprintf(
 		"poll-trigger/%s/%s",

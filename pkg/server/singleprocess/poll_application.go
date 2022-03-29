@@ -241,6 +241,12 @@ const (
 
 // appStatusPollSingletonId generates an application status polling job singleton ID
 // for the given workspace, project, app and operation type.
+// NOTE(briancain): We set a singleton ID for a poll application operation to ensure that the
+// poll handler does not fire off many operations of the same kind more than once,
+// clogging up the job system. By setting a singleton ID that is unique to this
+// application, we can ensure only 1 operation will be active at once rather than
+// many operations (such as in the case where a poll interval is shorter than it
+// takes to run the operation)
 func appStatusPollSingletonId(
 	workspaceName string,
 	projectName string,
