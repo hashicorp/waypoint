@@ -103,18 +103,24 @@ func (r *Runner) executePollOp(
 		}
 	}
 
+	// We assume a project and workspace is set given this is Project polling
+	singletonId := strings.ToLower(fmt.Sprintf(
+		"poll-trigger/%s/%s",
+		job.Workspace.Workspace,
+		job.Application.Project,
+	))
+	// Not all jobs set an application
+	if job.Application.Application != "" {
+		singletonId = "/" + job.Application.Application
+	}
+
 	log.Debug("queueing job")
 	queueResp, err := r.client.QueueJob(ctx, &pb.QueueJobRequest{
 		Job: &pb.Job{
 			// We set a singleton ID to verify that we only setup
 			// a queue operation once (in case it is taking longer to
 			// process than the poll interval).
-			SingletonId: strings.ToLower(fmt.Sprintf(
-				"poll-trigger/%s/%s/%s",
-				job.Application.Project,
-				job.Application.Application,
-				job.Workspace.Workspace,
-			)),
+			SingletonId: singletonId,
 
 			// Target only our project, we don't need an app for this.
 			Application: &pb.Ref_Application{
