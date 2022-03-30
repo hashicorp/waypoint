@@ -628,6 +628,8 @@ message Variable {
     // value stores one of three simple types (string, number, bool) as their
     // matching protobuf format, or any complex hcl type as a raw string.
     oneof value {
+      // 'sensitive' values are hashed as SHA256 values for
+	    // the purposes of output and logging
       string sensitive = 1;
       string str = 2;
       bool bool = 3;
@@ -638,7 +640,8 @@ message Variable {
 
     Source source = 6;
     enum Source {
-      // TODO: comments
+      // This is the final used value's source
+      // that is supplied to the user in outputs.
       UNKNOWN = 0;
       DEFAULT = 1;
       FILE = 2;
