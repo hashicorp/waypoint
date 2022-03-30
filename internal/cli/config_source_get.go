@@ -25,7 +25,7 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 
 	// type is required
 	if c.flagType == "" {
-		c.ui.Output(c.Flags().Help(), terminal.WithErrorStyle())
+		c.ui.Output("A source type must be specified with '-type'.\n"+c.Help(), terminal.WithErrorStyle())
 		return 1
 	}
 
