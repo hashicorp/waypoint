@@ -787,7 +787,7 @@ func (s *Service) handleJobStreamRequest(
 		})
 
 	case *pb.RunnerJobStreamRequest_VariableValuesSet_:
-		return s.state.JobUpdate(job.Id, func(jobpb *pb.Job) error {
+		return s.state(ctx).JobUpdate(job.Id, func(jobpb *pb.Job) error {
 			jobpb.VariableFinalValues = event.VariableValuesSet.FinalValues
 			return nil
 		})
