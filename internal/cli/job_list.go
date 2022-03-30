@@ -17,9 +17,9 @@ import (
 type JobListCommand struct {
 	*baseCommand
 
-	flagJson  bool
-	flagLimit int
-	flagDesc  bool
+	flagJson               bool
+	flagLimit              int
+	flagDesc               bool
 	flagState              []string
 	flagTargetRunner       string
 	flagTargetRunnerLabels map[string]string
@@ -247,10 +247,10 @@ func (c *JobListCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "target-runner",
+			Name:    "target-runner-id",
 			Target:  &c.flagTargetRunner,
 			Default: "",
-			Usage:   "List jobs that were only assigned to the target runner.",
+			Usage:   "List jobs that were only assigned to the target runner by id.",
 		})
 
 		f.StringMapVar(&flag.StringMapVar{
