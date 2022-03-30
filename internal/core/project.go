@@ -155,8 +155,8 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	// the source of that variable. This can be used to debug unexpected
 	// variable values.
 	for name, value := range p.variables {
-		// We purposely do NOT log the value because it may be sensitive
-		// and we have no way currently to mark a variable sensitive or not.
+		// We log the variables used at this point; we'll log the final values
+		// later when we have access to them including the obfuscated sensitive values
 		p.logger.Debug("variable info", "name", name, "source", value.Source)
 	}
 

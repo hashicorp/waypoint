@@ -266,7 +266,29 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 		event := resp.Event.(*pb.GetJobStreamResponse_Job)
 		require.NotNil(event)
 		require.Equal(pb.Job_Config_SERVER, event.Job.Job.Config.Source)
+	}
 
+	// Send final variable values event.
+	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_VariableValuesSet_{
+			VariableValuesSet: &pb.RunnerJobStreamRequest_VariableValuesSet{
+				FinalValues: map[string]*pb.Variable_FinalValue{
+					"test": {
+						Value:  &pb.Variable_FinalValue_Str{Str: "hello"},
+						Source: pb.Variable_FinalValue_CLI,
+					},
+				},
+			},
+		},
+	}))
+
+	// Wait for a job change event
+	{
+		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Job)(nil))
+		event := resp.Event.(*pb.GetJobStreamResponse_Job)
+		require.NotNil(event)
+		require.Equal(&pb.Variable_FinalValue_Str{Str: "hello"}, event.Job.Job.VariableFinalValues["test"].GetValue())
+		require.Equal(pb.Variable_FinalValue_CLI, event.Job.Job.VariableFinalValues["test"].GetSource())
 	}
 
 	// Complete the job

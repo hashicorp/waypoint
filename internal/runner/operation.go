@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
 	goplugin "github.com/hashicorp/go-plugin"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/appconfig"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/config/variables"
+	"github.com/hashicorp/waypoint/internal/config/variables/formatter"
 	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
@@ -225,10 +227,45 @@ func (r *Runner) executeJob(
 		}
 	}
 
-	// evaluate all variables against the variable blocks we just decoded
-	inputVars, diags := variables.EvaluateVariables(log, pbVars, cfg.InputVariables)
+	// Evaluate all variables against the variable blocks we just decoded:
+	// We grab the server cookie here to pass along for the variables
+	// evaluation to use a salt for sensitive values
+	clientResp, err := r.client.GetServerConfig(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	var serverCookie string
+	if clientResp != nil && clientResp.Config != nil {
+		serverCookie = clientResp.Config.Cookie
+	} else {
+		panic("server config does not exist")
+	}
+	// We set both inputVars and jobVars on the project.
+	// inputVars is the set of cty.Values to use in our hcl evaluation
+	// and jobVars is the matching set of variable refs to store on the job that
+	// has sensitive values obfuscated and is used for user-facing feedback/output.
+	inputVars, jobVars, diags := variables.EvaluateVariables(log, pbVars, cfg.InputVariables, serverCookie)
 	if diags.HasErrors() {
 		return nil, diags
+	}
+	// Update the job with the final set of variable values
+	log.Debug("setting final set of variable values on the job")
+	clientMutex.Lock()
+	err = client.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_VariableValuesSet_{
+			VariableValuesSet: &pb.RunnerJobStreamRequest_VariableValuesSet{
+				FinalValues: jobVars,
+			},
+		},
+	})
+	clientMutex.Unlock()
+	if err != nil {
+		return nil, err
+	}
+	// log outputtable values
+	output := formatter.ValuesForOutput(jobVars)
+	for name, value := range output {
+		log.Debug("set variable", "name", name, "value", value.Value, "type", value.Type, "source", value.Source)
 	}
 
 	// Build our job info

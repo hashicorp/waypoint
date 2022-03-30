@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -287,6 +288,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 		file        string
 		inputValues []*pb.Variable
 		expected    Values
+		expectedfvs map[string]*pb.Variable_FinalValue
 		err         string
 	}{
 		{
@@ -317,6 +319,26 @@ func TestVariables_EvalInputValues(t *testing.T) {
 				"whatdoesittaketobenumber": &Value{
 					cty.NumberIntVal(1), "default", hcl.Expression(nil), hcl.Range{},
 				},
+				"envs": &Value{
+					cty.NumberIntVal(1), "default", hcl.Expression(nil), hcl.Range{},
+				},
+			},
+			expectedfvs: map[string]*pb.Variable_FinalValue{
+				"art": {
+					Value: &pb.Variable_FinalValue_Str{Str: "gdbee"}, Source: pb.Variable_FinalValue_CLI,
+				},
+				"dynamic": {
+					Value: &pb.Variable_FinalValue_Str{Str: "value"}, Source: pb.Variable_FinalValue_CLI,
+				},
+				"is_good": {
+					Value: &pb.Variable_FinalValue_Bool{Bool: false}, Source: pb.Variable_FinalValue_DEFAULT,
+				},
+				"whatdoesittaketobenumber": {
+					Value: &pb.Variable_FinalValue_Sensitive{Sensitive: "dc90cf07de907ccc64636ceddb38e552a1a0d984743b1f36a447b73877012c39"}, Source: pb.Variable_FinalValue_DEFAULT,
+				},
+				"envs": {
+					Value: &pb.Variable_FinalValue_Num{Num: 1}, Source: pb.Variable_FinalValue_DEFAULT,
+				},
 			},
 			err: "",
 		},
@@ -327,6 +349,11 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			expected: Values{
 				"testdata": &Value{
 					stringListVal("pancakes"), "default", hcl.Expression(nil), hcl.Range{},
+				},
+			},
+			expectedfvs: map[string]*pb.Variable_FinalValue{
+				"testdata": {
+					Value: &pb.Variable_FinalValue_Hcl{Hcl: "[\"pancakes\"]"}, Source: pb.Variable_FinalValue_DEFAULT,
 				},
 			},
 			err: "",
@@ -346,6 +373,11 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					stringListVal("waffles"), "server", hcl.Expression(nil), hcl.Range{},
 				},
 			},
+			expectedfvs: map[string]*pb.Variable_FinalValue{
+				"testdata": {
+					Value: &pb.Variable_FinalValue_Hcl{Hcl: "[\"waffles\"]"}, Source: pb.Variable_FinalValue_SERVER,
+				},
+			},
 			err: "",
 		},
 		{
@@ -363,6 +395,12 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					stringListVal("waffles"), "cli", hcl.Expression(nil), hcl.Range{},
 				},
 			},
+			expectedfvs: map[string]*pb.Variable_FinalValue{
+				"testdata": {
+					Value:  &pb.Variable_FinalValue_Hcl{Hcl: "[\"waffles\"]"},
+					Source: pb.Variable_FinalValue_CLI,
+				},
+			},
 			err: "",
 		},
 		{
@@ -375,8 +413,9 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expected: Values{},
-			err:      "Undefined variable",
+			expected:    Values{},
+			expectedfvs: map[string]*pb.Variable_FinalValue{},
+			err:         "Undefined variable",
 		},
 		{
 			name: "invalid value type",
@@ -388,8 +427,9 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expected: Values{},
-			err:      "Invalid value for variable",
+			expected:    Values{},
+			expectedfvs: map[string]*pb.Variable_FinalValue{},
+			err:         "Invalid value for variable",
 		},
 		{
 			name: "undefined var for file value",
@@ -401,14 +441,16 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expected: Values{},
-			err:      "Undefined variable",
+			expected:    Values{},
+			expectedfvs: map[string]*pb.Variable_FinalValue{},
+			err:         "Undefined variable",
 		},
 		{
 			name:        "no assigned or default value",
 			file:        "no_default.hcl",
 			inputValues: []*pb.Variable{},
 			expected:    Values{},
+			expectedfvs: map[string]*pb.Variable_FinalValue{},
 			err:         "Unset variable",
 		},
 	}
@@ -439,10 +481,11 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			}
 			require.False(diags.HasErrors())
 
-			ivs, diags := EvaluateVariables(
+			ivs, jvs, diags := EvaluateVariables(
 				hclog.New(&hclog.LoggerOptions{}),
 				tt.inputValues,
 				vs,
+				"salt",
 			)
 			if tt.err != "" {
 				require.True(diags.HasErrors())
@@ -456,6 +499,11 @@ func TestVariables_EvalInputValues(t *testing.T) {
 				if diff != "" {
 					t.Fatalf("Expected variables differed from actual: %s", diff)
 				}
+			}
+
+			ers := reflect.DeepEqual(jvs, tt.expectedfvs)
+			if !ers {
+				t.Fatalf("Expected: \n%v\nActual: \n%v", tt.expectedfvs, jvs)
 			}
 		})
 	}

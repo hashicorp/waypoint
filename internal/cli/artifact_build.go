@@ -41,6 +41,18 @@ func (c *ArtifactBuildCommand) Run(args []string) int {
 			app.UI.Output("\nCreated artifact v%d", buildResult.Push.Sequence)
 		}
 
+		// Show input variable values used in build
+		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
+		resp, err := c.project.Client().GetJob(ctx, &pb.GetJobRequest{
+			JobId: buildResult.Build.JobId,
+		})
+		if err != nil {
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+		tbl := fmtVariablesOutput(resp.VariableFinalValues)
+		c.ui.Table(tbl)
+
 		return nil
 	})
 	if err != nil {

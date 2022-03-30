@@ -3,11 +3,6 @@ variable "art" {
   type = string
 }
 
-variable "mug" {
-  default = "clay"
-  type = string
-}
-
 variable "is_good" {
   default = false
   type = bool
@@ -16,6 +11,7 @@ variable "is_good" {
 variable "whatdoesittaketobenumber" {
   default = 1
   type = number
+  sensitive = true
 }
 
 variable "envs" {
