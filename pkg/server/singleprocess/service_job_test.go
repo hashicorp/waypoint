@@ -146,6 +146,7 @@ func TestServiceJob_List(t *testing.T) {
 		})
 		require.NoError(err)
 		require.Len(jobList.Jobs, 1)
+		require.Equal(jobList.Jobs[0].Workspace.Workspace, "prod")
 
 		proj := serverptypes.TestProject(t, &pb.Project{Name: "new"})
 		_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
@@ -176,6 +177,7 @@ func TestServiceJob_List(t *testing.T) {
 		})
 		require.NoError(err)
 		require.Len(jobList.Jobs, 1)
+		require.Equal(jobList.Jobs[0].Workspace.Workspace, "dev")
 
 		// No "new" Project apps in prod workspace.
 		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
@@ -202,6 +204,7 @@ func TestServiceJob_List(t *testing.T) {
 		})
 		require.NoError(err)
 		require.Len(jobList.Jobs, 1)
+		require.Equal(jobList.Jobs[0].Workspace.Workspace, "dev")
 
 		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
 			JobState: []pb.Job_State{pb.Job_QUEUED},
