@@ -2550,7 +2550,11 @@ message RunnerJobStreamResponse {
   }
 
   message JobAssignment {
+    // The job to assign
     Job job = 1;
+
+    // A list of plugin configs
+    repeated ConfigSource config_sources = 2;
   }
 
   message JobCancel {

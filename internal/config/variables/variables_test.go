@@ -257,10 +257,12 @@ func TestVariables_LoadDynamicDefaults(t *testing.T) {
 			needs := NeedsDynamicDefaults(tt.provided, vars)
 			require.Equal(tt.needs, needs)
 
+			var dcv []*pb.ConfigSource
 			dynVars, diags := LoadDynamicDefaults(
 				context.Background(),
 				hclog.L(),
 				tt.provided,
+				dcv,
 				vars,
 				appconfig.WithPlugins(map[string]*plugin.Instance{
 					"static": {
