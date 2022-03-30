@@ -20,7 +20,6 @@ type JobListCommand struct {
 	flagJson  bool
 	flagLimit int
 	flagDesc  bool
-
 	flagState              []string
 	flagTargetRunner       string
 	flagTargetRunnerLabels map[string]string
