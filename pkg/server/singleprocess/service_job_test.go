@@ -47,7 +47,7 @@ func TestServiceJob(t *testing.T) {
 		require.Equal(pb.Job_QUEUED, job.State)
 	})
 
-	t.Run("non-existent job get is a failure", func(t *testing.T) {
+	t.Run("fails to get non-existent job", func(t *testing.T) {
 		require := require.New(t)
 
 		// Job should not exist
@@ -278,7 +278,7 @@ func TestServiceJob_List(t *testing.T) {
 		require.Len(jobList.Jobs, 1)
 		require.Equal(resp.JobId, jobList.Jobs[0].Id)
 
-		// A job with target runner labels but different value does not match
+		// A job with matching target runner label keys but different values
 		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
 			TargetRunner: &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Labels{
