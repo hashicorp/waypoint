@@ -83,12 +83,14 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 	}
 	if !cfg.ServerTls {
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
+	} else if cfg.ServerTlsSkipVerify {
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(
+			credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}),
+		))
 	} else {
-		if cfg.ServerTlsSkipVerify {
-			grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(
-				credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}),
-			))
-		}
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(
+			credentials.NewTLS(&tls.Config{}),
+		))
 	}
 
 	// Connect to this server
