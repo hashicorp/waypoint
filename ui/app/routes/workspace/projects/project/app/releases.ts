@@ -14,12 +14,10 @@ export default class Releases extends Route {
     return [
       {
         label: model.app ?? 'unknown',
-        icon: 'git-repo',
         route: 'workspace.projects.project.app',
       },
       {
         label: 'Releases',
-        icon: 'globe',
         route: 'workspace.projects.project.app.releases',
       },
     ];

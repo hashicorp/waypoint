@@ -1,6 +1,7 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 import { ConfigGetRequest, ConfigGetResponse, Ref } from 'waypoint-pb';
 import {
   Model as ProjectRouteModel,
@@ -10,6 +11,15 @@ import ConfigVariablesController from 'waypoint/controllers/workspace/projects/p
 
 export default class WorkspaceProjectsProjectSettingsConfigVariables extends Route {
   @service api!: ApiService;
+
+  breadcrumbs(): Breadcrumb[] {
+    return [
+      {
+        label: 'Config Variables',
+        route: 'workspace.projects.project.settings.config-variables',
+      },
+    ];
+  }
 
   async model(): Promise<ConfigGetResponse.AsObject> {
     let ref = new Ref.Project();

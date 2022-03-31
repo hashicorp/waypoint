@@ -14,12 +14,10 @@ export default class Builds extends Route {
     return [
       {
         label: model.app ?? 'unknown',
-        icon: 'git-repo',
         route: 'workspace.projects.project.app',
       },
       {
         label: 'Builds',
-        icon: 'hammer',
         route: 'workspace.projects.project.app.builds',
       },
     ];
