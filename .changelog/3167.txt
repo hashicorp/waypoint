@@ -1,0 +1,3 @@
+```release-note:bug
+ceb: Fix connecting to servers with TLS verification
+```
