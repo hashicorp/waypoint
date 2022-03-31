@@ -190,9 +190,9 @@ service Waypoint {
   // GetJob queries a job by ID.
   rpc GetJob(GetJobRequest) returns (Job);
 
-  // INTERNAL: ListJobs lists all the jobs the server has processed. This
-  // is not yet ready for public use.
-  rpc _ListJobs(ListJobsRequest) returns (ListJobsResponse);
+  // ListJobs will return a list of jobs known to Waypoint server. Can be filtered
+  // by request on values like workspace, project, application, job state, etc.
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
 
   // ValidateJob checks if a job appears valid. This will check the job
   // structure itself (i.e. missing fields) and can also check to ensure
@@ -2104,7 +2104,13 @@ message GetJobRequest {
   string job_id = 1;
 }
 
-message ListJobsRequest {}
+message ListJobsRequest {
+  Ref.Workspace workspace = 1;
+  Ref.Project project = 2;
+  Ref.Application application = 3;
+  Ref.Runner targetRunner = 4;
+  repeated Job.State jobState = 5;
+}
 
 message ListJobsResponse {
   repeated Job jobs = 1;

@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/dustin/go-humanize"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -16,9 +17,12 @@ import (
 type JobListCommand struct {
 	*baseCommand
 
-	flagJson  bool
-	flagLimit int
-	flagDesc  bool
+	flagJson               bool
+	flagLimit              int
+	flagDesc               bool
+	flagState              []string
+	flagTargetRunner       string
+	flagTargetRunnerLabels map[string]string
 }
 
 func (c *JobListCommand) Run(args []string) int {
@@ -33,8 +37,65 @@ func (c *JobListCommand) Run(args []string) int {
 
 	req := &pb.ListJobsRequest{}
 
-	// NOTE(briancain): This is technically not a "public API" function
-	resp, err := c.project.Client().XListJobs(ctx, req)
+	if c.flagWorkspace != "" {
+		req.Workspace = &pb.Ref_Workspace{
+			Workspace: c.flagWorkspace,
+		}
+	}
+
+	if c.flagProject != "" {
+		req.Project = &pb.Ref_Project{
+			Project: c.flagProject,
+		}
+	}
+
+	if c.flagApp != "" {
+		req.Application = &pb.Ref_Application{
+			Application: c.flagApp,
+			Project:     c.flagProject,
+		}
+	}
+
+	if len(c.flagState) > 0 {
+		var states []pb.Job_State
+		for _, s := range c.flagState {
+			js, ok := pb.Job_State_value[strings.ToUpper(s)]
+			if !ok {
+				// this shouldn't happen given the State flag is an enum var, but protect
+				// against it anyway
+				c.ui.Output("Undefined job state value: "+s, terminal.WithErrorStyle())
+				return 1
+			} else {
+				states = append(states, pb.Job_State(js))
+			}
+		}
+
+		req.JobState = states
+	}
+
+	if len(c.flagTargetRunnerLabels) > 0 && c.flagTargetRunner != "" {
+		c.ui.Output("Cannot define both 'target-runner-id' and 'target-runner-label' flags.\n"+c.Help(), terminal.WithErrorStyle())
+		return 1
+	} else if c.flagTargetRunner != "" {
+		if c.flagTargetRunner == "*" {
+			req.TargetRunner = &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{}}
+		} else {
+			req.TargetRunner = &pb.Ref_Runner{Target: &pb.Ref_Runner_Id{
+				Id: &pb.Ref_RunnerId{
+					Id: c.flagTargetRunner,
+				},
+			},
+			}
+		}
+	} else if len(c.flagTargetRunnerLabels) > 0 {
+		req.TargetRunner = &pb.Ref_Runner{Target: &pb.Ref_Runner_Labels{
+			Labels: &pb.Ref_RunnerLabels{
+				Labels: c.flagTargetRunnerLabels,
+			},
+		}}
+	}
+
+	resp, err := c.project.Client().ListJobs(ctx, req)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
@@ -173,9 +234,32 @@ func (c *JobListCommand) Run(args []string) int {
 	return 0
 }
 
+var jobStateValues = []string{"Success", "Error", "Running", "Waiting", "Queued", "Unknown"}
+
 func (c *JobListCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
+		f.EnumVar(&flag.EnumVar{
+			Name:   "state",
+			Target: &c.flagState,
+			Values: jobStateValues,
+			Usage:  "List jobs that only match the requested state. Can be repeated multiple times.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "target-runner-id",
+			Target:  &c.flagTargetRunner,
+			Default: "",
+			Usage:   "List jobs that were only assigned to the target runner by id.",
+		})
+
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "target-runner-label",
+			Target: &c.flagTargetRunnerLabels,
+			Usage: "List jobs that were only assigned to the target runner by labels. " +
+				"Can be repeated multiple times.",
+		})
+
 		f.BoolVar(&flag.BoolVar{
 			Name:    "desc",
 			Target:  &c.flagDesc,

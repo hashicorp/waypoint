@@ -16,6 +16,299 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
+func TestServiceJob(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Simplify writing tests
+	type Req = pb.QueueJobRequest
+
+	t.Run("create and get success", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		resp, err := client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// Job should exist and be queued
+		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: resp.JobId})
+		require.NoError(err)
+		require.Equal(pb.Job_QUEUED, job.State)
+	})
+
+	t.Run("fails to get non-existent job", func(t *testing.T) {
+		require := require.New(t)
+
+		// Job should not exist
+		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: "NotRealJobId"})
+		require.Error(err)
+		require.Nil(job)
+	})
+}
+
+func TestServiceJob_List(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Simplify writing tests
+	type Req = pb.QueueJobRequest
+
+	t.Run("create and list jobs", func(t *testing.T) {
+		require := require.New(t)
+
+		// No jobs
+		jobList, err := client.ListJobs(ctx, &pb.ListJobsRequest{})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 0)
+
+		// Create, should get an ID back
+		resp, err := client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// Create, should get an ID back
+		resp, err = client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// Create, should get an ID back
+		resp, err = client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// Three jobs
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 3)
+	})
+
+	t.Run("list jobs with filters", func(t *testing.T) {
+		require := require.New(t)
+
+		// 3 jobs from previous test
+		jobList, err := client.ListJobs(ctx, &pb.ListJobsRequest{})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 3)
+
+		// Three jobs filtered on workspace
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "w_test",
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 3)
+
+		// Create, should get an ID back
+		resp, err := client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, &pb.Job{
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "prod",
+				},
+			}),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// One job filtered on workspace
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "prod",
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 1)
+		require.Equal(jobList.Jobs[0].Workspace.Workspace, "prod")
+
+		proj := serverptypes.TestProject(t, &pb.Project{Name: "new"})
+		_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+			Project: proj,
+		})
+		require.NoError(err)
+
+		resp, err = client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, &pb.Job{
+				Application: &pb.Ref_Application{
+					Application: "new",
+					Project:     "new",
+				},
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "dev",
+				},
+			}),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// One job filtered on dev workspace
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "dev",
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 1)
+		require.Equal(jobList.Jobs[0].Workspace.Workspace, "dev")
+
+		// No "new" Project apps in prod workspace.
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "prod",
+			},
+			Application: &pb.Ref_Application{
+				Application: "new",
+				Project:     "new",
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 0)
+
+		// "new" project is in dev workspace
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "dev",
+			},
+			Application: &pb.Ref_Application{
+				Application: "new",
+				Project:     "new",
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 1)
+		require.Equal(jobList.Jobs[0].Workspace.Workspace, "dev")
+
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			JobState: []pb.Job_State{pb.Job_QUEUED},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 5)
+
+		// Default mocked jobs target Any runners
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Any{},
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 5)
+
+		// Target a specific runner by id
+		resp, err = client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, &pb.Job{
+				TargetRunner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Id{
+						Id: &pb.Ref_RunnerId{
+							Id: "123",
+						},
+					},
+				},
+			}),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// Filter all jobs on those who target the 123 runner
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Id{
+					Id: &pb.Ref_RunnerId{
+						Id: "123",
+					},
+				},
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 1)
+		require.Equal(resp.JobId, jobList.Jobs[0].Id)
+
+		// Queue a job who targets a runner with labels
+		resp, err = client.QueueJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, &pb.Job{
+				TargetRunner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Labels{
+						Labels: &pb.Ref_RunnerLabels{
+							Labels: map[string]string{"123": "yes", "456": "maybe", "789": "perhaps"},
+						},
+					},
+				},
+			}),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// A job with target runner labels will match
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: map[string]string{"123": "yes"},
+					},
+				},
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 1)
+		require.Equal(resp.JobId, jobList.Jobs[0].Id)
+
+		// A job with matching target runner label keys but different values
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: map[string]string{"123": "no"},
+					},
+				},
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 0)
+
+		// A job with target runner labels but requested label key does not exist
+		jobList, err = client.ListJobs(ctx, &pb.ListJobsRequest{
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: map[string]string{"abc": "its easy as"},
+					},
+				},
+			},
+		})
+		require.NoError(err)
+		require.Len(jobList.Jobs, 0)
+	})
+}
+
 func TestServiceQueueJob(t *testing.T) {
 	ctx := context.Background()
 

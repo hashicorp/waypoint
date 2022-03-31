@@ -292,7 +292,9 @@ func (s *State) JobProjectScopedRequest(
 }
 
 // JobList returns the list of jobs.
-func (s *State) JobList() ([]*pb.Job, error) {
+func (s *State) JobList(
+	req *pb.ListJobsRequest,
+) ([]*pb.Job, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -314,6 +316,91 @@ func (s *State) JobList() ([]*pb.Job, error) {
 			job, err = s.jobById(dbTxn, idx.Id)
 			return err
 		})
+
+		// filter job list by request
+		if req.Workspace != nil {
+			if job.Workspace.Workspace != req.Workspace.Workspace {
+				continue
+			}
+		}
+
+		if req.Project != nil {
+			if job.Application.Project != req.Project.Project {
+				continue
+			}
+		}
+
+		if req.Application != nil {
+			if job.Application.Application != req.Application.Application {
+				continue
+			}
+			if job.Application.Project != "" && job.Application.Project != req.Application.Project {
+				continue
+			}
+		}
+
+		if len(req.JobState) > 0 {
+			found := false
+			for _, state := range req.JobState {
+				if job.State == state {
+					found = true
+					break
+				}
+			}
+			if !found {
+				continue
+			}
+		}
+
+		if req.TargetRunner != nil {
+			switch tr := job.TargetRunner.Target.(type) {
+			case *pb.Ref_Runner_Any:
+				// job was set to Any runner
+				_, ok := req.TargetRunner.Target.(*pb.Ref_Runner_Any)
+				if !ok {
+					// request is not targeted to Any runner, so don't include in list
+					continue
+				}
+			case *pb.Ref_Runner_Id:
+				// the job is targed to a specific runner id
+
+				id, ok := req.TargetRunner.Target.(*pb.Ref_Runner_Id)
+				if !ok {
+					// request was not for a target runner by id
+					continue
+				} else if id.Id.Id != tr.Id.Id {
+					// the requested id doesn't match the target runner id on the job
+					continue
+				}
+			case *pb.Ref_Runner_Labels:
+				// the job is targeted by runner labels
+
+				// if _any_ label matches, include it
+				reqLabels, ok := req.TargetRunner.Target.(*pb.Ref_Runner_Labels)
+				if !ok {
+					// Request was not for target runner by labels
+					continue
+				}
+
+				// look for any matching label from the request on the job
+				match := false
+				for key, value := range reqLabels.Labels.Labels {
+					v, ok := tr.Labels.Labels[key]
+					if !ok {
+						// requested key not found in job, continue searching through label loop
+						continue
+					}
+					if v == value {
+						// a key was found, and its value matches
+						match = true
+						break
+					}
+				}
+				if !match {
+					continue
+				}
+			}
+		}
 
 		result = append(result, job)
 	}
