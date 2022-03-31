@@ -233,7 +233,7 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 				},
 			},
 		}
-	} else {
+	} else if c.waypointHCL != nil {
 		var configRunner *configpkg.Runner
 		// Find runner configuration on the app
 		if job.Application != nil {
