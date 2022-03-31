@@ -203,10 +203,15 @@ func (s *Service) authRunner(
 	ctx context.Context, tokenRunner *pb.Token_Runner, endpoint string,
 ) (context.Context, error) {
 
+	runnerId, err := s.decodeId(tokenRunner.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to decode id in runner token")
+	}
+
 	// If no ID is set, then the runner is assumed at all times to be adopted.
 	// This use case is used to "pre-adopt" runners and avoid the adoption
 	// lifecycle completely, such as with infinitely autoscaled runners.
-	if tokenRunner.Id == "" {
+	if runnerId == "" {
 		// Authenticated.
 		return ctx, nil
 	}
@@ -215,11 +220,6 @@ func (s *Service) authRunner(
 	// because those APIs will verify and adopt the runner if they can.
 	if endpoint == "RunnerConfig" || endpoint == "RunnerToken" {
 		return ctx, nil
-	}
-
-	runnerId, err := s.decodeId(tokenRunner.Id)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "failed to decode id in runner token")
 	}
 
 	// Get our runner
@@ -276,7 +276,7 @@ func (s *Service) authLogin(
 
 	userId, err := s.decodeId(login.Login.UserId)
 	if err != nil {
-		msg := "failed to decode hcp id when authenticating login token"
+		msg := "failed to decode id when authenticating login token"
 		log.Error(msg, "id", login.Login.UserId, "err", err)
 		return nil, status.Errorf(codes.Internal, msg)
 	}
@@ -411,10 +411,10 @@ func (s *Service) decodeToken(ctx context.Context, token string) (*pb.TokenTrans
 	return &tt, &body, nil
 }
 
-// Encode the given token with the given key and metadata.
+// encodeToken Encodes the given token with the given key and metadata.
 // keyId controls which key is used to sign the key (key values are generated lazily).
 // metadata is attached to the token transport as configuration style information
-func (s *Service) EncodeToken(ctx context.Context, keyId string, metadata map[string]string, body *pb.Token) (string, error) {
+func (s *Service) encodeToken(ctx context.Context, keyId string, metadata map[string]string, body *pb.Token) (string, error) {
 	// Get the key material
 	key, err := s.state(ctx).HMACKeyCreateIfNotExist(keyId, hmacKeySize)
 	if err != nil {
@@ -600,7 +600,7 @@ func (s *Service) newToken(
 		return "", err
 	}
 
-	return s.EncodeToken(ctx, keyId, metadata, body)
+	return s.encodeToken(ctx, keyId, metadata, body)
 }
 
 // Create a new invite token.
