@@ -1,0 +1,4 @@
+```release-note:bug
+core: Ensure remote runners have dynamic config sources overrides for
+evaluating defaults for job variables.
+```
