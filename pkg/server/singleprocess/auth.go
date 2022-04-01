@@ -709,7 +709,7 @@ func (s *Service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteT
 		// Setup the login information for the new user
 		invite.Login.UserId, err = s.encodeId(ctx, user.Id)
 		if err != nil {
-			msg := "failed to the current user's id when converting an invite token"
+			msg := "failed to encode the current user's id when converting an invite token"
 			log.Error(msg, "user.Id", user.Id, "err", err)
 			return nil, status.Error(codes.InvalidArgument, msg)
 		}
