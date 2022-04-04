@@ -25,8 +25,8 @@ import (
 //go:generate go install github.com/evanphx/grpc-gateway/protoc-gen-swagger
 	_ "github.com/evanphx/grpc-gateway/protoc-gen-swagger"
 
-//go:generate go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway"
+//go:generate go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
+	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway"
 
 //go:generate go install "-ldflags=-s -w -X github.com/vektra/mockery/mockery.SemVer=1.1.2" github.com/vektra/mockery/cmd/mockery
 	_ "github.com/vektra/mockery"

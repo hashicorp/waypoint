@@ -44,6 +44,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.0
 	github.com/hashicorp/aws-sdk-go-base v0.7.0
 	github.com/hashicorp/cap v0.1.1
 	github.com/hashicorp/go-argmapper v0.2.3
@@ -103,7 +104,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
 	google.golang.org/api v0.44.0
-	google.golang.org/genproto v0.0.0-20220314164441-57ef72a4c106
+	google.golang.org/genproto v0.0.0-20220317150908-0efb43f6373e
 	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
