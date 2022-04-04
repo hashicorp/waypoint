@@ -1,0 +1,16 @@
+<span class="up-button">
+  {{#if this.currentMessage}}
+    <code class="up-button__msg">{{this.currentMessage}}</code>
+  {{/if}}
+  <Pds::Button
+    @variant="primary"
+    disabled={{this.init.isRunning}}
+    {{on "click" (perform this.init @project)}}
+  >
+  {{#if (has-block)}}
+    {{yield}}
+  {{else}}
+    Initialize Project
+  {{/if}}
+  </Pds::Button>
+</span>

@@ -11,7 +11,10 @@
   </Pds::CtaLink>
 </PageHeader>
 
-{{#each @model.applicationsList as |app|}}
+<EmptyState>
+  <ProjectInitError @project={{@model}} />
+</EmptyState>
+{{!-- {{#each @model.applicationsList as |app|}}
   <Card>
     <LinkTo @route="workspace.projects.project.app" @model={{app.name}}>
       <div class="row">
@@ -51,6 +54,6 @@
       <p>For more help getting started, refer to the <ExternalLink href="https://waypointproject.io/docs/getting-started">Waypoint documentation</ExternalLink></p>
     </EmptyState>
   {{/if}}
-{{/each}}
+{{/each}} --}}
 
 {{outlet}}
