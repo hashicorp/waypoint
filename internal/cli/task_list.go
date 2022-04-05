@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 
+	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -68,29 +69,65 @@ func (c *TaskListCommand) Run(args []string) int {
 		return 0
 	}
 
-	// TODO(briancain): this isn't really useful yet
 	c.ui.Output("Waypoint On-Demand Runner Tasks", terminal.WithHeaderStyle())
 
-	tblHeaders := []string{"ID", "Start Job Id", "Run Job Id", "Stop Job Id"}
+	tblHeaders := []string{"ID", "Run Job Operation", "Task State", "Time Completed"}
 	tbl := terminal.NewTable(tblHeaders...)
 
 	for _, t := range tasks {
-		var taskJobId, startJobId, stopJobId string
-		if t.Task.TaskJob != nil {
-			taskJobId = t.TaskJob.Id
+		var op string
+		// Job_Noop seems to be missing the isJob_operation method
+		switch t.TaskJob.Operation.(type) {
+		case *pb.Job_Build:
+			op = "Build"
+		case *pb.Job_Push:
+			op = "Push"
+		case *pb.Job_Deploy:
+			op = "Deploy"
+		case *pb.Job_Destroy:
+			op = "Destroy"
+		case *pb.Job_Release:
+			op = "Release"
+		case *pb.Job_Validate:
+			op = "Validate"
+		case *pb.Job_Auth:
+			op = "Auth"
+		case *pb.Job_Docs:
+			op = "Docs"
+		case *pb.Job_ConfigSync:
+			op = "ConfigSync"
+		case *pb.Job_Exec:
+			op = "Exec"
+		case *pb.Job_Up:
+			op = "Up"
+		case *pb.Job_Logs:
+			op = "Logs"
+		case *pb.Job_QueueProject:
+			op = "QueueProject"
+		case *pb.Job_Poll:
+			op = "Poll"
+		case *pb.Job_StatusReport:
+			op = "StatusReport"
+		case *pb.Job_StartTask:
+			op = "StartTask"
+		case *pb.Job_StopTask:
+			op = "StopTask"
+		case *pb.Job_Init:
+			op = "Init"
+		default:
+			op = "Unknown"
 		}
-		if t.Task.StartJob != nil {
-			startJobId = t.Task.StartJob.Id
-		}
-		if t.Task.StopJob != nil {
-			stopJobId = t.Task.StopJob.Id
+
+		var completeTime string
+		if t.StopJob.CompleteTime != nil {
+			completeTime = humanize.Time(t.StopJob.CompleteTime.AsTime())
 		}
 
 		tblColumn := []string{
 			t.Task.Id,
-			startJobId,
-			taskJobId,
-			stopJobId,
+			op,
+			pb.Task_State_name[int32(t.Task.JobState)],
+			completeTime,
 		}
 
 		tbl.Rich(tblColumn, nil)
