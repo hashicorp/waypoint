@@ -5674,27 +5674,8 @@
         },
         "stop_job": {
           "$ref": "#/definitions/hashicorp.waypoint.Job"
-        },
-        "state": {
-          "$ref": "#/definitions/hashicorp.waypoint.GetTaskResponse.State",
-          "description": "The overall state of the Task triple. See the enum def for details for\neach possible Task state. This will be computed for each GetTaskResponse\nbased on the Task job ids receieved from the database."
         }
       }
-    },
-    "hashicorp.waypoint.GetTaskResponse.State": {
-      "type": "string",
-      "enum": [
-        "UNKNOWN",
-        "PENDING",
-        "STARTING",
-        "STARTED",
-        "RUNNING",
-        "COMPLETED",
-        "STOPPING",
-        "STOPPED",
-        "MIXED"
-      ],
-      "default": "UNKNOWN"
     },
     "hashicorp.waypoint.GetTriggerResponse": {
       "type": "object",
@@ -6033,6 +6014,10 @@
           "type": "string",
           "format": "date-time",
           "description": "expire time is the time when this job would expire. If this isn't set\nthen this is a non-expiring job. This will remain set even if the job\nnever expired because it was accepted and run. This field can be used\nto detect that it was configured to expire."
+        },
+        "task": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Task",
+          "description": "task is a reference to a given Task that this job might be apart of. If\nthe task is Nil, it means the server does not associate this job with\nan on-demand runner task. If the Task Ref is set, that means this job\nis part of the referenced task id."
         }
       },
       "description": "A Job is a job that executes on a runner and is queued by QueueOperation."

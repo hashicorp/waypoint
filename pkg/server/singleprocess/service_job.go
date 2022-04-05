@@ -259,9 +259,7 @@ func (s *Service) wrapJobWithRunner(
 	}
 
 	// Write a Task state with the On-Demand Runner job triple
-	// TODO what if the Task id matches the source job id? could make determining
-	// which main source job relates to a task easier
-	if _, err := s.UpsertTask(ctx, &pb.UpsertTaskRequest{
+	if respTask, err := s.UpsertTask(ctx, &pb.UpsertTaskRequest{
 		Task: &pb.Task{
 			StartJob: &pb.Ref_Job{Id: startJob.Id},
 			TaskJob:  &pb.Ref_Job{Id: source.Id},
@@ -270,6 +268,17 @@ func (s *Service) wrapJobWithRunner(
 		},
 	}); err != nil {
 		return nil, err
+	} else {
+		// assign a task ref to each job for lookup later
+		taskRef := &pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: respTask.Task.Id,
+			},
+		}
+
+		startJob.Task = taskRef
+		source.Task = taskRef
+		stopJob.Task = taskRef
 	}
 
 	// These must be in order of dependency currently. This is a limitation
