@@ -39,6 +39,31 @@ func (r *Runner) executeStartTaskOp(
 		panic("operation not expected type")
 	}
 
+	var task *pb.Task
+	if job.Task != nil {
+		log.Debug("updating task to starting state")
+		taskResp, err := r.client.GetTask(ctx, &pb.GetTaskRequest{
+			Ref: job.Task,
+		})
+		if err != nil {
+			return nil, err
+		} else {
+			task = taskResp.Task
+		}
+
+		task.JobState = pb.Task_STARTING
+
+		// Update Task state to "starting"!
+		_, err = r.client.UpsertTask(ctx, &pb.UpsertTaskRequest{
+			Task: task,
+		})
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		log.Warn("no task set on job while executing start task! This is likely a bug")
+	}
+
 	params := op.StartTask.Params
 
 	pi, c, err := plugin.Open(ctx, log, &plugin.PluginRequest{
@@ -78,6 +103,18 @@ func (r *Runner) executeStartTaskOp(
 		return nil, err
 	}
 
+	if task != nil {
+		task.JobState = pb.Task_STARTED
+
+		// Update Task state to "started"!
+		_, err = r.client.UpsertTask(ctx, &pb.UpsertTaskRequest{
+			Task: task,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &pb.Job_Result{
 		StartTask: &pb.Job_StartTaskResult{
 			State: result,
@@ -96,6 +133,31 @@ func (r *Runner) executeStopTaskOp(
 		// this shouldn't happen since the call to this function is gated
 		// on the above type match.
 		panic("operation not expected type")
+	}
+
+	var task *pb.Task
+	if job.Task != nil {
+		log.Debug("updating task to stopping state")
+		taskResp, err := r.client.GetTask(ctx, &pb.GetTaskRequest{
+			Ref: job.Task,
+		})
+		if err != nil {
+			return nil, err
+		} else {
+			task = taskResp.Task
+		}
+
+		task.JobState = pb.Task_STOPPING
+
+		// Update Task state to "stopping"!
+		_, err = r.client.UpsertTask(ctx, &pb.UpsertTaskRequest{
+			Task: task,
+		})
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		log.Warn("no task set on job while executing stop task! This is likely a bug")
 	}
 
 	// Get our state first
@@ -184,6 +246,18 @@ func (r *Runner) executeStopTaskOp(
 	_, err = pi.Invoke(ctx, log, stop, plugin.ArgNamedAny("state", state))
 	if err != nil {
 		return nil, err
+	}
+
+	if task != nil {
+		task.JobState = pb.Task_STOPPED
+
+		// Update Task state to "stopped"!
+		_, err = r.client.UpsertTask(ctx, &pb.UpsertTaskRequest{
+			Task: task,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &pb.Job_Result{}, nil
