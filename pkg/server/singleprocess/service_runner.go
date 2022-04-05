@@ -459,12 +459,7 @@ func (s *Service) RunnerJobStream(
 	log = log.With("runner_id", reqEvent.Request.RunnerId)
 
 	// Get the runner to validate it is registered
-
-	runnerId, err := s.decodeId(reqEvent.Request.RunnerId)
-	if err != nil {
-		log.Error("Failed to decode runner ID when processing job stream", "id", reqEvent.Request.RunnerId, "err", err)
-		return status.Errorf(codes.InvalidArgument, "invalid runner id")
-	}
+	runnerId := reqEvent.Request.RunnerId
 
 	runner, err := s.state(ctx).RunnerById(runnerId, nil)
 	if err != nil {
