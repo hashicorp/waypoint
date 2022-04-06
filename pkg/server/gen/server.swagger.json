@@ -8043,9 +8043,13 @@
         "job_state": {
           "$ref": "#/definitions/hashicorp.waypoint.Task.State",
           "description": "The overall state of the Task triple. See the enum def for details for\neach possible Task state. This will be computed for each GetTaskResponse\nbased on the Task job ids receieved from the database."
+        },
+        "resource_name": {
+          "type": "string",
+          "description": "The resource that gets created to run the task job for this Task\nTODO(briancain): This field has not been implemented yet. See\n\"internal/runner/operation.go\" for more info."
         }
       },
-      "title": "TODO(briancain): Note that there is still work to be done here to properly\nleverage this message in Waypoint. Once the implementation phase comes\nto actually use this, we will be mindful in how these Task messages\nare pruned and deleted since they are directly associated with jobs. /end todo\nTask tracks the life of an on-demand runner task that spawns Start\nand Stop tasks for any kind of job/operation in Waypoint. Automatic jobs\nsuch as project polling or status report generation spawn on-demand\nrunner tasks, and this message can be used to track the life of those\nautomated jobs. Note that every on-demand runner task is wrapped with a\nStart and Stop task, which we track here as well.\nTODO(briancain): Add the \"resource\" this task launched to i.e. \"pod/task-123-abc\""
+      "description": "Task tracks the life of an on-demand runner task that spawns Start\nand Stop tasks for any kind of job/operation in Waypoint. Automatic jobs\nsuch as project polling or status report generation spawn on-demand\nrunner tasks, and this message can be used to track the life of those\nautomated jobs. Note that every on-demand runner task is wrapped with a\nStart and Stop task, which we track here as well."
     },
     "hashicorp.waypoint.Task.State": {
       "type": "string",
