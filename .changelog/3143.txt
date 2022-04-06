@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/k8s: clean up pending pods from cancelled jobs
+```
