@@ -207,7 +207,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// List all
 		{
-			resp, err := s.TaskList()
+			resp, err := s.TaskList(&pb.ListTaskRequest{})
 			require.NoError(err)
 			require.Len(resp, 3)
 		}

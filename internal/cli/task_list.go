@@ -15,9 +15,10 @@ import (
 type TaskListCommand struct {
 	*baseCommand
 
-	flagJson  bool
-	flagLimit int
-	flagDesc  bool
+	flagJson       bool
+	flagLimit      int
+	flagDesc       bool
+	flagTaskStates []string
 }
 
 func (c *TaskListCommand) Run(args []string) int {
@@ -30,7 +31,27 @@ func (c *TaskListCommand) Run(args []string) int {
 	}
 	ctx := c.Ctx
 
-	resp, err := c.project.Client().ListTask(ctx, &pb.ListTaskRequest{})
+	listTaskReq := &pb.ListTaskRequest{}
+
+	if len(c.flagTaskStates) > 0 {
+		var ts []pb.Task_State
+		// convert to int32 const from string value
+		for _, state := range c.flagTaskStates {
+			s, ok := pb.Task_State_value[state]
+			if !ok {
+				// this shouldn't happen given the State flag is an enum var, but protect
+				// against it anyway
+				c.ui.Output("Undefined task job state value: "+state, terminal.WithErrorStyle())
+				return 1
+			} else {
+				ts = append(ts, pb.Task_State(s))
+			}
+		}
+
+		listTaskReq.TaskState = ts
+	}
+
+	resp, err := c.project.Client().ListTask(ctx, listTaskReq)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
@@ -138,6 +159,17 @@ func (c *TaskListCommand) Run(args []string) int {
 	return 0
 }
 
+var taskStateValues = []string{pb.Task_State_name[0],
+	pb.Task_State_name[1],
+	pb.Task_State_name[2],
+	pb.Task_State_name[3],
+	pb.Task_State_name[4],
+	pb.Task_State_name[5],
+	pb.Task_State_name[6],
+	pb.Task_State_name[7],
+	pb.Task_State_name[8],
+}
+
 func (c *TaskListCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
@@ -160,6 +192,13 @@ func (c *TaskListCommand) Flags() *flag.Sets {
 			Target:  &c.flagLimit,
 			Default: 0,
 			Usage:   "If set, will limit the number of Tasks to list.",
+		})
+
+		f.EnumVar(&flag.EnumVar{
+			Name:   "state",
+			Target: &c.flagTaskStates,
+			Values: taskStateValues,
+			Usage:  "List Tasks that only match the requested state. Can be repeated multiple times.",
 		})
 	})
 }
