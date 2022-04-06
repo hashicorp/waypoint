@@ -190,7 +190,7 @@ func (c *JobInspectCommand) Run(args []string) int {
 			Name: "Cancel Time", Value: cancelTime,
 		},
 		{
-			Name: "Error Messsage", Value: errMsg,
+			Name: "Error Message", Value: errMsg,
 		},
 	}, terminal.WithInfoStyle())
 
