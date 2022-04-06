@@ -30,6 +30,10 @@
               (and (eq resourceObject.type "deployment") "workspace.projects.project.app.deployments.deployment")
               (and (eq resourceObject.type  "release") "workspace.projects.project.app.release")
             )
+            title=(or
+              (and (eq resourceObject.type "deployment") (concat (t "page.deployment.title") " v" resourceObject.source.sequence))
+              (and (eq resourceObject.type  "release") (concat (t "page.release.title") " v" resourceObject.source.sequence))
+            )
           )
           as |vars|}}
         <tr>
@@ -48,7 +52,7 @@
           <td>
             {{#if (eq resourceObject.type 'deployment')}}
               <LinkTo
-                title={{concat (t "page.deployment.title") " v" resourceObject.source.sequence}}
+                title={{vars.title}}
                 @route="workspace.projects.project.app.deployments.deployment"
                 @models={{array resourceObject.source.sequence}}
                 >
@@ -57,7 +61,7 @@
             {{/if}}
             {{#if (eq resourceObject.type 'release')}}
               <LinkTo
-                title={{concat (t "page.release.title") " v" resourceObject.source.sequence}}
+                title={{vars.title}}
                 @route="workspace.projects.project.app.release-id"
                 @models={{array resourceObject.source.sequence}}
                 >
