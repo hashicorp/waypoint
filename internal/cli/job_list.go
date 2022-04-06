@@ -106,11 +106,23 @@ func (c *JobListCommand) Run(args []string) int {
 	// sort by complete time
 	if c.flagDesc {
 		sort.Slice(jobs, func(i, j int) bool {
-			return jobs[i].CompleteTime.AsTime().Before(jobs[j].CompleteTime.AsTime())
+			if jobs[i].CompleteTime == nil {
+				return false
+			} else if jobs[j].CompleteTime == nil {
+				return true
+			} else {
+				return jobs[i].CompleteTime.AsTime().Before(jobs[j].CompleteTime.AsTime())
+			}
 		})
 	} else {
 		sort.Slice(jobs, func(i, j int) bool {
-			return jobs[i].CompleteTime.AsTime().After(jobs[j].CompleteTime.AsTime())
+			if jobs[i].CompleteTime == nil {
+				return true
+			} else if jobs[j].CompleteTime == nil {
+				return false
+			} else {
+				return jobs[i].CompleteTime.AsTime().After(jobs[j].CompleteTime.AsTime())
+			}
 		})
 	}
 
