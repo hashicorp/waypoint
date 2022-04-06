@@ -3,8 +3,8 @@ import classic from 'ember-classic-decorator';
 
 @classic
 class WaypointSessionService extends SessionService {
-  handleInvalidation() {
-    this._super(...arguments);
+  handleInvalidation(...args): void {
+    super.handleInvalidation(...args);
     this.set('data.workspace', undefined);
   }
 }
