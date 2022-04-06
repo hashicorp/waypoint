@@ -101,6 +101,15 @@ func (c *TaskInspectCommand) Run(args []string) int {
 		return 1
 	}
 
+	var workspace, project, application string
+	if taskResp.TaskJob.Workspace != nil {
+		workspace = taskResp.TaskJob.Workspace.Workspace
+	}
+	if taskResp.TaskJob.Application != nil {
+		project = taskResp.TaskJob.Application.Project
+		application = taskResp.TaskJob.Application.Application
+	}
+
 	c.ui.Output("On-Demand Runner Task Configuration", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
@@ -113,13 +122,13 @@ func (c *TaskInspectCommand) Run(args []string) int {
 			Name: "Task Resource", Value: taskResp.Task.ResourceName,
 		},
 		{
-			Name: "Run Job ID", Value: taskResp.Task.TaskJob.Id,
+			Name: "Workspace", Value: workspace,
 		},
 		{
-			Name: "Start Job ID", Value: taskResp.Task.StartJob.Id,
+			Name: "Project", Value: project,
 		},
 		{
-			Name: "Stop Job ID", Value: taskResp.Task.StopJob.Id,
+			Name: "Application", Value: application,
 		},
 	}, terminal.WithInfoStyle())
 
@@ -146,8 +155,6 @@ func (c *TaskInspectCommand) Run(args []string) int {
 
 // FormatJob takes a Job proto message and formats it into something nicer
 // to read to the user.
-// TODO(briancain): We should take this function as well as the one in `waypoint job inspect`
-// and have them use the same util format function.
 func (c *TaskInspectCommand) FormatJob(job *pb.Job) error {
 	if job == nil {
 		return nil

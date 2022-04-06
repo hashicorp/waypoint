@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
@@ -64,10 +65,13 @@ func (c *TaskListCommand) Run(args []string) int {
 
 	// Reverse task list if requested
 	if c.flagDesc {
-		// reverse in place
-		for i, j := 0, len(tasks)-1; i < j; i, j = i+1, j-1 {
-			tasks[i], tasks[j] = tasks[j], tasks[i]
-		}
+		sort.Slice(tasks, func(i, j int) bool {
+			return tasks[i].StartJob.QueueTime.AsTime().Before(tasks[j].StartJob.QueueTime.AsTime())
+		})
+	} else {
+		sort.Slice(tasks, func(i, j int) bool {
+			return tasks[i].StartJob.QueueTime.AsTime().After(tasks[j].StartJob.QueueTime.AsTime())
+		})
 	}
 
 	// limit to the first n jobs
@@ -92,7 +96,7 @@ func (c *TaskListCommand) Run(args []string) int {
 
 	c.ui.Output("Waypoint On-Demand Runner Tasks", terminal.WithHeaderStyle())
 
-	tblHeaders := []string{"ID", "Run Job Operation", "Task State", "Time Completed"}
+	tblHeaders := []string{"ID", "Run Job Operation", "Task State", "Project", "Time Created", "Time Completed"}
 	tbl := terminal.NewTable(tblHeaders...)
 
 	for _, t := range tasks {
@@ -139,6 +143,16 @@ func (c *TaskListCommand) Run(args []string) int {
 			op = "Unknown"
 		}
 
+		var project string
+		if t.TaskJob.Application != nil {
+			project = t.TaskJob.Application.Project
+		}
+
+		var queueTime string
+		if t.StartJob.QueueTime != nil {
+			queueTime = humanize.Time(t.StartJob.QueueTime.AsTime())
+		}
+
 		var completeTime string
 		if t.StopJob.CompleteTime != nil {
 			completeTime = humanize.Time(t.StopJob.CompleteTime.AsTime())
@@ -148,6 +162,8 @@ func (c *TaskListCommand) Run(args []string) int {
 			t.Task.Id,
 			op,
 			pb.Task_State_name[int32(t.Task.JobState)],
+			project,
+			queueTime,
 			completeTime,
 		}
 
