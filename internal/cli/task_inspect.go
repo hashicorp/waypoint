@@ -110,6 +110,9 @@ func (c *TaskInspectCommand) Run(args []string) int {
 			Name: "Task State", Value: taskState,
 		},
 		{
+			Name: "Task Resource", Value: taskResp.Task.ResourceName,
+		},
+		{
 			Name: "Run Job ID", Value: taskResp.Task.TaskJob.Id,
 		},
 		{

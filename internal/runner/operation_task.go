@@ -106,6 +106,14 @@ func (r *Runner) executeStartTaskOp(
 	if task != nil {
 		task.JobState = pb.Task_STARTED
 
+		// TODO(briancain): We need to update the return value of the Task plugin
+		// system to include the resource ID field that it spawned the task with.
+		// Currently it only returns an Any proto, with that exact id. Instead,
+		// we should make sure the Task plugin system always returns an id we can
+		// extract here and place on the Task. This could work similar to how
+		// the SDK system handles optional deployment URLs.
+		// task.ResourceName = resourceName
+
 		// Update Task state to "started"!
 		_, err = r.client.UpsertTask(ctx, &pb.UpsertTaskRequest{
 			Task: task,
@@ -161,6 +169,8 @@ func (r *Runner) executeStopTaskOp(
 	}
 
 	// Get our state first
+	// TODO(briancain): Update this to use the Task job id ref instead of looking
+	// at the task state proto
 	var state *opaqueany.Any
 	switch v := op.StopTask.State.(type) {
 	case *pb.Job_StopTaskLaunchOp_Direct:
