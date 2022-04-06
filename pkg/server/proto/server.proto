@@ -1244,6 +1244,13 @@ message DeleteTaskRequest {
 }
 
 message ListTaskRequest {
+  repeated Task.State taskState = 1;
+
+  // TODO(briancain): This currently isn't possible to reference the job
+  // operation this way. We either need to create a generic Ref operation
+  // that incldues every operation defined in Job, or re-define them all
+  // here in the same way the Trigger message does for its reference
+  //repeated Job.operation taskOperation = 2;
 }
 
 message ListTaskResponse {

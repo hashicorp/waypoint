@@ -104,7 +104,7 @@ func (c *TaskInspectCommand) Run(args []string) int {
 	c.ui.Output("On-Demand Runner Task Configuration", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
-			Name: "ID", Value: taskResp.Task.Id,
+			Name: "Task ID", Value: taskResp.Task.Id,
 		},
 		{
 			Name: "Task State", Value: taskState,
@@ -240,7 +240,7 @@ func (c *TaskInspectCommand) FormatJob(job *pb.Job) error {
 	c.ui.Output("Job Configuration", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
-			Name: "ID", Value: job.Id,
+			Name: "Job ID", Value: job.Id,
 		},
 		{
 			Name: "Singleton ID", Value: job.SingletonId,
