@@ -1907,8 +1907,8 @@ export class WaypointClient {
     this.methodDescriptorGetJob);
   }
 
-  methodDescriptor_ListJobs = new grpcWeb.MethodDescriptor(
-    '/hashicorp.waypoint.Waypoint/_ListJobs',
+  methodDescriptorListJobs = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListJobs',
     grpcWeb.MethodType.UNARY,
     pkg_server_proto_server_pb.ListJobsRequest,
     pkg_server_proto_server_pb.ListJobsResponse,
@@ -1918,17 +1918,17 @@ export class WaypointClient {
     pkg_server_proto_server_pb.ListJobsResponse.deserializeBinary
   );
 
-  _ListJobs(
+  listJobs(
     request: pkg_server_proto_server_pb.ListJobsRequest,
     metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListJobsResponse>;
 
-  _ListJobs(
+  listJobs(
     request: pkg_server_proto_server_pb.ListJobsRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.RpcError,
                response: pkg_server_proto_server_pb.ListJobsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListJobsResponse>;
 
-  _ListJobs(
+  listJobs(
     request: pkg_server_proto_server_pb.ListJobsRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.RpcError,
@@ -1936,18 +1936,18 @@ export class WaypointClient {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
-          '/hashicorp.waypoint.Waypoint/_ListJobs',
+          '/hashicorp.waypoint.Waypoint/ListJobs',
         request,
         metadata || {},
-        this.methodDescriptor_ListJobs,
+        this.methodDescriptorListJobs,
         callback);
     }
     return this.client_.unaryCall(
     this.hostname_ +
-      '/hashicorp.waypoint.Waypoint/_ListJobs',
+      '/hashicorp.waypoint.Waypoint/ListJobs',
     request,
     metadata || {},
-    this.methodDescriptor_ListJobs);
+    this.methodDescriptorListJobs);
   }
 
   methodDescriptorValidateJob = new grpcWeb.MethodDescriptor(

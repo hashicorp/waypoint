@@ -419,6 +419,14 @@ export class Variable extends jspb.Message {
   hasDynamic(): boolean;
   clearDynamic(): Variable;
 
+  getFinalValue(): Variable.FinalValue | undefined;
+  setFinalValue(value?: Variable.FinalValue): Variable;
+  hasFinalValue(): boolean;
+  clearFinalValue(): Variable;
+
+  getSensitive(): boolean;
+  setSensitive(value: boolean): Variable;
+
   getValueCase(): Variable.ValueCase;
 
   getSourceCase(): Variable.SourceCase;
@@ -444,6 +452,8 @@ export namespace Variable {
     vcs?: Variable.VCS.AsObject,
     server?: google_protobuf_empty_pb.Empty.AsObject,
     dynamic?: google_protobuf_empty_pb.Empty.AsObject,
+    finalValue?: Variable.FinalValue.AsObject,
+    sensitive: boolean,
   }
 
   export class File extends jspb.Message {
@@ -550,6 +560,67 @@ export namespace Variable {
       filename: string,
       start?: Variable.HclPos.AsObject,
       end?: Variable.HclPos.AsObject,
+    }
+  }
+
+
+  export class FinalValue extends jspb.Message {
+    getSensitive(): string;
+    setSensitive(value: string): FinalValue;
+
+    getStr(): string;
+    setStr(value: string): FinalValue;
+
+    getBool(): boolean;
+    setBool(value: boolean): FinalValue;
+
+    getNum(): number;
+    setNum(value: number): FinalValue;
+
+    getHcl(): string;
+    setHcl(value: string): FinalValue;
+
+    getSource(): Variable.FinalValue.Source;
+    setSource(value: Variable.FinalValue.Source): FinalValue;
+
+    getValueCase(): FinalValue.ValueCase;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): FinalValue.AsObject;
+    static toObject(includeInstance: boolean, msg: FinalValue): FinalValue.AsObject;
+    static serializeBinaryToWriter(message: FinalValue, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): FinalValue;
+    static deserializeBinaryFromReader(message: FinalValue, reader: jspb.BinaryReader): FinalValue;
+  }
+
+  export namespace FinalValue {
+    export type AsObject = {
+      sensitive: string,
+      str: string,
+      bool: boolean,
+      num: number,
+      hcl: string,
+      source: Variable.FinalValue.Source,
+    }
+
+    export enum Source { 
+      UNKNOWN = 0,
+      DEFAULT = 1,
+      FILE = 2,
+      CLI = 3,
+      ENV = 4,
+      VCS = 5,
+      SERVER = 6,
+      DYNAMIC = 7,
+    }
+
+    export enum ValueCase { 
+      VALUE_NOT_SET = 0,
+      SENSITIVE = 1,
+      STR = 2,
+      BOOL = 3,
+      NUM = 4,
+      HCL = 5,
     }
   }
 
@@ -2477,6 +2548,9 @@ export class Job extends jspb.Message {
   hasDataSourceRef(): boolean;
   clearDataSourceRef(): Job;
 
+  getVariableFinalValuesMap(): jspb.Map<string, Variable.FinalValue>;
+  clearVariableFinalValuesMap(): Job;
+
   getConfig(): Job.Config | undefined;
   setConfig(value?: Job.Config): Job;
   hasConfig(): boolean;
@@ -2553,6 +2627,7 @@ export namespace Job {
     ackTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     completeTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     dataSourceRef?: Job.DataSource.Ref.AsObject,
+    variableFinalValuesMap: Array<[string, Variable.FinalValue.AsObject]>,
     config?: Job.Config.AsObject,
     error?: google_rpc_status_pb.Status.AsObject,
     result?: Job.Result.AsObject,
@@ -3946,6 +4021,31 @@ export namespace GetJobRequest {
 }
 
 export class ListJobsRequest extends jspb.Message {
+  getWorkspace(): Ref.Workspace | undefined;
+  setWorkspace(value?: Ref.Workspace): ListJobsRequest;
+  hasWorkspace(): boolean;
+  clearWorkspace(): ListJobsRequest;
+
+  getProject(): Ref.Project | undefined;
+  setProject(value?: Ref.Project): ListJobsRequest;
+  hasProject(): boolean;
+  clearProject(): ListJobsRequest;
+
+  getApplication(): Ref.Application | undefined;
+  setApplication(value?: Ref.Application): ListJobsRequest;
+  hasApplication(): boolean;
+  clearApplication(): ListJobsRequest;
+
+  getTargetrunner(): Ref.Runner | undefined;
+  setTargetrunner(value?: Ref.Runner): ListJobsRequest;
+  hasTargetrunner(): boolean;
+  clearTargetrunner(): ListJobsRequest;
+
+  getJobstateList(): Array<Job.State>;
+  setJobstateList(value: Array<Job.State>): ListJobsRequest;
+  clearJobstateList(): ListJobsRequest;
+  addJobstate(value: Job.State, index?: number): ListJobsRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ListJobsRequest.AsObject;
   static toObject(includeInstance: boolean, msg: ListJobsRequest): ListJobsRequest.AsObject;
@@ -3956,6 +4056,11 @@ export class ListJobsRequest extends jspb.Message {
 
 export namespace ListJobsRequest {
   export type AsObject = {
+    workspace?: Ref.Workspace.AsObject,
+    project?: Ref.Project.AsObject,
+    application?: Ref.Application.AsObject,
+    targetrunner?: Ref.Runner.AsObject,
+    jobstateList: Array<Job.State>,
   }
 }
 
@@ -4859,6 +4964,11 @@ export class RunnerJobStreamRequest extends jspb.Message {
   hasConfigLoad(): boolean;
   clearConfigLoad(): RunnerJobStreamRequest;
 
+  getVariableValuesSet(): RunnerJobStreamRequest.VariableValuesSet | undefined;
+  setVariableValuesSet(value?: RunnerJobStreamRequest.VariableValuesSet): RunnerJobStreamRequest;
+  hasVariableValuesSet(): boolean;
+  clearVariableValuesSet(): RunnerJobStreamRequest;
+
   getHeartbeat(): RunnerJobStreamRequest.Heartbeat | undefined;
   setHeartbeat(value?: RunnerJobStreamRequest.Heartbeat): RunnerJobStreamRequest;
   hasHeartbeat(): boolean;
@@ -4883,6 +4993,7 @@ export namespace RunnerJobStreamRequest {
     terminal?: GetJobStreamResponse.Terminal.AsObject,
     download?: GetJobStreamResponse.Download.AsObject,
     configLoad?: RunnerJobStreamRequest.ConfigLoad.AsObject,
+    variableValuesSet?: RunnerJobStreamRequest.VariableValuesSet.AsObject,
     heartbeat?: RunnerJobStreamRequest.Heartbeat.AsObject,
   }
 
@@ -5002,6 +5113,25 @@ export namespace RunnerJobStreamRequest {
   }
 
 
+  export class VariableValuesSet extends jspb.Message {
+    getFinalValuesMap(): jspb.Map<string, Variable.FinalValue>;
+    clearFinalValuesMap(): VariableValuesSet;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): VariableValuesSet.AsObject;
+    static toObject(includeInstance: boolean, msg: VariableValuesSet): VariableValuesSet.AsObject;
+    static serializeBinaryToWriter(message: VariableValuesSet, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): VariableValuesSet;
+    static deserializeBinaryFromReader(message: VariableValuesSet, reader: jspb.BinaryReader): VariableValuesSet;
+  }
+
+  export namespace VariableValuesSet {
+    export type AsObject = {
+      finalValuesMap: Array<[string, Variable.FinalValue.AsObject]>,
+    }
+  }
+
+
   export enum EventCase { 
     EVENT_NOT_SET = 0,
     REQUEST = 1,
@@ -5011,6 +5141,7 @@ export namespace RunnerJobStreamRequest {
     TERMINAL = 5,
     DOWNLOAD = 7,
     CONFIG_LOAD = 8,
+    VARIABLE_VALUES_SET = 9,
     HEARTBEAT = 6,
   }
 }
@@ -5048,6 +5179,11 @@ export namespace RunnerJobStreamResponse {
     hasJob(): boolean;
     clearJob(): JobAssignment;
 
+    getConfigSourcesList(): Array<ConfigSource>;
+    setConfigSourcesList(value: Array<ConfigSource>): JobAssignment;
+    clearConfigSourcesList(): JobAssignment;
+    addConfigSources(value?: ConfigSource, index?: number): ConfigSource;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): JobAssignment.AsObject;
     static toObject(includeInstance: boolean, msg: JobAssignment): JobAssignment.AsObject;
@@ -5059,6 +5195,7 @@ export namespace RunnerJobStreamResponse {
   export namespace JobAssignment {
     export type AsObject = {
       job?: Job.AsObject,
+      configSourcesList: Array<ConfigSource.AsObject>,
     }
   }
 
