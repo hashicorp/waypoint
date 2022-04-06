@@ -270,3 +270,87 @@ func TestServiceTask_ListTaskSimple(t *testing.T) {
 		}
 	})
 }
+
+func TestServiceTask_ListTaskFilters(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	db := testDB(t)
+	impl, err := New(WithDB(db))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
+		Application: &pb.Ref_Application{
+			Application: "a_test",
+			Project:     "p_test",
+		},
+	}).Application)
+
+	// Create, should get an ID back
+	jobResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, jobResp)
+	require.NotEmpty(t, jobResp.JobId)
+	startJobId := jobResp.JobId
+
+	jobResp, err = client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, jobResp)
+	require.NotEmpty(t, jobResp.JobId)
+	runJobId := jobResp.JobId
+
+	jobResp, err = client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, jobResp)
+	require.NotEmpty(t, jobResp.JobId)
+	stopJobId := jobResp.JobId
+
+	_, err = client.UpsertTask(ctx, &pb.UpsertTaskRequest{
+		Task: serverptypes.TestValidTask(t, &pb.Task{
+			TaskJob:  &pb.Ref_Job{Id: runJobId},
+			StartJob: &pb.Ref_Job{Id: startJobId},
+			StopJob:  &pb.Ref_Job{Id: stopJobId},
+			JobState: pb.Task_STOPPED,
+		}),
+	})
+	_, err = client.UpsertTask(ctx, &pb.UpsertTaskRequest{
+		Task: serverptypes.TestValidTask(t, &pb.Task{
+			TaskJob:  &pb.Ref_Job{Id: runJobId},
+			StartJob: &pb.Ref_Job{Id: startJobId},
+			StopJob:  &pb.Ref_Job{Id: stopJobId},
+			JobState: pb.Task_RUNNING,
+		}),
+	})
+	_, err = client.UpsertTask(ctx, &pb.UpsertTaskRequest{
+		Task: serverptypes.TestValidTask(t, &pb.Task{
+			TaskJob:  &pb.Ref_Job{Id: runJobId},
+			StartJob: &pb.Ref_Job{Id: startJobId},
+			StopJob:  &pb.Ref_Job{Id: stopJobId},
+		}),
+	})
+
+	t.Run("list filter on job state", func(t *testing.T) {
+		require := require.New(t)
+
+		respList, err := client.ListTask(ctx, &pb.ListTaskRequest{
+			TaskState: []pb.Task_State{pb.Task_STOPPED},
+		})
+		require.NoError(err)
+		require.Equal(len(respList.Tasks), 1)
+
+		respList, err = client.ListTask(ctx, &pb.ListTaskRequest{
+			TaskState: []pb.Task_State{pb.Task_STOPPED, pb.Task_RUNNING},
+		})
+		require.NoError(err)
+		require.Equal(len(respList.Tasks), 2)
+
+	})
+}

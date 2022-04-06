@@ -50,9 +50,9 @@ func (s *Service) ListTask(
 	ctx context.Context,
 	req *pb.ListTaskRequest,
 ) (*pb.ListTaskResponse, error) {
-	// NOTE: no ptype validation at the moment, there are no request params
+	// NOTE: no ptype validation at the moment, request params are optional
 
-	result, err := s.state(ctx).TaskList()
+	result, err := s.state(ctx).TaskList(req)
 	if err != nil {
 		return nil, err
 	}

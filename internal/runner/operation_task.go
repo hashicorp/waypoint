@@ -16,16 +16,6 @@ import (
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
-// TODO(briancain): This is where we can at least update Task's start and
-// stop jobs. Need to check if (Start|Stop)TaskFunc() blocks on the job
-// finishing or if it fires and moves on so we can upate the Task state
-
-// Not really sure where or how we're gonna update the RunJob though since
-// that would just be running a regular operation on a runner.
-
-// What if we mark a RunJob as a task?? Then when the job state updates, it checks
-// if it's a task, looks up task by job id (self id), so it can update the Task triple state
-
 func (r *Runner) executeStartTaskOp(
 	ctx context.Context,
 	log hclog.Logger,

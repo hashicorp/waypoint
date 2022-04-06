@@ -80,7 +80,7 @@ func (s *State) TaskDelete(ref *pb.Ref_Task) error {
 }
 
 // TaskList returns the list of tasks.
-func (s *State) TaskList() ([]*pb.Task, error) {
+func (s *State) TaskList(req *pb.ListTaskRequest) ([]*pb.Task, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -96,6 +96,20 @@ func (s *State) TaskList() ([]*pb.Task, error) {
 			val, err := s.taskGet(dbTxn, memTxn, ref)
 			if err != nil {
 				return err
+			}
+
+			// filter any tasks by request
+			if len(req.TaskState) > 0 {
+				found := false
+				for _, state := range req.TaskState {
+					if val.JobState == state {
+						found = true
+						break
+					}
+				}
+				if !found {
+					continue
+				}
 			}
 
 			out = append(out, val)
@@ -270,7 +284,7 @@ func (s *State) taskIdByRef(ref *pb.Ref_Task) ([]byte, error) {
 }
 
 func (s *State) taskByJobId(jobId string) (*pb.Task, error) {
-	trackedTasks, err := s.TaskList()
+	trackedTasks, err := s.TaskList(&pb.ListTaskRequest{})
 	if err != nil {
 		return nil, err
 	}
