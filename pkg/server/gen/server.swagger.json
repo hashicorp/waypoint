@@ -7665,7 +7665,15 @@
       "type": "object",
       "properties": {
         "job": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job"
+          "$ref": "#/definitions/hashicorp.waypoint.Job",
+          "title": "The job to assign"
+        },
+        "config_sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.ConfigSource"
+          },
+          "title": "A list of plugin configs"
         }
       }
     },

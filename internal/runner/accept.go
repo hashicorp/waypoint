@@ -427,7 +427,7 @@ RESTART_JOB_STREAM:
 	// The job stream setup is done. Actually run the job, download any
 	// data necessary, setup the core, etc
 	log.Info("starting job execution")
-	result, err := r.prepareAndExecuteJob(ctx, log, ui, &sendMutex, client, assignment.Assignment.Job)
+	result, err := r.prepareAndExecuteJob(ctx, log, ui, &sendMutex, client, assignment.Assignment)
 	log.Debug("job finished", "error", err)
 
 	// We won't output anything else to the UI anymore.
@@ -508,8 +508,9 @@ func (r *Runner) prepareAndExecuteJob(
 	ui terminal.UI,
 	sendMutex *sync.Mutex,
 	client pb.Waypoint_RunnerJobStreamClient,
-	job *pb.Job,
+	assignment *pb.RunnerJobStreamResponse_JobAssignment,
 ) (*pb.Job_Result, error) {
+	job := assignment.Job
 	log.Trace("preparing to execute job operation", "type", hclog.Fmt("%T", job.Operation))
 
 	// Some operation types don't need to download data, execute those here.
@@ -570,7 +571,7 @@ func (r *Runner) prepareAndExecuteJob(
 		if err == nil {
 			// Execute the job. We have to close the UI right afterwards to
 			// ensure that no more output is written to the client.
-			result, err = r.executeJob(ctx, log, ui, job, wd, sendMutex, client)
+			result, err = r.executeJob(ctx, log, ui, assignment, wd, sendMutex, client)
 		}
 	}
 

@@ -365,7 +365,7 @@ func (s *Service) RunnerConfig(
 		job = sjob.Job
 
 		log.Debug("runner is scoped for config",
-			"application", job.Application,
+			"project/application", job.Application,
 			"workspace", job.Workspace,
 			"labels", job.Labels)
 	}
@@ -466,6 +466,7 @@ func (s *Service) RunnerJobStream(
 		log.Error("unknown runner connected", "id", runnerId)
 		return err
 	}
+	log.With("runner-id", runner.Id)
 
 	// The runner must be adopted to get a job.
 	if runner.AdoptionState != pb.Runner_ADOPTED &&
@@ -522,6 +523,19 @@ func (s *Service) RunnerJobStream(
 	}
 	log = log.With("job_id", job.Id)
 
+	// Load config sourcers to send along with the job assignment
+	cfgSrcs, err := s.state(ctx).ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
+		Scope: &pb.GetConfigSourceRequest_Global{
+			Global: &pb.Ref_Global{},
+		},
+	}, nil)
+	if err != nil {
+		log.Warn("failed to load config sourcers for job assignment", "err", err)
+		return err
+	}
+	log.Trace("loaded config sources for job", "total_sourcers", len(cfgSrcs))
+
+	log.Debug("sending job assignment to runner")
 	// Send the job assignment.
 	//
 	// If this has an error, we continue to accumulate the error until
@@ -530,10 +544,14 @@ func (s *Service) RunnerJobStream(
 	err = server.Send(&pb.RunnerJobStreamResponse{
 		Event: &pb.RunnerJobStreamResponse_Assignment{
 			Assignment: &pb.RunnerJobStreamResponse_JobAssignment{
-				Job: job.Job,
+				Job:           job.Job,
+				ConfigSources: cfgSrcs,
 			},
 		},
 	})
+	if err != nil {
+		log.Warn("error sending job assignment to runner, will wait for ack", "err", err)
+	}
 
 	// Wait for an ack. We only do this if the job assignment above
 	// succeeded. If it didn't succeed, the client will never send us
