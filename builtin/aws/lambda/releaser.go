@@ -118,12 +118,8 @@ func (r *Releaser) resourceFunctionUrlCreate(
 	}
 	log.Info("Created permission", "permission", *p.Statement)
 
-	// https://us-east-1.console.aws.amazon.com/lambda/services/ajax?operation=createFunctionUrlConfig&locale=en
 	o, err := lambdasrv.CreateFunctionUrlConfig(&lambda.CreateFunctionUrlConfigInput{
-		// When you choose auth type NONE, Lambda [DASHBOARD OPERATION ONLY] automatically creates the
-		// following resource-based policy and attaches it to your function.
-		// This policy makes your function public to anyone with the function URL.
-		// You can edit the policy later. To limit access to authenticated IAM users and roles, choose auth type AWS_IAM.
+		// Todo: make AuthType configurable via HCL
 		AuthType:     aws.String(lambda.FunctionUrlAuthTypeNone),
 		FunctionName: a.AliasArn,
 		Cors:         &lambda.Cors{},
@@ -143,7 +139,6 @@ func (r *Releaser) resourceFunctionUrlDestroy(
 	ctx context.Context,
 	sess *session.Session,
 	sg terminal.StepGroup,
-	// state *Resource_LoadBalancer,
 ) error {
 	step := sg.Add("Destroying Lambda URL...")
 	step.Update("Destroyed Lambda URL...")
