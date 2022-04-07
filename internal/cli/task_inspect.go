@@ -244,7 +244,7 @@ func (c *TaskInspectCommand) FormatJob(job *pb.Job) error {
 		errMsg = job.Error.Message
 	}
 
-	c.ui.Output("Job Configuration", terminal.WithHeaderStyle())
+	c.ui.Output("Job Configuration:", terminal.WithInfoStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
 			Name: "Job ID", Value: job.Id,
@@ -269,7 +269,7 @@ func (c *TaskInspectCommand) FormatJob(job *pb.Job) error {
 		},
 	}, terminal.WithInfoStyle())
 
-	c.ui.Output("Job Results", terminal.WithHeaderStyle())
+	c.ui.Output("\nJob Results:", terminal.WithInfoStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
 			Name: "State", Value: jobState,
