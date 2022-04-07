@@ -106,7 +106,7 @@ jobs:
       - run:
           command: cd ./website; npx --no-install next-hashicorp format
       - run: |
-          if ! git diff --exit-code > /dev/null; then
+          if ! git diff --exit-code website/content > /dev/null; then
             echo "Website directory has unstaged mdx changes. This is because you have modified doc strings"
             echo "that must be reflected in the website. Run the following make command:"
             echo

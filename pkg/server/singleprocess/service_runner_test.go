@@ -1085,6 +1085,23 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
+	// Add a config source app variable for the job
+	v := &pb.ConfigSource{
+		Scope: &pb.ConfigSource_Global{
+			Global: &pb.Ref_Global{},
+		},
+
+		Type: "foo",
+
+		Config: map[string]string{
+			"value": "42",
+		},
+	}
+	// set the config source
+	resp, err := client.SetConfigSource(ctx, &pb.SetConfigSourceRequest{ConfigSource: v})
+	require.NoError(err)
+	require.NotNil(resp)
+
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
 
@@ -1116,6 +1133,8 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 		require.True(ok, "should be an assignment")
 		require.NotNil(assignment)
 		require.Equal(queueResp.JobId, assignment.Assignment.Job.Id)
+		require.Equal(1, len(assignment.Assignment.ConfigSources))
+		require.Equal("foo", assignment.Assignment.ConfigSources[0].Type)
 
 		require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
 			Event: &pb.RunnerJobStreamRequest_Ack_{

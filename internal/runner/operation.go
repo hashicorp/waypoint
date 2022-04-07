@@ -35,11 +35,13 @@ func (r *Runner) executeJob(
 	ctx context.Context,
 	log hclog.Logger,
 	ui terminal.UI,
-	job *pb.Job,
+	assignment *pb.RunnerJobStreamResponse_JobAssignment,
 	wd string,
 	clientMutex *sync.Mutex,
 	client pb.Waypoint_RunnerJobStreamClient,
 ) (*pb.Job_Result, error) {
+	job := assignment.Job
+
 	// NOTE(mitchellh; krantzinator): For now, we query the project directly here
 	// since we use it only in case of a missing local waypoint.hcl, and to
 	// collect input variable values set on the server. I can see us moving this
@@ -191,6 +193,8 @@ func (r *Runner) executeJob(
 	pbVars = append(pbVars, vcsVars...)
 	pbVars = append(pbVars, job.Variables...)
 
+	log.Debug("looking to see if there are dynamic variable default values to load")
+
 	// Load any dynamic default values. This happens after the above
 	// because we only load dynamic default values for variables we do
 	// not have values for.
@@ -207,23 +211,32 @@ func (r *Runner) executeJob(
 			)
 		}
 
+		log.Debug("loading default values for dynamic variables")
+
 		dynamicVars, diags := variables.LoadDynamicDefaults(
 			ctx,
 			log,
 			pbVars,
+			assignment.ConfigSources,
 			cfg.InputVariables,
 			appconfig.WithLogger(log),
 			appconfig.WithPlugins(r.configPlugins),
+			appconfig.WithDynamicEnabled(true), // true because we've already determined variables need dynamic defaults
 		)
 		if diags.HasErrors() {
+			log.Warn("failed to load dynamic defaults for variables", "diags", diags)
 			return nil, diags
 		}
+
 		if len(dynamicVars) > 0 {
+			log.Debug("dynamic variables discovered, adding to project variables")
 			// If we have dynamic variable values, we _prepend_ them so that
 			// they have the lowest precedence. In reality, this shouldn't
 			// matter because we only grab dynamic values for vars that have
 			// no value set, but we might as well be careful.
 			pbVars = append(dynamicVars, pbVars...)
+		} else {
+			log.Debug("no dynamic variables found")
 		}
 	}
 

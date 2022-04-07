@@ -421,6 +421,7 @@ func LoadDynamicDefaults(
 	ctx context.Context,
 	log hclog.Logger,
 	pbvars []*pb.Variable,
+	cfgSrcs []*pb.ConfigSource,
 	vars map[string]*Variable,
 	dynamicOpts ...appconfig.Option,
 ) ([]*pb.Variable, hcl.Diagnostics) {
@@ -439,8 +440,11 @@ func LoadDynamicDefaults(
 
 	// If we have no dynamic vars, we do nothing.
 	if len(dynamicVars) == 0 {
+		log.Debug("no dynamic vars")
 		return nil, diags
 	}
+
+	log.Debug("dynamic variables discovered", "total", len(dynamicVars))
 
 	// Go through our variable values and delete any dynamic vars we have
 	// values for already; we do not need to fetch those.
@@ -450,6 +454,7 @@ func LoadDynamicDefaults(
 
 	// If we have no dynamic vars we need values for, also do nothing.
 	if len(dynamicVars) == 0 {
+		log.Debug("no dynamic vars needed values")
 		return nil, diags
 	}
 
@@ -489,6 +494,9 @@ func LoadDynamicDefaults(
 		})
 	}
 
+	// Update and send any config source overrides for dynamic vars.
+	w.UpdateSources(ctx, cfgSrcs)
+
 	// Send our variables. Purposely ignore the error return value because
 	// it can only ever be a context cancellation which we pick up in the
 	// select later.
@@ -514,6 +522,7 @@ func LoadDynamicDefaults(
 
 		case config := <-ch:
 			var result []*pb.Variable
+
 			for _, f := range config.Files {
 				result = append(result, &pb.Variable{
 					Name: f.Path,

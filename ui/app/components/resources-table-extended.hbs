@@ -24,40 +24,53 @@
   <tbody>
     {{#each @resources key="resource.id" as |resourceObject|}}
       {{#let resourceObject.resource as |resource|}}
-      <tr>
-        <th scope="row">
-          <LinkTo
-            title={{resource.name}}
-            @route={{@route}}
-            @models={{append (or @models (array)) resource.id}}
-          >
-            {{resource.name}}
-          </LinkTo>
-        </th>
-        <td class="resource-icon"><FlightIcon @name={{icon-for-component resource.platform}} /> {{resource.type}}</td>
-        <td>{{date-format-distance-to-now resource.createdTime.seconds}}</td>
-        <td><ResourceHealthIndicator @resource={{resource}} /></td>
-        <td>
-          {{#if (eq resourceObject.type 'deployment')}}
+        {{#let
+          (hash
+            route=(or
+              (and (eq resourceObject.type "deployment") "workspace.projects.project.app.deployments.deployment")
+              (and (eq resourceObject.type  "release") "workspace.projects.project.app.release")
+            )
+            title=(or
+              (and (eq resourceObject.type "deployment") (concat (t "page.deployment.title") " v" resourceObject.source.sequence))
+              (and (eq resourceObject.type  "release") (concat (t "page.release.title") " v" resourceObject.source.sequence))
+            )
+          )
+          as |vars|}}
+        <tr>
+          <th scope="row">
             <LinkTo
-              title={{concat (t "page.deployment.title") " v" resourceObject.source.sequence}}
-              @route="workspace.projects.project.app.deployments.deployment"
-              @models={{array resourceObject.source.sequence}}
-              >
-              {{t "page.resources.table.deployment"}} <b class="badge badge--version">v{{resourceObject.source.sequence}}</b>
+              title={{resource.name}}
+              @route={{concat vars.route ".resource"}}
+              @models={{append (array resourceObject.source.sequence) resource.id}}
+            >
+              {{resource.name}}
             </LinkTo>
-          {{/if}}
-          {{#if (eq resourceObject.type 'release')}}
-            <LinkTo
-              title={{concat (t "page.release.title") " v" resourceObject.source.sequence}}
-              @route="workspace.projects.project.app.release-id"
-              @models={{array resourceObject.source.sequence}}
-              >
-              {{t "page.resources.table.release"}} <b class="badge badge--version">v{{resourceObject.source.sequence}}</b>
-            </LinkTo>
-          {{/if}}
-        </td>
-      </tr>
+          </th>
+          <td class="resource-icon"><FlightIcon @name={{icon-for-component resource.platform}} /> {{resource.type}}</td>
+          <td>{{date-format-distance-to-now resource.createdTime.seconds}}</td>
+          <td><ResourceHealthIndicator @resource={{resource}} /></td>
+          <td>
+            {{#if (eq resourceObject.type 'deployment')}}
+              <LinkTo
+                title={{vars.title}}
+                @route="workspace.projects.project.app.deployments.deployment"
+                @models={{array resourceObject.source.sequence}}
+                >
+                {{t "page.resources.table.deployment"}} <b class="badge badge--version">v{{resourceObject.source.sequence}}</b>
+              </LinkTo>
+            {{/if}}
+            {{#if (eq resourceObject.type 'release')}}
+              <LinkTo
+                title={{vars.title}}
+                @route="workspace.projects.project.app.release-id"
+                @models={{array resourceObject.source.sequence}}
+                >
+                {{t "page.resources.table.release"}} <b class="badge badge--version">v{{resourceObject.source.sequence}}</b>
+              </LinkTo>
+            {{/if}}
+          </td>
+        </tr>
+        {{/let}}
       {{/let}}
     {{/each}}
   </tbody>

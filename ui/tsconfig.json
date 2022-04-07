@@ -21,6 +21,7 @@
     "baseUrl": ".",
     "module": "es6",
     "experimentalDecorators": true,
+    "skipLibCheck": true,
     "paths": {
       "ember-cli-flash/*": ["node_modules/ember-cli-flash/index.d.ts"],
       "waypoint/tests/*": ["tests/*"],

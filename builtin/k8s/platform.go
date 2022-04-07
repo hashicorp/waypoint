@@ -480,7 +480,7 @@ func configureContainer(
 			}
 			resourceRequests[resourceName] = q
 		} else {
-			log.Warn("ignoring unrecognized k8s resources key: %q", k)
+			log.Warn("ignoring unrecognized k8s resources key", "key", k)
 		}
 	}
 
@@ -622,7 +622,7 @@ func (p *Platform) resourceDeploymentCreate(
 
 	// App container must have some kind of port
 	if len(appContainerSpec.Ports) == 0 {
-		log.Warn("No ports defined in waypoint.hcl - defaulting to http on port %d", DefaultServicePort)
+		log.Warn("No ports defined in waypoint.hcl - defaulting to http on port", "port", DefaultServicePort)
 		appContainerSpec.Ports = append(appContainerSpec.Ports, &Port{Port: DefaultServicePort, Name: "http"})
 	}
 

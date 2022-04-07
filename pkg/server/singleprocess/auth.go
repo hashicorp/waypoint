@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/mr-tron/base58"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/blake2b"
@@ -25,28 +26,25 @@ import (
 )
 
 const (
-	// The username of the initial user created during bootstrapping. This
+	// DefaultUser is the username of the initial user created during bootstrapping. This
 	// also is the user that Waypoint server versions prior to 0.5 used with
 	// their token, so we use this to detect that scenario as well.
 	DefaultUser = serverstate.DefaultUser
 
-	// The ID of the initial user created during bootstrapping.
+	// DefaultUserId is the ID of the initial user created during bootstrapping.
 	DefaultUserId = serverstate.DefaultUserId
 
-	// The identifier for the default key to use to generating tokens.
+	// DefaultKeyId is the identifier for the default key to use to generating tokens.
 	DefaultKeyId = "k1"
 
-	// Used as a byte sequence prepended to the encoded TokenTransport to identify
+	// tokenMagic is used as a byte sequence prepended to the encoded TokenTransport to identify
 	// the token as valid before attempting to decode it. This is mostly a nicity to improve
 	// understanding of the token data and error messages.
 	tokenMagic = "wp24"
 
-	// The size in bytes that the HMAC keys should be. Each key will contain this number of bytes
+	// hmacKeySize is the size in bytes that the HMAC keys should be. Each key will contain this number of bytes
 	// of data from rand.Reader
 	hmacKeySize = 32
-
-	// A prefix added to the key id when looking up the HMAC key from the database
-	dbKeyPrefix = "hmacKey:"
 )
 
 var (
@@ -74,9 +72,9 @@ var (
 
 type userKey struct{}
 
-// userWithContext inserts the user value u into the context. This can
+// UserWithContext inserts the user value u into the context. This can
 // be extracted with userFromContext.
-func userWithContext(ctx context.Context, u *pb.User) context.Context {
+func UserWithContext(ctx context.Context, u *pb.User) context.Context {
 	return context.WithValue(ctx, userKey{}, u)
 }
 
@@ -95,8 +93,8 @@ func (s *Service) userFromContext(ctx context.Context) *pb.User {
 
 type tokenKey struct{}
 
-// tokenWithContext inserts the decrypted token t into the context.
-func tokenWithContext(ctx context.Context, t *pb.Token) context.Context {
+// TokenWithContext inserts the decrypted token t into the context.
+func TokenWithContext(ctx context.Context, t *pb.Token) context.Context {
 	return context.WithValue(ctx, tokenKey{}, t)
 }
 
@@ -121,7 +119,7 @@ func (s *Service) tokenFromContext(ctx context.Context) *pb.Token {
 	return value
 }
 
-// cookieFromRequest returns the server cookie value provided during the request,
+// CookieFromRequest returns the server cookie value provided during the request,
 // or blank if none (or a blank cookie) is provided.
 func CookieFromRequest(ctx context.Context) string {
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
@@ -175,7 +173,7 @@ func (s *Service) Authenticate(
 	}
 
 	// Store the token in the context
-	ctx = tokenWithContext(ctx, body)
+	ctx = TokenWithContext(ctx, body)
 
 	// If we are at an unauthenticated endpoint, no need to verify further.
 	if anonEndpoint {
@@ -204,10 +202,16 @@ func (s *Service) Authenticate(
 func (s *Service) authRunner(
 	ctx context.Context, tokenRunner *pb.Token_Runner, endpoint string,
 ) (context.Context, error) {
+
+	runnerId, err := s.decodeId(tokenRunner.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to decode id in runner token")
+	}
+
 	// If no ID is set, then the runner is assumed at all times to be adopted.
 	// This use case is used to "pre-adopt" runners and avoid the adoption
 	// lifecycle completely, such as with infinitely autoscaled runners.
-	if tokenRunner.Id == "" {
+	if runnerId == "" {
 		// Authenticated.
 		return ctx, nil
 	}
@@ -219,7 +223,7 @@ func (s *Service) authRunner(
 	}
 
 	// Get our runner
-	r, err := s.state(ctx).RunnerById(tokenRunner.Id, nil)
+	r, err := s.state(ctx).RunnerById(runnerId, nil)
 	if status.Code(err) == codes.NotFound {
 		err = nil
 		r = nil
@@ -258,6 +262,7 @@ func (s *Service) authRunner(
 func (s *Service) authLogin(
 	ctx context.Context, body *pb.Token, endpoint string,
 ) (context.Context, error) {
+	log := hclog.FromContext(ctx)
 	// Token must be a login token to be used for auth
 	login, ok := body.Kind.(*pb.Token_Login_)
 	if !ok || login == nil {
@@ -269,10 +274,17 @@ func (s *Service) authLogin(
 		return nil, status.Errorf(codes.Unauthenticated, "Unauthorized endpoint")
 	}
 
+	userId, err := s.decodeId(login.Login.UserId)
+	if err != nil {
+		msg := "failed to decode id when authenticating login token"
+		log.Error(msg, "id", login.Login.UserId, "err", err)
+		return nil, status.Errorf(codes.Internal, msg)
+	}
+
 	// Look up the user that this token is for.
 	user, err := s.state(ctx).UserGet(&pb.Ref_User{
 		Ref: &pb.Ref_User_Id{
-			Id: &pb.Ref_UserId{Id: login.Login.UserId},
+			Id: &pb.Ref_UserId{Id: userId},
 		},
 	})
 	if status.Code(err) == codes.NotFound {
@@ -280,7 +292,7 @@ func (s *Service) authLogin(
 		// first time, we need to create the initial Waypoint user. This is
 		// purely a backwards compatibility case that we should drop at some
 		// point.
-		if !body.UnusedLogin || login.Login.UserId != DefaultUserId {
+		if !body.UnusedLogin || userId != DefaultUserId {
 			return nil, status.Errorf(codes.Unauthenticated,
 				"Pre-Waypoint 0.5 token must be for the default user. This should always "+
 					"be the case so the token is likely corrupt.")
@@ -300,7 +312,7 @@ func (s *Service) authLogin(
 		// Look up the user again
 		user, err = s.state(ctx).UserGet(&pb.Ref_User{
 			Ref: &pb.Ref_User_Id{
-				Id: &pb.Ref_UserId{Id: login.Login.UserId},
+				Id: &pb.Ref_UserId{Id: userId},
 			},
 		})
 	}
@@ -308,7 +320,7 @@ func (s *Service) authLogin(
 		return nil, err
 	}
 
-	return userWithContext(ctx, user), nil
+	return UserWithContext(ctx, user), nil
 }
 
 // decodeToken parses the string and validates it as a valid token. If the token
@@ -399,7 +411,7 @@ func (s *Service) decodeToken(ctx context.Context, token string) (*pb.TokenTrans
 	return &tt, &body, nil
 }
 
-// Encode the given token with the given key and metadata.
+// encodeToken Encodes the given token with the given key and metadata.
 // keyId controls which key is used to sign the key (key values are generated lazily).
 // metadata is attached to the token transport as configuration style information
 func (s *Service) encodeToken(ctx context.Context, keyId string, metadata map[string]string, body *pb.Token) (string, error) {
@@ -446,6 +458,8 @@ func (s *Service) encodeToken(ctx context.Context, keyId string, metadata map[st
 func (s *Service) GenerateLoginToken(
 	ctx context.Context, req *pb.LoginTokenRequest,
 ) (*pb.NewTokenResponse, error) {
+	log := hclog.FromContext(ctx)
+
 	// Get our user, that's what we log in as
 	currentUser := s.userFromContext(ctx)
 
@@ -459,8 +473,15 @@ func (s *Service) GenerateLoginToken(
 		}
 	}
 
+	encodedId, err := s.encodeId(ctx, currentUser.Id)
+	if err != nil {
+		msg := "failed to encode id when generating a login token"
+		log.Error(msg, "currentUser.Id", currentUser.Id, "err", err)
+		return nil, status.Error(codes.Internal, msg)
+	}
+
 	login := &pb.Token_Login{
-		UserId: currentUser.Id,
+		UserId: encodedId,
 	}
 
 	// If we're authing as another user, we have to get that user
@@ -470,19 +491,24 @@ func (s *Service) GenerateLoginToken(
 			return nil, err
 		}
 
-		login.UserId = user.Id
+		login.UserId, err = s.encodeId(ctx, user.Id)
+		if err != nil {
+			msg := "failed to encode id when generating a login token"
+			log.Error(msg, "user.Id", currentUser.Id, "err", err)
+			return nil, status.Error(codes.Internal, msg)
+		}
 	}
 
 	createToken := &pb.Token{}
+
 	if req.Trigger {
-		currentUser := s.userFromContext(ctx)
 		// NOTE(briancain): when Waypoint has proper access control, this should
 		// only be allowed to be generated by super users. The auth call might
 		// be checked before the client gets to make this request though, but for
 		// now the note about it is here because every user has the same permissions.
 		createToken.Kind = &pb.Token_Trigger_{
 			Trigger: &pb.Token_Trigger{
-				FromUserId: currentUser.Id,
+				FromUserId: encodedId,
 			},
 		}
 	} else {
@@ -502,6 +528,7 @@ func (s *Service) GenerateLoginToken(
 func (s *Service) GenerateRunnerToken(
 	ctx context.Context, req *pb.GenerateRunnerTokenRequest,
 ) (*pb.NewTokenResponse, error) {
+	log := hclog.FromContext(ctx)
 	// If we have a duration set, set the expiry
 	var dur time.Duration
 	if d := req.Duration; d != "" {
@@ -510,6 +537,13 @@ func (s *Service) GenerateRunnerToken(
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	encodedId, err := s.encodeId(ctx, req.Id)
+	if err != nil {
+		msg := "failed to encode id when generating a runner token"
+		log.Error(msg, "req.Id", req.Id, "err", err)
+		return nil, status.Error(codes.InvalidArgument, msg)
 	}
 
 	var hash uint64 = 0
@@ -524,7 +558,7 @@ func (s *Service) GenerateRunnerToken(
 	createToken := &pb.Token{
 		Kind: &pb.Token_Runner_{
 			Runner: &pb.Token_Runner{
-				Id:        req.Id,
+				Id:        encodedId,
 				LabelHash: hash,
 			},
 		},
@@ -573,6 +607,8 @@ func (s *Service) newToken(
 func (s *Service) GenerateInviteToken(
 	ctx context.Context, req *pb.InviteTokenRequest,
 ) (*pb.NewTokenResponse, error) {
+	log := hclog.FromContext(ctx)
+
 	currentUser := s.userFromContext(ctx)
 
 	// Old behavior, if we have the entrypoint set, we convert that to
@@ -597,6 +633,8 @@ func (s *Service) GenerateInviteToken(
 
 	// If we're creating a login token for another user and this is not
 	// a signup token, then we need to verify that user exists.
+	// req.Login.UserId is authored by the caller and won't be an encoded id
+	// so we don't decode it, but we will be sure the resulting token is encoded.
 	if req.Login.UserId != currentUser.Id && req.Signup == nil {
 		_, err := s.state(ctx).UserGet(&pb.Ref_User{
 			Ref: &pb.Ref_User_Id{
@@ -616,8 +654,23 @@ func (s *Service) GenerateInviteToken(
 	// TODO(mitchellh): when we have a policy system, we need to ensure only
 	// management tokens can signup other users.
 
+	loginUserId, err := s.encodeId(ctx, req.Login.UserId)
+	if err != nil {
+		msg := "failed to encode id when generating an invite token"
+		log.Error(msg, "req.Login.UserId", req.Login.UserId, "err", err)
+		return nil, status.Error(codes.InvalidArgument, msg)
+	}
+	req.Login.UserId = loginUserId
+
+	fromUserId, err := s.encodeId(ctx, currentUser.Id)
+	if err != nil {
+		msg := "failed to encode the 'from' user's id when generating an invite token"
+		log.Error(msg, "currentUser.Id", currentUser.Id, "err", err)
+		return nil, status.Error(codes.InvalidArgument, msg)
+	}
+
 	invite := &pb.Token_Invite{
-		FromUserId: currentUser.Id,
+		FromUserId: fromUserId,
 		Login:      req.Login,
 		Signup:     req.Signup,
 	}
@@ -634,6 +687,7 @@ func (s *Service) GenerateInviteToken(
 
 // Given an invite token, validate it and return a login token. This is a gRPC wrapper around ExchangeInvite.
 func (s *Service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteTokenRequest) (*pb.NewTokenResponse, error) {
+	log := hclog.FromContext(ctx)
 	_, body, err := s.decodeToken(ctx, req.Token)
 	if err != nil {
 		return nil, err
@@ -653,7 +707,12 @@ func (s *Service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteT
 		}
 
 		// Setup the login information for the new user
-		invite.Login.UserId = user.Id
+		invite.Login.UserId, err = s.encodeId(ctx, user.Id)
+		if err != nil {
+			msg := "failed to encode the current user's id when converting an invite token"
+			log.Error(msg, "user.Id", user.Id, "err", err)
+			return nil, status.Error(codes.InvalidArgument, msg)
+		}
 	}
 
 	// Our login token is just the login token on the invite.

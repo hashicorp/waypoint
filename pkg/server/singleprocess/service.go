@@ -141,15 +141,17 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 		s.id = id
 	}
 
-	// If we haven't initialized our server config before, do that once.
-	conf, err := state.ServerConfigGet()
-	if err != nil {
-		return nil, err
-	}
-	if conf.Cookie == "" {
-		err := state.ServerConfigSet(conf)
-		if err != nil && status.Convert(err).Code() != codes.Unimplemented {
+	if !cfg.skipServerConfigInit {
+		// If we haven't initialized our server config before, do that once.
+		conf, err := state.ServerConfigGet()
+		if err != nil {
 			return nil, err
+		}
+		if conf.Cookie == "" {
+			err := state.ServerConfigSet(conf)
+			if err != nil && status.Convert(err).Code() != codes.Unimplemented {
+				return nil, err
+			}
 		}
 	}
 
@@ -249,13 +251,14 @@ type config struct {
 	idEncoder func(ctx context.Context, id string) (encodedId string, err error)
 	idDecoder func(encodedId string) (id string, err error)
 
-	serverConfig      *serverconfig.Config
-	log               hclog.Logger
-	superuser         bool
-	oidcDisabled      bool
-	pollingDisabled   bool
-	logStreamProvider logstream.Provider
-	serverId          string
+	serverConfig         *serverconfig.Config
+	log                  hclog.Logger
+	superuser            bool
+	oidcDisabled         bool
+	pollingDisabled      bool
+	logStreamProvider    logstream.Provider
+	serverId             string
+	skipServerConfigInit bool
 
 	acceptUrlTerms bool
 }
@@ -370,6 +373,16 @@ func WithLogStreamProvider(logStreamProvider logstream.Provider) Option {
 func WithServerId(serverId string) Option {
 	return func(s *Service, cfg *config) error {
 		cfg.serverId = serverId
+		return nil
+	}
+}
+
+// WithServerConfigSkipInit skips initial server config initialization
+// which may be desired if server config is initialized some other way.
+// If unset, server config will be initialized on startup.
+func WithServerConfigSkipInit() Option {
+	return func(s *Service, cfg *config) error {
+		cfg.skipServerConfigInit = true
 		return nil
 	}
 }
