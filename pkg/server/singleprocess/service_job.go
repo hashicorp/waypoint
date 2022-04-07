@@ -623,7 +623,7 @@ func (s *Service) GetJobStream(
 
 				// NOTE: at present (2022-02-25) there is no exposed CLI or UI API that
 				// causes GetJobStream to be called on a completed job. Thusly this code below
-				// is entirely optimistic about future API usage.
+				// is entirely optimistic about future API usage. But it is tested!
 				case pb.Job_SUCCESS, pb.Job_ERROR:
 					// This means that the requested stream finished before GetJobStream was
 					// called. As such, we'll reply the output events from the database instead.
@@ -639,7 +639,8 @@ func (s *Service) GetJobStream(
 					if err := server.Send(&pb.GetJobStreamResponse{
 						Event: &pb.GetJobStreamResponse_Terminal_{
 							Terminal: &pb.GetJobStreamResponse_Terminal{
-								Events: events,
+								Events:   events,
+								Buffered: true,
 							},
 						},
 					}); err != nil {

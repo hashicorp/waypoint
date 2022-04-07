@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/pkg/errors"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/logbuffer"
@@ -40,9 +41,31 @@ func (s *singleProcessLogStreamProvider) StartReader(ctx context.Context, log hc
 	}, nil
 }
 
+// ReadCompleted reads all the buffered logs for the specified job.
+// NOTE: It doesn't verify that the job has, in fact, completed -
+// If called on a non-completed job, it may still return logs.
+// ALSO NOTE: The writer implementation does not persist job logs
+// permanently, so this reader will not give logs for a long-completed job.
 func (l *singleProcessLogStreamProvider) ReadCompleted(ctx context.Context, log hclog.Logger, state serverstate.Interface, job *serverstate.Job) ([]*pb.GetJobStreamResponse_Terminal_Event, error) {
-	// The singleprocess waypoint server does not support reading completed job events.
-	return []*pb.GetJobStreamResponse_Terminal_Event{}, nil
+	r, err := l.StartReader(ctx, log, job)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to start reader to get completed logs")
+	}
+
+	var events []*pb.GetJobStreamResponse_Terminal_Event
+
+	// Read events for this job until
+	for {
+		eventsBatch, err := r.ReadStream(ctx, false)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to read log batch for completed job")
+		}
+		if eventsBatch == nil {
+			break
+		}
+		events = append(events, eventsBatch...)
+	}
+	return events, nil
 }
 
 // singleProcessLogStreamWriter implements logstream.Writer
