@@ -14,9 +14,9 @@ import (
 	empty "google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/server/logbuffer"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
@@ -315,8 +315,9 @@ func (s *Service) onDemandRunnerStartJob(
 
 	encodedDefaultUserId, err := s.encodeId(ctx, DefaultUserId)
 	if err != nil {
-		log.Error("failed to encode the default user id", "id", DefaultUserId, "err", err)
-		return nil, "", status.Error(codes.Internal, "failed to encode the default user id")
+		msg := "failed to encode the default user id when starting and ODR job"
+		log.Error(msg, "id", DefaultUserId, "err", err)
+		return nil, "", status.Error(codes.Internal, msg)
 	}
 
 	// We generate a new login token for each ondemand-runner used. This will inherit
@@ -517,6 +518,7 @@ func (s *Service) GetJobStream(
 			ws = memdb.NewWatchSet()
 			job, err = s.state(ctx).JobById(job.Id, ws)
 			if err != nil {
+				log.Error("error acquiring job by id", "error", err, "id", req.JobId)
 				errCh <- err
 				return
 			}
@@ -603,17 +605,52 @@ func (s *Service) GetJobStream(
 				}
 			}
 
-			// If we haven't initialized output streaming and the output buffer
-			// is now non-nil, initialize that. This will send any buffered
-			// data down.
-			if eventsCh == nil && job.OutputBuffer != nil {
-				eventsCh, err = s.getJobStreamOutputInit(ctx, job, server)
-				if err != nil {
-					return err
+			if eventsCh == nil {
+				switch job.State {
+				case pb.Job_RUNNING:
+
+					// We're seeing the job start up live, so we'll initialize the
+					// event channel and use the job streamer to stream the logs
+					// in as they arrive via the runner interface.
+					// If the job OutputBuffer is nil, the streamer won't send
+					// any events.
+					eventsCh, err = s.getJobStreamOutputInit(ctx, log, job, server)
+					if err != nil {
+						msg := "failed to init job output stream"
+						log.Error(msg, "job.id", job.Id, "error", err)
+						return status.Error(codes.Internal, msg)
+					}
+
+				// NOTE: at present (2022-02-25) there is no exposed CLI or UI API that
+				// causes GetJobStream to be called on a completed job. Thusly this code below
+				// is entirely optimistic about future API usage.
+				case pb.Job_SUCCESS, pb.Job_ERROR:
+					// This means that the requested stream finished before GetJobStream was
+					// called. As such, we'll reply the output events from the database instead.
+					events, err := s.logStreamProvider.ReadCompleted(ctx, log, s.state(ctx), job)
+					if err != nil {
+						msg := "failed to stream logs for completed job"
+						log.Error(msg, "job.Id", job.Id, "error", err)
+						return status.Error(codes.Internal, msg)
+					}
+
+					// We're doing this synchronously so that the client receives the events
+					// before we send down the completion event.
+					if err := server.Send(&pb.GetJobStreamResponse{
+						Event: &pb.GetJobStreamResponse_Terminal_{
+							Terminal: &pb.GetJobStreamResponse_Terminal{
+								Events: events,
+							},
+						},
+					}); err != nil {
+						log.Error("failed to send logs for completed job", "job.Id", job.Id, "error", err)
+						return err
+					}
 				}
 			}
 
 			switch job.State {
+
 			case pb.Job_SUCCESS, pb.Job_ERROR:
 				// TODO(mitchellh): we should drain the output buffer
 
@@ -643,30 +680,25 @@ func (s *Service) GetJobStream(
 	}
 }
 
-func (s *Service) readJobLogBatch(r *logbuffer.Reader, block bool) []*pb.GetJobStreamResponse_Terminal_Event {
-	entries := r.Read(64, block)
-	if entries == nil {
-		return nil
-	}
-
-	events := make([]*pb.GetJobStreamResponse_Terminal_Event, len(entries))
-	for i, entry := range entries {
-		events[i] = entry.(*pb.GetJobStreamResponse_Terminal_Event)
-	}
-
-	return events
-}
-
 func (s *Service) getJobStreamOutputInit(
 	ctx context.Context,
+	log hclog.Logger,
 	job *serverstate.Job,
 	server pb.Waypoint_GetJobStreamServer,
 ) (<-chan []*pb.GetJobStreamResponse_Terminal_Event, error) {
+
+	// Start a log stream reader for this job
+	lsReader, err := s.logStreamProvider.StartReader(ctx, log, job)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to start log reader")
+	}
+
 	// Send down all our buffered lines.
-	outputR := job.OutputBuffer.Reader(-1)
-	go outputR.CloseContext(ctx)
 	for {
-		events := s.readJobLogBatch(outputR, false)
+		events, err := lsReader.ReadStream(ctx, false)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to read buffered log batch")
+		}
 		if events == nil {
 			break
 		}
@@ -683,11 +715,47 @@ func (s *Service) getJobStreamOutputInit(
 		}
 	}
 
-	// Start a goroutine that reads output
+	// Start a goroutine that reads output. If things go wrong in here,
+	// we cancel the whole job stream request.
+	ctx, cancel := context.WithCancel(ctx)
 	eventsCh := make(chan []*pb.GetJobStreamResponse_Terminal_Event, 1)
 	go func() {
 		for {
-			events := s.readJobLogBatch(outputR, true)
+			events, err := lsReader.ReadStream(ctx, true)
+			if err != nil {
+				// In the event of a reader error, we shut the stream down.
+				// It's up to the reader to retry if ephemeral errors are common.
+
+				msg := "failed to read streaming log batch"
+				log.Error(msg, "error", err)
+
+				// Let the client know we're terminating due to an error.
+				if err := server.Send(&pb.GetJobStreamResponse{
+					Event: &pb.GetJobStreamResponse_Terminal_{
+						Terminal: &pb.GetJobStreamResponse_Terminal{
+							Events: []*pb.GetJobStreamResponse_Terminal_Event{{
+								Timestamp: timestamppb.Now(),
+
+								// NOTE(izaak): really not sure if this is the right kind of terminal event
+								Event: &pb.GetJobStreamResponse_Terminal_Event_Line_{
+									Line: &pb.GetJobStreamResponse_Terminal_Event_Line{
+										Style: terminal.ErrorStyle,
+										Msg:   msg,
+									},
+								},
+							}},
+							Buffered: false,
+						},
+					},
+				}); err != nil {
+					// This waypoint server must be experiencing some kind of catastrophic failure - it can't
+					// stream logs or send messages to the client.
+					log.Error("failed to inform client of read streaming error", "error", err)
+				}
+
+				cancel()
+				return
+			}
 			if events == nil {
 				return
 			}
