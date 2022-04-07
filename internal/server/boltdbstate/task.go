@@ -79,6 +79,49 @@ func (s *State) TaskDelete(ref *pb.Ref_Task) error {
 	return err
 }
 
+// GetJobsByTaskRef will look up every job triple by Task ref in a single
+// memdb transaction. This is often used via the API for building out
+// a complete picture of a task beyond the job ID refs.
+func (s *State) GetJobsByTaskRef(
+	task *pb.Task,
+) (startJob *pb.Job, taskJob *pb.Job, stopJob *pb.Job, err error) {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	err = s.db.View(func(dbTxn *bolt.Tx) error {
+		resp, err := s.JobById(task.StartJob.Id, nil)
+		if err != nil {
+			return err
+		} else if resp == nil || resp.Job == nil {
+			return status.Errorf(codes.NotFound, "start job %q not found", task.StartJob.Id)
+		} else {
+			startJob = resp.Job
+		}
+
+		resp, err = s.JobById(task.TaskJob.Id, nil)
+		if err != nil {
+			return err
+		} else if resp == nil || resp.Job == nil {
+			return status.Errorf(codes.NotFound, "task job %q not found", task.TaskJob.Id)
+		} else {
+			taskJob = resp.Job
+		}
+
+		resp, err = s.JobById(task.StopJob.Id, nil)
+		if err != nil {
+			return err
+		} else if resp == nil || resp.Job == nil {
+			return status.Errorf(codes.NotFound, "stop job %q not found", task.StopJob.Id)
+		} else {
+			stopJob = resp.Job
+		}
+
+		return nil
+	})
+
+	return startJob, taskJob, stopJob, err
+}
+
 // TaskList returns the list of tasks.
 func (s *State) TaskList(req *pb.ListTaskRequest) ([]*pb.Task, error) {
 	memTxn := s.inmem.Txn(false)
