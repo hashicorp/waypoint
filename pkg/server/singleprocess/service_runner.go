@@ -615,15 +615,15 @@ func (s *Service) RunnerJobStream(
 		return err
 	}
 
-	var logStreamTracker logstream.Tracker
+	var logStreamWriter logstream.Writer
 	if s.logStreamProvider != nil {
-		logStreamTracker, err = s.logStreamProvider.StartWriter(ctx, log, s.state(ctx), job)
+		logStreamWriter, err = s.logStreamProvider.StartWriter(ctx, log, s.state(ctx), job)
 		if err != nil {
 			return errors.Wrapf(err, "failed to start a log writer to handle jog logs")
 		}
 	}
 
-	defer logStreamTracker.Flush(ctx)
+	defer logStreamWriter.Flush(ctx)
 
 	// Start a goroutine that watches for job changes
 	jobCh := make(chan *serverstate.Job, 1)
@@ -712,7 +712,7 @@ func (s *Service) RunnerJobStream(
 			for {
 				select {
 				case req := <-eventCh:
-					if err := s.handleJobStreamRequest(log, job, server, req, logStreamTracker); err != nil {
+					if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
 						return err
 					}
 				default:
@@ -724,7 +724,7 @@ func (s *Service) RunnerJobStream(
 			return err
 
 		case req := <-eventCh:
-			if err := s.handleJobStreamRequest(log, job, server, req, logStreamTracker); err != nil {
+			if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
 				return err
 			}
 
@@ -770,7 +770,7 @@ func (s *Service) handleJobStreamRequest(
 	job *serverstate.Job,
 	srv pb.Waypoint_RunnerJobStreamServer,
 	req *pb.RunnerJobStreamRequest,
-	logStreamTracker logstream.Tracker,
+	logStreamWriter logstream.Writer,
 ) error {
 	ctx := srv.Context()
 	log.Trace("event received", "event", req.Event)
@@ -808,7 +808,7 @@ func (s *Service) handleJobStreamRequest(
 	case *pb.RunnerJobStreamRequest_Terminal:
 
 		// Write the events
-		logStreamTracker.NewEvent(ctx, event)
+		logStreamWriter.NewEvent(ctx, event)
 
 		return nil
 
