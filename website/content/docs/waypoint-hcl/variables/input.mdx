@@ -189,6 +189,7 @@ operation can verify whether the expected value was used by verifying the output
 SHA256 hashed value.
 
 Defining a variable as “sensitive” in the waypoint.hcl definition looks like this:
+
 ```hcl
 variable "auth_email" {
  sensitive   = true
@@ -197,6 +198,7 @@ variable "auth_email" {
 ```
 
 The resulting output value displayed:
+
 ```
    VARIABLE  |                     VALUE                      |   TYPE    | SOURCE
 -------------+------------------------------------------------+-----------+----------
@@ -205,12 +207,14 @@ The resulting output value displayed:
 ```
 
 Retrieve the server cookie using the command `waypoint server cookie`:
+
 ```
 $ waypoint server cookie
 WPC01FZ1FB3FQ1BYABXVN67FAPXJE
 ```
 
 Then verify by combining the cookie with the value you expected Waypoint to use:
+
 ```
 $ echo -n "WPC01FZ1FB3FQ1BYABXVN67FAPXJEmyemail@mycorp.com" | sha256sum
 63fc1b8d861dd448c9ae7eaae3102e8a6dd14b838c8bbf1c0ed2f4eceb967d0c
