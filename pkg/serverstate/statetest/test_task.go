@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func init() {
@@ -211,5 +212,44 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.NoError(err)
 			require.Len(resp, 3)
 		}
+	})
+
+	t.Run("Getting task jobs by task ref", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "start_job",
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "j_test",
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "stop_job",
+		})))
+
+		err := s.TaskPut(&pb.Task{
+			Id:       "t_test",
+			TaskJob:  &pb.Ref_Job{Id: "j_test"},
+			StartJob: &pb.Ref_Job{Id: "start_job"},
+			StopJob:  &pb.Ref_Job{Id: "stop_job"},
+		})
+		require.NoError(err)
+
+		task, err := s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_JobId{
+				JobId: "j_test",
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+
+		startJob, taskJob, stopJob, err := s.GetJobsByTaskRef(task)
+		require.NoError(err)
+		require.Equal(startJob.Id, "start_job")
+		require.Equal(taskJob.Id, "j_test")
+		require.Equal(stopJob.Id, "stop_job")
 	})
 }
