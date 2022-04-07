@@ -626,7 +626,7 @@ func (s *Service) GetJobStream(
 				// is entirely optimistic about future API usage. But it is tested!
 				case pb.Job_SUCCESS, pb.Job_ERROR:
 					// This means that the requested stream finished before GetJobStream was
-					// called. As such, we'll reply the output events from the database instead.
+					// called. As such, we'll replay the output events.
 					events, err := s.logStreamProvider.ReadCompleted(ctx, log, s.state(ctx), job)
 					if err != nil {
 						msg := "failed to stream logs for completed job"
