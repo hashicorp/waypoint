@@ -1,6 +1,7 @@
 .operation-status-indicator {
   margin-top: 1px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
 
   > span {

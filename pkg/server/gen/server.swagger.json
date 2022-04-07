@@ -1303,7 +1303,7 @@
     },
     "/v1/project/{application.project}/application/{application.application}/release/latest": {
       "get": {
-        "summary": "GetLatestRelease returns the most recent successfully completed\nartifact push for an app.",
+        "summary": "GetLatestRelease returns the most recent successfully completed\nrelease for an app.",
         "operationId": "Waypoint_GetLatestRelease",
         "responses": {
           "200": {
@@ -1360,7 +1360,7 @@
     },
     "/v1/project/{application.project}/application/{application.application}/releases": {
       "get": {
-        "summary": "ListReleases returns the deployments.",
+        "summary": "ListReleases returns the releases.",
         "operationId": "Waypoint_ListReleases",
         "responses": {
           "200": {
@@ -1999,7 +1999,7 @@
     },
     "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/release/latest": {
       "get": {
-        "summary": "GetLatestRelease returns the most recent successfully completed\nartifact push for an app.",
+        "summary": "GetLatestRelease returns the most recent successfully completed\nrelease for an app.",
         "operationId": "Waypoint_GetLatestRelease2",
         "responses": {
           "200": {
@@ -2056,7 +2056,7 @@
     },
     "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/releases": {
       "get": {
-        "summary": "ListReleases returns the deployments.",
+        "summary": "ListReleases returns the releases.",
         "operationId": "Waypoint_ListReleases2",
         "responses": {
           "200": {
@@ -2798,7 +2798,7 @@
     },
     "/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/release/{ref.sequence.number}": {
       "get": {
-        "summary": "GetRelease returns a deployment",
+        "summary": "GetRelease returns a release",
         "operationId": "Waypoint_GetRelease2",
         "responses": {
           "200": {
@@ -3169,7 +3169,7 @@
     },
     "/v1/release/{ref.id}": {
       "get": {
-        "summary": "GetRelease returns a deployment",
+        "summary": "GetRelease returns a release",
         "operationId": "Waypoint_GetRelease",
         "responses": {
           "200": {
@@ -5967,6 +5967,13 @@
           "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref",
           "description": "Ref of the data was fetched for this job. This is available after\nthe Ref event is sent down by GetJobStream. This is NOT used to specify\nthe ref that should be downloaded. That level of configuration should be\nexposed via the data_source parameter itself."
         },
+        "variable_final_values": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/hashicorp.waypoint.Variable.FinalValue"
+          },
+          "description": "Variable refs store the final value used on the operation for each variable\ndefined in the waypoint.hcl. Any variables with `sensitive` set in the\nwaypoint.hcl will have a value hashed with SHA256 so the user can verify\nthe value used."
+        },
         "config": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.Config",
           "description": "Config is information about the Waypoint configuration (waypoint.hcl)\nfor this job. This is only available once the configuration is loaded.\nIf this is nil and the job is RUNNING, then it may not be loaded yet.\nAPI users can wait on the Job event on the JobStream to listen for\njob updates."
@@ -6990,7 +6997,7 @@
           "items": {
             "$ref": "#/definitions/hashicorp.waypoint.Variable"
           },
-          "description": "NOTE: Variables are WIP and experimental; currently\nthese are not used, and don't do anything\nWIP: Variable values stored on the server. These values are set in the UI."
+          "description": "Variable values stored on the server. These values are set in the UI."
         },
         "status_report_poll": {
           "$ref": "#/definitions/hashicorp.waypoint.Project.AppStatusPoll",
@@ -7630,6 +7637,17 @@
         }
       }
     },
+    "hashicorp.waypoint.RunnerJobStreamRequest.VariableValuesSet": {
+      "type": "object",
+      "properties": {
+        "final_values": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/hashicorp.waypoint.Variable.FinalValue"
+          }
+        }
+      }
+    },
     "hashicorp.waypoint.RunnerJobStreamResponse": {
       "type": "object",
       "properties": {
@@ -7647,7 +7665,15 @@
       "type": "object",
       "properties": {
         "job": {
-          "$ref": "#/definitions/hashicorp.waypoint.Job"
+          "$ref": "#/definitions/hashicorp.waypoint.Job",
+          "title": "The job to assign"
+        },
+        "config_sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.ConfigSource"
+          },
+          "title": "A list of plugin configs"
         }
       }
     },
@@ -8551,6 +8577,12 @@
         "dynamic": {
           "properties": {},
           "title": "Dynamic config source plugin"
+        },
+        "final_value": {
+          "$ref": "#/definitions/hashicorp.waypoint.Variable.FinalValue"
+        },
+        "sensitive": {
+          "type": "boolean"
         }
       },
       "title": "Variable stores a variable's value, and metadata to allow for precedence\nsorting and source-specific error messaging"
@@ -8565,6 +8597,47 @@
           "$ref": "#/definitions/hashicorp.waypoint.Variable.HclRange"
         }
       }
+    },
+    "hashicorp.waypoint.Variable.FinalValue": {
+      "type": "object",
+      "properties": {
+        "sensitive": {
+          "type": "string",
+          "title": "'sensitive' values are hashed as SHA256 values for\nthe purposes of output and logging"
+        },
+        "str": {
+          "type": "string"
+        },
+        "bool": {
+          "type": "boolean"
+        },
+        "num": {
+          "type": "string",
+          "format": "int64"
+        },
+        "hcl": {
+          "type": "string",
+          "title": "hcl stores values of any complex type in a raw string format"
+        },
+        "source": {
+          "$ref": "#/definitions/hashicorp.waypoint.Variable.FinalValue.Source"
+        }
+      }
+    },
+    "hashicorp.waypoint.Variable.FinalValue.Source": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "DEFAULT",
+        "FILE",
+        "CLI",
+        "ENV",
+        "VCS",
+        "SERVER",
+        "DYNAMIC"
+      ],
+      "default": "UNKNOWN",
+      "description": " - UNKNOWN: This is the final used value's source\nthat is supplied to the user in outputs."
     },
     "hashicorp.waypoint.Variable.HclPos": {
       "type": "object",

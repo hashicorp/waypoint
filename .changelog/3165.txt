@@ -1,0 +1,3 @@
+```release-note:bug
+core: Fix panic when running `waypoint build` remotely outside of project directory.
+```

@@ -41,7 +41,13 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 
 		// Set
 		rec := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
-			OciUrl: "h/w:s",
+			Name:                 "test",
+			OciUrl:               "h/w:s",
+			EnvironmentVariables: map[string]string{"CONTAINER": "DOCKER", "FOO": "BAR"},
+			TargetRunner:         &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{Any: &pb.Ref_RunnerAny{}}},
+			PluginConfig:         []byte(`{"foo":"bar"}`),
+			ConfigFormat:         pb.Hcl_JSON,
+			Default:              true,
 		})
 
 		err := s.OnDemandRunnerConfigPut(rec)
@@ -54,6 +60,16 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 			})
 			require.NoError(err)
 			require.NotNil(resp)
+
+			// Ensure fields were saved correctly
+			require.Equal(rec.Id, resp.Id)
+			require.Equal(rec.Name, resp.Name)
+			require.Equal(rec.TargetRunner.Target, resp.TargetRunner.Target)
+			require.Equal(rec.OciUrl, resp.OciUrl)
+			require.Equal(rec.EnvironmentVariables, resp.EnvironmentVariables)
+			require.Equal(rec.PluginConfig, resp.PluginConfig)
+			require.Equal(rec.ConfigFormat, resp.ConfigFormat)
+			require.Equal(rec.Default, resp.Default)
 		}
 
 		// Get case insensitive

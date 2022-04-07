@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/config/variables/formatter"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -49,6 +50,22 @@ func (c *UpCommand) Run(args []string) int {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
+
+		// Show input variable values used in build
+		// We do this here so that if the list is long, it doesn't
+		// push the deploy/release URLs off the top of the terminal.
+		// BuildResult, DeployResult, and ReleaseResult all store
+		// used VariableRefs. We use Release just because it's last.
+		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
+		resp, err := c.project.Client().GetJob(ctx, &pb.GetJobRequest{
+			JobId: result.Release.Release.JobId,
+		})
+		if err != nil {
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+		tbl := fmtVariablesOutput(resp.VariableFinalValues)
+		c.ui.Table(tbl)
 
 		// Common reused values
 		releaseUrl := result.Up.ReleaseUrl
@@ -246,4 +263,36 @@ Usage: waypoint up [options]
   Perform the build, deploy, and release steps.
 
 ` + c.Flags().Help())
+}
+
+// Helper functions for formatting variable final value output
+func fmtVariablesOutput(values map[string]*pb.Variable_FinalValue) *terminal.Table {
+	headers := []string{
+		"Variable", "Value", "Type", "Source",
+	}
+	tbl := terminal.NewTable(headers...)
+	output := formatter.ValuesForOutput(values)
+	var columns []string
+	for iv, v := range output {
+		// We add a line break in the value here because the Table word wrap
+		// alone can't accomodate the column headers to a long value
+		if len(v.Value) > 45 {
+			for i := 45; i < len(v.Value); i += 46 {
+				v.Value = v.Value[:i] + "\n" + v.Value[i:]
+			}
+		}
+		columns = []string{
+			iv,
+			v.Value,
+			v.Type,
+			v.Source,
+		}
+		tbl.Rich(
+			columns,
+			[]string{
+				terminal.Green,
+			},
+		)
+	}
+	return tbl
 }

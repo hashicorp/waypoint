@@ -118,6 +118,22 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			}
 		}
 
+		// Show input variable values used in build
+		// We do this here so that if the list is long, it doesn't
+		// push the deploy/release URLs off the top of the terminal.
+		// We also use the deploy result and not the release result,
+		// because the data will be the same and this is the deployment command.
+		app.UI.Output("Variables used:", terminal.WithHeaderStyle())
+		resp, err := c.project.Client().GetJob(ctx, &pb.GetJobRequest{
+			JobId: deployment.JobId,
+		})
+		if err != nil {
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+		tbl := fmtVariablesOutput(resp.VariableFinalValues)
+		c.ui.Table(tbl)
+
 		// inplace is true if this was an in-place deploy. We detect this
 		// if we have a generation that uses a non-matching sequence number
 		inplace := result.Deployment.Generation != nil &&

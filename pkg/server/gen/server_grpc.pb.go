@@ -102,12 +102,12 @@ type WaypointClient interface {
 	// GetLatestPushedArtifact returns the most recent successfully completed
 	// artifact push for an app.
 	GetLatestPushedArtifact(ctx context.Context, in *GetLatestPushedArtifactRequest, opts ...grpc.CallOption) (*PushedArtifact, error)
-	// ListReleases returns the deployments.
+	// ListReleases returns the releases.
 	ListReleases(ctx context.Context, in *ListReleasesRequest, opts ...grpc.CallOption) (*ListReleasesResponse, error)
-	// GetRelease returns a deployment
+	// GetRelease returns a release
 	GetRelease(ctx context.Context, in *GetReleaseRequest, opts ...grpc.CallOption) (*Release, error)
 	// GetLatestRelease returns the most recent successfully completed
-	// artifact push for an app.
+	// release for an app.
 	GetLatestRelease(ctx context.Context, in *GetLatestReleaseRequest, opts ...grpc.CallOption) (*Release, error)
 	// GetLogStream reads the log stream for a deployment. This will immediately
 	// send a single LogEntry with the lines we have so far. If there are no
@@ -149,9 +149,9 @@ type WaypointClient interface {
 	CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// GetJob queries a job by ID.
 	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*Job, error)
-	// INTERNAL: ListJobs lists all the jobs the server has processed. This
-	// is not yet ready for public use.
-	XListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
+	// ListJobs will return a list of jobs known to Waypoint server. Can be filtered
+	// by request on values like workspace, project, application, job state, etc.
+	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
 	// ValidateJob checks if a job appears valid. This will check the job
 	// structure itself (i.e. missing fields) and can also check to ensure
 	// the job is assignable to a runner.
@@ -746,9 +746,9 @@ func (c *waypointClient) GetJob(ctx context.Context, in *GetJobRequest, opts ...
 	return out, nil
 }
 
-func (c *waypointClient) XListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error) {
+func (c *waypointClient) ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error) {
 	out := new(ListJobsResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/_ListJobs", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListJobs", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1419,12 +1419,12 @@ type WaypointServer interface {
 	// GetLatestPushedArtifact returns the most recent successfully completed
 	// artifact push for an app.
 	GetLatestPushedArtifact(context.Context, *GetLatestPushedArtifactRequest) (*PushedArtifact, error)
-	// ListReleases returns the deployments.
+	// ListReleases returns the releases.
 	ListReleases(context.Context, *ListReleasesRequest) (*ListReleasesResponse, error)
-	// GetRelease returns a deployment
+	// GetRelease returns a release
 	GetRelease(context.Context, *GetReleaseRequest) (*Release, error)
 	// GetLatestRelease returns the most recent successfully completed
-	// artifact push for an app.
+	// release for an app.
 	GetLatestRelease(context.Context, *GetLatestReleaseRequest) (*Release, error)
 	// GetLogStream reads the log stream for a deployment. This will immediately
 	// send a single LogEntry with the lines we have so far. If there are no
@@ -1466,9 +1466,9 @@ type WaypointServer interface {
 	CancelJob(context.Context, *CancelJobRequest) (*emptypb.Empty, error)
 	// GetJob queries a job by ID.
 	GetJob(context.Context, *GetJobRequest) (*Job, error)
-	// INTERNAL: ListJobs lists all the jobs the server has processed. This
-	// is not yet ready for public use.
-	XListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
+	// ListJobs will return a list of jobs known to Waypoint server. Can be filtered
+	// by request on values like workspace, project, application, job state, etc.
+	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
 	// ValidateJob checks if a job appears valid. This will check the job
 	// structure itself (i.e. missing fields) and can also check to ensure
 	// the job is assignable to a runner.
@@ -1745,8 +1745,8 @@ func (UnimplementedWaypointServer) CancelJob(context.Context, *CancelJobRequest)
 func (UnimplementedWaypointServer) GetJob(context.Context, *GetJobRequest) (*Job, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetJob not implemented")
 }
-func (UnimplementedWaypointServer) XListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method XListJobs not implemented")
+func (UnimplementedWaypointServer) ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListJobs not implemented")
 }
 func (UnimplementedWaypointServer) ValidateJob(context.Context, *ValidateJobRequest) (*ValidateJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidateJob not implemented")
@@ -2714,20 +2714,20 @@ func _Waypoint_GetJob_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Waypoint_XListJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Waypoint_ListJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListJobsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WaypointServer).XListJobs(ctx, in)
+		return srv.(WaypointServer).ListJobs(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/_ListJobs",
+		FullMethod: "/hashicorp.waypoint.Waypoint/ListJobs",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).XListJobs(ctx, req.(*ListJobsRequest))
+		return srv.(WaypointServer).ListJobs(ctx, req.(*ListJobsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3753,8 +3753,8 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_GetJob_Handler,
 		},
 		{
-			MethodName: "_ListJobs",
-			Handler:    _Waypoint_XListJobs_Handler,
+			MethodName: "ListJobs",
+			Handler:    _Waypoint_ListJobs_Handler,
 		},
 		{
 			MethodName: "ValidateJob",

@@ -1055,6 +1055,11 @@ export namespace Ref {
     hasId(): boolean;
     clearId(): Runner;
 
+    getLabels(): Ref.RunnerLabels | undefined;
+    setLabels(value?: Ref.RunnerLabels): Runner;
+    hasLabels(): boolean;
+    clearLabels(): Runner;
+
     getTargetCase(): Runner.TargetCase;
 
     serializeBinary(): Uint8Array;
@@ -1069,12 +1074,29 @@ export namespace Ref {
     export type AsObject = {
       any?: Ref.RunnerAny.AsObject,
       id?: Ref.RunnerId.AsObject,
+      labels?: Ref.RunnerLabels.AsObject,
     }
 
     export enum TargetCase { 
       TARGET_NOT_SET = 0,
       ANY = 1,
       ID = 2,
+      LABELS = 3,
+    }
+  }
+
+
+  export class RunnerAny extends jspb.Message {
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): RunnerAny.AsObject;
+    static toObject(includeInstance: boolean, msg: RunnerAny): RunnerAny.AsObject;
+    static serializeBinaryToWriter(message: RunnerAny, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): RunnerAny;
+    static deserializeBinaryFromReader(message: RunnerAny, reader: jspb.BinaryReader): RunnerAny;
+  }
+
+  export namespace RunnerAny {
+    export type AsObject = {
     }
   }
 
@@ -1098,17 +1120,21 @@ export namespace Ref {
   }
 
 
-  export class RunnerAny extends jspb.Message {
+  export class RunnerLabels extends jspb.Message {
+    getLabelsMap(): jspb.Map<string, string>;
+    clearLabelsMap(): RunnerLabels;
+
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): RunnerAny.AsObject;
-    static toObject(includeInstance: boolean, msg: RunnerAny): RunnerAny.AsObject;
-    static serializeBinaryToWriter(message: RunnerAny, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): RunnerAny;
-    static deserializeBinaryFromReader(message: RunnerAny, reader: jspb.BinaryReader): RunnerAny;
+    toObject(includeInstance?: boolean): RunnerLabels.AsObject;
+    static toObject(includeInstance: boolean, msg: RunnerLabels): RunnerLabels.AsObject;
+    static serializeBinaryToWriter(message: RunnerLabels, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): RunnerLabels;
+    static deserializeBinaryFromReader(message: RunnerLabels, reader: jspb.BinaryReader): RunnerLabels;
   }
 
-  export namespace RunnerAny {
+  export namespace RunnerLabels {
     export type AsObject = {
+      labelsMap: Array<[string, string]>,
     }
   }
 
@@ -4864,6 +4890,9 @@ export namespace RunnerJobStreamRequest {
     getRunnerId(): string;
     setRunnerId(value: string): Request;
 
+    getReattachJobId(): string;
+    setReattachJobId(value: string): Request;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Request.AsObject;
     static toObject(includeInstance: boolean, msg: Request): Request.AsObject;
@@ -4875,6 +4904,7 @@ export namespace RunnerJobStreamRequest {
   export namespace Request {
     export type AsObject = {
       runnerId: string,
+      reattachJobId: string,
     }
   }
 
