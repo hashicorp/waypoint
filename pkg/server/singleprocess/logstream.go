@@ -60,7 +60,7 @@ func (l *singleProcessLogStreamProvider) ReadCompleted(ctx context.Context, log 
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to read log batch for completed job")
 		}
-		if eventsBatch == nil || len(eventsBatch) == 0 {
+		if len(eventsBatch) == 0 {
 			break
 		}
 		events = append(events, eventsBatch...)
