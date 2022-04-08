@@ -7,7 +7,7 @@ Deploy the application into a Kubernetes cluster using Deployment objects.
 ### Examples
 
 ```hcl
-deploy "kubernetes" {
+use "kubernetes" {
 	image_secret = "registry_secret"
 	replicas = 3
 	probe_path = "/_healthz"
