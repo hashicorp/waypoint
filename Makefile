@@ -182,3 +182,14 @@ tools: # install dependencies and tools required to build
 	$(GO_CMD) generate -tags tools tools/tools.go
 	@echo
 	@echo "Done!"
+
+.PHONY: test/boltdbstate
+test/boltdbstate:
+	@echo "Running state tests..."
+	go test -test.v ./internal/server/boltdbstate 
+
+
+.PHONY: test/service
+test/service:
+	@echo "Running service API server tests..."
+	go test -test.v ./pkg/server/singleprocess/ 
