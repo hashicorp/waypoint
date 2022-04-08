@@ -1,0 +1,6 @@
+```release-note:feature
+**Waypoint Task Tracking**: Waypoint now tracks the lifecycle of on-demand
+runner tasks through a new internal core concept `Task`. As ODR jobs run, Task
+will keep track of what part the jobs are at for better debugging and on-demand
+runner insight.
+```
