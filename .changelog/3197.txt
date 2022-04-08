@@ -1,0 +1,3 @@
+```release-note:bug
+builtin/k8s: Ensure pod.container.static_environment is applied
+```
