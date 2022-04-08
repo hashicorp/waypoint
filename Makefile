@@ -191,5 +191,6 @@ test/boltdbstate:
 
 .PHONY: test/service
 test/service:
+	$(warning "Running the full service suite requires `docker-compose up`! Some Tests rely on a local Horizon instance to be running.")
 	@echo "Running service API server tests..."
 	go test -test.v ./pkg/server/singleprocess/ 
