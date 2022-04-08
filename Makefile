@@ -53,10 +53,6 @@ endif
 	mkdir -p $(GOPATH)/bin
 	cp ./waypoint $(GOPATH)/bin/waypoint
 
-.PHONY: test
-test: # run tests
-	go test ./...
-
 .PHONY: format
 format: # format go code
 	gofmt -s -w ./
@@ -183,11 +179,14 @@ tools: # install dependencies and tools required to build
 	@echo
 	@echo "Done!"
 
+.PHONY: test
+test: # run tests
+	go test ./...
+
 .PHONY: test/boltdbstate
 test/boltdbstate:
 	@echo "Running state tests..."
 	go test -test.v ./internal/server/boltdbstate 
-
 
 .PHONY: test/service
 test/service:
