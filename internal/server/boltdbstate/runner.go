@@ -359,7 +359,7 @@ func (s *State) runnerEmpty(memTxn *memdb.Txn) (bool, error) {
 
 // runnerIndexInit initializes the config index from persisted data.
 func (s *State) runnerIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
-	bucket := dbTxn.Bucket(jobBucket)
+	bucket := dbTxn.Bucket(runnerBucket)
 	c := bucket.Cursor()
 
 	for k, v := c.Last(); k != nil; k, v = c.Prev() {
