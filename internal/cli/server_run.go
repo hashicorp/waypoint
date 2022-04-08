@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -294,8 +295,8 @@ func (c *ServerRunCommand) Run(args []string) int {
 
 	// If we aren't bootstrapped, let the user know
 	if bs, ok := impl.(interface {
-		Bootstrapped() bool
-	}); ok && auth && !bs.Bootstrapped() {
+		Bootstrapped(ctx context.Context) bool
+	}); ok && auth && !bs.Bootstrapped(c.Ctx) {
 		c.ui.Output("Server requires bootstrapping!", terminal.WithHeaderStyle())
 		c.ui.Output("")
 		c.ui.Output(strings.TrimSpace(`
