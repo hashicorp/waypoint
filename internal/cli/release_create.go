@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -62,6 +63,9 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 
 		if c.flagDeployment == "" {
 			// Get the latest deployment
+			// NOTE(izaak): This doesn't guarantee we get the most recent
+			// *successful* deployment - we should eventually filter on
+			// Status rather than physical state.
 			resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
 				Application:   app.Ref(),
 				Workspace:     c.project.WorkspaceRef(),
@@ -110,6 +114,14 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 				return ErrSentinel
 			}
+		}
+
+		if deploy.Status.State != pb.Status_SUCCESS {
+			app.UI.Output(strings.TrimSpace(
+				fmt.Sprintf(releaseUnsuccessfulDeployment, deploy.Sequence, deploy.Status.State)),
+				terminal.WithErrorStyle(),
+			)
+			return ErrSentinel
 		}
 
 		// If the latest release already deployed this then we're done.
@@ -290,5 +302,10 @@ with matching generations share the same underlying resources.
 This means that your deployment plugin %[2]q performed an in-place update.
 For plugins that perform in-place updates, you can only release deployments
 of a different generation.
+`
+
+	releaseUnsuccessfulDeployment = `
+Warning: deployment v%[1]d was not successful (is in state %q),
+and cannot be released."
 `
 )
