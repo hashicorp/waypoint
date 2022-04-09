@@ -712,32 +712,6 @@ func (p *Platform) Destroy(
 			FunctionName: aws.String(deployment.FuncArn),
 			Qualifier:    aws.String(deployment.Version),
 		})
-		if err != nil {
-			// older lambda version fail to delete if they have aliases
-			if aerr, ok := err.(awserr.Error); ok {
-				switch aerr.Code() {
-				case lambda.ErrCodeResourceConflictException:
-					log.Warn("error deleting lambda function", "error", aerr.Error())
-					st.Step(terminal.StatusWarn, "Error deleting function..."+aerr.Message())
-					st.Step(terminal.StatusWarn, "Attempting to delete function alias...")
-
-					_, err = lamSvc.DeleteAlias(&lambda.DeleteAliasInput{
-						FunctionName: aws.String(deployment.FuncArn),
-						Name:         aws.String("Alias_" + deployment.Version),
-					})
-					if err != nil {
-						// todo logs
-						return err
-					}
-					st.Step(terminal.StatusOK, "Deleted alias: "+"Alias_"+deployment.Version)
-					st.Update("Attempting to delete again...")
-					_, err = lamSvc.DeleteFunction(&lambda.DeleteFunctionInput{
-						FunctionName: aws.String(deployment.FuncArn),
-						Qualifier:    aws.String(deployment.Version),
-					})
-				}
-			}
-		}
 	}
 	st.Step(terminal.StatusOK, "Deleted Lambda function version")
 
