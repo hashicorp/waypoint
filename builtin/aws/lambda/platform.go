@@ -42,7 +42,7 @@ func (p *Platform) ConfigSet(config interface{}) error {
 	c, ok := config.(*Config)
 	if !ok {
 		// this should never happen
-		return fmt.Errorf("Invalid configuration, expected *lambda.Config, got %s", reflect.TypeOf(config))
+		return fmt.Errorf("Invalid configuration, expected *lambda.Config, got %q", reflect.TypeOf(config))
 	}
 
 	// validate architecture
@@ -55,12 +55,12 @@ func (p *Platform) ConfigSet(config interface{}) error {
 
 		var validArchitectures []string
 		for _, arch := range lambda.Architecture_Values() {
-			validArchitectures = append(validArchitectures, fmt.Sprintf("\"%s\"", arch))
+			validArchitectures = append(validArchitectures, fmt.Sprintf("%q", arch))
 		}
 
 		if err := utils.Error(validation.ValidateStruct(c,
 			validation.Field(&c.Architecture,
-				validation.In(architectures...).Error(fmt.Sprintf("Unsupported function architecture \"%s\". Must be one of [%s], or left blank", c.Architecture, strings.Join(validArchitectures, ", "))),
+				validation.In(architectures...).Error(fmt.Sprintf("Unsupported function architecture %q. Must be one of [%s], or left blank", c.Architecture, strings.Join(validArchitectures, ", "))),
 			),
 		)); err != nil {
 			return err
