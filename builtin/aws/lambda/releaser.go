@@ -2,6 +2,7 @@ package lambda
 
 import (
 	"context"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -50,10 +51,8 @@ func (r *Releaser) resourceManager(log hclog.Logger) *resource.Manager {
 
 		resource.WithResource(resource.NewResource(
 			resource.WithName("function_url"),
-			// WithState is needed for `rm.Resource("function_url").State()` to succeed
 			resource.WithState(&Resource_FunctionUrl{}),
 			resource.WithCreate(r.resourceFunctionUrlCreate),
-			resource.WithDestroy(r.resourceFunctionUrlDestroy),
 		)),
 	)
 }
@@ -67,6 +66,10 @@ func (r *Releaser) getSession(
 	})
 }
 
+var (
+	DefaultFunctionUrlAuthType = lambda.FunctionUrlAuthTypeNone
+)
+
 func (r *Releaser) resourceFunctionUrlCreate(
 	ctx context.Context,
 	log hclog.Logger,
@@ -74,75 +77,95 @@ func (r *Releaser) resourceFunctionUrlCreate(
 	sg terminal.StepGroup,
 	ui terminal.UI,
 	dep *Deployment,
+	state *Resource_FunctionUrl,
 ) error {
-	log.Info("Creating Lambda URL...", "VerArn", dep.VerArn, "FuncArn", dep.FuncArn)
-
 	lambdasrv := lambda.New(sess)
 
-	log.Info("Creating alias...")
-	log.Info("Version: " + dep.Version)
-	log.Info("FuncArn: " + dep.FuncArn)
-	// create a function alias so that we can create a function url
-	// https://docs.aws.amazon.com/lambda/latest/dg/API_CreateAlias.html
-	qualifier := "Alias_" + dep.Version
-	a, err := lambdasrv.CreateAlias(&lambda.CreateAliasInput{
-		// Alias name cannot be numeric-only
-		Name:            aws.String(qualifier),
-		Description:     aws.String("Waypoint Lambda Alias"),
-		FunctionName:    aws.String(dep.FuncArn),
-		FunctionVersion: aws.String(dep.Version),
-	})
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			log.Error("Error creating alias", "error", aerr.Code(), "message", aerr.Message())
-		}
-		return err
+	functionUrlAuthType := DefaultFunctionUrlAuthType
+	if r.config.AuthType != "" {
+		functionUrlAuthType = strings.ToUpper(r.config.AuthType)
 	}
-	log.Info("Created alias", "alias", *a.AliasArn)
 
-	// create permissions prior to creating function url
-	// https://us-east-1.console.aws.amazon.com/lambda/services/ajax?operation=addPermission&locale=en
-	log.Info("Creating permission...")
-	p, err := lambdasrv.AddPermission(&lambda.AddPermissionInput{
-		FunctionUrlAuthType: aws.String(lambda.FunctionUrlAuthTypeNone),
-		FunctionName:        a.AliasArn,
+	// TODO(thiskevinwang): source cors from HCL config
+	cors := lambda.Cors{}
+
+	addPermissionInput := lambda.AddPermissionInput{
 		Action:              aws.String("lambda:InvokeFunctionUrl"),
+		FunctionUrlAuthType: aws.String(functionUrlAuthType),
+		FunctionName:        aws.String(dep.FuncArn),
 		Principal:           aws.String("*"),
-		Qualifier:           aws.String(qualifier),
 		StatementId:         aws.String("FunctionURLAllowPublicAccess"),
-	})
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			log.Error("Error creating permission", "error", aerr.Code(), "message", aerr.Message())
-		}
 	}
-	log.Info("Created permission", "permission", *p.Statement)
 
-	o, err := lambdasrv.CreateFunctionUrlConfig(&lambda.CreateFunctionUrlConfigInput{
-		// Todo: make AuthType configurable via HCL
-		AuthType:     aws.String(lambda.FunctionUrlAuthTypeNone),
-		FunctionName: a.AliasArn,
-		Cors:         &lambda.Cors{},
-	})
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			log.Error("Error creating function url config", "error", aerr.Code(), "message", aerr.Message())
-		}
-		return err
+	createFunctionUrlConfigInput := lambda.CreateFunctionUrlConfigInput{
+		AuthType:     aws.String(functionUrlAuthType),
+		FunctionName: &dep.FuncArn,
+		// TODO(thiskevinwang): make Cors configurable via HCL
+		Cors: &cors,
 	}
-	log.Info("Created function url config", "url", *o.FunctionUrl)
 
-	return nil
-}
+	step := sg.Add("Creating permissions for public access to the lambda URL...")
+	defer step.Abort()
 
-func (r *Releaser) resourceFunctionUrlDestroy(
-	ctx context.Context,
-	sess *session.Session,
-	sg terminal.StepGroup,
-) error {
-	step := sg.Add("Destroying Lambda URL...")
-	step.Update("Destroyed Lambda URL...")
+	// Grant public/anonymous access to the lambda URL
+	_, err := lambdasrv.AddPermission(&addPermissionInput)
+	if err != nil {
+		log.Error("Error creating permission", "error", err)
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "ResourceConflictException":
+				// permissions already exist. likely safe to continue
+				step.Update("Permissions for public access access already exist")
+			default:
+				step.Update("Error creating permissions: %q, %q", aerr.Code(), aerr.Message())
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		step.Update("Created permissions for public access access to the lambda URL")
+	}
 	step.Done()
+
+	step = sg.Add("Creating Lambda URL...")
+	defer step.Abort()
+
+	cfo, err := lambdasrv.CreateFunctionUrlConfig(&createFunctionUrlConfigInput)
+	if err != nil {
+		log.Error("Error creating function url config", "error", err)
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "ResourceConflictException":
+				// function url config already exists. get it. maybe safe to continue
+				step.Update("Function url config already exists")
+
+				// retrieve existing function url to update state
+				if gfc, err := lambdasrv.GetFunctionUrlConfig(&lambda.GetFunctionUrlConfigInput{
+					FunctionName: aws.String(dep.FuncArn),
+				}); err != nil {
+					// this should not realistically occur
+					log.Error("Error getting function url config", "error", err)
+					return err
+				} else {
+					state.Url = *gfc.FunctionUrl
+					step.Update("Reusing existing Lambda URL: %q", state.Url)
+				}
+			default:
+				step.Update("Error creating function url config: %q, %q", aerr.Code(), aerr.Message())
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		// update state
+		state.Url = *cfo.FunctionUrl
+		step.Update("Created Lambda URL: %q", state.Url)
+	}
+
+	step.Done()
+
 	return nil
 }
 
@@ -151,16 +174,10 @@ func (r *Releaser) Release(
 	log hclog.Logger,
 	src *component.Source,
 	ui terminal.UI,
-	// waypoint automatically injects the previous component's output
-	// - https://www.waypointproject.io/docs/extending-waypoint/passing-values
 	dep *Deployment,
 ) (*Release, error) {
 	sg := ui.StepGroup()
 	defer sg.Wait()
-
-	log.Info("Creating Function URL...")
-	log.Info("Deployment details", "deployment", dep)
-	log.Info("Deployment details", "FuncArn", dep.FuncArn, "VerArn", dep.VerArn)
 
 	// Create our resource manager and create
 	rm := r.resourceManager(log)
@@ -180,14 +197,13 @@ func (r *Releaser) Release(
 	}
 
 	return &Release{
-		Url:     fnUrlState.Url,
-		FuncArn: dep.FuncArn,
-		VerArn:  dep.VerArn,
+		Url:           fnUrlState.Url,
+		FuncArn:       dep.FuncArn,
+		VerArn:        dep.VerArn,
+		ResourceState: rm.State(),
 	}, nil
 }
 
-// Destroy will modify or delete Listeners, so that the platform can destroy the
-// target groups
 func (r *Releaser) Destroy(
 	ctx context.Context,
 	log hclog.Logger,
@@ -222,11 +238,19 @@ func (r *Releaser) Status(
 	release *Release,
 	ui terminal.UI,
 ) (*sdk.StatusReport, error) {
-	var report sdk.StatusReport
-	report.External = true
-	defer func() {
-		report.GeneratedTime = timestamppb.Now()
-	}()
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Gathering health report for lambda url deployment: %q", release.Url)
+	defer s.Done()
+
+	report := sdk.StatusReport{
+		External:      true,
+		Health:        sdk.StatusReport_READY,
+		GeneratedTime: timestamppb.Now(),
+		HealthMessage: "Lambda URL deployment health report not implemented",
+	}
+
 	return &report, nil
 }
 
@@ -236,79 +260,37 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 		return nil, err
 	}
 
-	doc.Description("TODO: Add description")
+	doc.Description("Create an AWS Lambda function URL")
 
-	// doc.Input("alb.TargetGroup")
-	// doc.Output("alb.Release")
-	// doc.AddMapper(
-	// 	"ec2.Deployment",
-	// 	"alb.TargetGroup",
-	// 	"Allow EC2 Deployments to be hooked up to an ALB",
-	// )
+	doc.Example(
+		`
+release {
+	use "aws-lambda" {
+		auth_type = "NONE"
+	}
+}
+`)
 
-	// doc.AddMapper(
-	// 	"lambda.Deployment",
-	// 	"alb.TargetGroup",
-	// 	"Allow Lambda Deployments to be hooked up to an ALB",
-	// )
+	doc.Input("lambda.Deployment")
+	doc.Output("lambda.Release")
 
+	doc.SetField(
+		"auth_type",
+		"the Lambda function URL auth type",
+		docs.Summary(
+			"The AuthType parameter determines how Lambda authenticates or authorizes requests to your function URL. Must be either `AWS_IAM` or `NONE`.",
+		),
+		docs.Default("NONE"),
+	)
+
+	// todo(thiskevinwang): CORS
 	// doc.SetField(
-	// 	"name",
-	// 	"the name to assign the ALB",
+	// 	"cors",
+	// 	"the CORS configuration for the Lambda function URL",
 	// 	docs.Summary(
-	// 		"names have to be unique per region",
+	// 		"Use CORS to allow access to your function URL from any domain. You can also use CORS to control access for specific HTTP headers and methods in requests to your function URL",
 	// 	),
-	// 	docs.Default("derived from application name"),
-	// )
-
-	// doc.SetField(
-	// 	"port",
-	// 	"the TCP port to configure the ALB to listen on",
-	// 	docs.Default("80 for HTTP, 443 for HTTPS"),
-	// )
-
-	// doc.SetField(
-	// 	"subnets",
-	// 	"the subnet ids to allow the ALB to run in",
-	// 	docs.Default("public subnets in the account default VPC"),
-	// )
-
-	// doc.SetField(
-	// 	"certificate",
-	// 	"ARN for the certificate to install on the ALB listener",
-	// 	docs.Summary(
-	// 		"when this is set, the port automatically changes to 443 unless",
-	// 		"overriden in this configuration",
-	// 	),
-	// )
-
-	// doc.SetField(
-	// 	"zone_id",
-	// 	"Route53 ZoneID to create a DNS record into",
-	// 	docs.Summary(
-	// 		"set along with domain_name to have DNS automatically setup for the ALB",
-	// 	),
-	// )
-
-	// doc.SetField(
-	// 	"domain_name",
-	// 	"Fully qualified domain name to set for the ALB",
-	// 	docs.Summary(
-	// 		"set along with zone_id to have DNS automatically setup for the ALB.",
-	// 		"this value should include the full hostname and domain name, for instance",
-	// 		"app.example.com",
-	// 	),
-	// )
-
-	// doc.SetField(
-	// 	"listener_arn",
-	// 	"the ARN on an existing ALB to configure",
-	// 	docs.Summary(
-	// 		"when this is set, no ALB or Listener is created. Instead the application is",
-	// 		"configured by manipulating this existing Listener. This allows users to",
-	// 		"configure their ALB outside waypoint but still have waypoint hook the application",
-	// 		"to that ALB",
-	// 	),
+	// 	docs.Default("{}"),
 	// )
 
 	return doc, nil
