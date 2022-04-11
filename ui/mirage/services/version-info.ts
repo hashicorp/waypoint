@@ -8,7 +8,7 @@ function createVersionInfo(): VersionInfo {
   protocolVersion.setCurrent(1);
   versionInfo.setApi(protocolVersion);
   versionInfo.setEntrypoint(protocolVersion);
-  versionInfo.setVersion('0.4.2');
+  versionInfo.setVersion('[Mirage]');
   return versionInfo;
 }
 
