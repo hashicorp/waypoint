@@ -1,0 +1,3 @@
+```release-note:feature
+plugin/aws-lambda: add `releaser` component. This leverages Lambda URLs.
+```
