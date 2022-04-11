@@ -53,10 +53,6 @@ endif
 	mkdir -p $(GOPATH)/bin
 	cp ./waypoint $(GOPATH)/bin/waypoint
 
-.PHONY: test
-test: # run tests
-	go test ./...
-
 .PHONY: format
 format: # format go code
 	gofmt -s -w ./
@@ -182,3 +178,18 @@ tools: # install dependencies and tools required to build
 	$(GO_CMD) generate -tags tools tools/tools.go
 	@echo
 	@echo "Done!"
+
+.PHONY: test
+test: # run tests
+	go test ./...
+
+.PHONY: test/boltdbstate
+test/boltdbstate:
+	@echo "Running state tests..."
+	go test -test.v ./internal/server/boltdbstate 
+
+.PHONY: test/service
+test/service:
+	$(warning "Running the full service suite requires `docker-compose up`! Some Tests rely on a local Horizon instance to be running.")
+	@echo "Running service API server tests..."
+	go test -test.v ./pkg/server/singleprocess/ 

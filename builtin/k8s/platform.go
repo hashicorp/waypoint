@@ -640,6 +640,11 @@ func (p *Platform) resourceDeploymentCreate(
 	for k, v := range p.config.StaticEnvVars {
 		envVars[k] = v
 	}
+	if p.config.Pod != nil && p.config.Pod.Container != nil {
+		for k, v := range p.config.Pod.Container.StaticEnvVars {
+			envVars[k] = v
+		}
+	}
 	for k, v := range deployConfig.Env() {
 		envVars[k] = v
 	}
@@ -1554,7 +1559,7 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	doc.Description("Deploy the application into a Kubernetes cluster using Deployment objects")
 
 	doc.Example(`
-deploy "kubernetes" {
+use "kubernetes" {
 	image_secret = "registry_secret"
 	replicas = 3
 	probe_path = "/_healthz"

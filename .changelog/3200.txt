@@ -1,0 +1,4 @@
+```release-note:bug
+server: Fix runner database by setting proper runner bucket for initialization.
+Sever upgrades to 0.8.0 would previously fail before this fix.
+```
