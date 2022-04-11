@@ -15,7 +15,7 @@ import (
 func init() {
 	tests["runner_ondemand"] = []testFunc{
 		TestOnDemandRunnerConfig,
-		TestOnDemandRunnerConfigLabelTargeting,
+		TestOnDemandRunnerConfig_LabelTargeting,
 	}
 }
 
@@ -144,13 +144,13 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 	})
 }
 
-func TestOnDemandRunnerConfigLabelTargeting(t *testing.T, factory Factory, restartF RestartFactory) {
+func TestOnDemandRunnerConfig_LabelTargeting(t *testing.T, factory Factory, restartF RestartFactory) {
 	require := require.New(t)
 
 	s := factory(t)
 	defer s.Close()
 
-	labels := map[string]string{"env": "test"}
+	labels := map[string]string{"name": "testrunner", "env": "test"}
 
 	// Set
 	rec := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
