@@ -640,6 +640,11 @@ func (p *Platform) resourceDeploymentCreate(
 	for k, v := range p.config.StaticEnvVars {
 		envVars[k] = v
 	}
+	if p.config.Pod != nil && p.config.Pod.Container != nil {
+		for k, v := range p.config.Pod.Container.StaticEnvVars {
+			envVars[k] = v
+		}
+	}
 	for k, v := range deployConfig.Env() {
 		envVars[k] = v
 	}
