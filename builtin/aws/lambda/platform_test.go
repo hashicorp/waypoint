@@ -18,7 +18,8 @@ func TestPlatformConfig(t *testing.T) {
 		cfg := &Config{
 			Architecture: "foobar",
 		}
-		require.Error(t, p.ConfigSet(cfg))
+
+		require.EqualError(t, p.ConfigSet(cfg), "rpc error: code = InvalidArgument desc = Architecture: Unsupported function architecture \"foobar\". Must be one of [\"x86_64\", \"arm64\"], or left blank.")
 	})
 
 	t.Run("disallows invalid timeout", func(t *testing.T) {
@@ -27,14 +28,14 @@ func TestPlatformConfig(t *testing.T) {
 			cfg := &Config{
 				Timeout: 901,
 			}
-			require.Error(t, p.ConfigSet(cfg))
+			require.EqualError(t, p.ConfigSet(cfg), "rpc error: code = InvalidArgument desc = Timeout: Timeout must be less than or equal to 15 minutes.")
 		}
 
 		{
 			cfg := &Config{
 				Timeout: -1,
 			}
-			require.Error(t, p.ConfigSet(cfg))
+			require.EqualError(t, p.ConfigSet(cfg), "rpc error: code = InvalidArgument desc = Timeout: Timeout must not be negative.")
 		}
 	})
 }
