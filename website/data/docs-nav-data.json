@@ -158,7 +158,7 @@
         ]
       },
       {
-        "title": "Google Cloud Platform",
+        "title": "Google Cloud Platform (GCP)",
         "routes": [
           {
             "title": "Deploy an application onto an Azure Container Instance",
