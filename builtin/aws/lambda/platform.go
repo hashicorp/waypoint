@@ -872,6 +872,12 @@ deploy {
 		docs.Default("x86_64"),
 	)
 
+	doc.SetField(
+		"storage",
+		"The storage size (in MB) of the Lambda function's `/tmp` directory. Must be a value between 512 and 10240.",
+		docs.Default("512"),
+	)
+
 	return doc, nil
 }
 
