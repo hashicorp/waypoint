@@ -145,6 +145,9 @@ const (
 
 	// The instruction set architecture that the function supports.
 	DefaultArchitecture = lambda.ArchitectureX8664
+
+	// The storage size (in MB) for the function's `/tmp` directory
+	DefaultStorageSize = 512
 )
 
 const lambdaRolePolicy = `{
@@ -276,6 +279,11 @@ func (p *Platform) Deploy(
 		architecture = DockerArchitectureMapper(img.Architecture, log)
 	}
 
+	storage := int64(p.config.Storage)
+	if storage == 0 {
+		storage = DefaultStorageSize
+	}
+
 	step.Done()
 
 	step = sg.Add("Reading Lambda function: %s", src.App)
@@ -304,39 +312,65 @@ func (p *Platform) Deploy(
 			reset = true
 		}
 
+		if *curFunc.Configuration.EphemeralStorage.Size != storage {
+			update.EphemeralStorage = &lambda.EphemeralStorage{
+				Size: aws.Int64(storage),
+			}
+			reset = true
+		}
+
 		if reset {
+			step.Update("Detected a configuration change. Updating Lambda function...")
+
 			update.FunctionName = curFunc.Configuration.FunctionArn
 
 			_, err = lamSvc.UpdateFunctionConfiguration(&update)
 			if err != nil {
 				return nil, errors.Wrapf(err, "unable to update function configuration")
 			}
+
+			step.Update("Updated Lambda configuration.")
 		}
 
-		funcCfg, err := lamSvc.UpdateFunctionCode(&lambda.UpdateFunctionCodeInput{
-			FunctionName:  aws.String(src.App),
-			ImageUri:      aws.String(img.Name()),
-			Architectures: aws.StringSlice([]string{architecture}),
-		})
+		step.Done()
 
-		if err != nil {
-			if aerr, ok := err.(awserr.Error); ok {
-				switch aerr.Code() {
-				case "ValidationException":
-					// likely here if Architectures was invalid
-					if architecture != lambda.ArchitectureX8664 && architecture != lambda.ArchitectureArm64 {
-						return nil, fmt.Errorf("architecture must be either \"x86_64\" or \"arm64\"")
+		// the following update has retry behavior in case the
+		// previous `UpdateFunctionConfiguration` call occurs
+		step = sg.Add("Updating function code...")
+		for i := 0; i < 30; i++ {
+			funcCfg, err := lamSvc.UpdateFunctionCode(&lambda.UpdateFunctionCodeInput{
+				FunctionName:  aws.String(src.App),
+				ImageUri:      aws.String(img.Name()),
+				Architectures: aws.StringSlice([]string{architecture}),
+			})
+
+			if err == nil {
+				funcarn = *funcCfg.FunctionArn
+				step.Update("Updated function code!")
+				break
+			}
+
+			if err != nil {
+
+				if aerr, ok := err.(awserr.Error); ok {
+					switch aerr.Code() {
+					// unrecoverable error
+					case "ValidationException":
+						// likely here if Architectures was invalid
+						if architecture != lambda.ArchitectureX8664 && architecture != lambda.ArchitectureArm64 {
+							return nil, fmt.Errorf("architecture must be either \"x86_64\" or \"arm64\"")
+						}
+						// other validation error
+						return nil, err
+					// Function update in progress error
+					case "ResourceConflictException":
+						log.Warn(fmt.Sprintf("Function update in progress. Waiting 2 seconds before retrying... (%d/30)", i+1))
+						time.Sleep(2 * time.Second)
 					}
+				} else {
 					return nil, err
 				}
 			}
-			return nil, err
-		}
-
-		funcarn = *funcCfg.FunctionArn
-
-		if err != nil {
-			return nil, err
 		}
 
 		// We couldn't read the function before, so we'll go ahead and create one.
@@ -864,6 +898,11 @@ type Config struct {
 	// Valid values are: "x86_64", "arm64"
 	// Defaults to "x86_64".
 	Architecture string `hcl:"architecture,optional"`
+
+	// The storage size (in MB) of the Lambda function's `/tmp` directory.
+	// Must be a value between 512 and 10240.
+	// Defaults to 512 MB.
+	Storage int `hcl:"storage,optional"`
 }
 
 var (
