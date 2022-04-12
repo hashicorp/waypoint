@@ -22,4 +22,8 @@ message Deployment {
 
   // The version identifier AWS uses for this version (basically a serial increasing number)
   string version = 7;
+
+  // The storage size (in MB) of the Lambda function's `/tmp` directory. 
+  // Must be a value between 512 and 10240.
+  int64 storage = 8;
 }
