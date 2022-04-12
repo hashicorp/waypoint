@@ -1,0 +1,62 @@
+---
+layout: docs
+page_title: Getting Started with Waypoint
+description: |-
+  Install and run Waypoint with this five minute quick start tutorial.
+---
+
+# Getting Started with Waypoint
+
+Deploying applications in the DevOps landscape can be confusing with so many
+services, configuration files, and workflows to decode. But as a developer, you
+just want to deploy.
+
+Waypoint is a tool that enables you to publish any application to any platform
+with a single file and a single command: `waypoint up`. Read this page to learn
+about the high level operation of Waypoint. Then, follow the next tutorials to
+install, set up, and run Waypoint.
+
+We built Waypoint so you can focus on the thing you love: web application
+development with JavaScript, Python, PHP, Java, Ruby, or any other language.
+
+The standard Waypoint workflow involves two commands and one file: `waypoint
+init`, `waypoint up` and `waypoint.hcl`. Waypoint will automatically generate a
+`waypoint.hcl` file with reasonable defaults when you initialize it, if your
+application doesn't have one.
+
+Waypoint's minimal configuration file uses the same syntax you are familiar with
+in Terraform, but asks you to write very little of it (as few as a dozen lines).
+
+Once you've initialized Waypoint, you can deploy your applications with
+`waypoint up`.
+
+Waypoint can [build](/docs/lifecycle/build) your
+application into a disk image,
+[deploy](/docs/lifecycle/deploy) it to your
+favorite cloud platform, and
+[release](/docs/lifecycle/release) it to the
+public.
+
+A typical build, deploy, and release workflow requires many configuration files.
+You _can_ create these and use them with Waypoint, but you don't have to. A
+single `waypoint.hcl` file dynamically packages your application, publishes it
+to a public or private container registry, configures Kubernetes, Nomad, or
+another application scheduler, and releases your application to a public URL
+with HTTPS included.
+
+![Files](/img/getting-started/intro-files.png)
+
+## Next Steps
+
+It only takes a few minutes to get started with Waypoint on your favorite platform. 
+Start by checking out the tutorial for your platform.
+
+- [Nomad](/tutorials/get-started-nomad/get-started-nomad)
+- [Kubernetes](/tutorials/get-started-nomad/get-started-kubernetes)
+- [Docker](tutorials/get-started-nomad/get-started-docker)
+
+
+Afterwards, go in-depth with tutorials for AWS, Azure, GCP, Kubernetes, and
+Nomad [tutorials](https://learn.hashicorp.com/waypoint). For detailed
+Kubernetes-focused documentation, see the
+[dedicated Kubernetes section](/docs/kubernetes/install).

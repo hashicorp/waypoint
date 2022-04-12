@@ -31,7 +31,24 @@
   },
   {
     "title": "Getting Started",
-    "path": "getting-started"
+    "routes": [
+      {
+        "title": "Overview",
+        "path": "getting-started"
+      },
+      {
+        "title": "Nomad",
+        "href": "/tutorials/get-started-nomad/get-started-nomad"
+      },
+      {
+        "title": "Kubernetes",
+        "href": "/tutorials/get-started-kubernetes/get-started-kubernetes"
+      },
+      {
+        "title": "Docker",
+        "href": "/tutorials/get-started-docker/get-started-docker"
+      }
+    ]
   },
   {
     "title": "Upgrading",
