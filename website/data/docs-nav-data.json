@@ -145,7 +145,7 @@
         ]
       },
       {
-        "title": "Amazon Web Services (AWS)",
+        "title": "Amazon Web Services",
         "routes": [
           {
             "title": "Deploy an Application to AWS Elastic Container Service",
@@ -158,7 +158,7 @@
         ]
       },
       {
-        "title": "Google Cloud Platform (GCP)",
+        "title": "Google Cloud Platform",
         "routes": [
           {
             "title": "Deploy an application onto an Azure Container Instance",
