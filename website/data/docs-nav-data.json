@@ -31,63 +31,7 @@
   },
   {
     "title": "Getting Started",
-    "routes": [
-      {
-        "title": "Install Waypoint",
-        "href": "/tutorials/waypoint/get-started-install"
-      },
-      {
-        "title": "Nomad",
-        "routes": [
-          {
-            "title": "Deploy an Application to Nomad",
-            "href": "/tutorials/get-started-nomad/get-started-nomad"
-          },
-          {
-            "title": "Debugging and UI",
-            "href": "/tutorials/get-started-nomad/get-started-ui"
-          },
-          {
-            "title": "Remove the Application from Nomad",
-            "href": "/tutorials/get-started-nomad/get-started-destroy"
-          }
-        ]
-      },
-      {
-        "title": "Kubernetes",
-        "routes": [
-          {
-            "title": "Deploy an Application to Kubernetes",
-            "href": "/tutorials/get-started-kubernetes/get-started-kubernetes"
-          },
-          {
-            "title": "Debugging and UI",
-            "href": "/tutorials/get-started-kubernetes/get-started-ui"
-          },
-          {
-            "title": "Remove the Application from Kubernetes",
-            "href": "/tutorials/get-started-kubernetes/get-started-kubernetes-destroy"
-          }
-        ]
-      },
-      {
-        "title": "Docker",
-        "routes": [
-          {
-            "title": "Deploy an Application to Docker",
-            "href": "/tutorials/get-started-docker/get-started-docker"
-          },
-          {
-            "title": "Debugging and UI",
-            "href": "/tutorials/get-started-docker/get-started-ui"
-          },
-          {
-            "title": "Remove the Application from Docker",
-            "href": "/tutorials/get-started-docker/get-started-destroy"
-          }
-        ]
-      }
-    ]
+    "path": "getting-started"
   },
   {
     "title": "Upgrading Waypoint",
