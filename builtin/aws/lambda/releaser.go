@@ -115,7 +115,7 @@ func (r *Releaser) resourceFunctionUrlCreate(
 			switch aerr.Code() {
 			case "ResourceConflictException":
 				// permissions already exist. likely safe to continue
-				step.Update("Permissions for public access access already exist")
+				step.Update("Permissions for public access already exist")
 			default:
 				step.Update("Error creating permissions: %q, %q", aerr.Code(), aerr.Message())
 				return err
@@ -124,7 +124,7 @@ func (r *Releaser) resourceFunctionUrlCreate(
 			return err
 		}
 	} else {
-		step.Update("Created permissions for public access access to the lambda URL")
+		step.Update("Created permissions for public access to the lambda URL")
 	}
 	step.Done()
 
