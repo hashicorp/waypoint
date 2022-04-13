@@ -12,6 +12,14 @@ TODO
 
 TODO
 
+## Translations
+
+TODO
+
+## Static Assets
+
+TODO
+
 ## Third-party Dependencies
 
 TODO

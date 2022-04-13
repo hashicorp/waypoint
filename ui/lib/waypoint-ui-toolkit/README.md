@@ -1,6 +1,9 @@
 # Waypoint UI Toolkit
 
-TODO: What is this? Who is it for?
+Waypoint UI Toolkit is a set of components, helpers, and utilities for the
+Waypoint Web UI.
+
+It is not general purpose, and is only intended for use on HashiCorp projects.
 
 ## Installing
 
@@ -21,17 +24,35 @@ $ yarn add -D @hashicorp/waypoint-ui-toolkit@latest
 $ npm install -D @hashicorp/waypoint-ui-toolkit@latest
 ```
 
-## Using Components
+## Usage
 
-TODO
+Components in the toolkit are scoped under the `Waypoint` namespace. They are
+available automatically in the consuming project:
 
-## Documentation
+```hbs
+<Waypoint::Timeline @model={{...}} />
+```
+
+Helpers are similarly scoped, and also automatically available:
+
+```hbs
+{{waypoint/icon-for-component @operation.component.name}}
+```
+
+Utilities may be imported from the package:
+
+```ts
+import { imageRef } from '@hashicorp/waypoint-ui-toolkit';
+```
 
 TODO: Where do I find documentation on individual elements of the kit?
+TODO: API.md?
+TODO: Storybook?
 
 ## Reporting Issues
 
-TODO: Where should I report issues?
+Please report issues on
+[github.com/hashicorp/waypoint](https://github.com/hashicorp/waypoint/issues).
 
 ## Contributing
 
