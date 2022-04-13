@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Releaser struct {
@@ -247,7 +246,6 @@ func (r *Releaser) Status(
 	report := sdk.StatusReport{
 		External:      true,
 		Health:        sdk.StatusReport_READY,
-		GeneratedTime: timestamppb.Now(),
 		HealthMessage: "Lambda URL deployment health report not implemented",
 	}
 
