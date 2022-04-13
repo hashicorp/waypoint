@@ -187,6 +187,9 @@ func (r *Releaser) resourceJobCreate(
 						return status.Errorf(codes.Aborted, "Context cancelled from timeout checking health of task group %q: %s", group, ctx.Err())
 					}
 					deploy, _, err = jobClient.LatestDeployment(*job.ID, q)
+					if err != nil {
+						return status.Errorf(codes.Aborted, "Unable to fetch latest deployment: %s", err.Error())
+					}
 					currentTaskGroupState = deploy.TaskGroups[group]
 					log.Info(fmt.Sprintf("Task group not healthy: %s", group))
 				} else {
