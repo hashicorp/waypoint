@@ -2,6 +2,8 @@ package lambda
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -107,8 +109,7 @@ func (r *Releaser) resourceFunctionUrlCreate(
 	defer step.Abort()
 
 	// Grant public/anonymous access to the lambda URL
-	_, err := lambdasrv.AddPermission(&addPermissionInput)
-	if err != nil {
+	if _, err := lambdasrv.AddPermission(&addPermissionInput); err != nil {
 		log.Error("Error creating permission", "error", err)
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -244,9 +245,28 @@ func (r *Releaser) Status(
 	defer s.Done()
 
 	report := sdk.StatusReport{
-		External:      true,
-		Health:        sdk.StatusReport_READY,
-		HealthMessage: "Lambda URL deployment health report not implemented",
+		External: true,
+	}
+
+	// check the function url status
+	log.Info("Checking function url status...", "url", release.Url)
+	if resp, err := http.Get(release.Url); err != nil {
+		log.Error("Failed to get a response from the Lambda URL: %s", err)
+		report.Health = sdk.StatusReport_UNKNOWN
+		report.HealthMessage = "Failed to get a response from the Lambda URL"
+	} else {
+		switch resp.StatusCode {
+		case http.StatusOK:
+			log.Info("Lambda URL returned a 200")
+			report.Health = sdk.StatusReport_READY
+			report.HealthMessage = "Lambda URL appears to be healthy"
+			break
+		default:
+			log.Error("Lambda URL returned a non-200 response: %d", resp.StatusCode)
+			report.Health = sdk.StatusReport_DOWN
+			report.HealthMessage = fmt.Sprintf("Lambda URL returned a non-200 response: %d", resp.StatusCode)
+			break
+		}
 	}
 
 	return &report, nil
