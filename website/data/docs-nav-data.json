@@ -33,20 +33,59 @@
     "title": "Getting Started",
     "routes": [
       {
-        "title": "Overview",
-        "path": "getting-started"
+        "title": "Install Waypoint",
+        "href": "/tutorials/waypoint/get-started-install"
       },
       {
         "title": "Nomad",
-        "href": "/tutorials/get-started-nomad/get-started-nomad"
+        "routes": [
+          {
+            "title": "Deploy an Application to Nomad",
+            "href": "/tutorials/get-started-nomad/get-started-nomad"
+          },
+          {
+            "title": "Debugging and UI",
+            "href": "/tutorials/get-started-nomad/get-started-ui"
+          },
+          {
+            "title": "Remove the Application from Nomad",
+            "href": "/tutorials/get-started-nomad/get-started-destroy"
+          }
+        ]
       },
       {
         "title": "Kubernetes",
-        "href": "/tutorials/get-started-kubernetes/get-started-kubernetes"
+        "routes": [
+          {
+            "title": "Deploy an Application to Kubernetes",
+            "href": "/tutorials/get-started-kubernetes/get-started-kubernetes"
+          },
+          {
+            "title": "Debugging and UI",
+            "href": "/tutorials/get-started-kubernetes/get-started-ui"
+          },
+          {
+            "title": "Remove the Application from Kubernetes",
+            "href": "/tutorials/get-started-kubernetes/get-started-kubernetes-destroy"
+          }
+        ]
       },
       {
         "title": "Docker",
-        "href": "/tutorials/get-started-docker/get-started-docker"
+        "routes": [
+          {
+            "title": "Deploy an Application to Docker",
+            "href": "/tutorials/get-started-docker/get-started-docker"
+          },
+          {
+            "title": "Debugging and UI",
+            "href": "/tutorials/get-started-docker/get-started-ui"
+          },
+          {
+            "title": "Remove the Application from Docker",
+            "href": "/tutorials/get-started-docker/get-started-destroy"
+          }
+        ]
       }
     ]
   },
@@ -381,6 +420,10 @@
       {
         "title": "Overview",
         "path": "app-config"
+      },
+      {
+        "title": "Static Values",
+        "href": "/tutorials/configuration/static-application-configuration"
       },
       {
         "title": "Dynamic Values",
