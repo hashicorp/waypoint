@@ -6,6 +6,11 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## 0.8.1 (April 08, 2022)
+
+BUG FIXES:
+
+* server: Fix runner database by setting proper runner bucket for initialization. Sever upgrades to 0.8.0 would previously fail before this fix. [[GH-3200](https://github.com/hashicorp/waypoint/issues/3200)]
 
 ## 0.8.0 (April 07, 2022)
 

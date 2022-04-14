@@ -600,7 +600,161 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 	}
 }
 
+// Tests that a client can connect to a job after the job has
+// logs (but before the job has completed), and can get the buffered logs.
 func TestServiceGetJobStream_bufferedData(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Create a job
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{Job: serverptypes.TestJobNew(t, nil)})
+	require.NoError(err)
+	require.NotNil(queueResp)
+	require.NotEmpty(queueResp.JobId)
+
+	// Register our runner
+	id, _ := TestRunner(t, client, nil)
+
+	// Start a job request
+	runnerStream, err := client.RunnerJobStream(ctx)
+	require.NoError(err)
+	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Request_{
+			Request: &pb.RunnerJobStreamRequest_Request{
+				RunnerId: id,
+			},
+		},
+	}))
+
+	// Wait for assignment and ack
+	{
+		resp, err := runnerStream.Recv()
+		require.NoError(err)
+		assignment, ok := resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
+		require.True(ok, "should be an assignment")
+		require.NotNil(assignment)
+		require.Equal(queueResp.JobId, assignment.Assignment.Job.Id)
+
+		require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
+			Event: &pb.RunnerJobStreamRequest_Ack_{
+				Ack: &pb.RunnerJobStreamRequest_Ack{},
+			},
+		}))
+	}
+
+	// Send some output
+	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Terminal{
+			Terminal: &pb.GetJobStreamResponse_Terminal{
+				Events: []*pb.GetJobStreamResponse_Terminal_Event{
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Line_{
+							Line: &pb.GetJobStreamResponse_Terminal_Event_Line{
+								Msg: "hello",
+							},
+						},
+					},
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Line_{
+							Line: &pb.GetJobStreamResponse_Terminal_Event_Line{
+								Msg: "world",
+							},
+						},
+					},
+				},
+			},
+		},
+	}))
+
+	// Get our job stream and verify we open
+	stream, err := client.GetJobStream(ctx, &pb.GetJobStreamRequest{JobId: queueResp.JobId})
+	require.NoError(err)
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		open, ok := resp.Event.(*pb.GetJobStreamResponse_Open_)
+		require.True(ok, "should be an open")
+		require.NotNil(open)
+
+	}
+
+	// Wait for output, verify its buffered
+	{
+		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Terminal_)(nil))
+		event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
+		require.NotNil(event)
+		require.True(event.Terminal.Buffered)
+		require.Len(event.Terminal.Events, 2)
+	}
+
+	// Send a bit more output now that we're connected
+	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Terminal{
+			Terminal: &pb.GetJobStreamResponse_Terminal{
+				Events: []*pb.GetJobStreamResponse_Terminal_Event{
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Line_{
+							Line: &pb.GetJobStreamResponse_Terminal_Event_Line{
+								Msg: "hello",
+							},
+						},
+					},
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Line_{
+							Line: &pb.GetJobStreamResponse_Terminal_Event_Line{
+								Msg: "world",
+							},
+						},
+					},
+				},
+			},
+		},
+	}))
+
+	// Wait for output, verify it's unbuffered (live).
+	{
+		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Terminal_)(nil))
+		event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
+		require.NotNil(event)
+		require.False(event.Terminal.Buffered)
+		require.Len(event.Terminal.Events, 2)
+	}
+
+	// Complete the job
+	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Complete_{
+			Complete: &pb.RunnerJobStreamRequest_Complete{},
+		},
+	}))
+
+	// Should be done
+	_, err = runnerStream.Recv()
+	require.Error(err)
+	require.Equal(io.EOF, err)
+
+	// Wait for completion
+	{
+		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Complete_)(nil))
+		event := resp.Event.(*pb.GetJobStreamResponse_Complete_)
+		require.Nil(event.Complete.Error)
+	}
+}
+
+// Tests that a client can connect to a completed job and still read
+// its output.
+// NOTE: this does not test that a client can read job logs for a
+// long-completed job. Some server state implementation (namely this one)
+// do not persist job logs, so streaming completed logs only works
+// if the server hasn't restarted or pruned them from memory.
+func TestServiceGetJobStream_completedBufferedData(t *testing.T) {
 	ctx := context.Background()
 	require := require.New(t)
 

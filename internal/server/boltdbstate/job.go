@@ -194,7 +194,7 @@ func jobIsCompleted(state pb.Job_State) bool {
 }
 
 // JobCreate queues the given jobs. If any job fails to queue, no jobs
-// are queued. If partial failures are acceptible, call this multiple times
+// are queued. If partial failures are acceptable, call this multiple times
 // with a single job.
 func (s *State) JobCreate(jobs ...*pb.Job) error {
 	txn := s.inmem.Txn(true)

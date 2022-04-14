@@ -1,0 +1,4 @@
+```release-note:bug
+cli: Prevent panic when releasing unsuccessful deployments
+```
+
