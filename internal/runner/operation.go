@@ -42,47 +42,6 @@ func (r *Runner) executeJob(
 ) (*pb.Job_Result, error) {
 	job := assignment.Job
 
-	var task *pb.Task
-	if job.Task != nil {
-		log.Debug("updating task to running state")
-		taskResp, err := r.client.GetTask(ctx, &pb.GetTaskRequest{
-			Ref: job.Task,
-		})
-		if err != nil {
-			return nil, err
-		} else {
-			task = taskResp.Task
-		}
-
-		task.JobState = pb.Task_RUNNING
-
-		// Update Task state to "running"!
-		_, err = r.client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-			Task: task,
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// We defer calling this task "complete" until the end of this function call,
-	// because at the end we will call the various requested operation and use
-	// its return in a switch case statement.
-	defer func() {
-		if task != nil {
-			task.JobState = pb.Task_COMPLETED
-
-			// Update Task state to "completed"!
-			_, err := r.client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-				Task: task,
-			})
-			if err != nil {
-				log.Warn("received an error marking this task completed", "task-id", task.Id, "err", err)
-				//return err
-			}
-		}
-	}()
-
 	// NOTE(mitchellh; krantzinator): For now, we query the project directly here
 	// since we use it only in case of a missing local waypoint.hcl, and to
 	// collect input variable values set on the server. I can see us moving this

@@ -269,9 +269,6 @@ type WaypointClient interface {
 	UpsertRelease(ctx context.Context, in *UpsertReleaseRequest, opts ...grpc.CallOption) (*UpsertReleaseResponse, error)
 	// UpsertStatusReport updates or inserts a statusreport.
 	UpsertStatusReport(ctx context.Context, in *UpsertStatusReportRequest, opts ...grpc.CallOption) (*UpsertStatusReportResponse, error)
-	// TODO(briancain): Delete UpsertTask
-	// UpsertTask updates or inserts a Task
-	UpsertTask(ctx context.Context, in *UpsertTaskRequest, opts ...grpc.CallOption) (*UpsertTaskResponse, error)
 	// GetTask returns a requested Task message. Or an error if it does not exist.
 	GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*GetTaskResponse, error)
 	// ListTask will return a list of all existing Tasks
@@ -1273,15 +1270,6 @@ func (c *waypointClient) UpsertStatusReport(ctx context.Context, in *UpsertStatu
 	return out, nil
 }
 
-func (c *waypointClient) UpsertTask(ctx context.Context, in *UpsertTaskRequest, opts ...grpc.CallOption) (*UpsertTaskResponse, error) {
-	out := new(UpsertTaskResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpsertTask", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *waypointClient) GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*GetTaskResponse, error) {
 	out := new(GetTaskResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetTask", in, out, opts...)
@@ -1631,9 +1619,6 @@ type WaypointServer interface {
 	UpsertRelease(context.Context, *UpsertReleaseRequest) (*UpsertReleaseResponse, error)
 	// UpsertStatusReport updates or inserts a statusreport.
 	UpsertStatusReport(context.Context, *UpsertStatusReportRequest) (*UpsertStatusReportResponse, error)
-	// TODO(briancain): Delete UpsertTask
-	// UpsertTask updates or inserts a Task
-	UpsertTask(context.Context, *UpsertTaskRequest) (*UpsertTaskResponse, error)
 	// GetTask returns a requested Task message. Or an error if it does not exist.
 	GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error)
 	// ListTask will return a list of all existing Tasks
@@ -1909,9 +1894,6 @@ func (UnimplementedWaypointServer) UpsertRelease(context.Context, *UpsertRelease
 }
 func (UnimplementedWaypointServer) UpsertStatusReport(context.Context, *UpsertStatusReportRequest) (*UpsertStatusReportResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertStatusReport not implemented")
-}
-func (UnimplementedWaypointServer) UpsertTask(context.Context, *UpsertTaskRequest) (*UpsertTaskResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpsertTask not implemented")
 }
 func (UnimplementedWaypointServer) GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTask not implemented")
@@ -3495,24 +3477,6 @@ func _Waypoint_UpsertStatusReport_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Waypoint_UpsertTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpsertTaskRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).UpsertTask(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/UpsertTask",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).UpsertTask(ctx, req.(*UpsertTaskRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Waypoint_GetTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetTaskRequest)
 	if err := dec(in); err != nil {
@@ -4005,10 +3969,6 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertStatusReport",
 			Handler:    _Waypoint_UpsertStatusReport_Handler,
-		},
-		{
-			MethodName: "UpsertTask",
-			Handler:    _Waypoint_UpsertTask_Handler,
 		},
 		{
 			MethodName: "GetTask",

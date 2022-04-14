@@ -8544,15 +8544,6 @@
         }
       }
     },
-    "hashicorp.waypoint.UpsertTaskResponse": {
-      "type": "object",
-      "properties": {
-        "task": {
-          "$ref": "#/definitions/hashicorp.waypoint.Task",
-          "description": "The resulting Task that was Upserted."
-        }
-      }
-    },
     "hashicorp.waypoint.UpsertTriggerRequest": {
       "type": "object",
       "properties": {
