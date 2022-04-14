@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -115,6 +116,12 @@ func (p *Platform) resourceJobCreate(
 
 	// Update our client to use the Namespace set in the jobspec
 	client.NomadClient.SetNamespace(*job.Namespace)
+
+	// Get Consul ACL token from environment
+	*job.ConsulToken = os.Getenv("CONSUL_HTTP_TOKEN")
+
+	// Get Vault token from environment
+	*job.VaultToken = os.Getenv("VAULT_TOKEN")
 
 	// Register job
 	st.Update("Registering job " + *job.Name + "...")
