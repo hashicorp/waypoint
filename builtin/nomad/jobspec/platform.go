@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 	"time"
 
@@ -118,10 +117,16 @@ func (p *Platform) resourceJobCreate(
 	client.NomadClient.SetNamespace(*job.Namespace)
 
 	// Get Consul ACL token from environment
-	*job.ConsulToken = os.Getenv("CONSUL_HTTP_TOKEN")
+	*job.ConsulToken, err = nomad.ConsulAuth()
+	if err != nil {
+		return err
+	}
 
 	// Get Vault token from environment
-	*job.VaultToken = os.Getenv("VAULT_TOKEN")
+	*job.VaultToken, err = nomad.VaultAuth()
+	if err != nil {
+		return err
+	}
 
 	// Register job
 	st.Update("Registering job " + *job.Name + "...")
