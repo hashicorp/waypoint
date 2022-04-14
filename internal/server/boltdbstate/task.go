@@ -82,7 +82,7 @@ func (s *State) TaskDelete(ref *pb.Ref_Task) error {
 // GetJobsByTaskRef will look up every job triple by Task ref in a single
 // memdb transaction. This is often used via the API for building out
 // a complete picture of a task beyond the job ID refs.
-func (s *State) GetJobsByTaskRef(
+func (s *State) JobsByTaskRef(
 	task *pb.Task,
 ) (startJob *pb.Job, taskJob *pb.Job, stopJob *pb.Job, err error) {
 	memTxn := s.inmem.Txn(true)
