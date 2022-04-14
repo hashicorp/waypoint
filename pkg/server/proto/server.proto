@@ -1194,7 +1194,7 @@ message Task {
 
   // The resource that gets created to run the task job for this Task
   // TODO(briancain): This field has not been implemented yet. See
-  // "internal/runner/operation.go" for more info.
+  // "internal/runner/operation_task.go" for more info.
   string resource_name = 8;
 
   enum State {
