@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"golang.org/x/crypto/ssh"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -358,7 +360,7 @@ func (p *Platform) Deploy(
 					case "ValidationException":
 						// likely here if Architectures was invalid
 						if architecture != lambda.ArchitectureX8664 && architecture != lambda.ArchitectureArm64 {
-							return nil, fmt.Errorf("architecture must be either \"x86_64\" or \"arm64\"")
+							return nil, status.Error(codes.FailedPrecondition, "architecture must be either \"x86_64\" or \"arm64\"")
 						}
 						// other validation error
 						return nil, err
