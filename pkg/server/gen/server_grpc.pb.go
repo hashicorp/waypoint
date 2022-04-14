@@ -269,12 +269,15 @@ type WaypointClient interface {
 	UpsertRelease(ctx context.Context, in *UpsertReleaseRequest, opts ...grpc.CallOption) (*UpsertReleaseResponse, error)
 	// UpsertStatusReport updates or inserts a statusreport.
 	UpsertStatusReport(ctx context.Context, in *UpsertStatusReportRequest, opts ...grpc.CallOption) (*UpsertStatusReportResponse, error)
+	// TODO(briancain): Delete UpsertTask
 	// UpsertTask updates or inserts a Task
 	UpsertTask(ctx context.Context, in *UpsertTaskRequest, opts ...grpc.CallOption) (*UpsertTaskResponse, error)
 	// GetTask returns a requested Task message. Or an error if it does not exist.
 	GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*GetTaskResponse, error)
 	// ListTask will return a list of all existing Tasks
 	ListTask(ctx context.Context, in *ListTaskRequest, opts ...grpc.CallOption) (*ListTaskResponse, error)
+	// CancelTask will attempt to gracefully cancel each job in the task job triple
+	CancelTask(ctx context.Context, in *CancelTaskRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// UpsertTrigger updates or inserts a trigger URL configuration.
 	UpsertTrigger(ctx context.Context, in *UpsertTriggerRequest, opts ...grpc.CallOption) (*UpsertTriggerResponse, error)
 	// GetTrigger returns a requested trigger message. Or an error if it does not exist.
@@ -1297,6 +1300,15 @@ func (c *waypointClient) ListTask(ctx context.Context, in *ListTaskRequest, opts
 	return out, nil
 }
 
+func (c *waypointClient) CancelTask(ctx context.Context, in *CancelTaskRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/CancelTask", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) UpsertTrigger(ctx context.Context, in *UpsertTriggerRequest, opts ...grpc.CallOption) (*UpsertTriggerResponse, error) {
 	out := new(UpsertTriggerResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpsertTrigger", in, out, opts...)
@@ -1619,12 +1631,15 @@ type WaypointServer interface {
 	UpsertRelease(context.Context, *UpsertReleaseRequest) (*UpsertReleaseResponse, error)
 	// UpsertStatusReport updates or inserts a statusreport.
 	UpsertStatusReport(context.Context, *UpsertStatusReportRequest) (*UpsertStatusReportResponse, error)
+	// TODO(briancain): Delete UpsertTask
 	// UpsertTask updates or inserts a Task
 	UpsertTask(context.Context, *UpsertTaskRequest) (*UpsertTaskResponse, error)
 	// GetTask returns a requested Task message. Or an error if it does not exist.
 	GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error)
 	// ListTask will return a list of all existing Tasks
 	ListTask(context.Context, *ListTaskRequest) (*ListTaskResponse, error)
+	// CancelTask will attempt to gracefully cancel each job in the task job triple
+	CancelTask(context.Context, *CancelTaskRequest) (*emptypb.Empty, error)
 	// UpsertTrigger updates or inserts a trigger URL configuration.
 	UpsertTrigger(context.Context, *UpsertTriggerRequest) (*UpsertTriggerResponse, error)
 	// GetTrigger returns a requested trigger message. Or an error if it does not exist.
@@ -1903,6 +1918,9 @@ func (UnimplementedWaypointServer) GetTask(context.Context, *GetTaskRequest) (*G
 }
 func (UnimplementedWaypointServer) ListTask(context.Context, *ListTaskRequest) (*ListTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTask not implemented")
+}
+func (UnimplementedWaypointServer) CancelTask(context.Context, *CancelTaskRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelTask not implemented")
 }
 func (UnimplementedWaypointServer) UpsertTrigger(context.Context, *UpsertTriggerRequest) (*UpsertTriggerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertTrigger not implemented")
@@ -3531,6 +3549,24 @@ func _Waypoint_ListTask_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_CancelTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CancelTaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).CancelTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/CancelTask",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).CancelTask(ctx, req.(*CancelTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_UpsertTrigger_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpsertTriggerRequest)
 	if err := dec(in); err != nil {
@@ -3981,6 +4017,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTask",
 			Handler:    _Waypoint_ListTask_Handler,
+		},
+		{
+			MethodName: "CancelTask",
+			Handler:    _Waypoint_CancelTask_Handler,
 		},
 		{
 			MethodName: "UpsertTrigger",
