@@ -38,7 +38,7 @@ func (s *Service) GetTask(
 	}
 
 	// Get the Start, Run, and Stop jobs
-	startJob, taskJob, stopJob, err := s.state(ctx).GetJobsByTaskRef(t)
+	startJob, taskJob, stopJob, err := s.state(ctx).JobsByTaskRef(t)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (s *Service) ListTask(
 
 	var tasks []*pb.GetTaskResponse
 	for _, t := range result {
-		startJob, taskJob, stopJob, err := s.state(ctx).GetJobsByTaskRef(t)
+		startJob, taskJob, stopJob, err := s.state(ctx).JobsByTaskRef(t)
 		if err != nil {
 			return nil, err
 		}
