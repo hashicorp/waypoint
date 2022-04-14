@@ -246,7 +246,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NoError(err)
 		require.NotNil(task)
 
-		startJob, taskJob, stopJob, err := s.GetJobsByTaskRef(task)
+		startJob, taskJob, stopJob, err := s.JobsByTaskRef(task)
 		require.NoError(err)
 		require.Equal(startJob.Id, "start_job")
 		require.Equal(taskJob.Id, "j_test")

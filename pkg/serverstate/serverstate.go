@@ -178,7 +178,7 @@ type Interface interface {
 	TaskGet(*pb.Ref_Task) (*pb.Task, error)
 	TaskDelete(*pb.Ref_Task) error
 	TaskList(*pb.ListTaskRequest) ([]*pb.Task, error)
-	GetJobsByTaskRef(*pb.Task) (*pb.Job, *pb.Job, *pb.Job, error)
+	JobsByTaskRef(*pb.Task) (*pb.Job, *pb.Job, *pb.Job, error)
 }
 
 // Pruner is implemented by state storage implementations that require
