@@ -81,6 +81,18 @@ func (p *Platform) ConfigSet(config interface{}) error {
 		}
 	}
 
+	// validate storage - value between 512 and 10240
+	if c.StorageMB != 0 {
+		if err := utils.Error(validation.ValidateStruct(c,
+			validation.Field(&c.StorageMB,
+				validation.Min(512).Error("Storage must a value between 512 and 10240"),
+				validation.Max(10240).Error("Storage must a value between 512 and 10240"),
+			),
+		)); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -281,7 +293,7 @@ func (p *Platform) Deploy(
 		architecture = DockerArchitectureMapper(img.Architecture, log)
 	}
 
-	storage := int64(p.config.Storage)
+	storage := int64(p.config.StorageMB)
 	if storage == 0 {
 		storage = DefaultStorageSize
 	}
@@ -875,7 +887,7 @@ deploy {
 	)
 
 	doc.SetField(
-		"storage",
+		"storagemb",
 		"The storage size (in MB) of the Lambda function's `/tmp` directory. Must be a value between 512 and 10240.",
 		docs.Default("512"),
 	)
@@ -910,7 +922,7 @@ type Config struct {
 	// The storage size (in MB) of the Lambda function's `/tmp` directory.
 	// Must be a value between 512 and 10240.
 	// Defaults to 512 MB.
-	Storage int `hcl:"storage,optional"`
+	StorageMB int `hcl:"storagemb,optional"`
 }
 
 var (
