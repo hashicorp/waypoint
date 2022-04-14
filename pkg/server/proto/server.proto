@@ -372,8 +372,11 @@ service Waypoint {
   // UpsertStatusReport updates or inserts a statusreport.
   rpc UpsertStatusReport(UpsertStatusReportRequest) returns (UpsertStatusReportResponse);
 
-  // Internal Task functions
+  //----------------------------------------------------------------------
+  // Task functions
+  //----------------------------------------------------------------------
 
+  // TODO(briancain): Delete UpsertTask
   // UpsertTask updates or inserts a Task
   rpc UpsertTask(UpsertTaskRequest) returns (UpsertTaskResponse);
 
@@ -382,6 +385,9 @@ service Waypoint {
 
   // ListTask will return a list of all existing Tasks
   rpc ListTask(ListTaskRequest) returns (ListTaskResponse);
+
+  // CancelTask will attempt to gracefully cancel each job in the task job triple
+  rpc CancelTask(CancelTaskRequest) returns (google.protobuf.Empty);
 
   //----------------------------------------------------------------------
   // Trigger URL Config functions
@@ -1256,6 +1262,15 @@ message ListTaskRequest {
 message ListTaskResponse {
   // An array of all available Tasks and their jobs
   repeated GetTaskResponse tasks = 1;
+}
+
+message CancelTaskRequest {
+  // A reference to the task to cancel
+  Ref.Task ref = 1;
+
+  // Forcefully attempt to cancel the task
+  // TODO(briancain): Unclear if this is a good idea
+  //bool force = 2;
 }
 
 /********************************************************************

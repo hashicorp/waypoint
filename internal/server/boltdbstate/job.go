@@ -891,6 +891,8 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 	job = job.Copy()
 	oldState := job.State
 
+	s.log.Debug("attempting to cancel job", "job", job.Id)
+
 	// How we handle cancel depends on the state
 	switch job.State {
 	case pb.Job_ERROR, pb.Job_SUCCESS:

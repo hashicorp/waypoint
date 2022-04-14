@@ -5,6 +5,7 @@ import (
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (s *Service) UpsertTask(
@@ -74,4 +75,19 @@ func (s *Service) ListTask(
 	}
 
 	return &pb.ListTaskResponse{Tasks: tasks}, nil
+}
+
+func (s *Service) CancelTask(
+	ctx context.Context,
+	req *pb.CancelTaskRequest,
+) (*empty.Empty, error) {
+	if err := serverptypes.ValidateCancelTaskRequest(req); err != nil {
+		return nil, err
+	}
+
+	if err := s.state(ctx).TaskCancel(req.Ref); err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
 }
