@@ -3,7 +3,6 @@ package nomad
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -213,10 +212,16 @@ func (p *Platform) resourceJobCreate(
 	job.TaskGroups[0].Tasks[0].Env = env
 
 	// Get Consul ACL token from environment
-	*job.ConsulToken = os.Getenv("CONSUL_HTTP_TOKEN")
+	*job.ConsulToken, err = ConsulAuth()
+	if err != nil {
+		return err
+	}
 
 	// Get Vault token from environment
-	*job.VaultToken = os.Getenv("VAULT_TOKEN")
+	*job.VaultToken, err = VaultAuth()
+	if err != nil {
+		return err
+	}
 
 	// Register job
 	st.Update("Registering job...")
