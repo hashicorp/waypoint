@@ -8046,7 +8046,7 @@
         },
         "resource_name": {
           "type": "string",
-          "description": "The resource that gets created to run the task job for this Task\nTODO(briancain): This field has not been implemented yet. See\n\"internal/runner/operation.go\" for more info."
+          "description": "The resource that gets created to run the task job for this Task\nTODO(briancain): This field has not been implemented yet. See\n\"internal/runner/operation_task.go\" for more info."
         }
       },
       "description": "Task tracks the life of an on-demand runner task that spawns Start\nand Stop tasks for any kind of job/operation in Waypoint. Automatic jobs\nsuch as project polling or status report generation spawn on-demand\nrunner tasks, and this message can be used to track the life of those\nautomated jobs. Note that every on-demand runner task is wrapped with a\nStart and Stop task, which we track here as well."
