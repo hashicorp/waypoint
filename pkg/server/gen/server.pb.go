@@ -2613,7 +2613,7 @@ type Task struct {
 	JobState Task_State `protobuf:"varint,7,opt,name=job_state,json=jobState,proto3,enum=hashicorp.waypoint.Task_State" json:"job_state,omitempty"`
 	// The resource that gets created to run the task job for this Task
 	// TODO(briancain): This field has not been implemented yet. See
-	// "internal/runner/operation.go" for more info.
+	// "internal/runner/operation_task.go" for more info.
 	ResourceName string `protobuf:"bytes,8,opt,name=resource_name,json=resourceName,proto3" json:"resource_name,omitempty"`
 }
 
@@ -2978,7 +2978,7 @@ type ListTaskRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	TaskState []Task_State `protobuf:"varint,1,rep,packed,name=taskState,proto3,enum=hashicorp.waypoint.Task_State" json:"taskState,omitempty"` //repeated Job.operation taskOperation = 2;
+	TaskState []Task_State `protobuf:"varint,1,rep,packed,name=taskState,proto3,enum=hashicorp.waypoint.Task_State" json:"taskState,omitempty"`
 }
 
 func (x *ListTaskRequest) Reset() {
