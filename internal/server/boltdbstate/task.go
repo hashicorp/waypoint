@@ -89,31 +89,31 @@ func (s *State) GetJobsByTaskRef(
 	defer memTxn.Abort()
 
 	err = s.db.View(func(dbTxn *bolt.Tx) error {
-		resp, err := s.JobById(task.StartJob.Id, nil)
+		job, err := s.jobById(dbTxn, task.StartJob.Id)
 		if err != nil {
 			return err
-		} else if resp == nil || resp.Job == nil {
+		} else if job == nil {
 			return status.Errorf(codes.NotFound, "start job %q not found", task.StartJob.Id)
 		} else {
-			startJob = resp.Job
+			startJob = job
 		}
 
-		resp, err = s.JobById(task.TaskJob.Id, nil)
+		job, err = s.jobById(dbTxn, task.TaskJob.Id)
 		if err != nil {
 			return err
-		} else if resp == nil || resp.Job == nil {
+		} else if job == nil {
 			return status.Errorf(codes.NotFound, "task job %q not found", task.TaskJob.Id)
 		} else {
-			taskJob = resp.Job
+			taskJob = job
 		}
 
-		resp, err = s.JobById(task.StopJob.Id, nil)
+		job, err = s.jobById(dbTxn, task.StopJob.Id)
 		if err != nil {
 			return err
-		} else if resp == nil || resp.Job == nil {
+		} else if job == nil {
 			return status.Errorf(codes.NotFound, "stop job %q not found", task.StopJob.Id)
 		} else {
-			stopJob = resp.Job
+			stopJob = job
 		}
 
 		return nil
