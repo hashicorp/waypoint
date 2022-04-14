@@ -669,6 +669,9 @@ RETRY_ASSIGN:
 // JobAck acknowledges that a job has been accepted or rejected by the runner.
 // If ack is false, then this will move the job back to the queued state
 // and be eligible for assignment.
+// Additionally, if a job is associated with an on-demand runner task, this
+// func will progress the Tasks state machine depending on which job has
+// currently been acked.
 func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
@@ -749,6 +752,13 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	}
 
 	txn.Commit()
+
+	// Update the task state machine if acked job is part of an on-demand runner task.
+	if err := s.TaskAck(job.Id); err != nil {
+		s.log.Error("error updating task state", "error", err, "job", job.Id)
+		return nil, err
+	}
+
 	return job.Job(result), nil
 }
 
@@ -859,6 +869,14 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 	}
 
 	txn.Commit()
+
+	// If the job is part of an on-demand runner task, update the task state machine
+	// to mark the job in the task as complete
+	if err := s.TaskComplete(job.Id); err != nil {
+		s.log.Error("error updating task state for complete", "error", err, "job", job.Id)
+		return err
+	}
+
 	return nil
 }
 

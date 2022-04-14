@@ -2688,36 +2688,6 @@ func (_m *WaypointClient) UpsertStatusReport(ctx context.Context, in *gen.Upsert
 	return r0, r1
 }
 
-// UpsertTask provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) UpsertTask(ctx context.Context, in *gen.UpsertTaskRequest, opts ...grpc.CallOption) (*gen.UpsertTaskResponse, error) {
-	_va := make([]interface{}, len(opts))
-	for _i := range opts {
-		_va[_i] = opts[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, in)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	var r0 *gen.UpsertTaskResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertTaskRequest, ...grpc.CallOption) *gen.UpsertTaskResponse); ok {
-		r0 = rf(ctx, in, opts...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.UpsertTaskResponse)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertTaskRequest, ...grpc.CallOption) error); ok {
-		r1 = rf(ctx, in, opts...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // UpsertTrigger provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) UpsertTrigger(ctx context.Context, in *gen.UpsertTriggerRequest, opts ...grpc.CallOption) (*gen.UpsertTriggerResponse, error) {
 	_va := make([]interface{}, len(opts))

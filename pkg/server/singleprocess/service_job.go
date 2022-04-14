@@ -259,20 +259,29 @@ func (s *Service) wrapJobWithRunner(
 	}
 
 	// Write a Task state with the On-Demand Runner job triple
-	if respTask, err := s.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: &pb.Task{
-			StartJob: &pb.Ref_Job{Id: startJob.Id},
-			TaskJob:  &pb.Ref_Job{Id: source.Id},
-			StopJob:  &pb.Ref_Job{Id: stopJob.Id},
-			JobState: pb.Task_PENDING,
-		},
-	}); err != nil {
+	task := &pb.Task{
+		StartJob: &pb.Ref_Job{Id: startJob.Id},
+		TaskJob:  &pb.Ref_Job{Id: source.Id},
+		StopJob:  &pb.Ref_Job{Id: stopJob.Id},
+		JobState: pb.Task_PENDING,
+	}
+	if err := s.state(ctx).TaskPut(task); err != nil {
 		return nil, err
 	} else {
+		task, err := s.state(ctx).TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_JobId{
+				JobId: source.Id,
+			},
+		})
+		if err != nil {
+			// could not find task that was just Put into the db!
+			return nil, err
+		}
+
 		// assign a task ref to each job for lookup later
 		taskRef := &pb.Ref_Task{
 			Ref: &pb.Ref_Task_Id{
-				Id: respTask.Task.Id,
+				Id: task.Id,
 			},
 		}
 

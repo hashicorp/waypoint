@@ -92,19 +92,19 @@ func (s *State) TaskCancel(ref *pb.Ref_Task) error {
 		return err
 	}
 
-	s.log.Debug("canceling start job for task", "task id", task.Id, "start job id", task.StartJob.Id)
+	s.log.Trace("canceling start job for task", "task id", task.Id, "start job id", task.StartJob.Id)
 	err = s.JobCancel(task.StartJob.Id, false)
 	if err != nil {
 		return err
 	}
 
-	s.log.Debug("canceling task job for task", "task id", task.Id, "start job id", task.TaskJob.Id)
+	s.log.Trace("canceling task job for task", "task id", task.Id, "start job id", task.TaskJob.Id)
 	err = s.JobCancel(task.TaskJob.Id, false)
 	if err != nil {
 		return err
 	}
 
-	s.log.Debug("canceling stop job for task", "task id", task.Id, "stop job id", task.StopJob.Id)
+	s.log.Trace("canceling stop job for task", "task id", task.Id, "stop job id", task.StopJob.Id)
 	err = s.JobCancel(task.StopJob.Id, false)
 	if err != nil {
 		return err
@@ -200,6 +200,102 @@ func (s *State) TaskList(req *pb.ListTaskRequest) ([]*pb.Task, error) {
 	}
 
 	return out, nil
+}
+
+// TaskAck looks to see if the referenced job id has a Task ref associated with it,
+// and if so, Ack the specific job inside the Task job triple to progress the
+// Task state machine.
+func (s *State) TaskAck(jobId string) error {
+	job, err := s.JobById(jobId, nil)
+	if err != nil {
+		s.log.Error("error getting job by id", "job", jobId, "err", err)
+		return err
+	} else if job.Task == nil {
+		s.log.Trace("job is not an on-demand runner task", "job", jobId)
+		return nil
+	}
+
+	// grab the full task message based on the Task Ref on the job
+	task, err := s.TaskGet(job.Task)
+	if err != nil {
+		s.log.Error("failed to get task to ack job", "job", job.Id, "task", job.Task.Ref)
+		return err
+	}
+
+	// now figure out which job has been acked for the task, and update
+	// the task state
+	switch job.Id {
+	case task.StartJob.Id:
+		// StartJob has been Acked
+		task.JobState = pb.Task_STARTING
+		s.log.Trace("start job is starting", "job", job.Id, "task", task.Id)
+	case task.TaskJob.Id:
+		// TaskJob has been Acked
+		task.JobState = pb.Task_RUNNING
+		s.log.Trace("task job is running", "job", job.Id, "task", task.Id)
+	case task.StopJob.Id:
+		// StopJob has been Acked
+		task.JobState = pb.Task_STOPPING
+		s.log.Trace("stop job is running", "job", job.Id, "task", task.Id)
+	default:
+		return status.Errorf(codes.Internal, "no task job id matches the requested job id %q", job.Id)
+	}
+
+	// TaskPut the new state
+	if err := s.TaskPut(task); err != nil {
+		s.log.Error("failed to ack task state", "job", job.Id, "task", task.Id)
+		return err
+	}
+
+	return nil
+}
+
+// TaskComplete will look up the referenced job to see if it has a Task ref
+// associated with it, and if so, mark the specific job inside the Task job triple
+// as complete to progress the task state machine.
+func (s *State) TaskComplete(jobId string) error {
+	job, err := s.JobById(jobId, nil)
+	if err != nil {
+		s.log.Error("error getting job by id", "job", jobId, "err", err)
+		return err
+	} else if job.Task == nil {
+		s.log.Trace("job is not an on-demand runner task", "job", jobId)
+		return nil
+	}
+
+	// grab the full task message based on the Task Ref on the job
+	task, err := s.TaskGet(job.Task)
+	if err != nil {
+		s.log.Error("failed to get task to mark complete", "job", job.Id, "task", job.Task.Ref)
+		return err
+	}
+
+	// now figure out which job has been completed this is for the task, and update
+	// the task state
+	switch job.Id {
+	case task.StartJob.Id:
+		// StartJob has completed
+		task.JobState = pb.Task_STARTED
+		s.log.Trace("start job has completed", "job", job.Id, "task", task.Id)
+	case task.TaskJob.Id:
+		// TaskJob has completed
+		task.JobState = pb.Task_COMPLETED
+		s.log.Trace("task job has completed", "job", job.Id, "task", task.Id)
+	case task.StopJob.Id:
+		// StopJob has completed, the whole task is finished
+		task.JobState = pb.Task_STOPPED
+		s.log.Trace("stop job has completed", "job", job.Id, "task", task.Id)
+	default:
+		return status.Errorf(codes.Internal, "no task job id matches the requested job id %q", job.Id)
+	}
+
+	// TaskPut the new state
+	if err := s.TaskPut(task); err != nil {
+		s.log.Error("failed to complete task state", "job", job.Id, "task", task.Id)
+		return err
+	}
+
+	return nil
 }
 
 func (s *State) taskPut(

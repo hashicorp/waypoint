@@ -314,3 +314,119 @@ func TestTaskCancel(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NotEmpty(job.CancelTime)
 	})
 }
+
+func TestTaskAckAndComplete(t *testing.T, factory Factory, restartF RestartFactory) {
+	t.Run("Ack and Complete a task to progress task state", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		task_id := "t_test"
+
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "start_job",
+			Task: &pb.Ref_Task{
+				Ref: &pb.Ref_Task_Id{
+					Id: task_id,
+				},
+			},
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "j_test",
+			Task: &pb.Ref_Task{
+				Ref: &pb.Ref_Task_Id{
+					Id: task_id,
+				},
+			},
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "stop_job",
+			Task: &pb.Ref_Task{
+				Ref: &pb.Ref_Task_Id{
+					Id: task_id,
+				},
+			},
+		})))
+
+		err := s.TaskPut(&pb.Task{
+			Id:       task_id,
+			TaskJob:  &pb.Ref_Job{Id: "j_test"},
+			StartJob: &pb.Ref_Job{Id: "start_job"},
+			StopJob:  &pb.Ref_Job{Id: "stop_job"},
+		})
+		require.NoError(err)
+
+		// lets get this started
+		require.NoError(s.TaskAck("start_job"))
+
+		task, err := s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: task_id,
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+		require.Equal(pb.Task_STARTING, task.JobState)
+
+		// complete the start task
+		require.NoError(s.TaskComplete("start_job"))
+
+		task, err = s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: task_id,
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+		require.Equal(pb.Task_STARTED, task.JobState)
+
+		// start the source job
+		require.NoError(s.TaskAck("j_test"))
+
+		task, err = s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: task_id,
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+		require.Equal(pb.Task_RUNNING, task.JobState)
+
+		// complete source job
+		require.NoError(s.TaskComplete("j_test"))
+
+		task, err = s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: task_id,
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+		require.Equal(pb.Task_COMPLETED, task.JobState)
+
+		// start the stop task
+		require.NoError(s.TaskAck("stop_job"))
+
+		task, err = s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: task_id,
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+		require.Equal(pb.Task_STOPPING, task.JobState)
+
+		// complete the stop task
+		require.NoError(s.TaskComplete("stop_job"))
+
+		task, err = s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: task_id,
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+		require.Equal(pb.Task_STOPPED, task.JobState)
+	})
+}

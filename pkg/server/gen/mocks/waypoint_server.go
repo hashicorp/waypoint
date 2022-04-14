@@ -1973,29 +1973,6 @@ func (_m *WaypointServer) UpsertStatusReport(_a0 context.Context, _a1 *gen.Upser
 	return r0, r1
 }
 
-// UpsertTask provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) UpsertTask(_a0 context.Context, _a1 *gen.UpsertTaskRequest) (*gen.UpsertTaskResponse, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *gen.UpsertTaskResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertTaskRequest) *gen.UpsertTaskResponse); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.UpsertTaskResponse)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertTaskRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // UpsertTrigger provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) UpsertTrigger(_a0 context.Context, _a1 *gen.UpsertTriggerRequest) (*gen.UpsertTriggerResponse, error) {
 	ret := _m.Called(_a0, _a1)

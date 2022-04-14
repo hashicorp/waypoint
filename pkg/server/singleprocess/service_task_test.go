@@ -13,57 +13,6 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestServiceTask(t *testing.T) {
-	ctx := context.Background()
-
-	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
-
-	type Req = pb.UpsertTaskRequest
-
-	t.Run("create and update", func(t *testing.T) {
-		require := require.New(t)
-
-		// Create, should get an ID back
-		resp, err := client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-			Task: serverptypes.TestValidTask(t, &pb.Task{TaskJob: &pb.Ref_Job{Id: "run_job"}}),
-		})
-		require.NoError(err)
-		require.NotNil(resp)
-		result := resp.Task
-		require.NotEmpty(result.Id)
-
-		// Let's write some data
-		result.StartJob = &pb.Ref_Job{Id: "start_job"}
-		result.StopJob = &pb.Ref_Job{Id: "stop_job"}
-		resp, err = client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-			Task: result,
-		})
-		require.NoError(err)
-		require.NotNil(resp)
-		result = resp.Task
-		require.Equal(result.StartJob.Id, "start_job")
-		require.Equal(result.Id, resp.Task.Id)
-	})
-
-	t.Run("create on non-existent task with id creates a new task by requested id", func(t *testing.T) {
-		require := require.New(t)
-
-		// Create, should get an ID back
-		resp, err := client.UpsertTask(ctx, &Req{
-			Task: serverptypes.TestValidTask(t, &pb.Task{
-				Id:      "newone",
-				TaskJob: &pb.Ref_Job{Id: "newone"},
-			}),
-		})
-		require.NoError(err)
-		require.NotNil(resp)
-		require.Equal(resp.Task.Id, "newone")
-	})
-}
-
 func TestServiceTask_GetTask(t *testing.T) {
 	ctx := context.Background()
 
@@ -106,15 +55,16 @@ func TestServiceTask_GetTask(t *testing.T) {
 	require.NotEmpty(t, jobResp.JobId)
 	stopJobId := jobResp.JobId
 
-	resp, err := client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: serverptypes.TestValidTask(t, &pb.Task{
+	taskId := "test_task"
+	err = testServiceImpl(impl).state(ctx).TaskPut(
+		serverptypes.TestValidTask(t, &pb.Task{
+			Id:       taskId,
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
 			StopJob:  &pb.Ref_Job{Id: stopJobId},
 		}),
-	})
+	)
 	require.NoError(t, err)
-	taskId := resp.Task.Id
 
 	// Create, should get an ID back
 	t.Run("get existing by task id", func(t *testing.T) {
@@ -126,7 +76,7 @@ func TestServiceTask_GetTask(t *testing.T) {
 		resp, err := client.GetTask(ctx, &pb.GetTaskRequest{
 			Ref: &pb.Ref_Task{
 				Ref: &pb.Ref_Task_Id{
-					Id: resp.Task.Id,
+					Id: taskId,
 				},
 			},
 		})
@@ -232,27 +182,30 @@ func TestServiceTask_ListTaskSimple(t *testing.T) {
 	require.NotEmpty(t, jobResp.JobId)
 	stopJobId := jobResp.JobId
 
-	_, err = client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: serverptypes.TestValidTask(t, &pb.Task{
+	err = testServiceImpl(impl).state(ctx).TaskPut(
+		serverptypes.TestValidTask(t, &pb.Task{
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
 			StopJob:  &pb.Ref_Job{Id: stopJobId},
 		}),
-	})
-	_, err = client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: serverptypes.TestValidTask(t, &pb.Task{
+	)
+	require.NoError(t, err)
+	err = testServiceImpl(impl).state(ctx).TaskPut(
+		serverptypes.TestValidTask(t, &pb.Task{
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
 			StopJob:  &pb.Ref_Job{Id: stopJobId},
 		}),
-	})
-	_, err = client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: serverptypes.TestValidTask(t, &pb.Task{
+	)
+	require.NoError(t, err)
+	err = testServiceImpl(impl).state(ctx).TaskPut(
+		serverptypes.TestValidTask(t, &pb.Task{
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
 			StopJob:  &pb.Ref_Job{Id: stopJobId},
 		}),
-	})
+	)
+	require.NoError(t, err)
 
 	t.Run("list", func(t *testing.T) {
 		require := require.New(t)
@@ -313,29 +266,32 @@ func TestServiceTask_ListTaskFilters(t *testing.T) {
 	require.NotEmpty(t, jobResp.JobId)
 	stopJobId := jobResp.JobId
 
-	_, err = client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: serverptypes.TestValidTask(t, &pb.Task{
+	err = testServiceImpl(impl).state(ctx).TaskPut(
+		serverptypes.TestValidTask(t, &pb.Task{
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
 			StopJob:  &pb.Ref_Job{Id: stopJobId},
 			JobState: pb.Task_STOPPED,
 		}),
-	})
-	_, err = client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: serverptypes.TestValidTask(t, &pb.Task{
+	)
+	require.NoError(t, err)
+	err = testServiceImpl(impl).state(ctx).TaskPut(
+		serverptypes.TestValidTask(t, &pb.Task{
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
 			StopJob:  &pb.Ref_Job{Id: stopJobId},
 			JobState: pb.Task_RUNNING,
 		}),
-	})
-	_, err = client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: serverptypes.TestValidTask(t, &pb.Task{
+	)
+	require.NoError(t, err)
+	err = testServiceImpl(impl).state(ctx).TaskPut(
+		serverptypes.TestValidTask(t, &pb.Task{
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
 			StopJob:  &pb.Ref_Job{Id: stopJobId},
 		}),
-	})
+	)
+	require.NoError(t, err)
 
 	t.Run("list filter on job state", func(t *testing.T) {
 		require := require.New(t)
@@ -397,15 +353,16 @@ func TestServiceTask_CancelTask(t *testing.T) {
 	require.NotEmpty(t, jobResp.JobId)
 	stopJobId := jobResp.JobId
 
-	resp, err := client.UpsertTask(ctx, &pb.UpsertTaskRequest{
-		Task: serverptypes.TestValidTask(t, &pb.Task{
+	taskId := "test_task"
+	err = testServiceImpl(impl).state(ctx).TaskPut(
+		serverptypes.TestValidTask(t, &pb.Task{
+			Id:       taskId,
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
 			StopJob:  &pb.Ref_Job{Id: stopJobId},
 		}),
-	})
+	)
 	require.NoError(t, err)
-	taskId := resp.Task.Id
 
 	t.Run("cancel existing by task id", func(t *testing.T) {
 		require := require.New(t)
