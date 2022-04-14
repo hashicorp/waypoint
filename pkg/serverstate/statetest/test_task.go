@@ -14,6 +14,7 @@ import (
 func init() {
 	tests["task"] = []testFunc{
 		TestTask,
+		TestTaskCancel,
 	}
 }
 
@@ -251,5 +252,65 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.Equal(startJob.Id, "start_job")
 		require.Equal(taskJob.Id, "j_test")
 		require.Equal(stopJob.Id, "stop_job")
+	})
+}
+
+func TestTaskCancel(t *testing.T, factory Factory, restartF RestartFactory) {
+	t.Run("Canceling a Task by task id", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "start_job",
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "j_test",
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "stop_job",
+		})))
+
+		err := s.TaskPut(&pb.Task{
+			Id:       "t_test",
+			TaskJob:  &pb.Ref_Job{Id: "j_test"},
+			StartJob: &pb.Ref_Job{Id: "start_job"},
+			StopJob:  &pb.Ref_Job{Id: "stop_job"},
+		})
+		require.NoError(err)
+
+		task, err := s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_JobId{
+				JobId: "j_test",
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+
+		require.NoError(s.TaskCancel(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: "t_test",
+			},
+		}))
+
+		// Verify it is canceled
+		job, err := s.JobById("start_job", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.Job.State)
+		require.NotNil(job.Job.Error)
+		require.NotEmpty(job.CancelTime)
+
+		job, err = s.JobById("j_test", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.Job.State)
+		require.NotNil(job.Job.Error)
+		require.NotEmpty(job.CancelTime)
+
+		job, err = s.JobById("stop_job", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.Job.State)
+		require.NotNil(job.Job.Error)
+		require.NotEmpty(job.CancelTime)
 	})
 }

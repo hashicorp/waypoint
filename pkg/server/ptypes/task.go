@@ -65,6 +65,13 @@ func ValidateGetTaskRequest(v *pb.GetTaskRequest) error {
 	))
 }
 
+// ValidateCancelTaskRequest
+func ValidateCancelTaskRequest(v *pb.CancelTaskRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Ref, validation.Required),
+	))
+}
+
 // ValidateDeleteTaskRequest
 func ValidateDeleteTaskRequest(v *pb.DeleteTaskRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,

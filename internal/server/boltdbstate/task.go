@@ -79,6 +79,40 @@ func (s *State) TaskDelete(ref *pb.Ref_Task) error {
 	return err
 }
 
+// TaskCancel deletes a task by reference.
+// NOTE(briancain): this way means each cancel is its own transaction and commit, not the greatest.
+// Previously I attempted to implement this with taskCancel where the entire job
+// triple was canceled inside a single transaction. This ended up deadlocking because
+// when we cancel a job, we also call a `db.Update` on each job when we update its
+// state in the database. This caused a deadlock. For now we cancel each job
+// separately.
+func (s *State) TaskCancel(ref *pb.Ref_Task) error {
+	task, err := s.TaskGet(ref)
+	if err != nil {
+		return err
+	}
+
+	s.log.Debug("canceling start job for task by id", "task id", task.Id, "start job id", task.StartJob.Id)
+	err = s.JobCancel(task.StartJob.Id, false)
+	if err != nil {
+		return err
+	}
+
+	s.log.Debug("canceling task job for task by id", "task id", task.Id, "start job id", task.TaskJob.Id)
+	err = s.JobCancel(task.TaskJob.Id, false)
+	if err != nil {
+		return err
+	}
+
+	s.log.Debug("canceling stop job for task by id", "task id", task.Id, "stop job id", task.StopJob.Id)
+	err = s.JobCancel(task.StopJob.Id, false)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetJobsByTaskRef will look up every job triple by Task ref in a single
 // memdb transaction. This is often used via the API for building out
 // a complete picture of a task beyond the job ID refs.
@@ -273,6 +307,67 @@ func (s *State) taskDelete(
 
 	return nil
 }
+
+/*
+func (s *State) taskCancel(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	task *pb.Task,
+) error {
+	s.log.Info("canceling task by id", "id", task.Id)
+	// call jobCancel on the job triple
+
+	// Get the start job
+	raw, err := memTxn.First(jobTableName, jobIdIndexName, task.StartJob.Id)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "StartJob for task %q not found: %s", task.Id, task.StartJob.Id)
+	}
+	startJob := raw.(*jobIndex)
+
+	// Cancel the job
+	s.log.Info("canceling start job by id", "id", startJob.Id)
+	if err = s.jobCancel(memTxn, startJob, false); err != nil {
+		return err
+	}
+
+	// Get the task job
+	raw, err = memTxn.First(jobTableName, jobIdIndexName, task.TaskJob.Id)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "TaskJob for task %q not found: %s", task.Id, task.TaskJob.Id)
+	}
+	taskJob := raw.(*jobIndex)
+
+	// Cancel the job
+	s.log.Info("canceling task job by id", "id", taskJob.Id)
+	if err = s.jobCancel(memTxn, taskJob, false); err != nil {
+		return err
+	}
+
+	// Get the stop job
+	raw, err = memTxn.First(jobTableName, jobIdIndexName, task.StopJob.Id)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "StopJob for task %q not found: %s", task.Id, task.StopJob.Id)
+	}
+	stopJob := raw.(*jobIndex)
+
+	// Cancel the job
+	s.log.Info("canceling stop job by id", "id", stopJob.Id)
+	if err = s.jobCancel(memTxn, stopJob, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+*/
 
 // taskIndexSet writes an index record for a single task.
 func (s *State) taskIndexSet(txn *memdb.Txn, id []byte, value *pb.Task) error {
