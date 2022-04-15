@@ -2,14 +2,17 @@ package lambda
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -25,9 +28,55 @@ type Releaser struct {
 	config ReleaserConfig
 }
 
+// Lambda GetPolicy() returns a JSON string of its IAM policy, so
+// we need to unmarshal it into this struct in order to use it.
+//
+// See https://github.com/aws/aws-sdk-go/issues/127
+// and https://github.com/aws/aws-sdk-go-v2/issues/225
+type IAMPolicy struct {
+	Version   string `json:"Version"`
+	ID        string `json:"Id"`
+	Statement []struct {
+		Sid    string `json:"Sid"`
+		Effect string `json:"Effect"`
+		// Principal can be either a string, like "*", or a struct
+		// like { "AWS": "arn:aws:iam::123456789012:root" }
+		Principal interface{} `json:"Principal"`
+		Action    string      `json:"Action"`
+		Resource  string      `json:"Resource"`
+		Condition struct {
+			StringEquals struct {
+				LambdaFunctionURLAuthType string `json:"lambda:FunctionUrlAuthType"`
+			} `json:"StringEquals"`
+		} `json:"Condition"`
+	} `json:"Statement"`
+}
+
 // Config implements Configurable
 func (r *Releaser) Config() (interface{}, error) {
 	return &r.config, nil
+}
+
+// ConfigSet is called after a configuration has been decoded
+// we can use this to validate the config
+func (r *Releaser) ConfigSet(config interface{}) error {
+	rc, ok := config.(*ReleaserConfig)
+	if !ok {
+		// this should never happen
+		return fmt.Errorf("Invalid configuration, expected *lambda.ReleaserConfig, got %s", reflect.TypeOf(config))
+	}
+
+	err := utils.Error(validation.ValidateStruct(rc,
+		validation.Field(&rc.Principal,
+			validation.Empty.When(rc.AuthType != "" && rc.AuthType != lambda.FunctionUrlAuthTypeAwsIam).Error("principal requires auth_type to be set to \"AWS_IAM\""),
+		),
+	))
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ReleaseFunc implements component.ReleaseManager
@@ -51,6 +100,11 @@ func (r *Releaser) resourceManager(log hclog.Logger) *resource.Manager {
 		resource.WithValueProvider(r.getSession),
 
 		resource.WithResource(resource.NewResource(
+			resource.WithName("function_permission"),
+			resource.WithCreate(r.resourceFunctionPermissionCreate),
+		)),
+
+		resource.WithResource(resource.NewResource(
 			resource.WithName("function_url"),
 			resource.WithState(&Resource_FunctionUrl{}),
 			resource.WithCreate(r.resourceFunctionUrlCreate),
@@ -68,8 +122,158 @@ func (r *Releaser) getSession(
 }
 
 var (
+	// If auth_type is not set we'll default to "NONE", allowing public access to the function URL
 	DefaultFunctionUrlAuthType = lambda.FunctionUrlAuthTypeNone
+	// If principal is not set we'll allow any authenticated AWS user to invoke the function URL
+	DefaultPrincipal = "*"
 )
+
+func (r *Releaser) resourceFunctionPermissionCreate(
+	ctx context.Context,
+	log hclog.Logger,
+	sess *session.Session,
+	sg terminal.StepGroup,
+	ui terminal.UI,
+	dep *Deployment,
+) error {
+	step := sg.Add("Checking function permission...")
+	defer step.Abort()
+
+	lambdasrv := lambda.New(sess)
+
+	var reset bool
+	var revisionId string
+
+	// use a single StatementId for now
+	statementId := "waypoint-function-url-access"
+
+	authtype := strings.ToUpper(r.config.AuthType)
+	if authtype == "" {
+		authtype = DefaultFunctionUrlAuthType
+	}
+	principal := r.config.Principal
+	if principal == "" {
+		principal = DefaultPrincipal
+	}
+
+	// check if principal or auth type have changed
+	if gpo, err := lambdasrv.GetPolicy(&lambda.GetPolicyInput{
+		FunctionName: aws.String(dep.FuncArn),
+	}); err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			// noop if ResourceNotFoundException
+			// This will likely happen if the function has 0 permissions
+			case lambda.ErrCodeResourceNotFoundException:
+				step.Update("No permissions found. Creating one...")
+				reset = true
+			default:
+				step.Update("Failed to get policy: %s", err)
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		policy := IAMPolicy{}
+		revisionId = *gpo.RevisionId
+		if err := json.Unmarshal([]byte(*gpo.Policy), &policy); err != nil {
+			// failed to unmarshal policy, this should never happen
+			log.Info("Failed to unmarshal policy: %s", err)
+			return err
+		}
+
+		statementFound := false
+		// determine if we should update permissions
+		// find the statement
+		for _, st := range policy.Statement {
+			if st.Sid == statementId {
+				// found the previous statement, check if the principal has changed
+				statementFound = true
+				pType := reflect.TypeOf(st.Principal)
+
+				switch pType {
+				case reflect.TypeOf(""):
+					if st.Principal != principal {
+						// principal has changed, we should update permissions
+						reset = true
+					}
+				case reflect.TypeOf(map[string]interface{}{}):
+					fmt.Println("3")
+					if st.Principal.(map[string]interface{})["AWS"].(string) != principal {
+						// principal has changed, we should update permissions
+						reset = true
+					}
+				default:
+					// this should never happen
+					return status.Errorf(codes.Unknown, "Unknown principal type from AWS policy: %s", pType)
+				}
+
+				if st.Condition.StringEquals.LambdaFunctionURLAuthType != authtype {
+					// auth type has changed, we should update permissions
+					reset = true
+				}
+			}
+		}
+		if !statementFound {
+			// statement not found, we should create permissions
+			reset = true
+		}
+	}
+
+	if reset {
+		step.Update("Updating permissions to invoke lambda URL...")
+
+		// attempt to remove the old permission
+		if _, err := lambdasrv.RemovePermission(&lambda.RemovePermissionInput{
+			FunctionName: aws.String(dep.FuncArn),
+			RevisionId:   aws.String(revisionId),
+			StatementId:  aws.String(statementId),
+		}); err != nil {
+			// no-op if there is no permission
+			if aerr, ok := err.(awserr.Error); ok {
+				switch aerr.Code() {
+				case "ResourceNotFoundException":
+					// Non-fatal
+					log.Warn("Failed to remove permission", "error", err)
+				default:
+					log.Error("Failed to remove permission", "error", err)
+					return err
+				}
+			}
+		}
+
+		// add new permission
+		if _, err := lambdasrv.AddPermission(&lambda.AddPermissionInput{
+			Action:              aws.String("lambda:InvokeFunctionUrl"),
+			FunctionUrlAuthType: aws.String(authtype),
+			FunctionName:        aws.String(dep.FuncArn),
+			Principal:           aws.String(principal),
+			StatementId:         aws.String(statementId),
+		}); err != nil {
+			log.Error("Error creating permission", "error", err)
+			if aerr, ok := err.(awserr.Error); ok {
+				switch aerr.Code() {
+				case "ResourceConflictException":
+					// permissions already exist. This should not happen since we remove the permission first
+					step.Update("Permissions to invoke lambda URL access already exist")
+				default:
+					step.Update("Error creating permissions: %s", err)
+					return err
+				}
+			} else {
+				return err
+			}
+		} else {
+			step.Update("Updated permissions to invoke lambda URL")
+		}
+	} else {
+		step.Update("No permissions need to be updated")
+	}
+
+	step.Done()
+	return nil
+}
 
 func (r *Releaser) resourceFunctionUrlCreate(
 	ctx context.Context,
@@ -90,47 +294,18 @@ func (r *Releaser) resourceFunctionUrlCreate(
 	// TODO(thiskevinwang): source cors from HCL config
 	cors := lambda.Cors{}
 
-	addPermissionInput := lambda.AddPermissionInput{
-		Action:              aws.String("lambda:InvokeFunctionUrl"),
-		FunctionUrlAuthType: aws.String(functionUrlAuthType),
-		FunctionName:        aws.String(dep.FuncArn),
-		Principal:           aws.String("*"),
-		StatementId:         aws.String("FunctionURLAllowPublicAccess"),
-	}
+	step := sg.Add("Creating Lambda URL...")
+	defer step.Abort()
 
 	createFunctionUrlConfigInput := lambda.CreateFunctionUrlConfigInput{
 		AuthType:     aws.String(functionUrlAuthType),
-		FunctionName: &dep.FuncArn,
+		FunctionName: aws.String(dep.FuncArn),
 		// TODO(thiskevinwang): make Cors configurable via HCL
 		Cors: &cors,
 	}
 
-	step := sg.Add("Creating permissions for public access to the lambda URL...")
-	defer step.Abort()
-
-	// Grant public/anonymous access to the lambda URL
-	if _, err := lambdasrv.AddPermission(&addPermissionInput); err != nil {
-		log.Error("Error creating permission", "error", err)
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case "ResourceConflictException":
-				// permissions already exist. likely safe to continue
-				step.Update("Permissions for public access already exist")
-			default:
-				step.Update("Error creating permissions: %q, %q", aerr.Code(), aerr.Message())
-				return err
-			}
-		} else {
-			return err
-		}
-	} else {
-		step.Update("Created permissions for public access to the lambda URL")
-	}
-	step.Done()
-
-	step = sg.Add("Creating Lambda URL...")
-	defer step.Abort()
-
+	// Create or Update the lambda URL
+	shouldUpdate := false
 	cfo, err := lambdasrv.CreateFunctionUrlConfig(&createFunctionUrlConfigInput)
 	if err != nil {
 		log.Error("Error creating function url config", "error", err)
@@ -148,8 +323,13 @@ func (r *Releaser) resourceFunctionUrlCreate(
 					log.Error("Error getting function url config", "error", err)
 					return err
 				} else {
-					state.Url = *gfc.FunctionUrl
-					step.Update("Reusing existing Lambda URL: %q", state.Url)
+					// compare remote config to incoming config
+					if functionUrlAuthType != *gfc.AuthType {
+						shouldUpdate = true
+					} else {
+						step.Update("Reusing existing Lambda URL: %q", *gfc.FunctionUrl)
+						state.Url = *gfc.FunctionUrl
+					}
 				}
 			default:
 				step.Update("Error creating function url config: %q, %q", aerr.Code(), aerr.Message())
@@ -162,6 +342,19 @@ func (r *Releaser) resourceFunctionUrlCreate(
 		// update state
 		state.Url = *cfo.FunctionUrl
 		step.Update("Created Lambda URL: %q", state.Url)
+	}
+
+	if shouldUpdate {
+		step.Update("Updating Lambda UR ConfigL...")
+		if ufc, err := lambdasrv.UpdateFunctionUrlConfig(&lambda.UpdateFunctionUrlConfigInput{
+			AuthType:     aws.String(functionUrlAuthType),
+			FunctionName: aws.String(dep.FuncArn),
+			Cors:         &cors,
+		}); err != nil {
+		} else {
+			state.Url = *ufc.FunctionUrl
+			step.Update("Updated Lambda URL ConfigL: %q", state.Url)
+		}
 	}
 
 	step.Done()
@@ -229,6 +422,8 @@ func (r *Releaser) Destroy(
 type ReleaserConfig struct {
 	// "AWS_IAM" or "NONE"
 	AuthType string `hcl:"auth_type,optional"`
+	// Only permitted if AuthType is "AWS_IAM" otherwise defaults to "*"
+	Principal string `hcl:"principal,optional"`
 	// todo(kevinwang): CORS
 }
 
