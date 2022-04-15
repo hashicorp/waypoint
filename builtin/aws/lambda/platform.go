@@ -351,7 +351,14 @@ func (p *Platform) Deploy(
 		// the following update has retry behavior in case the
 		// previous `UpdateFunctionConfiguration` call occurs
 		step = sg.Add("Updating function code...")
-		for i := 0; i < 30; i++ {
+
+		d := time.Now().Add(time.Minute * time.Duration(5))
+		ctx, cancel := context.WithDeadline(ctx, d)
+		defer cancel()
+		ticker := time.NewTicker(5 * time.Second)
+
+		shouldRetry := true
+		for shouldRetry {
 			funcCfg, err := lamSvc.UpdateFunctionCode(&lambda.UpdateFunctionCodeInput{
 				FunctionName:  aws.String(src.App),
 				ImageUri:      aws.String(img.Name()),
@@ -361,11 +368,10 @@ func (p *Platform) Deploy(
 			if err == nil {
 				funcarn = *funcCfg.FunctionArn
 				step.Update("Updated function code!")
-				break
+				shouldRetry = false
 			}
 
 			if err != nil {
-
 				if aerr, ok := err.(awserr.Error); ok {
 					switch aerr.Code() {
 					// unrecoverable error
@@ -378,8 +384,12 @@ func (p *Platform) Deploy(
 						return nil, err
 					// Function update in progress error
 					case "ResourceConflictException":
-						log.Warn(fmt.Sprintf("Function update in progress. Waiting 2 seconds before retrying... (%d/30)", i+1))
-						time.Sleep(2 * time.Second)
+						step.Update("Waiting for function to be available...")
+						select {
+						case <-ticker.C: // retry
+						case <-ctx.Done(): // abort
+							return nil, status.Errorf(codes.Aborted, "Context cancelled from timeout when waiting for lambda function to be available")
+						}
 					}
 				} else {
 					return nil, err
