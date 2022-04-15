@@ -19,12 +19,10 @@ export default class Logs extends Route {
     return [
       {
         label: model.app ?? 'unknown',
-        icon: 'git-repo',
         route: 'workspace.projects.project.app',
       },
       {
         label: 'Logs',
-        icon: 'outline',
         route: 'workspace.projects.project.app.logs',
       },
     ];

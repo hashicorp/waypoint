@@ -39,7 +39,10 @@ export default class App extends Route {
     return [
       {
         label: model.application.project,
-        icon: 'folder',
+        route: 'workspace.projects.project.apps',
+      },
+      {
+        label: 'Applications',
         route: 'workspace.projects.project.apps',
       },
     ];
