@@ -175,5 +175,10 @@ func TestOnDemandRunnerConfig_LabelTargeting(t *testing.T, factory Factory, rest
 	require.NotNil(resp)
 
 	// Ensure the target saved properly
-	require.Equal(rec.TargetRunner.Target, resp.TargetRunner.Target)
+	switch target := rec.TargetRunner.Target.(type) {
+	case *pb.Ref_Runner_Labels:
+		require.Equal(target.Labels.Labels, labels)
+	default:
+		t.Fatalf("runner target type %t is not by label", target)
+	}
 }
