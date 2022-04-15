@@ -15,6 +15,7 @@ import (
 func init() {
 	tests["runner_ondemand"] = []testFunc{
 		TestOnDemandRunnerConfig,
+		TestOnDemandRunnerConfig_LabelTargeting,
 	}
 }
 
@@ -141,4 +142,43 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 			require.Len(resp, 0)
 		}
 	})
+}
+
+func TestOnDemandRunnerConfig_LabelTargeting(t *testing.T, factory Factory, restartF RestartFactory) {
+	require := require.New(t)
+
+	s := factory(t)
+	defer s.Close()
+
+	labels := map[string]string{"name": "testrunner", "env": "test"}
+
+	// Set
+	rec := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
+		Name:   "test",
+		OciUrl: "h/w:s",
+		TargetRunner: &pb.Ref_Runner{
+			Target: &pb.Ref_Runner_Labels{
+				Labels: &pb.Ref_RunnerLabels{
+					Labels: labels,
+				},
+			},
+		},
+	})
+
+	err := s.OnDemandRunnerConfigPut(rec)
+	require.NoError(err)
+
+	resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+		Id: rec.Id,
+	})
+	require.NoError(err)
+	require.NotNil(resp)
+
+	// Ensure the target saved properly
+	switch target := rec.TargetRunner.Target.(type) {
+	case *pb.Ref_Runner_Labels:
+		require.Equal(target.Labels.Labels, labels)
+	default:
+		t.Fatalf("runner target type %t is not by label", target)
+	}
 }
