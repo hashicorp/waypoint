@@ -260,12 +260,10 @@ func (r *Releaser) Status(
 			log.Info("Lambda URL returned a 200")
 			report.Health = sdk.StatusReport_READY
 			report.HealthMessage = "Lambda URL appears to be healthy"
-			break
 		default:
 			log.Error("Lambda URL returned a non-200 response: %d", resp.StatusCode)
 			report.Health = sdk.StatusReport_DOWN
 			report.HealthMessage = fmt.Sprintf("Lambda URL returned a non-200 response: %d", resp.StatusCode)
-			break
 		}
 	}
 
