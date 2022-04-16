@@ -345,7 +345,7 @@ func (r *Releaser) resourceFunctionUrlCreate(
 	}
 
 	if shouldUpdate {
-		step.Update("Updating Lambda UR ConfigL...")
+		step.Update("Updating Lambda URL Config...")
 		if ufc, err := lambdasrv.UpdateFunctionUrlConfig(&lambda.UpdateFunctionUrlConfigInput{
 			AuthType:     aws.String(functionUrlAuthType),
 			FunctionName: aws.String(dep.FuncArn),
@@ -353,7 +353,7 @@ func (r *Releaser) resourceFunctionUrlCreate(
 		}); err != nil {
 		} else {
 			state.Url = *ufc.FunctionUrl
-			step.Update("Updated Lambda URL ConfigL: %q", state.Url)
+			step.Update("Updated Lambda URL Config: %q", state.Url)
 		}
 	}
 
