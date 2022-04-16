@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"reflect"
 	"strings"
 
@@ -436,30 +435,33 @@ func (r *Releaser) Status(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Gathering health report for lambda url deployment: %q", release.Url)
+	s := sg.Add("Gathering health report for lambda: %q", release.Url)
 	defer s.Done()
 
 	report := sdk.StatusReport{
 		External: true,
 	}
 
-	// check the function url status
-	log.Info("Checking function url status...", "url", release.Url)
-	if resp, err := http.Get(release.Url); err != nil {
-		log.Error("Failed to get a response from the Lambda URL: %s", err)
-		report.Health = sdk.StatusReport_UNKNOWN
-		report.HealthMessage = "Failed to get a response from the Lambda URL"
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: release.Region,
+		Logger: log,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	log.Info("Checking function status...", "url", release.Url)
+	lambdasrv := lambda.New(sess)
+	if err := lambdasrv.WaitUntilFunctionActiveV2(&lambda.GetFunctionInput{
+		FunctionName: aws.String(release.FuncArn),
+	}); err != nil {
+		log.Error("Error waiting for function to become active", "error", err)
+		report.Health = sdk.StatusReport_DOWN
+		report.HealthMessage = "Failed to wait for function to become active"
 	} else {
-		switch resp.StatusCode {
-		case http.StatusOK:
-			log.Info("Lambda URL returned a 200")
-			report.Health = sdk.StatusReport_READY
-			report.HealthMessage = "Lambda URL appears to be healthy"
-		default:
-			log.Error("Lambda URL returned a non-200 response: %d", resp.StatusCode)
-			report.Health = sdk.StatusReport_DOWN
-			report.HealthMessage = fmt.Sprintf("Lambda URL returned a non-200 response: %d", resp.StatusCode)
-		}
+		log.Info("Function is active")
+		report.Health = sdk.StatusReport_READY
+		report.HealthMessage = "Function is active"
 	}
 
 	return &report, nil
@@ -492,6 +494,15 @@ release {
 			"The AuthType parameter determines how Lambda authenticates or authorizes requests to your function URL. Must be either `AWS_IAM` or `NONE`.",
 		),
 		docs.Default("NONE"),
+	)
+
+	doc.SetField(
+		"principal",
+		"the principal to use when auth_type is `AWS_IAM`",
+		docs.Summary(
+			"The Principal parameter specifies the principal that is allowed to invoke the function.",
+		),
+		docs.Default("*"),
 	)
 
 	// todo(thiskevinwang): CORS
