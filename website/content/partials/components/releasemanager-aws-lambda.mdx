@@ -34,3 +34,13 @@ The AuthType parameter determines how Lambda authenticates or authorizes request
 - Type: **string**
 - **Optional**
 - Default: NONE
+
+#### principal
+
+The principal to use when auth_type is `AWS_IAM`.
+
+The Principal parameter specifies the principal that is allowed to invoke the function.
+
+- Type: **string**
+- **Optional**
+- Default: *
