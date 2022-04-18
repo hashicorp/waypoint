@@ -22,11 +22,11 @@ Waypoint [entrypoint functionality](/docs/entrypoint#functionality) such
 as logs, exec, app configuration, and more require two properties to be true:
 
 1. The running image must already have the Waypoint entrypoint installed
-   and configured as the entrypoint. This should happen in the build stage.
+  and configured as the entrypoint. This should happen in the build stage.
 
 2. Proper environment variables must be set so the entrypoint knows how
-   to communicate to the Waypoint server. **This step happens in this
-   deployment stage.**
+  to communicate to the Waypoint server. **This step happens in this
+  deployment stage.**
 
 **Step 2 does not happen automatically.** You must manually set the entrypoint
 environment variables using the [templating feature](/docs/waypoint-hcl/functions/template).
@@ -88,11 +88,23 @@ job "web" {
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### consul_token
+
+The Consul ACL token used to register services with the Nomad job.
+
+Uses the runner config environment variable CONSUL_HTTP_TOKEN.
+
 #### jobspec
 
 Path to a Nomad job specification file.
 
 - Type: **string**
+
+#### vault_token
+
+The Vault token used to deploy the Nomad job with a token having specific Vault policies attached.
+
+Uses the runner config environment variable VAULT_TOKEN.
 
 ### Optional Parameters
 
