@@ -291,6 +291,10 @@
     "path": "task-list"
   },
   {
+    "title": "task cancel",
+    "path": "task-cancel"
+  },
+  {
     "title": "task inspect",
     "path": "task-inspect"
   },
