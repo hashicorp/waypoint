@@ -1,0 +1,3 @@
+```release-note:bug
+internal/cli: Fix `waypoint exec` workspace selection
+```
