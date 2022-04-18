@@ -12,13 +12,15 @@ type Model = StatusReport.Resource.AsObject;
 
 export default class extends Route {
   @action
-  breadcrumbs(): Breadcrumb[] {
-    let release = this.modelFor('workspace.projects.project.app.release') as ReleaseRouteModel;
+  breadcrumbs(model: Model): Breadcrumb[] {
     return [
       {
-        label: `v${release.sequence}`,
-        icon: 'globe',
+        label: 'Resources',
         route: 'workspace.projects.project.app.release',
+      },
+      {
+        label: model.name,
+        route: 'workspace.projects.project.app.release.resource',
       },
     ];
   }

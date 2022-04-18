@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/builtin/aws/ecr"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
@@ -38,10 +39,44 @@ type Platform struct {
 // ConfigSet is called after a configuration has been decoded
 // we can use this to validate the config
 func (p *Platform) ConfigSet(config interface{}) error {
-	_, ok := config.(*Config)
+	c, ok := config.(*Config)
 	if !ok {
 		// this should never happen
-		return fmt.Errorf("Invalid configuration, expected *lambda.Config, got %s", reflect.TypeOf(config))
+		return fmt.Errorf("Invalid configuration, expected *lambda.Config, got %q", reflect.TypeOf(config))
+	}
+
+	// validate architecture
+	if c.Architecture != "" {
+		architectures := make([]interface{}, len(lambda.Architecture_Values()))
+
+		for i, ca := range lambda.Architecture_Values() {
+			architectures[i] = ca
+		}
+
+		var validArchitectures []string
+		for _, arch := range lambda.Architecture_Values() {
+			validArchitectures = append(validArchitectures, fmt.Sprintf("%q", arch))
+		}
+
+		if err := utils.Error(validation.ValidateStruct(c,
+			validation.Field(&c.Architecture,
+				validation.In(architectures...).Error(fmt.Sprintf("Unsupported function architecture %q. Must be one of [%s], or left blank", c.Architecture, strings.Join(validArchitectures, ", "))),
+			),
+		)); err != nil {
+			return err
+		}
+	}
+
+	// validate timeout - max is 900 (15 minutes)
+	if c.Timeout != 0 {
+		if err := utils.Error(validation.ValidateStruct(c,
+			validation.Field(&c.Timeout,
+				validation.Min(0).Error("Timeout must not be negative"),
+				validation.Max(900).Error("Timeout must be less than or equal to 15 minutes"),
+			),
+		)); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -822,7 +857,7 @@ type Config struct {
 	Memory int `hcl:"memory,optional"`
 
 	// The number of seconds to wait for a function to complete it's work.
-	// Defaults to 256
+	// Defaults to 60
 	Timeout int `hcl:"timeout,optional"`
 
 	// The instruction set architecture that the function supports.

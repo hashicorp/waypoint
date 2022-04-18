@@ -1,10 +1,13 @@
 import { DeploymentExtended, ReleaseExtended } from 'waypoint/services/api';
-
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 import { Model as AppRouteModel } from '../app';
 import Route from '@ember/routing/route';
 import { StatusReport } from 'waypoint-pb';
 
-type Model = ResourceMap[];
+type Model = {
+  resources: ResourceMap[];
+  application: string;
+};
 
 interface ResourceMap {
   resource: StatusReport.Resource.AsObject;
@@ -12,6 +15,20 @@ interface ResourceMap {
   source: DeploymentExtended | ReleaseExtended;
 }
 export default class Resources extends Route {
+  breadcrumbs(model: Model): Breadcrumb[] {
+    if (!model) return [];
+    return [
+      {
+        label: model.application ?? 'unknown',
+        route: 'workspace.projects.project.app',
+      },
+      {
+        label: 'Resources',
+        route: 'workspace.projects.project.app.resources',
+      },
+    ];
+  }
+
   async model(): Promise<Model> {
     let app = this.modelFor('workspace.projects.project.app') as AppRouteModel;
 
@@ -39,6 +56,6 @@ export default class Resources extends Route {
       });
     });
 
-    return resources;
+    return { application: app.application.application, resources };
   }
 }
