@@ -116,6 +116,18 @@ func (p *Platform) resourceJobCreate(
 	// Update our client to use the Namespace set in the jobspec
 	client.NomadClient.SetNamespace(*job.Namespace)
 
+	// Get Consul ACL token from environment
+	*job.ConsulToken, err = nomad.ConsulAuth()
+	if err != nil {
+		return err
+	}
+
+	// Get Vault token from environment
+	*job.VaultToken, err = nomad.VaultAuth()
+	if err != nil {
+		return err
+	}
+
 	// Register job
 	st.Update("Registering job " + *job.Name + "...")
 	regResult, _, err := jobclient.Register(job, nil)
@@ -610,6 +622,20 @@ job "web" {
 	doc.SetField(
 		"jobspec",
 		"Path to a Nomad job specification file.",
+	)
+
+	doc.SetField(
+		"consul_token",
+		"The Consul ACL token used to register services with the Nomad job.",
+		docs.Summary("Uses the runner config environment variable CONSUL_HTTP_TOKEN."),
+		docs.EnvVar("CONSUL_HTTP_TOKEN"),
+	)
+
+	doc.SetField(
+		"vault_token",
+		"The Vault token used to deploy the Nomad job with a token having specific Vault policies attached.",
+		docs.Summary("Uses the runner config environment variable VAULT_TOKEN."),
+		docs.EnvVar("VAULT_TOKEN"),
 	)
 
 	return doc, nil
