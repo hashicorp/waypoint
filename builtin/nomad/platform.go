@@ -530,6 +530,20 @@ deploy {
 	)
 
 	doc.SetField(
+		"consul_token",
+		"The Consul ACL token used to register services with the Nomad job.",
+		docs.Summary("Uses the environment variable CONSUL_HTTP_TOKEN."),
+		docs.EnvVar("CONSUL_HTTP_TOKEN"),
+	)
+
+	doc.SetField(
+		"vault_token",
+		"The Vault token used to deploy the Nomad job with a token having specific Vault policies attached.",
+		docs.Summary("Uses the environment variable VAULT_TOKEN."),
+		docs.EnvVar("VAULT_TOKEN"),
+	)
+
+	doc.SetField(
 		"static_environment",
 		"Environment variables to add to the job.",
 	)
