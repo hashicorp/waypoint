@@ -79,7 +79,7 @@ func (s *State) TaskDelete(ref *pb.Ref_Task) error {
 	return err
 }
 
-// TaskCancel deletes a task by reference.
+// TaskCancel cancels a tasks jobs by task id or run job id reference.
 // NOTE(briancain): this way means each cancel is its own transaction and commit, not the greatest.
 // Previously I attempted to implement this with taskCancel where the entire job
 // triple was canceled inside a single transaction. This ended up deadlocking because
