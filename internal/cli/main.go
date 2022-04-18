@@ -711,6 +711,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"task cancel": func() (cli.Command, error) {
+			return &TaskCancelCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"workspace": func() (cli.Command, error) {
 			return &helpCommand{
