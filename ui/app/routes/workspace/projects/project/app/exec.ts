@@ -12,12 +12,10 @@ export default class Exec extends Route {
     return [
       {
         label: model.application.application ?? 'unknown',
-        icon: 'git-repo',
         route: 'workspace.projects.project.app',
       },
       {
         label: 'Exec',
-        icon: 'terminal-screen',
         route: 'workspace.projects.project.app.exec',
       },
     ];

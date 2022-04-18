@@ -28,13 +28,15 @@ export default class ReleaseDetail extends Route {
     return [
       {
         label: model.application?.application ?? 'unknown',
-        icon: 'git-repo',
         route: 'workspace.projects.project.app',
       },
       {
         label: 'Releases',
-        icon: 'globe',
         route: 'workspace.projects.project.app.releases',
+      },
+      {
+        label: `v${model.sequence}`,
+        route: 'workspace.projects.project.app.release',
       },
     ];
   }

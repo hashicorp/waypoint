@@ -1,6 +1,6 @@
-{{#if @model.length}}
+{{#if @model.resources.length}}
   <ResourcesTableExtended
-    @resources={{@model}}
+    @resources={{@model.resources}}
   />
 {{else}}
   <EmptyState>
