@@ -104,12 +104,11 @@ func TestRelease(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Equal(ts.AsTime(), resp.Status.CompleteTime.AsTime())
 		}
 
-		// Add another and see Latset change
-		// Add
+		// Add another in another workspace, and see Latest change
 		err = s.ReleasePut(false, serverptypes.TestRelease(t, &pb.Release{
 			Id:          "d2",
 			Application: app,
-			Workspace:   ws,
+			Workspace:   &pb.Ref_Workspace{Workspace: "non-default"},
 			Status: &pb.Status{
 				State:        pb.Status_SUCCESS,
 				StartTime:    timestamppb.New(ts.AsTime().Add(time.Second)),
@@ -118,12 +117,24 @@ func TestRelease(t *testing.T, factory Factory, restartF RestartFactory) {
 		}))
 		require.NoError(err)
 
+		// Get by workspace
 		{
-			resp, err := s.ReleaseLatest(app, &pb.Ref_Workspace{Workspace: "default"})
+			resp, err := s.ReleaseLatest(app, &pb.Ref_Workspace{Workspace: "non-default"})
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("d2", resp.Id)
 		}
+
+		// Get with no workspace
+		{
+			resp, err := s.ReleaseLatest(app, nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("d2", resp.Id)
+		}
+
+		// Add another release in another workspace, and ensure
+		// ReleaseLatest (with no workspace filter) returns the latest one.
 
 		{
 			resp, err := s.ReleaseList(app)
@@ -201,6 +212,7 @@ func TestRelease(t *testing.T, factory Factory, restartF RestartFactory) {
 
 			require.Equal("d3", resp[0].Id)
 		}
+
 		{
 			resp, err := s.ReleaseList(app,
 				serverstate.ListWithOrder(&pb.OperationOrder{
