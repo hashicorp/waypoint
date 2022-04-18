@@ -92,19 +92,19 @@ func (s *State) TaskCancel(ref *pb.Ref_Task) error {
 		return err
 	}
 
-	s.log.Debug("canceling start job for task by id", "task id", task.Id, "start job id", task.StartJob.Id)
+	s.log.Debug("canceling start job for task", "task id", task.Id, "start job id", task.StartJob.Id)
 	err = s.JobCancel(task.StartJob.Id, false)
 	if err != nil {
 		return err
 	}
 
-	s.log.Debug("canceling task job for task by id", "task id", task.Id, "start job id", task.TaskJob.Id)
+	s.log.Debug("canceling task job for task", "task id", task.Id, "start job id", task.TaskJob.Id)
 	err = s.JobCancel(task.TaskJob.Id, false)
 	if err != nil {
 		return err
 	}
 
-	s.log.Debug("canceling stop job for task by id", "task id", task.Id, "stop job id", task.StopJob.Id)
+	s.log.Debug("canceling stop job for task", "task id", task.Id, "stop job id", task.StopJob.Id)
 	err = s.JobCancel(task.StopJob.Id, false)
 	if err != nil {
 		return err
@@ -230,7 +230,7 @@ func (s *State) taskGet(
 	var taskId string
 	switch r := ref.Ref.(type) {
 	case *pb.Ref_Task_Id:
-		s.log.Info("looking up task by id", "id", r.Id)
+		s.log.Info("looking up task", "id", r.Id)
 		taskId = r.Id
 	case *pb.Ref_Task_JobId:
 		s.log.Info("looking up task by job id", "job_id", r.JobId)
@@ -309,12 +309,15 @@ func (s *State) taskDelete(
 }
 
 /*
+NOTE(briancain): This was intentionally left commented out. In the future, if
+we ever decide to cancel Task jobs in a single transaction (see the note above `TaskCancel`)
+we can use this function to do the actual cancelation in that transaction.
 func (s *State) taskCancel(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
 	task *pb.Task,
 ) error {
-	s.log.Info("canceling task by id", "id", task.Id)
+	s.log.Info("canceling task", "id", task.Id)
 	// call jobCancel on the job triple
 
 	// Get the start job
@@ -328,7 +331,7 @@ func (s *State) taskCancel(
 	startJob := raw.(*jobIndex)
 
 	// Cancel the job
-	s.log.Info("canceling start job by id", "id", startJob.Id)
+	s.log.Info("canceling start job", "id", startJob.Id)
 	if err = s.jobCancel(memTxn, startJob, false); err != nil {
 		return err
 	}
@@ -344,7 +347,7 @@ func (s *State) taskCancel(
 	taskJob := raw.(*jobIndex)
 
 	// Cancel the job
-	s.log.Info("canceling task job by id", "id", taskJob.Id)
+	s.log.Info("canceling task job", "id", taskJob.Id)
 	if err = s.jobCancel(memTxn, taskJob, false); err != nil {
 		return err
 	}
@@ -360,7 +363,7 @@ func (s *State) taskCancel(
 	stopJob := raw.(*jobIndex)
 
 	// Cancel the job
-	s.log.Info("canceling stop job by id", "id", stopJob.Id)
+	s.log.Info("canceling stop job", "id", stopJob.Id)
 	if err = s.jobCancel(memTxn, stopJob, false); err != nil {
 		return err
 	}

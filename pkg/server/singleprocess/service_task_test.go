@@ -407,32 +407,30 @@ func TestServiceTask_CancelTask(t *testing.T) {
 	require.NoError(t, err)
 	taskId := resp.Task.Id
 
-	// Create, should get an ID back
 	t.Run("cancel existing by task id", func(t *testing.T) {
 		require := require.New(t)
 
 		type JobReq = pb.QueueJobRequest
 
-		// Get, should return a task
-		resp, err := client.GetTask(ctx, &pb.GetTaskRequest{
-			Ref: &pb.Ref_Task{
-				Ref: &pb.Ref_Task_Id{
-					Id: resp.Task.Id,
-				},
-			},
-		})
-		require.NoError(err)
-		require.NotNil(resp.Task)
-		require.NotEmpty(resp.Task.Id)
-		require.Equal(taskId, resp.Task.Id)
-
 		_, err = client.CancelTask(ctx, &pb.CancelTaskRequest{
 			Ref: &pb.Ref_Task{
 				Ref: &pb.Ref_Task_Id{
-					Id: resp.Task.Id,
+					Id: taskId,
 				},
 			},
 		})
 		require.NoError(err)
+
+		job, err := testServiceImpl(impl).state(ctx).JobById(startJobId, nil)
+		require.NoError(err)
+		require.True(job.State == pb.Job_ERROR && job.CancelTime != nil)
+
+		job, err = testServiceImpl(impl).state(ctx).JobById(runJobId, nil)
+		require.NoError(err)
+		require.True(job.State == pb.Job_ERROR && job.CancelTime != nil)
+
+		job, err = testServiceImpl(impl).state(ctx).JobById(stopJobId, nil)
+		require.NoError(err)
+		require.True(job.State == pb.Job_ERROR && job.CancelTime != nil)
 	})
 }

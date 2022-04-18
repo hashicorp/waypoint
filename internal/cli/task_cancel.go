@@ -26,37 +26,25 @@ func (c *TaskCancelCommand) Run(args []string) int {
 	}
 	ctx := c.Ctx
 
-	var taskId string
 	if len(c.args) == 0 && c.flagRunJobId == "" {
 		c.ui.Output("Task ID or Run Job Id required.\n\n%s", c.Help(), terminal.WithErrorStyle())
 		return 1
-	} else {
-		taskId = c.args[0]
 	}
+	taskId := c.args[0]
 
 	if c.flagRunJobId != "" && taskId != "" {
 		c.ui.Output("Both Run Job Id and Task Id was supplied, will look up by Task Id", terminal.WithWarningStyle())
 	}
 
-	var (
-		taskReq *pb.CancelTaskRequest
-	)
+	taskReq := &pb.CancelTaskRequest{Ref: &pb.Ref_Task{}}
 
 	if taskId != "" {
-		taskReq = &pb.CancelTaskRequest{
-			Ref: &pb.Ref_Task{
-				Ref: &pb.Ref_Task_Id{
-					Id: taskId,
-				},
-			},
+		taskReq.Ref.Ref = &pb.Ref_Task_Id{
+			Id: taskId,
 		}
 	} else if c.flagRunJobId != "" {
-		taskReq = &pb.CancelTaskRequest{
-			Ref: &pb.Ref_Task{
-				Ref: &pb.Ref_Task_JobId{
-					JobId: c.flagRunJobId,
-				},
-			},
+		taskReq.Ref.Ref = &pb.Ref_Task_JobId{
+			JobId: c.flagRunJobId,
 		}
 	}
 
