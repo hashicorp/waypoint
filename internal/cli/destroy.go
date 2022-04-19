@@ -30,8 +30,21 @@ func (c *DestroyCommand) Run(args []string) int {
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		if !c.confirm {
-			app.UI.Output("Destroying app %q requires confirmation with `-auto-approve`.", app.Ref().GetApplication(), terminal.WithWarningStyle())
-			return nil
+			proceed, err := c.ui.Input(&terminal.Input{
+				Prompt: "Do you really want to destroy all resources for this app? Only 'yes' will be accepted to approve. ",
+				Style:  "",
+				Secret: false,
+			})
+			if err != nil {
+				c.ui.Output(
+					"Error destroying resources: %s",
+					clierrors.Humanize(err),
+					terminal.WithErrorStyle(),
+				)
+			} else if proceed != "yes" {
+				app.UI.Output("Destroying app %q requires confirmation.", app.Ref().GetApplication(), terminal.WithWarningStyle())
+				return nil
+			}
 		}
 
 		if err := app.Destroy(ctx, &pb.Job_DestroyOp{

@@ -85,7 +85,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	if !c.confirm {
 		proceed, err := c.ui.Input(&terminal.Input{
-			Prompt: "Proceed with upgrade? ",
+			Prompt: "Would you like to proceed with the Waypoint server upgrade? Only 'yes' will be accepted to approve. ",
 			Style:  "",
 			Secret: false,
 		})
@@ -96,7 +96,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 				terminal.WithErrorStyle(),
 			)
 		} else if proceed != "yes" {
-			c.ui.Output(confirmReqMsg, terminal.WithErrorStyle())
+			c.ui.Output(upgradeConfirmMsg, terminal.WithErrorStyle())
 			return 1
 		}
 		if c.platform == "" {
@@ -478,9 +478,8 @@ Usage: waypoint server upgrade [options]
 
 var (
 	defaultSnapshotName = "waypoint-server-snapshot"
-	confirmReqMsg       = strings.TrimSpace(`
+	upgradeConfirmMsg   = strings.TrimSpace(`
 Upgrading Waypoint server requires confirmation.
-Rerun the command with '-auto-approve' to continue with the upgrade.
 `)
 	platformReqMsg = strings.TrimSpace(`
 A platform is required and must match the server context.
