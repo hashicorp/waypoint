@@ -88,11 +88,23 @@ job "web" {
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### consul_token
+
+The Consul ACL token used to register services with the Nomad job.
+
+Uses the runner config environment variable CONSUL_HTTP_TOKEN.
+
 #### jobspec
 
 Path to a Nomad job specification file.
 
 - Type: **string**
+
+#### vault_token
+
+The Vault token used to deploy the Nomad job with a token having specific Vault policies attached.
+
+Uses the runner config environment variable VAULT_TOKEN.
 
 ### Optional Parameters
 
