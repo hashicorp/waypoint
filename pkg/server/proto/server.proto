@@ -1267,10 +1267,6 @@ message ListTaskResponse {
 message CancelTaskRequest {
   // A reference to the task to cancel
   Ref.Task ref = 1;
-
-  // Forcefully attempt to cancel the task
-  // TODO(briancain): Unclear if this is a good idea
-  //bool force = 2;
 }
 
 /********************************************************************
