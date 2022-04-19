@@ -212,16 +212,18 @@ func (p *Platform) resourceJobCreate(
 	job.TaskGroups[0].Tasks[0].Env = env
 
 	// Get Consul ACL token from environment
-	*job.ConsulToken, err = ConsulAuth()
+	c, err := ConsulAuth()
 	if err != nil {
 		return err
 	}
+	job.ConsulToken = &c
 
 	// Get Vault token from environment
-	*job.VaultToken, err = VaultAuth()
+	v, err := VaultAuth()
 	if err != nil {
 		return err
 	}
+	job.VaultToken = &v
 
 	// Register job
 	st.Update("Registering job...")
