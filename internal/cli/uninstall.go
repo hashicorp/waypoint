@@ -46,8 +46,21 @@ func (c *UninstallCommand) Run(args []string) int {
 	}
 
 	if !c.autoApprove {
-		c.ui.Output(strings.TrimSpace(autoApproveMsg), terminal.WithErrorStyle())
-		return 1
+		proceed, err := c.ui.Input(&terminal.Input{
+			Prompt: "Proceed with uninstall? ",
+			Style:  "",
+			Secret: false,
+		})
+		if err != nil {
+			c.ui.Output(
+				"Error uninstalling server: %s",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+		} else if proceed != "yes" {
+			c.ui.Output(strings.TrimSpace(autoApproveMsg), terminal.WithErrorStyle())
+			return 1
+		}
 	}
 
 	// output the context we'll be uninstalling

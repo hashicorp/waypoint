@@ -84,12 +84,26 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	// Error handling from input
 
 	if !c.confirm {
-		c.ui.Output(confirmReqMsg, terminal.WithErrorStyle())
+		proceed, err := c.ui.Input(&terminal.Input{
+			Prompt: "Proceed with upgrade? ",
+			Style:  "",
+			Secret: false,
+		})
+		if err != nil {
+			c.ui.Output(
+				"Error upgrading server: %s",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+		} else if proceed != "yes" {
+			c.ui.Output(confirmReqMsg, terminal.WithErrorStyle())
+			return 1
+		}
 		if c.platform == "" {
 			c.ui.Output(platformReqMsg, terminal.WithErrorStyle())
 			c.ui.Output(c.Help(), terminal.WithErrorStyle())
+			return 1
 		}
-		return 1
 	} else if c.platform == "" {
 		c.ui.Output(
 			platformReqMsg,
