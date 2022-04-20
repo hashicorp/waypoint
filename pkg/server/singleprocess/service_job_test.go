@@ -686,7 +686,30 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 
 	}
 
-	// Wait for output, verify its buffered
+	// Wait until we get the "world" event, one way or the other.
+	{
+		// Set up a separate stream - if we read on the existing stream, we
+		// won't be able to re-read these messages.
+		lobbyStream, err := client.GetJobStream(ctx, &pb.GetJobStreamRequest{JobId: queueResp.JobId})
+		require.NoError(err)
+
+		require.Eventually(func() bool {
+			resp := jobStreamRecv(t, lobbyStream, (*pb.GetJobStreamResponse_Terminal_)(nil))
+			event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
+			for _, e := range event.Terminal.Events {
+				if lineMsg, ok := e.Event.(*pb.GetJobStreamResponse_Terminal_Event_Line_); ok {
+					if lineMsg.Line.Msg == "world" {
+						return true
+					}
+				}
+			}
+			return false
+		}, time.Millisecond*2000, time.Millisecond*50)
+	}
+
+	// Wait for output, verify its buffered. If we didn't wait until we knew the messages
+	// had been sent to _someone_ in the earlier step, we might be too early
+	// here and get unbuffered logs.
 	{
 		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Terminal_)(nil))
 		event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
