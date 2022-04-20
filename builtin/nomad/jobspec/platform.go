@@ -562,6 +562,9 @@ environment variables using the [templating feature](/docs/waypoint-hcl/function
 One of the examples below shows the entrypoint environment variables being
 injected.
 
+-> **Note:** The Waypoint entrypoint and the [Nomad entrypoint functionality](https://www.nomadproject.io/docs/drivers/docker#entrypoint) 
+cannot be used simultaneously. In order to use the features of the Waypoint entrypoint, the Nomad entrypoint must not be used in your jobspec.
+
 ### URL Service
 
 If you want your workload to be accessible by the
