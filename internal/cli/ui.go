@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -44,14 +43,8 @@ func (c *UICommand) Run(args []string) int {
 		return 1
 	}
 
-	var ctxConfig *clicontext.Config
-	if name != "" {
-		ctxConfig, err = c.contextStorage.Load(name)
-		if err != nil {
-			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		}
-	} else {
+	if name == "" {
+		// No default context found, do they have any at all?
 		if allContexts, err := c.contextStorage.List(); len(allContexts) == 0 || err != nil {
 			if err != nil {
 				c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -62,7 +55,14 @@ func (c *UICommand) Run(args []string) int {
 			return 1
 		}
 
+		// They have some context, but no default set
 		c.ui.Output("\n"+wpNoServerContext, terminal.WithWarningStyle())
+		return 1
+	}
+
+	ctxConfig, err := c.contextStorage.Load(name)
+	if err != nil {
+		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
