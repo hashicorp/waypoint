@@ -288,6 +288,11 @@ type WaypointClient interface {
 	// RunTrigger will look up the referenced trigger and attempt to queue a job
 	// based on the trigger configuration.
 	RunTrigger(ctx context.Context, in *RunTriggerRequest, opts ...grpc.CallOption) (*RunTriggerResponse, error)
+	// UpsertPipeline updates or inserts a pipeline. This is an INTERNAL ONLY
+	// endpoint that is meant to only be called by runners. Calling this manually
+	// can risk the internal state for pipelines. In the future, we'll restrict
+	// access to this via ACLs.
+	UpsertPipeline(ctx context.Context, in *UpsertPipelineRequest, opts ...grpc.CallOption) (*UpsertPipelineResponse, error)
 	// Get a given project with useful related records.
 	UI_GetProject(ctx context.Context, in *UI_GetProjectRequest, opts ...grpc.CallOption) (*UI_GetProjectResponse, error)
 	// List deployments for a given application.
@@ -1353,6 +1358,15 @@ func (c *waypointClient) RunTrigger(ctx context.Context, in *RunTriggerRequest, 
 	return out, nil
 }
 
+func (c *waypointClient) UpsertPipeline(ctx context.Context, in *UpsertPipelineRequest, opts ...grpc.CallOption) (*UpsertPipelineResponse, error) {
+	out := new(UpsertPipelineResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpsertPipeline", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) UI_GetProject(ctx context.Context, in *UI_GetProjectRequest, opts ...grpc.CallOption) (*UI_GetProjectResponse, error) {
 	out := new(UI_GetProjectResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UI_GetProject", in, out, opts...)
@@ -1649,6 +1663,11 @@ type WaypointServer interface {
 	// RunTrigger will look up the referenced trigger and attempt to queue a job
 	// based on the trigger configuration.
 	RunTrigger(context.Context, *RunTriggerRequest) (*RunTriggerResponse, error)
+	// UpsertPipeline updates or inserts a pipeline. This is an INTERNAL ONLY
+	// endpoint that is meant to only be called by runners. Calling this manually
+	// can risk the internal state for pipelines. In the future, we'll restrict
+	// access to this via ACLs.
+	UpsertPipeline(context.Context, *UpsertPipelineRequest) (*UpsertPipelineResponse, error)
 	// Get a given project with useful related records.
 	UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error)
 	// List deployments for a given application.
@@ -1934,6 +1953,9 @@ func (UnimplementedWaypointServer) ListTriggers(context.Context, *ListTriggerReq
 }
 func (UnimplementedWaypointServer) RunTrigger(context.Context, *RunTriggerRequest) (*RunTriggerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RunTrigger not implemented")
+}
+func (UnimplementedWaypointServer) UpsertPipeline(context.Context, *UpsertPipelineRequest) (*UpsertPipelineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertPipeline not implemented")
 }
 func (UnimplementedWaypointServer) UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_GetProject not implemented")
@@ -3655,6 +3677,24 @@ func _Waypoint_RunTrigger_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_UpsertPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertPipelineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).UpsertPipeline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/UpsertPipeline",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).UpsertPipeline(ctx, req.(*UpsertPipelineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_UI_GetProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UI_GetProjectRequest)
 	if err := dec(in); err != nil {
@@ -4039,6 +4079,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RunTrigger",
 			Handler:    _Waypoint_RunTrigger_Handler,
+		},
+		{
+			MethodName: "UpsertPipeline",
+			Handler:    _Waypoint_UpsertPipeline_Handler,
 		},
 		{
 			MethodName: "UI_GetProject",
