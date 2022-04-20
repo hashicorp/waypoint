@@ -698,6 +698,7 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 			event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
 			for _, e := range event.Terminal.Events {
 				if lineMsg, ok := e.Event.(*pb.GetJobStreamResponse_Terminal_Event_Line_); ok {
+					t.Logf("Lobby stream: got message %s (buffered %v)", lineMsg.Line.Msg, event.Terminal.Buffered)
 					if lineMsg.Line.Msg == "world" {
 						return true
 					}
