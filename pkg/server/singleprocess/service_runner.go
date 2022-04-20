@@ -806,7 +806,6 @@ func (s *Service) handleJobStreamRequest(
 		})
 
 	case *pb.RunnerJobStreamRequest_Terminal:
-
 		// Write the events
 		logStreamWriter.NewEvent(ctx, event)
 
