@@ -7773,6 +7773,9 @@
         "watch_task": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.WatchTaskOp"
         },
+        "pipeline_step": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.PipelineStepOp"
+        },
         "state": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.State",
           "title": "state of the job"
@@ -8157,6 +8160,10 @@
     "hashicorp.waypoint.Job.Noop": {
       "type": "object",
       "description": "Noop operations do nothing. This is primarily used for testing.\nThis operation will still download the data from the data source.\nA noop may be useful outside of testing to verify a runner is\nexecuting properly or can access data properly."
+    },
+    "hashicorp.waypoint.Job.PipelineStepOp": {
+      "type": "object",
+      "description": "PipelineStepOp triggers the execution of a pipeline step."
     },
     "hashicorp.waypoint.Job.PollOp": {
       "type": "object",
@@ -8835,6 +8842,70 @@
         "COMPLETE_TIME"
       ],
       "default": "UNSET"
+    },
+    "hashicorp.waypoint.Pipeline": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique ID for this pipeline."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-friendly name for the pipeline. This is not unique! Users should\nuse the ID and other metadata to differentiate pipelines. In general,\nwe recommend avoiding reusing names."
+        },
+        "project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project",
+          "description": "This pipeline is created from a waypoint.hcl file that is synced via VCS."
+        },
+        "steps": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step"
+          },
+          "description": "The steps that make up this pipeline. This is a set and the order\nhas no meaning; it does not imply any ordering that the steps will\nbe executed. The execution order is purely defined by the \"depends_on\"\nfields on the steps.\n\nThere must be only one \"root\" step. A root step is a step with no\ndependencies. It is an error for there to be more than one root step.\n\nFor API users, the GetPipelineResponse has a number of fields that\nhelp make this much easier to consume, such as a dedicated field for\nthe root step, mermaid-formatted graph output, and more.\n\nThese requirements are usually hidden from users through nicer user\nexperiences for editing: waypoint.hcl syntax (which implicitly creates\nordering and root steps), UIs, etc. All these requirements are noted for\n_internal_ users who are modifying pipelines via the API. For those\ninternal users, they must manage the tedium of adhering to these requirements."
+        }
+      }
+    },
+    "hashicorp.waypoint.Pipeline.Step": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the step. This is unique within a pipeline. In the \"steps\"\nmap, this must match the map key."
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The steps that must come before this step. If this is empty,\nthis is considered a \"root\" step. Only one step may be root.\nSee \"steps\" on the Pipeline message for details."
+        },
+        "exec": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Exec",
+          "description": "Docker execute."
+        }
+      },
+      "description": "A single step within the pipeline."
+    },
+    "hashicorp.waypoint.Pipeline.Step.Exec": {
+      "type": "object",
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "Docker image to execute. This should be a fully qualified image URL."
+        },
+        "command": {
+          "type": "string",
+          "description": "Command to execute within the image. If blank, the default command\nwill be executed."
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     },
     "hashicorp.waypoint.Project": {
       "type": "object",
@@ -10390,6 +10461,15 @@
         "config": {
           "$ref": "#/definitions/hashicorp.waypoint.OnDemandRunnerConfig",
           "description": "The resulting ondemand runner value. It should replace the one that was\nsent in the request."
+        }
+      }
+    },
+    "hashicorp.waypoint.UpsertPipelineResponse": {
+      "type": "object",
+      "properties": {
+        "pipeline": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline",
+          "description": "This is the inserted/updated pipeline. This may not match the\ninput since this will contain fully normalized data."
         }
       }
     },
