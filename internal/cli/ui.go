@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -36,6 +37,35 @@ func (c *UICommand) Run(args []string) int {
 	// Get our API client
 	client := c.project.Client()
 
+	// Get our default context (used context)
+	name, err := c.contextStorage.Default()
+	if err != nil {
+		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return 1
+	}
+
+	var ctxConfig *clicontext.Config
+	if name != "" {
+		ctxConfig, err = c.contextStorage.Load(name)
+		if err != nil {
+			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+	} else {
+		if allContexts, err := c.contextStorage.List(); len(allContexts) == 0 || err != nil {
+			if err != nil {
+				c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+
+			c.ui.Output("\n"+noContextFoundError, terminal.WithWarningStyle())
+			return 1
+		}
+
+		c.ui.Output("\n"+wpNoServerContext, terminal.WithWarningStyle())
+		return 1
+	}
+
 	var inviteToken string
 	if c.flagAuthenticate {
 		c.ui.Output("Creating invite token", terminal.WithStyle(terminal.HeaderStyle))
@@ -50,19 +80,6 @@ func (c *UICommand) Run(args []string) int {
 		}
 
 		inviteToken = resp.Token
-	}
-
-	// Get our default context (used context)
-	name, err := c.contextStorage.Default()
-	if err != nil {
-		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return 1
-	}
-
-	ctxConfig, err := c.contextStorage.Load(name)
-	if err != nil {
-		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return 1
 	}
 
 	// todo(mitchellh: current default port is hardcoded, cannot configure http address)
@@ -121,3 +138,11 @@ Usage: waypoint ui [options]
 
 ` + c.Flags().Help())
 }
+
+var (
+	noContextFoundError = strings.TrimSpace(`
+Attempted to open the ui but found no Waypoint contexts. Please either create a new
+context that uses an existing Waypoint server with 'waypoint context create'
+or install a server using 'waypoint server install' which will set up a context for you.
+`)
+)
