@@ -5,9 +5,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"os"
-	"os/exec"
-
 	"github.com/docker/cli/cli/config"
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
@@ -16,9 +13,12 @@ import (
 	"github.com/docker/docker/registry"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
+	"os"
+	"os/exec"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -37,6 +37,11 @@ type Builder struct {
 // BuildFunc implements component.Builder
 func (b *Builder) BuildFunc() interface{} {
 	return b.Build
+}
+
+// BuildFunc implements component.BuilderODR
+func (b *Builder) BuildODRFunc() interface{} {
+	return b.BuildODR
 }
 
 // Config is the configuration structure for the registry.
@@ -156,6 +161,25 @@ type buildArgs struct {
 	UI          terminal.UI
 	Log         hclog.Logger
 	HasRegistry bool
+}
+
+// Build
+func (b *Builder) BuildODR(
+	ctx context.Context,
+	ui terminal.UI,
+	src *component.Source,
+	log hclog.Logger,
+	ai *wpdocker.AccessInfo,
+) (*wpdocker.Image, error) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	result, err := b.pullWithKaniko(ctx, ui, sg, log, ai)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // Build
