@@ -621,9 +621,8 @@ func (s *Service) GetJobStream(
 						return status.Error(codes.Internal, msg)
 					}
 
-				// NOTE: at present (2022-02-25) there is no exposed CLI or UI API that
-				// causes GetJobStream to be called on a completed job. Thusly this code below
-				// is entirely optimistic about future API usage. But it is tested!
+				// NOTE: at present (2022-04-20) the CLI does not utilize this
+				// code path but the UI does for historical job viewing.
 				case pb.Job_SUCCESS, pb.Job_ERROR:
 					// This means that the requested stream finished before GetJobStream was
 					// called. As such, we'll replay the output events.
@@ -687,7 +686,6 @@ func (s *Service) getJobStreamOutputInit(
 	job *serverstate.Job,
 	server pb.Waypoint_GetJobStreamServer,
 ) (<-chan []*pb.GetJobStreamResponse_Terminal_Event, error) {
-
 	// Start a log stream reader for this job
 	lsReader, err := s.logStreamProvider.StartReader(ctx, log, job)
 	if err != nil {
