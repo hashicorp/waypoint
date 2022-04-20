@@ -4,6 +4,7 @@ import (
 	"context"
 	json "encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -856,6 +857,8 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	// Include services to be registered in Consul. Currently configured to happen by default
 	// One service added for Waypoint UI, and one for Waypoint backend port
 	if c.consulService {
+		token := os.Getenv("CONSUL_HTTP_TOKEN")
+		job.ConsulToken = &token
 		tg.Services = []*api.Service{
 			{
 				Name:      waypointConsulUIName,
@@ -943,7 +946,7 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 
 	tg.AddTask(preTask)
 
-	ras := []string{"server", "run", "-accept-tos", "-vv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)}
+	ras := []string{"server", "run", "-accept-tos", "-vv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)}
 	ras = append(ras, rawRunFlags...)
 	task := api.NewTask("server", "docker")
 	task.Config = map[string]interface{}{
