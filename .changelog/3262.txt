@@ -1,0 +1,4 @@
+```release-note:bug
+cli: Show better error message when there are no Waypoint contexts when attempting
+to open the UI
+```
