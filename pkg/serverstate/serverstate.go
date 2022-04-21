@@ -178,6 +178,11 @@ type Interface interface {
 	TaskCancel(*pb.Ref_Task) error
 	TaskList(*pb.ListTaskRequest) ([]*pb.Task, error)
 	JobsByTaskRef(*pb.Task) (*pb.Job, *pb.Job, *pb.Job, *pb.Job, error)
+
+	//---------------------------------------------------------------
+	// Pipelines
+
+	PipelinePut(*pb.Pipeline) error
 }
 
 // Pruner is implemented by state storage implementations that require
