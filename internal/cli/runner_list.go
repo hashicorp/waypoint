@@ -40,6 +40,7 @@ func (c *RunnerListCommand) Run(args []string) int {
 	}
 
 	if len(resp.Runners) == 0 {
+		c.ui.Output("No runners found")
 		return 0
 	}
 
