@@ -212,6 +212,9 @@ Alias: waypoint deploy
   pushed artifact by default. You can view a list of recent artifacts
   using the "artifact list" command.
 
+  By default, "waypoint deploy" automatically performs a release. This behavior
+  can be disabled by using the "-release=false" flag.
+
 ` + c.Flags().Help())
 }
 
