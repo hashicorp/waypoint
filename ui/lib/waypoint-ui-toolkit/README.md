@@ -56,4 +56,4 @@ Please report issues on
 
 ## Contributing
 
-See [CONTRIBUTING.md].
+See [CONTRIBUTING.md](CONTRIBUTING.md).
