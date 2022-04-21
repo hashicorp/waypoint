@@ -104,7 +104,7 @@ page:
     title: ''
 
 form:
-  project_new:
+  project_create:
     title: 'New Project'
     project_name_label: 'Project name'
     create_git_label: 'Connect a Git repository'

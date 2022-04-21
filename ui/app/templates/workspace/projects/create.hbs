@@ -1,9 +1,9 @@
-{{page-title (t 'form.project_new.title')}}
+{{page-title (t 'form.project_create.title')}}
 
 <AppBreadcrumbs/>
 <PageHeader @iconName="plus">
   <div class="title">
-    <h1>{{t 'form.project_new.title'}}</h1>
+    <h1>{{t 'form.project_create.title'}}</h1>
   </div>
 </PageHeader>
 
@@ -12,7 +12,7 @@
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
         <label for="project-name" class="pds-fieldName">
-          {{t 'form.project_new.project_name_label'}}
+          {{t 'form.project_create.project_name_label'}}
         </label>
         <Pds::Input
           @type="text"
@@ -30,10 +30,10 @@
         <div class="pds-fieldName" id="create-git-help-text">
           <span>
             <FlightIcon @name="git-repo" @size="16" class="icon" />
-            {{t 'form.project_new.create_git_label'}}
+            {{t 'form.project_create.create_git_label'}}
           </span>
           <Pds::HelpText>
-            {{t 'form.project_new.create_git_helptext'}}
+            {{t 'form.project_create.create_git_helptext'}}
           </Pds::HelpText>
         </div>
         <Pds::CheckboxField
@@ -42,12 +42,12 @@
           aria-describedby="create-git-help-text"
           {{on "change" (set this "createGit" (not this.createGit))}}
         >
-          {{t 'form.project_new.create_git_checkbox_label'}}
+          {{t 'form.project_create.create_git_checkbox_label'}}
         </Pds::CheckboxField>
       </div>
     </fieldset>
   </div>
   <Pds::Button @variant="primary" @type="submit">
-    {{t 'form.project_new.button'}}
+    {{t 'form.project_create.button'}}
   </Pds::Button>
 </form>

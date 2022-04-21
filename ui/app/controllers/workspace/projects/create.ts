@@ -5,7 +5,7 @@ import { tracked } from '@glimmer/tracking';
 import ApiService from 'waypoint/services/api';
 import { Project, UpsertProjectRequest } from 'waypoint-pb';
 import FlashMessagesService from 'waypoint/services/pds-flash-messages';
-export default class WorkspaceProjectsNew extends Controller {
+export default class WorkspaceProjectsCreate extends Controller {
   @service api!: ApiService;
   @service('pdsFlashMessages') flashMessages!: FlashMessagesService;
 

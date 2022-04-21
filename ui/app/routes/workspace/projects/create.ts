@@ -1,11 +1,11 @@
 import Route from '@ember/routing/route';
 import { Project } from 'waypoint-pb';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
-import Controller from 'waypoint/controllers/workspace/projects/new';
+import Controller from 'waypoint/controllers/workspace/projects/create';
 
 type Model = Project.AsObject;
 
-export default class WorkspaceProjectsNew extends Route {
+export default class WorkspaceProjectsCreate extends Route {
   breadcrumbs: Breadcrumb[] = [
     {
       label: 'Projects',
@@ -13,7 +13,7 @@ export default class WorkspaceProjectsNew extends Route {
     },
     {
       label: 'New Project',
-      route: 'workspace.projects.new',
+      route: 'workspace.projects.create',
     },
   ];
 
