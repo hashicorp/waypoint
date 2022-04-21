@@ -21,6 +21,10 @@ To create a new component, use the generator:
 $ yarn ember generate component <component-name>
 ```
 
+## Tests
+
+TODO: How do I write tests?
+
 ## CSS
 
 TODO: Where do I put CSS?
