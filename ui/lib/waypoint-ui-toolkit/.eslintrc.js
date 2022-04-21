@@ -2,7 +2,7 @@
 
 module.exports = {
   root: true,
-  parser: 'babel-eslint',
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2018,
     sourceType: 'module',
@@ -10,16 +10,21 @@ module.exports = {
       legacyDecorators: true,
     },
   },
-  plugins: ['ember'],
+  plugins: ['ember', 'prefer-let'],
   extends: [
     'eslint:recommended',
     'plugin:ember/recommended',
     'plugin:prettier/recommended',
+    'plugin:@typescript-eslint/recommended',
   ],
   env: {
     browser: true,
   },
-  rules: {},
+  rules: {
+    'prefer-let/prefer-let': 'error',
+    'prefer-const': 'off',
+    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+  },
   overrides: [
     // node files
     {
@@ -43,6 +48,10 @@ module.exports = {
       },
       plugins: ['node'],
       extends: ['plugin:node/recommended'],
+      rules: {
+        'node/no-unpublished-require': 'off',
+        '@typescript-eslint/no-var-requires': 'off',
+      },
     },
     {
       // Test files:
