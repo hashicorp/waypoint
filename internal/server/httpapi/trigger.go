@@ -3,6 +3,7 @@ package httpapi
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"net/http"
 	"strconv"
 	"sync"
@@ -150,7 +151,7 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 		}
 		if resp == nil {
 			http.Error(w,
-				fmt.Sprintf("server returned no job ids from run trigger %q", runTriggerId),
+				fmt.Sprintf("server returned no job ids from run trigger %q", html.EscapeString(runTriggerId)),
 				http.StatusInternalServerError)
 			return
 		}
