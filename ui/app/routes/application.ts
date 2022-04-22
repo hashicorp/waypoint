@@ -14,6 +14,7 @@ export default class Application extends Route {
   @service session!: SessionService;
 
   async beforeModel(transition: Transition): Promise<void> {
+    await this.session.setup();
     await super.beforeModel(transition);
     if (!this.session.isAuthenticated && !transition.to.name.startsWith('auth')) {
       this.session.attemptedTransition = transition;
