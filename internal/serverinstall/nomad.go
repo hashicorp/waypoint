@@ -60,7 +60,6 @@ type nomadConfig struct {
 	csiFS                string            `hcl:"csi_fs,optional"`
 	csiSecrets           map[string]string `hcl:"csi_secrets,optional"`
 	csiParams            map[string]string `hcl:"csi_parameters,optional"`
-	// TODO: Add CSI options here
 
 	nomadHost string `hcl:"nomad_host,optional"`
 }
@@ -76,8 +75,6 @@ var (
 	defaultCSIVolumeCapacityMax = int64(2147483648)
 
 	defaultCSIVolumeMountFS = "xfs"
-
-	// TODO: Add any new CSI defaults here
 
 	// Defaults to use for setting up Consul
 	defaultConsulServiceTag       = "waypoint"
@@ -1306,7 +1303,6 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Default: defaultCSIVolumeMountFS,
 	})
 
-	// TODO: Add other CSI options here
 	set.StringMapVar(&flag.StringMapVar{
 		Name:   "nomad-csi-secrets",
 		Target: &i.config.csiSecrets,
