@@ -59,6 +59,7 @@ type nomadConfig struct {
 	csiVolumeCapacityMax int64             `hcl:"csi_volume_capacity_max,optional"`
 	csiFS                string            `hcl:"csi_fs,optional"`
 	csiSecrets           map[string]string `hcl:"csi_secrets,optional"`
+	csiParams            map[string]string `hcl:"csi_parameters,optional"`
 	// TODO: Add CSI options here
 
 	nomadHost string `hcl:"nomad_host,optional"`
@@ -210,6 +211,7 @@ func (i *NomadInstaller) Install(
 			},
 			RequestedCapacityMin: defaultCSIVolumeCapacityMin,
 			RequestedCapacityMax: defaultCSIVolumeCapacityMax,
+			Parameters:           i.config.csiParams,
 			PluginID:             i.config.csiVolumeProvider,
 			Secrets:              api.CSISecrets(i.config.csiSecrets),
 		}
@@ -1309,6 +1311,12 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Name:   "nomad-csi-secrets",
 		Target: &i.config.csiSecrets,
 		Usage:  "Secrets to provide for the CSI volume.",
+	})
+
+	set.StringMapVar(&flag.StringMapVar{
+		Name:   "nomad-csi-parameters",
+		Target: &i.config.csiParams,
+		Usage:  "Parameters passed directly to the CSI plugin to configure the volume.",
 	})
 }
 
