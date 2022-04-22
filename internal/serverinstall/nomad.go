@@ -53,11 +53,13 @@ type nomadConfig struct {
 	runnerResourcesCPU    string `hcl:"runner_resources_cpu,optional"`
 	runnerResourcesMemory string `hcl:"runner_resources_memory,optional"`
 
-	hostVolume           string `hcl:"host_volume,optional"`
-	csiVolumeProvider    string `hcl:"csi_volume_provider,optional"`
-	csiVolumeCapacityMin int64  `hcl:"csi_volume_capacity_min,optional"`
-	csiVolumeCapacityMax int64  `hcl:"csi_volume_capacity_max,optional"`
-	csiFS                string `hcl:"csi_fs,optional"`
+	hostVolume           string            `hcl:"host_volume,optional"`
+	csiVolumeProvider    string            `hcl:"csi_volume_provider,optional"`
+	csiVolumeCapacityMin int64             `hcl:"csi_volume_capacity_min,optional"`
+	csiVolumeCapacityMax int64             `hcl:"csi_volume_capacity_max,optional"`
+	csiFS                string            `hcl:"csi_fs,optional"`
+	csiSecrets           map[string]string `hcl:"csi_secrets,optional"`
+	// TODO: Add CSI options here
 
 	nomadHost string `hcl:"nomad_host,optional"`
 }
@@ -73,6 +75,8 @@ var (
 	defaultCSIVolumeCapacityMax = int64(2147483648)
 
 	defaultCSIVolumeMountFS = "xfs"
+
+	// TODO: Add any new CSI defaults here
 
 	// Defaults to use for setting up Consul
 	defaultConsulServiceTag       = "waypoint"
@@ -207,6 +211,7 @@ func (i *NomadInstaller) Install(
 			RequestedCapacityMin: defaultCSIVolumeCapacityMin,
 			RequestedCapacityMax: defaultCSIVolumeCapacityMax,
 			PluginID:             i.config.csiVolumeProvider,
+			Secrets:              api.CSISecrets(i.config.csiSecrets),
 		}
 		if i.config.csiVolumeCapacityMin != 0 {
 			vol.RequestedCapacityMin = i.config.csiVolumeCapacityMin
@@ -1297,6 +1302,13 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.config.csiFS,
 		Usage:   "Nomad CSI volume mount option file system.",
 		Default: defaultCSIVolumeMountFS,
+	})
+
+	// TODO: Add other CSI options here
+	set.StringMapVar(&flag.StringMapVar{
+		Name:   "nomad-csi-secrets",
+		Target: &i.config.csiSecrets,
+		Usage:  "Secrets to provide for the CSI volume.",
 	})
 }
 
