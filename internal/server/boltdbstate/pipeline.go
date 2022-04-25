@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hashicorp/waypoint/internal/pkg/graph"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 var pipelineBucket = []byte("pipeline")
@@ -50,51 +50,10 @@ func (s *State) pipelinePut(
 	memTxn *memdb.Txn,
 	value *pb.Pipeline,
 ) error {
-	// Basic preconditions for state storage. The data is expected
-	// to be fully validated prior to this step so we just validate
-	// what we need to ensure data consistency.
-	if value.Owner == nil {
-		return status.Error(codes.FailedPrecondition,
-			"an owner must be set on the project")
-	}
-
-	if len(value.Steps) == 0 {
-		return status.Error(codes.FailedPrecondition,
-			"a pipeline requires at least one step")
-	}
-
-	// Verify we have exactly one root
-	rootCount := 0
-	for _, step := range value.Steps {
-		if len(step.DependsOn) == 0 {
-			rootCount++
-		}
-	}
-	if rootCount != 1 {
-		return status.Error(codes.FailedPrecondition,
-			"a pipeline requires exactly one root step")
-	}
-
-	// Verify there are no cycles in the steps
-	var stepGraph graph.Graph
-	for _, step := range value.Steps {
-		// Add our job
-		stepGraph.Add(step.Name)
-
-		// Add any dependencies
-		for _, dep := range step.DependsOn {
-			stepGraph.Add(dep)
-			stepGraph.AddEdge(dep, step.Name)
-
-			if _, ok := value.Steps[dep]; !ok {
-				return status.Errorf(codes.FailedPrecondition,
-					"Step %q depends on non-existent step %q", step, dep)
-			}
-		}
-	}
-	if cycles := stepGraph.Cycles(); len(cycles) > 0 {
-		return status.Errorf(codes.FailedPrecondition,
-			"Step dependencies contain one or more cycles: %#v", cycles)
+	// The data should be validated before this, but it is a critical
+	// issue if there are validation errors so we test again.
+	if err := ptypes.ValidatePipeline(value); err != nil {
+		return status.Errorf(codes.FailedPrecondition, err.Error())
 	}
 
 	// Get the global bucket and write the value to it.
