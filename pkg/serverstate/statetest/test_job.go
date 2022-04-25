@@ -23,6 +23,8 @@ func init() {
 		TestJobAssign,
 		TestJobAck,
 		TestJobComplete,
+		TestJobComplete,
+		TestJobTask_AckAndComplete,
 		TestJobIsAssignable,
 		TestJobCancel,
 		TestJobHeartbeat,
@@ -1461,6 +1463,199 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("C", job.Id)
+	})
+}
+
+func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory) {
+	t.Run("ack and complete on-demand runner jobs", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		task_id := "t_test"
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "start_job",
+			Task: &pb.Ref_Task{
+				Ref: &pb.Ref_Task_Id{
+					Id: task_id,
+				},
+			},
+		})))
+
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "task_job",
+			Task: &pb.Ref_Task{
+				Ref: &pb.Ref_Task_Id{
+					Id: task_id,
+				},
+			},
+		})))
+
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "stop_job",
+			Task: &pb.Ref_Task{
+				Ref: &pb.Ref_Task_Id{
+					Id: task_id,
+				},
+			},
+		})))
+
+		// Create a pending task. note that `service_job` does this when it wraps
+		// a requested job with an on-demand runner job triple.
+		err := s.TaskPut(&pb.Task{
+			Id:       task_id,
+			TaskJob:  &pb.Ref_Job{Id: "task_job"},
+			StartJob: &pb.Ref_Job{Id: "start_job"},
+			StopJob:  &pb.Ref_Job{Id: "stop_job"},
+		})
+		require.NoError(err)
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("start_job", job.Id)
+
+		// Ack it
+		_, err = s.JobAck(job.Id, true)
+		require.NoError(err)
+
+		task, err := s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: task_id,
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+		require.Equal(pb.Task_STARTING, task.JobState)
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id, nil)
+		require.NoError(err)
+		require.Equal(pb.Job_RUNNING, job.Job.State)
+
+		// We should have an output buffer
+		require.NotNil(job.OutputBuffer)
+
+		// Complete it
+		require.NoError(s.JobComplete(job.Id, &pb.Job_Result{
+			Build: &pb.Job_BuildResult{},
+		}, nil))
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id, nil)
+		require.NoError(err)
+		require.Equal(pb.Job_SUCCESS, job.State)
+		require.Nil(job.Error)
+		require.NotNil(job.Result)
+
+		task, err = s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: task_id,
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+		require.Equal(pb.Task_STARTED, task.JobState)
+
+		// Assign it, we should get this build
+		job, err = s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_B"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("task_job", job.Id)
+
+		// Ack it
+		_, err = s.JobAck(job.Id, true)
+		require.NoError(err)
+
+		task, err = s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: task_id,
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+		require.Equal(pb.Task_RUNNING, task.JobState)
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id, nil)
+		require.NoError(err)
+		require.Equal(pb.Job_RUNNING, job.Job.State)
+
+		// We should have an output buffer
+		require.NotNil(job.OutputBuffer)
+
+		// Complete it
+		require.NoError(s.JobComplete(job.Id, &pb.Job_Result{
+			Build: &pb.Job_BuildResult{},
+		}, nil))
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id, nil)
+		require.NoError(err)
+		require.Equal(pb.Job_SUCCESS, job.State)
+		require.Nil(job.Error)
+		require.NotNil(job.Result)
+
+		task, err = s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: task_id,
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+		require.Equal(pb.Task_COMPLETED, task.JobState)
+
+		// Assign it, we should get this build
+		job, err = s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_C"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("stop_job", job.Id)
+
+		// Ack it
+		_, err = s.JobAck(job.Id, true)
+		require.NoError(err)
+
+		task, err = s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: task_id,
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+		require.Equal(pb.Task_STOPPING, task.JobState)
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id, nil)
+		require.NoError(err)
+		require.Equal(pb.Job_RUNNING, job.Job.State)
+
+		// We should have an output buffer
+		require.NotNil(job.OutputBuffer)
+
+		// Complete it
+		require.NoError(s.JobComplete(job.Id, &pb.Job_Result{
+			Build: &pb.Job_BuildResult{},
+		}, nil))
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id, nil)
+		require.NoError(err)
+		require.Equal(pb.Job_SUCCESS, job.State)
+		require.Nil(job.Error)
+		require.NotNil(job.Result)
+
+		task, err = s.TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: task_id,
+			},
+		})
+		require.NoError(err)
+		require.NotNil(task)
+		require.Equal(pb.Task_STOPPED, task.JobState)
 	})
 }
 

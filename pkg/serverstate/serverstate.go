@@ -179,8 +179,6 @@ type Interface interface {
 	TaskDelete(*pb.Ref_Task) error
 	TaskCancel(*pb.Ref_Task) error
 	TaskList(*pb.ListTaskRequest) ([]*pb.Task, error)
-	TaskAck(string) error
-	TaskComplete(string) error
 	JobsByTaskRef(*pb.Task) (*pb.Job, *pb.Job, *pb.Job, error)
 }
 

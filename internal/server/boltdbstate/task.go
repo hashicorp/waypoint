@@ -202,102 +202,6 @@ func (s *State) TaskList(req *pb.ListTaskRequest) ([]*pb.Task, error) {
 	return out, nil
 }
 
-// TaskAck looks to see if the referenced job id has a Task ref associated with it,
-// and if so, Ack the specific job inside the Task job triple to progress the
-// Task state machine.
-func (s *State) TaskAck(jobId string) error {
-	job, err := s.JobById(jobId, nil)
-	if err != nil {
-		s.log.Error("error getting job by id", "job", jobId, "err", err)
-		return err
-	} else if job.Task == nil {
-		s.log.Trace("job is not an on-demand runner task", "job", jobId)
-		return nil
-	}
-
-	// grab the full task message based on the Task Ref on the job
-	task, err := s.TaskGet(job.Task)
-	if err != nil {
-		s.log.Error("failed to get task to ack job", "job", job.Id, "task", job.Task.Ref)
-		return err
-	}
-
-	// now figure out which job has been acked for the task, and update
-	// the task state
-	switch job.Id {
-	case task.StartJob.Id:
-		// StartJob has been Acked
-		task.JobState = pb.Task_STARTING
-		s.log.Trace("start job is starting", "job", job.Id, "task", task.Id)
-	case task.TaskJob.Id:
-		// TaskJob has been Acked
-		task.JobState = pb.Task_RUNNING
-		s.log.Trace("task job is running", "job", job.Id, "task", task.Id)
-	case task.StopJob.Id:
-		// StopJob has been Acked
-		task.JobState = pb.Task_STOPPING
-		s.log.Trace("stop job is running", "job", job.Id, "task", task.Id)
-	default:
-		return status.Errorf(codes.Internal, "no task job id matches the requested job id %q", job.Id)
-	}
-
-	// TaskPut the new state
-	if err := s.TaskPut(task); err != nil {
-		s.log.Error("failed to ack task state", "job", job.Id, "task", task.Id)
-		return err
-	}
-
-	return nil
-}
-
-// TaskComplete will look up the referenced job to see if it has a Task ref
-// associated with it, and if so, mark the specific job inside the Task job triple
-// as complete to progress the task state machine.
-func (s *State) TaskComplete(jobId string) error {
-	job, err := s.JobById(jobId, nil)
-	if err != nil {
-		s.log.Error("error getting job by id", "job", jobId, "err", err)
-		return err
-	} else if job.Task == nil {
-		s.log.Trace("job is not an on-demand runner task", "job", jobId)
-		return nil
-	}
-
-	// grab the full task message based on the Task Ref on the job
-	task, err := s.TaskGet(job.Task)
-	if err != nil {
-		s.log.Error("failed to get task to mark complete", "job", job.Id, "task", job.Task.Ref)
-		return err
-	}
-
-	// now figure out which job has been completed this is for the task, and update
-	// the task state
-	switch job.Id {
-	case task.StartJob.Id:
-		// StartJob has completed
-		task.JobState = pb.Task_STARTED
-		s.log.Trace("start job has completed", "job", job.Id, "task", task.Id)
-	case task.TaskJob.Id:
-		// TaskJob has completed
-		task.JobState = pb.Task_COMPLETED
-		s.log.Trace("task job has completed", "job", job.Id, "task", task.Id)
-	case task.StopJob.Id:
-		// StopJob has completed, the whole task is finished
-		task.JobState = pb.Task_STOPPED
-		s.log.Trace("stop job has completed", "job", job.Id, "task", task.Id)
-	default:
-		return status.Errorf(codes.Internal, "no task job id matches the requested job id %q", job.Id)
-	}
-
-	// TaskPut the new state
-	if err := s.TaskPut(task); err != nil {
-		s.log.Error("failed to complete task state", "job", job.Id, "task", task.Id)
-		return err
-	}
-
-	return nil
-}
-
 func (s *State) taskPut(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
@@ -326,17 +230,17 @@ func (s *State) taskGet(
 	var taskId string
 	switch r := ref.Ref.(type) {
 	case *pb.Ref_Task_Id:
-		s.log.Info("looking up task", "id", r.Id)
+		s.log.Debug("looking up task", "id", r.Id)
 		taskId = r.Id
 	case *pb.Ref_Task_JobId:
-		s.log.Info("looking up task by job id", "job_id", r.JobId)
+		s.log.Debug("looking up task by job id", "job_id", r.JobId)
 		// Look up Task by jobid
 		task, err := s.taskByJobId(r.JobId)
 		if err != nil {
 			return nil, err
 		}
 
-		s.log.Info("found task id", "id", task.Id)
+		s.log.Debug("found task id", "id", task.Id)
 		taskId = task.Id
 	default:
 		return nil, status.Error(codes.FailedPrecondition, "No valid ref id provided in Task ref to taskGet")
