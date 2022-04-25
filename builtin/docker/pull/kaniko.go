@@ -122,7 +122,7 @@ func (b *Builder) pullWithKaniko(
 
 	localRef := fmt.Sprintf("localhost:%d/%s:%s", port, refPath, ai.Tag)
 
-	dockerfileBS := []byte(fmt.Sprintf("FROM %s:%s", target.Image, target.Tag))
+	dockerfileBS := []byte(fmt.Sprintf("FROM %s:%s\n", target.Image, target.Tag))
 	err = os.WriteFile("Dockerfile", dockerfileBS, 0644)
 	if err != nil {
 		return nil, err
