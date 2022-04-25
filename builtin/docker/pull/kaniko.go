@@ -27,7 +27,7 @@ func (b *Builder) pullWithKaniko(
 	log hclog.Logger,
 	ai *wpdocker.AccessInfo,
 ) (*wpdocker.Image, error) {
-	step := sg.Add("Pulling Docker image with kaniko...")
+	step := sg.Add("Pulling Docker image with Kaniko...")
 	defer func() {
 		if step != nil {
 			step.Abort()
