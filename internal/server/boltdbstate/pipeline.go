@@ -146,6 +146,49 @@ func (s *State) pipelineGet(
 	return &result, dbGet(b, []byte(strings.ToLower(pipelineId)), &result)
 }
 
+// PipelineDelete deletes a pipeline by reference.
+func (s *State) PipelineDelete(ref *pb.Ref_Pipeline) error {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		return s.pipelineDelete(dbTxn, memTxn, ref)
+	})
+	if err == nil {
+		memTxn.Commit()
+	}
+
+	return err
+}
+
+func (s *State) pipelineDelete(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref *pb.Ref_Pipeline,
+) error {
+	// Get the pipeline. If it doesn't exist then we're successful.
+	p, err := s.pipelineGet(dbTxn, memTxn, ref)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil
+		}
+
+		return err
+	}
+
+	id := s.pipelineId(p)
+	if err := dbTxn.Bucket(pipelineBucket).Delete([]byte(p.Id)); err != nil {
+		return err
+	}
+
+	// Delete from memdb
+	if _, err := memTxn.DeleteAll(pipelineIndexTableName, pipelineIndexId, string(id)); err != nil {
+		return status.Errorf(codes.Aborted, err.Error())
+	}
+
+	return nil
+}
+
 // pipelineIndexSet writes an index record for a single pipeline.
 func (s *State) pipelineIndexSet(txn *memdb.Txn, id []byte, value *pb.Pipeline) error {
 	record := &pipelineIndexRecord{

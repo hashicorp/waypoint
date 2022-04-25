@@ -44,6 +44,12 @@ func TestPipeline(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.NotNil(resp)
 		}
 
+		// Delete
+		require.NoError(s.PipelineDelete(&pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{Id: p.Id},
+			},
+		}))
 	})
 
 	t.Run("Put: no steps", func(t *testing.T) {
