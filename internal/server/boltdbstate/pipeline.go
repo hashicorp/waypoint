@@ -108,6 +108,44 @@ func (s *State) pipelinePut(
 	return s.pipelineIndexSet(memTxn, id, value)
 }
 
+// PipelineGet gets a pipeline by reference.
+func (s *State) PipelineGet(ref *pb.Ref_Pipeline) (*pb.Pipeline, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	var result *pb.Pipeline
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		var err error
+		result, err = s.pipelineGet(dbTxn, memTxn, ref)
+		return err
+	})
+
+	return result, err
+}
+
+func (s *State) pipelineGet(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref *pb.Ref_Pipeline,
+) (*pb.Pipeline, error) {
+	var result pb.Pipeline
+	b := dbTxn.Bucket(pipelineBucket)
+
+	var pipelineId string
+	switch r := ref.Ref.(type) {
+	case *pb.Ref_Pipeline_Id:
+		s.log.Info("looking up pipeline by id", "id", r.Id)
+		pipelineId = r.Id.Id
+	default:
+		return nil, status.Error(
+			codes.FailedPrecondition,
+			"No valid ref provided to pipelineGet",
+		)
+	}
+
+	return &result, dbGet(b, []byte(strings.ToLower(pipelineId)), &result)
+}
+
 // pipelineIndexSet writes an index record for a single pipeline.
 func (s *State) pipelineIndexSet(txn *memdb.Txn, id []byte, value *pb.Pipeline) error {
 	record := &pipelineIndexRecord{
