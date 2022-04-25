@@ -511,7 +511,6 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 		require.NotNil(event)
 		require.False(event.Terminal.Buffered, 2)
 		require.Len(event.Terminal.Events, 2)
-
 	}
 
 	// Send the download event. This realistically could happen after
