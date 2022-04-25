@@ -67,6 +67,69 @@ func TestValidatePipeline(t *testing.T) {
 			},
 			`key "root" doesn't match`,
 		},
+
+		{
+			"multiple root steps",
+			func(v *pb.Pipeline) {
+				v.Steps = map[string]*pb.Pipeline_Step{
+					"root": {
+						Name: "root",
+						Kind: &pb.Pipeline_Step_Exec_{
+							Exec: &pb.Pipeline_Step_Exec{
+								Image: "hashicorp/waypoint",
+							},
+						},
+					},
+
+					"root2": {
+						Name: "root2",
+						Kind: &pb.Pipeline_Step_Exec_{
+							Exec: &pb.Pipeline_Step_Exec{
+								Image: "hashicorp/waypoint",
+							},
+						},
+					},
+				}
+			},
+			`exactly one root`,
+		},
+
+		{
+			"cycle",
+			func(v *pb.Pipeline) {
+				v.Steps = map[string]*pb.Pipeline_Step{
+					"root": {
+						Name: "root",
+						Kind: &pb.Pipeline_Step_Exec_{
+							Exec: &pb.Pipeline_Step_Exec{
+								Image: "hashicorp/waypoint",
+							},
+						},
+					},
+
+					"A": {
+						Name:      "A",
+						DependsOn: []string{"B"},
+						Kind: &pb.Pipeline_Step_Exec_{
+							Exec: &pb.Pipeline_Step_Exec{
+								Image: "hashicorp/waypoint",
+							},
+						},
+					},
+
+					"B": {
+						Name:      "B",
+						DependsOn: []string{"A"},
+						Kind: &pb.Pipeline_Step_Exec_{
+							Exec: &pb.Pipeline_Step_Exec{
+								Image: "hashicorp/waypoint",
+							},
+						},
+					},
+				}
+			},
+			`one or more cycles`,
+		},
 	}
 
 	for _, tt := range cases {

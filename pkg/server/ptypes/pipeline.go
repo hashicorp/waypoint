@@ -1,6 +1,7 @@
 package ptypes
 
 import (
+	"errors"
 	"fmt"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -8,6 +9,7 @@ import (
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 
+	"github.com/hashicorp/waypoint/internal/pkg/graph"
 	"github.com/hashicorp/waypoint/internal/pkg/validationext"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -65,6 +67,8 @@ func ValidatePipelineRules(v *pb.Pipeline) []*validation.FieldRules {
 		validation.Field(&v.Steps,
 			validation.Required,
 			validation.By(stepNameMatchesKey),
+			validation.By(stepSingleRoot),
+			validation.By(stepGraph),
 			validationext.Each(validation.By(func(v interface{}) error {
 				s := v.(*pb.Pipeline_Step)
 				return validation.ValidateStruct(s, ValidateStepRules(s)...)
@@ -123,6 +127,50 @@ func stepNameMatchesKey(v interface{}) error {
 		if k != step.Name {
 			return fmt.Errorf("step key %q doesn't match step name %q", k, step.Name)
 		}
+	}
+
+	return nil
+}
+
+// stepSingleRoot implements validation.RuleFunc to validate that
+// there is a single root step.
+func stepSingleRoot(v interface{}) error {
+	count := 0
+	for _, step := range v.(map[string]*pb.Pipeline_Step) {
+		if len(step.DependsOn) == 0 {
+			count++
+			if count > 1 {
+				return errors.New("a pipeline requires exactly one root step")
+			}
+		}
+	}
+
+	return nil
+}
+
+// stepGraph implements validation.RuleFunc to validate that
+// builds and validates the step graph.
+func stepGraph(v interface{}) error {
+	steps := v.(map[string]*pb.Pipeline_Step)
+	var stepGraph graph.Graph
+	for _, step := range steps {
+		// Add our job
+		stepGraph.Add(step.Name)
+
+		// Add any dependencies
+		for _, dep := range step.DependsOn {
+			stepGraph.Add(dep)
+			stepGraph.AddEdge(dep, step.Name)
+
+			if _, ok := steps[dep]; !ok {
+				return fmt.Errorf(
+					"step %q depends on non-existent step %q", step, dep)
+			}
+		}
+	}
+	if cycles := stepGraph.Cycles(); len(cycles) > 0 {
+		return fmt.Errorf(
+			"step dependencies contain one or more cycles: %s", cycles)
 	}
 
 	return nil
