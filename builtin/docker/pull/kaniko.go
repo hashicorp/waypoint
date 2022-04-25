@@ -98,7 +98,7 @@ func (b *Builder) pullWithKaniko(
 
 		data, err := assets.Asset(assetName)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
+			return nil, status.Errorf(codes.Internal, "unable to restore custom entrypoint binary: %s", err)
 		}
 
 		step.Done()
