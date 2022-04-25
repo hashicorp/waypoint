@@ -32,6 +32,9 @@ module.exports = function (defaults) {
         },
       },
     },
+    'ember-simple-auth': {
+      useSessionSetupMethod: true,
+    },
     svgJar: {
       sourceDirs: ['node_modules/@hashicorp/structure-icons/dist', 'public/images'],
     },

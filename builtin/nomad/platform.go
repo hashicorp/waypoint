@@ -211,6 +211,20 @@ func (p *Platform) resourceJobCreate(
 	job.TaskGroups[0].Tasks[0].Config = config
 	job.TaskGroups[0].Tasks[0].Env = env
 
+	// Get Consul ACL token from environment
+	c, err := ConsulAuth()
+	if err != nil {
+		return err
+	}
+	job.ConsulToken = &c
+
+	// Get Vault token from environment
+	v, err := VaultAuth()
+	if err != nil {
+		return err
+	}
+	job.VaultToken = &v
+
 	// Register job
 	st.Update("Registering job...")
 	regResult, _, err := jobclient.Register(job, nil)
@@ -515,6 +529,20 @@ deploy {
 	doc.SetField(
 		"auth",
 		"The credentials for docker registry.",
+	)
+
+	doc.SetField(
+		"consul_token",
+		"The Consul ACL token used to register services with the Nomad job.",
+		docs.Summary("Uses the runner config environment variable CONSUL_HTTP_TOKEN."),
+		docs.EnvVar("CONSUL_HTTP_TOKEN"),
+	)
+
+	doc.SetField(
+		"vault_token",
+		"The Vault token used to deploy the Nomad job with a token having specific Vault policies attached.",
+		docs.Summary("Uses the runner config environment variable VAULT_TOKEN."),
+		docs.EnvVar("VAULT_TOKEN"),
 	)
 
 	doc.SetField(

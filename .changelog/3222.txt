@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/nomad: Support Consul & Vault tokens for job submission
+```

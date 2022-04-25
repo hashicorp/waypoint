@@ -675,25 +675,38 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 	}))
 
 	// Get our job stream and verify we open
-	stream, err := client.GetJobStream(ctx, &pb.GetJobStreamRequest{JobId: queueResp.JobId})
-	require.NoError(err)
-	{
-		resp, err := stream.Recv()
-		require.NoError(err)
-		open, ok := resp.Event.(*pb.GetJobStreamResponse_Open_)
-		require.True(ok, "should be an open")
-		require.NotNil(open)
+	var stream pb.Waypoint_GetJobStreamClient
+	require.Eventually(func() bool {
+		stream, err = client.GetJobStream(ctx, &pb.GetJobStreamRequest{JobId: queueResp.JobId})
+		if err != nil {
+			t.Logf("retryable error connecting to job stream: %s", err)
+			return false
+		}
 
-	}
+		// We use require below because no matter what this should always succeed.
+		{
+			resp, err := stream.Recv()
+			require.NoError(err)
+			open, ok := resp.Event.(*pb.GetJobStreamResponse_Open_)
+			require.True(ok, "should be an open")
+			require.NotNil(open)
 
-	// Wait for output, verify its buffered
-	{
-		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Terminal_)(nil))
-		event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
-		require.NotNil(event)
-		require.True(event.Terminal.Buffered)
-		require.Len(event.Terminal.Events, 2)
-	}
+		}
+
+		// Wait for buffered output.
+		{
+			resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Terminal_)(nil))
+			event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
+			require.NotNil(event)
+			if len(event.Terminal.Events) != 2 || !event.Terminal.Buffered {
+				t.Logf("waiting for 2 buffered terminal events, got %d (buffered = %v)",
+					len(event.Terminal.Events), event.Terminal.Buffered)
+				return false
+			}
+		}
+
+		return true
+	}, 2*time.Second, 50*time.Millisecond)
 
 	// Send a bit more output now that we're connected
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
