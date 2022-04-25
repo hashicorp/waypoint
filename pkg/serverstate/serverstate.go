@@ -186,6 +186,7 @@ type Interface interface {
 
 	PipelinePut(*pb.Pipeline) error
 	PipelineGet(*pb.Ref_Pipeline) (*pb.Pipeline, error)
+	PipelineDelete(*pb.Ref_Pipeline) error
 }
 
 // Pruner is implemented by state storage implementations that require
