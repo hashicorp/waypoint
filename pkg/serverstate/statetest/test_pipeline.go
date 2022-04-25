@@ -33,7 +33,17 @@ func TestPipeline(t *testing.T, factory Factory, restartF RestartFactory) {
 		err = s.PipelinePut(p)
 		require.NoError(err)
 
-		// TODO: Get
+		// Get exact by id
+		{
+			resp, err := s.PipelineGet(&pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: &pb.Ref_PipelineId{Id: p.Id},
+				},
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+		}
+
 	})
 
 	t.Run("Put: no steps", func(t *testing.T) {
