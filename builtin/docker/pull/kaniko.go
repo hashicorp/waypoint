@@ -137,7 +137,7 @@ func (b *Builder) pullWithKaniko(
 	log.Debug("executing kaniko", "args", args)
 
 	step.Done()
-	step = sg.Add("Executing kaniko...")
+	step = sg.Add("Executing Kaniko...")
 
 	// Command output should go to the step
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
