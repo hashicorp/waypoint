@@ -4,7 +4,7 @@
 # builder builds the Waypoint binaries
 #--------------------------------------------------------------------
 
-FROM docker.mirror.hashicorp.services/golang:1.17.5-alpine3.15 AS builder
+FROM docker.mirror.hashicorp.services/golang:1.18.1-alpine3.15 AS builder
 
 RUN apk add --no-cache git gcc libc-dev make
 
