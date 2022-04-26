@@ -127,5 +127,8 @@ and disable the UI, the command would be:
 - `-nomad-csi-fs=<string>` - Nomad CSI volume mount option file system.
 - `-nomad-csi-secrets=<key=value>` - Secrets to provide for the CSI volume.
 - `-nomad-csi-parameters=<key=value>` - Parameters passed directly to the CSI plugin to configure the volume.
+- `-nomad-csi-plugin-id=<string>` - The ID of the CSI plugin that manages the volume, required for volume type 'csi'.
+- `-nomad-csi-external-id=<string>` - The ID of the physical volume from the Nomad storage provider.
+- `-nomad-csi-topologies=<key=value>` - Locations from which the Nomad Volume will be accessible.
 
 @include "commands/server-install_more.mdx"

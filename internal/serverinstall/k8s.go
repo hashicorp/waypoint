@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"io/ioutil"
 	"net"
 	"strconv"
@@ -32,6 +33,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
+	dockerparser "github.com/novln/docker-parser"
 )
 
 //
@@ -912,69 +914,31 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 // InstallRunner implements Installer.
 func (i *K8sInstaller) InstallRunner(
 	ctx context.Context,
-	opts *InstallRunnerOpts,
+	opts *runnerinstall.InstallOpts,
 ) error {
-	ui := opts.UI
-	log := opts.Log
-
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
-	s := sg.Add("Inspecting Kubernetes cluster...")
-	defer func() { s.Abort() }()
-
-	clientset, err := i.newClient()
+	ref, err := dockerparser.Parse(i.config.serverImage)
 	if err != nil {
-		ui.Output(err.Error(), terminal.WithErrorStyle())
+		opts.UI.Output("Error parsing image name: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
 	}
-
-	// Decode our configuration
-	deployment, err := newDeployment(i.config, opts)
-	if err != nil {
-		ui.Output(
-			"Error generating deployment configuration: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
+	runnerInstaller := runnerinstall.K8sRunnerInstaller{
+		Config: runnerinstall.K8sConfig{
+			KubeconfigPath:       "",
+			K8sContext:           i.config.k8sContext,
+			Version:              runnerinstall.DefaultHelmChartVersion,
+			Namespace:            i.config.namespace,
+			RunnerImage:          ref.ShortName(),
+			RunnerImageTag:       ref.Tag(),
+			CpuRequest:           i.config.cpuRequest,
+			MemRequest:           i.config.memRequest,
+			CreateServiceAccount: true,
+		},
 	}
 
-	s.Update("Creating Deployment for Runner")
-
-	deploymentClient := clientset.AppsV1().Deployments(i.config.namespace)
-	_, err = deploymentClient.Create(context.TODO(), deployment, metav1.CreateOptions{})
-	if err != nil {
-		ui.Output(
-			"Error creating deployment %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
-	}
-
-	s.Done()
-	s = sg.Add("Waiting for Kubernetes Deployment to be ready...")
-	log.Info("waiting for server deployment to become ready")
-	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		ss, err := clientset.AppsV1().Deployments(i.config.namespace).Get(
-			ctx, runnerName, metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-
-		if ss.Status.ReadyReplicas > 0 {
-			return true, nil
-		}
-
-		log.Trace("deployment not ready, waiting")
-		return false, nil
-	})
+	err = runnerInstaller.Install(ctx, opts)
 	if err != nil {
 		return err
 	}
-
-	s.Update("Kubernetes Deployment for Waypoint runner reporting ready")
-	s.Done()
-
 	return nil
 }
 
