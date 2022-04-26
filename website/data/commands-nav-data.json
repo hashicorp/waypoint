@@ -287,6 +287,18 @@
     "path": "status"
   },
   {
+    "title": "task list",
+    "path": "task-list"
+  },
+  {
+    "title": "task cancel",
+    "path": "task-cancel"
+  },
+  {
+    "title": "task inspect",
+    "path": "task-inspect"
+  },
+  {
     "title": "trigger create",
     "path": "trigger-create"
   },

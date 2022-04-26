@@ -373,6 +373,19 @@ service Waypoint {
   rpc UpsertStatusReport(UpsertStatusReportRequest) returns (UpsertStatusReportResponse);
 
   //----------------------------------------------------------------------
+  // Task functions
+  //----------------------------------------------------------------------
+
+  // GetTask returns a requested Task message. Or an error if it does not exist.
+  rpc GetTask(GetTaskRequest) returns (GetTaskResponse);
+
+  // ListTask will return a list of all existing Tasks
+  rpc ListTask(ListTaskRequest) returns (ListTaskResponse);
+
+  // CancelTask will attempt to gracefully cancel each job in the task job triple
+  rpc CancelTask(CancelTaskRequest) returns (google.protobuf.Empty);
+
+  //----------------------------------------------------------------------
   // Trigger URL Config functions
   //----------------------------------------------------------------------
 
@@ -1143,10 +1156,6 @@ message TaskLaunchInfo {
   repeated string arguments = 3;
 }
 
-// TODO(briancain): Note that there is still work to be done here to properly
-// leverage this message in Waypoint. Once the implementation phase comes
-// to actually use this, we will be mindful in how these Task messages
-// are pruned and deleted since they are directly associated with jobs. /end todo
 // Task tracks the life of an on-demand runner task that spawns Start
 // and Stop tasks for any kind of job/operation in Waypoint. Automatic jobs
 // such as project polling or status report generation spawn on-demand
@@ -1179,6 +1188,81 @@ message Task {
   // This task info message represented as an Any format. This is the full
   // task encoded directly by the server that has access to the proto to decode it.
   opaqueany.Any state = 6;
+
+  // The overall state of the Task triple. See the enum def for details for
+  // each possible Task state. This will be computed for each GetTaskResponse
+  // based on the Task job ids receieved from the database.
+  State job_state = 7;
+
+  // The resource that gets created to run the task job for this Task
+  // TODO(briancain): This field has not been implemented yet. See
+  // "internal/runner/operation_task.go" for more info.
+  string resource_name = 8;
+
+  enum State {
+    UNKNOWN = 0; // no state defined, the default
+    PENDING = 1; // no jobs have been ran yet
+    STARTING = 2; // start_job is running
+    STARTED  = 3; // start_job complete, task is not running yet
+    RUNNING = 4; // task is running
+    COMPLETED = 5; // task is done
+    STOPPING = 6; // stop_job is running
+    STOPPED = 7; // every job in Task triple is stopped
+    MIXED = 8; // jobs are in an undefined state that don't match our expectation
+  }
+}
+
+message UpsertTaskRequest {
+  // The Task to upsert. If the id in the Task message is empty, then this will
+  // be an insert in the db. Otherwise if an id was requested, this will act
+  // as an update. If the ID isn't found, it will be an error.
+  Task task = 1;
+}
+
+message UpsertTaskResponse {
+  // The resulting Task that was Upserted.
+  Task task = 1;
+}
+
+message GetTaskRequest {
+  // Can be oneof Task id or by the Run job id.
+  Ref.Task ref = 1;
+}
+
+message GetTaskResponse {
+  // The requested Task
+  Task task = 1;
+
+  // The Job triple that the task is associated with. These jobs are the full
+  // message for each based on the Ref_Job id found inside Task
+  Job task_job = 2;
+  Job start_job = 3;
+  Job stop_job = 4;
+}
+
+message DeleteTaskRequest {
+  // The referenced task to delete by task id or Run job id.
+  Ref.Task ref = 1;
+}
+
+message ListTaskRequest {
+  repeated Task.State taskState = 1;
+
+  // TODO(briancain): This currently isn't possible to reference the job
+  // operation this way. We either need to create a generic Ref operation
+  // that incldues every operation defined in Job, or re-define them all
+  // here in the same way the Trigger message does for its reference
+  //repeated Job.operation taskOperation = 2;
+}
+
+message ListTaskResponse {
+  // An array of all available Tasks and their jobs
+  repeated GetTaskResponse tasks = 1;
+}
+
+message CancelTaskRequest {
+  // A reference to the task to cancel
+  Ref.Task ref = 1;
 }
 
 /********************************************************************
@@ -1603,6 +1687,12 @@ message Job {
   // never expired because it was accepted and run. This field can be used
   // to detect that it was configured to expire.
   google.protobuf.Timestamp expire_time = 109;
+
+  // task is a reference to a given Task that this job might be apart of. If
+  // the task is Nil, it means the server does not associate this job with
+  // an on-demand runner task. If the Task Ref is set, that means this job
+  // is part of the referenced task id.
+  Ref.Task task = 114;
 
   enum State {
     UNKNOWN = 0;

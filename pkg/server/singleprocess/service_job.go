@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
-// TODO: test
 func (s *Service) GetJob(
 	ctx context.Context,
 	req *pb.GetJobRequest,
@@ -38,7 +37,6 @@ func (s *Service) GetJob(
 	return job.Job, nil
 }
 
-// TODO: test
 func (s *Service) ListJobs(
 	ctx context.Context,
 	req *pb.ListJobsRequest,
@@ -260,6 +258,38 @@ func (s *Service) wrapJobWithRunner(
 		return nil, err
 	}
 
+	// Write a Task state with the On-Demand Runner job triple
+	task := &pb.Task{
+		StartJob: &pb.Ref_Job{Id: startJob.Id},
+		TaskJob:  &pb.Ref_Job{Id: source.Id},
+		StopJob:  &pb.Ref_Job{Id: stopJob.Id},
+		JobState: pb.Task_PENDING,
+	}
+	if err := s.state(ctx).TaskPut(task); err != nil {
+		return nil, err
+	} else {
+		task, err := s.state(ctx).TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_JobId{
+				JobId: source.Id,
+			},
+		})
+		if err != nil {
+			// could not find task that was just Put into the db!
+			return nil, err
+		}
+
+		// assign a task ref to each job for lookup later
+		taskRef := &pb.Ref_Task{
+			Ref: &pb.Ref_Task_Id{
+				Id: task.Id,
+			},
+		}
+
+		startJob.Task = taskRef
+		source.Task = taskRef
+		stopJob.Task = taskRef
+	}
+
 	// These must be in order of dependency currently. This is a limitation
 	// of the state.JobCreate API and we should fix it one day. If we get
 	// this wrong it'll just error, so we'll know quickly.
@@ -270,6 +300,7 @@ func (s *Service) wrapJobWithRunner(
 	}, nil
 }
 
+// onDemandRunnerStartJob generates a StartJob template for a Task.
 func (s *Service) onDemandRunnerStartJob(
 	ctx context.Context,
 	source *pb.Job,
@@ -396,6 +427,7 @@ func (s *Service) onDemandRunnerStartJob(
 	return job, runnerId, nil
 }
 
+// onDemandRunnerStopJob generates a StopJob template for a Task.
 func (s *Service) onDemandRunnerStopJob(
 	ctx context.Context,
 	startJob *pb.Job,

@@ -5658,6 +5658,25 @@
         }
       }
     },
+    "hashicorp.waypoint.GetTaskResponse": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "$ref": "#/definitions/hashicorp.waypoint.Task",
+          "title": "The requested Task"
+        },
+        "task_job": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job",
+          "title": "The Job triple that the task is associated with. These jobs are the full\nmessage for each based on the Ref_Job id found inside Task"
+        },
+        "start_job": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job"
+        },
+        "stop_job": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job"
+        }
+      }
+    },
     "hashicorp.waypoint.GetTriggerResponse": {
       "type": "object",
       "properties": {
@@ -5995,6 +6014,10 @@
           "type": "string",
           "format": "date-time",
           "description": "expire time is the time when this job would expire. If this isn't set\nthen this is a non-expiring job. This will remain set even if the job\nnever expired because it was accepted and run. This field can be used\nto detect that it was configured to expire."
+        },
+        "task": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Task",
+          "description": "task is a reference to a given Task that this job might be apart of. If\nthe task is Nil, it means the server does not associate this job with\nan on-demand runner task. If the Task Ref is set, that means this job\nis part of the referenced task id."
         }
       },
       "description": "A Job is a job that executes on a runner and is queued by QueueOperation."
@@ -6743,6 +6766,18 @@
         }
       }
     },
+    "hashicorp.waypoint.ListTaskResponse": {
+      "type": "object",
+      "properties": {
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.GetTaskResponse"
+          },
+          "title": "An array of all available Tasks and their jobs"
+        }
+      }
+    },
     "hashicorp.waypoint.ListTriggerResponse": {
       "type": "object",
       "properties": {
@@ -7157,6 +7192,15 @@
       "type": "object",
       "description": "Global references the entire server. This is used in some APIs\nas a way to read/write values that are server-global."
     },
+    "hashicorp.waypoint.Ref.Job": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "description": "Job references a Job message value by job id."
+    },
     "hashicorp.waypoint.Ref.OnDemandRunnerConfig": {
       "type": "object",
       "properties": {
@@ -7242,6 +7286,20 @@
         }
       },
       "description": "RunnerLabels references a runner by labels.\nThe labels can be a subset match or an exact match."
+    },
+    "hashicorp.waypoint.Ref.Task": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "the id of the tracktask record"
+        },
+        "job_id": {
+          "type": "string",
+          "title": "The main \"run\" job ID that the task initiated"
+        }
+      },
+      "title": "Task references a Task message by its id or the main run job id it queued"
     },
     "hashicorp.waypoint.Ref.Trigger": {
       "type": "object",
@@ -7955,6 +8013,58 @@
       ],
       "default": "UNKNOWN",
       "title": "the state of overall health of a deployed application"
+    },
+    "hashicorp.waypoint.Task": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The ID of this message. If on first upsert, the id does not need to be\nspecified and the state pkg will autogenerate an id. Specifying an id\nassumes the Task message already exists in the database."
+        },
+        "task_job": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Job",
+          "description": "task_job represents the \"run\" job the runner will execute, i.e. the operation\nthat was requested to run on the runner.\nThe referred job stores data like ODR config, the target runner used,\ntimestamp for when job started or completed, operation state for task, etc.\nCurrently the only required field when Upserting a Task."
+        },
+        "start_job": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Job",
+          "description": "Both start_job and stop_job relate to task_job.These jobs were\nresponsibile for starting and stopping the runner which executed the task\njob."
+        },
+        "stop_job": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Job"
+        },
+        "state_json": {
+          "type": "string",
+          "description": "This task info message represented as JSON-encoded protobuf structure of\nthe Any field below. It does not modify any of the structure."
+        },
+        "state": {
+          "$ref": "#/definitions/opaqueany.Any",
+          "description": "This task info message represented as an Any format. This is the full\ntask encoded directly by the server that has access to the proto to decode it."
+        },
+        "job_state": {
+          "$ref": "#/definitions/hashicorp.waypoint.Task.State",
+          "description": "The overall state of the Task triple. See the enum def for details for\neach possible Task state. This will be computed for each GetTaskResponse\nbased on the Task job ids receieved from the database."
+        },
+        "resource_name": {
+          "type": "string",
+          "description": "The resource that gets created to run the task job for this Task\nTODO(briancain): This field has not been implemented yet. See\n\"internal/runner/operation_task.go\" for more info."
+        }
+      },
+      "description": "Task tracks the life of an on-demand runner task that spawns Start\nand Stop tasks for any kind of job/operation in Waypoint. Automatic jobs\nsuch as project polling or status report generation spawn on-demand\nrunner tasks, and this message can be used to track the life of those\nautomated jobs. Note that every on-demand runner task is wrapped with a\nStart and Stop task, which we track here as well."
+    },
+    "hashicorp.waypoint.Task.State": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "PENDING",
+        "STARTING",
+        "STARTED",
+        "RUNNING",
+        "COMPLETED",
+        "STOPPING",
+        "STOPPED",
+        "MIXED"
+      ],
+      "default": "UNKNOWN"
     },
     "hashicorp.waypoint.TaskLaunchInfo": {
       "type": "object",

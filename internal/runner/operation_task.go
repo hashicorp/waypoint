@@ -89,6 +89,8 @@ func (r *Runner) executeStopTaskOp(
 	}
 
 	// Get our state first
+	// TODO(briancain): Update this to use the Task job id ref instead of looking
+	// at the task state proto
 	var state *opaqueany.Any
 	switch v := op.StopTask.State.(type) {
 	case *pb.Job_StopTaskLaunchOp_Direct:
