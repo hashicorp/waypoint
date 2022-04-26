@@ -90,6 +90,7 @@ func (b *Builder) pullWithKaniko(
 	refPath := reference.Path(ref)
 
 	if !b.config.DisableCEB {
+		step.Update("Injecting entrypoint...")
 		// For Kaniko we can use our runtime arch because the image we build
 		// always matches the architecture of our Kaniko environment.
 		assetName, ok := assets.CEBArch[runtime.GOARCH]
@@ -103,7 +104,6 @@ func (b *Builder) pullWithKaniko(
 			return nil, status.Errorf(codes.Internal, "unable to restore custom entrypoint binary: %s", err)
 		}
 
-		step.Done()
 		step = sg.Add("Testing registry and uploading entrypoint layer")
 
 		err = oci.SetupEntrypointLayer(refPath, data)
@@ -138,9 +138,7 @@ func (b *Builder) pullWithKaniko(
 	}
 
 	log.Debug("executing kaniko", "args", args)
-
-	step.Done()
-	step = sg.Add("Executing Kaniko...")
+	step.Update("Executing Kaniko...")
 
 	// Command output should go to the step
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
