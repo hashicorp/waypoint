@@ -110,6 +110,7 @@ func (b *Builder) pullWithKaniko(
 		}
 	}
 
+	// Setting up local registry to which Kaniko will push
 	li, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		return nil, err
