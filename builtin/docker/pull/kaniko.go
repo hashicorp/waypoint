@@ -58,6 +58,8 @@ func (b *Builder) pullWithKaniko(
 		case *wpdocker.AccessInfo_UserPass_:
 			oci.AuthConfig.Username = sv.UserPass.Username
 			oci.AuthConfig.Password = sv.UserPass.Password
+		default:
+			return nil, status.Error(codes.Unauthenticated, "Unexpected auth type.")
 		}
 	}
 
