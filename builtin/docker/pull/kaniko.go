@@ -154,7 +154,7 @@ func (b *Builder) pullWithKaniko(
 
 	step.Done()
 
-	step = sg.Add("Image pushed to '%s:%s'", ai.Image, ai.Tag)
+	step = sg.Add("Image pull completed.")
 	step.Done()
 
 	return target, nil
