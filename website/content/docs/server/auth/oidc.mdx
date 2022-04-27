@@ -59,6 +59,17 @@ You should set the following redirect URLs:
   routable UI address you visit. And note you SHOULD set TLS (`https`) for
   this.
 
+To set the UI-based URL when setting up your auth method, add the `allowed-redirect-uri` flag:
+
+```
+$ waypoint auth-method set oidc \
+  -client-id=87a30dc693eb4db0a807c9faked4e0e643277f698aff83df5661021b6fc2d742 \
+  -client-secret=11360b5e9d7a54435dstillfake0b2c0e49ca866676f00ab02ad0e8e2a6c \
+  -issuer=https://accounts.google.com \
+  -allowed-redirect-uri=https://<ui addr>/auth/oidc-callback
+  google
+```
+
 ### Restricting Access
 
 You can restrict access to only certain users in your identity provider.
