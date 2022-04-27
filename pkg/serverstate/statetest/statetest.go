@@ -54,7 +54,7 @@ func Test(t *testing.T, f Factory, rf RestartFactory, skipTests []string) {
 				}
 				if skip {
 					t.Run(name, func(t *testing.T) {
-						t.Skip("Test is on the skip list - ignoring")
+						t.Skipf("Test %q is on the skip list - ignoring", name)
 					})
 					continue
 				}
