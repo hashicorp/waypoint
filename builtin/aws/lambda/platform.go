@@ -932,6 +932,12 @@ deploy {
 	doc.SetField(
 		"static_environment",
 		"environment variables to expose to the lambda function",
+		docs.Summary(
+			"environment variables that are meant to configure the application in a static",
+			"way. This might be to control an image that has multiple modes of operation,",
+			"selected via environment variable. Most configuration should use the waypoint",
+			"config commands.",
+		),
 	)
 
 	return doc, nil
