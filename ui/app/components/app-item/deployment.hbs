@@ -11,7 +11,7 @@
     @route="workspace.projects.project.app.deployments.deployment"
     @models={{array @deployment.sequence}}
   >
-    <b class="badge badge--version">v{{@deployment.sequence}}</b>
+    <Hds::Badge @text="v{{@deployment.sequence}}" @size="small" @color="neutral-dark-mode" />
     <div class="app-item__deployment-state">
       {{!-- ROW: health check + deployment URL --}}
       {{#if @deployment.statusReport.health}}

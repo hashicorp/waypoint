@@ -17,10 +17,8 @@
       placeholder={{t 'login.input.placeholder'}} />
   </fieldset>
 
-  <button
-    data-test-login-submit
-    type="submit"
-    class="button button--primary">
-    {{t 'login.button'}}
-  </button>
+  {{!-- Note: Because Hds::Button and Hds::LinkTo::Standalone's require an icon and text, the text 
+  isn't centered in the component container, but in the space not including the icon. So 
+  this swap out makes the centered text uneven with the "Authenticate with OIDC" LinkTo below --}}
+  <Hds::Button @text={{t 'login.button'}} @icon="clipboard-copy" data-test-login-submit />
 </form>

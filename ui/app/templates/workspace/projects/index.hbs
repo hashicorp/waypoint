@@ -20,10 +20,7 @@
       {{/if}}
     </small>
   </div>
-  <Pds::CtaLink @route="workspace.projects.new" @variant="secondary "class="pds--iconStart">
-    <FlightIcon @name="plus" class="pds-button__iconStart"/>
-    &nbsp;{{t "form.project_new.title"}}
-  </Pds::CtaLink>
+  <Hds::LinkTo::Standalone @text={{t "form.project_new.title"}} @icon="plus" @iconPosition="leading" @route="workspace.projects.new" />
 </PageHeader>
 
 <div data-test-project-list>

@@ -2348,16 +2348,7 @@
   resolved "https://registry.yarnpkg.com/@hashicorp/design-system-tokens/-/design-system-tokens-0.5.1.tgz#5030214f4f94187733a782b4d0d25a4bf806b297"
   integrity sha512-Sw4MK6pRTuHoX+xsrwUROhPxTqxWAlyTDrxkPY347+HZwHf7uSi+BspXotFeNoZKyojM5JGX7F1IfbjDIxnc/g==
 
-"@hashicorp/ember-flight-icons@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@hashicorp/ember-flight-icons/-/ember-flight-icons-2.0.0.tgz#d4eb9082fe6579c54d481de4f1644f0c3188f37c"
-  integrity sha512-mCOyha0YnZjQcEomm2FKKL74BBvTrVJVjicxh+P5yu+Yo8hmiFOr0PbaoOuLrFOxsHsd33VW6Y5uskcZivR1tQ==
-  dependencies:
-    "@hashicorp/flight-icons" "^2.0.0"
-    ember-cli-babel "^7.26.6"
-    ember-cli-htmlbars "^5.7.1"
-
-"@hashicorp/ember-flight-icons@^2.0.1":
+"@hashicorp/ember-flight-icons@^2.0.1", "@hashicorp/ember-flight-icons@^2.0.2":
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@hashicorp/ember-flight-icons/-/ember-flight-icons-2.0.2.tgz#05aded9992922d00e62bdf95d99e188905494095"
   integrity sha512-OBye+O1RdHNXUcy3W+WEHyORY45E5QUVZrKH7wDCN1qxcuUkQTIN1DRn41W+s9B7S+N+Xyg7YNdrfZbRmZPUuA==
@@ -2365,11 +2356,6 @@
     "@hashicorp/flight-icons" "^2.1.1"
     ember-cli-babel "^7.26.11"
     ember-cli-htmlbars "^6.0.1"
-
-"@hashicorp/flight-icons@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@hashicorp/flight-icons/-/flight-icons-2.0.0.tgz#84910c97f2bc643a6ca039ca7ed9be0bf14f8ee2"
-  integrity sha512-jNRHHCFvptOHLXPIlnZ4A1LIFtS6m+Bv72NsE3Pl7KHMwcqkLHDN8gNa6AHf80cvFE+pR3sEx6Yjxu79jWJczQ==
 
 "@hashicorp/flight-icons@^2.1.1":
   version "2.1.1"
