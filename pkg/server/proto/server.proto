@@ -4501,6 +4501,10 @@ message Token {
     Trigger trigger = 10;
   }
 
+  // A client that sees this populated will use the details to fetch a token
+  // via oauth instead of submitting this token directly.
+  OAuthCredentials oauth_creds = 12;
+
   message Login {
     // User that this token represents. This is the internal user ID (ULID),
     // not the username/email/etc. The special value of "waypoint" means the
@@ -4559,6 +4563,20 @@ message Token {
   message Trigger {
     // The user that initiated the trigger token generation
     string from_user_id = 1;
+  }
+
+  // The OAuth message contains information that the client should use
+  // to generate on OAuth token for authenticating with the server rather
+  // than just submitting the waypoint token directly.
+  message OAuthCredentials {
+    // The url for the oauth2 provider
+    string url = 1;
+
+    // The OAuth client id to submit
+    string client_id = 2;
+
+    // The OAuth client secret that goes along with the client_id
+    string client_secrete = 3;
   }
 
   // OLD FIELDS FOR BACKWARDS COMPATIBILITY. These are no longer used

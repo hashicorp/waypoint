@@ -101,7 +101,7 @@ require (
 	go.opencensus.io v0.23.0
 	go.uber.org/goleak v1.1.10
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
-	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
+	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
 	google.golang.org/api v0.44.0
 	google.golang.org/genproto v0.0.0-20220317150908-0efb43f6373e

@@ -3,14 +3,18 @@ package serverclient
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/hashicorp/go-hclog"
+	"golang.org/x/oauth2/clientcredentials"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/oauth"
 	"google.golang.org/grpc/keepalive"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -21,11 +25,22 @@ import (
 
 // ErrNoServerConfig is the error when there is no server configuration
 // found for connection.
-var ErrNoServerConfig = errors.New("no server connection configuration found")
+var (
+	ErrNoServerConfig = errors.New("no server connection configuration found")
+	ErrInvalidToken   = errors.New("invalid token detected")
+)
 
 // ConnectOption is used to configure how Waypoint server connection
 // configuration is sourced.
 type ConnectOption func(*connectConfig) error
+
+type disableTS struct {
+	credentials.PerRPCCredentials
+}
+
+func (_ disableTS) RequireTransportSecurity() bool {
+	return false
+}
 
 // Connect connects to the Waypoint server. This returns the raw gRPC connection.
 // You'll have to wrap it in NewWaypointClient to get the Waypoint client.
@@ -102,15 +117,48 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 			token = ""
 		}
 	}
-	grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(ContextToken(token)))
 
-	cfg.Log.Debug("connection information",
+	var perRPC credentials.PerRPCCredentials = ContextToken(token)
+
+	logArgs := []interface{}{
 		"address", cfg.Addr,
 		"tls", cfg.Tls,
 		"tls_skip_verify", cfg.TlsSkipVerify,
 		"send_auth", cfg.Auth,
 		"has_token", token != "",
-	)
+	}
+
+	if token != "" {
+		tokenData, err := TokenDecode(token)
+		if err != nil {
+			return nil, err
+		}
+
+		if oc := tokenData.OauthCreds; oc != nil {
+			conf := &clientcredentials.Config{
+				ClientID:       oc.ClientId,
+				ClientSecret:   oc.ClientSecrete,
+				TokenURL:       oc.Url,
+				EndpointParams: url.Values{"audience": {"waypoint-cli"}},
+			}
+
+			oauthToken, err := conf.Token(ctx)
+			if err != nil {
+				return nil, err
+			}
+
+			perRPC = oauth.NewOauthAccess(oauthToken)
+
+			logArgs = append(logArgs,
+				"oauth-url", oc.Url,
+				"oauth-client-id", oc.ClientId,
+			)
+		}
+	}
+
+	grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(perRPC))
+
+	cfg.Log.Debug("connection information", logArgs...)
 
 	// Connect to this server
 	return grpc.DialContext(ctx, cfg.Addr, grpcOpts...)

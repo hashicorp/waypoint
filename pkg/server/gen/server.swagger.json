@@ -8155,6 +8155,10 @@
           "$ref": "#/definitions/hashicorp.waypoint.Token.Trigger",
           "title": "trigger tokens can be used to trigger lifecycle actions via HTTP"
         },
+        "oauth_creds": {
+          "$ref": "#/definitions/hashicorp.waypoint.Token.OAuthCredentials",
+          "description": "A client that sees this populated will use the details to fetch a token\nvia oauth instead of submitting this token directly."
+        },
         "unused_user": {
           "type": "string",
           "description": "The user that the token is for. This must be \"waypoint\" for\nbackwards compat reasons."
@@ -8220,6 +8224,24 @@
           "description": "If set, this login token can only be used for entrypoint-related\nAPIs against the configured deployment."
         }
       }
+    },
+    "hashicorp.waypoint.Token.OAuthCredentials": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "title": "The url for the oauth2 provider"
+        },
+        "client_id": {
+          "type": "string",
+          "title": "The OAuth client id to submit"
+        },
+        "client_secrete": {
+          "type": "string",
+          "title": "The OAuth client secret that goes along with the client_id"
+        }
+      },
+      "description": "The OAuth message contains information that the client should use\nto generate on OAuth token for authenticating with the server rather\nthan just submitting the waypoint token directly."
     },
     "hashicorp.waypoint.Token.Runner": {
       "type": "object",
