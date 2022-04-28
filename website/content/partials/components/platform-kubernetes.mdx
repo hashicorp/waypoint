@@ -261,25 +261,27 @@ Environment variables that are meant to configure the container in a static way.
 - Type: **map of string to string**
 - **Optional**
 
-##### pod.pod_security_context (category)
+##### pod.security_context (category)
 
 Holds pod-level security attributes and container settings.
 
-###### pod.pod_security_context.fs_group
+###### pod.security_context.fs_group
 
 A special supplemental group that applies to all containers in a pod.
 
-###### pod.pod_security_context.run_as_non_root
+- Type: **int64**
+
+###### pod.security_context.run_as_non_root
 
 Indicates that the container must run as a non-root user.
 
-###### pod.pod_security_context.run_as_user
+- Type: **bool**
+
+###### pod.security_context.run_as_user
 
 The UID to run the entrypoint of the container process.
 
-##### pod.security_context
-
-- Type: **k8s.PodSecurityContext**
+- Type: **int64**
 
 ##### pod.sidecar (category)
 
