@@ -480,7 +480,7 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 	doc.Example(
 		`
 release {
-	use "aws-lambda" {
+	use "lambda-function-url" {
 		auth_type = "NONE"
 	}
 }
