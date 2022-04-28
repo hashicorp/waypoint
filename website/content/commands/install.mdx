@@ -119,7 +119,9 @@ and disable the UI, the command would be:
 - `-nomad-consul-service-backend-tags=<string>` - Tags for the Waypoint backend service generated in Consul. The 'first' tag will be used when crafting the Consul DNS hostname for accessing Waypoint.
 - `-nomad-consul-datacenter=<string>` - The datacenter where Consul is located.
 - `-nomad-consul-domain=<string>` - The domain where Consul is located.
+- `-nomad-consul-token=<string>` - If set, the passed Consul token is stored in the job before sending to the Nomad servers. Overrides the CONSUL_HTTP_TOKEN environment variable if set.
 - `-nomad-host-volume=<string>` - Nomad host volume name, required for volume type 'host'.
+- `-nomad-host-volume-path=<string>` - Path of the host volume for Waypoint on the Nomad client.
 - `-nomad-csi-volume-provider=<string>` - Nomad CSI volume provider, required for volume type 'csi'.
 - `-nomad-csi-volume-capacity-min=<int>` - Nomad CSI volume capacity minimum, in bytes.
 - `-nomad-csi-volume-capacity-max=<int>` - Nomad CSI volume capacity maximum, in bytes.
