@@ -160,15 +160,6 @@ func (p *TaskLauncher) StopTask(
 		ns = p.config.Namespace
 	}
 
-	// Delete the job. This does *not* delete any running pods that the job
-	// created.
-	jobsClient := clientSet.BatchV1().Jobs(ns)
-	if err := jobsClient.Delete(ctx, ti.Id, metav1.DeleteOptions{}); err != nil {
-		if !errors.IsNotFound(err) {
-			return err
-		}
-	}
-
 	// List pods with this job label
 	podsClient := clientSet.CoreV1().Pods(ns)
 	pods, err := podsClient.List(ctx, metav1.ListOptions{
@@ -185,11 +176,27 @@ func (p *TaskLauncher) StopTask(
 		return nil
 	}
 
-	// Delete any pods stuck in pending
+	// Find any pods stuck in pending
+	var pendingPods []string
 	for _, p := range pods.Items {
 		if p.Status.Phase == corev1.PodPending {
+			pendingPods = append(pendingPods, p.Name)
+		}
+	}
+
+	// If we've found pending/stuck pods, attempt to clean up
+	if len(pendingPods) > 0 {
+		// Delete the job. This does *not* delete any running pods that the job
+		// created.
+		jobsClient := clientSet.BatchV1().Jobs(ns)
+		if err := jobsClient.Delete(ctx, ti.Id, metav1.DeleteOptions{}); err != nil {
+			if !errors.IsNotFound(err) {
+				return err
+			}
+		}
+		for _, name := range pendingPods {
 			log.Warn("job pod is in pending phase in StopTask operation, cancelling", "job_id", ti.Id)
-			if err := podsClient.Delete(ctx, p.Name, metav1.DeleteOptions{}); err != nil {
+			if err := podsClient.Delete(ctx, name, metav1.DeleteOptions{}); err != nil {
 				if !errors.IsNotFound(err) {
 					return err
 				}
