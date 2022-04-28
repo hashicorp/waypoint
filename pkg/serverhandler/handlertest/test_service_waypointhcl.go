@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -10,12 +10,17 @@ import (
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
-func TestServiceWaypointHclFmt(t *testing.T) {
+func init() {
+	tests["waypoint_hcl"] = []testFunc{
+		TestServiceWaypointHclFmt,
+	}
+}
+
+func TestServiceWaypointHclFmt(t *testing.T, factory Factory, restartF RestartFactory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
+	impl := factory(t)
 	client := server.TestServer(t, impl)
 
 	t.Run("basic formatting", func(t *testing.T) {
