@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -14,12 +14,19 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestServiceOnDemandRunnerConfig(t *testing.T) {
+func init() {
+	tests["runner_ondemand"] = []testFunc{
+		TestServiceOnDemandRunnerConfig,
+		TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig,
+		TestServiceOnDemandRunnerConfig_ListOnDemandRunnerConfigs,
+	}
+}
+
+func TestServiceOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
+	impl := factory(t)
 	client := server.TestServer(t, impl)
 
 	// Simplify writing tests
@@ -95,13 +102,11 @@ func TestServiceOnDemandRunnerConfig(t *testing.T) {
 	})
 }
 
-func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T) {
+func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 	ctx := context.Background()
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
+	impl := factory(t)
 	client := server.TestServer(t, impl)
 
 	// Best way to mock for now is to make a request
@@ -145,13 +150,11 @@ func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T) {
 	})
 }
 
-func TestServiceOnDemandRunnerConfig_ListOnDemandRunnerConfigs(t *testing.T) {
+func TestServiceOnDemandRunnerConfig_ListOnDemandRunnerConfigs(t *testing.T, factory Factory, restartF RestartFactory) {
 	ctx := context.Background()
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
+	impl := factory(t)
 	client := server.TestServer(t, impl)
 
 	dep := serverptypes.TestOnDemandRunnerConfig(t, nil)

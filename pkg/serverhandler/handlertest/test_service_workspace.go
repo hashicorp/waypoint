@@ -1,22 +1,27 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
-
-	"github.com/stretchr/testify/require"
 )
 
-func TestWorkspace_Upsert(t *testing.T) {
+func init() {
+	tests["workspace"] = []testFunc{
+		TestWorkspace_Upsert,
+	}
+}
+
+func TestWorkspace_Upsert(t *testing.T, factory Factory, restartF RestartFactory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
+	impl := factory(t)
 	client := server.TestServer(t, impl)
 
 	// Simplify writing tests
