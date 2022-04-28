@@ -36,6 +36,7 @@ type nomadConfig struct {
 	consulServiceBackendTags []string `hcl:"consul_service_backend_tags:optional"`
 	consulDatacenter         string   `hcl:"consul_datacenter,optional"`
 	consulDomain             string   `hcl:"consul_datacenter,optional"`
+	consulToken              string   `hcl:"consul_token,optional"`
 
 	// If set along with consul, will use this hostname instead of
 	// making a consul DNS hostname for the server address in its context
@@ -53,6 +54,7 @@ type nomadConfig struct {
 	runnerResourcesMemory string `hcl:"runner_resources_memory,optional"`
 
 	hostVolume           string `hcl:"host_volume,optional"`
+	hostVolumePath       string `hcl:"host_volume_path,optional"`
 	csiVolumeProvider    string `hcl:"csi_volume_provider,optional"`
 	csiVolumeCapacityMin int64  `hcl:"csi_volume_capacity_min,optional"`
 	csiVolumeCapacityMax int64  `hcl:"csi_volume_capacity_max,optional"`
@@ -857,7 +859,12 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	// Include services to be registered in Consul. Currently configured to happen by default
 	// One service added for Waypoint UI, and one for Waypoint backend port
 	if c.consulService {
-		token := os.Getenv("CONSUL_HTTP_TOKEN")
+		token := ""
+		if c.consulToken == "" {
+			token = os.Getenv("CONSUL_HTTP_TOKEN")
+		} else {
+			token = c.consulToken
+		}
 		job.ConsulToken = &token
 		tg.Services = []*api.Service{
 			{
@@ -928,11 +935,18 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	// Observed WP user and group IDs in the published container, update if those ever change
 	waypointUserID := 100
 	waypointGroupID := 1000
+	// Used by busybox pre-task to set permissions on the directory Waypoint will use
+	volumePath := ""
+	if c.hostVolumePath != "" && volumeRequest.Type == "host" {
+		volumePath = c.hostVolumePath
+	} else {
+		volumePath = "/data/"
+	}
 	preTask.Config = map[string]interface{}{
 		// Doing this because this is the only way https://github.com/hashicorp/nomad/issues/8892
 		"image":   "busybox:latest",
 		"command": "sh",
-		"args":    []string{"-c", fmt.Sprintf("chown -R %d:%d /data/", waypointUserID, waypointGroupID)},
+		"args":    []string{"-c", fmt.Sprintf("chown -R %d:%d %s", waypointUserID, waypointGroupID, volumePath)},
 	}
 	preTask.VolumeMounts = volumeMounts
 	preTask.Resources = &api.Resources{
@@ -1253,9 +1267,23 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
+		Name:   "nomad-consul-token",
+		Target: &i.config.consulToken,
+		Usage: "If set, the passed Consul token is stored in the job " +
+			"before sending to the Nomad servers. Overrides the CONSUL_HTTP_TOKEN " +
+			"environment variable if set.",
+	})
+
+	set.StringVar(&flag.StringVar{
 		Name:   "nomad-host-volume",
 		Target: &i.config.hostVolume,
 		Usage:  "Nomad host volume name, required for volume type 'host'.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-host-volume-path",
+		Target: &i.config.hostVolumePath,
+		Usage:  "Path of the host volume for Waypoint on the Nomad client.",
 	})
 
 	set.StringVar(&flag.StringVar{
