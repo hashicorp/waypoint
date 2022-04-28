@@ -25,6 +25,14 @@ func TestOnDemandRunnerConfig(t testing.T, src *pb.OnDemandRunnerConfig) *pb.OnD
 		}
 	}
 
+	if src.TargetRunner == nil {
+		src.TargetRunner = &pb.Ref_Runner{
+			Target: &pb.Ref_Runner_Any{
+				Any: &pb.Ref_RunnerAny{},
+			},
+		}
+	}
+
 	require.NoError(t, mergo.Merge(src, &pb.OnDemandRunnerConfig{
 		PluginType: "docker",
 		OciUrl:     "hashicorp/waypoint-odr:latest",
