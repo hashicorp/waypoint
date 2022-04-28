@@ -11,5 +11,4 @@ import (
 // the Google Cloud Run plugin.
 var Options = []sdk.Option{
 	sdk.WithComponents(&Platform{}),
-	sdk.WithComponents(&Releaser{}),
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/aws/ecr"
 	"github.com/hashicorp/waypoint/builtin/aws/ecs"
 	"github.com/hashicorp/waypoint/builtin/aws/lambda"
+	lambdaFunctionUrl "github.com/hashicorp/waypoint/builtin/aws/lambda/function_url"
 	"github.com/hashicorp/waypoint/builtin/aws/ssm"
 	"github.com/hashicorp/waypoint/builtin/azure/aci"
 	"github.com/hashicorp/waypoint/builtin/docker"
@@ -53,6 +54,7 @@ var (
 		"aws-alb":                  alb.Options,
 		"aws-ssm":                  ssm.Options,
 		"aws-lambda":               lambda.Options,
+		"lambda-function-url":      lambdaFunctionUrl.Options,
 		"vault":                    vault.Options,
 		"terraform-cloud":          tfc.Options,
 		"null":                     null.Options,

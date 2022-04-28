@@ -1,4 +1,4 @@
-package lambda
+package function_url
 
 import "github.com/hashicorp/waypoint-plugin-sdk/component"
 

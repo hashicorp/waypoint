@@ -4,8 +4,6 @@ package aws.lambda;
 
 option go_package = "waypoint/builtin/aws/lambda";
 
-import "opaqueany/any.proto";
-
 message Deployment {
   // Identifier for the deployment, required by Waypoint
   string id = 1;
@@ -24,27 +22,4 @@ message Deployment {
 
   // The version identifier AWS uses for this version (basically a serial increasing number)
   string version = 7;
-}
-
-message Release {
-  // The function's public url
-  string url = 1;
-
-  // The AWS region the function is deployed in
-  string region = 2;
-
-  // The ARN for the Lambda function itself.
-  string func_arn = 3;
-
-  // The ARN for the version of the Lambda function this deployment uses.
-  string ver_arn = 4;
-
-  opaqueany.Any resource_state = 5;
-}
-
-// Resource contains the internal resource states.
-message Resource {
-  message FunctionUrl {
-    string url = 1;
-  }
 }

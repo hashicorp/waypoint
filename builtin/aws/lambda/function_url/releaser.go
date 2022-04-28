@@ -1,4 +1,4 @@
-package lambda
+package function_url
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	lambdaplugin "github.com/hashicorp/waypoint/builtin/aws/lambda"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -133,7 +135,7 @@ func (r *Releaser) resourceFunctionPermissionCreate(
 	sess *session.Session,
 	sg terminal.StepGroup,
 	ui terminal.UI,
-	dep *Deployment,
+	dep *lambdaplugin.Deployment,
 ) error {
 	step := sg.Add("Checking function permission...")
 	defer step.Abort()
@@ -280,7 +282,7 @@ func (r *Releaser) resourceFunctionUrlCreate(
 	sess *session.Session,
 	sg terminal.StepGroup,
 	ui terminal.UI,
-	dep *Deployment,
+	dep *lambdaplugin.Deployment,
 	state *Resource_FunctionUrl,
 ) error {
 	lambdasrv := lambda.New(sess)
@@ -366,7 +368,7 @@ func (r *Releaser) Release(
 	log hclog.Logger,
 	src *component.Source,
 	ui terminal.UI,
-	dep *Deployment,
+	dep *lambdaplugin.Deployment,
 ) (*Release, error) {
 	sg := ui.StepGroup()
 	defer sg.Wait()

@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package function_url;
+
+option go_package = "waypoint/builtin/aws/lambda/function_url";
+
+import "opaqueany/any.proto";
+
+message Release {
+    // The function's public url
+    string url = 1;
+  
+    // The AWS region the function is deployed in
+    string region = 2;
+  
+    // The ARN for the Lambda function itself.
+    string func_arn = 3;
+  
+    // The ARN for the version of the Lambda function this deployment uses.
+    string ver_arn = 4;
+  
+    opaqueany.Any resource_state = 5;
+  }
+  
+  // Resource contains the internal resource states.
+  message Resource {
+    message FunctionUrl {
+      string url = 1;
+    }
+  }
