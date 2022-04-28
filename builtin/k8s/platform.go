@@ -1961,7 +1961,7 @@ use "kubernetes" {
 				}),
 			)
 			doc.SetField(
-				"pod_security_context",
+				"security_context",
 				"holds pod-level security attributes and container settings",
 				docs.SubFields(func(doc *docs.SubFieldDoc) {
 					doc.SetField(
