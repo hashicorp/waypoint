@@ -1,0 +1,168 @@
+---
+layout: docs
+page_title: On-Demand Runners
+description: |-
+  A brief overview about on-demand runners and their role in Waypoint.
+---
+
+# On-Demand Runners
+
+On-demand runners allow a single Waypoint installation to scale very high by
+leveraging the defined platform to spawn resources to execute Waypoint jobs
+remotely. Through on-demand runner profiles and runner targeting, Waypoint can
+even utilize resources from other platforms that Waypoint has access to. For
+example, a local Kubernetes server install could be configured to use Amazon ECS
+to execute jobs.
+
+## Job Assignment
+
+When a job is submitted to the server, if on-demand runners are enabled, it
+will spawn an on-demand runner and the job is placed in a holding set. This is
+the same mechanism we use today for automatic CLI runners. When the on-demand
+runner starts, it will execute the normal Waypoint runner code and connect back
+to the server. On connection, the server will see the job in the holding set
+and send it immediately to the new runner.
+
+The flow of information about the job will use the existing grpc runner APIs so
+all the input and output remain the same as today.
+
+Upon finishing the job, the on-demand runner will exit and the platform it runs
+on will reclaim its resources.
+
+### Launching Tasks to Execute Jobs
+
+When Waypoint goes to launch an on-demand runner task, it will generate three
+jobs:
+
+- `StartJob`
+- `TaskJob`
+- `StopJob`
+
+The start job is responsible for scheduling a resource in the platform to execute
+the assigned job. Once that resource exists, it will be a `TaskJob` that is
+responsible for actually running the assigned job. Once it's complete, the task
+plugin system will launch a stop job to end the launched platform resource.
+
+## On-Demand Runner Profiles
+
+Users can configure Waypoint server to launch on-demand runners with specific
+configurations. These configurations are set through on-demand runner profiles.
+See [runner profiles](/docs/runner/profiles) for more information.
+
+## OCI/Docker Image
+
+By default, the server will launch on-demand runners using the same OCI image
+it was configured with. The on-demand configuration will also accept a specific
+OCI image url to use instead. This allows operators the ability to prepackage
+any Waypoint plugins into the image and use them in their configuration.
+
+The official on-demand runner container image is built very similar to Waypoint
+server, with some additional packages such as `Kaniko` for doing in-container
+builds for jobs like the `Build operation`.
+
+Users can configure Waypoint server to launch on-demand runners with a custom
+built on-demand runner image. This image name must be set via the on-demand
+runner profile.
+
+## Official Waypoint Supported Task Plugin Platforms
+
+When you use the `waypoint server install` command, we automatically set up a
+default On-Demand runner profile for you to use with Waypoint Server. Like our
+server install platform support, we also currently support these platforms
+for launching on-demand runner tasks.
+
+- `Kubernetes`
+- `HashiCorp/Nomad`
+- `AWS/ECS`
+- `Docker`
+
+## Task Plugin
+
+Launching on-demand runners can be developed with the Task plugin. If there
+is a platform that you wish to support while using Waypoint, we provide a
+plugin system, similar to our build/deploy/release plugins, that lets you
+define your own configuration for launching tasks on your platform of choice.
+
+Plugins expect to fulfill the SDK interface with the following functions:
+
+- `StartTask`
+- `StopTask`
+
+These functions are what will launch and stop the spawned resource with the
+task launcher.
+
+Task plugins also can accept `TaskLauncherConfig` configuration which users can
+configure through an [on-demand runner profile](/docs/runner/profiles).
+
+## Task Introspection
+
+In Waypoint 0.9.0, we will introduce the CLI command `waypoint task`. This command
+currently gives users more introspection into the task launcher system and
+what Waypoint is doing with remote-enabled projects. The simplest benefit
+to this command is listing all known tasks in the system:
+
+```shell
+$ waypoint task list
+
+» Waypoint On-Demand Runner Tasks
+              ID             | RUN JOB OPERATION | TASK STATE |   PROJECT   |  TIME CREATED  | TIME COMPLETED
+-----------------------------+-------------------+------------+-------------+----------------+-----------------
+  01G1RYP6JFSEAQVE2SQX38Q19D | Up                | RUNNING    | go-gitops-0 | 3 seconds ago  |
+  01G1RYP37X5FTD9TFZQE5J2BQM | QueueProject      | STOPPED    | go-gitops-0 | 7 seconds ago  | 3 seconds ago
+  01G1RYP08Z9V18HMBP5XDPP0KA | Poll              | STOPPED    | go-gitops-0 | 10 seconds ago | 6 seconds ago
+  01G1RYNTQJ5421K3QBYR6FPAZP | Init              | STOPPED    | go-gitops-0 | 15 seconds ago | 12 seconds ago
+  01G1RYNNEK141B23YDE26XPED7 | Init              | STOPPED    | go-gitops-0 | 21 seconds ago | 15 seconds ago
+```
+
+This will display a list of all known Tasks in Waypoint server. It will show
+the current state of the task as well.
+
+```shell
+$ waypoint task inspect 01G1RYP6JFSEAQVE2SQX38Q19D
+
+» On-Demand Runner Task Configuration
+      Task ID: 01G1RYP6JFSEAQVE2SQX38Q19D
+   Task State: RUNNING
+    Workspace: default
+      Project: go-gitops-0
+  Application: go
+
+» Run Job Configuration
+  Job Configuration:
+         Job ID: 01G1RYP6JDVM4FPXEZVHP2JPD9
+      Operation: Up
+  Target Runner: 01G1RYP6JD0AV2HEWF4B9CYY29
+      Workspace: default
+        Project: go-gitops-0
+    Application: go
+
+  Job Results:
+  State: Running
+
+» Start Job Configuration
+  Job Configuration:
+         Job ID: 01G1RYP6JF57MV6MSGPHMCCQCR
+      Operation: StartTask
+  Target Runner: *
+      Workspace: default
+        Project: go-gitops-0
+    Application: go
+
+  Job Results:
+          State: Success
+  Complete Time: 25 seconds ago
+
+» Stop Job Configuration
+  Job Configuration:
+         Job ID: 01G1RYP6JFSS7SHZG2HETKVCBR
+      Operation: StopTask
+  Target Runner: *
+      Workspace: default
+        Project: go-gitops-0
+    Application: go
+
+  Job Results:
+  State: Queued
+```
+
+This view will also show you the job status for a given Task.
