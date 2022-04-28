@@ -106,7 +106,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 		defer s.Close()
 
 		// Set
-		rec := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{})
+		rec := serverptypes.TestOnDemandRunnerConfig(t, serverptypes.TestOnDemandRunnerConfig(t, nil))
 
 		err := s.OnDemandRunnerConfigPut(rec)
 		require.NoError(err)
