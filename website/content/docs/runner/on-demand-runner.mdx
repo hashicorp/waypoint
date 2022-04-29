@@ -18,13 +18,14 @@ to execute jobs.
 
 When a job is submitted to the server, if on-demand runners are enabled, it
 will spawn an on-demand runner and the job is placed in a holding set. This is
-the same mechanism we use today for automatic CLI runners. When the on-demand
+the same mechanism we use for automatic CLI runners. When the on-demand
 runner starts, it will execute the normal Waypoint runner code and connect back
 to the server. On connection, the server will see the job in the holding set
 and send it immediately to the new runner.
 
-The flow of information about the job will use the existing grpc runner APIs so
-all the input and output remain the same as today.
+The flow of information about the job uses the normal grpc runner APIs so all
+the input and output remain the same as if the work were performed by the
+CLI-runner.
 
 Upon finishing the job, the on-demand runner will exit and the platform it runs
 on will reclaim its resources.
