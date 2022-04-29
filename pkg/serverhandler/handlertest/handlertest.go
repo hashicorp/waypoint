@@ -16,9 +16,9 @@ type (
 	Factory func(*testing.T) (pb.WaypointServer, pb.WaypointClient)
 )
 
-// Test runs a validation test suite for a state implementation. All
-// state implementations should pass this suite with no errors to ensure
-// the correct behavior of the state when Waypoint uses it.
+// Test runs a validation test suite for a pb.WaypointServer implementation.
+// All server implementations should pass this suite with no errors to ensure
+// the correct behavior of the server.
 // skipTests are function names of tests in the serverstate package to skip
 // (i.e. TestJobCreate_singleton). It cannot skip sub-tests (called by
 // t.Run() inside a top-level test)

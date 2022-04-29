@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -13,13 +13,20 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestServiceStatusReport(t *testing.T) {
+func init() {
+	tests["status_report"] = []testFunc{
+		TestServiceStatusReport,
+		TestServiceStatusReport_GetStatusReport,
+		TestServiceStatusReport_ListStatusReports,
+		TestServiceStatusReport_ExpediteStatusReport,
+	}
+}
+
+func TestServiceStatusReport(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	type Req = pb.UpsertStatusReportRequest
 
@@ -64,14 +71,11 @@ func TestServiceStatusReport(t *testing.T) {
 	})
 }
 
-func TestServiceStatusReport_GetStatusReport(t *testing.T) {
+func TestServiceStatusReport_GetStatusReport(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	statusReportResp, err := client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
 		StatusReport: serverptypes.TestValidStatusReport(t, nil),
@@ -111,14 +115,11 @@ func TestServiceStatusReport_GetStatusReport(t *testing.T) {
 	})
 }
 
-func TestServiceStatusReport_ListStatusReports(t *testing.T) {
+func TestServiceStatusReport_ListStatusReports(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Create a project with an application
 	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
@@ -246,14 +247,11 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 	})
 }
 
-func TestServiceStatusReport_ExpediteStatusReport(t *testing.T) {
+func TestServiceStatusReport_ExpediteStatusReport(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Create a project with an application
 	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{

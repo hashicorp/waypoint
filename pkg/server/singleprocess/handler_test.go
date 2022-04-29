@@ -15,6 +15,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+// TODO(izaak): comment.
 func Test(t *testing.T) {
 	handlertest.Test(t, func(t *testing.T) (pb.WaypointServer, pb.WaypointClient) {
 		impl := TestImpl(t)
