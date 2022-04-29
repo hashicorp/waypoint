@@ -32,6 +32,7 @@ func (r *Runner) AcceptParallel(ctx context.Context, count int) {
 	defer cancel()
 
 	// Start up all the goroutines
+	r.logger.Info("accepting jobs concurrently", "count", count)
 	var wg sync.WaitGroup
 	wg.Add(count)
 	for i := 0; i < count; i++ {
