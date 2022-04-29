@@ -872,11 +872,7 @@ func TestRunnerAcceptParallel(t *testing.T) {
 
 		job, err = client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId_2})
 		require.NoError(err)
-		if job.State != pb.Job_RUNNING {
-			return false
-		}
-
-		return true
+		return job.State == pb.Job_RUNNING
 	}, 3*time.Second, 10*time.Millisecond)
 
 	// Jobs should complete
@@ -890,11 +886,7 @@ func TestRunnerAcceptParallel(t *testing.T) {
 
 		job, err = client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId_2})
 		require.NoError(err)
-		if job.State != pb.Job_SUCCESS {
-			return false
-		}
-
-		return true
+		return job.State == pb.Job_SUCCESS
 	}, 3*time.Second, 10*time.Millisecond)
 
 	// Loop should exit
