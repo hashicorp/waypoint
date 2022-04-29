@@ -19,9 +19,9 @@ import (
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/pkg/k8sauth"
-	"github.com/hashicorp/waypoint/internal/serverclient"
 	wpoidc "github.com/hashicorp/waypoint/pkg/auth/oidc"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverclient"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
