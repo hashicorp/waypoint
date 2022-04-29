@@ -1,0 +1,5 @@
+```release-note:improvement
+runner: runners will now accept and execute multiple jobs concurrently
+if multiple jobs are available. On-demand runners continue to execute exactly
+one job since they are purpose launched for single job execution.
+```
