@@ -4,13 +4,14 @@ import (
 	"context"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
 type RunnerInstaller interface {
 	// Install expects a Waypoint Runner to be installed
-	Install(context.Context, *InstallOpts) (bool, error)
+	Install(context.Context, *InstallOpts) error
 
 	// InstallFlags is called prior to Install and allows the installer to
 	// specify flags for the install CLI. The flags should be prefixed with
@@ -18,7 +19,7 @@ type RunnerInstaller interface {
 	InstallFlags(*flag.Set)
 
 	// Uninstall should remove the runner(s) installed via Install.
-	Uninstall(context.Context, *InstallOpts) (bool, error)
+	Uninstall(context.Context, *InstallOpts) error
 
 	// UninstallFlags is called prior to Uninstall and allows the Uninstaller to
 	// specify flags for the uninstall CLI. The flags should be prefixed with the
@@ -30,15 +31,23 @@ type RunnerInstaller interface {
 type InstallOpts struct {
 	Log hclog.Logger
 	UI  terminal.UI
-}
 
-type InstallResults struct {
-	// Context is the connection context that can be used to connect from
-	// the CLI to the server. This will be used to establish an API client.
-	Context *clicontext.Config
+	// AuthToken is an auth token that can be used for this runner.
+	AuthToken string
 
-	// ID is the uuid of the installed runner
-	ID string
+	// Cookie is the server cookie that can be used for this runner
+	Cookie string
+
+	// AdvertiseAddr is the advertised address configuration currently set
+	// for the server. This is likely the same information you want to use
+	// for the runner to connect to the server, but doesn't have to be.
+	AdvertiseAddr *pb.ServerConfig_AdvertiseAddr
+
+	// AdvertiseClient is the serverconfig.Client information for connecting
+	// to the server via the AdvertiseAddr information. This also has the auth
+	// token already set. This is provided as a convenience since it is common
+	// to build this immediately.
+	AdvertiseClient *serverconfig.Client
 }
 
 var Platforms = map[string]RunnerInstaller{

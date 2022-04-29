@@ -9,7 +9,7 @@ type NomadRunnerInstaller struct {
 	config NomadConfig
 }
 
-func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) (bool, error) {
+func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) error {
 	//TODO implement me
 	panic("implement me")
 }
@@ -19,7 +19,7 @@ func (i *NomadRunnerInstaller) InstallFlags(set *flag.Set) {
 	panic("implement me")
 }
 
-func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) (bool, error) {
+func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	//TODO implement me
 	panic("implement me")
 }

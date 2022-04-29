@@ -9,7 +9,7 @@ type ECSRunnerInstaller struct {
 	config ecsConfig
 }
 
-func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) (bool, error) {
+func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) error {
 	//TODO implement me
 	panic("implement me")
 }
@@ -19,7 +19,7 @@ func (i *ECSRunnerInstaller) InstallFlags(set *flag.Set) {
 	panic("implement me")
 }
 
-func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) (bool, error) {
+func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	//TODO implement me
 	panic("implement me")
 }
