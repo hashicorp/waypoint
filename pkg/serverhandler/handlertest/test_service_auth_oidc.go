@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -7,19 +7,23 @@ import (
 	"github.com/hashicorp/cap/oidc"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestOIDCAuth(t *testing.T) {
+func init() {
+	tests["auth_oidc"] = []testFunc{
+		TestOIDCAuth,
+		TestOIDCAuth_accessSelector,
+	}
+}
+
+func TestOIDCAuth(t *testing.T, factory Factory) {
 	require := require.New(t)
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Create our OIDC test provider
 	oidcTP := oidc.StartTestProvider(t)
@@ -100,13 +104,11 @@ func TestOIDCAuth(t *testing.T) {
 	}
 }
 
-func TestOIDCAuth_accessSelector(t *testing.T) {
+func TestOIDCAuth_accessSelector(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Create our OIDC test provider
 	oidcTP := oidc.StartTestProvider(t)
