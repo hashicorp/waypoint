@@ -15,8 +15,9 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-// TODO(izaak): comment.
-func Test(t *testing.T) {
+// TestHandlers run the service handler tests that depend exclusively on the protobuf
+// interfaces.
+func TestHandlers(t *testing.T) {
 	handlertest.Test(t, func(t *testing.T) (pb.WaypointServer, pb.WaypointClient) {
 		impl := TestImpl(t)
 		client := server.TestServer(t, impl)
