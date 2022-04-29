@@ -64,6 +64,12 @@ type TaskLauncherConfig struct {
 
 	// The namespace to use for launching this task in Kubernetes
 	Namespace string `hcl:"namespace,optional"`
+
+	// Optionally define various cpu resource limits and requests for kubernetes pod containers
+	CPU *ResourceConfig `hcl:"cpu,block"`
+
+	// Optionally define various memory resource limits and requests for kubernetes pod containers
+	Memory *ResourceConfig `hcl:"memory,block"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -118,6 +124,16 @@ task {
 			"service account is the name of the Kubernetes service account to add to the pod.",
 			"This is useful to apply Kubernetes RBAC to the application.",
 		),
+	)
+
+	doc.SetField(
+		"memory",
+		"memory resource request to be added to the task container",
+	)
+
+	doc.SetField(
+		"cpu",
+		"cpu resource request to be added to the task container",
 	)
 
 	doc.SetField(
@@ -254,6 +270,47 @@ func (p *TaskLauncher) StartTask(
 	// Get container resource limits and requests
 	resourceLimits := make(map[corev1.ResourceName]k8sresource.Quantity)
 	resourceRequests := make(map[corev1.ResourceName]k8sresource.Quantity)
+
+	if p.config.CPU != nil {
+		if p.config.CPU.Requested != "" {
+			q, err := k8sresource.ParseQuantity(p.config.CPU.Requested)
+			if err != nil {
+				return nil,
+					status.Errorf(codes.InvalidArgument, "failed to parse cpu request %s to k8s quantity: %s", p.config.CPU.Requested, err)
+			}
+			resourceRequests[corev1.ResourceCPU] = q
+		}
+
+		if p.config.CPU.Limit != "" {
+			q, err := k8sresource.ParseQuantity(p.config.CPU.Limit)
+			if err != nil {
+				return nil,
+					status.Errorf(codes.InvalidArgument, "failed to parse cpu limit %s to k8s quantity: %s", p.config.CPU.Limit, err)
+			}
+			resourceLimits[corev1.ResourceCPU] = q
+		}
+	}
+
+	if p.config.Memory != nil {
+		if p.config.Memory.Requested != "" {
+			q, err := k8sresource.ParseQuantity(p.config.Memory.Requested)
+			if err != nil {
+				return nil,
+					status.Errorf(codes.InvalidArgument, "failed to parse memory requested %s to k8s quantity: %s", p.config.Memory.Requested, err)
+			}
+			resourceRequests[corev1.ResourceMemory] = q
+		}
+
+		if p.config.Memory.Limit != "" {
+			q, err := k8sresource.ParseQuantity(p.config.Memory.Limit)
+			if err != nil {
+				return nil,
+					status.Errorf(codes.InvalidArgument, "failed to parse memory limit %s to k8s quantity: %s", p.config.Memory.Limit, err)
+			}
+			resourceLimits[corev1.ResourceMemory] = q
+		}
+	}
+
 	resourceRequirements := corev1.ResourceRequirements{
 		Limits:   resourceLimits,
 		Requests: resourceRequests,
