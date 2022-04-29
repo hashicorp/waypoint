@@ -1,0 +1,3 @@
+```release-note:bug
+server: fix issue cleaning up tasks in Kubernetes that completed successfully
+```
