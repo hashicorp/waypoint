@@ -115,24 +115,22 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 	require.NoError(err)
 	client := pb.NewWaypointClient(conn)
 
-	if !c.skipBootstrap {
-		// Bootstrap
-		tokenResp, err := client.BootstrapToken(context.Background(), &empty.Empty{})
-		if status.Code(err) == codes.PermissionDenied {
-			// Ignore bootstrap already complete errors
-			err = nil
-			tokenResp = &pb.NewTokenResponse{Token: ""}
-		}
-		conn.Close()
-		require.NoError(err)
-
-		// Reconnect with a token
-		token := c.token
-		if !c.tokenSet {
-			token = tokenResp.Token
-		}
-		conn, err = connect(token)
+	// Bootstrap
+	tokenResp, err := client.BootstrapToken(context.Background(), &empty.Empty{})
+	if status.Code(err) == codes.PermissionDenied {
+		// Ignore bootstrap already complete errors
+		err = nil
+		tokenResp = &pb.NewTokenResponse{Token: ""}
 	}
+	conn.Close()
+	require.NoError(err)
+
+	// Reconnect with a token
+	token := c.token
+	if !c.tokenSet {
+		token = tokenResp.Token
+	}
+	conn, err = connect(token)
 
 	require.NoError(err)
 	t.Cleanup(func() { conn.Close() })
@@ -186,11 +184,10 @@ func newTestServer(ctx context.Context, impl pb.WaypointServer) (*grpc.Server, e
 type TestOption func(*testConfig)
 
 type testConfig struct {
-	ctx           context.Context
-	restartCh     <-chan struct{}
-	token         string
-	tokenSet      bool
-	skipBootstrap bool
+	ctx       context.Context
+	restartCh <-chan struct{}
+	token     string
+	tokenSet  bool
 }
 
 // TestWithContext specifies a context to use with the test server. When
@@ -216,13 +213,6 @@ func TestWithToken(token string) TestOption {
 	return func(c *testConfig) {
 		c.token = token
 		c.tokenSet = true
-	}
-}
-
-// TestWithSkipBootstrap skips the bootstrap step, for server implementations
-func TestWithSkipBootstrap() TestOption {
-	return func(c *testConfig) {
-		c.skipBootstrap = true
 	}
 }
 
