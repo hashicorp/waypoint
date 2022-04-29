@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/env"
 	"github.com/hashicorp/waypoint/pkg/protocolversion"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
@@ -33,14 +34,6 @@ var (
 // ConnectOption is used to configure how Waypoint server connection
 // configuration is sourced.
 type ConnectOption func(*connectConfig) error
-
-type disableTS struct {
-	credentials.PerRPCCredentials
-}
-
-func (_ disableTS) RequireTransportSecurity() bool {
-	return false
-}
 
 // Connect connects to the Waypoint server. This returns the raw gRPC connection.
 // You'll have to wrap it in NewWaypointClient to get the Waypoint client.
@@ -128,31 +121,82 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		"has_token", token != "",
 	}
 
+	/*
+
+				A wonderful flow diagram of what is happening when the Waypoint token contains
+				OAuth2 creds:
+
+		                                      (Not in the PR)
+		                         ┌───────────8. OAuth dance to ─────────────────┐
+		                         │            validate token.                   │
+		                         │                                              ▼
+		                         │                                        ┌──────────┐
+		                         │                                        │  OAuth   │
+		                         │                                     ┌──│  Server  │◀─┐
+		                         │                                     │  │          │  │
+		                         │                                     │  └──────────┘  │
+		                         │                                     │                │
+		                         │                                     │                │
+		                         │                                6. Yeah ok, I         │
+		                         │                                  know you.      5. Can I have
+		                         │   ┌─────────────────────┐           │             an OAuth
+		                         │   │                     │           │            token pls?
+		                         ▼   ▼                     │           └────────┐    Here's my
+		                      ┌────────────┐             7. Hi! Can             │      info.
+		                      │  Waypoint  │             you handle             │       │
+		                   ┌─▶│   Server   │──────┐        │this                │       │
+		                   │  │            │      │       request,              │       │
+		                   │  └────────────┘      │      here's my              ▼       │
+		                   │                      │        OAuth                Λ       │
+		                   │                2. Here you    token.              ╱ ╲      │
+		                   │                   go, I       │                  ╱   ╲     │
+		                   │                smuggled an    │                 ╱     ╲    │
+		                   │                   OAuth       │                ╱       ╲   │
+		               1. I want              server       └───────────────▕ client  ▏──┘
+		               a Waypoint            address &                      ╲       ╱
+		                 token              credentials                      ╲    4. Oh, there's
+		                   │                  in it.                          ╲   OAuth info in
+		                   │                      │                            ╲ ╱    this!
+		                   │                      │                             V
+		                   │                      │                             ▲
+		                   │                      │                             │
+		                   │            .─────.   │                        3. Client, do
+		                   │           ; User  :  │                         your thing.
+		                   └───────────:       ;◀─┘                          Here's my
+		                                ╲     ╱                              Waypoint
+		                                 `───'                             access token
+		                                   │                                    │
+		                                   │                                    │
+		                                   └────────────────────────────────────┘
+	*/
+
 	if token != "" {
 		tokenData, err := TokenDecode(token)
 		if err != nil {
 			return nil, err
 		}
 
-		if oc := tokenData.OauthCreds; oc != nil {
-			conf := &clientcredentials.Config{
-				ClientID:       oc.ClientId,
-				ClientSecret:   oc.ClientSecrete,
-				TokenURL:       oc.Url,
-				EndpointParams: url.Values{"audience": {"waypoint-cli"}},
+		if tokenData.ExternalCreds != nil {
+			if oc, ok := tokenData.ExternalCreds.(*pb.Token_OauthCreds); ok {
+				conf := &clientcredentials.Config{
+					ClientID:       oc.OauthCreds.ClientId,
+					ClientSecret:   oc.OauthCreds.ClientSecret,
+					TokenURL:       oc.OauthCreds.Url,
+					EndpointParams: url.Values{"audience": {"waypoint-cli"}},
+				}
+
+				oauthToken, err := conf.Token(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				perRPC = oauth.NewOauthAccess(oauthToken)
+
+				logArgs = append(logArgs,
+					"oauth-url", oc.OauthCreds.Url,
+					"oauth-client-id", oc.OauthCreds.ClientId,
+				)
 			}
-
-			oauthToken, err := conf.Token(ctx)
-			if err != nil {
-				return nil, err
-			}
-
-			perRPC = oauth.NewOauthAccess(oauthToken)
-
-			logArgs = append(logArgs,
-				"oauth-url", oc.Url,
-				"oauth-client-id", oc.ClientId,
-			)
 		}
 	}
 

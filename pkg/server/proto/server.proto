@@ -4501,9 +4501,11 @@ message Token {
     Trigger trigger = 10;
   }
 
-  // A client that sees this populated will use the details to fetch a token
-  // via oauth instead of submitting this token directly.
-  OAuthCredentials oauth_creds = 12;
+  oneof external_creds {
+    // A client that sees this populated will use the details to fetch a token
+    // via oauth instead of submitting this token directly.
+    OAuthCredentials oauth_creds = 12;
+  }
 
   message Login {
     // User that this token represents. This is the internal user ID (ULID),
@@ -4576,7 +4578,7 @@ message Token {
     string client_id = 2;
 
     // The OAuth client secret that goes along with the client_id
-    string client_secrete = 3;
+    string client_secret = 3;
   }
 
   // OLD FIELDS FOR BACKWARDS COMPATIBILITY. These are no longer used

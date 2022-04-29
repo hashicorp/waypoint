@@ -59,10 +59,12 @@ func TestConnect(t *testing.T) {
 
 		defer gl.Close()
 
-		token.OauthCreds = &pb.Token_OAuthCredentials{
-			Url:           "http://" + l.Addr().String(),
-			ClientId:      "xxyyzz",
-			ClientSecrete: "aabbcc",
+		token.ExternalCreds = &pb.Token_OauthCreds{
+			OauthCreds: &pb.Token_OAuthCredentials{
+				Url:          "http://" + l.Addr().String(),
+				ClientId:     "xxyyzz",
+				ClientSecret: "aabbcc",
+			},
 		}
 
 		tt.Body, err = proto.Marshal(&token)

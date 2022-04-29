@@ -8236,7 +8236,7 @@
           "type": "string",
           "title": "The OAuth client id to submit"
         },
-        "client_secrete": {
+        "client_secret": {
           "type": "string",
           "title": "The OAuth client secret that goes along with the client_id"
         }
