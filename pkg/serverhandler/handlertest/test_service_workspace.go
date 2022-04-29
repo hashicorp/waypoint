@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
@@ -17,12 +16,11 @@ func init() {
 	}
 }
 
-func TestWorkspace_Upsert(t *testing.T, factory Factory, restartF RestartFactory) {
+func TestWorkspace_Upsert(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl := factory(t)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Simplify writing tests
 	type Req = pb.UpsertWorkspaceRequest

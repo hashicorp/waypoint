@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverhandler/handlertest"
 )
@@ -15,10 +16,9 @@ func init() {
 }
 
 func Test(t *testing.T) {
-	handlertest.Test(t, func(t *testing.T) pb.WaypointServer {
-		return TestImpl(t)
-	}, func(t *testing.T, impl pb.WaypointServer) pb.WaypointServer {
-		// TODO(izaak): figure this out.
-		panic("TODO(izaak): figure out restarts")
-	})
+	handlertest.Test(t, func(t *testing.T) (pb.WaypointServer, pb.WaypointClient) {
+		impl := TestImpl(t)
+		client := server.TestServer(t, impl)
+		return impl, client
+	}, nil)
 }

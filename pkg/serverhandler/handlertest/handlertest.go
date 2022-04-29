@@ -13,24 +13,16 @@ import (
 type (
 	// Factory is the function type used to create a new serverhandler
 	// implementation. To fail, this should fail the test.
-	Factory func(*testing.T) pb.WaypointServer
-
-	// RestartFactory functions simulate a server restart. This should
-	// gracefully close the existing interface given and create a new one
-	// using the same data store. Therefore, data persisted in the first
-	// version should become visible in the second.
-	//
-	// This SHOULD simulate a physical restart as much as possible. Therefore,
-	// do NOT just return the same state pointer. Try to clean up, reopen disks,
-	// reconnect to databases, etc. This is used as part of failure testing,
-	// snapshot restore, etc.
-	RestartFactory func(*testing.T, pb.WaypointServer) pb.WaypointServer
+	Factory func(*testing.T) (pb.WaypointServer, pb.WaypointClient)
 )
 
 // Test runs a validation test suite for a state implementation. All
 // state implementations should pass this suite with no errors to ensure
 // the correct behavior of the state when Waypoint uses it.
-func Test(t *testing.T, f Factory, rf RestartFactory) {
+// skipTests are function names of tests in the serverstate package to skip
+// (i.e. TestJobCreate_singleton). It cannot skip sub-tests (called by
+// t.Run() inside a top-level test)
+func Test(t *testing.T, f Factory, skipTests []string) {
 	for name, funcs := range tests {
 		t.Run(name, func(t *testing.T) {
 			for _, tf := range funcs {
@@ -39,8 +31,22 @@ func Test(t *testing.T, f Factory, rf RestartFactory) {
 					name = name[idx+1:]
 				}
 
+				skip := false
+				for _, skipTest := range skipTests {
+					if name == skipTest {
+						skip = true
+						break
+					}
+				}
+				if skip {
+					t.Run(name, func(t *testing.T) {
+						t.Skipf("Test %q is on the handler skip list - ignoring", name)
+					})
+					continue
+				}
+
 				t.Run(name, func(t *testing.T) {
-					tf(t, f, rf)
+					tf(t, f)
 				})
 			}
 		})
@@ -48,7 +54,7 @@ func Test(t *testing.T, f Factory, rf RestartFactory) {
 }
 
 // TestGroup runs a specific group of validation tests for a state implementation.
-func TestGroup(t *testing.T, name string, f Factory, rf RestartFactory) {
+func TestGroup(t *testing.T, name string, f Factory) {
 	funcs, ok := tests[name]
 	if !ok {
 		panic(fmt.Sprintf("unknown test group: %s", name))
@@ -56,7 +62,7 @@ func TestGroup(t *testing.T, name string, f Factory, rf RestartFactory) {
 
 	t.Run(name, func(t *testing.T) {
 		for _, tf := range funcs {
-			tf(t, f, rf)
+			tf(t, f)
 		}
 	})
 }
@@ -66,4 +72,4 @@ var tests = map[string][]testFunc{}
 
 // testFunc is the type of the function that a test that is run as part of
 // Test implements. This is an internal only type.
-type testFunc func(*testing.T, Factory, RestartFactory)
+type testFunc func(*testing.T, Factory)

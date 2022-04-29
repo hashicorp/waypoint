@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -16,12 +15,11 @@ func init() {
 	}
 }
 
-func TestServiceWaypointHclFmt(t *testing.T, factory Factory, restartF RestartFactory) {
+func TestServiceWaypointHclFmt(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl := factory(t)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	t.Run("basic formatting", func(t *testing.T) {
 		require := require.New(t)
