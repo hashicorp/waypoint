@@ -312,7 +312,6 @@ jobs:
           paths:
             - ui/node_modules
             - ui/lib/node_modules
-            - ui/lib/waypoint-ui-toolkit/node_modules
       - notify_main_failure
 
   # build ember so frontend tests run faster
