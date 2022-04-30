@@ -1,6 +1,6 @@
 {
   "name": "@hashicorp/waypoint-ui-toolkit",
-  "version": "0.0.0",
+  "version": "0.0.1-beta",
   "description": "A set of components, helpers, and utilities for the Waypoint Web UI",
   "keywords": [
     "ember-addon"
