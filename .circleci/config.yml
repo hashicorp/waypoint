@@ -305,11 +305,11 @@ jobs:
       - restore_cache:
           key: *YARN_CACHE_KEY
       - run:
-          name: install yarn packages
-          command: cd ui && yarn install
-      - run:
           name: install nested yarn packages
-          command: cd lib/waypoint-ui-toolkit && yarn install
+          command: cd ui/lib/waypoint-ui-toolkit && yarn install
+      - run:
+          name: install yarn packages
+          command: cd ../.. && yarn install
       - save_cache:
           key: *YARN_CACHE_KEY
           paths:
