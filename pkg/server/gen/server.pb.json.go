@@ -1528,6 +1528,22 @@ func (msg *Job) UnmarshalJSON(b []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler
+func (msg *Job_TaskOverride) MarshalJSON() ([]byte, error) {
+	return protojson.MarshalOptions{
+		UseEnumNumbers:  false,
+		EmitUnpopulated: false,
+		UseProtoNames:   false,
+	}.Marshal(msg)
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (msg *Job_TaskOverride) UnmarshalJSON(b []byte) error {
+	return protojson.UnmarshalOptions{
+		DiscardUnknown: false,
+	}.Unmarshal(b, msg)
+}
+
+// MarshalJSON implements json.Marshaler
 func (msg *Job_Result) MarshalJSON() ([]byte, error) {
 	return protojson.MarshalOptions{
 		UseEnumNumbers:  false,
@@ -2274,6 +2290,22 @@ func (msg *Job_PipelineStepOp) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler
 func (msg *Job_PipelineStepOp) UnmarshalJSON(b []byte) error {
+	return protojson.UnmarshalOptions{
+		DiscardUnknown: false,
+	}.Unmarshal(b, msg)
+}
+
+// MarshalJSON implements json.Marshaler
+func (msg *Job_PipelineStepResult) MarshalJSON() ([]byte, error) {
+	return protojson.MarshalOptions{
+		UseEnumNumbers:  false,
+		EmitUnpopulated: false,
+		UseProtoNames:   false,
+	}.Marshal(msg)
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (msg *Job_PipelineStepResult) UnmarshalJSON(b []byte) error {
 	return protojson.UnmarshalOptions{
 		DiscardUnknown: false,
 	}.Unmarshal(b, msg)
