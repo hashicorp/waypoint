@@ -7685,6 +7685,10 @@
           "$ref": "#/definitions/hashicorp.waypoint.Ref.OnDemandRunnerConfig",
           "description": "If target_runner is Any and this is set, the job will be executed\non an ODR spawned from this config."
         },
+        "ondemand_runner_task": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.TaskOverride",
+          "description": "This is optional and overrides the task that is used by the on-demand\nrunner. This requires ODR to exist since the ODR system is used to\nlaunch tasks. If an ODR config is not available, queueing this job will\nfail.\n\nThis can be used to run custom runner binaries or custom tasks without\na runner."
+        },
         "labels": {
           "type": "object",
           "additionalProperties": {
@@ -8163,7 +8167,23 @@
     },
     "hashicorp.waypoint.Job.PipelineStepOp": {
       "type": "object",
+      "properties": {
+        "step": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step",
+          "description": "The step to execute."
+        }
+      },
       "description": "PipelineStepOp triggers the execution of a pipeline step."
+    },
+    "hashicorp.waypoint.Job.PipelineStepResult": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/google.rpc.Status",
+          "description": "The resulting status from the pipeline step execution. This will\nalways be non-nil. On success the code will be OK."
+        }
+      },
+      "description": "Note that since we run pipeline steps as jobs, the output of the pipeline\nexecution is in the job log."
     },
     "hashicorp.waypoint.Job.PollOp": {
       "type": "object",
@@ -8313,6 +8333,9 @@
         },
         "watch_task": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.WatchTaskResult"
+        },
+        "pipeline_step": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.PipelineStepResult"
         }
       }
     },
@@ -8386,6 +8409,19 @@
         "start_job_id": {
           "type": "string",
           "description": "The state can be looked up from the result of a StartTask job."
+        }
+      }
+    },
+    "hashicorp.waypoint.Job.TaskOverride": {
+      "type": "object",
+      "properties": {
+        "launch_info": {
+          "$ref": "#/definitions/hashicorp.waypoint.TaskLaunchInfo",
+          "description": "Launch info for the task. The environment variables will be merged\nwith the defaults. If no OCI URL is specified, the ODR profile\nsettings are used."
+        },
+        "skip_operation": {
+          "type": "boolean",
+          "description": "If true, the operation will not be queued. This only works with\nNoop operations out of safety. This is primarliy for tasks that\nare NOT runners."
         }
       }
     },
