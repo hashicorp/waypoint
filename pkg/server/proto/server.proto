@@ -1566,7 +1566,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 71 to 99; // future operation range
+  reserved 72 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -1616,6 +1616,26 @@ message Job {
   // If target_runner is Any and this is set, the job will be executed
   // on an ODR spawned from this config.
   Ref.OnDemandRunnerConfig ondemand_runner = 112;
+
+  // This is optional and overrides the task that is used by the on-demand
+  // runner. This requires ODR to exist since the ODR system is used to
+  // launch tasks. If an ODR config is not available, queueing this job will
+  // fail.
+  //
+  // This can be used to run custom runner binaries or custom tasks without
+  // a runner.
+  TaskOverride ondemand_runner_task = 115;
+  message TaskOverride {
+    // Launch info for the task. The environment variables will be merged
+    // with the defaults. If no OCI URL is specified, the ODR profile
+    // settings are used.
+    TaskLaunchInfo launch_info = 1;
+
+    // If true, the operation will not be queued. This only works with
+    // Noop operations out of safety. This is primarliy for tasks that
+    // are NOT runners.
+    bool skip_operation = 2;
+  }
 
   // Labels are the labels to set for this operation.
   // This is optional.
@@ -1759,6 +1779,7 @@ message Job {
     StartTaskResult start_task = 13;
     InitResult init = 14;
     WatchTaskResult watch_task = 15;
+    PipelineStepResult pipeline_step = 16;
   }
 
   message Config {
@@ -2196,7 +2217,16 @@ message Job {
 
   // PipelineStepOp triggers the execution of a pipeline step.
   message PipelineStepOp {
-    // TODO: do this!
+    // The step to execute.
+    Pipeline.Step step = 1;
+  }
+
+  // Note that since we run pipeline steps as jobs, the output of the pipeline
+  // execution is in the job log.
+  message PipelineStepResult {
+    // The resulting status from the pipeline step execution. This will
+    // always be non-nil. On success the code will be OK.
+    google.rpc.Status result = 1;
   }
 
   // QueueProjectOp queues a job for all applications in a project. The
