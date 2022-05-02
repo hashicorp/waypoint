@@ -215,7 +215,7 @@ func (r *Runner) executeWatchTaskOp(
 	// If the job is not in a terminal state, then its an error.
 	if job.State != pb.Job_SUCCESS && job.State != pb.Job_ERROR {
 		return nil, status.Errorf(codes.FailedPrecondition,
-			"cannot stop task when the start job is not terminal: %q",
+			"cannot watch task when the start job is not terminal: %q",
 			job.State)
 	}
 
