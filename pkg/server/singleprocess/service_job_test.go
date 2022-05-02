@@ -1054,6 +1054,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	st := assignment.Assignment.Job.Operation.(*pb.Job_StartTask).StartTask
 	require.Equal(odr.PluginConfig, st.Params.HclConfig)
 	require.Equal(odr.PluginType, st.Params.PluginType)
+	startJobId := assignment.Assignment.Job.Id
 
 	for k, v := range odr.EnvironmentVariables {
 		require.Equal(v, st.Info.EnvironmentVariables[k])
@@ -1069,7 +1070,8 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	// Register our runner
 	runnerId := st.Info.EnvironmentVariables["WAYPOINT_RUNNER_ID"]
 	TestRunner(t, client, &pb.Runner{
-		Id: runnerId,
+		Id:       runnerId,
+		ByIdOnly: true,
 	})
 
 	// Start a job request
@@ -1167,6 +1169,48 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	require.NoError(err)
 	require.Equal(pb.Task_COMPLETED, task.JobState)
 
+	{
+		// Watch
+
+		// Start a job request
+		rs3, err := client.RunnerJobStream(ctx)
+		require.NoError(err)
+		require.NoError(rs3.Send(&pb.RunnerJobStreamRequest{
+			Event: &pb.RunnerJobStreamRequest_Request_{
+				Request: &pb.RunnerJobStreamRequest_Request{
+					RunnerId: id,
+				},
+			},
+		}))
+
+		// We should get a task to stop the job
+		resp, err = rs3.Recv()
+		require.NoError(err)
+		assignment, ok = resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
+		require.True(ok, "should be an assignment")
+		require.NotNil(assignment)
+		require.Equal(id, assignment.Assignment.Job.AssignedRunner.Id)
+		require.NotEqual(queueResp.JobId, assignment.Assignment.Job.Id)
+		require.IsType(&pb.Job_WatchTask{}, assignment.Assignment.Job.Operation)
+
+		watchTask := assignment.Assignment.Job.Operation.(*pb.Job_WatchTask).WatchTask
+		require.Equal(startJobId, watchTask.StartJob.Id)
+
+		// Ack it and complete it
+		require.NoError(rs3.Send(&pb.RunnerJobStreamRequest{
+			Event: &pb.RunnerJobStreamRequest_Ack_{
+				Ack: &pb.RunnerJobStreamRequest_Ack{},
+			},
+		}))
+
+		// Complete our watch task job so that we can move on
+		require.NoError(rs3.Send(&pb.RunnerJobStreamRequest{
+			Event: &pb.RunnerJobStreamRequest_Complete_{
+				Complete: &pb.RunnerJobStreamRequest_Complete{},
+			},
+		}))
+	}
+
 	// Stop the task
 
 	// Start a job request
@@ -1175,7 +1219,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	require.NoError(rs3.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Request_{
 			Request: &pb.RunnerJobStreamRequest_Request{
-				RunnerId: runnerId,
+				RunnerId: id,
 			},
 		},
 	}))
@@ -1186,7 +1230,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	assignment, ok = resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
 	require.True(ok, "should be an assignment")
 	require.NotNil(assignment)
-	require.Equal(runnerId, assignment.Assignment.Job.AssignedRunner.Id)
+	require.Equal(id, assignment.Assignment.Job.AssignedRunner.Id)
 	require.NotEqual(queueResp.JobId, assignment.Assignment.Job.Id)
 	require.IsType(&pb.Job_StopTask{}, assignment.Assignment.Job.Operation)
 
@@ -1352,7 +1396,8 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 
 	// Register our runner
 	TestRunner(t, client, &pb.Runner{
-		Id: runnerId,
+		Id:       runnerId,
+		ByIdOnly: true,
 	})
 
 	// Start a job request

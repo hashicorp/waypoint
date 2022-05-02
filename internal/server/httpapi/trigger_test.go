@@ -169,7 +169,7 @@ func (v *triggerImpl) RunTrigger(ctx context.Context,
 	req *pb.RunTriggerRequest,
 ) (*pb.RunTriggerResponse, error) {
 	return &pb.RunTriggerResponse{
-		JobIds: []string{"000", "123", "999"},
+		JobIds: []string{"123"},
 	}, nil
 }
 
@@ -179,7 +179,7 @@ func (v *triggerBadImpl) RunTrigger(ctx context.Context,
 	req *pb.RunTriggerRequest,
 ) (*pb.RunTriggerResponse, error) {
 	return &pb.RunTriggerResponse{
-		JobIds: []string{"000", "123", "999"},
+		JobIds: []string{"123"},
 	}, nil
 }
 

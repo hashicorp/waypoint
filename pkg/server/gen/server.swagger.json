@@ -5957,6 +5957,9 @@
         "init": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.InitOp"
         },
+        "watch_task": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.WatchTaskOp"
+        },
         "state": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.State",
           "title": "state of the job"
@@ -6478,6 +6481,9 @@
         },
         "init": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.InitResult"
+        },
+        "watch_task": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.WatchTaskResult"
         }
       }
     },
@@ -6606,6 +6612,24 @@
     },
     "hashicorp.waypoint.Job.ValidateResult": {
       "type": "object"
+    },
+    "hashicorp.waypoint.Job.WatchTaskOp": {
+      "type": "object",
+      "properties": {
+        "start_job": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Job",
+          "description": "The job that started the task (should match up to a StartTaskLaunchOp).\nThis is used to lookup the state to pass to the task."
+        }
+      }
+    },
+    "hashicorp.waypoint.Job.WatchTaskResult": {
+      "type": "object",
+      "properties": {
+        "exit_code": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
     },
     "hashicorp.waypoint.ListAuthMethodsResponse": {
       "type": "object",

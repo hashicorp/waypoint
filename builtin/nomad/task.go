@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
 	"github.com/oklog/ulid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -29,6 +31,11 @@ func (p *TaskLauncher) StartTaskFunc() interface{} {
 // StopTaskFunc implements component.TaskLauncher.
 func (p *TaskLauncher) StopTaskFunc() interface{} {
 	return p.StopTask
+}
+
+// WatchTaskFunc implements component.TaskLauncher.
+func (p *TaskLauncher) WatchTaskFunc() interface{} {
+	return p.WatchTask
 }
 
 const (
@@ -263,3 +270,14 @@ func (p *TaskLauncher) getNomadClient() (*api.Client, error) {
 	}
 	return client, nil
 }
+
+// WatchTask implements TaskLauncher
+func (p *TaskLauncher) WatchTask(
+	ctx context.Context,
+	log hclog.Logger,
+	ti *TaskInfo,
+) (*component.TaskResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "WatchTask not implemented")
+}
+
+var _ component.TaskLauncher = (*TaskLauncher)(nil)

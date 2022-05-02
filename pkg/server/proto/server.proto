@@ -1528,7 +1528,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 69 to 99; // future operation range
+  reserved 70 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -1630,6 +1630,7 @@ message Job {
     StartTaskLaunchOp start_task = 66;
     StopTaskLaunchOp stop_task = 67;
     InitOp init = 68;
+    WatchTaskOp watch_task = 69;
   }
 
   //-----------------------------------------------------------------
@@ -1718,6 +1719,7 @@ message Job {
     StatusReportResult status_report = 12;
     StartTaskResult start_task = 13;
     InitResult init = 14;
+    WatchTaskResult watch_task = 15;
   }
 
   message Config {
@@ -2062,6 +2064,16 @@ message Job {
       // The state can be looked up from the result of a StartTask job.
       string start_job_id = 3;
     }
+  }
+
+  message WatchTaskOp {
+    // The job that started the task (should match up to a StartTaskLaunchOp).
+    // This is used to lookup the state to pass to the task.
+    Ref.Job start_job = 1;
+  }
+
+  message WatchTaskResult {
+    int32 exit_code = 1;
   }
 
   message StatusReportOp {
