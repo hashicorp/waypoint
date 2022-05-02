@@ -190,6 +190,8 @@ func (c *JobListCommand) Run(args []string) int {
 			op = "StartTask"
 		case *pb.Job_StopTask:
 			op = "StopTask"
+		case *pb.Job_WatchTask:
+			op = "WatchTask"
 		case *pb.Job_Init:
 			op = "Init"
 		default:
