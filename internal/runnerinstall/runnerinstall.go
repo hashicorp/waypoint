@@ -5,7 +5,6 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
@@ -38,10 +37,9 @@ type InstallOpts struct {
 	// Cookie is the server cookie that can be used for this runner
 	Cookie string
 
-	// AdvertiseAddr is the advertised address configuration currently set
-	// for the server. This is likely the same information you want to use
-	// for the runner to connect to the server, but doesn't have to be.
-	AdvertiseAddr *pb.ServerConfig_AdvertiseAddr
+	// ServerAddr is the address of the server to which the runner
+	// connects
+	ServerAddr string
 
 	// AdvertiseClient is the serverconfig.Client information for connecting
 	// to the server via the AdvertiseAddr information. This also has the auth
@@ -54,4 +52,5 @@ var Platforms = map[string]RunnerInstaller{
 	"ecs":        &ECSRunnerInstaller{},
 	"kubernetes": &K8sRunnerInstaller{},
 	"nomad":      &NomadRunnerInstaller{},
+	"docker":     &DockerRunnerInstaller{},
 }
