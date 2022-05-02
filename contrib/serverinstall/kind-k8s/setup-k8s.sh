@@ -11,7 +11,7 @@ setupIngress=$WP_K8S_INGRESS
 # NOTE(briancain): This version is both the kind node version as well as the
 # version of Kubernetes that kind sets up. In this case, we'd be installing
 # kubernetes version 1.22.
-kindVersion="${KIND_NODE_VERSION:-'kindest/node:v1.22.7'}"
+kindVersion="${KIND_NODE_VERSION:-kindest/node:v1.22.7}"
 
 echo "Setting up local docker registry..."
 echo
