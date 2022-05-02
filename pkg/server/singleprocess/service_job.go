@@ -70,25 +70,27 @@ func (s *Service) queueJobMulti(
 	ctx context.Context,
 	req []*pb.QueueJobRequest,
 ) ([]*pb.QueueJobResponse, error) {
-	jobs := make([]*pb.Job, 0, len(req))
+	jobQueue := make([]*pb.Job, 0, len(req)*4)
+	jobIds := make([]string, 0, len(req))
 	for _, single := range req {
-		job, _, err := s.queueJobReqToJob(ctx, single)
+		jobs, jobId, err := s.queueJobReqToJob(ctx, single)
 		if err != nil {
 			return nil, err
 		}
 
-		jobs = append(jobs, job...)
+		jobQueue = append(jobQueue, jobs...)
+		jobIds = append(jobIds, jobId)
 	}
 
 	// Queue the jobs
-	if err := s.state(ctx).JobCreate(jobs...); err != nil {
+	if err := s.state(ctx).JobCreate(jobQueue...); err != nil {
 		return nil, err
 	}
 
 	// Get the response
-	resp := make([]*pb.QueueJobResponse, len(jobs))
-	for i, job := range jobs {
-		resp[i] = &pb.QueueJobResponse{JobId: job.Id}
+	resp := make([]*pb.QueueJobResponse, len(jobIds))
+	for i, id := range jobIds {
+		resp[i] = &pb.QueueJobResponse{JobId: id}
 	}
 
 	return resp, nil
