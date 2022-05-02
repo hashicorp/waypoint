@@ -536,6 +536,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"runner install": func() (cli.Command, error) {
+			return &RunnerInstallCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"context": func() (cli.Command, error) {
 			return &ContextHelpCommand{
