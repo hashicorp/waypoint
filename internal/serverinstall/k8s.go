@@ -26,6 +26,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/k8s"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -1124,6 +1125,18 @@ func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	}
 	if v := i.config.imagePullPolicy; v != "" {
 		cfgMap["image_pull_policy"] = v
+	}
+	if v := i.config.cpuRequest; v != "" {
+		cpuRequest := k8s.ResourceConfig{
+			Requested: v,
+		}
+		cfgMap["cpu"] = cpuRequest
+	}
+	if v := i.config.memRequest; v != "" {
+		memRequest := k8s.ResourceConfig{
+			Requested: v,
+		}
+		cfgMap["memory"] = memRequest
 	}
 
 	// Marshal our config
