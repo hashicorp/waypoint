@@ -93,7 +93,7 @@ EOF
 echo
 echo "Applying metallb namespace..."
 echo
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.10.1/manifests/namespace.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.11.0/manifests/namespace.yaml
 
 echo "Create secret for metallb-system node..."
 echo
@@ -101,7 +101,7 @@ kubectl create secret generic -n metallb-system memberlist --from-literal=secret
 
 echo "Applying metallb manifest..."
 echo
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.10.1/manifests/metallb.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.11.0/manifests/metallb.yaml
 
 echo
 echo
