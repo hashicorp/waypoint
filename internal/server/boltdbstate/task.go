@@ -79,8 +79,85 @@ func (s *State) TaskDelete(ref *pb.Ref_Task) error {
 	return err
 }
 
+// TaskCancel cancels a tasks jobs by task id or run job id reference.
+// NOTE(briancain): this way means each cancel is its own transaction and commit, not the greatest.
+// Previously I attempted to implement this with taskCancel where the entire job
+// triple was canceled inside a single transaction. This ended up deadlocking because
+// when we cancel a job, we also call a `db.Update` on each job when we update its
+// state in the database. This caused a deadlock. For now we cancel each job
+// separately.
+func (s *State) TaskCancel(ref *pb.Ref_Task) error {
+	task, err := s.TaskGet(ref)
+	if err != nil {
+		return err
+	}
+
+	s.log.Trace("canceling start job for task", "task id", task.Id, "start job id", task.StartJob.Id)
+	err = s.JobCancel(task.StartJob.Id, false)
+	if err != nil {
+		return err
+	}
+
+	s.log.Trace("canceling task job for task", "task id", task.Id, "start job id", task.TaskJob.Id)
+	err = s.JobCancel(task.TaskJob.Id, false)
+	if err != nil {
+		return err
+	}
+
+	s.log.Trace("canceling stop job for task", "task id", task.Id, "stop job id", task.StopJob.Id)
+	err = s.JobCancel(task.StopJob.Id, false)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetJobsByTaskRef will look up every job triple by Task ref in a single
+// memdb transaction. This is often used via the API for building out
+// a complete picture of a task beyond the job ID refs.
+func (s *State) JobsByTaskRef(
+	task *pb.Task,
+) (startJob *pb.Job, taskJob *pb.Job, stopJob *pb.Job, err error) {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	err = s.db.View(func(dbTxn *bolt.Tx) error {
+		job, err := s.jobById(dbTxn, task.StartJob.Id)
+		if err != nil {
+			return err
+		} else if job == nil {
+			return status.Errorf(codes.NotFound, "start job %q not found", task.StartJob.Id)
+		} else {
+			startJob = job
+		}
+
+		job, err = s.jobById(dbTxn, task.TaskJob.Id)
+		if err != nil {
+			return err
+		} else if job == nil {
+			return status.Errorf(codes.NotFound, "task job %q not found", task.TaskJob.Id)
+		} else {
+			taskJob = job
+		}
+
+		job, err = s.jobById(dbTxn, task.StopJob.Id)
+		if err != nil {
+			return err
+		} else if job == nil {
+			return status.Errorf(codes.NotFound, "stop job %q not found", task.StopJob.Id)
+		} else {
+			stopJob = job
+		}
+
+		return nil
+	})
+
+	return startJob, taskJob, stopJob, err
+}
+
 // TaskList returns the list of tasks.
-func (s *State) TaskList() ([]*pb.Task, error) {
+func (s *State) TaskList(req *pb.ListTaskRequest) ([]*pb.Task, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -96,6 +173,20 @@ func (s *State) TaskList() ([]*pb.Task, error) {
 			val, err := s.taskGet(dbTxn, memTxn, ref)
 			if err != nil {
 				return err
+			}
+
+			// filter any tasks by request
+			if len(req.TaskState) > 0 {
+				found := false
+				for _, state := range req.TaskState {
+					if val.JobState == state {
+						found = true
+						break
+					}
+				}
+				if !found {
+					continue
+				}
 			}
 
 			out = append(out, val)
@@ -139,17 +230,17 @@ func (s *State) taskGet(
 	var taskId string
 	switch r := ref.Ref.(type) {
 	case *pb.Ref_Task_Id:
-		s.log.Info("looking up task by id", "id", r.Id)
+		s.log.Debug("looking up task", "id", r.Id)
 		taskId = r.Id
 	case *pb.Ref_Task_JobId:
-		s.log.Info("looking up task by job id", "job_id", r.JobId)
+		s.log.Debug("looking up task by job id", "job_id", r.JobId)
 		// Look up Task by jobid
 		task, err := s.taskByJobId(r.JobId)
 		if err != nil {
 			return nil, err
 		}
 
-		s.log.Info("found task id", "id", task.Id)
+		s.log.Debug("found task id", "id", task.Id)
 		taskId = task.Id
 	default:
 		return nil, status.Error(codes.FailedPrecondition, "No valid ref id provided in Task ref to taskGet")
@@ -217,6 +308,70 @@ func (s *State) taskDelete(
 	return nil
 }
 
+/*
+NOTE(briancain): This was intentionally left commented out. In the future, if
+we ever decide to cancel Task jobs in a single transaction (see the note above `TaskCancel`)
+we can use this function to do the actual cancelation in that transaction.
+func (s *State) taskCancel(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	task *pb.Task,
+) error {
+	s.log.Info("canceling task", "id", task.Id)
+	// call jobCancel on the job triple
+
+	// Get the start job
+	raw, err := memTxn.First(jobTableName, jobIdIndexName, task.StartJob.Id)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "StartJob for task %q not found: %s", task.Id, task.StartJob.Id)
+	}
+	startJob := raw.(*jobIndex)
+
+	// Cancel the job
+	s.log.Info("canceling start job", "id", startJob.Id)
+	if err = s.jobCancel(memTxn, startJob, false); err != nil {
+		return err
+	}
+
+	// Get the task job
+	raw, err = memTxn.First(jobTableName, jobIdIndexName, task.TaskJob.Id)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "TaskJob for task %q not found: %s", task.Id, task.TaskJob.Id)
+	}
+	taskJob := raw.(*jobIndex)
+
+	// Cancel the job
+	s.log.Info("canceling task job", "id", taskJob.Id)
+	if err = s.jobCancel(memTxn, taskJob, false); err != nil {
+		return err
+	}
+
+	// Get the stop job
+	raw, err = memTxn.First(jobTableName, jobIdIndexName, task.StopJob.Id)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "StopJob for task %q not found: %s", task.Id, task.StopJob.Id)
+	}
+	stopJob := raw.(*jobIndex)
+
+	// Cancel the job
+	s.log.Info("canceling stop job", "id", stopJob.Id)
+	if err = s.jobCancel(memTxn, stopJob, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+*/
+
 // taskIndexSet writes an index record for a single task.
 func (s *State) taskIndexSet(txn *memdb.Txn, id []byte, value *pb.Task) error {
 	record := &taskIndexRecord{
@@ -270,7 +425,7 @@ func (s *State) taskIdByRef(ref *pb.Ref_Task) ([]byte, error) {
 }
 
 func (s *State) taskByJobId(jobId string) (*pb.Task, error) {
-	trackedTasks, err := s.TaskList()
+	trackedTasks, err := s.TaskList(&pb.ListTaskRequest{})
 	if err != nil {
 		return nil, err
 	}

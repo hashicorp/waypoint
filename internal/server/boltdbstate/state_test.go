@@ -23,5 +23,5 @@ func TestImpl(t *testing.T) {
 		v, err := TestStateRestart(t, impl.(*State))
 		require.NoError(t, err)
 		return v
-	})
+	}, nil)
 }

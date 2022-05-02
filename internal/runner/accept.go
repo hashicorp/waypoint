@@ -22,6 +22,31 @@ import (
 
 var heartbeatDuration = 5 * time.Second
 
+// AcceptParallel allows up to count jobs to be accepted and executing
+// concurrently.
+func (r *Runner) AcceptParallel(ctx context.Context, count int) {
+	// Create a new cancellable context so we can stop all the goroutines
+	// when one exits. We do this because if one exits, its likely that the
+	// unrecoverable error exists in all.
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// Start up all the goroutines
+	r.logger.Info("accepting jobs concurrently", "count", count)
+	var wg sync.WaitGroup
+	wg.Add(count)
+	for i := 0; i < count; i++ {
+		go func() {
+			defer cancel()
+			defer wg.Done()
+			r.AcceptMany(ctx)
+		}()
+	}
+
+	// Wait for them to exit
+	wg.Wait()
+}
+
 // AcceptMany will accept jobs and execute them on after another as they are accepted.
 // This is meant to be run in a goroutine and reports its own errors via r's logger.
 func (r *Runner) AcceptMany(ctx context.Context) {

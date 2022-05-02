@@ -19,13 +19,13 @@ config {
 
     # KV Version 2
     "PASSWORD_FOO" = dynamic("vault", {
-      path = "secret/data/my-secret
+      path = "secret/data/my-secret"
       key = "/data/password"  # key must be prefixed with "/data" (see below)
     })
 
     # KV Version 1
     "PASSWORD_BAR" = dynamic("vault", {
-      path = "kv1/my-secret
+      path = "kv1/my-secret"
       key = "password"
     })
   }

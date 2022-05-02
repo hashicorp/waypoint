@@ -669,6 +669,9 @@ RETRY_ASSIGN:
 // JobAck acknowledges that a job has been accepted or rejected by the runner.
 // If ack is false, then this will move the job back to the queued state
 // and be eligible for assignment.
+// Additionally, if a job is associated with an on-demand runner task, this
+// func will progress the Tasks state machine depending on which job has
+// currently been acked.
 func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
@@ -749,6 +752,13 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	}
 
 	txn.Commit()
+
+	// Update the task state machine if acked job is part of an on-demand runner task.
+	if err := s.taskAck(job.Id); err != nil {
+		s.log.Error("error updating task state", "error", err, "job", job.Id)
+		return nil, err
+	}
+
 	return job.Job(result), nil
 }
 
@@ -859,6 +869,14 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 	}
 
 	txn.Commit()
+
+	// If the job is part of an on-demand runner task, update the task state machine
+	// to mark the job in the task as complete
+	if err := s.taskComplete(job.Id); err != nil {
+		s.log.Error("error updating task state for complete", "error", err, "job", job.Id)
+		return err
+	}
+
 	return nil
 }
 
@@ -890,6 +908,8 @@ func (s *State) JobCancel(id string, force bool) error {
 func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 	job = job.Copy()
 	oldState := job.State
+
+	s.log.Debug("attempting to cancel job", "job", job.Id)
 
 	// How we handle cancel depends on the state
 	switch job.State {
@@ -1576,6 +1596,102 @@ func (s *State) jobCandidateAny(
 	}
 
 	return nil, nil
+}
+
+// taskAck looks to see if the referenced job id has a Task ref associated with it,
+// and if so, Ack the specific job inside the Task job triple to progress the
+// Task state machine.
+func (s *State) taskAck(jobId string) error {
+	job, err := s.JobById(jobId, nil)
+	if err != nil {
+		s.log.Error("error getting job by id", "job", jobId, "err", err)
+		return err
+	} else if job.Task == nil {
+		s.log.Trace("job is not an on-demand runner task", "job", jobId)
+		return nil
+	}
+
+	// grab the full task message based on the Task Ref on the job
+	task, err := s.TaskGet(job.Task)
+	if err != nil {
+		s.log.Error("failed to get task to ack job", "job", job.Id, "task", job.Task.Ref)
+		return err
+	}
+
+	// now figure out which job has been acked for the task, and update
+	// the task state
+	switch job.Id {
+	case task.StartJob.Id:
+		// StartJob has been Acked
+		task.JobState = pb.Task_STARTING
+		s.log.Trace("start job is starting", "job", job.Id, "task", task.Id)
+	case task.TaskJob.Id:
+		// TaskJob has been Acked
+		task.JobState = pb.Task_RUNNING
+		s.log.Trace("task job is running", "job", job.Id, "task", task.Id)
+	case task.StopJob.Id:
+		// StopJob has been Acked
+		task.JobState = pb.Task_STOPPING
+		s.log.Trace("stop job is running", "job", job.Id, "task", task.Id)
+	default:
+		return status.Errorf(codes.Internal, "no task job id matches the requested job id %q", job.Id)
+	}
+
+	// TaskPut the new state
+	if err := s.TaskPut(task); err != nil {
+		s.log.Error("failed to ack task state", "job", job.Id, "task", task.Id)
+		return err
+	}
+
+	return nil
+}
+
+// taskComplete will look up the referenced job to see if it has a Task ref
+// associated with it, and if so, mark the specific job inside the Task job triple
+// as complete to progress the task state machine.
+func (s *State) taskComplete(jobId string) error {
+	job, err := s.JobById(jobId, nil)
+	if err != nil {
+		s.log.Error("error getting job by id", "job", jobId, "err", err)
+		return err
+	} else if job.Task == nil {
+		s.log.Trace("job is not an on-demand runner task", "job", jobId)
+		return nil
+	}
+
+	// grab the full task message based on the Task Ref on the job
+	task, err := s.TaskGet(job.Task)
+	if err != nil {
+		s.log.Error("failed to get task to mark complete", "job", job.Id, "task", job.Task.Ref)
+		return err
+	}
+
+	// now figure out which job has been completed this is for the task, and update
+	// the task state
+	switch job.Id {
+	case task.StartJob.Id:
+		// StartJob has completed
+		task.JobState = pb.Task_STARTED
+		s.log.Trace("start job has completed", "job", job.Id, "task", task.Id)
+	case task.TaskJob.Id:
+		// TaskJob has completed
+		task.JobState = pb.Task_COMPLETED
+		s.log.Trace("task job has completed", "job", job.Id, "task", task.Id)
+	case task.StopJob.Id:
+		// StopJob has completed, the whole task is finished
+		task.JobState = pb.Task_STOPPED
+		s.log.Trace("stop job has completed", "job", job.Id, "task", task.Id)
+	default:
+		return status.Errorf(codes.Internal, "no task job id matches the requested job id %q", job.Id)
+	}
+
+	// TaskPut the new state
+	if err := s.TaskPut(task); err != nil {
+		s.log.Error("failed to complete task state", "job", job.Id, "task", task.Id)
+		return err
+	}
+
+	return nil
 }
 
 // Copy should be called prior to any modifications to an existing jobIndex.
