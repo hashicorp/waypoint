@@ -5,7 +5,9 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"io"
 	"strings"
+	"time"
 
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
@@ -14,6 +16,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/docker/docker/pkg/stdcopy"
 	goUnits "github.com/docker/go-units"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -22,6 +25,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
 )
 
@@ -436,8 +440,72 @@ func (p *TaskLauncher) WatchTask(
 	ctx context.Context,
 	log hclog.Logger,
 	ti *TaskInfo,
+	ui terminal.UI,
 ) (*component.TaskResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "WatchTask not implemented")
+	cli, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
+	}
+	cli.NegotiateAPIVersion(ctx)
+
+	// Accumulate our result on this
+	var result component.TaskResult
+
+	// Grab the logs reader
+	logsR, err := cli.ContainerLogs(ctx, ti.Id, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Get our writers for the UI
+	outW, errW, err := ui.OutputWriters()
+	if err != nil {
+		return nil, err
+	}
+
+	// Start a goroutine to copy our logs. The goroutine will exit on its own
+	// when EOF or when this RPC ends because the UI will EOF.
+	logsDoneCh := make(chan struct{})
+	go func() {
+		defer close(logsDoneCh)
+		_, err := stdcopy.StdCopy(outW, errW, logsR)
+		if err != io.EOF {
+			log.Warn("error reading container logs", "err", err)
+		}
+	}()
+
+	// Wait for the container to exit
+	waitCh, errCh := cli.ContainerWait(ctx, ti.Id, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		// Error talking to Docker daemon.
+		return nil, err
+
+	case info := <-waitCh:
+		result.ExitCode = int(info.StatusCode)
+
+		// If we got an error, it is from the process (not Docker) and we
+		// should log it. TODO: we should write this to the UI.
+		if err := info.Error; err != nil {
+			log.Warn("error from container process: %s", err.Message)
+		}
+
+		// Wait for our logs to end
+		log.Debug("container exited, waiting for logs to finish", "code", info.StatusCode)
+		select {
+		case <-logsDoneCh:
+		case <-time.After(1 * time.Minute):
+			// They should never continue for 1 minute after the container
+			// exited. To avoid hanging a runner process, lets warn and exit.
+			log.Error("container logs never exited! please look into this")
+		}
+	}
+
+	return &result, nil
 }
 
 var _ component.TaskLauncher = (*TaskLauncher)(nil)
