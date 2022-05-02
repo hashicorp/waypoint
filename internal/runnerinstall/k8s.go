@@ -2,9 +2,10 @@ package runnerinstall
 
 import (
 	"context"
-	"github.com/hashicorp/waypoint/builtin/k8s"
+	"github.com/hashicorp/waypoint/internal/installutil/helm"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/action"
+	"time"
 )
 
 type K8sRunnerInstaller struct {
@@ -13,21 +14,130 @@ type K8sRunnerInstaller struct {
 
 func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) error {
 	// Initialize Helm settings
-	settings := cli.New()
-
-	// Get our K8S API
-	// TODO: Get kubeconfig path & context
-	_, ns, rc, err := k8s.Clientset(i.config.KubeconfigPath, i.config.Context)
+	opts.Log.Debug("Getting settings for Helm.")
+	settings, err := helm.SettingsInit()
 	if err != nil {
 		return err
 	}
 
-	panic("implement me")
+	opts.Log.Debug("Getting path options for Helm chart.")
+	actionConfig, err := helm.ActionInit(opts.Log, i.config.KubeconfigPath, i.config.K8sContext)
+	if err != nil {
+		return err
+	}
+
+	// TODO: Add support for targeting specific versions of the chart, but default to latest
+	cpo, chartName, err := helm.ChartPathOptions(
+		"https://helm.releases.hashicorp.com",
+		"hashicorp/waypoint",
+		"0.1.8")
+	if err != nil {
+		return err
+	}
+
+	opts.Log.Debug("Loading chart.")
+	c, _, err := helm.GetChart(chartName, cpo, settings)
+	opts.Log.Debug("Chart loaded.")
+	// Chart loaded
+
+	chartNS := ""
+	if v := i.config.Namespace; v != "" {
+		chartNS = v
+	}
+	if chartNS == "" {
+		// If all else fails, default the namespace to "default"
+		chartNS = "default"
+	}
+
+	opts.Log.Debug("Creating new install action client.")
+	client := action.NewInstall(actionConfig)
+	client.ChartPathOptions = *cpo
+	client.ClientOnly = false
+	client.DryRun = false
+	client.DisableHooks = false
+	client.Wait = true
+	client.WaitForJobs = false
+	client.Devel = false
+	client.DependencyUpdate = false
+	client.Timeout = 300 * time.Second
+	client.Namespace = chartNS
+	client.ReleaseName = "hashicorp/waypoint"
+	client.GenerateName = false
+	client.NameTemplate = ""
+	client.OutputDir = ""
+	client.Atomic = false
+	client.SkipCRDs = false
+	client.SubNotes = true
+	client.DisableOpenAPIValidation = false
+	client.Replace = false
+	client.Description = ""
+	client.CreateNamespace = true
+
+	values := map[string]interface{}{
+		"server": map[string]interface{}{
+			"enabled": "false",
+		},
+		"runner": map[string]interface{}{
+			"server": map[string]interface{}{
+				"addr":   opts.ServerAddr,
+				"cookie": opts.Cookie,
+			},
+			"image": map[string]interface{}{
+				"repository": i.config.RunnerImage,
+				"tag":        i.config.RunnerImageTag,
+			},
+			"pullPolicy": "always",
+		},
+	}
+	opts.Log.Debug("Installing Waypoint Helm chart.")
+	_, err = client.Run(c, values)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
-	//TODO implement me
-	panic("implement me")
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-config-path",
+		Usage:  "Path to the kubeconfig file to use,",
+		Target: &i.config.KubeconfigPath,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-context",
+		Target: &i.config.K8sContext,
+		Usage: "The Kubernetes context to install the Waypoint runner to. If left" +
+			" unset, Waypoint will use the current Kubernetes context.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-helm-version",
+		Target: &i.config.Version,
+		Usage:  "The version of the Helm chart to use for the Waypoint runner install.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-namespace",
+		Target: &i.config.Namespace,
+		Usage: "The namespace in the Kubernetes cluster into which the Waypoint " +
+			"runner will be installed.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-runner-image",
+		Target:  &i.config.RunnerImage,
+		Default: "hashicorp/waypoint",
+		Usage:   "Docker image for the Waypoint runner.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-runner-image-tag",
+		Target:  &i.config.RunnerImageTag,
+		Default: "latest",
+		Usage:   "Tag of the Docker image for the Waypoint runner.",
+	})
 }
 
 func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
@@ -42,7 +152,11 @@ func (i *K8sRunnerInstaller) UninstallFlags(set *flag.Set) {
 
 type k8sConfig struct {
 	KubeconfigPath string
-	Context        string
+	K8sContext     string
+	Version        string
+	Namespace      string
+	RunnerImage    string
+	RunnerImageTag string
 }
 
 // Use as base - suffix will be ID
