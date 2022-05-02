@@ -8,6 +8,11 @@ set -o errexit
 
 setupIngress=$WP_K8S_INGRESS
 
+# NOTE(briancain): This version is both the kind node version as well as the
+# version of Kubernetes that kind sets up. In this case, we'd be installing
+# kubernetes version 1.22.
+kindVersion="${KIND_NODE_VERSION:-'kindest/node:v1.22.7'}"
+
 echo "Setting up local docker registry..."
 echo
 
@@ -26,7 +31,7 @@ echo
 if [ -n "${setupIngress}" ]; then
   echo "Creating kind cluster with ingress controller..."
   echo
-cat <<EOF | kind create cluster --config=-
+cat <<EOF | kind create cluster --image="$kindVersion" --config=-
   kind: Cluster
   apiVersion: kind.x-k8s.io/v1alpha4
   containerdConfigPatches:
@@ -55,7 +60,7 @@ EOF
 else
   echo "Creating kind cluster with cluster-config.yaml..."
   echo
-cat <<EOF | kind create cluster --config=-
+cat <<EOF | kind create cluster --image="$kindVersion" --config=-
   kind: Cluster
   apiVersion: kind.x-k8s.io/v1alpha4
   containerdConfigPatches:
