@@ -40,6 +40,11 @@ func (b *TaskLauncher) StopTaskFunc() interface{} {
 	return b.StopTask
 }
 
+// WatchFunc implements component.TaskLauncher
+func (b *TaskLauncher) WatchTaskFunc() interface{} {
+	return b.WatchTask
+}
+
 type TaskResources struct {
 	// How many CPU shares to allocate to each task
 	CpuShares int64 `hcl:"cpu,optional"`
@@ -425,3 +430,14 @@ func (b *TaskLauncher) StartTask(
 
 	return ti, nil
 }
+
+// WatchTask implements TaskLauncher
+func (p *TaskLauncher) WatchTask(
+	ctx context.Context,
+	log hclog.Logger,
+	ti *TaskInfo,
+) (*component.TaskResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "WatchTask not implemented")
+}
+
+var _ component.TaskLauncher = (*TaskLauncher)(nil)

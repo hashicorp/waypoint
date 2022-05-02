@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/oklog/ulid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -32,6 +34,11 @@ func (p *TaskLauncher) StartTaskFunc() interface{} {
 // StopTaskFunc implements component.TaskLauncher
 func (p *TaskLauncher) StopTaskFunc() interface{} {
 	return p.StopTask
+}
+
+// WatchTaskFunc implements component.TaskLauncher
+func (p *TaskLauncher) WatchTaskFunc() interface{} {
+	return p.WatchTask
 }
 
 // TaskLauncherConfig is the configuration structure for the task plugin. At
@@ -211,6 +218,15 @@ func (p *TaskLauncher) StopTask(
 ) error {
 	log.Warn("the StopTask method is not currently implemented for ECS tasks")
 	return nil
+}
+
+// WatchTask implements TaskLauncher
+func (p *TaskLauncher) WatchTask(
+	ctx context.Context,
+	log hclog.Logger,
+	ti *TaskInfo,
+) (*component.TaskResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "WatchTask not implemented")
 }
 
 // StartTask runs an ECS Task to perform the requested job.

@@ -38,6 +38,11 @@ func (p *TaskLauncher) StopTaskFunc() interface{} {
 	return p.StopTask
 }
 
+// WatchTaskFunc implements component.TaskLauncher
+func (p *TaskLauncher) WatchTaskFunc() interface{} {
+	return p.WatchTask
+}
+
 // TaskLauncherConfig is the configuration structure for the task plugin.
 type TaskLauncherConfig struct {
 	// Context specifies the kube context to use.
@@ -326,3 +331,14 @@ func (p *TaskLauncher) StartTask(
 		Id: name,
 	}, nil
 }
+
+// WatchTask implements TaskLauncher
+func (p *TaskLauncher) WatchTask(
+	ctx context.Context,
+	log hclog.Logger,
+	ti *TaskInfo,
+) (*component.TaskResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "WatchTask not implemented")
+}
+
+var _ component.TaskLauncher = (*TaskLauncher)(nil)
