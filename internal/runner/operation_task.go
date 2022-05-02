@@ -270,7 +270,7 @@ func (r *Runner) executeWatchTaskOp(
 	defer pi.Close()
 
 	watch := c.(component.TaskLauncher).WatchTaskFunc()
-	_, err = pi.Invoke(ctx, log, watch,
+	output, err := pi.Invoke(ctx, log, watch,
 		plugin.ArgNamedAny("state", state),
 		ui,
 	)
@@ -278,9 +278,15 @@ func (r *Runner) executeWatchTaskOp(
 		return nil, err
 	}
 
+	taskResult, ok := output.(*component.TaskResult)
+	if !ok {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"plugin should've returned TaskResult, got %T", output)
+	}
+
 	return &pb.Job_Result{
 		WatchTask: &pb.Job_WatchTaskResult{
-			ExitCode: 42, // TODO
+			ExitCode: int32(taskResult.ExitCode),
 		},
 	}, nil
 }
