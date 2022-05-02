@@ -475,6 +475,7 @@ func (p *TaskLauncher) WatchTask(
 		_, err := stdcopy.StdCopy(outW, errW, logsR)
 		if err != io.EOF {
 			log.Warn("error reading container logs", "err", err)
+			ui.Output("Error reading container logs: %s", err, terminal.WithErrorStyle())
 		}
 	}()
 
@@ -488,10 +489,13 @@ func (p *TaskLauncher) WatchTask(
 	case info := <-waitCh:
 		result.ExitCode = int(info.StatusCode)
 
-		// If we got an error, it is from the process (not Docker) and we
-		// should log it. TODO: we should write this to the UI.
+		// If we got an error, it is from the process (not Docker)
 		if err := info.Error; err != nil {
 			log.Warn("error from container process: %s", err.Message)
+
+			// We also write it to the UI so that it is more easily
+			// seen in UIs.
+			ui.Output("Error reported by container: %s", err.Message, terminal.WithErrorStyle())
 		}
 
 		// Wait for our logs to end
