@@ -29,6 +29,10 @@ func (op *Operation) Configure(plugin interface{}, ctx *hcl.EvalContext) hcl.Dia
 	return component.Configure(plugin, op.Use.Body, ctx)
 }
 
+func (b *Step) Operation() *Operation {
+	return mapoperation(b, true)
+}
+
 func (b *Build) Operation() *Operation {
 	return mapoperation(b, true)
 }
