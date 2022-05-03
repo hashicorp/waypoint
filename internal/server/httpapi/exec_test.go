@@ -18,6 +18,10 @@ import (
 	"github.com/hashicorp/waypoint/pkg/server/gen/mocks"
 )
 
+// This code uses the magic token value 445DHu. This value is a base58 encoded
+// empty token. An empty token has the magic 'wp24' at the beginning, so this
+// empty token is just base58.Encode([]byte("wp24"))
+
 func TestHandleExec(t *testing.T) {
 	ctx := context.Background()
 	require := require.New(t)
@@ -31,7 +35,7 @@ func TestHandleExec(t *testing.T) {
 	defer httpServer.Close()
 
 	// Dial it up
-	conn, _, err := websocket.Dial(ctx, httpServer.URL+"?token=foo-bar-baz", nil)
+	conn, _, err := websocket.Dial(ctx, httpServer.URL+"?token=445DHu", nil)
 	require.NoError(err)
 	defer conn.Close(websocket.StatusInternalError, "early exit")
 
