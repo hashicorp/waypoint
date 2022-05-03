@@ -16,7 +16,6 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 
 func (i *ECSRunnerInstaller) InstallFlags(set *flag.Set) {
 	//TODO implement me
-	panic("implement me")
 }
 
 func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {

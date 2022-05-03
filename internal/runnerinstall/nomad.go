@@ -16,7 +16,6 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 
 func (i *NomadRunnerInstaller) InstallFlags(set *flag.Set) {
 	//TODO implement me
-	panic("implement me")
 }
 
 func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {

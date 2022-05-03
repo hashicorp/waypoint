@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/posener/complete"
+	"sort"
 	"strings"
 )
 
@@ -28,8 +29,8 @@ func (c *RunnerInstallCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *RunnerInstallCommand) Flags() *flag.Sets {
-	return c.flagSet(0, func(sets *flag.Sets) {
-		f := sets.NewSet("Command Options")
+	return c.flagSet(0, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
 
 		f.StringVar(&flag.StringVar{
 			Name:   "platform",
@@ -58,7 +59,20 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 			Target: &c.serverCookie,
 		})
 
-		// TODO: Get platform-specific flags
+		// Add platforms in alphabetical order. A consistent order is important for repeatable doc generation.
+		i := 0
+		sortedPlatformNames := make([]string, len(runnerinstall.Platforms))
+		for name := range runnerinstall.Platforms {
+			sortedPlatformNames[i] = name
+			i++
+		}
+		sort.Strings(sortedPlatformNames)
+
+		for _, name := range sortedPlatformNames {
+			platform := runnerinstall.Platforms[name]
+			platformSet := set.NewSet(name + " Options")
+			platform.InstallFlags(platformSet)
+		}
 	})
 }
 

@@ -15,7 +15,6 @@ func (d DockerRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 
 func (d DockerRunnerInstaller) InstallFlags(set *flag.Set) {
 	//TODO implement me
-	panic("implement me")
 }
 
 func (d DockerRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
