@@ -1,0 +1,92 @@
+---
+layout: docs
+page_title: On-Demand Runners
+description: |-
+  A brief overview about on-demand runners and their role in Waypoint.
+---
+
+# On-Demand Runners
+
+On-demand runners allow a single Waypoint installation to scale very high by
+leveraging the defined platform to spawn resources to execute Waypoint jobs
+remotely. Through on-demand runner profiles and runner targeting, Waypoint can
+even utilize resources from other platforms that Waypoint has access to. For
+example, a local Kubernetes server install could be configured to use Amazon ECS
+to execute jobs.
+
+## Job Assignment
+
+When a job is submitted to the server, if on-demand runners are enabled, it
+will spawn an on-demand runner and the job is placed in a holding set. This is
+the same mechanism we use for automatic CLI runners. When the on-demand
+runner starts, it will execute the normal Waypoint runner code and connect back
+to the server. On connection, the server will see the job in the holding set
+and send it immediately to the new runner.
+
+The flow of information about the job uses the normal grpc runner APIs so all
+the input and output remain the same as if the work were performed by the
+CLI-runner.
+
+Upon finishing the job, the on-demand runner will exit and the platform it runs
+on will reclaim its resources.
+
+### Launching Tasks to Execute Jobs
+
+When Waypoint goes to launch an on-demand runner task, it will generate three
+jobs:
+
+- `StartJob`
+- `TaskJob`
+- `StopJob`
+
+The start job is responsible for scheduling a resource in the platform to execute
+the assigned job. Once that resource exists, it will be a `TaskJob` that is
+responsible for actually running the assigned job. Once it's complete, the task
+plugin system will launch a stop job to clean up the launched platform resource.
+
+## On-Demand Runner Profiles
+
+Users can configure Waypoint server to launch on-demand runners with specific
+configurations. These configurations are set through on-demand runner profiles.
+See [runner profiles](/docs/runner/profiles) for more information.
+
+## OCI/Docker Image
+
+By default, the server will launch on-demand runners using the same OCI image
+it was configured with. The on-demand configuration will also accept a specific
+OCI image url to use instead. This allows operators the ability to prepackage
+any Waypoint plugins into the image and use them in their configuration.
+
+The official on-demand runner container image is built very similar to Waypoint
+server, with some additional packages such as `Kaniko` for doing in-container
+builds for jobs like the `Build` operation.
+
+See the [runner profile docs on OCI URLs](/docs/runner/profiles#oci-url) for more information.
+
+## Official Waypoint Supported Task Plugin Platforms
+
+When you use the `waypoint server install` command, we automatically set up a
+default On-Demand runner profile for you to use with Waypoint Server. Like our
+server install platform support, we also currently support these platforms
+for launching on-demand runner tasks:
+
+- [Kubernetes](/plugins/kubernetes#kubernetes-task)
+- [HashiCorp/Nomad](/plugins/nomad#nomad-task)
+- [AWS/ECS](/plugins/aws-ecs#aws-ecs-task)
+- [Docker](/plugins/docker#docker-task)
+
+## Adding on-demand runner support for other platforms
+
+On-demand runner support can be implemented for additional platforms
+using the [plugin SDK](/docs/extending-waypoint).
+
+Plugins expect to fulfill the SDK interface with the following functions:
+
+- `StartTask`
+- `StopTask`
+
+These functions are what will launch and stop the spawned resource with the
+task launcher.
+
+Task plugins also can accept `TaskLauncherConfig` configuration which users can
+configure through an [on-demand runner profile](/docs/runner/profiles).
