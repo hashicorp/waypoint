@@ -41,6 +41,32 @@ type scopedStage struct {
 	Remain hcl.Body `hcl:",remain"`
 }
 
+// Step are the step settings for pipelines
+type Step struct {
+	Labels map[string]string `hcl:"labels,optional"`
+	Hooks  []*Hook           `hcl:"hook,block"`
+	Use    *Use              `hcl:"use,block"`
+
+	// Optionally give this step a name
+	Name string `hcl:"name,optional"`
+
+	// If set, this step will depend on the defined step. The default step
+	// will be the previously defined step in order that it was defined
+	// in a waypoint.hcl
+	DependsOn string `hcl:"depends_on,optional"`
+
+	// The OCI image to use for executing this step
+	ImageURL string `hcl:"image_url,optional"`
+
+	// Unused for practical reasons, but we need this here so that
+	// the decoding validates successfully (HCL doesn't error of
+	// unexpected things).
+	WorkspaceScoped []*scopedStage `hcl:"workspace,block"`
+	LabelScoped     []*scopedStage `hcl:"label,block"`
+
+	ctx *hcl.EvalContext
+}
+
 // Build are the build settings.
 type Build struct {
 	Labels map[string]string `hcl:"labels,optional"`
@@ -110,6 +136,7 @@ func (h *Hook) ContinueOnFailure() bool {
 	return h.OnFailure == "continue"
 }
 
+func (b *Step) hclContext() *hcl.EvalContext     { return b.ctx }
 func (b *Build) hclContext() *hcl.EvalContext    { return b.ctx }
 func (b *Registry) hclContext() *hcl.EvalContext { return b.ctx }
 func (b *Deploy) hclContext() *hcl.EvalContext   { return b.ctx }
