@@ -29,14 +29,19 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	// TODO: Add support for targeting specific versions of the chart, but default to latest
 	cpo, chartName, err := helm.ChartPathOptions(
 		"https://helm.releases.hashicorp.com",
-		"hashicorp/waypoint",
+		"waypoint",
 		"0.1.8")
 	if err != nil {
 		return err
 	}
 
+	opts.Log.Debug("Chart name: " + chartName)
+
 	opts.Log.Debug("Loading chart.")
 	c, _, err := helm.GetChart(chartName, cpo, settings)
+	if err != nil {
+		return err
+	}
 	opts.Log.Debug("Chart loaded.")
 	// Chart loaded
 
@@ -57,11 +62,11 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	client.DisableHooks = false
 	client.Wait = true
 	client.WaitForJobs = false
-	client.Devel = false
+	client.Devel = true
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
 	client.Namespace = chartNS
-	client.ReleaseName = "hashicorp/waypoint"
+	client.ReleaseName = "waypoint"
 	client.GenerateName = false
 	client.NameTemplate = ""
 	client.OutputDir = ""
@@ -89,8 +94,8 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			"pullPolicy": "always",
 		},
 	}
-	opts.Log.Debug("Installing Waypoint Helm chart.")
-	_, err = client.Run(c, values)
+	opts.Log.Debug("Installing Waypoint Helm chart: " + c.Name())
+	_, err = client.RunWithContext(ctx, c, values)
 	if err != nil {
 		return err
 	}
