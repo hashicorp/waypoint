@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/core"
+	"github.com/hashicorp/waypoint/internal/jobstreamui"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -116,6 +117,7 @@ func (r *Runner) executePipelineStepExec(
 	}
 
 	// Watch job
+	streamUI := &jobstreamui.UI{UI: project.UI}
 	for {
 		resp, err := stream.Recv()
 		if err != nil {
@@ -156,7 +158,9 @@ func (r *Runner) executePipelineStepExec(
 			}, nil
 
 		case *pb.GetJobStreamResponse_Terminal_:
-			// TODO: stream the terminal output back to our job stream.
+			if err := streamUI.Write(event.Terminal.Events); err != nil {
+				log.Warn("job stream UI failure", "err", err)
+			}
 
 		case *pb.GetJobStreamResponse_State_:
 			// Ignore state changes
