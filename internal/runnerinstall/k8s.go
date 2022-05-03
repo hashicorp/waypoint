@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/installutil/helm"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart/loader"
 	"time"
 )
 
@@ -26,25 +27,6 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		return err
 	}
 
-	// TODO: Add support for targeting specific versions of the chart, but default to latest
-	cpo, chartName, err := helm.ChartPathOptions(
-		"https://helm.releases.hashicorp.com",
-		"waypoint",
-		"0.1.8")
-	if err != nil {
-		return err
-	}
-
-	opts.Log.Debug("Chart name: " + chartName)
-
-	opts.Log.Debug("Loading chart.")
-	c, _, err := helm.GetChart(chartName, cpo, settings)
-	if err != nil {
-		return err
-	}
-	opts.Log.Debug("Chart loaded.")
-	// Chart loaded
-
 	chartNS := ""
 	if v := i.config.Namespace; v != "" {
 		chartNS = v
@@ -56,7 +38,6 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 
 	opts.Log.Debug("Creating new install action client.")
 	client := action.NewInstall(actionConfig)
-	client.ChartPathOptions = *cpo
 	client.ClientOnly = false
 	client.DryRun = false
 	client.DisableHooks = false
@@ -77,6 +58,19 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	client.Replace = false
 	client.Description = ""
 	client.CreateNamespace = true
+
+	opts.Log.Debug("Locating chart.")
+	// TODO: Add support for targeting specific versions of the chart, but default to latest
+	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/v0.1.8.tar.gz", settings)
+	if err != nil {
+		return err
+	}
+
+	opts.Log.Debug("Locating chart.")
+	c, err := loader.Load(path)
+	if err != nil {
+		return err
+	}
 
 	values := map[string]interface{}{
 		"server": map[string]interface{}{
