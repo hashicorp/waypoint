@@ -196,6 +196,16 @@ func (s *Service) queueJobReqToJob(
 		if err != nil {
 			return nil, "", err
 		}
+
+		// If we are skipping, then the job we queued is the watch job.
+		if job.OndemandRunnerTask != nil && job.OndemandRunnerTask.SkipOperation {
+			for _, j := range result {
+				if _, ok := j.Operation.(*pb.Job_WatchTask); ok {
+					job = j
+					break
+				}
+			}
+		}
 	}
 
 	return result, job.Id, nil
@@ -265,6 +275,20 @@ func (s *Service) wrapJobWithRunner(
 			source.OndemandRunner.Id, source.Id)
 	}
 
+	// Determine if we're skipping this job. This is done for custom tasks.
+	skip := source.OndemandRunnerTask != nil && source.OndemandRunnerTask.SkipOperation
+	if skip {
+		// We only allow noop operations to be skipped out of safety. These
+		// make sense to skip, whereas skipping a build or deploy might be
+		// a bug in the client.
+		_, ok := source.Operation.(*pb.Job_Noop_)
+		if !ok {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"only noop operations can be skipped with custom tasks, got %T",
+				source.Operation)
+		}
+	}
+
 	// Generate our job to start the ODR
 	startJob, runnerId, err := s.onDemandRunnerStartJob(ctx, source, od)
 	if err != nil {
@@ -295,20 +319,31 @@ func (s *Service) wrapJobWithRunner(
 		return nil, err
 	}
 
+	// For our task tracking, the primary job is usually the job. But
+	// if we're skipping, then it is the watch task.
+	taskSource := source
+	if skip {
+		taskSource = watchJob
+	}
+
 	// Write a Task state with the On-Demand Runner job triple
 	task := &pb.Task{
 		StartJob: &pb.Ref_Job{Id: startJob.Id},
-		TaskJob:  &pb.Ref_Job{Id: source.Id},
+		TaskJob:  &pb.Ref_Job{Id: taskSource.Id},
 		StopJob:  &pb.Ref_Job{Id: stopJob.Id},
 		WatchJob: &pb.Ref_Job{Id: watchJob.Id},
 		JobState: pb.Task_PENDING,
+	}
+	if skip {
+		// If we're skipping, the primary task job becomes the watch.
+		task.TaskJob = &pb.Ref_Job{Id: watchJob.Id}
 	}
 	if err := s.state(ctx).TaskPut(task); err != nil {
 		return nil, err
 	} else {
 		task, err := s.state(ctx).TaskGet(&pb.Ref_Task{
 			Ref: &pb.Ref_Task_JobId{
-				JobId: source.Id,
+				JobId: taskSource.Id,
 			},
 		})
 		if err != nil {
@@ -324,20 +359,17 @@ func (s *Service) wrapJobWithRunner(
 		}
 
 		startJob.Task = taskRef
-		source.Task = taskRef
+		taskSource.Task = taskRef
 		stopJob.Task = taskRef
 		watchJob.Task = taskRef
 	}
 
-	// These must be in order of dependency currently. This is a limitation
-	// of the state.JobCreate API and we should fix it one day. If we get
-	// this wrong it'll just error, so we'll know quickly.
-	return []*pb.Job{
-		startJob,
-		watchJob,
-		source,
-		stopJob,
-	}, nil
+	jobs := []*pb.Job{startJob, watchJob, stopJob}
+	if !skip {
+		jobs = append(jobs, source)
+	}
+
+	return jobs, nil
 }
 
 // onDemandRunnerStartJob generates a StartJob template for a Task.
@@ -419,9 +451,29 @@ func (s *Service) onDemandRunnerStartJob(
 		envVars[k] = v
 	}
 
-	// Arguments for the runner image. Waypoint is ALWAYS assumed to be
-	// the entrypoint for ODR images.
-	args := []string{"runner", "agent", "-vv", "-id", runnerId, "-odr", "-odr-profile-id", od.Id}
+	// Build our task launch info.
+	launchInfo := &pb.TaskLaunchInfo{}
+	if override := source.OndemandRunnerTask; override != nil {
+		if info := override.LaunchInfo; info != nil {
+			launchInfo = info
+		}
+	}
+	if launchInfo.OciUrl == "" {
+		launchInfo.OciUrl = od.OciUrl
+
+		// Arguments for the runner image. Waypoint is ALWAYS assumed to be
+		// the entrypoint for ODR images if no custom one is specified.
+		launchInfo.Arguments = []string{
+			"runner", "agent", "-vv", "-id", runnerId, "-odr", "-odr-profile-id", od.Id,
+		}
+	}
+
+	// We always default our env vars so that a custom image can still
+	// behave like a runner and has access to the token, runner ID, etc.
+	for k, v := range launchInfo.EnvironmentVariables {
+		envVars[k] = v
+	}
+	launchInfo.EnvironmentVariables = envVars
 
 	job := &pb.Job{
 		// Inherit the workspace/application of the source job.
@@ -435,11 +487,7 @@ func (s *Service) onDemandRunnerStartJob(
 					HclConfig:  od.PluginConfig,
 					HclFormat:  od.ConfigFormat,
 				},
-				Info: &pb.TaskLaunchInfo{
-					OciUrl:               od.OciUrl,
-					EnvironmentVariables: envVars,
-					Arguments:            args,
-				},
+				Info: launchInfo,
 			},
 		},
 	}
@@ -512,6 +560,13 @@ func (s *Service) onDemandRunnerStopJob(
 	source *pb.Job,
 	od *pb.OnDemandRunnerConfig,
 ) (*pb.Job, error) {
+	depends := []string{startJob.Id, watchJob.Id}
+
+	// Only add the source job if we're not skipping it.
+	if over := source.OndemandRunnerTask; over != nil && !over.SkipOperation {
+		depends = append(depends, source.Id)
+	}
+
 	job := &pb.Job{
 		// Inherit the workspace/application of the source job.
 		Workspace:   source.Workspace,
@@ -519,8 +574,8 @@ func (s *Service) onDemandRunnerStopJob(
 
 		// We depend on both the start job and the main job. We allow them
 		// both to fail, however, because we want to try to stop no matter what.
-		DependsOn:             []string{startJob.Id, watchJob.Id, source.Id},
-		DependsOnAllowFailure: []string{startJob.Id, watchJob.Id, source.Id},
+		DependsOn:             depends,
+		DependsOnAllowFailure: depends,
 
 		// Use the same targeting as the start job. We assume the start job
 		// had proper access to stop, too, so we just copy it.
