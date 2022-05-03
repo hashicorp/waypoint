@@ -28,8 +28,9 @@ import (
 // The Close function should be called when finished with the project
 // to properly clean up any open resources.
 type Project struct {
-	logger    hclog.Logger
-	apps      map[string]*App
+	logger hclog.Logger
+	apps   map[string]*App
+	//pipelines map[string]*Pipeline internal/core/pipeline.go needs to exist
 	factories map[component.Type]*factory.Factory
 	dir       *datadir.Project
 	mappers   []*argmapper.Func
@@ -73,7 +74,8 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		logger:    hclog.L(),
 		workspace: "default",
 		apps:      make(map[string]*App),
-		jobInfo:   &component.JobInfo{},
+		//pipelines: make(map[string]*Pipeline),
+		jobInfo: &component.JobInfo{},
 		factories: map[component.Type]*factory.Factory{
 			component.BuilderType:        plugin.BaseFactories[component.BuilderType],
 			component.RegistryType:       plugin.BaseFactories[component.RegistryType],
