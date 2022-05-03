@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/jobstreamui"
 	"github.com/hashicorp/waypoint/internal/pkg/finalcontext"
 	"github.com/hashicorp/waypoint/internal/pkg/gitdirty"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -314,15 +314,9 @@ func (c *Project) queueAndStreamJob(
 
 	// Process events
 	var (
-		completed bool
-
+		completed       bool
+		streamUI        = &jobstreamui.UI{UI: ui}
 		stateEventTimer *time.Timer
-		tstatus         terminal.Status
-
-		stdout, stderr io.Writer
-
-		sg    terminal.StepGroup
-		steps = map[int32]*stepData{}
 	)
 
 	if localJob {
@@ -388,107 +382,8 @@ func (c *Project) queueAndStreamJob(
 				continue
 			}
 
-			for _, ev := range event.Terminal.Events {
-				log.Trace("job terminal output", "event", ev)
-
-				switch ev := ev.Event.(type) {
-				case *pb.GetJobStreamResponse_Terminal_Event_Line_:
-					ui.Output(ev.Line.Msg, terminal.WithStyle(ev.Line.Style))
-				case *pb.GetJobStreamResponse_Terminal_Event_NamedValues_:
-					var values []terminal.NamedValue
-
-					for _, tnv := range ev.NamedValues.Values {
-						values = append(values, terminal.NamedValue{
-							Name:  tnv.Name,
-							Value: tnv.Value,
-						})
-					}
-
-					ui.NamedValues(values)
-				case *pb.GetJobStreamResponse_Terminal_Event_Status_:
-					if tstatus == nil {
-						tstatus = ui.Status()
-						defer tstatus.Close()
-					}
-
-					if ev.Status.Msg == "" && !ev.Status.Step {
-						tstatus.Close()
-					} else if ev.Status.Step {
-						tstatus.Step(ev.Status.Status, ev.Status.Msg)
-					} else {
-						tstatus.Update(ev.Status.Msg)
-					}
-				case *pb.GetJobStreamResponse_Terminal_Event_Raw_:
-					if stdout == nil {
-						stdout, stderr, err = ui.OutputWriters()
-						if err != nil {
-							return nil, err
-						}
-					}
-
-					if ev.Raw.Stderr {
-						stderr.Write(ev.Raw.Data)
-					} else {
-						stdout.Write(ev.Raw.Data)
-					}
-				case *pb.GetJobStreamResponse_Terminal_Event_Table_:
-					tbl := terminal.NewTable(ev.Table.Headers...)
-
-					for _, row := range ev.Table.Rows {
-						var trow []terminal.TableEntry
-
-						for _, ent := range row.Entries {
-							trow = append(trow, terminal.TableEntry{
-								Value: ent.Value,
-								Color: ent.Color,
-							})
-						}
-					}
-
-					ui.Table(tbl)
-				case *pb.GetJobStreamResponse_Terminal_Event_StepGroup_:
-					if !ev.StepGroup.Close {
-						sg = ui.StepGroup()
-					}
-				case *pb.GetJobStreamResponse_Terminal_Event_Step_:
-					if sg == nil {
-						continue
-					}
-
-					step, ok := steps[ev.Step.Id]
-					if !ok {
-						step = &stepData{
-							Step: sg.Add(ev.Step.Msg),
-						}
-						steps[ev.Step.Id] = step
-					} else {
-						if ev.Step.Msg != "" {
-							step.Update(ev.Step.Msg)
-						}
-					}
-
-					if ev.Step.Status != "" {
-						if ev.Step.Status == terminal.StatusAbort {
-							step.Abort()
-						} else {
-							step.Status(ev.Step.Status)
-						}
-					}
-
-					if len(ev.Step.Output) > 0 {
-						if step.out == nil {
-							step.out = step.TermOutput()
-						}
-
-						step.out.Write(ev.Step.Output)
-					}
-
-					if ev.Step.Close {
-						step.Done()
-					}
-				default:
-					c.logger.Error("Unknown terminal event seen", "type", hclog.Fmt("%T", ev))
-				}
+			if err := streamUI.Write(event.Terminal.Events); err != nil {
+				log.Warn("job stream UI failure", "err", err)
 			}
 		case *pb.GetJobStreamResponse_State_:
 			// Stop any state event timers if we have any since the state
