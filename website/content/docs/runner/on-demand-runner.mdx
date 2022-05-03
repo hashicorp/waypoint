@@ -42,7 +42,7 @@ jobs:
 The start job is responsible for scheduling a resource in the platform to execute
 the assigned job. Once that resource exists, it will be a `TaskJob` that is
 responsible for actually running the assigned job. Once it's complete, the task
-plugin system will launch a stop job to end the launched platform resource.
+plugin system will launch a stop job to clean up the launched platform resource.
 
 ## On-Demand Runner Profiles
 
@@ -59,30 +59,26 @@ any Waypoint plugins into the image and use them in their configuration.
 
 The official on-demand runner container image is built very similar to Waypoint
 server, with some additional packages such as `Kaniko` for doing in-container
-builds for jobs like the `Build operation`.
+builds for jobs like the `Build` operation.
 
-Users can configure Waypoint server to launch on-demand runners with a custom
-built on-demand runner image. This image name must be set via the on-demand
-runner profile.
+See the [runner profile docs on OCI URLs](/docs/runner/profiles#oci-url) for more information.
 
 ## Official Waypoint Supported Task Plugin Platforms
 
 When you use the `waypoint server install` command, we automatically set up a
 default On-Demand runner profile for you to use with Waypoint Server. Like our
 server install platform support, we also currently support these platforms
-for launching on-demand runner tasks.
+for launching on-demand runner tasks:
 
 - [Kubernetes](/plugins/kubernetes#kubernetes-task)
 - [HashiCorp/Nomad](/plugins/nomad#nomad-task)
 - [AWS/ECS](/plugins/aws-ecs#aws-ecs-task)
 - [Docker](/plugins/docker#docker-task)
 
-## Task Plugin
+## Adding on-demand runner support for other platforms
 
-Launching on-demand runners can be developed with the Task plugin. If there
-is a platform that you wish to support while using Waypoint, we provide a
-plugin system, similar to our build/deploy/release plugins, that lets you
-define your own configuration for launching tasks on your platform of choice.
+On-demand runner support can be implemented for additional platforms
+using the [plugin SDK](/docs/extending-waypoint).
 
 Plugins expect to fulfill the SDK interface with the following functions:
 
