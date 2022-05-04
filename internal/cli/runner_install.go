@@ -18,6 +18,7 @@ type RunnerInstallCommand struct {
 	mode         string
 	serverUrl    string
 	serverCookie string
+	id           string
 }
 
 func (c *RunnerInstallCommand) AutocompleteArgs() complete.Predictor {
@@ -57,6 +58,12 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 			Name:   "server-cookie",
 			Usage:  "Server cookie for the Waypoint cluster for which you're targeting this runner.",
 			Target: &c.serverCookie,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "id",
+			Usage:  "If this is set, the runner will use the specified id.",
+			Target: &c.id,
 		})
 
 		// Add platforms in alphabetical order. A consistent order is important for repeatable doc generation.

@@ -46,6 +46,9 @@ type InstallOpts struct {
 	// token already set. This is provided as a convenience since it is common
 	// to build this immediately.
 	AdvertiseClient *serverconfig.Client
+
+	// Unique ID for the runner.
+	Id string
 }
 
 var Platforms = map[string]RunnerInstaller{

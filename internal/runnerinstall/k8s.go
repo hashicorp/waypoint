@@ -77,6 +77,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			"enabled": false,
 		},
 		"runner": map[string]interface{}{
+			"id": opts.Id,
 			"server": map[string]interface{}{
 				"addr":        opts.ServerAddr,
 				"cookie":      opts.Cookie,
