@@ -12,8 +12,7 @@ type Pipeline struct {
 	Id   string `hcl:",label"`
 	Name string `hcl:"name,optional"`
 
-	// TODO: A pipeline can have multiple steps
-	StepRaw *hclStage `hcl:"step,block"`
+	StepRaw []*hclStage `hcl:"step,block"`
 
 	Body hcl.Body `hcl:",body"`
 
@@ -26,7 +25,7 @@ type hclPipeline struct {
 	Name string `hcl:"name,optional"`
 
 	// We need these raw values to determine the plugins need to be used.
-	StepRaw *hclStage `hcl:"step,block"`
+	StepRaw []*hclStage `hcl:"step,block"`
 
 	Body   hcl.Body `hcl:",body"`
 	Remain hcl.Body `hcl:",remain"`
@@ -87,51 +86,70 @@ func (c *Pipeline) Ref() *pb.Ref_Pipeline {
 }
 
 // Step loads the associated section of the configuration
-func (c *Pipeline) Step(ctx *hcl.EvalContext) (*Step, error) {
+func (c *Pipeline) Step(ctx *hcl.EvalContext) ([]*Step, error) {
 	ctx = appendContext(c.ctx, ctx)
 
-	body := c.StepRaw.Body
-	scope, err := scopeMatchStage(ctx, c.StepRaw.WorkspaceScoped, c.StepRaw.LabelScoped)
-	if err != nil {
-		return nil, err
-	}
-	if scope != nil {
-		body = scope.Body
+	var steps []*Step
+	for _, stepRaw := range c.StepRaw {
+		body := stepRaw.Body
+		scope, err := scopeMatchStage(ctx, stepRaw.WorkspaceScoped, stepRaw.LabelScoped)
+		if err != nil {
+			return nil, err
+		}
+		if scope != nil {
+			body = scope.Body
+		}
+
+		var s Step
+		if diag := gohcl.DecodeBody(body, finalizeContext(ctx), &s); diag.HasErrors() {
+			return nil, diag
+		}
+		s.ctx = ctx
+
+		steps = append(steps, &s)
 	}
 
-	var s Step
-	if diag := gohcl.DecodeBody(body, finalizeContext(ctx), &s); diag.HasErrors() {
-		return nil, diag
-	}
-	s.ctx = ctx
-
-	return &s, nil
+	return steps, nil
 }
 
 // StepUse returns the plugin "use" value for a single step
+// TODO: Since pipelines can have N steps, where each step could be its own
+// plugin, how does this Use func work? It looks like the component creator
+// is what uses this to invoke the proper plugin, so it's expecting a single
+// plugin per stanza with build/deploy/release. But pipelines have many steps,
+// so maybe a component creator refactor is required to support multiple
+// plugins? For now I'm leaving this function commented out with its original
+// single use-stanza implementation in place.
 func (c *Pipeline) StepUse(ctx *hcl.EvalContext) (string, error) {
-	if c.StepRaw == nil {
-		return "", nil
-	}
+	return "", nil
+	/*
+		if c.StepRaw == nil {
+			return "", nil
+		}
 
-	useType := c.StepRaw.Use.Type
-	stage, err := scopeMatchStage(ctx, c.StepRaw.WorkspaceScoped, c.StepRaw.LabelScoped)
-	if err != nil {
-		return "", err
-	}
-	if stage != nil {
-		useType = stage.Use.Type
-	}
+		useType := c.StepRaw.Use.Type
+		stage, err := scopeMatchStage(ctx, c.StepRaw.WorkspaceScoped, c.StepRaw.LabelScoped)
+		if err != nil {
+			return "", err
+		}
+		if stage != nil {
+			useType = stage.Use.Type
+		}
 
-	return useType, nil
+		return useType, nil
+	*/
 }
 
 // StepLabels returns the labels for this stage.
+// TODO: see the todo in StepUse
 func (c *Pipeline) StepLabels(ctx *hcl.EvalContext) (map[string]string, error) {
-	if c.StepRaw == nil {
-		return nil, nil
-	}
+	return nil, nil
+	/*
+		if c.StepRaw == nil {
+			return nil, nil
+		}
 
-	ctx = appendContext(c.ctx, ctx)
-	return labels(ctx, c.StepRaw.Body)
+		ctx = appendContext(c.ctx, ctx)
+		return labels(ctx, c.StepRaw.Body)
+	*/
 }
