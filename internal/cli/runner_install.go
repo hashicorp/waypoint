@@ -125,24 +125,26 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	// TODO: Implement logic of different "modes" - preadoption vs. adoption
-
 	log.Debug("Generating runner token.")
 	client := c.project.Client()
-	token, err := client.GenerateRunnerToken(ctx, &pb.GenerateRunnerTokenRequest{
-		Duration: "",
-		Id:       "",
-		Labels:   nil,
-	})
-	if err != nil {
-		c.ui.Output("Error generating runner token: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
+
+	token := &pb.NewTokenResponse{}
+	if c.mode == "adoption" {
+		token, err := client.GenerateRunnerToken(ctx, &pb.GenerateRunnerTokenRequest{
+			Duration: "",
+			Id:       "",
+			Labels:   nil,
+		})
+		if err != nil {
+			c.ui.Output("Error generating runner token: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+		}
+		log.Debug("Runner token generated: %s", token)
 	}
-	log.Debug("Runner token generated.")
 
 	log.Debug("Installing runner.")
-	err = p.Install(ctx, &runnerinstall.InstallOpts{
+	err := p.Install(ctx, &runnerinstall.InstallOpts{
 		Log:             log,
 		UI:              c.ui,
 		AuthToken:       token.Token,

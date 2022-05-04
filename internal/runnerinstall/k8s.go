@@ -59,9 +59,15 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	client.Description = ""
 	client.CreateNamespace = true
 
+	var version string
+	if i.config.Version == "" {
+		version = defaultHelmChartVersion
+	} else {
+		version = i.config.Version
+	}
+
 	opts.Log.Debug("Locating chart.")
-	// TODO: Add support for targeting specific versions of the chart, but default to latest
-	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/v0.1.8.tar.gz", settings)
+	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/v"+version+".tar.gz", settings)
 	if err != nil {
 		return err
 	}
@@ -78,15 +84,22 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		},
 		"runner": map[string]interface{}{
 			"id": opts.Id,
+			"resources": map[string]interface{}{
+				"requests": map[string]interface{}{
+					"memory": i.config.MemRequest,
+					"cpu":    i.config.CpuRequest,
+				},
+			},
 			"server": map[string]interface{}{
 				"addr":        opts.ServerAddr,
 				"cookie":      opts.Cookie,
-				"tokenSecret": "",
+				"tokenSecret": opts.AuthToken,
 			},
 			"image": map[string]interface{}{
 				"repository": i.config.RunnerImage,
 				"tag":        i.config.RunnerImageTag,
 			},
+
 			"pullPolicy": "always",
 		},
 	}
@@ -139,6 +152,20 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 		Default: "latest",
 		Usage:   "Tag of the Docker image for the Waypoint runner.",
 	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-cpu-request",
+		Target:  &i.config.CpuRequest,
+		Default: "250m",
+		Usage:   "Requested amount of CPU for Waypoint runner.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-mem-request",
+		Target:  &i.config.MemRequest,
+		Default: "256Mi",
+		Usage:   "Requested amount of memory for Waypoint runner.",
+	})
 }
 
 func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
@@ -158,6 +185,8 @@ type k8sConfig struct {
 	Namespace      string
 	RunnerImage    string
 	RunnerImageTag string
+	CpuRequest     string
+	MemRequest     string
 }
 
 // Use as base - suffix will be ID
@@ -166,4 +195,5 @@ const (
 	runnerRoleBindingName        = "waypoint-runner-rolebinding"
 	runnerClusterRoleName        = "waypoint-runner"
 	runnerClusterRoleBindingName = "waypoint-runner"
+	defaultHelmChartVersion      = "0.1.8"
 )
