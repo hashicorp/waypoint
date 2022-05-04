@@ -43,8 +43,9 @@ func TestPipeline(t *testing.T) {
 				require.NotNil(t, c)
 				require.Equal("foo", c.Id)
 
-				s, err := c.Step(nil)
+				steps, err := c.Step(nil)
 				require.NoError(err)
+				s := steps[0]
 
 				op := s.Operation()
 				require.NotNil(t, op)
@@ -60,34 +61,63 @@ func TestPipeline(t *testing.T) {
 			},
 		},
 
-		/*
-			// TODO(briancain): make this test pass, add more tests to validate each step config
-			{
-				"pipeline_multi_step.hcl",
-				"foo",
-				func(t *testing.T, c *Pipeline) {
-					require := require.New(t)
+		{
+			"pipeline_multi_step.hcl",
+			"foo",
+			func(t *testing.T, c *Pipeline) {
+				require := require.New(t)
 
-					require.NotNil(t, c)
-					require.Equal("foo", c.Id)
+				require.NotNil(t, c)
+				require.Equal("foo", c.Id)
 
-					s, err := c.Step(nil)
-					require.NoError(err)
+				steps, err := c.Step(nil)
+				require.NoError(err)
+				require.Len(steps, 3)
 
-					op := s.Operation()
-					require.NotNil(t, op)
+				s := steps[0]
+				op := s.Operation()
+				require.NotNil(t, op)
 
-					var p testStepPluginConfig
-					diag := op.Configure(&p, nil)
-					if diag.HasErrors() {
-						t.Fatal(diag.Error())
-					}
+				var p testStepPluginConfig
 
-					require.NotEmpty(t, p.config.Foo)
-					require.Equal("example.com/test", s.ImageURL)
-				},
+				diag := op.Configure(&p, nil)
+				if diag.HasErrors() {
+					t.Fatal(diag.Error())
+				}
+
+				require.NotEmpty(t, p.config.Foo)
+				require.Equal("example.com/test", s.ImageURL)
+				require.Equal("qubit", p.config.Foo)
+
+				s2 := steps[1]
+				op2 := s2.Operation()
+				require.NotNil(t, op2)
+
+				diag = op2.Configure(&p, nil)
+				if diag.HasErrors() {
+					t.Fatal(diag.Error())
+				}
+
+				require.NotEmpty(t, p.config.Foo)
+				require.Equal("example.com/second", s2.ImageURL)
+				require.Equal("few", p.config.Foo)
+				require.Equal("bar", p.config.Bar)
+
+				s3 := steps[2]
+				op3 := s3.Operation()
+				require.NotNil(t, op3)
+
+				diag = op3.Configure(&p, nil)
+				if diag.HasErrors() {
+					t.Fatal(diag.Error())
+				}
+
+				require.NotEmpty(t, p.config.Foo)
+				require.Equal("example.com/different", s3.ImageURL)
+				require.Equal("food", p.config.Foo)
+				require.Equal("drink", p.config.Bar)
 			},
-		*/
+		},
 	}
 
 	// Test all the cases

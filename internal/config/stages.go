@@ -48,6 +48,8 @@ type Step struct {
 	Use    *Use              `hcl:"use,block"`
 
 	// Optionally give this step a name
+	// TODO: figure out how to make this an optional label rather than
+	// a variable for a Step stanza
 	Name string `hcl:"name,optional"`
 
 	// If set, this step will depend on the defined step. The default step
