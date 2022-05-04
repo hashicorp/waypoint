@@ -125,11 +125,27 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	log.Debug("Generating runner token.")
+	if c.mode != "adoption" && c.mode != "preadoption" {
+		c.ui.Output(
+			"Unsupported runner install mode.",
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
+
+	if c.mode == "adoption" && c.serverCookie == "" {
+		c.ui.Output(
+			"Server cookie must be supplied for adoption mode.",
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
+
 	client := c.project.Client()
 
 	token := &pb.NewTokenResponse{}
 	if c.mode == "adoption" {
+		log.Debug("Generating runner token.")
 		token, err := client.GenerateRunnerToken(ctx, &pb.GenerateRunnerTokenRequest{
 			Duration: "",
 			Id:       "",
