@@ -200,7 +200,6 @@ func (r *Releaser) resourceFunctionPermissionCreate(
 						reset = true
 					}
 				case reflect.TypeOf(map[string]interface{}{}):
-					fmt.Println("3")
 					if st.Principal.(map[string]interface{})["AWS"].(string) != principal {
 						// principal has changed, we should update permissions
 						reset = true
@@ -292,7 +291,6 @@ func (r *Releaser) resourceFunctionUrlCreate(
 		functionUrlAuthType = strings.ToUpper(r.config.AuthType)
 	}
 
-	// TODO(thiskevinwang): source cors from HCL config
 	cors := lambda.Cors{}
 
 	step := sg.Add("Creating Lambda URL...")
@@ -301,8 +299,7 @@ func (r *Releaser) resourceFunctionUrlCreate(
 	createFunctionUrlConfigInput := lambda.CreateFunctionUrlConfigInput{
 		AuthType:     aws.String(functionUrlAuthType),
 		FunctionName: aws.String(dep.FuncArn),
-		// TODO(thiskevinwang): make Cors configurable via HCL
-		Cors: &cors,
+		Cors:         &cors,
 	}
 
 	// Create or Update the lambda URL
@@ -425,7 +422,6 @@ type ReleaserConfig struct {
 	AuthType string `hcl:"auth_type,optional"`
 	// Only permitted if AuthType is "AWS_IAM" otherwise defaults to "*"
 	Principal string `hcl:"principal,optional"`
-	// todo(kevinwang): CORS
 }
 
 func (r *Releaser) Status(
@@ -506,16 +502,6 @@ release {
 		),
 		docs.Default("*"),
 	)
-
-	// todo(thiskevinwang): CORS
-	// doc.SetField(
-	// 	"cors",
-	// 	"the CORS configuration for the Lambda function URL",
-	// 	docs.Summary(
-	// 		"Use CORS to allow access to your function URL from any domain. You can also use CORS to control access for specific HTTP headers and methods in requests to your function URL",
-	// 	),
-	// 	docs.Default("{}"),
-	// )
 
 	return doc, nil
 }
