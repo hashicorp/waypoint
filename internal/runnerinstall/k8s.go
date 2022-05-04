@@ -74,12 +74,13 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 
 	values := map[string]interface{}{
 		"server": map[string]interface{}{
-			"enabled": "false",
+			"enabled": false,
 		},
 		"runner": map[string]interface{}{
 			"server": map[string]interface{}{
-				"addr":   opts.ServerAddr,
-				"cookie": opts.Cookie,
+				"addr":        opts.ServerAddr,
+				"cookie":      opts.Cookie,
+				"tokenSecret": "",
 			},
 			"image": map[string]interface{}{
 				"repository": i.config.RunnerImage,
