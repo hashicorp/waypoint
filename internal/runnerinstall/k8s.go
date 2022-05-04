@@ -84,6 +84,10 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		},
 		"runner": map[string]interface{}{
 			"id": opts.Id,
+			"image": map[string]interface{}{
+				"repository": i.config.RunnerImage,
+				"tag":        i.config.RunnerImageTag,
+			},
 			"resources": map[string]interface{}{
 				"requests": map[string]interface{}{
 					"memory": i.config.MemRequest,
@@ -95,9 +99,8 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				"cookie":      opts.Cookie,
 				"tokenSecret": opts.AuthToken,
 			},
-			"image": map[string]interface{}{
-				"repository": i.config.RunnerImage,
-				"tag":        i.config.RunnerImageTag,
+			"serviceAccount": map[string]interface{}{
+				"create": i.config.CreateServiceAccount,
 			},
 
 			"pullPolicy": "always",
@@ -166,6 +169,13 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 		Default: "256Mi",
 		Usage:   "Requested amount of memory for Waypoint runner.",
 	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "k8s-runner-service-account-init",
+		Target:  &i.config.CreateServiceAccount,
+		Default: true,
+		Usage:   "Create the service account if it does not exist. The default is true.",
+	})
 }
 
 func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
@@ -179,21 +189,17 @@ func (i *K8sRunnerInstaller) UninstallFlags(set *flag.Set) {
 }
 
 type k8sConfig struct {
-	KubeconfigPath string
-	K8sContext     string
-	Version        string
-	Namespace      string
-	RunnerImage    string
-	RunnerImageTag string
-	CpuRequest     string
-	MemRequest     string
+	KubeconfigPath       string
+	K8sContext           string
+	Version              string
+	Namespace            string
+	RunnerImage          string
+	RunnerImageTag       string
+	CpuRequest           string
+	MemRequest           string
+	CreateServiceAccount bool
 }
 
-// Use as base - suffix will be ID
 const (
-	serviceName                  = "waypoint"
-	runnerRoleBindingName        = "waypoint-runner-rolebinding"
-	runnerClusterRoleName        = "waypoint-runner"
-	runnerClusterRoleBindingName = "waypoint-runner"
-	defaultHelmChartVersion      = "0.1.8"
+	defaultHelmChartVersion = "0.1.8"
 )
