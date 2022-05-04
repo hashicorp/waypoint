@@ -26,6 +26,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/k8s"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -53,6 +54,8 @@ type k8sConfig struct {
 	openshift         bool   `hcl:"openshft,optional"`
 	cpuRequest        string `hcl:"cpu_request,optional"`
 	memRequest        string `hcl:"mem_request,optional"`
+	cpuLimit          string `hcl:"cpu_limit,optional"`
+	memLimit          string `hcl:"mem_limit,optional"`
 	storageClassName  string `hcl:"storageclassname,optional"`
 	storageRequest    string `hcl:"storage_request,optional"`
 	secretFile        string `hcl:"secret_file,optional"`
@@ -1031,6 +1034,14 @@ func (i *K8sInstaller) UninstallRunner(
 					i.config.cpuRequest = v.String()
 				}
 			}
+			if m := c.Resources.Limits; len(m) > 0 {
+				if v, ok := m[apiv1.ResourceMemory]; ok {
+					i.config.memLimit = v.String()
+				}
+				if v, ok := m[apiv1.ResourceCPU]; ok {
+					i.config.cpuLimit = v.String()
+				}
+			}
 		}
 
 		// create our wait channel to later poll for statefulset+pod deletion
@@ -1126,6 +1137,23 @@ func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		cfgMap["image_pull_policy"] = v
 	}
 
+	var cpuConfig k8s.ResourceConfig
+	var memConfig k8s.ResourceConfig
+	if v := i.config.cpuRequest; v != "" {
+		cpuConfig.Requested = v
+	}
+	if v := i.config.memRequest; v != "" {
+		memConfig.Requested = v
+	}
+	if v := i.config.cpuLimit; v != "" {
+		cpuConfig.Limit = v
+	}
+	if v := i.config.memLimit; v != "" {
+		memConfig.Limit = v
+	}
+	cfgMap["cpu"] = cpuConfig
+	cfgMap["memory"] = memConfig
+
 	// Marshal our config
 	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
 	if err != nil {
@@ -1155,12 +1183,22 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 
 	cpuRequest, err := resource.ParseQuantity(c.cpuRequest)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse cpu request resource %s: %s", c.cpuRequest, err)
+		return nil, fmt.Errorf("could not parse cpu request resource %q: %s", c.cpuRequest, err)
+	}
+
+	cpuLimit, err := resource.ParseQuantity(c.cpuLimit)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse cpu limit resource %q: %s", c.cpuLimit, err)
 	}
 
 	memRequest, err := resource.ParseQuantity(c.memRequest)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse memory request resource %s: %s", c.memRequest, err)
+		return nil, fmt.Errorf("could not parse memory request resource %q: %s", c.memRequest, err)
+	}
+
+	memLimit, err := resource.ParseQuantity(c.memLimit)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse memory limit resource %q: %s", c.memLimit, err)
 	}
 
 	securityContext := &apiv1.PodSecurityContext{}
@@ -1242,6 +1280,10 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 								},
 							},
 							Resources: apiv1.ResourceRequirements{
+								Limits: apiv1.ResourceList{
+									apiv1.ResourceMemory: memLimit,
+									apiv1.ResourceCPU:    cpuLimit,
+								},
 								Requests: apiv1.ResourceList{
 									apiv1.ResourceMemory: memRequest,
 									apiv1.ResourceCPU:    cpuRequest,
@@ -1260,17 +1302,27 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 func newStatefulSet(c k8sConfig, rawRunFlags []string) (*appsv1.StatefulSet, error) {
 	cpuRequest, err := resource.ParseQuantity(c.cpuRequest)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse cpu request resource %s: %s", c.cpuRequest, err)
+		return nil, fmt.Errorf("could not parse cpu request resource %q: %s", c.cpuRequest, err)
 	}
 
 	memRequest, err := resource.ParseQuantity(c.memRequest)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse memory request resource %s: %s", c.memRequest, err)
+		return nil, fmt.Errorf("could not parse memory request resource %q: %s", c.memRequest, err)
+	}
+
+	cpuLimit, err := resource.ParseQuantity(c.cpuLimit)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse cpu limit resource %q: %s", c.cpuLimit, err)
+	}
+
+	memLimit, err := resource.ParseQuantity(c.memLimit)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse memory limit resource %q: %s", c.memLimit, err)
 	}
 
 	storageRequest, err := resource.ParseQuantity(c.storageRequest)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse storage request resource %s: %s", c.storageRequest, err)
+		return nil, fmt.Errorf("could not parse storage request resource %q: %s", c.storageRequest, err)
 	}
 
 	securityContext := &apiv1.PodSecurityContext{}
@@ -1372,6 +1424,10 @@ func newStatefulSet(c k8sConfig, rawRunFlags []string) (*appsv1.StatefulSet, err
 								},
 							},
 							Resources: apiv1.ResourceRequirements{
+								Limits: apiv1.ResourceList{
+									apiv1.ResourceMemory: memLimit,
+									apiv1.ResourceCPU:    cpuLimit,
+								},
 								Requests: apiv1.ResourceList{
 									apiv1.ResourceMemory: memRequest,
 									apiv1.ResourceCPU:    cpuRequest,
@@ -1533,6 +1589,20 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 		Name:    "k8s-mem-request",
 		Target:  &i.config.memRequest,
 		Usage:   "Configures the requested memory amount for the Waypoint server in Kubernetes.",
+		Default: "256Mi",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-cpu-limit",
+		Target:  &i.config.cpuLimit,
+		Usage:   "Configures the CPU limit for the Waypoint server in Kubernetes.",
+		Default: "100m",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-mem-limit",
+		Target:  &i.config.memLimit,
+		Usage:   "Configures the memory limit for the Waypoint server in Kubernetes.",
 		Default: "256Mi",
 	})
 
