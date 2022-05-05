@@ -67,9 +67,9 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 	pipeline.Name = rawPipeline.Name
 	pipeline.ctx = ctx
 	pipeline.config = c
-	// TODO: config overrides?
-
-	// TODO: is this were we set step order?
+	if pipeline.config != nil {
+		pipeline.config.ctx = ctx
+	}
 
 	return &pipeline, nil
 }
@@ -138,6 +138,32 @@ func (c *Pipeline) StepUse(ctx *hcl.EvalContext) (string, error) {
 
 		return useType, nil
 	*/
+}
+
+// StepsUse iterates over all defined steps in the eval context and returns
+// every step plugin type.
+// NOTE(briancain): We could gather all of the use plugin labels this way and
+// return them as a string?
+func (c *Pipeline) StepsUse(ctx *hcl.EvalContext) ([]string, error) {
+	if len(c.StepRaw) == 0 {
+		return nil, nil
+	}
+
+	var useTypes []string
+
+	for _, stepRaw := range c.StepRaw {
+		useType := stepRaw.Use.Type
+		stage, err := scopeMatchStage(ctx, stepRaw.WorkspaceScoped, stepRaw.LabelScoped)
+		if err != nil {
+			return nil, err
+		}
+		if stage != nil {
+			useType = stage.Use.Type
+		}
+		useTypes = append(useTypes, useType)
+	}
+
+	return useTypes, nil
 }
 
 // StepLabels returns the labels for this stage.
