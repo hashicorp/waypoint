@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -9,6 +10,7 @@ import (
 	"github.com/posener/complete"
 	"sort"
 	"strings"
+	"time"
 )
 
 type RunnerInstallCommand struct {
@@ -156,7 +158,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 				terminal.WithErrorStyle(),
 			)
 		}
-		log.Debug("Runner token generated: %s", token)
+		token.GetToken()
 	}
 
 	log.Debug("Installing runner.")
@@ -167,6 +169,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		Cookie:          c.serverCookie,
 		ServerAddr:      c.serverUrl,
 		AdvertiseClient: nil,
+		Id:              c.id,
 	})
 	if err != nil {
 		c.ui.Output("Error installing runner: %s", clierrors.Humanize(err),
@@ -176,6 +179,50 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	}
 	log.Debug("Runner installed.")
 
+	// TODO: Only run the below in adoption mode
+	var id string
+	if c.id == "" {
+		// TODO: Get the randomly generated ID of the newly installed runner
+	} else {
+		id = c.id
+	}
+
+	// Waits 5 minutes for the server to detect the new runner before timing out
+	d := time.Now().Add(time.Minute * time.Duration(5))
+	ctx, cancel := context.WithDeadline(ctx, d)
+	defer cancel()
+	ticker := time.NewTicker(5 * time.Second)
+	for true {
+		select {
+		case <-ticker.C:
+		case <-ctx.Done():
+			c.ui.Output("Cancelled.",
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+		runner, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: id})
+		if err != nil {
+			c.ui.Output("Error getting runner: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+		if runner == nil {
+			continue
+		}
+		_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+			RunnerId: runner.Id,
+			Adopt:    true,
+		})
+		if err != nil {
+			c.ui.Output("Error adopting runner: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+		return 0
+	}
 	return 0
 }
 
