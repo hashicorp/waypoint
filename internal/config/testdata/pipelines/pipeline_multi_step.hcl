@@ -28,5 +28,14 @@ pipeline "foo" {
   }
 }
 
-app "foo" {
+app "web" {
+    config {
+        env = {
+            static = "hello"
+        }
+    }
+
+    build {}
+
+    deploy {}
 }
