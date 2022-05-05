@@ -21,3 +21,10 @@
 @import 'pages';
 
 @import 'lab';
+
+// https://docs.percy.io/docs/percy-specific-css#percy-css-media-query
+@media only percy {
+  .hide-in-percy {
+    visibility: hidden;
+  }
+}
