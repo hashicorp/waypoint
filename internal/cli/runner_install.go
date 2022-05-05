@@ -194,10 +194,11 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		)
 		return 1
 	}
-	log.Debug("Runner installed.")
+	c.ui.Output("Runner %s installed successfully", id,
+		terminal.WithSuccessStyle(),
+	)
 
 	// TODO: Only run the below in adoption mode
-
 	// Waits 5 minutes for the server to detect the new runner before timing out
 	d := time.Now().Add(time.Minute * time.Duration(5))
 	ctx, cancel := context.WithDeadline(ctx, d)
@@ -232,6 +233,40 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 			)
 			return 1
 		}
+		c.ui.Output("Runner %s adopted successfully.", id,
+			terminal.WithSuccessStyle(),
+		)
+
+		// Creating a new runner profile for the newly adopted runner
+		runnerProfile, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+			Config: &pb.OnDemandRunnerConfig{
+				Id:   id,
+				Name: c.platform + "-" + id,
+				TargetRunner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Id{
+						Id: &pb.Ref_RunnerId{
+							Id: id,
+						},
+					},
+				},
+				OciUrl:               "hashicorp/waypoint-odr:latest",
+				EnvironmentVariables: nil,
+				PluginType:           c.platform,
+				PluginConfig:         nil,
+				ConfigFormat:         0,
+				Default:              false,
+			},
+		})
+		if err != nil {
+			c.ui.Output("Error creating runner profile: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+		c.ui.Output("Runner profile %s created successfully.", runnerProfile.Config.Name,
+			terminal.WithSuccessStyle(),
+		)
+
 		return 0
 	}
 	return 0
