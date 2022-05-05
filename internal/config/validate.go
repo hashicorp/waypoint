@@ -23,6 +23,7 @@ type validateStruct struct {
 	Variables []*validateVariable `hcl:"variable,block"`
 	Plugin    []*Plugin           `hcl:"plugin,block"`
 	Apps      []*validateApp      `hcl:"app,block"`
+	Pipelines []*validatePipeline `hcl:"pipeline,block"`
 	Config    *genericConfig      `hcl:"config,block"`
 }
 
@@ -46,6 +47,12 @@ type validateVariable struct {
 	Default     cty.Value `hcl:"default,optional"`
 	Type        cty.Type  `hcl:"type,optional"`
 	Description string    `hcl:"description,optional"`
+}
+
+type validatePipeline struct {
+	Name   string            `hcl:",label"`
+	Labels map[string]string `hcl:"labels,optional"`
+	Step   []*Step           `hcl:"step,block"`
 }
 
 // Validate the structure of the configuration.
@@ -76,6 +83,14 @@ func (c *Config) Validate() error {
 	// Validate apps
 	for _, block := range content.Blocks.OfType("app") {
 		err := c.validateApp(block)
+		if err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	// Validate pipelines
+	for _, block := range content.Blocks.OfType("pipeline") {
+		err := c.validatePipeline(block)
 		if err != nil {
 			result = multierror.Append(result, err)
 		}
@@ -197,6 +212,42 @@ func (c *App) Validate() error {
 		}
 	}
 
+	return result
+}
+
+// validatePipeline validates that a given pipeline block has at least
+// one step stanza
+func (c *Config) validatePipeline(b *hcl.Block) error {
+	// Validate root
+	schema, _ := gohcl.ImpliedBodySchema(&validatePipeline{})
+	content, diag := b.Body.Content(schema)
+	if diag.HasErrors() {
+		return diag
+	}
+
+	// At least one Step required
+	if len(content.Blocks.OfType("step")) < 1 {
+		return &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "'step' stanza required",
+			Subject:  &b.DefRange,
+			Context:  &b.TypeRange,
+		}
+	}
+	return nil
+}
+
+func (c *Pipeline) Validate() error {
+	var result error
+
+	for _, stepRaw := range c.StepRaw {
+		if stepRaw == nil || stepRaw.Use == nil || stepRaw.Use.Type == "" {
+			result = multierror.Append(result, fmt.Errorf(
+				"step stage with a default 'use' stanza is required"))
+		}
+
+		// else, other step validations?
+	}
 	return result
 }
 
