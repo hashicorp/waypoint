@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
+	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/posener/complete"
 	"sort"
@@ -146,6 +147,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	client := c.project.Client()
 
 	token := &pb.NewTokenResponse{}
+	var err error
 	if c.mode == "adoption" {
 		log.Debug("Generating runner token.")
 		token, err := client.GenerateRunnerToken(ctx, &pb.GenerateRunnerTokenRequest{
@@ -161,15 +163,30 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		token.GetToken()
 	}
 
+	// We generate the ID if the user doesn't provide one
+	// This ID is used later to adopt the runner
+	var id string
+	if c.id == "" {
+		id, err = server.Id()
+		if err != nil {
+			c.ui.Output("Error generating runner ID: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+	} else {
+		id = c.id
+	}
+
 	log.Debug("Installing runner.")
-	err := p.Install(ctx, &runnerinstall.InstallOpts{
+	err = p.Install(ctx, &runnerinstall.InstallOpts{
 		Log:             log,
 		UI:              c.ui,
 		AuthToken:       token.Token,
 		Cookie:          c.serverCookie,
 		ServerAddr:      c.serverUrl,
 		AdvertiseClient: nil,
-		Id:              c.id,
+		Id:              id,
 	})
 	if err != nil {
 		c.ui.Output("Error installing runner: %s", clierrors.Humanize(err),
@@ -180,12 +197,6 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	log.Debug("Runner installed.")
 
 	// TODO: Only run the below in adoption mode
-	var id string
-	if c.id == "" {
-		// TODO: Get the randomly generated ID of the newly installed runner
-	} else {
-		id = c.id
-	}
 
 	// Waits 5 minutes for the server to detect the new runner before timing out
 	d := time.Now().Add(time.Minute * time.Duration(5))
@@ -203,7 +214,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		}
 		runner, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: id})
 		if err != nil {
-			c.ui.Output("Error getting runner: %s", clierrors.Humanize(err),
+			c.ui.Output("Error getting runner %s: %s", id, clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
 			return 1
