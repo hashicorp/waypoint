@@ -20,7 +20,7 @@ type RunnerInstallCommand struct {
 	*baseCommand
 
 	platform     string
-	mode         string
+	adopt        bool
 	serverUrl    string
 	serverCookie string
 	id           string
@@ -51,12 +51,11 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 			Target: &c.serverUrl,
 		})
 
-		// TODO: Determine if adoption or preadoption will be default
-		f.StringVar(&flag.StringVar{
-			Name:    "mode",
-			Usage:   "Installation mode: adoption or preadoption.",
-			Default: "adoption",
-			Target:  &c.mode,
+		f.BoolVar(&flag.BoolVar{
+			Name:    "adopt",
+			Usage:   "Adopt the runner after it is installed.",
+			Default: true,
+			Target:  &c.adopt,
 		})
 
 		f.StringVar(&flag.StringVar{
@@ -129,17 +128,9 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	if c.mode != "adoption" && c.mode != "preadoption" {
+	if c.adopt && c.serverCookie == "" {
 		c.ui.Output(
-			"Unsupported runner install mode.",
-			terminal.WithErrorStyle(),
-		)
-		return 1
-	}
-
-	if c.mode == "adoption" && c.serverCookie == "" {
-		c.ui.Output(
-			"Server cookie must be supplied for adoption mode.",
+			"Server cookie must be supplied for adoption.",
 			terminal.WithErrorStyle(),
 		)
 		return 1
@@ -152,8 +143,9 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		return 1
 	}
 
+	// TODO: Evaluate if generating a token for non-adoption mode is necessary
 	token := &pb.NewTokenResponse{}
-	if c.mode == "preadoption" {
+	if !c.adopt {
 		log.Debug("Generating runner token.")
 		token, err = client.GenerateRunnerToken(ctx, &pb.GenerateRunnerTokenRequest{
 			Duration: "",
@@ -205,8 +197,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		terminal.WithSuccessStyle(),
 	)
 
-	// TODO: Only run the below in adoption mode
-	if c.mode == "adoption" {
+	if c.adopt {
 		c.ui.Output("Waiting for runner to connect to server...")
 		// Waits 5 minutes for the server to detect the new runner before timing out
 		d := time.Now().Add(time.Minute * time.Duration(5))
