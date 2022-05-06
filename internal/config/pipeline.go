@@ -167,9 +167,8 @@ func (c *Pipeline) StepsUse(ctx *hcl.EvalContext) ([]string, error) {
 }
 
 // StepLabels returns the labels for this stage.
-// TODO: see the todo in StepUse
-func (c *Pipeline) StepLabels(ctx *hcl.EvalContext) (map[string]string, error) {
-	return nil, nil
+// TODO: see the todo in StepUse for single step verus Many step
+func (c *Pipeline) StepLabels(ctx *hcl.EvalContext) ([]map[string]string, error) {
 	/*
 		if c.StepRaw == nil {
 			return nil, nil
@@ -178,4 +177,21 @@ func (c *Pipeline) StepLabels(ctx *hcl.EvalContext) (map[string]string, error) {
 		ctx = appendContext(c.ctx, ctx)
 		return labels(ctx, c.StepRaw.Body)
 	*/
+	if len(c.StepRaw) == 0 {
+		return nil, nil
+	}
+
+	var result []map[string]string
+
+	ctx = appendContext(c.ctx, ctx)
+	for _, stepRaw := range c.StepRaw {
+		l, err := labels(ctx, stepRaw.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, l)
+	}
+
+	return result, nil
 }
