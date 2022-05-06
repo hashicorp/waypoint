@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
+	"strings"
 	"time"
 )
 
@@ -47,7 +48,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
 	client.Namespace = chartNS
-	client.ReleaseName = "waypoint-" + opts.Id
+	client.ReleaseName = "waypoint-" + strings.ToLower(opts.Id)
 	client.GenerateName = false
 	client.NameTemplate = ""
 	client.OutputDir = ""
