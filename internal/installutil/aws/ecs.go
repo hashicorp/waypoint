@@ -40,6 +40,7 @@ const (
 	runnerName = "waypoint-runner"
 
 	defaultGrpcPort = "9701"
+	defaultHttpPort = "9702"
 )
 
 type Lifecycle struct {
@@ -56,7 +57,6 @@ func (lf *Lifecycle) Execute(log hclog.Logger, ui terminal.UI) error {
 		if err != nil {
 			return err
 		}
-
 	}
 
 	log.Debug("lifecycle run")
@@ -75,6 +75,52 @@ func (lf *Lifecycle) Execute(log hclog.Logger, ui terminal.UI) error {
 	}
 
 	return nil
+}
+
+func SetupNetworking(
+	ctx context.Context,
+	ui terminal.UI,
+	sess *session.Session,
+	subnet []string,
+) (*NetworkInformation, error) {
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Setting up networking...")
+	defer s.Abort()
+	subnets, vpcID, err := subnetInfo(ctx, s, sess, subnet)
+	if err != nil {
+		return nil, err
+	}
+
+	s.Update("Setting up security group...")
+	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
+	httpPort, _ := strconv.Atoi(defaultHttpPort)
+	ports := []*int64{
+		aws.Int64(int64(grpcPort)),
+		aws.Int64(int64(httpPort)),
+		aws.Int64(int64(2049)), // EFS File system port
+	}
+
+	sgID, err := createSG(ctx, s, sess, defaultSecurityGroupName, vpcID, ports)
+	if err != nil {
+		return nil, err
+	}
+	s.Update("Networking setup")
+	s.Done()
+	ni := NetworkInformation{
+		vpcID:   vpcID,
+		subnets: subnets,
+		sgID:    sgID,
+	}
+	return &ni, nil
+}
+
+type NetworkInformation struct {
+	vpcID   *string
+	sgID    *string
+	subnets []*string
 }
 
 type Logging struct {
@@ -132,6 +178,7 @@ func LaunchRunner(
 	sess *session.Session,
 	env []string,
 	executionRoleArn, taskRoleArn, logGroup, region, cpu, memory, runnerImage, cluster string,
+	netInfo *NetworkInformation,
 ) (*string, error) {
 
 	sg := ui.StepGroup()
@@ -166,12 +213,16 @@ func LaunchRunner(
 		})
 	}
 
+	// TODO: Add -state-dir and -cookie flags
+	// TODO: Add mount from EFS for state
 	def := ecs.ContainerDefinition{
 		Essential: aws.Bool(true),
 		Command: []*string{
 			aws.String("runner"),
 			aws.String("agent"),
 			aws.String("-vv"),
+			//aws.String("-state-dir=/data/runner"),
+			//aws.String("-cookie"),
 			aws.String("-liveness-tcp-addr=:1234"),
 		},
 		Name:  aws.String("waypoint-runner"),
@@ -187,6 +238,13 @@ func LaunchRunner(
 			LogDriver: aws.String(ecs.LogDriverAwslogs),
 			Options:   logOptions,
 		},
+		//MountPoints: []*ecs.MountPoint{
+		//	{
+		//		ContainerPath: aws.String("/data/runner"),
+		//		ReadOnly:      aws.Bool(false),
+		//		SourceVolume:  aws.String("waypoint-runner"),
+		//	},
+		//},
 	}
 
 	s.Update("Registering Task definition: waypoint-runner")
@@ -241,6 +299,8 @@ func LaunchRunner(
 		return nil, fmt.Errorf("could not find security group (%s)", defaultSecurityGroupName)
 	}
 
+	// Check for details of possibly existing cluster `waypoint-server`
+	// If server was installed to ECS with `waypoint install` command, we'd expect this
 	// query what subnets and vpc information from the server service
 	services, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
 		Cluster:  aws.String(cluster),
@@ -250,14 +310,19 @@ func LaunchRunner(
 		return nil, err
 	}
 
-	// should only find one
-	service := services.Services[0]
-	if service == nil {
-		return nil, fmt.Errorf("no waypoint-server service found")
+	// If we found an ECS cluster `waypoint-server` use that
+	// If not, use the configs passed to this method
+	var clusterArn *string
+	var subnets []*string
+	if len(services.Services) == 0 {
+		// return nil, fmt.Errorf("no waypoint-server service found")
+		clusterArn = aws.String(cluster)
+		subnets = netInfo.subnets
+	} else {
+		service := services.Services[0]
+		clusterArn = service.ClusterArn
+		subnets = service.NetworkConfiguration.AwsvpcConfiguration.Subnets
 	}
-
-	clusterArn := service.ClusterArn
-	subnets := service.NetworkConfiguration.AwsvpcConfiguration.Subnets
 
 	createServiceInput := &ecs.CreateServiceInput{
 		Cluster:              clusterArn,
@@ -582,6 +647,150 @@ func SetupTaskRole(
 	s.Update("Created IAM task role: %s", roleName)
 	s.Done()
 	return roleArn, nil
+}
+
+func subnetInfo(
+	ctx context.Context,
+	s terminal.Step,
+	sess *session.Session,
+	subnet []string,
+) ([]*string, *string, error) {
+	ec2Svc := ec2.New(sess)
+
+	var (
+		subnets []*string
+		vpcID   *string
+	)
+
+	if len(subnet) == 0 {
+		s.Update("Using default subnets for Service networking")
+		desc, err := ec2Svc.DescribeSubnets(&ec2.DescribeSubnetsInput{
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("default-for-az"),
+					Values: []*string{aws.String("true")},
+				},
+			},
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+
+		for _, subnet := range desc.Subnets {
+			subnets = append(subnets, subnet.SubnetId)
+		}
+		if len(desc.Subnets) == 0 {
+			return nil, nil, fmt.Errorf("no default subnet information found")
+		}
+		vpcID = desc.Subnets[0].VpcId
+		return subnets, vpcID, nil
+	}
+
+	subnets = make([]*string, len(subnet))
+	for j := range subnet {
+		subnets[j] = &subnet[j]
+	}
+	s.Update("Using provided subnets for Service networking")
+	subnetInfo, err := ec2Svc.DescribeSubnets(&ec2.DescribeSubnetsInput{
+		SubnetIds: subnets,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(subnetInfo.Subnets) == 0 {
+		return nil, nil, fmt.Errorf("no subnet information found for provided subnets")
+	}
+
+	vpcID = subnetInfo.Subnets[0].VpcId
+
+	return subnets, vpcID, nil
+}
+
+func createSG(
+	ctx context.Context,
+	s terminal.Step,
+	sess *session.Session,
+	name string,
+	vpcId *string,
+
+	ports []*int64,
+) (*string, error) {
+	ec2srv := ec2.New(sess)
+
+	dsg, err := ec2srv.DescribeSecurityGroups(&ec2.DescribeSecurityGroupsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("group-name"),
+				Values: []*string{aws.String(name)},
+			},
+			{
+				Name:   aws.String("vpc-id"),
+				Values: []*string{vpcId},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var groupId *string
+
+	if len(dsg.SecurityGroups) != 0 {
+		groupId = dsg.SecurityGroups[0].GroupId
+		s.Update("Using existing security group: %s", name)
+	} else {
+		s.Update("Creating security group: %s", name)
+		out, err := ec2srv.CreateSecurityGroup(&ec2.CreateSecurityGroupInput{
+			Description: aws.String("created by waypoint"),
+			GroupName:   aws.String(name),
+			VpcId:       vpcId,
+			TagSpecifications: []*ec2.TagSpecification{
+				{
+					ResourceType: aws.String(ec2.ResourceTypeSecurityGroup),
+					Tags: []*ec2.Tag{
+						{
+							Key:   aws.String(defaultServerTagName),
+							Value: aws.String(defaultServerTagValue),
+						},
+					},
+				},
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		groupId = out.GroupId
+		s.Update("Created security group: %s", name)
+	}
+
+	s.Update("Authorizing ports to security group")
+	// Port 2049 is the port for accessing EFS file systems over NFS
+	for _, port := range ports {
+		_, err = ec2srv.AuthorizeSecurityGroupIngress(&ec2.AuthorizeSecurityGroupIngressInput{
+			CidrIp:     aws.String("0.0.0.0/0"),
+			FromPort:   port,
+			ToPort:     port,
+			GroupId:    groupId,
+			IpProtocol: aws.String("tcp"),
+		})
+	}
+
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "InvalidPermission.Duplicate":
+				// fine, means we already added it.
+			default:
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+
+	return groupId, nil
 }
 
 func SetupLogs(

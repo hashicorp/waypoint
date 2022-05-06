@@ -31,6 +31,7 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	var (
 		logGroup      string
 		executionRole string
+		netInfo       *aws.NetworkInformation
 		taskRole      string
 		runSvcArn     *string
 	)
@@ -44,8 +45,11 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				return err
 			}
 
-			executionRole, err = aws.SetupExecutionRole(ctx, ui, log, sess, i.config.ExecutionRoleName)
-			if err != nil {
+			if netInfo, err = aws.SetupNetworking(ctx, ui, sess, i.config.Subnets); err != nil {
+				return err
+			}
+
+			if executionRole, err = aws.SetupExecutionRole(ctx, ui, log, sess, i.config.ExecutionRoleName); err != nil {
 				return err
 			}
 
@@ -74,6 +78,7 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				i.config.Memory,
 				i.config.RunnerImage,
 				i.config.Cluster,
+				netInfo,
 			)
 			return err
 		},
@@ -110,15 +115,17 @@ func (i *ECSRunnerInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:   "ecs-cpu",
-		Target: &i.config.CPU,
-		Usage:  "The amount of CPU to allocate for the Waypoint runner task.",
+		Name:    "ecs-cpu",
+		Target:  &i.config.CPU,
+		Usage:   "The amount of CPU to allocate for the Waypoint runner task.",
+		Default: "512",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:   "ecs-memory",
-		Target: &i.config.Memory,
-		Usage:  "The amount of memory to allocate for the Waypoint runner task",
+		Name:    "ecs-memory",
+		Target:  &i.config.Memory,
+		Usage:   "The amount of memory to allocate for the Waypoint runner task",
+		Default: "2048",
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -133,6 +140,12 @@ func (i *ECSRunnerInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.config.Cluster,
 		Default: "waypoint-server",
 		Usage:   "The name of the ECS Cluster to install the Waypoint runner into.",
+	})
+
+	set.StringSliceVar(&flag.StringSliceVar{
+		Name:   "ecs-subnets",
+		Target: &i.config.Subnets,
+		Usage:  "Subnets to install the Waypoint runner into.",
 	})
 }
 
@@ -154,4 +167,5 @@ type ecsConfig struct {
 	Memory            string
 	RunnerImage       string
 	Cluster           string
+	Subnets           []string
 }
