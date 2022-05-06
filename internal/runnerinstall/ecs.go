@@ -58,7 +58,7 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				return err
 			}
 
-			taskRole, err = aws.SetupTaskRole(ctx, ui, log, sess, i.config.TaskRoleName)
+			taskRole, err = aws.SetupTaskRole(ctx, ui, log, sess, i.config.TaskRoleName, opts.Id)
 			if err != nil {
 				return err
 			}

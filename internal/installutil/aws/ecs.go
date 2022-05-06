@@ -410,6 +410,10 @@ func LaunchRunner(
 				Key:   aws.String(defaultRunnerTagName),
 				Value: aws.String(defaultRunnerTagValue),
 			},
+			{
+				Key:   aws.String("runner-id"),
+				Value: aws.String(id),
+			},
 		},
 		Volumes: []*ecs.Volume{
 			{
@@ -554,6 +558,7 @@ func createService(serviceInput *ecs.CreateServiceInput, ecsSvc *ecs.ECS) (*ecs.
 	return servOut.Service, nil
 }
 
+// TODO: Add runner ID as tag
 func SetupExecutionRole(
 	ctx context.Context,
 	ui terminal.UI,
@@ -729,6 +734,7 @@ func SetupTaskRole(
 	sess *session.Session,
 
 	taskRoleName string,
+	id string,
 ) (string, error) {
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -771,6 +777,10 @@ func SetupTaskRole(
 			{
 				Key:   aws.String(defaultRunnerTagName),
 				Value: aws.String(defaultRunnerTagValue),
+			},
+			{
+				Key:   aws.String("runner-id"),
+				Value: aws.String(id),
 			},
 		},
 	}
