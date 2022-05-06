@@ -29,6 +29,7 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	}
 
 	var (
+		efsInfo       *aws.EfsInformation
 		logGroup      string
 		executionRole string
 		netInfo       *aws.NetworkInformation
@@ -46,6 +47,10 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			}
 
 			if netInfo, err = aws.SetupNetworking(ctx, ui, sess, i.config.Subnets); err != nil {
+				return err
+			}
+
+			if efsInfo, err = aws.SetupEFS(ctx, ui, sess, netInfo); err != nil {
 				return err
 			}
 
@@ -78,7 +83,10 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				i.config.Memory,
 				i.config.RunnerImage,
 				i.config.Cluster,
+				opts.Cookie,
+				opts.Id,
 				netInfo,
+				efsInfo,
 			)
 			return err
 		},

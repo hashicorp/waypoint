@@ -9,8 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"strconv"
@@ -117,10 +119,152 @@ func SetupNetworking(
 	return &ni, nil
 }
 
+func SetupEFS(
+	ctx context.Context,
+	ui terminal.UI,
+	sess *session.Session,
+	netInfo *NetworkInformation,
+
+) (*EfsInformation, error) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Creating new EFS file system...")
+	defer func() { s.Abort() }()
+
+	efsSvc := efs.New(sess)
+	ulid, _ := component.Id()
+
+	fsd, err := efsSvc.CreateFileSystem(&efs.CreateFileSystemInput{
+		CreationToken: aws.String(ulid),
+		Encrypted:     aws.Bool(true),
+		Tags: []*efs.Tag{
+			{
+				Key:   aws.String(defaultServerTagName),
+				Value: aws.String(defaultServerTagValue),
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = efsSvc.DescribeFileSystems(&efs.DescribeFileSystemsInput{
+		CreationToken: aws.String(ulid),
+	})
+	if err != nil {
+		return nil, err
+	}
+	s.Update("Created new EFS file system: %s", *fsd.FileSystemId)
+
+EFSLOOP:
+	for i := 0; i < 10; i++ {
+		fsList, err := efsSvc.DescribeFileSystems(&efs.DescribeFileSystemsInput{
+			FileSystemId: fsd.FileSystemId,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(fsList.FileSystems) == 0 {
+			return nil, fmt.Errorf("file system (%s) not found", *fsd.FileSystemId)
+		}
+		// check the status of the first one
+		fs := fsList.FileSystems[0]
+		switch *fs.LifeCycleState {
+		case efs.LifeCycleStateDeleted, efs.LifeCycleStateDeleting:
+			return nil, fmt.Errorf("files system is deleting/deleted")
+		case efs.LifeCycleStateAvailable:
+			break EFSLOOP
+		}
+		time.Sleep(2 * time.Second)
+	}
+
+	s.Update("Creating EFS Mount targets...")
+
+	// poll for available
+	for _, sub := range netInfo.subnets {
+		_, err := efsSvc.CreateMountTarget(&efs.CreateMountTargetInput{
+			FileSystemId:   fsd.FileSystemId,
+			SecurityGroups: []*string{netInfo.sgID},
+			SubnetId:       sub,
+			// Mount Targets do not support tags directly
+		})
+		if err != nil {
+			return nil, fmt.Errorf("error creating mount target: %w", err)
+		}
+	}
+
+	// create EFS access points
+	s.Update("Creating EFS Access Point...")
+	uid := aws.Int64(int64(100))
+	gid := aws.Int64(int64(1000))
+	accessPoint, err := efsSvc.CreateAccessPoint(&efs.CreateAccessPointInput{
+		FileSystemId: fsd.FileSystemId,
+		PosixUser: &efs.PosixUser{
+			Uid: uid,
+			Gid: gid,
+		},
+		RootDirectory: &efs.RootDirectory{
+			CreationInfo: &efs.CreationInfo{
+				OwnerUid:    uid,
+				OwnerGid:    gid,
+				Permissions: aws.String("755"),
+			},
+			Path: aws.String("/waypointserverdata"),
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating access point: %w", err)
+	}
+
+	// loop until all mount targets are ready, or the first container can have
+	// issues starting
+	// TODO: Update to use context instead of sleep
+	s.Update("Waiting for EFS mount targets to become available...")
+	var available int
+	for i := 0; 1 < 30; i++ {
+		mtgs, err := efsSvc.DescribeMountTargets(&efs.DescribeMountTargetsInput{
+			AccessPointId: accessPoint.AccessPointId,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, m := range mtgs.MountTargets {
+			if *m.LifeCycleState == efs.LifeCycleStateAvailable {
+				available++
+			}
+		}
+		if available == len(netInfo.subnets) {
+			break
+		}
+
+		available = 0
+		time.Sleep(5 * time.Second)
+		continue
+	}
+
+	if available != len(netInfo.subnets) {
+		return nil, fmt.Errorf("not enough available mount targets found")
+	}
+
+	s.Update("EFS ready")
+	s.Done()
+	return &EfsInformation{
+		fileSystemID:  fsd.FileSystemId,
+		accessPointID: accessPoint.AccessPointId,
+	}, nil
+}
+
 type NetworkInformation struct {
 	vpcID   *string
 	sgID    *string
 	subnets []*string
+}
+
+type EfsInformation struct {
+	fileSystemID  *string
+	accessPointID *string
 }
 
 type Logging struct {
@@ -177,8 +321,9 @@ func LaunchRunner(
 	log hclog.Logger,
 	sess *session.Session,
 	env []string,
-	executionRoleArn, taskRoleArn, logGroup, region, cpu, memory, runnerImage, cluster string,
+	executionRoleArn, taskRoleArn, logGroup, region, cpu, memory, runnerImage, cluster, cookie, id string,
 	netInfo *NetworkInformation,
+	efsInfo *EfsInformation,
 ) (*string, error) {
 
 	sg := ui.StepGroup()
@@ -213,17 +358,18 @@ func LaunchRunner(
 		})
 	}
 
-	// TODO: Add -state-dir and -cookie flags
+	// TODO: Add -state-dir
 	// TODO: Add mount from EFS for state
 	def := ecs.ContainerDefinition{
 		Essential: aws.Bool(true),
 		Command: []*string{
 			aws.String("runner"),
 			aws.String("agent"),
-			aws.String("-vv"),
-			//aws.String("-state-dir=/data/runner"),
-			//aws.String("-cookie"),
+			aws.String("-id=" + id),
 			aws.String("-liveness-tcp-addr=:1234"),
+			aws.String("-cookie=" + cookie),
+			aws.String("-state-dir=/data/runner"),
+			aws.String("-vv"),
 		},
 		Name:  aws.String("waypoint-runner"),
 		Image: aws.String(runnerImage),
@@ -238,13 +384,13 @@ func LaunchRunner(
 			LogDriver: aws.String(ecs.LogDriverAwslogs),
 			Options:   logOptions,
 		},
-		//MountPoints: []*ecs.MountPoint{
-		//	{
-		//		ContainerPath: aws.String("/data/runner"),
-		//		ReadOnly:      aws.Bool(false),
-		//		SourceVolume:  aws.String("waypoint-runner"),
-		//	},
-		//},
+		MountPoints: []*ecs.MountPoint{
+			{
+				ContainerPath: aws.String("/data/runner"),
+				ReadOnly:      aws.Bool(false),
+				SourceVolume:  aws.String(defaultRunnerTagName),
+			},
+		},
 	}
 
 	s.Update("Registering Task definition: waypoint-runner")
@@ -263,6 +409,18 @@ func LaunchRunner(
 			{
 				Key:   aws.String(defaultRunnerTagName),
 				Value: aws.String(defaultRunnerTagValue),
+			},
+		},
+		Volumes: []*ecs.Volume{
+			{
+				EfsVolumeConfiguration: &ecs.EFSVolumeConfiguration{
+					AuthorizationConfig: &ecs.EFSAuthorizationConfig{
+						AccessPointId: efsInfo.accessPointID,
+					},
+					FileSystemId:      efsInfo.fileSystemID,
+					TransitEncryption: aws.String(ecs.EFSTransitEncryptionEnabled),
+				},
+				Name: aws.String(defaultRunnerTagName),
 			},
 		},
 	}
@@ -328,7 +486,7 @@ func LaunchRunner(
 		Cluster:              clusterArn,
 		DesiredCount:         aws.Int64(1),
 		LaunchType:           aws.String(defaultTaskRuntime),
-		ServiceName:          aws.String(runnerName),
+		ServiceName:          aws.String(runnerName + "-" + id),
 		EnableECSManagedTags: aws.Bool(true),
 		TaskDefinition:       aws.String(taskDefArn),
 		NetworkConfiguration: &ecs.NetworkConfiguration{
@@ -342,6 +500,10 @@ func LaunchRunner(
 			{
 				Key:   aws.String(defaultRunnerTagName),
 				Value: aws.String(defaultRunnerTagValue),
+			},
+			{
+				Key:   aws.String("runner-id"),
+				Value: aws.String(id),
 			},
 		},
 	}
