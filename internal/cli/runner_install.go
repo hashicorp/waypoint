@@ -87,10 +87,17 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 	})
 }
 
-// TODO: Add description
 func (c *RunnerInstallCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint runner install [options]
+
+  Installs a Waypoint runner to an existing platform. The platform should be
+  specified as kubernetes, nomad, ecs, or docker.
+
+  By default, this will adopt the runner after it is installed. The install will
+  attempt to install a runner for the server configured in the current Waypoint 
+  context.
+
 ` + c.Flags().Help())
 }
 
