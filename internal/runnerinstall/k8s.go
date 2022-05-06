@@ -47,7 +47,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
 	client.Namespace = chartNS
-	client.ReleaseName = "waypoint"
+	client.ReleaseName = "waypoint-" + opts.Id
 	client.GenerateName = false
 	client.NameTemplate = ""
 	client.OutputDir = ""
@@ -95,9 +95,8 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				},
 			},
 			"server": map[string]interface{}{
-				"addr":        opts.ServerAddr,
-				"cookie":      opts.Cookie,
-				"tokenSecret": opts.AuthToken,
+				"addr":   opts.ServerAddr,
+				"cookie": opts.Cookie,
 			},
 			"serviceAccount": map[string]interface{}{
 				"create": i.config.CreateServiceAccount,
