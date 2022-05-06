@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverconfig"
 	"github.com/posener/complete"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 	"sort"
 	"strings"
 	"time"
@@ -115,7 +117,6 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 				"The -platform flag is required.",
 				terminal.WithErrorStyle(),
 			)
-
 			return 1
 		}
 
@@ -145,12 +146,16 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	}
 
 	client := c.project.Client()
+	conn, err := client.GetServerConfig(ctx, &empty.Empty{})
+	if err != nil {
+		c.ui.Output("Error getting server config: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+		return 1
+	}
 
 	token := &pb.NewTokenResponse{}
-	var err error
-	if c.mode == "adoption" {
+	if c.mode == "preadoption" {
 		log.Debug("Generating runner token.")
-		token, err := client.GenerateRunnerToken(ctx, &pb.GenerateRunnerTokenRequest{
+		token, err = client.GenerateRunnerToken(ctx, &pb.GenerateRunnerTokenRequest{
 			Duration: "",
 			Id:       "",
 			Labels:   nil,
@@ -160,7 +165,6 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 				terminal.WithErrorStyle(),
 			)
 		}
-		token.GetToken()
 	}
 
 	// We generate the ID if the user doesn't provide one
@@ -169,9 +173,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	if c.id == "" {
 		id, err = server.Id()
 		if err != nil {
-			c.ui.Output("Error generating runner ID: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
+			c.ui.Output("Error generating runner ID: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
 	} else {
@@ -180,13 +182,18 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 
 	log.Debug("Installing runner.")
 	err = p.Install(ctx, &runnerinstall.InstallOpts{
-		Log:             log,
-		UI:              c.ui,
-		AuthToken:       token.Token,
-		Cookie:          c.serverCookie,
-		ServerAddr:      c.serverUrl,
-		AdvertiseClient: nil,
-		Id:              id,
+		Log:        log,
+		UI:         c.ui,
+		Cookie:     c.serverCookie,
+		ServerAddr: c.serverUrl,
+		AdvertiseClient: &serverconfig.Client{
+			Address:       conn.Config.AdvertiseAddrs[0].Addr,
+			Tls:           conn.Config.AdvertiseAddrs[0].Tls,
+			TlsSkipVerify: conn.Config.AdvertiseAddrs[0].TlsSkipVerify,
+			RequireAuth:   true,
+			AuthToken:     token.Token,
+		},
+		Id: id,
 	})
 	if err != nil {
 		c.ui.Output("Error installing runner: %s", clierrors.Humanize(err),
@@ -199,76 +206,92 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	)
 
 	// TODO: Only run the below in adoption mode
-	// Waits 5 minutes for the server to detect the new runner before timing out
-	d := time.Now().Add(time.Minute * time.Duration(5))
-	ctx, cancel := context.WithDeadline(ctx, d)
-	defer cancel()
-	ticker := time.NewTicker(5 * time.Second)
-	for true {
-		select {
-		case <-ticker.C:
-		case <-ctx.Done():
-			c.ui.Output("Cancelled.",
-				terminal.WithErrorStyle(),
-			)
-			return 1
-		}
-		runner, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: id})
-		if err != nil {
-			c.ui.Output("Error getting runner %s: %s", id, clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return 1
-		}
-		if runner == nil {
-			continue
-		}
-		_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
-			RunnerId: runner.Id,
-			Adopt:    true,
-		})
-		if err != nil {
-			c.ui.Output("Error adopting runner: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return 1
-		}
-		c.ui.Output("Runner %s adopted successfully.", id,
-			terminal.WithSuccessStyle(),
-		)
+	if c.mode == "adoption" {
+		c.ui.Output("Waiting for runner to connect to server...")
+		// Waits 5 minutes for the server to detect the new runner before timing out
+		d := time.Now().Add(time.Minute * time.Duration(5))
+		ctx, cancel := context.WithDeadline(ctx, d)
+		defer cancel()
+		ticker := time.NewTicker(5 * time.Second)
+		// TODO: Something safer than for true
+		for true {
+			select {
+			case <-ticker.C:
+			case <-ctx.Done():
+				c.ui.Output("Cancelled.",
+					terminal.WithErrorStyle(),
+				)
+				return 1
+			}
+			// Use runner list API to check if runner is reporting to server yet
+			// If it's found, adopt it. Otherwise, try until deadline.
+			runners, err := client.ListRunners(ctx, &pb.ListRunnersRequest{})
+			if err != nil {
+				c.ui.Output("Error getting runners: %s", clierrors.Humanize(err),
+					terminal.WithErrorStyle(),
+				)
+				return 1
+			}
+			found := false
+			for _, myRunner := range runners.Runners {
+				if myRunner.Id == id {
+					found = true
+					break
+				}
+			}
+			if found {
+				_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+					RunnerId: id,
+					Adopt:    true,
+				})
+				if err != nil {
+					c.ui.Output("Error adopting runner: %s", clierrors.Humanize(err),
+						terminal.WithErrorStyle(),
+					)
+					return 1
+				}
+				c.ui.Output("Runner %s adopted successfully.", id,
+					terminal.WithSuccessStyle(),
+				)
 
-		// Creating a new runner profile for the newly adopted runner
-		runnerProfile, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
-			Config: &pb.OnDemandRunnerConfig{
-				Id:   id,
-				Name: c.platform + "-" + id,
-				TargetRunner: &pb.Ref_Runner{
-					Target: &pb.Ref_Runner_Id{
-						Id: &pb.Ref_RunnerId{
-							Id: id,
+				// Creating a new runner profile for the newly adopted runner
+				runnerProfile, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+					Config: &pb.OnDemandRunnerConfig{
+						Id:   id,
+						Name: c.platform + "-" + id,
+						TargetRunner: &pb.Ref_Runner{
+							Target: &pb.Ref_Runner_Id{
+								Id: &pb.Ref_RunnerId{
+									Id: id,
+								},
+							},
 						},
+						OciUrl:               "hashicorp/waypoint-odr:latest",
+						EnvironmentVariables: nil,
+						PluginType:           c.platform,
+						PluginConfig:         nil,
+						ConfigFormat:         0,
+						Default:              false,
 					},
-				},
-				OciUrl:               "hashicorp/waypoint-odr:latest",
-				EnvironmentVariables: nil,
-				PluginType:           c.platform,
-				PluginConfig:         nil,
-				ConfigFormat:         0,
-				Default:              false,
-			},
-		})
-		if err != nil {
-			c.ui.Output("Error creating runner profile: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return 1
-		}
-		c.ui.Output("Runner profile %s created successfully.", runnerProfile.Config.Name,
-			terminal.WithSuccessStyle(),
-		)
+				})
+				if err != nil {
+					c.ui.Output("Error creating runner profile: %s", clierrors.Humanize(err),
+						terminal.WithErrorStyle(),
+					)
+					return 1
+				}
+				c.ui.Output("Runner profile %s created successfully.", runnerProfile.Config.Name,
+					terminal.WithSuccessStyle(),
+				)
 
+				return 0
+			}
+		}
+	} else {
 		return 0
 	}
+
+	// We shouldn't ever reach this return
 	return 0
 }
 
