@@ -1,0 +1,3 @@
+```release-note:feature
+plugin/lambda-function-url: Adds a new plugin and `releaser` component. This leverages Lambda URLs.
+```
