@@ -31,9 +31,6 @@ type InstallOpts struct {
 	Log hclog.Logger
 	UI  terminal.UI
 
-	// AuthToken is an auth token that can be used for this runner.
-	AuthToken string
-
 	// Cookie is the server cookie that can be used for this runner
 	Cookie string
 
