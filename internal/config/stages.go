@@ -55,7 +55,7 @@ type Step struct {
 	// If set, this step will depend on the defined step. The default step
 	// will be the previously defined step in order that it was defined
 	// in a waypoint.hcl
-	DependsOn string `hcl:"depends_on,optional"`
+	DependsOn []string `hcl:"depends_on,optional"`
 
 	// The OCI image to use for executing this step
 	ImageURL string `hcl:"image_url,optional"`
