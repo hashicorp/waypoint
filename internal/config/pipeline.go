@@ -11,7 +11,7 @@ import (
 type Pipeline struct {
 	Name string `hcl:",label"`
 
-	StepRaw []*hclStage `hcl:"step,block"`
+	StepRaw []*hclStep `hcl:"step,block"`
 	Steps   []*Step
 
 	ctx    *hcl.EvalContext
@@ -22,7 +22,7 @@ type hclPipeline struct {
 	Name string `hcl:",label"`
 
 	// We need these raw values to determine the plugins need to be used.
-	StepRaw []*hclStage `hcl:"step,block"`
+	StepRaw []*hclStep `hcl:"step,block"`
 
 	Body   hcl.Body `hcl:",body"`
 	Remain hcl.Body `hcl:",remain"`
@@ -71,13 +71,6 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 	var steps []*Step
 	for _, stepRaw := range pipeline.StepRaw {
 		body := stepRaw.Body
-		scope, err := scopeMatchStage(ctx, stepRaw.WorkspaceScoped, stepRaw.LabelScoped)
-		if err != nil {
-			return nil, err
-		}
-		if scope != nil {
-			body = scope.Body
-		}
 
 		var s Step
 		if diag := gohcl.DecodeBody(body, finalizeContext(ctx), &s); diag.HasErrors() {
