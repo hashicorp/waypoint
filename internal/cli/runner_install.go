@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"context"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"github.com/hashicorp/waypoint/pkg/server"
@@ -13,7 +13,6 @@ import (
 	empty "google.golang.org/protobuf/types/known/emptypb"
 	"sort"
 	"strings"
-	"time"
 )
 
 type RunnerInstallCommand struct {
@@ -205,91 +204,44 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	)
 
 	if c.adopt {
-		c.ui.Output("Waiting for runner to connect to server...")
-		// Waits 5 minutes for the server to detect the new runner before timing out
-		d := time.Now().Add(time.Minute * time.Duration(5))
-		ctx, cancel := context.WithDeadline(ctx, d)
-		defer cancel()
-		ticker := time.NewTicker(5 * time.Second)
-		// TODO: Something safer than for true
-		for true {
-			select {
-			case <-ticker.C:
-			case <-ctx.Done():
-				c.ui.Output("Cancelled.",
-					terminal.WithErrorStyle(),
-				)
-				return 1
-			}
-			// Use runner list API to check if runner is reporting to server yet
-			// If it's found, adopt it. Otherwise, try until deadline.
-			runners, err := client.ListRunners(ctx, &pb.ListRunnersRequest{})
-			if err != nil {
-				c.ui.Output("Error getting runners: %s", clierrors.Humanize(err),
-					terminal.WithErrorStyle(),
-				)
-				return 1
-			}
-			found := false
-			for _, myRunner := range runners.Runners {
-				if myRunner.Id == id {
-					found = true
-					break
-				}
-			}
-			if found {
-				_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
-					RunnerId: id,
-					Adopt:    true,
-				})
-				if err != nil {
-					c.ui.Output("Error adopting runner: %s", clierrors.Humanize(err),
-						terminal.WithErrorStyle(),
-					)
-					return 1
-				}
-				c.ui.Output("Runner %s adopted successfully.", id,
-					terminal.WithSuccessStyle(),
-				)
-
-				// Creating a new runner profile for the newly adopted runner
-				runnerProfile, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
-					Config: &pb.OnDemandRunnerConfig{
-						Id:   id,
-						Name: c.platform + "-" + id,
-						TargetRunner: &pb.Ref_Runner{
-							Target: &pb.Ref_Runner_Id{
-								Id: &pb.Ref_RunnerId{
-									Id: id,
-								},
-							},
-						},
-						OciUrl:               "hashicorp/waypoint-odr:latest",
-						EnvironmentVariables: nil,
-						PluginType:           c.platform,
-						PluginConfig:         nil,
-						ConfigFormat:         0,
-						Default:              false,
-					},
-				})
-				if err != nil {
-					c.ui.Output("Error creating runner profile: %s", clierrors.Humanize(err),
-						terminal.WithErrorStyle(),
-					)
-					return 1
-				}
-				c.ui.Output("Runner profile %s created successfully.", runnerProfile.Config.Name,
-					terminal.WithSuccessStyle(),
-				)
-
-				return 0
-			}
+		err = installutil.AdoptRunner(ctx, c.ui, client, id)
+		if err != nil {
+			c.ui.Output("Error adopting runner: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return 1
 		}
-	} else {
+
+		log.Debug("Creating runner profile and targeting runner %s", strings.ToUpper(id))
+		// Creating a new runner profile for the newly adopted runner
+		runnerProfile, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+			Config: &pb.OnDemandRunnerConfig{
+				Name: c.platform + "-" + strings.ToUpper(id),
+				TargetRunner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Id{
+						Id: &pb.Ref_RunnerId{
+							Id: strings.ToUpper(id),
+						},
+					},
+				},
+				OciUrl:               "hashicorp/waypoint-odr:latest",
+				EnvironmentVariables: nil,
+				PluginType:           c.platform,
+				PluginConfig:         nil,
+				ConfigFormat:         0,
+				Default:              false,
+			},
+		})
+		if err != nil {
+			c.ui.Output("Error creating runner profile: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+		c.ui.Output("Runner profile %s created successfully.", runnerProfile.Config.Name, terminal.WithSuccessStyle())
 		return 0
 	}
 
-	// We shouldn't ever reach this return
 	return 0
 }
 
