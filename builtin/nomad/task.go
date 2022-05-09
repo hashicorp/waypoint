@@ -200,7 +200,7 @@ func (p *TaskLauncher) StartTask(
 
 	log.Trace("creating Nomad job for task")
 	jobclient := client.Jobs()
-	job := api.NewServiceJob(taskName, taskName, p.config.Region, 10)
+	job := api.NewBatchJob(taskName, taskName, p.config.Region, 10)
 	job.Datacenters = []string{p.config.Datacenter}
 	tg := api.NewTaskGroup(taskName, 1)
 	tg.Networks = []*api.NetworkResource{
