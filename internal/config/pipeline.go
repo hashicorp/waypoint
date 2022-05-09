@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -94,4 +95,12 @@ func (c *Pipeline) Ref() *pb.Ref_Pipeline {
 			},
 		},
 	}
+}
+
+// Configure configures the plugin for a given Step with the use body of this operation.
+func (s *Step) Configure(plugin interface{}, ctx *hcl.EvalContext) hcl.Diagnostics {
+	ctx = appendContext(s.ctx, ctx)
+	ctx = finalizeContext(ctx)
+
+	return component.Configure(plugin, s.Use.Body, ctx)
 }
