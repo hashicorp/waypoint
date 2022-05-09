@@ -12,6 +12,7 @@ type Pipeline struct {
 	Name string `hcl:",label"`
 
 	StepRaw []*hclStage `hcl:"step,block"`
+	Steps   []*Step
 
 	ctx    *hcl.EvalContext
 	config *Config
@@ -66,26 +67,9 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 		pipeline.config.ctx = ctx
 	}
 
-	return &pipeline, nil
-}
-
-// Ref returns the ref for this pipeline.
-func (c *Pipeline) Ref() *pb.Ref_Pipeline {
-	return &pb.Ref_Pipeline{
-		Ref: &pb.Ref_Pipeline_Id{
-			Id: &pb.Ref_PipelineId{
-				Id: c.Name,
-			},
-		},
-	}
-}
-
-// Step loads the associated section of the configuration
-func (c *Pipeline) Step(ctx *hcl.EvalContext) ([]*Step, error) {
-	ctx = appendContext(c.ctx, ctx)
-
+	// decode all of the defined raw steps for a pipeline
 	var steps []*Step
-	for _, stepRaw := range c.StepRaw {
+	for _, stepRaw := range pipeline.StepRaw {
 		body := stepRaw.Body
 		scope, err := scopeMatchStage(ctx, stepRaw.WorkspaceScoped, stepRaw.LabelScoped)
 		if err != nil {
@@ -103,87 +87,18 @@ func (c *Pipeline) Step(ctx *hcl.EvalContext) ([]*Step, error) {
 
 		steps = append(steps, &s)
 	}
+	pipeline.Steps = steps
 
-	return steps, nil
+	return &pipeline, nil
 }
 
-// StepUse returns the plugin "use" value for a single step
-// TODO(briancain): We will leave this unimplemented for now  until we start
-// actually executing Step plugins. We will execute each step on their own,
-// so we'll probably need a single Step to return the plugin Use label.
-func (c *Pipeline) StepUse(ctx *hcl.EvalContext) (string, error) {
-	return "", nil
-	/*
-		if c.StepRaw == nil {
-			return "", nil
-		}
-
-		useType := c.StepRaw.Use.Type
-		stage, err := scopeMatchStage(ctx, c.StepRaw.WorkspaceScoped, c.StepRaw.LabelScoped)
-		if err != nil {
-			return "", err
-		}
-		if stage != nil {
-			useType = stage.Use.Type
-		}
-
-		return useType, nil
-	*/
-}
-
-// StepsUse iterates over all defined steps in the eval context and returns
-// every step plugin type.
-// NOTE(briancain): We could gather all of the use plugin labels this way and
-// return them as a string?
-// Nothing uses this right now, but is included for now.
-func (c *Pipeline) StepsUse(ctx *hcl.EvalContext) ([]string, error) {
-	if len(c.StepRaw) == 0 {
-		return nil, nil
+// Ref returns the ref for this pipeline.
+func (c *Pipeline) Ref() *pb.Ref_Pipeline {
+	return &pb.Ref_Pipeline{
+		Ref: &pb.Ref_Pipeline_Id{
+			Id: &pb.Ref_PipelineId{
+				Id: c.Name,
+			},
+		},
 	}
-
-	var useTypes []string
-
-	for _, stepRaw := range c.StepRaw {
-		useType := stepRaw.Use.Type
-		stage, err := scopeMatchStage(ctx, stepRaw.WorkspaceScoped, stepRaw.LabelScoped)
-		if err != nil {
-			return nil, err
-		}
-		if stage != nil {
-			useType = stage.Use.Type
-		}
-		useTypes = append(useTypes, useType)
-	}
-
-	return useTypes, nil
-}
-
-// StepLabels returns the labels for this stage.
-// TODO: see the todo in StepUse for single step verus Many step
-func (c *Pipeline) StepLabels(ctx *hcl.EvalContext) ([]map[string]string, error) {
-	/*
-		if c.StepRaw == nil {
-			return nil, nil
-		}
-
-		ctx = appendContext(c.ctx, ctx)
-		return labels(ctx, c.StepRaw.Body)
-	*/
-	if len(c.StepRaw) == 0 {
-		return nil, nil
-	}
-
-	var result []map[string]string
-
-	ctx = appendContext(c.ctx, ctx)
-	for _, stepRaw := range c.StepRaw {
-		l, err := labels(ctx, stepRaw.Body)
-		if err != nil {
-			return nil, err
-		}
-
-		result = append(result, l)
-	}
-
-	return result, nil
 }
