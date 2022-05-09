@@ -29,7 +29,7 @@ func TestPipeline(t *testing.T) {
 				require := require.New(t)
 
 				require.NotNil(t, c)
-				require.Equal("foo", c.Id)
+				require.Equal("foo", c.Name)
 			},
 		},
 
@@ -40,7 +40,7 @@ func TestPipeline(t *testing.T) {
 				require := require.New(t)
 
 				require.NotNil(t, c)
-				require.Equal("foo", c.Id)
+				require.Equal("foo", c.Name)
 
 				steps, err := c.Step(nil)
 				require.NoError(err)
@@ -67,7 +67,7 @@ func TestPipeline(t *testing.T) {
 				require := require.New(t)
 
 				require.NotNil(t, c)
-				require.Equal("foo", c.Id)
+				require.Equal("foo", c.Name)
 
 				steps, err := c.Step(nil)
 				require.NoError(err)
