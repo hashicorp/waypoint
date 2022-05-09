@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	//pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func TestPipeline(t *testing.T) {
