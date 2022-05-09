@@ -270,6 +270,15 @@ func (p *TaskLauncher) StartTask(
 		})
 	}
 
+	// NOTE(briancain): This is here to help kaniko detect that this is a docker container.
+	// See https://github.com/GoogleContainerTools/kaniko/blob/7e3954ac734534ce5ce68ad6300a2d3143d82f40/vendor/github.com/genuinetools/bpfd/proc/proc.go#L138
+	// for more info.
+	log.Warn("temporarily setting 'container=docker' environment variable to patch Kaniko working on Kubernetes 1.23")
+	env = append(env, corev1.EnvVar{
+		Name:  "container",
+		Value: "docker",
+	})
+
 	// If the user is using the latest tag, then don't specify an overriding pull policy.
 	// This by default means kubernetes will always pull so that latest is used.
 	pullPolicy := corev1.PullIfNotPresent
