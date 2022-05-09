@@ -115,6 +115,8 @@ func TestPipeline(t *testing.T) {
 				require.Equal("example.com/different", s3.ImageURL)
 				require.Equal("food", p.config.Foo)
 				require.Equal("drink", p.config.Bar)
+				require.Len(s3.DependsOn, 1)
+				require.Equal("zero", s3.DependsOn[0])
 			},
 		},
 	}
