@@ -70,25 +70,27 @@ func (s *Service) queueJobMulti(
 	ctx context.Context,
 	req []*pb.QueueJobRequest,
 ) ([]*pb.QueueJobResponse, error) {
-	jobs := make([]*pb.Job, 0, len(req))
+	jobQueue := make([]*pb.Job, 0, len(req)*4)
+	jobIds := make([]string, 0, len(req))
 	for _, single := range req {
-		job, _, err := s.queueJobReqToJob(ctx, single)
+		jobs, jobId, err := s.queueJobReqToJob(ctx, single)
 		if err != nil {
 			return nil, err
 		}
 
-		jobs = append(jobs, job...)
+		jobQueue = append(jobQueue, jobs...)
+		jobIds = append(jobIds, jobId)
 	}
 
 	// Queue the jobs
-	if err := s.state(ctx).JobCreate(jobs...); err != nil {
+	if err := s.state(ctx).JobCreate(jobQueue...); err != nil {
 		return nil, err
 	}
 
 	// Get the response
-	resp := make([]*pb.QueueJobResponse, len(jobs))
-	for i, job := range jobs {
-		resp[i] = &pb.QueueJobResponse{JobId: job.Id}
+	resp := make([]*pb.QueueJobResponse, len(jobIds))
+	for i, id := range jobIds {
+		resp[i] = &pb.QueueJobResponse{JobId: id}
 	}
 
 	return resp, nil
@@ -219,6 +221,35 @@ func (s *Service) QueueJob(
 // wrapJobWithRunner takes a job and "wraps" it within an on-demand launched
 // runner. This creates a dependency chain that ensures that the runner is
 // started and stopped around the given job (hence "wraps").
+//
+// A diagram of the dependency chain created is shown below. The dashed
+// border is the "source" job.
+//
+//           ┌────────────────┐
+//           │   Start Task   │─────────────┐
+//           └────────────────┘             │
+//                    │                     │
+//          ┌─────────┴─────────┐           │
+//          ▼                   ▼           │
+// ┌────────────────┐   ┌─ ── ── ── ── ──   │
+// │   Watch Task   │   │      Job       │  │
+// └────────────────┘   └ ── ── ── ── ── ┘  │
+//          │                    │          │
+//          └─────────┬──────────┘          │
+//                    ▼                     │
+//           ┌────────────────┐             │
+//           │   Stop Task    │◀────────────┘
+//           └────────────────┘
+//
+// Details:
+//
+//   - Start task launches the on-demand runner.
+//   - After it is launched, "job" can run targeting the launched ODR.
+//   - Simultaneously, the watch task watches the launched task and records
+//     logs, exit code, etc.
+//   - Finally, stop task is called to clean up the resources associated
+//     with start.
+//
 func (s *Service) wrapJobWithRunner(
 	ctx context.Context,
 	source *pb.Job,
@@ -240,6 +271,12 @@ func (s *Service) wrapJobWithRunner(
 		return nil, err
 	}
 
+	// Generate our job to watch the ODR
+	watchJob, err := s.onDemandRunnerWatchJob(ctx, startJob, source, od)
+	if err != nil {
+		return nil, err
+	}
+
 	// Change our source job to run on the launched ODR.
 	source.TargetRunner = &pb.Ref_Runner{
 		Target: &pb.Ref_Runner_Id{
@@ -253,12 +290,13 @@ func (s *Service) wrapJobWithRunner(
 	source.DependsOn = []string{startJob.Id}
 
 	// Job to stop the ODR
-	stopJob, err := s.onDemandRunnerStopJob(ctx, startJob, source, od)
+	stopJob, err := s.onDemandRunnerStopJob(ctx, startJob, watchJob, source, od)
 	if err != nil {
 		return nil, err
 	}
 
 	// Write a Task state with the On-Demand Runner job triple
+	// TODO: integrate watchjob into task tracking
 	task := &pb.Task{
 		StartJob: &pb.Ref_Job{Id: startJob.Id},
 		TaskJob:  &pb.Ref_Job{Id: source.Id},
@@ -295,6 +333,7 @@ func (s *Service) wrapJobWithRunner(
 	// this wrong it'll just error, so we'll know quickly.
 	return []*pb.Job{
 		startJob,
+		watchJob,
 		source,
 		stopJob,
 	}, nil
@@ -427,8 +466,8 @@ func (s *Service) onDemandRunnerStartJob(
 	return job, runnerId, nil
 }
 
-// onDemandRunnerStopJob generates a StopJob template for a Task.
-func (s *Service) onDemandRunnerStopJob(
+// onDemandRunnerWatchJob generates a WatchJob template for a Task.
+func (s *Service) onDemandRunnerWatchJob(
 	ctx context.Context,
 	startJob *pb.Job,
 	source *pb.Job,
@@ -439,10 +478,48 @@ func (s *Service) onDemandRunnerStopJob(
 		Workspace:   source.Workspace,
 		Application: source.Application,
 
+		// We depend on the starting job. We don't run if the start job fails.
+		DependsOn: []string{startJob.Id},
+
+		// Use the same targeting as the start job. We assume the start job
+		// had proper access to stop, too, so we just copy it.
+		TargetRunner: startJob.TargetRunner,
+
+		// Watch
+		Operation: &pb.Job_WatchTask{
+			WatchTask: &pb.Job_WatchTaskOp{
+				StartJob: &pb.Ref_Job{Id: startJob.Id},
+			},
+		},
+	}
+
+	// Get the next id for the job
+	id, err := server.Id()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+	}
+	job.Id = id
+
+	return job, nil
+}
+
+// onDemandRunnerStopJob generates a StopJob template for a Task.
+func (s *Service) onDemandRunnerStopJob(
+	ctx context.Context,
+	startJob *pb.Job,
+	watchJob *pb.Job,
+	source *pb.Job,
+	od *pb.OnDemandRunnerConfig,
+) (*pb.Job, error) {
+	job := &pb.Job{
+		// Inherit the workspace/application of the source job.
+		Workspace:   source.Workspace,
+		Application: source.Application,
+
 		// We depend on both the start job and the main job. We allow them
 		// both to fail, however, because we want to try to stop no matter what.
-		DependsOn:             []string{startJob.Id, source.Id},
-		DependsOnAllowFailure: []string{startJob.Id, source.Id},
+		DependsOn:             []string{startJob.Id, watchJob.Id, source.Id},
+		DependsOnAllowFailure: []string{startJob.Id, watchJob.Id, source.Id},
 
 		// Use the same targeting as the start job. We assume the start job
 		// had proper access to stop, too, so we just copy it.

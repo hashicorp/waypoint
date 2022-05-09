@@ -1,0 +1,3 @@
+```release-note:feature
+core: Add ability to have cli and runners use OAuth2 to get an auth token
+```

@@ -1,0 +1,9 @@
+version: 2
+
+  - package-ecosystem: "npm"
+    directory: "/ui"
+    schedule:
+      interval: "weekly"
+    allow:
+      # Allow updates for all HashiCorp addons
+      - dependency-name: "@hashicorp/*"

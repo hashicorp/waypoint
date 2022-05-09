@@ -1,0 +1,4 @@
+```release-note:improvement
+core: on-demand runner logs are now captured from the underlying platform
+and stored in the job system.
+```

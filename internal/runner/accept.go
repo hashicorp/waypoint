@@ -546,6 +546,8 @@ func (r *Runner) prepareAndExecuteJob(
 		return r.executeStartTaskOp(ctx, log, ui, job)
 	case *pb.Job_StopTask:
 		return r.executeStopTaskOp(ctx, log, ui, job)
+	case *pb.Job_WatchTask:
+		return r.executeWatchTaskOp(ctx, log, ui, job)
 	}
 
 	// We need to get our data source next prior to executing.
