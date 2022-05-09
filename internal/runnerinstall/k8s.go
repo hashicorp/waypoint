@@ -79,6 +79,28 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		return err
 	}
 
+	var memory, cpu, image, tag string
+	if i.config.MemRequest == "" {
+		memory = defaultRunnerMemory
+	} else {
+		memory = i.config.MemRequest
+	}
+	if i.config.CpuRequest == "" {
+		cpu = defaultRunnerCPU
+	} else {
+		cpu = i.config.CpuRequest
+	}
+	if i.config.RunnerImage == "" {
+		image = defaultRunnerImage
+	} else {
+		image = i.config.RunnerImage
+	}
+	if i.config.RunnerImageTag == "" {
+		tag = defaultRunnerImageTag
+	} else {
+		tag = i.config.RunnerImageTag
+	}
+
 	values := map[string]interface{}{
 		"server": map[string]interface{}{
 			"enabled": false,
@@ -86,13 +108,13 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		"runner": map[string]interface{}{
 			"id": opts.Id,
 			"image": map[string]interface{}{
-				"repository": i.config.RunnerImage,
-				"tag":        i.config.RunnerImageTag,
+				"repository": image,
+				"tag":        tag,
 			},
 			"resources": map[string]interface{}{
 				"requests": map[string]interface{}{
-					"memory": i.config.MemRequest,
-					"cpu":    i.config.CpuRequest,
+					"memory": memory,
+					"cpu":    cpu,
 				},
 			},
 			"server": map[string]interface{}{
@@ -145,28 +167,28 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-runner-image",
 		Target:  &i.config.RunnerImage,
-		Default: "hashicorp/waypoint",
+		Default: defaultRunnerImage,
 		Usage:   "Docker image for the Waypoint runner.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-runner-image-tag",
 		Target:  &i.config.RunnerImageTag,
-		Default: "latest",
+		Default: defaultRunnerImageTag,
 		Usage:   "Tag of the Docker image for the Waypoint runner.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-cpu-request",
 		Target:  &i.config.CpuRequest,
-		Default: "250m",
+		Default: defaultRunnerCPU,
 		Usage:   "Requested amount of CPU for Waypoint runner.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-mem-request",
 		Target:  &i.config.MemRequest,
-		Default: "256Mi",
+		Default: defaultRunnerMemory,
 		Usage:   "Requested amount of memory for Waypoint runner.",
 	})
 
@@ -202,4 +224,8 @@ type k8sConfig struct {
 
 const (
 	defaultHelmChartVersion = "0.1.8"
+	defaultRunnerMemory     = "256Mi"
+	defaultRunnerCPU        = "250m"
+	defaultRunnerImage      = "hashicorp/waypoint"
+	defaultRunnerImageTag   = "latest"
 )
