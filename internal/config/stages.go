@@ -48,8 +48,6 @@ type Step struct {
 	Use    *Use              `hcl:"use,block"`
 
 	// Optionally give this step a name
-	// TODO: figure out how to make this an optional label rather than
-	// a variable for a Step stanza
 	Name string `hcl:"name,optional"`
 
 	// If set, this step will depend on the defined step. The default step
@@ -59,12 +57,6 @@ type Step struct {
 
 	// The OCI image to use for executing this step
 	ImageURL string `hcl:"image_url,optional"`
-
-	// Unused for practical reasons, but we need this here so that
-	// the decoding validates successfully (HCL doesn't error of
-	// unexpected things).
-	WorkspaceScoped []*scopedStage `hcl:"workspace,block"`
-	LabelScoped     []*scopedStage `hcl:"label,block"`
 
 	ctx *hcl.EvalContext
 }
