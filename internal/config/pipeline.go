@@ -113,13 +113,9 @@ func (c *Pipeline) Step(ctx *hcl.EvalContext) ([]*Step, error) {
 }
 
 // StepUse returns the plugin "use" value for a single step
-// TODO: Since pipelines can have N steps, where each step could be its own
-// plugin, how does this Use func work? It looks like the component creator
-// is what uses this to invoke the proper plugin, so it's expecting a single
-// plugin per stanza with build/deploy/release. But pipelines have many steps,
-// so maybe a component creator refactor is required to support multiple
-// plugins? For now I'm leaving this function commented out with its original
-// single use-stanza implementation in place.
+// TODO(briancain): We will leave this unimplemented for now  until we start
+// actually executing Step plugins. We will execute each step on their own,
+// so we'll probably need a single Step to return the plugin Use label.
 func (c *Pipeline) StepUse(ctx *hcl.EvalContext) (string, error) {
 	return "", nil
 	/*
@@ -144,6 +140,7 @@ func (c *Pipeline) StepUse(ctx *hcl.EvalContext) (string, error) {
 // every step plugin type.
 // NOTE(briancain): We could gather all of the use plugin labels this way and
 // return them as a string?
+// Nothing uses this right now, but is included for now.
 func (c *Pipeline) StepsUse(ctx *hcl.EvalContext) ([]string, error) {
 	if len(c.StepRaw) == 0 {
 		return nil, nil
