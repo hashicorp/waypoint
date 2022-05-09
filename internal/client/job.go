@@ -43,6 +43,15 @@ func (c *Project) job() *pb.Job {
 	return job
 }
 
+// DoJobDangerously executes the given job and returns the result. The
+// "Dangerously" suffix is because this function isn't meant to be generally
+// used; it is dangerous because it doesn't perform many validation steps.
+// In almost all cases, callers should use a more focused function such as
+// Build or Deploy, or write a new one.
+func (c *Project) DoJobDangerously(ctx context.Context, job *pb.Job) (*pb.Job_Result, error) {
+	return c.doJob(ctx, job, c.UI)
+}
+
 // doJob will queue and execute the job, and target the proper runner.
 func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.Job_Result, error) {
 	return c.doJobMonitored(ctx, job, ui, nil)
