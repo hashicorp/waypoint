@@ -2,6 +2,7 @@ package runnerinstall
 
 import (
 	"context"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/installutil/helm"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"helm.sh/helm/v3/pkg/action"
@@ -16,17 +17,27 @@ type K8sRunnerInstaller struct {
 
 func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) error {
 	// Initialize Helm settings
-	opts.Log.Debug("Getting settings for Helm.")
+	sg := opts.UI.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Getting Helm configs...")
+	defer func() { s.Abort() }()
 	settings, err := helm.SettingsInit()
 	if err != nil {
 		return err
 	}
+	s.Update("Helm settings retrieved")
+	s.Status(terminal.StatusOK)
+	s.Done()
 
-	opts.Log.Debug("Getting path options for Helm chart.")
+	s = sg.Add("Getting Helm action configuration...")
 	actionConfig, err := helm.ActionInit(opts.Log, i.config.KubeconfigPath, i.config.K8sContext)
 	if err != nil {
 		return err
 	}
+	s.Update("Helm action initialized")
+	s.Status(terminal.StatusOK)
+	s.Done()
 
 	chartNS := ""
 	if v := i.config.Namespace; v != "" {
@@ -37,7 +48,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		chartNS = "default"
 	}
 
-	opts.Log.Debug("Creating new install action client.")
+	s = sg.Add("Creating new Helm install object...")
 	client := action.NewInstall(actionConfig)
 	client.ClientOnly = false
 	client.DryRun = false
@@ -59,6 +70,9 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	client.Replace = false
 	client.Description = ""
 	client.CreateNamespace = true
+	s.Update("Helm install created")
+	s.Status(terminal.StatusOK)
+	s.Done()
 
 	var version string
 	if i.config.Version == "" {
@@ -67,17 +81,23 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		version = i.config.Version
 	}
 
-	opts.Log.Debug("Locating chart.")
+	s = sg.Add("Locating chart...")
 	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/v"+version+".tar.gz", settings)
 	if err != nil {
 		return err
 	}
+	s.Update("Helm chart located")
+	s.Status(terminal.StatusOK)
+	s.Done()
 
-	opts.Log.Debug("Locating chart.")
+	s = sg.Add("Loading Helm chart...")
 	c, err := loader.Load(path)
 	if err != nil {
 		return err
 	}
+	s.Update("Helm chart loaded")
+	s.Status(terminal.StatusOK)
+	s.Done()
 
 	var memory, cpu, image, tag string
 	if i.config.MemRequest == "" {
@@ -128,11 +148,14 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			"pullPolicy": "always",
 		},
 	}
-	opts.Log.Debug("Installing Waypoint Helm chart: " + c.Name())
+	s = sg.Add("Installing Waypoint Helm chart with runner options: " + c.Name())
 	_, err = client.RunWithContext(ctx, c, values)
 	if err != nil {
 		return err
 	}
+	s.Update("Waypoint runner installed with Helm!")
+	s.Status(terminal.StatusOK)
+	s.Done()
 
 	return nil
 }

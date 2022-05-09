@@ -134,6 +134,12 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		return 1
 	}
 
+	sg := c.ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Connecting to: %s", c.serverUrl)
+	defer func() { s.Abort() }()
+
 	if c.adopt && c.serverCookie == "" {
 		c.ui.Output(
 			"Server cookie must be supplied for adoption.",
@@ -148,11 +154,14 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		c.ui.Output("Error getting server config: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
+	s.Update("Retrieved server config")
+	s.Status(terminal.StatusOK)
+	s.Done()
 
 	// TODO: Evaluate if generating a token for non-adoption mode is necessary
 	token := &pb.NewTokenResponse{}
 	if !c.adopt {
-		log.Debug("Generating runner token.")
+		s = sg.Add("Generating runner token...")
 		token, err = client.GenerateRunnerToken(ctx, &pb.GenerateRunnerTokenRequest{
 			Duration: "",
 			Id:       "",
@@ -163,6 +172,9 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 				terminal.WithErrorStyle(),
 			)
 		}
+		s.Update("Runner token generated")
+		s.Status(terminal.StatusOK)
+		s.Done()
 	}
 
 	// We generate the ID if the user doesn't provide one
@@ -178,7 +190,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		id = c.id
 	}
 
-	log.Debug("Installing runner.")
+	s = sg.Add("Installing runner...")
 	err = p.Install(ctx, &runnerinstall.InstallOpts{
 		Log:        log,
 		UI:         c.ui,
@@ -199,9 +211,9 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		)
 		return 1
 	}
-	c.ui.Output("Runner %s installed successfully", id,
-		terminal.WithSuccessStyle(),
-	)
+	s.Update("Runner %s installed successfully", id)
+	s.Status(terminal.StatusOK)
+	s.Done()
 
 	if c.adopt {
 		err = installutil.AdoptRunner(ctx, c.ui, client, id)
@@ -212,7 +224,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 			return 1
 		}
 
-		log.Debug("Creating runner profile and targeting runner %s", strings.ToUpper(id))
+		s = sg.Add("Creating runner profile and targeting runner %s", strings.ToUpper(id))
 		// Creating a new runner profile for the newly adopted runner
 		runnerProfile, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 			Config: &pb.OnDemandRunnerConfig{
@@ -238,10 +250,11 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 			)
 			return 1
 		}
-		c.ui.Output("Runner profile %s created successfully.", runnerProfile.Config.Name, terminal.WithSuccessStyle())
+		s.Update("Runner profile %s created successfully.", runnerProfile.Config.Name)
+		s.Status(terminal.StatusOK)
+		s.Done()
 		return 0
 	}
-
 	return 0
 }
 

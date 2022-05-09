@@ -10,7 +10,12 @@ import (
 )
 
 func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, id string) error {
-	ui.Output("Waiting for runner to connect to server...")
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Waiting for runner to connect to server...")
+	defer func() { s.Abort() }()
+
 	// Waits 5 minutes for the server to detect the new runner before timing out
 	d := time.Now().Add(time.Minute * time.Duration(5))
 	ctx, cancel := context.WithDeadline(ctx, d)
@@ -39,10 +44,14 @@ func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, 
 		for _, myRunner := range runners.Runners {
 			if myRunner.Id == id {
 				found = true
+				s.Update("Runner detected by server")
+				s.Status(terminal.StatusOK)
+				s.Done()
 				break
 			}
 		}
 		if found {
+			s = sg.Add("Adopting runner...")
 			_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
 				RunnerId: id,
 				Adopt:    true,
@@ -53,9 +62,9 @@ func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, 
 				)
 				return err
 			}
-			ui.Output("Runner %s adopted successfully.", id,
-				terminal.WithSuccessStyle(),
-			)
+			s.Update("Runner %s adopted successfully.", id)
+			s.Status(terminal.StatusOK)
+			s.Done()
 			return nil
 		}
 	}
