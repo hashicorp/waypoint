@@ -1,0 +1,5 @@
+```release-note:bug
+plugin/k8s: Ensure `container=docker` environment variable is set for Kaniko
+to properly detect running inside a container, which prevented on-demand
+runners from working on Kubernetes 1.23.
+```
