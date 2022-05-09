@@ -45,11 +45,8 @@ func TestPipeline(t *testing.T) {
 				steps := c.Steps
 				s := steps[0]
 
-				op := s.Operation()
-				require.NotNil(t, op)
-
 				var p testStepPluginConfig
-				diag := op.Configure(&p, nil)
+				diag := s.Configure(&p, nil)
 				if diag.HasErrors() {
 					t.Fatal(diag.Error())
 				}
@@ -72,12 +69,10 @@ func TestPipeline(t *testing.T) {
 				require.Len(steps, 3)
 
 				s := steps[0]
-				op := s.Operation()
-				require.NotNil(t, op)
 
 				var p testStepPluginConfig
 
-				diag := op.Configure(&p, nil)
+				diag := s.Configure(&p, nil)
 				if diag.HasErrors() {
 					t.Fatal(diag.Error())
 				}
@@ -87,10 +82,8 @@ func TestPipeline(t *testing.T) {
 				require.Equal("qubit", p.config.Foo)
 
 				s2 := steps[1]
-				op2 := s2.Operation()
-				require.NotNil(t, op2)
 
-				diag = op2.Configure(&p, nil)
+				diag = s2.Configure(&p, nil)
 				if diag.HasErrors() {
 					t.Fatal(diag.Error())
 				}
@@ -101,10 +94,8 @@ func TestPipeline(t *testing.T) {
 				require.Equal("bar", p.config.Bar)
 
 				s3 := steps[2]
-				op3 := s3.Operation()
-				require.NotNil(t, op3)
 
-				diag = op3.Configure(&p, nil)
+				diag = s3.Configure(&p, nil)
 				if diag.HasErrors() {
 					t.Fatal(diag.Error())
 				}
