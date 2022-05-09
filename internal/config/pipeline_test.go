@@ -42,8 +42,7 @@ func TestPipeline(t *testing.T) {
 				require.NotNil(t, c)
 				require.Equal("foo", c.Name)
 
-				steps, err := c.Step(nil)
-				require.NoError(err)
+				steps := c.Steps
 				s := steps[0]
 
 				op := s.Operation()
@@ -69,8 +68,7 @@ func TestPipeline(t *testing.T) {
 				require.NotNil(t, c)
 				require.Equal("foo", c.Name)
 
-				steps, err := c.Step(nil)
-				require.NoError(err)
+				steps := c.Steps
 				require.Len(steps, 3)
 
 				s := steps[0]
