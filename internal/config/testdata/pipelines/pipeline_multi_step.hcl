@@ -3,6 +3,7 @@ project = "foo"
 pipeline "foo" {
   step {
     image_url = "example.com/test"
+    name      = "zero"
 
     use "test" {
       foo = "qubit"
@@ -20,6 +21,7 @@ pipeline "foo" {
 
   step {
     image_url = "example.com/different"
+    depends_on = ["zero"]
 
     use "test/hunger" {
       foo = "food"
