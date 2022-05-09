@@ -9,20 +9,16 @@ import (
 
 // Pipeline represents a single pipeline definition
 type Pipeline struct {
-	Id   string `hcl:",label"`
-	Name string `hcl:"name,optional"`
+	Name string `hcl:",label"`
 
 	StepRaw []*hclStage `hcl:"step,block"`
-
-	Body hcl.Body `hcl:",body"`
 
 	ctx    *hcl.EvalContext
 	config *Config
 }
 
 type hclPipeline struct {
-	Id   string `hcl:",label"`
-	Name string `hcl:"name,optional"`
+	Name string `hcl:",label"`
 
 	// We need these raw values to determine the plugins need to be used.
 	StepRaw []*hclStage `hcl:"step,block"`
@@ -35,7 +31,7 @@ type hclPipeline struct {
 func (c *Config) Pipelines() []string {
 	var result []string
 	for _, p := range c.hclConfig.Pipelines {
-		result = append(result, p.Id)
+		result = append(result, p.Name)
 	}
 
 	return result
@@ -49,7 +45,7 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 	// Find the pipeline by progressively decoding
 	var rawPipeline *hclPipeline
 	for _, p := range c.hclConfig.Pipelines {
-		if p.Id == id {
+		if p.Name == id {
 			rawPipeline = p
 			break
 		}
@@ -63,7 +59,6 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 	if diag := gohcl.DecodeBody(rawPipeline.Body, finalizeContext(ctx), &pipeline); diag.HasErrors() {
 		return nil, diag
 	}
-	pipeline.Id = rawPipeline.Id
 	pipeline.Name = rawPipeline.Name
 	pipeline.ctx = ctx
 	pipeline.config = c
@@ -79,7 +74,7 @@ func (c *Pipeline) Ref() *pb.Ref_Pipeline {
 	return &pb.Ref_Pipeline{
 		Ref: &pb.Ref_Pipeline_Id{
 			Id: &pb.Ref_PipelineId{
-				Id: c.Id,
+				Id: c.Name,
 			},
 		},
 	}
