@@ -19,12 +19,20 @@ type Pipeline struct {
 	config *Config
 }
 
+// hclPipeline represents a raw HCL version of a pipeline config
 type hclPipeline struct {
 	Name string `hcl:",label"`
 
 	// We need these raw values to determine the plugins need to be used.
 	StepRaw []*hclStep `hcl:"step,block"`
 
+	Body   hcl.Body `hcl:",body"`
+	Remain hcl.Body `hcl:",remain"`
+}
+
+// hclStep represents a raw HCL version of a step stanza in a pipeline config
+type hclStep struct {
+	Use    *Use     `hcl:"use,block"`
 	Body   hcl.Body `hcl:",body"`
 	Remain hcl.Body `hcl:",remain"`
 }
