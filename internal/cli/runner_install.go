@@ -190,6 +190,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		id = c.id
 	}
 
+	// TODO: Specify server TLS details on CLI as well, or just address?
 	s = sg.Add("Installing runner...")
 	err = p.Install(ctx, &runnerinstall.InstallOpts{
 		Log:        log,
@@ -197,7 +198,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		Cookie:     c.serverCookie,
 		ServerAddr: c.serverUrl,
 		AdvertiseClient: &serverconfig.Client{
-			Address:       conn.Config.AdvertiseAddrs[0].Addr,
+			Address:       c.serverUrl,
 			Tls:           conn.Config.AdvertiseAddrs[0].Tls,
 			TlsSkipVerify: conn.Config.AdvertiseAddrs[0].TlsSkipVerify,
 			RequireAuth:   true,
