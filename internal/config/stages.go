@@ -29,12 +29,6 @@ type hclBuild struct {
 	LabelScoped []*scopedStage `hcl:"label,block"`
 }
 
-type hclStep struct {
-	Use    *Use     `hcl:"use,block"`
-	Body   hcl.Body `hcl:",body"`
-	Remain hcl.Body `hcl:",remain"`
-}
-
 // scopedStage is used within hclStage for workspace/label scoping.
 type scopedStage struct {
 	// Scope is the label for the block. This is reused for both workspace
