@@ -249,6 +249,5 @@ const (
 	defaultHelmChartVersion = "0.1.8"
 	defaultRunnerMemory     = "256Mi"
 	defaultRunnerCPU        = "250m"
-	defaultRunnerImage      = "hashicorp/waypoint"
 	defaultRunnerImageTag   = "latest"
 )

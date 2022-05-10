@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
+const defaultRunnerImage = "hashicorp/waypoint"
+
 type RunnerInstaller interface {
 	// Install expects a Waypoint Runner to be installed
 	Install(context.Context, *InstallOpts) error
