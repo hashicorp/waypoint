@@ -977,6 +977,7 @@ func (i *K8sInstaller) InstallRunner(
 }
 
 // UninstallRunner implements Installer.
+// TODO: Uninstall runners via helm
 func (i *K8sInstaller) UninstallRunner(
 	ctx context.Context,
 	opts *InstallOpts,
