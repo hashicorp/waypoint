@@ -23,11 +23,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/installutil/k8s"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
@@ -35,6 +35,7 @@ import (
 
 //
 type K8sInstaller struct {
+	k8s.K8sInstaller
 	config k8sConfig
 }
 
@@ -89,7 +90,7 @@ func (i *K8sInstaller) Install(
 	s := sg.Add("Inspecting Kubernetes cluster...")
 	defer func() { s.Abort() }()
 
-	clientset, err := i.newClient()
+	clientset, err := i.NewClient()
 	if err != nil {
 		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return nil, err
@@ -385,7 +386,7 @@ func (i *K8sInstaller) Upgrade(
 	s := sg.Add("Inspecting Kubernetes cluster...")
 	defer s.Abort()
 
-	clientset, err := i.newClient()
+	clientset, err := i.NewClient()
 	if err != nil {
 		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return nil, err
@@ -640,7 +641,7 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	s := sg.Add("Inspecting Kubernetes cluster...")
 	defer func() { s.Abort() }()
 
-	clientset, err := i.newClient()
+	clientset, err := i.NewClient()
 	if err != nil {
 		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
@@ -920,7 +921,7 @@ func (i *K8sInstaller) InstallRunner(
 	s := sg.Add("Inspecting Kubernetes cluster...")
 	defer func() { s.Abort() }()
 
-	clientset, err := i.newClient()
+	clientset, err := i.NewClient()
 	if err != nil {
 		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
@@ -989,7 +990,7 @@ func (i *K8sInstaller) UninstallRunner(
 	s := sg.Add("Inspecting Kubernetes cluster...")
 	defer func() { s.Abort() }()
 
-	clientset, err := i.newClient()
+	clientset, err := i.NewClient()
 	if err != nil {
 		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
@@ -1096,7 +1097,7 @@ func (i *K8sInstaller) HasRunner(
 	ctx context.Context,
 	opts *InstallOpts,
 ) (bool, error) {
-	clientset, err := i.newClient()
+	clientset, err := i.NewClient()
 	if err != nil {
 		return false, err
 	}
@@ -1695,54 +1696,6 @@ func int32Ptr(i int32) *int32 {
 
 func int64Ptr(i int64) *int64 {
 	return &i
-}
-
-// newClient creates a new K8S client based on the configured settings.
-func (i *K8sInstaller) newClient() (*kubernetes.Clientset, error) {
-	// Build our K8S client.
-	configOverrides := &clientcmd.ConfigOverrides{}
-	if i.config.k8sContext != "" {
-		configOverrides = &clientcmd.ConfigOverrides{
-			CurrentContext: i.config.k8sContext,
-		}
-	}
-	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		clientcmd.NewDefaultClientConfigLoadingRules(),
-		configOverrides,
-	)
-
-	// Discover the current target namespace in the user's config so if they
-	// run kubectl commands waypoint will show up. If we use the default namespace
-	// they might not see the objects we've created.
-	if i.config.namespace == "" {
-		namespace, _, err := newCmdConfig.Namespace()
-		if err != nil {
-			return nil, fmt.Errorf(
-				"Error getting namespace from client config: %s",
-				clierrors.Humanize(err),
-			)
-		}
-
-		i.config.namespace = namespace
-	}
-
-	clientconfig, err := newCmdConfig.ClientConfig()
-	if err != nil {
-		return nil, fmt.Errorf(
-			"Error initializing kubernetes client: %s",
-			clierrors.Humanize(err),
-		)
-	}
-
-	clientset, err := kubernetes.NewForConfig(clientconfig)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"Error initializing kubernetes client: %s",
-			clierrors.Humanize(err),
-		)
-	}
-
-	return clientset, nil
 }
 
 func (i *K8sInstaller) initServiceAccount(
