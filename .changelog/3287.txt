@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/nomad-jobspec: Add configuration option to parse jobspec as HCL1 instead of HCL2
+```
