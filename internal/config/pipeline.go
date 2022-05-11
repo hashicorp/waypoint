@@ -4,7 +4,9 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/zclconf/go-cty/cty/function"
 
+	"github.com/hashicorp/waypoint/internal/config/dynamic"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -16,7 +18,7 @@ type Pipeline struct {
 	Steps   []*Step
 
 	ctx    *hcl.EvalContext
-	config *Config
+	Config *Config
 }
 
 // hclPipeline represents a raw HCL version of a pipeline config
@@ -80,9 +82,9 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 	}
 	pipeline.Name = rawPipeline.Name
 	pipeline.ctx = ctx
-	pipeline.config = c
-	if pipeline.config != nil {
-		pipeline.config.ctx = ctx
+	pipeline.Config = c
+	if pipeline.Config != nil {
+		pipeline.Config.ctx = ctx
 	}
 
 	// decode all of the defined raw steps for a pipeline
@@ -102,6 +104,58 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 	pipeline.Steps = steps
 
 	return &pipeline, nil
+}
+
+// PipelineProtos will take the existing HCL eval context, eval the config
+// and translate the HCL result into a Pipeline Proto to be returned for
+// operations such as ConfigSync.
+func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
+	if c == nil {
+		return nil, nil
+	}
+
+	// Build our evaluation context for the config vars
+	ctx := c.ctx
+	ctx = appendContext(ctx, &hcl.EvalContext{
+		Functions: dynamic.Register(map[string]function.Function{}),
+	})
+	ctx = finalizeContext(ctx)
+
+	// Load HCL config and convert to a Pipeline proto
+	var result []*pb.Pipeline
+	for _, pl := range c.hclConfig.Pipelines {
+		pipe := &pb.Pipeline{
+			Name: pl.Name,
+		}
+
+		steps := make(map[string]*pb.Pipeline_Step)
+		for _, step := range pl.StepRaw {
+			s := &pb.Pipeline_Step{
+				Name:      step.Name,
+				DependsOn: step.DependsOn,
+			}
+
+			// We currently only support one kind of Step plugin. But in the future
+			// maybe this would be a switch on step.Type? Or maybe we get our
+			// own Step Eval func that returns the step proto instead and does the
+			// switches there.
+			s.Kind = &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: step.ImageURL,
+					// Command: step.Use.Body.Command,
+					// Args:    step.Use.Body.Args,
+				},
+			}
+
+			steps[step.Name] = s
+		}
+
+		pipe.Steps = steps
+
+		result = append(result, pipe)
+	}
+
+	return result, nil
 }
 
 // Ref returns the ref for this pipeline.
