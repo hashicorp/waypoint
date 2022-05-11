@@ -30,6 +30,7 @@ import (
 type Project struct {
 	logger    hclog.Logger
 	apps      map[string]*App
+	pipelines map[string]*Pipeline
 	factories map[component.Type]*factory.Factory
 	dir       *datadir.Project
 	mappers   []*argmapper.Func
@@ -73,6 +74,7 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		logger:    hclog.L(),
 		workspace: "default",
 		apps:      make(map[string]*App),
+		pipelines: make(map[string]*Pipeline),
 		jobInfo:   &component.JobInfo{},
 		factories: map[component.Type]*factory.Factory{
 			component.BuilderType:        plugin.BaseFactories[component.BuilderType],
@@ -147,6 +149,27 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		}
 
 		p.apps[appConfig.Name] = app
+	}
+
+	// configure pipelines for project and its apps
+	for _, name := range opts.Config.Pipelines() {
+		evalCtx := config.EvalContext(nil, p.dir.DataDir()).NewChild()
+		// TODO: Add variables
+
+		pipelineConfig, err := opts.Config.Pipeline(name, evalCtx)
+		if err != nil {
+			return nil, fmt.Errorf("error loading pipeline %q: %w", name, err)
+		}
+		if err := pipelineConfig.Validate(); err != nil {
+			return nil, fmt.Errorf("error loading pipeline %q: %w", name, err)
+		}
+
+		pipeline, err := newPipeline(ctx, p, pipelineConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		p.pipelines[pipelineConfig.Name] = pipeline
 	}
 
 	p.logger.Info("project initialized", "workspace", p.workspace)
