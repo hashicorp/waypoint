@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -6,17 +6,20 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
-func TestServiceUpdateUser(t *testing.T) {
+func init() {
+	tests["user"] = []testFunc{
+		TestServiceUpdateUser,
+	}
+}
+
+func TestServiceUpdateUser(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Get ourself
 	getUser := func(t *testing.T) *pb.User {

@@ -12,10 +12,8 @@ import (
 
 // Interface is the primary interface implemented by an implementation.
 //
-// This is an internal interface because (1) we don't expect or support
-// any external implementations and (2) we can absolutely change this interface
-// anytime we want or find it convenient, but we have to make sure so simultaneously
-// modify all our implementations.
+// Any changes to this interface will require changes to all
+// implementations in all projects.
 type Interface interface {
 	// Close is always called when the server is shutting down or reloading
 	// the state store. This should clean up any resources (file handles, etc.)

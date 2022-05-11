@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -7,18 +7,23 @@ import (
 	"github.com/stretchr/testify/require"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestServiceProject(t *testing.T) {
+func init() {
+	tests["project"] = []testFunc{
+		TestServiceProject,
+		TestServiceProject_GetApplication,
+		TestServiceProject_UpsertApplication,
+	}
+}
+
+func TestServiceProject(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 	project := ptypes.TestProject(t, &pb.Project{
 		Name: "example",
 	})
@@ -86,13 +91,11 @@ func TestServiceProject(t *testing.T) {
 	})
 }
 
-func TestServiceProject_GetApplication(t *testing.T) {
+func TestServiceProject_GetApplication(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 	project := ptypes.TestProject(t, &pb.Project{
 		Name: "example",
 	})
@@ -138,13 +141,11 @@ func TestServiceProject_GetApplication(t *testing.T) {
 	})
 }
 
-func TestServiceProject_UpsertApplication(t *testing.T) {
+func TestServiceProject_UpsertApplication(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 	project := ptypes.TestProject(t, &pb.Project{
 		Name: "example",
 	})

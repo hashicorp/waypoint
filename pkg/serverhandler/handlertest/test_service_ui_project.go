@@ -1,19 +1,28 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
-
-	"github.com/stretchr/testify/require"
 )
 
-func TestServiceUI_GetProject(t *testing.T) {
+func init() {
+	tests["ui_project"] = []testFunc{
+		TestServiceUI_GetProject,
+	}
+}
+
+func TestServiceUI_GetProject(t *testing.T, factory Factory) {
 	require := require.New(t)
 	ctx := context.Background()
-	client := TestServer(t)
+
+	// Create our server
+	_, client := factory(t)
+
 	project := serverptypes.TestProject(t, &pb.Project{
 		Name: "example",
 	})

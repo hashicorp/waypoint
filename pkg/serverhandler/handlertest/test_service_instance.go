@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -12,16 +12,20 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestListInstances(t *testing.T) {
+func init() {
+	tests["instance"] = []testFunc{
+		TestListInstances,
+	}
+}
+
+func TestListInstances(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	t.Run("deployment ID", func(t *testing.T) {
 		require := require.New(t)
 
 		// Create our server
-		impl, err := New(WithDB(testDB(t)))
-		require.NoError(err)
-		client := server.TestServer(t, impl)
+		_, client := factory(t)
 
 		// Create a deployment
 		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -74,9 +78,7 @@ func TestListInstances(t *testing.T) {
 		require := require.New(t)
 
 		// Create our server
-		impl, err := New(WithDB(testDB(t)))
-		require.NoError(err)
-		client := server.TestServer(t, impl)
+		_, client := factory(t)
 
 		// Create a deployment
 		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
