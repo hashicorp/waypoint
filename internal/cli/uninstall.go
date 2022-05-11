@@ -47,7 +47,7 @@ func (c *UninstallCommand) Run(args []string) int {
 
 	if !c.autoApprove {
 		proceed, err := c.ui.Input(&terminal.Input{
-			Prompt: "Do you really want to uninstall the Waypoint server? Only 'yes' will be accepted to approve. ",
+			Prompt: "Do you really want to uninstall the Waypoint server? Only 'yes' will be accepted to approve: ",
 			Style:  "",
 			Secret: false,
 		})
@@ -57,7 +57,7 @@ func (c *UninstallCommand) Run(args []string) int {
 				clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
-		} else if proceed != "yes" {
+		} else if strings.ToLower(proceed) != "yes" {
 			c.ui.Output(strings.TrimSpace(uninstallApproveMsg), terminal.WithErrorStyle())
 			return 1
 		}

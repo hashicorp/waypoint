@@ -85,7 +85,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	if !c.confirm {
 		proceed, err := c.ui.Input(&terminal.Input{
-			Prompt: "Would you like to proceed with the Waypoint server upgrade? Only 'yes' will be accepted to approve. ",
+			Prompt: "Would you like to proceed with the Waypoint server upgrade? Only 'yes' will be accepted to approve: ",
 			Style:  "",
 			Secret: false,
 		})
@@ -95,7 +95,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 				clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
-		} else if proceed != "yes" {
+		} else if strings.ToLower(proceed) != "yes" {
 			c.ui.Output(upgradeConfirmMsg, terminal.WithErrorStyle())
 			return 1
 		}

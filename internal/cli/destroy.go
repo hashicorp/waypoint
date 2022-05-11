@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"strings"
 
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
@@ -31,7 +32,7 @@ func (c *DestroyCommand) Run(args []string) int {
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		if !c.confirm {
 			proceed, err := c.ui.Input(&terminal.Input{
-				Prompt: "Do you really want to destroy all resources for this app? Only 'yes' will be accepted to approve. ",
+				Prompt: "Do you really want to destroy all resources for this app? Only 'yes' will be accepted to approve: ",
 				Style:  "",
 				Secret: false,
 			})
@@ -41,7 +42,7 @@ func (c *DestroyCommand) Run(args []string) int {
 					clierrors.Humanize(err),
 					terminal.WithErrorStyle(),
 				)
-			} else if proceed != "yes" {
+			} else if strings.ToLower(proceed) != "yes" {
 				app.UI.Output("Destroying app %q requires confirmation.", app.Ref().GetApplication(), terminal.WithWarningStyle())
 				return nil
 			}
