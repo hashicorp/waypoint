@@ -158,13 +158,17 @@ func (i *ECSRunnerInstaller) InstallFlags(set *flag.Set) {
 }
 
 func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
-	//TODO implement me
-	panic("implement me")
+	sg := opts.UI.StepGroup()
+	defer sg.Wait()
+
+	//s := sg.Add("Preparing Helm...")
+	//defer func() { s.Abort() }()
+
+	return nil
 }
 
 func (i *ECSRunnerInstaller) UninstallFlags(set *flag.Set) {
 	//TODO implement me
-	panic("implement me")
 }
 
 type ecsConfig struct {
