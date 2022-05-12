@@ -117,7 +117,10 @@ func (r *Runner) executePipelineStepExec(
 	}
 
 	// Watch job
-	streamUI := &jobstreamui.UI{UI: project.UI}
+	streamUI := &jobstreamui.UI{
+		UI:  project.UI,
+		Log: log.Named("ui"),
+	}
 	for {
 		resp, err := stream.Recv()
 		if err != nil {
