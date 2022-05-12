@@ -179,8 +179,7 @@ func (s *Service) queueJobReqToJob(
 				job.OndemandRunner = ods[0]
 			default:
 				job.OndemandRunner = ods[rand.Intn(len(ods))]
-				log.Debug("multiple default on-demand runner profiles detected, chose a random one",
-					"runner-config-id", job.OndemandRunner.Id)
+				log.Debug("multiple default on-demand runner profiles detected, chose a random one", job.OndemandRunner)
 			}
 		}
 	}
