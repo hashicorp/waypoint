@@ -179,7 +179,8 @@ func (s *Service) queueJobReqToJob(
 				job.OndemandRunner = ods[0]
 			default:
 				job.OndemandRunner = ods[rand.Intn(len(ods))]
-				log.Debug("multiple default on-demand runner profiles detected, chose a random one", job.OndemandRunner)
+				log.Debug("multiple default on-demand runner profiles detected, chose a random one",
+					"runner-config-id", job.OndemandRunner.Id)
 			}
 		}
 	}
@@ -459,7 +460,7 @@ func (s *Service) onDemandRunnerStartJob(
 
 	job.ExpireTime = timestamppb.New(time.Now().Add(dur))
 
-	// This will be either "Any" or a specific static runner defined by a runner profile.
+	// This will be either "Any" or a specific static runner.
 	job.TargetRunner = od.TargetRunner
 
 	return job, runnerId, nil

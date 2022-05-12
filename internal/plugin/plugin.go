@@ -3,7 +3,6 @@ package plugin
 import (
 	sdk "github.com/hashicorp/waypoint-plugin-sdk"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	k8shelm "github.com/hashicorp/waypoint/builtin/k8s/helm"
 	"github.com/hashicorp/waypoint/internal/factory"
 
 	"github.com/hashicorp/waypoint/builtin/aws/alb"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/google/cloudrun"
 	"github.com/hashicorp/waypoint/builtin/k8s"
 	k8sapply "github.com/hashicorp/waypoint/builtin/k8s/apply"
+	k8shelm "github.com/hashicorp/waypoint/builtin/k8s/helm"
 	"github.com/hashicorp/waypoint/builtin/nomad"
 	"github.com/hashicorp/waypoint/builtin/nomad/jobspec"
 	"github.com/hashicorp/waypoint/builtin/null"
