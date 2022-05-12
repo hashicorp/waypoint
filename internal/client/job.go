@@ -235,7 +235,7 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 		}
 	} else if c.waypointHCL != nil {
 		var configRunner *configpkg.Runner
-		// Find runner configuration on the app
+		// Find runner configuration on the project
 		if job.Application != nil {
 			configRunner = c.waypointHCL.ConfigAppRunner(job.Application.Application)
 		}
@@ -308,21 +308,17 @@ func (c *Project) queueAndStreamJob(
 
 	type stepData struct {
 		terminal.Step
-
 		out io.Writer
 	}
 
 	// Process events
 	var (
-		completed bool
-
+		completed       bool
 		stateEventTimer *time.Timer
 		tstatus         terminal.Status
-
-		stdout, stderr io.Writer
-
-		sg    terminal.StepGroup
-		steps = map[int32]*stepData{}
+		stdout, stderr  io.Writer
+		sg              terminal.StepGroup
+		steps           = map[int32]*stepData{}
 	)
 
 	if localJob {
@@ -362,22 +358,18 @@ func (c *Project) queueAndStreamJob(
 		}
 
 		switch event := resp.Event.(type) {
-
 		case *pb.GetJobStreamResponse_Complete_:
 			completed = true
-
 			if event.Complete.Error == nil {
 				log.Info("job completed successfully")
 				return event.Complete.Result, nil
 			}
-
 			st := status.FromProto(event.Complete.Error)
 			log.Warn("job failed", "code", st.Code(), "message", st.Message())
 			return nil, st.Err()
 
 		case *pb.GetJobStreamResponse_Error_:
 			completed = true
-
 			st := status.FromProto(event.Error.Error)
 			log.Warn("job stream failure", "code", st.Code(), "message", st.Message())
 			return nil, st.Err()
@@ -387,7 +379,6 @@ func (c *Project) queueAndStreamJob(
 			if localJob {
 				continue
 			}
-
 			for _, ev := range event.Terminal.Events {
 				log.Trace("job terminal output", "event", ev)
 

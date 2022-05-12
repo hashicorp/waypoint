@@ -65,6 +65,9 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 	// Wrap our handler to log
 	rootHandler = httpLogHandler(rootHandler, log)
 
+	// Wrap handler to sanitize user inputs
+	rootHandler = sanitizedHandler(rootHandler)
+
 	// Create our http server
 	return &httpServer{
 		ln:   ln,
