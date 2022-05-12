@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -13,13 +13,19 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestServiceRelease(t *testing.T) {
+func init() {
+	tests["release"] = []testFunc{
+		TestServiceRelease,
+		TestServiceRelease_GetRelease,
+		TestServiceRelease_ListReleases,
+	}
+}
+
+func TestServiceRelease(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Simplify writing tests
 	type Req = pb.UpsertReleaseRequest
@@ -65,14 +71,11 @@ func TestServiceRelease(t *testing.T) {
 	})
 }
 
-func TestServiceRelease_GetRelease(t *testing.T) {
+func TestServiceRelease_GetRelease(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Best way to mock for now is to make a request
 	resp, err := client.UpsertRelease(ctx, &pb.UpsertReleaseRequest{
@@ -115,14 +118,11 @@ func TestServiceRelease_GetRelease(t *testing.T) {
 	})
 }
 
-func TestServiceRelease_ListReleases(t *testing.T) {
+func TestServiceRelease_ListReleases(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	buildresp, err := client.UpsertBuild(ctx, &pb.UpsertBuildRequest{
 		Build: serverptypes.TestValidBuild(t, nil),

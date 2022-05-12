@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -8,19 +8,21 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestServiceUI_Deployment_ListDeployments(t *testing.T) {
+func init() {
+	tests["ui_release"] = []testFunc{
+		TestServiceUI_Release_ListReleases,
+	}
+}
+
+func TestServiceUI_Release_ListReleases(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Create a project with an application
 	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
@@ -77,10 +79,21 @@ func TestServiceUI_Deployment_ListDeployments(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, deployResp)
 
+	releaseResp, err := client.UpsertRelease(ctx, &pb.UpsertReleaseRequest{
+		Release: serverptypes.TestValidRelease(t, &pb.Release{
+			DeploymentId: deployResp.Deployment.Id,
+			Application: &pb.Ref_Application{
+				Application: "apple-app",
+				Project:     "Example",
+			},
+		}),
+	})
+	require.NoError(t, err)
+
 	sr1, err := client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
 		StatusReport: serverptypes.TestValidStatusReport(t, &pb.StatusReport{
-			TargetId: &pb.StatusReport_DeploymentId{
-				DeploymentId: deployResp.Deployment.Id,
+			TargetId: &pb.StatusReport_ReleaseId{
+				ReleaseId: releaseResp.Release.Id,
 			},
 			Application: &pb.Ref_Application{
 				Application: "apple-app",
@@ -91,64 +104,64 @@ func TestServiceUI_Deployment_ListDeployments(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	type Req = pb.UI_ListDeploymentsRequest
+	type Req = pb.UI_ListReleasesRequest
 
 	t.Run("list", func(t *testing.T) {
 		require := require.New(t)
-		deployments, err := client.UI_ListDeployments(ctx, &Req{
-			Application: deployResp.Deployment.Application,
-			Workspace:   deployResp.Deployment.Workspace,
+		releases, err := client.UI_ListReleases(ctx, &Req{
+			Application: releaseResp.Release.Application,
+			Workspace:   releaseResp.Release.Workspace,
 		})
 		require.NoError(err)
-		require.NotNil(deployments)
-		require.NotNil(deployments.Deployments)
-		require.Equal(len(deployments.Deployments), 1)
+		require.NotNil(releases)
+		require.NotNil(releases.Releases)
+		require.Equal(len(releases.Releases), 1)
 
 		// Operation exists and is what we expect
-		deployment := deployments.Deployments[0]
-		require.NotNil(deployment.Deployment)
-		require.Equal(deployment.Deployment.Id, deployResp.Deployment.Id)
+		release := releases.Releases[0]
+		require.NotNil(release.Release)
+		require.Equal(release.Release.Id, releaseResp.Release.Id)
 
 		// Status report exists and matches our operation
-		require.NotNil(deployment.LatestStatusReport)
-		require.IsType(deployment.LatestStatusReport.TargetId, &pb.StatusReport_DeploymentId{})
-		require.Equal(deployment.LatestStatusReport.TargetId.(*pb.StatusReport_DeploymentId).DeploymentId, deployment.Deployment.Id)
+		require.NotEmpty(release.LatestStatusReport)
+		require.IsType(release.LatestStatusReport.TargetId, &pb.StatusReport_ReleaseId{})
+		require.Equal(release.LatestStatusReport.TargetId.(*pb.StatusReport_ReleaseId).ReleaseId, release.Release.Id)
 
 		// Latest status report is what we inserted
-		require.Equal(deployment.LatestStatusReport.Id, sr1.StatusReport.Id)
+		require.Equal(release.LatestStatusReport.Id, sr1.StatusReport.Id)
 	})
 
 	t.Run("list shows newest status report", func(t *testing.T) {
-		// Insert another status report for the deployment, with a newer time
+		// Insert another status report for the release, with a newer time
 		sr2, err := client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
 			StatusReport: serverptypes.TestValidStatusReport(t, &pb.StatusReport{
-				TargetId: &pb.StatusReport_DeploymentId{
-					DeploymentId: deployResp.Deployment.Id,
+				TargetId: &pb.StatusReport_ReleaseId{
+					ReleaseId: releaseResp.Release.Id,
 				},
 				Application: &pb.Ref_Application{
 					Application: "apple-app",
 					Project:     "Example",
 				},
-				GeneratedTime: timestamppb.Now(),
+				GeneratedTime: timestamppb.New(time.Now()),
 			}),
 		})
 		require.NoError(t, err)
 
 		require := require.New(t)
-		deployments, err := client.UI_ListDeployments(ctx, &Req{
-			Application: deployResp.Deployment.Application,
-			Workspace:   deployResp.Deployment.Workspace,
+		releases, err := client.UI_ListReleases(ctx, &Req{
+			Application: releaseResp.Release.Application,
+			Workspace:   releaseResp.Release.Workspace,
 		})
 		require.NoError(err)
-		require.NotEmpty(deployments)
-		require.NotEmpty(deployments.Deployments)
-		require.Equal(len(deployments.Deployments), 1)
+		require.NotNil(releases)
+		require.NotNil(releases.Releases)
+		require.Equal(len(releases.Releases), 1)
 
 		// Operation exists and is what we expect
-		deployment := deployments.Deployments[0]
+		release := releases.Releases[0]
 
-		// Is the most recent status report for the deployment
-		require.NotEmpty(deployment.LatestStatusReport)
-		require.Equal(deployment.LatestStatusReport.Id, sr2.StatusReport.Id)
+		// Is the most recent status report for the release
+		require.NotEmpty(release.LatestStatusReport)
+		require.Equal(release.LatestStatusReport.Id, sr2.StatusReport.Id)
 	})
 }

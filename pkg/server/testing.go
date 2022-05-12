@@ -14,9 +14,9 @@ import (
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/pkg/protocolversion"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverclient"
 )
 
 // TestServer starts a server and returns a gRPC client to that server.
@@ -131,6 +131,7 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 		token = tokenResp.Token
 	}
 	conn, err = connect(token)
+
 	require.NoError(err)
 	t.Cleanup(func() { conn.Close() })
 	return pb.NewWaypointClient(conn)

@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -13,13 +13,18 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestServiceArtifact(t *testing.T) {
+func init() {
+	tests["artifact"] = []testFunc{
+		TestServiceArtifact,
+		TestServiceArtifact_List,
+	}
+}
+
+func TestServiceArtifact(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Simplify writing tests
 	type Req = pb.UpsertPushedArtifactRequest
@@ -66,13 +71,11 @@ func TestServiceArtifact(t *testing.T) {
 
 }
 
-func TestServiceArtifact_List(t *testing.T) {
+func TestServiceArtifact_List(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Simplify writing tests
 	type Req = pb.ListPushedArtifactsRequest

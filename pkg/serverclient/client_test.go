@@ -19,9 +19,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/waypoint/internal/clicontext"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/serverconfig"
 	"github.com/mr-tron/base58"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,6 +26,10 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/hashicorp/waypoint/internal/clicontext"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
 func TestConnect(t *testing.T) {

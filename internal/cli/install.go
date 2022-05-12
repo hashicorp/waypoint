@@ -18,9 +18,9 @@ import (
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/internal/serverinstall"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverclient"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 

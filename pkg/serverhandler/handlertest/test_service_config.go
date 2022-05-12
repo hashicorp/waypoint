@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -6,21 +6,21 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/go-hclog"
-
-	"github.com/hashicorp/waypoint/internal/server/boltdbstate"
-	"github.com/hashicorp/waypoint/internal/serverconfig"
-	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
-func TestServiceConfig(t *testing.T) {
+func init() {
+	tests["workspace"] = []testFunc{
+		TestServiceConfig,
+		TestServiceConfigSource,
+	}
+}
+
+func TestServiceConfig(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Simplify writing tests
 	type (
@@ -70,13 +70,11 @@ func TestServiceConfig(t *testing.T) {
 	})
 }
 
-func TestServiceConfigSource(t *testing.T) {
+func TestServiceConfigSource(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Simplify writing tests
 	type (
@@ -117,62 +115,5 @@ func TestServiceConfigSource(t *testing.T) {
 			require.NotNil(resp)
 			require.Equal(1, len(resp.ConfigSources))
 		}
-	})
-}
-
-func TestServerConfigWithStartupConfig(t *testing.T) {
-	cfg := &serverconfig.Config{
-		CEBConfig: &serverconfig.CEBConfig{
-			Addr:          "myendpoint",
-			TLSEnabled:    false,
-			TLSSkipVerify: true,
-		},
-	}
-
-	db := testDB(t)
-	// Create our server
-	impl, err := New(
-		WithDB(db),
-		WithConfig(cfg),
-	)
-	require.NoError(t, err)
-	_ = server.TestServer(t, impl)
-
-	st, err := boltdbstate.New(hclog.L(), db)
-	require.NoError(t, err)
-
-	t.Run("Check config defaults are set", func(t *testing.T) {
-		require := require.New(t)
-
-		retCfg, err := st.ServerConfigGet()
-		require.NoError(err)
-		require.NotNil(retCfg)
-
-		addr := retCfg.AdvertiseAddrs[0]
-		require.Equal(cfg.CEBConfig.Addr, addr.Addr)
-		require.Equal(cfg.CEBConfig.TLSEnabled, addr.Tls)
-		require.Equal(cfg.CEBConfig.TLSSkipVerify, addr.TlsSkipVerify)
-	})
-}
-
-func TestServerConfigWithNoStartupConfig(t *testing.T) {
-	db := testDB(t)
-	// Create our server
-	impl, err := New(
-		WithDB(db),
-	)
-	require.NoError(t, err)
-	_ = server.TestServer(t, impl)
-
-	st, err := boltdbstate.New(hclog.L(), db)
-	require.NoError(t, err)
-
-	t.Run("Check config defaults are not set", func(t *testing.T) {
-		require := require.New(t)
-
-		retCfg, err := st.ServerConfigGet()
-		require.NoError(err)
-		require.NotNil(retCfg)
-		require.Len(retCfg.AdvertiseAddrs, 0)
 	})
 }

@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -9,18 +9,23 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestServiceOnDemandRunnerConfig(t *testing.T) {
+func init() {
+	tests["runner_ondemand"] = []testFunc{
+		TestServiceOnDemandRunnerConfig,
+		TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig,
+		TestServiceOnDemandRunnerConfig_ListOnDemandRunnerConfigs,
+	}
+}
+
+func TestServiceOnDemandRunnerConfig(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Simplify writing tests
 	type Req = pb.UpsertOnDemandRunnerConfigRequest
@@ -95,14 +100,11 @@ func TestServiceOnDemandRunnerConfig(t *testing.T) {
 	})
 }
 
-func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T) {
+func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Best way to mock for now is to make a request
 	resp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
@@ -145,14 +147,11 @@ func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T) {
 	})
 }
 
-func TestServiceOnDemandRunnerConfig_ListOnDemandRunnerConfigs(t *testing.T) {
+func TestServiceOnDemandRunnerConfig_ListOnDemandRunnerConfigs(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	dep := serverptypes.TestOnDemandRunnerConfig(t, nil)
 

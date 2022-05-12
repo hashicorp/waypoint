@@ -13,10 +13,10 @@ import (
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint/internal/server"
-	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/pkg/protocolversion"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/singleprocess"
+	"github.com/hashicorp/waypoint/pkg/serverclient"
 )
 
 // initServerClient will initialize a gRPC connection to the Waypoint server.

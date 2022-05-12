@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -8,18 +8,26 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestServiceTrigger(t *testing.T) {
+func init() {
+	tests["trigger"] = []testFunc{
+		TestServiceTrigger,
+		TestServiceTrigger_GetTrigger,
+		TestServiceTrigger_ListTriggersSimple,
+		TestServiceTrigger_ListTriggersWithFilters,
+		TestServiceTrigger_DeleteTrigger,
+		TestServiceTrigger_RunTrigger,
+	}
+}
+
+func TestServiceTrigger(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	type Req = pb.UpsertTriggerRequest
 
@@ -88,18 +96,16 @@ func TestServiceTrigger(t *testing.T) {
 	})
 }
 
-func TestServiceTrigger_GetTrigger(t *testing.T) {
+func TestServiceTrigger_GetTrigger(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	resp, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
 		Trigger: serverptypes.TestValidTrigger(t, nil),
 	})
+	require.NoError(t, err)
 	triggerId := resp.Trigger.Id
 
 	type Req = pb.UpsertTriggerRequest
@@ -136,44 +142,42 @@ func TestServiceTrigger_GetTrigger(t *testing.T) {
 	})
 }
 
-func TestServiceTrigger_ListTriggersSimple(t *testing.T) {
+func TestServiceTrigger_ListTriggersSimple(t *testing.T, factory Factory) {
 	ctx := context.Background()
+	require := require.New(t)
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
+
+	_, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+		Trigger: serverptypes.TestValidTrigger(t, nil),
+	})
+	require.NoError(err)
 
 	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
 		Trigger: serverptypes.TestValidTrigger(t, nil),
 	})
+	require.NoError(err)
+
 	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
 		Trigger: serverptypes.TestValidTrigger(t, nil),
 	})
-	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
-		Trigger: serverptypes.TestValidTrigger(t, nil),
-	})
+	require.NoError(err)
 
 	t.Run("list", func(t *testing.T) {
-		require := require.New(t)
-
 		respList, err := client.ListTriggers(ctx, &pb.ListTriggerRequest{})
 		require.NoError(err)
 		require.Equal(len(respList.Triggers), 3)
 	})
 }
 
-func TestServiceTrigger_ListTriggersWithFilters(t *testing.T) {
+func TestServiceTrigger_ListTriggersWithFilters(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
-	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+	_, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
 		Trigger: serverptypes.TestValidTrigger(t, nil),
 	})
 	_, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
@@ -320,18 +324,16 @@ func TestServiceTrigger_ListTriggersWithFilters(t *testing.T) {
 	})
 }
 
-func TestServiceTrigger_DeleteTrigger(t *testing.T) {
+func TestServiceTrigger_DeleteTrigger(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	db := testDB(t)
-	impl, err := New(WithDB(db))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	resp, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
 		Trigger: serverptypes.TestValidTrigger(t, nil),
 	})
+	require.NoError(t, err)
 	triggerId := resp.Trigger.Id
 
 	type Req = pb.UpsertTriggerRequest
@@ -383,13 +385,11 @@ func TestServiceTrigger_DeleteTrigger(t *testing.T) {
 	})
 }
 
-func TestServiceTrigger_RunTrigger(t *testing.T) {
+func TestServiceTrigger_RunTrigger(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	t.Run("running a missing trigger", func(t *testing.T) {
 		require := require.New(t)
