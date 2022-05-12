@@ -32,9 +32,18 @@ type hclPipeline struct {
 
 // hclStep represents a raw HCL version of a step stanza in a pipeline config
 type hclStep struct {
-	Use    *Use     `hcl:"use,block"`
-	Body   hcl.Body `hcl:",body"`
-	Remain hcl.Body `hcl:",remain"`
+	Name string `hcl:",label"`
+
+	// If set, this step will depend on the defined step. The default step
+	// will be the previously defined step in order that it was defined
+	// in a waypoint.hcl
+	DependsOn []string `hcl:"depends_on,optional"`
+
+	// The OCI image to use for executing this step
+	ImageURL string `hcl:"image_url,optional"`
+
+	// The plugin to use for this Step
+	Use *Use `hcl:"use,block"`
 }
 
 // Pipelines returns the id of all the defined pipelines
@@ -79,13 +88,14 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 	// decode all of the defined raw steps for a pipeline
 	var steps []*Step
 	for _, stepRaw := range pipeline.StepRaw {
-		body := stepRaw.Body
-
-		var s Step
-		if diag := gohcl.DecodeBody(body, finalizeContext(ctx), &s); diag.HasErrors() {
-			return nil, diag
+		// turn stepRaw into a staged Step
+		s := Step{
+			ctx:       ctx,
+			Name:      stepRaw.Name,
+			DependsOn: stepRaw.DependsOn,
+			ImageURL:  stepRaw.ImageURL,
+			Use:       stepRaw.Use,
 		}
-		s.ctx = ctx
 
 		steps = append(steps, &s)
 	}

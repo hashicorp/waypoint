@@ -1,16 +1,15 @@
 project = "foo"
 
 pipeline "foo" {
-  step {
+  step "zero" {
     image_url = "example.com/test"
-    name      = "zero"
 
     use "test" {
       foo = "qubit"
     }
   }
 
-  step {
+  step "one" {
     image_url = "example.com/second"
 
     use "test/exec" {
@@ -19,7 +18,7 @@ pipeline "foo" {
     }
   }
 
-  step {
+  step "two" {
     image_url = "example.com/different"
     depends_on = ["zero"]
 
