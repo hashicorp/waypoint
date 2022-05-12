@@ -46,8 +46,8 @@ type Step struct {
 	Labels map[string]string `hcl:"labels,optional"`
 	Use    *Use              `hcl:"use,block"`
 
-	// Optionally give this step a name
-	Name string `hcl:"name,optional"`
+	// Give this step a name
+	Name string `hcl:",label"`
 
 	// If set, this step will depend on the defined step. The default step
 	// will be the previously defined step in order that it was defined
