@@ -5,6 +5,8 @@ package jobstreamui
 import (
 	"io"
 
+	"github.com/hashicorp/go-hclog"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -14,6 +16,9 @@ import (
 type UI struct {
 	// The underlying UI that will be written to.
 	UI terminal.UI
+
+	// Log for unknown events and other diagnostics.
+	Log hclog.Logger
 
 	// Internal state
 	status         terminal.Status
@@ -36,6 +41,10 @@ type stepData struct {
 // eventually and it should be pretty easy to do so!
 func (s *UI) Write(events []*pb.GetJobStreamResponse_Terminal_Event) error {
 	ui := s.UI
+	log := s.Log
+	if log == nil {
+		log = hclog.L()
+	}
 
 	for _, ev := range events {
 		switch ev := ev.Event.(type) {
@@ -141,6 +150,7 @@ func (s *UI) Write(events []*pb.GetJobStreamResponse_Terminal_Event) error {
 
 		default:
 			// Unknown, ignore.
+			log.Warn("unknown UI event", "event", ev)
 		}
 	}
 
