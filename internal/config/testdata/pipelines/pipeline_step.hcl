@@ -1,7 +1,7 @@
 project = "foo"
 
 pipeline "foo" {
-  step {
+  step "test" {
     image_url = "example.com/test"
 
     use "test" {
