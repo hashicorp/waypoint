@@ -1179,13 +1179,10 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex
 	switch v := jobpb.TargetRunner.Target.(type) {
 	case *pb.Ref_Runner_Any:
 		rec.TargetAny = true
-
 	case *pb.Ref_Runner_Id:
 		rec.TargetRunnerId = v.Id.Id
-
 	case *pb.Ref_Runner_Labels:
 		rec.TargetRunnerLabels = v.Labels.Labels
-
 	default:
 		return nil, fmt.Errorf("unknown runner target value: %#v", jobpb.TargetRunner.Target)
 	}
@@ -1554,6 +1551,7 @@ func (s *State) jobCandidateByLabels(
 			continue
 		}
 
+		s.log.Debug("Job targeting runner by labels", "id", job.TargetRunnerLabels, "runner ID", r.Id)
 		return job, nil
 	}
 
@@ -1582,6 +1580,9 @@ func (s *State) jobCandidateAny(
 
 		job := raw.(*jobIndex)
 		if job.State != pb.Job_QUEUED || !job.TargetAny {
+			if !job.TargetAny {
+				s.log.Debug("Job not targeting 'Any' runner", "id", job.Id, "runner ID", r.Id)
+			}
 			continue
 		}
 
@@ -1592,6 +1593,7 @@ func (s *State) jobCandidateAny(
 			continue
 		}
 
+		s.log.Debug("Job targeting 'Any' runner", "id", job.Id, "runner ID", r.Id)
 		return job, nil
 	}
 

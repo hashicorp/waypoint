@@ -461,6 +461,14 @@ func (s *Service) onDemandRunnerStartJob(
 
 	// This will be either "Any" or a specific static runner.
 	job.TargetRunner = od.TargetRunner
+	switch target := job.TargetRunner.Target.(type) {
+	case *pb.Ref_Runner_Any:
+		log.Debug("Start job assignable to any runner.", "id", job.Id)
+	case *pb.Ref_Runner_Id:
+		log.Debug("Start job targeting runner ID %q", "id", job.Id, "runner id", target.Id.Id)
+	case *pb.Ref_Runner_Labels:
+		log.Debug("Start job targeting runner with labels", "id", job.Id, "runner labels", target.Labels.Labels)
+	}
 
 	return job, runnerId, nil
 }
