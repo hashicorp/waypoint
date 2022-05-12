@@ -18,7 +18,12 @@ func init() {
 		TestServiceOnDemandRunnerConfig,
 		TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig,
 		TestServiceOnDemandRunnerConfig_ListOnDemandRunnerConfigs,
+		TestNewODRFeature,
 	}
+}
+
+func TestNewODRFeature(t *testing.T, factory Factory) {
+	t.Fatalf("Oh no, the feature doesn't work yet")
 }
 
 func TestServiceOnDemandRunnerConfig(t *testing.T, factory Factory) {
