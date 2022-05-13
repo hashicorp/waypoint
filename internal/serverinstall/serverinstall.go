@@ -3,6 +3,7 @@ package serverinstall
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 
 	"github.com/distribution/distribution/v3/reference"
 	"github.com/hashicorp/go-hclog"
@@ -24,7 +25,7 @@ type Installer interface {
 	Install(context.Context, *InstallOpts) (*InstallResults, error)
 
 	// InstallRunner expects a Waypoint runner to be installed.
-	InstallRunner(context.Context, *InstallRunnerOpts) error
+	InstallRunner(context.Context, *runnerinstall.InstallOpts) error
 
 	// InstallFlags is called prior to Install and allows the installer to
 	// specify flags for the install CLI. The flags should be prefixed with
@@ -102,6 +103,10 @@ type InstallRunnerOpts struct {
 	// token already set. This is provided as a convenience since it is common
 	// to build this immediately.
 	AdvertiseClient *serverconfig.Client
+
+	Cookie string
+
+	Id string
 }
 
 // An optional interface that the installer can implement to request

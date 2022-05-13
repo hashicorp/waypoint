@@ -4,13 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net"
 	"strconv"
+
+	"net"
 	"strings"
 	"time"
 
-	"github.com/ghodss/yaml"
+	installutil "github.com/hashicorp/waypoint/internal/installutil/helm"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
+	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart/loader"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	appsv1 "k8s.io/api/apps/v1"
@@ -32,6 +36,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
+	dockerparser "github.com/novln/docker-parser"
 )
 
 //
@@ -60,6 +65,8 @@ type k8sConfig struct {
 	storageRequest    string `hcl:"storage_request,optional"`
 	secretFile        string `hcl:"secret_file,optional"`
 	imagePullSecret   string `hcl:"image_pull_secret,optional"`
+	kubeConfigPath    string `hcl:"kubeconfig_path,optional"`
+	version           string `hcl:"version,optional"`
 }
 
 const (
@@ -83,176 +90,139 @@ func (i *K8sInstaller) Install(
 		}
 	}
 
-	ui := opts.UI
 	log := opts.Log
+	ui := opts.UI
 
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Inspecting Kubernetes cluster...")
+	s := sg.Add("Getting Helm configs...")
 	defer func() { s.Abort() }()
-
-	clientset, err := i.newClient()
-	if err != nil {
-		ui.Output(err.Error(), terminal.WithErrorStyle())
-		return nil, err
-	}
-
-	// If this is kind, then we want to warn the user that they need
-	// to have some loadbalancer system setup or this will not work.
-	_, err = clientset.AppsV1().DaemonSets("kube-system").Get(
-		ctx, "kindnet", metav1.GetOptions{})
-	isKind := err == nil
-	if isKind {
-		s.Update(warnK8SKind)
-		s.Status(terminal.StatusWarn)
-		s.Done()
-		s = sg.Add("")
-	}
-
-	if i.config.secretFile != "" {
-		s.Update("Initializing Kubernetes secret")
-
-		data, err := ioutil.ReadFile(i.config.secretFile)
-		if err != nil {
-			ui.Output(
-				"Error reading Kubernetes secret file: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return nil, err
-		}
-
-		var secretData apiv1.Secret
-
-		err = yaml.Unmarshal(data, &secretData)
-		if err != nil {
-			ui.Output(
-				"Error reading Kubernetes secret file: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return nil, err
-		}
-
-		i.config.imagePullSecret = secretData.ObjectMeta.Name
-
-		ui.Output("Installing kubernetes secret...")
-
-		secretsClient := clientset.CoreV1().Secrets(i.config.namespace)
-		_, err = secretsClient.Create(context.TODO(), &secretData, metav1.CreateOptions{})
-		if err != nil {
-			ui.Output(
-				"Error creating Kubernetes secret from file: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return nil, err
-		}
-
-		s.Done()
-		s = sg.Add("")
-	}
-
-	// Do some probing to see if this is OpenShift. If so, we'll switch the config for the user.
-	// Setting the OpenShift flag will short circuit this.
-	if !i.config.openshift {
-		s.Update("Gathering information about the Kubernetes cluster...")
-		namespaceClient := clientset.CoreV1().Namespaces()
-		_, err := namespaceClient.Get(context.TODO(), "openshift", metav1.GetOptions{})
-		isOpenShift := err == nil
-
-		// Default namespace in OpenShift acts like a regular K8s namespace, so we don't want
-		// to remove fsGroup in this case.
-		if isOpenShift && i.config.namespace != "default" {
-			s.Update("OpenShift detected. Switching configuration...")
-			i.config.openshift = true
-		}
-	}
-
-	// Decode our configuration
-	statefulset, err := newStatefulSet(i.config, opts.ServerRunFlags)
-	if err != nil {
-		ui.Output(
-			"Error generating statefulset configuration: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return nil, err
-	}
-
-	service, err := newService(i.config)
-	if err != nil {
-		ui.Output(
-			"Error generating service configuration: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return nil, err
-	}
-
-	if i.config.odrServiceAccountInit {
-		s.Done()
-		err := i.initServiceAccount(ctx, clientset, sg)
-		if err != nil {
-			return nil, err
-		}
-		s = sg.Add("")
-	}
-
-	s.Update("Creating Kubernetes resources...")
-
-	serviceClient := clientset.CoreV1().Services(i.config.namespace)
-	_, err = serviceClient.Create(context.TODO(), service, metav1.CreateOptions{})
-	if err != nil {
-		ui.Output(
-			"Error creating service %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return nil, err
-	}
-
-	statefulSetClient := clientset.AppsV1().StatefulSets(i.config.namespace)
-	_, err = statefulSetClient.Create(context.TODO(), statefulset, metav1.CreateOptions{})
-	if err != nil {
-		ui.Output(
-			"Error creating statefulset %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return nil, err
-	}
-
-	s.Done()
-	s = sg.Add("Waiting for Kubernetes StatefulSet to be ready...")
-	log.Info("waiting for server statefulset to become ready")
-	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		ss, err := clientset.AppsV1().StatefulSets(i.config.namespace).Get(
-			ctx, serverName, metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-
-		if ss.Status.ReadyReplicas != ss.Status.Replicas {
-			log.Trace("statefulset not ready, waiting")
-			return false, nil
-		}
-
-		return true, nil
-	})
+	settings, err := installutil.SettingsInit()
 	if err != nil {
 		return nil, err
 	}
-
-	s.Update("Kubernetes StatefulSet reporting ready")
+	s.Update("Helm settings retrieved")
+	s.Status(terminal.StatusOK)
 	s.Done()
 
-	s = sg.Add("Waiting for Kubernetes service to become ready..")
+	s = sg.Add("Getting Helm action configuration...")
+	actionConfig, err := installutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
+	if err != nil {
+		return nil, err
+	}
+	s.Update("Helm action initialized")
+	s.Status(terminal.StatusOK)
+	s.Done()
 
-	// Wait for our service to be ready
-	log.Info("waiting for server service to become ready")
+	chartNS := ""
+	if v := i.config.namespace; v != "" {
+		chartNS = v
+	}
+	if chartNS == "" {
+		// If all else fails, default the namespace to "default"
+		chartNS = "default"
+	}
+
+	s = sg.Add("Creating new Helm install object...")
+	client := action.NewInstall(actionConfig)
+	client.ClientOnly = false
+	client.DryRun = false
+	client.DisableHooks = false
+	client.Wait = true
+	client.WaitForJobs = false
+	client.Devel = true
+	client.DependencyUpdate = false
+	client.Timeout = 300 * time.Second
+	client.Namespace = chartNS
+	client.ReleaseName = "waypoint"
+	client.GenerateName = false
+	client.NameTemplate = ""
+	client.OutputDir = ""
+	client.Atomic = false
+	client.SkipCRDs = false
+	client.SubNotes = true
+	client.DisableOpenAPIValidation = false
+	client.Replace = false
+	client.Description = ""
+	client.CreateNamespace = true
+	s.Update("Helm install created")
+	s.Status(terminal.StatusOK)
+	s.Done()
+
+	var version string
+	if i.config.version == "" {
+		version = installutil.DefaultHelmChartVersion
+	} else {
+		version = i.config.version
+	}
+
+	s = sg.Add("Locating chart...")
+	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/v"+version+".tar.gz", settings)
+	if err != nil {
+		return nil, err
+	}
+	s.Update("Helm chart located")
+	s.Status(terminal.StatusOK)
+	s.Done()
+
+	s = sg.Add("Loading Helm chart...")
+	c, err := loader.Load(path)
+	if err != nil {
+		return nil, err
+	}
+	s.Update("Helm chart loaded")
+	s.Status(terminal.StatusOK)
+	s.Done()
+
+	imageRef, err := dockerparser.Parse(i.config.serverImage)
+	if err != nil {
+		ui.Output("Error parsing image ref: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+		return nil, err
+	}
+
+	values := map[string]interface{}{
+		"server": map[string]interface{}{
+			"enabled": true,
+			"image": map[string]interface{}{
+				"repository": imageRef.ShortName(),
+				"tag":        imageRef.Tag(),
+			},
+			"resources": map[string]interface{}{
+				"requests": map[string]interface{}{
+					"memory": i.config.memRequest,
+					"cpu":    i.config.cpuRequest,
+				},
+				"limits": map[string]interface{}{
+					"memory": i.config.memLimit,
+					"cpu":    i.config.cpuLimit,
+				},
+			},
+		},
+		"runner": map[string]interface{}{
+			"enabled": false,
+		},
+	}
+	s = sg.Add("Installing Waypoint Helm chart...")
+	_, err = client.RunWithContext(ctx, c, values)
+	if err != nil {
+		return nil, err
+	}
+
 	var contextConfig clicontext.Config
 	var advertiseAddr pb.ServerConfig_AdvertiseAddr
 	var httpAddr string
 	var grpcAddr string
 
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		clientset, err := i.newClient()
+		if err != nil {
+			return false, err
+		}
+
+		s.Update("Getting waypoint-ui service...")
 		svc, err := clientset.CoreV1().Services(i.config.namespace).Get(
-			ctx, serviceName, metav1.GetOptions{})
+			ctx, "waypoint-ui", metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -274,17 +244,6 @@ func (i *K8sInstaller) Install(
 			return false, nil
 		}
 
-		endpoints, err := clientset.CoreV1().Endpoints(i.config.namespace).Get(
-			ctx, serviceName, metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-
-		if len(endpoints.Subsets) == 0 {
-			log.Trace("endpoints are empty, waiting")
-			return false, nil
-		}
-
 		// Get the ports
 		var grpcPort int32
 		var httpPort int32
@@ -293,7 +252,7 @@ func (i *K8sInstaller) Install(
 				grpcPort = spec.Port
 			}
 
-			if spec.Name == "http" {
+			if spec.Name == "https-2" {
 				httpPort = spec.Port
 			}
 
@@ -309,12 +268,13 @@ func (i *K8sInstaller) Install(
 
 		// Set the grpc address
 		grpcAddr = fmt.Sprintf("%s:%d", addr, grpcPort)
-		log.Info("server service ready", "addr", addr)
+		log.Info("server service ready: %s", addr)
 
 		// HTTP address to return
 		httpAddr = fmt.Sprintf("%s:%d", addr, httpPort)
 
 		// Ensure the service is ready to use before returning
+		s.Update("Checking that the server service is ready...")
 		_, err = net.DialTimeout("tcp", httpAddr, 1*time.Second)
 		if err != nil {
 			// Depending on the platform, this can take a long time. On EKS, it's by far the longest step. Adding an explicit message helps
@@ -335,7 +295,7 @@ func (i *K8sInstaller) Install(
 		// since pods can't reach this.
 		if i.config.advertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
 			advertiseAddr.Addr = fmt.Sprintf("%s:%d",
-				serviceName,
+				"waypoint-server",
 				grpcPort,
 			)
 		}
@@ -355,7 +315,10 @@ func (i *K8sInstaller) Install(
 	if err != nil {
 		return nil, err
 	}
+	s.Done()
 
+	s.Update("Waypoint server installed with Helm!")
+	s.Status(terminal.StatusOK)
 	s.Done()
 
 	return &InstallResults{
@@ -533,17 +496,6 @@ func (i *K8sInstaller) Upgrade(
 			return false, nil
 		}
 
-		endpoints, err := clientset.CoreV1().Endpoints(i.config.namespace).Get(
-			ctx, serviceName, metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-
-		if len(endpoints.Subsets) == 0 {
-			log.Trace("endpoints are empty, waiting")
-			return false, nil
-		}
-
 		// Get the ports
 		var grpcPort int32
 		var httpPort int32
@@ -635,276 +587,51 @@ func (i *K8sInstaller) Upgrade(
 // a Kubernetes cluster
 func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	ui := opts.UI
-	log := opts.Log
 
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Inspecting Kubernetes cluster...")
+	s := sg.Add("Getting Helm action configuration...")
 	defer func() { s.Abort() }()
 
-	clientset, err := i.newClient()
-	if err != nil {
-		ui.Output(err.Error(), terminal.WithErrorStyle())
-		return err
-	}
-
-	ssClient := clientset.AppsV1().StatefulSets(i.config.namespace)
-	if list, err := ssClient.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", serverName),
-	}); err != nil {
-		ui.Output(
-			"Error looking up stateful sets: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
-	} else if len(list.Items) > 0 {
-		s.Update("Deleting statefulset and pods...")
-
-		// create our wait channel to later poll for statefulset+pod deletion
-		w, err := ssClient.Watch(
-			ctx,
-			metav1.ListOptions{
-				LabelSelector: "app=" + serverName,
-			},
-		)
-		if err != nil {
-			ui.Output(
-				"Error creating stateful set watcher: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		// send DELETE to statefulset collection
-		if err = ssClient.DeleteCollection(
-			ctx,
-			metav1.DeleteOptions{},
-			metav1.ListOptions{
-				LabelSelector: "app=" + serverName,
-			},
-		); err != nil {
-			ui.Output(
-				"Error deleting Waypoint statefulset: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-
-		// wait for deletion to complete
-		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-			select {
-			case wCh := <-w.ResultChan():
-				if wCh.Type == "DELETED" {
-					w.Stop()
-					return true, nil
-				}
-				log.Trace("statefulset collection not fully removed, waiting")
-				return false, nil
-			default:
-				log.Trace("no message received on watch.ResultChan(), waiting for Event")
-				return false, nil
-			}
-		})
-		if err != nil {
-			return err
-		}
-		s.Update("Statefulset and pods deleted")
-		s.Done()
-		s = sg.Add("")
-	}
-
-	pvcClient := clientset.CoreV1().PersistentVolumeClaims(i.config.namespace)
-	if list, err := pvcClient.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", serverName),
-	}); err != nil {
-		ui.Output(
-			"Error looking up persistent volume claims: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
-	} else if len(list.Items) > 0 {
-		s.Update("Deleting Persistent Volume Claim...")
-
-		// create our wait channel to later poll for pvc deletion
-		w, err := pvcClient.Watch(
-			ctx,
-			metav1.ListOptions{
-				LabelSelector: "app=" + serverName,
-			},
-		)
-		if err != nil {
-			ui.Output(
-				"Error creating persistent volume claims watcher: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		// delete persistent volume claims
-		if err = pvcClient.DeleteCollection(
-			ctx,
-			metav1.DeleteOptions{},
-			metav1.ListOptions{
-				LabelSelector: "app=" + serverName,
-			},
-		); err != nil {
-			ui.Output(
-				"Error deleting Waypoint pvc: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		// wait for deletion to complete
-		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-			select {
-			case wCh := <-w.ResultChan():
-				if wCh.Type == "DELETED" {
-					w.Stop()
-					return true, nil
-				}
-				log.Trace("persistent volume claims collection not fully removed, waiting")
-				return false, nil
-			default:
-				log.Trace("no message received on watch.ResultChan(), waiting for Event")
-				return false, nil
-			}
-		})
-		if err != nil {
-			return err
-		}
-
-		s.Update("Persistent Volume Claim deleted")
-		s.Done()
-		s = sg.Add("")
-	}
-
-	svcClient := clientset.CoreV1().Services(i.config.namespace)
-	if list, err := svcClient.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", serverName),
-	}); err != nil {
-		ui.Output(
-			"Error looking up services: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
-	} else if len(list.Items) > 0 {
-		s.Update("Deleting service...")
-
-		// create our wait channel to later poll for service deletion
-		w, err := svcClient.Watch(
-			ctx,
-			metav1.ListOptions{
-				LabelSelector: "app=" + serverName,
-			},
-		)
-		if err != nil {
-			ui.Output(
-				"Error creating service client watcher: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		// delete waypoint service
-		if err = svcClient.Delete(
-			ctx,
-			serviceName,
-			metav1.DeleteOptions{},
-		); err != nil {
-			ui.Output(
-				"Error deleting Waypoint service: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		// wait for deletion to complete
-		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-			select {
-			case wCh := <-w.ResultChan():
-				if wCh.Type == "DELETED" {
-					w.Stop()
-					return true, nil
-				}
-				log.Trace("no message received on watch.ResultChan(), waiting for Event")
-				return false, nil
-			default:
-				log.Trace("persistent volume claims not fully removed, waiting")
-				return false, nil
-			}
-		})
-		if err != nil {
-			return err
-		}
-
-		s.Update("Service deleted")
-		s.Done()
-	}
-
-	// Delete the role binding
-	rbClient := clientset.RbacV1().RoleBindings(i.config.namespace)
+	actionConfig, err := installutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
 	if err != nil {
 		return err
 	}
-	_, err = rbClient.Get(ctx, runnerRoleBindingName, metav1.GetOptions{})
-	if err != nil && !errors.IsNotFound(err) {
-		return err
-	}
-	if err == nil {
-		s = sg.Add("Deleting role binding %s...", runnerRoleBindingName)
-		if err := rbClient.Delete(ctx, runnerRoleBindingName, metav1.DeleteOptions{}); err != nil {
-			ui.Output(
-				"Error deleting role binding %s: %s", runnerRoleBindingName, clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		s.Update("Role binding deleted")
-		s.Done()
-	}
-
-	// Delete the cluster role
-	crClient := clientset.RbacV1().ClusterRoles()
-	if err != nil {
-		return err
-	}
-	_, err = crClient.Get(ctx, runnerClusterRoleName, metav1.GetOptions{})
-	if err != nil && !errors.IsNotFound(err) {
-		return err
-	}
-	if err == nil {
-		s = sg.Add("Deleting cluster role %s...", runnerClusterRoleName)
-		if err := crClient.Delete(ctx, runnerClusterRoleName, metav1.DeleteOptions{}); err != nil {
-			ui.Output(
-				"Error deleting cluster role %s: %s", runnerClusterRoleName, clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		s.Update("Cluster role deleted")
-		s.Done()
-	}
-
-	// Delete the cluster role binding
-	crbClient := clientset.RbacV1().ClusterRoleBindings()
-	if err != nil {
-		return err
-	}
-	_, err = crbClient.Get(ctx, runnerClusterRoleBindingName, metav1.GetOptions{})
-	if err != nil && !errors.IsNotFound(err) {
-		return err
-	}
-	if err == nil {
-		s = sg.Add("Deleting cluster role binding %s...", runnerClusterRoleBindingName)
-		if err := crbClient.Delete(ctx, runnerClusterRoleBindingName, metav1.DeleteOptions{}); err != nil {
-			ui.Output(
-				"Error deleting cluster role binding %s: %s", runnerClusterRoleBindingName, clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		s.Update("Cluster role binding deleted")
-		s.Done()
-	}
-
+	s.Update("Helm action initialized")
+	s.Status(terminal.StatusOK)
 	s.Done()
+
+	chartNS := ""
+	if v := i.config.namespace; v != "" {
+		chartNS = v
+	}
+	if chartNS == "" {
+		// If all else fails, default the namespace to "default"
+		chartNS = "default"
+	}
+
+	s = sg.Add("Creating new Helm uninstall object...")
+	client := action.NewUninstall(actionConfig)
+	client.DryRun = false
+	client.DisableHooks = false
+	client.Wait = true
+	client.Timeout = 300 * time.Second
+	client.Description = ""
+	s.Update("Helm uninstall created")
+	s.Status(terminal.StatusOK)
+	s.Done()
+
+	s = sg.Add("Uninstalling Helm chart...")
+	_, err = client.Run("waypoint")
+	if err != nil {
+		return err
+	}
+	s.Update("Waypoint uninstalled with Helm!")
+	s.Status(terminal.StatusOK)
+	s.Done()
+
+	// TODO: Delete runner (or all runners?)
 
 	return nil
 }
@@ -912,69 +639,31 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 // InstallRunner implements Installer.
 func (i *K8sInstaller) InstallRunner(
 	ctx context.Context,
-	opts *InstallRunnerOpts,
+	opts *runnerinstall.InstallOpts,
 ) error {
-	ui := opts.UI
-	log := opts.Log
-
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
-	s := sg.Add("Inspecting Kubernetes cluster...")
-	defer func() { s.Abort() }()
-
-	clientset, err := i.newClient()
+	ref, err := dockerparser.Parse(i.config.serverImage)
 	if err != nil {
-		ui.Output(err.Error(), terminal.WithErrorStyle())
+		opts.UI.Output("Error parsing image name: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
 	}
-
-	// Decode our configuration
-	deployment, err := newDeployment(i.config, opts)
-	if err != nil {
-		ui.Output(
-			"Error generating deployment configuration: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
+	runnerInstaller := runnerinstall.K8sRunnerInstaller{
+		Config: runnerinstall.K8sConfig{
+			KubeconfigPath:       "",
+			K8sContext:           i.config.k8sContext,
+			Version:              installutil.DefaultHelmChartVersion,
+			Namespace:            i.config.namespace,
+			RunnerImage:          ref.ShortName(),
+			RunnerImageTag:       ref.Tag(),
+			CpuRequest:           i.config.cpuRequest,
+			MemRequest:           i.config.memRequest,
+			CreateServiceAccount: true,
+		},
 	}
 
-	s.Update("Creating Deployment for Runner")
-
-	deploymentClient := clientset.AppsV1().Deployments(i.config.namespace)
-	_, err = deploymentClient.Create(context.TODO(), deployment, metav1.CreateOptions{})
-	if err != nil {
-		ui.Output(
-			"Error creating deployment %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
-	}
-
-	s.Done()
-	s = sg.Add("Waiting for Kubernetes Deployment to be ready...")
-	log.Info("waiting for server deployment to become ready")
-	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		ss, err := clientset.AppsV1().Deployments(i.config.namespace).Get(
-			ctx, runnerName, metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-
-		if ss.Status.ReadyReplicas > 0 {
-			return true, nil
-		}
-
-		log.Trace("deployment not ready, waiting")
-		return false, nil
-	})
+	err = runnerInstaller.Install(ctx, opts)
 	if err != nil {
 		return err
 	}
-
-	s.Update("Kubernetes Deployment for Waypoint runner reporting ready")
-	s.Done()
-
 	return nil
 }
 
@@ -1555,6 +1244,12 @@ func newServiceAccountRoleBinding(c k8sConfig) (*rbacv1.RoleBinding, error) {
 }
 
 func (i *K8sInstaller) InstallFlags(set *flag.Set) {
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-config-path",
+		Usage:  "Path to the kubeconfig file to use,",
+		Target: &i.config.kubeConfigPath,
+	})
+
 	set.BoolVar(&flag.BoolVar{
 		Name:   "k8s-advertise-internal",
 		Target: &i.config.advertiseInternal,
@@ -1582,6 +1277,12 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	// setting the limits and requests values to 0 is the same as not setting it all.
 	// This is the expected behavior we'll want. If someone _does_ set a value using
 	// these flags, they will be parsed and used instead.
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-helm-version",
+		Target: &i.config.version,
+		Usage:  "The version of the Helm chart to use for the Waypoint runner install.",
+	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-cpu-request",

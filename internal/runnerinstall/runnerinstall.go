@@ -52,6 +52,7 @@ type InstallOpts struct {
 
 var Platforms = map[string]RunnerInstaller{
 	"ecs":        &ECSRunnerInstaller{},
+	"kubernetes": &K8sRunnerInstaller{},
 	"nomad":      &NomadRunnerInstaller{},
 	"docker":     &DockerRunnerInstaller{},
 }
