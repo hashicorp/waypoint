@@ -1,0 +1,3 @@
+```release-note:feature
+CLI: New `runner install` command to install Waypoint runners to a specified platform
+```
