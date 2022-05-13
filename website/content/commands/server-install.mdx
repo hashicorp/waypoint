@@ -79,9 +79,11 @@ and disable the UI, the command would be:
 
 #### kubernetes Options
 
+- `-k8s-Config-path=<string>` - Path to the kubeconfig file to use,
 - `-k8s-advertise-internal` - Advertise the internal service address rather than the external. This is useful if all your deployments will be able to access the private service address. This will default to false but will be automatically set to true if the external host is detected to be localhost.
 - `-k8s-annotate-service=<key=value>` - Annotations for the Service generated.
 - `-k8s-context=<string>` - The Kubernetes context to install the Waypoint server to. If left unset, Waypoint will use the current Kubernetes context.
+- `-k8s-helm-version=<string>` - The version of the Helm chart to use for the Waypoint runner install.
 - `-k8s-cpu-request=<string>` - Configures the requested CPU amount for the Waypoint server in Kubernetes.
 - `-k8s-mem-request=<string>` - Configures the requested memory amount for the Waypoint server in Kubernetes.
 - `-k8s-cpu-limit=<string>` - Configures the CPU limit for the Waypoint server in Kubernetes.
