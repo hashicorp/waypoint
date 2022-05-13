@@ -585,276 +585,51 @@ func (i *K8sInstaller) Upgrade(
 // a Kubernetes cluster
 func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	ui := opts.UI
-	log := opts.Log
 
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Inspecting Kubernetes cluster...")
+	s := sg.Add("Getting Helm action configuration...")
 	defer func() { s.Abort() }()
 
-	clientset, err := i.newClient()
-	if err != nil {
-		ui.Output(err.Error(), terminal.WithErrorStyle())
-		return err
-	}
-
-	ssClient := clientset.AppsV1().StatefulSets(i.config.namespace)
-	if list, err := ssClient.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", serverName),
-	}); err != nil {
-		ui.Output(
-			"Error looking up stateful sets: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
-	} else if len(list.Items) > 0 {
-		s.Update("Deleting statefulset and pods...")
-
-		// create our wait channel to later poll for statefulset+pod deletion
-		w, err := ssClient.Watch(
-			ctx,
-			metav1.ListOptions{
-				LabelSelector: "app=" + serverName,
-			},
-		)
-		if err != nil {
-			ui.Output(
-				"Error creating stateful set watcher: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		// send DELETE to statefulset collection
-		if err = ssClient.DeleteCollection(
-			ctx,
-			metav1.DeleteOptions{},
-			metav1.ListOptions{
-				LabelSelector: "app=" + serverName,
-			},
-		); err != nil {
-			ui.Output(
-				"Error deleting Waypoint statefulset: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-
-		// wait for deletion to complete
-		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-			select {
-			case wCh := <-w.ResultChan():
-				if wCh.Type == "DELETED" {
-					w.Stop()
-					return true, nil
-				}
-				log.Trace("statefulset collection not fully removed, waiting")
-				return false, nil
-			default:
-				log.Trace("no message received on watch.ResultChan(), waiting for Event")
-				return false, nil
-			}
-		})
-		if err != nil {
-			return err
-		}
-		s.Update("Statefulset and pods deleted")
-		s.Done()
-		s = sg.Add("")
-	}
-
-	pvcClient := clientset.CoreV1().PersistentVolumeClaims(i.config.namespace)
-	if list, err := pvcClient.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", serverName),
-	}); err != nil {
-		ui.Output(
-			"Error looking up persistent volume claims: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
-	} else if len(list.Items) > 0 {
-		s.Update("Deleting Persistent Volume Claim...")
-
-		// create our wait channel to later poll for pvc deletion
-		w, err := pvcClient.Watch(
-			ctx,
-			metav1.ListOptions{
-				LabelSelector: "app=" + serverName,
-			},
-		)
-		if err != nil {
-			ui.Output(
-				"Error creating persistent volume claims watcher: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		// delete persistent volume claims
-		if err = pvcClient.DeleteCollection(
-			ctx,
-			metav1.DeleteOptions{},
-			metav1.ListOptions{
-				LabelSelector: "app=" + serverName,
-			},
-		); err != nil {
-			ui.Output(
-				"Error deleting Waypoint pvc: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		// wait for deletion to complete
-		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-			select {
-			case wCh := <-w.ResultChan():
-				if wCh.Type == "DELETED" {
-					w.Stop()
-					return true, nil
-				}
-				log.Trace("persistent volume claims collection not fully removed, waiting")
-				return false, nil
-			default:
-				log.Trace("no message received on watch.ResultChan(), waiting for Event")
-				return false, nil
-			}
-		})
-		if err != nil {
-			return err
-		}
-
-		s.Update("Persistent Volume Claim deleted")
-		s.Done()
-		s = sg.Add("")
-	}
-
-	svcClient := clientset.CoreV1().Services(i.config.namespace)
-	if list, err := svcClient.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", serverName),
-	}); err != nil {
-		ui.Output(
-			"Error looking up services: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
-	} else if len(list.Items) > 0 {
-		s.Update("Deleting service...")
-
-		// create our wait channel to later poll for service deletion
-		w, err := svcClient.Watch(
-			ctx,
-			metav1.ListOptions{
-				LabelSelector: "app=" + serverName,
-			},
-		)
-		if err != nil {
-			ui.Output(
-				"Error creating service client watcher: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		// delete waypoint service
-		if err = svcClient.Delete(
-			ctx,
-			serviceName,
-			metav1.DeleteOptions{},
-		); err != nil {
-			ui.Output(
-				"Error deleting Waypoint service: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		// wait for deletion to complete
-		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-			select {
-			case wCh := <-w.ResultChan():
-				if wCh.Type == "DELETED" {
-					w.Stop()
-					return true, nil
-				}
-				log.Trace("no message received on watch.ResultChan(), waiting for Event")
-				return false, nil
-			default:
-				log.Trace("persistent volume claims not fully removed, waiting")
-				return false, nil
-			}
-		})
-		if err != nil {
-			return err
-		}
-
-		s.Update("Service deleted")
-		s.Done()
-	}
-
-	// Delete the role binding
-	rbClient := clientset.RbacV1().RoleBindings(i.config.namespace)
+	actionConfig, err := installutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
 	if err != nil {
 		return err
 	}
-	_, err = rbClient.Get(ctx, runnerRoleBindingName, metav1.GetOptions{})
-	if err != nil && !errors.IsNotFound(err) {
-		return err
-	}
-	if err == nil {
-		s = sg.Add("Deleting role binding %s...", runnerRoleBindingName)
-		if err := rbClient.Delete(ctx, runnerRoleBindingName, metav1.DeleteOptions{}); err != nil {
-			ui.Output(
-				"Error deleting role binding %s: %s", runnerRoleBindingName, clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		s.Update("Role binding deleted")
-		s.Done()
-	}
-
-	// Delete the cluster role
-	crClient := clientset.RbacV1().ClusterRoles()
-	if err != nil {
-		return err
-	}
-	_, err = crClient.Get(ctx, runnerClusterRoleName, metav1.GetOptions{})
-	if err != nil && !errors.IsNotFound(err) {
-		return err
-	}
-	if err == nil {
-		s = sg.Add("Deleting cluster role %s...", runnerClusterRoleName)
-		if err := crClient.Delete(ctx, runnerClusterRoleName, metav1.DeleteOptions{}); err != nil {
-			ui.Output(
-				"Error deleting cluster role %s: %s", runnerClusterRoleName, clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		s.Update("Cluster role deleted")
-		s.Done()
-	}
-
-	// Delete the cluster role binding
-	crbClient := clientset.RbacV1().ClusterRoleBindings()
-	if err != nil {
-		return err
-	}
-	_, err = crbClient.Get(ctx, runnerClusterRoleBindingName, metav1.GetOptions{})
-	if err != nil && !errors.IsNotFound(err) {
-		return err
-	}
-	if err == nil {
-		s = sg.Add("Deleting cluster role binding %s...", runnerClusterRoleBindingName)
-		if err := crbClient.Delete(ctx, runnerClusterRoleBindingName, metav1.DeleteOptions{}); err != nil {
-			ui.Output(
-				"Error deleting cluster role binding %s: %s", runnerClusterRoleBindingName, clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		s.Update("Cluster role binding deleted")
-		s.Done()
-	}
-
+	s.Update("Helm action initialized")
+	s.Status(terminal.StatusOK)
 	s.Done()
+
+	chartNS := ""
+	if v := i.config.namespace; v != "" {
+		chartNS = v
+	}
+	if chartNS == "" {
+		// If all else fails, default the namespace to "default"
+		chartNS = "default"
+	}
+
+	s = sg.Add("Creating new Helm uninstall object...")
+	client := action.NewUninstall(actionConfig)
+	client.DryRun = false
+	client.DisableHooks = false
+	client.Wait = true
+	client.Timeout = 300 * time.Second
+	client.Description = ""
+	s.Update("Helm uninstall created")
+	s.Status(terminal.StatusOK)
+	s.Done()
+
+	s = sg.Add("Uninstalling Helm chart...")
+	_, err = client.Run("waypoint")
+	if err != nil {
+		return err
+	}
+	s.Update("Waypoint uninstalled with Helm!")
+	s.Status(terminal.StatusOK)
+	s.Done()
+
+	// TODO: Delete runner (or all runners?)
 
 	return nil
 }
