@@ -2409,3 +2409,98 @@ func TestServiceQueueJob_odr_target_labels(t *testing.T, factory Factory) {
 		require.NotNil(open)
 	}
 }
+
+// Test that a job with dependencies has an ODR started that depends on
+// the same things.
+func TestServiceQueueJob_odr_depends(t *testing.T) {
+	require := require.New(t)
+	ctx := context.Background()
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl, server.TestWithContext(ctx))
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
+		Application: &pb.Ref_Application{
+			Application: "app",
+			Project:     "proj",
+		},
+	}).Application)
+
+	// Simplify writing tests
+	type Req = pb.QueueJobRequest
+
+	// Create an ODR profile
+	odr := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
+		PluginType:   "magic-carpet",
+		PluginConfig: []byte("foo = 1"),
+		EnvironmentVariables: map[string]string{
+			"CARPET_DRIVER": "apu",
+		},
+	})
+	cfgResp, err := client.UpsertOnDemandRunnerConfig(context.Background(), &pb.UpsertOnDemandRunnerConfigRequest{
+		Config: odr,
+	})
+	odr = cfgResp.Config
+
+	// Update the project to include ondemand runner
+	proj := serverptypes.TestProject(t, &pb.Project{Name: "proj"})
+	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+		Project: proj,
+	})
+	require.NoError(err)
+
+	queueA, err := client.QueueJob(ctx, &Req{
+		Job: serverptypes.TestJobNew(t, &pb.Job{
+			Application: &pb.Ref_Application{
+				Application: "app",
+				Project:     "proj",
+			},
+		}),
+	})
+	require.NoError(err)
+	queueB, err := client.QueueJob(ctx, &Req{
+		Job: serverptypes.TestJobNew(t, &pb.Job{
+			Application: &pb.Ref_Application{
+				Application: "app",
+				Project:     "proj",
+			},
+		}),
+	})
+	require.NoError(err)
+
+	// Create, should get an ID back
+	queueResp, err := client.QueueJob(ctx, &Req{
+		Job: serverptypes.TestJobNew(t, &pb.Job{
+			Application: &pb.Ref_Application{
+				Application: "app",
+				Project:     "proj",
+			},
+			DependsOn:             []string{queueA.JobId, queueB.JobId},
+			DependsOnAllowFailure: []string{queueB.JobId},
+			OndemandRunner: &pb.Ref_OnDemandRunnerConfig{
+				Name: odr.Name,
+			},
+		}),
+	})
+	require.NoError(err)
+	require.NotEmpty(queueResp)
+
+	// Get the task to get the start job
+	task, err := testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+		Ref: &pb.Ref_Task_JobId{
+			JobId: queueResp.JobId,
+		},
+	})
+	require.NoError(err)
+	require.Equal(pb.Task_PENDING, task.JobState)
+
+	// Get the start job
+	job, err := testServiceImpl(impl).state(ctx).JobById(task.StartJob.Id, nil)
+	require.NoError(err)
+	require.IsType(&pb.Job_StartTask{}, job.Operation)
+	require.Equal([]string{queueA.JobId, queueB.JobId}, job.DependsOn)
+	require.Equal([]string{queueB.JobId}, job.DependsOnAllowFailure)
+}
