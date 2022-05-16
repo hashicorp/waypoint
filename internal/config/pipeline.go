@@ -111,7 +111,8 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 // operations such as ConfigSync.
 func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 	if c == nil {
-		return nil, nil
+		// This is likely an internal error if this happens.
+		panic("attempted to construct pipeline proto on a nil genericConfig")
 	}
 
 	// Build our evaluation context for the config vars
