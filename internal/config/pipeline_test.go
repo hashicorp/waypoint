@@ -128,28 +128,20 @@ func TestPipeline(t *testing.T) {
 	}
 }
 
-// This test is a little weird. We parse a pipeline, but only to use its config
-// to get to the HCL Eval context for loading all pipelines and generating the
-// Proto slice. This test intends to show that if you eval an HCL context,
-// the PipelineProtos func will load those and convert them to Proto Pipelines.
-// So there's probably a better way to get a pipeline config struct to access
-// PipelineProtos()?
+// TestPipelineProtos will test that given a config, we can translate a Pipeline
+// HCL raw config into a Pipeline Proto that could be used to upsert the latest
+// config into the Waypoint database.
 func TestPipelineProtos(t *testing.T) {
 	cases := []struct {
-		File     string
-		Pipeline string
-		Func     func(*testing.T, *Pipeline)
+		File string
+		Func func(*testing.T, *Config)
 	}{
 		{
 			"pipeline_step.hcl",
-			"foo",
-			func(t *testing.T, c *Pipeline) {
+			func(t *testing.T, c *Config) {
 				require := require.New(t)
 
-				require.NotNil(t, c)
-				require.Equal("foo", c.Name)
-
-				pipelines, err := c.Config.PipelineProtos()
+				pipelines, err := c.PipelineProtos()
 				require.NoError(err)
 				require.Len(pipelines, 1)
 
@@ -159,17 +151,14 @@ func TestPipelineProtos(t *testing.T) {
 
 		{
 			"pipelines_many.hcl",
-			"bar",
-			func(t *testing.T, c *Pipeline) {
+			func(t *testing.T, c *Config) {
 				require := require.New(t)
 
-				require.NotNil(t, c)
-				require.Equal("bar", c.Name)
-
-				pipelines, err := c.Config.PipelineProtos()
+				pipelines, err := c.PipelineProtos()
 				require.NoError(err)
 				require.Len(pipelines, 2)
 
+				require.Equal(pipelines[0].Name, "foo")
 				require.Equal(pipelines[1].Name, "bar")
 			},
 		},
@@ -185,10 +174,7 @@ func TestPipelineProtos(t *testing.T) {
 			})
 			require.NoError(err)
 
-			pipeline, err := cfg.Pipeline(tt.Pipeline, nil)
-			require.NoError(err)
-
-			tt.Func(t, pipeline)
+			tt.Func(t, cfg)
 		})
 	}
 }
