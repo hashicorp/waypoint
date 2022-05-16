@@ -421,6 +421,17 @@ service Waypoint {
   // RunPipeline queues a pipeline execution.
   rpc RunPipeline(RunPipelineRequest) returns (RunPipelineResponse);
 
+  // ListPipelines takes a project and evaluates the projects config to get
+  // a list of Pipeline protos to return in the response. These pipelines
+  // are scoped to a single project from the request. It will return an
+  // error if the requested project does not exist, or an empty response
+  // if no pipelines are defined for the project.
+  rpc ListPipelines(ListPipelinesRequest) returns (ListPipelinesResponse);
+
+  // ConfigSyncPipeline takes a request for a given project and syncs the current
+  // project config to the Waypoint database.
+  rpc ConfigSyncPipeline(ConfigSyncPipelineRequest) returns (ConfigSyncPipelineResponse);
+
   //----------------------------------------------------------------------
   // UI endpoints. The endpoints below are convenience methods for Waypoint's
   // various UIs (web GUI and CLI). They contain no unique functionality, i.e.
@@ -4693,6 +4704,23 @@ message RunPipelineResponse {
   // than the initial pipeline if nested pipelines are used.
   map<string, Ref.PipelineStep> job_map = 3;
 }
+
+message ListPipelinesRequest {
+  // The project to list all pipelines on
+  Ref.Project project = 1;
+}
+
+message ListPipelinesResponse {
+  // All of the listed pipelines
+  repeated Pipeline pipelines = 1;
+}
+
+message ConfigSyncPipelineRequest {
+  // The project to sync all pipeline configs on
+  Ref.Project project = 1;
+}
+
+message ConfigSyncPipelineResponse {}
 
 /********************************************************************
 * Token

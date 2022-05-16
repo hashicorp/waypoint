@@ -606,6 +606,30 @@ func Commands(
 			}, nil
 		},
 
+		"pipeline": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["pipeline"][0],
+				HelpText:     helpText["pipeline"][1],
+			}, nil
+		},
+		"pipeline list": func() (cli.Command, error) {
+			return &PipelineListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"pipeline run": func() (cli.Command, error) {
+			return &PipelineRunCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		/*
+			"pipeline config-sync": func() (cli.Command, error) {
+				return &PipelineConfigSyncCommand{
+					baseCommand: baseCommand,
+				}, nil
+			},
+		*/
+
 		"project": func() (cli.Command, error) {
 			return &helpCommand{
 				SynopsisText: helpText["project"][0],
@@ -1035,6 +1059,16 @@ For more information see: https://waypointproject.io/docs/url
 		"Job introspection and management",
 		`
 Manage and check the status of jobs in Waypoint.
+`,
+	},
+
+	"pipeline": {
+		"Pipeline management",
+		`
+Pipeline config management.
+
+Pipelines are custom defined Waypoint operations that allow you to customize
+your application delivery experience.
 `,
 	},
 
