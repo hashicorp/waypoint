@@ -4,9 +4,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	"github.com/zclconf/go-cty/cty/function"
 
-	"github.com/hashicorp/waypoint/internal/config/dynamic"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -114,13 +112,6 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 		// This is likely an internal error if this happens.
 		panic("attempted to construct pipeline proto on a nil genericConfig")
 	}
-
-	// Build our evaluation context for the config vars
-	ctx := c.ctx
-	ctx = appendContext(ctx, &hcl.EvalContext{
-		Functions: dynamic.Register(map[string]function.Function{}),
-	})
-	ctx = finalizeContext(ctx)
 
 	// Load HCL config and convert to a Pipeline proto
 	var result []*pb.Pipeline
