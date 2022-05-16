@@ -1112,7 +1112,7 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 	require.NotEmpty(queueResp.JobId)
 
 	// Register our runner
-	id, _ := TestRunner(t, client, nil)
+	id, _ := server.TestRunner(t, client, nil)
 
 	// Start a job request
 	stream, err := client.RunnerJobStream(ctx)
@@ -1234,7 +1234,7 @@ func TestServiceRunnerJobStream_errorBeforeAck(t *testing.T) {
 	require.NotEmpty(queueResp.JobId)
 
 	// Register our runner
-	id, _ := TestRunner(t, client, nil)
+	id, _ := server.TestRunner(t, client, nil)
 
 	// Start a job request
 	stream, err := client.RunnerJobStream(ctx)
@@ -1296,7 +1296,7 @@ func TestServiceRunnerJobStream_cancel(t *testing.T) {
 	require.NotEmpty(queueResp.JobId)
 
 	// Register our runner
-	id, _ := TestRunner(t, client, nil)
+	id, _ := server.TestRunner(t, client, nil)
 
 	// Start a job request
 	stream, err := client.RunnerJobStream(ctx)
@@ -1417,7 +1417,7 @@ func TestServiceRunnerJobStream_reattachHappy(t *testing.T) {
 	require.NotEmpty(queueResp.JobId)
 
 	// Register our runner
-	id, _ := TestRunner(t, client, nil)
+	id, _ := server.TestRunner(t, client, nil)
 
 	// New context so we can cancel the stream
 	streamCtx, streamCtxCancel := context.WithCancel(ctx)
@@ -1550,7 +1550,7 @@ func TestServiceRunnerJobStream_reattachInvalidJobId(t *testing.T) {
 	require.NotEmpty(queueResp.JobId)
 
 	// Register our runner
-	id, _ := TestRunner(t, client, nil)
+	id, _ := server.TestRunner(t, client, nil)
 
 	// New context so we can cancel the stream
 	streamCtx, streamCtxCancel := context.WithCancel(ctx)
@@ -1627,8 +1627,8 @@ func TestServiceRunnerJobStream_reattachInvalidRunner(t *testing.T) {
 	require.NotEmpty(queueResp.JobId)
 
 	// Register our runner
-	id, _ := TestRunner(t, client, nil)
-	id2, _ := TestRunner(t, client, nil)
+	id, _ := server.TestRunner(t, client, nil)
+	id2, _ := server.TestRunner(t, client, nil)
 
 	// New context so we can cancel the stream
 	streamCtx, streamCtxCancel := context.WithCancel(ctx)
