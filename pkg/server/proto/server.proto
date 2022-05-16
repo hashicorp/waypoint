@@ -418,6 +418,9 @@ service Waypoint {
   // access to this via ACLs.
   rpc UpsertPipeline(UpsertPipelineRequest) returns (UpsertPipelineResponse);
 
+  // RunPipeline queues a pipeline execution.
+  rpc RunPipeline(RunPipelineRequest) returns (RunPipelineResponse);
+
   //----------------------------------------------------------------------
   // UI endpoints. The endpoints below are convenience methods for Waypoint's
   // various UIs (web GUI and CLI). They contain no unique functionality, i.e.
@@ -4651,6 +4654,18 @@ message GetPipelineResponse {
       MERMAID = 1; // https://mermaid-js.github.io/mermaid/
     }
   }
+}
+
+message RunPipelineRequest {
+  // The pipeline to execute.
+  Ref.Pipeline pipeline = 1;
+
+  // In the future, we'll put input variables and other options here.
+}
+
+message RunPipelineResponse {
+  // The root job of the pipeline.
+  string job_id = 1;
 }
 
 /********************************************************************
