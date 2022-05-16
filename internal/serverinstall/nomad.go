@@ -4,6 +4,7 @@ import (
 	"context"
 	json "encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -35,6 +36,7 @@ type nomadConfig struct {
 	consulServiceBackendTags []string `hcl:"consul_service_backend_tags:optional"`
 	consulDatacenter         string   `hcl:"consul_datacenter,optional"`
 	consulDomain             string   `hcl:"consul_datacenter,optional"`
+	consulToken              string   `hcl:"consul_token,optional"`
 
 	// If set along with consul, will use this hostname instead of
 	// making a consul DNS hostname for the server address in its context
@@ -51,11 +53,13 @@ type nomadConfig struct {
 	runnerResourcesCPU    string `hcl:"runner_resources_cpu,optional"`
 	runnerResourcesMemory string `hcl:"runner_resources_memory,optional"`
 
-	hostVolume           string `hcl:"host_volume,optional"`
-	csiVolumeProvider    string `hcl:"csi_volume_provider,optional"`
-	csiVolumeCapacityMin int64  `hcl:"csi_volume_capacity_min,optional"`
-	csiVolumeCapacityMax int64  `hcl:"csi_volume_capacity_max,optional"`
-	csiFS                string `hcl:"csi_fs,optional"`
+	hostVolume           string            `hcl:"host_volume,optional"`
+	csiVolumeProvider    string            `hcl:"csi_volume_provider,optional"`
+	csiVolumeCapacityMin int64             `hcl:"csi_volume_capacity_min,optional"`
+	csiVolumeCapacityMax int64             `hcl:"csi_volume_capacity_max,optional"`
+	csiFS                string            `hcl:"csi_fs,optional"`
+	csiSecrets           map[string]string `hcl:"csi_secrets,optional"`
+	csiParams            map[string]string `hcl:"csi_parameters,optional"`
 
 	nomadHost string `hcl:"nomad_host,optional"`
 }
@@ -204,7 +208,9 @@ func (i *NomadInstaller) Install(
 			},
 			RequestedCapacityMin: defaultCSIVolumeCapacityMin,
 			RequestedCapacityMax: defaultCSIVolumeCapacityMax,
+			Parameters:           i.config.csiParams,
 			PluginID:             i.config.csiVolumeProvider,
+			Secrets:              api.CSISecrets(i.config.csiSecrets),
 		}
 		if i.config.csiVolumeCapacityMin != 0 {
 			vol.RequestedCapacityMin = i.config.csiVolumeCapacityMin
@@ -856,6 +862,13 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	// Include services to be registered in Consul. Currently configured to happen by default
 	// One service added for Waypoint UI, and one for Waypoint backend port
 	if c.consulService {
+		token := ""
+		if c.consulToken == "" {
+			token = os.Getenv("CONSUL_HTTP_TOKEN")
+		} else {
+			token = c.consulToken
+		}
+		job.ConsulToken = &token
 		tg.Services = []*api.Service{
 			{
 				Name:      waypointConsulUIName,
@@ -929,7 +942,7 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 		// Doing this because this is the only way https://github.com/hashicorp/nomad/issues/8892
 		"image":   "busybox:latest",
 		"command": "sh",
-		"args":    []string{"-c", fmt.Sprintf("chown -R %d:%d /data/", waypointUserID, waypointGroupID)},
+		"args":    []string{"-c", fmt.Sprintf("chown -R %d:%d /data", waypointUserID, waypointGroupID)},
 	}
 	preTask.VolumeMounts = volumeMounts
 	preTask.Resources = &api.Resources{
@@ -943,7 +956,7 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 
 	tg.AddTask(preTask)
 
-	ras := []string{"server", "run", "-accept-tos", "-vv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)}
+	ras := []string{"server", "run", "-accept-tos", "-vv", "-db=/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)}
 	ras = append(ras, rawRunFlags...)
 	task := api.NewTask("server", "docker")
 	task.Config = map[string]interface{}{
@@ -1250,6 +1263,14 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
+		Name:   "nomad-consul-token",
+		Target: &i.config.consulToken,
+		Usage: "If set, the passed Consul token is stored in the job " +
+			"before sending to the Nomad servers. Overrides the CONSUL_HTTP_TOKEN " +
+			"environment variable if set.",
+	})
+
+	set.StringVar(&flag.StringVar{
 		Name:   "nomad-host-volume",
 		Target: &i.config.hostVolume,
 		Usage:  "Nomad host volume name, required for volume type 'host'.",
@@ -1280,6 +1301,18 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.config.csiFS,
 		Usage:   "Nomad CSI volume mount option file system.",
 		Default: defaultCSIVolumeMountFS,
+	})
+
+	set.StringMapVar(&flag.StringMapVar{
+		Name:   "nomad-csi-secrets",
+		Target: &i.config.csiSecrets,
+		Usage:  "Secrets to provide for the CSI volume.",
+	})
+
+	set.StringMapVar(&flag.StringMapVar{
+		Name:   "nomad-csi-parameters",
+		Target: &i.config.csiParams,
+		Usage:  "Parameters passed directly to the CSI plugin to configure the volume.",
 	})
 }
 
