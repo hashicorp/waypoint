@@ -4660,6 +4660,10 @@ message RunPipelineRequest {
   // The pipeline to execute.
   Ref.Pipeline pipeline = 1;
 
+  // This is the job template to use for all the queued steps. This should
+  // set all the required fields of a job except for "operation".
+  Job job_template = 2;
+
   // In the future, we'll put input variables and other options here.
 }
 
