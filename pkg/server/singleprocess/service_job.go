@@ -311,7 +311,7 @@ func (s *Service) wrapJobWithRunner(
 	}
 
 	// Our source job depends on the starting job.
-	source.DependsOn = []string{startJob.Id}
+	source.DependsOn = append(source.DependsOn, startJob.Id)
 
 	// Job to stop the ODR
 	stopJob, err := s.onDemandRunnerStopJob(ctx, startJob, watchJob, source, od)
@@ -479,6 +479,12 @@ func (s *Service) onDemandRunnerStartJob(
 		// Inherit the workspace/application of the source job.
 		Workspace:   source.Workspace,
 		Application: source.Application,
+
+		// Depend on the same dependencies as the source job. This way,
+		// we don't start up the ODR very early when the job is not ready
+		// to execute.
+		DependsOn:             source.DependsOn,
+		DependsOnAllowFailure: source.DependsOnAllowFailure,
 
 		Operation: &pb.Job_StartTask{
 			StartTask: &pb.Job_StartTaskLaunchOp{
