@@ -118,6 +118,11 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 	for _, pl := range c.hclConfig.Pipelines {
 		pipe := &pb.Pipeline{
 			Name: pl.Name,
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: c.hclConfig.Project,
+				},
+			},
 		}
 
 		steps := make(map[string]*pb.Pipeline_Step)
