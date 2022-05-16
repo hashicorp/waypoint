@@ -1208,7 +1208,7 @@
     resolve "^1.8.1"
     semver "^7.3.2"
 
-"@embroider/macros@>= 0.48.1 < 2.0.0-alpha.1", "@embroider/macros@^0.50.0":
+"@embroider/macros@>= 0.48.1 < 2.0.0-alpha.1":
   version "0.50.2"
   resolved "https://registry.yarnpkg.com/@embroider/macros/-/macros-0.50.2.tgz#9ec7d0bb1fa846410fc6c209a69b782640942b11"
   integrity sha512-nPRE8fanqbIik4+WBm/roW3sxNkMp6WnuZT/IM8wdmgkYU55uH+eyJXT7XW0UGy9IQv6YJ2QTRz46cq9N0/4qg==
@@ -1311,7 +1311,7 @@
     semver "^7.3.5"
     typescript-memoize "^1.0.1"
 
-"@embroider/shared-internals@0.50.2", "@embroider/shared-internals@^0.50.0":
+"@embroider/shared-internals@0.50.2":
   version "0.50.2"
   resolved "https://registry.yarnpkg.com/@embroider/shared-internals/-/shared-internals-0.50.2.tgz#567c5451db31a1f3edc2f64376ce5a0dcaaabacb"
   integrity sha512-l3SKn1YdxTFBjY3ylYTLHxFY0dG2XxIsjbtZt7Mm6QyZFssWBDg3oWYwBoUpkw/ysjNJf8IcI7reXhB23WXwDw==
@@ -1550,19 +1550,19 @@
   resolved "https://registry.yarnpkg.com/@handlebars/parser/-/parser-1.1.0.tgz#d6dbc7574774b238114582410e8fee0dc3532bdf"
   integrity sha512-rR7tJoSwJ2eooOpYGxGGW95sLq6GXUaS1UtWvN7pei6n2/okYvCGld9vsUTvkl2migxbkszsycwtMf/GEc1k1A==
 
-"@hashicorp/design-system-components@^0.10.0":
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/@hashicorp/design-system-components/-/design-system-components-0.10.0.tgz#9e31270898160b69f04a36914274b1ce50ce7ac7"
-  integrity sha512-497e9/Cg0KRVddCnOlMODdpDMghevIHUG2SmfRwApkHVGd6jCVDXFQMCL3EcRVOhZTjVwLrkds52YFnZTG8AXQ==
+"@hashicorp/design-system-components@^0.11.0":
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/@hashicorp/design-system-components/-/design-system-components-0.11.0.tgz#5135de82d3e2c58ec98f920f0ce44f945c381b3d"
+  integrity sha512-Y6YLszEY9pTVDc7CpTB+pQb2h/rZbSzKlAQA9yet8if/fiSPy91cFJ/kxuoLidW1FpRJF5JhjU1IGqs1ZHj+Qg==
   dependencies:
     "@hashicorp/design-system-tokens" "^0.8.0"
     "@hashicorp/ember-flight-icons" "^2.0.5"
-    ember-auto-import "^2.2.3"
-    ember-cli-babel "^7.26.6"
-    ember-cli-htmlbars "^5.7.1"
+    ember-auto-import "^2.4.1"
+    ember-cli-babel "^7.26.11"
+    ember-cli-htmlbars "^6.0.1"
     ember-cli-sass "^10.0.1"
     ember-focus-trap "^1.0.1"
-    ember-keyboard "^8.0.0"
+    ember-keyboard "^8.1.0"
     ember-named-blocks-polyfill "^0.2.5"
     sass "^1.43.4"
 
@@ -1571,16 +1571,7 @@
   resolved "https://registry.yarnpkg.com/@hashicorp/design-system-tokens/-/design-system-tokens-0.8.0.tgz#1e9c0f9909fb8138cf0cd076198f09415f18a5f4"
   integrity sha512-p9VOS6Kw8sRAvXgK4SfVc/hrb0lrQDx1dPLEnZjgMgTARKv0Otfyc4mXrSBsYA+CAJwXdP2ctr+sAhB3vkJu0w==
 
-"@hashicorp/ember-flight-icons@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@hashicorp/ember-flight-icons/-/ember-flight-icons-2.0.0.tgz#d4eb9082fe6579c54d481de4f1644f0c3188f37c"
-  integrity sha512-mCOyha0YnZjQcEomm2FKKL74BBvTrVJVjicxh+P5yu+Yo8hmiFOr0PbaoOuLrFOxsHsd33VW6Y5uskcZivR1tQ==
-  dependencies:
-    "@hashicorp/flight-icons" "^2.0.0"
-    ember-cli-babel "^7.26.6"
-    ember-cli-htmlbars "^5.7.1"
-
-"@hashicorp/ember-flight-icons@^2.0.5":
+"@hashicorp/ember-flight-icons@^2.0.0", "@hashicorp/ember-flight-icons@^2.0.5":
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/@hashicorp/ember-flight-icons/-/ember-flight-icons-2.0.5.tgz#a1edfdd24475ecd0cf07cd1f944e2e5bdb5e97cc"
   integrity sha512-PXNk1aRBjYSGeoB4e2ovOBm6RhGKE554XjW8leYYK+y9yorHhJNNwWRkwjhDRLYWikLhNmfwp6nAYOJWl/IOgw==
@@ -1588,11 +1579,6 @@
     "@hashicorp/flight-icons" "^2.3.1"
     ember-cli-babel "^7.26.11"
     ember-cli-htmlbars "^6.0.1"
-
-"@hashicorp/flight-icons@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@hashicorp/flight-icons/-/flight-icons-2.0.0.tgz#84910c97f2bc643a6ca039ca7ed9be0bf14f8ee2"
-  integrity sha512-jNRHHCFvptOHLXPIlnZ4A1LIFtS6m+Bv72NsE3Pl7KHMwcqkLHDN8gNa6AHf80cvFE+pR3sEx6Yjxu79jWJczQ==
 
 "@hashicorp/flight-icons@^2.3.1":
   version "2.3.1"
@@ -3246,8 +3232,7 @@ anymatch@~3.1.2:
     picomatch "^2.0.4"
 
 "api-common-protos@link:./lib/api-common-protos":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 aproba@^1.0.3, aproba@^1.1.1:
   version "1.2.0"
@@ -5420,21 +5405,6 @@ cheerio@^0.22.0:
     lodash.reject "^4.4.0"
     lodash.some "^4.4.0"
 
-"chokidar@>=2.0.0 <4.0.0", chokidar@^3.4.1:
-  version "3.5.1"
-  resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.5.1.tgz#ee9ce7bbebd2b79f49f304799d5468e31e14e68a"
-  integrity sha512-9+s+Od+W0VJJzawDma/gvBNQqkTiqYTWLuZoyAsivsI4AaWTCzHG06/TMjsf1cYe9Cb97UCEhjz7HvnPk2p/tw==
-  dependencies:
-    anymatch "~3.1.1"
-    braces "~3.0.2"
-    glob-parent "~5.1.0"
-    is-binary-path "~2.1.0"
-    is-glob "~4.0.1"
-    normalize-path "~3.0.0"
-    readdirp "~3.5.0"
-  optionalDependencies:
-    fsevents "~2.3.1"
-
 "chokidar@>=3.0.0 <4.0.0":
   version "3.5.3"
   resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.5.3.tgz#1cf37c8707b932bd1af1ae22c0432e2acd1903bd"
@@ -5468,6 +5438,21 @@ chokidar@^2.1.8:
     upath "^1.1.1"
   optionalDependencies:
     fsevents "^1.2.7"
+
+chokidar@^3.4.1:
+  version "3.5.1"
+  resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.5.1.tgz#ee9ce7bbebd2b79f49f304799d5468e31e14e68a"
+  integrity sha512-9+s+Od+W0VJJzawDma/gvBNQqkTiqYTWLuZoyAsivsI4AaWTCzHG06/TMjsf1cYe9Cb97UCEhjz7HvnPk2p/tw==
+  dependencies:
+    anymatch "~3.1.1"
+    braces "~3.0.2"
+    glob-parent "~5.1.0"
+    is-binary-path "~2.1.0"
+    is-glob "~4.0.1"
+    normalize-path "~3.0.0"
+    readdirp "~3.5.0"
+  optionalDependencies:
+    fsevents "~2.3.1"
 
 chownr@^1.1.1:
   version "1.1.4"
@@ -6606,7 +6591,7 @@ ember-auto-import@^1.11.2, ember-auto-import@^1.11.3, ember-auto-import@^1.2.19,
     walk-sync "^0.3.3"
     webpack "^4.43.0"
 
-ember-auto-import@^2.2.3:
+ember-auto-import@^2.2.4, ember-auto-import@^2.4.1:
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/ember-auto-import/-/ember-auto-import-2.4.1.tgz#25e1c21d403eed116b21972ccc5336b49a7ca46b"
   integrity sha512-lyCl2hzIb6Dlcmfm3gI3lAtaOk/nzR2kM4GDJRRu19YJhhSkpiIMSDVjw8ShxmnYiI005R1eOcP3C/GgRRW5mA==
@@ -6637,41 +6622,6 @@ ember-auto-import@^2.2.3:
     parse5 "^6.0.1"
     resolve "^1.20.0"
     resolve-package-path "^4.0.3"
-    semver "^7.3.4"
-    style-loader "^2.0.0"
-    typescript-memoize "^1.0.0-alpha.3"
-    walk-sync "^3.0.0"
-
-ember-auto-import@^2.2.4:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/ember-auto-import/-/ember-auto-import-2.3.0.tgz#ffb05e11322ea041d73cddee7c7d804ffe130913"
-  integrity sha512-38fOQ8ix3IQfFZHg99xQh/rJ1JwOhl2egauYXpCmFKdNm45rkRap3HDhkA4JtO532R7KEkaloU9Bj0oEUv520w==
-  dependencies:
-    "@babel/core" "^7.16.7"
-    "@babel/plugin-proposal-class-properties" "^7.16.7"
-    "@babel/plugin-proposal-decorators" "^7.16.7"
-    "@babel/preset-env" "^7.16.7"
-    "@embroider/macros" "^0.50.0"
-    "@embroider/shared-internals" "^0.50.0"
-    babel-loader "^8.0.6"
-    babel-plugin-ember-modules-api-polyfill "^3.5.0"
-    babel-plugin-htmlbars-inline-precompile "^5.2.1"
-    babel-plugin-syntax-dynamic-import "^6.18.0"
-    broccoli-debug "^0.6.4"
-    broccoli-funnel "^3.0.8"
-    broccoli-merge-trees "^4.2.0"
-    broccoli-plugin "^4.0.0"
-    broccoli-source "^3.0.0"
-    css-loader "^5.2.0"
-    debug "^4.3.1"
-    fs-extra "^6.0.1"
-    fs-tree-diff "^2.0.0"
-    handlebars "^4.3.1"
-    js-string-escape "^1.0.1"
-    lodash "^4.17.19"
-    parse5 "^6.0.1"
-    resolve "^1.20.0"
-    resolve-package-path "^3.1.0"
     semver "^7.3.4"
     style-loader "^2.0.0"
     typescript-memoize "^1.0.0-alpha.3"
@@ -7479,7 +7429,7 @@ ember-intl@^5.5.0:
     mkdirp "^1.0.4"
     silent-error "^1.1.1"
 
-ember-keyboard@^8.0.0:
+ember-keyboard@^8.1.0:
   version "8.1.1"
   resolved "https://registry.yarnpkg.com/ember-keyboard/-/ember-keyboard-8.1.1.tgz#b12844a0f87cbb091b7c21293afccbf5aedc2ea3"
   integrity sha512-mgCV2LBeD3JrFCDqubY8GjHH7o1zysb4BbAogCStJIo/4HCvjHmw5UOO0ePXk4vjlpoVrDx7lxVsKLb604Y/Iw==
@@ -7540,15 +7490,7 @@ ember-modifier@^3.0.0:
     ember-cli-typescript "^4.2.1"
     ember-compatibility-helpers "^1.2.5"
 
-ember-named-blocks-polyfill@^0.2.4:
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/ember-named-blocks-polyfill/-/ember-named-blocks-polyfill-0.2.4.tgz#f5f30711ee89244927b55aae7fa9630edaadc974"
-  integrity sha512-PsohC7ejjS7V++6i/JSy0pl1hXLV3IS3Qs+O7SrjIPYcg1UEmUwqgPiDmXqNgy0p2dc5TK5bIJTtX8wofCI63Q==
-  dependencies:
-    ember-cli-babel "^7.19.0"
-    ember-cli-version-checker "^5.1.1"
-
-ember-named-blocks-polyfill@^0.2.5:
+ember-named-blocks-polyfill@^0.2.4, ember-named-blocks-polyfill@^0.2.5:
   version "0.2.5"
   resolved "https://registry.yarnpkg.com/ember-named-blocks-polyfill/-/ember-named-blocks-polyfill-0.2.5.tgz#d5841406277026a221f479c815cfbac6cdcaeecb"
   integrity sha512-OVMxzkfqJrEvmiky7gFzmuTaImCGm7DOudHWTdMBPO7E+dQSunrcRsJMgO9ZZ56suqBIz/yXbEURrmGS+avHxA==
@@ -9336,8 +9278,7 @@ growly@^1.3.0:
   integrity sha1-8QdIy+dq+WS3yWyTxrzCivEgwIE=
 
 "grpc-web@link:./lib/grpc-web":
-  version "0.0.0"
-  uid ""
+  version "1.2.1"
 
 gzip-size@^5.0.0:
   version "5.1.1"
@@ -11934,8 +11875,7 @@ onetime@^5.1.0, onetime@^5.1.2:
     mimic-fn "^2.1.0"
 
 "opaqueany@link:./lib/opaqueany":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 opener@^1.5.1:
   version "1.5.1"
@@ -13382,14 +13322,7 @@ sane@^4.0.0, sane@^4.1.0:
     minimist "^1.1.1"
     walker "~1.0.5"
 
-sass@^1.26.11:
-  version "1.29.0"
-  resolved "https://registry.yarnpkg.com/sass/-/sass-1.29.0.tgz#ec4e1842c146d8ea9258c28c141b8c2b7c6ab7f1"
-  integrity sha512-ZpwAUFgnvAUCdkjwPREny+17BpUj8nh5Yr6zKPGtLNTLrmtoRYIjm7njP24COhjJldjwW1dcv52Lpf4tNZVVRA==
-  dependencies:
-    chokidar ">=2.0.0 <4.0.0"
-
-sass@^1.43.4, sass@^1.51.0:
+sass@^1.26.11, sass@^1.43.4, sass@^1.51.0:
   version "1.51.0"
   resolved "https://registry.yarnpkg.com/sass/-/sass-1.51.0.tgz#25ea36cf819581fe1fe8329e8c3a4eaaf70d2845"
   integrity sha512-haGdpTgywJTvHC2b91GSq+clTKGbtkkZmVAb82jZQN/wTy6qs8DdFm2lhEQbEwrY0QDRgSQ3xDurqM977C3noA==
@@ -15149,12 +15082,10 @@ watchpack@^2.3.1:
     graceful-fs "^4.1.2"
 
 "waypoint-client@link:./lib/waypoint-client":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 "waypoint-pb@link:./lib/waypoint-pb":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 wcwidth@^1.0.1:
   version "1.0.1"
