@@ -16,10 +16,10 @@
 // Ex:
 // $ go test -test.v ./pkg/server/singleprocess -count=1
 //
-// To run a specific test, use the -run flag with TestImpl. For example, to run
-// the TestOnDemandRunnerConfig test defined in
+// To run a specific test, use the -run flag with TestHandlers. For example, to run
+// the TestWorkspace_Upsert test defined in
 // pkg/serverhandler/handlertest/test_service_workspace.go, use:
 //
-// $ go test -test.v ./pkg/server/singleprocess -count=1 -run=TestImpl/workspace/TestWorkspace_Upsert
+// $ go test -test.v ./pkg/server/singleprocess -count=1 -run=TestHandlers/workspace/TestWorkspace_Upsert
 
 package handlertest
