@@ -26,7 +26,7 @@ func init() {
 		TestServiceGetJobStream_bufferedData,
 		TestServiceGetJobStream_completedBufferedData,
 		TestServiceGetJobStream_expired,
-		TestServiceQueueJob_odr,
+		TestServiceQueueJob_odr_basic,
 		TestServiceQueueJob_odr_default,
 		TestServiceQueueJob_odr_target_id,
 		TestServiceQueueJob_odr_target_labels,
@@ -968,7 +968,7 @@ func jobStreamRecv(
 	}
 }
 
-func TestServiceQueueJob_odr(t *testing.T, factory Factory) {
+func TestServiceQueueJob_odr_basic(t *testing.T, factory Factory) {
 	require := require.New(t)
 	ctx := context.Background()
 
@@ -1048,6 +1048,7 @@ func TestServiceQueueJob_odr(t *testing.T, factory Factory) {
 	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: queueResp.JobId})
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
+	primaryJobId := job.Id
 
 	// task should be PENDING
 	taskResp, err := client.GetTask(ctx, &pb.GetTaskRequest{Ref: &pb.Ref_Task{
@@ -1206,6 +1207,7 @@ func TestServiceQueueJob_odr(t *testing.T, factory Factory) {
 	task = taskResp.Task
 	require.Equal(pb.Task_COMPLETED, task.JobState)
 
+	var watchId string
 	{
 		// Watch
 
@@ -1229,6 +1231,7 @@ func TestServiceQueueJob_odr(t *testing.T, factory Factory) {
 		require.Equal(id, assignment.Assignment.Job.AssignedRunner.Id)
 		require.NotEqual(queueResp.JobId, assignment.Assignment.Job.Id)
 		require.IsType(&pb.Job_WatchTask{}, assignment.Assignment.Job.Operation)
+		watchId = assignment.Assignment.Job.Id
 
 		watchTask := assignment.Assignment.Job.Operation.(*pb.Job_WatchTask).WatchTask
 		require.Equal(startJobId, watchTask.StartJob.Id)
@@ -1270,6 +1273,10 @@ func TestServiceQueueJob_odr(t *testing.T, factory Factory) {
 	require.Equal(id, assignment.Assignment.Job.AssignedRunner.Id)
 	require.NotEqual(queueResp.JobId, assignment.Assignment.Job.Id)
 	require.IsType(&pb.Job_StopTask{}, assignment.Assignment.Job.Operation)
+
+	// Stop should depend on both the watch and source job
+	require.Contains(assignment.Assignment.Job.DependsOn, watchId)
+	require.Contains(assignment.Assignment.Job.DependsOn, primaryJobId)
 
 	stopTask := assignment.Assignment.Job.Operation.(*pb.Job_StopTask).StopTask
 	require.Equal(odr.PluginConfig, stopTask.Params.HclConfig)
@@ -1379,6 +1386,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
+	primaryJobId := job.Id
 
 	// task should be PENDING
 	task, err := testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
@@ -1531,6 +1539,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 	require.NoError(err)
 	require.Equal(pb.Task_COMPLETED, task.JobState)
 
+	var watchId string
 	{
 		// Watch
 
@@ -1554,6 +1563,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 		require.Equal(id, assignment.Assignment.Job.AssignedRunner.Id)
 		require.NotEqual(queueResp.JobId, assignment.Assignment.Job.Id)
 		require.IsType(&pb.Job_WatchTask{}, assignment.Assignment.Job.Operation)
+		watchId = assignment.Assignment.Job.Id
 
 		watchTask := assignment.Assignment.Job.Operation.(*pb.Job_WatchTask).WatchTask
 		require.Equal(startJobId, watchTask.StartJob.Id)
@@ -1595,6 +1605,10 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 	require.Equal(id, assignment.Assignment.Job.AssignedRunner.Id)
 	require.NotEqual(queueResp.JobId, assignment.Assignment.Job.Id)
 	require.IsType(&pb.Job_StopTask{}, assignment.Assignment.Job.Operation)
+
+	// Stop should depend on both the watch and source job
+	require.Contains(assignment.Assignment.Job.DependsOn, watchId)
+	require.Contains(assignment.Assignment.Job.DependsOn, primaryJobId)
 
 	stopTask := assignment.Assignment.Job.Operation.(*pb.Job_StopTask).StopTask
 	require.Equal(odr.PluginConfig, stopTask.Params.HclConfig)
