@@ -121,6 +121,24 @@ func ValidateUpsertPipelineRequest(v *pb.UpsertPipelineRequest) error {
 	))
 }
 
+// ValidateRunPipelineRequest
+func ValidateRunPipelineRequest(v *pb.RunPipelineRequest) error {
+	// Set the operation so that validation succeeds. We override it later.
+	if v.JobTemplate != nil {
+		v.JobTemplate.Operation = &pb.Job_Noop_{
+			Noop: &pb.Job_Noop{},
+		}
+	}
+
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Pipeline, validation.Required),
+		validation.Field(&v.JobTemplate, validation.Required),
+		validationext.StructField(&v.JobTemplate, func() []*validation.FieldRules {
+			return ValidateJobRules(v.JobTemplate)
+		}),
+	))
+}
+
 // stepNameMatchesKey implements validation.RuleFunc to validate that
 // the map key (string) matches the step name field.
 func stepNameMatchesKey(v interface{}) error {
