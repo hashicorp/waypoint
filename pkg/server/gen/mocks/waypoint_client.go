@@ -2058,6 +2058,36 @@ func (_m *WaypointClient) RestoreSnapshot(ctx context.Context, opts ...grpc.Call
 	return r0, r1
 }
 
+// RunPipeline provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) RunPipeline(ctx context.Context, in *gen.RunPipelineRequest, opts ...grpc.CallOption) (*gen.RunPipelineResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.RunPipelineResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.RunPipelineRequest, ...grpc.CallOption) *gen.RunPipelineResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.RunPipelineResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.RunPipelineRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RunTrigger provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) RunTrigger(ctx context.Context, in *gen.RunTriggerRequest, opts ...grpc.CallOption) (*gen.RunTriggerResponse, error) {
 	_va := make([]interface{}, len(opts))

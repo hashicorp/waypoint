@@ -9204,6 +9204,24 @@
       },
       "description": "OperationSeq references an operation by sequence number."
     },
+    "hashicorp.waypoint.Ref.Pipeline": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineId",
+          "description": "Reference a single pipeline by ID."
+        }
+      },
+      "description": "Pipeline references a pipeline using one or more lookup types."
+    },
+    "hashicorp.waypoint.Ref.PipelineId": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
     "hashicorp.waypoint.Ref.Project": {
       "type": "object",
       "properties": {
@@ -9448,6 +9466,15 @@
         "exit": {
           "type": "boolean",
           "description": "If true, the server will exit after the restore is staged. This will\nSHUT DOWN the server and some external process you created is expected\nto bring it back. The Waypoint server on its own WILL NOT automatically\nrestart. You should only set this if you have some operation to\nautomate restart such as running in Nomad or Kubernetes."
+        }
+      }
+    },
+    "hashicorp.waypoint.RunPipelineResponse": {
+      "type": "object",
+      "properties": {
+        "job_id": {
+          "type": "string",
+          "description": "The root job of the pipeline."
         }
       }
     },
