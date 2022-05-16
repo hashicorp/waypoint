@@ -563,7 +563,7 @@ func (s *Service) onDemandRunnerStopJob(
 	depends := []string{startJob.Id, watchJob.Id}
 
 	// Only add the source job if we're not skipping it.
-	if over := source.OndemandRunnerTask; over != nil && !over.SkipOperation {
+	if over := source.OndemandRunnerTask; over == nil || !over.SkipOperation {
 		depends = append(depends, source.Id)
 	}
 
