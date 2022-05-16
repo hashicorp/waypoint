@@ -239,17 +239,17 @@ func (s *State) taskGet(
 	var taskId string
 	switch r := ref.Ref.(type) {
 	case *pb.Ref_Task_Id:
-		s.log.Debug("looking up task", "id", r.Id)
+		s.log.Trace("looking up task", "id", r.Id)
 		taskId = r.Id
 	case *pb.Ref_Task_JobId:
-		s.log.Debug("looking up task by job id", "job_id", r.JobId)
+		s.log.Trace("looking up task by job id", "job_id", r.JobId)
 		// Look up Task by jobid
 		task, err := s.taskByJobId(r.JobId)
 		if err != nil {
 			return nil, err
 		}
 
-		s.log.Debug("found task id", "id", task.Id)
+		s.log.Trace("found task id", "id", task.Id)
 		taskId = task.Id
 	default:
 		return nil, status.Error(codes.FailedPrecondition, "No valid ref id provided in Task ref to taskGet")
