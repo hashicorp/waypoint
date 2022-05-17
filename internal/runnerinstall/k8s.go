@@ -2,14 +2,20 @@ package runnerinstall
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
 	k8sinstallutil "github.com/hashicorp/waypoint/internal/installutil/k8s"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/mitchellh/mapstructure"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
-	"strings"
-	"time"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 type K8sRunnerInstaller struct {
@@ -34,6 +40,10 @@ const (
 	defaultRunnerCPU      = "250m"
 	defaultRunnerImageTag = "latest"
 )
+
+type InstalledRunnerConfig struct {
+	Id string `mapstructure:"id"`
+}
 
 func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) error {
 	// Initialize Helm settings
@@ -246,11 +256,134 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 }
 
 func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
-	//TODO implement me
-	panic("implement me")
+	sg := opts.UI.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Preparing Helm...")
+	defer func() { s.Abort() }()
+
+	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeconfigPath, i.Config.K8sContext)
+	if err != nil {
+		return err
+	}
+	s.Update("Helm settings retrieved")
+	s.Status(terminal.StatusOK)
+	s.Done()
+
+	s = sg.Add("Uninstallation Pre-check...")
+	helmRunnerId := "waypoint-" + strings.ToLower(opts.Id)
+	verifyClient := action.NewGetValues(actionConfig)
+	cfg, err := verifyClient.Run(helmRunnerId)
+	if err != nil {
+		return err
+	}
+
+	var runnerCfg InstalledRunnerConfig
+	err = mapstructure.Decode(cfg["runner"], &runnerCfg)
+	if err != nil {
+		return err
+	}
+
+	// Check if the runner we are uninstalling matches the helm chart
+	// This should always be true and is a sanity check to make sure this is a
+	// proper runner installation and that we are uninstalling what we think we
+	// should be uninstalling.
+	if strings.ToLower(runnerCfg.Id) != strings.ToLower(opts.Id) {
+		opts.Log.Debug("Could not find runner for id %q", opts.Id)
+		return errors.New("Runner not found")
+	}
+	s.Update("Runner %q found", opts.Id)
+	s.Status(terminal.StatusOK)
+	s.Done()
+
+	s = sg.Add("Uninstalling Runner...")
+	client := action.NewUninstall(actionConfig)
+	client.DryRun = false
+	client.DisableHooks = false
+	client.Wait = true
+	client.Timeout = 300 * time.Second
+	client.Description = ""
+
+	_, err = client.Run(helmRunnerId)
+	if err != nil {
+		return err
+	}
+	s.Update("Runner Uninstalled")
+	s.Status(terminal.StatusOK)
+	s.Done()
+
+	// Delete left over runner persistent volume claim
+	s = sg.Add("Gathering Persistent Volume Claim...")
+	clientset, err := i.NewClient()
+	if err != nil {
+		return err
+	}
+	pvClient := clientset.CoreV1().PersistentVolumeClaims(i.Config.Namespace)
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=%s", helmRunnerId),
+	}
+	if list, err := pvClient.List(ctx, listOptions); err != nil {
+		return err
+	} else if len(list.Items) > 0 {
+		s.Update("Deleting Persistent Volume Claim...")
+
+		// Add watcher for waiting for persistent volume clean up
+		w, err := pvClient.Watch(ctx, listOptions)
+		if err != nil {
+			return err
+		}
+
+		// Delete the PVCs
+		if err = pvClient.DeleteCollection(
+			ctx,
+			metav1.DeleteOptions{},
+			listOptions,
+		); err != nil {
+			return err
+		}
+
+		// Wait until the persistent volumes are cleaned up
+		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+			select {
+			case wCh := <-w.ResultChan():
+				if wCh.Type == "DELETED" {
+					w.Stop()
+					return true, nil
+				}
+				return false, nil
+			default:
+				return false, nil
+			}
+		})
+		if err != nil {
+			return err
+		}
+	}
+	s.Update("Persistent volume claims cleaned up")
+	s.Status(terminal.StatusOK)
+	s.Done()
+
+	return nil
 }
 
 func (i *K8sRunnerInstaller) UninstallFlags(set *flag.Set) {
-	//TODO implement me
-	panic("implement me")
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-config-path",
+		Usage:  "Path to the kubeconfig file to use,",
+		Target: &i.Config.KubeconfigPath,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-context",
+		Target: &i.Config.K8sContext,
+		Usage: "The Kubernetes context to install the Waypoint runner to. If left" +
+			" unset, Waypoint will use the current Kubernetes context.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-namespace",
+		Target: &i.Config.Namespace,
+		Usage: "The namespace in the Kubernetes cluster into which the Waypoint " +
+			"runner will be installed.",
+	})
 }
