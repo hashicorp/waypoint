@@ -78,13 +78,27 @@ func (s *Service) RunPipeline(
 	if err != nil {
 		return nil, err
 	}
-	order := stepGraph.KahnSort()
-	rootId := stepIds[order[0].(string)]
+
+	// Get the ordered jobs.
+	var jobIds []string
+	jobMap := map[string]*pb.Ref_PipelineStep{}
+	for _, v := range stepGraph.KahnSort() {
+		jobId := stepIds[v.(string)]
+		jobIds = append(jobIds, jobId)
+		jobMap[jobId] = &pb.Ref_PipelineStep{
+			Pipeline: pipeline.Id,
+			Step:     v.(string),
+		}
+	}
 
 	// Queue all the jobs atomically
 	if _, err := s.queueJobMulti(ctx, stepJobs); err != nil {
 		return nil, err
 	}
 
-	return &pb.RunPipelineResponse{JobId: rootId}, nil
+	return &pb.RunPipelineResponse{
+		JobId:     jobIds[0],
+		AllJobIds: jobIds,
+		JobMap:    jobMap,
+	}, nil
 }
