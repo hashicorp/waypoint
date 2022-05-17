@@ -1000,6 +1000,14 @@ message Ref {
   message PipelineId {
     string id = 1;
   }
+
+  message PipelineStep {
+    // ID of te pipeline
+    string pipeline = 1;
+
+    // Step name within the pipeline.
+    string step = 2;
+  }
 }
 
 // Component represents metadata about a component. A component is the
@@ -4670,6 +4678,20 @@ message RunPipelineRequest {
 message RunPipelineResponse {
   // The root job of the pipeline.
   string job_id = 1;
+
+  // All job IDs are the list of all jobs that were queued for this pipeline.
+  // They are in topologically sorted order. This means that a job's dependencies
+  // are guaranteed to be satisfied by previous jobs in the list, but all
+  // previous jobs may not be necessary. This is because two jobs may be
+  // totally independent of each other and can execute concurrently. To get
+  // a better view, a graph should be built using step dependencies, and
+  // the job IDs can be correlated using the job_map field.
+  repeated string all_job_ids = 2;
+
+  // This provides a lookup from job ID to what step and pipeline a job
+  // corresponds to. Note that some jobs may correspond to pipelines other
+  // than the initial pipeline if nested pipelines are used.
+  map<string, Ref.PipelineStep> job_map = 3;
 }
 
 /********************************************************************
