@@ -168,6 +168,36 @@ func (_m *WaypointClient) CompleteOIDCAuth(ctx context.Context, in *gen.Complete
 	return r0, r1
 }
 
+// ConfigSyncPipeline provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ConfigSyncPipeline(ctx context.Context, in *gen.ConfigSyncPipelineRequest, opts ...grpc.CallOption) (*gen.ConfigSyncPipelineResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.ConfigSyncPipelineResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ConfigSyncPipelineRequest, ...grpc.CallOption) *gen.ConfigSyncPipelineResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ConfigSyncPipelineResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ConfigSyncPipelineRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ConvertInviteToken provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) ConvertInviteToken(ctx context.Context, in *gen.ConvertInviteTokenRequest, opts ...grpc.CallOption) (*gen.NewTokenResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -1690,6 +1720,36 @@ func (_m *WaypointClient) ListOnDemandRunnerConfigs(ctx context.Context, in *emp
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListPipelines provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ListPipelines(ctx context.Context, in *gen.ListPipelinesRequest, opts ...grpc.CallOption) (*gen.ListPipelinesResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.ListPipelinesResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListPipelinesRequest, ...grpc.CallOption) *gen.ListPipelinesResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListPipelinesResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListPipelinesRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

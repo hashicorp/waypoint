@@ -295,6 +295,15 @@ type WaypointClient interface {
 	UpsertPipeline(ctx context.Context, in *UpsertPipelineRequest, opts ...grpc.CallOption) (*UpsertPipelineResponse, error)
 	// RunPipeline queues a pipeline execution.
 	RunPipeline(ctx context.Context, in *RunPipelineRequest, opts ...grpc.CallOption) (*RunPipelineResponse, error)
+	// ListPipelines takes a project and evaluates the projects config to get
+	// a list of Pipeline protos to return in the response. These pipelines
+	// are scoped to a single project from the request. It will return an
+	// error if the requested project does not exist, or an empty response
+	// if no pipelines are defined for the project.
+	ListPipelines(ctx context.Context, in *ListPipelinesRequest, opts ...grpc.CallOption) (*ListPipelinesResponse, error)
+	// ConfigSyncPipeline takes a request for a given project and syncs the current
+	// project config to the Waypoint database.
+	ConfigSyncPipeline(ctx context.Context, in *ConfigSyncPipelineRequest, opts ...grpc.CallOption) (*ConfigSyncPipelineResponse, error)
 	// Get a given project with useful related records.
 	UI_GetProject(ctx context.Context, in *UI_GetProjectRequest, opts ...grpc.CallOption) (*UI_GetProjectResponse, error)
 	// List deployments for a given application.
@@ -1378,6 +1387,24 @@ func (c *waypointClient) RunPipeline(ctx context.Context, in *RunPipelineRequest
 	return out, nil
 }
 
+func (c *waypointClient) ListPipelines(ctx context.Context, in *ListPipelinesRequest, opts ...grpc.CallOption) (*ListPipelinesResponse, error) {
+	out := new(ListPipelinesResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListPipelines", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) ConfigSyncPipeline(ctx context.Context, in *ConfigSyncPipelineRequest, opts ...grpc.CallOption) (*ConfigSyncPipelineResponse, error) {
+	out := new(ConfigSyncPipelineResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ConfigSyncPipeline", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) UI_GetProject(ctx context.Context, in *UI_GetProjectRequest, opts ...grpc.CallOption) (*UI_GetProjectResponse, error) {
 	out := new(UI_GetProjectResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UI_GetProject", in, out, opts...)
@@ -1681,6 +1708,15 @@ type WaypointServer interface {
 	UpsertPipeline(context.Context, *UpsertPipelineRequest) (*UpsertPipelineResponse, error)
 	// RunPipeline queues a pipeline execution.
 	RunPipeline(context.Context, *RunPipelineRequest) (*RunPipelineResponse, error)
+	// ListPipelines takes a project and evaluates the projects config to get
+	// a list of Pipeline protos to return in the response. These pipelines
+	// are scoped to a single project from the request. It will return an
+	// error if the requested project does not exist, or an empty response
+	// if no pipelines are defined for the project.
+	ListPipelines(context.Context, *ListPipelinesRequest) (*ListPipelinesResponse, error)
+	// ConfigSyncPipeline takes a request for a given project and syncs the current
+	// project config to the Waypoint database.
+	ConfigSyncPipeline(context.Context, *ConfigSyncPipelineRequest) (*ConfigSyncPipelineResponse, error)
 	// Get a given project with useful related records.
 	UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error)
 	// List deployments for a given application.
@@ -1972,6 +2008,12 @@ func (UnimplementedWaypointServer) UpsertPipeline(context.Context, *UpsertPipeli
 }
 func (UnimplementedWaypointServer) RunPipeline(context.Context, *RunPipelineRequest) (*RunPipelineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RunPipeline not implemented")
+}
+func (UnimplementedWaypointServer) ListPipelines(context.Context, *ListPipelinesRequest) (*ListPipelinesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListPipelines not implemented")
+}
+func (UnimplementedWaypointServer) ConfigSyncPipeline(context.Context, *ConfigSyncPipelineRequest) (*ConfigSyncPipelineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfigSyncPipeline not implemented")
 }
 func (UnimplementedWaypointServer) UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_GetProject not implemented")
@@ -3729,6 +3771,42 @@ func _Waypoint_RunPipeline_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_ListPipelines_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPipelinesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).ListPipelines(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/ListPipelines",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).ListPipelines(ctx, req.(*ListPipelinesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_ConfigSyncPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigSyncPipelineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).ConfigSyncPipeline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/ConfigSyncPipeline",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).ConfigSyncPipeline(ctx, req.(*ConfigSyncPipelineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_UI_GetProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UI_GetProjectRequest)
 	if err := dec(in); err != nil {
@@ -4121,6 +4199,14 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RunPipeline",
 			Handler:    _Waypoint_RunPipeline_Handler,
+		},
+		{
+			MethodName: "ListPipelines",
+			Handler:    _Waypoint_ListPipelines_Handler,
+		},
+		{
+			MethodName: "ConfigSyncPipeline",
+			Handler:    _Waypoint_ConfigSyncPipeline_Handler,
 		},
 		{
 			MethodName: "UI_GetProject",
