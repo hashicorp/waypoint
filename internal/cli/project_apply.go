@@ -32,6 +32,7 @@ type ProjectApplyCommand struct {
 	flagGitPassword           string
 	flagGitKeyPath            string
 	flagGitKeyPassword        string
+	flagGitRecurseSubmodules  int
 	flagFromWaypointHcl       string
 	flagWaypointHcl           string
 	flagPoll                  *bool
@@ -207,6 +208,9 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 		}
 		if v := c.flagGitRef; v != "" {
 			gitInfo.Ref = v
+		}
+		if v := c.flagGitRecurseSubmodules; v > 0 {
+			gitInfo.RecurseSubmodules = uint32(v)
 		}
 
 		switch strings.ToLower(c.flagGitAuthType) {
@@ -483,6 +487,14 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 			Usage: "Password for the private key specified by git-private-key-path " +
 				"if the key requires a password to decode. This is not required if " +
 				"the private key doesn't require a password.",
+		})
+
+		f.IntVar(&flag.IntVar{
+			Name:    "git-recurse-submodules",
+			Target:  &c.flagGitRecurseSubmodules,
+			Default: 0,
+			Usage: "The maximum depth to recursively clone submodules. A value of " +
+				"zero disables cloning any submodules recursively.",
 		})
 
 		f.BoolPtrVar(&flag.BoolPtrVar{

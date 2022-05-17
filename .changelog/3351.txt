@@ -1,0 +1,3 @@
+```release-note:improvement
+core: git cloning now supports recursively cloning submodules
+```
