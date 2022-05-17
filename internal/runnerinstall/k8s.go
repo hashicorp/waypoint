@@ -59,7 +59,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
 	client.Namespace = chartNS
-	client.ReleaseName = "waypoint-" + strings.ToLower(opts.Id)
+	client.ReleaseName = "waypoint-runner" + strings.ToLower(opts.Id)
 	client.GenerateName = false
 	client.NameTemplate = ""
 	client.OutputDir = ""
