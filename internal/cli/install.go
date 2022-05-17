@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/waypoint/internal/installutil"
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
-	"github.com/hashicorp/waypoint/pkg/server"
 	"sort"
 	"strings"
 	"time"
@@ -499,12 +498,8 @@ func installRunner(
 		AuthToken:     resp.Token,
 	}
 
-	// Get ID for runner
-	id, err := server.Id()
-	if err != nil {
-		ui.Output("Error generating runner ID: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-		return 1
-	}
+	// We set the ID to be "init" since it is the initial static runner
+	id := "init"
 
 	// Install!
 	s.Update("Installing runner...")
