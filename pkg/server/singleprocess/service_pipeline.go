@@ -26,6 +26,27 @@ func (s *Service) UpsertPipeline(
 	return &pb.UpsertPipelineResponse{Pipeline: result}, nil
 }
 
+// GetPipeline returns a Pipeline based on a pipeline ref id
+func (s *Service) GetPipeline(
+	ctx context.Context,
+	req *pb.GetPipelineRequest,
+) (*pb.GetPipelineResponse, error) {
+	if err := serverptypes.ValidateGetPipelineRequest(req); err != nil {
+		return nil, err
+	}
+
+	p, err := s.state(ctx).PipelineGet(req.Pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetPipelineResponse{
+		Pipeline: p,
+		//RootStep: "", // TODO figure out root step
+		//Graph:    nil, // intentionally left out for now
+	}, nil
+}
+
 func (s *Service) ListPipelines(
 	ctx context.Context,
 	req *pb.ListPipelinesRequest,

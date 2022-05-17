@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/posener/complete"
@@ -87,11 +88,14 @@ func (c *PipelineListCommand) Run(args []string) int {
 		// TODO(briancain): Does this make sense? What else can be shown in this
 		// lower detail view when listing pipelines
 
+		totalSteps := strconv.Itoa(len(pipeline.Steps))
+
 		tblColumn := []string{
 			pipeline.Id,
 			pipeline.Name,
 			owner,
 			rootStepName,
+			totalSteps,
 		}
 
 		tbl.Rich(tblColumn, nil)

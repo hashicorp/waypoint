@@ -44,5 +44,5 @@ Usage: waypoint pipeline run [options] <pipeline-id>
 
   Run a pipeline by id.
 
-`)
+` + c.Flags().Help())
 }
