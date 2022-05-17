@@ -533,6 +533,10 @@ An example below shows this by using ` + "`templatefile`" + ` mixed with
 variables such as ` + "`artifact.image`" + ` to dynamically configure the
 Docker image within the Nomad job specification.
 
+-> **Note:** If using [Nomad interpolation](https://www.nomadproject.io/docs/runtime/interpolation) in your jobspec file,
+and the ` + "`templatefile`" + ` function in your waypoint.hcl file, any interpolated values must be escaped with a second 
+` + "`$`" + `. For example: ` + "`$${meta.metadata}`" + ` instead of ` + "`${meta.metadata}`" + `.
+
 ### Entrypoint Functionality
 
 Waypoint [entrypoint functionality](/docs/entrypoint#functionality) such
