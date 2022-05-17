@@ -277,6 +277,157 @@ func TestGitSourceGet(t *testing.T) {
 		_, err = os.Stat(filepath.Join(dir, "two"))
 		require.Error(err)
 	})
+
+	t.Run("submodule: clone disabled (default)", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		dir, _, closer, err := s.Get(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: testGitFixture(t, "git-submodule"),
+					},
+				},
+			},
+			"",
+		)
+		require.NoError(err)
+		if closer != nil {
+			defer closer()
+		}
+
+		// Verify files
+		_, err = os.Stat(filepath.Join(dir, "hello.txt"))
+		require.NoError(err)
+		_, err = os.Stat(filepath.Join(dir, "examples", "README.md"))
+		require.Error(err)
+	})
+
+	t.Run("submodule: recursion on clone", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		dir, _, closer, err := s.Get(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url:               testGitFixture(t, "git-submodule"),
+						RecurseSubmodules: 10,
+					},
+				},
+			},
+			"",
+		)
+		require.NoError(err)
+		if closer != nil {
+			defer closer()
+		}
+
+		// Verify files
+		_, err = os.Stat(filepath.Join(dir, "hello.txt"))
+		require.NoError(err)
+		_, err = os.Stat(filepath.Join(dir, "examples", "README.md"))
+		require.NoError(err)
+	})
+
+	t.Run("submodule: ref with no submodules", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		dir, _, closer, err := s.Get(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url:               testGitFixture(t, "git-submodule"),
+						Ref:               "758c263",
+						RecurseSubmodules: 10,
+					},
+				},
+			},
+			"",
+		)
+		require.NoError(err)
+		if closer != nil {
+			defer closer()
+		}
+
+		// Verify files
+		_, err = os.Stat(filepath.Join(dir, "hello.txt"))
+		require.NoError(err)
+		_, err = os.Stat(filepath.Join(dir, "examples", "README.md"))
+		require.Error(err)
+	})
+
+	t.Run("submodule: removed HEAD", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		dir, _, closer, err := s.Get(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url:               testGitFixture(t, "git-submodule-rm"),
+						RecurseSubmodules: 10,
+					},
+				},
+			},
+			"",
+		)
+		require.NoError(err)
+		if closer != nil {
+			defer closer()
+		}
+
+		// Verify files
+		_, err = os.Stat(filepath.Join(dir, "hello.txt"))
+		require.NoError(err)
+		_, err = os.Stat(filepath.Join(dir, "examples", "README.md"))
+		require.Error(err)
+	})
+
+	t.Run("submodule: ref with submodule", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		dir, _, closer, err := s.Get(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url:               testGitFixture(t, "git-submodule-rm"),
+						Ref:               "27e97ef4f312fe37588f84209e4d056825dee614",
+						RecurseSubmodules: 10,
+					},
+				},
+			},
+			"",
+		)
+		require.NoError(err)
+		if closer != nil {
+			defer closer()
+		}
+
+		// Verify files
+		_, err = os.Stat(filepath.Join(dir, "hello.txt"))
+		require.NoError(err)
+		_, err = os.Stat(filepath.Join(dir, "examples", "README.md"))
+		require.NoError(err)
+	})
 }
 
 func TestGitSourceChanges(t *testing.T) {
