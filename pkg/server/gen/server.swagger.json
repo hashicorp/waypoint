@@ -9222,6 +9222,19 @@
         }
       }
     },
+    "hashicorp.waypoint.Ref.PipelineStep": {
+      "type": "object",
+      "properties": {
+        "pipeline": {
+          "type": "string",
+          "title": "ID of te pipeline"
+        },
+        "step": {
+          "type": "string",
+          "description": "Step name within the pipeline."
+        }
+      }
+    },
     "hashicorp.waypoint.Ref.Project": {
       "type": "object",
       "properties": {
@@ -9475,6 +9488,20 @@
         "job_id": {
           "type": "string",
           "description": "The root job of the pipeline."
+        },
+        "all_job_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "All job IDs are the list of all jobs that were queued for this pipeline.\nThey are in topologically sorted order. This means that a job's dependencies\nare guaranteed to be satisfied by previous jobs in the list, but all\nprevious jobs may not be necessary. This is because two jobs may be\ntotally independent of each other and can execute concurrently. To get\na better view, a graph should be built using step dependencies, and\nthe job IDs can be correlated using the job_map field."
+        },
+        "job_map": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineStep"
+          },
+          "description": "This provides a lookup from job ID to what step and pipeline a job\ncorresponds to. Note that some jobs may correspond to pipelines other\nthan the initial pipeline if nested pipelines are used."
         }
       }
     },
