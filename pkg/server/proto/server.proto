@@ -421,6 +421,7 @@ service Waypoint {
   // RunPipeline queues a pipeline execution.
   rpc RunPipeline(RunPipelineRequest) returns (RunPipelineResponse);
 
+  // GetPipeline returns a pipeline proto by pipeline ref id
   rpc GetPipeline(GetPipelineRequest) returns (GetPipelineResponse);
 
   // ListPipelines takes a project and evaluates the projects config to get
