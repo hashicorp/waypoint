@@ -59,7 +59,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
 	client.Namespace = chartNS
-	client.ReleaseName = "waypoint-runner" + strings.ToLower(opts.Id)
+	client.ReleaseName = "waypoint-" + strings.ToLower(opts.Id)
 	client.GenerateName = false
 	client.NameTemplate = ""
 	client.OutputDir = ""
@@ -68,7 +68,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	client.SubNotes = true
 	client.DisableOpenAPIValidation = false
 	client.Replace = false
-	client.Description = ""
+	client.Description = "Static runner for executing remote operations for Hashicorp Waypoint."
 	client.CreateNamespace = true
 	s.Update("Helm install created")
 	s.Status(terminal.StatusOK)
@@ -138,8 +138,10 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				},
 			},
 			"server": map[string]interface{}{
-				"addr":   opts.ServerAddr,
-				"cookie": opts.Cookie,
+				"addr":          opts.ServerAddr,
+				"tls":           opts.AdvertiseClient.Tls,
+				"tlsSkipVerify": opts.AdvertiseClient.TlsSkipVerify,
+				"cookie":        opts.Cookie,
 			},
 			"serviceAccount": map[string]interface{}{
 				"create": i.Config.CreateServiceAccount,
