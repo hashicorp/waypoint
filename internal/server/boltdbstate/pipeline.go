@@ -148,6 +148,64 @@ func (s *State) pipelineDelete(
 	return nil
 }
 
+func (s *State) PipelineList(pRef *pb.Ref_Project) ([]*pb.Pipeline, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	refs, err := s.pipelineList(memTxn, pRef)
+	if err != nil {
+		return nil, err
+	}
+
+	var out []*pb.Pipeline
+	err = s.db.View(func(dbTxn *bolt.Tx) error {
+		for _, ref := range refs {
+			val, err := s.pipelineGet(dbTxn, memTxn, ref)
+			if err != nil {
+				return err
+			}
+
+			out = append(out, val)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *State) pipelineList(
+	memTxn *memdb.Txn,
+	ref *pb.Ref_Project,
+) ([]*pb.Ref_Pipeline, error) {
+	iter, err := memTxn.Get(pipelineIndexTableName, pipelineIndexId+"_prefix", "")
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*pb.Ref_Pipeline
+	for {
+		next := iter.Next()
+		if next == nil {
+			break
+		}
+		idx := next.(*pipelineIndexRecord)
+
+		result = append(result, &pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{
+					Id: idx.Id,
+				},
+			},
+		})
+	}
+
+	return result, nil
+}
+
 // pipelineIndexSet writes an index record for a single pipeline.
 func (s *State) pipelineIndexSet(txn *memdb.Txn, id []byte, value *pb.Pipeline) error {
 	record := &pipelineIndexRecord{
