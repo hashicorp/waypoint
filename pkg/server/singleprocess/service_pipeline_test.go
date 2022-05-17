@@ -45,6 +45,50 @@ func TestServicePipeline(t *testing.T) {
 		require.Equal(result.Name, testName)
 	})
 
+	t.Run("get an missing pipeline by id returns nothing", func(t *testing.T) {
+		require := require.New(t)
+
+		pResp, err := client.GetPipeline(ctx, &pb.GetPipelineRequest{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: &pb.Ref_PipelineId{
+						Id: "doesnotexist",
+					},
+				},
+			},
+		})
+		require.Error(err)
+		require.Nil(pResp)
+	})
+
+	t.Run("get an existing pipeline by id", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		resp, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: serverptypes.TestPipeline(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		result := resp.Pipeline
+		require.NotEmpty(result.Id)
+
+		pResp, err := client.GetPipeline(ctx, &pb.GetPipelineRequest{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: &pb.Ref_PipelineId{
+						Id: "test",
+					},
+				},
+			},
+		})
+		require.NoError(err)
+		require.NotNil(pResp)
+
+		pipeline := pResp.Pipeline
+		require.Equal(pipeline.Name, "test")
+	})
+
 }
 
 func TestServiceRunPipeline(t *testing.T) {

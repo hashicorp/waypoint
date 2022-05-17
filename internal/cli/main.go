@@ -617,6 +617,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"pipeline inspect": func() (cli.Command, error) {
+			return &PipelineInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"pipeline run": func() (cli.Command, error) {
 			return &PipelineRunCommand{
 				baseCommand: baseCommand,
