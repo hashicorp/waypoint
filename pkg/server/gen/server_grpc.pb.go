@@ -293,6 +293,7 @@ type WaypointClient interface {
 	UpsertPipeline(ctx context.Context, in *UpsertPipelineRequest, opts ...grpc.CallOption) (*UpsertPipelineResponse, error)
 	// RunPipeline queues a pipeline execution.
 	RunPipeline(ctx context.Context, in *RunPipelineRequest, opts ...grpc.CallOption) (*RunPipelineResponse, error)
+	GetPipeline(ctx context.Context, in *GetPipelineRequest, opts ...grpc.CallOption) (*GetPipelineResponse, error)
 	// ListPipelines takes a project and evaluates the projects config to get
 	// a list of Pipeline protos to return in the response. These pipelines
 	// are scoped to a single project from the request. It will return an
@@ -1376,6 +1377,15 @@ func (c *waypointClient) RunPipeline(ctx context.Context, in *RunPipelineRequest
 	return out, nil
 }
 
+func (c *waypointClient) GetPipeline(ctx context.Context, in *GetPipelineRequest, opts ...grpc.CallOption) (*GetPipelineResponse, error) {
+	out := new(GetPipelineResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetPipeline", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) ListPipelines(ctx context.Context, in *ListPipelinesRequest, opts ...grpc.CallOption) (*ListPipelinesResponse, error) {
 	out := new(ListPipelinesResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListPipelines", in, out, opts...)
@@ -1695,6 +1705,7 @@ type WaypointServer interface {
 	UpsertPipeline(context.Context, *UpsertPipelineRequest) (*UpsertPipelineResponse, error)
 	// RunPipeline queues a pipeline execution.
 	RunPipeline(context.Context, *RunPipelineRequest) (*RunPipelineResponse, error)
+	GetPipeline(context.Context, *GetPipelineRequest) (*GetPipelineResponse, error)
 	// ListPipelines takes a project and evaluates the projects config to get
 	// a list of Pipeline protos to return in the response. These pipelines
 	// are scoped to a single project from the request. It will return an
@@ -1992,6 +2003,9 @@ func (UnimplementedWaypointServer) UpsertPipeline(context.Context, *UpsertPipeli
 }
 func (UnimplementedWaypointServer) RunPipeline(context.Context, *RunPipelineRequest) (*RunPipelineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RunPipeline not implemented")
+}
+func (UnimplementedWaypointServer) GetPipeline(context.Context, *GetPipelineRequest) (*GetPipelineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPipeline not implemented")
 }
 func (UnimplementedWaypointServer) ListPipelines(context.Context, *ListPipelinesRequest) (*ListPipelinesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPipelines not implemented")
@@ -3737,6 +3751,24 @@ func _Waypoint_RunPipeline_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_GetPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPipelineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetPipeline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetPipeline",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetPipeline(ctx, req.(*GetPipelineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_ListPipelines_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListPipelinesRequest)
 	if err := dec(in); err != nil {
@@ -4161,6 +4193,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RunPipeline",
 			Handler:    _Waypoint_RunPipeline_Handler,
+		},
+		{
+			MethodName: "GetPipeline",
+			Handler:    _Waypoint_GetPipeline_Handler,
 		},
 		{
 			MethodName: "ListPipelines",
