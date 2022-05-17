@@ -59,9 +59,30 @@ func TestServiceRunPipeline(t *testing.T) {
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
 
+	// Create our pipeline
+	pipeline := serverptypes.TestPipeline(t, nil)
+	pipeline.Steps["B"] = &pb.Pipeline_Step{
+		Name:      "B",
+		DependsOn: []string{"root"},
+		Kind: &pb.Pipeline_Step_Exec_{
+			Exec: &pb.Pipeline_Step_Exec{
+				Image: "hashicorp/waypoint",
+			},
+		},
+	}
+	pipeline.Steps["C"] = &pb.Pipeline_Step{
+		Name:      "C",
+		DependsOn: []string{"B"},
+		Kind: &pb.Pipeline_Step_Exec_{
+			Exec: &pb.Pipeline_Step_Exec{
+				Image: "hashicorp/waypoint",
+			},
+		},
+	}
+
 	// Create, should get an ID back
 	pipeResp, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
-		Pipeline: serverptypes.TestPipeline(t, nil),
+		Pipeline: pipeline,
 	})
 	require.NoError(err)
 
@@ -80,8 +101,17 @@ func TestServiceRunPipeline(t *testing.T) {
 	require.NoError(err)
 	require.NotNil(resp)
 
-	// Job should exit
+	// Job should exist
 	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: resp.JobId})
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
+
+	// We should have all the job IDs
+	require.Len(resp.AllJobIds, 3)
+	var names []string
+	for _, id := range resp.AllJobIds {
+		require.Contains(resp.JobMap, id)
+		names = append(names, resp.JobMap[id].Step)
+	}
+	require.Equal([]string{"root", "B", "C"}, names)
 }
