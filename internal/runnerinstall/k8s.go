@@ -63,6 +63,11 @@ const (
 	defaultRunnerImageTag = "latest"
 )
 
+type InstalledRunnerConfig struct {
+	Id string `mapstructure:"id"`
+	Server map[string]string `mapstructure:"server"`
+}
+
 func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) error {
 	// Initialize Helm settings
 	sg := opts.UI.StepGroup()
