@@ -38,6 +38,11 @@ func (p *TaskLauncher) StopTaskFunc() interface{} {
 	return p.StopTask
 }
 
+// WatchTaskFunc implements component.TaskLauncher
+func (p *TaskLauncher) WatchTaskFunc() interface{} {
+	return p.WatchTask
+}
+
 // TaskLauncherConfig is the configuration structure for the task plugin.
 type TaskLauncherConfig struct {
 	// Context specifies the kube context to use.
@@ -64,6 +69,12 @@ type TaskLauncherConfig struct {
 
 	// The namespace to use for launching this task in Kubernetes
 	Namespace string `hcl:"namespace,optional"`
+
+	// Optionally define various cpu resource limits and requests for kubernetes pod containers
+	CPU *ResourceConfig `hcl:"cpu,block"`
+
+	// Optionally define various memory resource limits and requests for kubernetes pod containers
+	Memory *ResourceConfig `hcl:"memory,block"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -121,6 +132,16 @@ task {
 	)
 
 	doc.SetField(
+		"memory",
+		"memory resource request to be added to the task container",
+	)
+
+	doc.SetField(
+		"cpu",
+		"cpu resource request to be added to the task container",
+	)
+
+	doc.SetField(
 		"image_pull_policy",
 		"pull policy to use for the task container image",
 	)
@@ -160,15 +181,6 @@ func (p *TaskLauncher) StopTask(
 		ns = p.config.Namespace
 	}
 
-	// Delete the job. This does *not* delete any running pods that the job
-	// created.
-	jobsClient := clientSet.BatchV1().Jobs(ns)
-	if err := jobsClient.Delete(ctx, ti.Id, metav1.DeleteOptions{}); err != nil {
-		if !errors.IsNotFound(err) {
-			return err
-		}
-	}
-
 	// List pods with this job label
 	podsClient := clientSet.CoreV1().Pods(ns)
 	pods, err := podsClient.List(ctx, metav1.ListOptions{
@@ -185,11 +197,27 @@ func (p *TaskLauncher) StopTask(
 		return nil
 	}
 
-	// Delete any pods stuck in pending
+	// Find any pods stuck in pending
+	var pendingPods []string
 	for _, p := range pods.Items {
 		if p.Status.Phase == corev1.PodPending {
+			pendingPods = append(pendingPods, p.Name)
+		}
+	}
+
+	// If we've found pending/stuck pods, attempt to clean up
+	if len(pendingPods) > 0 {
+		// Delete the job. This does *not* delete any running pods that the job
+		// created.
+		jobsClient := clientSet.BatchV1().Jobs(ns)
+		if err := jobsClient.Delete(ctx, ti.Id, metav1.DeleteOptions{}); err != nil {
+			if !errors.IsNotFound(err) {
+				return err
+			}
+		}
+		for _, name := range pendingPods {
 			log.Warn("job pod is in pending phase in StopTask operation, cancelling", "job_id", ti.Id)
-			if err := podsClient.Delete(ctx, p.Name, metav1.DeleteOptions{}); err != nil {
+			if err := podsClient.Delete(ctx, name, metav1.DeleteOptions{}); err != nil {
 				if !errors.IsNotFound(err) {
 					return err
 				}
@@ -242,6 +270,15 @@ func (p *TaskLauncher) StartTask(
 		})
 	}
 
+	// NOTE(briancain): This is here to help kaniko detect that this is a docker container.
+	// See https://github.com/GoogleContainerTools/kaniko/blob/7e3954ac734534ce5ce68ad6300a2d3143d82f40/vendor/github.com/genuinetools/bpfd/proc/proc.go#L138
+	// for more info.
+	log.Warn("temporarily setting 'container=docker' environment variable to patch Kaniko working on Kubernetes 1.23")
+	env = append(env, corev1.EnvVar{
+		Name:  "container",
+		Value: "docker",
+	})
+
 	// If the user is using the latest tag, then don't specify an overriding pull policy.
 	// This by default means kubernetes will always pull so that latest is used.
 	pullPolicy := corev1.PullIfNotPresent
@@ -254,6 +291,47 @@ func (p *TaskLauncher) StartTask(
 	// Get container resource limits and requests
 	resourceLimits := make(map[corev1.ResourceName]k8sresource.Quantity)
 	resourceRequests := make(map[corev1.ResourceName]k8sresource.Quantity)
+
+	if p.config.CPU != nil {
+		if p.config.CPU.Requested != "" {
+			q, err := k8sresource.ParseQuantity(p.config.CPU.Requested)
+			if err != nil {
+				return nil,
+					status.Errorf(codes.InvalidArgument, "failed to parse cpu request %q to k8s quantity: %s", p.config.CPU.Requested, err)
+			}
+			resourceRequests[corev1.ResourceCPU] = q
+		}
+
+		if p.config.CPU.Limit != "" {
+			q, err := k8sresource.ParseQuantity(p.config.CPU.Limit)
+			if err != nil {
+				return nil,
+					status.Errorf(codes.InvalidArgument, "failed to parse cpu limit %q to k8s quantity: %s", p.config.CPU.Limit, err)
+			}
+			resourceLimits[corev1.ResourceCPU] = q
+		}
+	}
+
+	if p.config.Memory != nil {
+		if p.config.Memory.Requested != "" {
+			q, err := k8sresource.ParseQuantity(p.config.Memory.Requested)
+			if err != nil {
+				return nil,
+					status.Errorf(codes.InvalidArgument, "failed to parse memory requested %q to k8s quantity: %s", p.config.Memory.Requested, err)
+			}
+			resourceRequests[corev1.ResourceMemory] = q
+		}
+
+		if p.config.Memory.Limit != "" {
+			q, err := k8sresource.ParseQuantity(p.config.Memory.Limit)
+			if err != nil {
+				return nil,
+					status.Errorf(codes.InvalidArgument, "failed to parse memory limit %q to k8s quantity: %s", p.config.Memory.Limit, err)
+			}
+			resourceLimits[corev1.ResourceMemory] = q
+		}
+	}
+
 	resourceRequirements := corev1.ResourceRequirements{
 		Limits:   resourceLimits,
 		Requests: resourceRequests,
@@ -319,3 +397,14 @@ func (p *TaskLauncher) StartTask(
 		Id: name,
 	}, nil
 }
+
+// WatchTask implements TaskLauncher
+func (p *TaskLauncher) WatchTask(
+	ctx context.Context,
+	log hclog.Logger,
+	ti *TaskInfo,
+) (*component.TaskResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "WatchTask not implemented")
+}
+
+var _ component.TaskLauncher = (*TaskLauncher)(nil)

@@ -20,9 +20,9 @@
       {{/if}}
     </small>
   </div>
-  <Pds::CtaLink @route="workspace.projects.new" @variant="secondary "class="pds--iconStart">
+  <Pds::CtaLink @route="workspace.projects.create" @variant="secondary "class="pds--iconStart">
     <FlightIcon @name="plus" class="pds-button__iconStart"/>
-    &nbsp;{{t "form.project_new.title"}}
+    &nbsp;{{t "form.project_create.title"}}
   </Pds::CtaLink>
 </PageHeader>
 
@@ -31,7 +31,7 @@
   <Card>
     <LinkTo @route="workspace.projects.project" @model={{project.project}}>
       <div class="row">
-        <IconTile @icon="folder" />
+        <Hds::IconTile @icon="folder" />
         <div class="meta">
           <h2>{{project.project}}</h2>
           {{!-- todo(pearkes): get full project objects from list api --}}
@@ -42,7 +42,7 @@
   </Card>
   {{else}}
   <EmptyState>
-    <p>There are no projects to display yet. <LinkTo @route="workspace.projects.new">Create your first project here</LinkTo>.</p>
+    <p>There are no projects to display yet. <LinkTo @route="workspace.projects.create">Create your first project here</LinkTo>.</p>
     <p>Alternatively, you can run
       <CopyableCode @ref="empty-init" @inline="true">
         <code id="empty-init">waypoint init</code>

@@ -84,6 +84,8 @@ and disable the UI, the command would be:
 - `-k8s-context=<string>` - The Kubernetes context to install the Waypoint server to. If left unset, Waypoint will use the current Kubernetes context.
 - `-k8s-cpu-request=<string>` - Configures the requested CPU amount for the Waypoint server in Kubernetes.
 - `-k8s-mem-request=<string>` - Configures the requested memory amount for the Waypoint server in Kubernetes.
+- `-k8s-cpu-limit=<string>` - Configures the CPU limit for the Waypoint server in Kubernetes.
+- `-k8s-mem-limit=<string>` - Configures the memory limit for the Waypoint server in Kubernetes.
 - `-k8s-namespace=<string>` - Namespace to install the Waypoint server into for Kubernetes.
 - `-k8s-openshift` - Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift. If set, auto-configures the installation.
 - `-k8s-pull-policy=<string>` - Set the pull policy for the Waypoint server image.
@@ -117,10 +119,13 @@ and disable the UI, the command would be:
 - `-nomad-consul-service-backend-tags=<string>` - Tags for the Waypoint backend service generated in Consul. The 'first' tag will be used when crafting the Consul DNS hostname for accessing Waypoint.
 - `-nomad-consul-datacenter=<string>` - The datacenter where Consul is located.
 - `-nomad-consul-domain=<string>` - The domain where Consul is located.
+- `-nomad-consul-token=<string>` - If set, the passed Consul token is stored in the job before sending to the Nomad servers. Overrides the CONSUL_HTTP_TOKEN environment variable if set.
 - `-nomad-host-volume=<string>` - Nomad host volume name, required for volume type 'host'.
 - `-nomad-csi-volume-provider=<string>` - Nomad CSI volume provider, required for volume type 'csi'.
 - `-nomad-csi-volume-capacity-min=<int>` - Nomad CSI volume capacity minimum, in bytes.
 - `-nomad-csi-volume-capacity-max=<int>` - Nomad CSI volume capacity maximum, in bytes.
 - `-nomad-csi-fs=<string>` - Nomad CSI volume mount option file system.
+- `-nomad-csi-secrets=<key=value>` - Secrets to provide for the CSI volume.
+- `-nomad-csi-parameters=<key=value>` - Parameters passed directly to the CSI plugin to configure the volume.
 
 @include "commands/server-install_more.mdx"

@@ -15,6 +15,8 @@ import (
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
+// For a note about the magic value 445DHu, see exec_test.go
+
 func TestHandleTrigger(t *testing.T) {
 	require := require.New(t)
 
@@ -27,7 +29,7 @@ func TestHandleTrigger(t *testing.T) {
 	defer httpServer.Close()
 
 	// Mock a request
-	resp, err := http.Get(httpServer.URL + "/v1/trigger/123" + "?token=foo-bar-baz&stream=true")
+	resp, err := http.Get(httpServer.URL + "/v1/trigger/123" + "?token=445DHu&stream=true")
 	if err != nil {
 		t.Errorf("failed to make http request: %s", err)
 	}
@@ -78,7 +80,7 @@ func TestHandleTrigger_BadFailures(t *testing.T) {
 	defer httpServer.Close()
 
 	// Mock a request
-	resp, err := http.Get(httpServer.URL + "/v1/trigger/123" + "?token=foo-bar-baz&stream=true")
+	resp, err := http.Get(httpServer.URL + "/v1/trigger/123" + "?token=445DHu&stream=true")
 	if err != nil {
 		t.Errorf("failed to make http request: %s", err)
 	}
@@ -120,7 +122,7 @@ func TestHandleTrigger_CancelStream(t *testing.T) {
 	defer httpServer.Close()
 
 	// Mock a request
-	req, err := http.NewRequest("GET", httpServer.URL+"/v1/trigger/123"+"?token=foo-bar-baz&stream=true", nil)
+	req, err := http.NewRequest("GET", httpServer.URL+"/v1/trigger/123"+"?token=445DHu&stream=true", nil)
 	if err != nil {
 		t.Errorf("failed to make http request: %s", err)
 	}
@@ -169,7 +171,7 @@ func (v *triggerImpl) RunTrigger(ctx context.Context,
 	req *pb.RunTriggerRequest,
 ) (*pb.RunTriggerResponse, error) {
 	return &pb.RunTriggerResponse{
-		JobIds: []string{"000", "123", "999"},
+		JobIds: []string{"123"},
 	}, nil
 }
 
@@ -179,7 +181,7 @@ func (v *triggerBadImpl) RunTrigger(ctx context.Context,
 	req *pb.RunTriggerRequest,
 ) (*pb.RunTriggerResponse, error) {
 	return &pb.RunTriggerResponse{
-		JobIds: []string{"000", "123", "999"},
+		JobIds: []string{"123"},
 	}, nil
 }
 

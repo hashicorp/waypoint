@@ -33,13 +33,30 @@ type (
 // Test runs a validation test suite for a state implementation. All
 // state implementations should pass this suite with no errors to ensure
 // the correct behavior of the state when Waypoint uses it.
-func Test(t *testing.T, f Factory, rf RestartFactory) {
+// skipTests are function names of tests in the serverstate package to skip
+// (i.e. TestJobCreate_singleton). It cannot skip sub-tests (called by
+// t.Run() inside a top-level test)
+func Test(t *testing.T, f Factory, rf RestartFactory, skipTests []string) {
 	for name, funcs := range tests {
 		t.Run(name, func(t *testing.T) {
 			for _, tf := range funcs {
 				name := runtime.FuncForPC(reflect.ValueOf(tf).Pointer()).Name()
 				if idx := strings.LastIndexByte(name, '.'); idx >= 0 {
 					name = name[idx+1:]
+				}
+
+				skip := false
+				for _, skipTest := range skipTests {
+					if name == skipTest {
+						skip = true
+						break
+					}
+				}
+				if skip {
+					t.Run(name, func(t *testing.T) {
+						t.Skipf("Test %q is on the state skip list - ignoring", name)
+					})
+					continue
 				}
 
 				t.Run(name, func(t *testing.T) {

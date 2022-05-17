@@ -392,6 +392,10 @@
         "path": "runner/profiles"
       },
       {
+        "title": "On-Demand Runner",
+        "path": "runner/on-demand-runner"
+      },
+      {
         "title": "Additional Runners",
         "path": "runner/run-manual"
       }

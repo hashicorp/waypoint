@@ -45,6 +45,9 @@ and the rest should be taken care of.
 
 - `WP_K8S_INGRESS` - setting this var to any non-empty value will include ingress configuration for the
 setup k8s cluster.
+- `KIND_NODE_VERSION` - if you wish, you can override the node version Kind sets
+up by default. If not set, this script will automatically use `kindest/node:v1.22.7`
+which includes Kubernetes version 1.22.
 
 After this script runs, you should be ready to run a `waypoint install` for
 the kubernetes platform!

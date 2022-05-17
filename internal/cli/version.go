@@ -8,8 +8,8 @@ import (
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/internal/version"
+	"github.com/hashicorp/waypoint/pkg/serverclient"
 )
 
 type VersionCommand struct {

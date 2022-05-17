@@ -33,6 +33,26 @@ If you find a typo or you feel like you can improve the HTML, CSS, or JavaScript
 
 ## Running the Site Locally
 
+### Using Docker
+
+If you wish to run the site in a container, you can run the site locally via
+`make`.
+
+- `make website`
+  - This command will pull and run the latest website container.
+  - This includes live reload which will load your changes as you make them.
+- `make website/local`
+  - This command will run the website locally using a locally built image
+  - This includes live reload which will load your changes as you make them.
+- `make website/build-local`
+  - This command will build a local image of the website from `hashicorp/dev-portal.git`.
+
+...and then visit `http://localhost:3000`.
+There's no need to re-run `make website` each time the site is run, only the
+first time.
+
+### Using NPM
+
 Make sure your local development environment has a supported version (v14.0.0+) of [node installed](https://nodejs.org/en/) you can run:
 
 - `npm install`
@@ -40,7 +60,7 @@ Make sure your local development environment has a supported version (v14.0.0+) 
 
 ...and then visit `http://localhost:3000`.
 
-There's no need to re-run `npm install` each time the site is run, only the first time. Going forward, you can just run `npm start` to get it going. We also provide a Docker-based workflow to run the site locally. Just run `make`!
+There's no need to re-run `npm install` each time the site is run, only the first time. Going forward, you can just run `npm start` to get it going.
 
 <!-- BEGIN: editing-markdown -->
 <!-- Generated text, do not edit directly -->

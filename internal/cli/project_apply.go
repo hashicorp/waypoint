@@ -38,7 +38,6 @@ type ProjectApplyCommand struct {
 	flagPollInterval          string
 	flagAppStatusPoll         *bool
 	flagAppStatusPollInterval string
-	flagOndemandRunner        string
 }
 
 func (c *ProjectApplyCommand) Run(args []string) int {
@@ -366,25 +365,6 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 		proj.WaypointHclFormat = format
 	}
 
-	if c.flagOndemandRunner != "" {
-		ref := &pb.Ref_OnDemandRunnerConfig{
-			Name: c.flagOndemandRunner,
-		}
-
-		// Validate the ref by looking up the runner.
-		_, err := c.project.Client().GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
-			Config: ref,
-		})
-		if err != nil {
-			c.ui.Output(
-				"Error looking up ondemand runner: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-
-			return 1
-		}
-	}
-
 	// Upsert
 	_, err = c.project.Client().UpsertProject(ctx, &pb.UpsertProjectRequest{
 		Project: proj,
@@ -531,12 +511,6 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 			Target:  &c.flagAppStatusPollInterval,
 			Default: "5m",
 			Usage:   "Interval between polling to generate status reports if polling is enabled.",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:   "runner-profile",
-			Target: &c.flagOndemandRunner,
-			Usage:  "Name of a runner profile to be used for this project",
 		})
 	})
 }

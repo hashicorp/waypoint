@@ -821,6 +821,84 @@ func TestRunnerAccept_jobHcl(t *testing.T) {
 	require.Equal(pb.Job_Config_JOB, job.Config.Source)
 }
 
+func TestRunnerAcceptParallel(t *testing.T) {
+	require := require.New(t)
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+
+	// Setup our runner
+	client := singleprocess.TestServer(t)
+	runner := TestRunner(t, WithClient(client))
+	require.NoError(runner.Start(ctx))
+
+	// Block our noop jobs so we can inspect their state
+	noopCh := make(chan struct{})
+	runner.noopCh = noopCh
+
+	// Initialize our app
+	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Queue jobs
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, &pb.Job{
+			Workspace: &pb.Ref_Workspace{Workspace: "w1"},
+		}),
+	})
+	require.NoError(err)
+	jobId_1 := queueResp.JobId
+
+	queueResp, err = client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, &pb.Job{
+			Workspace: &pb.Ref_Workspace{Workspace: "w2"},
+		}),
+	})
+	require.NoError(err)
+	jobId_2 := queueResp.JobId
+
+	// Accept should complete
+	doneCh := make(chan struct{})
+	go func() {
+		defer close(doneCh)
+		runner.AcceptParallel(ctx, 2)
+	}()
+
+	// Both jobs should be running at once eventually
+	require.Eventually(func() bool {
+		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId_1})
+		require.NoError(err)
+		if job.State != pb.Job_RUNNING {
+			return false
+		}
+
+		job, err = client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId_2})
+		require.NoError(err)
+		return job.State == pb.Job_RUNNING
+	}, 3*time.Second, 10*time.Millisecond)
+
+	// Jobs should complete
+	close(noopCh)
+	require.Eventually(func() bool {
+		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId_1})
+		require.NoError(err)
+		if job.State != pb.Job_SUCCESS {
+			return false
+		}
+
+		job, err = client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId_2})
+		require.NoError(err)
+		return job.State == pb.Job_SUCCESS
+	}, 3*time.Second, 10*time.Millisecond)
+
+	// Loop should exit
+	cancel()
+	select {
+	case <-time.After(2 * time.Second):
+		t.Fatal("accept should exit")
+
+	default:
+	}
+}
+
 // testGitFixture MUST be called before TestRunner since TestRunner
 // changes our working directory.
 func testGitFixture(t *testing.T, n string) string {

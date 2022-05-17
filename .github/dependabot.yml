@@ -1,0 +1,8 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /ui
+    schedule:
+      interval: weekly
+    allow:
+      - dependency-name: '@hashicorp/*'

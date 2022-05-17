@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/k8s: Add CPU and memory resource limits to on-demand runners through runner profiles and at install time. These resource limits follow the same format that kubernetes expects within `spec.containers[].resources`.
+```

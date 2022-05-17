@@ -6,6 +6,8 @@
 @use 'pds/core/typography/config' as Typography;
 @use 'utilities/index';
 
+@import '@hashicorp/design-system-components';
+
 @import 'node_modules/codemirror/lib/codemirror';
 @import 'node_modules/codemirror/theme/monokai';
 
@@ -19,3 +21,10 @@
 @import 'pages';
 
 @import 'lab';
+
+// https://docs.percy.io/docs/percy-specific-css#percy-css-media-query
+@media only percy {
+  .hide-in-percy {
+    visibility: hidden;
+  }
+}

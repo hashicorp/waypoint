@@ -459,14 +459,11 @@ func (s *Service) RunTrigger(
 		// Queue the job(s)
 		log.Debug("queueing jobs", "total_jobs", len(jobList))
 
-		// NOTE(briancain): queueJobMulti currently returns 3 Jobs due to On-Demand Runners:
-		// The start task job, the actual queued job, and the stop task job. Users
-		// will generally just care about the middle job for streaming the result
-		// of the RunTrigger
 		respList, err := s.queueJobMulti(ctx, jobList)
 		if err != nil {
 			return nil, err
 		}
+
 		// Gather queue job request ids
 		for _, qJr := range respList {
 			ids = append(ids, qJr.JobId)

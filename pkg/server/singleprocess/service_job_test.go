@@ -675,25 +675,38 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 	}))
 
 	// Get our job stream and verify we open
-	stream, err := client.GetJobStream(ctx, &pb.GetJobStreamRequest{JobId: queueResp.JobId})
-	require.NoError(err)
-	{
-		resp, err := stream.Recv()
-		require.NoError(err)
-		open, ok := resp.Event.(*pb.GetJobStreamResponse_Open_)
-		require.True(ok, "should be an open")
-		require.NotNil(open)
+	var stream pb.Waypoint_GetJobStreamClient
+	require.Eventually(func() bool {
+		stream, err = client.GetJobStream(ctx, &pb.GetJobStreamRequest{JobId: queueResp.JobId})
+		if err != nil {
+			t.Logf("retryable error connecting to job stream: %s", err)
+			return false
+		}
 
-	}
+		// We use require below because no matter what this should always succeed.
+		{
+			resp, err := stream.Recv()
+			require.NoError(err)
+			open, ok := resp.Event.(*pb.GetJobStreamResponse_Open_)
+			require.True(ok, "should be an open")
+			require.NotNil(open)
 
-	// Wait for output, verify its buffered
-	{
-		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Terminal_)(nil))
-		event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
-		require.NotNil(event)
-		require.True(event.Terminal.Buffered)
-		require.Len(event.Terminal.Events, 2)
-	}
+		}
+
+		// Wait for buffered output.
+		{
+			resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Terminal_)(nil))
+			event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
+			require.NotNil(event)
+			if len(event.Terminal.Events) != 2 || !event.Terminal.Buffered {
+				t.Logf("waiting for 2 buffered terminal events, got %d (buffered = %v)",
+					len(event.Terminal.Events), event.Terminal.Buffered)
+				return false
+			}
+		}
+
+		return true
+	}, 2*time.Second, 50*time.Millisecond)
 
 	// Send a bit more output now that we're connected
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
@@ -1005,6 +1018,15 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 
+	// task should be PENDING
+	task, err := testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+		Ref: &pb.Ref_Task_JobId{
+			JobId: queueResp.JobId,
+		},
+	})
+	require.NoError(err)
+	require.Equal(pb.Task_PENDING, task.JobState)
+
 	// Register our runner
 	id, _ := TestRunner(t, client, nil)
 
@@ -1032,6 +1054,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	st := assignment.Assignment.Job.Operation.(*pb.Job_StartTask).StartTask
 	require.Equal(odr.PluginConfig, st.Params.HclConfig)
 	require.Equal(odr.PluginType, st.Params.PluginType)
+	startJobId := assignment.Assignment.Job.Id
 
 	for k, v := range odr.EnvironmentVariables {
 		require.Equal(v, st.Info.EnvironmentVariables[k])
@@ -1047,7 +1070,8 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	// Register our runner
 	runnerId := st.Info.EnvironmentVariables["WAYPOINT_RUNNER_ID"]
 	TestRunner(t, client, &pb.Runner{
-		Id: runnerId,
+		Id:       runnerId,
+		ByIdOnly: true,
 	})
 
 	// Start a job request
@@ -1061,12 +1085,35 @@ func TestServiceQueueJob_odr(t *testing.T) {
 		},
 	}))
 
+	// task should be STARTING
+	// sleep to ensure job stream request was sent, so that task state updates from
+	// the JobAck. We do this a few times in this test to account for CI machine
+	// slowness.
+	time.Sleep(200 * time.Millisecond)
+	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+		Ref: &pb.Ref_Task_JobId{
+			JobId: job.Id,
+		},
+	})
+	require.NoError(err)
+	require.Equal(pb.Task_STARTING, task.JobState)
+
 	// Complete our launch task job so that we can move on
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Complete_{
 			Complete: &pb.RunnerJobStreamRequest_Complete{},
 		},
 	}))
+
+	// task should be STARTED
+	time.Sleep(200 * time.Millisecond)
+	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+		Ref: &pb.Ref_Task_JobId{
+			JobId: job.Id,
+		},
+	})
+	require.NoError(err)
+	require.Equal(pb.Task_STARTED, task.JobState)
 
 	// Wait for assignment and ack
 	resp, err = rs2.Recv()
@@ -1093,7 +1140,137 @@ func TestServiceQueueJob_odr(t *testing.T) {
 		open, ok := resp.Event.(*pb.GetJobStreamResponse_Open_)
 		require.True(ok, "should be an open")
 		require.NotNil(open)
+
+		// task should be RUNNING
+		time.Sleep(200 * time.Millisecond)
+		task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+			Ref: &pb.Ref_Task_JobId{
+				JobId: queueResp.JobId,
+			},
+		})
+		require.NoError(err)
+		require.Equal(pb.Task_RUNNING, task.JobState)
 	}
+
+	// Complete our run task job so that we can move on
+	require.NoError(rs2.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Complete_{
+			Complete: &pb.RunnerJobStreamRequest_Complete{},
+		},
+	}))
+
+	// task should be COMPLETED
+	time.Sleep(200 * time.Millisecond)
+	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+		Ref: &pb.Ref_Task_JobId{
+			JobId: job.Id,
+		},
+	})
+	require.NoError(err)
+	require.Equal(pb.Task_COMPLETED, task.JobState)
+
+	{
+		// Watch
+
+		// Start a job request
+		rs3, err := client.RunnerJobStream(ctx)
+		require.NoError(err)
+		require.NoError(rs3.Send(&pb.RunnerJobStreamRequest{
+			Event: &pb.RunnerJobStreamRequest_Request_{
+				Request: &pb.RunnerJobStreamRequest_Request{
+					RunnerId: id,
+				},
+			},
+		}))
+
+		// We should get a task to stop the job
+		resp, err = rs3.Recv()
+		require.NoError(err)
+		assignment, ok = resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
+		require.True(ok, "should be an assignment")
+		require.NotNil(assignment)
+		require.Equal(id, assignment.Assignment.Job.AssignedRunner.Id)
+		require.NotEqual(queueResp.JobId, assignment.Assignment.Job.Id)
+		require.IsType(&pb.Job_WatchTask{}, assignment.Assignment.Job.Operation)
+
+		watchTask := assignment.Assignment.Job.Operation.(*pb.Job_WatchTask).WatchTask
+		require.Equal(startJobId, watchTask.StartJob.Id)
+
+		// Ack it and complete it
+		require.NoError(rs3.Send(&pb.RunnerJobStreamRequest{
+			Event: &pb.RunnerJobStreamRequest_Ack_{
+				Ack: &pb.RunnerJobStreamRequest_Ack{},
+			},
+		}))
+
+		// Complete our watch task job so that we can move on
+		require.NoError(rs3.Send(&pb.RunnerJobStreamRequest{
+			Event: &pb.RunnerJobStreamRequest_Complete_{
+				Complete: &pb.RunnerJobStreamRequest_Complete{},
+			},
+		}))
+	}
+
+	// Stop the task
+
+	// Start a job request
+	rs3, err := client.RunnerJobStream(ctx)
+	require.NoError(err)
+	require.NoError(rs3.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Request_{
+			Request: &pb.RunnerJobStreamRequest_Request{
+				RunnerId: id,
+			},
+		},
+	}))
+
+	// We should get a task to stop the job
+	resp, err = rs3.Recv()
+	require.NoError(err)
+	assignment, ok = resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
+	require.True(ok, "should be an assignment")
+	require.NotNil(assignment)
+	require.Equal(id, assignment.Assignment.Job.AssignedRunner.Id)
+	require.NotEqual(queueResp.JobId, assignment.Assignment.Job.Id)
+	require.IsType(&pb.Job_StopTask{}, assignment.Assignment.Job.Operation)
+
+	stopTask := assignment.Assignment.Job.Operation.(*pb.Job_StopTask).StopTask
+	require.Equal(odr.PluginConfig, stopTask.Params.HclConfig)
+	require.Equal(odr.PluginType, stopTask.Params.PluginType)
+
+	// Ack it and complete it
+	require.NoError(rs3.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Ack_{
+			Ack: &pb.RunnerJobStreamRequest_Ack{},
+		},
+	}))
+
+	// task should be STOPPING
+	time.Sleep(200 * time.Millisecond)
+	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+		Ref: &pb.Ref_Task_JobId{
+			JobId: job.Id,
+		},
+	})
+	require.NoError(err)
+	require.Equal(pb.Task_STOPPING, task.JobState)
+
+	// Complete our launch task job so that we can move on
+	require.NoError(rs3.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Complete_{
+			Complete: &pb.RunnerJobStreamRequest_Complete{},
+		},
+	}))
+
+	// task should be STOPPED
+	time.Sleep(200 * time.Millisecond)
+	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+		Ref: &pb.Ref_Task_JobId{
+			JobId: job.Id,
+		},
+	})
+	require.NoError(err)
+	require.Equal(pb.Task_STOPPED, task.JobState)
 }
 
 func TestServiceQueueJob_odr_default(t *testing.T) {
@@ -1219,7 +1396,8 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 
 	// Register our runner
 	TestRunner(t, client, &pb.Runner{
-		Id: runnerId,
+		Id:       runnerId,
+		ByIdOnly: true,
 	})
 
 	// Start a job request

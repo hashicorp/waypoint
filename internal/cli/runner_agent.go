@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net"
+	"runtime"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -16,8 +17,8 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	runnerpkg "github.com/hashicorp/waypoint/internal/runner"
-	"github.com/hashicorp/waypoint/internal/serverclient"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverclient"
 )
 
 type RunnerAgentCommand struct {
@@ -53,6 +54,9 @@ type RunnerAgentCommand struct {
 
 	// Labels for the runner.
 	flagLabels map[string]string
+
+	// The amount of concurrent jobs that can be running.
+	flagConcurrency int
 }
 
 // This is how long a runner in ODR mode will wait for its job assignment before
@@ -75,6 +79,12 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	}
 
 	plugin.InsideODR = c.flagODR
+
+	// Flag defaults
+	if c.flagConcurrency < 1 {
+		log.Warn("concurrency flag less than 1 has no effect, using 1")
+		c.flagConcurrency = 1
+	}
 
 	// Connect to the server
 	log.Info("sourcing credentials and connecting to the Waypoint server")
@@ -227,9 +237,16 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	go func() {
 		defer cancel()
 
+		// In non-ODR mode, we accept many jobs in parallel.
+		if !c.flagODR {
+			runner.AcceptParallel(ctx, c.flagConcurrency)
+			return
+		}
+
+		// In ODR mode, we accept a single job.
 		for {
 			err := runner.Accept(ctx)
-			if err == nil && c.flagODR {
+			if err == nil {
 				log.Debug("handled our one job in ODR mode, exiting")
 				return
 			}
@@ -343,6 +360,18 @@ func (c *RunnerAgentCommand) Flags() *flag.Sets {
 			Name:   "label",
 			Target: &c.flagLabels,
 			Usage:  "Labels to set for this runner in 'k=v' format. Can be specified multiple times.",
+		})
+
+		f.IntVar(&flag.IntVar{
+			Name:   "concurrency",
+			Target: &c.flagConcurrency,
+			Usage: "The number of concurrent jobs that can be running at one time. " +
+				"This has no effect if `-odr` is set. A value of less than 1 will " +
+				"default to 1.",
+
+			// Most jobs that a non-ODR runner runs are IO bound, so we use
+			// just a heuristic here of allowing some multiple above the CPUs.
+			Default: runtime.NumCPU() * 3,
 		})
 	})
 }

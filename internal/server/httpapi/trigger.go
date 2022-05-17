@@ -3,6 +3,7 @@ package httpapi
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"net/http"
 	"strconv"
 	"sync"
@@ -10,14 +11,15 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	"github.com/hashicorp/waypoint/internal/clicontext"
-	"github.com/hashicorp/waypoint/internal/serverclient"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverclient"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
@@ -150,11 +152,11 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 		}
 		if resp == nil {
 			http.Error(w,
-				fmt.Sprintf("server returned no job ids from run trigger %q", runTriggerId),
+				fmt.Sprintf("server returned no job ids from run trigger %q", html.EscapeString(runTriggerId)),
 				http.StatusInternalServerError)
 			return
 		}
-		jobIds := resp.JobIds
+		triggerJobs := resp.JobIds
 
 		streamOutput := r.URL.Query().Get("stream")
 
@@ -195,19 +197,6 @@ func HandleTrigger(addr string, tls bool) http.HandlerFunc {
 		flusher.Flush()
 
 		enc := json.NewEncoder(w)
-
-		// NOTE(briancain): We skip every two jobs here because when we call RunTrigger
-		// via gRPC, it eventually queues the trigger jobs through on-demand runners, and
-		// queueJobMulti returns three jobs: StartTask, the job to be queued, and StopTask. People
-		// really only expect output from the job to be queued, so we only stream that back.
-
-		// For example, a trigger that queues 2 Waypoint operation jobs returns 6 total job ids:
-		// Job List: [ 0: StartTask, 1: WP Operation 1, 2: StopTask, 3: StartTask, 4: WP Operation 2, 5: StopTask, ... ]
-
-		var triggerJobs []string
-		for i := 1; i < len(jobIds); i += 3 {
-			triggerJobs = append(triggerJobs, jobIds[i])
-		}
 
 		var (
 			wg sync.WaitGroup
