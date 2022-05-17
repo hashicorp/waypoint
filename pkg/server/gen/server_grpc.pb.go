@@ -295,6 +295,7 @@ type WaypointClient interface {
 	UpsertPipeline(ctx context.Context, in *UpsertPipelineRequest, opts ...grpc.CallOption) (*UpsertPipelineResponse, error)
 	// RunPipeline queues a pipeline execution.
 	RunPipeline(ctx context.Context, in *RunPipelineRequest, opts ...grpc.CallOption) (*RunPipelineResponse, error)
+	// GetPipeline returns a pipeline proto by pipeline ref id
 	GetPipeline(ctx context.Context, in *GetPipelineRequest, opts ...grpc.CallOption) (*GetPipelineResponse, error)
 	// ListPipelines takes a project and evaluates the projects config to get
 	// a list of Pipeline protos to return in the response. These pipelines
@@ -1718,6 +1719,7 @@ type WaypointServer interface {
 	UpsertPipeline(context.Context, *UpsertPipelineRequest) (*UpsertPipelineResponse, error)
 	// RunPipeline queues a pipeline execution.
 	RunPipeline(context.Context, *RunPipelineRequest) (*RunPipelineResponse, error)
+	// GetPipeline returns a pipeline proto by pipeline ref id
 	GetPipeline(context.Context, *GetPipelineRequest) (*GetPipelineResponse, error)
 	// ListPipelines takes a project and evaluates the projects config to get
 	// a list of Pipeline protos to return in the response. These pipelines
