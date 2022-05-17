@@ -6216,6 +6216,11 @@
           "type": "boolean",
           "description": "This setting only takes effect if both \"path\" is true AND the\nGit polling is enabled. Under those conditions, if this option\nis true, then only changes in Git commits within the \"path\" will\ntrigger a deploy. Changes outside the \"path\" will be ignored."
         },
+        "recurse_submodules": {
+          "type": "integer",
+          "format": "int64",
+          "description": "The max depth for recursively cloning submodules. 0 disables submodule\ncloning."
+        },
         "basic": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.Git.Basic"
         },

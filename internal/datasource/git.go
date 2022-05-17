@@ -58,6 +58,7 @@ func (s *GitSource) ProjectSource(body hcl.Body, ctx *hcl.EvalContext) (*pb.Job_
 		Path:                     cfg.Path,
 		IgnoreChangesOutsidePath: cfg.IgnoreChangesOutsidePath,
 		Ref:                      cfg.Ref,
+		RecurseSubmodules:        cfg.RecurseSubmodules,
 	}
 	switch {
 	case cfg.Username != "":
@@ -187,6 +188,11 @@ func (s *GitSource) Get(
 		URL:      source.Git.Url,
 		Auth:     auth,
 		Progress: &output,
+
+		// Note: we don't set RecurseSubmodules here because if we're checking
+		// out a ref without submodules or with different submodules, we
+		// don't want to waste time recursing HEAD. We fetch submodules
+		// later.
 	})
 	if err != nil {
 		closer()
@@ -233,6 +239,32 @@ func (s *GitSource) Get(
 			closer()
 			return "", nil, nil, status.Errorf(codes.Aborted,
 				"Git checkout failed: %s", err)
+		}
+	}
+
+	if depth := source.Git.RecurseSubmodules; depth > 0 {
+		wt, err := repo.Worktree()
+		if err != nil {
+			closer()
+			return "", nil, nil, status.Errorf(codes.Aborted,
+				"Failed to load Git working tree: %s", err)
+		}
+
+		sm, err := wt.Submodules()
+		if err != nil {
+			closer()
+			return "", nil, nil, status.Errorf(codes.Aborted,
+				"Failed to load submodules: %s", err)
+		}
+
+		if err := sm.UpdateContext(ctx, &git.SubmoduleUpdateOptions{
+			Init:              true,
+			Auth:              auth,
+			RecurseSubmodules: git.SubmoduleRescursivity(depth),
+		}); err != nil {
+			closer()
+			return "", nil, nil, status.Errorf(codes.Aborted,
+				"Failed to update submodules: %s", err)
 		}
 	}
 
@@ -611,6 +643,7 @@ type gitConfig struct {
 	SSHKeyPassword           string `hcl:"key_password,optional"`
 	Ref                      string `hcl:"ref,optional"`
 	IgnoreChangesOutsidePath bool   `hcl:"ignore_changes_outside_path,optional"`
+	RecurseSubmodules        uint32 `hcl:"recurse_submodules,optional"`
 }
 
 var _ Sourcer = (*GitSource)(nil)

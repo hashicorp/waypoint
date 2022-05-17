@@ -1,0 +1,3 @@
+0000000000000000000000000000000000000000 bf58a5a277a4bfa2a3d2b7a41e67b24525b6091a Mitchell Hashimoto <mitchell.hashimoto@gmail.com> 1652818307 -0700	commit (initial): initial commit
+bf58a5a277a4bfa2a3d2b7a41e67b24525b6091a 27e97ef4f312fe37588f84209e4d056825dee614 Mitchell Hashimoto <mitchell.hashimoto@gmail.com> 1652818318 -0700	commit: add examples
+27e97ef4f312fe37588f84209e4d056825dee614 25ae337fbe7bda43abd25924297a17c24995f852 Mitchell Hashimoto <mitchell.hashimoto@gmail.com> 1652818471 -0700	commit: remove submodule
