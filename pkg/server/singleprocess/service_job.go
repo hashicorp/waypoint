@@ -100,26 +100,14 @@ func (s *Service) queueJobMulti(
 // does not queue it. This may return multiple jobs if the queue job
 // request requires an on-demand runner. They should all be queued
 // atomically with JobCreate.
+//
+// Precondition: req parameter must be validated
 func (s *Service) queueJobReqToJob(
 	ctx context.Context,
 	req *pb.QueueJobRequest,
 ) ([]*pb.Job, string, error) {
 	log := hclog.FromContext(ctx)
 	job := req.Job
-
-	// Validation
-	if job == nil {
-		return nil, "", status.Errorf(codes.FailedPrecondition, "job must be set")
-	}
-	if job.Operation == nil {
-		// We special case this check and return "Unimplemented" because
-		// the primary case where operation is nil is if a client is sending
-		// us an unsupported operation.
-		return nil, "", status.Errorf(codes.Unimplemented, "operation is nil or unknown")
-	}
-	if err := serverptypes.ValidateJob(job); err != nil {
-		return nil, "", status.Errorf(codes.FailedPrecondition, err.Error())
-	}
 
 	// Verify the project exists and use that to set the default data source
 	log.Debug("checking job project", "project", job.Application.Project)
@@ -146,11 +134,13 @@ func (s *Service) queueJobReqToJob(
 	}
 
 	// Get the next id
-	id, err := server.Id()
-	if err != nil {
-		return nil, "", status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+	if job.Id == "" {
+		id, err := server.Id()
+		if err != nil {
+			return nil, "", status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+		}
+		job.Id = id
 	}
-	job.Id = id
 
 	// Validate expiry if we have one
 	job.ExpireTime = nil
@@ -215,6 +205,19 @@ func (s *Service) QueueJob(
 	ctx context.Context,
 	req *pb.QueueJobRequest,
 ) (*pb.QueueJobResponse, error) {
+	if req.Job == nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "job must be set")
+	}
+	if req.Job.Operation == nil {
+		// We special case this check and return "Unimplemented" because
+		// the primary case where operation is nil is if a client is sending
+		// us an unsupported operation.
+		return nil, status.Errorf(codes.Unimplemented, "operation is nil or unknown")
+	}
+	if err := serverptypes.ValidateJob(req.Job); err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, err.Error())
+	}
+
 	jobs, jobId, err := s.queueJobReqToJob(ctx, req)
 	if err != nil {
 		return nil, err
@@ -311,7 +314,7 @@ func (s *Service) wrapJobWithRunner(
 	}
 
 	// Our source job depends on the starting job.
-	source.DependsOn = []string{startJob.Id}
+	source.DependsOn = append(source.DependsOn, startJob.Id)
 
 	// Job to stop the ODR
 	stopJob, err := s.onDemandRunnerStopJob(ctx, startJob, watchJob, source, od)
@@ -478,6 +481,12 @@ func (s *Service) onDemandRunnerStartJob(
 		// Inherit the workspace/application of the source job.
 		Workspace:   source.Workspace,
 		Application: source.Application,
+
+		// Depend on the same dependencies as the source job. This way,
+		// we don't start up the ODR very early when the job is not ready
+		// to execute.
+		DependsOn:             source.DependsOn,
+		DependsOnAllowFailure: source.DependsOnAllowFailure,
 
 		Operation: &pb.Job_StartTask{
 			StartTask: &pb.Job_StartTaskLaunchOp{

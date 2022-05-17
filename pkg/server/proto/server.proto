@@ -415,6 +415,9 @@ service Waypoint {
   // access to this via ACLs.
   rpc UpsertPipeline(UpsertPipelineRequest) returns (UpsertPipelineResponse);
 
+  // RunPipeline queues a pipeline execution.
+  rpc RunPipeline(RunPipelineRequest) returns (RunPipelineResponse);
+
   //----------------------------------------------------------------------
   // UI endpoints. The endpoints below are convenience methods for Waypoint's
   // various UIs (web GUI and CLI). They contain no unique functionality, i.e.
@@ -993,6 +996,14 @@ message Ref {
 
   message PipelineId {
     string id = 1;
+  }
+
+  message PipelineStep {
+    // ID of te pipeline
+    string pipeline = 1;
+
+    // Step name within the pipeline.
+    string step = 2;
   }
 }
 
@@ -4623,6 +4634,36 @@ message GetPipelineResponse {
       MERMAID = 1; // https://mermaid-js.github.io/mermaid/
     }
   }
+}
+
+message RunPipelineRequest {
+  // The pipeline to execute.
+  Ref.Pipeline pipeline = 1;
+
+  // This is the job template to use for all the queued steps. This should
+  // set all the required fields of a job except for "operation".
+  Job job_template = 2;
+
+  // In the future, we'll put input variables and other options here.
+}
+
+message RunPipelineResponse {
+  // The root job of the pipeline.
+  string job_id = 1;
+
+  // All job IDs are the list of all jobs that were queued for this pipeline.
+  // They are in topologically sorted order. This means that a job's dependencies
+  // are guaranteed to be satisfied by previous jobs in the list, but all
+  // previous jobs may not be necessary. This is because two jobs may be
+  // totally independent of each other and can execute concurrently. To get
+  // a better view, a graph should be built using step dependencies, and
+  // the job IDs can be correlated using the job_map field.
+  repeated string all_job_ids = 2;
+
+  // This provides a lookup from job ID to what step and pipeline a job
+  // corresponds to. Note that some jobs may correspond to pipelines other
+  // than the initial pipeline if nested pipelines are used.
+  map<string, Ref.PipelineStep> job_map = 3;
 }
 
 /********************************************************************

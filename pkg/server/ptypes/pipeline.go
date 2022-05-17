@@ -14,6 +14,12 @@ import (
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
+// PipelineGraph returns the graph of steps for a pipeline. The graph
+// vertices are the pipeline step names.
+func PipelineGraph(v *pb.Pipeline) (*graph.Graph, error) {
+	return pipelineGraph(v.Steps)
+}
+
 // TestPipeline returns a valid user for tests.
 func TestPipeline(t testing.T, src *pb.Pipeline) *pb.Pipeline {
 	t.Helper()
@@ -115,6 +121,24 @@ func ValidateUpsertPipelineRequest(v *pb.UpsertPipelineRequest) error {
 	))
 }
 
+// ValidateRunPipelineRequest
+func ValidateRunPipelineRequest(v *pb.RunPipelineRequest) error {
+	// Set the operation so that validation succeeds. We override it later.
+	if v.JobTemplate != nil {
+		v.JobTemplate.Operation = &pb.Job_Noop_{
+			Noop: &pb.Job_Noop{},
+		}
+	}
+
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Pipeline, validation.Required),
+		validation.Field(&v.JobTemplate, validation.Required),
+		validationext.StructField(&v.JobTemplate, func() []*validation.FieldRules {
+			return ValidateJobRules(v.JobTemplate)
+		}),
+	))
+}
+
 // stepNameMatchesKey implements validation.RuleFunc to validate that
 // the map key (string) matches the step name field.
 func stepNameMatchesKey(v interface{}) error {
@@ -152,6 +176,11 @@ func stepSingleRoot(v interface{}) error {
 // builds and validates the step graph.
 func stepGraph(v interface{}) error {
 	steps := v.(map[string]*pb.Pipeline_Step)
+	_, err := pipelineGraph(steps)
+	return err
+}
+
+func pipelineGraph(steps map[string]*pb.Pipeline_Step) (*graph.Graph, error) {
 	var stepGraph graph.Graph
 	for _, step := range steps {
 		// Add our job
@@ -163,15 +192,15 @@ func stepGraph(v interface{}) error {
 			stepGraph.AddEdge(dep, step.Name)
 
 			if _, ok := steps[dep]; !ok {
-				return fmt.Errorf(
+				return nil, fmt.Errorf(
 					"step %q depends on non-existent step %q", step, dep)
 			}
 		}
 	}
 	if cycles := stepGraph.Cycles(); len(cycles) > 0 {
-		return fmt.Errorf(
+		return nil, fmt.Errorf(
 			"step dependencies contain one or more cycles: %s", cycles)
 	}
 
-	return nil
+	return &stepGraph, nil
 }
