@@ -18,11 +18,14 @@ import (
 type RunnerInstallCommand struct {
 	*baseCommand
 
-	platform     string
-	adopt        bool
-	serverUrl    string
-	serverCookie string
-	id           string
+	platform            string
+	adopt               bool
+	serverUrl           string
+	serverCookie        string
+	id                  string
+	serverTls           bool
+	serverTlsSkipVerify bool
+	serverRequireAuth   bool
 }
 
 func (c *RunnerInstallCommand) AutocompleteArgs() complete.Predictor {
@@ -48,6 +51,25 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 			Usage:  "Address of the Waypoint server.",
 			EnvVar: "WAYPOINT_ADDR",
 			Target: &c.serverUrl,
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "server-tls",
+			Target:  &c.serverTls,
+			Usage:   "If true, the Waypoint runner will connect to the server over TLS.",
+			Default: true,
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "server-tls-skip-verify",
+			Target: &c.serverTlsSkipVerify,
+			Usage:  "If true, will not validate TLS cert presented by the server.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "server-require-auth",
+			Target: &c.serverRequireAuth,
+			Usage:  "If true, will send authentication details.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
@@ -190,7 +212,6 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		id = c.id
 	}
 
-	// TODO: Specify server TLS details on CLI as well, or just address?
 	s = sg.Add("Installing runner...")
 	err = p.Install(ctx, &runnerinstall.InstallOpts{
 		Log:        log,
@@ -199,9 +220,9 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		ServerAddr: c.serverUrl,
 		AdvertiseClient: &serverconfig.Client{
 			Address:       c.serverUrl,
-			Tls:           conn.Config.AdvertiseAddrs[0].Tls,
-			TlsSkipVerify: conn.Config.AdvertiseAddrs[0].TlsSkipVerify,
-			RequireAuth:   true,
+			Tls:           c.serverTls,
+			TlsSkipVerify: c.serverTlsSkipVerify,
+			RequireAuth:   c.serverRequireAuth,
 			AuthToken:     token.Token,
 		},
 		Id: id,
