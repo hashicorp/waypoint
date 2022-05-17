@@ -908,7 +908,7 @@ func newServiceAccountRoleBinding(c k8sConfig) (*rbacv1.RoleBinding, error) {
 
 func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
-		Name:   "k8s-Config-path",
+		Name:   "k8s-config-path",
 		Usage:  "Path to the kubeconfig file to use,",
 		Target: &i.config.kubeConfigPath,
 	})
