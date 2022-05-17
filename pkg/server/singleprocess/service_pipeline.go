@@ -26,6 +26,24 @@ func (s *Service) UpsertPipeline(
 	return &pb.UpsertPipelineResponse{Pipeline: result}, nil
 }
 
+func (s *Service) ListPipelines(
+	ctx context.Context,
+	req *pb.ListPipelinesRequest,
+) (*pb.ListPipelinesResponse, error) {
+	if err := serverptypes.ValidateListPipelinesRequest(req); err != nil {
+		return nil, err
+	}
+
+	result, err := s.state(ctx).PipelineList(req.Project)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.ListPipelinesResponse{
+		Pipelines: result,
+	}, nil
+}
+
 func (s *Service) RunPipeline(
 	ctx context.Context,
 	req *pb.RunPipelineRequest,

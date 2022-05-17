@@ -4565,6 +4565,9 @@
         }
       }
     },
+    "hashicorp.waypoint.ConfigSyncPipelineResponse": {
+      "type": "object"
+    },
     "hashicorp.waypoint.ConfigVar": {
       "type": "object",
       "properties": {
@@ -6774,6 +6777,18 @@
           "items": {
             "$ref": "#/definitions/hashicorp.waypoint.OnDemandRunnerConfig"
           }
+        }
+      }
+    },
+    "hashicorp.waypoint.ListPipelinesResponse": {
+      "type": "object",
+      "properties": {
+        "pipelines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.Pipeline"
+          },
+          "title": "All of the listed pipelines"
         }
       }
     },
