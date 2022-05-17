@@ -128,6 +128,13 @@ func ValidateListPipelinesRequest(v *pb.ListPipelinesRequest) error {
 	)
 }
 
+// ValidateGetPipelineRequest
+func ValidateGetPipelineRequest(v *pb.GetPipelineRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Pipeline, validation.Required)),
+	)
+}
+
 // ValidateRunPipelineRequest
 func ValidateRunPipelineRequest(v *pb.RunPipelineRequest) error {
 	// Set the operation so that validation succeeds. We override it later.
