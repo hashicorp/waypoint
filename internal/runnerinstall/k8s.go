@@ -335,56 +335,58 @@ func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	s.Status(terminal.StatusOK)
 	s.Done()
 
-	// Delete left over runner persistent volume claim
-	s = sg.Add("Gathering Persistent Volume Claim...")
-	clientset, err := i.NewClient()
-	if err != nil {
-		return err
-	}
-	pvClient := clientset.CoreV1().PersistentVolumeClaims(i.Config.Namespace)
-	listOptions := metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=%s", helmRunnerId),
-	}
-	if list, err := pvClient.List(ctx, listOptions); err != nil {
-		return err
-	} else if len(list.Items) > 0 {
-		s.Update("Deleting Persistent Volume Claim...")
-
-		// Add watcher for waiting for persistent volume clean up
-		w, err := pvClient.Watch(ctx, listOptions)
+	if ! i.Config.KeepPV {
+		// Delete left over runner persistent volume claim
+		s = sg.Add("Gathering Persistent Volume Claim...")
+		clientset, err := i.NewClient()
 		if err != nil {
 			return err
 		}
-
-		// Delete the PVCs
-		if err = pvClient.DeleteCollection(
-			ctx,
-			metav1.DeleteOptions{},
-			listOptions,
-		); err != nil {
-			return err
+		pvClient := clientset.CoreV1().PersistentVolumeClaims(i.Config.Namespace)
+		listOptions := metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=%s", helmRunnerId),
 		}
+		if list, err := pvClient.List(ctx, listOptions); err != nil {
+			return err
+		} else if len(list.Items) > 0 {
+			s.Update("Deleting Persistent Volume Claim...")
 
-		// Wait until the persistent volumes are cleaned up
-		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-			select {
-			case wCh := <-w.ResultChan():
-				if wCh.Type == "DELETED" {
-					w.Stop()
-					return true, nil
-				}
-				return false, nil
-			default:
-				return false, nil
+			// Add watcher for waiting for persistent volume clean up
+			w, err := pvClient.Watch(ctx, listOptions)
+			if err != nil {
+				return err
 			}
-		})
-		if err != nil {
-			return err
+
+			// Delete the PVCs
+			if err = pvClient.DeleteCollection(
+				ctx,
+				metav1.DeleteOptions{},
+				listOptions,
+			); err != nil {
+				return err
+			}
+
+			// Wait until the persistent volumes are cleaned up
+			err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+				select {
+				case wCh := <-w.ResultChan():
+					if wCh.Type == "DELETED" {
+						w.Stop()
+						return true, nil
+					}
+					return false, nil
+				default:
+					return false, nil
+				}
+			})
+			if err != nil {
+				return err
+			}
 		}
+		s.Update("Persistent volume claims cleaned up")
+		s.Status(terminal.StatusOK)
+		s.Done()
 	}
-	s.Update("Persistent volume claims cleaned up")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
 	return nil
 }
@@ -409,4 +411,12 @@ func (i *K8sRunnerInstaller) UninstallFlags(set *flag.Set) {
 		Usage: "The namespace in the Kubernetes cluster into which the Waypoint " +
 			"runner will be installed.",
 	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name: "k8s-keep-pv",
+		Target: &i.Config.KeepPV,
+		Usage: "The Persistent Volume associated with the runner will be " +
+			"cleaned up if left unset.",
+	})
+
 }
