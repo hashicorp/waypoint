@@ -3,7 +3,8 @@ package runnerinstall
 import (
 	"context"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	installutil "github.com/hashicorp/waypoint/internal/installutil/helm"
+	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
+	k8sinstallutil "github.com/hashicorp/waypoint/internal/installutil/k8s"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -12,6 +13,7 @@ import (
 )
 
 type K8sRunnerInstaller struct {
+	k8sinstallutil.K8sInstaller
 	Config K8sConfig
 }
 
@@ -40,7 +42,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 
 	s := sg.Add("Getting Helm configs...")
 	defer func() { s.Abort() }()
-	settings, err := installutil.SettingsInit()
+	settings, err := helminstallutil.SettingsInit()
 	if err != nil {
 		return err
 	}
@@ -49,7 +51,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	s.Done()
 
 	s = sg.Add("Getting Helm action configuration...")
-	actionConfig, err := installutil.ActionInit(opts.Log, i.Config.KubeconfigPath, i.Config.K8sContext)
+	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeconfigPath, i.Config.K8sContext)
 	if err != nil {
 		return err
 	}
@@ -94,7 +96,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 
 	var version string
 	if i.Config.Version == "" {
-		version = installutil.DefaultHelmChartVersion
+		version = helminstallutil.DefaultHelmChartVersion
 	} else {
 		version = i.Config.Version
 	}
