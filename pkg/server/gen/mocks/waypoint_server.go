@@ -131,6 +131,29 @@ func (_m *WaypointServer) CompleteOIDCAuth(_a0 context.Context, _a1 *gen.Complet
 	return r0, r1
 }
 
+// ConfigSyncPipeline provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ConfigSyncPipeline(_a0 context.Context, _a1 *gen.ConfigSyncPipelineRequest) (*gen.ConfigSyncPipelineResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ConfigSyncPipelineResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ConfigSyncPipelineRequest) *gen.ConfigSyncPipelineResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ConfigSyncPipelineResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ConfigSyncPipelineRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ConvertInviteToken provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) ConvertInviteToken(_a0 context.Context, _a1 *gen.ConvertInviteTokenRequest) (*gen.NewTokenResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -1242,6 +1265,29 @@ func (_m *WaypointServer) ListOnDemandRunnerConfigs(_a0 context.Context, _a1 *em
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListPipelines provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListPipelines(_a0 context.Context, _a1 *gen.ListPipelinesRequest) (*gen.ListPipelinesResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListPipelinesResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListPipelinesRequest) *gen.ListPipelinesResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListPipelinesResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListPipelinesRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
