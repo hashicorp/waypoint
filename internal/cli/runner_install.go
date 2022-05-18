@@ -10,7 +10,6 @@ import (
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 	"github.com/posener/complete"
-	empty "google.golang.org/protobuf/types/known/emptypb"
 	"sort"
 	"strings"
 )
@@ -171,15 +170,8 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	}
 
 	client := c.project.Client()
-	conn, err := client.GetServerConfig(ctx, &empty.Empty{})
-	if err != nil {
-		c.ui.Output("Error getting server config: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-		return 1
-	}
-	s.Update("Retrieved server config")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
+	var err error
 	// TODO: Evaluate if generating a token for non-adoption mode is necessary
 	token := &pb.NewTokenResponse{}
 	if !c.adopt {
