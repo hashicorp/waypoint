@@ -113,6 +113,10 @@ and disable the UI, the command would be:
 - `-nomad-server-memory=<string>` - MB of Memory to allocate to the Server job task.
 - `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz.
 - `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task.
+- `-nomad-runner-host-volume=<string>` - Name of the host volume to use for the Waypoint runner.
+- `-nomad-runner-csi-volume-provider=<string>` - Name of the CSI volume provider to use for the Waypoint runner.
+- `-nomad-runner-csi-volume-capacity-min=<int>` - Waypoint runner Nomad CSI volume capacity minimum, in bytes.
+- `-nomad-runner-csi-volume-capacity-max=<int>` - Waypoint runner Nomad CSI volume capacity maximum, in bytes.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server.
 - `-nomad-consul-service` - Create service for Waypoint UI and Server in Consul.
 - `-nomad-consul-service-hostname=<string>` - If set, will use this hostname for Consul DNS rather than the default, i.e. "waypoint-server.service.consul".
@@ -121,7 +125,7 @@ and disable the UI, the command would be:
 - `-nomad-consul-datacenter=<string>` - The datacenter where Consul is located.
 - `-nomad-consul-domain=<string>` - The domain where Consul is located.
 - `-nomad-consul-token=<string>` - If set, the passed Consul token is stored in the job before sending to the Nomad servers. Overrides the CONSUL_HTTP_TOKEN environment variable if set.
-- `-nomad-host-volume=<string>` - Nomad host volume name, required for volume type 'host'.
+- `-nomad-host-volume=<string>` - Nomad host volume name to use for the Waypoint server, required for volume type 'host'.
 - `-nomad-csi-volume-provider=<string>` - Nomad CSI volume provider, required for volume type 'csi'.
 - `-nomad-csi-volume-capacity-min=<int>` - Nomad CSI volume capacity minimum, in bytes.
 - `-nomad-csi-volume-capacity-max=<int>` - Nomad CSI volume capacity maximum, in bytes.
