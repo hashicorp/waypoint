@@ -126,10 +126,15 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 		}
 
 		steps := make(map[string]*pb.Pipeline_Step)
-		for _, step := range pl.StepRaw {
+		for i, step := range pl.StepRaw {
 			s := &pb.Pipeline_Step{
 				Name:      step.Name,
 				DependsOn: step.DependsOn,
+			}
+
+			// If no dependency was explictily set, we rely on the previous step
+			if i != 0 && len(step.DependsOn) == 0 {
+				s.DependsOn = []string{pl.StepRaw[i-1].Name}
 			}
 
 			// We currently only support one kind of Step plugin. But in the future
