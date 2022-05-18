@@ -191,6 +191,18 @@
     "path": "plugin"
   },
   {
+    "title": "pipeline inspect",
+    "path": "pipeline-inspect"
+  },
+  {
+    "title": "pipeline list",
+    "path": "pipeline-list"
+  },
+  {
+    "title": "pipeline run",
+    "path": "pipeline-run"
+  },
+  {
     "title": "project apply",
     "path": "project-apply"
   },

@@ -8215,6 +8215,18 @@
       "type": "object",
       "description": "Noop operations do nothing. This is primarily used for testing.\nThis operation will still download the data from the data source.\nA noop may be useful outside of testing to verify a runner is\nexecuting properly or can access data properly."
     },
+    "hashicorp.waypoint.Job.PipelineConfigSyncResult": {
+      "type": "object",
+      "properties": {
+        "synced_pipelines": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline"
+          },
+          "description": "synced_pipelines is a map of Pipeline Name Keys to Pipeline ID Refs for\neach pipeline that was synced in the config sync request."
+        }
+      }
+    },
     "hashicorp.waypoint.Job.PipelineStepOp": {
       "type": "object",
       "properties": {
@@ -8386,6 +8398,9 @@
         },
         "pipeline_step": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.PipelineStepResult"
+        },
+        "pipeline_config_sync": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.PipelineConfigSyncResult"
         }
       }
     },
@@ -9272,6 +9287,10 @@
         "id": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineId",
           "description": "Reference a single pipeline by ID."
+        },
+        "owner": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineOwner",
+          "description": "Reference an existing pipeline by Project owner and Pipeline Name\nThis assumes that a project cannot have two pipelines with the same name."
         }
       },
       "description": "Pipeline references a pipeline using one or more lookup types."
@@ -9281,6 +9300,19 @@
       "properties": {
         "id": {
           "type": "string"
+        }
+      }
+    },
+    "hashicorp.waypoint.Ref.PipelineOwner": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project",
+          "title": "the project this pipeline is associated with"
+        },
+        "pipeline_name": {
+          "type": "string",
+          "title": "the name of the defined pipeline config"
         }
       }
     },
