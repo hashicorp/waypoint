@@ -95,6 +95,41 @@ func (s *State) pipelineGet(
 	case *pb.Ref_Pipeline_Id:
 		s.log.Info("looking up pipeline by id", "id", r.Id)
 		pipelineId = r.Id.Id
+	case *pb.Ref_Pipeline_Owner:
+		s.log.Info("looking up pipeline by owner and name",
+			"owner", r.Owner.Project, "name", r.Owner.PipelineName)
+
+		// NOTE(briancain): This query doesn't seem to work as I'd expect it to.
+		// It returns the "last inserted pipeline" rather than all pipelines
+		// by project name. :thinking:
+		iter, err := memTxn.Get(pipelineIndexTableName, pipelineIndexProjectId, r.Owner.Project.Project)
+		if err != nil {
+			return nil, err
+		}
+
+		// Look up if there's a pipeline name that exists by project ID owner
+		for {
+			raw := iter.Next()
+			if raw == nil {
+				// We're out of candidates and we found none.
+				break
+			}
+
+			pipeIndex := raw.(*pipelineIndexRecord)
+			// TODO:  delete this, used for debugging tests
+			s.log.Info("looking at", "name", pipeIndex.Name)
+
+			if pipeIndex.ProjectId == r.Owner.Project.Project &&
+				pipeIndex.Name == r.Owner.PipelineName {
+				pipelineId = pipeIndex.Id
+				break
+			}
+		}
+
+		if pipelineId == "" {
+			// better error message here
+			return nil, status.Errorf(codes.NotFound, "pipeline %q not found", r.Owner.PipelineName)
+		}
 	default:
 		return nil, status.Error(
 			codes.FailedPrecondition,
@@ -211,6 +246,7 @@ func (s *State) pipelineIndexSet(txn *memdb.Txn, id []byte, value *pb.Pipeline) 
 	record := &pipelineIndexRecord{
 		Id:        string(id),
 		ProjectId: value.Owner.(*pb.Pipeline_Project).Project.Project,
+		Name:      value.Name,
 	}
 
 	// Insert the index
@@ -260,6 +296,15 @@ func pipelineIndexSchema() *memdb.TableSchema {
 					Lowercase: true,
 				},
 			},
+			pipelineIndexName: {
+				Name:         pipelineIndexName,
+				AllowMissing: false,
+				Unique:       true,
+				Indexer: &memdb.StringFieldIndex{
+					Field:     "Name",
+					Lowercase: true,
+				},
+			},
 		},
 	}
 }
@@ -268,11 +313,13 @@ const (
 	pipelineIndexTableName = "pipeline-index"
 	pipelineIndexId        = "id"
 	pipelineIndexProjectId = "projectid"
+	pipelineIndexName      = "name"
 )
 
 type pipelineIndexRecord struct {
 	Id        string
 	ProjectId string
+	Name      string
 }
 
 // Copy should be called prior to any modifications to an existing record.

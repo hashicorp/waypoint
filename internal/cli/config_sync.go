@@ -30,10 +30,10 @@ func (c *ConfigSyncCommand) Run(args []string) int {
 		sg := app.UI.StepGroup()
 		defer sg.Wait()
 
-		step := sg.Add("Synchronizing configuration variables...")
+		step := sg.Add("Synchronizing configuration variables and pipeline configs...")
 		defer step.Abort()
 
-		_, err := app.ConfigSync(ctx, &pb.Job_ConfigSyncOp{})
+		jobResult, err := app.ConfigSync(ctx, &pb.Job_ConfigSyncOp{})
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
@@ -41,6 +41,24 @@ func (c *ConfigSyncCommand) Run(args []string) int {
 
 		step.Update("Configuration variables synchronized successfully!")
 		step.Done()
+
+		if jobResult.PipelineConfigSync != nil && len(jobResult.PipelineConfigSync.SyncedPipelines) > 0 {
+			step := sg.Add("Configuration for pipelines synchronized successfully!")
+			step.Done()
+
+			// Extra space
+			app.UI.Output("")
+			for name, ref := range jobResult.PipelineConfigSync.SyncedPipelines {
+				pipelineRef, ok := ref.Ref.(*pb.Ref_Pipeline_Id)
+				if !ok {
+					app.UI.Output("failed to convert pipeline ref", terminal.WithErrorStyle())
+					return ErrSentinel
+				}
+
+				app.UI.Output("Pipeline %q (%s) synchronized!", name, pipelineRef.Id, terminal.WithInfoStyle())
+			}
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -63,7 +81,7 @@ func (c *ConfigSyncCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *ConfigSyncCommand) Synopsis() string {
-	return "Synchronize declared variables in waypoint.hcl"
+	return "Synchronize declared variables and pipeline configs in a waypoint.hcl"
 }
 
 func (c *ConfigSyncCommand) Help() string {

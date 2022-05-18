@@ -72,7 +72,7 @@ func (c *PipelineListCommand) Run(args []string) int {
 
 	c.ui.Output("Waypoint Pipelines for %s", c.refProject.Project, terminal.WithHeaderStyle())
 
-	tblHeaders := []string{"ID", "Name", "Owner", "Root Step"}
+	tblHeaders := []string{"ID", "Name", "Owner", "Total Steps"}
 	tbl := terminal.NewTable(tblHeaders...)
 
 	for _, pipeline := range pipelines {
@@ -84,17 +84,12 @@ func (c *PipelineListCommand) Run(args []string) int {
 			owner = "???"
 		}
 
-		var rootStepName string
-		// TODO(briancain): Does this make sense? What else can be shown in this
-		// lower detail view when listing pipelines
-
 		totalSteps := strconv.Itoa(len(pipeline.Steps))
 
 		tblColumn := []string{
 			pipeline.Id,
 			pipeline.Name,
 			owner,
-			rootStepName,
 			totalSteps,
 		}
 

@@ -1006,13 +1006,22 @@ message Ref {
       // Reference a single pipeline by ID.
       PipelineId id = 1;
 
-      // Future: this could contain references to look up by
-      // project name.
+      // Reference an existing pipeline by Project owner and Pipeline Name
+      // This assumes that a project cannot have two pipelines with the same name.
+      PipelineOwner owner = 2;
     }
   }
 
   message PipelineId {
     string id = 1;
+  }
+
+  message PipelineOwner {
+    // the project this pipeline is associated with
+    Ref.Project project = 1;
+
+    // the name of the defined pipeline config
+    string pipeline_name = 2;
   }
 
   message PipelineStep {
@@ -1805,6 +1814,7 @@ message Job {
     InitResult init = 14;
     WatchTaskResult watch_task = 15;
     PipelineStepResult pipeline_step = 16;
+    PipelineConfigSyncResult pipeline_config_sync = 17;
   }
 
   message Config {
@@ -2202,6 +2212,12 @@ message Job {
   message ConfigSyncOp {}
 
   message ConfigSyncResult {}
+
+  message PipelineConfigSyncResult {
+    // synced_pipelines is a map of Pipeline Name Keys to Pipeline ID Refs for
+    // each pipeline that was synced in the config sync request.
+    map<string, Ref.Pipeline> synced_pipelines = 1;
+  }
 
   // PollOp triggers a poll action for a project. The job will fail if there
   // is no data source configured for the project.

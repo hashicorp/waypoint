@@ -1,0 +1,29 @@
+---
+layout: commands
+page_title: 'Commands: Pipeline run'
+sidebar_title: 'pipeline run'
+description: 'Manually execute a pipeline'
+---
+
+# Waypoint Pipeline run
+
+Command: `waypoint pipeline run`
+
+Manually execute a pipeline
+
+@include "commands/pipeline-run_desc.mdx"
+
+## Usage
+
+Usage: `waypoint pipeline run [options] <pipeline-id>`
+
+Run a pipeline by id.
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-project=<string>` (`-p`) - Project to target.
+- `-workspace=<string>` (`-w`) - Workspace to operate in.
+
+@include "commands/pipeline-run_more.mdx"

@@ -59,6 +59,11 @@ func newPipeline(
 	return pipeline, nil
 }
 
+// Name() returns the name of the given pipeline
+func (p *Pipeline) Name() string {
+	return p.config.Name
+}
+
 // Ref returns the reference to this pipeline for us in API calls.
 func (p *Pipeline) Ref() *pb.Ref_Pipeline {
 	return p.ref

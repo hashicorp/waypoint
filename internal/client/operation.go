@@ -224,7 +224,7 @@ func (a *App) Logs(ctx context.Context) (pb.Waypoint_GetLogStreamClient, error) 
 	return client, nil
 }
 
-func (c *App) ConfigSync(ctx context.Context, op *pb.Job_ConfigSyncOp) (*pb.Job_ConfigSyncResult, error) {
+func (c *App) ConfigSync(ctx context.Context, op *pb.Job_ConfigSyncOp) (*pb.Job_Result, error) {
 	if op == nil {
 		op = &pb.Job_ConfigSyncOp{}
 	}
@@ -240,7 +240,7 @@ func (c *App) ConfigSync(ctx context.Context, op *pb.Job_ConfigSyncOp) (*pb.Job_
 		return nil, err
 	}
 
-	return result.ConfigSync, nil
+	return result, nil
 }
 
 func (c *App) StatusReport(ctx context.Context, op *pb.Job_StatusReportOp) (*pb.Job_StatusReportResult, error) {

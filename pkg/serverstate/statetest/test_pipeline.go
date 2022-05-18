@@ -136,4 +136,78 @@ func TestPipeline(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.Error(err)
 		require.Equal(codes.FailedPrecondition, status.Code(err))
 	})
+
+	t.Run("Get: by Pipeline Owner and Pipeline Name Ref", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Set a few pipelines
+		p := ptypes.TestPipeline(t, nil)
+		err := s.PipelinePut(p)
+		require.NoError(err)
+
+		// Another one
+		p2 := ptypes.TestPipeline(t, &pb.Pipeline{
+			Id:   "mario",
+			Name: "mario",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "project",
+				},
+			},
+		})
+		err = s.PipelinePut(p2)
+		require.NoError(err)
+
+		// a third, same pipeline name but different project
+		p3 := ptypes.TestPipeline(t, &pb.Pipeline{
+			Id:   "testtest",
+			Name: "mario",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "nintendo",
+				},
+			},
+		})
+		err = s.PipelinePut(p3)
+		require.NoError(err)
+
+		// Get pipeline by Owner Ref
+		{
+			resp, err := s.PipelineGet(&pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Owner{
+					Owner: &pb.Ref_PipelineOwner{Project: &pb.Ref_Project{Project: "project"}, PipelineName: "mario"},
+				},
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal(resp.Name, "test")
+		}
+	})
+
+	t.Run("Get: by missing Pipeline Owner and Pipeline Name Ref", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Set
+		p := ptypes.TestPipeline(t, nil)
+		err := s.PipelinePut(p)
+		require.NoError(err)
+
+		// Get pipeline by Owner Ref should be nothing
+		{
+			resp, err := s.PipelineGet(&pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Owner{
+					Owner: &pb.Ref_PipelineOwner{Project: &pb.Ref_Project{Project: "nope"}, PipelineName: "nope"},
+				},
+			})
+			require.Error(err)
+			require.Equal(codes.NotFound, status.Code(err))
+			require.Nil(resp)
+		}
+	})
 }
