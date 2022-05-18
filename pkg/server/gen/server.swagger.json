@@ -6332,7 +6332,16 @@
       }
     },
     "hashicorp.waypoint.ConfigSyncPipelineResponse": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "synced_pipelines": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline"
+          },
+          "description": "synced_pipelines is a map of Pipeline Name Keys to Pipeline ID Refs for\neach pipeline that was synced in the config sync request."
+        }
+      }
     },
     "hashicorp.waypoint.ConfigVar": {
       "type": "object",
