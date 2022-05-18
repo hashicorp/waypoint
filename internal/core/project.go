@@ -212,6 +212,29 @@ func (p *Project) App(name string) (*App, error) {
 	)
 }
 
+func (p *Project) Pipelines() []*Pipeline {
+	var result []*Pipeline
+	for _, pipeline := range p.pipelines {
+		result = append(result, pipeline)
+	}
+
+	return result
+}
+
+// App initializes and returns the app with the given name. This
+// returns an error with codes.NotFound if the app is not found.
+func (p *Project) Pipeline(name string) (*Pipeline, error) {
+	if v, ok := p.pipelines[name]; ok {
+		return v, nil
+	}
+
+	return nil, status.Errorf(codes.NotFound,
+		"Pipeline %q was not found in this project. Please ensure that "+
+			"you've created this project in the waypoint.hcl configuration.",
+		name,
+	)
+}
+
 // Client returns the API client for the backend server.
 func (p *Project) Client() pb.WaypointClient {
 	return p.client

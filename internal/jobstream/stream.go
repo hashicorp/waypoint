@@ -180,7 +180,7 @@ func (s *stream) Run(ctx context.Context) (*pb.Job_Result, error) {
 				switch runnerType := runner.Kind.(type) {
 				case *pb.Runner_Local_:
 					if ui != nil {
-						ui.Output("Performing operation locally", terminal.WithInfoStyle())
+						ui.Output("Performing operation locally", terminal.WithHeaderStyle())
 					}
 				case *pb.Runner_Remote_:
 					if ui != nil {
