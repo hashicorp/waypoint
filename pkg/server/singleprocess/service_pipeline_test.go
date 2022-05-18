@@ -84,6 +84,7 @@ func TestServicePipeline(t *testing.T) {
 		})
 		require.NoError(err)
 		require.NotNil(pResp)
+		require.Equal(pResp.RootStep, "root")
 
 		pipeline := pResp.Pipeline
 		require.Equal(pipeline.Name, "test")

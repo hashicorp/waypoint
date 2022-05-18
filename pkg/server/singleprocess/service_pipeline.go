@@ -40,10 +40,21 @@ func (s *Service) GetPipeline(
 		return nil, err
 	}
 
+	// Get the graph for the steps so we can get the root. We enforce a
+	// single root so the root is always the first step.
+	stepGraph, err := serverptypes.PipelineGraph(p)
+	if err != nil {
+		return nil, err
+	}
+
+	orderedStep := stepGraph.KahnSort()
+	rootStepName := orderedStep[0].(string)
+
 	return &pb.GetPipelineResponse{
 		Pipeline: p,
-		//RootStep: "", // TODO figure out root step
-		//Graph:    nil, // intentionally left out for now
+		RootStep: rootStepName,
+		// TODO: Leaving this out intentionally for now, need to convert stepGraph into mermaid
+		//Graph:    graph,
 	}, nil
 }
 
