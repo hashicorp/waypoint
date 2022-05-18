@@ -4723,7 +4723,11 @@ message ConfigSyncPipelineRequest {
   Ref.Project project = 1;
 }
 
-message ConfigSyncPipelineResponse {}
+message ConfigSyncPipelineResponse {
+  // synced_pipelines is a map of Pipeline Name Keys to Pipeline ID Refs for
+  // each pipeline that was synced in the config sync request.
+  map<string, Ref.Pipeline> synced_pipelines = 1;
+}
 
 /********************************************************************
 * Token
