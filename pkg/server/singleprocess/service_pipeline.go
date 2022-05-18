@@ -26,6 +26,56 @@ func (s *Service) UpsertPipeline(
 	return &pb.UpsertPipelineResponse{Pipeline: result}, nil
 }
 
+// GetPipeline returns a Pipeline based on a pipeline ref id
+func (s *Service) GetPipeline(
+	ctx context.Context,
+	req *pb.GetPipelineRequest,
+) (*pb.GetPipelineResponse, error) {
+	if err := serverptypes.ValidateGetPipelineRequest(req); err != nil {
+		return nil, err
+	}
+
+	p, err := s.state(ctx).PipelineGet(req.Pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the graph for the steps so we can get the root. We enforce a
+	// single root so the root is always the first step.
+	stepGraph, err := serverptypes.PipelineGraph(p)
+	if err != nil {
+		return nil, err
+	}
+
+	orderedStep := stepGraph.KahnSort()
+	rootStepName := orderedStep[0].(string)
+
+	return &pb.GetPipelineResponse{
+		Pipeline: p,
+		RootStep: rootStepName,
+		// TODO: Leaving this out intentionally for now, need to convert stepGraph into mermaid
+		//Graph:    graph,
+	}, nil
+}
+
+func (s *Service) ListPipelines(
+	ctx context.Context,
+	req *pb.ListPipelinesRequest,
+) (*pb.ListPipelinesResponse, error) {
+	if err := serverptypes.ValidateListPipelinesRequest(req); err != nil {
+		return nil, err
+	}
+
+	result, err := s.state(ctx).PipelineList(req.Project)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.ListPipelinesResponse{
+		Pipelines: result,
+	}, nil
+}
+
 func (s *Service) RunPipeline(
 	ctx context.Context,
 	req *pb.RunPipelineRequest,

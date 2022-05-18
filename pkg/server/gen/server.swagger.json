@@ -4565,6 +4565,18 @@
         }
       }
     },
+    "hashicorp.waypoint.ConfigSyncPipelineResponse": {
+      "type": "object",
+      "properties": {
+        "synced_pipelines": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline"
+          },
+          "description": "synced_pipelines is a map of Pipeline Name Keys to Pipeline ID Refs for\neach pipeline that was synced in the config sync request."
+        }
+      }
+    },
     "hashicorp.waypoint.ConfigVar": {
       "type": "object",
       "properties": {
@@ -5634,6 +5646,44 @@
           "$ref": "#/definitions/hashicorp.waypoint.OnDemandRunnerConfig"
         }
       }
+    },
+    "hashicorp.waypoint.GetPipelineResponse": {
+      "type": "object",
+      "properties": {
+        "pipeline": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline",
+          "description": "Pipeline is the pipeline that was requested."
+        },
+        "root_step": {
+          "type": "string",
+          "description": "Root step is the name of the step in pipeline that is the first\nstep executed."
+        },
+        "graph": {
+          "$ref": "#/definitions/hashicorp.waypoint.GetPipelineResponse.Graph",
+          "description": "Graph is the execution graph for the pipeline steps. This can be\nused to better visualize pipeline execution since the internal data\nformat of pipeline.steps is optimized more for storage rather than usage."
+        }
+      }
+    },
+    "hashicorp.waypoint.GetPipelineResponse.Graph": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string",
+          "format": "byte"
+        },
+        "format": {
+          "$ref": "#/definitions/hashicorp.waypoint.GetPipelineResponse.Graph.Format"
+        }
+      },
+      "description": "Graph represents the execution graph for the pipeline steps. This\nmay support multiple formats."
+    },
+    "hashicorp.waypoint.GetPipelineResponse.Graph.Format": {
+      "type": "string",
+      "enum": [
+        "INVALID",
+        "MERMAID"
+      ],
+      "default": "INVALID"
     },
     "hashicorp.waypoint.GetProjectResponse": {
       "type": "object",
@@ -6774,6 +6824,18 @@
           "items": {
             "$ref": "#/definitions/hashicorp.waypoint.OnDemandRunnerConfig"
           }
+        }
+      }
+    },
+    "hashicorp.waypoint.ListPipelinesResponse": {
+      "type": "object",
+      "properties": {
+        "pipelines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.Pipeline"
+          },
+          "title": "All of the listed pipelines"
         }
       }
     },
