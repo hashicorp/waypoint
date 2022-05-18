@@ -9,24 +9,9 @@ import (
 )
 
 type K8sConfig struct {
-	serverImage        string            `hcl:"server_image,optional"`
 	namespace          string            `hcl:"namespace,optional"`
-	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
 
-	odrImage              string `hcl:"odr_image,optional"`
-	odrServiceAccount     string `hcl:"odr_service_account,optional"`
-	odrServiceAccountInit bool   `hcl:"odr_service_account_init,optional"`
-
-	advertiseInternal bool   `hcl:"advertise_internal,optional"`
-	imagePullPolicy   string `hcl:"image_pull_policy,optional"`
 	k8sContext        string `hcl:"k8s_context,optional"`
-	openshift         bool   `hcl:"openshft,optional"`
-	cpuRequest        string `hcl:"cpu_request,optional"`
-	memRequest        string `hcl:"mem_request,optional"`
-	storageClassName  string `hcl:"storageclassname,optional"`
-	storageRequest    string `hcl:"storage_request,optional"`
-	secretFile        string `hcl:"secret_file,optional"`
-	imagePullSecret   string `hcl:"image_pull_secret,optional"`
 }
 
 type K8sInstaller struct {
