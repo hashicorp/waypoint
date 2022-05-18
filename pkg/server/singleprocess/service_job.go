@@ -212,6 +212,7 @@ func (s *Service) QueueJob(
 
 	// Queue the job
 	if err := s.state(ctx).JobCreate(jobs...); err != nil {
+		// TODO: metrics
 		return nil, err
 	}
 
@@ -759,7 +760,6 @@ func (s *Service) GetJobStream(
 			}
 
 			switch job.State {
-
 			case pb.Job_SUCCESS, pb.Job_ERROR:
 				// TODO(mitchellh): we should drain the output buffer
 

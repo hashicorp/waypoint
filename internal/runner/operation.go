@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
+	"github.com/hashicorp/waypoint/internal/telemetry/metrics"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -80,7 +81,7 @@ func (r *Runner) executeJob(
 
 		// We just write this into the working directory.
 		path = filepath.Join(wd, configpkg.Filename+ext)
-		if err := ioutil.WriteFile(path, job.WaypointHcl.Contents, 0644); err != nil {
+		if err := ioutil.WriteFile(path, job.WaypointHcl.Contents, 0o644); err != nil {
 			return nil, status.Errorf(codes.Internal,
 				"Failed to write waypoint.hcl from job metadata: %s", err)
 		}
@@ -103,7 +104,7 @@ func (r *Runner) executeJob(
 
 			// We just write this into the working directory.
 			path = filepath.Join(wd, configpkg.Filename+ext)
-			if err := ioutil.WriteFile(path, v, 0644); err != nil {
+			if err := ioutil.WriteFile(path, v, 0o644); err != nil {
 				return nil, status.Errorf(codes.Internal,
 					"Failed to write waypoint.hcl from server: %s", err)
 			}
@@ -330,15 +331,23 @@ func (r *Runner) executeJob(
 		return r.executeBuildOp(ctx, job, project)
 
 	case *pb.Job_Push:
+		log.Info("==== calling timer for push")
+		jt := metrics.StartTimer(metrics.JobPush)
+		defer func() {
+			log.Info("==== calling Record for push")
+			jt.Record()
+		}()
 		return r.executePushOp(ctx, job, project)
 
 	case *pb.Job_Deploy:
+		defer metrics.StartTimer(metrics.JobDeploy).Record()
 		return r.executeDeployOp(ctx, job, project)
 
 	case *pb.Job_Destroy:
 		return r.executeDestroyOp(ctx, job, project)
 
 	case *pb.Job_Release:
+		defer metrics.StartTimer(metrics.JobRelease).Record()
 		return r.executeReleaseOp(ctx, log, job, project)
 
 	case *pb.Job_Validate:
@@ -363,6 +372,7 @@ func (r *Runner) executeJob(
 		return r.executeQueueProjectOp(ctx, log, job, project)
 
 	case *pb.Job_StatusReport:
+		defer metrics.StartTimer(metrics.JobReport).Record()
 		return r.executeStatusReportOp(ctx, log, job, project)
 
 	case *pb.Job_Init:

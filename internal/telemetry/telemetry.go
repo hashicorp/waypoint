@@ -112,6 +112,7 @@ func (t *Telemetry) Run(ctx context.Context) error {
 
 	// Register all of our configured exporters
 	for _, e := range t.exporters {
+		log.Info("=>=> registring exporters")
 		e.register()
 	}
 

@@ -3,7 +3,9 @@ package runner
 import (
 	"context"
 
+	"github.com/apex/log"
 	"github.com/hashicorp/waypoint/internal/core"
+	"github.com/hashicorp/waypoint/internal/telemetry/metrics"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -12,6 +14,13 @@ func (r *Runner) executeBuildOp(
 	job *pb.Job,
 	project *core.Project,
 ) (*pb.Job_Result, error) {
+	log.Info("==== calling timer for build")
+	jt := metrics.StartTimer(metrics.JobBuild)
+	defer func() {
+		log.Info("==== calling Record for build")
+		jt.Record()
+	}()
+
 	app, err := project.App(job.Application.Application)
 	if err != nil {
 		return nil, err

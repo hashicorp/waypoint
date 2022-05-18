@@ -2,12 +2,14 @@ package runner
 
 import (
 	"context"
+
 	"github.com/hashicorp/go-hclog"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/core"
+	"github.com/hashicorp/waypoint/internal/telemetry/metrics"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -16,6 +18,12 @@ func (r *Runner) executeInitOp(
 	log hclog.Logger,
 	project *core.Project,
 ) (*pb.Job_Result, error) {
+	log.Info("==== calling timer for init")
+	jt := metrics.StartTimer(metrics.JobInit)
+	defer func() {
+		log.Info("==== calling Record for init")
+		jt.Record()
+	}()
 	client := project.Client()
 	// UpsertWorkspace called to ensure the workspace exists before the
 	// project/app is initialized.

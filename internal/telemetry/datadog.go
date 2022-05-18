@@ -3,6 +3,7 @@ package telemetry
 import (
 	datadog "github.com/DataDog/opencensus-go-exporter-datadog"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint/internal/telemetry/metrics"
 	ocview "go.opencensus.io/stats/view"
 	octrace "go.opencensus.io/trace"
 	"google.golang.org/grpc/codes"
@@ -20,6 +21,19 @@ func (d *datadogExporter) register() {
 	d.log.Debug("Registering the Datadog exporter")
 	octrace.RegisterExporter(d.exporter)
 	ocview.RegisterExporter(d.exporter)
+
+	metrics.NewGlobal("waypoint-metrics")
+
+	metrics.AddDuration(metrics.Jobs, metrics.MJobs)
+
+	// Register OpenCensus views.
+	vl := len(metrics.StatsViews)
+	d.log.Debug("=-=> registering views:", "view_count", vl)
+	if err := ocview.Register(metrics.StatsViews...); err != nil {
+		d.log.Debug("error registering OpenCensus views:", "error", err)
+	} else {
+		d.log.Debug("=> no error registering views")
+	}
 }
 
 func (d *datadogExporter) close() error {

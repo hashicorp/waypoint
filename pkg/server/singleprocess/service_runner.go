@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
@@ -14,10 +15,31 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	datadog "github.com/DataDog/opencensus-go-exporter-datadog"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/logstream"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
+	"go.opencensus.io/stats"
+	ocview "go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
+)
+
+var (
+	KeyJobType, _ = tag.NewKey("job_type")
+
+	MJobs          = stats.Int64("metricsjobs", "Jobs", "ms")
+	MetricJobsView = &ocview.View{
+		Name:        "metricsjobs",
+		Measure:     MJobs,
+		Description: "The distribution of the job build latencies",
+
+		// Latency in buckets:
+		// [>=0ms, >=25ms, >=50ms, >=75ms, >=100ms, >=200ms, >=400ms, >=600ms, >=800ms, >=1s, >=2s, >=4s, >=6s]
+		// Aggregation: view.Distribution(0, 25, 50, 75, 100, 200, 400, 600, 800, 1000, 2000, 4000, 6000),
+		Aggregation: ocview.Distribution(0, 25, 50, 75, 100, 200, 400, 600, 800, 1000, 2000),
+		TagKeys:     []tag.Key{KeyJobType},
+	}
 )
 
 func (s *Service) ListRunners(
@@ -541,6 +563,52 @@ func (s *Service) RunnerJobStream(
 	// If this has an error, we continue to accumulate the error until
 	// we set the ack status in the DB. We do this because if we fail to
 	// send the job assignment we want to nack the job so it is queued again.
+
+	op := opString(job.Job)
+
+	// metrics.NewGlobal("waypoint-metrics")
+	// start datadog exporter
+	dd, err := datadog.NewExporter(datadog.Options{
+		Namespace: "metricproto",
+		Service:   "metricproto",
+		TraceAddr: "192.168.147.119:8126",
+		StatsAddr: "192.168.147.119:8126",
+	})
+	if err != nil {
+		log.Warn("fatal starting datadog exporter:", "error", err)
+	}
+
+	ocview.RegisterExporter(dd)
+	if err := ocview.Register(MetricJobsView); err != nil {
+		log.Warn("========\nerror registring view:\n=======", "error", err)
+	} else {
+		log.Info("======no error with new type view registration")
+	}
+
+	// log.Info("=======================")
+	// log.Info("==== Server calling timer for RunnerJobStream", "operation", op)
+	// log.Info("=======================")
+	// jt := metrics.StartTimer(op)
+	// defer func() {
+	// 	log.Info("=======================")
+	// 	log.Info("==== End Server calling Record() for RunnerJobStream", "operation", op)
+	// 	log.Info("=======================")
+	// 	jt.Record()
+	// }()
+
+	statTime := time.Now()
+	log.Info("=======================")
+	log.Info("==== Server calling special timer for RunnerJobStream", "operation", op)
+	log.Info("=======================")
+	defer func() {
+		log.Info("=======================")
+		log.Info("==== END special timer for RunnerJobStream", "operation", op)
+		log.Info("=======================")
+		stats.RecordWithTags(context.Background(), []tag.Mutator{
+			tag.Upsert(KeyJobType, op),
+		}, MJobs.M(time.Since(statTime).Milliseconds()))
+	}()
+
 	err = server.Send(&pb.RunnerJobStreamResponse{
 		Event: &pb.RunnerJobStreamResponse_Assignment{
 			Assignment: &pb.RunnerJobStreamResponse_JobAssignment{
@@ -873,4 +941,54 @@ func (s *Service) runnerVerifyToken(
 	}
 
 	return nil
+}
+
+func opString(job *pb.Job) string {
+	switch job.Operation.(type) {
+	case *pb.Job_Noop_:
+		return "Noop"
+	case *pb.Job_Up:
+		return "up"
+	case *pb.Job_Build:
+		return "build"
+
+	case *pb.Job_Push:
+		return "push"
+
+	case *pb.Job_Deploy:
+		return "deploy"
+	case *pb.Job_Destroy:
+		return "destroy"
+
+	case *pb.Job_Release:
+		return "release"
+
+	case *pb.Job_Validate:
+		return "validate"
+
+	case *pb.Job_Auth:
+		return "auth"
+
+	case *pb.Job_Docs:
+		return "docs"
+
+	case *pb.Job_ConfigSync:
+		return "config_sync"
+
+	case *pb.Job_Exec:
+		return "exec"
+
+	case *pb.Job_Logs:
+		return "logs"
+
+	case *pb.Job_QueueProject:
+		return "queue_project"
+
+	case *pb.Job_StatusReport:
+		return "status"
+
+	case *pb.Job_Init:
+		return "init"
+	}
+	return "none"
 }
