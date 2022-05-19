@@ -1,4 +1,4 @@
-## unreleased
+## 0.8.2 (May 19, 2022)
 
 FEATURES:
 
