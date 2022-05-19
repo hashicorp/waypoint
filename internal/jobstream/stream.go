@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/internal/jobstreamui"
 	"github.com/hashicorp/waypoint/internal/pkg/finalcontext"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -80,7 +79,7 @@ func (s *stream) Run(ctx context.Context) (*pb.Job_Result, error) {
 
 	// The UI that will translate terminal events into UI calls.
 	ui := s.ui
-	streamUI := &jobstreamui.UI{UI: ui}
+	streamUI := &UI{UI: ui}
 
 	// If we're canceling the job on non-successful exit, then setup
 	// the defer so that we do that.
