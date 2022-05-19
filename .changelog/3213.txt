@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/aws-lambda: add support for lambda storage size
+```
