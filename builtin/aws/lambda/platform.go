@@ -298,6 +298,11 @@ func (p *Platform) Deploy(
 		storage = DefaultStorageSize
 	}
 
+	envVars := make(map[string]*string)
+	for k, v := range p.config.StaticEnvVars {
+		envVars[k] = aws.String(v)
+	}
+
 	step.Done()
 
 	step = sg.Add("Reading Lambda function: %s", src.App)
@@ -331,6 +336,25 @@ func (p *Platform) Deploy(
 				Size: aws.Int64(storage),
 			}
 			reset = true
+		}
+
+		// if the lambda has no env vars, Environment will be nil
+		if curFunc.Configuration.Environment != nil {
+			// compare config to AWS
+			if !reflect.DeepEqual(envVars, curFunc.Configuration.Environment.Variables) {
+				update.Environment = &lambda.Environment{
+					Variables: envVars,
+				}
+				reset = true
+			}
+		} else {
+			// only update if we have any envVars to set
+			if len(envVars) > 0 {
+				update.Environment = &lambda.Environment{
+					Variables: envVars,
+				}
+				reset = true
+			}
 		}
 
 		if reset {
@@ -419,6 +443,9 @@ func (p *Platform) Deploy(
 				},
 				ImageConfig:   &lambda.ImageConfig{},
 				Architectures: aws.StringSlice([]string{architecture}),
+				Environment: &lambda.Environment{
+					Variables: envVars,
+				},
 			})
 
 			if err != nil {
@@ -902,6 +929,17 @@ deploy {
 		docs.Default("512"),
 	)
 
+	doc.SetField(
+		"static_environment",
+		"environment variables to expose to the lambda function",
+		docs.Summary(
+			"environment variables that are meant to configure the application in a static",
+			"way. This might be to control an image that has multiple modes of operation,",
+			"selected via environment variable. Most configuration should use the waypoint",
+			"config commands.",
+		),
+	)
+
 	return doc, nil
 }
 
@@ -933,6 +971,12 @@ type Config struct {
 	// Must be a value between 512 and 10240.
 	// Defaults to 512 MB.
 	StorageMB int `hcl:"storagemb,optional"`
+
+	// Environment variables that are meant to configure the application in a static
+	// way. This might be control an image that has multiple modes of operation,
+	// selected via environment variable. Most configuration should use the waypoint
+	// config commands.
+	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 }
 
 var (

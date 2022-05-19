@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/lambda: Add `static_environment` to deploy plugin
+```
