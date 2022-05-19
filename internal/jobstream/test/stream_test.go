@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/require"
 
+	"github.com/hashicorp/waypoint/internal/jobstream"
 	"github.com/hashicorp/waypoint/internal/runner"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -40,7 +41,7 @@ func TestStream_single(t *testing.T) {
 	go r.Accept(ctx)
 
 	// Stream should complete
-	result, err := Stream(ctx, resp.JobId, WithClient(client))
+	result, err := jobstream.Stream(ctx, resp.JobId, jobstream.WithClient(client))
 	require.NoError(err)
 	require.NotNil(result)
 }
