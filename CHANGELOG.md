@@ -6,6 +6,35 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## 0.8.2 (May 19, 2022)
+
+IMPROVEMENTS:
+
+* cli: Output message if no runners are found for 'runner list' [[GH-3266](https://github.com/hashicorp/waypoint/issues/3266)]
+* core: git cloning now supports recursively cloning submodules [[GH-3351](https://github.com/hashicorp/waypoint/issues/3351)]
+* plugin/aws-lambda: Add platform config validation. [[GH-3193](https://github.com/hashicorp/waypoint/issues/3193)]
+* plugin/aws-lambda: add support for lambda storage size [[GH-3213](https://github.com/hashicorp/waypoint/issues/3213)]
+* plugin/k8s: Add CPU and memory resource limits to on-demand runners through runner profiles and at install time. These resource limits follow the same format that kubernetes expects within `spec.containers[].resources`. [[GH-3307](https://github.com/hashicorp/waypoint/issues/3307)]
+* plugin/lambda: Add `static_environment` to deploy plugin [[GH-3282](https://github.com/hashicorp/waypoint/issues/3282)]
+* plugin/nomad-jobspec: Add configuration option to parse jobspec as HCL1 instead of HCL2 [[GH-3287](https://github.com/hashicorp/waypoint/issues/3287)]
+* plugin/nomad: Support Consul & Vault tokens for job submission [[GH-3222](https://github.com/hashicorp/waypoint/issues/3222)]
+
+BUG FIXES:
+
+* builtin/k8s: Ensure pod.container.static_environment is applied [[GH-3197](https://github.com/hashicorp/waypoint/issues/3197)]
+* cli: Fix missing bootstrap hint with server run command [[GH-3196](https://github.com/hashicorp/waypoint/issues/3196)]
+* cli: Prevent panic when releasing unsuccessful deployments [[GH-3207](https://github.com/hashicorp/waypoint/issues/3207)]
+* cli: Show better error message when there are no Waypoint contexts when attempting
+to open the UI [[GH-3262](https://github.com/hashicorp/waypoint/issues/3262)]
+* install/nomad: Add support for CSI params & secrets to Nomad install [[GH-3279](https://github.com/hashicorp/waypoint/issues/3279)]
+* install/nomad: Fix DB directory for Nomad install [[GH-3261](https://github.com/hashicorp/waypoint/issues/3261)]
+* internal/cli: Fix `waypoint exec` workspace selection [[GH-3226](https://github.com/hashicorp/waypoint/issues/3226)]
+* plugin/docker: support remote operations for docker-pull plugin [[GH-3253](https://github.com/hashicorp/waypoint/issues/3253)]
+* plugin/k8s: Ensure `container=docker` environment variable is set for Kaniko
+to properly detect running inside a container, which prevented on-demand
+runners from working on Kubernetes 1.23. [[GH-3322](https://github.com/hashicorp/waypoint/issues/3322)]
+* server: fix issue cleaning up tasks in Kubernetes that completed successfully [[GH-3299](https://github.com/hashicorp/waypoint/issues/3299)]
+
 ## 0.8.1 (April 08, 2022)
 
 BUG FIXES:
