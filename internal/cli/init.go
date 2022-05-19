@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-getter"
 	"github.com/pkg/errors"
@@ -109,6 +110,21 @@ func (c *InitCommand) Run(args []string) int {
 			Dst: dir,
 			Pwd: pwd,
 			Dir: true,
+			Getters: map[string]getter.Getter{
+				"http": &getter.HttpGetter{
+					Netrc:            false,
+					HeadFirstTimeout: 10 * time.Second,
+					ReadTimeout:      30 * time.Second,
+					MaxBytes:         500000000, // 500 MB
+				},
+				"file": &getter.FileGetter{
+					Copy: true,
+				},
+				"git": &getter.GitGetter{
+					Timeout: 30 * time.Second,
+				},
+			},
+			DisableSymlinks: true,
 		}
 
 		err = client.Get()
