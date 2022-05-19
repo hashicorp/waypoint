@@ -45,6 +45,24 @@ type InstalledRunnerConfig struct {
 	Id string `mapstructure:"id"`
 }
 
+type K8sConfig struct {
+	KubeconfigPath       string `hcl:"kubeconfig,optional"`
+	K8sContext           string `hcl:"context,optional"`
+	Version              string `hcl:"version,optional"`
+	Namespace            string `hcl:"namespace,optional"`
+	RunnerImage          string `hcl:"runner_image,optional"`
+	RunnerImageTag       string `hcl:"runner_image_tag,optional"`
+	CpuRequest           string `hcl:"runner_cpu_request,optional"`
+	MemRequest           string `hcl:"runner_mem_request,optional"`
+	CreateServiceAccount bool   `hcl:"odr_service_account_init,optional"`
+}
+
+const (
+	defaultRunnerMemory   = "256Mi"
+	defaultRunnerCPU      = "250m"
+	defaultRunnerImageTag = "latest"
+)
+
 func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) error {
 	// Initialize Helm settings
 	sg := opts.UI.StepGroup()
