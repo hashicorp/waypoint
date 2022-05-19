@@ -10,8 +10,8 @@ import (
 )
 
 type DockerConfig struct {
-	RunnerImage string
-	Network     string
+	RunnerImage string `hcl:"runner_image,optional"`
+	Network     string `hcl:"network,optional"`
 }
 
 type DockerRunnerInstaller struct {

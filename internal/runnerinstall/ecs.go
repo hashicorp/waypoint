@@ -104,6 +104,17 @@ type ECSRunnerInstaller struct {
 	Config EcsConfig
 }
 
+type EcsConfig struct {
+	Region            string   `hcl:"region,required"`
+	ExecutionRoleName string   `hcl:"execution_role_name,optional"`
+	TaskRoleName      string   `hcl:"task_role_name,optional"`
+	CPU               string   `hcl:"runner_cpu,optional"`
+	Memory            string   `hcl:"memory_cpu,optional"`
+	RunnerImage       string   `hcl:"runner_image,optional"`
+	Cluster           string   `hcl:"cluster,optional"`
+	Subnets           []string `hcl:"subnets,optional"`
+}
+
 func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) error {
 	ui := opts.UI
 	log := opts.Log
@@ -600,15 +611,4 @@ type Logging struct {
 	MultilinePattern string `hcl:"multiline_pattern,optional"`
 	Mode             string `hcl:"mode,optional"`
 	MaxBufferSize    string `hcl:"max_buffer_size,optional"`
-}
-
-type EcsConfig struct {
-	Region            string
-	ExecutionRoleName string
-	TaskRoleName      string
-	CPU               string
-	Memory            string
-	RunnerImage       string
-	Cluster           string
-	Subnets           []string
 }
