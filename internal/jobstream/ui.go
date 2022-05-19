@@ -1,6 +1,4 @@
-// Package jobstreamui exposes helpers to convert JobStream response
-// to terminal output.
-package jobstreamui
+package jobstream
 
 import (
 	"io"
