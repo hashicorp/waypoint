@@ -9,7 +9,7 @@
 package tools
 
 //go:generate go install github.com/kevinburke/go-bindata
-//go:generate go install google.golang.org/protobuf/cmd/protoc-gen-go
+//go:generate go get github.com/golang/protobuf/protoc-gen-go
 //go:generate go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
 //go:generate go install github.com/mitchellh/protoc-gen-go-json
 
