@@ -22,7 +22,7 @@ module('Acceptance | release resource list', function (hooks) {
     assert.dom('[data-test-resources-table]').containsText('example-pod');
     assert
       .dom(
-        `[href="/default/${project.name}/app/${application.name}/release/seq/${release.sequence}/resources/${resource.id}"`
+        `[href="/default/${project.name}/app/${application.name}/release/seq/${release.sequence}/resources/${resource.id}"]`
       )
       .exists();
   });
@@ -40,7 +40,7 @@ module('Acceptance | release resource list', function (hooks) {
     assert.dom('[data-test-resources-table]').containsText('example-service');
     assert
       .dom(
-        `[href="/default/${project.name}/app/${application.name}/release/seq/${release.sequence}/resources/${resource.id}"`
+        `[href="/default/${project.name}/app/${application.name}/release/seq/${release.sequence}/resources/${resource.id}"]`
       )
       .exists();
   });
