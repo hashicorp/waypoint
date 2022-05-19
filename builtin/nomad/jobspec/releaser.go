@@ -214,7 +214,7 @@ func (r *Releaser) resourceJobCreate(
 	}
 
 	st.Update("Monitoring evaluation " + u.EvalID)
-	if err := nomad.NewMonitor(st, client.NomadClient).Monitor(u.EvalID); err != nil {
+	if err := nomad.NewMonitor(st, client.NomadClient).Monitor(ctx, u.EvalID); err != nil {
 		return err
 	}
 

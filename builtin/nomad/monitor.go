@@ -1,7 +1,11 @@
 package nomad
 
 import (
+	"context"
 	"fmt"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"strings"
 	"sync"
 	"time"
@@ -128,97 +132,56 @@ func (m *monitor) update(update *evalState) {
 
 // Monitor is used to start monitoring the given evaluation ID. It
 // writes output directly to the terminal ui, and returns an error.
-func (m *monitor) Monitor(evalID string) error {
-	// Track if we encounter a scheduling failure. This can only be
-	// detected while querying allocations, so we use this bool to
-	// carry that status into the return code.
-	var schedFailure bool
-
+func (m *monitor) Monitor(ctx context.Context, evalID string) error {
 	// Add the initial pending state
 	m.update(newEvalState())
+	eval, _, err := m.client.Evaluations().Info(evalID, nil)
 
-	for {
-		// Query the evaluation
-		eval, _, err := m.client.Evaluations().Info(evalID, nil)
-		if err != nil {
-			return fmt.Errorf("No evaluation with id %q found", evalID)
-		}
-		m.ui.Update(fmt.Sprintf("Monitoring evaluation %q", eval.ID))
-
-		// Create the new eval state.
-		state := newEvalState()
-		state.status = eval.Status
-		state.desc = eval.StatusDescription
-		state.node = eval.NodeID
-		state.job = eval.JobID
-		state.deployment = eval.DeploymentID
-		state.wait = eval.Wait
-		state.index = eval.CreateIndex
-
-		// Query the allocations associated with the evaluation
-		allocs, _, err := m.client.Evaluations().Allocations(eval.ID, nil)
-		if err != nil {
-			return fmt.Errorf("Error reading allocations: %s", err)
-		}
-
-		// Add the allocs to the state
-		for _, alloc := range allocs {
-			state.allocs[alloc.ID] = &allocState{
-				id:          alloc.ID,
-				group:       alloc.TaskGroup,
-				node:        alloc.NodeID,
-				desired:     alloc.DesiredStatus,
-				desiredDesc: alloc.DesiredDescription,
-				client:      alloc.ClientStatus,
-				clientDesc:  alloc.ClientDescription,
-				index:       alloc.CreateIndex,
-			}
-		}
-
-		// Update the state
-		m.update(state)
-
-		switch eval.Status {
-		case "complete", "failed", "cancelled":
-			if len(eval.FailedTGAllocs) == 0 {
-				m.ui.Step(terminal.StatusOK, fmt.Sprintf("Evaluation %q finished with status %q",
-					eval.ID, eval.Status))
-			} else {
-				// There were failures making the allocations
-				schedFailure = true
-				m.ui.Step(terminal.StatusWarn, fmt.Sprintf("Evaluation %q finished with status %q but failed to place all allocations",
-					eval.ID, eval.Status))
-
-				// Print the failures per task group
-				for tg, metrics := range eval.FailedTGAllocs {
-					noun := "allocation"
-					if metrics.CoalescedFailures > 0 {
-						noun += "s"
-					}
-					output := fmt.Sprintf("Task Group %q (failed to place %d %s):\n", tg, metrics.CoalescedFailures+1, noun)
-					metrics := formatAllocMetrics(metrics, false, "  ")
-					for _, line := range strings.Split(metrics, "\n") {
-						output = output + line
-					}
-
-					m.ui.Step(terminal.StatusWarn, output)
-				}
-
-				if eval.BlockedEval != "" {
-					m.ui.Step(terminal.StatusWarn, fmt.Sprintf("Evaluation %q waiting for additional capacity to place remainder",
-						eval.BlockedEval))
-				}
-			}
-		default:
-			// Wait for the next update
-			time.Sleep(updateWait)
-			continue
-		}
-
-		break
+	events := m.client.EventStream()
+	topics := make(map[api.Topic][]string)
+	topics["Evaluation"] = append(topics["Evaluation"], evalID)
+	eventStream, err := events.Stream(ctx, topics, 0, nil)
+	if err != nil {
+		return err
 	}
-	if schedFailure {
-		return fmt.Errorf("Failed to schedule all allocations")
+
+	d := time.Now().Add(time.Minute * time.Duration(5))
+	ctx, cancel := context.WithDeadline(ctx, d)
+	defer cancel()
+	ticker := time.NewTicker(5 * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+		case <-ctx.Done(): // cancelled
+			return status.Errorf(codes.Aborted, "Context cancelled: %s", ctx.Err())
+		}
+		event := <-eventStream
+		for _, event := range event.Events {
+			if event.Topic != "Evaluation" {
+				return errors.New("Evaluations API did not return evaluation")
+			}
+			if event.Payload["Evaluation"] != nil {
+				evalPayload := event.Payload["Evaluation"].(map[string]string)
+				if evalPayload["JobID"] == eval.JobID {
+					switch evalPayload["Status"] {
+					case "pending":
+						continue
+					case "failed":
+						errors.New("Evaluation failed")
+					case "completed":
+						return nil
+					case "cancelled":
+						return errors.New("Evaluation cancelled")
+					default:
+						return errors.New(fmt.Sprintf("Unknown evaluation status: %s", evalPayload["Status"]))
+					}
+				} else {
+					// TODO: Log warning - we shouldn't get evaluations for jobs we didn't want
+					break
+				}
+
+			}
+		}
 	}
 
 	return nil

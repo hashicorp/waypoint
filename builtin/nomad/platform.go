@@ -240,7 +240,7 @@ func (p *Platform) resourceJobCreate(
 	evalID := regResult.EvalID
 	st.Update(fmt.Sprintf("Monitoring evaluation %q", evalID))
 
-	if err := NewMonitor(st, client).Monitor(evalID); err != nil {
+	if err := NewMonitor(st, client).Monitor(ctx, evalID); err != nil {
 		return err
 	}
 

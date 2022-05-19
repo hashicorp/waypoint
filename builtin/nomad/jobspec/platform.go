@@ -142,7 +142,7 @@ func (p *Platform) resourceJobCreate(
 	// Wait on the allocation
 	evalID := regResult.EvalID
 	st.Update("Monitoring evaluation " + evalID)
-	if err := nomad.NewMonitor(st, client.NomadClient).Monitor(evalID); err != nil {
+	if err := nomad.NewMonitor(st, client.NomadClient).Monitor(ctx, evalID); err != nil {
 		return err
 	}
 	st.Step(terminal.StatusOK, "Deployment successfully rolled out!")
