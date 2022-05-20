@@ -28,9 +28,9 @@ import (
 var (
 	KeyJobType, _ = tag.NewKey("job_type")
 
-	MJobs          = stats.Int64("metricsjobs", "Jobs", "ms")
+	MJobs          = stats.Int64("catsbymetricsjobs", "Jobs", "ms")
 	MetricJobsView = &ocview.View{
-		Name:        "metricsjobs",
+		Name:        "catsbyjobs",
 		Measure:     MJobs,
 		Description: "The distribution of the job build latencies",
 
@@ -569,10 +569,10 @@ func (s *Service) RunnerJobStream(
 	// metrics.NewGlobal("waypoint-metrics")
 	// start datadog exporter
 	dd, err := datadog.NewExporter(datadog.Options{
-		Namespace: "metricproto",
-		Service:   "metricproto",
-		TraceAddr: "192.168.147.119:8126",
-		StatsAddr: "192.168.147.119:8126",
+		Namespace: "catsbymetrics",
+		Service:   "catsbymetrics",
+		TraceAddr: "192.168.147.119:8125",
+		StatsAddr: "192.168.147.119:8125",
 	})
 	if err != nil {
 		log.Warn("fatal starting datadog exporter:", "error", err)
@@ -797,7 +797,15 @@ func (s *Service) RunnerJobStream(
 			}
 
 		case job := <-jobCh:
+			op := opString(job.Job)
+			log.Debug("=======================")
+			log.Debug("==== job recieved on jobCh:", "job", op)
+			log.Debug("=======================")
+
 			if lastJob == job.Job {
+				log.Debug("=======================")
+				log.Debug("==== job equal last job on jobCh:", "job", op)
+				log.Debug("=======================")
 				continue
 			}
 
