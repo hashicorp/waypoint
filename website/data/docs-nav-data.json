@@ -500,6 +500,10 @@
             "path": "extending-waypoint/plugin-interfaces/authenticator"
           },
           {
+            "title": "ConfigSourcer",
+            "path": "extending-waypoint/plugin-interfaces/configsourcer"
+          },
+          {
             "title": "Configurable",
             "path": "extending-waypoint/plugin-interfaces/configurable"
           },
