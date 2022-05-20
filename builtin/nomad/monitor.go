@@ -3,22 +3,13 @@ package nomad
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-)
-
-const (
-	// updateWait is the amount of time to wait between status
-	// updates. Because the monitor is poll-based, we use this
-	// delay to avoid overwhelming the API server.
-	updateWait = time.Second
 )
 
 // evalState is used to store the current "state of the world"
@@ -64,7 +55,7 @@ type monitor struct {
 	sync.Mutex
 }
 
-// newMonitor returns a new monitor. The returned monitor will
+// NewMonitor returns a new monitor. The returned monitor will
 // write output information to the provided ui.
 func NewMonitor(ui terminal.Status, client *api.Client) *monitor {
 	mon := &monitor{
@@ -137,14 +128,16 @@ func (m *monitor) Monitor(ctx context.Context, evalID string) error {
 	m.update(newEvalState())
 	eval, _, err := m.client.Evaluations().Info(evalID, nil)
 
-	events := m.client.EventStream()
+	stream := m.client.EventStream()
 	topics := make(map[api.Topic][]string)
-	topics["Evaluation"] = append(topics["Evaluation"], evalID)
-	eventStream, err := events.Stream(ctx, topics, 0, nil)
+	topicName := api.Topic("Evaluation:" + eval.JobID)
+	topics["Evaluation"] = append(topics[topicName], evalID)
+	eventStream, err := stream.Stream(ctx, topics, 0, nil)
 	if err != nil {
 		return err
 	}
 
+	// We wait for 5 minutes for the evaluation to finish
 	d := time.Now().Add(time.Minute * time.Duration(5))
 	ctx, cancel := context.WithDeadline(ctx, d)
 	defer cancel()
@@ -155,77 +148,36 @@ func (m *monitor) Monitor(ctx context.Context, evalID string) error {
 		case <-ctx.Done(): // cancelled
 			return status.Errorf(codes.Aborted, "Context cancelled: %s", ctx.Err())
 		}
-		event := <-eventStream
-		for _, event := range event.Events {
+		events := <-eventStream
+		for _, event := range events.Events {
 			if event.Topic != "Evaluation" {
-				return errors.New("Evaluations API did not return evaluation")
+				return status.Errorf(codes.FailedPrecondition, "Evaluations API did not return evaluation")
 			}
 			if event.Payload["Evaluation"] != nil {
-				evalPayload := event.Payload["Evaluation"].(map[string]string)
-				if evalPayload["JobID"] == eval.JobID {
+				evalPayload := event.Payload["Evaluation"].(map[string]interface{})
+				if evalPayload["JobID"].(string) == eval.JobID {
 					switch evalPayload["Status"] {
 					case "pending":
 						continue
 					case "failed":
-						errors.New("Evaluation failed")
-					case "completed":
+						return status.Errorf(codes.FailedPrecondition, "Evaluation failed")
+					case "complete":
 						return nil
 					case "cancelled":
-						return errors.New("Evaluation cancelled")
+						return status.Errorf(codes.FailedPrecondition, "Evaluation cancelled")
+					case "blocked":
+						// We error here because even though Nomad can start a new eval if a job can only be partially deployed
+						// (where the new eval is "blocked" until allocs can be scheduled, we error here because we only
+						// check the initial eval ID (for now)
+						return status.Errorf(codes.FailedPrecondition, "Evaluation blocked")
 					default:
-						return errors.New(fmt.Sprintf("Unknown evaluation status: %s", evalPayload["Status"]))
+						return status.Errorf(codes.FailedPrecondition, "Unknown evaluation status: %s", evalPayload["Status"].(string))
 					}
 				} else {
 					// TODO: Log warning - we shouldn't get evaluations for jobs we didn't want
 					break
 				}
-
 			}
 		}
 	}
-
-	return nil
-}
-
-func formatAllocMetrics(metrics *api.AllocationMetric, scores bool, prefix string) string {
-	// Print a helpful message if we have an eligibility problem
-	var out string
-	if metrics.NodesEvaluated == 0 {
-		out += fmt.Sprintf("%s* No nodes were eligible for evaluation\n", prefix)
-	}
-
-	// Print a helpful message if the user has asked for a DC that has no
-	// available nodes.
-	for dc, available := range metrics.NodesAvailable {
-		if available == 0 {
-			out += fmt.Sprintf("%s* No nodes are available in datacenter %q\n", prefix, dc)
-		}
-	}
-
-	// Print filter info
-	for class, num := range metrics.ClassFiltered {
-		out += fmt.Sprintf("%s* Class %q: %d nodes excluded by filter\n", prefix, class, num)
-	}
-	for cs, num := range metrics.ConstraintFiltered {
-		out += fmt.Sprintf("%s* Constraint %q: %d nodes excluded by filter\n", prefix, cs, num)
-	}
-
-	// Print exhaustion info
-	if ne := metrics.NodesExhausted; ne > 0 {
-		out += fmt.Sprintf("%s* Resources exhausted on %d nodes\n", prefix, ne)
-	}
-	for class, num := range metrics.ClassExhausted {
-		out += fmt.Sprintf("%s* Class %q exhausted on %d nodes\n", prefix, class, num)
-	}
-	for dim, num := range metrics.DimensionExhausted {
-		out += fmt.Sprintf("%s* Dimension %q exhausted on %d nodes\n", prefix, dim, num)
-	}
-
-	// Print quota info
-	for _, dim := range metrics.QuotaExhausted {
-		out += fmt.Sprintf("%s* Quota limit hit %q\n", prefix, dim)
-	}
-
-	out = strings.TrimSuffix(out, "\n")
-	return out
 }

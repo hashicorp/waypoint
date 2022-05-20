@@ -405,9 +405,13 @@ func (p *Platform) Generation(
 
 	// If we have canaries, generate random ID, otherwise keep gen ID as job ID
 	canaryDeployment := false
-	for _, taskGroup := range job.TaskGroups {
-		if *taskGroup.Update.Canary > 0 {
-			canaryDeployment = true
+	if job.IsPeriodic() {
+		ui.Output("Nomad job is periodic", terminal.WithInfoStyle())
+	} else {
+		for _, taskGroup := range job.TaskGroups {
+			if *taskGroup.Update.Canary > 0 {
+				canaryDeployment = true
+			}
 		}
 	}
 
