@@ -12,10 +12,12 @@ Waypoint 0.2.x can be upgraded to Waypoint 0.3.0 using a [standard upgrade](/doc
 ## Breaking Changes
 
 **[v0.3.0](https://github.com/hashicorp/waypoint/releases/tag/v0.3.0)**
-* ui: dropped support for Internet Explorer
+
+- ui: dropped support for Internet Explorer
 
 **[v0.3.2](https://github.com/hashicorp/waypoint/releases/tag/v0.3.2)**
-* plugin/k8s: `scratch_path` now uses an array of strings instead of a string, allowing you to specify multiple directories to be mounted as emptyDir
+
+- plugin/k8s: `scratch_path` now uses an array of strings instead of a string, allowing you to specify multiple directories to be mounted as emptyDir
 
 ## Other Considerations
 
@@ -39,6 +41,7 @@ your platform may be using an old cached image.
 
 For 0.3.1 and forward, you can verify both the CLI version and server version by
 running:
+
 ```shell-session
 $ waypoint version
 CLI: v0.3.1 (622f37bd1)
