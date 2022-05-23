@@ -48,9 +48,10 @@ func newPipeline(
 		UI:     project.UI,
 
 		ref: &pb.Ref_Pipeline{
-			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: config.Name,
+			Ref: &pb.Ref_Pipeline_Owner{
+				Owner: &pb.Ref_PipelineOwner{
+					Project:      project.Ref(),
+					PipelineName: config.Name,
 				},
 			},
 		},
@@ -67,4 +68,15 @@ func (p *Pipeline) Name() string {
 // Ref returns the reference to this pipeline for us in API calls.
 func (p *Pipeline) Ref() *pb.Ref_Pipeline {
 	return p.ref
+}
+
+func (p *Pipeline) OwnerRef() *pb.Ref_Pipeline {
+	return &pb.Ref_Pipeline{
+		Ref: &pb.Ref_Pipeline_Owner{
+			Owner: &pb.Ref_PipelineOwner{
+				Project:      p.project.Ref(),
+				PipelineName: p.config.Name,
+			},
+		},
+	}
 }
