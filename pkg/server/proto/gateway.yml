@@ -310,3 +310,53 @@ http:
   - selector: hashicorp.waypoint.Waypoint.RunTrigger
     put: /v1/trigger/{ref.id}
     body: "*"
+
+    # Jobs
+
+  - selector: hashicorp.waypoint.Waypoint.GetJobStream
+    get: /v1/jobs/stream/{job_id}
+
+  - selector: hashicorp.waypoint.Waypoint.ValidateJob
+    post: /v1/jobs/validate
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.QueueJob
+    post: /v1/jobs/queue
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.CancelJob
+    put: /v1/jobs/cancel/{job_id}
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.GetJob
+    get: /v1/jobs/{job_id}
+
+    # Incomplete list of endpoints allowed for listing jobs.
+  - selector: hashicorp.waypoint.Waypoint.ListJobs
+    get: /v1/jobs/workspace/{workspace.workspace}
+
+  - selector: hashicorp.waypoint.Waypoint.ListJobs
+    get: /v1/jobs/workspace/{workspace.workspace}/state/{jobState}
+
+  - selector: hashicorp.waypoint.Waypoint.ListJobs
+    get: /v1/jobs/project/{project.project}
+
+  - selector: hashicorp.waypoint.Waypoint.ListJobs
+    get: /v1/jobs/state/{jobState}
+
+  - selector: hashicorp.waypoint.Waypoint.ListJobs
+    get: /v1/jobs/runner/by-id/{targetRunner.id.id}
+
+    # UI
+
+  - selector: hashicorp.waypoint.Waypoint.UI_ListDeployments
+    get: /v1/ui/deployments/workspace/{workspace.workspace}
+
+  - selector: hashicorp.waypoint.Waypoint.UI_ListDeployments
+    get: /v1/ui/deployments/application/{application.application}
+
+  - selector: hashicorp.waypoint.Waypoint.UI_ListDeployments
+    get: /v1/ui/deployments/project/{application.project}
+
+  - selector: hashicorp.waypoint.Waypoint.UI_ListDeployments
+    get: /v1/ui/deployments/state/{physical_state}

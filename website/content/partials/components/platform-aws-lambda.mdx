@@ -56,6 +56,23 @@ The amount of memory, in megabytes, to assign the function.
 - **Optional**
 - Default: 265
 
+#### static_environment
+
+Environment variables to expose to the lambda function.
+
+Environment variables that are meant to configure the application in a static way. This might be to control an image that has multiple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands.
+
+- Type: **map of string to string**
+- **Optional**
+
+#### storagemb
+
+The storage size (in MB) of the Lambda function's `/tmp` directory. Must be a value between 512 and 10240.
+
+- Type: **int**
+- **Optional**
+- Default: 512
+
 #### timeout
 
 The number of seconds a function has to return a result.

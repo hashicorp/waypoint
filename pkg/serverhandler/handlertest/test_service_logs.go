@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -16,7 +15,15 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestServiceGetLogStreamCases(t *testing.T) {
+func init() {
+	tests["logs"] = []testFunc{
+		TestServiceGetLogStreamCases,
+		TestServiceGetLogStream_depPlugin,
+		TestServiceGetLogStream_byApp,
+	}
+}
+
+func TestServiceGetLogStreamCases(t *testing.T, factory Factory) {
 	// Simplify writing tests
 	type Req = pb.UpsertDeploymentRequest
 
@@ -72,9 +79,7 @@ func TestServiceGetLogStreamCases(t *testing.T) {
 		ctx := context.Background()
 
 		// Create our server
-		impl, err := New(WithDB(testDB(t)))
-		require.NoError(t, err)
-		client := server.TestServer(t, impl)
+		_, client := factory(t)
 
 		insts, dep := mkinsts(t, ctx, client, 1)
 
@@ -118,9 +123,7 @@ func TestServiceGetLogStreamCases(t *testing.T) {
 		ctx := context.Background()
 
 		// Create our server
-		impl, err := New(WithDB(testDB(t)))
-		require.NoError(t, err)
-		client := server.TestServer(t, impl)
+		_, client := factory(t)
 
 		insts, dep := mkinsts(t, ctx, client, 2)
 
@@ -188,9 +191,7 @@ func TestServiceGetLogStreamCases(t *testing.T) {
 		ctx := context.Background()
 
 		// Create our server
-		impl, err := New(WithDB(testDB(t)))
-		require.NoError(t, err)
-		client := server.TestServer(t, impl)
+		_, client := factory(t)
 
 		insts, dep := mkinsts(t, ctx, client, 1)
 
@@ -273,9 +274,7 @@ func TestServiceGetLogStreamCases(t *testing.T) {
 		ctx := context.Background()
 
 		// Create our server
-		impl, err := New(WithDB(testDB(t)))
-		require.NoError(t, err)
-		client := server.TestServer(t, impl)
+		_, client := factory(t)
 
 		insts, dep := mkinsts(t, ctx, client, 1)
 
@@ -341,14 +340,12 @@ func TestServiceGetLogStreamCases(t *testing.T) {
 	})
 }
 
-func TestServiceGetLogStream_depPlugin(t *testing.T) {
+func TestServiceGetLogStream_depPlugin(t *testing.T, factory Factory) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Register our instances
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -399,7 +396,7 @@ func TestServiceGetLogStream_depPlugin(t *testing.T) {
 	require.Equal(t, resp.Deployment.Application, job.Application)
 
 	// Start our runner so it'll process the job
-	TestRunner(t, client, &pb.Runner{Id: fakeRunner})
+	server.TestRunner(t, client, &pb.Runner{Id: fakeRunner})
 
 	// We force the job forward so that the server side moves forward not.
 	rs, err := client.RunnerJobStream(ctx)
@@ -427,20 +424,6 @@ func TestServiceGetLogStream_depPlugin(t *testing.T) {
 
 	instanceId := assignment.Assignment.Job.Operation.(*pb.Job_Logs).Logs.InstanceId
 
-	// Wait for our instance log buffer to register, otherwise
-	// we can't send logs. In a real CEB/runner environment, we'd
-	// retry so this is only needed in tests.
-	require.Eventually(t, func() bool {
-		_, err := testStateInmem(impl).InstanceLogsByInstanceId(
-			instanceId)
-		if err != nil {
-			t.Logf("error getting instance logs: %s", err)
-			return false
-		}
-
-		return true
-	}, 10*time.Second, 50*time.Millisecond)
-
 	// Create the stream and send some log messages
 	logSendClient, err := client.EntrypointLogStream(ctx)
 	require.NoError(t, err)
@@ -453,10 +436,19 @@ func TestServiceGetLogStream_depPlugin(t *testing.T) {
 			})
 		}
 
-		logSendClient.Send(&pb.EntrypointLogBatch{
-			InstanceId: instanceId,
-			Lines:      entries,
-		})
+		// Our instance log buffer might not be registered, so it's OK to retry
+		require.Eventually(t, func() bool {
+			err := logSendClient.Send(&pb.EntrypointLogBatch{
+				InstanceId: instanceId,
+				Lines:      entries,
+			})
+			if err != nil {
+				t.Logf("error getting instance logs: %s", err)
+				return false
+			}
+			return true
+		}, 10*time.Second, 50*time.Millisecond)
+
 	}
 
 	// We have to use an Eventually here and accumulate lines because
@@ -483,18 +475,12 @@ func TestServiceGetLogStream_depPlugin(t *testing.T) {
 	require.Len(t, lines, 25)
 }
 
-func TestServiceGetLogStream_byApp(t *testing.T) {
+func TestServiceGetLogStream_byApp(t *testing.T, factory Factory) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	log := hclog.New(&hclog.LoggerOptions{
-		Level: hclog.Trace,
-	})
-
 	// Create our server
-	impl, err := New(WithDB(testDB(t)), WithLogger(log))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Setup our references
 	refApp := &pb.Ref_Application{

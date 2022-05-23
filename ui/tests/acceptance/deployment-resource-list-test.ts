@@ -21,7 +21,7 @@ module('Acceptance | deployment resource list', function (hooks) {
     assert.dom('[data-test-resources-table]').containsText('example-pod');
     assert
       .dom(
-        `[href="/default/${project.name}/app/${application.name}/deployments/${deployment.sequence}/resources/${resource.id}"`
+        `[href="/default/${project.name}/app/${application.name}/deployments/${deployment.sequence}/resources/${resource.id}"]`
       )
       .exists();
   });

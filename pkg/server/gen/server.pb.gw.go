@@ -4360,6 +4360,626 @@ func local_request_Waypoint_ListHostnames_1(ctx context.Context, marshaler runti
 
 }
 
+func request_Waypoint_QueueJob_0(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueueJobRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.QueueJob(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_QueueJob_0(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueueJobRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.QueueJob(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Waypoint_CancelJob_0(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CancelJobRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "job_id")
+	}
+
+	protoReq.JobId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "job_id", err)
+	}
+
+	msg, err := client.CancelJob(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_CancelJob_0(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CancelJobRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "job_id")
+	}
+
+	protoReq.JobId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "job_id", err)
+	}
+
+	msg, err := server.CancelJob(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Waypoint_GetJob_0(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetJobRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "job_id")
+	}
+
+	protoReq.JobId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "job_id", err)
+	}
+
+	msg, err := client.GetJob(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_GetJob_0(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetJobRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "job_id")
+	}
+
+	protoReq.JobId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "job_id", err)
+	}
+
+	msg, err := server.GetJob(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_Waypoint_ListJobs_0 = &utilities.DoubleArray{Encoding: map[string]int{"workspace": 0}, Base: []int{1, 2, 2, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_Waypoint_ListJobs_0(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListJobsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["workspace.workspace"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workspace.workspace")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "workspace.workspace", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspace.workspace", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_ListJobs_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ListJobs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_ListJobs_0(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListJobsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["workspace.workspace"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workspace.workspace")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "workspace.workspace", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspace.workspace", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_ListJobs_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListJobs(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_Waypoint_ListJobs_1 = &utilities.DoubleArray{Encoding: map[string]int{"workspace": 0, "jobState": 1}, Base: []int{1, 3, 3, 2, 0, 0}, Check: []int{0, 1, 1, 2, 4, 3}}
+)
+
+func request_Waypoint_ListJobs_1(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListJobsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		es  []int32
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["workspace.workspace"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workspace.workspace")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "workspace.workspace", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspace.workspace", err)
+	}
+
+	val, ok = pathParams["jobState"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "jobState")
+	}
+
+	es, err = runtime.EnumSlice(val, ",", Job_State_value)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "jobState", err)
+	}
+
+	s := make([]Job_State, len(es))
+	for i, v := range es {
+		s[i] = Job_State(v)
+	}
+	protoReq.JobState = s
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_ListJobs_1); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ListJobs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_ListJobs_1(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListJobsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		es  []int32
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["workspace.workspace"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workspace.workspace")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "workspace.workspace", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspace.workspace", err)
+	}
+
+	val, ok = pathParams["jobState"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "jobState")
+	}
+
+	es, err = runtime.EnumSlice(val, ",", Job_State_value)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "jobState", err)
+	}
+
+	s := make([]Job_State, len(es))
+	for i, v := range es {
+		s[i] = Job_State(v)
+	}
+	protoReq.JobState = s
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_ListJobs_1); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListJobs(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_Waypoint_ListJobs_2 = &utilities.DoubleArray{Encoding: map[string]int{"project": 0}, Base: []int{1, 2, 2, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_Waypoint_ListJobs_2(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListJobsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["project.project"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "project.project")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "project.project", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "project.project", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_ListJobs_2); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ListJobs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_ListJobs_2(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListJobsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["project.project"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "project.project")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "project.project", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "project.project", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_ListJobs_2); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListJobs(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_Waypoint_ListJobs_3 = &utilities.DoubleArray{Encoding: map[string]int{"jobState": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
+func request_Waypoint_ListJobs_3(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListJobsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		es  []int32
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["jobState"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "jobState")
+	}
+
+	es, err = runtime.EnumSlice(val, ",", Job_State_value)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "jobState", err)
+	}
+
+	s := make([]Job_State, len(es))
+	for i, v := range es {
+		s[i] = Job_State(v)
+	}
+	protoReq.JobState = s
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_ListJobs_3); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ListJobs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_ListJobs_3(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListJobsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		es  []int32
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["jobState"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "jobState")
+	}
+
+	es, err = runtime.EnumSlice(val, ",", Job_State_value)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "jobState", err)
+	}
+
+	s := make([]Job_State, len(es))
+	for i, v := range es {
+		s[i] = Job_State(v)
+	}
+	protoReq.JobState = s
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_ListJobs_3); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListJobs(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_Waypoint_ListJobs_4 = &utilities.DoubleArray{Encoding: map[string]int{"targetRunner": 0, "id": 1}, Base: []int{1, 1, 2, 2, 0}, Check: []int{0, 1, 2, 3, 4}}
+)
+
+func request_Waypoint_ListJobs_4(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListJobsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["targetRunner.id.id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "targetRunner.id.id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "targetRunner.id.id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "targetRunner.id.id", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_ListJobs_4); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ListJobs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_ListJobs_4(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListJobsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["targetRunner.id.id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "targetRunner.id.id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "targetRunner.id.id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "targetRunner.id.id", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_ListJobs_4); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListJobs(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Waypoint_ValidateJob_0(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ValidateJobRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ValidateJob(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_ValidateJob_0(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ValidateJobRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ValidateJob(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Waypoint_GetJobStream_0(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (Waypoint_GetJobStreamClient, runtime.ServerMetadata, error) {
+	var protoReq GetJobStreamRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "job_id")
+	}
+
+	protoReq.JobId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "job_id", err)
+	}
+
+	stream, err := client.GetJobStream(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
+
+}
+
 func request_Waypoint_GetRunner_0(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetRunnerRequest
 	var metadata runtime.ServerMetadata
@@ -6368,6 +6988,292 @@ func local_request_Waypoint_RunTrigger_0(ctx context.Context, marshaler runtime.
 
 }
 
+var (
+	filter_Waypoint_UI_ListDeployments_0 = &utilities.DoubleArray{Encoding: map[string]int{"workspace": 0}, Base: []int{1, 2, 2, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_Waypoint_UI_ListDeployments_0(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UI_ListDeploymentsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["workspace.workspace"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workspace.workspace")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "workspace.workspace", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspace.workspace", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_UI_ListDeployments_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.UI_ListDeployments(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_UI_ListDeployments_0(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UI_ListDeploymentsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["workspace.workspace"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workspace.workspace")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "workspace.workspace", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspace.workspace", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_UI_ListDeployments_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.UI_ListDeployments(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_Waypoint_UI_ListDeployments_1 = &utilities.DoubleArray{Encoding: map[string]int{"application": 0}, Base: []int{1, 2, 2, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_Waypoint_UI_ListDeployments_1(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UI_ListDeploymentsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["application.application"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "application.application")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "application.application", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "application.application", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_UI_ListDeployments_1); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.UI_ListDeployments(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_UI_ListDeployments_1(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UI_ListDeploymentsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["application.application"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "application.application")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "application.application", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "application.application", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_UI_ListDeployments_1); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.UI_ListDeployments(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_Waypoint_UI_ListDeployments_2 = &utilities.DoubleArray{Encoding: map[string]int{"application": 0, "project": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_Waypoint_UI_ListDeployments_2(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UI_ListDeploymentsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["application.project"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "application.project")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "application.project", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "application.project", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_UI_ListDeployments_2); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.UI_ListDeployments(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_UI_ListDeployments_2(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UI_ListDeploymentsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["application.project"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "application.project")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "application.project", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "application.project", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_UI_ListDeployments_2); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.UI_ListDeployments(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_Waypoint_UI_ListDeployments_3 = &utilities.DoubleArray{Encoding: map[string]int{"physical_state": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
+func request_Waypoint_UI_ListDeployments_3(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UI_ListDeploymentsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		e   int32
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["physical_state"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "physical_state")
+	}
+
+	e, err = runtime.Enum(val, Operation_PhysicalState_value)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "physical_state", err)
+	}
+
+	protoReq.PhysicalState = Operation_PhysicalState(e)
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_UI_ListDeployments_3); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.UI_ListDeployments(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_UI_ListDeployments_3(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UI_ListDeploymentsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		e   int32
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["physical_state"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "physical_state")
+	}
+
+	e, err = runtime.Enum(val, Operation_PhysicalState_value)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "physical_state", err)
+	}
+
+	protoReq.PhysicalState = Operation_PhysicalState(e)
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_UI_ListDeployments_3); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.UI_ListDeployments(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 // RegisterWaypointHandlerServer registers the http handlers for service Waypoint to "mux".
 // UnaryRPC     :call WaypointServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -6380,12 +7286,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetVersionInfo", runtime.WithHTTPPathPattern("/v1/version"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetVersionInfo", runtime.WithHTTPPathPattern("/v1/version"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetVersionInfo_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetVersionInfo_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6403,12 +7310,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListOIDCAuthMethods", runtime.WithHTTPPathPattern("/v1/oidc/methods"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListOIDCAuthMethods", runtime.WithHTTPPathPattern("/v1/oidc/methods"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListOIDCAuthMethods_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListOIDCAuthMethods_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6426,12 +7334,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetOIDCAuthURL", runtime.WithHTTPPathPattern("/v1/oidc/{auth_method.name}/url"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetOIDCAuthURL", runtime.WithHTTPPathPattern("/v1/oidc/{auth_method.name}/url"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetOIDCAuthURL_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetOIDCAuthURL_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6449,12 +7358,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CompleteOIDCAuth", runtime.WithHTTPPathPattern("/v1/oidc/{auth_method.name}/complete"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CompleteOIDCAuth", runtime.WithHTTPPathPattern("/v1/oidc/{auth_method.name}/complete"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_CompleteOIDCAuth_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_CompleteOIDCAuth_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6472,12 +7382,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetUser", runtime.WithHTTPPathPattern("/v1/user/by-id/{user.id.id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetUser", runtime.WithHTTPPathPattern("/v1/user/by-id/{user.id.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetUser_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetUser_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6495,12 +7406,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetUser", runtime.WithHTTPPathPattern("/v1/user/by-username/{user.username.username}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetUser", runtime.WithHTTPPathPattern("/v1/user/by-username/{user.username.username}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetUser_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetUser_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6518,12 +7430,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListUsers", runtime.WithHTTPPathPattern("/v1/users"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListUsers", runtime.WithHTTPPathPattern("/v1/users"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListUsers_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListUsers_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6541,12 +7454,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpdateUser", runtime.WithHTTPPathPattern("/v1/user/{user.id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpdateUser", runtime.WithHTTPPathPattern("/v1/user/{user.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_UpdateUser_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_UpdateUser_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6564,12 +7478,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteUser", runtime.WithHTTPPathPattern("/v1/user/by-id/{user.id.id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteUser", runtime.WithHTTPPathPattern("/v1/user/by-id/{user.id.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_DeleteUser_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_DeleteUser_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6587,12 +7502,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteUser", runtime.WithHTTPPathPattern("/v1/user/by-username/{user.username.username}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteUser", runtime.WithHTTPPathPattern("/v1/user/by-username/{user.username.username}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_DeleteUser_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_DeleteUser_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6610,12 +7526,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertAuthMethod", runtime.WithHTTPPathPattern("/v1/auth-method"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertAuthMethod", runtime.WithHTTPPathPattern("/v1/auth-method"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_UpsertAuthMethod_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_UpsertAuthMethod_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6633,12 +7550,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetAuthMethod", runtime.WithHTTPPathPattern("/v1/auth-method/{auth_method.name}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetAuthMethod", runtime.WithHTTPPathPattern("/v1/auth-method/{auth_method.name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetAuthMethod_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetAuthMethod_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6656,12 +7574,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListAuthMethods", runtime.WithHTTPPathPattern("/v1/auth-methods"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListAuthMethods", runtime.WithHTTPPathPattern("/v1/auth-methods"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListAuthMethods_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListAuthMethods_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6679,12 +7598,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteAuthMethod", runtime.WithHTTPPathPattern("/v1/auth-method/{auth_method.name}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteAuthMethod", runtime.WithHTTPPathPattern("/v1/auth-method/{auth_method.name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_DeleteAuthMethod_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_DeleteAuthMethod_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6702,12 +7622,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListWorkspaces", runtime.WithHTTPPathPattern("/v1/workspaces"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListWorkspaces", runtime.WithHTTPPathPattern("/v1/workspaces"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListWorkspaces_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListWorkspaces_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6725,12 +7646,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListWorkspaces", runtime.WithHTTPPathPattern("/v1/project/{project.project}/workspaces"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListWorkspaces", runtime.WithHTTPPathPattern("/v1/project/{project.project}/workspaces"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListWorkspaces_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListWorkspaces_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6748,12 +7670,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListWorkspaces", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspaces"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListWorkspaces", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspaces"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListWorkspaces_2(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListWorkspaces_2(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6771,12 +7694,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetWorkspace", runtime.WithHTTPPathPattern("/v1/workspace/{workspace.workspace}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetWorkspace", runtime.WithHTTPPathPattern("/v1/workspace/{workspace.workspace}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetWorkspace_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetWorkspace_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6794,12 +7718,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertWorkspace", runtime.WithHTTPPathPattern("/v1/workspace"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertWorkspace", runtime.WithHTTPPathPattern("/v1/workspace"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_UpsertWorkspace_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_UpsertWorkspace_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6817,12 +7742,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertProject", runtime.WithHTTPPathPattern("/v1/project"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertProject", runtime.WithHTTPPathPattern("/v1/project"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_UpsertProject_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_UpsertProject_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6840,12 +7766,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetProject", runtime.WithHTTPPathPattern("/v1/project/{project.project}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetProject", runtime.WithHTTPPathPattern("/v1/project/{project.project}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetProject_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetProject_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6863,12 +7790,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListProjects", runtime.WithHTTPPathPattern("/v1/projects"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListProjects", runtime.WithHTTPPathPattern("/v1/projects"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListProjects_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListProjects_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6886,12 +7814,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetApplication", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetApplication", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetApplication_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetApplication_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6909,12 +7838,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertApplication", runtime.WithHTTPPathPattern("/v1/project/{project.project}/application"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertApplication", runtime.WithHTTPPathPattern("/v1/project/{project.project}/application"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_UpsertApplication_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_UpsertApplication_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6932,12 +7862,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListBuilds", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/builds"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListBuilds", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/builds"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListBuilds_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListBuilds_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6955,12 +7886,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListBuilds", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/builds"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListBuilds", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/builds"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListBuilds_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListBuilds_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -6978,12 +7910,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetBuild", runtime.WithHTTPPathPattern("/v1/build/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetBuild", runtime.WithHTTPPathPattern("/v1/build/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetBuild_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetBuild_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7001,12 +7934,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetBuild", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/build/{ref.sequence.number}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetBuild", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/build/{ref.sequence.number}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetBuild_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetBuild_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7024,12 +7958,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListPushedArtifacts", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/artifacts"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListPushedArtifacts", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/artifacts"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListPushedArtifacts_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListPushedArtifacts_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7047,12 +7982,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListPushedArtifacts", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/artifacts"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListPushedArtifacts", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/artifacts"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListPushedArtifacts_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListPushedArtifacts_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7070,12 +8006,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetPushedArtifact", runtime.WithHTTPPathPattern("/v1/artifact/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetPushedArtifact", runtime.WithHTTPPathPattern("/v1/artifact/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetPushedArtifact_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetPushedArtifact_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7093,12 +8030,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetPushedArtifact", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/artifact/{ref.sequence.number}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetPushedArtifact", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/artifact/{ref.sequence.number}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetPushedArtifact_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetPushedArtifact_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7116,12 +8054,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListDeployments", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/deployments"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListDeployments", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/deployments"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListDeployments_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListDeployments_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7139,12 +8078,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListDeployments", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/deployments"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListDeployments", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/deployments"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListDeployments_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListDeployments_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7162,12 +8102,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListInstances", runtime.WithHTTPPathPattern("/v1/instances/{deployment_id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListInstances", runtime.WithHTTPPathPattern("/v1/instances/{deployment_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListInstances_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListInstances_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7185,12 +8126,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListInstances", runtime.WithHTTPPathPattern("/v1/project/{application.application.project}/application/{application.application.application}/instances"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListInstances", runtime.WithHTTPPathPattern("/v1/project/{application.application.project}/application/{application.application.application}/instances"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListInstances_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListInstances_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7208,12 +8150,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListInstances", runtime.WithHTTPPathPattern("/v1/project/{application.application.project}/application/{application.application.application}/workspace/{application.workspace.workspace}/instances"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListInstances", runtime.WithHTTPPathPattern("/v1/project/{application.application.project}/application/{application.application.application}/workspace/{application.workspace.workspace}/instances"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListInstances_2(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListInstances_2(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7231,12 +8174,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetDeployment", runtime.WithHTTPPathPattern("/v1/deployment/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetDeployment", runtime.WithHTTPPathPattern("/v1/deployment/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetDeployment_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetDeployment_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7254,12 +8198,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetDeployment", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/deployment/{ref.sequence.number}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetDeployment", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/deployment/{ref.sequence.number}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetDeployment_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetDeployment_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7277,12 +8222,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestBuild", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/build/latest"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestBuild", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/build/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetLatestBuild_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetLatestBuild_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7300,12 +8246,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestBuild", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/build/latest"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestBuild", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/build/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetLatestBuild_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetLatestBuild_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7323,12 +8270,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/artifact/latest"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/artifact/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetLatestPushedArtifact_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetLatestPushedArtifact_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7346,12 +8294,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/artifact/latest"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/artifact/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetLatestPushedArtifact_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetLatestPushedArtifact_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7369,12 +8318,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListReleases", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/releases"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListReleases", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/releases"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListReleases_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListReleases_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7392,12 +8342,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListReleases", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/releases"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListReleases", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/releases"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListReleases_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListReleases_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7415,12 +8366,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetRelease", runtime.WithHTTPPathPattern("/v1/release/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetRelease", runtime.WithHTTPPathPattern("/v1/release/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetRelease_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetRelease_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7438,12 +8390,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetRelease", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/release/{ref.sequence.number}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetRelease", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/release/{ref.sequence.number}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetRelease_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetRelease_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7461,12 +8414,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestRelease", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/release/latest"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestRelease", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/release/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetLatestRelease_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetLatestRelease_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7484,12 +8438,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestRelease", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/release/latest"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestRelease", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/release/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetLatestRelease_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetLatestRelease_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7528,12 +8483,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CreateHostname", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/hostname"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CreateHostname", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/hostname"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_CreateHostname_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_CreateHostname_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7551,12 +8507,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CreateHostname", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/workspace/{target.application.workspace.workspace}/hostname"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CreateHostname", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/workspace/{target.application.workspace.workspace}/hostname"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_CreateHostname_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_CreateHostname_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7574,12 +8531,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteHostname", runtime.WithHTTPPathPattern("/v1/hostname/{hostname}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteHostname", runtime.WithHTTPPathPattern("/v1/hostname/{hostname}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_DeleteHostname_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_DeleteHostname_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7597,12 +8555,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListHostnames", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/hostnames"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListHostnames", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/hostnames"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListHostnames_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListHostnames_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7620,12 +8579,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListHostnames", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/workspace/{target.application.workspace.workspace}/hostnames"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListHostnames", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/workspace/{target.application.workspace.workspace}/hostnames"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListHostnames_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListHostnames_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7637,18 +8597,242 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 
 	})
 
+	mux.Handle("POST", pattern_Waypoint_QueueJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/QueueJob", runtime.WithHTTPPathPattern("/v1/jobs/queue"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_QueueJob_0(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_QueueJob_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_Waypoint_CancelJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CancelJob", runtime.WithHTTPPathPattern("/v1/jobs/cancel/{job_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_CancelJob_0(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_CancelJob_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_GetJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetJob", runtime.WithHTTPPathPattern("/v1/jobs/{job_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_GetJob_0(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_GetJob_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_ListJobs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs/workspace/{workspace.workspace}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_ListJobs_0(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_ListJobs_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_ListJobs_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs/workspace/{workspace.workspace}/state/{jobState}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_ListJobs_1(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_ListJobs_1(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_ListJobs_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs/project/{project.project}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_ListJobs_2(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_ListJobs_2(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_ListJobs_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs/state/{jobState}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_ListJobs_3(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_ListJobs_3(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_ListJobs_4, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs/runner/by-id/{targetRunner.id.id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_ListJobs_4(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_ListJobs_4(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_Waypoint_ValidateJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ValidateJob", runtime.WithHTTPPathPattern("/v1/jobs/validate"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_ValidateJob_0(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_ValidateJob_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_GetJobStream_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
 	mux.Handle("GET", pattern_Waypoint_GetRunner_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetRunner", runtime.WithHTTPPathPattern("/v1/runner/{runner_id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetRunner", runtime.WithHTTPPathPattern("/v1/runner/{runner_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetRunner_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetRunner_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7666,12 +8850,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListRunners", runtime.WithHTTPPathPattern("/v1/runners"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListRunners", runtime.WithHTTPPathPattern("/v1/runners"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListRunners_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListRunners_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7689,12 +8874,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/AdoptRunner", runtime.WithHTTPPathPattern("/v1/runner/{runner_id}/adopt"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/AdoptRunner", runtime.WithHTTPPathPattern("/v1/runner/{runner_id}/adopt"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_AdoptRunner_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_AdoptRunner_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7712,12 +8898,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ForgetRunner", runtime.WithHTTPPathPattern("/v1/runner/{runner_id}/forget"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ForgetRunner", runtime.WithHTTPPathPattern("/v1/runner/{runner_id}/forget"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ForgetRunner_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ForgetRunner_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7735,12 +8922,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetServerConfig", runtime.WithHTTPPathPattern("/v1/server/config"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetServerConfig", runtime.WithHTTPPathPattern("/v1/server/config"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetServerConfig_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetServerConfig_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7758,12 +8946,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/SetServerConfig", runtime.WithHTTPPathPattern("/v1/server/config"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/SetServerConfig", runtime.WithHTTPPathPattern("/v1/server/config"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_SetServerConfig_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_SetServerConfig_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7781,12 +8970,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DecodeToken", runtime.WithHTTPPathPattern("/v1/token/decode"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DecodeToken", runtime.WithHTTPPathPattern("/v1/token/decode"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_DecodeToken_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_DecodeToken_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7804,12 +8994,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GenerateInviteToken", runtime.WithHTTPPathPattern("/v1/token/invite"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GenerateInviteToken", runtime.WithHTTPPathPattern("/v1/token/invite"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GenerateInviteToken_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GenerateInviteToken_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7827,12 +9018,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GenerateLoginToken", runtime.WithHTTPPathPattern("/v1/token/login"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GenerateLoginToken", runtime.WithHTTPPathPattern("/v1/token/login"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GenerateLoginToken_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GenerateLoginToken_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7850,12 +9042,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GenerateRunnerToken", runtime.WithHTTPPathPattern("/v1/token/runner"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GenerateRunnerToken", runtime.WithHTTPPathPattern("/v1/token/runner"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GenerateRunnerToken_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GenerateRunnerToken_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7873,12 +9066,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ConvertInviteToken", runtime.WithHTTPPathPattern("/v1/token/exchange"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ConvertInviteToken", runtime.WithHTTPPathPattern("/v1/token/exchange"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ConvertInviteToken_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ConvertInviteToken_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7896,12 +9090,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetStatusReport", runtime.WithHTTPPathPattern("/v1/release/by-id/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetStatusReport", runtime.WithHTTPPathPattern("/v1/release/by-id/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetStatusReport_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetStatusReport_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7919,12 +9114,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestStatusReport", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/status-report/latest"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestStatusReport", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/status-report/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetLatestStatusReport_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetLatestStatusReport_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7942,12 +9138,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestStatusReport", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/status-report/latest"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestStatusReport", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/status-report/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetLatestStatusReport_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetLatestStatusReport_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7965,12 +9162,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListStatusReports", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/status-reports"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListStatusReports", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/status-reports"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListStatusReports_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListStatusReports_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -7988,12 +9186,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListStatusReports", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/status-reports"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListStatusReports", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/status-reports"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListStatusReports_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListStatusReports_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8011,12 +9210,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/deployment/{deployment.id}/status-report"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/deployment/{deployment.id}/status-report"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ExpediteStatusReport_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ExpediteStatusReport_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8034,12 +9234,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/release/{release.id}/status-report"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/release/{release.id}/status-report"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ExpediteStatusReport_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ExpediteStatusReport_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8057,12 +9258,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/project/{deployment.sequence.application.project}/application/{deployment.sequence.application.application}/deployment/{deployment.sequence.number}/status-report"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/project/{deployment.sequence.application.project}/application/{deployment.sequence.application.application}/deployment/{deployment.sequence.number}/status-report"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ExpediteStatusReport_2(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ExpediteStatusReport_2(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8080,12 +9282,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/project/{release.sequence.application.project}/application/{release.sequence.application.application}/release/{release.sequence.number}/status-report"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/project/{release.sequence.application.project}/application/{release.sequence.application.application}/release/{release.sequence.number}/status-report"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ExpediteStatusReport_3(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ExpediteStatusReport_3(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8103,12 +9306,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/WaypointHclFmt", runtime.WithHTTPPathPattern("/v1/hcl/format"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/WaypointHclFmt", runtime.WithHTTPPathPattern("/v1/hcl/format"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_WaypointHclFmt_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_WaypointHclFmt_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8126,12 +9330,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertOnDemandRunnerConfig", runtime.WithHTTPPathPattern("/v1/runner/on-demand"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertOnDemandRunnerConfig", runtime.WithHTTPPathPattern("/v1/runner/on-demand"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_UpsertOnDemandRunnerConfig_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_UpsertOnDemandRunnerConfig_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8149,12 +9354,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig", runtime.WithHTTPPathPattern("/v1/on-demand-runner/by-id/{config.id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig", runtime.WithHTTPPathPattern("/v1/on-demand-runner/by-id/{config.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetOnDemandRunnerConfig_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetOnDemandRunnerConfig_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8172,12 +9378,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig", runtime.WithHTTPPathPattern("/v1/on-demand-runner/by-name/{config.name}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig", runtime.WithHTTPPathPattern("/v1/on-demand-runner/by-name/{config.name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetOnDemandRunnerConfig_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetOnDemandRunnerConfig_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8195,12 +9402,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListOnDemandRunnerConfigs", runtime.WithHTTPPathPattern("/v1/on-demand-runners"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListOnDemandRunnerConfigs", runtime.WithHTTPPathPattern("/v1/on-demand-runners"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListOnDemandRunnerConfigs_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListOnDemandRunnerConfigs_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8218,12 +9426,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertTrigger", runtime.WithHTTPPathPattern("/v1/triggers"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertTrigger", runtime.WithHTTPPathPattern("/v1/triggers"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_UpsertTrigger_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_UpsertTrigger_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8241,12 +9450,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetTrigger", runtime.WithHTTPPathPattern("/v1/trigger/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetTrigger", runtime.WithHTTPPathPattern("/v1/trigger/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetTrigger_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetTrigger_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8264,12 +9474,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetTrigger", runtime.WithHTTPPathPattern("/v1/trigger/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetTrigger", runtime.WithHTTPPathPattern("/v1/trigger/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_GetTrigger_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_GetTrigger_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8287,12 +9498,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/triggers"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/triggers"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListTriggers_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListTriggers_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8310,12 +9522,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/project/{project.project}/triggers"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/project/{project.project}/triggers"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListTriggers_1(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListTriggers_1(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8333,12 +9546,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/triggers"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/triggers"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListTriggers_2(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListTriggers_2(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8356,12 +9570,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/triggers"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/triggers"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_ListTriggers_3(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_ListTriggers_3(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8379,12 +9594,13 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/RunTrigger", runtime.WithHTTPPathPattern("/v1/trigger/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/RunTrigger", runtime.WithHTTPPathPattern("/v1/trigger/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_RunTrigger_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_RunTrigger_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -8393,6 +9609,102 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		}
 
 		forward_Waypoint_RunTrigger_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_UI_ListDeployments_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_ListDeployments", runtime.WithHTTPPathPattern("/v1/ui/deployments/workspace/{workspace.workspace}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_UI_ListDeployments_0(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_UI_ListDeployments_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_UI_ListDeployments_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_ListDeployments", runtime.WithHTTPPathPattern("/v1/ui/deployments/application/{application.application}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_UI_ListDeployments_1(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_UI_ListDeployments_1(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_UI_ListDeployments_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_ListDeployments", runtime.WithHTTPPathPattern("/v1/ui/deployments/project/{application.project}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_UI_ListDeployments_2(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_UI_ListDeployments_2(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_UI_ListDeployments_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_ListDeployments", runtime.WithHTTPPathPattern("/v1/ui/deployments/state/{physical_state}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_UI_ListDeployments_3(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_UI_ListDeployments_3(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -8441,12 +9753,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetVersionInfo", runtime.WithHTTPPathPattern("/v1/version"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetVersionInfo", runtime.WithHTTPPathPattern("/v1/version"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetVersionInfo_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetVersionInfo_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8461,12 +9774,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListOIDCAuthMethods", runtime.WithHTTPPathPattern("/v1/oidc/methods"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListOIDCAuthMethods", runtime.WithHTTPPathPattern("/v1/oidc/methods"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListOIDCAuthMethods_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListOIDCAuthMethods_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8481,12 +9795,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetOIDCAuthURL", runtime.WithHTTPPathPattern("/v1/oidc/{auth_method.name}/url"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetOIDCAuthURL", runtime.WithHTTPPathPattern("/v1/oidc/{auth_method.name}/url"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetOIDCAuthURL_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetOIDCAuthURL_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8501,12 +9816,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CompleteOIDCAuth", runtime.WithHTTPPathPattern("/v1/oidc/{auth_method.name}/complete"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CompleteOIDCAuth", runtime.WithHTTPPathPattern("/v1/oidc/{auth_method.name}/complete"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_CompleteOIDCAuth_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_CompleteOIDCAuth_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8521,12 +9837,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetUser", runtime.WithHTTPPathPattern("/v1/user/by-id/{user.id.id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetUser", runtime.WithHTTPPathPattern("/v1/user/by-id/{user.id.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetUser_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetUser_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8541,12 +9858,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetUser", runtime.WithHTTPPathPattern("/v1/user/by-username/{user.username.username}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetUser", runtime.WithHTTPPathPattern("/v1/user/by-username/{user.username.username}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetUser_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetUser_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8561,12 +9879,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListUsers", runtime.WithHTTPPathPattern("/v1/users"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListUsers", runtime.WithHTTPPathPattern("/v1/users"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListUsers_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListUsers_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8581,12 +9900,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpdateUser", runtime.WithHTTPPathPattern("/v1/user/{user.id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpdateUser", runtime.WithHTTPPathPattern("/v1/user/{user.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_UpdateUser_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_UpdateUser_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8601,12 +9921,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteUser", runtime.WithHTTPPathPattern("/v1/user/by-id/{user.id.id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteUser", runtime.WithHTTPPathPattern("/v1/user/by-id/{user.id.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_DeleteUser_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_DeleteUser_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8621,12 +9942,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteUser", runtime.WithHTTPPathPattern("/v1/user/by-username/{user.username.username}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteUser", runtime.WithHTTPPathPattern("/v1/user/by-username/{user.username.username}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_DeleteUser_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_DeleteUser_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8641,12 +9963,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertAuthMethod", runtime.WithHTTPPathPattern("/v1/auth-method"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertAuthMethod", runtime.WithHTTPPathPattern("/v1/auth-method"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_UpsertAuthMethod_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_UpsertAuthMethod_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8661,12 +9984,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetAuthMethod", runtime.WithHTTPPathPattern("/v1/auth-method/{auth_method.name}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetAuthMethod", runtime.WithHTTPPathPattern("/v1/auth-method/{auth_method.name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetAuthMethod_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetAuthMethod_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8681,12 +10005,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListAuthMethods", runtime.WithHTTPPathPattern("/v1/auth-methods"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListAuthMethods", runtime.WithHTTPPathPattern("/v1/auth-methods"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListAuthMethods_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListAuthMethods_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8701,12 +10026,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteAuthMethod", runtime.WithHTTPPathPattern("/v1/auth-method/{auth_method.name}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteAuthMethod", runtime.WithHTTPPathPattern("/v1/auth-method/{auth_method.name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_DeleteAuthMethod_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_DeleteAuthMethod_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8721,12 +10047,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListWorkspaces", runtime.WithHTTPPathPattern("/v1/workspaces"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListWorkspaces", runtime.WithHTTPPathPattern("/v1/workspaces"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListWorkspaces_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListWorkspaces_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8741,12 +10068,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListWorkspaces", runtime.WithHTTPPathPattern("/v1/project/{project.project}/workspaces"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListWorkspaces", runtime.WithHTTPPathPattern("/v1/project/{project.project}/workspaces"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListWorkspaces_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListWorkspaces_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8761,12 +10089,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListWorkspaces", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspaces"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListWorkspaces", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspaces"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListWorkspaces_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListWorkspaces_2(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8781,12 +10110,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetWorkspace", runtime.WithHTTPPathPattern("/v1/workspace/{workspace.workspace}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetWorkspace", runtime.WithHTTPPathPattern("/v1/workspace/{workspace.workspace}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetWorkspace_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetWorkspace_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8801,12 +10131,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertWorkspace", runtime.WithHTTPPathPattern("/v1/workspace"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertWorkspace", runtime.WithHTTPPathPattern("/v1/workspace"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_UpsertWorkspace_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_UpsertWorkspace_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8821,12 +10152,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertProject", runtime.WithHTTPPathPattern("/v1/project"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertProject", runtime.WithHTTPPathPattern("/v1/project"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_UpsertProject_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_UpsertProject_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8841,12 +10173,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetProject", runtime.WithHTTPPathPattern("/v1/project/{project.project}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetProject", runtime.WithHTTPPathPattern("/v1/project/{project.project}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetProject_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetProject_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8861,12 +10194,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListProjects", runtime.WithHTTPPathPattern("/v1/projects"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListProjects", runtime.WithHTTPPathPattern("/v1/projects"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListProjects_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListProjects_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8881,12 +10215,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetApplication", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetApplication", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetApplication_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetApplication_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8901,12 +10236,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertApplication", runtime.WithHTTPPathPattern("/v1/project/{project.project}/application"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertApplication", runtime.WithHTTPPathPattern("/v1/project/{project.project}/application"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_UpsertApplication_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_UpsertApplication_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8921,12 +10257,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListBuilds", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/builds"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListBuilds", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/builds"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListBuilds_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListBuilds_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8941,12 +10278,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListBuilds", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/builds"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListBuilds", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/builds"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListBuilds_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListBuilds_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8961,12 +10299,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetBuild", runtime.WithHTTPPathPattern("/v1/build/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetBuild", runtime.WithHTTPPathPattern("/v1/build/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetBuild_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetBuild_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -8981,12 +10320,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetBuild", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/build/{ref.sequence.number}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetBuild", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/build/{ref.sequence.number}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetBuild_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetBuild_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9001,12 +10341,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListPushedArtifacts", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/artifacts"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListPushedArtifacts", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/artifacts"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListPushedArtifacts_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListPushedArtifacts_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9021,12 +10362,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListPushedArtifacts", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/artifacts"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListPushedArtifacts", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/artifacts"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListPushedArtifacts_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListPushedArtifacts_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9041,12 +10383,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetPushedArtifact", runtime.WithHTTPPathPattern("/v1/artifact/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetPushedArtifact", runtime.WithHTTPPathPattern("/v1/artifact/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetPushedArtifact_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetPushedArtifact_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9061,12 +10404,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetPushedArtifact", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/artifact/{ref.sequence.number}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetPushedArtifact", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/artifact/{ref.sequence.number}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetPushedArtifact_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetPushedArtifact_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9081,12 +10425,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListDeployments", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/deployments"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListDeployments", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/deployments"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListDeployments_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListDeployments_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9101,12 +10446,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListDeployments", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/deployments"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListDeployments", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/deployments"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListDeployments_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListDeployments_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9121,12 +10467,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListInstances", runtime.WithHTTPPathPattern("/v1/instances/{deployment_id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListInstances", runtime.WithHTTPPathPattern("/v1/instances/{deployment_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListInstances_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListInstances_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9141,12 +10488,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListInstances", runtime.WithHTTPPathPattern("/v1/project/{application.application.project}/application/{application.application.application}/instances"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListInstances", runtime.WithHTTPPathPattern("/v1/project/{application.application.project}/application/{application.application.application}/instances"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListInstances_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListInstances_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9161,12 +10509,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListInstances", runtime.WithHTTPPathPattern("/v1/project/{application.application.project}/application/{application.application.application}/workspace/{application.workspace.workspace}/instances"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListInstances", runtime.WithHTTPPathPattern("/v1/project/{application.application.project}/application/{application.application.application}/workspace/{application.workspace.workspace}/instances"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListInstances_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListInstances_2(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9181,12 +10530,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetDeployment", runtime.WithHTTPPathPattern("/v1/deployment/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetDeployment", runtime.WithHTTPPathPattern("/v1/deployment/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetDeployment_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetDeployment_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9201,12 +10551,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetDeployment", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/deployment/{ref.sequence.number}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetDeployment", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/deployment/{ref.sequence.number}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetDeployment_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetDeployment_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9221,12 +10572,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestBuild", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/build/latest"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestBuild", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/build/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetLatestBuild_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetLatestBuild_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9241,12 +10593,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestBuild", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/build/latest"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestBuild", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/build/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetLatestBuild_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetLatestBuild_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9261,12 +10614,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/artifact/latest"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/artifact/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetLatestPushedArtifact_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetLatestPushedArtifact_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9281,12 +10635,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/artifact/latest"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/artifact/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetLatestPushedArtifact_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetLatestPushedArtifact_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9301,12 +10656,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListReleases", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/releases"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListReleases", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/releases"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListReleases_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListReleases_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9321,12 +10677,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListReleases", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/releases"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListReleases", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/releases"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListReleases_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListReleases_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9341,12 +10698,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetRelease", runtime.WithHTTPPathPattern("/v1/release/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetRelease", runtime.WithHTTPPathPattern("/v1/release/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetRelease_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetRelease_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9361,12 +10719,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetRelease", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/release/{ref.sequence.number}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetRelease", runtime.WithHTTPPathPattern("/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/release/{ref.sequence.number}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetRelease_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetRelease_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9381,12 +10740,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestRelease", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/release/latest"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestRelease", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/release/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetLatestRelease_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetLatestRelease_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9401,12 +10761,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestRelease", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/release/latest"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestRelease", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/release/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetLatestRelease_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetLatestRelease_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9421,12 +10782,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLogStream", runtime.WithHTTPPathPattern("/v1/deployment/{deployment_id}/logs"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLogStream", runtime.WithHTTPPathPattern("/v1/deployment/{deployment_id}/logs"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetLogStream_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetLogStream_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9441,12 +10803,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLogStream", runtime.WithHTTPPathPattern("/v1/project/{application.application.project}/application/{application.application.application}/logs"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLogStream", runtime.WithHTTPPathPattern("/v1/project/{application.application.project}/application/{application.application.application}/logs"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetLogStream_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetLogStream_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9461,12 +10824,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLogStream", runtime.WithHTTPPathPattern("/v1/project/{application.application.project}/application/{application.application.application}/workspace/{application.workspace.workspace}/logs"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLogStream", runtime.WithHTTPPathPattern("/v1/project/{application.application.project}/application/{application.application.application}/workspace/{application.workspace.workspace}/logs"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetLogStream_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetLogStream_2(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9481,12 +10845,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CreateHostname", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/hostname"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CreateHostname", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/hostname"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_CreateHostname_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_CreateHostname_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9501,12 +10866,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CreateHostname", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/workspace/{target.application.workspace.workspace}/hostname"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CreateHostname", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/workspace/{target.application.workspace.workspace}/hostname"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_CreateHostname_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_CreateHostname_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9521,12 +10887,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteHostname", runtime.WithHTTPPathPattern("/v1/hostname/{hostname}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DeleteHostname", runtime.WithHTTPPathPattern("/v1/hostname/{hostname}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_DeleteHostname_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_DeleteHostname_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9541,12 +10908,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListHostnames", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/hostnames"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListHostnames", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/hostnames"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListHostnames_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListHostnames_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9561,12 +10929,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListHostnames", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/workspace/{target.application.workspace.workspace}/hostnames"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListHostnames", runtime.WithHTTPPathPattern("/v1/project/{target.application.application.project}/application/{target.application.application.application}/workspace/{target.application.workspace.workspace}/hostnames"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListHostnames_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListHostnames_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9577,16 +10946,227 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 
 	})
 
-	mux.Handle("GET", pattern_Waypoint_GetRunner_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Waypoint_QueueJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetRunner", runtime.WithHTTPPathPattern("/v1/runner/{runner_id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/QueueJob", runtime.WithHTTPPathPattern("/v1/jobs/queue"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetRunner_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_QueueJob_0(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_QueueJob_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_Waypoint_CancelJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CancelJob", runtime.WithHTTPPathPattern("/v1/jobs/cancel/{job_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_CancelJob_0(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_CancelJob_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_GetJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetJob", runtime.WithHTTPPathPattern("/v1/jobs/{job_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_GetJob_0(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_GetJob_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_ListJobs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs/workspace/{workspace.workspace}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_ListJobs_0(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_ListJobs_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_ListJobs_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs/workspace/{workspace.workspace}/state/{jobState}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_ListJobs_1(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_ListJobs_1(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_ListJobs_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs/project/{project.project}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_ListJobs_2(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_ListJobs_2(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_ListJobs_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs/state/{jobState}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_ListJobs_3(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_ListJobs_3(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_ListJobs_4, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs/runner/by-id/{targetRunner.id.id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_ListJobs_4(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_ListJobs_4(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_Waypoint_ValidateJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ValidateJob", runtime.WithHTTPPathPattern("/v1/jobs/validate"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_ValidateJob_0(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_ValidateJob_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_GetJobStream_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetJobStream", runtime.WithHTTPPathPattern("/v1/jobs/stream/{job_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_GetJobStream_0(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_GetJobStream_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_GetRunner_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetRunner", runtime.WithHTTPPathPattern("/v1/runner/{runner_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_GetRunner_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9601,12 +11181,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListRunners", runtime.WithHTTPPathPattern("/v1/runners"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListRunners", runtime.WithHTTPPathPattern("/v1/runners"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListRunners_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListRunners_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9621,12 +11202,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/AdoptRunner", runtime.WithHTTPPathPattern("/v1/runner/{runner_id}/adopt"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/AdoptRunner", runtime.WithHTTPPathPattern("/v1/runner/{runner_id}/adopt"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_AdoptRunner_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_AdoptRunner_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9641,12 +11223,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ForgetRunner", runtime.WithHTTPPathPattern("/v1/runner/{runner_id}/forget"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ForgetRunner", runtime.WithHTTPPathPattern("/v1/runner/{runner_id}/forget"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ForgetRunner_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ForgetRunner_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9661,12 +11244,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetServerConfig", runtime.WithHTTPPathPattern("/v1/server/config"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetServerConfig", runtime.WithHTTPPathPattern("/v1/server/config"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetServerConfig_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetServerConfig_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9681,12 +11265,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/SetServerConfig", runtime.WithHTTPPathPattern("/v1/server/config"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/SetServerConfig", runtime.WithHTTPPathPattern("/v1/server/config"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_SetServerConfig_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_SetServerConfig_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9701,12 +11286,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DecodeToken", runtime.WithHTTPPathPattern("/v1/token/decode"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/DecodeToken", runtime.WithHTTPPathPattern("/v1/token/decode"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_DecodeToken_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_DecodeToken_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9721,12 +11307,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GenerateInviteToken", runtime.WithHTTPPathPattern("/v1/token/invite"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GenerateInviteToken", runtime.WithHTTPPathPattern("/v1/token/invite"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GenerateInviteToken_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GenerateInviteToken_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9741,12 +11328,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GenerateLoginToken", runtime.WithHTTPPathPattern("/v1/token/login"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GenerateLoginToken", runtime.WithHTTPPathPattern("/v1/token/login"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GenerateLoginToken_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GenerateLoginToken_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9761,12 +11349,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GenerateRunnerToken", runtime.WithHTTPPathPattern("/v1/token/runner"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GenerateRunnerToken", runtime.WithHTTPPathPattern("/v1/token/runner"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GenerateRunnerToken_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GenerateRunnerToken_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9781,12 +11370,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ConvertInviteToken", runtime.WithHTTPPathPattern("/v1/token/exchange"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ConvertInviteToken", runtime.WithHTTPPathPattern("/v1/token/exchange"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ConvertInviteToken_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ConvertInviteToken_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9801,12 +11391,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetStatusReport", runtime.WithHTTPPathPattern("/v1/release/by-id/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetStatusReport", runtime.WithHTTPPathPattern("/v1/release/by-id/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetStatusReport_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetStatusReport_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9821,12 +11412,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestStatusReport", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/status-report/latest"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestStatusReport", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/status-report/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetLatestStatusReport_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetLatestStatusReport_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9841,12 +11433,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestStatusReport", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/status-report/latest"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetLatestStatusReport", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/status-report/latest"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetLatestStatusReport_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetLatestStatusReport_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9861,12 +11454,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListStatusReports", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/status-reports"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListStatusReports", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/status-reports"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListStatusReports_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListStatusReports_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9881,12 +11475,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListStatusReports", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/status-reports"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListStatusReports", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/status-reports"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListStatusReports_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListStatusReports_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9901,12 +11496,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/deployment/{deployment.id}/status-report"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/deployment/{deployment.id}/status-report"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ExpediteStatusReport_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ExpediteStatusReport_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9921,12 +11517,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/release/{release.id}/status-report"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/release/{release.id}/status-report"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ExpediteStatusReport_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ExpediteStatusReport_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9941,12 +11538,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/project/{deployment.sequence.application.project}/application/{deployment.sequence.application.application}/deployment/{deployment.sequence.number}/status-report"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/project/{deployment.sequence.application.project}/application/{deployment.sequence.application.application}/deployment/{deployment.sequence.number}/status-report"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ExpediteStatusReport_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ExpediteStatusReport_2(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9961,12 +11559,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/project/{release.sequence.application.project}/application/{release.sequence.application.application}/release/{release.sequence.number}/status-report"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", runtime.WithHTTPPathPattern("/v1/project/{release.sequence.application.project}/application/{release.sequence.application.application}/release/{release.sequence.number}/status-report"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ExpediteStatusReport_3(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ExpediteStatusReport_3(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -9981,12 +11580,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/WaypointHclFmt", runtime.WithHTTPPathPattern("/v1/hcl/format"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/WaypointHclFmt", runtime.WithHTTPPathPattern("/v1/hcl/format"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_WaypointHclFmt_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_WaypointHclFmt_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -10001,12 +11601,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertOnDemandRunnerConfig", runtime.WithHTTPPathPattern("/v1/runner/on-demand"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertOnDemandRunnerConfig", runtime.WithHTTPPathPattern("/v1/runner/on-demand"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_UpsertOnDemandRunnerConfig_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_UpsertOnDemandRunnerConfig_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -10021,12 +11622,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig", runtime.WithHTTPPathPattern("/v1/on-demand-runner/by-id/{config.id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig", runtime.WithHTTPPathPattern("/v1/on-demand-runner/by-id/{config.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetOnDemandRunnerConfig_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetOnDemandRunnerConfig_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -10041,12 +11643,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig", runtime.WithHTTPPathPattern("/v1/on-demand-runner/by-name/{config.name}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig", runtime.WithHTTPPathPattern("/v1/on-demand-runner/by-name/{config.name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetOnDemandRunnerConfig_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetOnDemandRunnerConfig_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -10061,12 +11664,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListOnDemandRunnerConfigs", runtime.WithHTTPPathPattern("/v1/on-demand-runners"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListOnDemandRunnerConfigs", runtime.WithHTTPPathPattern("/v1/on-demand-runners"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListOnDemandRunnerConfigs_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListOnDemandRunnerConfigs_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -10081,12 +11685,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertTrigger", runtime.WithHTTPPathPattern("/v1/triggers"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UpsertTrigger", runtime.WithHTTPPathPattern("/v1/triggers"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_UpsertTrigger_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_UpsertTrigger_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -10101,12 +11706,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetTrigger", runtime.WithHTTPPathPattern("/v1/trigger/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetTrigger", runtime.WithHTTPPathPattern("/v1/trigger/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetTrigger_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetTrigger_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -10121,12 +11727,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetTrigger", runtime.WithHTTPPathPattern("/v1/trigger/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/GetTrigger", runtime.WithHTTPPathPattern("/v1/trigger/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_GetTrigger_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_GetTrigger_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -10141,12 +11748,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/triggers"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/triggers"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListTriggers_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListTriggers_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -10161,12 +11769,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/project/{project.project}/triggers"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/project/{project.project}/triggers"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListTriggers_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListTriggers_1(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -10181,12 +11790,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/triggers"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/triggers"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListTriggers_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListTriggers_2(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -10201,12 +11811,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/triggers"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/ListTriggers", runtime.WithHTTPPathPattern("/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/triggers"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_ListTriggers_3(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_ListTriggers_3(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -10221,12 +11832,13 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/RunTrigger", runtime.WithHTTPPathPattern("/v1/trigger/{ref.id}"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/RunTrigger", runtime.WithHTTPPathPattern("/v1/trigger/{ref.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_RunTrigger_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_RunTrigger_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -10234,6 +11846,90 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		}
 
 		forward_Waypoint_RunTrigger_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_UI_ListDeployments_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_ListDeployments", runtime.WithHTTPPathPattern("/v1/ui/deployments/workspace/{workspace.workspace}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_UI_ListDeployments_0(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_UI_ListDeployments_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_UI_ListDeployments_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_ListDeployments", runtime.WithHTTPPathPattern("/v1/ui/deployments/application/{application.application}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_UI_ListDeployments_1(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_UI_ListDeployments_1(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_UI_ListDeployments_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_ListDeployments", runtime.WithHTTPPathPattern("/v1/ui/deployments/project/{application.project}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_UI_ListDeployments_2(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_UI_ListDeployments_2(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_UI_ListDeployments_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_ListDeployments", runtime.WithHTTPPathPattern("/v1/ui/deployments/state/{physical_state}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_UI_ListDeployments_3(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_UI_ListDeployments_3(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -10355,6 +12051,26 @@ var (
 
 	pattern_Waypoint_ListHostnames_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"v1", "project", "target.application.application.project", "application", "target.application.application.application", "workspace", "target.application.workspace.workspace", "hostnames"}, ""))
 
+	pattern_Waypoint_QueueJob_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "jobs", "queue"}, ""))
+
+	pattern_Waypoint_CancelJob_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "jobs", "cancel", "job_id"}, ""))
+
+	pattern_Waypoint_GetJob_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "jobs", "job_id"}, ""))
+
+	pattern_Waypoint_ListJobs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "jobs", "workspace", "workspace.workspace"}, ""))
+
+	pattern_Waypoint_ListJobs_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"v1", "jobs", "workspace", "workspace.workspace", "state", "jobState"}, ""))
+
+	pattern_Waypoint_ListJobs_2 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "jobs", "project", "project.project"}, ""))
+
+	pattern_Waypoint_ListJobs_3 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "jobs", "state", "jobState"}, ""))
+
+	pattern_Waypoint_ListJobs_4 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "jobs", "runner", "by-id", "targetRunner.id.id"}, ""))
+
+	pattern_Waypoint_ValidateJob_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "jobs", "validate"}, ""))
+
+	pattern_Waypoint_GetJobStream_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "jobs", "stream", "job_id"}, ""))
+
 	pattern_Waypoint_GetRunner_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "runner", "runner_id"}, ""))
 
 	pattern_Waypoint_ListRunners_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "runners"}, ""))
@@ -10420,6 +12136,14 @@ var (
 	pattern_Waypoint_ListTriggers_3 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"v1", "project", "application.project", "application", "application.application", "workspace", "workspace.workspace", "triggers"}, ""))
 
 	pattern_Waypoint_RunTrigger_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "trigger", "ref.id"}, ""))
+
+	pattern_Waypoint_UI_ListDeployments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "ui", "deployments", "workspace", "workspace.workspace"}, ""))
+
+	pattern_Waypoint_UI_ListDeployments_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "ui", "deployments", "application", "application.application"}, ""))
+
+	pattern_Waypoint_UI_ListDeployments_2 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "ui", "deployments", "project", "application.project"}, ""))
+
+	pattern_Waypoint_UI_ListDeployments_3 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "ui", "deployments", "state", "physical_state"}, ""))
 )
 
 var (
@@ -10537,6 +12261,26 @@ var (
 
 	forward_Waypoint_ListHostnames_1 = runtime.ForwardResponseMessage
 
+	forward_Waypoint_QueueJob_0 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_CancelJob_0 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_GetJob_0 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_ListJobs_0 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_ListJobs_1 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_ListJobs_2 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_ListJobs_3 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_ListJobs_4 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_ValidateJob_0 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_GetJobStream_0 = runtime.ForwardResponseStream
+
 	forward_Waypoint_GetRunner_0 = runtime.ForwardResponseMessage
 
 	forward_Waypoint_ListRunners_0 = runtime.ForwardResponseMessage
@@ -10602,4 +12346,12 @@ var (
 	forward_Waypoint_ListTriggers_3 = runtime.ForwardResponseMessage
 
 	forward_Waypoint_RunTrigger_0 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_UI_ListDeployments_0 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_UI_ListDeployments_1 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_UI_ListDeployments_2 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_UI_ListDeployments_3 = runtime.ForwardResponseMessage
 )

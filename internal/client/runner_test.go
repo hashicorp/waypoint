@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	configpkg "github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/pkg/server"
 	"github.com/hashicorp/waypoint/pkg/server/singleprocess"
 
 	"github.com/hashicorp/go-hclog"
@@ -67,7 +68,7 @@ func Test_remoteOpPreferred(t *testing.T) {
 	}
 
 	// Register a remote runner
-	_, remoteRunnerClose := singleprocess.TestRunner(t, client, &pb.Runner{
+	_, remoteRunnerClose := server.TestRunner(t, client, &pb.Runner{
 		Kind: &pb.Runner_Remote_{Remote: &pb.Runner_Remote{}},
 	})
 	defer remoteRunnerClose()

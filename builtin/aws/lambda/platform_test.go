@@ -38,4 +38,21 @@ func TestPlatformConfig(t *testing.T) {
 			require.EqualError(t, p.ConfigSet(cfg), "rpc error: code = InvalidArgument desc = Timeout: Timeout must not be negative.")
 		}
 	})
+
+	t.Run("disallows invalid storagemb", func(t *testing.T) {
+		var p Platform
+		{
+			cfg := &Config{
+				StorageMB: 100,
+			}
+			require.EqualError(t, p.ConfigSet(cfg), "rpc error: code = InvalidArgument desc = StorageMB: Storage must a value between 512 and 10240.")
+		}
+
+		{
+			cfg := &Config{
+				StorageMB: 20000,
+			}
+			require.EqualError(t, p.ConfigSet(cfg), "rpc error: code = InvalidArgument desc = StorageMB: Storage must a value between 512 and 10240.")
+		}
+	})
 }

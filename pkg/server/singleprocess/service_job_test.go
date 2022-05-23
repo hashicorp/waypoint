@@ -420,7 +420,7 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 	require.NotEmpty(queueResp.JobId)
 
 	// Register our runner
-	id, _ := TestRunner(t, client, nil)
+	id, _ := server.TestRunner(t, client, nil)
 
 	// Start a job request
 	runnerStream, err := client.RunnerJobStream(ctx)
@@ -621,7 +621,7 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 	require.NotEmpty(queueResp.JobId)
 
 	// Register our runner
-	id, _ := TestRunner(t, client, nil)
+	id, _ := server.TestRunner(t, client, nil)
 
 	// Start a job request
 	runnerStream, err := client.RunnerJobStream(ctx)
@@ -786,7 +786,7 @@ func TestServiceGetJobStream_completedBufferedData(t *testing.T) {
 	require.NotEmpty(queueResp.JobId)
 
 	// Register our runner
-	id, _ := TestRunner(t, client, nil)
+	id, _ := server.TestRunner(t, client, nil)
 
 	// Start a job request
 	runnerStream, err := client.RunnerJobStream(ctx)
@@ -1028,7 +1028,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	require.Equal(pb.Task_PENDING, task.JobState)
 
 	// Register our runner
-	id, _ := TestRunner(t, client, nil)
+	id, _ := server.TestRunner(t, client, nil)
 
 	// Start a job request
 	runnerStream, err := client.RunnerJobStream(ctx)
@@ -1069,7 +1069,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 
 	// Register our runner
 	runnerId := st.Info.EnvironmentVariables["WAYPOINT_RUNNER_ID"]
-	TestRunner(t, client, &pb.Runner{
+	server.TestRunner(t, client, &pb.Runner{
 		Id:       runnerId,
 		ByIdOnly: true,
 	})
@@ -1349,7 +1349,7 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 	require.Equal(pb.Job_QUEUED, job.State)
 
 	// Register our runner
-	id, _ := TestRunner(t, client, nil)
+	id, _ := server.TestRunner(t, client, nil)
 
 	// Start a job request
 	runnerStream, err := client.RunnerJobStream(ctx)
@@ -1395,7 +1395,7 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 	}))
 
 	// Register our runner
-	TestRunner(t, client, &pb.Runner{
+	server.TestRunner(t, client, &pb.Runner{
 		Id:       runnerId,
 		ByIdOnly: true,
 	})
@@ -1519,7 +1519,7 @@ func TestServiceQueueJob_odr_target_id(t *testing.T) {
 	require.Equal(pb.Job_QUEUED, job.State)
 
 	// Register our static runner
-	TestRunner(t, client, &pb.Runner{Id: runnerId})
+	server.TestRunner(t, client, &pb.Runner{Id: runnerId})
 
 	// Start a job request
 	runnerStream, err := client.RunnerJobStream(ctx)
@@ -1559,7 +1559,7 @@ func TestServiceQueueJob_odr_target_id(t *testing.T) {
 
 	// Register on-demand runner
 	odrId := st.Info.EnvironmentVariables["WAYPOINT_RUNNER_ID"]
-	TestRunner(t, client, &pb.Runner{Id: odrId})
+	server.TestRunner(t, client, &pb.Runner{Id: odrId})
 
 	// Start a job request
 	rs2, err := client.RunnerJobStream(ctx)
@@ -1690,7 +1690,7 @@ func TestServiceQueueJob_odr_target_labels(t *testing.T) {
 	require.Equal(pb.Job_QUEUED, job.State)
 
 	// Register our static runner
-	id, _ := TestRunner(t, client, &pb.Runner{Labels: labels})
+	id, _ := server.TestRunner(t, client, &pb.Runner{Labels: labels})
 
 	// Start a job request
 	runnerStream, err := client.RunnerJobStream(ctx)
@@ -1730,7 +1730,7 @@ func TestServiceQueueJob_odr_target_labels(t *testing.T) {
 
 	// Register on-demand runner
 	odrId := st.Info.EnvironmentVariables["WAYPOINT_RUNNER_ID"]
-	TestRunner(t, client, &pb.Runner{Id: odrId})
+	server.TestRunner(t, client, &pb.Runner{Id: odrId})
 
 	// Start a job request
 	rs2, err := client.RunnerJobStream(ctx)
