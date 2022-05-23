@@ -93,43 +93,33 @@ func (s *State) pipelineGet(
 	var pipelineId string
 	switch r := ref.Ref.(type) {
 	case *pb.Ref_Pipeline_Id:
-		s.log.Info("looking up pipeline by id", "id", r.Id)
+		s.log.Trace("looking up pipeline by id", "id", r.Id)
 		pipelineId = r.Id.Id
 	case *pb.Ref_Pipeline_Owner:
-		s.log.Info("looking up pipeline by owner and name",
+		s.log.Trace("looking up pipeline by owner and name",
 			"owner", r.Owner.Project, "name", r.Owner.PipelineName)
 
-		// NOTE(briancain): This query doesn't seem to work as I'd expect it to.
-		// It returns the "last inserted pipeline" rather than all pipelines
-		// by project name. :thinking:
-		iter, err := memTxn.Get(pipelineIndexTableName, pipelineIndexProjectId, r.Owner.Project.Project)
+		// Look up the first instance of the pipeline owners pipeline name
+		raw, err := memTxn.First(pipelineIndexTableName,
+			pipelineIndexName, r.Owner.Project.Project, r.Owner.PipelineName)
 		if err != nil {
 			return nil, err
 		}
-
-		// Look up if there's a pipeline name that exists by project ID owner
-		for {
-			raw := iter.Next()
-			if raw == nil {
-				// We're out of candidates and we found none.
-				break
-			}
-
-			pipeIndex := raw.(*pipelineIndexRecord)
-			// TODO:  delete this, used for debugging tests
-			s.log.Info("looking at", "name", pipeIndex.Name)
-
-			if pipeIndex.ProjectId == r.Owner.Project.Project &&
-				pipeIndex.Name == r.Owner.PipelineName {
-				pipelineId = pipeIndex.Id
-				break
-			}
+		if raw == nil {
+			return nil, status.Errorf(codes.NotFound,
+				"pipeline %q could not found for owner %q",
+				r.Owner.PipelineName, r.Owner.Project.Project)
 		}
 
-		if pipelineId == "" {
-			// better error message here
-			return nil, status.Errorf(codes.NotFound, "pipeline %q not found", r.Owner.PipelineName)
+		// set the id to be looked up for GET
+		idx, ok := raw.(*pipelineIndexRecord)
+		if !ok {
+			// This shouldn't happen, but guard against it...
+			return nil, status.Error(codes.Internal,
+				"failed to decode raw result to *pipelineIndexRecord!")
 		}
+
+		pipelineId = idx.Id
 	default:
 		return nil, status.Error(
 			codes.FailedPrecondition,
@@ -290,7 +280,7 @@ func pipelineIndexSchema() *memdb.TableSchema {
 			pipelineIndexProjectId: {
 				Name:         pipelineIndexProjectId,
 				AllowMissing: false,
-				Unique:       true,
+				Unique:       false,
 				Indexer: &memdb.StringFieldIndex{
 					Field:     "ProjectId",
 					Lowercase: true,
@@ -300,9 +290,18 @@ func pipelineIndexSchema() *memdb.TableSchema {
 				Name:         pipelineIndexName,
 				AllowMissing: false,
 				Unique:       true,
-				Indexer: &memdb.StringFieldIndex{
-					Field:     "Name",
-					Lowercase: true,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.StringFieldIndex{
+							Field:     "ProjectId",
+							Lowercase: true,
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Name",
+							Lowercase: true,
+						},
+					},
 				},
 			},
 		},

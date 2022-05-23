@@ -52,13 +52,13 @@ func (c *ConfigSyncCommand) Run(args []string) int {
 			// Extra space
 			app.UI.Output("")
 			for name, ref := range jobResult.PipelineConfigSync.SyncedPipelines {
-				pipelineRef, ok := ref.Ref.(*pb.Ref_Pipeline_Id)
+				pipelineRef, ok := ref.Ref.(*pb.Ref_Pipeline_Owner)
 				if !ok {
 					app.UI.Output("failed to convert pipeline ref", terminal.WithErrorStyle())
 					return ErrSentinel
 				}
 
-				app.UI.Output("✔ Pipeline %q (%s) synchronized!", name, pipelineRef.Id, terminal.WithInfoStyle())
+				app.UI.Output("✔ Pipeline %q (%s) synchronized!", name, pipelineRef.Owner.Project, terminal.WithInfoStyle())
 			}
 		}
 
