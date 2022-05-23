@@ -20,7 +20,6 @@ func (p *Pipeline) ConfigSync(ctx context.Context) error {
 		return err
 	}
 
-	// TODO(briancain): do we need a Multi upsert?
 	p.logger.Debug("syncing pipeline config")
 	for _, pipeline := range pipelines {
 		pipeOwner, ok := pipeline.Owner.(*pb.Pipeline_Project)
@@ -28,6 +27,8 @@ func (p *Pipeline) ConfigSync(ctx context.Context) error {
 			return status.Error(codes.FailedPrecondition,
 				"failed to determine pipeline owner. Only expecting pipeline owner to be a Pipeline_Project type.")
 		}
+
+		p.logger.Trace("looking up pipeline by owner and name", "owner", pipeOwner.Project, "name", pipeline.Name)
 
 		// Look up if this pipeline already exists by Pipeline Owner (project and pipeline name)
 		// If so, use the existing id to upsert into an existing config. Otherwise
@@ -53,6 +54,8 @@ func (p *Pipeline) ConfigSync(ctx context.Context) error {
 			p.logger.Trace("existing pipeline already in db, using existing id", "pipeline_id", pipeline.Id)
 		}
 
+		// TODO(briancain): We might want a multi-upsert for pipelines if this
+		// request gets out of hand.
 		_, err = p.client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
 			Pipeline: pipeline,
 		})
