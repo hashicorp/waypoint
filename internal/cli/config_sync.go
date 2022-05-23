@@ -27,6 +27,9 @@ func (c *ConfigSyncCommand) Run(args []string) int {
 	}
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		app.UI.Output("Synchronizing application %q configuration with Waypoint server...",
+			app.Ref().Application, terminal.WithHeaderStyle())
+
 		sg := app.UI.StepGroup()
 		defer sg.Wait()
 
@@ -39,11 +42,11 @@ func (c *ConfigSyncCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
-		step.Update("Configuration variables synchronized successfully!")
+		step.Update("Configuration variables synchronized!")
 		step.Done()
 
 		if jobResult.PipelineConfigSync != nil && len(jobResult.PipelineConfigSync.SyncedPipelines) > 0 {
-			step := sg.Add("Configuration for pipelines synchronized successfully!")
+			step := sg.Add("Configuration for pipelines synchronized!")
 			step.Done()
 
 			// Extra space
@@ -55,9 +58,12 @@ func (c *ConfigSyncCommand) Run(args []string) int {
 					return ErrSentinel
 				}
 
-				app.UI.Output("Pipeline %q (%s) synchronized!", name, pipelineRef.Id, terminal.WithInfoStyle())
+				app.UI.Output("✔ Pipeline %q (%s) synchronized!", name, pipelineRef.Id, terminal.WithInfoStyle())
 			}
 		}
+
+		step = sg.Add("Application configuration for %q synchronized successfully with Waypoint server!", app.Ref().Application)
+		step.Done()
 
 		return nil
 	})
