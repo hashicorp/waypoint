@@ -1096,7 +1096,7 @@
     ember-cli-version-checker "^5.1.2"
     semver "^7.3.5"
 
-"@embroider/addon-shim@^1.0.0", "@embroider/addon-shim@^1.5.0":
+"@embroider/addon-shim@^1.5.0":
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/@embroider/addon-shim/-/addon-shim-1.6.0.tgz#d2d6d1d820605a48273a123a9adb49e163c8de1c"
   integrity sha512-wHXsBsDsKxF6Ftnh67SBzV0OvwCBCBlgN5IVm661ByEdDacwWzYywFpVNcNJpCUttEJPMrqB5MJK7xf/xEqihg==
@@ -1496,10 +1496,10 @@
   resolved "https://registry.yarnpkg.com/@handlebars/parser/-/parser-1.1.0.tgz#d6dbc7574774b238114582410e8fee0dc3532bdf"
   integrity sha512-rR7tJoSwJ2eooOpYGxGGW95sLq6GXUaS1UtWvN7pei6n2/okYvCGld9vsUTvkl2migxbkszsycwtMf/GEc1k1A==
 
-"@hashicorp/design-system-components@^0.11.0":
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/@hashicorp/design-system-components/-/design-system-components-0.11.0.tgz#5135de82d3e2c58ec98f920f0ce44f945c381b3d"
-  integrity sha512-Y6YLszEY9pTVDc7CpTB+pQb2h/rZbSzKlAQA9yet8if/fiSPy91cFJ/kxuoLidW1FpRJF5JhjU1IGqs1ZHj+Qg==
+"@hashicorp/design-system-components@^0.11.2":
+  version "0.11.2"
+  resolved "https://registry.yarnpkg.com/@hashicorp/design-system-components/-/design-system-components-0.11.2.tgz#fe58203c548c87f95462545ca0c09a55a871b570"
+  integrity sha512-+EHZlee/EXnTrk+fPbMkPH06PuTVt4DFuInc432eFdmb12531Gg4mRPuoke/ZVA4tjKAm5IdK1qg2VLci+oz0A==
   dependencies:
     "@hashicorp/design-system-tokens" "^0.8.0"
     "@hashicorp/ember-flight-icons" "^2.0.5"
@@ -1507,7 +1507,6 @@
     ember-cli-babel "^7.26.11"
     ember-cli-htmlbars "^6.0.1"
     ember-cli-sass "^10.0.1"
-    ember-focus-trap "^1.0.1"
     ember-keyboard "^8.1.0"
     ember-named-blocks-polyfill "^0.2.5"
     sass "^1.43.4"
@@ -7261,14 +7260,6 @@ ember-fetch@^8.1.1:
     node-fetch "^2.6.1"
     whatwg-fetch "^3.6.2"
 
-ember-focus-trap@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/ember-focus-trap/-/ember-focus-trap-1.0.1.tgz#a99565f6ce55d500b92a0965e79e3ad04219f157"
-  integrity sha512-ZUyq5ZkIuXp+ng9rCMkqBh36/V95PltL7iljStkma4+651xlAy3Z84L9WOu/uOJyVpNUxii8RJBbAySHV6c+RQ==
-  dependencies:
-    "@embroider/addon-shim" "^1.0.0"
-    focus-trap "^6.7.1"
-
 ember-gesture-modifiers@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/ember-gesture-modifiers/-/ember-gesture-modifiers-1.0.0.tgz#6ddee2a301bcbe8fe01ab190284ab3cdf5bf9aeb"
@@ -8698,13 +8689,6 @@ flush-write-stream@^1.0.0:
   dependencies:
     inherits "^2.0.3"
     readable-stream "^2.3.6"
-
-focus-trap@^6.7.1:
-  version "6.9.0"
-  resolved "https://registry.yarnpkg.com/focus-trap/-/focus-trap-6.9.0.tgz#d72a1ba17ac1b500bd857c6b01f072b8cfd97f6e"
-  integrity sha512-Yv3ieSeAPbfjzjU6xIuF1yAGw0kIKO5EkEJL9o/8MYfBcr99cV7dE6rJM4slk1itDHHeEhoNorQVzvEIT1rNsw==
-  dependencies:
-    tabbable "^5.3.1"
 
 follow-redirects@^1.0.0:
   version "1.14.8"
@@ -14037,11 +14021,6 @@ sync-disk-cache@^2.0.0:
     mkdirp "^0.5.0"
     rimraf "^3.0.0"
     username-sync "^1.0.2"
-
-tabbable@^5.3.1:
-  version "5.3.1"
-  resolved "https://registry.yarnpkg.com/tabbable/-/tabbable-5.3.1.tgz#059f2a19b829efce2a0ec05785a47dd3bcd0a25b"
-  integrity sha512-NtO7I7eoAHR+JwwcNsi/PipamtAEebYDnur/k9wM6n238HHy/+1O4+7Zx7e/JaDAbKJPlIFYsfsV/6tPqTOQvg==
 
 table@^6.0.9:
   version "6.8.0"
