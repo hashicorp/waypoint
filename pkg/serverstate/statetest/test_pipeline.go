@@ -183,7 +183,21 @@ func TestPipeline(t *testing.T, factory Factory, restartF RestartFactory) {
 			})
 			require.NoError(err)
 			require.NotNil(resp)
-			require.Equal(resp.Name, "test")
+			require.Equal(resp.Name, "mario")
+			require.Equal(resp.Id, "mario")
+		}
+
+		// Get pipeline by Owner Ref
+		{
+			resp, err := s.PipelineGet(&pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Owner{
+					Owner: &pb.Ref_PipelineOwner{Project: &pb.Ref_Project{Project: "nintendo"}, PipelineName: "mario"},
+				},
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal(resp.Name, "mario")
+			require.Equal(resp.Id, "testtest")
 		}
 	})
 
@@ -208,6 +222,64 @@ func TestPipeline(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Error(err)
 			require.Equal(codes.NotFound, status.Code(err))
 			require.Nil(resp)
+		}
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Set
+		p := ptypes.TestPipeline(t, nil)
+		err := s.PipelinePut(p)
+		require.NoError(err)
+
+		// List should return one pipeline
+		{
+			resp, err := s.PipelineList(&pb.Ref_Project{
+				Project: "project",
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Len(resp, 1)
+		}
+
+		// Another one
+		p2 := ptypes.TestPipeline(t, &pb.Pipeline{
+			Id:   "mario",
+			Name: "mario",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "project",
+				},
+			},
+		})
+		err = s.PipelinePut(p2)
+		require.NoError(err)
+
+		// a third, same pipeline name but different project
+		p3 := ptypes.TestPipeline(t, &pb.Pipeline{
+			Id:   "testtwo",
+			Name: "testtwo",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "project",
+				},
+			},
+		})
+		err = s.PipelinePut(p3)
+		require.NoError(err)
+
+		// List should return three pipelines
+		{
+			resp, err := s.PipelineList(&pb.Ref_Project{
+				Project: "project",
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Len(resp, 3)
 		}
 	})
 }
