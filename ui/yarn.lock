@@ -1496,13 +1496,13 @@
   resolved "https://registry.yarnpkg.com/@handlebars/parser/-/parser-1.1.0.tgz#d6dbc7574774b238114582410e8fee0dc3532bdf"
   integrity sha512-rR7tJoSwJ2eooOpYGxGGW95sLq6GXUaS1UtWvN7pei6n2/okYvCGld9vsUTvkl2migxbkszsycwtMf/GEc1k1A==
 
-"@hashicorp/design-system-components@^0.11.2":
-  version "0.11.2"
-  resolved "https://registry.yarnpkg.com/@hashicorp/design-system-components/-/design-system-components-0.11.2.tgz#fe58203c548c87f95462545ca0c09a55a871b570"
-  integrity sha512-+EHZlee/EXnTrk+fPbMkPH06PuTVt4DFuInc432eFdmb12531Gg4mRPuoke/ZVA4tjKAm5IdK1qg2VLci+oz0A==
+"@hashicorp/design-system-components@^0.12.1":
+  version "0.12.1"
+  resolved "https://registry.yarnpkg.com/@hashicorp/design-system-components/-/design-system-components-0.12.1.tgz#5018b0e7921438fdf1b0efa6f1342df0525c4a03"
+  integrity sha512-kWIA1ABEWQ9k/aWpbx0R9VhQ6jLJ7JCKn/EF2qgdbl9RV5QWvBfxfIEOkOzEwqoe0Q6apMqj32DBP53cLDlzQA==
   dependencies:
     "@hashicorp/design-system-tokens" "^0.8.0"
-    "@hashicorp/ember-flight-icons" "^2.0.5"
+    "@hashicorp/ember-flight-icons" "^2.0.6"
     ember-auto-import "^2.4.1"
     ember-cli-babel "^7.26.11"
     ember-cli-htmlbars "^6.0.1"
@@ -1510,25 +1510,26 @@
     ember-keyboard "^8.1.0"
     ember-named-blocks-polyfill "^0.2.5"
     sass "^1.43.4"
+    sinon "^14.0.0"
 
 "@hashicorp/design-system-tokens@^0.8.0":
   version "0.8.0"
   resolved "https://registry.yarnpkg.com/@hashicorp/design-system-tokens/-/design-system-tokens-0.8.0.tgz#1e9c0f9909fb8138cf0cd076198f09415f18a5f4"
   integrity sha512-p9VOS6Kw8sRAvXgK4SfVc/hrb0lrQDx1dPLEnZjgMgTARKv0Otfyc4mXrSBsYA+CAJwXdP2ctr+sAhB3vkJu0w==
 
-"@hashicorp/ember-flight-icons@^2.0.0", "@hashicorp/ember-flight-icons@^2.0.5":
-  version "2.0.5"
-  resolved "https://registry.yarnpkg.com/@hashicorp/ember-flight-icons/-/ember-flight-icons-2.0.5.tgz#a1edfdd24475ecd0cf07cd1f944e2e5bdb5e97cc"
-  integrity sha512-PXNk1aRBjYSGeoB4e2ovOBm6RhGKE554XjW8leYYK+y9yorHhJNNwWRkwjhDRLYWikLhNmfwp6nAYOJWl/IOgw==
+"@hashicorp/ember-flight-icons@^2.0.0", "@hashicorp/ember-flight-icons@^2.0.6":
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/@hashicorp/ember-flight-icons/-/ember-flight-icons-2.0.6.tgz#4cb479edae02de43335b111c979b4977e44a3096"
+  integrity sha512-ytEV2ghle0l2xXdJZ8gYR7nzHDlVeLhWmhcDhaVaHaLOJwWYUoZuDbqbGSeJuAQ2v+bVyd8+ovkWITIARVVJuA==
   dependencies:
-    "@hashicorp/flight-icons" "^2.3.1"
+    "@hashicorp/flight-icons" "^2.4.0"
     ember-cli-babel "^7.26.11"
     ember-cli-htmlbars "^6.0.1"
 
-"@hashicorp/flight-icons@^2.3.1":
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/@hashicorp/flight-icons/-/flight-icons-2.3.1.tgz#0b0dc259c0a4255c5613174db7192ab48523ca6f"
-  integrity sha512-WGCMMixkmYCP5Dyz4QW7XjW4zDhIc7njkVVucoj7Iv7abtfgQDWwm05Ja2aBJTxFHiP4jat9w9cbGNgC6QHmZQ==
+"@hashicorp/flight-icons@^2.4.0":
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/@hashicorp/flight-icons/-/flight-icons-2.4.0.tgz#4176d3f7928a518e5dbf99673cbe70962a184131"
+  integrity sha512-GhA29Rgu/SYnVxDidCR78pRAHVYiY7gk5MXeE0HRHV7MgvDgiDiCJ4r3n9yLzDgeA2laW0FoRU1CI0VVqhol5w==
 
 "@hashicorp/pds-ember@^0.6.3":
   version "0.6.3"
@@ -2127,6 +2128,34 @@
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/@simple-dom/interface/-/interface-1.4.0.tgz#e8feea579232017f89b0138e2726facda6fbb71f"
   integrity sha512-l5qumKFWU0S+4ZzMaLXFU8tQZsicHEMEyAxI5kDFGhJsRqDwe0a7/iPA/GdxlGyDKseQQAgIz5kzU7eXTrlSpA==
+
+"@sinonjs/commons@^1.6.0", "@sinonjs/commons@^1.7.0", "@sinonjs/commons@^1.8.3":
+  version "1.8.3"
+  resolved "https://registry.yarnpkg.com/@sinonjs/commons/-/commons-1.8.3.tgz#3802ddd21a50a949b6721ddd72da36e67e7f1b2d"
+  integrity sha512-xkNcLAn/wZaX14RPlwizcKicDk9G3F8m2nU3L7Ukm5zBgTwiT0wsoFAHx9Jq56fJA1z/7uKGtCRu16sOUCLIHQ==
+  dependencies:
+    type-detect "4.0.8"
+
+"@sinonjs/fake-timers@>=5", "@sinonjs/fake-timers@^9.1.2":
+  version "9.1.2"
+  resolved "https://registry.yarnpkg.com/@sinonjs/fake-timers/-/fake-timers-9.1.2.tgz#4eaab737fab77332ab132d396a3c0d364bd0ea8c"
+  integrity sha512-BPS4ynJW/o92PUR4wgriz2Ud5gpST5vz6GQfMixEDK0Z8ZCUv2M7SkBLykH56T++Xs+8ln9zTGbOvNGIe02/jw==
+  dependencies:
+    "@sinonjs/commons" "^1.7.0"
+
+"@sinonjs/samsam@^6.1.1":
+  version "6.1.1"
+  resolved "https://registry.yarnpkg.com/@sinonjs/samsam/-/samsam-6.1.1.tgz#627f7f4cbdb56e6419fa2c1a3e4751ce4f6a00b1"
+  integrity sha512-cZ7rKJTLiE7u7Wi/v9Hc2fs3Ucc3jrWeMgPHbbTCeVAB2S0wOBbYlkJVeNSL04i7fdhT8wIbDq1zhC/PXTD2SA==
+  dependencies:
+    "@sinonjs/commons" "^1.6.0"
+    lodash.get "^4.4.2"
+    type-detect "^4.0.8"
+
+"@sinonjs/text-encoding@^0.7.1":
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/@sinonjs/text-encoding/-/text-encoding-0.7.1.tgz#8da5c6530915653f3a1f38fd5f101d8c3f8079c5"
+  integrity sha512-+iTbntw2IZPb/anVDbypzfQa+ay64MW0Zo8aJ8gZPWMMK6/OubMVb6lUPMagqjOPnmtauXnFCACVl3O7ogjeqQ==
 
 "@types/acorn@^4.0.3":
   version "4.0.5"
@@ -10319,6 +10348,11 @@ jsprim@^1.2.2:
     json-schema "0.2.3"
     verror "1.10.0"
 
+just-extend@^4.0.2:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/just-extend/-/just-extend-4.2.1.tgz#ef5e589afb61e5d66b24eca749409a8939a8c744"
+  integrity sha512-g3UB796vUFIY90VIv/WX3L2c8CS2MdWUww3CNrYmqza1Fg0DURc2K/O4YrnklBdQarSJ/y8JnJYDGc+1iumQjg==
+
 kind-of@^3.0.2, kind-of@^3.0.3, kind-of@^3.2.0:
   version "3.2.2"
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-3.2.2.tgz#31ea21a734bab9bbb0f32466d893aea51e4a3c64"
@@ -11408,6 +11442,17 @@ nice-try@^1.0.4:
   resolved "https://registry.yarnpkg.com/nice-try/-/nice-try-1.0.5.tgz#a3378a7696ce7d223e88fc9b764bd7ef1089e366"
   integrity sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==
 
+nise@^5.1.1:
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/nise/-/nise-5.1.1.tgz#ac4237e0d785ecfcb83e20f389185975da5c31f3"
+  integrity sha512-yr5kW2THW1AkxVmCnKEh4nbYkJdB3I7LUkiUgOvEkOp414mc2UMaHMA7pjq1nYowhdoJZGwEKGaQVbxfpWj10A==
+  dependencies:
+    "@sinonjs/commons" "^1.8.3"
+    "@sinonjs/fake-timers" ">=5"
+    "@sinonjs/text-encoding" "^0.7.1"
+    just-extend "^4.0.2"
+    path-to-regexp "^1.7.0"
+
 no-case@^3.0.3:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/no-case/-/no-case-3.0.3.tgz#c21b434c1ffe48b39087e86cfb4d2582e9df18f8"
@@ -12101,6 +12146,13 @@ path-to-regexp@2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-2.2.1.tgz#90b617025a16381a879bc82a38d4e8bdeb2bcf45"
   integrity sha512-gu9bD6Ta5bwGrrU8muHzVOBFFREpp2iRkVfhBJahwJ6p6Xw20SjT0MxLnwkjOibQmGSYhiUnf2FLe7k+jcFmGQ==
+
+path-to-regexp@^1.7.0:
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-1.8.0.tgz#887b3ba9d84393e87a0a0b9f4cb756198b53548a"
+  integrity sha512-n43JRhlUKUAlibEJhPeir1ncUID16QnEjNpwzNdO3Lm4ywrBpBZ5oLD0I6br9evr1Y9JTqwRtAh7JLoOzAQdVA==
+  dependencies:
+    isarray "0.0.1"
 
 path-type@^3.0.0:
   version "3.0.0"
@@ -13439,6 +13491,18 @@ simple-swizzle@^0.2.2:
   dependencies:
     is-arrayish "^0.3.1"
 
+sinon@^14.0.0:
+  version "14.0.0"
+  resolved "https://registry.yarnpkg.com/sinon/-/sinon-14.0.0.tgz#203731c116d3a2d58dc4e3cbe1f443ba9382a031"
+  integrity sha512-ugA6BFmE+WrJdh0owRZHToLd32Uw3Lxq6E6LtNRU+xTVBefx632h03Q7apXWRsRdZAJ41LB8aUfn2+O4jsDNMw==
+  dependencies:
+    "@sinonjs/commons" "^1.8.3"
+    "@sinonjs/fake-timers" "^9.1.2"
+    "@sinonjs/samsam" "^6.1.1"
+    diff "^5.0.0"
+    nise "^5.1.1"
+    supports-color "^7.2.0"
+
 slash@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/slash/-/slash-1.0.0.tgz#c41f2f6c39fc16d1cd17ad4b5d896114ae470d55"
@@ -13957,7 +14021,7 @@ supports-color@^5.3.0:
   dependencies:
     has-flag "^3.0.0"
 
-supports-color@^7.1.0:
+supports-color@^7.1.0, supports-color@^7.2.0:
   version "7.2.0"
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-7.2.0.tgz#1b7dcdcb32b8138801b3e478ba6a51caa89648da"
   integrity sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==
@@ -14454,6 +14518,11 @@ type-check@~0.3.2:
   integrity sha1-WITKtRLPHTVeP7eE8wgEsrUg23I=
   dependencies:
     prelude-ls "~1.1.2"
+
+type-detect@4.0.8, type-detect@^4.0.8:
+  version "4.0.8"
+  resolved "https://registry.yarnpkg.com/type-detect/-/type-detect-4.0.8.tgz#7646fb5f18871cfbb7749e69bd39a6388eb7450c"
+  integrity sha512-0fr/mIH1dlO+x7TlcMy+bIDqKPsw/70tVyeHW787goQjhmqaZe10uwLujubK9q9Lg6Fiho1KUKDYz0Z7k7g5/g==
 
 type-fest@^0.11.0:
   version "0.11.0"
