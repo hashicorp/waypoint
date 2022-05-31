@@ -259,7 +259,7 @@ func TestPipeline(t *testing.T, factory Factory, restartF RestartFactory) {
 		err = s.PipelinePut(p2)
 		require.NoError(err)
 
-		// a third, same pipeline name but different project
+		// a third
 		p3 := ptypes.TestPipeline(t, &pb.Pipeline{
 			Id:   "testtwo",
 			Name: "testtwo",
