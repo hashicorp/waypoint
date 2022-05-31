@@ -65,11 +65,14 @@ func (p *Pipeline) Name() string {
 	return p.config.Name
 }
 
-// Ref returns the reference to this pipeline for us in API calls.
+// Ref returns the reference to this pipeline for us in API calls. In the future
+// this ref can be Ref_Pipeline_Id, as in the ID we store in the database. For now,
+// we'd have to look up that ID so we default to return the Owner Ref instead.
 func (p *Pipeline) Ref() *pb.Ref_Pipeline {
 	return p.ref
 }
 
+// OwnerRef returns the reference to the pipeline by Owner Ref and Pipeline Name
 func (p *Pipeline) OwnerRef() *pb.Ref_Pipeline {
 	return &pb.Ref_Pipeline{
 		Ref: &pb.Ref_Pipeline_Owner{
