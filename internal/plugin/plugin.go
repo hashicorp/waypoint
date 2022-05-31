@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/aws/ami"
 	"github.com/hashicorp/waypoint/builtin/aws/ec2"
 	"github.com/hashicorp/waypoint/builtin/aws/ecr"
+	awsecrpull "github.com/hashicorp/waypoint/builtin/aws/ecr/pull"
 	"github.com/hashicorp/waypoint/builtin/aws/ecs"
 	"github.com/hashicorp/waypoint/builtin/aws/lambda"
 	lambdaFunctionUrl "github.com/hashicorp/waypoint/builtin/aws/lambda/function_url"
@@ -46,6 +47,7 @@ var (
 		"helm":                     k8shelm.Options,
 		"aws-ecs":                  ecs.Options,
 		"aws-ecr":                  ecr.Options,
+		"aws-ecr-pull":             awsecrpull.Options,
 		"nomad":                    nomad.Options,
 		"nomad-jobspec":            jobspec.Options,
 		"nomad-jobspec-canary":     jobspec.Options,
