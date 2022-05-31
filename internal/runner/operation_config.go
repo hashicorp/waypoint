@@ -35,8 +35,6 @@ func (r *Runner) executeConfigSyncOp(
 		ConfigSync: &pb.Job_ConfigSyncResult{},
 	}
 
-	// TODO: do pipeline config sync per-app?? We don't know what pipelines an
-	// application has at the moment though
 	pipelineResult := make(map[string]*pb.Ref_Pipeline)
 	for _, pipeline := range project.Pipelines() {
 		if err := pipeline.ConfigSync(ctx); err != nil {
