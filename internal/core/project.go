@@ -212,6 +212,7 @@ func (p *Project) App(name string) (*App, error) {
 	)
 }
 
+// Pipelines returns all of the defined pipelines as a list for a given project.
 func (p *Project) Pipelines() []*Pipeline {
 	var result []*Pipeline
 	for _, pipeline := range p.pipelines {
