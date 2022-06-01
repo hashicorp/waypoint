@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/docker: fix issue with remote operations for `docker-pull` builder
+```
