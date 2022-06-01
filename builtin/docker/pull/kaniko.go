@@ -3,12 +3,14 @@ package dockerpull
 import (
 	"context"
 	"fmt"
+	"github.com/docker/cli/cli/command/image/build"
 	"github.com/docker/distribution/reference"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	wpdocker "github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint/internal/assets"
 	"github.com/hashicorp/waypoint/internal/pkg/epinject/ociregistry"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
@@ -16,7 +18,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 )
 
@@ -35,8 +36,8 @@ func (b *Builder) pullWithKaniko(
 	}()
 
 	target := &wpdocker.Image{
-		Image:    b.config.Image,
-		Tag:      b.config.Tag,
+		Image:    ai.Image,
+		Tag:      ai.Tag,
 		Location: &wpdocker.Image_Docker{Docker: &empty.Empty{}},
 	}
 
@@ -79,15 +80,22 @@ func (b *Builder) pullWithKaniko(
 		// is "index.docker.io".
 		host = "index.docker.io"
 	}
-	log.Trace("auth host", "host", host)
 
+	var insecure bool
 	if ai.Insecure {
 		oci.Upstream = "http://" + host
+		insecure = true
 	} else {
 		oci.Upstream = "https://" + host
+		insecure = false
 	}
 
 	refPath := reference.Path(ref)
+
+	err = oci.Negotiate(ref.Name())
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to negotiate with upstream")
+	}
 
 	if !b.config.DisableCEB {
 		step.Update("Injecting entrypoint...")
@@ -103,13 +111,14 @@ func (b *Builder) pullWithKaniko(
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "unable to restore custom entrypoint binary: %s", err)
 		}
+		step.Done()
 
 		step = sg.Add("Testing registry and uploading entrypoint layer")
-
 		err = oci.SetupEntrypointLayer(refPath, data)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer: %s", err)
 		}
+		step.Done()
 	}
 
 	// Setting up local registry to which Kaniko will push
@@ -125,16 +134,27 @@ func (b *Builder) pullWithKaniko(
 
 	localRef := fmt.Sprintf("localhost:%d/%s:%s", port, refPath, ai.Tag)
 
-	dockerfileBS := []byte(fmt.Sprintf("FROM %s:%s\n", target.Image, target.Tag))
+	dockerfileBS := []byte(fmt.Sprintf("FROM %s:%s\n", b.config.Image, b.config.Tag))
 	err = os.WriteFile("Dockerfile", dockerfileBS, 0644)
 	if err != nil {
 		return nil, err
 	}
+
+	contextDir, relDockerfile, err := build.GetContextFromLocalDir(".", "Dockerfile")
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker context: %s", err)
+	}
+
 	// Start constructing our arg string for img
 	args := []string{
 		"/kaniko/executor",
-		"-f", filepath.Dir("Dockerfile"),
+		"--context", "dir://" + contextDir,
+		"-f", relDockerfile,
 		"-d", localRef,
+	}
+
+	if insecure {
+		args = append(args, "--insecure-registry")
 	}
 
 	log.Debug("executing kaniko", "args", args)
@@ -153,6 +173,7 @@ func (b *Builder) pullWithKaniko(
 	step.Done()
 
 	step = sg.Add("Image pull completed.")
+	step.Status(terminal.StatusOK)
 	step.Done()
 
 	return target, nil
