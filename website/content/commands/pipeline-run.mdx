@@ -2,22 +2,23 @@
 layout: commands
 page_title: 'Commands: Pipeline run'
 sidebar_title: 'pipeline run'
-description: 'Manually execute a pipeline'
+description: 'Manually execute a pipeline by name.'
 ---
 
 # Waypoint Pipeline run
 
 Command: `waypoint pipeline run`
 
-Manually execute a pipeline
+Manually execute a pipeline by name.
 
 @include "commands/pipeline-run_desc.mdx"
 
 ## Usage
 
-Usage: `waypoint pipeline run [options] <pipeline-id>`
+Usage: `waypoint pipeline run [options] <pipeline-name>`
 
-Run a pipeline by id.
+Run a pipeline by name. If run outside of a project dir, a '-project' flag is
+required.
 
 #### Global Options
 
