@@ -29,6 +29,9 @@ type Metrics struct {
 	options []Option
 
 	l sync.RWMutex
+
+	// Configured exporters that need to be registered and closed
+	// TODO: (clint) telemetry exporter needs to be here, or datadog options?
 }
 
 // New returns a new metrics instance.
@@ -118,7 +121,10 @@ func (m *Metrics) MeasureSince(name string, t time.Time, options ...Option) {
 	if !ok {
 		// var err error
 
-		log.Fatal("-err jobs not found")
+		log.Println("========-err jobs not found=======")
+		log.Println("========-err jobs not found=======")
+		log.Println("========-err jobs not found=======")
+		return
 		// r, err = m.meter.NewInt64ValueRecorder(m.metricName(name)+".milliseconds",
 		// 	metric.WithUnit(unit.Milliseconds))
 		// if err != nil {

@@ -372,7 +372,7 @@ This command will bootstrap the server and setup a CLI context.
 
 		// Datadog
 		if c.flagTelemetryDatadogTraceAddr != "" {
-			c.ui.Output("==> setting up data dog options")
+			c.ui.Output("==> setting up datadog options")
 			telemetryOptions = append(telemetryOptions, telemetry.WithDatadogExporter(
 				datadog.Options{
 					TraceAddr: c.flagTelemetryDatadogTraceAddr,
@@ -382,7 +382,7 @@ This command will bootstrap the server and setup a CLI context.
 				},
 			))
 		} else {
-			c.ui.Output("==> NOT setting up data dog options")
+			c.ui.Output("==> NOT setting up datadog options")
 		}
 
 		t, err := telemetry.NewTelemetry(telemetryOptions...)

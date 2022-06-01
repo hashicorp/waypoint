@@ -10,6 +10,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func init() {
+}
+
 // datadogExporter is a wrapper around a datadog.Exporter that implements exporter to give some well-defined registration
 // and shut down behavior.
 type datadogExporter struct {

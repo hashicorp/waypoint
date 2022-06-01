@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	datadog "github.com/DataDog/opencensus-go-exporter-datadog"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 
@@ -15,7 +16,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
-	datadog "github.com/DataDog/opencensus-go-exporter-datadog"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/logstream"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
