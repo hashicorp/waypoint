@@ -17,14 +17,14 @@ import (
 type RunnerInstallCommand struct {
 	*baseCommand
 
-	platform            string
-	adopt               bool
-	serverUrl           string
-	serverCookie        string
-	id                  string
-	serverTls           bool
-	serverTlsSkipVerify bool
-	serverRequireAuth   bool
+	platform            string `hcl:"platform,required"`
+	adopt               bool   `hcl:"adopt,optional"`
+	serverUrl           string `hcl:"server_url,required"`
+	serverCookie        string `hcl:"server_cookie,optional"`
+	id                  string `hcl:"id,optional"`
+	serverTls           bool   `hcl:"server_tls,optional"`
+	serverTlsSkipVerify bool   `hcl:"server_tls_skip_verify,optional"`
+	serverRequireAuth   bool   `hcl:"server_require_auth,optional"`
 }
 
 func (c *RunnerInstallCommand) AutocompleteArgs() complete.Predictor {
