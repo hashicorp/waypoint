@@ -81,13 +81,10 @@ func (b *Builder) pullWithKaniko(
 		host = "index.docker.io"
 	}
 
-	var insecure bool
 	if ai.Insecure {
 		oci.Upstream = "http://" + host
-		insecure = true
 	} else {
 		oci.Upstream = "https://" + host
-		insecure = false
 	}
 
 	refPath := reference.Path(ref)
@@ -153,7 +150,7 @@ func (b *Builder) pullWithKaniko(
 		"-d", localRef,
 	}
 
-	if insecure {
+	if ai.Insecure {
 		args = append(args, "--insecure-registry")
 	}
 
