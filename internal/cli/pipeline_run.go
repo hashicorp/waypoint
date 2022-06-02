@@ -15,6 +15,8 @@ import (
 
 type PipelineRunCommand struct {
 	*baseCommand
+
+	flagPipelineId string
 }
 
 func (c *PipelineRunCommand) Run(args []string) int {
@@ -27,30 +29,22 @@ func (c *PipelineRunCommand) Run(args []string) int {
 	}
 
 	var pipelineName string
-	if len(c.args) == 0 {
+	if len(c.args) == 0 && c.flagPipelineId == "" {
 		c.ui.Output("Pipeline Name required.\n\n%s", c.Help(), terminal.WithErrorStyle())
 		return 1
 	} else {
 		pipelineName = c.args[0]
 	}
 
-	// Pre-calculate our project ref
-	projectRef := &pb.Ref_Project{Project: c.flagProject}
-	if c.flagProject == "" {
-		if c.project != nil {
-			projectRef = c.project.Ref()
-		}
-
-		if projectRef == nil {
-			c.ui.Output("You must specify a project with -project or be inside an existing project directory.\n"+c.Help(),
-				terminal.WithErrorStyle())
-			return 1
-		}
-	}
-
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		// setup pipeline name to be used for UI printing
+		pipelineIdent := pipelineName
+		if c.flagPipelineId != "" {
+			pipelineIdent = c.flagPipelineId
+		}
+
 		app.UI.Output("Running pipeline %q for application %q",
-			pipelineName, app.Ref().Application, terminal.WithHeaderStyle())
+			pipelineIdent, app.Ref().Application, terminal.WithHeaderStyle())
 
 		sg := app.UI.StepGroup()
 		defer sg.Wait()
@@ -58,6 +52,7 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		step := sg.Add("Building pipeline execution request...")
 		defer step.Abort()
 
+		// build the initial job template for running the pipeline
 		runJobTemplate := &pb.Job{
 			Application: app.Ref(),
 			Workspace:   &pb.Ref_Workspace{Workspace: c.flagWorkspace},
@@ -65,20 +60,32 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			TargetRunner: &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{}},
 		}
 
+		// build the base api request
 		runPipelineReq := &pb.RunPipelineRequest{
 			JobTemplate: runJobTemplate,
+		}
 
-			Pipeline: &pb.Ref_Pipeline{
+		// Reference by ID if set, otherwise by name
+		if c.flagPipelineId != "" {
+			runPipelineReq.Pipeline = &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: &pb.Ref_PipelineId{
+						Id: c.flagPipelineId,
+					},
+				},
+			}
+		} else {
+			runPipelineReq.Pipeline = &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Owner{
 					Owner: &pb.Ref_PipelineOwner{
-						Project:      projectRef,
+						Project:      &pb.Ref_Project{Project: app.Ref().Project},
 						PipelineName: pipelineName,
 					},
 				},
-			},
+			}
 		}
 
-		step.Update("Requesting to queue run of pipeline %q...", pipelineName)
+		step.Update("Requesting to queue run of pipeline %q...", pipelineIdent)
 
 		// take pipeline id and queue a RunPipeline with a Job Template.
 		resp, err := c.project.Client().RunPipeline(c.Ctx, runPipelineReq)
@@ -86,10 +93,9 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			return err
 		}
 
-		step.Update("Pipeline %q has started running. Attempting to read job stream sequentially in order", pipelineName)
+		step.Update("Pipeline %q has started running. Attempting to read job stream sequentially in order", pipelineIdent)
 		step.Done()
 
-		// TODO: do we need a stream timeout?
 		// Receieve job ids from running pipeline, use job client to attach to job stream
 		// and stream here. First pass can be linear job streaming
 		for _, jobId := range resp.AllJobIds {
@@ -98,7 +104,6 @@ func (c *PipelineRunCommand) Run(args []string) int {
 
 			// Throw away the job result for now. We could do something fancy with this
 			// later.
-			// TODO: unknown stream event: type=*gen.GetJobStreamResponse_Download_ ??
 			_, err := jobstream.Stream(c.Ctx, jobId,
 				jobstream.WithClient(c.project.Client()),
 				jobstream.WithUI(app.UI))
@@ -107,7 +112,7 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			}
 		}
 
-		app.UI.Output("✔ Pipeline %q (%s) finished!", pipelineName, projectRef, terminal.WithSuccessStyle())
+		app.UI.Output("✔ Pipeline %q (%s) finished!", pipelineIdent, app.Ref().Project, terminal.WithSuccessStyle())
 
 		return nil
 	})
@@ -120,7 +125,15 @@ func (c *PipelineRunCommand) Run(args []string) int {
 }
 
 func (c *PipelineRunCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.StringVar(&flag.StringVar{
+			Name:    "pipeline-id",
+			Target:  &c.flagPipelineId,
+			Default: "",
+			Usage:   "Run a pipeline by ID.",
+		})
+	})
 }
 
 func (c *PipelineRunCommand) AutocompleteArgs() complete.Predictor {
