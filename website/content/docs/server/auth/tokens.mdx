@@ -23,13 +23,6 @@ a private key known only to the server. Before authenticating a token, the
 server verifies the token's HMAC, preventing users from tampering with the
 contents of the token.
 
-## Creating Tokens
-
-When the Waypoint server is ,
-the Waypoint server generates an initial "root" user token, and
-returns it to the bootstrapper. This token has full Waypoint permissions,
-and the bootstrapper can use it to create other tokens.
-
 ## Longevity
 
 Tokens may be created with an expiration time, i.e. with the `-expires-in` flag for
@@ -100,10 +93,3 @@ issued via `waypoint exec`, communicate logs, etc.
 Entrypoint tokens are only allowed on RPCs prefixed with "Entrypoint". As such,
 Entrypoint tokens cannot be used to manage users, generate new tokens, create deployments,
 etc.
-
-### Trigger
-
-Trigger tokens are created by the `waypoint trigger create` command. They are only
-accepted by the Waypoint `v1/trigger` endpoint. A specific project, app, workspace,
-and operation can be embedded in the token, and the token will only be valid if
-the trigger request pertains to those resources.
