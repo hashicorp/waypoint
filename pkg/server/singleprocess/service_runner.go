@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	datadog "github.com/DataDog/opencensus-go-exporter-datadog"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 
@@ -568,17 +567,17 @@ func (s *Service) RunnerJobStream(
 
 	// metrics.NewGlobal("waypoint-metrics")
 	// start datadog exporter
-	dd, err := datadog.NewExporter(datadog.Options{
-		Namespace: "catsbymetrics",
-		Service:   "catsbymetrics",
-		TraceAddr: "192.168.147.119:8125",
-		StatsAddr: "192.168.147.119:8125",
-	})
-	if err != nil {
-		log.Warn("fatal starting datadog exporter:", "error", err)
-	}
+	// dd, err := datadog.NewExporter(datadog.Options{
+	// 	Namespace: "catsbymetrics",
+	// 	Service:   "catsbymetrics",
+	// 	TraceAddr: "192.168.147.119:8125",
+	// 	StatsAddr: "192.168.147.119:8125",
+	// })
+	// if err != nil {
+	// 	log.Warn("fatal starting datadog exporter:", "error", err)
+	// }
 
-	ocview.RegisterExporter(dd)
+	// ocview.RegisterExporter(dd)
 	if err := ocview.Register(MetricJobsView); err != nil {
 		log.Warn("========\nerror registring view:\n=======", "error", err)
 	} else {

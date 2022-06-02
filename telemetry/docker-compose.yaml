@@ -38,7 +38,8 @@ services:
   datadog:
     image: gcr.io/datadoghq/agent:7
     ports:
-      - "8126:8126" # APM input
+      # - "8126:8126" # APM input
+      - "8125:8125" # APM input
     environment:
       - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
       - DD_SITE=datadoghq.com

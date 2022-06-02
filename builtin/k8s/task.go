@@ -374,7 +374,7 @@ func (p *TaskLauncher) StartTask(
 			Parallelism:             pointer.Int32(1),
 			Completions:             pointer.Int32(1),
 			BackoffLimit:            pointer.Int32(3),
-			TTLSecondsAfterFinished: pointer.Int32(600),
+			TTLSecondsAfterFinished: pointer.Int32(120),
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					ServiceAccountName: p.config.ServiceAccount,

@@ -5,7 +5,8 @@ receivers:
 exporters:
   datadog:
     namespace: "waypoint"
-    trace_addr: "datadog:8126"
+    # trace_addr: "datadog:8125"
+    trace_addr: "192.168.147.119:8126"
     enable_tracing: true
 
 queued-exporters:
