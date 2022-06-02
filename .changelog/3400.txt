@@ -1,3 +1,0 @@
-```release-note:improvement
-server: add documentation on the token system
-```
