@@ -137,10 +137,15 @@ func (c *TaskListCommand) Run(args []string) int {
 			op = "StartTask"
 		case *pb.Job_StopTask:
 			op = "StopTask"
+		case *pb.Job_WatchTask:
+			op = "WatchTask"
 		case *pb.Job_Init:
 			op = "Init"
+		case *pb.Job_PipelineStep:
+			op = "PipelineStep"
 		default:
 			op = "Unknown"
+			c.Log.Debug("encountered unsupported task operation", "op", t.TaskJob.Operation)
 		}
 
 		var project string
