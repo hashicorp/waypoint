@@ -288,8 +288,23 @@ func (i *NomadRunnerInstaller) InstallFlags(set *flag.Set) {
 }
 
 func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
-	//TODO implement me
-	panic("implement me")
+	ui := opts.UI
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Initializing Nomad client...")
+	defer func() { s.Abort() }()
+
+	// Build api client
+	//client, err := api.NewClient(api.DefaultConfig())
+	_, err := api.NewClient(api.DefaultConfig())
+	if err != nil {
+		return err
+	}
+	s.Done()
+
+	return nil
 }
 
 func (i *NomadRunnerInstaller) UninstallFlags(set *flag.Set) {
