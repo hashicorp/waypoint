@@ -62,7 +62,7 @@ in conjunction with the "aws-ecr" registry option.
 	doc.Example(`
 build {
   use "aws-ecr-pull" {
-	region     = "us-east-1"
+    region     = "us-east-1"
     repository = "deno-http"
     tag        = "latest"
   }
