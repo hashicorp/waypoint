@@ -3,6 +3,9 @@ package aws
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -11,12 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
-	"strconv"
-	"time"
 )
 
 const (
@@ -564,3 +566,93 @@ func SetupLogs(
 	s.Done()
 	return logGroup, nil
 }
+
+func DeleteEcsCommonResources(
+	ctx context.Context,
+	sess *session.Session,
+	clusterArn string,
+	resources []*resourcegroups.ResourceIdentifier,
+) error {
+	ecsSvc := ecs.New(sess)
+
+	var serviceArn string
+	for _, r := range resources {
+		if *r.ResourceType == "AWS::ECS::Service" {
+			serviceArn = *r.ResourceArn
+		}
+	}
+	if serviceArn == "" {
+		return nil
+	}
+
+	_, err := ecsSvc.DeleteService(&ecs.DeleteServiceInput{
+		Service: &serviceArn,
+		Force:   aws.Bool(true),
+		Cluster: &clusterArn,
+	})
+	if err != nil {
+		return err
+	}
+
+	runningTasks, err := ecsSvc.ListTasks(&ecs.ListTasksInput{
+		Cluster:       &clusterArn,
+		DesiredStatus: aws.String(ecs.DesiredStatusRunning),
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, task := range runningTasks.TaskArns {
+		_, err := ecsSvc.StopTask(&ecs.StopTaskInput{
+			Cluster: &clusterArn,
+			Task:    task,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	err = ecsSvc.WaitUntilServicesInactive(&ecs.DescribeServicesInput{
+		Cluster:  &clusterArn,
+		Services: []*string{&serviceArn},
+	})
+	if err != nil {
+		return err
+	}
+	for _, r := range resources {
+		if *r.ResourceType == "AWS::ECS::TaskDefinition" {
+			_, err := ecsSvc.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
+				TaskDefinition: r.ResourceArn,
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func DeleteCWLResources(
+	ctx context.Context,
+	sess *session.Session,
+	logGroup string,
+) error {
+	cwlSvc := cloudwatchlogs.New(sess)
+
+	_, err := cwlSvc.DeleteLogGroup(&cloudwatchlogs.DeleteLogGroupInput{
+		LogGroupName: aws.String(logGroup),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "ResourceNotFoundException":
+				// the log group has already been destroyed
+				return nil
+			}
+		}
+		return err
+	}
+	return nil
+}
+

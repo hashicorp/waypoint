@@ -17,6 +17,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go/service/resourcegroups"
 )
 
 const (
@@ -248,8 +250,59 @@ func (i *ECSRunnerInstaller) InstallFlags(set *flag.Set) {
 }
 
 func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
-	//TODO implement me
-	panic("implement me")
+	ui := opts.UI
+	log := opts.Log
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Uninstalling Runner resources...")
+	defer func() { s.Abort() }()
+
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: i.Config.Region,
+		Logger: log,
+	})
+	if err != nil {
+		return err
+	}
+	rgSvc := resourcegroups.New(sess)
+
+	runnerResourceQuery := "{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{\"Key\":\"%s\",\"Values\":[\"%s\"]}]}"
+
+	// TODO: Has ID
+	runnerTagName := "waypoint-runner"
+	runnerTagValue := "runner-component"
+
+	query := fmt.Sprintf(runnerResourceQuery, runnerTagName, runnerTagValue)
+	results, err := rgSvc.SearchResources(&resourcegroups.SearchResourcesInput{
+		ResourceQuery: &resourcegroups.ResourceQuery{
+			Type:  aws.String(resourcegroups.QueryTypeTagFilters10),
+			Query: aws.String(query),
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	resources := results.ResourceIdentifiers
+	var clusterArn string
+	for _, r := range resources {
+		if *r.ResourceType == "AWS::ECS::Cluster" {
+			clusterArn = *r.ResourceArn
+		}
+	}
+	s.Update("Deleting ECS resources...")
+	if err := installutil.DeleteEcsCommonResources(ctx, sess, clusterArn, resources); err != nil {
+		return err
+	}
+	s.Update("Deleting Cloud Watch Log Group resources...")
+	if err := installutil.DeleteCWLResources(ctx, sess, defaultRunnerLogGroup); err != nil {
+		return err
+	}
+	s.Update("Runner resources deleted")
+	s.Done()
+	return nil
 }
 
 func (i *ECSRunnerInstaller) UninstallFlags(set *flag.Set) {

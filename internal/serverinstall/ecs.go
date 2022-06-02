@@ -4,15 +4,15 @@ import (
 	"context"
 	json "encoding/json"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
@@ -659,7 +659,7 @@ func (i *ECSInstaller) Uninstall(
 	s.Done()
 
 	s.Update("Deleting Cloud Watch Log Group resources...")
-	if err := deleteCWLResources(ctx, sess, defaultServerLogGroup); err != nil {
+	if err := installutil.DeleteCWLResources(ctx, sess, defaultServerLogGroup); err != nil {
 		return err
 	}
 	s.Done()
@@ -840,29 +840,6 @@ func nameFromArn(arn string) string {
 	return parts[len(parts)-1]
 }
 
-func deleteCWLResources(
-	ctx context.Context,
-	sess *session.Session,
-	logGroup string,
-) error {
-	cwlSvc := cloudwatchlogs.New(sess)
-
-	_, err := cwlSvc.DeleteLogGroup(&cloudwatchlogs.DeleteLogGroupInput{
-		LogGroupName: aws.String(logGroup),
-	})
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case "ResourceNotFoundException":
-				// the log group has already been destroyed
-				return nil
-			}
-		}
-		return err
-	}
-	return nil
-}
-
 func deleteEcsResources(
 	ctx context.Context,
 	sess *session.Session,
@@ -876,7 +853,7 @@ func deleteEcsResources(
 			clusterArn = *r.ResourceArn
 		}
 	}
-	if err := deleteEcsCommonResources(ctx, sess, clusterArn, resources); err != nil {
+	if err := installutil.DeleteEcsCommonResources(ctx, sess, clusterArn, resources); err != nil {
 		return err
 	}
 
@@ -892,72 +869,6 @@ func deleteEcsResources(
 			}
 		}
 		return err
-	}
-
-	return nil
-}
-
-func deleteEcsCommonResources(
-	ctx context.Context,
-	sess *session.Session,
-	clusterArn string,
-	resources []*resourcegroups.ResourceIdentifier,
-) error {
-	ecsSvc := ecs.New(sess)
-
-	var serviceArn string
-	for _, r := range resources {
-		if *r.ResourceType == "AWS::ECS::Service" {
-			serviceArn = *r.ResourceArn
-		}
-	}
-	if serviceArn == "" {
-		return nil
-	}
-
-	_, err := ecsSvc.DeleteService(&ecs.DeleteServiceInput{
-		Service: &serviceArn,
-		Force:   aws.Bool(true),
-		Cluster: &clusterArn,
-	})
-	if err != nil {
-		return err
-	}
-
-	runningTasks, err := ecsSvc.ListTasks(&ecs.ListTasksInput{
-		Cluster:       &clusterArn,
-		DesiredStatus: aws.String(ecs.DesiredStatusRunning),
-	})
-	if err != nil {
-		return err
-	}
-
-	for _, task := range runningTasks.TaskArns {
-		_, err := ecsSvc.StopTask(&ecs.StopTaskInput{
-			Cluster: &clusterArn,
-			Task:    task,
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	err = ecsSvc.WaitUntilServicesInactive(&ecs.DescribeServicesInput{
-		Cluster:  &clusterArn,
-		Services: []*string{&serviceArn},
-	})
-	if err != nil {
-		return err
-	}
-	for _, r := range resources {
-		if *r.ResourceType == "AWS::ECS::TaskDefinition" {
-			_, err := ecsSvc.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
-				TaskDefinition: r.ResourceArn,
-			})
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	return nil
@@ -1031,11 +942,11 @@ func (i *ECSInstaller) UninstallRunner(
 		}
 	}
 	s.Update("Deleting ECS resources...")
-	if err := deleteEcsCommonResources(ctx, sess, clusterArn, resources); err != nil {
+	if err := installutil.DeleteEcsCommonResources(ctx, sess, clusterArn, resources); err != nil {
 		return err
 	}
 	s.Update("Deleting Cloud Watch Log Group resources...")
-	if err := deleteCWLResources(ctx, sess, defaultRunnerLogGroup); err != nil {
+	if err := installutil.DeleteCWLResources(ctx, sess, defaultRunnerLogGroup); err != nil {
 		return err
 	}
 	s.Update("Runner resources deleted")
