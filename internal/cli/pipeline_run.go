@@ -99,7 +99,9 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			// Throw away the job result for now. We could do something fancy with this
 			// later.
 			// TODO: unknown stream event: type=*gen.GetJobStreamResponse_Download_ ??
-			_, err := jobstream.Stream(c.Ctx, jobId, jobstream.WithClient(c.project.Client()))
+			_, err := jobstream.Stream(c.Ctx, jobId,
+				jobstream.WithClient(c.project.Client()),
+				jobstream.WithUI(app.UI))
 			if err != nil {
 				return err
 			}
