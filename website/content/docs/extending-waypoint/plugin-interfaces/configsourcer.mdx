@@ -74,3 +74,17 @@ func (cs *ConfigSourcer) read(
         // Return the results
 }
 ```
+
+## Getting your plugin into the CEB
+
+To write your own config sourcer, the Waypoint [entrypoint](/docs/entrypoint)
+needs to be able to load and run your plugin. Unfortunately today there is no
+supported way for the CEB to automatically load your plugin. This means if
+you wish you write your own config sourcer plugin, you'll need to add the
+plugin in your own fork of Waypoint and build it from your fork to have your
+plugin included. You can also make a pull request to the main repository of
+Waypoint if you think your plugin makes sense.
+
+We intend to provide a better way for the entrypoint to load custom plugins
+in the future that does not require users building their own version of Waypoint
+with their custom config sourcer plugin.
