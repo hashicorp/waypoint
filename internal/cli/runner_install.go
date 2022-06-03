@@ -170,12 +170,13 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	}
 
 	client := c.project.Client()
+	s.Status(terminal.StatusOK)
+	s.Done()
 
 	var err error
 	// TODO: Evaluate if generating a token for non-adoption mode is necessary
 	token := &pb.NewTokenResponse{}
 	if !c.adopt {
-		s = sg.Add("Generating runner token...")
 		token, err = client.GenerateRunnerToken(ctx, &pb.GenerateRunnerTokenRequest{
 			Duration: "",
 			Id:       "",

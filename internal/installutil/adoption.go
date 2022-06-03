@@ -43,13 +43,14 @@ func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, 
 		for _, myRunner := range runners.Runners {
 			if myRunner.Id == id {
 				found = true
-				s.Update("Runner detected by server")
-				s.Status(terminal.StatusOK)
-				s.Done()
 				break
 			}
 		}
 	}
+	s.Update("Runner detected by server")
+	s.Status(terminal.StatusOK)
+	s.Done()
+
 	s = sg.Add("Adopting runner...")
 	_, err := client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
 		RunnerId: id,
