@@ -7,7 +7,7 @@ description: |-
 
 # `runner` Stanza
 
-<Placement groups={[['runner']]} />
+<Placement groups={[['runner'], ['app', 'runner']]}/>
 
 The `runner` stanza configures a project for [remote operations](/docs/runner),
 including configuring how to source a project's source code from Git and
@@ -70,16 +70,19 @@ The `runner` stanza has no required parameters.
 ### Optional
 
 - `enabled` `(boolean: false)` - This must be set to true to enable
-  [remote operations](/docs/runner) from the CLI. This only affects
-  the CLI. Remote operations triggered via Git polling or directly via the
-  API are still allowed.
+[remote operations](/docs/runner) from the CLI. This only affects
+the CLI. Remote operations triggered via Git polling or directly via the
+API are still allowed.
 
 - `data_source` <code>([data_source][data_source]: nil)</code> - Configuration
-  for how to fetch the source for this project, such as from Git.
+for how to fetch the source for this project, such as from Git.
 
 - `poll` <code>([poll][poll]: nil)</code> - Settings for polling the data
-  source for changes and automatically running `waypoint up`. By default
-  polling is disabled.
+source for changes and automatically running `waypoint up`. By default
+polling is disabled.
+
+- `profile` `(string: "")` - The name of the runner profile to target for the
+project/app to use for remote operations.
 
 ## `data_source` Parameters
 

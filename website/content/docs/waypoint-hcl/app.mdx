@@ -106,19 +106,23 @@ The `app` stanza is composed of other stanzas and parameters, namely `build`,
   labels applied.
 
 - `path` `(string: "")` - The path to the application source. This defaults
-  to the directory alongside the project configuration file. This is used by
-  builders to determine the root path for the source to build.
+to the directory alongside the project configuration file. This is used by
+builders to determine the root path for the source to build.
 
 - `release` <code>([release][release]: nil)</code> - Describes how to release
-  this application during `waypoint up` or `waypoint release`. See
-  [default behavior](/docs/lifecycle/release#default-behavior) for how
-  releases are handled if release configuration is not specified.
+this application during `waypoint up` or `waypoint release`. See
+[default behavior](/docs/lifecycle/release#default-behavior) for how
+releases are handled if release configuration is not specified.
+
+- `runner` <code>([runner][runner]: nil)</code> - The runner stanza configures
+a project for remote operations.
 
 - `url` <code>([url][url]: nil)</code> - Describes the [URL service](/docs/url)
-  behavior for this application. If this isn't specified, the default settings
-  configured on the Waypoint server will be used.
+behavior for this application. If this isn't specified, the default settings
+configured on the Waypoint server will be used.
 
 [build]: /docs/waypoint-hcl/build 'Build Stanza'
 [deploy]: /docs/waypoint-hcl/deploy 'Deploy Stanza'
-[release]: /docs/waypoint-hcl/release 'Release Stanza'
-[url]: /docs/waypoint-hcl/url 'url Stanza'
+[release]  /docs/waypoint-hcl/release 'Release Stanza'
+[runner]  /docs/waypoint-hcl/runner 'Runner Stanza'
+[url]  /docs/waypoint-hcl/url 'url Stanza'
