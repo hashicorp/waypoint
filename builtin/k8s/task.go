@@ -4,7 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"io"
 	"strings"
+	"time"
 
 	"github.com/docker/distribution/reference"
 	"github.com/hashicorp/go-hclog"
@@ -13,13 +15,16 @@ import (
 	"google.golang.org/grpc/status"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/pointer"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 // TaskLauncher implements the TaskLauncher plugin interface to support
@@ -402,9 +407,125 @@ func (p *TaskLauncher) StartTask(
 func (p *TaskLauncher) WatchTask(
 	ctx context.Context,
 	log hclog.Logger,
+	ui terminal.UI,
 	ti *TaskInfo,
 ) (*component.TaskResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "WatchTask not implemented")
+	// Get our client
+	clientSet, ns, _, err := Clientset(p.config.KubeconfigPath, p.config.Context)
+	if err != nil {
+		return nil, err
+	}
+	if p.config.Namespace != "" {
+		ns = p.config.Namespace
+	}
+
+	// List pods with this job label
+	podsClient := clientSet.CoreV1().Pods(ns)
+	pods, err := podsClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("job-name=%s", ti.Id),
+	})
+	// It's not clear from the documentation if an error is returned from the
+	// List API call if no jobs are found, so we guard here just in case
+	if err != nil && !errors.IsNotFound(err) {
+		return nil, err
+	}
+
+	if pods == nil {
+		log.Info("no pods found for job, returning", "job_id", ti.Id)
+		return nil, nil
+	}
+
+	// Assume first one exists for now? Our task launcher for k8s only launches
+	// one pod right now.
+	pod := pods.Items[0]
+
+	// TODO(briancain): a better wait time duration?
+	timeout := time.Duration(30 * time.Second)
+
+	log.Info("waiting for pod to start", "name", pod.Name)
+
+	// Ensure the pod exists before attempting to stream its logs
+	err = wait.PollImmediate(time.Second, timeout, func() (bool, error) {
+		p, err := clientSet.CoreV1().Pods(ns).Get(ctx, pod.Name, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		switch p.Status.Phase {
+		case v1.PodRunning, v1.PodFailed, v1.PodSucceeded:
+			return true, nil
+		case v1.PodPending, v1.PodUnknown:
+			return false, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		log.Error("pod failed to start before timeout", "timeout", timeout, "err", err)
+		return nil, err
+	}
+
+	log.Info("attempting to stream pod logs")
+
+	// Accumulate our result on this
+	var result component.TaskResult
+
+	req := clientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{
+		Follow: true,
+	})
+	podLogs, err := req.Stream(ctx)
+	if err != nil {
+		log.Error("failed to read pod log stream", "err", err)
+		return nil, err
+	}
+	defer podLogs.Close()
+
+	log.Info("reading pod logs", "name", pod.Name)
+
+	d := time.Now().Add(time.Second * time.Duration(30))
+	ctx, cancel := context.WithDeadline(ctx, d)
+	defer cancel()
+	ticker := time.NewTicker(5 * time.Second)
+
+	// Read the log stream and send to the UI
+	for {
+		buf := make([]byte, 2000)
+		numBytes, err := podLogs.Read(buf)
+
+		if numBytes == 0 {
+			// This is here because it doesn't look like the pod log reader ever
+			// sends an io.EOF when the logstream is finished. :thinking:
+			select {
+			case <-ticker.C:
+				log.Trace("waiting for log message...")
+				continue
+			case <-ctx.Done(): // cancelled
+				log.Info("timed out waiting for buffered logs")
+				result.ExitCode = 0
+
+				return &result, nil
+			}
+
+			continue
+		}
+		// NOTE(briancain): it doesn't seem like the k8s API is sending an EOF??
+		// This loop never exits here
+		if err == io.EOF {
+			log.Info("end of stream")
+			result.ExitCode = 0
+			break
+		}
+		if err != nil {
+			log.Error("got an error streaming pod logs", "err", err)
+			return nil, err
+		}
+
+		// stream message to the ui
+		message := string(buf[:numBytes])
+		log.Info("msg", message)
+		ui.Output(message)
+	}
+
+	return &result, nil
 }
 
 var _ component.TaskLauncher = (*TaskLauncher)(nil)
