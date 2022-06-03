@@ -1,0 +1,94 @@
+---
+layout: docs
+page_title: Tokens
+description: |-
+  Waypoint uses tokens to control access to the Waypoint server and bound the permissions of users, runners, and entrypoints.
+---
+
+# Tokens
+
+Waypoint uses tokens to control access to the Waypoint server and bound
+the permissions of users, runners, and entrypoints. A handful of Waypoint
+endpoints are necessarily unauthenticated (including BootstrapToken and
+GetVersionInfo), but all endpoints that interact with users or
+applications (excepting authless triggers) require a valid token.
+
+Tokens in Waypoint are base-58 encoded protobuf messages, and contain metadata
+including their kind, any associated entities that must be valid at auth time
+(users or runners), an expiration date, etc.
+
+The Waypoint server does not store copies of the tokens it creates. Rather,
+it includes inside the token an HMAC of the token itself, signed with
+a private key known only to the server. Before authenticating a token, the
+server verifies the token's HMAC, preventing users from tampering with the
+contents of the token.
+
+## Longevity
+
+Tokens may be created with an expiration time, i.e. with the `-expires-in` flag for
+`waypoint user token`. After the expiration time is reached, the token cannot
+be used to access the Waypoint server. If a token is created without an expiration
+date, the token is valid forever.
+
+## Invalidation
+
+Because the Waypoint server does not store Waypoint tokens, tokens cannot be directly
+invalidated. User tokens can be rendered useless by deleting the underlying user, and
+runner tokens can likewise be invalidated by rejecting the associated runner.
+
+## Token Types
+
+### Invite
+
+Invite tokens are short-lived tokens used to invite new users. The can
+be created via `waypoint user invite`. Invite tokens can be exchanged
+for login tokens via the `login` command.
+
+### Bootstrap
+
+The bootstrap token is the first token created by the Waypoint server during
+[bootstrapping](/commands/server-bootstrap). It isn't a distinct token type,
+rather it's a user token associated with an automatically generated initial user.
+This user can be safely deleted once actual users have been created using the
+bootstrap token.
+
+### Login
+
+Login tokens are meant to be supplied to Waypoint users. They are meant
+to be used by users to authenticate requests made via the CLI and UI.
+
+A user ID is encoded into Waypoint user tokens. Before authenticating
+a request, the Waypoint server verifies that the user associated with
+the ID exists (and has not been deleted).
+
+Login tokens backed by valid users have full permission to access
+all Waypoint APIs.
+
+### Runner
+
+Runner tokens a kind of Waypoint token issued to runners. They are
+created by the `runner token` command, and are automatically issued to
+adopted runners. They are used by runners to accept and execute jobs.
+
+Runner IDs and labels are also encoded into runner tokens. The server
+validates that the runner ID within the token is adopted or preadopted
+by the server, and the labels of the runner have not changed,
+before allowing requests.
+
+Beyond these limitations, runner tokens have the same capabilities as
+login tokens.
+
+### Entrypoint
+
+A subset of login tokens, entrypoint tokens are meant for use by the
+Waypoint custom entrypoint.
+
+As part of each deployment, the Waypoint runner will create a new entrypoint token
+and make it available to the deployment process (generally via an environment variable
+embedded in the platform's deployment spec). The Waypoint entrypoint uses this
+to authenticate to the server and receive app configuration changes, commands
+issued via `waypoint exec`, communicate logs, etc.
+
+Entrypoint tokens are only allowed on RPCs prefixed with "Entrypoint". As such,
+Entrypoint tokens cannot be used to manage users, generate new tokens, create deployments,
+etc.

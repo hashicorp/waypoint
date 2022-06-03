@@ -346,6 +346,10 @@
           {
             "title": "OIDC",
             "path": "server/auth/oidc"
+          },
+          {
+            "title": "Tokens",
+            "path": "server/auth/tokens"
           }
         ]
       },
