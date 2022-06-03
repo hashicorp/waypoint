@@ -10,11 +10,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/internal/server/boltdbstate"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/grpcmetadata"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
 func (s *Service) StartExecStream(
@@ -23,9 +23,9 @@ func (s *Service) StartExecStream(
 	ctx := srv.Context()
 	log := hclog.FromContext(srv.Context())
 
-	// TODO(mitchellh): We only support exec if we're using the in-memory
-	// state store. We will add support for our other stores later.
-	inmemstate, ok := s.state(ctx).(*boltdbstate.State)
+	// Instance exec support is optional to state, so we need to check before we offer
+	// to start the exec stream.
+	iexec, ok := s.state(ctx).(serverstate.InstanceExecHandler)
 	if !ok {
 		return status.Errorf(codes.Unimplemented,
 			"state storage doesn't support exec streaming")
@@ -51,7 +51,7 @@ func (s *Service) StartExecStream(
 	// a change and the instance should try to connect to us.
 	clientEventCh := make(chan *pb.ExecStreamRequest)
 	eventCh := make(chan *pb.EntrypointExecRequest)
-	execRec := &boltdbstate.InstanceExec{
+	execRec := &serverstate.InstanceExec{
 		Args:              start.Start.Args,
 		Pty:               start.Start.Pty,
 		ClientEventCh:     clientEventCh,
@@ -63,7 +63,7 @@ func (s *Service) StartExecStream(
 	switch t := start.Start.Target.(type) {
 	case *pb.ExecStreamRequest_Start_InstanceId:
 		log = log.With("instance_id", t.InstanceId)
-		err = inmemstate.InstanceExecCreateByTargetedInstance(t.InstanceId, execRec)
+		err = iexec.InstanceExecCreateByTargetedInstance(t.InstanceId, execRec)
 		if err != nil {
 			return err
 		}
@@ -172,12 +172,12 @@ func (s *Service) StartExecStream(
 			ctx, cancel := context.WithTimeout(srv.Context(), 60*time.Second)
 			defer cancel()
 
-			err = inmemstate.InstanceExecCreateForVirtualInstance(ctx, instId, execRec)
+			err = iexec.InstanceExecCreateForVirtualInstance(ctx, instId, execRec)
 			if err != nil {
 				return err
 			}
 		} else {
-			err = inmemstate.InstanceExecCreateByDeployment(t.DeploymentId, execRec)
+			err = iexec.InstanceExecCreateByDeployment(t.DeploymentId, execRec)
 			if err != nil {
 				return err
 			}
@@ -192,7 +192,7 @@ func (s *Service) StartExecStream(
 	log.Debug("exec requested", "args", start.Start.Args)
 
 	// Make sure we always deregister it
-	defer inmemstate.InstanceExecDelete(execRec.Id)
+	defer iexec.InstanceExecDelete(execRec.Id)
 
 	// Always send the open message. In the future we'll send some metadata here.
 	if err := srv.Send(&pb.ExecStreamResponse{
@@ -200,6 +200,11 @@ func (s *Service) StartExecStream(
 			Open: &pb.ExecStreamResponse_Open{},
 		},
 	}); err != nil {
+		return err
+	}
+
+	err = iexec.InstanceExecWaitConnected(ctx, execRec)
+	if err != nil {
 		return err
 	}
 

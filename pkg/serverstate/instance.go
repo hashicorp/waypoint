@@ -3,6 +3,7 @@ package serverstate
 import (
 	"context"
 
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/logbuffer"
 )
@@ -50,4 +51,15 @@ type InstanceExec struct {
 	// It is used by the entrypoint side to detect if the client is still
 	// around or not.
 	Context context.Context
+}
+
+type InstanceExecHandler interface {
+	InstanceExecCreateByTargetedInstance(id string, exec *InstanceExec) error
+	InstanceExecCreateByDeployment(did string, exec *InstanceExec) error
+	InstanceExecCreateForVirtualInstance(ctx context.Context, id string, exec *InstanceExec) error
+	InstanceExecDelete(id int64) error
+	InstanceExecById(id int64) (*InstanceExec, error)
+	InstanceExecConnect(ctx context.Context, id int64) (*InstanceExec, error)
+	InstanceExecListByInstanceId(id string, ws memdb.WatchSet) ([]*InstanceExec, error)
+	InstanceExecWaitConnected(ctx context.Context, exec *InstanceExec) error
 }
