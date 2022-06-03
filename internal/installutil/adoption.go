@@ -21,7 +21,8 @@ func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, 
 	ctx, cancel := context.WithDeadline(ctx, d)
 	defer cancel()
 	ticker := time.NewTicker(5 * time.Second)
-	for {
+	found := false
+	for !found {
 		select {
 		case <-ticker.C:
 		case <-ctx.Done():
@@ -39,7 +40,6 @@ func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, 
 			)
 			return err
 		}
-		found := false
 		for _, myRunner := range runners.Runners {
 			if myRunner.Id == id {
 				found = true
@@ -49,22 +49,20 @@ func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, 
 				break
 			}
 		}
-		if found {
-			s = sg.Add("Adopting runner...")
-			_, err = client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
-				RunnerId: id,
-				Adopt:    true,
-			})
-			if err != nil {
-				ui.Output("Error adopting runner: %s", clierrors.Humanize(err),
-					terminal.WithErrorStyle(),
-				)
-				return err
-			}
-			s.Update("Runner %s adopted successfully.", id)
-			s.Status(terminal.StatusOK)
-			s.Done()
-			return nil
-		}
 	}
+	s = sg.Add("Adopting runner...")
+	_, err := client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
+		RunnerId: id,
+		Adopt:    true,
+	})
+	if err != nil {
+		ui.Output("Error adopting runner: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
+	s.Update("Runner %s adopted successfully.", id)
+	s.Status(terminal.StatusOK)
+	s.Done()
+	return nil
 }
