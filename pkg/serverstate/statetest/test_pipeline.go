@@ -137,6 +137,146 @@ func TestPipeline(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.Equal(codes.FailedPrecondition, status.Code(err))
 	})
 
+	t.Run("Put: with no Id by Pipeline Owner and Pipeline Name Ref updates existing field", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Set a few pipelines
+		p := ptypes.TestPipeline(t, nil)
+		err := s.PipelinePut(p)
+		require.NoError(err)
+
+		// Update the pipeline
+		p.Steps["second"] = &pb.Pipeline_Step{
+			Name:      "second",
+			DependsOn: []string{"root"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		p.Id = ""
+		err = s.PipelinePut(p)
+		require.NoError(err)
+
+		// Should only be 1 pipeline
+		// List should return one pipeline
+		{
+			resp, err := s.PipelineList(&pb.Ref_Project{
+				Project: "project",
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Len(resp, 1)
+			require.Equal(resp[0].Id, "test")
+		}
+	})
+
+	t.Run("Put: with existing Id by Pipeline Owner and Pipeline Name Ref updates existing field", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Set a few pipelines
+		p := ptypes.TestPipeline(t, nil)
+		err := s.PipelinePut(p)
+		require.NoError(err)
+
+		// Update the pipeline
+		p.Steps["second"] = &pb.Pipeline_Step{
+			Name:      "second",
+			DependsOn: []string{"root"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		p.Id = "test"
+
+		err = s.PipelinePut(p)
+		require.NoError(err)
+
+		// Should only be 1 pipeline
+		// List should return one pipeline
+		{
+			resp, err := s.PipelineList(&pb.Ref_Project{
+				Project: "project",
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Len(resp, 1)
+			require.Equal(resp[0].Id, p.Id)
+		}
+	})
+
+	t.Run("Put: with no Id by Pipeline Owner and Pipeline Name Ref inserts a new pipeline", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Set a few pipelines
+		p := ptypes.TestPipeline(t, nil)
+		err := s.PipelinePut(p)
+		require.NoError(err)
+
+		// Update the pipeline
+		p.Steps["second"] = &pb.Pipeline_Step{
+			Name:      "second",
+			DependsOn: []string{"root"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		p.Id = "two"
+		p.Name = "two"
+
+		err = s.PipelinePut(p)
+		require.NoError(err)
+
+		// Should only be 2 pipelines
+		{
+			resp, err := s.PipelineList(&pb.Ref_Project{
+				Project: "project",
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Len(resp, 2)
+			require.Equal(resp[0].Id, "test")
+			require.Equal(resp[1].Id, "two")
+		}
+
+		// Another new one
+		p2 := ptypes.TestPipeline(t, &pb.Pipeline{
+			Id:   "mario",
+			Name: "mario",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "project",
+				},
+			},
+		})
+		err = s.PipelinePut(p2)
+		require.NoError(err)
+
+		// Should be three
+		{
+			resp, err := s.PipelineList(&pb.Ref_Project{
+				Project: "project",
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Len(resp, 3)
+		}
+	})
+
 	t.Run("Get: by Pipeline Owner and Pipeline Name Ref", func(t *testing.T) {
 		require := require.New(t)
 
