@@ -564,7 +564,7 @@ func (p *TaskLauncher) WatchTask(
 
 		// stream message to the ui
 		message := string(buf[:numBytes])
-		log.Info("msg", message)
+		log.Info(message)
 		ui.Output(message)
 	}
 
