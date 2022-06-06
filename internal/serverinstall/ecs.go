@@ -653,7 +653,7 @@ func (i *ECSInstaller) Uninstall(
 	// - EFS File System
 
 	s.Update("Deleting ECS resources...")
-	if err := deleteEcsResources(ctx, sess, resources); err != nil {
+	if err := installutil.DeleteEcsResources(ctx, sess, resources); err != nil {
 		return err
 	}
 	s.Done()
@@ -838,40 +838,6 @@ func nameFromArn(arn string) string {
 	last := parts[len(parts)-1]
 	parts = strings.Split(last, "/")
 	return parts[len(parts)-1]
-}
-
-func deleteEcsResources(
-	ctx context.Context,
-	sess *session.Session,
-	resources []*resourcegroups.ResourceIdentifier,
-) error {
-	ecsSvc := ecs.New(sess)
-
-	var clusterArn string
-	for _, r := range resources {
-		if *r.ResourceType == "AWS::ECS::Cluster" {
-			clusterArn = *r.ResourceArn
-		}
-	}
-	if err := installutil.DeleteEcsCommonResources(ctx, sess, clusterArn, resources); err != nil {
-		return err
-	}
-
-	_, err := ecsSvc.DeleteCluster(&ecs.DeleteClusterInput{
-		Cluster: &clusterArn,
-	})
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case "ClusterNotFoundException":
-				// the cluster has already been destroyed
-				return nil
-			}
-		}
-		return err
-	}
-
-	return nil
 }
 
 // InstallRunner implements Installer.

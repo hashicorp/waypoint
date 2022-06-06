@@ -3,6 +3,10 @@ package runnerinstall
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -14,11 +18,6 @@ import (
 	installutil "github.com/hashicorp/waypoint/internal/installutil/aws"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
-	"strconv"
-	"strings"
-	"time"
-
-	"github.com/aws/aws-sdk-go/service/resourcegroups"
 )
 
 const (
@@ -277,48 +276,81 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	if err != nil {
 		return err
 	}
-	rgSvc := resourcegroups.New(sess)
+	//rgSvc := resourcegroups.New(sess)
+	ecsSvc := ecs.New(sess)
 
-	runnerResourceQuery := "{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{\"Key\":\"%s\",\"Values\":[\"%s\"]}]}"
+	//runnerResourceQuery := "{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{\"Key\":\"%s\",\"Values\":[\"%s\"]}]}"
 
 	// TODO: Has ID
-	runnerTagName := "waypoint-runner"
-	runnerTagValue := "runner-component"
+	//runnerTagName := "runner-id"
+	//runnerTagValue := opts.Id
 
-	query := fmt.Sprintf(runnerResourceQuery, runnerTagName, runnerTagValue)
-	results, err := rgSvc.SearchResources(&resourcegroups.SearchResourcesInput{
-		ResourceQuery: &resourcegroups.ResourceQuery{
-			Type:  aws.String(resourcegroups.QueryTypeTagFilters10),
-			Query: aws.String(query),
-		},
+	//runnerTagName := "waypoint-runner"
+	//runnerTagValue := "runner-component"
+
+	//query := fmt.Sprintf(runnerResourceQuery, runnerTagName, runnerTagValue)
+	//results, err := rgSvc.SearchResources(&resourcegroups.SearchResourcesInput{
+	//	ResourceQuery: &resourcegroups.ResourceQuery{
+	//		Type:  aws.String(resourcegroups.QueryTypeTagFilters10),
+	//		Query: aws.String(query),
+	//	},
+	//})
+	//if err != nil {
+	//	return err
+	//}
+
+	//log.Debug("Results", results)
+
+	log.Debug("Get cluster ARN")
+
+	// Check for details of possibly existing cluster `waypoint-server`
+	// If server was installed to ECS with `waypoint install` command, we'd expect this
+	// query what subnets and vpc information from the server service
+	services, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
+		Cluster:  aws.String(i.Config.Cluster),
+		Services: []*string{aws.String("waypoint-runner-" + opts.Id)},
 	})
 	if err != nil {
 		return err
 	}
+	if len(services.Services) != 1 {
+		log.Debug("Unable to uninstall runner. Too many instances")
+		return nil
+	}
 
-	resources := results.ResourceIdentifiers
-	var clusterArn string
-	for _, r := range resources {
-		if *r.ResourceType == "AWS::ECS::Cluster" {
-			clusterArn = *r.ResourceArn
-		}
-	}
+	log.Debug("services", services)
+
+	return nil
+
+	//resources := results.ResourceIdentifiers
 	s.Update("Deleting ECS resources...")
-	if err := installutil.DeleteEcsCommonResources(ctx, sess, clusterArn, resources); err != nil {
-		return err
-	}
+	//if err := installutil.DeleteEcsResources(ctx, sess, resources); err != nil {
+	//	return err
+	//}
 	s.Update("Deleting Cloud Watch Log Group resources...")
-	if err := installutil.DeleteCWLResources(ctx, sess, defaultRunnerLogGroup); err != nil {
-		return err
-	}
+	//if err := installutil.DeleteCWLResources(ctx, sess, defaultRunnerLogGroup); err != nil {
+	//	return err
+	//}
 	s.Update("Runner resources deleted")
+
 	s.Done()
 	return nil
 }
 
 func (i *ECSRunnerInstaller) UninstallFlags(set *flag.Set) {
-	//TODO implement me
-	panic("implement me")
+	set.StringVar(&flag.StringVar{
+		Name:   "ecs-region",
+		Usage:  "AWS region in which to install the Waypoint runner.",
+		Target: &i.Config.Region,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-cluster",
+		Target:  &i.Config.Cluster,
+		Default: "waypoint-server",
+		Usage:   "The name of the ECS Cluster to install the Waypoint runner into.",
+	})
+
 }
 
 func launchRunner(

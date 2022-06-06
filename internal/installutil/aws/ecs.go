@@ -656,3 +656,36 @@ func DeleteCWLResources(
 	return nil
 }
 
+func DeleteEcsResources(
+	ctx context.Context,
+	sess *session.Session,
+	resources []*resourcegroups.ResourceIdentifier,
+) error {
+	ecsSvc := ecs.New(sess)
+
+	var clusterArn string
+	for _, r := range resources {
+		if *r.ResourceType == "AWS::ECS::Cluster" {
+			clusterArn = *r.ResourceArn
+		}
+	}
+	if err := DeleteEcsCommonResources(ctx, sess, clusterArn, resources); err != nil {
+		return err
+	}
+
+	_, err := ecsSvc.DeleteCluster(&ecs.DeleteClusterInput{
+		Cluster: &clusterArn,
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "ClusterNotFoundException":
+				// the cluster has already been destroyed
+				return nil
+			}
+		}
+		return err
+	}
+
+	return nil
+}

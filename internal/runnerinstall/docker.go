@@ -106,10 +106,12 @@ func (i *DockerRunnerInstaller) InstallFlags(set *flag.Set) {
 
 func (d DockerRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	//TODO implement me
-	panic("implement me")
+	//panic("implement me")
+	return nil
 }
 
 func (d DockerRunnerInstaller) UninstallFlags(set *flag.Set) {
 	//TODO implement me
-	panic("implement me")
+	//panic("implement me")
+	return
 }
