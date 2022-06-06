@@ -13,7 +13,6 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	empty "google.golang.org/protobuf/types/known/emptypb"
 	"net"
 	"net/http"
 	"os"
@@ -38,7 +37,7 @@ func (b *Builder) pullWithKaniko(
 	target := &wpdocker.Image{
 		Image:    ai.Image,
 		Tag:      ai.Tag,
-		Location: &wpdocker.Image_Docker{Docker: &empty.Empty{}},
+		Location: &wpdocker.Image_Registry{Registry: &wpdocker.Image_RegistryLocation{}},
 	}
 
 	var oci ociregistry.Server
