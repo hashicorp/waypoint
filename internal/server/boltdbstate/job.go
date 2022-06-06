@@ -1633,6 +1633,8 @@ func (s *State) taskAck(jobId string) error {
 		// StopJob has been Acked
 		task.JobState = pb.Task_STOPPING
 		s.log.Trace("stop job is running", "job", job.Id, "task", task.Id)
+	case task.WatchJob.Id:
+		s.log.Trace("ignoring watch task job")
 	default:
 		return status.Errorf(codes.Internal, "no task job id matches the requested job id %q", job.Id)
 	}
@@ -1681,6 +1683,8 @@ func (s *State) taskComplete(jobId string) error {
 		// StopJob has completed, the whole task is finished
 		task.JobState = pb.Task_STOPPED
 		s.log.Trace("stop job has completed", "job", job.Id, "task", task.Id)
+	case task.WatchJob.Id:
+		s.log.Trace("ignoring watch task job")
 	default:
 		return status.Errorf(codes.Internal, "no task job id matches the requested job id %q", job.Id)
 	}
