@@ -296,11 +296,11 @@ func (s *Service) wrapJobWithRunner(
 	}
 
 	// Write a Task state with the On-Demand Runner job triple
-	// TODO: integrate watchjob into task tracking
 	task := &pb.Task{
 		StartJob: &pb.Ref_Job{Id: startJob.Id},
 		TaskJob:  &pb.Ref_Job{Id: source.Id},
 		StopJob:  &pb.Ref_Job{Id: stopJob.Id},
+		WatchJob: &pb.Ref_Job{Id: watchJob.Id},
 		JobState: pb.Task_PENDING,
 	}
 	if err := s.state(ctx).TaskPut(task); err != nil {
@@ -326,6 +326,7 @@ func (s *Service) wrapJobWithRunner(
 		startJob.Task = taskRef
 		source.Task = taskRef
 		stopJob.Task = taskRef
+		watchJob.Task = taskRef
 	}
 
 	// These must be in order of dependency currently. This is a limitation

@@ -138,6 +138,12 @@ func (c *TaskInspectCommand) Run(args []string) int {
 		return 1
 	}
 
+	c.ui.Output("Watch Job Configuration", terminal.WithHeaderStyle())
+	if err := c.FormatJob(taskResp.WatchJob); err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return 1
+	}
+
 	c.ui.Output("Start Job Configuration", terminal.WithHeaderStyle())
 	if err := c.FormatJob(taskResp.StartJob); err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -197,6 +203,8 @@ func (c *TaskInspectCommand) FormatJob(job *pb.Job) error {
 		op = "StartTask"
 	case *pb.Job_StopTask:
 		op = "StopTask"
+	case *pb.Job_WatchTask:
+		op = "WatchTask"
 	case *pb.Job_Init:
 		op = "Init"
 	default:

@@ -6568,6 +6568,9 @@
         },
         "stop_job": {
           "$ref": "#/definitions/hashicorp.waypoint.Job"
+        },
+        "watch_job": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job"
         }
       }
     },
@@ -8960,6 +8963,10 @@
         "task_job": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.Job",
           "description": "task_job represents the \"run\" job the runner will execute, i.e. the operation\nthat was requested to run on the runner.\nThe referred job stores data like ODR config, the target runner used,\ntimestamp for when job started or completed, operation state for task, etc.\nCurrently the only required field when Upserting a Task."
+        },
+        "watch_job": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Job",
+          "description": "watch_job will spawn a job to stream logs from the `task_job`."
         },
         "start_job": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.Job",

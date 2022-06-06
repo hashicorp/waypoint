@@ -118,7 +118,7 @@ func (s *State) TaskCancel(ref *pb.Ref_Task) error {
 // a complete picture of a task beyond the job ID refs.
 func (s *State) JobsByTaskRef(
 	task *pb.Task,
-) (startJob *pb.Job, taskJob *pb.Job, stopJob *pb.Job, err error) {
+) (startJob *pb.Job, taskJob *pb.Job, stopJob *pb.Job, watchJob *pb.Job, err error) {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -150,10 +150,19 @@ func (s *State) JobsByTaskRef(
 			stopJob = job
 		}
 
+		job, err = s.jobById(dbTxn, task.WatchJob.Id)
+		if err != nil {
+			return err
+		} else if job == nil {
+			return status.Errorf(codes.NotFound, "watch job %q not found", task.WatchJob.Id)
+		} else {
+			watchJob = job
+		}
+
 		return nil
 	})
 
-	return startJob, taskJob, stopJob, err
+	return startJob, taskJob, stopJob, watchJob, err
 }
 
 // TaskList returns the list of tasks.

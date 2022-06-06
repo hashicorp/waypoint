@@ -230,12 +230,16 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "stop_job",
 		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "watch_job",
+		})))
 
 		err := s.TaskPut(&pb.Task{
 			Id:       "t_test",
 			TaskJob:  &pb.Ref_Job{Id: "j_test"},
 			StartJob: &pb.Ref_Job{Id: "start_job"},
 			StopJob:  &pb.Ref_Job{Id: "stop_job"},
+			WatchJob: &pb.Ref_Job{Id: "watch_job"},
 		})
 		require.NoError(err)
 
@@ -247,11 +251,12 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NoError(err)
 		require.NotNil(task)
 
-		startJob, taskJob, stopJob, err := s.JobsByTaskRef(task)
+		startJob, taskJob, stopJob, watchJob, err := s.JobsByTaskRef(task)
 		require.NoError(err)
 		require.Equal(startJob.Id, "start_job")
 		require.Equal(taskJob.Id, "j_test")
 		require.Equal(stopJob.Id, "stop_job")
+		require.Equal(watchJob.Id, "watch_job")
 	})
 }
 
