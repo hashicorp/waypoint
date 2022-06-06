@@ -80,6 +80,11 @@ type TaskLauncherConfig struct {
 
 	// Optionally define various memory resource limits and requests for kubernetes pod containers
 	Memory *ResourceConfig `hcl:"memory,block"`
+
+	// How long WatchTask should wait for a pod to startup. This option is specifically
+	// wordy because it's only for the WatchTask timing out waiting for the pod
+	// its watching to start up before it attempts to stream its logs.
+	WatchTaskStartupTimeoutSeconds int `hcl:watchtask_startup_timeout_seconds,optional"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -87,6 +92,7 @@ func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
 		docs.FromConfig(&TaskLauncherConfig{}),
 		docs.FromFunc(p.StartTaskFunc()),
 	)
+
 	if err != nil {
 		return nil, err
 	}
@@ -154,6 +160,14 @@ task {
 	doc.SetField(
 		"namespace",
 		"namespace in which to launch task",
+	)
+
+	doc.SetField(
+		"watchtask_startup_timeout_seconds",
+		"This option configures how long the WatchTask should wait for a task pod to start-up "+
+			"before attempting to stream its logs. If the pod does not start up within "+
+			"the given timeout, WatchTask will exit.",
+		docs.Default(30),
 	)
 
 	return doc, nil
@@ -439,13 +453,17 @@ func (p *TaskLauncher) WatchTask(
 	// one pod right now.
 	pod := pods.Items[0]
 
-	// TODO(briancain): a better wait time duration?
-	timeout := time.Duration(30 * time.Second)
+	// How long to wait for the pod in question to start before attempting to stream
+	// its logs.
+	podStartUpTimeout := time.Duration(30 * time.Second)
+	if p.config.WatchTaskStartupTimeoutSeconds != 0 {
+		podStartUpTimeout = time.Duration(p.config.WatchTaskStartupTimeoutSeconds) * time.Second
+	}
 
 	log.Info("waiting for pod to start", "name", pod.Name)
 
 	// Ensure the pod exists before attempting to stream its logs
-	err = wait.PollImmediate(time.Second, timeout, func() (bool, error) {
+	err = wait.PollImmediate(time.Second, podStartUpTimeout, func() (bool, error) {
 		p, err := clientSet.CoreV1().Pods(ns).Get(ctx, pod.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -460,7 +478,7 @@ func (p *TaskLauncher) WatchTask(
 		return false, nil
 	})
 	if err != nil {
-		log.Error("pod failed to start before timeout", "timeout", timeout, "err", err)
+		log.Error("pod failed to start before timeout", "timeout", podStartUpTimeout, "err", err)
 		return nil, err
 	}
 
