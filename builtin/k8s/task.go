@@ -499,10 +499,33 @@ func (p *TaskLauncher) WatchTask(
 
 	log.Info("reading pod logs", "name", pod.Name)
 
-	d := time.Now().Add(time.Second * time.Duration(30))
-	ctx, cancel := context.WithDeadline(ctx, d)
-	defer cancel()
-	ticker := time.NewTicker(5 * time.Second)
+	// Start a func to watch the pod phase. If complete, we no longer need to
+	// attempt to stream the pod logs.
+	logsDoneCh := make(chan bool)
+	go func() {
+		defer close(logsDoneCh)
+		for {
+			p, err := clientSet.CoreV1().Pods(ns).Get(ctx, pod.Name, metav1.GetOptions{})
+			if err != nil {
+				log.Warn("error getting pod status", "err", err)
+				ui.Output("Error getting pod status: %s", err, terminal.WithErrorStyle())
+				return
+			}
+
+			switch p.Status.Phase {
+			case v1.PodRunning:
+				// Pod is still running, so wait
+				logsDoneCh <- false
+			case v1.PodFailed, v1.PodSucceeded:
+				// Pod has finished
+				logsDoneCh <- true
+				return
+			case v1.PodPending, v1.PodUnknown:
+				// Unknown state, still wait
+				logsDoneCh <- false
+			}
+		}
+	}()
 
 	// Read the log stream and send to the UI
 	for {
@@ -511,22 +534,24 @@ func (p *TaskLauncher) WatchTask(
 
 		if numBytes == 0 {
 			// This is here because it doesn't look like the pod log reader ever
-			// sends an io.EOF when the logstream is finished. :thinking:
+			// sends an io.EOF when the logstream is finished. We instead can look
+			// at the pod phase for when it's no longer running and the streamer
+			// hasn't sent any log bytes.
 			select {
-			case <-ticker.C:
-				log.Trace("waiting for log message...")
-				continue
-			case <-ctx.Done(): // cancelled
-				log.Info("timed out waiting for buffered logs")
+			case <-logsDoneCh:
+				log.Trace("pod is finished")
 				result.ExitCode = 0
 
 				return &result, nil
+			default:
+				// Pod is still running, but no log output
+				continue
 			}
 
 			continue
 		}
-		// NOTE(briancain): it doesn't seem like the k8s API is sending an EOF??
-		// This loop never exits here
+		// NOTE(briancain): it doesn't seem like the k8s API is sending an EOF
+		// Maybe some day this will work.
 		if err == io.EOF {
 			log.Info("end of stream")
 			result.ExitCode = 0
