@@ -11,11 +11,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/internal/server/boltdbstate"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/grpcmetadata"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
 func TestServiceStartExecStream_badOpen(t *testing.T) {
@@ -311,7 +311,7 @@ func TestServiceStartExecStream_entrypointEventChClose(t *testing.T) {
 	require.False(active)
 }
 
-func testGetInstanceExec(t *testing.T, impl pb.WaypointServer, instanceId string) *boltdbstate.InstanceExec {
+func testGetInstanceExec(t *testing.T, impl pb.WaypointServer, instanceId string) *serverstate.InstanceExec {
 	ws := memdb.NewWatchSet()
 	list, err := testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
 	require.NoError(t, err)
