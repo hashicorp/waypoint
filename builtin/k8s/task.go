@@ -167,7 +167,7 @@ task {
 		"This option configures how long the WatchTask should wait for a task pod to start-up "+
 			"before attempting to stream its logs. If the pod does not start up within "+
 			"the given timeout, WatchTask will exit.",
-		docs.Default(30),
+		docs.Default("30"),
 	)
 
 	return doc, nil
