@@ -28,12 +28,36 @@ func (s *State) PipelinePut(p *pb.Pipeline) error {
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
 		if p.Id == "" {
-			id, err := ulid()
-			if err != nil {
+			// look up if pipeline already exists by Owner and Name
+			pipelineProjRef, ok := p.Owner.(*pb.Pipeline_Project)
+			if !ok {
+				return status.Error(codes.FailedPrecondition,
+					"unsupported pipeline project owner, Pipeline_Project is expected")
+			}
+
+			pipe, err := s.pipelineGet(dbTxn, memTxn, &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Owner{
+					Owner: &pb.Ref_PipelineOwner{
+						Project:      pipelineProjRef.Project,
+						PipelineName: p.Name,
+					},
+				},
+			})
+			if err != nil && status.Code(err) != codes.NotFound {
+				// if not found, that's ok. We're creating a new entry
 				return err
 			}
 
-			p.Id = id
+			if pipe != nil {
+				p.Id = pipe.Id
+			} else {
+				id, err := ulid()
+				if err != nil {
+					return err
+				}
+
+				p.Id = id
+			}
 		}
 
 		return s.pipelinePut(dbTxn, memTxn, p)
