@@ -1503,6 +1503,15 @@ func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory
 			},
 		})))
 
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "watch_job",
+			Task: &pb.Ref_Task{
+				Ref: &pb.Ref_Task_Id{
+					Id: task_id,
+				},
+			},
+		})))
+
 		// Create a pending task. note that `service_job` does this when it wraps
 		// a requested job with an on-demand runner job triple.
 		err := s.TaskPut(&pb.Task{
@@ -1510,6 +1519,7 @@ func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory
 			TaskJob:  &pb.Ref_Job{Id: "task_job"},
 			StartJob: &pb.Ref_Job{Id: "start_job"},
 			StopJob:  &pb.Ref_Job{Id: "stop_job"},
+			WatchJob: &pb.Ref_Job{Id: "watch_job"},
 		})
 		require.NoError(err)
 
