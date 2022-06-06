@@ -1175,6 +1175,9 @@ message Task {
   // Currently the only required field when Upserting a Task.
   Ref.Job task_job = 2;
 
+  // watch_job will spawn a job to stream logs from the `task_job`.
+  Ref.Job watch_job = 9;
+
   // Both start_job and stop_job relate to task_job.These jobs were
   // responsibile for starting and stopping the runner which executed the task
   // job.
@@ -1238,6 +1241,7 @@ message GetTaskResponse {
   Job task_job = 2;
   Job start_job = 3;
   Job stop_job = 4;
+  Job watch_job = 5;
 }
 
 message DeleteTaskRequest {
