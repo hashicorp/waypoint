@@ -509,6 +509,8 @@ func (p *TaskLauncher) WatchTask(
 			if err != nil {
 				log.Warn("error getting pod status", "err", err)
 				ui.Output("Error getting pod status: %s", err, terminal.WithErrorStyle())
+
+				logsDoneCh <- true
 				return
 			}
 
@@ -516,8 +518,13 @@ func (p *TaskLauncher) WatchTask(
 			case v1.PodRunning:
 				// Pod is still running, so wait
 				logsDoneCh <- false
-			case v1.PodFailed, v1.PodSucceeded:
+			case v1.PodFailed:
 				// Pod has finished
+				result.ExitCode = 1
+				logsDoneCh <- true
+			case v1.PodSucceeded:
+				// Pod has finished
+				result.ExitCode = 0
 				logsDoneCh <- true
 				return
 			case v1.PodPending, v1.PodUnknown:
@@ -540,7 +547,6 @@ func (p *TaskLauncher) WatchTask(
 			select {
 			case <-logsDoneCh:
 				log.Trace("pod is finished")
-				result.ExitCode = 0
 
 				return &result, nil
 			default:
