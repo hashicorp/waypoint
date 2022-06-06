@@ -27,6 +27,9 @@ func (d *datadogExporter) register() {
 
 	metrics.NewGlobal("waypoint-metrics")
 
+	d.log.Debug("===>                      ")
+	d.log.Debug("===> Adding Durations <===")
+	d.log.Debug("===>                      ")
 	metrics.AddDuration(metrics.Jobs, metrics.MJobs)
 
 	// Register OpenCensus views.

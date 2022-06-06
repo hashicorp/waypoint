@@ -1,10 +1,11 @@
 package singleprocess
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"runtime/debug"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
@@ -15,30 +16,11 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/hashicorp/waypoint/internal/telemetry/metrics"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/logstream"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
-	"go.opencensus.io/stats"
-	ocview "go.opencensus.io/stats/view"
-	"go.opencensus.io/tag"
-)
-
-var (
-	KeyJobType, _ = tag.NewKey("job_type")
-
-	MJobs          = stats.Int64("catsbymetricsjobs", "Jobs", "ms")
-	MetricJobsView = &ocview.View{
-		Name:        "catsbyjobs",
-		Measure:     MJobs,
-		Description: "The distribution of the job build latencies",
-
-		// Latency in buckets:
-		// [>=0ms, >=25ms, >=50ms, >=75ms, >=100ms, >=200ms, >=400ms, >=600ms, >=800ms, >=1s, >=2s, >=4s, >=6s]
-		// Aggregation: view.Distribution(0, 25, 50, 75, 100, 200, 400, 600, 800, 1000, 2000, 4000, 6000),
-		Aggregation: ocview.Distribution(0, 25, 50, 75, 100, 200, 400, 600, 800, 1000, 2000),
-		TagKeys:     []tag.Key{KeyJobType},
-	}
 )
 
 func (s *Service) ListRunners(
@@ -565,48 +547,43 @@ func (s *Service) RunnerJobStream(
 
 	op := opString(job.Job)
 
-	// metrics.NewGlobal("waypoint-metrics")
+	metrics.NewGlobal("catsbymetrics")
+	s.metrics = metrics.NewChild(op)
+
+	log.Debug("===>                      ")
+	log.Debug("===> Adding Durations in service_runner.go <===")
+	log.Debug("===>                      ")
+	s.metrics.AddDuration(metrics.Jobs, metrics.MJobs)
 	// start datadog exporter
-	// dd, err := datadog.NewExporter(datadog.Options{
-	// 	Namespace: "catsbymetrics",
-	// 	Service:   "catsbymetrics",
-	// 	TraceAddr: "192.168.147.119:8125",
-	// 	StatsAddr: "192.168.147.119:8125",
-	// })
-	// if err != nil {
-	// 	log.Warn("fatal starting datadog exporter:", "error", err)
-	// }
 
 	// ocview.RegisterExporter(dd)
-	if err := ocview.Register(MetricJobsView); err != nil {
-		log.Warn("========\nerror registring view:\n=======", "error", err)
-	} else {
-		log.Info("======no error with new type view registration")
-	}
+	// if err := ocview.Register(MetricJobsView); err != nil {
+	// 	log.Warn("========\nerror registring view:\n=======", "error", err)
+	// } else {
+	// 	log.Info("======no error with new type view registration")
+	// }
+	gr := bytes.Fields(debug.Stack())[1]
+	stack := string(gr)
 
+	// tag.Job
+	defer s.metrics.StartTimer(metrics.Jobs).Record(ctx)
+
+	log.Info("=======================")
+	log.Info("==== Stack ", "stack", stack)
+	log.Info("=======================")
+
+	// statTime := time.Now()
 	// log.Info("=======================")
-	// log.Info("==== Server calling timer for RunnerJobStream", "operation", op)
+	// log.Info("==== Server calling special timer for RunnerJobStream", "operation", op)
 	// log.Info("=======================")
-	// jt := metrics.StartTimer(op)
 	// defer func() {
 	// 	log.Info("=======================")
-	// 	log.Info("==== End Server calling Record() for RunnerJobStream", "operation", op)
+	// 	log.Info("==== END special timer for RunnerJobStream", "operation", op)
 	// 	log.Info("=======================")
-	// 	jt.Record()
+	// 	stats.RecordWithTags(context.Background(), []tag.Mutator{
+	// 		tag.Upsert(metrics.KeyJobType, op),
+	// 	}, metrics.MJobs.M(time.Since(statTime).Milliseconds()))
 	// }()
-
-	statTime := time.Now()
-	log.Info("=======================")
-	log.Info("==== Server calling special timer for RunnerJobStream", "operation", op)
-	log.Info("=======================")
-	defer func() {
-		log.Info("=======================")
-		log.Info("==== END special timer for RunnerJobStream", "operation", op)
-		log.Info("=======================")
-		stats.RecordWithTags(context.Background(), []tag.Mutator{
-			tag.Upsert(KeyJobType, op),
-		}, MJobs.M(time.Since(statTime).Milliseconds()))
-	}()
 
 	err = server.Send(&pb.RunnerJobStreamResponse{
 		Event: &pb.RunnerJobStreamResponse_Assignment{
@@ -796,15 +773,15 @@ func (s *Service) RunnerJobStream(
 			}
 
 		case job := <-jobCh:
-			op := opString(job.Job)
-			log.Debug("=======================")
-			log.Debug("==== job recieved on jobCh:", "job", op)
-			log.Debug("=======================")
+			// op := opString(job.Job)
+			// log.Debug("=======================")
+			// log.Debug("==== job recieved on jobCh:", "job", op)
+			// log.Debug("=======================")
 
 			if lastJob == job.Job {
-				log.Debug("=======================")
-				log.Debug("==== job equal last job on jobCh:", "job", op)
-				log.Debug("=======================")
+				// log.Debug("=======================")
+				// log.Debug("==== job equal last job on jobCh:", "job", op)
+				// log.Debug("=======================")
 				continue
 			}
 

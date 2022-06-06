@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"context"
+	"log"
 	"sync/atomic"
 	"time"
 
@@ -14,6 +16,9 @@ var global atomic.Value
 
 func init() {
 	// Store a typed nil. The implementation supports nil receivers.
+	log.Println("===============")
+	log.Println("==== init call ===")
+	log.Println("===============")
 	global.Store((*Metrics)(nil))
 }
 
@@ -44,8 +49,8 @@ func AddDuration(name string, stat *stats.Int64Measure) {
 }
 
 // MeasureSince measures the time elapsed since t using the global instance.
-func MeasureSince(name string, t time.Time, options ...Option) {
-	global.Load().(*Metrics).MeasureSince(name, t, options...)
+func MeasureSince(ctx context.Context, name string, t time.Time, options ...Option) {
+	global.Load().(*Metrics).MeasureSince(ctx, name, t, options...)
 }
 
 // // SetGauge sets the value of the named gauge using the global instance.

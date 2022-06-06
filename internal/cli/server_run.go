@@ -183,6 +183,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 		singleprocess.WithConfig(&c.config),
 		singleprocess.WithLogger(log.Named("singleprocess")),
 		singleprocess.WithAcceptURLTerms(c.flagAcceptTOS),
+		// singleprocess.WithTelemVg(c.flagAcceptTOS),
 	)
 	if c, ok := impl.(io.Closer); ok {
 		defer c.Close()

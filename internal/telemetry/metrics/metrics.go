@@ -6,6 +6,7 @@ package metrics
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -20,7 +21,7 @@ import (
 
 // Metrics is a wrapper around OpenTelemetry's metrics library.
 type Metrics struct {
-	// parent *Metrics
+	parent *Metrics
 	// meter     metric.Meter
 	prefix    string
 	durations map[string]*stats.Int64Measure
@@ -53,39 +54,51 @@ func (m *Metrics) NewChild(prefix string) *Metrics {
 	}
 
 	return &Metrics{
-		// parent: m,
-		prefix: prefix,
+		parent:    m,
+		prefix:    prefix,
+		durations: make(map[string]*stats.Int64Measure),
 	}
 }
 
 // AddDuration is used to add durations for metrics
 func (m *Metrics) AddDuration(name string, stat *stats.Int64Measure) {
 	if m == nil {
+		log.Println("&&&&&&&&&&&&&&&")
+		log.Println("&&&&&&&& M IS NILL not adding =======")
+		log.Println("&&&&&&&&&&&&&&&")
 		return
+	} else {
+		log.Println("&&&&&&&&&&&&&&&")
+		log.Println("&&&&&&&& M set, adding.. =======")
+		log.Println("&&&&&&&&&&&&&&&")
 	}
 
 	// TODO: load first/error handle
 	m.l.Lock()
 	m.durations[name] = stat
+	l := len(m.durations)
+	log.Println("===============")
+	log.Println(fmt.Sprintf("======== duration len in Add (%d) =======", l))
+	log.Println("===============")
 	m.l.Unlock()
 }
 
-// // SetAttribute is used to set an attribute key/value pair on the metrics
-// // instance, which will be logged with each metric thereafter.
-// func (m *Metrics) SetAttribute(key, value string) {
-// 	if m == nil {
-// 		return
-// 	}
+// SetAttribute is used to set an attribute key/value pair on the metrics
+// instance, which will be logged with each metric thereafter.
+func (m *Metrics) SetAttribute(key, value string) {
+	if m == nil {
+		return
+	}
 
-// 	// Skip attributes with missing key or value.
-// 	if key == "" || value == "" {
-// 		return
-// 	}
+	// Skip attributes with missing key or value.
+	if key == "" || value == "" {
+		return
+	}
 
-// 	m.l.Lock()
-// 	m.options = append(m.options, WithAttribute(key, value))
-// 	m.l.Unlock()
-// }
+	m.l.Lock()
+	m.options = append(m.options, WithAttribute(key, value))
+	m.l.Unlock()
+}
 
 // StartTimer returns a new *Timer, which can be used to measure the elapsed
 // time since StartTimer was called.
@@ -103,7 +116,17 @@ func (m *Metrics) StartTimer(name string, options ...Option) *Timer {
 }
 
 // MeasureSince is used to measure the time elapsed since t.
-func (m *Metrics) MeasureSince(name string, t time.Time, options ...Option) {
+func (m *Metrics) MeasureSince(ctx context.Context, name string, t time.Time, options ...Option) {
+	if m == nil {
+		log.Println("&&&&&&&&&&&&&&&")
+		log.Println("&&&&&&&& M IS NILL in measure since =======")
+		log.Println("&&&&&&&&&&&&&&&")
+		return
+	} else {
+		log.Println("&&&&&&&&&&&&&&&")
+		log.Println("&&&&&&&& M is set, measuring.... =======")
+		log.Println("&&&&&&&&&&&&&&&")
+	}
 	if m == nil {
 		return
 	}
@@ -116,14 +139,15 @@ func (m *Metrics) MeasureSince(name string, t time.Time, options ...Option) {
 
 	m.l.RLock()
 	r, ok := m.durations[Jobs]
+	l := len(m.durations)
 	m.l.RUnlock()
 
 	if !ok {
 		// var err error
 
-		log.Println("========-err jobs not found=======")
-		log.Println("========-err jobs not found=======")
-		log.Println("========-err jobs not found=======")
+		log.Println("===============")
+		log.Println(fmt.Sprintf("======== err jobs not found (%d) =======", l))
+		log.Println("===============")
 		return
 		// r, err = m.meter.NewInt64ValueRecorder(m.metricName(name)+".milliseconds",
 		// 	metric.WithUnit(unit.Milliseconds))
@@ -147,7 +171,7 @@ func (m *Metrics) MeasureSince(name string, t time.Time, options ...Option) {
 	ts := time.Since(t).Milliseconds()
 	log.Printf("=== Debug sending record with tags")
 	err := stats.RecordWithTags(context.Background(), []tag.Mutator{
-		tag.Upsert(KeyJobType, name),
+		tag.Upsert(KeyJobType, m.prefix),
 		// }, r.M(time.Since(t).Milliseconds()))
 	}, r.M(ts))
 
@@ -205,12 +229,13 @@ func (m *Metrics) MeasureSince(name string, t time.Time, options ...Option) {
 // 	g.setValue(floatValue)
 // }
 
-// // RecordValue records the given value as a single, point-in-time sample.
-// // value must be builtin numerical type. Other types will be discarded.
-// func (m *Metrics) RecordValue(name string, value interface{}, options ...Option) {
-// 	if m == nil {
-// 		return
-// 	}
+// RecordValue records the given value as a single, point-in-time sample.
+// value must be builtin numerical type. Other types will be discarded.
+func (m *Metrics) RecordValue(name string, value interface{}, options ...Option) {
+	if m == nil {
+		return
+	}
+}
 
 // 	floatValue, ok := float64Value(value)
 // 	if !ok {
@@ -286,8 +311,8 @@ type Timer struct {
 }
 
 // Record records the current elapsed time since the start of the Timer.
-func (t *Timer) Record() {
-	t.metrics.MeasureSince(t.name, t.start, t.options...)
+func (t *Timer) Record(ctx context.Context) {
+	t.metrics.MeasureSince(ctx, t.name, t.start, t.options...)
 }
 
 // MetricOptions carries information about options given at the call site
@@ -318,13 +343,13 @@ type Option func(*MetricOptions)
 // 	}
 // }
 
-// // WithAttributes produces an Option which carries the given attribute through
-// // to the underlying OpenTelemetry API calls when logging metrics.
-// func WithAttribute(key, value string) Option {
-// 	return func(m *MetricOptions) {
-// 		m.Attributes[key] = value
-// 	}
-// }
+// WithAttributes produces an Option which carries the given attribute through
+// to the underlying OpenTelemetry API calls when logging metrics.
+func WithAttribute(key, value string) Option {
+	return func(m *MetricOptions) {
+		m.Attributes[key] = value
+	}
+}
 
 // // gauge is the internal representation of a gauge and its value.
 // type gauge struct {

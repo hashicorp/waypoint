@@ -10,6 +10,7 @@ import (
 
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
+	"github.com/hashicorp/waypoint/internal/telemetry/metrics"
 	wpoidc "github.com/hashicorp/waypoint/pkg/auth/oidc"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -67,6 +68,8 @@ type Service struct {
 
 	// oidcCache is the cache for OIDC providers.
 	oidcCache *wpoidc.ProviderCache
+
+	metrics *metrics.Metrics
 }
 
 // New returns a Waypoint server implementation that uses BotlDB plus
@@ -226,6 +229,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 		s.bgWg.Add(1)
 		go s.runPrune(s.bgCtx, &s.bgWg, log.Named("prune"))
 	}
+	s.Telem()
 
 	return &s, nil
 }
@@ -242,6 +246,21 @@ func (s *Service) Close() error {
 	if s.oidcCache != nil {
 		s.oidcCache.Close()
 	}
+	return nil
+}
+
+func (s *Service) Telem() error {
+	// start datadog exporter
+	// dd, _ := datadog.NewExporter(datadog.Options{
+	// 	Namespace: "catsbymetrics",
+	// 	Service:   "catsbymetrics",
+	// 	TraceAddr: "192.168.147.119:8125",
+	// 	StatsAddr: "192.168.147.119:8125",
+	// })
+
+	// ocview.RegisterExporter(dd)
+	// ocview.Register(metrics.MetricJobsView)
+	// metrics.NewChild("catsbymetrics")
 	return nil
 }
 

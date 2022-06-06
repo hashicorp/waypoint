@@ -6,22 +6,31 @@ import (
 	"go.opencensus.io/tag"
 )
 
-// func init() {
-// }
-
 var (
+	MetricJobsView = &view.View{
+		Name:        "catsbyjobs",
+		Measure:     MJobs,
+		Description: "The distribution of the job build latencies",
+
+		// Latency in buckets:
+		// [>=0ms, >=25ms, >=50ms, >=75ms, >=100ms, >=200ms, >=400ms, >=600ms, >=800ms, >=1s, >=2s, >=4s, >=6s]
+		// Aggregation: view.Distribution(0, 25, 50, 75, 100, 200, 400, 600, 800, 1000, 2000, 4000, 6000),
+		Aggregation: view.Distribution(0, 25, 50, 75, 100, 200, 400, 600, 800, 1000, 2000),
+		TagKeys:     []tag.Key{KeyJobType},
+	}
 	// stat names
 	Latency = "repl/latency"
 
 	Jobs = "waypoint-metrics"
 
-	JobBuild   = "build"
-	JobDeploy  = "deploy"
-	JobReport  = "report"
-	JobRelease = "release"
-	JobInit    = "init"
-	JobUp      = "up"
-	JobPush    = "push"
+	JobOperation = "operation"
+	JobBuild     = "build"
+	JobDeploy    = "deploy"
+	JobReport    = "report"
+	JobRelease   = "release"
+	JobInit      = "init"
+	JobUp        = "up"
+	JobPush      = "push"
 
 	KeyMethod, _  = tag.NewKey("method")
 	KeyService, _ = tag.NewKey("service")
@@ -35,41 +44,10 @@ var (
 	// Counts/groups the lengths of lines read in.
 	MJobs = stats.Int64(Jobs, "Waypoint Job durations", "ms")
 
-	JobsView = &view.View{
-		Name:        "waypointstats",
-		Measure:     MJobs,
-		Description: "The distribution of the job build latencies",
-
-		// Latency in buckets:
-		// [>=0ms, >=25ms, >=50ms, >=75ms, >=100ms, >=200ms, >=400ms, >=600ms, >=800ms, >=1s, >=2s, >=4s, >=6s]
-		// Aggregation: view.Distribution(0, 25, 50, 75, 100, 200, 400, 600, 800, 1000, 2000, 4000, 6000),
-		Aggregation: view.Distribution(0, 25, 50, 75, 100, 200, 400, 600, 800, 1000, 2000),
-		TagKeys:     []tag.Key{KeyJobType},
-	}
-
-	LatencyView = &view.View{
-		Name:        "demo/latency",
-		Measure:     MLatencyMs,
-		Description: "The distribution of the latencies",
-
-		// Latency in buckets:
-		// [>=0ms, >=25ms, >=50ms, >=75ms, >=100ms, >=200ms, >=400ms, >=600ms, >=800ms, >=1s, >=2s, >=4s, >=6s]
-		Aggregation: view.Distribution(0, 25, 50, 75, 100, 200, 400, 600, 800, 1000, 2000, 4000, 6000),
-		TagKeys:     []tag.Key{KeyMethod},
-	}
-
 	// StatsViews is a list of all stats views for
 	// measurements emitted by this package.
 	StatsViews = []*view.View{
-		LatencyView,
-		JobsView,
-		// clusterInconsistencyDetectedView,
-		// failedHealthCheckView,
-		// succeededHealthCheckView,
-		// performedHealthCheckView,
-		// clusterHealthyView,
-		// clusterHealthTimeSinceLastWriteView,
-		// failedToGetClusterHealthInformationView,
+		MetricJobsView,
 	}
 
 // 	clusterIDTag = tag.MustNewKey("cluster_id")
