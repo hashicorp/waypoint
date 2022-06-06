@@ -11,10 +11,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/internal/server/boltdbstate"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
 func TestServiceEntrypointConfig(t *testing.T) {
@@ -459,7 +459,7 @@ func TestServiceEntrypointExecStream_doubleStart(t *testing.T) {
 	require.Nil(resp)
 }
 
-func testRegisterExec(t *testing.T, client pb.WaypointClient, impl pb.WaypointServer) (*boltdbstate.InstanceExec, func()) {
+func testRegisterExec(t *testing.T, client pb.WaypointClient, impl pb.WaypointServer) (*serverstate.InstanceExec, func()) {
 	// Create an instance
 	instanceId, deploymentId, closer := TestEntrypoint(t, client)
 	defer closer()

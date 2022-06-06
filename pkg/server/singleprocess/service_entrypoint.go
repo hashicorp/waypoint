@@ -57,11 +57,12 @@ func (s *Service) EntrypointConfig(
 		return err
 	}
 
-	// TODO(mitchellh): We only support exec if we're using the in-memory
-	// state store. We will add support for our other stores later.
-	inmemstate, ok := s.state(ctx).(*boltdbstate.State)
+	// Handling exec requests is optional so we check if state supports
+	// them and only if so do we add them to the list of things we'll check
+	// for.
+	iexec, ok := s.state(ctx).(serverstate.InstanceExecHandler)
 	if !ok {
-		inmemstate = nil
+		iexec = nil
 	}
 
 	// Defer deleting this.
@@ -77,11 +78,11 @@ func (s *Service) EntrypointConfig(
 			log.Error("failed to delete instance data. This should not happen.", "err", err)
 		}
 
-		if inmemstate != nil {
+		if iexec != nil {
 			// Delete any active but unconnected exec requests. This can happen
 			// if the entrypoint crashed after an exec was assigned to the entrypoint.
 			log.Trace("closing any unconnected exec requests")
-			execs, err := inmemstate.InstanceExecListByInstanceId(record.Id, nil)
+			execs, err := iexec.InstanceExecListByInstanceId(record.Id, nil)
 			if err != nil {
 				log.Error("failed to query instance exec list. This should not happen.", "err", err)
 			} else {
@@ -99,9 +100,9 @@ func (s *Service) EntrypointConfig(
 		ws := memdb.NewWatchSet()
 
 		// Get our exec requests
-		var execs []*boltdbstate.InstanceExec
-		if inmemstate != nil {
-			execs, err = inmemstate.InstanceExecListByInstanceId(req.InstanceId, ws)
+		var execs []*serverstate.InstanceExec
+		if iexec != nil {
+			execs, err = iexec.InstanceExecListByInstanceId(req.InstanceId, ws)
 			if err != nil {
 				return err
 			}
@@ -111,7 +112,7 @@ func (s *Service) EntrypointConfig(
 		config := &pb.EntrypointConfig{}
 		for _, exec := range execs {
 			config.Exec = append(config.Exec, &pb.EntrypointConfig_Exec{
-				Index: exec.Id,
+				Index: int64(exec.Id),
 				Args:  exec.Args,
 				Pty:   exec.Pty,
 			})
@@ -297,9 +298,9 @@ func (s *Service) EntrypointExecStream(
 	ctx := server.Context()
 	log := hclog.FromContext(server.Context())
 
-	// TODO(mitchellh): We only support exec if we're using the in-memory
-	// state store. We will add support for our other stores later.
-	inmemstate, ok := s.state(ctx).(*boltdbstate.State)
+	// Exec support is optional for a state interface, so we need to check that
+	// it's supported first.
+	iexec, ok := s.state(ctx).(serverstate.InstanceExecHandler)
 	if !ok {
 		return status.Errorf(codes.Unimplemented,
 			"state storage doesn't support exec streaming")
@@ -317,7 +318,7 @@ func (s *Service) EntrypointExecStream(
 	}
 
 	// Get our instance and look for this exec index
-	exec, err := inmemstate.InstanceExecById(open.Open.Index)
+	exec, err := iexec.InstanceExecConnect(ctx, open.Open.Index)
 	if err != nil {
 		return err
 	}
