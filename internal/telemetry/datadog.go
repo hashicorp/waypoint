@@ -31,6 +31,7 @@ func (d *datadogExporter) register() {
 	d.log.Debug("===> Adding Durations <===")
 	d.log.Debug("===>                      ")
 	metrics.AddDuration(metrics.Jobs, metrics.MJobs)
+	// metrics.SetAttribute(metrics.KeyServerVersion)
 
 	// Register OpenCensus views.
 	vl := len(metrics.StatsViews)

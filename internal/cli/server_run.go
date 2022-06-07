@@ -378,10 +378,10 @@ This command will bootstrap the server and setup a CLI context.
 				datadog.Options{
 					TraceAddr: c.flagTelemetryDatadogTraceAddr,
 					StatsAddr: c.flagTelemetryDatadogTraceAddr,
-					// Service:   "waypoint",
-					// Namespace: "waypoint",
-					Service:   "catsbymetrics",
-					Namespace: "catsbymetrics",
+					Service:   "waypoint",
+					Namespace: "waypoint",
+					// Service:   "catsbymetrics",
+					// Namespace: "catsbymetrics",
 				},
 			))
 		} else {

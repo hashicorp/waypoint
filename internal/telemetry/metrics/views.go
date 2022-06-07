@@ -8,15 +8,17 @@ import (
 
 var (
 	MetricJobsView = &view.View{
-		Name:        "catsbyjobs",
+		// Name:        "catsbyjobs",
+		Name:        "operations",
 		Measure:     MJobs,
 		Description: "The distribution of the job build latencies",
 
 		// Latency in buckets:
 		// [>=0ms, >=25ms, >=50ms, >=75ms, >=100ms, >=200ms, >=400ms, >=600ms, >=800ms, >=1s, >=2s, >=4s, >=6s]
 		// Aggregation: view.Distribution(0, 25, 50, 75, 100, 200, 400, 600, 800, 1000, 2000, 4000, 6000),
-		Aggregation: view.Distribution(0, 25, 50, 75, 100, 200, 400, 600, 800, 1000, 2000),
-		TagKeys:     []tag.Key{KeyJobType},
+		// Aggregation: view.Distribution(0, 25, 50, 75, 100, 200, 400, 600, 800, 1000, 2000),
+		Aggregation: view.Distribution(),
+		TagKeys:     []tag.Key{KeyJobType, KeyServerVersion},
 	}
 	// stat names
 	Latency = "repl/latency"
@@ -32,17 +34,19 @@ var (
 	JobUp        = "up"
 	JobPush      = "push"
 
-	KeyMethod, _  = tag.NewKey("method")
-	KeyService, _ = tag.NewKey("service")
-	KeyStatus, _  = tag.NewKey("status")
-	KeyError, _   = tag.NewKey("error")
-	KeyJobType, _ = tag.NewKey("job_type")
+	KeyMethod, _        = tag.NewKey("method")
+	KeyService, _       = tag.NewKey("service")
+	KeyStatus, _        = tag.NewKey("status")
+	KeyError, _         = tag.NewKey("error")
+	KeyJobType, _       = tag.NewKey("job_type")
+	KeyServerVersion, _ = tag.NewKey("server_version")
 
 	// The latency in milliseconds
 	MLatencyMs = stats.Float64(Latency, "The latency in milliseconds per REPL loop", "ms")
 
 	// Counts/groups the lengths of lines read in.
-	MJobs = stats.Int64(Jobs, "Waypoint Job durations", "ms")
+	// MJobs = stats.Int64(Jobs, "Waypoint Job durations", "ms")
+	MJobs = stats.Float64(Jobs, "Waypoint Job durations", "ms")
 
 	// StatsViews is a list of all stats views for
 	// measurements emitted by this package.

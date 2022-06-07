@@ -24,7 +24,7 @@ type Metrics struct {
 	parent *Metrics
 	// meter     metric.Meter
 	prefix    string
-	durations map[string]*stats.Int64Measure
+	durations map[string]*stats.Float64Measure
 	// samples   map[string]metric.Float64ValueRecorder
 	// gauges    map[string]*gauge
 	options []Option
@@ -40,7 +40,7 @@ func New(prefix string) *Metrics {
 	return &Metrics{
 		// meter:     m,
 		prefix:    prefix,
-		durations: make(map[string]*stats.Int64Measure),
+		durations: make(map[string]*stats.Float64Measure),
 		// samples:   make(map[string]metric.Float64ValueRecorder),
 		// gauges:    make(map[string]*gauge),
 	}
@@ -56,12 +56,12 @@ func (m *Metrics) NewChild(prefix string) *Metrics {
 	return &Metrics{
 		parent:    m,
 		prefix:    prefix,
-		durations: make(map[string]*stats.Int64Measure),
+		durations: make(map[string]*stats.Float64Measure),
 	}
 }
 
 // AddDuration is used to add durations for metrics
-func (m *Metrics) AddDuration(name string, stat *stats.Int64Measure) {
+func (m *Metrics) AddDuration(name string, stat *stats.Float64Measure) {
 	if m == nil {
 		log.Println("&&&&&&&&&&&&&&&")
 		log.Println("&&&&&&&& M IS NILL not adding =======")
@@ -167,11 +167,11 @@ func (m *Metrics) MeasureSince(ctx context.Context, name string, t time.Time, op
 	// _ = stats.RecordWithTags(context.Background(), []tag.Mutator{
 	// tag.Upsert(clusterIDTag, clusterID),
 	// }, measurement.M(1))
-
-	ts := time.Since(t).Milliseconds()
+	ts := sinceInMilliseconds(t)
 	log.Printf("=== Debug sending record with tags")
 	err := stats.RecordWithTags(context.Background(), []tag.Mutator{
 		tag.Upsert(KeyJobType, m.prefix),
+		tag.Upsert(KeyServerVersion, "0.8.1"),
 		// }, r.M(time.Since(t).Milliseconds()))
 	}, r.M(ts))
 
@@ -409,3 +409,7 @@ func noop() *Metrics {
 // 		return 0, false
 // 	}
 // }
+
+func sinceInMilliseconds(startTime time.Time) float64 {
+	return float64(time.Since(startTime).Nanoseconds()) / 1e6
+}

@@ -572,19 +572,6 @@ func (s *Service) RunnerJobStream(
 	log.Info("==== Stack ", "stack", stack)
 	log.Info("=======================")
 
-	// statTime := time.Now()
-	// log.Info("=======================")
-	// log.Info("==== Server calling special timer for RunnerJobStream", "operation", op)
-	// log.Info("=======================")
-	// defer func() {
-	// 	log.Info("=======================")
-	// 	log.Info("==== END special timer for RunnerJobStream", "operation", op)
-	// 	log.Info("=======================")
-	// 	stats.RecordWithTags(context.Background(), []tag.Mutator{
-	// 		tag.Upsert(metrics.KeyJobType, op),
-	// 	}, metrics.MJobs.M(time.Since(statTime).Milliseconds()))
-	// }()
-
 	err = server.Send(&pb.RunnerJobStreamResponse{
 		Event: &pb.RunnerJobStreamResponse_Assignment{
 			Assignment: &pb.RunnerJobStreamResponse_JobAssignment{

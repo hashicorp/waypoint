@@ -32,10 +32,10 @@ func NewChild(prefix string) *Metrics {
 	return global.Load().(*Metrics).NewChild(prefix)
 }
 
-// // SetAttribute sets the given key/value pair on the global metrics instance.
-// func SetAttribute(key, value string) {
-// 	global.Load().(*Metrics).SetAttribute(key, value)
-// }
+// SetAttribute sets the given key/value pair on the global metrics instance.
+func SetAttribute(key, value string) {
+	global.Load().(*Metrics).SetAttribute(key, value)
+}
 
 // StartTimer uses the global instance to return a new *Timer, which can be
 // used to measure the elapsed time since StartTimer was called.
@@ -44,7 +44,7 @@ func StartTimer(name string, options ...Option) *Timer {
 }
 
 // AddDuration uses the global instance to add durations
-func AddDuration(name string, stat *stats.Int64Measure) {
+func AddDuration(name string, stat *stats.Float64Measure) {
 	global.Load().(*Metrics).AddDuration(name, stat)
 }
 
