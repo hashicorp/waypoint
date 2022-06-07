@@ -591,6 +591,11 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		deployBundle := respDeployList.Deployments[0]
 		deploy := deployBundle.Deployment
 		appDeployStatus := deployBundle.LatestStatusReport
+
+		var instancesCount uint32
+		if appDeployStatus != nil {
+			instancesCount = appDeployStatus.InstancesCount
+		}
 		statusColor := ""
 
 		var details string
@@ -613,7 +618,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 			deploy.Component.Name,
 			details,
 			deploy.Status.State.String(),
-			fmt.Sprintf("%d", appDeployStatus.InstancesCount),
+			fmt.Sprintf("%d", instancesCount),
 		}
 
 		// Add column data to table
