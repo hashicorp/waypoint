@@ -266,7 +266,7 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Uninstalling Runner resources...")
+	s := sg.Add("Uninstalling Runner...")
 	defer func() { s.Abort() }()
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
@@ -276,63 +276,50 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	if err != nil {
 		return err
 	}
-	//rgSvc := resourcegroups.New(sess)
+
+	// Find clusterArn which waypoint runner is installed into
 	ecsSvc := ecs.New(sess)
-
-	//runnerResourceQuery := "{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{\"Key\":\"%s\",\"Values\":[\"%s\"]}]}"
-
-	// TODO: Has ID
-	//runnerTagName := "runner-id"
-	//runnerTagValue := opts.Id
-
-	//runnerTagName := "waypoint-runner"
-	//runnerTagValue := "runner-component"
-
-	//query := fmt.Sprintf(runnerResourceQuery, runnerTagName, runnerTagValue)
-	//results, err := rgSvc.SearchResources(&resourcegroups.SearchResourcesInput{
-	//	ResourceQuery: &resourcegroups.ResourceQuery{
-	//		Type:  aws.String(resourcegroups.QueryTypeTagFilters10),
-	//		Query: aws.String(query),
-	//	},
-	//})
-	//if err != nil {
-	//	return err
-	//}
-
-	//log.Debug("Results", results)
-
-	log.Debug("Get cluster ARN")
-
-	// Check for details of possibly existing cluster `waypoint-server`
-	// If server was installed to ECS with `waypoint install` command, we'd expect this
-	// query what subnets and vpc information from the server service
 	services, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
 		Cluster:  aws.String(i.Config.Cluster),
 		Services: []*string{aws.String("waypoint-runner-" + opts.Id)},
 	})
 	if err != nil {
+		s.Update("Could not find runner with ID %s", opts.Id)
 		return err
 	}
 	if len(services.Services) != 1 {
 		log.Debug("Unable to uninstall runner. Too many instances")
-		return nil
+		s.Update("Expected 1 runner service, found %s.", len(services.Services))
+
+		return fmt.Errorf("Expected 1 runner service, found %d.", len(services.Services))
+	}
+	clusterArn := services.Services[0].ClusterArn
+
+	// Delete associated runner service and tasks
+	// This does not remove the security group since it may be in use by other
+	// runners/waypoint infrastructure.
+	s.Update("Deleting runner service")
+	_, err = ecsSvc.DeleteService(&ecs.DeleteServiceInput{
+		Service: services.Services[0].ServiceArn,
+		Force:   aws.Bool(true),
+		Cluster: clusterArn,
+	})
+	if err != nil {
+		s.Update("Unable to delete runner service.")
+		return err
 	}
 
-	log.Debug("services", services)
+	s.Update("Waiting for runner service to be inactive")
+	err = ecsSvc.WaitUntilServicesInactive(&ecs.DescribeServicesInput{
+		Cluster:  clusterArn,
+		Services: []*string{services.Services[0].ServiceArn},
+	})
+	if err != nil {
+		s.Update("Unable to verify runner uninstalled", len(services.Services))
+		return err
+	}
 
-	return nil
-
-	//resources := results.ResourceIdentifiers
-	s.Update("Deleting ECS resources...")
-	//if err := installutil.DeleteEcsResources(ctx, sess, resources); err != nil {
-	//	return err
-	//}
-	s.Update("Deleting Cloud Watch Log Group resources...")
-	//if err := installutil.DeleteCWLResources(ctx, sess, defaultRunnerLogGroup); err != nil {
-	//	return err
-	//}
-	s.Update("Runner resources deleted")
-
+	s.Update("Runner uninstalled")
 	s.Done()
 	return nil
 }
