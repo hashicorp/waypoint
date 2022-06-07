@@ -2,10 +2,17 @@ package runnerinstall
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 )
 
@@ -19,6 +26,7 @@ type DockerRunnerInstaller struct {
 }
 
 func (i *DockerRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) error {
+	ui := opts.UI
 	sg := opts.UI.StepGroup()
 	defer sg.Wait()
 
@@ -31,11 +39,44 @@ func (i *DockerRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) 
 	}
 	cli.NegotiateAPIVersion(ctx)
 
-	var runnerImage string
-	if i.Config.RunnerImage == "" {
-		runnerImage = "hashicorp/waypoint:latest"
-	} else {
-		runnerImage = i.Config.RunnerImage
+	runnerImage := i.Config.RunnerImage
+	imageRef, err := reference.ParseNormalizedNamed(runnerImage)
+
+	imageList, err := cli.ImageList(ctx, types.ImageListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "reference",
+			Value: reference.FamiliarString(imageRef),
+		}),
+	})
+	if err != nil {
+		return err
+	}
+
+	if len(imageList) == 0 {
+		s.Update("Pulling image %s", runnerImage)
+
+		resp, err := cli.ImagePull(ctx, reference.FamiliarName(imageRef), types.ImagePullOptions{})
+		if err != nil {
+			s.Update("Unable to pull waypoint image")
+			return err
+		}
+		defer resp.Close()
+
+		stdout, _, err := ui.OutputWriters()
+		if err != nil {
+			return err
+		}
+
+		var termFd uintptr
+		if f, ok := stdout.(*os.File); ok {
+			termFd = f.Fd()
+		}
+
+		err = jsonmessage.DisplayJSONMessagesStream(resp, s.TermOutput(), termFd, true, nil)
+		if err != nil {
+			return fmt.Errorf("unable to stream pull logs to the terminal: %s", err)
+		}
+
 	}
 
 	var waypointNetwork network.NetworkingConfig
@@ -105,8 +146,51 @@ func (i *DockerRunnerInstaller) InstallFlags(set *flag.Set) {
 }
 
 func (d DockerRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
-	//TODO implement me
-	//panic("implement me")
+	sg := opts.UI.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Initializing Docker client...")
+	defer func() { s.Abort() }()
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return err
+	}
+	cli.NegotiateAPIVersion(ctx)
+
+	s.Update("Finding runner container")
+	containerName := "waypoint-runner-" + opts.Id
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "name",
+			Value: containerName,
+		}),
+	})
+	if err != nil {
+		s.Update("Could not get container list")
+		return err
+	}
+
+	if len(containers) == 0 {
+		s.Update("Could not find runner.")
+		return fmt.Errorf("Runner not found.")
+	}
+
+	s.Update("Stopping runner...")
+	stopTimeout := time.Second * 30
+	err = cli.ContainerStop(ctx, containerName, &stopTimeout)
+	if err != nil {
+		return err
+	}
+
+	s.Update("Removing runner container")
+	err = cli.ContainerRemove(ctx, containerName, types.ContainerRemoveOptions{})
+	if err != nil {
+		return err
+	}
+
+	s.Update("Waypoint Runner uninstalled")
+	s.Done()
 	return nil
 }
 
