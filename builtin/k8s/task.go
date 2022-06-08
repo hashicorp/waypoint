@@ -537,6 +537,9 @@ func (p *TaskLauncher) WatchTask(
 				// Unknown state, still wait
 				logsDoneCh <- false
 			}
+
+			// Sleep a bit so we don't hammer the k8s cluster
+			time.Sleep(500 * time.Millisecond)
 		}
 	}()
 
