@@ -140,7 +140,7 @@ func getDefaultBranch(log hclog.Logger, repoPath string, remoteName string) (str
 	return defaultBranch, nil
 }
 
-// remoteHasBranch checks to see if the configured remote
+// remoteHasBranch checks to see if the configured remote has the specified branch
 func remoteHasBranch(log hclog.Logger, repoPath string, branch string) (bool, error) {
 	remoteBranchOutput, err := runGitCommand(log, repoPath, "branch", "-r")
 	if err != nil {
@@ -148,6 +148,10 @@ func remoteHasBranch(log hclog.Logger, repoPath string, branch string) (bool, er
 	}
 	branches := strings.Split(remoteBranchOutput, "\n")
 	for _, thisBranch := range branches {
+		arrowIdx := strings.Index(thisBranch, "->")
+		if arrowIdx > 0 {
+			thisBranch = thisBranch[0:arrowIdx]
+		}
 		thisBranch = strings.TrimSpace(thisBranch)
 		if thisBranch == branch {
 			return true, nil
