@@ -2,7 +2,6 @@ package singleprocess
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"strings"
 	"time"
@@ -538,16 +537,9 @@ func (s *Service) RunnerJobStream(
 	}
 	log.Trace("loaded config sources for job", "total_sourcers", len(cfgSrcs))
 
-	operation := opString(job.Job)
-	log.Debug("sending job assignment to runner")
-	log.Debug("===>                      ")
-	log.Debug(fmt.Sprintf("===> defer func start  (%s) <===", operation))
-	log.Debug("===>                      ")
+	operation := operationString(job.Job)
 	defer func(start time.Time) {
 		metrics.MeasureOperation(ctx, start, operation)
-		log.Debug("===>                      ")
-		log.Debug(fmt.Sprintf("===> defer func execute (%s) <===", operation))
-		log.Debug("===>                      ")
 	}(time.Now())
 	metrics.CountOperation(ctx, operation)
 	// Send the job assignment.
@@ -889,52 +881,49 @@ func (s *Service) runnerVerifyToken(
 	return nil
 }
 
-func opString(job *pb.Job) string {
+func operationString(job *pb.Job) string {
+	// Types that are assignable to Operation:
 	switch job.Operation.(type) {
 	case *pb.Job_Noop_:
 		return "Noop"
-	case *pb.Job_Up:
-		return "up"
 	case *pb.Job_Build:
 		return "build"
-
 	case *pb.Job_Push:
 		return "push"
-
 	case *pb.Job_Deploy:
 		return "deploy"
 	case *pb.Job_Destroy:
 		return "destroy"
-
 	case *pb.Job_Release:
 		return "release"
-
 	case *pb.Job_Validate:
 		return "validate"
-
 	case *pb.Job_Auth:
 		return "auth"
-
 	case *pb.Job_Docs:
 		return "docs"
-
 	case *pb.Job_ConfigSync:
 		return "config_sync"
-
 	case *pb.Job_Exec:
 		return "exec"
-
+	case *pb.Job_Up:
+		return "up"
 	case *pb.Job_Logs:
 		return "logs"
-
 	case *pb.Job_QueueProject:
 		return "queue_project"
-
+	case *pb.Job_Poll:
+		return "poll"
 	case *pb.Job_StatusReport:
-		return "status"
-
+		return "status_report"
+	case *pb.Job_StartTask:
+		return "start_task"
+	case *pb.Job_StopTask:
+		return "stop_task"
+	case *pb.Job_WatchTask:
+		return "watch_task"
 	case *pb.Job_Init:
 		return "init"
 	}
-	return "none"
+	return "unknown"
 }

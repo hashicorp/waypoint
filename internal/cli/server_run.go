@@ -115,7 +115,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 	}
 	path := c.config.DBPath
 	log.Info("opening DB", "path", path)
-	db, err := bolt.Open(path, 0o600, nil)
+	db, err := bolt.Open(path, 0600, nil)
 	if err != nil {
 		c.ui.Output(
 			"Error opening database: %s", err.Error(),
@@ -377,6 +377,7 @@ This command will bootstrap the server and setup a CLI context.
 					TraceAddr: c.flagTelemetryDatadogTraceAddr,
 					StatsAddr: c.flagTelemetryDatadogTraceAddr,
 					Service:   "waypoint",
+					Namespace: "waypoint",
 				},
 			))
 		}

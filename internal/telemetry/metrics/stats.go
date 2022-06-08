@@ -3,7 +3,6 @@ package metrics
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -15,34 +14,28 @@ import (
 func init() {
 	// Register OpenCensus views.
 	if err := view.Register(statsViews...); err != nil {
-		log.Printf("========================")
-		log.Printf("=== error registering view ===")
-		log.Printf("=== %v ===", err)
-		log.Printf("========================")
 		fmt.Fprintf(os.Stderr, "error registering OpenCensus views: %v", err)
-	} else {
-		log.Printf("========================")
-		log.Printf("=== no registering view ===")
-		log.Printf("========================")
 	}
 }
 
 var (
-	// TagMethod is a tag for capturing the method.
+	// TagOperation is a tag for capturing the operation type, e.g. build,
+	// deploy, release
 	TagOperation = tag.MustNewKey("operation")
 
 	operationDurationMeasure = stats.Float64(
-		"waypoint_operation",
-		"The number of seconds duration for this operation",
+		"operation_duration",
+		"The duration for this operation, measured in seconds",
 		stats.UnitSeconds,
 	)
 
 	operationCountMeasure = stats.Int64(
-		"waypoint_operation_count",
+		"operation_count",
 		"count of operations",
 		stats.UnitDimensionless,
 	)
 
+	// views aggregate measurements
 	waypointOperationCounts = &view.View{
 		Name:        operationCountMeasure.Name(),
 		Description: operationCountMeasure.Description(),
@@ -100,12 +93,15 @@ var (
 	}
 )
 
+// MeasureOperation records the duration of an operation and upserts the
+// operation value into the TagOperation tag
 func MeasureOperation(ctx context.Context, lastWriteAt time.Time, operationName string) {
 	_ = stats.RecordWithTags(ctx, []tag.Mutator{
 		tag.Upsert(TagOperation, operationName),
 	}, operationDurationMeasure.M(time.Since(lastWriteAt).Seconds()))
 }
 
+// CountOperation records a single incremental value for an operation
 func CountOperation(ctx context.Context, operationName string) {
 	_ = stats.RecordWithTags(ctx, []tag.Mutator{
 		tag.Upsert(TagOperation, operationName),
