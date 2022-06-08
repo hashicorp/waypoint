@@ -446,6 +446,8 @@ func (p *TaskLauncher) WatchTask(
 
 	if pods == nil {
 		log.Info("no pods found for job, returning", "job_id", ti.Id)
+		ui.Output("no pods found for job id %q, cannot watch task job...", ti.Id, terminal.WithErrorStyle())
+
 		return nil, nil
 	}
 
@@ -478,7 +480,9 @@ func (p *TaskLauncher) WatchTask(
 		return false, nil
 	})
 	if err != nil {
-		log.Error("pod failed to start before timeout", "timeout", podStartUpTimeout, "err", err)
+		log.Error("pod failed to start before timeout", "pod", pod.Name, "timeout", podStartUpTimeout, "err", err)
+		ui.Output("pod %q failed to start before WatchTask timeout %q. err: %s", pod.Name, podStartUpTimeout, err, terminal.WithErrorStyle())
+
 		return nil, err
 	}
 
@@ -493,6 +497,8 @@ func (p *TaskLauncher) WatchTask(
 	podLogs, err := req.Stream(ctx)
 	if err != nil {
 		log.Error("failed to read pod log stream", "err", err)
+		ui.Output("WatchTask failed to read pod %q log stream: err: %s", pod.Name, err, terminal.WithErrorStyle())
+
 		return nil, err
 	}
 	defer podLogs.Close()
@@ -507,8 +513,8 @@ func (p *TaskLauncher) WatchTask(
 		for {
 			p, err := clientSet.CoreV1().Pods(ns).Get(ctx, pod.Name, metav1.GetOptions{})
 			if err != nil {
-				log.Warn("error getting pod status", "err", err)
-				ui.Output("Error getting pod status: %s", err, terminal.WithErrorStyle())
+				log.Warn("error getting pod status", "pod", pod.Name, "err", err)
+				ui.Output("Error getting pod %q status: %s", pod.Name, err, terminal.WithErrorStyle())
 
 				logsDoneCh <- true
 				return
@@ -546,7 +552,7 @@ func (p *TaskLauncher) WatchTask(
 			// hasn't sent any log bytes.
 			select {
 			case <-logsDoneCh:
-				log.Trace("pod is finished")
+				log.Trace("pod is finished", "pod", pod.Name)
 
 				return &result, nil
 			default:
@@ -564,7 +570,7 @@ func (p *TaskLauncher) WatchTask(
 			break
 		}
 		if err != nil {
-			log.Error("got an error streaming pod logs", "err", err)
+			log.Error("got an error streaming pod logs", "pod", pod.Name, "err", err)
 			return nil, err
 		}
 
