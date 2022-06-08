@@ -4,7 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"io"
 	"strings"
+	"time"
 
 	"github.com/docker/distribution/reference"
 	"github.com/hashicorp/go-hclog"
@@ -13,13 +15,16 @@ import (
 	"google.golang.org/grpc/status"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/pointer"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 // TaskLauncher implements the TaskLauncher plugin interface to support
@@ -75,6 +80,11 @@ type TaskLauncherConfig struct {
 
 	// Optionally define various memory resource limits and requests for kubernetes pod containers
 	Memory *ResourceConfig `hcl:"memory,block"`
+
+	// How long WatchTask should wait for a pod to startup. This option is specifically
+	// wordy because it's only for the WatchTask timing out waiting for the pod
+	// its watching to start up before it attempts to stream its logs.
+	WatchTaskStartupTimeoutSeconds int `hcl:watchtask_startup_timeout_seconds,optional"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -82,6 +92,7 @@ func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
 		docs.FromConfig(&TaskLauncherConfig{}),
 		docs.FromFunc(p.StartTaskFunc()),
 	)
+
 	if err != nil {
 		return nil, err
 	}
@@ -149,6 +160,14 @@ task {
 	doc.SetField(
 		"namespace",
 		"namespace in which to launch task",
+	)
+
+	doc.SetField(
+		"watchtask_startup_timeout_seconds",
+		"This option configures how long the WatchTask should wait for a task pod to start-up "+
+			"before attempting to stream its logs. If the pod does not start up within "+
+			"the given timeout, WatchTask will exit.",
+		docs.Default("30"),
 	)
 
 	return doc, nil
@@ -402,9 +421,169 @@ func (p *TaskLauncher) StartTask(
 func (p *TaskLauncher) WatchTask(
 	ctx context.Context,
 	log hclog.Logger,
+	ui terminal.UI,
 	ti *TaskInfo,
 ) (*component.TaskResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "WatchTask not implemented")
+	// Get our client
+	clientSet, ns, _, err := Clientset(p.config.KubeconfigPath, p.config.Context)
+	if err != nil {
+		return nil, err
+	}
+	if p.config.Namespace != "" {
+		ns = p.config.Namespace
+	}
+
+	// List pods with this job label
+	podsClient := clientSet.CoreV1().Pods(ns)
+	pods, err := podsClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("job-name=%s", ti.Id),
+	})
+	// It's not clear from the documentation if an error is returned from the
+	// List API call if no jobs are found, so we guard here just in case
+	if err != nil && !errors.IsNotFound(err) {
+		return nil, err
+	}
+
+	if pods == nil {
+		log.Info("no pods found for job, returning", "job_id", ti.Id)
+		ui.Output("no pods found for job id %q, cannot watch task job...", ti.Id, terminal.WithErrorStyle())
+
+		return nil, nil
+	}
+
+	// Assume first one exists for now? Our task launcher for k8s only launches
+	// one pod right now.
+	pod := pods.Items[0]
+
+	// How long to wait for the pod in question to start before attempting to stream
+	// its logs.
+	podStartUpTimeout := time.Duration(30 * time.Second)
+	if p.config.WatchTaskStartupTimeoutSeconds != 0 {
+		podStartUpTimeout = time.Duration(p.config.WatchTaskStartupTimeoutSeconds) * time.Second
+	}
+
+	log.Info("waiting for pod to start", "name", pod.Name)
+
+	// Ensure the pod exists before attempting to stream its logs
+	err = wait.PollImmediate(time.Second, podStartUpTimeout, func() (bool, error) {
+		p, err := clientSet.CoreV1().Pods(ns).Get(ctx, pod.Name, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		switch p.Status.Phase {
+		case v1.PodRunning, v1.PodFailed, v1.PodSucceeded:
+			return true, nil
+		case v1.PodPending, v1.PodUnknown:
+			return false, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		log.Error("pod failed to start before timeout", "pod", pod.Name, "timeout", podStartUpTimeout, "err", err)
+		ui.Output("pod %q failed to start before WatchTask timeout %q. err: %s", pod.Name, podStartUpTimeout, err, terminal.WithErrorStyle())
+
+		return nil, err
+	}
+
+	log.Info("attempting to stream pod logs")
+
+	// Accumulate our result on this
+	var result component.TaskResult
+
+	req := clientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{
+		Follow: true,
+	})
+	podLogs, err := req.Stream(ctx)
+	if err != nil {
+		log.Error("failed to read pod log stream", "err", err)
+		ui.Output("WatchTask failed to read pod %q log stream: err: %s", pod.Name, err, terminal.WithErrorStyle())
+
+		return nil, err
+	}
+	defer podLogs.Close()
+
+	log.Info("reading pod logs", "name", pod.Name)
+
+	// Start a func to watch the pod phase. If complete, we no longer need to
+	// attempt to stream the pod logs.
+	logsDoneCh := make(chan bool)
+	go func() {
+		defer close(logsDoneCh)
+		for {
+			p, err := clientSet.CoreV1().Pods(ns).Get(ctx, pod.Name, metav1.GetOptions{})
+			if err != nil {
+				log.Warn("error getting pod status", "pod", pod.Name, "err", err)
+				ui.Output("Error getting pod %q status: %s", pod.Name, err, terminal.WithErrorStyle())
+
+				logsDoneCh <- true
+				return
+			}
+
+			switch p.Status.Phase {
+			case v1.PodRunning:
+				// Pod is still running, so wait
+				logsDoneCh <- false
+			case v1.PodFailed:
+				// Pod has finished
+				result.ExitCode = 1
+				logsDoneCh <- true
+			case v1.PodSucceeded:
+				// Pod has finished
+				result.ExitCode = 0
+				logsDoneCh <- true
+				return
+			case v1.PodPending, v1.PodUnknown:
+				// Unknown state, still wait
+				logsDoneCh <- false
+			}
+
+			// Sleep a bit so we don't hammer the k8s cluster
+			time.Sleep(500 * time.Millisecond)
+		}
+	}()
+
+	// Read the log stream and send to the UI
+	for {
+		buf := make([]byte, 2000)
+		numBytes, err := podLogs.Read(buf)
+
+		if numBytes == 0 {
+			// This is here because it doesn't look like the pod log reader ever
+			// sends an io.EOF when the logstream is finished. We instead can look
+			// at the pod phase for when it's no longer running and the streamer
+			// hasn't sent any log bytes.
+			select {
+			case <-logsDoneCh:
+				log.Trace("pod is finished", "pod", pod.Name)
+
+				return &result, nil
+			default:
+				// Pod is still running, but no log output
+				continue
+			}
+
+			continue
+		}
+		// NOTE(briancain): it doesn't seem like the k8s API is sending an EOF
+		// Maybe some day this will work.
+		if err == io.EOF {
+			log.Info("end of stream")
+			result.ExitCode = 0
+			break
+		}
+		if err != nil {
+			log.Error("got an error streaming pod logs", "pod", pod.Name, "err", err)
+			return nil, err
+		}
+
+		// stream message to the ui
+		message := string(buf[:numBytes])
+		log.Info(message)
+		ui.Output(message)
+	}
+
+	return &result, nil
 }
 
 var _ component.TaskLauncher = (*TaskLauncher)(nil)
