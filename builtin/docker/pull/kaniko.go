@@ -3,6 +3,12 @@ package dockerpull
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/http"
+	"os"
+	"os/exec"
+	"runtime"
+
 	"github.com/docker/cli/cli/command/image/build"
 	"github.com/docker/distribution/reference"
 	"github.com/hashicorp/go-hclog"
@@ -13,11 +19,6 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"net"
-	"net/http"
-	"os"
-	"os/exec"
-	"runtime"
 )
 
 func (b *Builder) pullWithKaniko(
@@ -112,7 +113,7 @@ func (b *Builder) pullWithKaniko(
 		step = sg.Add("Testing registry and uploading entrypoint layer")
 		err = oci.SetupEntrypointLayer(refPath, data)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer: %s", err)
+			return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer to host: %q, err: %s", oci.Upstream, err)
 		}
 		step.Done()
 	}
