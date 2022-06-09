@@ -3,13 +3,14 @@ package runnerinstall
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	nomadutil "github.com/hashicorp/waypoint/internal/installutil/nomad"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"strconv"
-	"strings"
 )
 
 type NomadRunnerInstaller struct {
@@ -297,10 +298,68 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	defer func() { s.Abort() }()
 
 	// Build api client
-	//client, err := api.NewClient(api.DefaultConfig())
-	_, err := api.NewClient(api.DefaultConfig())
+	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return err
+	}
+	s.Done()
+
+	s = sg.Add("Locate existing Waypoint runner...")
+	waypointRunnerJobName := "waypoint-runner-" + opts.Id
+	jobs, _, err := client.Jobs().PrefixList(waypointRunnerJobName)
+	if err != nil {
+		s.Update("Unable to find nomad job %s for Waypoint runner", waypointRunnerJobName)
+		return err
+	}
+
+	if len(jobs) != 1 {
+		return fmt.Errorf("Expected 1 runner, found %d", len(jobs))
+	}
+
+	s.Update("Waypoint runner found.")
+	s.Done()
+
+	s = sg.Add("Uninstalling the Waypoint runner...")
+	_, _, err = client.Jobs().Deregister(waypointRunnerJobName, true, &api.WriteOptions{})
+	if err != nil {
+		s.Update("Unable to deregister Waypoint runner job.")
+		return err
+	}
+
+	allocs, _, err := client.Jobs().Allocations(waypointRunnerJobName, true, nil)
+	if err != nil {
+		return err
+	}
+	for _, alloc := range allocs {
+		if alloc.DesiredStatus != "stop" {
+			a, _, err := client.Allocations().Info(alloc.ID, &api.QueryOptions{})
+			if err != nil {
+				return err
+			}
+			_, err = client.Allocations().Stop(a, &api.QueryOptions{})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	s.Update("Waypoint runner job and allocations purged")
+
+	// Delete CSI volume for runner (if it exists)
+	vols, _, err := client.CSIVolumes().List(&api.QueryOptions{Prefix: "waypoint"})
+	if err != nil {
+		return err
+	}
+	for _, vol := range vols {
+		if vol.ID == waypointRunnerJobName {
+			s.Update("Destroying persistent CSI volume")
+			err = client.CSIVolumes().Deregister(vol.ID, false, &api.WriteOptions{})
+			if err != nil {
+				return err
+			}
+			s.Update("Successfully destroyed persistent volumes")
+			break
+		}
 	}
 	s.Done()
 
