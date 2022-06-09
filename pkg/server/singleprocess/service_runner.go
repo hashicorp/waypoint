@@ -885,7 +885,7 @@ func operationString(job *pb.Job) string {
 	// Types that are assignable to Operation:
 	switch job.Operation.(type) {
 	case *pb.Job_Noop_:
-		return "Noop"
+		return "noop"
 	case *pb.Job_Build:
 		return "build"
 	case *pb.Job_Push:
