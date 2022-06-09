@@ -1398,7 +1398,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 	require.Equal(pb.Task_PENDING, task.JobState)
 
 	// Register our runner
-	id, _ := TestRunner(t, client, nil)
+	id, _ := server.TestRunner(t, client, nil)
 
 	// Start a job request
 	runnerStream, err := client.RunnerJobStream(ctx)
@@ -1439,7 +1439,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 
 	// Register our runner
 	runnerId := st.Info.EnvironmentVariables["WAYPOINT_RUNNER_ID"]
-	TestRunner(t, client, &pb.Runner{
+	server.TestRunner(t, client, &pb.Runner{
 		Id:       runnerId,
 		ByIdOnly: true,
 	})
@@ -1729,7 +1729,7 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T) {
 	require.Equal(pb.Task_PENDING, task.JobState)
 
 	// Register our runner
-	id, _ := TestRunner(t, client, nil)
+	id, _ := server.TestRunner(t, client, nil)
 
 	// Start a job request
 	runnerStream, err := client.RunnerJobStream(ctx)
