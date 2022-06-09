@@ -24,13 +24,13 @@ var (
 	TagOperation = tag.MustNewKey("operation")
 
 	operationDurationMeasure = stats.Float64(
-		"operation_duration",
-		"The duration for this operation, measured in seconds",
-		stats.UnitSeconds,
+		"operation-duration.milliseconds",
+		"The duration for this operation, measured in milliseconds",
+		stats.UnitMilliseconds,
 	)
 
 	operationCountMeasure = stats.Int64(
-		"operation_count",
+		"operation-count",
 		"count of operations",
 		stats.UnitDimensionless,
 	)

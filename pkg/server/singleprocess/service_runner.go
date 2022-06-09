@@ -537,6 +537,8 @@ func (s *Service) RunnerJobStream(
 	}
 	log.Trace("loaded config sources for job", "total_sourcers", len(cfgSrcs))
 
+	log.Debug("sending job assignment to runner")
+
 	operation := operationString(job.Job)
 	defer func(start time.Time) {
 		metrics.MeasureOperation(ctx, start, operation)
