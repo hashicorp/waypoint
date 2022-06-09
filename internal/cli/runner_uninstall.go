@@ -129,23 +129,8 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 	sg := c.ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Forgetting runner %s on server...", c.id)
-	defer func() { s.Abort() }()
-
-	_, err := c.project.Client().ForgetRunner(ctx, &pb.ForgetRunnerRequest{
-		RunnerId: c.id,
-	})
-	if err != nil {
-		s.Update("Couldn't forget runner: %s", clierrors.Humanize(err))
-		s.Status(terminal.StatusWarn)
-	} else {
-		s.Update("Runner %s forgotten on server", c.id)
-		s.Status(terminal.StatusOK)
-	}
-	s.Done()
-
-	s = sg.Add("Uninstalling runner...")
-	err = p.Uninstall(ctx, &runnerinstall.InstallOpts{
+	s := sg.Add("Uninstalling runner...")
+	err := p.Uninstall(ctx, &runnerinstall.InstallOpts{
 		Log:             log,
 		UI:              c.ui,
 		ServerAddr:      c.serverUrl,
@@ -160,6 +145,21 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 	}
 	s.Update("Runner %s uninstalled successfully", c.id)
 	s.Status(terminal.StatusOK)
+	s.Done()
+
+	s = sg.Add("Forgetting runner %s on server...", c.id)
+	defer func() { s.Abort() }()
+
+	_, err = c.project.Client().ForgetRunner(ctx, &pb.ForgetRunnerRequest{
+		RunnerId: c.id,
+	})
+	if err != nil {
+		s.Update("Couldn't forget runner: %s", clierrors.Humanize(err))
+		s.Status(terminal.StatusWarn)
+	} else {
+		s.Update("Runner %s forgotten on server", c.id)
+		s.Status(terminal.StatusOK)
+	}
 	s.Done()
 
 	// TODO: Remove runner profiles associated solely with this runner
