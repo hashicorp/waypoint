@@ -111,7 +111,7 @@ func (b *Builder) buildWithKaniko(
 
 		err = os.SetupEntrypointLayer(refPath, data)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer: %s", err)
+			return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer to host %q, err: %s", os.Upstream, err)
 		}
 	}
 
