@@ -57,7 +57,7 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		// build the initial job template for running the pipeline
 		runJobTemplate := &pb.Job{
 			Application: app.Ref(),
-			Workspace:   &pb.Ref_Workspace{Workspace: c.flagWorkspace},
+			Workspace:   c.project.WorkspaceRef(),
 
 			TargetRunner: &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{}},
 		}
