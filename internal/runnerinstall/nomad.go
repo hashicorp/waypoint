@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	nomadutil "github.com/hashicorp/waypoint/internal/installutil/nomad"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 type NomadRunnerInstaller struct {
@@ -341,6 +343,21 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 				return err
 			}
 		}
+	}
+
+	s.Update("Waiting for jobs to be purged...")
+	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		jobs, _, err := client.Jobs().PrefixList(waypointRunnerJobName)
+		if err != nil {
+			return false, err
+		}
+		if len(jobs) == 0 {
+			return true, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		return err
 	}
 
 	s.Update("Waypoint runner job and allocations purged")
