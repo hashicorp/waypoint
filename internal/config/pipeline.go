@@ -4,6 +4,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -141,12 +143,31 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 			// maybe this would be a switch on step.Type? Or maybe we get our
 			// own Step Eval func that returns the step proto instead and does the
 			// switches there.
-			s.Kind = &pb.Pipeline_Step_Exec_{
-				Exec: &pb.Pipeline_Step_Exec{
-					Image: step.ImageURL,
-					// Command: step.Use.Body.Command,
-					// Args:    step.Use.Body.Args,
-				},
+			switch step.Use.Type {
+			// TODO(Briancain): this is where we can queue the built in pipeline to WP job ops
+			//case "deploy"
+			case "exec":
+				var execBody struct {
+					Command string   `hcl:"command,optional"`
+					Args    []string `hcl:"args,optional"`
+				}
+
+				if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &execBody); diag.HasErrors() {
+					return nil, diag
+				}
+
+				// in the server proto, make a new Kind for built-in operations
+				// Enum or OneOf that has each operation
+				s.Kind = &pb.Pipeline_Step_Exec_{
+					Exec: &pb.Pipeline_Step_Exec{
+						Image:   step.ImageURL,
+						Command: execBody.Command,
+						Args:    execBody.Args,
+					},
+				}
+			default:
+				// TODO(briancain): This is what you'd change to support future Step plugins
+				return nil, status.Errorf(codes.Internal, "unsupported step plugin type: %q", step.Use.Type)
 			}
 
 			steps[step.Name] = s
