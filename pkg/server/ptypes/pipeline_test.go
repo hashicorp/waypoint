@@ -95,6 +95,21 @@ func TestValidatePipeline(t *testing.T) {
 		},
 
 		{
+			"exec image required",
+			func(v *pb.Pipeline) {
+				v.Steps = map[string]*pb.Pipeline_Step{
+					"root": {
+						Name: "root",
+						Kind: &pb.Pipeline_Step_Exec_{
+							Exec: &pb.Pipeline_Step_Exec{},
+						},
+					},
+				}
+			},
+			`image: cannot be blank`,
+		},
+
+		{
 			"cycle",
 			func(v *pb.Pipeline) {
 				v.Steps = map[string]*pb.Pipeline_Step{
