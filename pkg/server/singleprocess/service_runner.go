@@ -721,6 +721,7 @@ func (s *Service) RunnerJobStream(
 				select {
 				case req := <-eventCh:
 					if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
+						log.Error("error handling job stream request during drain", "err", err, "req", req)
 						return err
 					}
 				default:
@@ -729,10 +730,12 @@ func (s *Service) RunnerJobStream(
 			}
 
 		case err := <-errCh:
+			log.Error("err from err channel", "err", err)
 			return err
 
 		case req := <-eventCh:
 			if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
+				log.Error("error handling job stream request", "err", err, "req", req)
 				return err
 			}
 
@@ -746,6 +749,8 @@ func (s *Service) RunnerJobStream(
 			// cancel requests are made.
 			if job.CancelTime != nil &&
 				(lastJob == nil || !lastJob.CancelTime.AsTime().Equal(job.CancelTime.AsTime())) {
+				log.Trace("job cancellation request receieved")
+
 				// The job is forced if we're in an error state. This must be true
 				// because we would've already exited the loop if we naturally
 				// got a terminal event.
@@ -759,6 +764,7 @@ func (s *Service) RunnerJobStream(
 					},
 				})
 				if err != nil {
+					log.Error("error sending job cancel event to runner", "err", err)
 					return err
 				}
 
@@ -768,6 +774,7 @@ func (s *Service) RunnerJobStream(
 				}
 			}
 
+			log.Trace("updating job from state store", "last_job", lastJob, "job", job.Job)
 			lastJob = job.Job
 		}
 	}
