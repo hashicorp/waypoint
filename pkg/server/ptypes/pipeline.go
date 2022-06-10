@@ -89,7 +89,7 @@ func ValidateStepRules(v *pb.Pipeline_Step) []*validation.FieldRules {
 		validation.Field(&v.Name, validation.Required),
 		validation.Field(&v.Kind, validation.Required),
 
-		validationext.StructOneof(&v.Kind, (*pb.Pipeline_Step_Exec)(nil),
+		validationext.StructOneof(&v.Kind, (*pb.Pipeline_Step_Exec_)(nil),
 			func() []*validation.FieldRules {
 				v := v.Kind.(*pb.Pipeline_Step_Exec_)
 				return validatePipelineStepExecRules(v)
