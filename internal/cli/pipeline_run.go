@@ -101,7 +101,8 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		// Receieve job ids from running pipeline, use job client to attach to job stream
 		// and stream here. First pass can be linear job streaming
 		for _, jobId := range resp.AllJobIds {
-			app.UI.Output("Reading job stream (jobId: %s)...", jobId, terminal.WithHeaderStyle())
+			app.UI.Output("Executing Step %q", resp.JobMap[jobId].Step, terminal.WithHeaderStyle())
+			app.UI.Output("Reading job stream (jobId: %s)...", jobId, terminal.WithInfoStyle())
 			app.UI.Output("")
 
 			// Throw away the job result for now. We could do something fancy with this
