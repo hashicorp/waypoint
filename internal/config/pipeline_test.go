@@ -136,8 +136,9 @@ func TestPipelineProtos(t *testing.T) {
 		File string
 		Func func(*testing.T, *Config)
 	}{
+		// TODO verify a step exec was set properly and the fields are set on the proto
 		{
-			"pipeline_step.hcl",
+			"pipeline_exec_step.hcl",
 			func(t *testing.T, c *Config) {
 				require := require.New(t)
 
@@ -150,7 +151,7 @@ func TestPipelineProtos(t *testing.T) {
 		},
 
 		{
-			"pipelines_many.hcl",
+			"pipeline_exec_step_many.hcl",
 			func(t *testing.T, c *Config) {
 				require := require.New(t)
 
