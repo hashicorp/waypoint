@@ -23,14 +23,14 @@ var (
 	// deploy, release
 	TagOperation = tag.MustNewKey("operation")
 
-	operationDurationMeasure = stats.Float64(
-		"operation-duration.milliseconds",
+	operationDurationMeasure = stats.Int64(
+		"operation_duration.milliseconds",
 		"The duration for this operation, measured in milliseconds",
 		stats.UnitMilliseconds,
 	)
 
 	operationCountMeasure = stats.Int64(
-		"operation-count",
+		"operation_count",
 		"count of operations",
 		stats.UnitDimensionless,
 	)
@@ -98,7 +98,7 @@ var (
 func MeasureOperation(ctx context.Context, lastWriteAt time.Time, operationName string) {
 	_ = stats.RecordWithTags(ctx, []tag.Mutator{
 		tag.Upsert(TagOperation, operationName),
-	}, operationDurationMeasure.M(time.Since(lastWriteAt).Seconds()))
+	}, operationDurationMeasure.M(time.Since(lastWriteAt).Milliseconds()))
 }
 
 // CountOperation records a single incremental value for an operation
