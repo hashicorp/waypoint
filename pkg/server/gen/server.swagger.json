@@ -227,6 +227,69 @@
         ]
       }
     },
+    "/v1/config-source": {
+      "get": {
+        "summary": "Get the matching configuration source for the request. This will return\nthe most specific matching config source given the scope in the request.\nFor example, if you search for an app-specific config source and only\na global config exists, the global config will be returned.",
+        "operationId": "Waypoint_GetConfigSource",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetConfigSourceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type",
+            "description": "config source type. This is optional. If this is omitted, all\nconfig source types matching the above scoping will be returned.\nThis is a prefix-search. All config sources with this type prefix\nwill be returned.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      },
+      "put": {
+        "summary": "Set the configuration for a dynamic configuration source. If you're looking\nto set application configuration, you probably want SetConfig instead.",
+        "operationId": "Waypoint_SetConfigSource",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.SetConfigSourceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/v1/deployment/{deployment.id}/status-report": {
       "put": {
         "summary": "ExpediteStatusReport returns the queued status report job id",
@@ -300,6 +363,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetLogStreamRequest"
+            }
           }
         ],
         "tags": [
@@ -363,6 +434,49 @@
               "BUILD"
             ],
             "default": "NONE"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/exec": {
+      "post": {
+        "summary": "StartExecStream starts an exec session.",
+        "operationId": "Waypoint_StartExecStream",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/hashicorp.waypoint.ExecStreamResponse"
+                },
+                "error": {
+                  "$ref": "#/definitions/grpc.gateway.runtime.StreamError"
+                }
+              },
+              "title": "Stream result of hashicorp.waypoint.ExecStreamResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": " (streaming inputs)",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ExecStreamRequest"
+            }
           }
         ],
         "tags": [
@@ -1364,6 +1478,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetLogStreamRequest"
+            }
           }
         ],
         "tags": [
@@ -1473,6 +1595,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetLogStreamRequest"
+            }
           }
         ],
         "tags": [
@@ -1743,6 +1873,68 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/project/{application.project}/application/{application.application}/config": {
+      "get": {
+        "summary": "Retrieve merged configuration values for a specific scope. You can determine\nwhere a configuration variable was set by looking at the scope field on\neach variable.",
+        "operationId": "Waypoint_GetConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ConfigGetResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "application.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "application.application",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "project.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "runner.id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workspace.workspace",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "prefix",
+            "description": "Get all configuration entries under the given prefix. When empty,\nreturns all config variables.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3075,6 +3267,68 @@
         ]
       }
     },
+    "/v1/project/{project.project}/config": {
+      "get": {
+        "summary": "Retrieve merged configuration values for a specific scope. You can determine\nwhere a configuration variable was set by looking at the scope field on\neach variable.",
+        "operationId": "Waypoint_GetConfig2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ConfigGetResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "application.application",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "application.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "runner.id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workspace.workspace",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "prefix",
+            "description": "Get all configuration entries under the given prefix. When empty,\nreturns all config variables.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/v1/project/{project.project}/triggers": {
       "get": {
         "summary": "ListTriggers takes a request filter, and returns any matching existing triggers",
@@ -4030,6 +4284,210 @@
         ]
       }
     },
+    "/v1/task/by-job/{ref.job_id}": {
+      "get": {
+        "summary": "GetTask returns a requested Task message. Or an error if it does not exist.",
+        "operationId": "Waypoint_GetTask2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetTaskResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ref.job_id",
+            "description": "The main \"run\" job ID that the task initiated",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ref.id",
+            "description": "the id of the tracktask record.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/task/by-job/{ref.job_id}/cancel": {
+      "put": {
+        "summary": "CancelTask will attempt to gracefully cancel each job in the task job triple",
+        "operationId": "Waypoint_CancelTask2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ref.job_id",
+            "description": "The main \"run\" job ID that the task initiated",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.CancelTaskRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/task/{ref.id}": {
+      "get": {
+        "summary": "GetTask returns a requested Task message. Or an error if it does not exist.",
+        "operationId": "Waypoint_GetTask",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetTaskResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ref.id",
+            "description": "the id of the tracktask record",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ref.job_id",
+            "description": "The main \"run\" job ID that the task initiated.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/task/{ref.id}/cancel": {
+      "put": {
+        "summary": "CancelTask will attempt to gracefully cancel each job in the task job triple",
+        "operationId": "Waypoint_CancelTask",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ref.id",
+            "description": "the id of the tracktask record",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.CancelTaskRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/tasks": {
+      "get": {
+        "summary": "ListTask will return a list of all existing Tasks",
+        "operationId": "Waypoint_ListTask",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ListTaskResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "taskState",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "UNKNOWN",
+                "PENDING",
+                "STARTING",
+                "STARTED",
+                "RUNNING",
+                "COMPLETED",
+                "STOPPING",
+                "STOPPED",
+                "MIXED"
+              ]
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/v1/token/decode": {
       "post": {
         "summary": "DecodeToken takes a token string and returns the structured information\nabout the given token. This is useful for frontends (CLI, UI, etc.) to\nlearn more about a token before using it. For example, if a UI wants to\ncreate a signup flow around signup tokens, they can validate the token\nahead of time.",
@@ -4384,6 +4842,45 @@
         ]
       }
     },
+    "/v1/triggers/no-auth/{ref.id}/run": {
+      "post": {
+        "summary": "Attempts to run a trigger given a trigger ID reference. If the trigger does\nnot exist, we return not found. If the trigger exists but requires authentication\nwe return an error.",
+        "operationId": "Waypoint_NoAuthRunTrigger",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.RunTriggerResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ref.id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.RunTriggerRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/v1/ui/deployments/application/{application.application}": {
       "get": {
         "summary": "List deployments for a given application.",
@@ -4644,6 +5141,372 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/hashicorp.waypoint.UI.ListDeploymentsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "workspace.workspace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "application.application",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "application.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order.order",
+            "description": "Order for the results.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "UNSET",
+              "START_TIME",
+              "COMPLETE_TIME"
+            ],
+            "default": "UNSET"
+          },
+          {
+            "name": "order.desc",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "order.limit",
+            "description": "Limit the number of results.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "physical_state",
+            "description": "The physical state to filter for. If this is zero or unset then no\nfiltering on physical state will be done.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "PENDING",
+              "CREATED",
+              "DESTROYED"
+            ],
+            "default": "UNKNOWN"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/ui/project/{project.project}": {
+      "get": {
+        "summary": "Get a given project with useful related records.",
+        "operationId": "Waypoint_UI_GetProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UI.GetProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/ui/releases/application/{application.application}": {
+      "get": {
+        "summary": "List releases for a given application.",
+        "operationId": "Waypoint_UI_ListReleases2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UI.ListReleasesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "application.application",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "application.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workspace.workspace",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order.order",
+            "description": "Order for the results.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "UNSET",
+              "START_TIME",
+              "COMPLETE_TIME"
+            ],
+            "default": "UNSET"
+          },
+          {
+            "name": "order.desc",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "order.limit",
+            "description": "Limit the number of results.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "physical_state",
+            "description": "The physical state to filter for. If this is zero or unset then no\nfiltering on physical state will be done.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "PENDING",
+              "CREATED",
+              "DESTROYED"
+            ],
+            "default": "UNKNOWN"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/ui/releases/project/{application.project}": {
+      "get": {
+        "summary": "List releases for a given application.",
+        "operationId": "Waypoint_UI_ListReleases3",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UI.ListReleasesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "application.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "application.application",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workspace.workspace",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order.order",
+            "description": "Order for the results.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "UNSET",
+              "START_TIME",
+              "COMPLETE_TIME"
+            ],
+            "default": "UNSET"
+          },
+          {
+            "name": "order.desc",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "order.limit",
+            "description": "Limit the number of results.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "physical_state",
+            "description": "The physical state to filter for. If this is zero or unset then no\nfiltering on physical state will be done.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "PENDING",
+              "CREATED",
+              "DESTROYED"
+            ],
+            "default": "UNKNOWN"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/ui/releases/state/{physical_state}": {
+      "get": {
+        "summary": "List releases for a given application.",
+        "operationId": "Waypoint_UI_ListReleases4",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UI.ListReleasesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "physical_state",
+            "description": "The physical state to filter for. If this is zero or unset then no\nfiltering on physical state will be done.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "PENDING",
+              "CREATED",
+              "DESTROYED"
+            ]
+          },
+          {
+            "name": "application.application",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "application.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workspace.workspace",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order.order",
+            "description": "Order for the results.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "UNSET",
+              "START_TIME",
+              "COMPLETE_TIME"
+            ],
+            "default": "UNSET"
+          },
+          {
+            "name": "order.desc",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "order.limit",
+            "description": "Limit the number of results.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/ui/releases/workspace/{workspace.workspace}": {
+      "get": {
+        "summary": "List releases for a given application.",
+        "operationId": "Waypoint_UI_ListReleases",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UI.ListReleasesResponse"
             }
           },
           "default": {
@@ -5350,6 +6213,15 @@
         }
       }
     },
+    "hashicorp.waypoint.CancelTaskRequest": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Task",
+          "title": "A reference to the task to cancel"
+        }
+      }
+    },
     "hashicorp.waypoint.CompleteOIDCAuthRequest": {
       "type": "object",
       "properties": {
@@ -6009,6 +6881,24 @@
         }
       }
     },
+    "hashicorp.waypoint.ExecStreamRequest": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "$ref": "#/definitions/hashicorp.waypoint.ExecStreamRequest.Start"
+        },
+        "input": {
+          "$ref": "#/definitions/hashicorp.waypoint.ExecStreamRequest.Input"
+        },
+        "winch": {
+          "$ref": "#/definitions/hashicorp.waypoint.ExecStreamRequest.WindowSize"
+        },
+        "input_eof": {
+          "properties": {},
+          "description": "input_eof should be sent as an event when the input stream is\nclosed. After this, no more Input messages can be sent. Any Input\nmessages sent will be ignored. This will send an EOF on the remote\nend as well to close stdin for the exec process."
+        }
+      }
+    },
     "hashicorp.waypoint.ExecStreamRequest.Input": {
       "type": "object",
       "properties": {
@@ -6043,7 +6933,7 @@
         },
         "instance_id": {
           "type": "string",
-          "description": "Instance to send the exec request to. This is indicates that\nthe client wants an exec session to this specific instance,\nrather than one the server picks. Targetted instances can be\nany instance type, where as untargeted have to be LONG_RUNNING."
+          "description": "Instance to send the exec request to. This is indicates that\nthe client wants an exec session to this specific instance,\nrather than one the server picks. Targeted instances can be\nany instance type, where as untargeted have to be LONG_RUNNING."
         },
         "args": {
           "type": "array",
@@ -6481,6 +7371,24 @@
           "items": {
             "$ref": "#/definitions/hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableEntry"
           }
+        }
+      }
+    },
+    "hashicorp.waypoint.GetLogStreamRequest": {
+      "type": "object",
+      "properties": {
+        "deployment_id": {
+          "type": "string",
+          "description": "Deployment to request logs for."
+        },
+        "application": {
+          "$ref": "#/definitions/hashicorp.waypoint.GetLogStreamRequest.Application",
+          "description": "Logs for a specific application in a workspace."
+        },
+        "limit_backlog": {
+          "type": "integer",
+          "format": "int32",
+          "description": "limit_backlog sets the maximum backlog lines to return on the initial\nconnection. This setting is per instance, not global. The maximum\nbacklog to expect is `n * limit_backlog` where n is the number of\ninstances.\n\nA negative value will not limit the backlog.\n\nA value of zero will default to a value of 50."
         }
       }
     },
@@ -8723,6 +9631,14 @@
         },
         "tls_skip_verify": {
           "type": "boolean"
+        }
+      }
+    },
+    "hashicorp.waypoint.SetConfigSourceRequest": {
+      "type": "object",
+      "properties": {
+        "config_source": {
+          "$ref": "#/definitions/hashicorp.waypoint.ConfigSource"
         }
       }
     },
