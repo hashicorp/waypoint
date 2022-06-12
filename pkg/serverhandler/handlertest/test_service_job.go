@@ -516,8 +516,24 @@ func TestServiceGetJobStream_complete(t *testing.T, factory Factory) {
 		event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
 		require.NotNil(event)
 		require.False(event.Terminal.Buffered, 2)
-		require.Len(event.Terminal.Events, 2)
+		switch len(event.Terminal.Events) {
+		case 2:
+			// Expected case - events were batched.
+			require.Equal("hello", event.Terminal.Events[0].Event.(*pb.GetJobStreamResponse_Terminal_Event_Line_).Line.Msg)
+			require.Equal("world", event.Terminal.Events[1].Event.(*pb.GetJobStreamResponse_Terminal_Event_Line_).Line.Msg)
+		case 1:
+			// Not an error if they came in as two separate events, but they need to be in order.
+			require.Equal("hello", event.Terminal.Events[0].Event.(*pb.GetJobStreamResponse_Terminal_Event_Line_).Line.Msg)
 
+			// Read again, and should get another event
+			resp2 := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Terminal_)(nil))
+			event2 := resp2.Event.(*pb.GetJobStreamResponse_Terminal_)
+			require.NotNil(event2)
+			require.False(event.Terminal.Buffered, 2)
+			require.Equal("world", event2.Terminal.Events[0].Event.(*pb.GetJobStreamResponse_Terminal_Event_Line_).Line.Msg)
+		default:
+			require.Fail("should have received one or two events, got: %d", len(event.Terminal.Events))
+		}
 	}
 
 	// Send the download event. This realistically could happen after
@@ -702,6 +718,7 @@ func TestServiceGetJobStream_bufferedData(t *testing.T, factory Factory) {
 			resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Terminal_)(nil))
 			event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
 			require.NotNil(event)
+
 			if len(event.Terminal.Events) != 2 || !event.Terminal.Buffered {
 				t.Logf("waiting for 2 buffered terminal events, got %d (buffered = %v)",
 					len(event.Terminal.Events), event.Terminal.Buffered)
