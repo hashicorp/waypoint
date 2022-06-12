@@ -921,7 +921,21 @@ func jobStreamRecv(
 ) *pb.GetJobStreamResponse {
 	match := reflect.TypeOf(typ)
 	for {
-		resp, err := stream.Recv()
+		var resp *pb.GetJobStreamResponse
+		var err error
+		done := make(chan struct{})
+		go func() {
+			resp, err = stream.Recv()
+			close(done)
+		}()
+
+		ticker := time.NewTicker(15 * time.Second)
+		select {
+		case <-ticker.C:
+			t.Fatal("timeout receiving job stream event")
+		case <-done:
+			// request complete! We now have a resp or err
+		}
 		require.NoError(t, err)
 
 		if reflect.TypeOf(resp.Event) == match {
