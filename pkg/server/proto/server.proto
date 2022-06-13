@@ -105,28 +105,28 @@ service Waypoint {
   // GetBuild returns a build
   rpc GetBuild(GetBuildRequest) returns (Build) {}
 
+  // GetLatestBuild returns the most recent successfully completed build
+  // for an app.
+  rpc GetLatestBuild(GetLatestBuildRequest) returns (Build);
+
   // ListPushedArtifacts returns the builds.
   rpc ListPushedArtifacts(ListPushedArtifactsRequest) returns (ListPushedArtifactsResponse);
 
   // GetPushedArtifact returns a deployment
   rpc GetPushedArtifact(GetPushedArtifactRequest) returns (PushedArtifact);
 
+  // GetLatestPushedArtifact returns the most recent successfully completed
+  // artifact push for an app.
+  rpc GetLatestPushedArtifact(GetLatestPushedArtifactRequest) returns (PushedArtifact);
+
   // ListDeployments returns the deployments.
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
-
-  // ListInstances returns the running instances of deployments.
-  rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse);
 
   // GetDeployment returns a deployment
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment) {}
 
-  // GetLatestBuild returns the most recent successfully completed build
-  // for an app.
-  rpc GetLatestBuild(GetLatestBuildRequest) returns (Build);
-
-  // GetLatestPushedArtifact returns the most recent successfully completed
-  // artifact push for an app.
-  rpc GetLatestPushedArtifact(GetLatestPushedArtifactRequest) returns (PushedArtifact);
+  // ListInstances returns the running instances of deployments.
+  rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse);
 
   // ListReleases returns the releases.
   rpc ListReleases(ListReleasesRequest) returns (ListReleasesResponse);
@@ -137,6 +137,19 @@ service Waypoint {
   // GetLatestRelease returns the most recent successfully completed
   // release for an app.
   rpc GetLatestRelease(GetLatestReleaseRequest) returns (Release);
+
+  // GetStatusReport returns a StatusReport
+  rpc GetStatusReport(GetStatusReportRequest) returns (StatusReport);
+
+  // GetLatestStatusReport returns the most recent successfully completed
+  // health report for an app
+  rpc GetLatestStatusReport(GetLatestStatusReportRequest) returns (StatusReport);
+
+  // ListStatusReports returns the deployments.
+  rpc ListStatusReports(ListStatusReportsRequest) returns (ListStatusReportsResponse);
+
+  // ExpediteStatusReport returns the queued status report job id
+  rpc ExpediteStatusReport(ExpediteStatusReportRequest) returns (ExpediteStatusReportResponse);
 
   // GetLogStream reads the log stream for a deployment. This will immediately
   // send a single LogEntry with the lines we have so far. If there are no
@@ -267,19 +280,6 @@ service Waypoint {
   // for a new user, this will create a new user account with the provided
   // username hint.
   rpc ConvertInviteToken(ConvertInviteTokenRequest) returns (NewTokenResponse);
-
-  // GetStatusReport returns a StatusReport
-  rpc GetStatusReport(GetStatusReportRequest) returns (StatusReport);
-
-  // GetLatestStatusReport returns the most recent successfully completed
-  // health report for an app
-  rpc GetLatestStatusReport(GetLatestStatusReportRequest) returns (StatusReport);
-
-  // ListStatusReports returns the deployments.
-  rpc ListStatusReports(ListStatusReportsRequest) returns (ListStatusReportsResponse);
-
-  // ExpediteStatusReport returns the queued status report job id
-  rpc ExpediteStatusReport(ExpediteStatusReportRequest) returns (ExpediteStatusReportResponse);
 
   //----------------------------------------------------------------------
   // Runner endpoints. These are expected to be called only by a runner.
@@ -4247,7 +4247,7 @@ message ExecStreamRequest {
 
       // Instance to send the exec request to. This is indicates that
       // the client wants an exec session to this specific instance,
-      // rather than one the server picks. Targetted instances can be
+      // rather than one the server picks. Targeted instances can be
       // any instance type, where as untargeted have to be LONG_RUNNING.
       string instance_id = 4;
     }
