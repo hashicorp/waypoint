@@ -393,7 +393,7 @@ implicit type of the `default` value), you will receive an error.
 
 When variable values are provided in a variable definitions file, you can use
 Waypoint's usual syntax for
-[literal expressions](/docs/language/expressions/types.html#literal-expressions)
+[literal expressions](/docs/waypoint-hcl/syntax/expressions#literal-expressions)
 to assign complex-typed values, like lists and maps.
 
 Some special rules apply to the `-var` command line option and to environment
@@ -437,7 +437,7 @@ will result in an error.
 Waypoint loads variables in the following order, with later sources taking
 precedence over earlier ones:
 
-- In the project settings via [the Waypoint server's UI](https://www.waypointproject.io/docs/server#waypoint-server).
+- In the project settings via [the Waypoint server's UI](/docs/server).
 - Automatically loaded variable definition files, named with the pattern
   `*.auto.wpvars`.
 - From environment variables prefixed with `WP_VAR_`.
