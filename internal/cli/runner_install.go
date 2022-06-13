@@ -173,28 +173,10 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	s.Status(terminal.StatusOK)
 	s.Done()
 
-	var err error
-	// TODO: Evaluate if generating a token for non-adoption mode is necessary
-	token := &pb.NewTokenResponse{}
-	if !c.adopt {
-		token, err = client.GenerateRunnerToken(ctx, &pb.GenerateRunnerTokenRequest{
-			Duration: "",
-			Id:       "",
-			Labels:   nil,
-		})
-		if err != nil {
-			c.ui.Output("Error generating runner token: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-		}
-		s.Update("Runner token generated")
-		s.Status(terminal.StatusOK)
-		s.Done()
-	}
-
 	// We generate the ID if the user doesn't provide one
 	// This ID is used later to adopt the runner
 	var id string
+	var err error
 	if c.id == "" {
 		id, err = server.Id()
 		if err != nil {
@@ -216,7 +198,6 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 			Tls:           c.serverTls,
 			TlsSkipVerify: c.serverTlsSkipVerify,
 			RequireAuth:   c.serverRequireAuth,
-			AuthToken:     token.Token,
 		},
 		Id: id,
 	})
