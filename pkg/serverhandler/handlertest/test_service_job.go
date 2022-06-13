@@ -1,4 +1,4 @@
-package singleprocess
+package handlertest
 
 import (
 	"context"
@@ -16,13 +16,27 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestServiceJob(t *testing.T) {
+func init() {
+	tests["job"] = []testFunc{
+		TestServiceJob,
+		TestServiceJob_List,
+		TestServiceQueueJob,
+		TestServiceValidateJob,
+		TestServiceGetJobStream_complete,
+		TestServiceGetJobStream_bufferedData,
+		TestServiceGetJobStream_completedBufferedData,
+		TestServiceGetJobStream_expired,
+		TestServiceQueueJob_odr,
+		TestServiceQueueJob_odr_target_id,
+		TestServiceQueueJob_odr_target_labels,
+	}
+}
+
+func TestServiceJob(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -57,13 +71,11 @@ func TestServiceJob(t *testing.T) {
 	})
 }
 
-func TestServiceJob_List(t *testing.T) {
+func TestServiceJob_List(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -309,13 +321,11 @@ func TestServiceJob_List(t *testing.T) {
 	})
 }
 
-func TestServiceQueueJob(t *testing.T) {
+func TestServiceQueueJob(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -335,7 +345,7 @@ func TestServiceQueueJob(t *testing.T) {
 		require.NotEmpty(resp.JobId)
 
 		// Job should exist and be queued
-		job, err := testServiceImpl(impl).state(ctx).JobById(resp.JobId, nil)
+		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: resp.JobId})
 		require.NoError(err)
 		require.Equal(pb.Job_QUEUED, job.State)
 	})
@@ -354,20 +364,18 @@ func TestServiceQueueJob(t *testing.T) {
 
 		// Job should exist and be queued
 		require.Eventually(func() bool {
-			job, err := testServiceImpl(impl).state(ctx).JobById(resp.JobId, nil)
+			job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: resp.JobId})
 			require.NoError(err)
 			return job.State == pb.Job_ERROR && job.CancelTime != nil
 		}, 2*time.Second, 10*time.Millisecond)
 	})
 }
 
-func TestServiceValidateJob(t *testing.T) {
+func TestServiceValidateJob(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(t, err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Simplify writing tests
 	type Req = pb.ValidateJobRequest
@@ -401,14 +409,12 @@ func TestServiceValidateJob(t *testing.T) {
 	})
 }
 
-func TestServiceGetJobStream_complete(t *testing.T) {
+func TestServiceGetJobStream_complete(t *testing.T, factory Factory) {
 	ctx := context.Background()
 	require := require.New(t)
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -510,8 +516,24 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 		event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
 		require.NotNil(event)
 		require.False(event.Terminal.Buffered, 2)
-		require.Len(event.Terminal.Events, 2)
+		switch len(event.Terminal.Events) {
+		case 2:
+			// Expected case - events were batched.
+			require.Equal("hello", event.Terminal.Events[0].Event.(*pb.GetJobStreamResponse_Terminal_Event_Line_).Line.Msg)
+			require.Equal("world", event.Terminal.Events[1].Event.(*pb.GetJobStreamResponse_Terminal_Event_Line_).Line.Msg)
+		case 1:
+			// Not an error if they came in as two separate events, but they need to be in order.
+			require.Equal("hello", event.Terminal.Events[0].Event.(*pb.GetJobStreamResponse_Terminal_Event_Line_).Line.Msg)
 
+			// Read again, and should get another event
+			resp2 := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Terminal_)(nil))
+			event2 := resp2.Event.(*pb.GetJobStreamResponse_Terminal_)
+			require.NotNil(event2)
+			require.False(event.Terminal.Buffered, 2)
+			require.Equal("world", event2.Terminal.Events[0].Event.(*pb.GetJobStreamResponse_Terminal_Event_Line_).Line.Msg)
+		default:
+			require.Fail("should have received one or two events, got: %d", len(event.Terminal.Events))
+		}
 	}
 
 	// Send the download event. This realistically could happen after
@@ -602,14 +624,12 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 
 // Tests that a client can connect to a job after the job has
 // logs (but before the job has completed), and can get the buffered logs.
-func TestServiceGetJobStream_bufferedData(t *testing.T) {
+func TestServiceGetJobStream_bufferedData(t *testing.T, factory Factory) {
 	ctx := context.Background()
 	require := require.New(t)
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -698,6 +718,7 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 			resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Terminal_)(nil))
 			event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
 			require.NotNil(event)
+
 			if len(event.Terminal.Events) != 2 || !event.Terminal.Buffered {
 				t.Logf("waiting for 2 buffered terminal events, got %d (buffered = %v)",
 					len(event.Terminal.Events), event.Terminal.Buffered)
@@ -767,14 +788,12 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 // long-completed job. Some server state implementation (namely this one)
 // do not persist job logs, so streaming completed logs only works
 // if the server hasn't restarted or pruned them from memory.
-func TestServiceGetJobStream_completedBufferedData(t *testing.T) {
+func TestServiceGetJobStream_completedBufferedData(t *testing.T, factory Factory) {
 	ctx := context.Background()
 	require := require.New(t)
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -881,14 +900,12 @@ func TestServiceGetJobStream_completedBufferedData(t *testing.T) {
 	}
 }
 
-func TestServiceGetJobStream_expired(t *testing.T) {
+func TestServiceGetJobStream_expired(t *testing.T, factory Factory) {
 	ctx := context.Background()
 	require := require.New(t)
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(err)
-	client := server.TestServer(t, impl)
+	_, client := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -921,7 +938,21 @@ func jobStreamRecv(
 ) *pb.GetJobStreamResponse {
 	match := reflect.TypeOf(typ)
 	for {
-		resp, err := stream.Recv()
+		var resp *pb.GetJobStreamResponse
+		var err error
+		done := make(chan struct{})
+		go func() {
+			resp, err = stream.Recv()
+			close(done)
+		}()
+
+		ticker := time.NewTicker(15 * time.Second)
+		select {
+		case <-ticker.C:
+			t.Fatal("timeout receiving job stream event")
+		case <-done:
+			// request complete! We now have a resp or err
+		}
 		require.NoError(t, err)
 
 		if reflect.TypeOf(resp.Event) == match {
@@ -932,7 +963,7 @@ func jobStreamRecv(
 	}
 }
 
-func TestServiceQueueJob_odr(t *testing.T) {
+func TestServiceQueueJob_odr(t *testing.T, factory Factory) {
 	require := require.New(t)
 	ctx := context.Background()
 
@@ -944,12 +975,7 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	ctx = hclog.WithContext(ctx, log)
 
 	// Create our server
-	impl, err := New(
-		WithLogger(log),
-		WithDB(testDB(t)),
-	)
-	require.NoError(err)
-	client := server.TestServer(t, impl, server.TestWithContext(ctx))
+	_, client := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
@@ -1014,17 +1040,19 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	require.NotEmpty(queueResp)
 
 	// Job should exist and be queued
-	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
+	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: queueResp.JobId})
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 
 	// task should be PENDING
-	task, err := testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	taskResp, err := client.GetTask(ctx, &pb.GetTaskRequest{Ref: &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: queueResp.JobId,
 		},
-	})
+	}})
 	require.NoError(err)
+	task := taskResp.Task
+
 	require.Equal(pb.Task_PENDING, task.JobState)
 
 	// Register our runner
@@ -1090,12 +1118,13 @@ func TestServiceQueueJob_odr(t *testing.T) {
 	// the JobAck. We do this a few times in this test to account for CI machine
 	// slowness.
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	taskResp, err = client.GetTask(ctx, &pb.GetTaskRequest{Ref: &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
-	})
+	}})
 	require.NoError(err)
+	task = taskResp.Task
 	require.Equal(pb.Task_STARTING, task.JobState)
 
 	// Complete our launch task job so that we can move on
@@ -1107,12 +1136,13 @@ func TestServiceQueueJob_odr(t *testing.T) {
 
 	// task should be STARTED
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	taskResp, err = client.GetTask(ctx, &pb.GetTaskRequest{Ref: &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
-	})
+	}})
 	require.NoError(err)
+	task = taskResp.Task
 	require.Equal(pb.Task_STARTED, task.JobState)
 
 	// Wait for assignment and ack
@@ -1143,12 +1173,13 @@ func TestServiceQueueJob_odr(t *testing.T) {
 
 		// task should be RUNNING
 		time.Sleep(200 * time.Millisecond)
-		task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+		taskResp, err = client.GetTask(ctx, &pb.GetTaskRequest{Ref: &pb.Ref_Task{
 			Ref: &pb.Ref_Task_JobId{
 				JobId: queueResp.JobId,
 			},
-		})
+		}})
 		require.NoError(err)
+		task = taskResp.Task
 		require.Equal(pb.Task_RUNNING, task.JobState)
 	}
 
@@ -1161,12 +1192,13 @@ func TestServiceQueueJob_odr(t *testing.T) {
 
 	// task should be COMPLETED
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	taskResp, err = client.GetTask(ctx, &pb.GetTaskRequest{Ref: &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
-	})
+	}})
 	require.NoError(err)
+	task = taskResp.Task
 	require.Equal(pb.Task_COMPLETED, task.JobState)
 
 	{
@@ -1247,12 +1279,13 @@ func TestServiceQueueJob_odr(t *testing.T) {
 
 	// task should be STOPPING
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	taskResp, err = client.GetTask(ctx, &pb.GetTaskRequest{Ref: &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
-	})
+	}})
 	require.NoError(err)
+	task = taskResp.Task
 	require.Equal(pb.Task_STOPPING, task.JobState)
 
 	// Complete our launch task job so that we can move on
@@ -1264,16 +1297,17 @@ func TestServiceQueueJob_odr(t *testing.T) {
 
 	// task should be STOPPED
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	taskResp, err = client.GetTask(ctx, &pb.GetTaskRequest{Ref: &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
-	})
+	}})
 	require.NoError(err)
+	task = taskResp.Task
 	require.Equal(pb.Task_STOPPED, task.JobState)
 }
 
-func TestServiceQueueJob_odr_default(t *testing.T) {
+func TestServiceQueueJob_odr_default(t *testing.T, factory Factory) {
 	require := require.New(t)
 
 	ctx := context.Background()
@@ -1286,13 +1320,7 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 	ctx = hclog.WithContext(ctx, log)
 
 	// Create our server
-	impl, err := New(
-		WithLogger(log),
-		WithDB(testDB(t)),
-	)
-
-	require.NoError(err)
-	client := server.TestServer(t, impl, server.TestWithContext(ctx))
+	_, client := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
@@ -1344,7 +1372,7 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 	require.NotEmpty(queueResp)
 
 	// Job should exist and be queued
-	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
+	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: queueResp.JobId})
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 
@@ -1438,7 +1466,7 @@ func TestServiceQueueJob_odr_default(t *testing.T) {
 	}
 }
 
-func TestServiceQueueJob_odr_target_id(t *testing.T) {
+func TestServiceQueueJob_odr_target_id(t *testing.T, factory Factory) {
 	require := require.New(t)
 	ctx := context.Background()
 
@@ -1450,13 +1478,7 @@ func TestServiceQueueJob_odr_target_id(t *testing.T) {
 	ctx = hclog.WithContext(ctx, log)
 
 	// Create our server
-	impl, err := New(
-		WithLogger(log),
-		WithDB(testDB(t)),
-	)
-
-	require.NoError(err)
-	client := server.TestServer(t, impl, server.TestWithContext(ctx))
+	_, client := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
@@ -1514,7 +1536,7 @@ func TestServiceQueueJob_odr_target_id(t *testing.T) {
 	require.NotEmpty(queueResp)
 
 	// Job should exist and be queued
-	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
+	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: queueResp.JobId})
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 
@@ -1607,7 +1629,7 @@ func TestServiceQueueJob_odr_target_id(t *testing.T) {
 	}
 }
 
-func TestServiceQueueJob_odr_target_labels(t *testing.T) {
+func TestServiceQueueJob_odr_target_labels(t *testing.T, factory Factory) {
 	require := require.New(t)
 	ctx := context.Background()
 
@@ -1619,13 +1641,7 @@ func TestServiceQueueJob_odr_target_labels(t *testing.T) {
 	ctx = hclog.WithContext(ctx, log)
 
 	// Create our server
-	impl, err := New(
-		WithLogger(log),
-		WithDB(testDB(t)),
-	)
-
-	require.NoError(err)
-	client := server.TestServer(t, impl, server.TestWithContext(ctx))
+	_, client := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
@@ -1685,7 +1701,7 @@ func TestServiceQueueJob_odr_target_labels(t *testing.T) {
 	require.NotEmpty(queueResp)
 
 	// Job should exist and be queued
-	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
+	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: queueResp.JobId})
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 
