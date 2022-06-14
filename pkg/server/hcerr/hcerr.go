@@ -34,7 +34,7 @@ func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) e
 	}
 
 	var details []*anypb.Any
-	if args != nil && len(args) > 0 {
+	if len(args) > 0 {
 
 		// Even out the number of pairs
 		if len(args)%2 != 0 {
