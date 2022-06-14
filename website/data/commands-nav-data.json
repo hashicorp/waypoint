@@ -219,6 +219,10 @@
     "path": "runner-inspect"
   },
   {
+    "title": "runner install",
+    "path": "runner-install"
+  },
+  {
     "title": "runner adopt",
     "path": "runner-adopt"
   },
