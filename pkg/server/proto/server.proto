@@ -4664,8 +4664,8 @@ message Pipeline {
 
     message Build {
       // Whether or not to push the built artifact to a remote container registry
-      // TODO(briancain): probably default to true because this will be inside
-      // an ODR container?
+      // TODO(briancain): ensure default to false because this will be inside
+      // an ODR container
       bool disable_push = 2;
     }
   }
