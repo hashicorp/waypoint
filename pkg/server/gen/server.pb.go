@@ -26204,8 +26204,8 @@ type Pipeline_Step_Build struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Whether or not to push the built artifact to a remote container registry
-	// TODO(briancain): probably default to true because this will be inside
-	// an ODR container?
+	// TODO(briancain): ensure default to false because this will be inside
+	// an ODR container
 	DisablePush bool `protobuf:"varint,2,opt,name=disable_push,json=disablePush,proto3" json:"disable_push,omitempty"`
 }
 
