@@ -9014,7 +9014,7 @@
       "properties": {
         "disable_push": {
           "type": "boolean",
-          "title": "Whether or not to push the built artifact to a remote container registry\nTODO(briancain): probably default to true because this will be inside\nan ODR container?"
+          "title": "Whether or not to push the built artifact to a remote container registry\nTODO(briancain): ensure default to false because this will be inside\nan ODR container"
         }
       }
     },
