@@ -45,24 +45,6 @@ type InstalledRunnerConfig struct {
 	Id string `mapstructure:"id"`
 }
 
-type K8sConfig struct {
-	KubeconfigPath       string `hcl:"kubeconfig,optional"`
-	K8sContext           string `hcl:"context,optional"`
-	Version              string `hcl:"version,optional"`
-	Namespace            string `hcl:"namespace,optional"`
-	RunnerImage          string `hcl:"runner_image,optional"`
-	RunnerImageTag       string `hcl:"runner_image_tag,optional"`
-	CpuRequest           string `hcl:"runner_cpu_request,optional"`
-	MemRequest           string `hcl:"runner_mem_request,optional"`
-	CreateServiceAccount bool   `hcl:"odr_service_account_init,optional"`
-}
-
-const (
-	defaultRunnerMemory   = "256Mi"
-	defaultRunnerCPU      = "250m"
-	defaultRunnerImageTag = "latest"
-)
-
 func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) error {
 	// Initialize Helm settings
 	sg := opts.UI.StepGroup()
@@ -307,7 +289,6 @@ func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	// proper runner installation and that we are uninstalling what we think we
 	// should be uninstalling.
 	if strings.ToLower(runnerCfg.Id) != strings.ToLower(opts.Id) {
-		opts.Log.Debug("Could not find runner for id %q", opts.Id)
 		return errors.New("Runner not found")
 	}
 	s.Update("Runner %q found", opts.Id)
@@ -336,14 +317,14 @@ func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	if err != nil {
 		return err
 	}
-	pvClient := clientset.CoreV1().PersistentVolumeClaims(i.Config.Namespace)
+	pvClient := clientset.CoreV1().PersistentVolumes()
 	listOptions := metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=%s", helmRunnerId),
 	}
 	if list, err := pvClient.List(ctx, listOptions); err != nil {
 		return err
 	} else if len(list.Items) > 0 {
-		s.Update("Deleting Persistent Volume Claim...")
+		s.Update("Deleting Persistent Volumes...")
 
 		// Add watcher for waiting for persistent volume clean up
 		w, err := pvClient.Watch(ctx, listOptions)
