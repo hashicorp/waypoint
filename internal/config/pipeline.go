@@ -132,6 +132,7 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 			s := &pb.Pipeline_Step{
 				Name:      step.Name,
 				DependsOn: step.DependsOn,
+				Image:     step.ImageURL, //TODO(briancain): actually use this when executing steps
 			}
 
 			// If no dependency was explictily set, we rely on the previous step
@@ -143,9 +144,23 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 			// maybe this would be a switch on step.Type? Or maybe we get our
 			// own Step Eval func that returns the step proto instead and does the
 			// switches there.
+			// NOTE(briancain): This is what you'd change to support future Step plugins
 			switch step.Use.Type {
-			// TODO(Briancain): this is where we can queue the built in pipeline to WP job ops
-			//case "deploy"
+			case "build":
+				var buildBody struct {
+					DisablePush bool `hcl:"disable_push,optional"`
+				}
+
+				if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &buildBody); diag.HasErrors() {
+					return nil, diag
+				}
+
+				s.Kind = &pb.Pipeline_Step_Build_{
+					Build: &pb.Pipeline_Step_Build{
+						DisablePush: buildBody.DisablePush,
+					},
+				}
+
 			case "exec":
 				var execBody struct {
 					Command string   `hcl:"command,optional"`
@@ -166,7 +181,6 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 					},
 				}
 			default:
-				// TODO(briancain): This is what you'd change to support future Step plugins
 				return nil, status.Errorf(codes.Internal, "unsupported step plugin type: %q", step.Use.Type)
 			}
 
