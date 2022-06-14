@@ -127,6 +127,8 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 			},
 		}
 
+		// TODO(briancain): Use the default ODR image for image_url so that it isn't required
+		// We do this already maybe in the ODR task launcher.
 		steps := make(map[string]*pb.Pipeline_Step)
 		for i, step := range pl.StepRaw {
 			s := &pb.Pipeline_Step{
