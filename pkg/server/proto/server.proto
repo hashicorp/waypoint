@@ -4639,10 +4639,20 @@ message Pipeline {
       // Docker execute.
       Exec exec = 3;
 
+      // "reserved" built-in pipeline step operations. These map directly to
+      // the lifecylce operations in Waypoint, i.e. Build, Deploy, Release, Up.
+
+      // Built-in build operation
+      Build build = 4;
+
       // TODO: custom plugins, pipeline references
     }
 
+    // Docker image to execute. This should be a fully qualified image URL.
+    string image = 5;
+
     message Exec {
+      // TODO(briancain): update this to use the Step exec instead of the plugin
       // Docker image to execute. This should be a fully qualified image URL.
       string image = 1;
 
@@ -4650,6 +4660,13 @@ message Pipeline {
       // will be executed.
       string command = 2;
       repeated string args = 3;
+    }
+
+    message Build {
+      // Whether or not to push the built artifact to a remote container registry
+      // TODO(briancain): probably default to true because this will be inside
+      // an ODR container?
+      bool disable_push = 2;
     }
   }
 }

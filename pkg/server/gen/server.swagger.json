@@ -8997,16 +8997,33 @@
         "exec": {
           "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Exec",
           "description": "Docker execute."
+        },
+        "build": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Build",
+          "title": "Built-in build operation"
+        },
+        "image": {
+          "type": "string",
+          "description": "Docker image to execute. This should be a fully qualified image URL."
         }
       },
       "description": "A single step within the pipeline."
+    },
+    "hashicorp.waypoint.Pipeline.Step.Build": {
+      "type": "object",
+      "properties": {
+        "disable_push": {
+          "type": "boolean",
+          "title": "Whether or not to push the built artifact to a remote container registry\nTODO(briancain): probably default to true because this will be inside\nan ODR container?"
+        }
+      }
     },
     "hashicorp.waypoint.Pipeline.Step.Exec": {
       "type": "object",
       "properties": {
         "image": {
           "type": "string",
-          "description": "Docker image to execute. This should be a fully qualified image URL."
+          "description": "TODO(briancain): update this to use the Step exec instead of the plugin\nDocker image to execute. This should be a fully qualified image URL."
         },
         "command": {
           "type": "string",
