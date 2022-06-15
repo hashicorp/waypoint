@@ -771,6 +771,10 @@ func (s *State) JobUpdateRef(id string, ref *pb.Job_DataSource_Ref) error {
 	})
 }
 
+// JobUpdateExpiry will update the jobs expiration time with the new value. This
+// method is used when a runner has accepted a job and peeks at its runner
+// config. By this point, we know the runner has accepted a job to work on,
+// so the runner should handle the job soon.
 func (s *State) JobUpdateExpiry(id string, newExpire *timestamppb.Timestamp) error {
 	return s.JobUpdate(id, func(jobpb *pb.Job) error {
 		jobpb.ExpireTime = newExpire
