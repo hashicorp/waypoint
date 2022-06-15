@@ -169,12 +169,11 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 					Args    []string `hcl:"args,optional"`
 				}
 
+				// Evaluate the step body hcl to get options
 				if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &execBody); diag.HasErrors() {
 					return nil, diag
 				}
 
-				// in the server proto, make a new Kind for built-in operations
-				// Enum or OneOf that has each operation
 				s.Kind = &pb.Pipeline_Step_Exec_{
 					Exec: &pb.Pipeline_Step_Exec{
 						Image:   step.ImageURL,

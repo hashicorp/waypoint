@@ -123,6 +123,8 @@ func (r *Runner) queueAndHandleJob(
 	}
 }
 
+// Take a given job param, and the Build Step options, and queue a Build
+// Operation job
 func (r *Runner) executePipelineStepBuild(
 	ctx context.Context,
 	log hclog.Logger,
@@ -131,9 +133,6 @@ func (r *Runner) executePipelineStepBuild(
 	stepImage string,
 	build *pb.Pipeline_Step_Build,
 ) (*pb.Job_Result, error) {
-	// TODO(briancain): Take a given job param, and the Build Step options,
-	// and queue a Build Operation job based on the users waypoint.hcl config
-
 	// Create a new job that launches our task to run. This is heavily based
 	// on the incoming job so we can inherit a lot of the properties. The key
 	// change is that we specify a noop operation and task override so that
