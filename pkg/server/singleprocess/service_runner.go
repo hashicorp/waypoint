@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	empty "google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/hashicorp/waypoint/internal/telemetry/metrics"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -366,10 +367,20 @@ func (s *Service) RunnerConfig(
 		// Set our job
 		job = sjob.Job
 
-		// TODO(briancain): update expiry time here to 60 seconds instead!! We know a job
-		// was accepted, so it shouldn't be hanging around because this runner
-		// is available
-		// Actually this method of updating the expiry time might be a db state func??
+		// We know a job was accepted, so it shouldn't be hanging around because this runner
+		// is available.
+		log.Trace("updating expiry time for job to be 60 seconds now that runner has been assigned job")
+		dur, err := time.ParseDuration("60s")
+		if err != nil {
+			return status.Errorf(codes.FailedPrecondition,
+				"Invalid expiry duration: %s", err.Error())
+		}
+
+		newExpireTime := timestamppb.New(time.Now().Add(dur))
+		if err := s.state(ctx).JobUpdateExpiry(job.Id, newExpireTime); err != nil {
+			log.Error("failed to update job expiry time after runner accepted job!", "err", err)
+			return err
+		}
 
 		log.Debug("runner is scoped for config",
 			"project/application", job.Application,

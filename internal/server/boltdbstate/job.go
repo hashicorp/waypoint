@@ -771,6 +771,13 @@ func (s *State) JobUpdateRef(id string, ref *pb.Job_DataSource_Ref) error {
 	})
 }
 
+func (s *State) JobUpdateExpiry(id string, newExpire *timestamppb.Timestamp) error {
+	return s.JobUpdate(id, func(jobpb *pb.Job) error {
+		jobpb.ExpireTime = newExpire
+		return nil
+	})
+}
+
 // JobUpdate calls the given callback to update fields on the job data.
 // The callback is called in the context of a database write lock so it
 // should NOT compute anything and should be fast. The callback can return

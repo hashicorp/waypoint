@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/hashicorp/go-memdb"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
@@ -30,6 +31,7 @@ func init() {
 		TestJobHeartbeat,
 		TestJobHeartbeatOnRestart,
 		TestJobUpdateRef,
+		TestJobUpdateExpiry,
 	}
 }
 
@@ -2414,5 +2416,55 @@ func TestJobUpdateRef(t *testing.T, factory Factory, rf RestartFactory) {
 
 		ref := job.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git
 		require.Equal(ref.Commit, "hello")
+	})
+}
+
+func TestJobUpdateExpiry(t *testing.T, factory Factory, rf RestartFactory) {
+	t.Run("new expire time", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+		require.Nil(job.ExpireTime)
+
+		// Ack it
+		_, err = s.JobAck(job.Id, true)
+		require.NoError(err)
+
+		// Create a watchset on the job
+		ws := memdb.NewWatchSet()
+
+		// Verify it was changed
+		job, err = s.JobById(job.Id, ws)
+		require.NoError(err)
+		require.Nil(job.DataSourceRef)
+
+		// Watch should block
+		require.True(ws.Watch(time.After(10 * time.Millisecond)))
+
+		// Update the expire time
+		dur, err := time.ParseDuration("60s")
+		newExpireTime := timestamppb.New(time.Now().Add(dur))
+		require.NoError(s.JobUpdateExpiry(job.Id, newExpireTime))
+
+		// Should be triggered. This is a very important test because
+		// we need to ensure that the watchers can detect ref changes.
+		require.False(ws.Watch(time.After(3 * time.Second)))
+
+		// Verify it was set
+		job, err = s.JobById(job.Id, nil)
+		require.NoError(err)
+		require.NotNil(job.ExpireTime)
 	})
 }
