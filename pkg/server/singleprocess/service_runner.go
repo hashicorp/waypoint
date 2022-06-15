@@ -366,6 +366,11 @@ func (s *Service) RunnerConfig(
 		// Set our job
 		job = sjob.Job
 
+		// TODO(briancain): update expiry time here to 60 seconds instead!! We know a job
+		// was accepted, so it shouldn't be hanging around because this runner
+		// is available
+		// Actually this method of updating the expiry time might be a db state func??
+
 		log.Debug("runner is scoped for config",
 			"project/application", job.Application,
 			"workspace", job.Workspace,

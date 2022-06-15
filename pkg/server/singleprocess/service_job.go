@@ -510,7 +510,13 @@ func (s *Service) onDemandRunnerStartJob(
 
 	// We're going to wait up to 60s for the job be picked up. No reason it won't be
 	// picked up immediately.
-	dur, err := time.ParseDuration("60s")
+	// JK - for pipelines, there IS a reason it won't be picked up immediately,
+	// and it's because we could queue a LOT of jobs. Downstream jobs could be waiting
+	// for a while, like say if a pipeline has a few build steps and a few deploy
+	// steps, a release step might not run within ~60 seconds.
+	// NOTE(briancain): Setting this to 60 minutes for pipelines for now
+	// We should actually set this when the runner peaks at the job
+	dur, err := time.ParseDuration("60m")
 	if err != nil {
 		return nil, "", status.Errorf(codes.FailedPrecondition,
 			"Invalid expiry duration: %s", err.Error())
