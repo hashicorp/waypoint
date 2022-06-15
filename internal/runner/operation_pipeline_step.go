@@ -134,10 +134,7 @@ func (r *Runner) executePipelineStepBuild(
 	build *pb.Pipeline_Step_Build,
 ) (*pb.Job_Result, error) {
 	// Create a new job that launches our task to run. This is heavily based
-	// on the incoming job so we can inherit a lot of the properties. The key
-	// change is that we specify a noop operation and task override so that
-	// we run ODR with a custom task (which does something) and the actual
-	// operation does nothing.
+	// on the incoming job so we can inherit a lot of the properties.
 	newJob := &pb.Job{
 		Application:         job.Application,
 		Workspace:           job.Workspace,
@@ -160,15 +157,6 @@ func (r *Runner) executePipelineStepBuild(
 				DisablePush: build.DisablePush,
 			},
 		},
-
-		/*
-			// Our custom overrides so we can run our task
-			OndemandRunnerTask: &pb.Job_TaskOverride{
-				LaunchInfo: &pb.TaskLaunchInfo{
-					OciUrl: stepImage,
-				},
-			},
-		*/
 	}
 
 	return r.queueAndHandleJob(ctx, log, project, newJob)
@@ -226,90 +214,5 @@ func (r *Runner) executePipelineStepExec(
 		},
 	}
 
-	// Queue our job
-	queueResp, err := r.client.QueueJob(ctx, &pb.QueueJobRequest{
-		Job: newJob,
-	})
-	if err != nil {
-		log.Warn("error queueing job", "err", err)
-		return nil, err
-	}
-
-	// Get the stream
-	log.Debug("opening job stream")
-	stream, err := r.client.GetJobStream(ctx, &pb.GetJobStreamRequest{
-		JobId: queueResp.JobId,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// Wait for open confirmation
-	resp, err := stream.Recv()
-	if err != nil {
-		return nil, err
-	}
-	if _, ok := resp.Event.(*pb.GetJobStreamResponse_Open_); !ok {
-		return nil, status.Errorf(codes.Aborted,
-			"job stream failed to open, got unexpected message %T",
-			resp.Event)
-	}
-
-	// Watch job
-	streamUI := &jobstream.UI{
-		UI:  project.UI,
-		Log: log.Named("ui"),
-	}
-	for {
-		resp, err := stream.Recv()
-		if err != nil {
-			return nil, err
-		}
-		if resp == nil {
-			// This shouldn't happen, but if it does, just ignore it.
-			log.Warn("nil response received, ignoring")
-			continue
-		}
-
-		switch event := resp.Event.(type) {
-		case *pb.GetJobStreamResponse_Complete_:
-			if event.Complete.Error == nil {
-				result := event.Complete.Result
-				result.PipelineStep = &pb.Job_PipelineStepResult{
-					Result: status.New(codes.OK, "").Proto(),
-				}
-
-				return result, nil
-			}
-
-			st := status.FromProto(event.Complete.Error)
-			log.Warn("job failed", "code", st.Code(), "message", st.Message())
-			return &pb.Job_Result{
-				PipelineStep: &pb.Job_PipelineStepResult{
-					Result: event.Complete.Error,
-				},
-			}, nil
-
-		case *pb.GetJobStreamResponse_Error_:
-			st := status.FromProto(event.Error.Error)
-			log.Warn("job failed", "code", st.Code(), "message", st.Message())
-			return &pb.Job_Result{
-				PipelineStep: &pb.Job_PipelineStepResult{
-					Result: event.Error.Error,
-				},
-			}, nil
-
-		case *pb.GetJobStreamResponse_Terminal_:
-			if err := streamUI.Write(event.Terminal.Events); err != nil {
-				log.Warn("job stream UI failure", "err", err)
-			}
-
-		case *pb.GetJobStreamResponse_State_:
-			// Ignore state changes
-			log.Debug("child job state change", "state", event)
-
-		default:
-			log.Warn("unknown stream event", "event", resp.Event)
-		}
-	}
+	return r.queueAndHandleJob(ctx, log, project, newJob)
 }
