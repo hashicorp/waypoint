@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-memdb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -162,6 +163,7 @@ type Interface interface {
 	JobAssignForRunner(context.Context, *pb.Runner) (*Job, error)
 	JobAck(string, bool) (*Job, error)
 	JobUpdateRef(string, *pb.Job_DataSource_Ref) error
+	JobUpdateExpiry(string, *timestamppb.Timestamp) error
 	JobUpdate(string, func(*pb.Job) error) error
 	JobComplete(string, *pb.Job_Result, error) error
 	JobCancel(string, bool) error
