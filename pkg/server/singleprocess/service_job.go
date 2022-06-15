@@ -508,14 +508,11 @@ func (s *Service) onDemandRunnerStartJob(
 	}
 	job.Id = id
 
-	// We're going to wait up to 60s for the job be picked up. No reason it won't be
-	// picked up immediately.
-	// JK - for pipelines, there IS a reason it won't be picked up immediately,
-	// and it's because we could queue a LOT of jobs. Downstream jobs could be waiting
-	// for a while, like say if a pipeline has a few build steps and a few deploy
-	// steps, a release step might not run within ~60 seconds.
-	// NOTE(briancain): Setting this to 60 minutes for pipelines for now
-	// We should actually set this when the runner peaks at the job
+	// NOTE(briancain): We set this value to something long for now, because it's
+	// possible during a pipeline run for jobs to be waiting in the QUEUED status
+	// while upstream jobs continue to run. Once a runner accepts a job however,
+	// we will update the jobs expiration time to be 60 seconds because by that
+	// point it should be executing quickly.
 	dur, err := time.ParseDuration("60m")
 	if err != nil {
 		return nil, "", status.Errorf(codes.FailedPrecondition,
