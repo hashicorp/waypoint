@@ -133,7 +133,7 @@ func (r *Releaser) resourceSecurityGroupCreate(
 		vpc = subnetInfo.Subnets[0].VpcId
 	}
 
-	if len(r.config.SecurityGroupIDs) >= 0 {
+	if len(r.config.SecurityGroupIDs) > 0 {
 		log.Debug("user specified alb security groups found, skipping security group create")
 
 		for _, sGroup := range r.config.SecurityGroupIDs {
