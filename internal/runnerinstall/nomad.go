@@ -315,6 +315,7 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	}
 
 	if len(jobs) != 1 {
+		s.Update("Expected 1 runner, found %d", len(jobs))
 		return fmt.Errorf("Expected 1 runner, found %d", len(jobs))
 	}
 
@@ -322,55 +323,38 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	s.Done()
 
 	s = sg.Add("Uninstalling the Waypoint runner...")
-	_, _, err = client.Jobs().Deregister(waypointRunnerJobName, true, &api.WriteOptions{})
+	_, _, err = client.Jobs().Deregister(waypointRunnerJobName, false, &api.WriteOptions{})
 	if err != nil {
 		s.Update("Unable to deregister Waypoint runner job.")
 		return err
 	}
 
-	allocs, _, err := client.Jobs().Allocations(waypointRunnerJobName, true, nil)
-	if err != nil {
-		return err
-	}
-	for _, alloc := range allocs {
-		if alloc.DesiredStatus != "stop" {
-			a, _, err := client.Allocations().Info(alloc.ID, &api.QueryOptions{})
-			if err != nil {
-				return err
-			}
-			_, err = client.Allocations().Stop(a, &api.QueryOptions{})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	s.Update("Waiting for jobs to be purged...")
+	s.Update("Waiting for jobs to be stopped...")
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
 		jobs, _, err := client.Jobs().PrefixList(waypointRunnerJobName)
 		if err != nil {
 			return false, err
 		}
-		if len(jobs) == 0 {
-			return true, nil
+		for _, job := range jobs {
+			if job.Status != "dead" {
+				return false, nil
+			}
 		}
-		return false, nil
+		return true, nil
 	})
 	if err != nil {
 		return err
 	}
 
-	s.Update("Waypoint runner job and allocations purged")
-
 	// Delete CSI volume for runner (if it exists)
-	vols, _, err := client.CSIVolumes().List(&api.QueryOptions{Prefix: "waypoint"})
+	vols, _, err := client.CSIVolumes().List(&api.QueryOptions{Prefix: waypointRunnerJobName})
 	if err != nil {
 		return err
 	}
 	for _, vol := range vols {
 		if vol.ID == waypointRunnerJobName {
 			s.Update("Destroying persistent CSI volume")
-			err = client.CSIVolumes().Deregister(vol.ID, false, &api.WriteOptions{})
+			err = client.CSIVolumes().Deregister(vol.ID, true, &api.WriteOptions{})
 			if err != nil {
 				return err
 			}
@@ -378,6 +362,13 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 			break
 		}
 	}
+
+	_, _, err = client.Jobs().Deregister(waypointRunnerJobName, true, &api.WriteOptions{})
+	if err != nil {
+		s.Update("Unable to deregister Waypoint runner job.")
+		return err
+	}
+	s.Update("Waypoint runner job and allocations purged")
 	s.Done()
 
 	return nil
