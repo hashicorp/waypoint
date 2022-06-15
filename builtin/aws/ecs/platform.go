@@ -1979,8 +1979,8 @@ func (p *Platform) resourceExternalSecurityGroupsCreate(
 	s := sg.Add("Initiating creation of external security group named %s", name)
 	defer s.Abort()
 
-	if p.config.ALB.SecurityGroupIDs != nil {
-		s.Update("Using specified security group IDs")
+	if p.config.ALB != nil && p.config.ALB.SecurityGroupIDs != nil {
+		s.Update("Using specified ALB security group IDs")
 		for _, sgId := range p.config.SecurityGroupIDs {
 			state.SecurityGroups = append(state.SecurityGroups, &Resource_SecurityGroup{Id: *sgId, Managed: false})
 		}
