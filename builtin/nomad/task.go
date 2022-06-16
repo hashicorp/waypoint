@@ -200,7 +200,7 @@ func (p *TaskLauncher) StartTask(
 
 	log.Trace("creating Nomad job for task")
 	jobclient := client.Jobs()
-	job := api.NewServiceJob(taskName, taskName, p.config.Region, 10)
+	job := api.NewBatchJob(taskName, taskName, p.config.Region, 10)
 	job.Datacenters = []string{p.config.Datacenter}
 	tg := api.NewTaskGroup(taskName, 1)
 	tg.Networks = []*api.NetworkResource{
@@ -208,6 +208,25 @@ func (p *TaskLauncher) StartTask(
 			Mode: "host",
 		},
 	}
+
+	interval, err := time.ParseDuration("5m")
+	if err != nil {
+		return nil, err
+	}
+	delay, err := time.ParseDuration("15s")
+	if err != nil {
+		return nil, err
+	}
+	attempts := 10
+	restartMode := "delay"
+
+	restartPolicy := api.RestartPolicy{
+		Interval: &interval,
+		Attempts: &attempts,
+		Delay:    &delay,
+		Mode:     &restartMode,
+	}
+	tg.RestartPolicy = &restartPolicy
 
 	job.Namespace = &p.config.Namespace
 	job.AddTaskGroup(tg)
