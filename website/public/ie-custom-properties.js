@@ -17,7 +17,7 @@
 
   function qsa(el, selector) {
     try {
-      return el.querySelectorAll(selector)
+      return el.querySelectorAll(selector);
     } catch (e) {
       // console.warn('the Selector '+selector+' can not be parsed');
       return []
