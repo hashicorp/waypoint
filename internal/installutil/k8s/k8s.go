@@ -9,9 +9,9 @@ import (
 )
 
 type K8sConfig struct {
-	namespace          string            `hcl:"namespace,optional"`
+	namespace string `hcl:"namespace,optional"`
 
-	k8sContext        string `hcl:"k8s_context,optional"`
+	k8sContext string `hcl:"k8s_context,optional"`
 }
 
 type K8sInstaller struct {

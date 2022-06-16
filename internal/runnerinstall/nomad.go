@@ -375,7 +375,4 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 }
 
 func (i *NomadRunnerInstaller) UninstallFlags(set *flag.Set) {
-	//TODO implement me
-	//panic("implement me")
-	return
 }
