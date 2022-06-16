@@ -1,2 +1,2 @@
 cd ui
-yarn test
+yarn lint:fix
