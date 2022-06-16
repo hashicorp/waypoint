@@ -18,6 +18,14 @@ import (
 // but not returned directly to the client, to prevent leaking too much
 // detail. If the err includes a grpc status, that, along with the msg and
 // args, will be returned to the client.
+//
+// Args follow the same pattern as `hclog`. They are expected to be in order of
+// "label, variable, label, variable", etc. Example:
+// `hcerr.Externalize(log, err, "failed doing thing", "id", thing.id, "organization id", org.id)`
+// All args will be printed as strings to transmit to clients, so rather than adding a big complex
+// struct as an arg, pull out the fields of interest and add them as multiple args.
+// These will be displayed as key/value pairs to the client. If there are an odd number of args,
+// this assumes it's a mistake and adds "EXTRA_VALUE_AT_END" as the label for the final arg.
 func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) error {
 	log.Error(msg, append(args, "error", err)...)
 
