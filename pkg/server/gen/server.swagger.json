@@ -8085,6 +8085,10 @@
           "type": "string",
           "format": "date-time",
           "title": "timestamp is the timestamp of the commit"
+        },
+        "commit_message": {
+          "type": "string",
+          "title": "commit_message is the commit message, contains arbitrary text"
         }
       },
       "title": "Ref is used to populate DataSource.Ref"

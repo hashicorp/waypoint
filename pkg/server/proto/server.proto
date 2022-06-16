@@ -1843,6 +1843,9 @@ message Job {
 
       // timestamp is the timestamp of the commit
       google.protobuf.Timestamp timestamp = 2;
+
+      // commit_message is the commit message, contains arbitrary text
+      string commit_message = 3;
     }
   }
 

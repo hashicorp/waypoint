@@ -213,6 +213,7 @@ func TestGitSourceGet(t *testing.T) {
 		// Verify ref
 		ref := refRaw.Ref.(*pb.Job_DataSource_Ref_Git).Git
 		require.Equal("b6bf15100c570f2be6a231a095d395ed16dfed81", ref.Commit)
+		require.Equal("Fixes\n", ref.CommitMessage)
 
 		ts := ref.Timestamp.AsTime()
 		require.False(ts.IsZero())

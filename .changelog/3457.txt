@@ -1,0 +1,3 @@
+```release-note:improvement
+core/api: include commit message in datasource/git response
+```
