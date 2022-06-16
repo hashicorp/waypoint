@@ -211,10 +211,12 @@ func (p *TaskLauncher) StartTask(
 
 	interval, err := time.ParseDuration("5m")
 	if err != nil {
+		log.Error("error parsing Nomad restart interval duration")
 		return nil, err
 	}
 	delay, err := time.ParseDuration("15s")
 	if err != nil {
+		log.Error("error parsing Nomad delay interval duration")
 		return nil, err
 	}
 	attempts := 10
