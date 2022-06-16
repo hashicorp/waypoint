@@ -132,7 +132,10 @@ func Open(
 	}
 
 	if file.Body != nil {
-		component.Configure(pi.Component, file.Body, hclCtx.NewChild())
+		diag := component.Configure(pi.Component, file.Body, hclCtx.NewChild())
+		if diag.HasErrors() {
+			return nil, nil, diag
+		}
 	}
 
 	return &Plugin{req: req, Instance: pi}, pi.Component, nil
