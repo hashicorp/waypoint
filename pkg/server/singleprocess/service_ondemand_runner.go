@@ -27,7 +27,7 @@ func (s *Service) UpsertOnDemandRunnerConfig(
 	}
 	result := req.Config
 	if err := s.state(ctx).OnDemandRunnerConfigPut(result); err != nil {
-		return nil, hcerr.Externalize(log, err, "failed setting on-demand runner config", err, "id", result.Id, "name", result.Name)
+		return nil, hcerr.Externalize(log, err, "failed setting on-demand runner config", "id", result.Id, "name", result.Name)
 	}
 
 	return &pb.UpsertOnDemandRunnerConfigResponse{Config: result}, nil
