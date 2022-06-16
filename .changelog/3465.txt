@@ -1,0 +1,3 @@
+```release-note:improvement
+core: show helpful errors when using invalid runner profile plugin config
+```
