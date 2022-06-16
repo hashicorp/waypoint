@@ -23,7 +23,8 @@
     "test": "npm-run-all lint test:*",
     "test:ember": "ember test",
     "test:ember:percy": "percy exec ember test",
-    "test:ember:percy:ci": "percy exec ember test --path=dist"
+    "test:ember:percy:ci": "percy exec ember test --path=dist",
+    "prepare": "cd .. && husky install ui/.husky"
   },
   "devDependencies": {
     "@ember-decorators/component": "^6.1.1",
@@ -141,6 +142,8 @@
     "ember-cli-typescript-blueprints": "^3.0.0",
     "google-protobuf": "^3.12.2",
     "grpc-web": "link:./lib/grpc-web",
+    "husky": "^8.0.1",
+    "lint-staged": "^13.0.2",
     "opaqueany": "link:./lib/opaqueany",
     "waypoint-client": "link:./lib/waypoint-client",
     "waypoint-pb": "link:./lib/waypoint-pb"
