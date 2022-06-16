@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"fmt"
 	"sort"
 
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/posener/complete"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
@@ -13,6 +15,8 @@ import (
 
 type ProjectListCommand struct {
 	*baseCommand
+
+	flagJson bool
 }
 
 func (c *ProjectListCommand) Run(args []string) int {
@@ -29,6 +33,21 @@ func (c *ProjectListCommand) Run(args []string) int {
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
+	}
+
+	if c.flagJson {
+		var m jsonpb.Marshaler
+		m.Indent = "\t"
+		for _, p := range resp.Projects {
+			str, err := m.MarshalToString(p)
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+
+			fmt.Println(str)
+		}
+		return 0
 	}
 
 	var result []string
@@ -49,7 +68,15 @@ func (c *ProjectListCommand) Run(args []string) int {
 }
 
 func (c *ProjectListCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.BoolVar(&flag.BoolVar{
+			Name:    "json",
+			Target:  &c.flagJson,
+			Default: false,
+			Usage:   "Output the Project names as json.",
+		})
+	})
 }
 
 func (c *ProjectListCommand) AutocompleteArgs() complete.Predictor {
