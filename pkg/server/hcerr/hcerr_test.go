@@ -21,8 +21,17 @@ func TestExternalize(t *testing.T) {
 
 		externalError := Externalize(hclog.Default(), wrappedStatusErr, "message")
 
-		_, isStatusErr := status.FromError(externalError)
+		externalizedErr, isStatusErr := status.FromError(externalError)
 		require.True(isStatusErr)
+
+		require.Equal(codes.NotFound, externalizedErr.Code())
+	})
+
+	t.Run("Non-status input errors turn into internal status errors", func(t *testing.T) {
+		externalError := Externalize(hclog.Default(), errors.New("non-status error"), "message")
+		externalizedErr, isStatusErr := status.FromError(externalError)
+		require.True(isStatusErr)
+		require.Equal(codes.Internal, externalizedErr.Code())
 	})
 
 	t.Run("Args are surfaced in status details", func(t *testing.T) {
