@@ -18,13 +18,12 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/k8s"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	k8sinstallutil "github.com/hashicorp/waypoint/internal/installutil/k8s"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
@@ -33,6 +32,7 @@ import (
 
 //
 type K8sInstaller struct {
+	k8sinstallutil.K8sInstaller
 	config k8sConfig
 }
 
@@ -207,7 +207,7 @@ func (i *K8sInstaller) Install(
 
 	// TODO: Move this to a util function for install and upgrade to use
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		clientset, err := i.newClient()
+		clientset, err := i.NewClient()
 		if err != nil {
 			return false, err
 		}
@@ -442,7 +442,7 @@ func (i *K8sInstaller) Upgrade(
 	var grpcAddr string
 
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		clientset, err := i.newClient()
+		clientset, err := i.NewClient()
 		if err != nil {
 			return false, err
 		}
@@ -652,7 +652,7 @@ func (i *K8sInstaller) UninstallRunner(
 	s := sg.Add("Inspecting Kubernetes cluster...")
 	defer func() { s.Abort() }()
 
-	clientset, err := i.newClient()
+	clientset, err := i.NewClient()
 	if err != nil {
 		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
@@ -767,7 +767,7 @@ func (i *K8sInstaller) HasRunner(
 	ctx context.Context,
 	opts *InstallOpts,
 ) (bool, error) {
-	clientset, err := i.newClient()
+	clientset, err := i.NewClient()
 	if err != nil {
 		return false, err
 	}
@@ -1114,54 +1114,6 @@ func (i *K8sInstaller) UninstallFlags(set *flag.Set) {
 		Usage:   "Namespace in Kubernetes to uninstall the Waypoint server from.",
 		Default: "",
 	})
-}
-
-// newClient creates a new K8S client based on the configured settings.
-func (i *K8sInstaller) newClient() (*kubernetes.Clientset, error) {
-	// Build our K8S client.
-	configOverrides := &clientcmd.ConfigOverrides{}
-	if i.config.k8sContext != "" {
-		configOverrides = &clientcmd.ConfigOverrides{
-			CurrentContext: i.config.k8sContext,
-		}
-	}
-	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		clientcmd.NewDefaultClientConfigLoadingRules(),
-		configOverrides,
-	)
-
-	// Discover the current target namespace in the user's config so if they
-	// run kubectl commands waypoint will show up. If we use the default namespace
-	// they might not see the objects we've created.
-	if i.config.namespace == "" {
-		namespace, _, err := newCmdConfig.Namespace()
-		if err != nil {
-			return nil, fmt.Errorf(
-				"Error getting namespace from client config: %s",
-				clierrors.Humanize(err),
-			)
-		}
-
-		i.config.namespace = namespace
-	}
-
-	clientconfig, err := newCmdConfig.ClientConfig()
-	if err != nil {
-		return nil, fmt.Errorf(
-			"Error initializing kubernetes client: %s",
-			clierrors.Humanize(err),
-		)
-	}
-
-	clientset, err := kubernetes.NewForConfig(clientconfig)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"Error initializing kubernetes client: %s",
-			clierrors.Humanize(err),
-		)
-	}
-
-	return clientset, nil
 }
 
 var warnK8SKind = strings.TrimSpace(`
