@@ -508,19 +508,6 @@ func (s *Service) onDemandRunnerStartJob(
 	}
 	job.Id = id
 
-	// NOTE(briancain): We set this value to something long for now, because it's
-	// possible during a pipeline run for jobs to be waiting in the QUEUED status
-	// while upstream jobs continue to run. Once a runner accepts a job however,
-	// we will update the jobs expiration time to be 60 seconds because by that
-	// point it should be executing quickly.
-	dur, err := time.ParseDuration("60m")
-	if err != nil {
-		return nil, "", status.Errorf(codes.FailedPrecondition,
-			"Invalid expiry duration: %s", err.Error())
-	}
-
-	job.ExpireTime = timestamppb.New(time.Now().Add(dur))
-
 	// This will be either "Any" or a specific static runner.
 	job.TargetRunner = od.TargetRunner
 
