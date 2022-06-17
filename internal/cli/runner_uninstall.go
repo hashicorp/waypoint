@@ -74,7 +74,7 @@ func (c *RunnerUninstallCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint runner uninstall [options]
 
-  Uninstalls a Waypoint runner from server given a platform and Waypoint runner
+  Uninstall a Waypoint runner from server given a platform and Waypoint runner
   id. The platform should be specified as kubernetes, nomad, ecs, or docker.
 
   This will forget the runner on the server and remove any of the resources
