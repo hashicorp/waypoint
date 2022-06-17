@@ -10,6 +10,7 @@ import (
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 	"github.com/posener/complete"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 	"sort"
 	"strings"
 )
@@ -173,11 +174,16 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	defer func() { s.Abort() }()
 
 	if c.adopt && c.serverCookie == "" {
-		c.ui.Output(
-			"Server cookie must be supplied for adoption.",
-			terminal.WithErrorStyle(),
-		)
-		return 1
+		serverConfig, err := c.project.Client().GetServerConfig(ctx, &empty.Empty{})
+		if err != nil {
+			c.ui.Output(
+				"Error getting server config.",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+		c.serverCookie = serverConfig.Config.Cookie
 	}
 
 	if c.serverUrl == "" {
