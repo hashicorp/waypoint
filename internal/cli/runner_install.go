@@ -180,6 +180,14 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		return 1
 	}
 
+	if c.serverUrl == "" {
+		c.ui.Output(
+			"-server-addr must be supplied for adoption.",
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
+
 	client := c.project.Client()
 	s.Status(terminal.StatusOK)
 	s.Done()
