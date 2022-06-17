@@ -184,6 +184,23 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 			return 1
 		}
 		c.serverCookie = serverConfig.Config.Cookie
+	} else if c.adopt && c.serverCookie != "" {
+		serverConfig, err := c.project.Client().GetServerConfig(ctx, &empty.Empty{})
+		if err != nil {
+			c.ui.Output(
+				"Error getting server config.",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+		if c.serverCookie != serverConfig.Config.Cookie {
+			c.ui.Output(
+				"Incorrect server cookie provided.",
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
 	}
 
 	if c.serverUrl == "" {
