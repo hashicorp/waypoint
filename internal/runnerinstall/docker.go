@@ -162,7 +162,7 @@ func (d DockerRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	cli.NegotiateAPIVersion(ctx)
 
 	s.Update("Finding runner container")
-	containerName := "waypoint-runner-" + opts.Id
+	containerName := "waypoint-" + opts.Id + "-runner"
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "name",
