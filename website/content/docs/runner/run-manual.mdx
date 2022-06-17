@@ -24,7 +24,7 @@ To install a runner, use the `waypoint runner install` command. Below is an
 example of using that command to install a Waypoint runner to Docker:
 
 ```shell-session
-waypoint runner install -platform=docker -docker-runner-network=waypoint -server-addr=waypoint-server:9701 -server-cookie=abc123
+waypoint runner install -platform=docker -docker-runner-network=waypoint -server-addr=waypoint-server:9701 -server-tls-skip-verify=true -server-cookie=abc123
 ✓ Connecting to: waypoint-server:9701
 ✓ Runner 01G5F2R0EKY0J8WW4W8HRGZVN1 installed successfully
 ✓ Runner profile docker-01G5F2R0EKY0J8WW4W8HRGZVN1 created successfully.
