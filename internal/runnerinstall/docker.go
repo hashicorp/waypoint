@@ -79,6 +79,9 @@ func (i *DockerRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) 
 
 	}
 
+	// We have no opinion on the EndpointSettings for the Docker network which
+	// the user can specify, so we assign an empty struct to the single element
+	// in the map of networks (which is the name of the network, if provided)
 	var waypointNetwork network.NetworkingConfig
 	if i.Config.Network != "" {
 		waypointNetwork = network.NetworkingConfig{
