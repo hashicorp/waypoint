@@ -50,4 +50,6 @@ type InstallOpts struct {
 	Id string
 }
 
-var Platforms = map[string]RunnerInstaller{}
+var Platforms = map[string]RunnerInstaller{
+	"ecs":        &ECSRunnerInstaller{},
+}

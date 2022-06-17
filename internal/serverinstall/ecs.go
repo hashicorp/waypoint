@@ -17,10 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -234,8 +232,8 @@ func (i *ECSInstaller) Launch(
 	s := sg.Add("Creating Network resources...")
 	defer func() { s.Abort() }()
 
-	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
-	httpPort, _ := strconv.Atoi(defaultHttpPort)
+	grpcPort, _ := strconv.Atoi(serverconfig.DefaultGRPCPort)
+	httpPort, _ := strconv.Atoi(serverconfig.DefaultHTTPPort)
 	nlb, err := createNLB(
 		ctx, s, log, sess,
 		netInfo.VpcID,
@@ -845,81 +843,22 @@ func nameFromArn(arn string) string {
 // InstallRunner implements Installer.
 func (i *ECSInstaller) InstallRunner(
 	ctx context.Context,
-	opts *InstallRunnerOpts,
+	opts *runnerinstall.InstallOpts,
 ) error {
-	ui := opts.UI
-	log := opts.Log
-
-	sess, err := utils.GetSession(&utils.SessionConfig{
-		Region: i.config.Region,
-		Logger: log,
-	})
+	runnerInstaller := runnerinstall.ECSRunnerInstaller{Config: runnerinstall.EcsConfig{
+		Region:            i.config.Region,
+		ExecutionRoleName: i.config.ExecutionRoleName,
+		TaskRoleName:      i.config.TaskRoleName,
+		CPU:               i.config.CPU,
+		Memory:            i.config.Memory,
+		RunnerImage:       i.config.ServerImage,
+		Cluster:           i.config.Cluster,
+		Subnets:           i.config.Subnets,
+	}}
+	err := runnerInstaller.Install(ctx, opts)
 	if err != nil {
 		return err
 	}
-
-	if i.config.OdrImage == "" {
-		var err error
-		i.config.OdrImage, err = defaultODRImage(i.config.ServerImage)
-		if err != nil {
-			return err
-		}
-	}
-
-	var (
-		logGroup      string
-		executionRole string
-		taskRole      string
-		runSvcArn     *string
-	)
-	lf := &Lifecycle{
-		Init: func(ui terminal.UI) error {
-			sess, err = utils.GetSession(&utils.SessionConfig{
-				Region: i.config.Region,
-				Logger: log,
-			})
-			if err != nil {
-				return err
-			}
-
-			executionRole, err = i.SetupExecutionRole(ctx, ui, log, sess)
-			if err != nil {
-				return err
-			}
-
-			taskRole, err = i.SetupTaskRole(ctx, ui, log, sess)
-			if err != nil {
-				return err
-			}
-
-			logGroup, err = i.SetupLogs(ctx, ui, log, sess, defaultRunnerLogGroup)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		},
-
-		Run: func(ui terminal.UI) error {
-			runSvcArn, err = i.LaunchRunner(
-				ctx, ui, log, sess,
-				opts.AdvertiseClient.Env(),
-				executionRole,
-				taskRole,
-				logGroup,
-			)
-			return err
-		},
-
-		Cleanup: func(ui terminal.UI) error { return nil },
-	}
-
-	if err := lf.Execute(log, ui); err != nil {
-		return err
-	}
-
-	log.Debug("runner service started", "arn", *runSvcArn)
-
 	return nil
 }
 
