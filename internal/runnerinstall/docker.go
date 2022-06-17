@@ -117,7 +117,7 @@ func (i *DockerRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) 
 			"seccomp=unconfined",
 			"apparmor=unconfined",
 		},
-	}, &waypointNetwork, nil, "waypoint-runner-"+opts.Id)
+	}, &waypointNetwork, nil, "waypoint-"+opts.Id+"-runner")
 	if err != nil {
 		return err
 	}
