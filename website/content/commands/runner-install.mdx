@@ -1,0 +1,87 @@
+---
+layout: commands
+page_title: 'Commands: Runner install'
+sidebar_title: 'runner install'
+description: 'Installs a Waypoint runner to Kubernetes, Nomad, ECS, or Docker'
+---
+
+# Waypoint Runner install
+
+Command: `waypoint runner install`
+
+Installs a Waypoint runner to Kubernetes, Nomad, ECS, or Docker
+
+@include "commands/runner-install_desc.mdx"
+
+## Usage
+
+Usage: `waypoint runner install [options]`
+
+Installs a Waypoint runner to an existing platform. The platform should be
+specified as kubernetes, nomad, ecs, or docker.
+
+By default, this will adopt the runner after it is installed. The install will
+attempt to install a runner for the server configured in the current Waypoint
+context.
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-project=<string>` (`-p`) - Project to target.
+- `-workspace=<string>` (`-w`) - Workspace to operate in.
+
+#### Command Options
+
+- `-platform=<string>` - Platform to install the Waypoint runner into. One possible value from: ecs, kubernetes, nomad, docker.
+- `-server-addr=<string>` - Address of the Waypoint server.
+- `-odr-image=<string>` - Docker image for the on-demand runners. If not specified, it defaults to 'hashicorp/waypoint-odr:latest'.
+- `-server-tls` - If true, the Waypoint runner will connect to the server over TLS.
+- `-server-tls-skip-verify` - If true, will not validate TLS cert presented by the server.
+- `-server-require-auth` - If true, will send authentication details.
+- `-adopt` - Adopt the runner after it is installed.
+- `-server-cookie=<string>` - Server cookie for the Waypoint cluster for which you're targeting this runner.
+- `-id=<string>` - If this is set, the runner will use the specified id.
+
+#### docker Options
+
+- `-docker-runner-image=<string>` - The Docker image for the Waypoint runner.
+- `-docker-runner-network=<string>` - The Docker network in which to deploy the Waypoint runner.
+
+#### ecs Options
+
+- `-ecs-region=<string>` - AWS region in which to install the Waypoint runner.
+- `-ecs-exeuction-role-name=<string>` - The name of the execution task IAM Role to associate with the ECS Service.
+- `-ecs-task-role-name=<string>` - IAM Execution Role to assign to the on-demand runner.
+- `-ecs-cpu=<string>` - The amount of CPU to allocate for the Waypoint runner task.
+- `-ecs-memory=<string>` - The amount of memory to allocate for the Waypoint runner task
+- `-ecs-runner-image=<string>` - The Waypoint runner Docker image.
+- `-ecs-cluster=<string>` - The name of the ECS Cluster to install the Waypoint runner into.
+- `-ecs-subnets=<string>` - Subnets to install the Waypoint runner into.
+
+#### kubernetes Options
+
+- `-k8s-Config-path=<string>` - Path to the kubeconfig file to use,
+- `-k8s-context=<string>` - The Kubernetes context to install the Waypoint runner to. If left unset, Waypoint will use the current Kubernetes context.
+- `-k8s-helm-version=<string>` - The version of the Helm chart to use for the Waypoint runner install.
+- `-k8s-namespace=<string>` - The namespace in the Kubernetes cluster into which the Waypoint runner will be installed.
+- `-k8s-runner-image=<string>` - Docker image for the Waypoint runner.
+- `-k8s-runner-image-tag=<string>` - Tag of the Docker image for the Waypoint runner.
+- `-k8s-cpu-request=<string>` - Requested amount of CPU for Waypoint runner.
+- `-k8s-mem-request=<string>` - Requested amount of memory for Waypoint runner.
+- `-k8s-runner-service-account-init` - Create the service account if it does not exist. The default is true.
+
+#### nomad Options
+
+- `-nomad-dc=<string>` - Datacenters to install to for Nomad.
+- `-nomad-host-volume=<string>` - Nomad host volume name.
+- `-nomad-csi-volume-plugin-id=<string>` - The ID of the CSI plugin that manages the volume, required for volume type 'csi'.
+- `-nomad-csi-volume-provider=<string>` - Nomad CSI volume provider, required for volume type 'csi'.
+- `-nomad-csi-volume-capacity-min=<int>` - Nomad CSI volume capacity minimum, in bytes.
+- `-nomad-csi-volume-capacity-max=<int>` - Nomad CSI volume capacity maximum, in bytes.
+- `-nomad-csi-fs=<string>` - Nomad CSI volume mount option file system.
+- `-nomad-csi-topologies=<key=value>` - Locations from which the Nomad Volume will be accessible.
+- `-nomad-csi-external-id=<string>` - The ID of the physical volume from the Nomad storage provider.
+- `-nomad-csi-secrets=<key=value>` - Credentials for publishing volume for Waypoint runner.
+
+@include "commands/runner-install_more.mdx"
