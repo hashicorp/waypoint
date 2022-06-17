@@ -129,7 +129,7 @@ Usage: waypoint runner install [options]
 }
 
 func (c *RunnerInstallCommand) Synopsis() string {
-	return "Installs a Waypoint runner to Kubernetes, Nomad, ECS, or Docker"
+	return "Install a Waypoint runner to Kubernetes, Nomad, ECS, or Docker"
 }
 
 func (c *RunnerInstallCommand) Run(args []string) int {
