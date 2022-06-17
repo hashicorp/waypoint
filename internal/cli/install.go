@@ -3,6 +3,8 @@ package cli
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/installutil"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"sort"
 	"strings"
 	"time"
@@ -491,6 +493,8 @@ func installRunner(
 		return 1
 	}
 
+	config, err := client.GetServerConfig(ctx, &empty.Empty{})
+
 	// Build a serverconfig that uses the advertise addr and includes
 	// the token we just requested.
 	connConfig := &serverconfig.Client{
@@ -501,15 +505,20 @@ func installRunner(
 		AuthToken:     resp.Token,
 	}
 
+	// We set the ID to be "init" since it is the initial static runner
+	id := "init"
+
 	// Install!
 	s.Update("Installing runner...")
-	err = p.InstallRunner(ctx, &serverinstall.InstallRunnerOpts{
+	err = p.InstallRunner(ctx, &runnerinstall.InstallOpts{
 		Log:             log,
 		UI:              ui,
-		AuthToken:       resp.Token,
-		AdvertiseAddr:   advertiseAddr,
+		Cookie:          config.Config.Cookie,
+		ServerAddr:      advertiseAddr.Addr,
 		AdvertiseClient: connConfig,
+		Id:              id,
 	})
+
 	if err != nil {
 		ui.Output(
 			"Error installing the runner: %s\n\n%s",
@@ -520,6 +529,13 @@ func installRunner(
 		return 1
 	}
 	s.Done()
+
+	err = installutil.AdoptRunner(ctx, ui, client, id, advertiseAddr.Addr)
+	if err != nil {
+		s.Update("Error adopting runner: %s", err)
+		s.Status(terminal.StatusError)
+		return 1
+	}
 
 	// If this installation platform supports an out-of-the-box ODR
 	// config then we set that up. This enables on-demand runners to
