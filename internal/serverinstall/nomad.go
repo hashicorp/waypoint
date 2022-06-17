@@ -23,6 +23,8 @@ import (
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
+const runnerJobName string = "waypoint-runner-init"
+
 type NomadInstaller struct {
 	config nomadConfig
 }
@@ -52,8 +54,6 @@ type nomadConfig struct {
 
 	serverResourcesCPU    string `hcl:"server_resources_cpu,optional"`
 	serverResourcesMemory string `hcl:"server_resources_memory,optional"`
-	runnerResourcesCPU    string `hcl:"runner_resources_cpu,optional"`
-	runnerResourcesMemory string `hcl:"runner_resources_memory,optional"`
 
 	hostVolume           string            `hcl:"host_volume,optional"`
 	csiVolumeProvider    string            `hcl:"csi_volume_provider,optional"`
@@ -65,8 +65,14 @@ type nomadConfig struct {
 	csiTopologies        map[string]string `hcl:"nomad_csi_topologies,optional"`
 	csiSecrets           map[string]string `hcl:"nomad_csi_secrets,optional"`
 	csiParams            map[string]string `hcl:"csi_parameters,optional"`
+	nomadHost            string            `hcl:"nomad_host,optional"`
 
-	nomadHost string `hcl:"nomad_host,optional"`
+	runnerResourcesCPU         string `hcl:"runner_resources_cpu,optional"`
+	runnerResourcesMemory      string `hcl:"runner_resources_memory,optional"`
+	runnerHostVolume           string `hcl:"runner_host_volume,optional"`
+	runnerCsiVolumeProvider    string `hcl:"runner_csi_volume_provider,optional"`
+	runnerCsiVolumeCapacityMin int64  `hcl:"runner_csi_volume_capacity_min,optional"`
+	runnerCsiVolumeCapacityMax int64  `hcl:"runner_csi_volume_capacity_max,optional"`
 }
 
 var (
@@ -593,7 +599,7 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 		return err
 	}
 	for _, vol := range vols {
-		if vol.ID == "waypoint" {
+		if vol.ID == "waypoint-server" {
 			s.Update("Destroying persistent CSI volume")
 			err = client.CSIVolumes().Deregister(vol.ID, false, &api.WriteOptions{})
 			if err != nil {
@@ -611,31 +617,36 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 // InstallRunner implements Installer.
 func (i *NomadInstaller) InstallRunner(
 	ctx context.Context,
-	opts *InstallRunnerOpts,
+	opts *runnerinstall.InstallOpts,
 ) error {
-	ui := opts.UI
-
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
-	s := sg.Add("Initializing Nomad client...")
-	defer func() { s.Abort() }()
-
-	// Build api client from environment
-	client, err := api.NewClient(api.DefaultConfig())
+	runnerInstaller := runnerinstall.NomadRunnerInstaller{
+		Config: runnerinstall.NomadConfig{
+			AuthSoftFail:          i.config.authSoftFail,
+			Image:                 i.config.serverImage,
+			Namespace:             i.config.namespace,
+			ServiceAnnotations:    i.config.serviceAnnotations,
+			OdrImage:              i.config.odrImage,
+			Region:                i.config.region,
+			Datacenters:           i.config.datacenters,
+			PolicyOverride:        i.config.policyOverride,
+			RunnerResourcesCPU:    i.config.runnerResourcesCPU,
+			RunnerResourcesMemory: i.config.runnerResourcesMemory,
+			HostVolume:            i.config.runnerHostVolume,
+			CsiVolumeProvider:     i.config.runnerCsiVolumeProvider,
+			CsiVolumeCapacityMin:  i.config.runnerCsiVolumeCapacityMin,
+			CsiVolumeCapacityMax:  i.config.runnerCsiVolumeCapacityMax,
+			CsiFS:                 i.config.csiFS,
+			CsiTopologies:         i.config.csiTopologies,
+			CsiExternalId:         i.config.csiExternalId,
+			CsiPluginId:           i.config.csiPluginId,
+			CsiSecrets:            i.config.csiSecrets,
+			NomadHost:             i.config.nomadHost,
+		},
+	}
+	err := runnerInstaller.Install(ctx, opts)
 	if err != nil {
 		return err
 	}
-
-	// Install the runner
-	s.Update("Installing the Waypoint runner")
-	_, err = i.runJob(ctx, s, client, waypointRunnerNomadJob(i.config, opts))
-	if err != nil {
-		return err
-	}
-	s.Update("Waypoint runner installed")
-	s.Done()
-
 	return nil
 }
 
@@ -659,13 +670,13 @@ func (i *NomadInstaller) UninstallRunner(
 	}
 
 	s.Update("Checking for existing Waypoint runner...")
-	jobs, _, err := client.Jobs().PrefixList(runnerName)
+	jobs, _, err := client.Jobs().PrefixList(runnerJobName)
 	if err != nil {
 		return err
 	}
 	var detected bool
 	for _, j := range jobs {
-		if j.Name == runnerName {
+		if j.Name == runnerJobName {
 			detected = true
 			break
 		}
@@ -677,7 +688,7 @@ func (i *NomadInstaller) UninstallRunner(
 	}
 
 	s.Update("Removing Waypoint runner...")
-	_, _, err = client.Jobs().Deregister(runnerName, true, &api.WriteOptions{})
+	_, _, err = client.Jobs().Deregister(runnerJobName, true, &api.WriteOptions{})
 	if err != nil {
 		ui.Output(
 			"Error deregistering Waypoint runner job: %s", clierrors.Humanize(err),
@@ -704,6 +715,24 @@ func (i *NomadInstaller) UninstallRunner(
 	}
 
 	s.Update("Waypoint runner job and allocations purged")
+	s.Done()
+
+	// Delete CSI volume for runner (if it exists)
+	vols, _, err := client.CSIVolumes().List(&api.QueryOptions{Prefix: "waypoint"})
+	if err != nil {
+		return err
+	}
+	for _, vol := range vols {
+		if vol.ID == runnerJobName {
+			s.Update("Destroying persistent CSI volume")
+			err = client.CSIVolumes().Deregister(vol.ID, false, &api.WriteOptions{})
+			if err != nil {
+				return err
+			}
+			s.Update("Successfully destroyed persistent volumes")
+			break
+		}
+	}
 	s.Done()
 
 	return nil
@@ -898,7 +927,7 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 
 	if c.csiVolumeProvider != "" {
 		volumeRequest.Type = "csi"
-		volumeRequest.Source = "waypoint"
+		volumeRequest.Source = "waypoint-server"
 		volumeRequest.AccessMode = "single-node-writer"
 		volumeRequest.AttachmentMode = "file-system"
 	} else {
@@ -1185,6 +1214,33 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
+		Name:   "nomad-runner-host-volume",
+		Target: &i.config.runnerHostVolume,
+		Usage:  "Name of the host volume to use for the Waypoint runner.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-runner-csi-volume-provider",
+		Target: &i.config.runnerCsiVolumeProvider,
+		Usage:  "Name of the CSI volume provider to use for the Waypoint runner.",
+	})
+
+	// TODO: Update default values for runner - less space is needed for runner compared to server
+	set.Int64Var(&flag.Int64Var{
+		Name:    "nomad-runner-csi-volume-capacity-min",
+		Target:  &i.config.runnerCsiVolumeCapacityMin,
+		Usage:   "Waypoint runner Nomad CSI volume capacity minimum, in bytes.",
+		Default: defaultCSIVolumeCapacityMin,
+	})
+
+	set.Int64Var(&flag.Int64Var{
+		Name:    "nomad-runner-csi-volume-capacity-max",
+		Target:  &i.config.runnerCsiVolumeCapacityMax,
+		Usage:   "Waypoint runner Nomad CSI volume capacity maximum, in bytes.",
+		Default: defaultCSIVolumeCapacityMax,
+	})
+
+	set.StringVar(&flag.StringVar{
 		Name:    "nomad-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
@@ -1246,7 +1302,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:   "nomad-host-volume",
 		Target: &i.config.hostVolume,
-		Usage:  "Nomad host volume name, required for volume type 'host'.",
+		Usage:  "Nomad host volume name to use for the Waypoint server, required for volume type 'host'.",
 	})
 
 	set.StringVar(&flag.StringVar{
