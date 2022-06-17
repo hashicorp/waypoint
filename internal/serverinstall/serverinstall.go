@@ -3,6 +3,7 @@ package serverinstall
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
 
 	"github.com/distribution/distribution/v3/reference"

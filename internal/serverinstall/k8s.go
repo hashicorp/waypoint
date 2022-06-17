@@ -4,15 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
-	"net"
-	"strings"
-	"time"
-
-	installutil "github.com/hashicorp/waypoint/internal/installutil/helm"
+	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
+	"net"
+	"strings"
+	"time"
 
 	apiv1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -89,7 +87,7 @@ func (i *K8sInstaller) Install(
 
 	s := sg.Add("Getting Helm configs...")
 	defer func() { s.Abort() }()
-	settings, err := installutil.SettingsInit()
+	settings, err := helminstallutil.SettingsInit()
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +96,7 @@ func (i *K8sInstaller) Install(
 	s.Done()
 
 	s = sg.Add("Getting Helm action configuration...")
-	actionConfig, err := installutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
+	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +141,7 @@ func (i *K8sInstaller) Install(
 
 	var version string
 	if i.config.version == "" {
-		version = installutil.DefaultHelmChartVersion
+		version = helminstallutil.DefaultHelmChartVersion
 	} else {
 		version = i.config.version
 	}
@@ -342,7 +340,7 @@ func (i *K8sInstaller) Upgrade(
 
 	s := sg.Add("Getting Helm configs...")
 	defer func() { s.Abort() }()
-	settings, err := installutil.SettingsInit()
+	settings, err := helminstallutil.SettingsInit()
 	if err != nil {
 		return nil, err
 	}
@@ -351,7 +349,7 @@ func (i *K8sInstaller) Upgrade(
 	s.Done()
 
 	s = sg.Add("Getting Helm action configuration...")
-	actionConfig, err := installutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
+	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +387,7 @@ func (i *K8sInstaller) Upgrade(
 
 	var version string
 	if i.config.version == "" {
-		version = installutil.DefaultHelmChartVersion
+		version = helminstallutil.DefaultHelmChartVersion
 	} else {
 		version = i.config.version
 	}
@@ -565,7 +563,7 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	s := sg.Add("Getting Helm action configuration...")
 	defer func() { s.Abort() }()
 
-	actionConfig, err := installutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
+	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
 	if err != nil {
 		return err
 	}
@@ -621,7 +619,7 @@ func (i *K8sInstaller) InstallRunner(
 		Config: runnerinstall.K8sConfig{
 			KubeconfigPath:       "",
 			K8sContext:           i.config.k8sContext,
-			Version:              installutil.DefaultHelmChartVersion,
+			Version:              helminstallutil.DefaultHelmChartVersion,
 			Namespace:            i.config.namespace,
 			RunnerImage:          ref.ShortName(),
 			RunnerImageTag:       ref.Tag(),
