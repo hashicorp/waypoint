@@ -9002,6 +9002,10 @@
           "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Build",
           "title": "Built-in build operation"
         },
+        "deploy": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Deploy",
+          "title": "Built-in deploy operation"
+        },
         "image": {
           "type": "string",
           "description": "Docker image to execute. This should be a fully qualified image URL."
@@ -9015,6 +9019,15 @@
         "disable_push": {
           "type": "boolean",
           "title": "Whether or not to push the built artifact to a remote container registry\nTODO(briancain): ensure default to false because this will be inside\nan ODR container"
+        }
+      }
+    },
+    "hashicorp.waypoint.Pipeline.Step.Deploy": {
+      "type": "object",
+      "properties": {
+        "release": {
+          "type": "boolean",
+          "description": "Whether or not to run a release immediately after the deploy. Defaults\nto false. Users would probably write a Release step to opt into a release\nbut lets support the option here just like the CLI does."
         }
       }
     },
