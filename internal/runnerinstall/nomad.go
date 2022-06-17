@@ -3,13 +3,16 @@ package runnerinstall
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	nomadutil "github.com/hashicorp/waypoint/internal/installutil/nomad"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"strconv"
-	"strings"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 type NomadRunnerInstaller struct {
@@ -288,11 +291,88 @@ func (i *NomadRunnerInstaller) InstallFlags(set *flag.Set) {
 }
 
 func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
-	//TODO implement me
-	panic("implement me")
+	ui := opts.UI
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Initializing Nomad client...")
+	defer func() { s.Abort() }()
+
+	// Build api client
+	client, err := api.NewClient(api.DefaultConfig())
+	if err != nil {
+		return err
+	}
+	s.Done()
+
+	s = sg.Add("Locate existing Waypoint runner...")
+	waypointRunnerJobName := "waypoint-runner-" + opts.Id
+	jobs, _, err := client.Jobs().PrefixList(waypointRunnerJobName)
+	if err != nil {
+		s.Update("Unable to find nomad job %s for Waypoint runner", waypointRunnerJobName)
+		return err
+	}
+
+	if len(jobs) != 1 {
+		s.Update("Expected 1 runner, found %d", len(jobs))
+		return fmt.Errorf("Expected 1 runner, found %d", len(jobs))
+	}
+
+	s.Update("Waypoint runner found.")
+	s.Done()
+
+	s = sg.Add("Uninstalling the Waypoint runner...")
+	_, _, err = client.Jobs().Deregister(waypointRunnerJobName, false, &api.WriteOptions{})
+	if err != nil {
+		s.Update("Unable to deregister Waypoint runner job.")
+		return err
+	}
+
+	s.Update("Waiting for jobs to be stopped...")
+	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		jobs, _, err := client.Jobs().PrefixList(waypointRunnerJobName)
+		if err != nil {
+			return false, err
+		}
+		for _, job := range jobs {
+			if job.Status != "dead" {
+				return false, nil
+			}
+		}
+		return true, nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Delete CSI volume for runner (if it exists)
+	vols, _, err := client.CSIVolumes().List(&api.QueryOptions{Prefix: waypointRunnerJobName})
+	if err != nil {
+		return err
+	}
+	for _, vol := range vols {
+		if vol.ID == waypointRunnerJobName {
+			s.Update("Destroying persistent CSI volume")
+			err = client.CSIVolumes().Deregister(vol.ID, true, &api.WriteOptions{})
+			if err != nil {
+				return err
+			}
+			s.Update("Successfully destroyed persistent volumes")
+			break
+		}
+	}
+
+	_, _, err = client.Jobs().Deregister(waypointRunnerJobName, true, &api.WriteOptions{})
+	if err != nil {
+		s.Update("Unable to deregister Waypoint runner job.")
+		return err
+	}
+	s.Update("Waypoint runner job and allocations purged")
+	s.Done()
+
+	return nil
 }
 
 func (i *NomadRunnerInstaller) UninstallFlags(set *flag.Set) {
-	//TODO implement me
-	panic("implement me")
 }
