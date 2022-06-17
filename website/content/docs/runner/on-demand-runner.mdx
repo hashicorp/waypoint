@@ -90,3 +90,76 @@ task launcher.
 
 Task plugins also can accept `TaskLauncherConfig` configuration which users can
 configure through an [on-demand runner profile](/docs/runner/profiles).
+
+## Task Introspection
+
+In Waypoint 0.9.0, we introduced the CLI command `waypoint task`. This command
+currently gives users more introspection into the task launcher system and
+what Waypoint is doing with remote-enabled projects. The simplest benefit
+to this command is listing all known tasks in the system:
+
+```shell
+$ waypoint task list
+
+» Waypoint On-Demand Runner Tasks
+              ID             | RUN JOB OPERATION | TASK STATE |   PROJECT   |  TIME CREATED  | TIME COMPLETED
+-----------------------------+-------------------+------------+-------------+----------------+-----------------
+  01G1RYP6JFSEAQVE2SQX38Q19D | Up                | RUNNING    | go-gitops-0 | 3 seconds ago  |
+  01G1RYP37X5FTD9TFZQE5J2BQM | QueueProject      | STOPPED    | go-gitops-0 | 7 seconds ago  | 3 seconds ago
+  01G1RYP08Z9V18HMBP5XDPP0KA | Poll              | STOPPED    | go-gitops-0 | 10 seconds ago | 6 seconds ago
+  01G1RYNTQJ5421K3QBYR6FPAZP | Init              | STOPPED    | go-gitops-0 | 15 seconds ago | 12 seconds ago
+  01G1RYNNEK141B23YDE26XPED7 | Init              | STOPPED    | go-gitops-0 | 21 seconds ago | 15 seconds ago
+```
+
+This will display a list of all known Tasks in Waypoint server. It will show
+the current state of the task as well.
+
+```shell
+$ waypoint task inspect 01G1RYP6JFSEAQVE2SQX38Q19D
+
+» On-Demand Runner Task Configuration
+      Task ID: 01G1RYP6JFSEAQVE2SQX38Q19D
+   Task State: RUNNING
+    Workspace: default
+      Project: go-gitops-0
+  Application: go
+
+» Run Job Configuration
+  Job Configuration:
+         Job ID: 01G1RYP6JDVM4FPXEZVHP2JPD9
+      Operation: Up
+  Target Runner: 01G1RYP6JD0AV2HEWF4B9CYY29
+      Workspace: default
+        Project: go-gitops-0
+    Application: go
+
+  Job Results:
+  State: Running
+
+» Start Job Configuration
+  Job Configuration:
+         Job ID: 01G1RYP6JF57MV6MSGPHMCCQCR
+      Operation: StartTask
+  Target Runner: *
+      Workspace: default
+        Project: go-gitops-0
+    Application: go
+
+  Job Results:
+          State: Success
+  Complete Time: 25 seconds ago
+
+» Stop Job Configuration
+  Job Configuration:
+         Job ID: 01G1RYP6JFSS7SHZG2HETKVCBR
+      Operation: StopTask
+  Target Runner: *
+      Workspace: default
+        Project: go-gitops-0
+    Application: go
+
+  Job Results:
+  State: Queued
+```
+
+This view will also show you the job status for a given Task.
