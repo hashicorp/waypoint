@@ -168,5 +168,5 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 }
 
 func (c *RunnerUninstallCommand) Synopsis() string {
-	return "Uninstalls a Waypoint runner from Kubernetes, Nomad, ECS, or Docker"
+	return "Uninstall a Waypoint runner from Kubernetes, Nomad, ECS, or Docker"
 }
