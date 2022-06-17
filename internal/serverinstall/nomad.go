@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
-const runnerJobName string = "waypoint-runner-init"
+const runnerJobName string = "waypoint-static-runner"
 
 type NomadInstaller struct {
 	config nomadConfig

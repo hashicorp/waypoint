@@ -82,8 +82,8 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 		err = nomadutil.CreatePersistentVolume(
 			ctx,
 			client,
-			"waypoint-runner-"+opts.Id,
-			"waypoint-runner-"+opts.Id,
+			"waypoint-"+opts.Id+"-runner",
+			"waypoint-"+opts.Id+"-runner",
 			i.Config.CsiPluginId,
 			i.Config.CsiVolumeProvider,
 			i.Config.CsiFS,
@@ -118,7 +118,7 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 	// Name AND ID of the Nomad job will be waypoint-runner-ID
 	// Name is cosmetic, but ID must be unique
-	jobRef := runnerName + "-" + opts.Id
+	jobRef := "waypoint-" + opts.Id + "-runner"
 	job := api.NewServiceJob(jobRef, jobRef, c.Region, 50)
 	job.Namespace = &c.Namespace
 	job.Datacenters = c.Datacenters
@@ -307,7 +307,7 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	s.Done()
 
 	s = sg.Add("Locate existing Waypoint runner...")
-	waypointRunnerJobName := "waypoint-runner-" + opts.Id
+	waypointRunnerJobName := "waypoint-" + opts.Id + "-runner"
 	jobs, _, err := client.Jobs().PrefixList(waypointRunnerJobName)
 	if err != nil {
 		s.Update("Unable to find nomad job %s for Waypoint runner", waypointRunnerJobName)
