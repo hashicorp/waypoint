@@ -162,7 +162,20 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 						DisablePush: buildBody.DisablePush,
 					},
 				}
+			case "deploy":
+				var deployBody struct {
+					Release bool `hcl:"release,optional"`
+				}
 
+				if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &deployBody); diag.HasErrors() {
+					return nil, diag
+				}
+
+				s.Kind = &pb.Pipeline_Step_Deploy_{
+					Deploy: &pb.Pipeline_Step_Deploy{
+						Release: deployBody.Release,
+					},
+				}
 			case "exec":
 				var execBody struct {
 					Command string   `hcl:"command,optional"`
