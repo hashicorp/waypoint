@@ -108,7 +108,7 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 
 	if c.id == "" {
 		c.ui.Output(
-			"Runner ID must be supplied for uninstallation",
+			"The -id flag is required",
 			terminal.WithErrorStyle(),
 		)
 
