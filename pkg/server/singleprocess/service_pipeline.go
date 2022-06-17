@@ -111,10 +111,22 @@ func (s *Service) RunPipeline(
 		job := proto.Clone(req.JobTemplate).(*pb.Job)
 		job.Id = stepIds[name]
 		job.DependsOn = append(job.DependsOn, dependsOn...)
-		job.Operation = &pb.Job_PipelineStep{
-			PipelineStep: &pb.Job_PipelineStepOp{
-				Step: step,
-			},
+
+		// Queue the right job depending on the Step type. We will queue a Waypoint
+		// operation if the type is a reserved built in step.
+		switch o := step.Kind.(type) {
+		case *pb.Pipeline_Step_Build_:
+			job.Operation = &pb.Job_Build{
+				Build: &pb.Job_BuildOp{
+					DisablePush: o.Build.DisablePush,
+				},
+			}
+		default:
+			job.Operation = &pb.Job_PipelineStep{
+				PipelineStep: &pb.Job_PipelineStepOp{
+					Step: step,
+				},
+			}
 		}
 
 		stepJobs = append(stepJobs, &pb.QueueJobRequest{
