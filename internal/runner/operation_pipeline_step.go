@@ -29,12 +29,9 @@ func (r *Runner) executePipelineStepOp(
 	case *pb.Pipeline_Step_Exec_:
 		return r.executePipelineStepExec(ctx, log, job, project, kind.Exec)
 
-	case *pb.Pipeline_Step_Build_:
-		return r.executePipelineStepBuild(ctx, log, job, project, op.PipelineStep.Step.Image, kind.Build)
-
 	default:
 		return nil, status.Errorf(codes.FailedPrecondition,
-			"unsupported step type: %T", op.PipelineStep.Step.Kind)
+			"invalid step type: %T", op.PipelineStep.Step.Kind)
 	}
 }
 
@@ -121,45 +118,6 @@ func (r *Runner) queueAndHandleJob(
 			log.Warn("unknown stream event", "event", resp.Event)
 		}
 	}
-}
-
-// Take a given job param, and the Build Step options, and queue a Build
-// Operation job
-func (r *Runner) executePipelineStepBuild(
-	ctx context.Context,
-	log hclog.Logger,
-	job *pb.Job,
-	project *core.Project,
-	stepImage string,
-	build *pb.Pipeline_Step_Build,
-) (*pb.Job_Result, error) {
-	// Create a new job that launches our task to run. This is heavily based
-	// on the incoming job so we can inherit a lot of the properties.
-	newJob := &pb.Job{
-		Application:         job.Application,
-		Workspace:           job.Workspace,
-		OndemandRunner:      job.OndemandRunner,
-		Labels:              job.Labels,
-		DataSource:          job.DataSource,
-		DataSourceOverrides: job.DataSourceOverrides,
-		WaypointHcl:         job.WaypointHcl,
-		Variables:           job.Variables,
-
-		// Must target "any" runner so we get ODR to work.
-		TargetRunner: &pb.Ref_Runner{
-			Target: &pb.Ref_Runner_Any{
-				Any: &pb.Ref_RunnerAny{},
-			},
-		},
-
-		Operation: &pb.Job_Build{
-			Build: &pb.Job_BuildOp{
-				DisablePush: build.DisablePush,
-			},
-		},
-	}
-
-	return r.queueAndHandleJob(ctx, log, project, newJob)
 }
 
 func (r *Runner) executePipelineStepExec(

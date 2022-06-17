@@ -124,6 +124,13 @@ func TestServiceRunPipeline(t *testing.T) {
 			},
 		},
 	}
+	pipeline.Steps["D"] = &pb.Pipeline_Step{
+		Name:      "D",
+		DependsOn: []string{"C"},
+		Kind: &pb.Pipeline_Step_Build_{
+			Build: &pb.Pipeline_Step_Build{},
+		},
+	}
 
 	// Create, should get an ID back
 	pipeResp, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
@@ -152,13 +159,13 @@ func TestServiceRunPipeline(t *testing.T) {
 	require.Equal(pb.Job_QUEUED, job.State)
 
 	// We should have all the job IDs
-	require.Len(resp.AllJobIds, 3)
+	require.Len(resp.AllJobIds, 4)
 	var names []string
 	for _, id := range resp.AllJobIds {
 		require.Contains(resp.JobMap, id)
 		names = append(names, resp.JobMap[id].Step)
 	}
-	require.Equal([]string{"root", "B", "C"}, names)
+	require.Equal([]string{"root", "B", "C", "D"}, names)
 }
 
 func TestServiceListPipelines(t *testing.T) {
