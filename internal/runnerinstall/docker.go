@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -105,11 +106,53 @@ func (i *DockerRunnerInstaller) InstallFlags(set *flag.Set) {
 }
 
 func (d DockerRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
-	//TODO implement me
-	panic("implement me")
+	sg := opts.UI.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Initializing Docker client...")
+	defer func() { s.Abort() }()
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return err
+	}
+	cli.NegotiateAPIVersion(ctx)
+
+	s.Update("Finding runner container")
+	containerName := "waypoint-runner-" + opts.Id
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "name",
+			Value: containerName,
+		}),
+	})
+	if err != nil {
+		s.Update("Could not get container list")
+		return err
+	}
+
+	if len(containers) == 0 {
+		s.Update("Could not find runner.")
+		return fmt.Errorf("Runner not found.")
+	}
+
+	s.Update("Stopping runner...")
+	stopTimeout := time.Second * 30
+	err = cli.ContainerStop(ctx, containerName, &stopTimeout)
+	if err != nil {
+		return err
+	}
+
+	s.Update("Removing runner container")
+	err = cli.ContainerRemove(ctx, containerName, types.ContainerRemoveOptions{})
+	if err != nil {
+		return err
+	}
+
+	s.Update("Waypoint Runner uninstalled")
+	s.Done()
+	return nil
 }
 
 func (d DockerRunnerInstaller) UninstallFlags(set *flag.Set) {
-	//TODO implement me
-	panic("implement me")
 }
