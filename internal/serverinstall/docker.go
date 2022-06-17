@@ -3,6 +3,7 @@ package serverinstall
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"os"
 	"time"
 
@@ -623,83 +624,16 @@ func (i *DockerInstaller) Uninstall(
 // InstallRunner implements Installer by starting a single runner container.
 func (i *DockerInstaller) InstallRunner(
 	ctx context.Context,
-	opts *InstallRunnerOpts,
+	opts *runnerinstall.InstallOpts,
 ) error {
-	ui := opts.UI
-
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
-	s := sg.Add("Initializing Docker client...")
-	defer func() { s.Abort() }()
-
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	runnerInstaller := runnerinstall.DockerRunnerInstaller{Config: runnerinstall.DockerConfig{
+		RunnerImage: i.config.serverImage,
+		Network:     "waypoint",
+	}}
+	err := runnerInstaller.Install(ctx, opts)
 	if err != nil {
 		return err
 	}
-	cli.NegotiateAPIVersion(ctx)
-
-	s.Update("Checking for an existing runner...")
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
-		All: true, // include stopped containers
-		Filters: filters.NewArgs(filters.KeyValuePair{
-			Key:   "label",
-			Value: "waypoint-type=runner",
-		}),
-	})
-	if err != nil {
-		return err
-	}
-	if len(containers) > 0 {
-		s.Update("Detected existing Waypoint runner.")
-		s.Status(terminal.StatusWarn)
-		s.Done()
-		return nil
-	}
-
-	// The key thing in the container creation below is that the environment
-	// variables are set to the advertised address env vars which will
-	// allow our runner to connect.
-	cr, err := cli.ContainerCreate(ctx, &container.Config{
-		AttachStdout: true,
-		AttachStderr: true,
-		AttachStdin:  true,
-		OpenStdin:    true,
-		StdinOnce:    true,
-		User:         "root",
-		Image:        i.config.serverImage,
-		Env:          opts.AdvertiseClient.Env(),
-		Cmd:          []string{"runner", "agent", "-vv"},
-		Labels: map[string]string{
-			"waypoint-type": "runner",
-		},
-	}, &container.HostConfig{
-		Privileged: true,
-		CapAdd:     []string{"CAP_DAC_OVERRIDE"},
-		Binds:      []string{"/var/run/docker.sock:/var/run/docker.sock"},
-		// These security options are required for the runner so that
-		// Docker daemonless image building works properly.
-		SecurityOpt: []string{
-			"seccomp=unconfined",
-			"apparmor=unconfined",
-		},
-	}, &network.NetworkingConfig{
-		EndpointsConfig: map[string]*network.EndpointSettings{
-			"waypoint": {},
-		},
-	}, nil, "waypoint-runner")
-	if err != nil {
-		return err
-	}
-
-	err = cli.ContainerStart(ctx, cr.ID, types.ContainerStartOptions{})
-	if err != nil {
-		return err
-	}
-
-	s.Update("Waypoint runner installed and started!")
-	s.Done()
-
 	return nil
 }
 
