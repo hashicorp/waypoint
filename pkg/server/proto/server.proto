@@ -4639,11 +4639,16 @@ message Pipeline {
       // Docker execute.
       Exec exec = 3;
 
+      //
       // "reserved" built-in pipeline step operations. These map directly to
       // the lifecylce operations in Waypoint, i.e. Build, Deploy, Release, Up.
+      //
 
       // Built-in build operation
       Build build = 4;
+
+      // Built-in deploy operation
+      Deploy deploy = 6;
 
       // TODO: custom plugins, pipeline references
     }
@@ -4667,6 +4672,13 @@ message Pipeline {
       // TODO(briancain): ensure default to false because this will be inside
       // an ODR container
       bool disable_push = 2;
+    }
+
+    message Deploy {
+      // Whether or not to run a release immediately after the deploy. Defaults
+      // to false. Users would probably write a Release step to opt into a release
+      // but lets support the option here just like the CLI does.
+      bool release = 1;
     }
   }
 }

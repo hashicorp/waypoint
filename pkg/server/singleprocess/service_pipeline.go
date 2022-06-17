@@ -5,6 +5,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -80,6 +81,7 @@ func (s *Service) RunPipeline(
 	ctx context.Context,
 	req *pb.RunPipelineRequest,
 ) (*pb.RunPipelineResponse, error) {
+	log := hclog.FromContext(ctx)
 	if err := serverptypes.ValidateRunPipelineRequest(req); err != nil {
 		return nil, err
 	}
@@ -120,6 +122,19 @@ func (s *Service) RunPipeline(
 				Build: &pb.Job_BuildOp{
 					DisablePush: o.Build.DisablePush,
 				},
+			}
+		case *pb.Pipeline_Step_Deploy_:
+			job.Operation = &pb.Job_Deploy{
+				Deploy: &pb.Job_DeployOp{},
+			}
+
+			if o.Deploy.Release {
+				// TODO(briancain): do it
+				// copy `job` and update Operation to be release I think. then append
+				// job to stepJobs
+
+				// Queue a release job too
+				log.Warn("Currently not queueing a release job yet....sry!!!")
 			}
 		default:
 			job.Operation = &pb.Job_PipelineStep{
