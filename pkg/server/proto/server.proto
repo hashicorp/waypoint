@@ -1269,6 +1269,12 @@ message CancelTaskRequest {
   Ref.Task ref = 1;
 }
 
+// ErrorDetail is intended for use in `status`.
+message ErrorDetail {
+  string key  = 1;
+  string value = 2;
+}
+
 /********************************************************************
 * User
 ********************************************************************/
