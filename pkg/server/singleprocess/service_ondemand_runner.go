@@ -64,3 +64,27 @@ func (s *Service) ListOnDemandRunnerConfigs(
 
 	return &pb.ListOnDemandRunnerConfigsResponse{Configs: result}, nil
 }
+
+func (s *Service) DeleteOnDemandRunnerConfig(
+	ctx context.Context,
+	req *pb.DeleteOnDemandRunnerConfigRequest,
+) (*pb.DeleteOnDemandRunnerConfigResponse, error) {
+	if err := serverptypes.ValidateDeleteOnDemandRunnerConfigRequest(req); err != nil {
+		return nil, err
+	}
+
+	// Check that runner config exists
+	resp, err := s.GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{Config: req.Config})
+	if err != nil {
+		return nil, err
+	}
+
+	// Delete the runner config
+	err = s.state(ctx).OnDemandRunnerConfigDelete(req.Config)
+	if err != nil {
+		return nil, err
+	}
+	result := resp.Config
+
+	return &pb.DeleteOnDemandRunnerConfigResponse{Config: result}, nil
+}

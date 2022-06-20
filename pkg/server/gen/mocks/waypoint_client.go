@@ -348,6 +348,36 @@ func (_m *WaypointClient) DeleteHostname(ctx context.Context, in *gen.DeleteHost
 	return r0, r1
 }
 
+// DeleteOnDemandRunnerConfig provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) DeleteOnDemandRunnerConfig(ctx context.Context, in *gen.DeleteOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*gen.DeleteOnDemandRunnerConfigResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.DeleteOnDemandRunnerConfigResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteOnDemandRunnerConfigRequest, ...grpc.CallOption) *gen.DeleteOnDemandRunnerConfigResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.DeleteOnDemandRunnerConfigResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteOnDemandRunnerConfigRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteTrigger provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) DeleteTrigger(ctx context.Context, in *gen.DeleteTriggerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	_va := make([]interface{}, len(opts))

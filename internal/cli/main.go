@@ -536,6 +536,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"runner profile delete": func() (cli.Command, error) {
+			return &RunnerProfileDeleteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"context": func() (cli.Command, error) {
 			return &ContextHelpCommand{

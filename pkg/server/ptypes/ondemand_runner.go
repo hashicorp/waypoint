@@ -76,6 +76,13 @@ func ValidateGetOnDemandRunnerConfigRequest(v *pb.GetOnDemandRunnerConfigRequest
 	))
 }
 
+// ValidateDeleteOnDemandRunnerConfigRequest
+func ValidateDeleteOnDemandRunnerConfigRequest(v *pb.DeleteOnDemandRunnerConfigRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Config, validation.Required),
+	))
+}
+
 func isPluginHcl(p *pb.OnDemandRunnerConfig) validation.Rule {
 	return validation.By(func(_ interface{}) error {
 		if len(p.PluginConfig) == 0 {
