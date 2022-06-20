@@ -8930,7 +8930,6 @@ func (x *GetOnDemandRunnerConfigResponse) GetConfig() *OnDemandRunnerConfig {
 	return nil
 }
 
-// Do we need name or is only `id` required?
 type DeleteOnDemandRunnerConfigRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

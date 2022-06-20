@@ -26,7 +26,7 @@ func (c *RunnerProfileDeleteCommand) Run(args []string) int {
 	}
 
 	if len(c.args) == 0 {
-		c.ui.Output("Runner profile name required.", terminal.WithErrorStyle())
+		c.ui.Output("Runner profile id required.", terminal.WithErrorStyle())
 		return 1
 	}
 	id := c.args[0]

@@ -3077,7 +3077,6 @@ message GetOnDemandRunnerConfigResponse {
   OnDemandRunnerConfig config = 1;
 }
 
-// Do we need name or is only `id` required?
 message DeleteOnDemandRunnerConfigRequest {
   Ref.OnDemandRunnerConfig config = 1;
 }
