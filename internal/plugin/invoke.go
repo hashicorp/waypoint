@@ -152,6 +152,7 @@ func Open(
 		return nil, nil, diags
 	}
 
+	// Only configure plugin config if it exists
 	if file.Body != nil {
 		diag := component.Configure(pi.Component, file.Body, hclCtx.NewChild())
 		if diag.HasErrors() {

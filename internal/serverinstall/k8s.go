@@ -1140,10 +1140,10 @@ func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	var cpuConfig k8s.ResourceConfig
 	var memConfig k8s.ResourceConfig
 	if v := i.config.cpuRequest; v != "" {
-		cpuConfig.Requested = v
+		cpuConfig.Request = v
 	}
 	if v := i.config.memRequest; v != "" {
-		memConfig.Requested = v
+		memConfig.Request = v
 	}
 	if v := i.config.cpuLimit; v != "" {
 		cpuConfig.Limit = v

@@ -421,11 +421,11 @@ func configureContainer(
 	resourceRequests := make(map[corev1.ResourceName]k8sresource.Quantity)
 
 	if c.CPU != nil {
-		if c.CPU.Requested != "" {
-			q, err := k8sresource.ParseQuantity(c.CPU.Requested)
+		if c.CPU.Request != "" {
+			q, err := k8sresource.ParseQuantity(c.CPU.Request)
 			if err != nil {
 				return nil,
-					status.Errorf(codes.InvalidArgument, "failed to parse cpu request %s to k8s quantity: %s", c.CPU.Requested, err)
+					status.Errorf(codes.InvalidArgument, "failed to parse cpu request %s to k8s quantity: %s", c.CPU.Request, err)
 			}
 			resourceRequests[corev1.ResourceCPU] = q
 		}
@@ -441,11 +441,11 @@ func configureContainer(
 	}
 
 	if c.Memory != nil {
-		if c.Memory.Requested != "" {
-			q, err := k8sresource.ParseQuantity(c.Memory.Requested)
+		if c.Memory.Request != "" {
+			q, err := k8sresource.ParseQuantity(c.Memory.Request)
 			if err != nil {
 				return nil,
-					status.Errorf(codes.InvalidArgument, "failed to parse memory requested %s to k8s quantity: %s", c.Memory.Requested, err)
+					status.Errorf(codes.InvalidArgument, "failed to parse memory requested %s to k8s quantity: %s", c.Memory.Request, err)
 			}
 			resourceRequests[corev1.ResourceMemory] = q
 		}
@@ -1475,8 +1475,8 @@ type Config struct {
 // ResourceConfig describes the request and limit of a resource. Used for
 // cpu and memory resource configuration.
 type ResourceConfig struct {
-	Requested string `hcl:"request,optional"`
-	Limit     string `hcl:"limit,optional"`
+	Request string `hcl:"request,optional" json:"request"`
+	Limit   string `hcl:"limit,optional" json:"limit"`
 }
 
 // AutoscaleConfig describes the possible configuration for creating a
