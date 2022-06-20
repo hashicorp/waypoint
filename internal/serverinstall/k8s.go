@@ -600,10 +600,11 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	s.Status(terminal.StatusOK)
 	s.Done()
 
+	// TODO: Clean-up waypoint server PVC
 	listOptions := metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=%s,component=server", "waypoint"),
 	}
-	err = i.CleanPVC(ctx, ui, opts.Log, chartNS, listOptions)
+	err = i.CleanPVC(ctx, ui, opts.Log, listOptions)
 
 	// TODO: Delete runner (or all runners?)
 
