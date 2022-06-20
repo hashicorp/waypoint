@@ -254,6 +254,8 @@ type WaypointClient interface {
 	UpsertOnDemandRunnerConfig(ctx context.Context, in *UpsertOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*UpsertOnDemandRunnerConfigResponse, error)
 	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
 	GetOnDemandRunnerConfig(ctx context.Context, in *GetOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*GetOnDemandRunnerConfigResponse, error)
+	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
+	DeleteOnDemandRunnerConfig(ctx context.Context, in *DeleteOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*DeleteOnDemandRunnerConfigResponse, error)
 	// ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
 	ListOnDemandRunnerConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListOnDemandRunnerConfigsResponse, error)
 	// UpsertBuild updates or inserts a build. A build is responsible for
@@ -1216,6 +1218,15 @@ func (c *waypointClient) GetOnDemandRunnerConfig(ctx context.Context, in *GetOnD
 	return out, nil
 }
 
+func (c *waypointClient) DeleteOnDemandRunnerConfig(ctx context.Context, in *DeleteOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*DeleteOnDemandRunnerConfigResponse, error) {
+	out := new(DeleteOnDemandRunnerConfigResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteOnDemandRunnerConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) ListOnDemandRunnerConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListOnDemandRunnerConfigsResponse, error) {
 	out := new(ListOnDemandRunnerConfigsResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListOnDemandRunnerConfigs", in, out, opts...)
@@ -1604,6 +1615,8 @@ type WaypointServer interface {
 	UpsertOnDemandRunnerConfig(context.Context, *UpsertOnDemandRunnerConfigRequest) (*UpsertOnDemandRunnerConfigResponse, error)
 	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
 	GetOnDemandRunnerConfig(context.Context, *GetOnDemandRunnerConfigRequest) (*GetOnDemandRunnerConfigResponse, error)
+	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
+	DeleteOnDemandRunnerConfig(context.Context, *DeleteOnDemandRunnerConfigRequest) (*DeleteOnDemandRunnerConfigResponse, error)
 	// ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
 	ListOnDemandRunnerConfigs(context.Context, *emptypb.Empty) (*ListOnDemandRunnerConfigsResponse, error)
 	// UpsertBuild updates or inserts a build. A build is responsible for
@@ -1876,6 +1889,9 @@ func (UnimplementedWaypointServer) UpsertOnDemandRunnerConfig(context.Context, *
 }
 func (UnimplementedWaypointServer) GetOnDemandRunnerConfig(context.Context, *GetOnDemandRunnerConfigRequest) (*GetOnDemandRunnerConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOnDemandRunnerConfig not implemented")
+}
+func (UnimplementedWaypointServer) DeleteOnDemandRunnerConfig(context.Context, *DeleteOnDemandRunnerConfigRequest) (*DeleteOnDemandRunnerConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteOnDemandRunnerConfig not implemented")
 }
 func (UnimplementedWaypointServer) ListOnDemandRunnerConfigs(context.Context, *emptypb.Empty) (*ListOnDemandRunnerConfigsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListOnDemandRunnerConfigs not implemented")
@@ -3369,6 +3385,24 @@ func _Waypoint_GetOnDemandRunnerConfig_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_DeleteOnDemandRunnerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteOnDemandRunnerConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DeleteOnDemandRunnerConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteOnDemandRunnerConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DeleteOnDemandRunnerConfig(ctx, req.(*DeleteOnDemandRunnerConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_ListOnDemandRunnerConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -3945,6 +3979,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetOnDemandRunnerConfig",
 			Handler:    _Waypoint_GetOnDemandRunnerConfig_Handler,
+		},
+		{
+			MethodName: "DeleteOnDemandRunnerConfig",
+			Handler:    _Waypoint_DeleteOnDemandRunnerConfig_Handler,
 		},
 		{
 			MethodName: "ListOnDemandRunnerConfigs",

@@ -6521,6 +6521,14 @@
         }
       }
     },
+    "hashicorp.waypoint.DeleteOnDemandRunnerConfigResponse": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/hashicorp.waypoint.OnDemandRunnerConfig"
+        }
+      }
+    },
     "hashicorp.waypoint.Deployment": {
       "type": "object",
       "properties": {

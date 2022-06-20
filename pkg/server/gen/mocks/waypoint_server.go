@@ -260,6 +260,29 @@ func (_m *WaypointServer) DeleteHostname(_a0 context.Context, _a1 *gen.DeleteHos
 	return r0, r1
 }
 
+// DeleteOnDemandRunnerConfig provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) DeleteOnDemandRunnerConfig(_a0 context.Context, _a1 *gen.DeleteOnDemandRunnerConfigRequest) (*gen.DeleteOnDemandRunnerConfigResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.DeleteOnDemandRunnerConfigResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteOnDemandRunnerConfigRequest) *gen.DeleteOnDemandRunnerConfigResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.DeleteOnDemandRunnerConfigResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteOnDemandRunnerConfigRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteTrigger provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) DeleteTrigger(_a0 context.Context, _a1 *gen.DeleteTriggerRequest) (*emptypb.Empty, error) {
 	ret := _m.Called(_a0, _a1)
