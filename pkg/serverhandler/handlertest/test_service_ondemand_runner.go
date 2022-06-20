@@ -25,7 +25,7 @@ func TestServiceOnDemandRunnerConfig(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Simplify writing tests
 	type Req = pb.UpsertOnDemandRunnerConfigRequest
@@ -104,7 +104,7 @@ func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T, facto
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Best way to mock for now is to make a request
 	resp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
@@ -151,7 +151,7 @@ func TestServiceOnDemandRunnerConfig_ListOnDemandRunnerConfigs(t *testing.T, fac
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	dep := serverptypes.TestOnDemandRunnerConfig(t, nil)
 

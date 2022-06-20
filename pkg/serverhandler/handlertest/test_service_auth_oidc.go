@@ -23,7 +23,7 @@ func TestOIDCAuth(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Create our OIDC test provider
 	oidcTP := oidc.StartTestProvider(t)
@@ -108,7 +108,7 @@ func TestOIDCAuth_accessSelector(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Create our OIDC test provider
 	oidcTP := oidc.StartTestProvider(t)

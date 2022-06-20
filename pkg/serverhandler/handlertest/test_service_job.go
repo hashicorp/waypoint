@@ -27,6 +27,7 @@ func init() {
 		TestServiceGetJobStream_completedBufferedData,
 		TestServiceGetJobStream_expired,
 		TestServiceQueueJob_odr,
+		TestServiceQueueJob_odr_default,
 		TestServiceQueueJob_odr_target_id,
 		TestServiceQueueJob_odr_target_labels,
 	}
@@ -36,7 +37,7 @@ func TestServiceJob(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, impl := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -69,13 +70,17 @@ func TestServiceJob(t *testing.T, factory Factory) {
 		require.Error(err)
 		require.Nil(job)
 	})
+
+	_, err := impl.State(context.Background()).JobList(&pb.ListJobsRequest{})
+	require.NoError(t, err)
+
 }
 
 func TestServiceJob_List(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -325,7 +330,7 @@ func TestServiceQueueJob(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -375,7 +380,7 @@ func TestServiceValidateJob(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Simplify writing tests
 	type Req = pb.ValidateJobRequest
@@ -414,7 +419,7 @@ func TestServiceGetJobStream_complete(t *testing.T, factory Factory) {
 	require := require.New(t)
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -629,7 +634,7 @@ func TestServiceGetJobStream_bufferedData(t *testing.T, factory Factory) {
 	require := require.New(t)
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -793,7 +798,7 @@ func TestServiceGetJobStream_completedBufferedData(t *testing.T, factory Factory
 	require := require.New(t)
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -905,7 +910,7 @@ func TestServiceGetJobStream_expired(t *testing.T, factory Factory) {
 	require := require.New(t)
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
@@ -975,7 +980,7 @@ func TestServiceQueueJob_odr(t *testing.T, factory Factory) {
 	ctx = hclog.WithContext(ctx, log)
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
@@ -1320,7 +1325,7 @@ func TestServiceQueueJob_odr_default(t *testing.T, factory Factory) {
 	ctx = hclog.WithContext(ctx, log)
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
@@ -1478,7 +1483,7 @@ func TestServiceQueueJob_odr_target_id(t *testing.T, factory Factory) {
 	ctx = hclog.WithContext(ctx, log)
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
@@ -1641,7 +1646,7 @@ func TestServiceQueueJob_odr_target_labels(t *testing.T, factory Factory) {
 	ctx = hclog.WithContext(ctx, log)
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{

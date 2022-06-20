@@ -25,7 +25,7 @@ func TestServiceRelease(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Simplify writing tests
 	type Req = pb.UpsertReleaseRequest
@@ -75,7 +75,7 @@ func TestServiceRelease_GetRelease(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Best way to mock for now is to make a request
 	resp, err := client.UpsertRelease(ctx, &pb.UpsertReleaseRequest{
@@ -122,7 +122,7 @@ func TestServiceRelease_ListReleases(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	buildresp, err := client.UpsertBuild(ctx, &pb.UpsertBuildRequest{
 		Build: serverptypes.TestValidBuild(t, nil),

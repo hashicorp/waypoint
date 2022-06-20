@@ -22,7 +22,7 @@ func TestServiceUI_Deployment_ListDeployments(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Create a project with an application
 	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
