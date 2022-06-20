@@ -1,9 +1,15 @@
 package k8s
 
 import (
+	"context"
 	"fmt"
+	"time"
 
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -64,4 +70,64 @@ func (i *K8sInstaller) NewClient() (*kubernetes.Clientset, error) {
 	}
 
 	return clientset, nil
+}
+
+// Takes list options and cleans up any PVCs found in the query of resources from the kubernetes api.
+// Useful for cleaning up PVCs left behind by statefulsets deployed via helm.
+func (i *K8sInstaller) CleanPVC(ctx context.Context, ui terminal.UI, log hclog.Logger, listOptions metav1.ListOptions) error {
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Deleting PVCs...")
+	defer func() { s.Abort() }()
+
+	clientset, err := i.NewClient()
+	if err != nil {
+		return err
+	}
+	pvcClient := clientset.CoreV1().PersistentVolumeClaims(i.config.namespace)
+	if list, err := pvcClient.List(ctx, listOptions); err != nil {
+		return err
+	} else if len(list.Items) > 0 {
+		// Add watcher for waiting for persistent volume clean up
+		w, err := pvcClient.Watch(ctx, listOptions)
+		if err != nil {
+			return err
+		}
+
+		// Delete the PVCs
+		if err = pvcClient.DeleteCollection(
+			ctx,
+			metav1.DeleteOptions{},
+			listOptions,
+		); err != nil {
+			s.Update("Unable to delete PVCs", terminal.StatusError)
+			s.Abort()
+			return err
+		}
+
+		// Wait until the persistent volumes are cleaned up
+		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+			select {
+			case wCh := <-w.ResultChan():
+				if wCh.Type == "DELETED" {
+					w.Stop()
+					return true, nil
+				}
+				return false, nil
+			default:
+				return false, nil
+			}
+		})
+		if err != nil {
+			s.Update("Unable to delete PVCs", terminal.StatusError)
+			s.Abort()
+			return err
+		}
+	}
+	s.Update("Persistent volume claims cleaned up")
+	s.Status(terminal.StatusOK)
+	s.Done()
+	return nil
 }
