@@ -1319,16 +1319,12 @@ func TestServiceQueueJob_odr_basic(t *testing.T, factory Factory) {
 	require.Equal(pb.Task_STOPPED, task.JobState)
 }
 
-func TestServiceQueueJob_odr_customTask(t *testing.T) {
+func TestServiceQueueJob_odr_customTask(t *testing.T, factory Factory) {
 	require := require.New(t)
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(
-		WithDB(testDB(t)),
-	)
-	require.NoError(err)
-	client := server.TestServer(t, impl, server.TestWithContext(ctx))
+	client, impl := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
@@ -1383,13 +1379,13 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 	require.NotEmpty(queueResp)
 
 	// Job should exist and be queued
-	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
+	job, err := impl.State(context.Background()).JobById(queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 	primaryJobId := job.Id
 
 	// task should be PENDING
-	task, err := testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	task, err := impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: queueResp.JobId,
 		},
@@ -1460,7 +1456,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 	// the JobAck. We do this a few times in this test to account for CI machine
 	// slowness.
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	task, err = impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1477,7 +1473,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 
 	// task should be STARTED
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	task, err = impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1513,7 +1509,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 
 		// task should be RUNNING
 		time.Sleep(200 * time.Millisecond)
-		task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+		task, err = impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 			Ref: &pb.Ref_Task_JobId{
 				JobId: queueResp.JobId,
 			},
@@ -1531,7 +1527,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 
 	// task should be COMPLETED
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	task, err = impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1623,7 +1619,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 
 	// task should be STOPPING
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	task, err = impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1640,7 +1636,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 
 	// task should be STOPPED
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	task, err = impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1649,16 +1645,12 @@ func TestServiceQueueJob_odr_customTask(t *testing.T) {
 	require.Equal(pb.Task_STOPPED, task.JobState)
 }
 
-func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T) {
+func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T, factory Factory) {
 	require := require.New(t)
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(
-		WithDB(testDB(t)),
-	)
-	require.NoError(err)
-	client := server.TestServer(t, impl, server.TestWithContext(ctx))
+	client, impl := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
@@ -1715,12 +1707,12 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T) {
 	require.NotEmpty(queueResp)
 
 	// Job should exist and be queued
-	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
+	job, err := impl.State(context.Background()).JobById(queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 
 	// task should be PENDING
-	task, err := testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	task, err := impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: queueResp.JobId,
 		},
@@ -1783,7 +1775,7 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T) {
 	// the JobAck. We do this a few times in this test to account for CI machine
 	// slowness.
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	task, err = impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1800,7 +1792,7 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T) {
 
 	// task should be STARTED
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	task, err = impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1835,7 +1827,7 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T) {
 
 		// task should be RUNNING
 		time.Sleep(200 * time.Millisecond)
-		task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+		task, err = impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 			Ref: &pb.Ref_Task_JobId{
 				JobId: queueResp.JobId,
 			},
@@ -1853,7 +1845,7 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T) {
 
 	// task should be COMPLETED
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	task, err = impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1897,7 +1889,7 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T) {
 
 	// task should be STOPPING
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	task, err = impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1914,7 +1906,7 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T) {
 
 	// task should be STOPPED
 	time.Sleep(200 * time.Millisecond)
-	task, err = testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	task, err = impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -2412,14 +2404,12 @@ func TestServiceQueueJob_odr_target_labels(t *testing.T, factory Factory) {
 
 // Test that a job with dependencies has an ODR started that depends on
 // the same things.
-func TestServiceQueueJob_odr_depends(t *testing.T) {
+func TestServiceQueueJob_odr_depends(t *testing.T, factory Factory) {
 	require := require.New(t)
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(err)
-	client := server.TestServer(t, impl, server.TestWithContext(ctx))
+	client, impl := factory(t)
 
 	// Initialize our app
 	TestApp(t, client, serverptypes.TestJobNew(t, &pb.Job{
@@ -2489,7 +2479,7 @@ func TestServiceQueueJob_odr_depends(t *testing.T) {
 	require.NotEmpty(queueResp)
 
 	// Get the task to get the start job
-	task, err := testServiceImpl(impl).state(ctx).TaskGet(&pb.Ref_Task{
+	task, err := impl.State(context.Background()).TaskGet(&pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: queueResp.JobId,
 		},
@@ -2498,7 +2488,7 @@ func TestServiceQueueJob_odr_depends(t *testing.T) {
 	require.Equal(pb.Task_PENDING, task.JobState)
 
 	// Get the start job
-	job, err := testServiceImpl(impl).state(ctx).JobById(task.StartJob.Id, nil)
+	job, err := impl.State(context.Background()).JobById(task.StartJob.Id, nil)
 	require.NoError(err)
 	require.IsType(&pb.Job_StartTask{}, job.Operation)
 	require.Equal([]string{queueA.JobId, queueB.JobId}, job.DependsOn)
