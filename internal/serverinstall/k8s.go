@@ -211,7 +211,7 @@ func (i *K8sInstaller) Install(
 		}
 
 		s.Update("Getting waypoint-ui service...")
-		svc, err := clientset.CoreV1().Services(i.config.namespace).Get(
+		svc, err := clientset.CoreV1().Services(chartNS).Get(
 			ctx, "waypoint-ui", metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -446,7 +446,7 @@ func (i *K8sInstaller) Upgrade(
 		}
 
 		s.Update("Getting waypoint-ui service...")
-		svc, err := clientset.CoreV1().Services(i.config.namespace).Get(
+		svc, err := clientset.CoreV1().Services(chartNS).Get(
 			ctx, "waypoint-ui", metav1.GetOptions{})
 		if err != nil {
 			return false, err
