@@ -1,6 +1,7 @@
 package singleprocess
 
 import (
+	"context"
 	"math/rand"
 	"testing"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverhandler/handlertest"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
 func init() {
@@ -15,12 +17,22 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+type OSSTestServerImpl struct {
+	service *Service
+}
+
+func (o *OSSTestServerImpl) State(ctx context.Context) serverstate.Interface {
+	return o.service.state(ctx)
+}
+
 // TestHandlers run the service handler tests that depend exclusively on the protobuf
 // interfaces.
 func TestHandlers(t *testing.T) {
-	handlertest.Test(t, func(t *testing.T) (pb.WaypointServer, pb.WaypointClient) {
+	handlertest.Test(t, func(t *testing.T) (pb.WaypointClient, handlertest.TestServerImpl) {
 		impl := TestImpl(t)
+
 		client := server.TestServer(t, impl)
-		return impl, client
+
+		return client, &OSSTestServerImpl{service: impl.(*Service)}
 	}, nil)
 }
