@@ -312,11 +312,11 @@ func (p *TaskLauncher) StartTask(
 	resourceRequests := make(map[corev1.ResourceName]k8sresource.Quantity)
 
 	if p.config.CPU != nil {
-		if p.config.CPU.Requested != "" {
-			q, err := k8sresource.ParseQuantity(p.config.CPU.Requested)
+		if p.config.CPU.Request != "" {
+			q, err := k8sresource.ParseQuantity(p.config.CPU.Request)
 			if err != nil {
 				return nil,
-					status.Errorf(codes.InvalidArgument, "failed to parse cpu request %q to k8s quantity: %s", p.config.CPU.Requested, err)
+					status.Errorf(codes.InvalidArgument, "failed to parse cpu request %q to k8s quantity: %s", p.config.CPU.Request, err)
 			}
 			resourceRequests[corev1.ResourceCPU] = q
 		}
@@ -332,11 +332,11 @@ func (p *TaskLauncher) StartTask(
 	}
 
 	if p.config.Memory != nil {
-		if p.config.Memory.Requested != "" {
-			q, err := k8sresource.ParseQuantity(p.config.Memory.Requested)
+		if p.config.Memory.Request != "" {
+			q, err := k8sresource.ParseQuantity(p.config.Memory.Request)
 			if err != nil {
 				return nil,
-					status.Errorf(codes.InvalidArgument, "failed to parse memory requested %q to k8s quantity: %s", p.config.Memory.Requested, err)
+					status.Errorf(codes.InvalidArgument, "failed to parse memory requested %q to k8s quantity: %s", p.config.Memory.Request, err)
 			}
 			resourceRequests[corev1.ResourceMemory] = q
 		}
