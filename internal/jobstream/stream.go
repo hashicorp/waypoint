@@ -148,6 +148,7 @@ func (s *stream) Run(ctx context.Context) (*pb.Job_Result, error) {
 
 				ui.Output("Git Commit: %s", git.Git.Commit, terminal.WithInfoStyle())
 				ui.Output(" Timestamp: %s", git.Git.Timestamp.AsTime(), terminal.WithInfoStyle())
+				ui.Output("   Message: %s", git.Git.CommitMessage, terminal.WithInfoStyle())
 			}
 
 		case *pb.GetJobStreamResponse_Terminal_:
