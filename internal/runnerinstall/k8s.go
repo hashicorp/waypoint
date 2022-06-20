@@ -212,8 +212,9 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:   "k8s-namespace",
-		Target: &i.Config.Namespace,
+		Name:    "k8s-namespace",
+		Target:  &i.Config.Namespace,
+		Default: "default",
 		Usage: "The namespace in the Kubernetes cluster into which the Waypoint " +
 			"runner will be installed.",
 	})
@@ -337,8 +338,9 @@ func (i *K8sRunnerInstaller) UninstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:   "k8s-namespace",
-		Target: &i.Config.Namespace,
+		Name:    "k8s-namespace",
+		Target:  &i.Config.Namespace,
+		Default: "default",
 		Usage: "The namespace in the Kubernetes cluster into which the Waypoint " +
 			"runner will be installed.",
 	})
