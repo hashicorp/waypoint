@@ -3,9 +3,10 @@ package serverinstall
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"os"
 	"time"
+
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
@@ -649,66 +650,16 @@ func (i *DockerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 // UninstallRunner implements Installer.
 func (i *DockerInstaller) UninstallRunner(
 	ctx context.Context,
-	opts *InstallOpts,
+	opts *runnerinstall.InstallOpts,
 ) error {
-	sg := opts.UI.StepGroup()
-	defer sg.Wait()
+	runnerInstaller := runnerinstall.DockerRunnerInstaller{
+		Config: runnerinstall.DockerConfig{},
+	}
 
-	s := sg.Add("Initializing Docker client...")
-	defer func() { s.Abort() }()
-
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	err := runnerInstaller.Uninstall(ctx, opts)
 	if err != nil {
 		return err
 	}
-	defer cli.Close()
-	cli.NegotiateAPIVersion(ctx)
-
-	// Find and delete any runners. There could be zero, 1, or more.
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
-		All: true, // include stopped containers
-		Filters: filters.NewArgs(filters.KeyValuePair{
-			Key:   "label",
-			Value: containerKey + "=" + containerValueRunner,
-		}),
-	})
-	if err != nil {
-		return err
-	}
-
-	// If there are no containers found, we do nothing.
-	if len(containers) == 0 {
-		s.Update("No runners found to uninstall.")
-		s.Done()
-		return nil
-	}
-
-	// It is not an error for there to be zero or more than one containers
-	// since runners are optional.
-	s.Update("Uninstalling runners...")
-
-	// There should only be one but let's just delete any that exist.
-	for _, c := range containers {
-		containerId := c.ID
-
-		s.Update("Stopping container: %s", containerId)
-
-		// Stop the container gracefully, respecting the Engine's default timeout.
-		if err := cli.ContainerStop(ctx, containerId, nil); err != nil {
-			return err
-		}
-
-		removeOptions := types.ContainerRemoveOptions{
-			RemoveVolumes: true,
-			Force:         true,
-		}
-		if err := cli.ContainerRemove(ctx, containerId, removeOptions); err != nil {
-			return err
-		}
-	}
-	s.Update("%d runner(s) uninstalled", len(containers))
-	s.Done()
-
 	return nil
 }
 

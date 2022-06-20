@@ -869,54 +869,17 @@ var (
 
 func (i *ECSInstaller) UninstallRunner(
 	ctx context.Context,
-	opts *InstallOpts,
+	opts *runnerinstall.InstallOpts,
 ) error {
-	ui := opts.UI
-	log := opts.Log
+	runnerInstaller := runnerinstall.ECSRunnerInstaller{Config: runnerinstall.EcsConfig{
+		Region:  i.config.Region,
+		Cluster: i.config.Cluster,
+	}}
 
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
-	s := sg.Add("Uninstalling Runner resources...")
-	defer func() { s.Abort() }()
-
-	sess, err := utils.GetSession(&utils.SessionConfig{
-		Region: i.config.Region,
-		Logger: log,
-	})
+	err := runnerInstaller.Uninstall(ctx, opts)
 	if err != nil {
 		return err
 	}
-	rgSvc := resourcegroups.New(sess)
-
-	query := fmt.Sprintf(runnerResourceQuery, defaultRunnerTagName, defaultRunnerTagValue)
-	results, err := rgSvc.SearchResources(&resourcegroups.SearchResourcesInput{
-		ResourceQuery: &resourcegroups.ResourceQuery{
-			Type:  aws.String(resourcegroups.QueryTypeTagFilters10),
-			Query: aws.String(query),
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	resources := results.ResourceIdentifiers
-	var clusterArn string
-	for _, r := range resources {
-		if *r.ResourceType == "AWS::ECS::Cluster" {
-			clusterArn = *r.ResourceArn
-		}
-	}
-	s.Update("Deleting ECS resources...")
-	if err := installutil.DeleteEcsCommonResources(ctx, sess, clusterArn, resources); err != nil {
-		return err
-	}
-	s.Update("Deleting Cloud Watch Log Group resources...")
-	if err := installutil.DeleteCWLResources(ctx, sess, defaultRunnerLogGroup); err != nil {
-		return err
-	}
-	s.Update("Runner resources deleted")
-	s.Done()
 	return nil
 }
 

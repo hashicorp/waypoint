@@ -4,12 +4,13 @@ import (
 	"context"
 	json "encoding/json"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/installutil/nomad"
-	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/waypoint/internal/installutil/nomad"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -653,88 +654,20 @@ func (i *NomadInstaller) InstallRunner(
 // UninstallRunner implements Installer.
 func (i *NomadInstaller) UninstallRunner(
 	ctx context.Context,
-	opts *InstallOpts,
+	opts *runnerinstall.InstallOpts,
 ) error {
-	ui := opts.UI
 
-	sg := ui.StepGroup()
-	defer sg.Wait()
+	runnerInstaller := runnerinstall.NomadRunnerInstaller{
+		Config: runnerinstall.NomadConfig{
+			Namespace: i.config.namespace,
+			Region:    i.config.region,
+		},
+	}
 
-	s := sg.Add("Initializing Nomad client...")
-	defer func() { s.Abort() }()
-
-	// Build api client from environment
-	client, err := api.NewClient(api.DefaultConfig())
+	err := runnerInstaller.Uninstall(ctx, opts)
 	if err != nil {
 		return err
 	}
-
-	s.Update("Checking for existing Waypoint runner...")
-	jobs, _, err := client.Jobs().PrefixList(runnerJobName)
-	if err != nil {
-		return err
-	}
-	var detected bool
-	for _, j := range jobs {
-		if j.Name == runnerJobName {
-			detected = true
-			break
-		}
-	}
-	if !detected {
-		s.Update("No Waypoint runner detected.")
-		s.Done()
-		return nil
-	}
-
-	s.Update("Removing Waypoint runner...")
-	_, _, err = client.Jobs().Deregister(runnerJobName, true, &api.WriteOptions{})
-	if err != nil {
-		ui.Output(
-			"Error deregistering Waypoint runner job: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
-	}
-
-	allocs, _, err := client.Jobs().Allocations(serverName, true, nil)
-	if err != nil {
-		return err
-	}
-	for _, alloc := range allocs {
-		if alloc.DesiredStatus != "stop" {
-			a, _, err := client.Allocations().Info(alloc.ID, &api.QueryOptions{})
-			if err != nil {
-				return err
-			}
-			_, err = client.Allocations().Stop(a, &api.QueryOptions{})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	s.Update("Waypoint runner job and allocations purged")
-	s.Done()
-
-	// Delete CSI volume for runner (if it exists)
-	vols, _, err := client.CSIVolumes().List(&api.QueryOptions{Prefix: "waypoint"})
-	if err != nil {
-		return err
-	}
-	for _, vol := range vols {
-		if vol.ID == runnerJobName {
-			s.Update("Destroying persistent CSI volume")
-			err = client.CSIVolumes().Deregister(vol.ID, false, &api.WriteOptions{})
-			if err != nil {
-				return err
-			}
-			s.Update("Successfully destroyed persistent volumes")
-			break
-		}
-	}
-	s.Done()
-
 	return nil
 }
 

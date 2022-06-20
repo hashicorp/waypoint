@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/clisnapshot"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"github.com/hashicorp/waypoint/internal/serverinstall"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverclient"
@@ -233,6 +234,10 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		UI:             c.ui,
 		ServerRunFlags: c.args,
 	}
+	runnerOpts := &runnerinstall.InstallOpts{
+		Log: log,
+		UI:  c.ui,
+	}
 
 	// Upgrade in place
 	result, err := p.Upgrade(ctx, installOpts, originalCfg.Server)
@@ -325,7 +330,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	// Upgrade the runner
 	if code := c.upgradeRunner(
-		ctx, client, p, installOpts, advertiseAddr,
+		ctx, client, p, installOpts, runnerOpts, advertiseAddr,
 	); code > 0 {
 		return code
 	}
@@ -347,6 +352,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 	client pb.WaypointClient,
 	p serverinstall.Installer,
 	installOpts *serverinstall.InstallOpts,
+	runnerOpts *runnerinstall.InstallOpts,
 	advertiseAddr *pb.ServerConfig_AdvertiseAddr,
 ) int {
 	// Connect
@@ -375,7 +381,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 	}
 
 	s.Update("Runner found. Uninstalling previous runner...")
-	if err := p.UninstallRunner(ctx, installOpts); err != nil {
+	if err := p.UninstallRunner(ctx, runnerOpts); err != nil {
 		c.ui.Output(
 			"Error uninstalling runner from %s: %s\n\n"+
 				"The runner will not be upgraded.",

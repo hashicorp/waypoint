@@ -639,124 +639,20 @@ func (i *K8sInstaller) InstallRunner(
 // UninstallRunner implements Installer.
 func (i *K8sInstaller) UninstallRunner(
 	ctx context.Context,
-	opts *InstallOpts,
+	opts *runnerinstall.InstallOpts,
 ) error {
-	ui := opts.UI
-	log := opts.Log
+	runnerUninstaller := runnerinstall.K8sRunnerInstaller{
+		Config: runnerinstall.K8sConfig{
+			KubeconfigPath: "",
+			K8sContext:     i.config.k8sContext,
+			Namespace:      i.config.namespace,
+		},
+	}
 
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
-	s := sg.Add("Inspecting Kubernetes cluster...")
-	defer func() { s.Abort() }()
-
-	clientset, err := i.NewClient()
+	err := runnerUninstaller.Uninstall(ctx, opts)
 	if err != nil {
-		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
 	}
-
-	deploymentClient := clientset.AppsV1().Deployments(i.config.namespace)
-	if list, err := deploymentClient.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", runnerName),
-	}); err != nil {
-		ui.Output(
-			"Error looking up deployments: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
-	} else if len(list.Items) > 0 {
-		s.Update("Deleting any automatically installed runners...")
-
-		// Record various settings we can reuse for runner reinstallation
-		// if we're doing an upgrade. We need to do this because the upgrade
-		// flags don't contain the installation settings, and we prefer them
-		// not to; instead we just retain the old settings.
-		//
-		// Note we have lots of conditionals here to try to avoid weird
-		// panic situations if the remote side doesn't have the fields we
-		// expect.
-		podSpec := list.Items[0].Spec.Template.Spec
-		if secrets := podSpec.ImagePullSecrets; len(secrets) > 0 {
-			i.config.imagePullSecret = secrets[0].Name
-		}
-		if v := podSpec.Containers; len(v) > 0 {
-			c := v[0]
-
-			i.config.imagePullPolicy = string(c.ImagePullPolicy)
-			if m := c.Resources.Requests; len(m) > 0 {
-				if v, ok := m[apiv1.ResourceMemory]; ok {
-					i.config.memRequest = v.String()
-				}
-				if v, ok := m[apiv1.ResourceCPU]; ok {
-					i.config.cpuRequest = v.String()
-				}
-			}
-			if m := c.Resources.Limits; len(m) > 0 {
-				if v, ok := m[apiv1.ResourceMemory]; ok {
-					i.config.memLimit = v.String()
-				}
-				if v, ok := m[apiv1.ResourceCPU]; ok {
-					i.config.cpuLimit = v.String()
-				}
-			}
-		}
-
-		// create our wait channel to later poll for statefulset+pod deletion
-		w, err := deploymentClient.Watch(
-			ctx,
-			metav1.ListOptions{
-				LabelSelector: "app=" + runnerName,
-			},
-		)
-		if err != nil {
-			ui.Output(
-				"Error creating deployments watcher %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-
-		}
-		// send DELETE to statefulset collection
-		if err = deploymentClient.DeleteCollection(
-			ctx,
-			metav1.DeleteOptions{},
-			metav1.ListOptions{
-				LabelSelector: "app=" + runnerName,
-			},
-		); err != nil {
-			ui.Output(
-				"Error deleting Waypoint deployment: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-
-		// wait for deletion to complete
-		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-			select {
-			case wCh := <-w.ResultChan():
-				if wCh.Type == "DELETED" {
-					w.Stop()
-					return true, nil
-				}
-				log.Trace("deployment collection not fully removed, waiting")
-				return false, nil
-			default:
-				log.Trace("no message received on watch.ResultChan(), waiting for Event")
-				return false, nil
-			}
-		})
-		if err != nil {
-			return err
-		}
-		s.Update("Runner deployment deleted")
-		s.Done()
-	} else {
-		s.Update("No runners installed.")
-		s.Done()
-	}
-
 	return nil
 }
 
