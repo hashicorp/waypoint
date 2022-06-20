@@ -2,3 +2,13 @@
 @import 'login';
 @import 'onboarding';
 @import 'projects/create';
+
+.deprecation-banner {
+  margin-bottom: scale.$lg-2;
+}
+
+.deprecation-description {
+  display: flex;
+  flex-direction: column;
+  gap: scale.$sm--3;
+}
