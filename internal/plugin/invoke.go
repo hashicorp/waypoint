@@ -44,7 +44,7 @@ func startInstance(
 		return nil, err
 	}
 
-	// Look for any reattach plugins to allow debugging task launcher plugins 
+	// Look for any reattach plugins to allow debugging task launcher plugins
 	var reattachPluginConfigs map[string]*goplugin.ReattachConfig
 	reattachPluginsStr := os.Getenv("WP_REATTACH_PLUGINS")
 	if reattachPluginsStr != "" {
