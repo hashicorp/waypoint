@@ -189,6 +189,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	}
 
 	client := c.project.Client()
+	s.Update("Finished connecting to: %s", c.serverUrl)
 	s.Status(terminal.StatusOK)
 	s.Done()
 
