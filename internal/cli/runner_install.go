@@ -21,7 +21,6 @@ type RunnerInstallCommand struct {
 	platform              []string `hcl:"platform,required"`
 	adopt                 bool     `hcl:"adopt,optional"`
 	serverUrl             string   `hcl:"server_url,required"`
-	serverCookie          string   `hcl:"server_cookie,optional"`
 	id                    string   `hcl:"id,optional"`
 	runnerProfileOdrImage string   `hcl:"id,optional"`
 	serverTls             bool     `hcl:"server_tls,optional"`
@@ -91,12 +90,6 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 			Usage:   "Adopt the runner after it is installed.",
 			Default: true,
 			Target:  &c.adopt,
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:   "server-cookie",
-			Usage:  "Server cookie for the Waypoint cluster for which you're targeting this runner.",
-			Target: &c.serverCookie,
 		})
 
 		f.StringVar(&flag.StringVar{
@@ -173,7 +166,8 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	s := sg.Add("Connecting to: %s", c.serverUrl)
 	defer func() { s.Abort() }()
 
-	if c.adopt && c.serverCookie == "" {
+	var cookie string
+	if c.adopt {
 		serverConfig, err := c.project.Client().GetServerConfig(ctx, &empty.Empty{})
 		if err != nil {
 			c.ui.Output(
@@ -183,24 +177,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 			)
 			return 1
 		}
-		c.serverCookie = serverConfig.Config.Cookie
-	} else if c.adopt && c.serverCookie != "" {
-		serverConfig, err := c.project.Client().GetServerConfig(ctx, &empty.Empty{})
-		if err != nil {
-			c.ui.Output(
-				"Error getting server config.",
-				clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return 1
-		}
-		if c.serverCookie != serverConfig.Config.Cookie {
-			c.ui.Output(
-				"Incorrect server cookie provided.",
-				terminal.WithErrorStyle(),
-			)
-			return 1
-		}
+		cookie = serverConfig.Config.Cookie
 	}
 
 	if c.serverUrl == "" {
@@ -233,7 +210,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	err = p.Install(ctx, &runnerinstall.InstallOpts{
 		Log:        log,
 		UI:         c.ui,
-		Cookie:     c.serverCookie,
+		Cookie:     cookie,
 		ServerAddr: c.serverUrl,
 		AdvertiseClient: &serverconfig.Client{
 			Address:       c.serverUrl,
