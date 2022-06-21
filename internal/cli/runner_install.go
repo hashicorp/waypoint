@@ -194,16 +194,14 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 
 	// We generate the ID if the user doesn't provide one
 	// This ID is used later to adopt the runner
-	var id string
+	id := c.id
 	var err error
-	if c.id == "" {
+	if id == "" {
 		id, err = server.Id()
 		if err != nil {
 			c.ui.Output("Error generating runner ID: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
-	} else {
-		id = c.id
 	}
 
 	s = sg.Add("Installing runner...")
