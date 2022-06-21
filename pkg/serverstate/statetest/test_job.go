@@ -28,6 +28,7 @@ func init() {
 		TestJobIsAssignable,
 		TestJobCancel,
 		TestJobHeartbeat,
+		TestJobHeartbeatOnRestart,
 		TestJobUpdateRef,
 	}
 }
@@ -2286,6 +2287,9 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 			return job.Job.State == pb.Job_ERROR
 		}, 4*time.Second, time.Second)
 	})
+}
+
+func TestJobHeartbeatOnRestart(t *testing.T, factory Factory, rf RestartFactory) {
 
 	t.Run("times out if running state loaded on restart", func(t *testing.T) {
 		require := require.New(t)
