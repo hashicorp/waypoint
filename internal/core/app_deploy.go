@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/opaqueany"
 	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -275,7 +276,7 @@ func (op *deployOperation) Upsert(
 		AutoHostname: op.autoHostname,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed upserting deployment operation")
 	}
 
 	if op.id == "" {
