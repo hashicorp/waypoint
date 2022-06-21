@@ -131,11 +131,10 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 
 	s := sg.Add("Uninstalling runner...")
 	err := p.Uninstall(ctx, &runnerinstall.InstallOpts{
-		Log:             log,
-		UI:              c.ui,
-		ServerAddr:      c.serverUrl,
-		AdvertiseClient: nil,
-		Id:              c.id,
+		Log:        log,
+		UI:         c.ui,
+		ServerAddr: c.serverUrl,
+		Id:         c.id,
 	})
 	if err != nil {
 		c.ui.Output("Error uninstalling runner: %s", clierrors.Humanize(err),
