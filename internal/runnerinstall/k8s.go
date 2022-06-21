@@ -77,6 +77,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		chartNS = "default"
 	}
 
+	// This setup for Helm install matches the setup for the Helm platform plugin
 	s = sg.Add("Creating new Helm install object...")
 	client := action.NewInstall(actionConfig)
 	client.ClientOnly = false
