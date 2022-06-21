@@ -238,15 +238,8 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 			return 1
 		}
 
-		s = sg.Add("Creating runner profile and targeting runner %s", strings.ToUpper(id))
-		var runnerProfileOdrImage string
-		if c.runnerProfileOdrImage == "" {
-			runnerProfileOdrImage = "hashicorp/waypoint-odr:latest"
-		} else {
-			runnerProfileOdrImage = c.runnerProfileOdrImage
-		}
-
 		// Creating a new runner profile for the newly adopted runner
+		s = sg.Add("Creating runner profile and targeting runner %s", strings.ToUpper(id))
 		runnerProfile, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 			Config: &pb.OnDemandRunnerConfig{
 				Name: c.platform[0] + "-" + strings.ToUpper(id),
@@ -257,7 +250,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 						},
 					},
 				},
-				OciUrl:               runnerProfileOdrImage,
+				OciUrl:               c.runnerProfileOdrImage,
 				EnvironmentVariables: nil,
 				PluginType:           c.platform[0],
 				PluginConfig:         nil,
