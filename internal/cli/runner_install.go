@@ -250,12 +250,8 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 						},
 					},
 				},
-				OciUrl:               c.runnerProfileOdrImage,
-				EnvironmentVariables: nil,
-				PluginType:           c.platform[0],
-				PluginConfig:         nil,
-				ConfigFormat:         0,
-				Default:              false,
+				OciUrl:     c.runnerProfileOdrImage,
+				PluginType: c.platform[0],
 			},
 		})
 		if err != nil {
