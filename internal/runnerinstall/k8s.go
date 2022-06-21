@@ -104,11 +104,9 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	s.Status(terminal.StatusOK)
 	s.Done()
 
-	var version string
-	if i.Config.Version == "" {
+	version := i.Config.Version
+	if version == "" {
 		version = helminstallutil.DefaultHelmChartVersion
-	} else {
-		version = i.Config.Version
 	}
 
 	s = sg.Add("Locating chart...")
