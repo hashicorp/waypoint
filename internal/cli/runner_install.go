@@ -18,11 +18,11 @@ import (
 type RunnerInstallCommand struct {
 	*baseCommand
 
-	platform              []string `hcl:"platform,required"`
+	platform              []string `hcl:"platform,optional"`
 	adopt                 bool     `hcl:"adopt,optional"`
 	serverUrl             string   `hcl:"server_url,required"`
 	id                    string   `hcl:"id,optional"`
-	runnerProfileOdrImage string   `hcl:"odr-image,optional"`
+	runnerProfileOdrImage string   `hcl:"odr_image,optional"`
 	serverTls             bool     `hcl:"server_tls,optional"`
 	serverTlsSkipVerify   bool     `hcl:"server_tls_skip_verify,optional"`
 	serverRequireAuth     bool     `hcl:"server_require_auth,optional"`
@@ -47,7 +47,7 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 
 		f.EnumVar(&flag.EnumVar{
 			Name:   "platform",
-			Usage:  "Platform to install the Waypoint runner into.",
+			Usage:  "Platform to install the Waypoint runner into. If unset, uses the platform of the local context.",
 			Values: runnerPlatforms,
 			Target: &c.platform,
 		})
@@ -141,22 +141,29 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	log := c.Log.Named("install")
 	defer c.Close()
 
-	if len(c.platform) == 0 {
+	serverConfig, err := c.project.Client().GetServerConfig(ctx, &empty.Empty{})
+	if err != nil {
 		c.ui.Output(
-			"The -platform flag is required.",
+			"Error getting server config.",
+			clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
-		c.ui.Output(c.Flags().Help(), terminal.WithInfoStyle())
 		return 1
 	}
-	p, ok := runnerinstall.Platforms[strings.ToLower(c.platform[0])]
+
+	// If the user doesn't set a platform, set platform to the platform of the user's context
+	platform := c.platform
+	if len(platform) == 0 {
+		platform = append(platform, serverConfig.Config.Platform)
+	}
+
+	p, ok := runnerinstall.Platforms[strings.ToLower(platform[0])]
 	if !ok {
 		c.ui.Output(
 			"Error installing server into %q: unsupported platform",
-			c.platform,
+			platform[0],
 			terminal.WithErrorStyle(),
 		)
-
 		return 1
 	}
 
@@ -168,15 +175,6 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 
 	var cookie string
 	if c.adopt {
-		serverConfig, err := c.project.Client().GetServerConfig(ctx, &empty.Empty{})
-		if err != nil {
-			c.ui.Output(
-				"Error getting server config.",
-				clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return 1
-		}
 		cookie = serverConfig.Config.Cookie
 	}
 
@@ -196,7 +194,6 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	// We generate the ID if the user doesn't provide one
 	// This ID is used later to adopt the runner
 	id := c.id
-	var err error
 	if id == "" {
 		id, err = server.Id()
 		if err != nil {
@@ -225,7 +222,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		)
 		return 1
 	}
-	s.Update("Runner %s installed successfully to %s", id, c.platform[0])
+	s.Update("Runner %s installed successfully to %s", id, platform[0])
 	s.Status(terminal.StatusOK)
 	s.Done()
 
@@ -242,7 +239,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		s = sg.Add("Creating runner profile and targeting runner %s", strings.ToUpper(id))
 		runnerProfile, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 			Config: &pb.OnDemandRunnerConfig{
-				Name: c.platform[0] + "-" + strings.ToUpper(id),
+				Name: platform[0] + "-" + strings.ToUpper(id),
 				TargetRunner: &pb.Ref_Runner{
 					Target: &pb.Ref_Runner_Id{
 						Id: &pb.Ref_RunnerId{
@@ -251,7 +248,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 					},
 				},
 				OciUrl:     c.runnerProfileOdrImage,
-				PluginType: c.platform[0],
+				PluginType: platform[0],
 			},
 		})
 		if err != nil {
