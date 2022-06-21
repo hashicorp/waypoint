@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Runner install"
-sidebar_title: "runner install"
-description: "Install a Waypoint runner to Kubernetes, Nomad, ECS, or Docker"
+page_title: 'Commands: Runner install'
+sidebar_title: 'runner install'
+description: 'Install a Waypoint runner to Kubernetes, Nomad, ECS, or Docker'
 ---
 
 # Waypoint Runner install
@@ -33,7 +33,7 @@ unless the '-adopt' flag is set to false.
 
 #### Command Options
 
-- `-platform=<string>` - Platform to install the Waypoint runner into. If unset, uses the platform of the local context. One possible value from: ecs, kubernetes, nomad, docker.
+- `-platform=<string>` - Platform to install the Waypoint runner into. If unset, uses the platform of the local context. One possible value from: nomad, docker, ecs, kubernetes.
 - `-server-addr=<string>` - Address of the Waypoint server.
 - `-odr-image=<string>` - Docker image for the on-demand runners.
 - `-server-tls` - If true, the Waypoint runner will connect to the server over TLS.
