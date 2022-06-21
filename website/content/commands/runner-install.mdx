@@ -20,9 +20,9 @@ Usage: `waypoint runner install [options]`
 Install a Waypoint runner to an existing platform. The platform should be
 specified as kubernetes, nomad, ecs, or docker.
 
-By default, this will adopt the runner after it is installed. The install will
-attempt to install a runner for the server configured in the current Waypoint
-context.
+With the '-adopt' flag set to true (the default), this command will adopt the
+runner after it is installed. The install will attempt to install a runner for
+the server configured in the current Waypoint context.
 
 #### Global Options
 
