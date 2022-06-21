@@ -505,7 +505,9 @@ func installRunner(
 		AuthToken:     resp.Token,
 	}
 
-	// We set the ID to be "init" since it is the initial static runner
+	// We set the ID to be "static" since it is the initial static runner
+	// Specific platform implementations should add the suffix -runner to
+	// resource names
 	id := "static"
 
 	// Install!
