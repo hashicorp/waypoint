@@ -62,7 +62,7 @@ func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, 
 		)
 		return err
 	}
-	s.Update("Runner %s adopted successfully.", id)
+	s.Update("Runner %q adopted successfully.", id)
 	s.Status(terminal.StatusOK)
 	s.Done()
 	return nil

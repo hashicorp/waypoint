@@ -142,11 +142,11 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 		)
 		return 1
 	}
-	s.Update("Runner %s uninstalled successfully", c.id)
+	s.Update("Runner %q uninstalled successfully", c.id)
 	s.Status(terminal.StatusOK)
 	s.Done()
 
-	s = sg.Add("Forgetting runner %s on server...", c.id)
+	s = sg.Add("Forgetting runner %q on server...", c.id)
 	defer func() { s.Abort() }()
 
 	_, err = c.project.Client().ForgetRunner(ctx, &pb.ForgetRunnerRequest{
@@ -156,7 +156,7 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 		s.Update("Couldn't forget runner: %s", clierrors.Humanize(err))
 		s.Status(terminal.StatusWarn)
 	} else {
-		s.Update("Runner %s forgotten on server", c.id)
+		s.Update("Runner %q forgotten on server", c.id)
 		s.Status(terminal.StatusOK)
 	}
 	s.Done()
