@@ -127,28 +127,6 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	s.Status(terminal.StatusOK)
 	s.Done()
 
-	var memory, cpu, image, tag string
-	if i.Config.MemRequest == "" {
-		memory = defaultRunnerMemory
-	} else {
-		memory = i.Config.MemRequest
-	}
-	if i.Config.CpuRequest == "" {
-		cpu = defaultRunnerCPU
-	} else {
-		cpu = i.Config.CpuRequest
-	}
-	if i.Config.RunnerImage == "" {
-		image = defaultRunnerImage
-	} else {
-		image = i.Config.RunnerImage
-	}
-	if i.Config.RunnerImageTag == "" {
-		tag = defaultRunnerImageTag
-	} else {
-		tag = i.Config.RunnerImageTag
-	}
-
 	values := map[string]interface{}{
 		"server": map[string]interface{}{
 			"enabled": false,
@@ -156,13 +134,13 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		"runner": map[string]interface{}{
 			"id": opts.Id,
 			"image": map[string]interface{}{
-				"repository": image,
-				"tag":        tag,
+				"repository": i.Config.RunnerImage,
+				"tag":        i.Config.RunnerImageTag,
 			},
 			"resources": map[string]interface{}{
 				"requests": map[string]interface{}{
-					"memory": memory,
-					"cpu":    cpu,
+					"memory": i.Config.MemRequest,
+					"cpu":    i.Config.CpuRequest,
 				},
 			},
 			"server": map[string]interface{}{
