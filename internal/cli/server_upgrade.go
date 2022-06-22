@@ -13,12 +13,14 @@ import (
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	goversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/clisnapshot"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/serverinstall"
+	"github.com/hashicorp/waypoint/internal/version"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverclient"
 )
@@ -415,15 +417,20 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 			return installRunnerResult
 		}
 
-		// Now that the new runner is installed, we can delete the old default runner profile
-		_, err = client.DeleteOnDemandRunnerConfig(ctx, &pb.DeleteOnDemandRunnerConfigRequest{
-			Config: &pb.Ref_OnDemandRunnerConfig{
-				Id:   oldRunnerConfig.Config.Id,
-				Name: oldRunnerConfig.Config.Name,
-			}})
-		if err != nil {
-			c.ui.Output("Error deleting previous default runner profile.", clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
+		cliVersion, err := goversion.NewVersion(version.GetVersion().Version)
+		okVersion, err := goversion.NewVersion("v0.9.0")
+		// Deleting on-demand runner configs isn't possible prior to version 0.9.0
+		if cliVersion.GreaterThanOrEqual(okVersion) {
+			// Now that the new runner is installed, we can delete the old default runner profile
+			_, err = client.DeleteOnDemandRunnerConfig(ctx, &pb.DeleteOnDemandRunnerConfigRequest{
+				Config: &pb.Ref_OnDemandRunnerConfig{
+					Id:   oldRunnerConfig.Config.Id,
+					Name: oldRunnerConfig.Config.Name,
+				}})
+			if err != nil {
+				c.ui.Output("Error deleting previous default runner profile.", clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
 		}
 	}
 	return 0
