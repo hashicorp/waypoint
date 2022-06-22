@@ -402,7 +402,7 @@ func (c *ServerUpgradeCommand) Flags() *flag.Sets {
 			Name:    "auto-approve",
 			Target:  &c.confirm,
 			Default: false,
-			Usage:   "Confirm server upgrade.",
+			Usage:   "Auto-approve server upgrade. If unset, confirmation will be requested.",
 		})
 		f.StringVar(&flag.StringVar{
 			Name:    "context-name",
