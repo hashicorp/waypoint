@@ -30,8 +30,28 @@ func (r *Runner) executeReleaseOp(
 		panic("operation not expected type")
 	}
 
-	// Our target deployment
-	target := op.Release.Deployment
+	var target *pb.Deployment
+	if op.Release.Deployment == nil {
+		// TODO(briancain): we need a GetLatestDeployment endpoint. That would be way better.
+		resp, err := r.client.UI_ListDeployments(ctx, &pb.UI_ListDeploymentsRequest{
+			Application: job.Application,
+			Workspace:   job.Workspace,
+			Order: &pb.OperationOrder{
+				Limit: 1, // we just care about the latest deployment
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		if len(resp.Deployments) == 0 {
+			return nil, status.Error(codes.FailedPrecondition, "there are no deployments to release")
+		}
+
+		target = resp.Deployments[0].Deployment
+	} else {
+		target = op.Release.Deployment
+	}
 
 	// Get our last release. If it's the same generation, then release is
 	// a no-op and return this value. We only do this if we have a generation.

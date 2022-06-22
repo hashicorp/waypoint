@@ -3,6 +3,8 @@ package singleprocess
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/go-hclog"
@@ -136,6 +138,42 @@ func (s *Service) RunPipeline(
 				// Queue a release job too
 				log.Warn("Currently not queueing a release job yet....sry!!!")
 			}
+		case *pb.Pipeline_Step_Release_:
+			releaseOp := &pb.Job_Release{
+				Release: &pb.Job_ReleaseOp{
+					Prune:               o.Release.Prune,
+					PruneRetain:         o.Release.PruneRetain,
+					PruneRetainOverride: o.Release.PruneRetainOverride,
+				},
+			}
+
+			switch d := o.Release.Deployment.Ref.(type) {
+			case *pb.Ref_Deployment_Latest:
+				// Nothing, keep the Deployment proto nil
+			case *pb.Ref_Deployment_Sequence:
+				// Look up deployment sequence here and set proto?
+				deployment, err := s.GetDeployment(ctx, &pb.GetDeploymentRequest{
+					Ref: &pb.Ref_Operation{
+						Target: &pb.Ref_Operation_Sequence{
+							Sequence: &pb.Ref_OperationSeq{
+								Application: job.Application,
+								Number:      d.Sequence,
+							},
+						},
+					},
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				releaseOp.Release.Deployment = deployment
+			default:
+				// return an error
+				log.Error("invalid deployment ref received", "ref", d)
+				return nil, status.Errorf(codes.Internal, "invalid deployment ref received: %T", d)
+			}
+
+			job.Operation = releaseOp
 		default:
 			job.Operation = &pb.Job_PipelineStep{
 				PipelineStep: &pb.Job_PipelineStepOp{
