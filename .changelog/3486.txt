@@ -1,0 +1,4 @@
+```release-note:bug
+plugin/docker: Ensure that the docker task launcher does not require a resources
+block to be set when attempting to load a task config to launch a task.
+```
