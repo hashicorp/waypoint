@@ -892,6 +892,24 @@ message Ref {
     string workspace = 1;
   }
 
+  message Deployment {
+    // Either reference the latest deployment, or a specific deployment id
+    oneof ref {
+      bool latest = 1;
+
+      uint64 sequence = 2;
+    }
+  }
+
+  message Artifact {
+    // Either reference the latest artifact, or a specific artifact id
+    oneof ref {
+      bool latest = 1;
+
+      uint64 sequence = 2;
+    }
+  }
+
   // Component references a component.
   message Component {
     hashicorp.waypoint.Component.Type type = 1;
@@ -4650,6 +4668,9 @@ message Pipeline {
       // Built-in deploy operation
       Deploy deploy = 6;
 
+      // Built-in release operation
+      Release release = 7;
+
       // TODO: custom plugins, pipeline references
     }
 
@@ -4679,6 +4700,17 @@ message Pipeline {
       // to false. Users would probably write a Release step to opt into a release
       // but lets support the option here just like the CLI does.
       bool release = 1;
+    }
+
+    message Release {
+      Ref.Deployment deployment = 1;
+      bool prune = 2;
+
+      // This sets the number of unreleased deployments to retain when pruning.
+      // This only has an effect if "prune_retain_override" is true. If that
+      // is false, then pruning uses the default behavior (retain 2).
+      int32 prune_retain = 3;
+      bool prune_retain_override = 4;
     }
   }
 }

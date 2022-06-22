@@ -9006,6 +9006,10 @@
           "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Deploy",
           "title": "Built-in deploy operation"
         },
+        "release": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Release",
+          "title": "Built-in release operation"
+        },
         "image": {
           "type": "string",
           "description": "Docker image to execute. This should be a fully qualified image URL."
@@ -9047,6 +9051,25 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "hashicorp.waypoint.Pipeline.Step.Release": {
+      "type": "object",
+      "properties": {
+        "deployment": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Deployment"
+        },
+        "prune": {
+          "type": "boolean"
+        },
+        "prune_retain": {
+          "type": "integer",
+          "format": "int32",
+          "description": "This sets the number of unreleased deployments to retain when pruning.\nThis only has an effect if \"prune_retain_override\" is true. If that\nis false, then pruning uses the default behavior (retain 2)."
+        },
+        "prune_retain_override": {
+          "type": "boolean"
         }
       }
     },
@@ -9260,6 +9283,18 @@
         }
       },
       "description": "DeclaredResource references a declared resource."
+    },
+    "hashicorp.waypoint.Ref.Deployment": {
+      "type": "object",
+      "properties": {
+        "latest": {
+          "type": "boolean"
+        },
+        "sequence": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
     },
     "hashicorp.waypoint.Ref.Global": {
       "type": "object",

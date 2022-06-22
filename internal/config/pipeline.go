@@ -176,6 +176,42 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 						Release: deployBody.Release,
 					},
 				}
+			case "release":
+				var releaseBody struct {
+					DeploymentRef       uint64 `hcl:"deployment_ref,optional"` // 0 or "unset" means latest
+					Prune               bool   `hcl:"prune,optional"`
+					PruneRetain         int32  `hcl:"prune_retain,optional"`
+					PruneRetainOverride bool   `hcl:"prune_retain_override,optional"`
+				}
+
+				if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &releaseBody); diag.HasErrors() {
+					return nil, diag
+				}
+
+				// For parsing pipeline configs, an unsert `deployment_ref` translates
+				// to the "latest" deployment. Otherwise if people want to release
+				// a specific deployment by sequence number, they can set it explicity.
+				deployRef := &pb.Ref_Deployment{
+					Ref: &pb.Ref_Deployment_Latest{
+						Latest: true,
+					},
+				}
+				if releaseBody.DeploymentRef != 0 {
+					deployRef = &pb.Ref_Deployment{
+						Ref: &pb.Ref_Deployment_Sequence{
+							Sequence: releaseBody.DeploymentRef,
+						},
+					}
+				}
+
+				s.Kind = &pb.Pipeline_Step_Release_{
+					Release: &pb.Pipeline_Step_Release{
+						Deployment:          deployRef,
+						Prune:               releaseBody.Prune,
+						PruneRetain:         releaseBody.PruneRetain,
+						PruneRetainOverride: releaseBody.PruneRetainOverride,
+					},
+				}
 			case "exec":
 				var execBody struct {
 					Command string   `hcl:"command,optional"`
