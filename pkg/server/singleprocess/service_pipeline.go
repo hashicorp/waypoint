@@ -139,41 +139,46 @@ func (s *Service) RunPipeline(
 				log.Warn("Currently not queueing a release job yet....sry!!!")
 			}
 		case *pb.Pipeline_Step_Release_:
-			releaseOp := &pb.Job_Release{
+			var deployment *pb.Deployment
+			if o.Release.Deployment != nil {
+				switch d := o.Release.Deployment.Ref.(type) {
+				case *pb.Ref_Deployment_Latest:
+					// Nothing, keep the Deployment proto nil
+					log.Trace("using nil deployment to queue job, which is latest deployment")
+				case *pb.Ref_Deployment_Sequence:
+					// Look up deployment sequence here and set proto?
+					deployment, err = s.GetDeployment(ctx, &pb.GetDeploymentRequest{
+						Ref: &pb.Ref_Operation{
+							Target: &pb.Ref_Operation_Sequence{
+								Sequence: &pb.Ref_OperationSeq{
+									Application: job.Application,
+									Number:      d.Sequence,
+								},
+							},
+						},
+						LoadDetails: pb.Deployment_ARTIFACT,
+					})
+					if err != nil {
+						return nil, err
+					}
+					if deployment == nil {
+						log.Debug("could not find deploy sequence, using latest instead", "seq", d.Sequence)
+					}
+				default:
+					// return an error
+					log.Error("invalid deployment ref received", "ref", d)
+					return nil, status.Errorf(codes.Internal, "invalid deployment ref received: %T", d)
+				}
+			}
+
+			job.Operation = &pb.Job_Release{
 				Release: &pb.Job_ReleaseOp{
+					Deployment:          deployment,
 					Prune:               o.Release.Prune,
 					PruneRetain:         o.Release.PruneRetain,
 					PruneRetainOverride: o.Release.PruneRetainOverride,
 				},
 			}
-
-			switch d := o.Release.Deployment.Ref.(type) {
-			case *pb.Ref_Deployment_Latest:
-				// Nothing, keep the Deployment proto nil
-			case *pb.Ref_Deployment_Sequence:
-				// Look up deployment sequence here and set proto?
-				deployment, err := s.GetDeployment(ctx, &pb.GetDeploymentRequest{
-					Ref: &pb.Ref_Operation{
-						Target: &pb.Ref_Operation_Sequence{
-							Sequence: &pb.Ref_OperationSeq{
-								Application: job.Application,
-								Number:      d.Sequence,
-							},
-						},
-					},
-				})
-				if err != nil {
-					return nil, err
-				}
-
-				releaseOp.Release.Deployment = deployment
-			default:
-				// return an error
-				log.Error("invalid deployment ref received", "ref", d)
-				return nil, status.Errorf(codes.Internal, "invalid deployment ref received: %T", d)
-			}
-
-			job.Operation = releaseOp
 		default:
 			job.Operation = &pb.Job_PipelineStep{
 				PipelineStep: &pb.Job_PipelineStepOp{

@@ -32,13 +32,20 @@ func (r *Runner) executeReleaseOp(
 
 	var target *pb.Deployment
 	if op.Release.Deployment == nil {
+		log.Debug("no deployment specified, using latest deployment")
+
 		// TODO(briancain): we need a GetLatestDeployment endpoint. That would be way better.
-		resp, err := r.client.UI_ListDeployments(ctx, &pb.UI_ListDeploymentsRequest{
+		resp, err := r.client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
 			Application: job.Application,
 			Workspace:   job.Workspace,
 			Order: &pb.OperationOrder{
 				Limit: 1, // we just care about the latest deployment
 			},
+
+			// NOTE(briancain): we _MUST_ preload the deployment details here. This is
+			// because when the runner goes to invoke the app_deploy operation, it
+			// assumes that the Deployment has pre-loaded the Artifact details.
+			LoadDetails: pb.Deployment_ARTIFACT,
 		})
 		if err != nil {
 			return nil, err
@@ -48,7 +55,7 @@ func (r *Runner) executeReleaseOp(
 			return nil, status.Error(codes.FailedPrecondition, "there are no deployments to release")
 		}
 
-		target = resp.Deployments[0].Deployment
+		target = resp.Deployments[0]
 	} else {
 		target = op.Release.Deployment
 	}
