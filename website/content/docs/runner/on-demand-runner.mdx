@@ -44,107 +44,6 @@ the assigned job. Once that resource exists, it will be a `TaskJob` that is
 responsible for actually running the assigned job. Once it's complete, the task
 plugin system will launch a stop job to clean up the launched platform resource.
 
-### On-Demand Runner Tracking
-
-The on-demand runner tasks that Waypoint launches can be examined through the CLI.
-The command `waypoint task list` will show you an inventory of Waypoint ODR tasks
-that have been launched:
-
-```terminal-output
-$ waypoint task list
-
-» Waypoint On-Demand Runner Tasks
-              ID             | RUN JOB OPERATION | TASK STATE |    PROJECT     |  TIME CREATED  | TIME COMPLETED
------------------------------+-------------------+------------+----------------+----------------+-----------------
-  01G669RE32WM0JBBGZW3JETYSJ | Build             | STOPPED    | example-go     | 32 minutes ago | 31 minutes ago
-  01G669R0PDA7BQZYJA1P2GK8CX | Init              | STOPPED    | example-go     | 32 minutes ago | 32 minutes ago
-  01G669MY6W92YMARAQFFZD1WRC | Build             | STOPPED    | example-nodejs | 34 minutes ago | 33 minutes ago
-  01G6687Z8W82GQMSEEZR1R0AF9 | Build             | STOPPED    | example-nodejs | 58 minutes ago | 58 minutes ago
-  01G6686GHKREG41C79Z94010EC | Init              | STOPPED    | example-nodejs | 59 minutes ago | 59 minutes ago
-```
-
-You can also take a closer look at an individual task using `waypoint task inspect`.
-This will provide information about the on-demand runner profile which ran the job,
-the job which executed the operation (the Run Job), as well as the job which was
-watching the Run Job (the Watch Job).
-
-In the example below, you can see that the Run Job which the task was running returned
-an error, with some helpful information about what happened:
-
-```terminal-output
-waypoint task inspect 01G669RE32WM0JBBGZW3JETYSJ
-
-» On-Demand Runner Task Configuration
-      Task ID: 01G669RE32WM0JBBGZW3JETYSJ
-   Task State: STOPPED
-    Workspace: default
-      Project: example-go
-  Application: example-go
-
-» Run Job Configuration
-  Job Configuration:
-         Job ID: 01G669RE30ND9SKP50RYWP1B5H
-      Operation: Build
-  Target Runner: 01G669RE300HV2D1QPSYMSKHP2
-      Workspace: default
-        Project: example-go
-    Application: example-go
-
-  Job Results:
-           State: Error
-   Complete Time: 33 minutes ago
-  Error Messsage: There was an error while executing a Waypoint plugin for this operation!
-
-One or more required arguments for the plugin was not satisfied. This is usually due to a missing or incompatible set of plugins. For example, only certain build plugins are only compatible with certain registries, and so on. Please inspect the missing argument, the set
-of plugins you are using, and the documentation to determine if your plugin combination is valid.
-
-Plugin function: github.com/hashicorp/waypoint/builtin/pack.(*Builder).BuildODR-fm
-
-==> Missing arguments:
-
-    - docker.AccessInfo
-
-
-» Watch Job Configuration
-  Job Configuration:
-         Job ID: 01G669RE32M1MGQBYAVND110SS
-      Operation: WatchTask
-  Target Runner: *
-      Workspace: default
-        Project: example-go
-    Application: example-go
-
-  Job Results:
-          State: Success
-  Complete Time: 33 minutes ago
-
-» Start Job Configuration
-  Job Configuration:
-         Job ID: 01G669RE32M558VJZKRGYQ9W3S
-      Operation: StartTask
-  Target Runner: *
-      Workspace: default
-        Project: example-go
-    Application: example-go
-
-  Job Results:
-          State: Success
-  Complete Time: 33 minutes ago
-
-» Stop Job Configuration
-  Job Configuration:
-         Job ID: 01G669RE32HSPGP4AXDSA0NZ7S
-      Operation: StopTask
-  Target Runner: *
-      Workspace: default
-        Project: example-go
-    Application: example-go
-
-  Job Results:
-          State: Success
-  Complete Time: 33 minutes ago
-```
-
 ## On-Demand Runner Profiles
 
 Users can configure Waypoint server to launch on-demand runners with specific
@@ -212,8 +111,10 @@ $ waypoint task list
   01G1RYNNEK141B23YDE26XPED7 | Init              | STOPPED    | go-gitops-0 | 21 seconds ago | 15 seconds ago
 ```
 
-This will display a list of all known Tasks in Waypoint server. It will show
-the current state of the task as well.
+You can also take a closer look at an individual task using `waypoint task inspect`.
+This will provide information about the on-demand runner profile which ran the job,
+the job which executed the operation (the Run Job), as well as the job which was
+watching the Run Job (the Watch Job).
 
 ```shell
 $ waypoint task inspect 01G1RYP6JFSEAQVE2SQX38Q19D

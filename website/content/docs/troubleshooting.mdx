@@ -88,6 +88,91 @@ $ docker volume list
 
 Locate the volumes named starting with `pack-cache-` and remove them with `docker volume rm`.
 
+## Remote Operations Failure
+
+If your Waypoint operation with remote runners fails, task introspection can help
+troubleshoot the issue. Logs from the on-demand runner may not be readily available
+from the platform in which the runners are launched, and task introspection can
+get the information needed to troubleshoot.
+
+In the example below, after a build failure, `waypoint task inspect` was used
+with the task ID. The Run Job results show that there was an error with the Docker
+plugin which required arguments which were missing:
+
+```terminal-output
+waypoint task inspect 01G669RE32WM0JBBGZW3JETYSJ
+
+» On-Demand Runner Task Configuration
+      Task ID: 01G669RE32WM0JBBGZW3JETYSJ
+   Task State: STOPPED
+    Workspace: default
+      Project: example-go
+  Application: example-go
+
+» Run Job Configuration
+  Job Configuration:
+         Job ID: 01G669RE30ND9SKP50RYWP1B5H
+      Operation: Build
+  Target Runner: 01G669RE300HV2D1QPSYMSKHP2
+      Workspace: default
+        Project: example-go
+    Application: example-go
+
+  Job Results:
+           State: Error
+   Complete Time: 33 minutes ago
+  Error Messsage: There was an error while executing a Waypoint plugin for this operation!
+
+One or more required arguments for the plugin was not satisfied. This is usually due to a missing or incompatible set of plugins. For example, only certain build plugins are only compatible with certain registries, and so on. Please inspect the missing argument, the set
+of plugins you are using, and the documentation to determine if your plugin combination is valid.
+
+Plugin function: github.com/hashicorp/waypoint/builtin/pack.(*Builder).BuildODR-fm
+
+==> Missing arguments:
+
+    - docker.AccessInfo
+
+
+» Watch Job Configuration
+  Job Configuration:
+         Job ID: 01G669RE32M1MGQBYAVND110SS
+      Operation: WatchTask
+  Target Runner: *
+      Workspace: default
+        Project: example-go
+    Application: example-go
+
+  Job Results:
+          State: Success
+  Complete Time: 33 minutes ago
+
+» Start Job Configuration
+  Job Configuration:
+         Job ID: 01G669RE32M558VJZKRGYQ9W3S
+      Operation: StartTask
+  Target Runner: *
+      Workspace: default
+        Project: example-go
+    Application: example-go
+
+  Job Results:
+          State: Success
+  Complete Time: 33 minutes ago
+
+» Stop Job Configuration
+  Job Configuration:
+         Job ID: 01G669RE32HSPGP4AXDSA0NZ7S
+      Operation: StopTask
+  Target Runner: *
+      Workspace: default
+        Project: example-go
+    Application: example-go
+
+  Job Results:
+          State: Success
+  Complete Time: 33 minutes ago
+```
+
 # Investigating Deployed Applications
 
 Waypoint includes several commands to support debugging and monitoring while
