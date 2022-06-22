@@ -111,8 +111,10 @@ $ waypoint task list
   01G1RYNNEK141B23YDE26XPED7 | Init              | STOPPED    | go-gitops-0 | 21 seconds ago | 15 seconds ago
 ```
 
-This will display a list of all known Tasks in Waypoint server. It will show
-the current state of the task as well.
+You can also take a closer look at an individual task using `waypoint task inspect`.
+This will provide information about the on-demand runner profile which ran the job,
+the job which executed the operation (the Run Job), as well as the job which was
+watching the Run Job (the Watch Job).
 
 ```shell
 $ waypoint task inspect 01G1RYP6JFSEAQVE2SQX38Q19D
