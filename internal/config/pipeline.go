@@ -188,7 +188,7 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 					return nil, diag
 				}
 
-				// For parsing pipeline configs, an unsert `deployment_ref` translates
+				// For parsing pipeline configs, an unset `deployment_ref` translates
 				// to the "latest" deployment. Otherwise if people want to release
 				// a specific deployment by sequence number, they can set it explicity.
 				deployRef := &pb.Ref_Deployment{
