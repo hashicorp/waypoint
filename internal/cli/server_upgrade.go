@@ -389,10 +389,44 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 	s.Update("Previous runner uninstalled")
 	s.Done()
 
-	// TODO(mitchellh): This creates a new auth token for the new runner.
-	// In the future, we need to invalidate the old token. We don't have
-	// the functionality to do this today.
-	return installRunner(ctx, installOpts.Log, client, c.ui, p, advertiseAddr)
+	if odc, ok := p.(serverinstall.OnDemandRunnerConfigProvider); ok {
+		odr := odc.OnDemandRunnerConfig()
+
+		// We attempt to look up the default runner profile from the previous
+		// installation. If we find it, we get the ID, so we can delete it after
+		// the new runner profile is set up
+		oldRunnerConfig, err := client.GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
+			Config: &pb.Ref_OnDemandRunnerConfig{
+				Id:   odr.Id,
+				Name: odr.Name,
+			}})
+		if err != nil && status.Code(err) != codes.NotFound {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		} else if err != nil && status.Code(err) == codes.NotFound {
+			c.ui.Output("default runner profile not found, skipping deletion", terminal.WithWarningStyle())
+		}
+
+		// TODO(mitchellh): This creates a new auth token for the new runner.
+		// In the future, we need to invalidate the old token. We don't have
+		// the functionality to do this today.
+		installRunnerResult := installRunner(ctx, installOpts.Log, client, c.ui, p, advertiseAddr)
+		if installRunnerResult != 0 {
+			return installRunnerResult
+		}
+
+		// Now that the new runner is installed, we can delete the old default runner profile
+		_, err = client.DeleteOnDemandRunnerConfig(ctx, &pb.DeleteOnDemandRunnerConfigRequest{
+			Config: &pb.Ref_OnDemandRunnerConfig{
+				Id:   oldRunnerConfig.Config.Id,
+				Name: oldRunnerConfig.Config.Name,
+			}})
+		if err != nil {
+			c.ui.Output("Error deleting previous default runner profile.", clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+	}
+	return 0
 }
 
 func (c *ServerUpgradeCommand) Flags() *flag.Sets {
