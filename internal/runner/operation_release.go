@@ -118,7 +118,7 @@ func (r *Runner) executeReleaseOp(
 		ds := make([]*pb.Deployment, 0, len(resp.Deployments))
 		for _, d := range resp.Deployments {
 			// If this is the deployment we're releasing, then do NOT delete it.
-			if d.Id == op.Release.Deployment.Id {
+			if d.Id == target.Id {
 				continue
 			}
 
@@ -133,7 +133,7 @@ func (r *Runner) executeReleaseOp(
 			// TODO this should instead check against the app's platform component
 			// and ignore any deployments that are NOT the app's current platform
 			// component (ya dig?)
-			if d.Component.Name != op.Release.Deployment.Component.Name {
+			if d.Component.Name != target.Component.Name {
 				continue
 			}
 
@@ -147,7 +147,7 @@ func (r *Runner) executeReleaseOp(
 
 	// Do the release
 	if release == nil {
-		release, _, err = app.Release(ctx, op.Release.Deployment)
+		release, _, err = app.Release(ctx, target)
 		if err != nil {
 			return nil, err
 		}
