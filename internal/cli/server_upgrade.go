@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/clisnapshot"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/serverinstall"
-	"github.com/hashicorp/waypoint/internal/version"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverclient"
 )
@@ -417,8 +416,21 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 			return installRunnerResult
 		}
 
-		cliVersion, err := goversion.NewVersion(version.GetVersion().Version)
+		serverVersionInfo, err := client.GetVersionInfo(ctx, &empty.Empty{})
+		if err != nil {
+			c.ui.Output("Error getting server version: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+		cliVersion, err := goversion.NewVersion(serverVersionInfo.Info.Version)
+		if err != nil {
+			c.ui.Output("Error parsing server version: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
 		okVersion, err := goversion.NewVersion("v0.9.0")
+		if err != nil {
+			c.ui.Output("Error parsing acceptable version: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
 		// Deleting on-demand runner configs isn't possible prior to version 0.9.0
 		if cliVersion.GreaterThanOrEqual(okVersion) {
 			// Now that the new runner is installed, we can delete the old default runner profile
@@ -428,7 +440,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 					Name: oldRunnerConfig.Config.Name,
 				}})
 			if err != nil {
-				c.ui.Output("Error deleting previous default runner profile.", clierrors.Humanize(err), terminal.WithErrorStyle())
+				c.ui.Output("Error deleting previous default runner profile. ID: %s, Name: %s", oldRunnerConfig.Config.Id, oldRunnerConfig.Config.Name, clierrors.Humanize(err), terminal.WithErrorStyle())
 				return 1
 			}
 		}
