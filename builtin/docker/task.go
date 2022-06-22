@@ -84,7 +84,7 @@ type TaskLauncherConfig struct {
 
 	// Resources configures the resource constraints such as cpu and memory for the
 	// created containers.
-	Resources TaskResources `hcl:"resources,block"`
+	Resources *TaskResources `hcl:"resources,block"`
 
 	// Environment variables that are meant to configure the application in a static
 	// way. This might be start an image in a specific mode,
@@ -369,12 +369,17 @@ func (b *TaskLauncher) StartTask(
 	)
 
 	var memory int64
+	var cpuShares int64
 
-	if b.config.Resources.MemoryLimit != "" {
+	if b.config.Resources != nil && b.config.Resources.MemoryLimit != "" {
 		memory, err = goUnits.FromHumanSize(b.config.Resources.MemoryLimit)
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	if b.config.Resources != nil {
+		cpuShares = b.config.Resources.CpuShares
 	}
 
 	cc, err := cli.ContainerCreate(
@@ -393,7 +398,7 @@ func (b *TaskLauncher) StartTask(
 			AutoRemove: !b.config.DebugContainers,
 
 			Resources: container.Resources{
-				CPUShares: b.config.Resources.CpuShares,
+				CPUShares: cpuShares,
 				Memory:    memory,
 			},
 		},
