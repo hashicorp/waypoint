@@ -371,14 +371,14 @@ func (b *TaskLauncher) StartTask(
 	var memory int64
 	var cpuShares int64
 
-	if b.config.Resources != nil && b.config.Resources.MemoryLimit != "" {
-		memory, err = goUnits.FromHumanSize(b.config.Resources.MemoryLimit)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	if b.config.Resources != nil {
+		if b.config.Resources.MemoryLimit != "" {
+			memory, err = goUnits.FromHumanSize(b.config.Resources.MemoryLimit)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		cpuShares = b.config.Resources.CpuShares
 	}
 
