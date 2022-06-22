@@ -30,6 +30,7 @@ func (r *Runner) executeReleaseOp(
 		panic("operation not expected type")
 	}
 
+	// Our target deployment
 	var target *pb.Deployment
 	if op.Release.Deployment == nil {
 		log.Debug("no deployment specified, using latest deployment")
