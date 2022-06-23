@@ -397,8 +397,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 		// the new runner profile is set up
 		oldRunnerConfig, err := client.GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
 			Config: &pb.Ref_OnDemandRunnerConfig{
-				Id:   odr.Id,
-				Name: odr.Name,
+				Name: odr.PluginType + "-bootstrap-profile",
 			}})
 
 		if err != nil && status.Code(err) != codes.NotFound {
@@ -407,11 +406,15 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 		} else if err != nil && status.Code(err) == codes.NotFound {
 			c.ui.Output("Waypoint default runner profile not found, creating new profile", terminal.WithWarningStyle())
 		} else {
+			ociUrl := odr.OciUrl
+			if ociUrl == "" {
+				ociUrl = "hashicorp/waypoint-odr:latest"
+			}
 			odr = &pb.OnDemandRunnerConfig{
 				Id:                   oldRunnerConfig.Config.Id,
 				Name:                 oldRunnerConfig.Config.Name,
 				TargetRunner:         oldRunnerConfig.Config.TargetRunner,
-				OciUrl:               "hashicorp/waypoint:latest",
+				OciUrl:               ociUrl,
 				EnvironmentVariables: oldRunnerConfig.Config.EnvironmentVariables,
 				PluginType:           oldRunnerConfig.Config.PluginType,
 				PluginConfig:         oldRunnerConfig.Config.PluginConfig,

@@ -526,9 +526,7 @@ func installRunner(
 			odrConfig = odc.OnDemandRunnerConfig()
 		}
 
-		version, err := client.GetVersionInfo(ctx, &empty.Empty{})
-		// The expected naming convention is "<platform>-default-<waypoint_version>
-		odrConfig.Name = odrConfig.PluginType + "-default-" + version.Info.Version
+		odrConfig.Name = odrConfig.PluginType + "-bootstrap-profile"
 		if err != nil {
 			ui.Output("Error getting version: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
