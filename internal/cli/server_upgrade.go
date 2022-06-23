@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
-	goversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -405,45 +404,25 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		} else if err != nil && status.Code(err) == codes.NotFound {
-			c.ui.Output("default runner profile not found, skipping deletion", terminal.WithWarningStyle())
+			c.ui.Output("Waypoint default runner profile not found, creating new profile", terminal.WithWarningStyle())
+		} else {
+			odr = &pb.OnDemandRunnerConfig{
+				Id:                   oldRunnerConfig.Config.Id,
+				Name:                 oldRunnerConfig.Config.Name,
+				TargetRunner:         oldRunnerConfig.Config.TargetRunner,
+				OciUrl:               "hashicorp/waypoint:latest",
+				EnvironmentVariables: oldRunnerConfig.Config.EnvironmentVariables,
+				PluginType:           oldRunnerConfig.Config.PluginType,
+				PluginConfig:         oldRunnerConfig.Config.PluginConfig,
+				ConfigFormat:         oldRunnerConfig.Config.ConfigFormat,
+				Default:              true,
+			}
 		}
 
 		// TODO(mitchellh): This creates a new auth token for the new runner.
 		// In the future, we need to invalidate the old token. We don't have
 		// the functionality to do this today.
-		installRunnerResult := installRunner(ctx, installOpts.Log, client, c.ui, p, advertiseAddr)
-		if installRunnerResult != 0 {
-			return installRunnerResult
-		}
-
-		serverVersionInfo, err := client.GetVersionInfo(ctx, &empty.Empty{})
-		if err != nil {
-			c.ui.Output("Error getting server version: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		}
-		cliVersion, err := goversion.NewVersion(serverVersionInfo.Info.Version)
-		if err != nil {
-			c.ui.Output("Error parsing server version: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		}
-		okVersion, err := goversion.NewVersion("v0.9.0")
-		if err != nil {
-			c.ui.Output("Error parsing acceptable version: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		}
-		// Deleting on-demand runner configs isn't possible prior to version 0.9.0
-		if cliVersion.GreaterThanOrEqual(okVersion) {
-			// Now that the new runner is installed, we can delete the old default runner profile
-			_, err = client.DeleteOnDemandRunnerConfig(ctx, &pb.DeleteOnDemandRunnerConfigRequest{
-				Config: &pb.Ref_OnDemandRunnerConfig{
-					Id:   oldRunnerConfig.Config.Id,
-					Name: oldRunnerConfig.Config.Name,
-				}})
-			if err != nil {
-				c.ui.Output("Error deleting previous default runner profile. ID: %s, Name: %s", oldRunnerConfig.Config.Id, oldRunnerConfig.Config.Name, clierrors.Humanize(err), terminal.WithErrorStyle())
-				return 1
-			}
-		}
+		return installRunner(ctx, installOpts.Log, client, c.ui, p, advertiseAddr, odr)
 	}
 	return 0
 }

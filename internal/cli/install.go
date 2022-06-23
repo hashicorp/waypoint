@@ -330,7 +330,8 @@ func (c *InstallCommand) Run(args []string) int {
 	s.Done()
 
 	if c.flagRunner {
-		if code := installRunner(c.Ctx, log, client, c.ui, p, advertiseAddr); code > 0 {
+		// we pass an empty string for the ID because it's a fresh install
+		if code := installRunner(c.Ctx, log, client, c.ui, p, advertiseAddr, nil); code > 0 {
 			return code
 		}
 	}
@@ -462,6 +463,7 @@ func installRunner(
 	ui terminal.UI,
 	p serverinstall.Installer,
 	advertiseAddr *pb.ServerConfig_AdvertiseAddr,
+	odrConfig *pb.OnDemandRunnerConfig,
 ) int {
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -520,21 +522,26 @@ func installRunner(
 	if odc, ok := p.(serverinstall.OnDemandRunnerConfigProvider); ok {
 		s = sg.Add("Registering on-demand runner configuration...")
 
-		odr := odc.OnDemandRunnerConfig()
-		if odr != nil {
-			_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
-				Config: odr,
-			})
+		if odrConfig == nil {
+			odrConfig = odc.OnDemandRunnerConfig()
+		}
 
-			if err != nil {
-				s.Update("Error creating ondemand runner: %s", err)
-				s.Status(terminal.StatusError)
-			} else {
-				s.Update("Registered ondemand runner!")
-				s.Status(terminal.StatusOK)
-			}
+		version, err := client.GetVersionInfo(ctx, &empty.Empty{})
+		// The expected naming convention is "<platform>-default-<waypoint_version>
+		odrConfig.Name = odrConfig.Name + "default-" + version.Info.Version
+		if err != nil {
+			ui.Output("Error getting version: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+		}
+
+		_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+			Config: odrConfig,
+		})
+		if err != nil {
+			s.Update("Error creating ondemand runner: %s", err)
+			s.Status(terminal.StatusError)
 		} else {
-			s.Update("Install type did not provide an ondemand runner config")
+			s.Update("Registered ondemand runner!")
+			s.Status(terminal.StatusOK)
 		}
 
 		s.Done()
