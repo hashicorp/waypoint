@@ -400,6 +400,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 				Id:   odr.Id,
 				Name: odr.Name,
 			}})
+
 		if err != nil && status.Code(err) != codes.NotFound {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
