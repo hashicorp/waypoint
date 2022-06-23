@@ -1,0 +1,60 @@
+---
+layout: docs
+page_title: Version 0.9.0 - Upgrade Guide
+description: |-
+  This upgrade guide describes any considerations for upgrading to Waypoint 0.9.0.
+---
+
+# Upgrading to Waypoint 0.9.0 from 0.8.x
+
+Waypoint 0.8.x can be upgraded to Waypoint 0.9.0 using a [standard upgrade](/docs/upgrading#standard-upgrade).
+There are no breaking changes in the protocol or `waypoint.hcl` configuration file. All
+Waypoint components (CLI, entrypoint, and server) are forwards and backwards
+compatible but we encourge users to have all components on the same version.
+
+## Other Considerations
+
+### Default runner profiles
+
+After an upgrade, you will have two default runner profiles, as the upgrade
+will create a new default runner profile with the new server version.
+
+We recommend you remove old runner profiles that depend on older versions of
+the `waypoint-odr` image. Additionally, having only one default runner profile
+is recommended so you have consistent behavior.
+
+#### Helm installs
+
+With the Helm upgrade, a new runner profile will not be created. We recommend
+overwriting the current default runner profile to update the `waypoint-odr`
+image version it uses. You can do that by running:
+
+```shell-session
+$ waypoint runner profile set -name=01G68E50FKQA2JZM8Q79C0NQE7 -plugin-type=kubernetes -default
+```
+
+### Server Image
+
+`waypoint install` uses the `hashicorp/waypoint:latest` container image for
+Kubernetes, Nomad, ECS, and Docker. When upgrading, your platform may require
+you to pull the latest image instead of using a cache.
+
+Kubernetes and Nomad both specify an "always pull" policy for `:latest` images
+so restarting the Deployment or Job should pull the latest released version.
+Docker may require an explicit `docker pull` and container recreate.
+
+#### Verifying the Server Version with the UI
+
+You can verify the server version by loading the UI and looking at the footer.
+You should see a version starting with `v0.9`. If you see an earlier version,
+your platform may be using an old cached image.
+
+#### Verifying the Server Version with the CLI
+
+You can verify both the CLI version and server version by running:
+
+```shell-session
+$ waypoint version
+CLI: v0.9.0 (622f37bd1)
+Server: v0.9.0
+```
