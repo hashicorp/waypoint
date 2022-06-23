@@ -528,7 +528,7 @@ func installRunner(
 
 		version, err := client.GetVersionInfo(ctx, &empty.Empty{})
 		// The expected naming convention is "<platform>-default-<waypoint_version>
-		odrConfig.Name = odrConfig.Name + "default-" + version.Info.Version
+		odrConfig.Name = odrConfig.Name + "-default-" + version.Info.Version
 		if err != nil {
 			ui.Output("Error getting version: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
