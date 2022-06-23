@@ -330,7 +330,7 @@ func (c *InstallCommand) Run(args []string) int {
 	s.Done()
 
 	if c.flagRunner {
-		// we pass an empty string for the ID because it's a fresh install
+		// we pass nil for the ODR config because it's a fresh install
 		if code := installRunner(c.Ctx, log, client, c.ui, p, advertiseAddr, nil); code > 0 {
 			return code
 		}
