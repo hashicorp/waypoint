@@ -179,6 +179,16 @@ func (s *Service) RunPipeline(
 					PruneRetainOverride: o.Release.PruneRetainOverride,
 				},
 			}
+		case *pb.Pipeline_Step_Up_:
+			job.Operation = &pb.Job_Up{
+				Up: &pb.Job_UpOp{
+					Release: &pb.Job_ReleaseOp{
+						Prune:               o.Up.Prune,
+						PruneRetain:         o.Up.PruneRetain,
+						PruneRetainOverride: o.Up.PruneRetainOverride,
+					},
+				},
+			}
 		default:
 			job.Operation = &pb.Job_PipelineStep{
 				PipelineStep: &pb.Job_PipelineStepOp{

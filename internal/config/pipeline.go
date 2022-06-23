@@ -212,6 +212,24 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 						PruneRetainOverride: releaseBody.PruneRetainOverride,
 					},
 				}
+			case "up":
+				var upBody struct {
+					Prune               bool  `hcl:"prune,optional"`
+					PruneRetain         int32 `hcl:"prune_retain,optional"`
+					PruneRetainOverride bool  `hcl:"prune_retain_override,optional"`
+				}
+
+				if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &upBody); diag.HasErrors() {
+					return nil, diag
+				}
+
+				s.Kind = &pb.Pipeline_Step_Up_{
+					Up: &pb.Pipeline_Step_Up{
+						Prune:               upBody.Prune,
+						PruneRetain:         upBody.PruneRetain,
+						PruneRetainOverride: upBody.PruneRetainOverride,
+					},
+				}
 			case "exec":
 				var execBody struct {
 					Command string   `hcl:"command,optional"`
