@@ -531,14 +531,15 @@ func installRunner(
 		odrConfig.Name = odrConfig.Name + "default-" + version.Info.Version
 		if err != nil {
 			ui.Output("Error getting version: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
 		}
 
 		_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 			Config: odrConfig,
 		})
 		if err != nil {
-			s.Update("Error creating ondemand runner: %s", err)
-			s.Status(terminal.StatusError)
+			ui.Output("Error creating ondemand runner: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
 		} else {
 			s.Update("Registered ondemand runner!")
 			s.Status(terminal.StatusOK)
