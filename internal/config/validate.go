@@ -82,7 +82,7 @@ const AppeningHappening = "More than one app stanza within a waypoint.hcl file i
 //
 // Users of this package should call Validate on each subsequent configuration
 // that is loaded (Apps, Builds, Deploys, etc.) for further rich validation.
-func (c *Config) Validate() ValidationResults {
+func (c *Config) Validate() error {
 	var results ValidationResults
 
 	// Validate root
@@ -118,6 +118,12 @@ func (c *Config) Validate() ValidationResults {
 	// Validate labels
 	labelResults := ValidateLabels(c.Labels)
 	results = append(results, labelResults...)
+
+	// So that callers that test the result for nil can still do so
+	// (they test for nil because this return type used to be error)
+	if len(results) == 0 {
+		return nil
+	}
 
 	return results
 }
@@ -164,7 +170,7 @@ func (c *Config) validateApp(b *hcl.Block) []ValidationResult {
 // Similar to Config.App, this doesn't validate configuration that is
 // further deferred such as build, deploy, etc. stanzas so call Validate
 // on those as they're loaded.
-func (c *App) Validate() ValidationResults {
+func (c *App) Validate() error {
 	var results ValidationResults
 
 	// Validate labels
@@ -233,6 +239,10 @@ func (c *App) Validate() ValidationResults {
 				scope.Scope,
 			)})
 		}
+	}
+
+	if len(results) == 0 {
+		return nil
 	}
 
 	return results
