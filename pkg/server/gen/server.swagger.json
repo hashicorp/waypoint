@@ -9010,6 +9010,10 @@
           "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Release",
           "title": "Built-in release operation"
         },
+        "up": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Up",
+          "title": "Built-in up operation"
+        },
         "image": {
           "type": "string",
           "description": "Docker image to execute. This should be a fully qualified image URL."
@@ -9060,6 +9064,22 @@
         "deployment": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.Deployment"
         },
+        "prune": {
+          "type": "boolean"
+        },
+        "prune_retain": {
+          "type": "integer",
+          "format": "int32",
+          "description": "This sets the number of unreleased deployments to retain when pruning.\nThis only has an effect if \"prune_retain_override\" is true. If that\nis false, then pruning uses the default behavior (retain 2)."
+        },
+        "prune_retain_override": {
+          "type": "boolean"
+        }
+      }
+    },
+    "hashicorp.waypoint.Pipeline.Step.Up": {
+      "type": "object",
+      "properties": {
         "prune": {
           "type": "boolean"
         },
