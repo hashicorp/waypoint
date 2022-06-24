@@ -53,20 +53,18 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	defer func() { s.Abort() }()
 	settings, err := helminstallutil.SettingsInit()
 	if err != nil {
+		s.Update("Unable to retrieve Helm configuration.")
+		s.Status(terminal.StatusError)
 		return err
 	}
-	s.Update("Helm settings retrieved")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
-	s = sg.Add("Getting Helm action configuration...")
+	s.Update("Getting Helm action configuration...")
 	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeconfigPath, i.Config.K8sContext)
 	if err != nil {
+		s.Update("Unable to initialize Helm.")
+		s.Status(terminal.StatusError)
 		return err
 	}
-	s.Update("Helm action initialized")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
 	chartNS := ""
 	if v := i.Config.Namespace; v != "" {
@@ -78,7 +76,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	}
 
 	// This setup for Helm install matches the setup for the Helm platform plugin
-	s = sg.Add("Creating new Helm install object...")
+	s.Update("Creating new Helm install object...")
 	client := action.NewInstall(actionConfig)
 	client.ClientOnly = false
 	client.DryRun = false
@@ -100,27 +98,25 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	client.Replace = false
 	client.Description = "Static runner for executing remote operations for Hashicorp Waypoint."
 	client.CreateNamespace = true
-	s.Update("Helm install created")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
 	version := i.Config.Version
 	if version == "" {
 		version = helminstallutil.DefaultHelmChartVersion
 	}
 
-	s = sg.Add("Locating chart...")
+	s.Update("Locating chart...")
 	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/v"+version+".tar.gz", settings)
 	if err != nil {
+		s.Update("Unable to locate Waypoint helm chart.")
+		s.Status(terminal.StatusError)
 		return err
 	}
-	s.Update("Helm chart located")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
-	s = sg.Add("Loading Helm chart...")
+	s.Update("Loading Helm chart...")
 	c, err := loader.Load(path)
 	if err != nil {
+		s.Update("Unable to load Helm chart.")
+		s.Status(terminal.StatusError)
 		return err
 	}
 	s.Update("Helm chart loaded")
@@ -241,13 +237,12 @@ func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 
 	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeconfigPath, i.Config.K8sContext)
 	if err != nil {
+		s.Update("Unable to setup Helm.")
+		s.Status(terminal.StatusError)
 		return err
 	}
-	s.Update("Helm settings retrieved")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
-	s = sg.Add("Uninstallation Pre-check...")
+	s.Update("Uninstallation Pre-check...")
 	helmRunnerId := "waypoint-" + strings.ToLower(opts.Id)
 	verifyClient := action.NewGetValues(actionConfig)
 	cfg, err := verifyClient.Run(helmRunnerId)
