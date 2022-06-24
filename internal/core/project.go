@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-multierror"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -110,8 +109,8 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	if err := opts.Config.Validate(); err != nil {
 		return nil, err
 	}
-	if errs := config.ValidateLabels(p.overrideLabels); len(errs) > 0 {
-		return nil, multierror.Append(nil, errs...)
+	if err := config.ValidateLabels(p.overrideLabels); err != nil {
+		return nil, err
 	}
 
 	// Init our server connection. This may be in-process if we're in
