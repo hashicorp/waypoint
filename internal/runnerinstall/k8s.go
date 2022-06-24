@@ -166,8 +166,8 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 
 func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
-		Name:   "k8s-Config-path",
-		Usage:  "Path to the kubeconfig file to use,",
+		Name:   "k8s-config-path",
+		Usage:  "Path to the kubeconfig file to use.",
 		Target: &i.Config.KubeconfigPath,
 	})
 
