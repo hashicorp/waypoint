@@ -1,0 +1,4 @@
+```release-note:feature
+plugin/aws-ecr-pull: This introduces an `aws-ecr-pull` builder plugin
+that enables using AWS ECR images that are built outside of Waypoint.
+```

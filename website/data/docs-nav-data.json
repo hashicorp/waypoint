@@ -62,6 +62,30 @@
           {
             "title": "Upgrade to 0.2.0",
             "path": "upgrading/version-guides/0.2.0"
+          },
+          {
+            "title": "Upgrade to 0.3.0",
+            "path": "upgrading/version-guides/0.3.0"
+          },
+          {
+            "title": "Upgrade to 0.4.0",
+            "path": "upgrading/version-guides/0.4.0"
+          },
+          {
+            "title": "Upgrade to 0.5.0",
+            "path": "upgrading/version-guides/0.5.0"
+          },
+          {
+            "title": "Upgrade to 0.6.0",
+            "path": "upgrading/version-guides/0.6.0"
+          },
+          {
+            "title": "Upgrade to 0.7.0",
+            "path": "upgrading/version-guides/0.7.0"
+          },
+          {
+            "title": "Upgrade to 0.8.0",
+            "path": "upgrading/version-guides/0.8.0"
           }
         ]
       }
@@ -404,6 +428,10 @@
           {
             "title": "OIDC",
             "path": "server/auth/oidc"
+          },
+          {
+            "title": "Tokens",
+            "path": "server/auth/tokens"
           }
         ]
       },
@@ -532,6 +560,10 @@
           {
             "title": "Authenticator",
             "path": "extending-waypoint/plugin-interfaces/authenticator"
+          },
+          {
+            "title": "ConfigSourcer",
+            "path": "extending-waypoint/plugin-interfaces/configsourcer"
           },
           {
             "title": "Configurable",

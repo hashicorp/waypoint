@@ -135,6 +135,35 @@ waypoint runner profile set -name=ecs -plugin-type=aws-ecs -plugin-config=./aws-
 This can either be set as the default plugin, or be used for specific projects. Note that to use this profile,
 the Waypoint remote runner will need permission and credentials to create ECS tasks in the desired cluster.
 
+### Deleting a runner profile
+
+Runner profiles can be deleted with the `waypoint runner profile delete` command including the ID as the argument.
+
+To get the runner ID, run `waypoint runner profile inspect` for a named runner.
+
+```shell-session
+$ waypoint runner profile list
+Runner profiles
+   NAME  | PLUGIN TYPE |            OCI URL            | TARGET RUNNER | DEFAULT
+---------+-------------+-------------------------------+---------------+----------
+  docker | docker      | waypoint-odr:dev              | *             | yes
+  dev    | kubernetes  | hashicorp/waypoint-odr:latest | dev           |
+
+$ waypoint runner profile inspect dev
+» Runner profile:
+                   Name: dev
+                     ID: 01G65VD1SSB3HYJ3FS9K629A3B
+                Default: false
+                OCI URL: hashicorp/waypoint-odr:latest
+            Plugin Type: kubernetes
+          Target Runner: dev
+  Environment Variables: map[]
+
+$ waypoint runner profile delete 01G65VD1SSB3HYJ3FS9K629A3B
+
+» Runner profile deleted
+```
+
 ## Using Profiles for Projects
 
 Projects can be configured to use specific runner profiles, rather than the default. To force a particular project

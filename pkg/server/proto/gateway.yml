@@ -15,17 +15,27 @@ apis:
 
 http:
   rules:
+
+  # Unauthenticated endpoints
   - selector: hashicorp.waypoint.Waypoint.GetVersionInfo
     get: /v1/version
+
   - selector: hashicorp.waypoint.Waypoint.ListOIDCAuthMethods
     get: /v1/oidc/methods
+
   - selector: hashicorp.waypoint.Waypoint.GetOIDCAuthURL
     post: /v1/oidc/{auth_method.name}/url
     body: "*"
+
   - selector: hashicorp.waypoint.Waypoint.CompleteOIDCAuth
     post: /v1/oidc/{auth_method.name}/complete
     body: "*"
 
+  - selector: hashicorp.waypoint.Waypoint.NoAuthRunTrigger
+    post: /v1/triggers/no-auth/{ref.id}/run
+    body: "*"
+
+  # Users
   - selector: hashicorp.waypoint.Waypoint.GetUser
     get: /v1/user/by-id/{user.id.id}
 
@@ -49,6 +59,7 @@ http:
     post: /v1/auth-method
     body: "*"
 
+  # Auth methods
   - selector: hashicorp.waypoint.Waypoint.GetAuthMethod
     get: /v1/auth-method/{auth_method.name}
 
@@ -76,6 +87,7 @@ http:
     post: /v1/workspace
     body: "*"
 
+  # Projects
   - selector: hashicorp.waypoint.Waypoint.UpsertProject
     post: /v1/project
     body: "*"
@@ -86,6 +98,7 @@ http:
   - selector: hashicorp.waypoint.Waypoint.ListProjects
     get: /v1/projects
 
+  # Applications
   - selector: hashicorp.waypoint.Waypoint.GetApplication
     get: /v1/project/{application.project}/application/{application.application}
 
@@ -93,9 +106,7 @@ http:
     post: /v1/project/{project.project}/application
     body: "*"
 
-
   # Builds
-
   - selector: hashicorp.waypoint.Waypoint.ListBuilds
     get: /v1/project/{application.project}/application/{application.application}/builds
 
@@ -114,6 +125,7 @@ http:
   - selector: hashicorp.waypoint.Waypoint.GetLatestBuild
     get: /v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/build/latest
 
+  # Pushed artifacts
   - selector: hashicorp.waypoint.Waypoint.ListPushedArtifacts
     get: /v1/project/{application.project}/application/{application.application}/artifacts
 
@@ -132,6 +144,7 @@ http:
   - selector: hashicorp.waypoint.Waypoint.GetLatestPushedArtifact
     get: /v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/artifact/latest
 
+  # Deployments
   - selector: hashicorp.waypoint.Waypoint.ListDeployments
     get: /v1/project/{application.project}/application/{application.application}/deployments
 
@@ -144,6 +157,7 @@ http:
   - selector: hashicorp.waypoint.Waypoint.GetDeployment
     get: /v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/deployment/{ref.sequence.number}
 
+  # Instances
   - selector: hashicorp.waypoint.Waypoint.ListInstances
     get: /v1/instances/{deployment_id}
 
@@ -153,6 +167,7 @@ http:
   - selector: hashicorp.waypoint.Waypoint.ListInstances
     get: /v1/project/{application.application.project}/application/{application.application.application}/workspace/{application.workspace.workspace}/instances
 
+  # Releases
   - selector: hashicorp.waypoint.Waypoint.ListReleases
     get: /v1/project/{application.project}/application/{application.application}/releases
 
@@ -171,6 +186,7 @@ http:
   - selector: hashicorp.waypoint.Waypoint.GetLatestRelease
     get: /v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/release/latest
 
+  # Status reports
   - selector: hashicorp.waypoint.Waypoint.ListStatusReports
     get: /v1/project/{application.project}/application/{application.application}/status-reports
 
@@ -202,15 +218,39 @@ http:
     put: /v1/project/{release.sequence.application.project}/application/{release.sequence.application.application}/release/{release.sequence.number}/status-report
     body: "*"
 
+  # Logs
   - selector: hashicorp.waypoint.Waypoint.GetLogStream
     post: /v1/deployment/{deployment_id}/logs
+    body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.GetLogStream
     post: /v1/project/{application.application.project}/application/{application.application.application}/logs
+    body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.GetLogStream
     post: /v1/project/{application.application.project}/application/{application.application.application}/workspace/{application.workspace.workspace}/logs
+    body: "*"
 
+  # Exec
+  - selector: hashicorp.waypoint.Waypoint.StartExecStream
+    post: /v1/exec
+    body: "*"
+
+  # Config
+  - selector: hashicorp.waypoint.Waypoint.GetConfig
+    get: /v1/project/{application.project}/application/{application.application}/config
+
+  - selector: hashicorp.waypoint.Waypoint.GetConfig
+    get: /v1/project/{project.project}/config
+
+  - selector: hashicorp.waypoint.Waypoint.SetConfigSource
+    put: /v1/config-source
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.GetConfigSource
+    get: /v1/config-source
+
+  # Hostname
   - selector: hashicorp.waypoint.Waypoint.CreateHostname
     post: /v1/project/{target.application.application.project}/application/{target.application.application.application}/hostname
     body: "*"
@@ -228,6 +268,41 @@ http:
   - selector: hashicorp.waypoint.Waypoint.ListHostnames
     get: /v1/project/{target.application.application.project}/application/{target.application.application.application}/workspace/{target.application.workspace.workspace}/hostnames
 
+    # Jobs
+  - selector: hashicorp.waypoint.Waypoint.QueueJob
+    post: /v1/jobs/queue
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.CancelJob
+    put: /v1/jobs/cancel/{job_id}
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.GetJob
+    get: /v1/jobs/{job_id}
+
+  - selector: hashicorp.waypoint.Waypoint.ListJobs
+    get: /v1/jobs/workspace/{workspace.workspace}
+
+  - selector: hashicorp.waypoint.Waypoint.ListJobs
+    get: /v1/jobs/workspace/{workspace.workspace}/state/{jobState}
+
+  - selector: hashicorp.waypoint.Waypoint.ListJobs
+    get: /v1/jobs/project/{project.project}
+
+  - selector: hashicorp.waypoint.Waypoint.ListJobs
+    get: /v1/jobs/state/{jobState}
+
+  - selector: hashicorp.waypoint.Waypoint.ListJobs
+    get: /v1/jobs/runner/by-id/{targetRunner.id.id}
+
+  - selector: hashicorp.waypoint.Waypoint.ValidateJob
+    post: /v1/jobs/validate
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.GetJobStream
+    get: /v1/jobs/stream/{job_id}
+
+  # Runners
   - selector: hashicorp.waypoint.Waypoint.GetRunner
     get: /v1/runner/{runner_id}
 
@@ -241,6 +316,7 @@ http:
   - selector: hashicorp.waypoint.Waypoint.ForgetRunner
     post: /v1/runner/{runner_id}/forget
 
+  # Server config
   - selector: hashicorp.waypoint.Waypoint.GetServerConfig
     get: /v1/server/config
 
@@ -248,6 +324,10 @@ http:
     post: /v1/server/config
     body: "*"
 
+  # Snapshots: TODO
+
+  # Tokens
+  # BootstrapToken: TODO
   - selector: hashicorp.waypoint.Waypoint.DecodeToken
     post: /v1/token/decode
     body: "*"
@@ -268,6 +348,12 @@ http:
     post: /v1/token/exchange
     body: "*"
 
+  # Ommitted from HTTP spec due to only being called by the runner over GRPC:
+  # RunnerToken, RunnerConfig, RunnerJobStream, RunnerGetDeploymentConfig
+
+  # Omitted from HTTP spec due to only being called by the CEB over GRPC:
+  # EntrypointConfig, EntrypointLogStream, EntrypointExecStream
+
   - selector: hashicorp.waypoint.Waypoint.WaypointHclFmt
     post: /v1/hcl/format
     body: "*"
@@ -285,6 +371,27 @@ http:
   - selector: hashicorp.waypoint.Waypoint.ListOnDemandRunnerConfigs
     get: /v1/on-demand-runners
 
+  # Internal metadata endpoints intentionally omitted
+
+  # Tasks
+  - selector: hashicorp.waypoint.Waypoint.GetTask
+    get: /v1/task/{ref.id}
+
+  - selector: hashicorp.waypoint.Waypoint.GetTask
+    get: /v1/task/by-job/{ref.job_id}
+
+  - selector: hashicorp.waypoint.Waypoint.ListTask
+    get: /v1/tasks
+
+  - selector: hashicorp.waypoint.Waypoint.CancelTask
+    put: /v1/task/{ref.id}/cancel
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.CancelTask
+    put: /v1/task/by-job/{ref.job_id}/cancel
+    body: "*"
+
+  # Triggers
   - selector: hashicorp.waypoint.Waypoint.UpsertTrigger
     post: /v1/triggers
     body: "*"
@@ -311,44 +418,15 @@ http:
     put: /v1/trigger/{ref.id}
     body: "*"
 
-    # Jobs
+    #############################################################################
+    # UI Endpoints
+    #############################################################################
 
-  - selector: hashicorp.waypoint.Waypoint.GetJobStream
-    get: /v1/jobs/stream/{job_id}
+    # Projects
+  - selector: hashicorp.waypoint.Waypoint.UI_GetProject
+    get: /v1/ui/project/{project.project}
 
-  - selector: hashicorp.waypoint.Waypoint.ValidateJob
-    post: /v1/jobs/validate
-    body: "*"
-
-  - selector: hashicorp.waypoint.Waypoint.QueueJob
-    post: /v1/jobs/queue
-    body: "*"
-
-  - selector: hashicorp.waypoint.Waypoint.CancelJob
-    put: /v1/jobs/cancel/{job_id}
-    body: "*"
-
-  - selector: hashicorp.waypoint.Waypoint.GetJob
-    get: /v1/jobs/{job_id}
-
-    # Incomplete list of endpoints allowed for listing jobs.
-  - selector: hashicorp.waypoint.Waypoint.ListJobs
-    get: /v1/jobs/workspace/{workspace.workspace}
-
-  - selector: hashicorp.waypoint.Waypoint.ListJobs
-    get: /v1/jobs/workspace/{workspace.workspace}/state/{jobState}
-
-  - selector: hashicorp.waypoint.Waypoint.ListJobs
-    get: /v1/jobs/project/{project.project}
-
-  - selector: hashicorp.waypoint.Waypoint.ListJobs
-    get: /v1/jobs/state/{jobState}
-
-  - selector: hashicorp.waypoint.Waypoint.ListJobs
-    get: /v1/jobs/runner/by-id/{targetRunner.id.id}
-
-    # UI
-
+    # Deployments
   - selector: hashicorp.waypoint.Waypoint.UI_ListDeployments
     get: /v1/ui/deployments/workspace/{workspace.workspace}
 
@@ -360,3 +438,17 @@ http:
 
   - selector: hashicorp.waypoint.Waypoint.UI_ListDeployments
     get: /v1/ui/deployments/state/{physical_state}
+
+    # Releases
+  - selector: hashicorp.waypoint.Waypoint.UI_ListReleases
+    get: /v1/ui/releases/workspace/{workspace.workspace}
+
+  - selector: hashicorp.waypoint.Waypoint.UI_ListReleases
+    get: /v1/ui/releases/application/{application.application}
+
+  - selector: hashicorp.waypoint.Waypoint.UI_ListReleases
+    get: /v1/ui/releases/project/{application.project}
+
+  - selector: hashicorp.waypoint.Waypoint.UI_ListReleases
+    get: /v1/ui/releases/state/{physical_state}
+

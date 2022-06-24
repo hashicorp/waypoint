@@ -25,8 +25,6 @@ The platform can be specified as kubernetes, nomad, ecs, or docker. If not
 specified, the CLI command will attempt to retrieve the platform defined in
 the server context.
 
-'-auto-approve' is required.
-
 By default, this command deletes the default server's context and creates
 a server snapshot.
 
@@ -46,7 +44,7 @@ command) will not be affected.
 
 #### Command Options
 
-- `-auto-approve` - Auto-approve server uninstallation.
+- `-auto-approve` - Auto-approve server uninstallation. If unset, confirmation will be requested.
 - `-delete-context` - Delete the context for the server once it's uninstalled.
 - `-platform=<string>` - Platform to uninstall the Waypoint server from.
 - `-snapshot-name=<string>` - Filename to write the snapshot to. If no name is specified, by default a timestamp will be appended to the default snapshot name.

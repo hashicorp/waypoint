@@ -273,8 +273,6 @@ Usage: waypoint server uninstall [options]
   specified, the CLI command will attempt to retrieve the platform defined in
   the server context.
 
-  '-auto-approve' is required.
-
   By default, this command deletes the default server's context and creates 
   a server snapshot.
 
@@ -295,7 +293,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 			Name:    "auto-approve",
 			Target:  &c.autoApprove,
 			Default: false,
-			Usage:   "Auto-approve server uninstallation.",
+			Usage:   "Auto-approve server uninstallation. If unset, confirmation will be requested.",
 		})
 
 		f.BoolVar(&flag.BoolVar{

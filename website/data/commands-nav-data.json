@@ -235,6 +235,10 @@
     "path": "runner-token"
   },
   {
+    "title": "runner profile delete",
+    "path": "runner-profile-delete"
+  },
+  {
     "title": "runner profile list",
     "path": "runner-profile-list"
   },

@@ -1,0 +1,3 @@
+```release-note:bug
+cli: fix git dirty check that was broken for some versions of the git cli
+```

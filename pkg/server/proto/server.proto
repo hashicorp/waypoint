@@ -105,28 +105,28 @@ service Waypoint {
   // GetBuild returns a build
   rpc GetBuild(GetBuildRequest) returns (Build) {}
 
+  // GetLatestBuild returns the most recent successfully completed build
+  // for an app.
+  rpc GetLatestBuild(GetLatestBuildRequest) returns (Build);
+
   // ListPushedArtifacts returns the builds.
   rpc ListPushedArtifacts(ListPushedArtifactsRequest) returns (ListPushedArtifactsResponse);
 
   // GetPushedArtifact returns a deployment
   rpc GetPushedArtifact(GetPushedArtifactRequest) returns (PushedArtifact);
 
+  // GetLatestPushedArtifact returns the most recent successfully completed
+  // artifact push for an app.
+  rpc GetLatestPushedArtifact(GetLatestPushedArtifactRequest) returns (PushedArtifact);
+
   // ListDeployments returns the deployments.
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
-
-  // ListInstances returns the running instances of deployments.
-  rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse);
 
   // GetDeployment returns a deployment
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment) {}
 
-  // GetLatestBuild returns the most recent successfully completed build
-  // for an app.
-  rpc GetLatestBuild(GetLatestBuildRequest) returns (Build);
-
-  // GetLatestPushedArtifact returns the most recent successfully completed
-  // artifact push for an app.
-  rpc GetLatestPushedArtifact(GetLatestPushedArtifactRequest) returns (PushedArtifact);
+  // ListInstances returns the running instances of deployments.
+  rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse);
 
   // ListReleases returns the releases.
   rpc ListReleases(ListReleasesRequest) returns (ListReleasesResponse);
@@ -137,6 +137,19 @@ service Waypoint {
   // GetLatestRelease returns the most recent successfully completed
   // release for an app.
   rpc GetLatestRelease(GetLatestReleaseRequest) returns (Release);
+
+  // GetStatusReport returns a StatusReport
+  rpc GetStatusReport(GetStatusReportRequest) returns (StatusReport);
+
+  // GetLatestStatusReport returns the most recent successfully completed
+  // health report for an app
+  rpc GetLatestStatusReport(GetLatestStatusReportRequest) returns (StatusReport);
+
+  // ListStatusReports returns the deployments.
+  rpc ListStatusReports(ListStatusReportsRequest) returns (ListStatusReportsResponse);
+
+  // ExpediteStatusReport returns the queued status report job id
+  rpc ExpediteStatusReport(ExpediteStatusReportRequest) returns (ExpediteStatusReportResponse);
 
   // GetLogStream reads the log stream for a deployment. This will immediately
   // send a single LogEntry with the lines we have so far. If there are no
@@ -268,19 +281,6 @@ service Waypoint {
   // username hint.
   rpc ConvertInviteToken(ConvertInviteTokenRequest) returns (NewTokenResponse);
 
-  // GetStatusReport returns a StatusReport
-  rpc GetStatusReport(GetStatusReportRequest) returns (StatusReport);
-
-  // GetLatestStatusReport returns the most recent successfully completed
-  // health report for an app
-  rpc GetLatestStatusReport(GetLatestStatusReportRequest) returns (StatusReport);
-
-  // ListStatusReports returns the deployments.
-  rpc ListStatusReports(ListStatusReportsRequest) returns (ListStatusReportsResponse);
-
-  // ExpediteStatusReport returns the queued status report job id
-  rpc ExpediteStatusReport(ExpediteStatusReportRequest) returns (ExpediteStatusReportResponse);
-
   //----------------------------------------------------------------------
   // Runner endpoints. These are expected to be called only by a runner.
   // These are not meant to be public endpoints.
@@ -344,6 +344,9 @@ service Waypoint {
 
   // GetOnDemandRunnerConfig returns the on-demand runner configuration.
   rpc GetOnDemandRunnerConfig(GetOnDemandRunnerConfigRequest) returns (GetOnDemandRunnerConfigResponse);
+
+  // GetOnDemandRunnerConfig returns the on-demand runner configuration.
+  rpc DeleteOnDemandRunnerConfig(DeleteOnDemandRunnerConfigRequest) returns (DeleteOnDemandRunnerConfigResponse);
 
   // ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
   rpc ListOnDemandRunnerConfigs(google.protobuf.Empty) returns (ListOnDemandRunnerConfigsResponse);
@@ -1175,6 +1178,9 @@ message Task {
   // Currently the only required field when Upserting a Task.
   Ref.Job task_job = 2;
 
+  // watch_job will spawn a job to stream logs from the `task_job`.
+  Ref.Job watch_job = 9;
+
   // Both start_job and stop_job relate to task_job.These jobs were
   // responsibile for starting and stopping the runner which executed the task
   // job.
@@ -1238,6 +1244,7 @@ message GetTaskResponse {
   Job task_job = 2;
   Job start_job = 3;
   Job stop_job = 4;
+  Job watch_job = 5;
 }
 
 message DeleteTaskRequest {
@@ -1263,6 +1270,12 @@ message ListTaskResponse {
 message CancelTaskRequest {
   // A reference to the task to cancel
   Ref.Task ref = 1;
+}
+
+// ErrorDetail is intended for use in `status`.
+message ErrorDetail {
+  string key  = 1;
+  string value = 2;
 }
 
 /********************************************************************
@@ -1839,6 +1852,9 @@ message Job {
 
       // timestamp is the timestamp of the commit
       google.protobuf.Timestamp timestamp = 2;
+
+      // commit_message is the commit message, contains arbitrary text
+      string commit_message = 3;
     }
   }
 
@@ -3061,6 +3077,14 @@ message GetOnDemandRunnerConfigResponse {
   OnDemandRunnerConfig config = 1;
 }
 
+message DeleteOnDemandRunnerConfigRequest {
+  Ref.OnDemandRunnerConfig config = 1;
+}
+
+message DeleteOnDemandRunnerConfigResponse {
+  OnDemandRunnerConfig config = 1;
+}
+
 message ListOnDemandRunnerConfigsResponse {
   repeated OnDemandRunnerConfig configs = 1;
 }
@@ -4243,7 +4267,7 @@ message ExecStreamRequest {
 
       // Instance to send the exec request to. This is indicates that
       // the client wants an exec session to this specific instance,
-      // rather than one the server picks. Targetted instances can be
+      // rather than one the server picks. Targeted instances can be
       // any instance type, where as untargeted have to be LONG_RUNNING.
       string instance_id = 4;
     }

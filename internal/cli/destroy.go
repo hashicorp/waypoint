@@ -78,7 +78,7 @@ func (c *DestroyCommand) Flags() *flag.Sets {
 			Name:    "auto-approve",
 			Target:  &c.confirm,
 			Default: false,
-			Usage:   "Confirm destroying all resources.",
+			Usage:   "Auto-approve destroying all resources. If unset, confirmation will be requested.",
 		})
 	})
 }

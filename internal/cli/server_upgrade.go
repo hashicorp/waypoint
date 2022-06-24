@@ -389,10 +389,46 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 	s.Update("Previous runner uninstalled")
 	s.Done()
 
-	// TODO(mitchellh): This creates a new auth token for the new runner.
-	// In the future, we need to invalidate the old token. We don't have
-	// the functionality to do this today.
-	return installRunner(ctx, installOpts.Log, client, c.ui, p, advertiseAddr)
+	if odc, ok := p.(serverinstall.OnDemandRunnerConfigProvider); ok {
+		odr := odc.OnDemandRunnerConfig()
+
+		// We attempt to look up the default runner profile from the previous
+		// installation. If we find it, we get the ID, so we can delete it after
+		// the new runner profile is set up
+		oldRunnerConfig, err := client.GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
+			Config: &pb.Ref_OnDemandRunnerConfig{
+				Name: odr.PluginType + "-bootstrap-profile",
+			}})
+
+		if err != nil && status.Code(err) != codes.NotFound {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		} else if err != nil && status.Code(err) == codes.NotFound {
+			c.ui.Output("Waypoint default runner profile not found, creating new profile", terminal.WithWarningStyle())
+		} else {
+			ociUrl := odr.OciUrl
+			if ociUrl == "" {
+				ociUrl = "hashicorp/waypoint-odr:latest"
+			}
+			odr = &pb.OnDemandRunnerConfig{
+				Id:                   oldRunnerConfig.Config.Id,
+				Name:                 oldRunnerConfig.Config.Name,
+				TargetRunner:         oldRunnerConfig.Config.TargetRunner,
+				OciUrl:               ociUrl,
+				EnvironmentVariables: oldRunnerConfig.Config.EnvironmentVariables,
+				PluginType:           oldRunnerConfig.Config.PluginType,
+				PluginConfig:         oldRunnerConfig.Config.PluginConfig,
+				ConfigFormat:         oldRunnerConfig.Config.ConfigFormat,
+				Default:              true,
+			}
+		}
+
+		// TODO(mitchellh): This creates a new auth token for the new runner.
+		// In the future, we need to invalidate the old token. We don't have
+		// the functionality to do this today.
+		return installRunner(ctx, installOpts.Log, client, c.ui, p, advertiseAddr, odr)
+	}
+	return 0
 }
 
 func (c *ServerUpgradeCommand) Flags() *flag.Sets {
@@ -402,7 +438,7 @@ func (c *ServerUpgradeCommand) Flags() *flag.Sets {
 			Name:    "auto-approve",
 			Target:  &c.confirm,
 			Default: false,
-			Usage:   "Confirm server upgrade.",
+			Usage:   "Auto-approve server upgrade. If unset, confirmation will be requested.",
 		})
 		f.StringVar(&flag.StringVar{
 			Name:    "context-name",

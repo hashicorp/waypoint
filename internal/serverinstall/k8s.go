@@ -1140,10 +1140,10 @@ func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	var cpuConfig k8s.ResourceConfig
 	var memConfig k8s.ResourceConfig
 	if v := i.config.cpuRequest; v != "" {
-		cpuConfig.Requested = v
+		cpuConfig.Request = v
 	}
 	if v := i.config.memRequest; v != "" {
-		memConfig.Requested = v
+		memConfig.Request = v
 	}
 	if v := i.config.cpuLimit; v != "" {
 		cpuConfig.Limit = v
@@ -1578,32 +1578,37 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 		Default: "",
 	})
 
+	// NOTE(briancain): We set the default for these values to 0. In the k8s API,
+	// setting the limits and requests values to 0 is the same as not setting it all.
+	// This is the expected behavior we'll want. If someone _does_ set a value using
+	// these flags, they will be parsed and used instead.
+
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-cpu-request",
 		Target:  &i.config.cpuRequest,
 		Usage:   "Configures the requested CPU amount for the Waypoint server in Kubernetes.",
-		Default: "100m",
+		Default: "0",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-mem-request",
 		Target:  &i.config.memRequest,
 		Usage:   "Configures the requested memory amount for the Waypoint server in Kubernetes.",
-		Default: "256Mi",
+		Default: "0",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-cpu-limit",
 		Target:  &i.config.cpuLimit,
 		Usage:   "Configures the CPU limit for the Waypoint server in Kubernetes.",
-		Default: "100m",
+		Default: "0",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-mem-limit",
 		Target:  &i.config.memLimit,
 		Usage:   "Configures the memory limit for the Waypoint server in Kubernetes.",
-		Default: "256Mi",
+		Default: "0",
 	})
 
 	set.StringVar(&flag.StringVar{

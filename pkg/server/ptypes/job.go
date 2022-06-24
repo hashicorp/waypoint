@@ -56,12 +56,22 @@ func ValidateJob(job *pb.Job) error {
 		validation.Field(&job.Id, validation.By(isEmpty)),
 		validation.Field(&job.Application, validation.Required),
 		validation.Field(&job.Workspace, validation.Required),
+		validationext.StructField(&job.Workspace, func() []*validation.FieldRules {
+			return ValidateJobWorkspaceRules(job.Workspace)
+		}),
 		validation.Field(&job.TargetRunner, validation.Required),
 		validation.Field(&job.Operation, validation.Required),
 		validationext.StructField(&job.DataSource, func() []*validation.FieldRules {
 			return ValidateJobDataSourceRules(job.DataSource)
 		}),
 	))
+}
+
+// ValidateJobWorkspaceRules
+func ValidateJobWorkspaceRules(v *pb.Ref_Workspace) []*validation.FieldRules {
+	return []*validation.FieldRules{
+		validation.Field(&v.Workspace, validation.Required),
+	}
 }
 
 // ValidateJobDataSourceRules

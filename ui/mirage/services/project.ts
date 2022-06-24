@@ -43,7 +43,7 @@ export function uiGet(this: RouteHandler, schema: any, { requestBody }: Request)
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export function update(this: RouteHandler, schema: any, { requestBody }: Request): Response {
+export function upsert(this: RouteHandler, schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(UpsertProjectRequest, requestBody);
   let name = requestMsg.getProject()?.getName();
   let variablesList = requestMsg

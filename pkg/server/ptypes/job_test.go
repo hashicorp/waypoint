@@ -27,6 +27,12 @@ func TestValidateJob(t *testing.T) {
 		},
 
 		{
+			"workspace is set",
+			func(j *pb.Job) { j.Workspace = nil },
+			"workspace: cannot be blank",
+		},
+
+		{
 			"git: path good",
 			func(j *pb.Job) {
 				j.DataSource = &pb.Job_DataSource{

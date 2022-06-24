@@ -1,0 +1,3 @@
+```release-note:bug
+upgrade: Update existing runner profile during server upgrade & change naming convention of initial runner profile
+```

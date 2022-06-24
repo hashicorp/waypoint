@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/opaqueany"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -230,7 +231,7 @@ func (op *releaseDestroyOperation) Upsert(
 		Release: d,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed upserting release destroy operation")
 	}
 
 	return resp.Release, nil
