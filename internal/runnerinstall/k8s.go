@@ -224,7 +224,7 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 		Name:    "k8s-runner-service-account-init",
 		Target:  &i.Config.CreateServiceAccount,
 		Default: true,
-		Usage:   "Create the service account if it does not exist. The default is true.",
+		Usage:   "Create the service account if it does not exist.",
 	})
 }
 
