@@ -125,9 +125,9 @@ func (c *Config) Validate() error {
 
 	// Validate pipelines
 	for _, block := range content.Blocks.OfType("pipeline") {
-		err := c.validatePipeline(block)
-		if err != nil {
-			result = multierror.Append(result, err)
+		pipelineRes := c.validatePipeline(block)
+		if pipelineRes != nil {
+			results = append(results, pipelineRes...)
 		}
 	}
 
@@ -266,24 +266,31 @@ func (c *App) Validate() error {
 
 // validatePipeline validates that a given pipeline block has at least
 // one step stanza
-func (c *Config) validatePipeline(b *hcl.Block) error {
+func (c *Config) validatePipeline(b *hcl.Block) []ValidationResult {
+	var results []ValidationResult
+
 	// Validate root
 	schema, _ := gohcl.ImpliedBodySchema(&validatePipeline{})
 	content, diag := b.Body.Content(schema)
 	if diag.HasErrors() {
-		return diag
+		results = append(results, ValidationResult{Error: diag})
+
+		if content == nil {
+			return results
+		}
 	}
 
 	// At least one Step required
 	if len(content.Blocks.OfType("step")) < 1 {
-		return &hcl.Diagnostic{
+		results = append(results, ValidationResult{Error: &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "'step' stanza required",
 			Subject:  &b.DefRange,
 			Context:  &b.TypeRange,
-		}
+		}})
 	}
-	return nil
+
+	return results
 }
 
 func (c *Pipeline) Validate() error {
