@@ -141,13 +141,18 @@ func (i *K8sInstaller) Install(
 
 	var version string
 	if i.config.version == "" {
-		version = helminstallutil.DefaultHelmChartVersion
+		tags, err := helminstallutil.GetLatestHelmChartVersion(ctx)
+		if err != nil {
+			opts.UI.Output("Error getting latest tag of Waypoint helm chart.", terminal.WithErrorStyle())
+			return nil, err
+		}
+		version = *tags[0].Name
 	} else {
 		version = i.config.version
 	}
 
 	s = sg.Add("Locating chart...")
-	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/v"+version+".tar.gz", settings)
+	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/"+version+".tar.gz", settings)
 	if err != nil {
 		return nil, err
 	}
@@ -387,13 +392,18 @@ func (i *K8sInstaller) Upgrade(
 
 	var version string
 	if i.config.version == "" {
-		version = helminstallutil.DefaultHelmChartVersion
+		tags, err := helminstallutil.GetLatestHelmChartVersion(ctx)
+		if err != nil {
+			opts.UI.Output("Error getting latest tag of Waypoint helm chart.", terminal.WithErrorStyle())
+			return nil, err
+		}
+		version = *tags[0].Name
 	} else {
 		version = i.config.version
 	}
 
 	s = sg.Add("Locating chart...")
-	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/v"+version+".tar.gz", settings)
+	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/"+version+".tar.gz", settings)
 	if err != nil {
 		return nil, err
 	}

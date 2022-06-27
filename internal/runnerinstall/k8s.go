@@ -4,9 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
-	"time"
-
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
 	k8sinstallutil "github.com/hashicorp/waypoint/internal/installutil/k8s"
@@ -15,6 +12,8 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
+	"time"
 )
 
 type K8sRunnerInstaller struct {
@@ -101,22 +100,25 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 
 	version := i.Config.Version
 	if version == "" {
-		version = helminstallutil.DefaultHelmChartVersion
+		tags, err := helminstallutil.GetLatestHelmChartVersion(ctx)
+		if err != nil {
+			opts.UI.Output("Error getting latest tag of Waypoint helm chart.", terminal.WithErrorStyle())
+			return err
+		}
+		version = *tags[0].Name
 	}
 
 	s.Update("Locating chart...")
-	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/v"+version+".tar.gz", settings)
+	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/"+version+".tar.gz", settings)
 	if err != nil {
-		s.Update("Unable to locate Waypoint helm chart.")
-		s.Status(terminal.StatusError)
+		opts.UI.Output("Unable to locate Waypoint helm chart.", terminal.WithErrorStyle())
 		return err
 	}
 
 	s.Update("Loading Helm chart...")
 	c, err := loader.Load(path)
 	if err != nil {
-		s.Update("Unable to load Helm chart.")
-		s.Status(terminal.StatusError)
+		opts.UI.Output("Unable to load Waypoint helm chart.", terminal.WithErrorStyle())
 		return err
 	}
 	s.Update("Helm chart loaded")
@@ -298,7 +300,7 @@ func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 func (i *K8sRunnerInstaller) UninstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-config-path",
-		Usage:  "Path to the kubeconfig file to use,",
+		Usage:  "Path to the kubeconfig file to use",
 		Target: &i.Config.KubeconfigPath,
 	})
 

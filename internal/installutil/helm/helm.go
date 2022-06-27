@@ -1,7 +1,9 @@
 package helm
 
 import (
+	"context"
 	"fmt"
+	"github.com/google/go-github/github"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/builtin/k8s"
 	"helm.sh/helm/v3/pkg/action"
@@ -192,4 +194,13 @@ func mergeMaps(a, b map[string]interface{}) map[string]interface{} {
 		out[k] = v
 	}
 	return out
+}
+
+func GetLatestHelmChartVersion(ctx context.Context) ([]*github.RepositoryTag, error) {
+	githubClient := github.NewClient(nil)
+	tags, _, err := githubClient.Repositories.ListTags(ctx, "hashicorp", "waypoint-helm", nil)
+	if err != nil {
+		return nil, err
+	}
+	return tags, nil
 }
