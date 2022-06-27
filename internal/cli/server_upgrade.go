@@ -405,7 +405,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		} else if err != nil && status.Code(err) == codes.NotFound {
-			c.ui.Output("Waypoint default runner profile not found, creating new profile", terminal.WithWarningStyle())
+			c.ui.Output("Waypoint runner profile %q not found, creating new profile", runnerConfigName, terminal.WithWarningStyle())
 		} else {
 			ociUrl := odr.OciUrl
 			if ociUrl == "" {
