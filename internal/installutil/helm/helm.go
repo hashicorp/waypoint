@@ -21,8 +21,6 @@ import (
 	"strings"
 )
 
-const DefaultHelmChartVersion = "0.1.8"
-
 // restClientGetter is a RESTClientGetter interface implementation for the
 // Helm Go packages.
 type restClientGetter struct {

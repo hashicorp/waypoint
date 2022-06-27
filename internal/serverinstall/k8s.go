@@ -633,9 +633,7 @@ func (i *K8sInstaller) InstallRunner(
 	}
 	runnerInstaller := runnerinstall.K8sRunnerInstaller{
 		Config: runnerinstall.K8sConfig{
-			KubeconfigPath:       "",
 			K8sContext:           i.config.k8sContext,
-			Version:              helminstallutil.DefaultHelmChartVersion,
 			Namespace:            i.config.namespace,
 			RunnerImage:          ref.ShortName(),
 			RunnerImageTag:       ref.Tag(),
