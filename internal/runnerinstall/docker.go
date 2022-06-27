@@ -138,7 +138,7 @@ func (i *DockerRunnerInstaller) InstallFlags(set *flag.Set) {
 		Name:    "docker-runner-image",
 		Target:  &i.Config.RunnerImage,
 		Usage:   "The Docker image for the Waypoint runner.",
-		Default: "hashicorp/waypoint:latest",
+		Default: defaultRunnerImage,
 	})
 
 	set.StringVar(&flag.StringVar{

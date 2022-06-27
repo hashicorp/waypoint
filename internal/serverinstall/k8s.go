@@ -636,7 +636,6 @@ func (i *K8sInstaller) InstallRunner(
 			K8sContext:           i.config.k8sContext,
 			Namespace:            i.config.namespace,
 			RunnerImage:          ref.ShortName(),
-			RunnerImageTag:       ref.Tag(),
 			CpuRequest:           i.config.cpuRequest,
 			MemRequest:           i.config.memRequest,
 			CreateServiceAccount: true,

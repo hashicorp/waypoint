@@ -623,7 +623,7 @@ func (i *NomadInstaller) InstallRunner(
 	runnerInstaller := runnerinstall.NomadRunnerInstaller{
 		Config: runnerinstall.NomadConfig{
 			AuthSoftFail:          i.config.authSoftFail,
-			Image:                 i.config.serverImage,
+			RunnerImage:           i.config.serverImage,
 			Namespace:             i.config.namespace,
 			ServiceAnnotations:    i.config.serviceAnnotations,
 			OdrImage:              i.config.odrImage,

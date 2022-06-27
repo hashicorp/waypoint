@@ -25,11 +25,11 @@ const (
 
 type NomadConfig struct {
 	AuthSoftFail       bool              `hcl:"auth_soft_fail,optional"`
-	Image              string            `hcl:"server_image,optional"`
 	Namespace          string            `hcl:"namespace,optional"`
 	ServiceAnnotations map[string]string `hcl:"service_annotations,optional"`
 
-	OdrImage string `hcl:"odr_image,optional"`
+	RunnerImage string `hcl:"runner_image,optional"`
+	OdrImage    string `hcl:"odr_image,optional"`
 
 	Region         string   `hcl:"namespace,optional"`
 	Datacenters    []string `hcl:"datacenters,optional"`
@@ -159,16 +159,9 @@ func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 		},
 	}
 
-	var image string
-	if c.Image == "" {
-		image = defaultRunnerImage
-	} else {
-		image = c.Image
-	}
-
 	task := api.NewTask("runner", "docker")
 	task.Config = map[string]interface{}{
-		"image": image,
+		"image": c.RunnerImage,
 		"args": []string{
 			"runner",
 			"agent",
@@ -230,6 +223,13 @@ func (i *NomadRunnerInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.Config.Datacenters,
 		Default: []string{"dc1"},
 		Usage:   "Datacenters to install to for Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-runner-image",
+		Target:  &i.Config.RunnerImage,
+		Usage:   "Docker image for the Waypoint runner.",
+		Default: defaultRunnerImage,
 	})
 
 	set.StringVar(&flag.StringVar{

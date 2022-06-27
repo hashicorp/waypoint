@@ -9,6 +9,7 @@ import (
 	k8sinstallutil "github.com/hashicorp/waypoint/internal/installutil/k8s"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/mitchellh/mapstructure"
+	dockerparser "github.com/novln/docker-parser"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,7 +28,6 @@ type K8sConfig struct {
 	Version              string `hcl:"version,optional"`
 	Namespace            string `hcl:"namespace,optional"`
 	RunnerImage          string `hcl:"runner_image,optional"`
-	RunnerImageTag       string `hcl:"runner_image_tag,optional"`
 	CpuRequest           string `hcl:"runner_cpu_request,optional"`
 	MemRequest           string `hcl:"runner_mem_request,optional"`
 	CreateServiceAccount bool   `hcl:"odr_service_account_init,optional"`
@@ -125,6 +125,8 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	s.Status(terminal.StatusOK)
 	s.Done()
 
+	runnerImageRef, err := dockerparser.Parse(i.Config.RunnerImage)
+
 	values := map[string]interface{}{
 		"server": map[string]interface{}{
 			"enabled": false,
@@ -132,8 +134,8 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		"runner": map[string]interface{}{
 			"id": opts.Id,
 			"image": map[string]interface{}{
-				"repository": i.Config.RunnerImage,
-				"tag":        i.Config.RunnerImageTag,
+				"repository": runnerImageRef.Repository(),
+				"tag":        runnerImageRef.Tag(),
 			},
 			"resources": map[string]interface{}{
 				"requests": map[string]interface{}{
@@ -199,13 +201,6 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.Config.RunnerImage,
 		Default: defaultRunnerImage,
 		Usage:   "Docker image for the Waypoint runner.",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-runner-image-tag",
-		Target:  &i.Config.RunnerImageTag,
-		Default: defaultRunnerImageTag,
-		Usage:   "Tag of the Docker image for the Waypoint runner.",
 	})
 
 	set.StringVar(&flag.StringVar{

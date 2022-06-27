@@ -241,7 +241,7 @@ func (i *ECSRunnerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-runner-image",
 		Target:  &i.Config.RunnerImage,
-		Default: "hashicorp/waypoint",
+		Default: defaultRunnerImage,
 		Usage:   "The Waypoint runner Docker image.",
 	})
 
