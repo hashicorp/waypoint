@@ -853,7 +853,8 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-helm-version",
 		Target: &i.config.version,
-		Usage:  "The version of the Helm chart to use for the Waypoint runner install.",
+		Usage: "The version of the Helm chart to use for the Waypoint runner install." +
+			"The required version number format is: 'vX.Y.Z'.",
 	})
 
 	set.StringVar(&flag.StringVar{
