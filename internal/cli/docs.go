@@ -199,9 +199,21 @@ description: "%s"
 				if len(f.Aliases) > 0 {
 					aliases := strings.Join(f.Aliases, "`, `-")
 
-					fmt.Fprintf(w, "- `-%s` (`-%s`) - %s\n", name, aliases, f.Usage)
+					str := fmt.Sprintf("- `-%s` (`-%s`) - %s", name, aliases, f.Usage)
+					if f.Default != "" {
+						str = fmt.Sprintf("%s The default is %s.", str, f.Default)
+					}
+					str += "\n"
+
+					fmt.Fprint(w, str)
 				} else {
-					fmt.Fprintf(w, "- `-%s` - %s\n", name, f.Usage)
+					str := fmt.Sprintf("- `-%s` - %s", name, f.Usage)
+					if f.Default != "" {
+						str = fmt.Sprintf("%s The default is %s.", str, f.Default)
+					}
+					str += "\n"
+
+					fmt.Fprint(w, str)
 				}
 			})
 		})
