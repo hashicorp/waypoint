@@ -23,7 +23,6 @@ func init() {
 		TestJobAssign,
 		TestJobAck,
 		TestJobComplete,
-		TestJobComplete,
 		TestJobTask_AckAndComplete,
 		TestJobIsAssignable,
 		TestJobCancel,
