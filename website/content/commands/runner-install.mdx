@@ -33,7 +33,7 @@ unless the '-adopt' flag is set to false.
 
 #### Command Options
 
-- `-platform=<string>` - Platform to install the Waypoint runner into. If unset, uses the platform of the local context. One possible value from: nomad, docker, ecs, kubernetes.
+- `-platform=<string>` - Platform to install the Waypoint runner into. If unset, uses the platform of the local context. One possible value from: ecs, kubernetes, nomad, docker.
 - `-server-addr=<string>` - Address of the Waypoint server.
 - `-odr-image=<string>` - Docker image for the on-demand runners.
 - `-server-tls` - If true, the Waypoint runner will connect to the server over TLS.
@@ -60,7 +60,7 @@ unless the '-adopt' flag is set to false.
 
 #### kubernetes Options
 
-- `-k8s-Config-path=<string>` - Path to the kubeconfig file to use,
+- `-k8s-config-path=<string>` - Path to the kubeconfig file to use.
 - `-k8s-context=<string>` - The Kubernetes context to install the Waypoint runner to. If left unset, Waypoint will use the current Kubernetes context.
 - `-k8s-helm-version=<string>` - The version of the Helm chart to use for the Waypoint runner install.
 - `-k8s-namespace=<string>` - The namespace in the Kubernetes cluster into which the Waypoint runner will be installed.
@@ -68,7 +68,7 @@ unless the '-adopt' flag is set to false.
 - `-k8s-runner-image-tag=<string>` - Tag of the Docker image for the Waypoint runner.
 - `-k8s-cpu-request=<string>` - Requested amount of CPU for Waypoint runner.
 - `-k8s-mem-request=<string>` - Requested amount of memory for Waypoint runner.
-- `-k8s-runner-service-account-init` - Create the service account if it does not exist. The default is true.
+- `-k8s-runner-service-account-init` - Create the service account if it does not exist.
 
 #### nomad Options
 
