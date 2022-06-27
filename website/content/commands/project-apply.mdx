@@ -32,7 +32,7 @@ some fields using flags by specifying the -waypoint-hcl flag.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -52,8 +52,8 @@ some fields using flags by specifying the -waypoint-hcl flag.
 - `-git-private-key-password=<string>` - Password for the private key specified by git-private-key-path if the key requires a password to decode. This is not required if the private key doesn't require a password.
 - `-git-recurse-submodules=<int>` - The maximum depth to recursively clone submodules. A value of zero disables cloning any submodules recursively.
 - `-poll` - Enable polling. This is only valid if a Git data source is supplied. This will watch the repo for changes and trigger a remote 'up'.
-- `-poll-interval=<string>` - Interval between polling if polling is enabled.
+- `-poll-interval=<string>` - Interval between polling if polling is enabled. The default is 30s.
 - `-app-status-poll` - Enable polling to continuously generate status reports for apps. This is only valid if a Git data source is supplied.
-- `-app-status-poll-interval=<string>` - Interval between polling to generate status reports if polling is enabled.
+- `-app-status-poll-interval=<string>` - Interval between polling to generate status reports if polling is enabled. The default is 5m.
 
 @include "commands/project-apply_more.mdx"

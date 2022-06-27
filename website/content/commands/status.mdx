@@ -26,7 +26,7 @@ data sourced projects.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -43,9 +43,9 @@ data sourced projects.
 
 #### Command Options
 
-- `-verbose` (`-V`) - Display more details.
-- `-json` - Output the status information as JSON.
-- `-all-projects` - Output status about every project in a workspace.
-- `-refresh` - Refresh application status for the requested app or apps in a project.
+- `-verbose` (`-V`) - Display more details. The default is false.
+- `-json` - Output the status information as JSON. The default is false.
+- `-all-projects` - Output status about every project in a workspace. The default is false.
+- `-refresh` - Refresh application status for the requested app or apps in a project. The default is false.
 
 @include "commands/status_more.mdx"

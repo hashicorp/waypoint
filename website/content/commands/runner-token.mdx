@@ -29,14 +29,14 @@ level of security to transfer a token around.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
 
 #### Command Options
 
-- `-expires-in=<duration>` - The duration until the token expires. i.e. '5m'.
+- `-expires-in=<duration>` - The duration until the token expires. i.e. '5m'. The default is 720h0m0s.
 - `-id=<string>` - Id to restrict this token to. If empty, all runner IDs are valid.
 - `-label=<key=value>` - Labels that must match the runner for this token to be valid. These are set in 'k=v' format and this flag can be repeated to set multiple labels. If no labels are set, runners with any labels are valid.
 
