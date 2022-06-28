@@ -40,15 +40,17 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 
-		var runnerPlatforms []string
-		for platformName := range runnerinstall.Platforms {
-			runnerPlatforms = append(runnerPlatforms, platformName)
+		// Add platforms in alphabetical order. A consistent order is important for repeatable doc generation.
+		var sortedPlatformNames []string
+		for name := range runnerinstall.Platforms {
+			sortedPlatformNames = append(sortedPlatformNames, name)
 		}
+		sort.Strings(sortedPlatformNames)
 
 		f.EnumVar(&flag.EnumVar{
 			Name:   "platform",
 			Usage:  "Platform to install the Waypoint runner into. If unset, uses the platform of the local context.",
-			Values: runnerPlatforms,
+			Values: sortedPlatformNames,
 			Target: &c.platform,
 		})
 
@@ -97,14 +99,6 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 			Usage:  "If this is set, the runner will use the specified id.",
 			Target: &c.id,
 		})
-
-		// Add platforms in alphabetical order. A consistent order is important for repeatable doc generation.
-		var sortedPlatformNames []string
-		for name := range runnerinstall.Platforms {
-			sortedPlatformNames = append(sortedPlatformNames, name)
-		}
-
-		sort.Strings(sortedPlatformNames)
 
 		for _, name := range sortedPlatformNames {
 			platform := runnerinstall.Platforms[name]
