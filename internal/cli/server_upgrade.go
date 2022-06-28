@@ -392,19 +392,20 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 	if odc, ok := p.(serverinstall.OnDemandRunnerConfigProvider); ok {
 		odr := odc.OnDemandRunnerConfig()
 
+		runnerConfigName := odr.PluginType + "-bootstrap-profile"
 		// We attempt to look up the default runner profile from the previous
 		// installation. If we find it, we get the ID, so we can delete it after
 		// the new runner profile is set up
 		oldRunnerConfig, err := client.GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
 			Config: &pb.Ref_OnDemandRunnerConfig{
-				Name: odr.PluginType + "-bootstrap-profile",
+				Name: runnerConfigName,
 			}})
 
 		if err != nil && status.Code(err) != codes.NotFound {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		} else if err != nil && status.Code(err) == codes.NotFound {
-			c.ui.Output("Waypoint default runner profile not found, creating new profile", terminal.WithWarningStyle())
+			c.ui.Output("Waypoint runner profile %q not found, creating new profile", runnerConfigName, terminal.WithWarningStyle())
 		} else {
 			ociUrl := odr.OciUrl
 			if ociUrl == "" {
@@ -421,6 +422,35 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 				ConfigFormat:         oldRunnerConfig.Config.ConfigFormat,
 				Default:              true,
 			}
+		}
+
+		// Look at the existing on-demand runner configs and let the user know
+		// they should not have multiple defaults
+		// NOTE(briancain): A better way to handle this going forward is to enforce
+		// a single default at the Waypoint state level. That should likely happen
+		// soon.
+		resp, err := client.ListOnDemandRunnerConfigs(ctx, &empty.Empty{})
+		if err != nil {
+			c.ui.Output("Failed to determine if default runner profiles are already set: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+
+		if len(resp.Configs) > 0 {
+			var (
+				runnerUnsetStr     []string
+				runnerDefaultNames []string
+			)
+
+			for _, cfg := range resp.Configs {
+				if cfg.Name != runnerConfigName {
+					runnerDefaultNames = append(runnerDefaultNames, fmt.Sprintf(runnerDefaultName, cfg.Name))
+					runnerUnsetStr = append(runnerUnsetStr, fmt.Sprintf(runnerUnsetDefault, cfg.PluginType, cfg.Name))
+				}
+			}
+
+			c.ui.Output("")
+			c.ui.Output(runnerMultiDefault, strings.Join(runnerDefaultNames[:], "\n"), strings.Join(runnerUnsetStr[:], "\n"), terminal.WithWarningStyle())
+			c.ui.Output("")
 		}
 
 		// TODO(mitchellh): This creates a new auth token for the new runner.
@@ -536,5 +566,25 @@ https://www.waypointproject.io/docs/server/run/maintenance#backup-restore
 	addrSuccess = strings.TrimSpace(`
 Advertise Address: %[1]s
    Web UI Address: %[2]s
+`)
+
+	runnerUnsetDefault = strings.TrimSpace(`
+waypoint runner profile set -default=false -plugin-type=%[1]s -name=%[2]s
+`)
+
+	runnerDefaultName = "=> %[1]s"
+
+	runnerMultiDefault = strings.TrimSpace(`
+Waypoint expects only one runner profile to be a default. During the upgrade,
+we have detected that there are multiple default runner profiles. This can
+cause issues with launching on-demand runner tasks. The following profile names
+have been set to be a default runner profile:
+
+%[1]s
+
+Please run the following commands if you wish to unset these runner profiles
+from being the default:
+
+%[2]s
 `)
 )
