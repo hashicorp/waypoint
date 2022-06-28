@@ -29,14 +29,14 @@ via "waypoint login".
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
 
 #### Command Options
 
-- `-expires-in=<duration>` - The duration until the token expires. i.e. '5m'.
+- `-expires-in=<duration>` - The duration until the token expires. i.e. '5m'. The default is 24h0m0s.
 - `-username=<string>` - Invite a new user and provide a username hint. The user may still change their username after signing up. If this isn't specified, an invite token for your current user will be generated and no new user signup is performed.
 
 @include "commands/user-invite_more.mdx"

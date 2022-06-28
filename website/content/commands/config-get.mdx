@@ -42,16 +42,16 @@ as well.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
 
 #### Command Options
 
-- `-json` - Output in JSON
-- `-raw` - Output in key=val
-- `-runner` - Show configuration that is set on runners. This will not show any configuration that is set on any applications. This only includes configuration set with the -runner flag.
+- `-json` - Output in JSON. The default is false.
+- `-raw` - Output in key=val. The default is false.
+- `-runner` - Show configuration that is set on runners. This will not show any configuration that is set on any applications. This only includes configuration set with the -runner flag. The default is false.
 - `-label=<key=value>` - Labels to set for this operation. Can be specified multiple times.
 
 @include "commands/config-get_more.mdx"

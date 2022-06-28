@@ -25,7 +25,7 @@ build artifact sequence number, it will use whatever the latest artifact sequenc
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -46,18 +46,18 @@ build artifact sequence number, it will use whatever the latest artifact sequenc
 - `-id=<string>` - If specified, will look up an existing trigger by this id and attempt to update the configuration.
 - `-description=<string>` - A human readable description about the trigger URL configuration.
 - `-trigger-tag=<string>` - A collection of tags to apply to the trigger URL configuration. Can be specified multiple times.
-- `-no-auth` - If set, the trigger URL configuration will not require authentication to initiate a request.
+- `-no-auth` - If set, the trigger URL configuration will not require authentication to initiate a request. The default is false.
 - `-op=<string>` - The operation the trigger should execute when requested. One possible value from: build, push, deploy, destroy-workspace, destroy-deployment, release, up, init, status-report-deploy, status-report-release.
 
 #### Operation Options
 
-- `-disable-push` - Disables pushing a build artifact to any configured registry for build operations.
+- `-disable-push` - Disables pushing a build artifact to any configured registry for build operations. The default is false.
 - `-build-id=<int>` - The sequence number (short id) for the build to use for a deployment operation.
 - `-deployment-id=<int>` - The sequence number (short id) for the deployment to use for a deployment operation.
 
 #### Release Operation Options
 
-- `-prune` - If true, will prune deployments that aren't released.
+- `-prune` - If true, will prune deployments that aren't released. The default is false.
 - `-prune-retain=<int>` - This sets the number of unreleased deployments to retain when pruning.
 
 @include "commands/trigger-create_more.mdx"

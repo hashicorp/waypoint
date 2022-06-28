@@ -21,7 +21,7 @@ List all known jobs from Waypoint server.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -41,8 +41,8 @@ List all known jobs from Waypoint server.
 - `-state=<string>` - List jobs that only match the requested state. Can be repeated multiple times. One possible value from: Success, Error, Running, Waiting, Queued, Unknown.
 - `-target-runner-id=<string>` - List jobs that were only assigned to the target runner by id.
 - `-target-runner-label=<key=value>` - List jobs that were only assigned to the target runner by labels. Can be repeated multiple times.
-- `-desc` - Output the list of jobs from newest to oldest.
-- `-json` - Output the list of jobs as json.
+- `-desc` - Output the list of jobs from newest to oldest. The default is false.
+- `-json` - Output the list of jobs as json. The default is false.
 - `-limit=<int>` - If set, will limit the number of jobs to list.
 
 @include "commands/job-list_more.mdx"
