@@ -54,11 +54,9 @@ func (c *RunnerUninstallCommand) Flags() *flag.Sets {
 		})
 
 		// Add platforms in alphabetical order. A consistent order is important for repeatable doc generation.
-		i := 0
-		sortedPlatformNames := make([]string, len(runnerinstall.Platforms))
+		var sortedPlatformNames []string
 		for name := range runnerinstall.Platforms {
-			sortedPlatformNames[i] = name
-			i++
+			sortedPlatformNames = append(sortedPlatformNames, name)
 		}
 		sort.Strings(sortedPlatformNames)
 

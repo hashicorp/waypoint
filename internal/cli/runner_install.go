@@ -98,9 +98,15 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 			Target: &c.id,
 		})
 
-		sort.Strings(runnerPlatforms)
+		// Add platforms in alphabetical order. A consistent order is important for repeatable doc generation.
+		var sortedPlatformNames []string
+		for name := range runnerinstall.Platforms {
+			sortedPlatformNames = append(sortedPlatformNames, name)
+		}
 
-		for _, name := range runnerPlatforms {
+		sort.Strings(sortedPlatformNames)
+
+		for _, name := range sortedPlatformNames {
 			platform := runnerinstall.Platforms[name]
 			platformSet := set.NewSet(name + " Options")
 			platform.InstallFlags(platformSet)
@@ -257,7 +263,6 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		s.Update("Runner profile %q created successfully.", runnerProfile.Config.Name)
 		s.Status(terminal.StatusOK)
 		s.Done()
-		return 0
 	}
 	return 0
 }

@@ -38,21 +38,25 @@ below. If you customized any of the values during install, substitute your own
 values for the defaults.
 
 Docker:
+
 ```shell-session
 $ waypoint runner install -platform=docker -server-addr=waypoint-server:9701 -docker-runner-network=waypoint -server-tls-skip-verify
 ```
 
 Kubernetes:
+
 ```shell-session
 $ waypoint runner install -platform=kubernetes -server-addr=waypoint-server:9701 -server-tls-skip-verify
 ```
 
 ECS:
+
 ```shell-session
 $ waypoint runner install -platform=ecs -ecs-cluster=waypoint -ecs-region=<AWS_REGION> -server-addr=<AWS_NLB_NAME>.elb.<AWS_REGION>.amazonaws.com:9701 -server-tls-skip-verify
 ```
 
 Nomad:
+
 ```shell-session
 $ waypoint runner install -platform=nomad -server-addr=localhost:9701 -nomad-host-volume=waypoint-runner -server-tls-skip-verify
 ```
