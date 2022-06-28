@@ -204,7 +204,15 @@ description: "%s"
 				}
 
 				if f.Default != "" {
-					str = fmt.Sprintf("%s The default is %s.", str, f.Default)
+					// NOTE(briancain): This is a hacky way around trying to document
+					// default flag values that are dynamic. Currently as of this writing
+					// `context-create` is the only CLI flag with a dynamic default value.
+					if name == "context-create=<string>" {
+						cc := strings.Split(f.Default, "-")
+						str = fmt.Sprintf("%s The default is %s-%s.", str, cc[0], "<timestamp>")
+					} else {
+						str = fmt.Sprintf("%s The default is %s.", str, f.Default)
+					}
 				}
 				str += "\n"
 
