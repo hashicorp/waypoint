@@ -19,7 +19,7 @@ type RunnerInstallCommand struct {
 	*baseCommand
 
 	platform              []string `hcl:"platform,optional"`
-	adopt                 bool     `hcl:"adopt,optional"`
+	skipAdopt             bool     `hcl:"skip_adopt,optional"`
 	serverUrl             string   `hcl:"server_url,required"`
 	id                    string   `hcl:"id,optional"`
 	runnerProfileOdrImage string   `hcl:"odr_image,optional"`
@@ -69,27 +69,27 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 		f.BoolVar(&flag.BoolVar{
 			Name:    "server-tls",
 			Target:  &c.serverTls,
-			Usage:   "If true, the Waypoint runner will connect to the server over TLS.",
+			Usage:   "Connect the runner to the server over TLS.",
 			Default: true,
 		})
 
 		f.BoolVar(&flag.BoolVar{
 			Name:   "server-tls-skip-verify",
 			Target: &c.serverTlsSkipVerify,
-			Usage:  "If true, will not validate TLS cert presented by the server.",
+			Usage:  "Skip TLS verification for runner connection to server.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
 			Name:   "server-require-auth",
 			Target: &c.serverRequireAuth,
-			Usage:  "If true, will send authentication details.",
+			Usage:  "Send authentication details from runner to server.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
-			Name:    "adopt",
-			Usage:   "Adopt the runner after it is installed.",
-			Default: true,
-			Target:  &c.adopt,
+			Name:    "skip-adopt",
+			Usage:   "Skip adoption of runner after it is installed.",
+			Default: false,
+			Target:  &c.skipAdopt,
 		})
 
 		f.StringVar(&flag.StringVar{
@@ -123,7 +123,7 @@ Usage: waypoint runner install [options]
 
   This command will attempt to install a runner for the server configured in 
   the current Waypoint context. It will adopt the runner after installation, 
-  unless the '-adopt' flag is set to false.
+  unless the '-skip-adopt' flag is set to true.
 
 ` + c.Flags().Help())
 }
@@ -180,7 +180,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	defer func() { s.Abort() }()
 
 	var cookie string
-	if c.adopt {
+	if !c.skipAdopt {
 		cookie = serverConfig.Config.Cookie
 	}
 
@@ -232,7 +232,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	s.Status(terminal.StatusOK)
 	s.Done()
 
-	if c.adopt {
+	if !c.skipAdopt {
 		err = installutil.AdoptRunner(ctx, c.ui, client, id, c.serverUrl)
 		if err != nil {
 			return 1
