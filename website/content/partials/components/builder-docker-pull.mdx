@@ -37,6 +37,24 @@ build {
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### image
+
+The image to pull.
+
+This should NOT include the tag (the value following the ':' in a Docker image). Use `tag` to define the image tag.
+
+- Type: **string**
+
+#### tag
+
+The tag of the image to pull.
+
+- Type: **string**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
 #### auth (category)
 
 The authentication information to log into the docker repository.
@@ -92,24 +110,6 @@ Username of Docker registry account.
 
 - Type: **string**
 - **Optional**
-
-#### image
-
-The image to pull.
-
-This should NOT include the tag (the value following the ':' in a Docker image). Use `tag` to define the image tag.
-
-- Type: **string**
-
-#### tag
-
-The tag of the image to pull.
-
-- Type: **string**
-
-### Optional Parameters
-
-These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### disable_entrypoint
 
