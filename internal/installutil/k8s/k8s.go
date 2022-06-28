@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -111,7 +112,7 @@ func (i *K8sInstaller) CleanPVC(ctx context.Context, ui terminal.UI, log hclog.L
 		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
 			select {
 			case wCh := <-w.ResultChan():
-				if wCh.Type == "DELETED" {
+				if wCh.Type == watch.Deleted {
 					w.Stop()
 					return true, nil
 				}
