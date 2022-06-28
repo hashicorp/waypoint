@@ -203,6 +203,12 @@ description: "%s"
 					str = fmt.Sprintf("- `-%s` (`-%s`) - %s", name, aliases, f.Usage)
 				}
 
+				// Add a period at the end of the doc sentence if the field didn't add
+				// one already.
+				if str[len(str)-1:] != "." {
+					str += "."
+				}
+
 				if f.Default != "" {
 					// NOTE(briancain): This is a hacky way around trying to document
 					// default flag values that are dynamic. Currently as of this writing
