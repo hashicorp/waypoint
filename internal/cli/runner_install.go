@@ -226,7 +226,9 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	s.Status(terminal.StatusOK)
 	s.Done()
 
-	if !c.skipAdopt {
+	if c.skipAdopt {
+		c.ui.Output(runnerInstalledButNotYetAdopted, terminal.WithInfoStyle())
+	} else {
 		err = installutil.AdoptRunner(ctx, c.ui, client, id, c.serverUrl)
 		if err != nil {
 			c.ui.Output("Error adopting runner: %s", clierrors.Humanize(err))
@@ -261,3 +263,9 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	}
 	return 0
 }
+
+var (
+	runnerInstalledButNotYetAdopted = strings.TrimSpace(`The installed runner must be adopted.
+Please run "waypoint runner adopt" before the runner can start accepting jobs.
+`)
+)
