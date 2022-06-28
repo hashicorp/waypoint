@@ -196,25 +196,19 @@ description: "%s"
 					}
 				}
 
+				str := fmt.Sprintf("- `-%s` - %s", name, f.Usage)
 				if len(f.Aliases) > 0 {
 					aliases := strings.Join(f.Aliases, "`, `-")
 
-					str := fmt.Sprintf("- `-%s` (`-%s`) - %s", name, aliases, f.Usage)
-					if f.Default != "" {
-						str = fmt.Sprintf("%s The default is %s.", str, f.Default)
-					}
-					str += "\n"
-
-					fmt.Fprint(w, str)
-				} else {
-					str := fmt.Sprintf("- `-%s` - %s", name, f.Usage)
-					if f.Default != "" {
-						str = fmt.Sprintf("%s The default is %s.", str, f.Default)
-					}
-					str += "\n"
-
-					fmt.Fprint(w, str)
+					str = fmt.Sprintf("- `-%s` (`-%s`) - %s", name, aliases, f.Usage)
 				}
+
+				if f.Default != "" {
+					str = fmt.Sprintf("%s The default is %s.", str, f.Default)
+				}
+				str += "\n"
+
+				fmt.Fprint(w, str)
 			})
 		})
 	} else {
