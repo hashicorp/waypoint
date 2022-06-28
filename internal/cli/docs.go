@@ -205,7 +205,7 @@ description: "%s"
 
 				// Add a period at the end of the doc sentence if the field didn't add
 				// one already.
-				if str[len(str)-1:] != "." {
+				if !strings.HasSuffix(str, ".") {
 					str += "."
 				}
 
