@@ -263,7 +263,7 @@ func (c *InstallCommand) Run(args []string) int {
 		serverclient.StaticToken(contextConfig.Server.AuthToken)))
 
 	// This is our default, so let's actually set the timestamp.
-	if c.contextName == "install-<timestamp>" || c.contextName == "" {
+	if c.contextName == "install-timestamp" || c.contextName == "" {
 		c.contextName = fmt.Sprintf("install-%d", time.Now().Unix())
 	}
 
@@ -364,7 +364,7 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "context-create",
 			Target:  &c.contextName,
-			Default: "install-<timestamp>",
+			Default: "install-timestamp",
 			Usage: "Create a context with connection information for this installation. " +
 				"The default value will be suffixed with a timestamp at the time the command is executed.",
 		})

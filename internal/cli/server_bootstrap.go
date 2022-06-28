@@ -62,7 +62,7 @@ func (c *ServerBootstrapCommand) Run(args []string) int {
 		// specifically sets the flag to empty string. Our flag package will set
 		// the default here, which will never be emptry string
 		return 0
-	} else if c.flagContext == "bootstrap-<timestamp>" {
+	} else if c.flagContext == "bootstrap-timestamp" {
 		c.flagContext = fmt.Sprintf("bootstrap-%d", time.Now().Unix())
 	}
 
@@ -105,7 +105,7 @@ func (c *ServerBootstrapCommand) Flags() *flag.Sets {
 			Usage: "Create a CLI context for this bootstrapped server. The context name " +
 				"will be the value of this flag. If this is an empty string, a context will " +
 				"not be created",
-			Default: "bootstrap-<timestamp>",
+			Default: "bootstrap-timestamp",
 		})
 
 		f.BoolVar(&flag.BoolVar{
