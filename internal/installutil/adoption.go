@@ -21,6 +21,7 @@ func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, 
 	ctx, cancel := context.WithDeadline(ctx, d)
 	defer cancel()
 	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
 	found := false
 	for !found {
 		select {
