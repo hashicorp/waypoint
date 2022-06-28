@@ -262,6 +262,11 @@ func (c *InstallCommand) Run(args []string) int {
 	callOpts = append(callOpts, grpc.PerRPCCredentials(
 		serverclient.StaticToken(contextConfig.Server.AuthToken)))
 
+	// This is our default, so let's actually set the timestamp.
+	if c.contextName == "install-<timestamp>" || c.contextName == "" {
+		c.contextName = fmt.Sprintf("install-%d", time.Now().Unix())
+	}
+
 	// If we connected successfully, lets immediately setup our context.
 	if c.contextName != "" {
 		if err := c.contextStorage.Set(c.contextName, contextConfig); err != nil {
@@ -359,7 +364,7 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "context-create",
 			Target:  &c.contextName,
-			Default: fmt.Sprintf("install-%d", time.Now().Unix()),
+			Default: "install-<timestamp>",
 			Usage: "Create a context with connection information for this installation. " +
 				"The default value will be suffixed with a timestamp at the time the command is executed.",
 		})
