@@ -229,6 +229,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	if !c.skipAdopt {
 		err = installutil.AdoptRunner(ctx, c.ui, client, id, c.serverUrl)
 		if err != nil {
+			c.ui.Output("Error adopting runner: %s", clierrors.Humanize(err))
 			return 1
 		}
 

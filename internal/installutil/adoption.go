@@ -3,10 +3,12 @@ package installutil
 import (
 	"context"
 	"errors"
+	"strings"
+	"time"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"time"
 )
 
 func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, id string, addr string) error {
@@ -36,7 +38,7 @@ func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, 
 		// If it's found, adopt it. Otherwise, try until deadline.
 		runners, err := client.ListRunners(ctx, &pb.ListRunnersRequest{})
 		if err != nil {
-			ui.Output("Error getting runners: %s", clierrors.Humanize(err),
+			ui.Output(runnerFailedToConnectToServer, clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
 			return err
@@ -68,3 +70,10 @@ func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, 
 	s.Done()
 	return nil
 }
+
+var (
+	runnerFailedToConnectToServer = strings.TrimSpace(`
+The Waypoint runner was unable to connect to Waypoint server. Maybe the
+-server-addr specified is not accessible from the Waypoint runner?
+`)
+)
