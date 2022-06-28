@@ -2,7 +2,9 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/waypoint/builtin/k8s"
 	"os"
 	"sort"
 	"strings"
@@ -464,6 +466,24 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 					runnerDefaultNames = append(runnerDefaultNames, fmt.Sprintf(runnerDefaultName, cfg.Name))
 					runnerUnsetStr = append(runnerUnsetStr, fmt.Sprintf(runnerUnsetDefault, cfg.PluginType, cfg.Name))
 				}
+
+				// Checking if the default runner profile for a platform, pre-0.9, has the correct task launcher configs
+				// If incorrect, update them
+				if c.platform == cfg.Name {
+					switch c.platform {
+					case "kubernetes":
+						// attempt to parse the runner profile config into the correct task launcher config struct
+						var result k8s.TaskLauncherConfig
+						err = json.Unmarshal(cfg.PluginConfig, result)
+					default:
+					}
+					if err != nil {
+						c.ui.Output("")
+						c.ui.Output(runnerProfileUpgradeConfigError, cfg.Name,
+							cfg.Name, terminal.WithWarningStyle())
+						c.ui.Output("")
+					}
+				}
 			}
 
 			c.ui.Output("")
@@ -616,5 +636,11 @@ the commands:
 waypoint server snapshot
 waypoint install -platform=kubernetes
 waypoint server restore [snapshot-name]
+`)
+
+	runnerProfileUpgradeConfigError = strings.TrimSpace(`
+The plugin config for runner profile %[1]s is incorrect. Please run
+waypoint runner profile set -name=%[2]s -plugin-config=<path_to_config_file>
+with the corrected plugin configuration to fix this.
 `)
 )
