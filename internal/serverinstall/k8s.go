@@ -626,16 +626,11 @@ func (i *K8sInstaller) InstallRunner(
 	ctx context.Context,
 	opts *runnerinstall.InstallOpts,
 ) error {
-	ref, err := dockerparser.Parse(i.config.serverImage)
-	if err != nil {
-		opts.UI.Output("Error parsing image name: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-		return err
-	}
 	runnerInstaller := runnerinstall.K8sRunnerInstaller{
 		Config: runnerinstall.K8sConfig{
 			K8sContext:           i.config.k8sContext,
 			Namespace:            i.config.namespace,
-			RunnerImage:          ref.Repository(),
+			RunnerImage:          i.config.serverImage,
 			CpuRequest:           i.config.cpuRequest,
 			MemRequest:           i.config.memRequest,
 			CreateServiceAccount: true,
@@ -643,7 +638,7 @@ func (i *K8sInstaller) InstallRunner(
 		},
 	}
 
-	err = runnerInstaller.Install(ctx, opts)
+	err := runnerInstaller.Install(ctx, opts)
 	if err != nil {
 		return err
 	}
