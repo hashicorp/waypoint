@@ -4,6 +4,7 @@ import (
 	"context"
 	json "encoding/json"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"os"
 	"strconv"
 	"strings"
@@ -141,7 +142,7 @@ func (i *NomadInstaller) Install(
 
 	if i.config.odrImage == "" {
 		var err error
-		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
 		if err != nil {
 			return nil, err
 		}
@@ -360,7 +361,7 @@ func (i *NomadInstaller) Upgrade(
 
 	if i.config.odrImage == "" {
 		var err error
-		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
 		if err != nil {
 			return nil, err
 		}

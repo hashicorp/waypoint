@@ -3,6 +3,7 @@ package serverinstall
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"os"
 	"time"
 
@@ -51,7 +52,7 @@ func (i *DockerInstaller) Install(
 ) (*InstallResults, error) {
 	if i.config.odrImage == "" {
 		var err error
-		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
 		if err != nil {
 			return nil, err
 		}
@@ -293,7 +294,7 @@ func (i *DockerInstaller) Upgrade(
 ) {
 	if i.config.odrImage == "" {
 		var err error
-		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
 		if err != nil {
 			return nil, err
 		}

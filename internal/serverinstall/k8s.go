@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"helm.sh/helm/v3/pkg/action"
@@ -73,7 +74,7 @@ func (i *K8sInstaller) Install(
 ) (*InstallResults, error) {
 	if i.config.odrImage == "" {
 		var err error
-		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
 		if err != nil {
 			return nil, err
 		}
@@ -331,7 +332,7 @@ func (i *K8sInstaller) Upgrade(
 ) {
 	if i.config.odrImage == "" {
 		var err error
-		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
 		if err != nil {
 			return nil, err
 		}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
 	k8sinstallutil "github.com/hashicorp/waypoint/internal/installutil/k8s"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -134,7 +135,8 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 
 	odrImage := i.Config.OdrImage
 	if odrImage == "" {
-		odrImage = defaultRunnerImage + "latest"
+		odrImage, err = installutil.DefaultODRImage(i.Config.RunnerImage)
+		opts.UI.Output("Error getting default ODR image: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 	}
 	odrImageRef, err := dockerparser.Parse(odrImage)
 	if err != nil {
