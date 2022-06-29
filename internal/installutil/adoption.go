@@ -24,8 +24,8 @@ func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, 
 	defer cancel()
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
-	found := false
-	for !found {
+LOOP:
+	for {
 		select {
 		case <-ticker.C:
 		case <-ctx.Done():
@@ -45,8 +45,7 @@ func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, 
 		}
 		for _, myRunner := range runners.Runners {
 			if myRunner.Id == id {
-				found = true
-				break
+				break LOOP
 			}
 		}
 	}
