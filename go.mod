@@ -258,7 +258,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/novln/docker-parser v1.0.0 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/opencontainers/runc v1.0.2 // indirect
 	github.com/opencontainers/selinux v1.8.2 // indirect
