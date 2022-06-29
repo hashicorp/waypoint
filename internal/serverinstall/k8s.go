@@ -639,6 +639,7 @@ func (i *K8sInstaller) InstallRunner(
 			CpuRequest:           i.config.cpuRequest,
 			MemRequest:           i.config.memRequest,
 			CreateServiceAccount: true,
+			OdrImage:             i.config.odrImage,
 		},
 	}
 

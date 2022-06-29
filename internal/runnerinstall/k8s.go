@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
 	k8sinstallutil "github.com/hashicorp/waypoint/internal/installutil/k8s"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -31,12 +32,12 @@ type K8sConfig struct {
 	CpuRequest           string `hcl:"runner_cpu_request,optional"`
 	MemRequest           string `hcl:"runner_mem_request,optional"`
 	CreateServiceAccount bool   `hcl:"odr_service_account_init,optional"`
+	OdrImage             string `hcl:"odr_image"`
 }
 
 const (
-	defaultRunnerMemory   = "256Mi"
-	defaultRunnerCPU      = "250m"
-	defaultRunnerImageTag = "latest"
+	defaultRunnerMemory = "256Mi"
+	defaultRunnerCPU    = "250m"
 )
 
 type InstalledRunnerConfig struct {
@@ -126,6 +127,20 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	s.Done()
 
 	runnerImageRef, err := dockerparser.Parse(i.Config.RunnerImage)
+	if err != nil {
+		opts.UI.Output("Error parsing runner image name: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+		return err
+	}
+
+	odrImage := i.Config.OdrImage
+	if odrImage == "" {
+		odrImage = defaultRunnerImage + "latest"
+	}
+	odrImageRef, err := dockerparser.Parse(odrImage)
+	if err != nil {
+		opts.UI.Output("Error parsing ODR image name: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+		return err
+	}
 
 	values := map[string]interface{}{
 		"server": map[string]interface{}{
@@ -136,6 +151,12 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			"image": map[string]interface{}{
 				"repository": runnerImageRef.Repository(),
 				"tag":        runnerImageRef.Tag(),
+			},
+			"odr": map[string]interface{}{
+				"image": map[string]interface{}{
+					"repository": odrImageRef.Repository(),
+					"tag":        odrImageRef.Tag(),
+				},
 			},
 			"resources": map[string]interface{}{
 				"requests": map[string]interface{}{
