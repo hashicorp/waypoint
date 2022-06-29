@@ -307,16 +307,26 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	s.Done()
 
 	s = sg.Add("Locate existing Waypoint runner...")
-	waypointRunnerJobName := "waypoint-" + opts.Id + "-runner"
-	jobs, _, err := client.Jobs().PrefixList(waypointRunnerJobName)
-	if err != nil {
-		s.Update("Unable to find nomad job %s for Waypoint runner", waypointRunnerJobName)
-		return err
+	var waypointRunnerJobName string
+	possibleRunnerJobNames := []string{
+		"waypoint-" + opts.Id + "-runner",
+		"waypoint-runner",
+	}
+	for _, runnerJobName := range possibleRunnerJobNames {
+		jobs, _, err := client.Jobs().PrefixList(runnerJobName)
+		if err != nil {
+			s.Update("Unable to find nomad job %s for Waypoint runner", waypointRunnerJobName)
+			return err
+		}
+		if len(jobs) > 0 {
+			waypointRunnerJobName = runnerJobName
+			break
+		}
 	}
 
-	if len(jobs) != 1 {
-		s.Update("Expected 1 runner, found %d", len(jobs))
-		return fmt.Errorf("Expected 1 runner, found %d", len(jobs))
+	if waypointRunnerJobName == "" {
+		s.Update("Could not find Waypoint runner in Nomad")
+		return fmt.Errorf("Could not find Waypoint runner in Nomad")
 	}
 
 	s.Update("Waypoint runner found.")
