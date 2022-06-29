@@ -179,7 +179,7 @@ func (i *K8sInstaller) Install(
 		"server": map[string]interface{}{
 			"enabled": true,
 			"image": map[string]interface{}{
-				"repository": imageRef.ShortName(),
+				"repository": imageRef.Repository(),
 				"tag":        imageRef.Tag(),
 			},
 			"resources": map[string]interface{}{
@@ -430,7 +430,7 @@ func (i *K8sInstaller) Upgrade(
 		"server": map[string]interface{}{
 			"enabled": true,
 			"image": map[string]interface{}{
-				"repository": imageRef.ShortName(),
+				"repository": imageRef.Repository(),
 				"tag":        imageRef.Tag(),
 			},
 		},
@@ -635,7 +635,7 @@ func (i *K8sInstaller) InstallRunner(
 		Config: runnerinstall.K8sConfig{
 			K8sContext:           i.config.k8sContext,
 			Namespace:            i.config.namespace,
-			RunnerImage:          ref.ShortName(),
+			RunnerImage:          ref.Repository(),
 			CpuRequest:           i.config.cpuRequest,
 			MemRequest:           i.config.memRequest,
 			CreateServiceAccount: true,
