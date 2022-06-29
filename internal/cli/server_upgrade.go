@@ -468,20 +468,17 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 				}
 
 				// Checking if the default runner profile for a platform, pre-0.9, has the correct task launcher configs
-				// If incorrect, update them
 				if c.platform == cfg.Name {
 					switch c.platform {
 					case "kubernetes":
 						// attempt to parse the runner profile config into the correct task launcher config struct
-						var result k8s.TaskLauncherConfig
+						result := k8s.TaskLauncherConfig{}
 						err = json.Unmarshal(cfg.PluginConfig, &result)
 					default:
 					}
 					if err != nil {
-						c.ui.Output("")
 						c.ui.Output(runnerProfileUpgradeConfigError, cfg.Name,
-							cfg.Name, terminal.WithWarningStyle())
-						c.ui.Output("")
+							cfg.Name, clierrors.Humanize(err), terminal.WithWarningStyle())
 					}
 				}
 			}
@@ -639,8 +636,11 @@ waypoint server restore [snapshot-name]
 `)
 
 	runnerProfileUpgradeConfigError = strings.TrimSpace(`
-The plugin config for runner profile %[1]s is incorrect. Please run
+The plugin config for runner profile %[1]s failed to correctly be parsed. 
+Plugin Config Error: %[3]s
+
+Please run the following with the corrected plugin configuration to fix this.
+
 waypoint runner profile set -name=%[2]s -plugin-config=<path_to_config_file>
-with the corrected plugin configuration to fix this.
 `)
 )
