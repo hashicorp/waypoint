@@ -1,4 +1,0 @@
-```release-note:bug
-docs: Add ability to automatically put categories with no required fields in 
-the optional section of plugin docs. 
-```
