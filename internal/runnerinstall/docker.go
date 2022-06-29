@@ -162,32 +162,41 @@ func (d DockerRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	cli.NegotiateAPIVersion(ctx)
 
 	s.Update("Finding runner container")
-	containerName := "waypoint-" + opts.Id + "-runner"
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
-		Filters: filters.NewArgs(filters.KeyValuePair{
-			Key:   "name",
-			Value: containerName,
-		}),
-	})
-	if err != nil {
-		s.Update("Could not get container list")
-		return err
+	containerNames := []string{
+		"waypoint-" + opts.Id + "-runner",
+		"waypoint-runner",
 	}
-
-	if len(containers) == 0 {
-		s.Update("Could not find runner.")
+	var foundContainer types.Container
+	for _, containerName := range containerNames {
+		containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+			Filters: filters.NewArgs(filters.KeyValuePair{
+				Key:   "name",
+				Value: containerName,
+			}),
+		})
+		if err != nil {
+			s.Update("Could not get container list")
+			return err
+		}
+		if len(containers) > 0 {
+			foundContainer = containers[0]
+			break
+		}
+	}
+	if foundContainer.ID == "" {
+		s.Update("Could not find runner in docker.")
 		return fmt.Errorf("Runner not found.")
 	}
 
-	s.Update("Stopping runner...")
 	stopTimeout := time.Second * 30
-	err = cli.ContainerStop(ctx, containerName, &stopTimeout)
+	s.Update("Stopping runner...")
+	err = cli.ContainerStop(ctx, foundContainer.ID, &stopTimeout)
 	if err != nil {
 		return err
 	}
 
 	s.Update("Removing runner container")
-	err = cli.ContainerRemove(ctx, containerName, types.ContainerRemoveOptions{})
+	err = cli.ContainerRemove(ctx, foundContainer.ID, types.ContainerRemoveOptions{})
 	if err != nil {
 		return err
 	}
