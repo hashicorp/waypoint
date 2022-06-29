@@ -474,12 +474,29 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 						// attempt to parse the runner profile config into the correct task launcher config struct
 						var result *k8s.TaskLauncherConfig
 						err = json.Unmarshal(cfg.PluginConfig, result)
+						if err != nil {
+							c.ui.Output(runnerProfileUpgradeConfigError, cfg.Name,
+								cfg.Name, clierrors.Humanize(err), terminal.WithWarningStyle())
+							var content map[string]interface{}
+							err = json.Unmarshal(cfg.PluginConfig, &content)
+							if content["cpu"] != nil {
+								cpuBody := content["cpu"].(map[string]interface{})
+								if cpuBody["Requested"] != nil {
+									c.ui.Output("The 'Requested' key specified for the CPU resources should instead be 'request'",
+										terminal.WithWarningStyle())
+								}
+							}
+							if content["memory"] != nil {
+								memBody := content["memory"].(map[string]interface{})
+								if memBody["Requested"] != nil {
+									c.ui.Output("The 'Requested' key specified for the Memory resources should instead be 'request'",
+										terminal.WithWarningStyle())
+								}
+							}
+						}
 					default:
 					}
-					if err != nil {
-						c.ui.Output(runnerProfileUpgradeConfigError, cfg.Name,
-							cfg.Name, clierrors.Humanize(err), terminal.WithWarningStyle())
-					}
+
 				}
 			}
 
