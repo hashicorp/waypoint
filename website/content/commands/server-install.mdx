@@ -79,15 +79,16 @@ and disable the UI, the command would be:
 
 #### kubernetes Options
 
+- `-k8s-config-path=<string>` - Path to the kubeconfig file to use.
 - `-k8s-advertise-internal` - Advertise the internal service address rather than the external. This is useful if all your deployments will be able to access the private service address. This will default to false but will be automatically set to true if the external host is detected to be localhost. The default is false.
 - `-k8s-annotate-service=<key=value>` - Annotations for the Service generated.
 - `-k8s-context=<string>` - The Kubernetes context to install the Waypoint server to. If left unset, Waypoint will use the current Kubernetes context.
+- `-k8s-helm-version=<string>` - The version of the Helm chart to use for the Waypoint runner install. The required version number format is: 'vX.Y.Z'.
 - `-k8s-cpu-request=<string>` - Configures the requested CPU amount for the Waypoint server in Kubernetes. The default is 0.
 - `-k8s-mem-request=<string>` - Configures the requested memory amount for the Waypoint server in Kubernetes. The default is 0.
 - `-k8s-cpu-limit=<string>` - Configures the CPU limit for the Waypoint server in Kubernetes. The default is 0.
 - `-k8s-mem-limit=<string>` - Configures the memory limit for the Waypoint server in Kubernetes. The default is 0.
 - `-k8s-namespace=<string>` - Namespace to install the Waypoint server into for Kubernetes.
-- `-k8s-openshift` - Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift. If set, auto-configures the installation. The default is false.
 - `-k8s-pull-policy=<string>` - Set the pull policy for the Waypoint server image.
 - `-k8s-pull-secret=<string>` - Secret to use to access the Waypoint server image on Kubernetes.
 - `-k8s-secret-file=<string>` - Use the Kubernetes Secret in the given path to access the Waypoint server image.
@@ -112,6 +113,10 @@ and disable the UI, the command would be:
 - `-nomad-server-memory=<string>` - MB of Memory to allocate to the Server job task. The default is 600.
 - `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz. The default is 200.
 - `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task. The default is 600.
+- `-nomad-runner-host-volume=<string>` - Name of the host volume to use for the Waypoint runner.
+- `-nomad-runner-csi-volume-provider=<string>` - Name of the CSI volume provider to use for the Waypoint runner.
+- `-nomad-runner-csi-volume-capacity-min=<int>` - Waypoint runner Nomad CSI volume capacity minimum, in bytes. The default is 1073741824.
+- `-nomad-runner-csi-volume-capacity-max=<int>` - Waypoint runner Nomad CSI volume capacity maximum, in bytes. The default is 2147483648.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
 - `-nomad-consul-service` - Create service for Waypoint UI and Server in Consul. The default is true.
 - `-nomad-consul-service-hostname=<string>` - If set, will use this hostname for Consul DNS rather than the default, i.e. "waypoint-server.service.consul".
@@ -120,12 +125,15 @@ and disable the UI, the command would be:
 - `-nomad-consul-datacenter=<string>` - The datacenter where Consul is located. The default is dc1.
 - `-nomad-consul-domain=<string>` - The domain where Consul is located. The default is consul.
 - `-nomad-consul-token=<string>` - If set, the passed Consul token is stored in the job before sending to the Nomad servers. Overrides the CONSUL_HTTP_TOKEN environment variable if set.
-- `-nomad-host-volume=<string>` - Nomad host volume name, required for volume type 'host'.
+- `-nomad-host-volume=<string>` - Nomad host volume name to use for the Waypoint server, required for volume type 'host'.
 - `-nomad-csi-volume-provider=<string>` - Nomad CSI volume provider, required for volume type 'csi'.
 - `-nomad-csi-volume-capacity-min=<int>` - Nomad CSI volume capacity minimum, in bytes. The default is 1073741824.
 - `-nomad-csi-volume-capacity-max=<int>` - Nomad CSI volume capacity maximum, in bytes. The default is 2147483648.
 - `-nomad-csi-fs=<string>` - Nomad CSI volume mount option file system. The default is xfs.
 - `-nomad-csi-secrets=<key=value>` - Secrets to provide for the CSI volume.
 - `-nomad-csi-parameters=<key=value>` - Parameters passed directly to the CSI plugin to configure the volume.
+- `-nomad-csi-plugin-id=<string>` - The ID of the CSI plugin that manages the volume, required for volume type 'csi'.
+- `-nomad-csi-external-id=<string>` - The ID of the physical volume from the Nomad storage provider.
+- `-nomad-csi-topologies=<key=value>` - Locations from which the Nomad Volume will be accessible.
 
 @include "commands/server-install_more.mdx"

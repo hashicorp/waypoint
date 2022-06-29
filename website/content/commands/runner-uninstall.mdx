@@ -25,7 +25,7 @@ created by a runner installation.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -39,12 +39,12 @@ created by a runner installation.
 #### ecs Options
 
 - `-ecs-region=<string>` - AWS region in which to install the Waypoint runner.
-- `-ecs-cluster=<string>` - The name of the ECS Cluster to install the Waypoint runner into.
+- `-ecs-cluster=<string>` - The name of the ECS Cluster to install the Waypoint runner into. The default is waypoint-server.
 
 #### kubernetes Options
 
-- `-k8s-config-path=<string>` - Path to the kubeconfig file to use
+- `-k8s-config-path=<string>` - Path to the kubeconfig file to use.
 - `-k8s-context=<string>` - The Kubernetes context to install the Waypoint runner to. If left unset, Waypoint will use the current Kubernetes context.
-- `-k8s-namespace=<string>` - The namespace in the Kubernetes cluster into which the Waypoint runner will be installed.
+- `-k8s-namespace=<string>` - The namespace in the Kubernetes cluster into which the Waypoint runner will be installed. The default is default.
 
 @include "commands/runner-uninstall_more.mdx"
