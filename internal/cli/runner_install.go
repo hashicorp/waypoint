@@ -231,7 +231,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	} else {
 		err = installutil.AdoptRunner(ctx, c.ui, client, id, c.serverUrl)
 		if err != nil {
-			c.ui.Output("Error adopting runner: %s", clierrors.Humanize(err))
+			c.ui.Output("Error adopting runner: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
 

@@ -19,20 +19,17 @@ func AdoptRunner(ctx context.Context, ui terminal.UI, client pb.WaypointClient, 
 	defer func() { s.Abort() }()
 
 	// Waits 5 minutes for the server to detect the new runner before timing out
-	d := time.Now().Add(time.Minute * time.Duration(5))
-	ctx, cancel := context.WithDeadline(ctx, d)
-	defer cancel()
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
+	timer := time.NewTimer(time.Minute * time.Duration(5))
+	defer timer.Stop()
 LOOP:
 	for {
 		select {
-		case <-ticker.C:
-		case <-ctx.Done():
+		case <-timer.C:
 			ui.Output("Cancelled.",
 				terminal.WithErrorStyle(),
 			)
-			return errors.New("context canceled")
+			return errors.New("runner not detected by server after 5 minutes")
+		default:
 		}
 		// Use runner list API to check if runner is reporting to server yet
 		// If it's found, adopt it. Otherwise, try until deadline.
@@ -48,6 +45,7 @@ LOOP:
 				break LOOP
 			}
 		}
+		time.Sleep(5 * time.Second)
 	}
 	s.Update("Runner detected by server")
 	s.Status(terminal.StatusOK)

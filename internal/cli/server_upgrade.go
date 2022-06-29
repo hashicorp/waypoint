@@ -380,7 +380,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 		return 0
 	}
 
-	s.Update("Runner found. Uninstalling previous runner...")
+	s.Update("Runner found on Waypoint server. Uninstalling previous runner...")
 	if err := p.UninstallRunner(ctx, runnerOpts); err != nil {
 		c.ui.Output(
 			"Error uninstalling runner from %s: %s\n\n"+
