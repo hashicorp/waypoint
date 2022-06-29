@@ -472,8 +472,8 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 					switch c.platform {
 					case "kubernetes":
 						// attempt to parse the runner profile config into the correct task launcher config struct
-						result := k8s.TaskLauncherConfig{}
-						err = json.Unmarshal(cfg.PluginConfig, &result)
+						var result *k8s.TaskLauncherConfig
+						err = json.Unmarshal(cfg.PluginConfig, result)
 					default:
 					}
 					if err != nil {
