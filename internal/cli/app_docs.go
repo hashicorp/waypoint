@@ -244,6 +244,7 @@ func splitFields(fields []*docs.FieldDocs) (required, optional []*docs.FieldDocs
 				for _, fo := range sf {
 					if !fo.Optional {
 						not_req = false
+						break
 					}
 				}
 			}
