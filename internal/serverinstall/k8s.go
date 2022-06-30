@@ -92,17 +92,11 @@ func (i *K8sInstaller) Install(
 	if err != nil {
 		return nil, err
 	}
-	s.Update("Helm settings retrieved")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
-	s = sg.Add("Getting Helm action configuration...")
 	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
 	if err != nil {
 		return nil, err
 	}
-	s.Update("Helm action initialized")
-	s.Status(terminal.StatusOK)
 	s.Done()
 
 	chartNS := ""
@@ -114,7 +108,6 @@ func (i *K8sInstaller) Install(
 		chartNS = "default"
 	}
 
-	s = sg.Add("Creating new Helm install object...")
 	client := action.NewInstall(actionConfig)
 	client.ClientOnly = false
 	client.DryRun = false
@@ -136,9 +129,6 @@ func (i *K8sInstaller) Install(
 	client.Replace = false
 	client.Description = ""
 	client.CreateNamespace = true
-	s.Update("Helm install created")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
 	var version string
 	if i.config.version == "" {
@@ -151,24 +141,15 @@ func (i *K8sInstaller) Install(
 	} else {
 		version = i.config.version
 	}
-
-	s = sg.Add("Locating chart...")
 	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/"+version+".tar.gz", settings)
 	if err != nil {
 		return nil, err
 	}
-	s.Update("Helm chart located")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
-	s = sg.Add("Loading Helm chart...")
 	c, err := loader.Load(path)
 	if err != nil {
 		return nil, err
 	}
-	s.Update("Helm chart loaded")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
 	imageRef, err := dockerparser.Parse(i.config.serverImage)
 	if err != nil {
@@ -198,6 +179,8 @@ func (i *K8sInstaller) Install(
 			"enabled": false,
 		},
 	}
+	s.Done()
+
 	s = sg.Add("Installing Waypoint Helm chart...")
 	_, err = client.RunWithContext(ctx, c, values)
 	if err != nil {
@@ -350,18 +333,11 @@ func (i *K8sInstaller) Upgrade(
 	if err != nil {
 		return nil, err
 	}
-	s.Update("Helm settings retrieved")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
-	s = sg.Add("Getting Helm action configuration...")
 	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
 	if err != nil {
 		return nil, err
 	}
-	s.Update("Helm action initialized")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
 	chartNS := ""
 	if v := i.config.namespace; v != "" {
@@ -372,7 +348,6 @@ func (i *K8sInstaller) Upgrade(
 		chartNS = "default"
 	}
 
-	s = sg.Add("Creating new Helm upgrade object...")
 	client := action.NewUpgrade(actionConfig)
 	client.DryRun = false
 	client.DisableHooks = false
@@ -387,9 +362,6 @@ func (i *K8sInstaller) Upgrade(
 	client.SubNotes = true
 	client.DisableOpenAPIValidation = false
 	client.Description = ""
-	s.Update("Helm upgrade created")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
 	var version string
 	if i.config.version == "" {
@@ -403,23 +375,15 @@ func (i *K8sInstaller) Upgrade(
 		version = i.config.version
 	}
 
-	s = sg.Add("Locating chart...")
 	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/"+version+".tar.gz", settings)
 	if err != nil {
 		return nil, err
 	}
-	s.Update("Helm chart located")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
-	s = sg.Add("Loading Helm chart...")
 	c, err := loader.Load(path)
 	if err != nil {
 		return nil, err
 	}
-	s.Update("Helm chart loaded")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
 	imageRef, err := dockerparser.Parse(i.config.serverImage)
 	if err != nil {
@@ -439,6 +403,8 @@ func (i *K8sInstaller) Upgrade(
 			"enabled": false,
 		},
 	}
+	s.Done()
+
 	s = sg.Add("Installing Waypoint Helm chart...")
 	_, err = client.RunWithContext(ctx, "waypoint", c, values)
 	if err != nil {

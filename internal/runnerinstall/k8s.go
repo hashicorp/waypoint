@@ -54,16 +54,13 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	defer func() { s.Abort() }()
 	settings, err := helminstallutil.SettingsInit()
 	if err != nil {
-		s.Update("Unable to retrieve Helm configuration.")
-		s.Status(terminal.StatusError)
+		opts.UI.Output("Unable to retrieve Helm configuration.", terminal.WithErrorStyle())
 		return err
 	}
 
-	s.Update("Getting Helm action configuration...")
 	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeconfigPath, i.Config.K8sContext)
 	if err != nil {
-		s.Update("Unable to initialize Helm.")
-		s.Status(terminal.StatusError)
+		opts.UI.Output("Unable to initialize Helm.", terminal.WithErrorStyle())
 		return err
 	}
 
@@ -77,7 +74,6 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	}
 
 	// This setup for Helm install matches the setup for the Helm platform plugin
-	s.Update("Creating new Helm install object...")
 	client := action.NewInstall(actionConfig)
 	client.ClientOnly = false
 	client.DryRun = false
@@ -110,22 +106,17 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		version = *tags[0].Name
 	}
 
-	s.Update("Locating chart...")
 	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/"+version+".tar.gz", settings)
 	if err != nil {
 		opts.UI.Output("Unable to locate Waypoint helm chart.", terminal.WithErrorStyle())
 		return err
 	}
 
-	s.Update("Loading Helm chart...")
 	c, err := loader.Load(path)
 	if err != nil {
 		opts.UI.Output("Unable to load Waypoint helm chart.", terminal.WithErrorStyle())
 		return err
 	}
-	s.Update("Helm chart loaded")
-	s.Status(terminal.StatusOK)
-	s.Done()
 
 	runnerImageRef, err := dockerparser.Parse(i.Config.RunnerImage)
 	if err != nil {
@@ -179,6 +170,8 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			"pullPolicy": "always",
 		},
 	}
+	s.Done()
+
 	s = sg.Add("Installing Waypoint Helm chart with runner options: " + c.Name())
 	_, err = client.RunWithContext(ctx, c, values)
 	if err != nil {
