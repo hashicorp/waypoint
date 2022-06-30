@@ -444,11 +444,7 @@ func (i *K8sRunnerInstaller) uninstallWithHelm(ctx context.Context, opts *Instal
 	if strings.ToLower(runnerCfg.Id) != strings.ToLower(opts.Id) {
 		return errors.New("Runner not found")
 	}
-	s.Update("Runner %q found", opts.Id)
-	s.Status(terminal.StatusOK)
-	s.Done()
-
-	s = sg.Add("Uninstalling Runner...")
+	s.Update("Runner %q found; uninstalling runner...", opts.Id)
 	client := action.NewUninstall(actionConfig)
 	client.DryRun = false
 	client.DisableHooks = false
@@ -460,7 +456,7 @@ func (i *K8sRunnerInstaller) uninstallWithHelm(ctx context.Context, opts *Instal
 	if err != nil {
 		return err
 	}
-	s.Update("Runner Uninstalled")
+	s.Update("Runner %q uninstalled", opts.Id)
 	s.Status(terminal.StatusOK)
 	s.Done()
 
