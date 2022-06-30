@@ -530,6 +530,7 @@ func installRunner(
 		)
 		return 1
 	}
+	s.Update("Runner %q installed", id)
 	s.Done()
 
 	err = installutil.AdoptRunner(ctx, ui, client, id, advertiseAddr.Addr)
