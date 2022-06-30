@@ -13,11 +13,13 @@ import (
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/clisnapshot"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"github.com/hashicorp/waypoint/internal/serverinstall"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverclient"
@@ -225,6 +227,17 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	c.ui.Output("Upgrading...", terminal.WithHeaderStyle())
 
+	// TODO(demophoon): Remove when we can handle automatic snapshot backup and
+	// restore for kubernetes servers.
+	if strings.ToLower(c.platform) == "kubernetes" {
+		upgradeFrom, _ := version.NewVersion(initServerVersion)
+		postHelmVersion, _ := version.NewVersion("v0.9.0")
+		if upgradeFrom.LessThan(postHelmVersion) {
+			c.ui.Output(upgradeToHelmRefused, terminal.WithErrorStyle())
+			return 1
+		}
+	}
+
 	c.ui.Output("Waypoint server will now upgrade from version %q",
 		initServerVersion, terminal.WithInfoStyle())
 
@@ -232,6 +245,10 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		Log:            log,
 		UI:             c.ui,
 		ServerRunFlags: c.args,
+	}
+	runnerOpts := &runnerinstall.InstallOpts{
+		Log: log,
+		UI:  c.ui,
 	}
 
 	// Upgrade in place
@@ -325,7 +342,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	// Upgrade the runner
 	if code := c.upgradeRunner(
-		ctx, client, p, installOpts, advertiseAddr,
+		ctx, client, p, installOpts, runnerOpts, advertiseAddr,
 	); code > 0 {
 		return code
 	}
@@ -347,6 +364,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 	client pb.WaypointClient,
 	p serverinstall.Installer,
 	installOpts *serverinstall.InstallOpts,
+	runnerOpts *runnerinstall.InstallOpts,
 	advertiseAddr *pb.ServerConfig_AdvertiseAddr,
 ) int {
 	// Connect
@@ -374,8 +392,8 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 		return 0
 	}
 
-	s.Update("Runner found. Uninstalling previous runner...")
-	if err := p.UninstallRunner(ctx, installOpts); err != nil {
+	s.Update("Runner found on Waypoint server. Uninstalling previous runner...")
+	if err := p.UninstallRunner(ctx, runnerOpts); err != nil {
 		c.ui.Output(
 			"Error uninstalling runner from %s: %s\n\n"+
 				"The runner will not be upgraded.",
@@ -586,5 +604,17 @@ Please run the following commands if you wish to unset these runner profiles
 from being the default:
 
 %[2]s
+`)
+
+	upgradeToHelmRefused = strings.TrimSpace(`
+Upgrading directly to 0.9.0 is not currently supported via this method on Kubernetes.
+
+You can manually perform the upgrade by taking a snapshot of your Waypoint
+server and restoring the snapshot to a fresh install of Waypoint Server using
+the commands:
+
+waypoint server snapshot
+waypoint install -platform=kubernetes
+waypoint server restore [snapshot-name]
 `)
 )

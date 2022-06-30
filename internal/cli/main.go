@@ -542,6 +542,17 @@ func Commands(
 			}, nil
 		},
 
+		"runner install": func() (cli.Command, error) {
+			return &RunnerInstallCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"runner uninstall": func() (cli.Command, error) {
+			return &RunnerUninstallCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"context": func() (cli.Command, error) {
 			return &ContextHelpCommand{
 				baseCommand:  baseCommand,

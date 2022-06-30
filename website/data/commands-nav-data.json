@@ -219,6 +219,14 @@
     "path": "runner-inspect"
   },
   {
+    "title": "runner install",
+    "path": "runner-install"
+  },
+  {
+    "title": "runner uninstall",
+    "path": "runner-uninstall"
+  },
+  {
     "title": "runner adopt",
     "path": "runner-adopt"
   },
