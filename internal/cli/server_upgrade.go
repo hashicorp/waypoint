@@ -229,11 +229,13 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	// TODO(demophoon): Remove when we can handle automatic snapshot backup and
 	// restore for kubernetes servers.
-	upgradeFrom, _ := version.NewVersion(initServerVersion)
-	postHelmVersion, _ := version.NewVersion("v0.9.0")
-	if upgradeFrom.LessThan(postHelmVersion) {
-		c.ui.Output(upgradeToHelmRefused, terminal.WithErrorStyle())
-		return 1
+	if strings.ToLower(c.platform) == "kubernetes" {
+		upgradeFrom, _ := version.NewVersion(initServerVersion)
+		postHelmVersion, _ := version.NewVersion("v0.9.0")
+		if upgradeFrom.LessThan(postHelmVersion) {
+			c.ui.Output(upgradeToHelmRefused, terminal.WithErrorStyle())
+			return 1
+		}
 	}
 
 	c.ui.Output("Waypoint server will now upgrade from version %q",

@@ -278,22 +278,37 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	}
 
 	// Find clusterArn which waypoint runner is installed into
+	// We check for the serviceName before v0.9 and v0.9+
 	ecsSvc := ecs.New(sess)
-	services, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
-		Cluster:  aws.String(i.Config.Cluster),
-		Services: []*string{aws.String("waypoint-runner-" + opts.Id)},
-	})
-	if err != nil {
-		s.Update("Could not find runner with ID %s", opts.Id)
-		return err
+	serviceNames := []string{
+		"waypoint-runner-" + opts.Id,
+		"waypoint-runner",
 	}
-	if len(services.Services) != 1 {
-		log.Debug("Unable to uninstall runner. Too many instances")
-		s.Update("Expected 1 runner service, found %s.", len(services.Services))
-
-		return fmt.Errorf("Expected 1 runner service, found %d.", len(services.Services))
+	var foundService *ecs.Service
+	var services *ecs.DescribeServicesOutput
+	for _, serviceName := range serviceNames {
+		ss, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
+			Cluster:  aws.String(i.Config.Cluster),
+			Services: []*string{aws.String(serviceName)},
+		})
+		services = ss
+		if err != nil {
+			s.Update("Could not get list of ECS services")
+			return err
+		}
+		if ss != nil && len(ss.Services) > 0 {
+			foundService = ss.Services[0]
+			if len(ss.Services) != 1 {
+				log.Debug("Unable to uninstall runner; expected 1 runner service named %s, found %d", serviceName, len(ss.Services))
+				return fmt.Errorf("expected 1 runner service named %s, found %d", serviceName, len(ss.Services))
+			}
+			break
+		}
 	}
-	clusterArn := services.Services[0].ClusterArn
+	if len(services.Failures) > 0 {
+		return fmt.Errorf("could not find runner with ID %q, service is %q", opts.Id, *services.Failures[0].Reason)
+	}
+	clusterArn := foundService.ClusterArn
 
 	// Delete associated runner service and tasks
 	// This does not remove the security group since it may be in use by other
