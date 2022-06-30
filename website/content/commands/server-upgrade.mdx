@@ -50,7 +50,7 @@ manually installed runners will not be automatically upgraded.
 
 - `-ecs-cluster=<string>` - Configures the Cluster to upgrade. The default is waypoint-server.
 - `-ecs-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
-- `-ecs-region=<string>` - Configures which AWS region to install into. The default is us-west-2.
+- `-ecs-region=<string>` - Configures which AWS region to install into.
 - `-ecs-cpu=<string>` - Configures the requested CPU amount for the Waypoint server task in ECS. The default is 512.
 - `-ecs-mem=<string>` - Configures the requested memory amount for the Waypoint server task in ECS. The default is 1024.
 - `-ecs-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners. This will default to the server image with the name (not label) suffixed with '-odr'.
