@@ -89,6 +89,7 @@ manually installed runners will not be automatically upgraded.
 - `-nomad-runner-csi-volume-capacity-max=<int>` - Waypoint runner Nomad CSI volume capacity maximum, in bytes. The default is 2147483648.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
 - `-nomad-host-volume=<string>` - Nomad host volume name.
+- `-nomad-service-provider=<string>` - Create service for Waypoint UI and Server. One possible value from: consul, nomad, none. The default is none.
 - `-nomad-consul-service` - Create service for Waypoint UI and Server in Consul. The default is false.
 - `-nomad-consul-service-hostname=<string>` - If set, will use this hostname for Consul DNS rather than the default, i.e. "waypoint-server.service.consul".
 - `-nomad-consul-service-ui-tags=<string>` - Tags for the Waypoint UI service generated in Consul. The default is waypoint.
