@@ -137,7 +137,11 @@ func (c *InstallCommand) Run(args []string) int {
 			sr.Status(terminal.StatusError)
 			// dont return the error yet
 		} else {
-			sr.Update("Successfully connected to Waypoint server in %s!", strings.ToUpper(c.platform))
+			p := strings.Title(c.platform)
+			if p == "Ecs" {
+				p = strings.ToUpper(p)
+			}
+			sr.Update("Successfully connected to Waypoint server in %s!", p)
 			sr.Status(terminal.StatusOK)
 			sr.Done()
 			break
