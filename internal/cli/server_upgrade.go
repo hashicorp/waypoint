@@ -479,6 +479,10 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 								cfg.Name, clierrors.Humanize(err), terminal.WithWarningStyle())
 							var content map[string]interface{}
 							err = json.Unmarshal(cfg.PluginConfig, &content)
+							if err != nil {
+								c.ui.Output("Error parsing plugin content: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+								return 1
+							}
 							if content["cpu"] != nil {
 								cpuBody := content["cpu"].(map[string]interface{})
 								if cpuBody["Requested"] != nil {
@@ -659,5 +663,9 @@ Plugin Config Error: %[3]s
 Please run the following with the corrected plugin configuration to fix this.
 
 waypoint runner profile set -name=%[2]s -plugin-config=<path_to_config_file>
+
+Starting in v0.9.0, ODR plugin configurations are validated for correctness.
+The previous configuration for this profile is invalid, and ODRs will not launch
+unless it is updated.
 `)
 )
