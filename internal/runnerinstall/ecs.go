@@ -221,7 +221,7 @@ func (i *ECSRunnerInstaller) InstallFlags(set *flag.Set) {
 		Name:    "ecs-task-role-name",
 		Target:  &i.Config.TaskRoleName,
 		Usage:   "IAM Execution Role to assign to the on-demand runner.",
-		Default: "waypoint-runner",
+		Default: runnerName,
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -393,7 +393,7 @@ func launchRunner(
 			aws.String("-state-dir=/data/runner"),
 			aws.String("-vv"),
 		},
-		Name:  aws.String("waypoint-runner"),
+		Name:  aws.String(runnerName),
 		Image: aws.String(runnerImage),
 		PortMappings: []*ecs.PortMapping{
 			{

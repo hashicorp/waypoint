@@ -164,7 +164,7 @@ func (d DockerRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	s.Update("Finding runner container")
 	containerNames := []string{
 		"waypoint-" + opts.Id + "-runner",
-		"waypoint-runner",
+		runnerName,
 	}
 	var foundContainer types.Container
 	for _, containerName := range containerNames {

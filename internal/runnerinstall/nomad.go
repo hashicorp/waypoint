@@ -19,10 +19,6 @@ type NomadRunnerInstaller struct {
 	Config NomadConfig
 }
 
-const (
-	runnerName = "waypoint-runner"
-)
-
 type NomadConfig struct {
 	AuthSoftFail       bool              `hcl:"auth_soft_fail,optional"`
 	Namespace          string            `hcl:"namespace,optional"`
@@ -143,13 +139,13 @@ func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 	}
 
 	tg.Volumes = map[string]*api.VolumeRequest{
-		"waypoint-runner": &volumeRequest,
+		runnerName: &volumeRequest,
 	}
 
 	job.AddTaskGroup(tg)
 
 	readOnly := false
-	volume := "waypoint-runner"
+	volume := runnerName
 	destination := "/data"
 	volumeMounts := []*api.VolumeMount{
 		{
@@ -310,7 +306,7 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	var waypointRunnerJobName string
 	possibleRunnerJobNames := []string{
 		"waypoint-" + opts.Id + "-runner",
-		"waypoint-runner",
+		runnerName,
 	}
 	for _, runnerJobName := range possibleRunnerJobNames {
 		jobs, _, err := client.Jobs().PrefixList(runnerJobName)

@@ -178,7 +178,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			},
 			"serviceAccount": map[string]interface{}{
 				"create": i.Config.CreateServiceAccount,
-				"name":   "waypoint-runner",
+				"name":   runnerName,
 			},
 
 			"pullPolicy": "always",
