@@ -8,9 +8,31 @@ description: |-
 # Upgrading to Waypoint 0.9.0 from 0.8.x
 
 Waypoint 0.8.x can be upgraded to Waypoint 0.9.0 using a [standard upgrade](/docs/upgrading#standard-upgrade).
-There are no breaking changes in the protocol or `waypoint.hcl` configuration file. All
-Waypoint components (CLI, entrypoint, and server) are forwards and backwards
-compatible but we encourge users to have all components on the same version.
+There are some considerations depending on what platform your server is installed on.
+There are no breaking changes in the protocol or `waypoint.hcl` configuration file.
+Due to the changes in `runner` management, we cannot guarantee that all Waypoint
+components (CLI, entrypoint, and server) are forwards and backwards
+compatible. We encourge users to have all components on the same version.
+
+## ECS Upgrades
+
+We removed the default value for the flag `-ecs-region`. This was previously set
+to `us-west-2`. If you used the default on the install of Waypoint to ECS, you will
+need to specify `us-west-2` moving forward.
+
+## Kubernetes Upgrades
+
+With 0.9 comes a significant change in how Waypoint manages express server installs.
+Waypoint now uses Helm under the hood to all Waypoint components. If you previously
+installed with Helm, you can run a standard Waypoint upgrade.
+
+If you previously installed with the Waypoint express install for Kubernetes,
+you will need to snapshot your sever, do a Waypoint server uninstall, complete a
+new express install with v0.9.0, and restore your server snapshot. An example is below:
+
+```shell-session
+
+```
 
 ## Other Considerations
 
