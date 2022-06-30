@@ -159,6 +159,10 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 					"repository": odrImageRef.Repository(),
 					"tag":        odrImageRef.Tag(),
 				},
+				"serviceAccount": map[string]interface{}{
+					"create": i.Config.CreateServiceAccount,
+					"name":   "waypoint-runner-odr",
+				},
 			},
 			"resources": map[string]interface{}{
 				"requests": map[string]interface{}{
@@ -174,6 +178,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			},
 			"serviceAccount": map[string]interface{}{
 				"create": i.Config.CreateServiceAccount,
+				"name":   "waypoint-runner",
 			},
 
 			"pullPolicy": "always",
