@@ -587,6 +587,9 @@ func (i *K8sInstaller) Upgrade(
 		return nil, err
 	}
 
+	s = sg.Add("Upgrade complete!")
+	s.Done()
+
 	return &InstallResults{
 		Context:       &contextConfig,
 		AdvertiseAddr: &advertiseAddr,
