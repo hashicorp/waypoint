@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	"net"
 	"strings"
 	"time"
@@ -66,6 +68,54 @@ const (
 	runnerClusterRoleBindingName = "waypoint-runner"
 )
 
+// newClient creates a new K8S client based on the configured settings.
+func (i *K8sInstaller) newClient() (*kubernetes.Clientset, error) {
+	// Build our K8S client.
+	configOverrides := &clientcmd.ConfigOverrides{}
+	if i.config.k8sContext != "" {
+		configOverrides = &clientcmd.ConfigOverrides{
+			CurrentContext: i.config.k8sContext,
+		}
+	}
+	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		configOverrides,
+	)
+
+	// Discover the current target namespace in the user's config so if they
+	// run kubectl commands waypoint will show up. If we use the default namespace
+	// they might not see the objects we've created.
+	if i.config.namespace == "" {
+		namespace, _, err := newCmdConfig.Namespace()
+		if err != nil {
+			return nil, fmt.Errorf(
+				"Error getting namespace from client config: %s",
+				clierrors.Humanize(err),
+			)
+		}
+
+		i.config.namespace = namespace
+	}
+
+	clientconfig, err := newCmdConfig.ClientConfig()
+	if err != nil {
+		return nil, fmt.Errorf(
+			"Error initializing kubernetes client: %s",
+			clierrors.Humanize(err),
+		)
+	}
+
+	clientset, err := kubernetes.NewForConfig(clientconfig)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"Error initializing kubernetes client: %s",
+			clierrors.Humanize(err),
+		)
+	}
+
+	return clientset, nil
+}
+
 // Install is a method of K8sInstaller and implements the Installer interface to
 // register a waypoint-server in a Kubernetes cluster
 func (i *K8sInstaller) Install(
@@ -86,7 +136,25 @@ func (i *K8sInstaller) Install(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Getting Helm configs...")
+	clientset, err := i.newClient()
+	if err != nil {
+		ui.Output(err.Error(), terminal.WithErrorStyle())
+		return nil, err
+	}
+
+	s := sg.Add("Inspecting Kubernetes cluster")
+	// If this is kind, then we want to warn the user that they need
+	// to have some loadbalancer system setup or this will not work.
+	_, err = clientset.AppsV1().DaemonSets("kube-system").Get(
+		ctx, "kindnet", metav1.GetOptions{})
+	isKind := err == nil
+	if isKind {
+		s.Update(warnK8SKind)
+		s.Status(terminal.StatusWarn)
+	}
+	s.Done()
+
+	s = sg.Add("Getting Helm configs...")
 	defer func() { s.Abort() }()
 	settings, err := helminstallutil.SettingsInit()
 	if err != nil {
