@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -225,6 +226,15 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	}
 
 	c.ui.Output("Upgrading...", terminal.WithHeaderStyle())
+
+	// TODO(demophoon): Remove when we can handle automatic snapshot backup and
+	// restore for kubernetes servers.
+	upgradeFrom, _ := version.NewVersion(initServerVersion)
+	postHelmVersion, _ := version.NewVersion("v0.9.0")
+	if upgradeFrom.LessThan(postHelmVersion) {
+		c.ui.Output(upgradeToHelmRefused, terminal.WithErrorStyle())
+		return 1
+	}
 
 	c.ui.Output("Waypoint server will now upgrade from version %q",
 		initServerVersion, terminal.WithInfoStyle())
@@ -592,5 +602,17 @@ Please run the following commands if you wish to unset these runner profiles
 from being the default:
 
 %[2]s
+`)
+
+	upgradeToHelmRefused = strings.TrimSpace(`
+Upgrading directly to 0.9.0 is not currently supported via this method on Kubernetes.
+
+You can manually perform the upgrade by taking a snapshot of your Waypoint
+server and restoring the snapshot to a fresh install of Waypoint Server using
+the commands:
+
+waypoint server snapshot
+waypoint install -platform=kubernetes
+waypoint server restore [snapshot-name]
 `)
 )
