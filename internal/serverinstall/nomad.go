@@ -304,21 +304,17 @@ func (i *NomadInstaller) Install(
 
 	switch i.config.serviceProvider {
 	case "consul":
-		s = sg.Add("The CLI has been configured to automatically install a Consul service for\n" +
+		opts.UI.Output("The CLI has been configured to automatically install a Consul service for\n" +
 			"the Waypoint service backend and ui service in Nomad.")
-		s.Done()
 	case "nomad":
-		s = sg.Add("The CLI has been configured to automatically install a Nomad service for\n" +
+		opts.UI.Output("The CLI has been configured to automatically install a Nomad service for\n" +
 			"the Waypoint service backend and ui service in Nomad.")
-		s.Done()
 	default:
-		s = sg.Add("Waypoint server running on Nomad is being accessed via its allocation IP and port.\n" +
+		opts.UI.Output("Waypoint server running on Nomad is being accessed via its allocation IP and port.\n" +
 			"This could change in the future if Nomad creates a new allocation for the Waypoint server,\n" +
 			"which would break all existing Waypoint contexts.\n\n" +
 			"It is recommended to use Consul for determining Waypoint servers IP running on Nomad rather than\n" +
 			"relying on the static IP that is initially set up for this allocation.")
-		s.Status(terminal.StatusWarn)
-		s.Done()
 	}
 
 	return &InstallResults{
