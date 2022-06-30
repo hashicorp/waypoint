@@ -305,7 +305,7 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 		}
 	}
 	if len(services.Failures) > 0 {
-		return fmt.Errorf("could not find runner with ID %q, service is %q", opts.Id, *services.Failures[0].Reason)
+		return fmt.Errorf("could not find runner named %q or %q, service is %q", serviceNames[0], serviceNames[1], *services.Failures[0].Reason)
 	}
 	clusterArn := foundService.ClusterArn
 
