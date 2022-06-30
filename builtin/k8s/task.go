@@ -445,10 +445,17 @@ func (p *TaskLauncher) WatchTask(
 	}
 
 	if pods == nil {
-		log.Info("no pods found for job, returning", "job_id", ti.Id)
-		ui.Output("no pods found for job id %q, cannot watch task job...", ti.Id, terminal.WithErrorStyle())
+		log.Info("no pods found for job label, returning", "job_id", ti.Id)
+		ui.Output("no pods found for job-name %q, cannot watch task job...", ti.Id, terminal.WithErrorStyle())
 
 		return nil, nil
+	}
+
+	if len(pods.Items) < 1 {
+		// This is an error. We found the pods by job name but for some reason there
+		// are no actual pods inside the job. This might happen if Waypoint server
+		// encounters an internal error or panic mid-task launch.
+		return nil, status.Errorf(codes.NotFound, "No pods found in job %q for WatchTask", ti.Id)
 	}
 
 	// Assume first one exists for now? Our task launcher for k8s only launches
