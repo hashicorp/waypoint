@@ -178,7 +178,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			},
 			"serviceAccount": map[string]interface{}{
 				"create": i.Config.CreateServiceAccount,
-				"name":   runnerName,
+				"name":   DefaultRunnerTagName,
 			},
 
 			"pullPolicy": "always",
@@ -306,7 +306,7 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 
 	deploymentClient := clientset.AppsV1().Deployments(i.Config.Namespace)
 	if list, err := deploymentClient.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", runnerName),
+		LabelSelector: fmt.Sprintf("app=%s", DefaultRunnerTagName),
 	}); err != nil {
 		ui.Output(
 			"Error looking up deployments: %s", clierrors.Humanize(err),
@@ -354,7 +354,7 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 		w, err := deploymentClient.Watch(
 			ctx,
 			metav1.ListOptions{
-				LabelSelector: "app=" + runnerName,
+				LabelSelector: "app=" + DefaultRunnerTagName,
 			},
 		)
 		if err != nil {
@@ -370,7 +370,7 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 			ctx,
 			metav1.DeleteOptions{},
 			metav1.ListOptions{
-				LabelSelector: "app=" + runnerName,
+				LabelSelector: "app=" + DefaultRunnerTagName,
 			},
 		); err != nil {
 			ui.Output(

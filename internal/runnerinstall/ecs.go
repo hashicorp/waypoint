@@ -22,7 +22,6 @@ import (
 
 const (
 	defaultRunnerLogGroup = "waypoint-runner-logs"
-	defaultRunnerTagName  = "waypoint-runner"
 	defaultTaskRuntime    = "FARGATE"
 	defaultRunnerTagValue = "runner-component"
 )
@@ -281,8 +280,8 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	// We check for the serviceName before v0.9 and v0.9+
 	ecsSvc := ecs.New(sess)
 	serviceNames := []string{
-		"waypoint-runner-" + opts.Id,
-		"waypoint-runner",
+		defaultRunnerName(opts.Id),
+		DefaultRunnerTagName,
 	}
 	var foundService *ecs.Service
 	var services *ecs.DescribeServicesOutput
@@ -425,7 +424,7 @@ func launchRunner(
 			{
 				ContainerPath: aws.String("/data/runner"),
 				ReadOnly:      aws.Bool(false),
-				SourceVolume:  aws.String(defaultRunnerTagName),
+				SourceVolume:  aws.String(DefaultRunnerTagName),
 			},
 		},
 	}
@@ -438,13 +437,13 @@ func launchRunner(
 		ExecutionRoleArn:        aws.String(executionRoleArn),
 		Cpu:                     aws.String(cpu),
 		Memory:                  aws.String(memory),
-		Family:                  aws.String(runnerName),
+		Family:                  aws.String(DefaultRunnerTagName),
 		TaskRoleArn:             &taskRoleArn,
 		NetworkMode:             aws.String("awsvpc"),
 		RequiresCompatibilities: []*string{aws.String(defaultTaskRuntime)},
 		Tags: []*ecs.Tag{
 			{
-				Key:   aws.String(defaultRunnerTagName),
+				Key:   aws.String(DefaultRunnerTagName),
 				Value: aws.String(defaultRunnerTagValue),
 			},
 			{
@@ -461,7 +460,7 @@ func launchRunner(
 					FileSystemId:      efsInfo.FileSystemID,
 					TransitEncryption: aws.String(ecs.EFSTransitEncryptionEnabled),
 				},
-				Name: aws.String(defaultRunnerTagName),
+				Name: aws.String(DefaultRunnerTagName),
 			},
 		},
 	}
@@ -527,7 +526,7 @@ func launchRunner(
 		Cluster:              clusterArn,
 		DesiredCount:         aws.Int64(1),
 		LaunchType:           aws.String(defaultTaskRuntime),
-		ServiceName:          aws.String(runnerName + "-" + id),
+		ServiceName:          aws.String(DefaultRunnerTagName + "-" + id),
 		EnableECSManagedTags: aws.Bool(true),
 		TaskDefinition:       aws.String(taskDefArn),
 		NetworkConfiguration: &ecs.NetworkConfiguration{
@@ -539,7 +538,7 @@ func launchRunner(
 		},
 		Tags: []*ecs.Tag{
 			{
-				Key:   aws.String(defaultRunnerTagName),
+				Key:   aws.String(DefaultRunnerTagName),
 				Value: aws.String(defaultRunnerTagValue),
 			},
 			{
@@ -549,7 +548,7 @@ func launchRunner(
 		},
 	}
 
-	s.Update("Creating ECS Service (%s)", runnerName)
+	s.Update("Creating ECS Service (%s)", DefaultRunnerTagName)
 	svc, err := installutil.CreateService(createServiceInput, ecsSvc)
 	if err != nil {
 		return nil, err
@@ -645,7 +644,7 @@ func (i *ECSRunnerInstaller) setupTaskRole(
 		RoleName:                 aws.String(roleName),
 		Tags: []*iam.Tag{
 			{
-				Key:   aws.String(defaultRunnerTagName),
+				Key:   aws.String(DefaultRunnerTagName),
 				Value: aws.String(defaultRunnerTagValue),
 			},
 			{
