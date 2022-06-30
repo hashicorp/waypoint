@@ -69,8 +69,8 @@ expected host for a Consul service, i.e. `waypoint-server.service.dc1.consul`.
 When running the install helper, the CLI should show the Consul DNS backed hostname of Waypoint
 server at the end of an install:
 
-```shell
-waypoint@hashicorp:waypoint λ waypoint install -platform=nomad -accept-tos -nomad-host-volume="waypoint"
+```shell-session
+$ waypoint install -platform=nomad -accept-tos -nomad-host-volume="waypoint"
 ✓ Waypoint server ready
 ✓ The CLI has been configured to automatically install a Consul service for
 the Waypoint service backend and ui service in Nomad.
@@ -123,19 +123,19 @@ The main components installed are:
 - EC2 Security Group: authorizing traffic in to the cluster, as well as enabling access to the EFS FileSystem from the Cluster
 - CloudWatch Log Groups: a log group is created for each of the Waypoint server and runner services
 - IAM Execution role
-- Network load balancer: required to enable both HTTP and gRPC connections\*
+- Network load balancer: required to enable both HTTP and gRPC connections (see `NOTE`)
 - Load balancing target groups: a target group is created for each of the Waypoint server and runner services
 - ECS Cluster: a cluster dedicated to running the Waypoint server and runner
 - ECS server service: runs the Waypoint server task
 - ECS runner service: runs the default Waypoint runner task
 - ECS Task Definitions: for both the server and runner
 
-~> **NOTE**: \* A Network Load Balancer is required because user-supplied TLS certificates are not yet supported.
+~> **NOTE**: A Network Load Balancer is required because user-supplied TLS certificates are not yet supported.
 
-And example ECS install should give output similar to the below.
+An example ECS install should result in output similar to the below:
 
-```shell
-❯ waypoint install --platform=ecs -accept-tos                                                                                                                                     21:27:12
+```shell-session
+$ waypoint install -platform=ecs -accept-tos
 ✓ Networking setup
 ✓ Created new ECS cluster: waypoint-server
 ✓ EFS ready
