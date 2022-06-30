@@ -166,7 +166,6 @@ func (i *K8sInstaller) Install(
 	if err != nil {
 		return nil, err
 	}
-	s.Done()
 
 	chartNS := ""
 	if v := i.config.namespace; v != "" {
@@ -248,7 +247,6 @@ func (i *K8sInstaller) Install(
 			"enabled": false,
 		},
 	}
-	s.Done()
 
 	s = sg.Add("Installing Waypoint Helm chart...")
 	_, err = client.RunWithContext(ctx, c, values)
@@ -472,7 +470,6 @@ func (i *K8sInstaller) Upgrade(
 			"enabled": false,
 		},
 	}
-	s.Done()
 
 	s = sg.Add("Installing Waypoint Helm chart...")
 	_, err = client.RunWithContext(ctx, "waypoint", c, values)

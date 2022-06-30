@@ -184,7 +184,6 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			"pullPolicy": "always",
 		},
 	}
-	s.Done()
 
 	s = sg.Add("Installing Waypoint Helm chart with runner options: " + c.Name())
 	_, err = client.RunWithContext(ctx, c, values)
