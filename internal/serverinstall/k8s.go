@@ -247,7 +247,7 @@ func (i *K8sInstaller) Install(
 
 		// Set the grpc address
 		grpcAddr = fmt.Sprintf("%s:%d", addr, grpcPort)
-		log.Info("server service ready: %s", addr)
+		log.Info("server service ready", "addr", addr)
 
 		// HTTP address to return
 		httpAddr = fmt.Sprintf("%s:%d", addr, httpPort)
@@ -470,7 +470,7 @@ func (i *K8sInstaller) Upgrade(
 
 		// Set the grpc address
 		grpcAddr = fmt.Sprintf("%s:%d", addr, grpcPort)
-		log.Info("server service ready: %s", addr)
+		log.Info("server service ready", "addr", addr)
 
 		// HTTP address to return
 		httpAddr = fmt.Sprintf("%s:%d", addr, httpPort)
