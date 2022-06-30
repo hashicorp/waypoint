@@ -111,7 +111,26 @@ an IP address from the Nomad allocation after the Waypoint install helper finish
 
 ### AWS ECS Platform
 
-This section still needs to be filled out.
+Waypoint supports installing the server in AWS ECS. Several AWS resources are created
+as part of the install. The default cluster name is `waypoint-server`; this can
+be changed by specifying the value for the flag `-ecs-cluster`. The resources
+are tagged with `waypoint-server` as the tag name; this is not able to be changed
+as Waypoint needs a way to track all the resources that are part of the server install.
+
+The main components installed are:
+
+- EFS Filesystem: used for persisting the Waypoint server database
+- EC2 Security Group: authorizing traffic in to the cluster, as well as enabling access to the EFS FileSystem from the Cluster
+- CloudWatch Log Groups: a log group is created for each of the Waypoint server and runner services
+- IAM Execution role
+- Network load balancer: required to enable both HTTP and gRPC connections\*
+- Load balancing target groups: a target group is created for each of the Waypoint server and runner services
+- ECS Cluster: a cluster dedicated to running the Waypoint server and runner
+- ECS server service: runs the Waypoint server task
+- ECS runner service: runs the default Waypoint runner task
+- ECS Task Definitions: for both the server and runner
+
+~> **NOTE**: \* A Network Load Balancer is required because user-supplied TLS certificates are not yet supported.
 
 ### Docker Platform
 
