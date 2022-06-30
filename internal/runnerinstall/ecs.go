@@ -526,7 +526,7 @@ func launchRunner(
 		Cluster:              clusterArn,
 		DesiredCount:         aws.Int64(1),
 		LaunchType:           aws.String(defaultTaskRuntime),
-		ServiceName:          aws.String(DefaultRunnerTagName + "-" + id),
+		ServiceName:          aws.String(defaultRunnerName(id)),
 		EnableECSManagedTags: aws.Bool(true),
 		TaskDefinition:       aws.String(taskDefArn),
 		NetworkConfiguration: &ecs.NetworkConfiguration{
