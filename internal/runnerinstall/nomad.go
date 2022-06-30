@@ -114,12 +114,12 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 	// Name AND ID of the Nomad job will be waypoint-runner-ID
 	// Name is cosmetic, but ID must be unique
-	jobRef := "waypoint-" + opts.Id + "-runner"
+	jobRef := defaultRunnerName(opts.Id)
 	job := api.NewServiceJob(jobRef, jobRef, c.Region, 50)
 	job.Namespace = &c.Namespace
 	job.Datacenters = c.Datacenters
 	job.Meta = c.ServiceAnnotations
-	tg := api.NewTaskGroup(runnerName, 1)
+	tg := api.NewTaskGroup(DefaultRunnerTagName, 1)
 	tg.Networks = []*api.NetworkResource{
 		{
 			Mode: "host",
@@ -130,7 +130,7 @@ func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 	volumeRequest := api.VolumeRequest{ReadOnly: false}
 	if c.CsiVolumeProvider != "" {
 		volumeRequest.Type = "csi"
-		volumeRequest.Source = "waypoint-" + opts.Id + "-runner"
+		volumeRequest.Source = defaultRunnerName(opts.Id)
 		volumeRequest.AccessMode = "single-node-writer"
 		volumeRequest.AttachmentMode = "file-system"
 	} else {
@@ -139,13 +139,13 @@ func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 	}
 
 	tg.Volumes = map[string]*api.VolumeRequest{
-		runnerName: &volumeRequest,
+		DefaultRunnerTagName: &volumeRequest,
 	}
 
 	job.AddTaskGroup(tg)
 
 	readOnly := false
-	volume := runnerName
+	volume := DefaultRunnerTagName
 	destination := "/data"
 	volumeMounts := []*api.VolumeMount{
 		{
@@ -305,8 +305,8 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	s = sg.Add("Locate existing Waypoint runner...")
 	var waypointRunnerJobName string
 	possibleRunnerJobNames := []string{
-		"waypoint-" + opts.Id + "-runner",
-		runnerName,
+		defaultRunnerName(opts.Id),
+		DefaultRunnerTagName,
 	}
 	for _, runnerJobName := range possibleRunnerJobNames {
 		jobs, _, err := client.Jobs().PrefixList(runnerJobName)

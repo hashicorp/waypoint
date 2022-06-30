@@ -2,6 +2,7 @@ package runnerinstall
 
 import (
 	"context"
+
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -59,3 +60,11 @@ var Platforms = map[string]RunnerInstaller{
 	"nomad":      &NomadRunnerInstaller{},
 	"docker":     &DockerRunnerInstaller{},
 }
+
+func defaultRunnerName(id string) string {
+	return "waypoint-" + id + "-runner"
+}
+
+const (
+	DefaultRunnerTagName = "waypoint-runner"
+)

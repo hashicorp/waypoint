@@ -178,15 +178,14 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			},
 			"serviceAccount": map[string]interface{}{
 				"create": i.Config.CreateServiceAccount,
-				"name":   runnerName,
+				"name":   DefaultRunnerTagName,
 			},
 
 			"pullPolicy": "always",
 		},
 	}
-	s.Done()
 
-	s = sg.Add("Installing Waypoint Helm chart with runner options: " + c.Name())
+	s.Update("Installing Waypoint Helm chart with runner options: " + c.Name())
 	_, err = client.RunWithContext(ctx, c, values)
 	if err != nil {
 		return err
@@ -307,7 +306,7 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 
 	deploymentClient := clientset.AppsV1().Deployments(i.Config.Namespace)
 	if list, err := deploymentClient.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", runnerName),
+		LabelSelector: fmt.Sprintf("app=%s", DefaultRunnerTagName),
 	}); err != nil {
 		ui.Output(
 			"Error looking up deployments: %s", clierrors.Humanize(err),
@@ -355,7 +354,7 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 		w, err := deploymentClient.Watch(
 			ctx,
 			metav1.ListOptions{
-				LabelSelector: "app=" + runnerName,
+				LabelSelector: "app=" + DefaultRunnerTagName,
 			},
 		)
 		if err != nil {
@@ -371,7 +370,7 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 			ctx,
 			metav1.DeleteOptions{},
 			metav1.ListOptions{
-				LabelSelector: "app=" + runnerName,
+				LabelSelector: "app=" + DefaultRunnerTagName,
 			},
 		); err != nil {
 			ui.Output(
@@ -444,11 +443,7 @@ func (i *K8sRunnerInstaller) uninstallWithHelm(ctx context.Context, opts *Instal
 	if strings.ToLower(runnerCfg.Id) != strings.ToLower(opts.Id) {
 		return errors.New("Runner not found")
 	}
-	s.Update("Runner %q found", opts.Id)
-	s.Status(terminal.StatusOK)
-	s.Done()
-
-	s = sg.Add("Uninstalling Runner...")
+	s.Update("Runner %q found; uninstalling runner...", opts.Id)
 	client := action.NewUninstall(actionConfig)
 	client.DryRun = false
 	client.DisableHooks = false
@@ -460,7 +455,7 @@ func (i *K8sRunnerInstaller) uninstallWithHelm(ctx context.Context, opts *Instal
 	if err != nil {
 		return err
 	}
-	s.Update("Runner Uninstalled")
+	s.Update("Runner %q uninstalled", opts.Id)
 	s.Status(terminal.StatusOK)
 	s.Done()
 

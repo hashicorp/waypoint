@@ -560,6 +560,7 @@ func (i *ECSInstaller) Upgrade(
 	}
 
 	s.Update("Waiting until service is stable")
+	// WaitUntil waits for ~10 minutes
 	err = ecsSvc.WaitUntilServicesStable(&ecs.DescribeServicesInput{
 		Cluster:  &clusterArn,
 		Services: []*string{serverSvc.ServiceName},

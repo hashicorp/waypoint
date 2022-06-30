@@ -47,11 +47,8 @@ LOOP:
 		}
 		time.Sleep(5 * time.Second)
 	}
-	s.Update("Runner detected by server")
-	s.Status(terminal.StatusOK)
-	s.Done()
+	s.Update("Runner detected by server; adopting runner...")
 
-	s = sg.Add("Adopting runner...")
 	_, err := client.AdoptRunner(ctx, &pb.AdoptRunnerRequest{
 		RunnerId: id,
 		Adopt:    true,

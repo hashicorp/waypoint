@@ -4,21 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
+	"strings"
+	"time"
+
 	"github.com/hashicorp/waypoint/internal/installutil"
 	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"net"
-	"strings"
-	"time"
 
 	apiv1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/k8s"
@@ -165,7 +166,6 @@ func (i *K8sInstaller) Install(
 	if err != nil {
 		return nil, err
 	}
-	s.Done()
 
 	chartNS := ""
 	if v := i.config.namespace; v != "" {
@@ -247,9 +247,8 @@ func (i *K8sInstaller) Install(
 			"enabled": false,
 		},
 	}
-	s.Done()
 
-	s = sg.Add("Installing Waypoint Helm chart...")
+	s.Update("Installing Waypoint Helm chart...")
 	_, err = client.RunWithContext(ctx, c, values)
 	if err != nil {
 		return nil, err
@@ -471,7 +470,6 @@ func (i *K8sInstaller) Upgrade(
 			"enabled": false,
 		},
 	}
-	s.Done()
 
 	s = sg.Add("Installing Waypoint Helm chart...")
 	_, err = client.RunWithContext(ctx, "waypoint", c, values)
@@ -612,9 +610,7 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	if err != nil {
 		return err
 	}
-	s.Update("Helm action initialized")
-	s.Status(terminal.StatusOK)
-	s.Done()
+	s.Update("Helm action initialized, creating new Helm uninstall object...")
 
 	chartNS := ""
 	if v := i.config.namespace; v != "" {
@@ -625,18 +621,14 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 		chartNS = "default"
 	}
 
-	s = sg.Add("Creating new Helm uninstall object...")
 	client := action.NewUninstall(actionConfig)
 	client.DryRun = false
 	client.DisableHooks = false
 	client.Wait = true
 	client.Timeout = 300 * time.Second
 	client.Description = ""
-	s.Update("Helm uninstall created")
-	s.Status(terminal.StatusOK)
-	s.Done()
+	s.Update("Helm uninstall created; uninstalling Helm chart...")
 
-	s = sg.Add("Uninstalling Helm chart...")
 	_, err = client.Run("waypoint")
 	if err != nil {
 		return err
