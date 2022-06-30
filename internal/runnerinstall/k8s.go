@@ -185,7 +185,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		},
 	}
 
-	s = sg.Add("Installing Waypoint Helm chart with runner options: " + c.Name())
+	s.Update("Installing Waypoint Helm chart with runner options: " + c.Name())
 	_, err = client.RunWithContext(ctx, c, values)
 	if err != nil {
 		return err
