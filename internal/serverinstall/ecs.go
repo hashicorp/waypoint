@@ -918,10 +918,9 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 		Default: "waypoint-server",
 	})
 	set.StringVar(&flag.StringVar{
-		Name:    "ecs-region",
-		Target:  &i.config.Region,
-		Usage:   "Configures which AWS region to install into.",
-		Default: "us-west-2",
+		Name:   "ecs-region",
+		Target: &i.config.Region,
+		Usage:  "Configures which AWS region to install into.",
 	})
 	set.StringSliceVar(&flag.StringSliceVar{
 		Name:   "ecs-subnets",
@@ -994,10 +993,9 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 		Default: defaultServerImage,
 	})
 	set.StringVar(&flag.StringVar{
-		Name:    "ecs-region",
-		Target:  &i.config.Region,
-		Usage:   "Configures which AWS region to install into.",
-		Default: "us-west-2",
+		Name:   "ecs-region",
+		Target: &i.config.Region,
+		Usage:  "Configures which AWS region to install into.",
 	})
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-cpu",
@@ -1049,10 +1047,9 @@ func (i *ECSInstaller) UninstallFlags(set *flag.Set) {
 		Default: "waypoint-server",
 	})
 	set.StringVar(&flag.StringVar{
-		Name:    "ecs-region",
-		Target:  &i.config.Region,
-		Usage:   "Configures which AWS region to uninstall from.",
-		Default: "us-west-2",
+		Name:   "ecs-region",
+		Target: &i.config.Region,
+		Usage:  "Configures which AWS region to uninstall from.",
 	})
 }
 
