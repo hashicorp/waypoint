@@ -119,6 +119,7 @@ and disable the UI, the command would be:
 - `-nomad-runner-csi-volume-capacity-min=<int>` - Waypoint runner Nomad CSI volume capacity minimum, in bytes. The default is 1073741824.
 - `-nomad-runner-csi-volume-capacity-max=<int>` - Waypoint runner Nomad CSI volume capacity maximum, in bytes. The default is 2147483648.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
+- `-nomad-service-provider=<string>` - Create service for Waypoint UI and Server in Consul. One possible value from: consul, nomad, none. The default is consul.
 - `-nomad-consul-service` - Create service for Waypoint UI and Server in Consul. The default is true.
 - `-nomad-consul-service-hostname=<string>` - If set, will use this hostname for Consul DNS rather than the default, i.e. "waypoint-server.service.consul".
 - `-nomad-consul-service-ui-tags=<string>` - Tags for the Waypoint UI service generated in Consul. The default is waypoint.

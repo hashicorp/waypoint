@@ -37,7 +37,7 @@ type nomadConfig struct {
 	namespace          string            `hcl:"namespace,optional"`
 	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
 
-	serviceProvider          []string `hcl:"service_provider,optional"`
+	serviceProvider          string   `hcl:"service_provider,optional"`
 	consulService            bool     `hcl:"consul_service,optional"`
 	consulServiceUITags      []string `hcl:"consul_service_ui_tags:optional"`
 	consulServiceBackendTags []string `hcl:"consul_service_backend_tags:optional"`
@@ -231,7 +231,7 @@ func (i *NomadInstaller) Install(
 	}
 
 	s.Update("Installing Waypoint server to Nomad")
-	allocID, err := nomad.RunJob(ctx, s, client, waypointNomadJob(i.config, opts.ServerRunFlags), i.config.policyOverride)
+	allocID, err := nomad.RunJob(ctx, s, client, waypointNomadJob(i.config, opts.ServerRunFlags, false), i.config.policyOverride)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +240,7 @@ func (i *NomadInstaller) Install(
 	// than the direct static IP for the CLI context and server config. Otherwise
 	// if Nomad restarts the server allocation, a new IP will be assigned and any
 	// configured clients will be invalid
-	if i.config.serviceProvider[0] == "consul" && i.config.consulService {
+	if i.config.serviceProvider == "consul" && i.config.consulService {
 		s.Update("Configuring the server context to use Consul DNS hostname")
 		if i.config.consulDatacenter == "" {
 			i.config.consulDatacenter = defaultConsulDatacenter
@@ -261,7 +261,7 @@ func (i *NomadInstaller) Install(
 			addr.Addr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, grpcPort)
 			httpAddr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, httpPort)
 		}
-	} else if i.config.serviceProvider[0] == "nomad" {
+	} else if i.config.serviceProvider == "nomad" {
 		backendService, _, err := client.Services().Get(waypointBackendServiceName, nil)
 		if err != nil {
 			return nil, err
@@ -302,10 +302,10 @@ func (i *NomadInstaller) Install(
 	s.Update("Waypoint server ready")
 	s.Done()
 
-	if i.config.serviceProvider[0] == "consul" && i.config.consulService {
+	if i.config.serviceProvider == "consul" && i.config.consulService {
 		opts.UI.Output("The CLI has been configured to automatically install a Consul service for\n" +
 			"the Waypoint service backend and ui service in Nomad.")
-	} else if i.config.serviceProvider[0] == "nomad" {
+	} else if i.config.serviceProvider == "nomad" {
 		opts.UI.Output("The CLI has been configured to automatically install a Nomad service for\n" +
 			"the Waypoint service backend and ui service in Nomad.")
 	} else {
@@ -334,7 +334,7 @@ func (i *NomadInstaller) Upgrade(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	if i.config.serviceProvider[0] == "none" {
+	if i.config.serviceProvider == "none" && !i.config.consulService {
 		// By default, we don't auto-enable the consul service because prior to Waypoint
 		// version 0.6.2, we did not enable it by default.
 		sw := sg.Add("Service discovery is disabled for the Waypoint Nomad job. If you had previously enabled " +
@@ -417,7 +417,7 @@ func (i *NomadInstaller) Upgrade(
 	}
 
 	s = sg.Add("Upgrading Waypoint server on Nomad to %q", i.config.serverImage)
-	job := waypointNomadJob(i.config, opts.ServerRunFlags)
+	job := waypointNomadJob(i.config, opts.ServerRunFlags, true)
 	jobOpts := &api.RegisterOptions{
 		PolicyOverride: i.config.policyOverride,
 	}
@@ -492,7 +492,7 @@ func (i *NomadInstaller) Upgrade(
 	// than the direct static IP for the CLI context and server config. Otherwise
 	// if Nomad restarts the server allocation, a new IP will be assigned and any
 	// configured clients will be invalid
-	if i.config.serviceProvider[0] == "consul" && i.config.consulService {
+	if i.config.serviceProvider == "consul" && i.config.consulService {
 		s.Update("Configuring the server context to use Consul DNS hostname")
 		if i.config.consulDatacenter == "" {
 			i.config.consulDatacenter = defaultConsulDatacenter
@@ -513,7 +513,7 @@ func (i *NomadInstaller) Upgrade(
 			addr.Addr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, grpcPort)
 			httpAddr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, httpPort)
 		}
-	} else if i.config.serviceProvider[0] == "nomad" {
+	} else if i.config.serviceProvider == "nomad" {
 		backendService, _, err := client.Services().Get(waypointBackendServiceName, nil)
 		if err != nil {
 			return nil, err
@@ -832,7 +832,7 @@ func (i *NomadInstaller) waitForEvaluation(
 
 // waypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
 // Nomad API
-func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
+func waypointNomadJob(c nomadConfig, rawRunFlags []string, upgrade bool) *api.Job {
 	job := api.NewServiceJob(serverName, serverName, c.region, 50)
 	job.Namespace = &c.namespace
 	job.Datacenters = c.datacenters
@@ -842,9 +842,10 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
 	httpPort, _ := strconv.Atoi(defaultHttpPort)
 
-	// Include services to be registered in Consul. Currently configured to happen by default
+	// Include services to be registered. Currently configured to happen with Consul by default
 	// One service added for Waypoint UI, and one for Waypoint backend port
-	if c.serviceProvider[0] == "consul" && c.consulService {
+	services := []*api.Service{}
+	if c.serviceProvider == "consul" || (c.consulService && c.serviceProvider == "consul") || (c.consulService && upgrade) {
 		token := ""
 		if c.consulToken == "" {
 			token = os.Getenv("CONSUL_HTTP_TOKEN")
@@ -852,24 +853,37 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string) *api.Job {
 			token = c.consulToken
 		}
 		job.ConsulToken = &token
-	}
-
-	if c.serviceProvider[0] != "none" || c.consulService {
-		tg.Services = []*api.Service{
+		services = []*api.Service{
 			{
 				Name:      waypointUIServiceName,
 				PortLabel: "ui",
 				Tags:      c.consulServiceUITags,
-				Provider:  c.serviceProvider[0],
+				Provider:  "consul",
 			},
 			{
 				Name:      waypointBackendServiceName,
 				PortLabel: "server",
 				Tags:      c.consulServiceBackendTags,
-				Provider:  c.serviceProvider[0],
+				Provider:  "consul",
+			},
+		}
+	} else if c.serviceProvider == "nomad" {
+		services = []*api.Service{
+			{
+				Name:      waypointUIServiceName,
+				PortLabel: "ui",
+				Tags:      c.consulServiceUITags,
+				Provider:  "nomad",
+			},
+			{
+				Name:      waypointBackendServiceName,
+				PortLabel: "server",
+				Tags:      c.consulServiceBackendTags,
+				Provider:  "nomad",
 			},
 		}
 	}
+	tg.Services = services
 
 	tg.Networks = []*api.NetworkResource{
 		{
@@ -1221,12 +1235,12 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Default: installutil.DefaultServerImage,
 	})
 
-	set.EnumVar(&flag.EnumVar{
+	set.EnumSingleVar(&flag.EnumSingleVar{
 		Name:    "nomad-service-provider",
 		Target:  &i.config.serviceProvider,
 		Usage:   "Create service for Waypoint UI and Server in Consul.",
 		Values:  []string{"consul", "nomad", "none"},
-		Default: []string{"consul"}, //default to consul for fresh installs
+		Default: "consul", //default to consul for fresh installs
 	})
 
 	set.BoolVar(&flag.BoolVar{
@@ -1483,12 +1497,12 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Usage:  "Nomad host volume name.",
 	})
 
-	set.EnumVar(&flag.EnumVar{
+	set.EnumSingleVar(&flag.EnumSingleVar{
 		Name:    "nomad-service-provider",
 		Target:  &i.config.serviceProvider,
 		Usage:   "Create service for Waypoint UI and Server.",
 		Values:  []string{"consul", "nomad", "none"},
-		Default: []string{"none"}, // default none on upgrades, make sure people opt-in to service discovery
+		Default: "none", // default none on upgrades, make sure people opt-in to service discovery
 	})
 
 	set.BoolVar(&flag.BoolVar{
