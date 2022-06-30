@@ -274,7 +274,7 @@ func (i *K8sInstaller) Install(
 		// since pods can't reach this.
 		if i.config.advertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
 			advertiseAddr.Addr = fmt.Sprintf("%s:%d",
-				"waypoint-server",
+				serverName,
 				grpcPort,
 			)
 		}
@@ -499,7 +499,7 @@ func (i *K8sInstaller) Upgrade(
 		// since pods can't reach this.
 		if i.config.advertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
 			advertiseAddr.Addr = fmt.Sprintf("%s:%d",
-				"waypoint-server",
+				serverName,
 				grpcPort,
 			)
 		}
