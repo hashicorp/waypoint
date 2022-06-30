@@ -130,7 +130,7 @@ func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 	volumeRequest := api.VolumeRequest{ReadOnly: false}
 	if c.CsiVolumeProvider != "" {
 		volumeRequest.Type = "csi"
-		volumeRequest.Source = "waypoint-runner-" + opts.Id
+		volumeRequest.Source = "waypoint-" + opts.Id + "-runner"
 		volumeRequest.AccessMode = "single-node-writer"
 		volumeRequest.AttachmentMode = "file-system"
 	} else {
