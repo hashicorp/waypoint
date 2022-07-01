@@ -26,3 +26,5 @@ func DefaultODRImage(serverImage string) (string, error) {
 
 	return fmt.Sprintf("%s-odr:%s", imageName, tag), nil
 }
+
+const DefaultServerImage = "hashicorp/waypoint:latest"

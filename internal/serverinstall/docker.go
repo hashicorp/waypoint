@@ -155,7 +155,7 @@ func (i *DockerInstaller) Install(
 		return nil, err
 	}
 
-	if len(imageList) == 0 || i.config.serverImage == defaultServerImage {
+	if len(imageList) == 0 || i.config.serverImage == installutil.DefaultServerImage {
 		s.Update("Pulling image: %s", i.config.serverImage)
 
 		resp, err := cli.ImagePull(ctx, reference.FamiliarString(imageRef), types.ImagePullOptions{})
@@ -373,7 +373,7 @@ func (i *DockerInstaller) Upgrade(
 		return nil, err
 	}
 
-	if len(imageList) == 0 || i.config.serverImage == defaultServerImage {
+	if len(imageList) == 0 || i.config.serverImage == installutil.DefaultServerImage {
 		s.Done()
 		s = sg.Add("Pulling image: %s", i.config.serverImage)
 
@@ -696,7 +696,7 @@ func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 		Name:    "docker-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: defaultServerImage,
+		Default: installutil.DefaultServerImage,
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -712,7 +712,7 @@ func (i *DockerInstaller) UpgradeFlags(set *flag.Set) {
 		Name:    "docker-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: defaultServerImage,
+		Default: installutil.DefaultServerImage,
 	})
 
 	set.StringVar(&flag.StringVar{

@@ -136,7 +136,10 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	odrImage := i.Config.OdrImage
 	if odrImage == "" {
 		odrImage, err = installutil.DefaultODRImage(i.Config.RunnerImage)
-		opts.UI.Output("Error getting default ODR image: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+		if err != nil {
+			opts.UI.Output("Error getting default ODR image: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			return err
+		}
 	}
 	odrImageRef, err := dockerparser.Parse(odrImage)
 	if err != nil {
@@ -229,7 +232,7 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-runner-image",
 		Target:  &i.Config.RunnerImage,
-		Default: defaultRunnerImage,
+		Default: installutil.DefaultServerImage,
 		Usage:   "Docker image for the Waypoint runner.",
 	})
 

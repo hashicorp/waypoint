@@ -1178,7 +1178,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Name:    "nomad-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: defaultServerImage,
+		Default: installutil.DefaultServerImage,
 	})
 
 	set.BoolVar(&flag.BoolVar{
@@ -1386,7 +1386,7 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Name:    "nomad-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: defaultServerImage,
+		Default: installutil.DefaultServerImage,
 	})
 
 	set.StringVar(&flag.StringVar{
