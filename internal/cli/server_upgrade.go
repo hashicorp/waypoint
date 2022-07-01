@@ -2,7 +2,9 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/waypoint/builtin/k8s"
 	"os"
 	"sort"
 	"strings"
@@ -464,6 +466,44 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 					runnerDefaultNames = append(runnerDefaultNames, fmt.Sprintf(runnerDefaultName, cfg.Name))
 					runnerUnsetStr = append(runnerUnsetStr, fmt.Sprintf(runnerUnsetDefault, cfg.PluginType, cfg.Name))
 				}
+
+				// Checking if the default runner profile for a platform, pre-0.9, has the correct task launcher configs
+				if c.platform == cfg.Name {
+					switch c.platform {
+					case "kubernetes":
+						// attempt to parse the runner profile config into the correct task launcher config struct
+						var result *k8s.TaskLauncherConfig
+						if cfg.ConfigFormat == pb.Hcl_JSON {
+							err = json.Unmarshal(cfg.PluginConfig, result)
+							if err != nil {
+								c.ui.Output(runnerProfileUpgradeConfigError, cfg.Name,
+									cfg.Name, clierrors.Humanize(err), terminal.WithWarningStyle())
+								var content map[string]interface{}
+								err = json.Unmarshal(cfg.PluginConfig, &content)
+								if err != nil {
+									c.ui.Output("Error parsing plugin content: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+									return 1
+								}
+								if content["cpu"] != nil {
+									cpuBody := content["cpu"].(map[string]interface{})
+									if cpuBody["Requested"] != nil {
+										c.ui.Output("The 'Requested' key specified for the CPU resources should instead be 'request'",
+											terminal.WithWarningStyle())
+									}
+								}
+								if content["memory"] != nil {
+									memBody := content["memory"].(map[string]interface{})
+									if memBody["Requested"] != nil {
+										c.ui.Output("The 'Requested' key specified for the Memory resources should instead be 'request'",
+											terminal.WithWarningStyle())
+									}
+								}
+							}
+						}
+					default:
+					}
+
+				}
 			}
 
 			c.ui.Output("")
@@ -616,5 +656,18 @@ the commands:
 waypoint server snapshot
 waypoint install -platform=kubernetes
 waypoint server restore [snapshot-name]
+`)
+
+	runnerProfileUpgradeConfigError = strings.TrimSpace(`
+The plugin config for runner profile %[1]s failed to correctly be parsed. 
+Plugin Config Error: %[3]s
+
+Please run the following with the corrected plugin configuration to fix this.
+
+waypoint runner profile set -name=%[2]s -plugin-config=<path_to_config_file>
+
+Starting in v0.9.0, ODR plugin configurations are validated for correctness.
+The previous configuration for this profile is invalid, and ODRs will not launch
+unless it is updated.
 `)
 )
