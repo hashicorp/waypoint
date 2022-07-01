@@ -4,6 +4,7 @@ import (
 	"context"
 	json "encoding/json"
 	"fmt"
+	installutil2 "github.com/hashicorp/waypoint/internal/installutil"
 	"strconv"
 	"strings"
 	"time"
@@ -506,7 +507,7 @@ func (i *ECSInstaller) Upgrade(
 	taskTags := def.Tags
 	containerDef := taskDef.ContainerDefinitions[0]
 
-	upgradeImg := defaultServerImage
+	upgradeImg := installutil2.DefaultServerImage
 	if i.config.ServerImage != "" {
 		upgradeImg = i.config.ServerImage
 	}
@@ -515,7 +516,7 @@ func (i *ECSInstaller) Upgrade(
 	s = sg.Add("Updating task definition")
 	defer func() { s.Abort() }()
 	// assume upgrade to latest
-	if *containerDef.Image == defaultServerImage {
+	if *containerDef.Image == installutil2.DefaultServerImage {
 		// we can just update/force-deploy the service
 		_, err := ecsSvc.UpdateService(&ecs.UpdateServiceInput{
 			ForceNewDeployment:            aws.Bool(true),
@@ -937,7 +938,7 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 		Name:    "ecs-server-image",
 		Target:  &i.config.ServerImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: defaultServerImage,
+		Default: installutil2.DefaultServerImage,
 	})
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-cpu",
@@ -990,7 +991,7 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 		Name:    "ecs-server-image",
 		Target:  &i.config.ServerImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: defaultServerImage,
+		Default: installutil2.DefaultServerImage,
 	})
 	set.StringVar(&flag.StringVar{
 		Name:   "ecs-region",

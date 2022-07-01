@@ -123,8 +123,6 @@ var Platforms = map[string]Installer{
 const (
 	serverName = "waypoint-server"
 	runnerName = "waypoint-runner"
-
-	defaultServerImage = "hashicorp/waypoint:latest"
 )
 
 // Default server ports to use
