@@ -1,4 +1,3 @@
-```release-note:bug
-core: Fix a rare panic when generating an invite token.
+```release-note:improvement
+upgrade: Warn user if default k8s runner profile has incorrect plugin configs
 ```
-
