@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/pkg/jsonpb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
@@ -38,7 +39,7 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.Equal(codes.NotFound, status.Code(err))
 	})
 
-	t.Run("Put and Get", func(t *testing.T) {
+	t.Run("Basic Put and Get", func(t *testing.T) {
 		require := require.New(t)
 
 		s := factory(t)
@@ -84,6 +85,105 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.NoError(err)
 			require.Len(resp, 2)
 		}
+	})
+
+	t.Run("Put and get with all the properties", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// A project with all the properties set
+		initialProject := &pb.Project{
+			Name: "complex project",
+			Applications: []*pb.Application{{
+				Name:    "complex project",
+				Project: &pb.Ref_Project{Project: "complex project"},
+			}},
+			RemoteEnabled: true,
+			DataSource: &pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url:                      "https://github.com/hashicorp/test",
+						Ref:                      "main",
+						Path:                     "/test",
+						IgnoreChangesOutsidePath: true,
+						RecurseSubmodules:        1,
+						Auth: &pb.Job_Git_Ssh{
+							Ssh: &pb.Job_Git_SSH{
+								PrivateKeyPem: []byte("private key"),
+								Password:      "password",
+								User:          "user",
+							},
+						},
+					},
+				},
+			},
+			DataSourcePoll: &pb.Project_Poll{
+				Enabled:  true,
+				Interval: "1h",
+			},
+			WaypointHcl:       []byte("hcl bytes"),
+			WaypointHclFormat: pb.Hcl_JSON,
+			FileChangeSignal:  "HUP",
+			Variables: []*pb.Variable{{
+				Name: "test-variable",
+				Value: &pb.Variable_Str{
+					Str: "variable-value",
+				},
+				Source: &pb.Variable_Vcs{
+					Vcs: &pb.Variable_VCS{
+						FileName: "test.file",
+						HclRange: &pb.Variable_HclRange{
+							Filename: "test.file",
+							Start: &pb.Variable_HclPos{
+								Line:   1,
+								Column: 2,
+								Byte:   3,
+							},
+							End: &pb.Variable_HclPos{
+								Line:   4,
+								Column: 5,
+								Byte:   6,
+							},
+						},
+					},
+				},
+				FinalValue: &pb.Variable_FinalValue{
+					Value: &pb.Variable_FinalValue_Sensitive{
+						Sensitive: "sensitive-value",
+					},
+					Source: pb.Variable_FinalValue_DEFAULT,
+				},
+				Sensitive: true,
+			}},
+			StatusReportPoll: &pb.Project_AppStatusPoll{
+				Enabled:  true,
+				Interval: "1h",
+			},
+		}
+
+		initialJsonBytes, err := jsonpb.Marshal(initialProject)
+		require.NoError(err)
+		initialJsonStr := string(initialJsonBytes)
+
+		// Set
+		err = s.ProjectPut(initialProject)
+		require.NoError(err)
+
+		// Get
+		resp, err := s.ProjectGet(&pb.Ref_Project{
+			Project: initialProject.Name,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+
+		// Compare the two
+		respJsonBytes, err := jsonpb.Marshal(resp)
+		require.NoError(err)
+		respJsonStr := string(respJsonBytes)
+
+		require.Equal(initialJsonStr, respJsonStr)
 	})
 
 	t.Run("Put does not modify applications", func(t *testing.T) {
