@@ -165,6 +165,8 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				return err
 			}
 		} else {
+			opts.UI.Output("Waypoint runner service account already exists - a new service account will not be created",
+				terminal.WithInfoStyle())
 			i.Config.CreateServiceAccount = false
 		}
 	}
