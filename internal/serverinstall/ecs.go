@@ -52,7 +52,7 @@ type ECSInstaller struct {
 	// netInfo stores information needed to setup on-demand runners between
 	// installation and on demand runner setup, so that we don't need to query
 	// AWS again to re-establish all the information.
-	netInfo *networkInformation
+	netInfo *installutil.NetworkInformation
 }
 
 type ecsConfig struct {
@@ -159,6 +159,7 @@ func (i *ECSInstaller) Install(
 			if netInfo, err = installutil.SetupNetworking(ctx, ui, sess, i.config.Subnets); err != nil {
 				return err
 			}
+			i.netInfo = netInfo
 
 			if cluster, err = i.SetupCluster(ctx, ui, sess); err != nil {
 				return err
@@ -1438,11 +1439,11 @@ func (i *ECSInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 
 	if i.netInfo != nil {
 		var subnets []string
-		for _, s := range i.netInfo.subnets {
+		for _, s := range i.netInfo.Subnets {
 			subnets = append(subnets, *s)
 		}
 		cfgMap["subnets"] = strings.Join(subnets, ",")
-		cfgMap["security_group_id"] = i.netInfo.sgID
+		cfgMap["security_group_id"] = i.netInfo.SgID
 	}
 
 	// Marshal our config
