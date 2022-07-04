@@ -134,7 +134,7 @@
     "edition": "octane"
   },
   "dependencies": {
-    "@hashicorp/design-system-components": "^0.12.6",
+    "@hashicorp/design-system-components": "^0.12.9",
     "@hashicorp/ember-flight-icons": "^2.0.6",
     "@types/google-protobuf": "^3.7.2",
     "api-common-protos": "link:./lib/api-common-protos",
