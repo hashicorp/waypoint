@@ -52,7 +52,7 @@ type ECSInstaller struct {
 	// netInfo stores information needed to setup on-demand runners between
 	// installation and on demand runner setup, so that we don't need to query
 	// AWS again to re-establish all the information.
-	netInfo *installutil.NetworkInformation
+	netInfo *awsinstallutil.NetworkInformation
 }
 
 type ecsConfig struct {
