@@ -16,6 +16,19 @@ compatible. We encourge users to have all components on the same version.
 
 ## ECS Upgrades
 
+During prerelease testing, we discovered an issue that has exited since the 0.8.1
+release, and possibly earlier, that means `waypoint upgrade` does not work on
+servers installed on ECS. We found this too late to fix it for the 0.9.0 release,
+but plan to fix it for a future release. You can track [the issue here](https://github.com/hashicorp/waypoint/issues/3527).
+
+If you want to upgrade your Waypoint server installed on ECS, you will need to
+snapshot your sever, do a Waypoint server uninstall, complete a new express
+install with v0.9.0, and restore your server snapshot. Note that the
+`waypoint uninstall` command creates a snapshot by default.
+An example is in the below [Kubernetes Upgrades](#kubernetes-upgrades) section.
+
+### Change to Region Flag
+
 We removed the default value for the flag `-ecs-region`. This was previously set
 to `us-west-2`. If you used the default on the install of Waypoint to ECS, you will
 need to specify `us-west-2` moving forward.
@@ -28,10 +41,74 @@ installed with Helm, you can run a standard Waypoint upgrade.
 
 If you previously installed with the Waypoint express install for Kubernetes,
 you will need to snapshot your sever, do a Waypoint server uninstall, complete a
-new express install with v0.9.0, and restore your server snapshot. An example is below:
+new express install with v0.9.0, and restore your server snapshot. Note that the
+`waypoint uninstall` command does creates a snapshot by default. It is also vitally
+important that you set `-delete-context=false` on the uninstall.
+An example is below:
 
 ```shell-session
+$ waypoint version
+CLI: v0.8.2 (5b8885480)
+Server: v0.8.2
 
+$ waypoint status
+Current project statuses in server context "localhost:9701"
+
+PROJECT          	WORKSPACE	DEPLOYMENT STATUSES	RELEASE STATUSES
+example-nodejs   	default  	1 READY            	1 READY
+go-multiworkspace	default  	N/A                	N/A
+
+
+The projects listed above represent their current state known
+in the Waypoint server. For more information about a project’s applications and
+their current state, run ‘waypoint status -project=PROJECT-NAME’.
+
+$ waypoint server uninstall -platform=kubernetes -delete-context=false -auto-approve
+Uninstalling Waypoint server on platform "kubernetes" with context "install-1657050368"
+✓ Snapshot "waypoint-server-snapshot-1657050483" generated
+...
+
+Waypoint server successfully uninstalled for kubernetes platform
+
+$ waypoint version
+CLI: v0.9.0 (88a2e83eb)
+
+$ waypoint install -platform=kubernetes
+✓ Inspecting Kubernetes cluster
+✓ Waypoint server installed with Helm!
+...
+The CLI has been configured to connect to the server automatically. This
+connection information is saved in the CLI context named "install-1657050581".
+Use the "waypoint context" CLI to manage CLI contexts.
+...
+
+$ waypoint version
+CLI: v0.9.0 (88a2e83eb)
+Server: v0.9.0
+
+$ waypoint context inspect
+
+» Context Settings:
+      config path: /Users/username/Library/Preferences/waypoint
+  default context: install-1657050581
+
+$ waypoint server restore waypoint-server-snapshot-1657050483
+  
+$ cp /Users/username/Library/Preferences/waypoint/context/install-1657050368.hcl /Users/username/Library/Preferences/waypoint/context/install-1657050581.hcl 
+
+$ kubectl delete pod/waypoint-server-0
+pod "waypoint-server-0" deleted
+
+$ waypoint status
+Current project statuses in server context "localhost:9701"
+
+PROJECT       	WORKSPACE	DEPLOYMENT STATUSES	RELEASE STATUSES
+example-nodejs	default  	1 READY            	1 READY
+
+
+The projects listed above represent their current state known
+in the Waypoint server. For more information about a project’s applications and
+their current state, run ‘waypoint status -project=PROJECT-NAME’.
 ```
 
 ## Other Considerations
