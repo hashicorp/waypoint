@@ -6,9 +6,9 @@ FEATURES:
 runner tasks through a new internal core concept `Task`. As ODR jobs run, Task
 will keep track of what part the jobs are at for better debugging and on-demand
 runner insight. [[GH-3203](https://github.com/hashicorp/waypoint/issues/3203)]
-* CLI: **New `runner install` and `runner uninstall` commands** to install/uninstall Waypoint runners to a specified platform [[GH-3335](https://github.com/hashicorp/waypoint/issues/3335)]
-* CLI: **New `runner profile delete` command** to delete a Waypoint runner profile [[GH-3474](https://github.com/hashicorp/waypoint/issues/3474)]
-* CLI: **Refactor k8s server install to use Helm** [[GH-3335](https://github.com/hashicorp/waypoint/issues/3335)]
+* cli: **New `runner install` and `runner uninstall` commands** to install/uninstall Waypoint runners to a specified platform [[GH-3335](https://github.com/hashicorp/waypoint/issues/3335)]
+* cli: **New `runner profile delete` command** to delete a Waypoint runner profile [[GH-3474](https://github.com/hashicorp/waypoint/issues/3474)]
+* cli: **Refactor k8s server install to use Helm** [[GH-3335](https://github.com/hashicorp/waypoint/issues/3335)]
 * core: **Add ability to have cli and runners use OAuth2 to get an auth token** [[GH-3298](https://github.com/hashicorp/waypoint/issues/3298)]
 * plugin/aws-ecr-pull: **Introduces an `aws-ecr-pull` builder plugin**
 that enables using AWS ECR images that are built outside of Waypoint. [[GH-3396](https://github.com/hashicorp/waypoint/issues/3396)]
@@ -16,7 +16,7 @@ that enables using AWS ECR images that are built outside of Waypoint. [[GH-3396]
 
 IMPROVEMENTS:
 
-* CLI: Show list of existing default runner profiles on post-upgrade to warn user
+* cli: Show list of existing default runner profiles on post-upgrade to warn user
 that only one runner profile should be default. [[GH-3497](https://github.com/hashicorp/waypoint/issues/3497)]
 * cli: Add interactive input for server upgrade, server uninstall, and destroy commands [[GH-3238](https://github.com/hashicorp/waypoint/issues/3238)]
 * cli: Remove unused flag `runner-profile` in `waypoint project apply` [[GH-3318](https://github.com/hashicorp/waypoint/issues/3318)]
