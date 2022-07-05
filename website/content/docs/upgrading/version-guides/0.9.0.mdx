@@ -44,7 +44,18 @@ you will need to snapshot your sever, do a Waypoint server uninstall, complete a
 new express install with v0.9.0, and restore your server snapshot. Note that the
 `waypoint uninstall` command does creates a snapshot by default. It is also vitally
 important that you set `-delete-context=false` on the uninstall.
-An example is below:
+An example is below, showing the following steps:
+- verifying the Waypoint version
+- verifying the server connection by checking the status of a deployed and release app
+- uninstalling the server with `delete-context` set to `false`
+- upgrading Waypoint CLI as verified by another version check
+- re-installing Waypoint server onto k8s
+- verifying the installed server version
+- getting the context path
+- restoring the server snapshot
+- overwriting the token in the new context with the token from the previous install's context
+- deleting the waypoint-server pod
+- verifying the server snapshot has been succesfully restored by checking `waypoint status` again and seeing the same output as before
 
 ```shell-session
 $ waypoint version
