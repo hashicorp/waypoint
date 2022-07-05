@@ -45,6 +45,7 @@ new express install with v0.9.0, and restore your server snapshot. Note that the
 `waypoint uninstall` command does creates a snapshot by default. It is also vitally
 important that you set `-delete-context=false` on the uninstall.
 An example is below, showing the following steps:
+
 - verifying the Waypoint version
 - verifying the server connection by checking the status of a deployed and release app
 - uninstalling the server with `delete-context` set to `false`
@@ -102,8 +103,8 @@ $ waypoint context inspect
   default context: install-1657050581
 
 $ waypoint server restore waypoint-server-snapshot-1657050483
-  
-$ cp /Users/username/Library/Preferences/waypoint/context/install-1657050368.hcl /Users/username/Library/Preferences/waypoint/context/install-1657050581.hcl 
+
+$ cp /Users/username/Library/Preferences/waypoint/context/install-1657050368.hcl /Users/username/Library/Preferences/waypoint/context/install-1657050581.hcl
 
 $ kubectl delete pod/waypoint-server-0
 pod "waypoint-server-0" deleted
