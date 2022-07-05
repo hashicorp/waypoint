@@ -1383,6 +1383,33 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
+		Name:   "nomad-runner-host-volume",
+		Target: &i.config.runnerHostVolume,
+		Usage:  "Name of the host volume to use for the Waypoint runner.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-runner-csi-volume-provider",
+		Target: &i.config.runnerCsiVolumeProvider,
+		Usage:  "Name of the CSI volume provider to use for the Waypoint runner.",
+	})
+
+	// TODO: Update default values for runner - less space is needed for runner compared to server
+	set.Int64Var(&flag.Int64Var{
+		Name:    "nomad-runner-csi-volume-capacity-min",
+		Target:  &i.config.runnerCsiVolumeCapacityMin,
+		Usage:   "Waypoint runner Nomad CSI volume capacity minimum, in bytes.",
+		Default: defaultCSIVolumeCapacityMin,
+	})
+
+	set.Int64Var(&flag.Int64Var{
+		Name:    "nomad-runner-csi-volume-capacity-max",
+		Target:  &i.config.runnerCsiVolumeCapacityMax,
+		Usage:   "Waypoint runner Nomad CSI volume capacity maximum, in bytes.",
+		Default: defaultCSIVolumeCapacityMax,
+	})
+
+	set.StringVar(&flag.StringVar{
 		Name:    "nomad-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
