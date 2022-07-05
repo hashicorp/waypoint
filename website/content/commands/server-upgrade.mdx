@@ -82,6 +82,10 @@ manually installed runners will not be automatically upgraded.
 - `-nomad-server-memory=<string>` - MB of Memory to allocate to the server job task. The default is 600.
 - `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz. The default is 200.
 - `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task. The default is 600.
+- `-nomad-runner-host-volume=<string>` - Name of the host volume to use for the Waypoint runner.
+- `-nomad-runner-csi-volume-provider=<string>` - Name of the CSI volume provider to use for the Waypoint runner.
+- `-nomad-runner-csi-volume-capacity-min=<int>` - Waypoint runner Nomad CSI volume capacity minimum, in bytes. The default is 1073741824.
+- `-nomad-runner-csi-volume-capacity-max=<int>` - Waypoint runner Nomad CSI volume capacity maximum, in bytes. The default is 2147483648.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
 - `-nomad-host-volume=<string>` - Nomad host volume name.
 - `-nomad-consul-service` - Create service for Waypoint UI and Server in Consul. The default is false.
