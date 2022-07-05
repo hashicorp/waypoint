@@ -4,7 +4,7 @@ import (
 	"context"
 	json "encoding/json"
 	"fmt"
-	installutil2 "github.com/hashicorp/waypoint/internal/installutil"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"strconv"
 	"strings"
 	"time"
@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/internal/clicontext"
-	installutil "github.com/hashicorp/waypoint/internal/installutil/aws"
+	awsinstallutil "github.com/hashicorp/waypoint/internal/installutil/aws"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
@@ -106,9 +106,9 @@ func (i *ECSInstaller) Install(
 	log.Info("Starting lifecycle")
 
 	var (
-		efsInfo                                *installutil.EfsInformation
+		efsInfo                                *awsinstallutil.EfsInformation
 		executionRole, cluster, serverLogGroup string
-		netInfo                                *installutil.NetworkInformation
+		netInfo                                *awsinstallutil.NetworkInformation
 		server                                 *ecsServer
 		sess                                   *session.Session
 
@@ -156,7 +156,7 @@ func (i *ECSInstaller) Install(
 				return err
 			}
 
-			if netInfo, err = installutil.SetupNetworking(ctx, ui, sess, i.config.Subnets); err != nil {
+			if netInfo, err = awsinstallutil.SetupNetworking(ctx, ui, sess, i.config.Subnets); err != nil {
 				return err
 			}
 			i.netInfo = netInfo
@@ -165,15 +165,15 @@ func (i *ECSInstaller) Install(
 				return err
 			}
 
-			if efsInfo, err = installutil.SetupEFS(ctx, ui, sess, netInfo); err != nil {
+			if efsInfo, err = awsinstallutil.SetupEFS(ctx, ui, sess, netInfo); err != nil {
 				return err
 			}
 
-			if executionRole, err = installutil.SetupExecutionRole(ctx, ui, log, sess, i.config.ExecutionRoleName); err != nil {
+			if executionRole, err = awsinstallutil.SetupExecutionRole(ctx, ui, log, sess, i.config.ExecutionRoleName); err != nil {
 				return err
 			}
 
-			if serverLogGroup, err = installutil.SetupLogs(ctx, ui, log, sess, defaultServerLogGroup); err != nil {
+			if serverLogGroup, err = awsinstallutil.SetupLogs(ctx, ui, log, sess, defaultServerLogGroup); err != nil {
 				return err
 			}
 
@@ -223,8 +223,8 @@ func (i *ECSInstaller) Launch(
 	log hclog.Logger,
 	ui terminal.UI,
 	sess *session.Session,
-	efsInfo *installutil.EfsInformation,
-	netInfo *installutil.NetworkInformation,
+	efsInfo *awsinstallutil.EfsInformation,
+	netInfo *awsinstallutil.NetworkInformation,
 	executionRoleArn, clusterName, logGroup string, rawRunFlags []string,
 ) (*ecsServer, error) {
 
@@ -379,7 +379,7 @@ func (i *ECSInstaller) Launch(
 		},
 	}
 
-	service, err := installutil.CreateService(createServiceInput, ecsSvc)
+	service, err := awsinstallutil.CreateService(createServiceInput, ecsSvc)
 	if err != nil {
 		return nil, err
 	}
@@ -508,7 +508,7 @@ func (i *ECSInstaller) Upgrade(
 	taskTags := def.Tags
 	containerDef := taskDef.ContainerDefinitions[0]
 
-	upgradeImg := installutil2.DefaultServerImage
+	upgradeImg := installutil.DefaultServerImage
 	if i.config.ServerImage != "" {
 		upgradeImg = i.config.ServerImage
 	}
@@ -517,7 +517,7 @@ func (i *ECSInstaller) Upgrade(
 	s = sg.Add("Updating task definition")
 	defer func() { s.Abort() }()
 	// assume upgrade to latest
-	if *containerDef.Image == installutil2.DefaultServerImage {
+	if *containerDef.Image == installutil.DefaultServerImage {
 		// we can just update/force-deploy the service
 		_, err := ecsSvc.UpdateService(&ecs.UpdateServiceInput{
 			ForceNewDeployment:            aws.Bool(true),
@@ -656,13 +656,13 @@ func (i *ECSInstaller) Uninstall(
 	// - EFS File System
 
 	s.Update("Deleting ECS resources...")
-	if err := installutil.DeleteEcsResources(ctx, sess, resources); err != nil {
+	if err := awsinstallutil.DeleteEcsResources(ctx, sess, resources); err != nil {
 		return err
 	}
 	s.Done()
 
 	s.Update("Deleting Cloud Watch Log Group resources...")
-	if err := installutil.DeleteCWLResources(ctx, sess, defaultServerLogGroup); err != nil {
+	if err := awsinstallutil.DeleteCWLResources(ctx, sess, defaultServerLogGroup); err != nil {
 		return err
 	}
 	s.Done()
@@ -939,7 +939,7 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 		Name:    "ecs-server-image",
 		Target:  &i.config.ServerImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: installutil2.DefaultServerImage,
+		Default: installutil.DefaultServerImage,
 	})
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-cpu",
@@ -992,7 +992,7 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 		Name:    "ecs-server-image",
 		Target:  &i.config.ServerImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: installutil2.DefaultServerImage,
+		Default: installutil.DefaultServerImage,
 	})
 	set.StringVar(&flag.StringVar{
 		Name:   "ecs-region",
