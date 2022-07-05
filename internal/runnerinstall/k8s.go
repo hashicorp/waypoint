@@ -18,6 +18,7 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	apiv1 "k8s.io/api/core/v1"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
@@ -145,6 +146,29 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	if err != nil {
 		opts.UI.Output("Error parsing ODR image name: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
+	}
+
+	clientSet, err := i.K8sInstaller.NewClient()
+	if err != nil {
+		opts.UI.Output("Error creating k8s clientset: %s", clierrors.Humanize(err), terminal.StatusError)
+		return err
+	}
+	// Determine if we need to make a service account
+	if i.Config.CreateServiceAccount {
+		saClient := clientSet.CoreV1().ServiceAccounts(i.Config.Namespace)
+		_, err = saClient.Get(ctx, DefaultRunnerTagName, metav1.GetOptions{})
+		if err != nil {
+			if k8sErrors.IsNotFound(err) {
+				err = nil
+			} else {
+				opts.UI.Output("Error getting service account: %s", clierrors.Humanize(err), terminal.StatusError)
+				return err
+			}
+		} else {
+			opts.UI.Output("Waypoint runner service account already exists - a new service account will not be created",
+				terminal.WithInfoStyle())
+			i.Config.CreateServiceAccount = false
+		}
 	}
 
 	values := map[string]interface{}{
