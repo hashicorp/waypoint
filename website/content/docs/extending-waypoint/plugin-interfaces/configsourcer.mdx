@@ -1,0 +1,90 @@
+---
+layout: docs
+page_title: 'ConfigSourcer'
+description: |-
+  How Waypoint plugins work
+---
+
+# ConfigSourcer
+
+https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#ConfigSourcer
+
+`ConfigSourcer` can be implemented to dynamically load configs from external
+sources such as [Vault](/plugins/vault#vault-configsourcer) and [Terraform Cloud](/plugins/terraform-cloud#terraform-cloud-configsourcer).
+Waypoint uses dynamic config sourcers to run alongside the application. The
+plugin interface expects a `ReadFunc()` for reading configuration and a
+`StopFunc()` for stopping configuration sourcing.
+
+```go
+// ConfigSourcer can be implemented by plugins that support sourcing
+// dynamic configuration for running applications.
+//
+// This plugin type runs alongside the application. The initial config loading
+// will block the application start so authors should attempt to source
+// configuration as quickly as possible.
+type ConfigSourcer interface {
+  // ReadFunc returns the function for reading configuration.
+  //
+  // The returned function can start a background goroutine to more efficiently
+  // watch for changes. The entrypoint will periodically call Read to check for
+  // updates.
+  //
+  // If the configuration changes for any dynamic configuration variable,
+  // the entrypoint will call Stop followed by Read, so plugins DO NOT need
+  // to implement config diffing. Plugins may safely assume if Read is called
+  // after a Stop that the config is new, and that subsequent calls have the
+  // same config.
+  //
+  // Read is called for ALL defined configuration variables for this source.
+  // If ANY change, Stop is called followed by Read again. Only one sourcer
+  // is active for a set of configs.
+  ReadFunc() interface{}
+
+  // StopFunc returns a function for stopping configuration sourcing.
+  // You can return nil if stopping is not necessary or supported for
+  // this sourcer.
+  //
+  // The stop function should stop any background processes started with Read.
+  StopFunc() interface{}
+}
+```
+
+Below is an abbreviated example of the Terraform Cloud ConfigSourcer `ReadFunc()`.
+
+```go
+// ReadFunc implements component.ConfigSourcer
+func (cs *ConfigSourcer) ReadFunc() interface{} {
+        return cs.read
+}
+
+
+func (cs *ConfigSourcer) read(
+        ctx context.Context,
+        log hclog.Logger,
+        reqs []*component.ConfigRequest,
+) ([]*pb.ConfigSource_Value, error) {
+        // Setup our lock
+        cs.cacheMu.Lock()
+        defer cs.cacheMu.Unlock()
+
+        // Set up client to read from Terraform Cloud
+
+        // Then iterate over each request in `reqs` to load the value from TFC
+
+        // Return the results
+}
+```
+
+## Getting your plugin into the CEB
+
+To write your own config sourcer, the Waypoint [entrypoint](/docs/entrypoint)
+needs to be able to load and run your plugin. Unfortunately today there is no
+supported way for the CEB to automatically load your plugin. This means if
+you wish you write your own config sourcer plugin, you'll need to add the
+plugin in your own fork of Waypoint and build it from your fork to have your
+plugin included. You can also make a pull request to the main repository of
+Waypoint if you think your plugin makes sense.
+
+We intend to provide a better way for the entrypoint to load custom plugins
+in the future that does not require users building their own version of Waypoint
+with their custom config sourcer plugin.

@@ -1,0 +1,8 @@
+```release-note:bug
+plugin/k8s: Properly parse kubernetes task launcher config on plugin invoke.
+```
+
+```release-note:improvement
+serverinstall/k8s: By default, do not set a mem or cpu limit or request for
+the default runner profile installed.
+```

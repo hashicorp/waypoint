@@ -1,0 +1,50 @@
+---
+layout: commands
+page_title: 'Commands: Runner uninstall'
+sidebar_title: 'runner uninstall'
+description: 'Uninstall a Waypoint runner from Kubernetes, Nomad, ECS, or Docker'
+---
+
+# Waypoint Runner uninstall
+
+Command: `waypoint runner uninstall`
+
+Uninstall a Waypoint runner from Kubernetes, Nomad, ECS, or Docker
+
+@include "commands/runner-uninstall_desc.mdx"
+
+## Usage
+
+Usage: `waypoint runner uninstall [options]`
+
+Uninstall a Waypoint runner from server given a platform and Waypoint runner
+id. The platform should be specified as kubernetes, nomad, ecs, or docker.
+
+This will forget the runner on the server and remove any of the resources
+created by a runner installation.
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation. The default is false.
+- `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-project=<string>` (`-p`) - Project to target.
+- `-workspace=<string>` (`-w`) - Workspace to operate in.
+
+#### Command Options
+
+- `-platform=<string>` - Platform to uninstall the Waypoint runner from.
+- `-server-addr=<string>` - Address of the Waypoint server.
+- `-id=<string>` - ID of the Waypoint runner.
+
+#### ecs Options
+
+- `-ecs-region=<string>` - AWS region in which to install the Waypoint runner.
+- `-ecs-cluster=<string>` - The name of the ECS Cluster to install the Waypoint runner into. The default is waypoint-server.
+
+#### kubernetes Options
+
+- `-k8s-config-path=<string>` - Path to the kubeconfig file to use.
+- `-k8s-context=<string>` - The Kubernetes context to install the Waypoint runner to. If left unset, Waypoint will use the current Kubernetes context.
+- `-k8s-namespace=<string>` - The namespace in the Kubernetes cluster into which the Waypoint runner will be installed. The default is default.
+
+@include "commands/runner-uninstall_more.mdx"

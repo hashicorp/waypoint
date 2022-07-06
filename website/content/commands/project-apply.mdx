@@ -32,7 +32,7 @@ some fields using flags by specifying the -waypoint-hcl flag.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -43,7 +43,7 @@ some fields using flags by specifying the -waypoint-hcl flag.
 - `-waypoint-hcl=<string>` - Path to a waypoint.hcl file to associate with this project. This is only necessary if a waypoint.hcl is not committed alongside the project source code. If a waypoint.hcl file does not exist in the project source then this waypoint.hcl file will be used. This file will not be validated until an operation is run against the project; this is done on purpose since the waypoint.hcl file may depend on files in the source repository.
 - `-data-source=<string>` - The data source type to use (currently only supports 'git' or 'local'). Associated data source settings (such as flags starting with '-git') will not take effect unless the appropriate data source is set with this flag.
 - `-git-url=<string>` - URL of the Git repository to clone. This can be an HTTP or SSH URL.
-- `-git-path=<string>` - Path is a subdirectory within the checked out repository to go into for the project's configuration. This must be a relative path and may not contain '..'
+- `-git-path=<string>` - Path is a subdirectory within the checked out repository to go into for the project's configuration. This must be a relative path and may not contain '..'.
 - `-git-ref=<string>` - Git ref (i.e. branch, tag, commit) to clone on new operations.
 - `-git-auth-type=<string>` - Authentication type for Git. If set, must be one of 'basic' or 'ssh'. Basic auth is username/password and SSH uses an SSH key.
 - `-git-username=<string>` - Username for authentication when git-auth-type is 'basic'. For GitHub, this can be any value but it must be non-empty.
@@ -52,8 +52,8 @@ some fields using flags by specifying the -waypoint-hcl flag.
 - `-git-private-key-password=<string>` - Password for the private key specified by git-private-key-path if the key requires a password to decode. This is not required if the private key doesn't require a password.
 - `-git-recurse-submodules=<int>` - The maximum depth to recursively clone submodules. A value of zero disables cloning any submodules recursively.
 - `-poll` - Enable polling. This is only valid if a Git data source is supplied. This will watch the repo for changes and trigger a remote 'up'.
-- `-poll-interval=<string>` - Interval between polling if polling is enabled.
+- `-poll-interval=<string>` - Interval between polling if polling is enabled. The default is 30s.
 - `-app-status-poll` - Enable polling to continuously generate status reports for apps. This is only valid if a Git data source is supplied.
-- `-app-status-poll-interval=<string>` - Interval between polling to generate status reports if polling is enabled.
+- `-app-status-poll-interval=<string>` - Interval between polling to generate status reports if polling is enabled. The default is 5m.
 
 @include "commands/project-apply_more.mdx"

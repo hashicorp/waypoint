@@ -27,7 +27,7 @@ func TestServiceTrigger(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	type Req = pb.UpsertTriggerRequest
 
@@ -100,7 +100,7 @@ func TestServiceTrigger_GetTrigger(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	resp, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
 		Trigger: serverptypes.TestValidTrigger(t, nil),
@@ -147,7 +147,7 @@ func TestServiceTrigger_ListTriggersSimple(t *testing.T, factory Factory) {
 	require := require.New(t)
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	_, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
 		Trigger: serverptypes.TestValidTrigger(t, nil),
@@ -175,7 +175,7 @@ func TestServiceTrigger_ListTriggersWithFilters(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	_, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
 		Trigger: serverptypes.TestValidTrigger(t, nil),
@@ -328,7 +328,7 @@ func TestServiceTrigger_DeleteTrigger(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	resp, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
 		Trigger: serverptypes.TestValidTrigger(t, nil),
@@ -389,7 +389,7 @@ func TestServiceTrigger_RunTrigger(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	t.Run("running a missing trigger", func(t *testing.T) {
 		require := require.New(t)

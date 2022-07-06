@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/opaqueany"
+	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -222,7 +223,7 @@ func (op *deployDestroyOperation) Upsert(
 		Deployment: d,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed upserting deployment destroy operation")
 	}
 
 	return resp.Deployment, nil

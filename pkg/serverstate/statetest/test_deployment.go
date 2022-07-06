@@ -15,6 +15,7 @@ import (
 func init() {
 	tests["deployment"] = []testFunc{
 		TestDeployment,
+		TestDeploymentListFilter,
 	}
 }
 
@@ -233,5 +234,65 @@ func TestDeployment(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Len(resp, 3)
 		}
 	})
+}
 
+func TestDeploymentListFilter(t *testing.T, f Factory, rf RestartFactory) {
+	require := require.New(t)
+
+	s := f(t)
+	defer s.Close()
+
+	// Write project
+	ref := &pb.Ref_Project{Project: "foo"}
+	require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		Name: ref.Project,
+	})))
+
+	app := &pb.Ref_Application{
+		Project:     ref.Project,
+		Application: "testapp",
+	}
+
+	ws := &pb.Ref_Workspace{
+		Workspace: "default",
+	}
+
+	// Add a destroyed deployment
+	require.NoError(
+		s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+			Id:          "destroyed",
+			Application: app,
+			Workspace:   ws,
+			State:       pb.Operation_DESTROYED,
+			Status: &pb.Status{
+				StartTime: timestamppb.Now(),
+			},
+		})),
+	)
+
+	require.NoError(
+		s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+			Id:          "created",
+			Application: app,
+			Workspace:   ws,
+			State:       pb.Operation_CREATED,
+			Status: &pb.Status{
+				StartTime: timestamppb.Now(),
+			},
+		})),
+	)
+
+	resp, err := s.DeploymentList(app, serverstate.ListWithPhysicalState(pb.Operation_CREATED))
+	require.NoError(err)
+	require.Len(resp, 1)
+	require.Equal("created", resp[0].Id)
+
+	resp, err = s.DeploymentList(app, serverstate.ListWithPhysicalState(pb.Operation_DESTROYED))
+	require.NoError(err)
+	require.Len(resp, 1)
+	require.Equal("destroyed", resp[0].Id)
+
+	resp, err = s.DeploymentList(app, serverstate.ListWithPhysicalState(pb.Operation_PENDING))
+	require.NoError(err)
+	require.Len(resp, 0)
 }

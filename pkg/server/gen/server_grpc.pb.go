@@ -86,22 +86,22 @@ type WaypointClient interface {
 	ListBuilds(ctx context.Context, in *ListBuildsRequest, opts ...grpc.CallOption) (*ListBuildsResponse, error)
 	// GetBuild returns a build
 	GetBuild(ctx context.Context, in *GetBuildRequest, opts ...grpc.CallOption) (*Build, error)
+	// GetLatestBuild returns the most recent successfully completed build
+	// for an app.
+	GetLatestBuild(ctx context.Context, in *GetLatestBuildRequest, opts ...grpc.CallOption) (*Build, error)
 	// ListPushedArtifacts returns the builds.
 	ListPushedArtifacts(ctx context.Context, in *ListPushedArtifactsRequest, opts ...grpc.CallOption) (*ListPushedArtifactsResponse, error)
 	// GetPushedArtifact returns a deployment
 	GetPushedArtifact(ctx context.Context, in *GetPushedArtifactRequest, opts ...grpc.CallOption) (*PushedArtifact, error)
-	// ListDeployments returns the deployments.
-	ListDeployments(ctx context.Context, in *ListDeploymentsRequest, opts ...grpc.CallOption) (*ListDeploymentsResponse, error)
-	// ListInstances returns the running instances of deployments.
-	ListInstances(ctx context.Context, in *ListInstancesRequest, opts ...grpc.CallOption) (*ListInstancesResponse, error)
-	// GetDeployment returns a deployment
-	GetDeployment(ctx context.Context, in *GetDeploymentRequest, opts ...grpc.CallOption) (*Deployment, error)
-	// GetLatestBuild returns the most recent successfully completed build
-	// for an app.
-	GetLatestBuild(ctx context.Context, in *GetLatestBuildRequest, opts ...grpc.CallOption) (*Build, error)
 	// GetLatestPushedArtifact returns the most recent successfully completed
 	// artifact push for an app.
 	GetLatestPushedArtifact(ctx context.Context, in *GetLatestPushedArtifactRequest, opts ...grpc.CallOption) (*PushedArtifact, error)
+	// ListDeployments returns the deployments.
+	ListDeployments(ctx context.Context, in *ListDeploymentsRequest, opts ...grpc.CallOption) (*ListDeploymentsResponse, error)
+	// GetDeployment returns a deployment
+	GetDeployment(ctx context.Context, in *GetDeploymentRequest, opts ...grpc.CallOption) (*Deployment, error)
+	// ListInstances returns the running instances of deployments.
+	ListInstances(ctx context.Context, in *ListInstancesRequest, opts ...grpc.CallOption) (*ListInstancesResponse, error)
 	// ListReleases returns the releases.
 	ListReleases(ctx context.Context, in *ListReleasesRequest, opts ...grpc.CallOption) (*ListReleasesResponse, error)
 	// GetRelease returns a release
@@ -109,6 +109,15 @@ type WaypointClient interface {
 	// GetLatestRelease returns the most recent successfully completed
 	// release for an app.
 	GetLatestRelease(ctx context.Context, in *GetLatestReleaseRequest, opts ...grpc.CallOption) (*Release, error)
+	// GetStatusReport returns a StatusReport
+	GetStatusReport(ctx context.Context, in *GetStatusReportRequest, opts ...grpc.CallOption) (*StatusReport, error)
+	// GetLatestStatusReport returns the most recent successfully completed
+	// health report for an app
+	GetLatestStatusReport(ctx context.Context, in *GetLatestStatusReportRequest, opts ...grpc.CallOption) (*StatusReport, error)
+	// ListStatusReports returns the deployments.
+	ListStatusReports(ctx context.Context, in *ListStatusReportsRequest, opts ...grpc.CallOption) (*ListStatusReportsResponse, error)
+	// ExpediteStatusReport returns the queued status report job id
+	ExpediteStatusReport(ctx context.Context, in *ExpediteStatusReportRequest, opts ...grpc.CallOption) (*ExpediteStatusReportResponse, error)
 	// GetLogStream reads the log stream for a deployment. This will immediately
 	// send a single LogEntry with the lines we have so far. If there are no
 	// available lines this will NOT block and instead will return an error.
@@ -210,15 +219,6 @@ type WaypointClient interface {
 	// for a new user, this will create a new user account with the provided
 	// username hint.
 	ConvertInviteToken(ctx context.Context, in *ConvertInviteTokenRequest, opts ...grpc.CallOption) (*NewTokenResponse, error)
-	// GetStatusReport returns a StatusReport
-	GetStatusReport(ctx context.Context, in *GetStatusReportRequest, opts ...grpc.CallOption) (*StatusReport, error)
-	// GetLatestStatusReport returns the most recent successfully completed
-	// health report for an app
-	GetLatestStatusReport(ctx context.Context, in *GetLatestStatusReportRequest, opts ...grpc.CallOption) (*StatusReport, error)
-	// ListStatusReports returns the deployments.
-	ListStatusReports(ctx context.Context, in *ListStatusReportsRequest, opts ...grpc.CallOption) (*ListStatusReportsResponse, error)
-	// ExpediteStatusReport returns the queued status report job id
-	ExpediteStatusReport(ctx context.Context, in *ExpediteStatusReportRequest, opts ...grpc.CallOption) (*ExpediteStatusReportResponse, error)
 	// RunnerToken is called to register a runner and request a token for
 	// remaining runner API calls. This kicks off the "adoption" process
 	// (if necessary).
@@ -254,6 +254,8 @@ type WaypointClient interface {
 	UpsertOnDemandRunnerConfig(ctx context.Context, in *UpsertOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*UpsertOnDemandRunnerConfigResponse, error)
 	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
 	GetOnDemandRunnerConfig(ctx context.Context, in *GetOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*GetOnDemandRunnerConfigResponse, error)
+	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
+	DeleteOnDemandRunnerConfig(ctx context.Context, in *DeleteOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*DeleteOnDemandRunnerConfigResponse, error)
 	// ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
 	ListOnDemandRunnerConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListOnDemandRunnerConfigsResponse, error)
 	// UpsertBuild updates or inserts a build. A build is responsible for
@@ -509,6 +511,15 @@ func (c *waypointClient) GetBuild(ctx context.Context, in *GetBuildRequest, opts
 	return out, nil
 }
 
+func (c *waypointClient) GetLatestBuild(ctx context.Context, in *GetLatestBuildRequest, opts ...grpc.CallOption) (*Build, error) {
+	out := new(Build)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestBuild", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) ListPushedArtifacts(ctx context.Context, in *ListPushedArtifactsRequest, opts ...grpc.CallOption) (*ListPushedArtifactsResponse, error) {
 	out := new(ListPushedArtifactsResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListPushedArtifacts", in, out, opts...)
@@ -527,18 +538,18 @@ func (c *waypointClient) GetPushedArtifact(ctx context.Context, in *GetPushedArt
 	return out, nil
 }
 
-func (c *waypointClient) ListDeployments(ctx context.Context, in *ListDeploymentsRequest, opts ...grpc.CallOption) (*ListDeploymentsResponse, error) {
-	out := new(ListDeploymentsResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListDeployments", in, out, opts...)
+func (c *waypointClient) GetLatestPushedArtifact(ctx context.Context, in *GetLatestPushedArtifactRequest, opts ...grpc.CallOption) (*PushedArtifact, error) {
+	out := new(PushedArtifact)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *waypointClient) ListInstances(ctx context.Context, in *ListInstancesRequest, opts ...grpc.CallOption) (*ListInstancesResponse, error) {
-	out := new(ListInstancesResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListInstances", in, out, opts...)
+func (c *waypointClient) ListDeployments(ctx context.Context, in *ListDeploymentsRequest, opts ...grpc.CallOption) (*ListDeploymentsResponse, error) {
+	out := new(ListDeploymentsResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListDeployments", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -554,18 +565,9 @@ func (c *waypointClient) GetDeployment(ctx context.Context, in *GetDeploymentReq
 	return out, nil
 }
 
-func (c *waypointClient) GetLatestBuild(ctx context.Context, in *GetLatestBuildRequest, opts ...grpc.CallOption) (*Build, error) {
-	out := new(Build)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestBuild", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *waypointClient) GetLatestPushedArtifact(ctx context.Context, in *GetLatestPushedArtifactRequest, opts ...grpc.CallOption) (*PushedArtifact, error) {
-	out := new(PushedArtifact)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact", in, out, opts...)
+func (c *waypointClient) ListInstances(ctx context.Context, in *ListInstancesRequest, opts ...grpc.CallOption) (*ListInstancesResponse, error) {
+	out := new(ListInstancesResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListInstances", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -593,6 +595,42 @@ func (c *waypointClient) GetRelease(ctx context.Context, in *GetReleaseRequest, 
 func (c *waypointClient) GetLatestRelease(ctx context.Context, in *GetLatestReleaseRequest, opts ...grpc.CallOption) (*Release, error) {
 	out := new(Release)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestRelease", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetStatusReport(ctx context.Context, in *GetStatusReportRequest, opts ...grpc.CallOption) (*StatusReport, error) {
+	out := new(StatusReport)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetStatusReport", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetLatestStatusReport(ctx context.Context, in *GetLatestStatusReportRequest, opts ...grpc.CallOption) (*StatusReport, error) {
+	out := new(StatusReport)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestStatusReport", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) ListStatusReports(ctx context.Context, in *ListStatusReportsRequest, opts ...grpc.CallOption) (*ListStatusReportsResponse, error) {
+	out := new(ListStatusReportsResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListStatusReports", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) ExpediteStatusReport(ctx context.Context, in *ExpediteStatusReportRequest, opts ...grpc.CallOption) (*ExpediteStatusReportResponse, error) {
+	out := new(ExpediteStatusReportResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -976,42 +1014,6 @@ func (c *waypointClient) ConvertInviteToken(ctx context.Context, in *ConvertInvi
 	return out, nil
 }
 
-func (c *waypointClient) GetStatusReport(ctx context.Context, in *GetStatusReportRequest, opts ...grpc.CallOption) (*StatusReport, error) {
-	out := new(StatusReport)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetStatusReport", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *waypointClient) GetLatestStatusReport(ctx context.Context, in *GetLatestStatusReportRequest, opts ...grpc.CallOption) (*StatusReport, error) {
-	out := new(StatusReport)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestStatusReport", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *waypointClient) ListStatusReports(ctx context.Context, in *ListStatusReportsRequest, opts ...grpc.CallOption) (*ListStatusReportsResponse, error) {
-	out := new(ListStatusReportsResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListStatusReports", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *waypointClient) ExpediteStatusReport(ctx context.Context, in *ExpediteStatusReportRequest, opts ...grpc.CallOption) (*ExpediteStatusReportResponse, error) {
-	out := new(ExpediteStatusReportResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ExpediteStatusReport", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *waypointClient) RunnerToken(ctx context.Context, in *RunnerTokenRequest, opts ...grpc.CallOption) (*RunnerTokenResponse, error) {
 	out := new(RunnerTokenResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/RunnerToken", in, out, opts...)
@@ -1210,6 +1212,15 @@ func (c *waypointClient) UpsertOnDemandRunnerConfig(ctx context.Context, in *Ups
 func (c *waypointClient) GetOnDemandRunnerConfig(ctx context.Context, in *GetOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*GetOnDemandRunnerConfigResponse, error) {
 	out := new(GetOnDemandRunnerConfigResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetOnDemandRunnerConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) DeleteOnDemandRunnerConfig(ctx context.Context, in *DeleteOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*DeleteOnDemandRunnerConfigResponse, error) {
+	out := new(DeleteOnDemandRunnerConfigResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteOnDemandRunnerConfig", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1436,22 +1447,22 @@ type WaypointServer interface {
 	ListBuilds(context.Context, *ListBuildsRequest) (*ListBuildsResponse, error)
 	// GetBuild returns a build
 	GetBuild(context.Context, *GetBuildRequest) (*Build, error)
+	// GetLatestBuild returns the most recent successfully completed build
+	// for an app.
+	GetLatestBuild(context.Context, *GetLatestBuildRequest) (*Build, error)
 	// ListPushedArtifacts returns the builds.
 	ListPushedArtifacts(context.Context, *ListPushedArtifactsRequest) (*ListPushedArtifactsResponse, error)
 	// GetPushedArtifact returns a deployment
 	GetPushedArtifact(context.Context, *GetPushedArtifactRequest) (*PushedArtifact, error)
-	// ListDeployments returns the deployments.
-	ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error)
-	// ListInstances returns the running instances of deployments.
-	ListInstances(context.Context, *ListInstancesRequest) (*ListInstancesResponse, error)
-	// GetDeployment returns a deployment
-	GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error)
-	// GetLatestBuild returns the most recent successfully completed build
-	// for an app.
-	GetLatestBuild(context.Context, *GetLatestBuildRequest) (*Build, error)
 	// GetLatestPushedArtifact returns the most recent successfully completed
 	// artifact push for an app.
 	GetLatestPushedArtifact(context.Context, *GetLatestPushedArtifactRequest) (*PushedArtifact, error)
+	// ListDeployments returns the deployments.
+	ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error)
+	// GetDeployment returns a deployment
+	GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error)
+	// ListInstances returns the running instances of deployments.
+	ListInstances(context.Context, *ListInstancesRequest) (*ListInstancesResponse, error)
 	// ListReleases returns the releases.
 	ListReleases(context.Context, *ListReleasesRequest) (*ListReleasesResponse, error)
 	// GetRelease returns a release
@@ -1459,6 +1470,15 @@ type WaypointServer interface {
 	// GetLatestRelease returns the most recent successfully completed
 	// release for an app.
 	GetLatestRelease(context.Context, *GetLatestReleaseRequest) (*Release, error)
+	// GetStatusReport returns a StatusReport
+	GetStatusReport(context.Context, *GetStatusReportRequest) (*StatusReport, error)
+	// GetLatestStatusReport returns the most recent successfully completed
+	// health report for an app
+	GetLatestStatusReport(context.Context, *GetLatestStatusReportRequest) (*StatusReport, error)
+	// ListStatusReports returns the deployments.
+	ListStatusReports(context.Context, *ListStatusReportsRequest) (*ListStatusReportsResponse, error)
+	// ExpediteStatusReport returns the queued status report job id
+	ExpediteStatusReport(context.Context, *ExpediteStatusReportRequest) (*ExpediteStatusReportResponse, error)
 	// GetLogStream reads the log stream for a deployment. This will immediately
 	// send a single LogEntry with the lines we have so far. If there are no
 	// available lines this will NOT block and instead will return an error.
@@ -1560,15 +1580,6 @@ type WaypointServer interface {
 	// for a new user, this will create a new user account with the provided
 	// username hint.
 	ConvertInviteToken(context.Context, *ConvertInviteTokenRequest) (*NewTokenResponse, error)
-	// GetStatusReport returns a StatusReport
-	GetStatusReport(context.Context, *GetStatusReportRequest) (*StatusReport, error)
-	// GetLatestStatusReport returns the most recent successfully completed
-	// health report for an app
-	GetLatestStatusReport(context.Context, *GetLatestStatusReportRequest) (*StatusReport, error)
-	// ListStatusReports returns the deployments.
-	ListStatusReports(context.Context, *ListStatusReportsRequest) (*ListStatusReportsResponse, error)
-	// ExpediteStatusReport returns the queued status report job id
-	ExpediteStatusReport(context.Context, *ExpediteStatusReportRequest) (*ExpediteStatusReportResponse, error)
 	// RunnerToken is called to register a runner and request a token for
 	// remaining runner API calls. This kicks off the "adoption" process
 	// (if necessary).
@@ -1604,6 +1615,8 @@ type WaypointServer interface {
 	UpsertOnDemandRunnerConfig(context.Context, *UpsertOnDemandRunnerConfigRequest) (*UpsertOnDemandRunnerConfigResponse, error)
 	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
 	GetOnDemandRunnerConfig(context.Context, *GetOnDemandRunnerConfigRequest) (*GetOnDemandRunnerConfigResponse, error)
+	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
+	DeleteOnDemandRunnerConfig(context.Context, *DeleteOnDemandRunnerConfigRequest) (*DeleteOnDemandRunnerConfigResponse, error)
 	// ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
 	ListOnDemandRunnerConfigs(context.Context, *emptypb.Empty) (*ListOnDemandRunnerConfigsResponse, error)
 	// UpsertBuild updates or inserts a build. A build is responsible for
@@ -1718,26 +1731,26 @@ func (UnimplementedWaypointServer) ListBuilds(context.Context, *ListBuildsReques
 func (UnimplementedWaypointServer) GetBuild(context.Context, *GetBuildRequest) (*Build, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBuild not implemented")
 }
+func (UnimplementedWaypointServer) GetLatestBuild(context.Context, *GetLatestBuildRequest) (*Build, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLatestBuild not implemented")
+}
 func (UnimplementedWaypointServer) ListPushedArtifacts(context.Context, *ListPushedArtifactsRequest) (*ListPushedArtifactsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPushedArtifacts not implemented")
 }
 func (UnimplementedWaypointServer) GetPushedArtifact(context.Context, *GetPushedArtifactRequest) (*PushedArtifact, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPushedArtifact not implemented")
 }
+func (UnimplementedWaypointServer) GetLatestPushedArtifact(context.Context, *GetLatestPushedArtifactRequest) (*PushedArtifact, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLatestPushedArtifact not implemented")
+}
 func (UnimplementedWaypointServer) ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListDeployments not implemented")
-}
-func (UnimplementedWaypointServer) ListInstances(context.Context, *ListInstancesRequest) (*ListInstancesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
 }
 func (UnimplementedWaypointServer) GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDeployment not implemented")
 }
-func (UnimplementedWaypointServer) GetLatestBuild(context.Context, *GetLatestBuildRequest) (*Build, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetLatestBuild not implemented")
-}
-func (UnimplementedWaypointServer) GetLatestPushedArtifact(context.Context, *GetLatestPushedArtifactRequest) (*PushedArtifact, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetLatestPushedArtifact not implemented")
+func (UnimplementedWaypointServer) ListInstances(context.Context, *ListInstancesRequest) (*ListInstancesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
 }
 func (UnimplementedWaypointServer) ListReleases(context.Context, *ListReleasesRequest) (*ListReleasesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReleases not implemented")
@@ -1747,6 +1760,18 @@ func (UnimplementedWaypointServer) GetRelease(context.Context, *GetReleaseReques
 }
 func (UnimplementedWaypointServer) GetLatestRelease(context.Context, *GetLatestReleaseRequest) (*Release, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLatestRelease not implemented")
+}
+func (UnimplementedWaypointServer) GetStatusReport(context.Context, *GetStatusReportRequest) (*StatusReport, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStatusReport not implemented")
+}
+func (UnimplementedWaypointServer) GetLatestStatusReport(context.Context, *GetLatestStatusReportRequest) (*StatusReport, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLatestStatusReport not implemented")
+}
+func (UnimplementedWaypointServer) ListStatusReports(context.Context, *ListStatusReportsRequest) (*ListStatusReportsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListStatusReports not implemented")
+}
+func (UnimplementedWaypointServer) ExpediteStatusReport(context.Context, *ExpediteStatusReportRequest) (*ExpediteStatusReportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExpediteStatusReport not implemented")
 }
 func (UnimplementedWaypointServer) GetLogStream(*GetLogStreamRequest, Waypoint_GetLogStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetLogStream not implemented")
@@ -1835,18 +1860,6 @@ func (UnimplementedWaypointServer) GenerateRunnerToken(context.Context, *Generat
 func (UnimplementedWaypointServer) ConvertInviteToken(context.Context, *ConvertInviteTokenRequest) (*NewTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConvertInviteToken not implemented")
 }
-func (UnimplementedWaypointServer) GetStatusReport(context.Context, *GetStatusReportRequest) (*StatusReport, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetStatusReport not implemented")
-}
-func (UnimplementedWaypointServer) GetLatestStatusReport(context.Context, *GetLatestStatusReportRequest) (*StatusReport, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetLatestStatusReport not implemented")
-}
-func (UnimplementedWaypointServer) ListStatusReports(context.Context, *ListStatusReportsRequest) (*ListStatusReportsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListStatusReports not implemented")
-}
-func (UnimplementedWaypointServer) ExpediteStatusReport(context.Context, *ExpediteStatusReportRequest) (*ExpediteStatusReportResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ExpediteStatusReport not implemented")
-}
 func (UnimplementedWaypointServer) RunnerToken(context.Context, *RunnerTokenRequest) (*RunnerTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RunnerToken not implemented")
 }
@@ -1876,6 +1889,9 @@ func (UnimplementedWaypointServer) UpsertOnDemandRunnerConfig(context.Context, *
 }
 func (UnimplementedWaypointServer) GetOnDemandRunnerConfig(context.Context, *GetOnDemandRunnerConfigRequest) (*GetOnDemandRunnerConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOnDemandRunnerConfig not implemented")
+}
+func (UnimplementedWaypointServer) DeleteOnDemandRunnerConfig(context.Context, *DeleteOnDemandRunnerConfigRequest) (*DeleteOnDemandRunnerConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteOnDemandRunnerConfig not implemented")
 }
 func (UnimplementedWaypointServer) ListOnDemandRunnerConfigs(context.Context, *emptypb.Empty) (*ListOnDemandRunnerConfigsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListOnDemandRunnerConfigs not implemented")
@@ -2355,6 +2371,24 @@ func _Waypoint_GetBuild_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_GetLatestBuild_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLatestBuildRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetLatestBuild(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetLatestBuild",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetLatestBuild(ctx, req.(*GetLatestBuildRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_ListPushedArtifacts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListPushedArtifactsRequest)
 	if err := dec(in); err != nil {
@@ -2391,6 +2425,24 @@ func _Waypoint_GetPushedArtifact_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_GetLatestPushedArtifact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLatestPushedArtifactRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetLatestPushedArtifact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetLatestPushedArtifact(ctx, req.(*GetLatestPushedArtifactRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_ListDeployments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListDeploymentsRequest)
 	if err := dec(in); err != nil {
@@ -2405,24 +2457,6 @@ func _Waypoint_ListDeployments_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).ListDeployments(ctx, req.(*ListDeploymentsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Waypoint_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListInstancesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).ListInstances(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/ListInstances",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).ListInstances(ctx, req.(*ListInstancesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2445,38 +2479,20 @@ func _Waypoint_GetDeployment_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Waypoint_GetLatestBuild_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetLatestBuildRequest)
+func _Waypoint_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListInstancesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WaypointServer).GetLatestBuild(ctx, in)
+		return srv.(WaypointServer).ListInstances(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/GetLatestBuild",
+		FullMethod: "/hashicorp.waypoint.Waypoint/ListInstances",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).GetLatestBuild(ctx, req.(*GetLatestBuildRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Waypoint_GetLatestPushedArtifact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetLatestPushedArtifactRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).GetLatestPushedArtifact(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).GetLatestPushedArtifact(ctx, req.(*GetLatestPushedArtifactRequest))
+		return srv.(WaypointServer).ListInstances(ctx, req.(*ListInstancesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2531,6 +2547,78 @@ func _Waypoint_GetLatestRelease_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).GetLatestRelease(ctx, req.(*GetLatestReleaseRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetStatusReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStatusReportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetStatusReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetStatusReport",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetStatusReport(ctx, req.(*GetStatusReportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetLatestStatusReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLatestStatusReportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetLatestStatusReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetLatestStatusReport",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetLatestStatusReport(ctx, req.(*GetLatestStatusReportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_ListStatusReports_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListStatusReportsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).ListStatusReports(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/ListStatusReports",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).ListStatusReports(ctx, req.(*ListStatusReportsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_ExpediteStatusReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExpediteStatusReportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).ExpediteStatusReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/ExpediteStatusReport",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).ExpediteStatusReport(ctx, req.(*ExpediteStatusReportRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3082,78 +3170,6 @@ func _Waypoint_ConvertInviteToken_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Waypoint_GetStatusReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetStatusReportRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).GetStatusReport(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/GetStatusReport",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).GetStatusReport(ctx, req.(*GetStatusReportRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Waypoint_GetLatestStatusReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetLatestStatusReportRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).GetLatestStatusReport(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/GetLatestStatusReport",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).GetLatestStatusReport(ctx, req.(*GetLatestStatusReportRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Waypoint_ListStatusReports_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListStatusReportsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).ListStatusReports(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/ListStatusReports",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).ListStatusReports(ctx, req.(*ListStatusReportsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Waypoint_ExpediteStatusReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExpediteStatusReportRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).ExpediteStatusReport(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/ExpediteStatusReport",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).ExpediteStatusReport(ctx, req.(*ExpediteStatusReportRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Waypoint_RunnerToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RunnerTokenRequest)
 	if err := dec(in); err != nil {
@@ -3365,6 +3381,24 @@ func _Waypoint_GetOnDemandRunnerConfig_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).GetOnDemandRunnerConfig(ctx, req.(*GetOnDemandRunnerConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_DeleteOnDemandRunnerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteOnDemandRunnerConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DeleteOnDemandRunnerConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteOnDemandRunnerConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DeleteOnDemandRunnerConfig(ctx, req.(*DeleteOnDemandRunnerConfigRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3775,6 +3809,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_GetBuild_Handler,
 		},
 		{
+			MethodName: "GetLatestBuild",
+			Handler:    _Waypoint_GetLatestBuild_Handler,
+		},
+		{
 			MethodName: "ListPushedArtifacts",
 			Handler:    _Waypoint_ListPushedArtifacts_Handler,
 		},
@@ -3783,24 +3821,20 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_GetPushedArtifact_Handler,
 		},
 		{
-			MethodName: "ListDeployments",
-			Handler:    _Waypoint_ListDeployments_Handler,
+			MethodName: "GetLatestPushedArtifact",
+			Handler:    _Waypoint_GetLatestPushedArtifact_Handler,
 		},
 		{
-			MethodName: "ListInstances",
-			Handler:    _Waypoint_ListInstances_Handler,
+			MethodName: "ListDeployments",
+			Handler:    _Waypoint_ListDeployments_Handler,
 		},
 		{
 			MethodName: "GetDeployment",
 			Handler:    _Waypoint_GetDeployment_Handler,
 		},
 		{
-			MethodName: "GetLatestBuild",
-			Handler:    _Waypoint_GetLatestBuild_Handler,
-		},
-		{
-			MethodName: "GetLatestPushedArtifact",
-			Handler:    _Waypoint_GetLatestPushedArtifact_Handler,
+			MethodName: "ListInstances",
+			Handler:    _Waypoint_ListInstances_Handler,
 		},
 		{
 			MethodName: "ListReleases",
@@ -3813,6 +3847,22 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetLatestRelease",
 			Handler:    _Waypoint_GetLatestRelease_Handler,
+		},
+		{
+			MethodName: "GetStatusReport",
+			Handler:    _Waypoint_GetStatusReport_Handler,
+		},
+		{
+			MethodName: "GetLatestStatusReport",
+			Handler:    _Waypoint_GetLatestStatusReport_Handler,
+		},
+		{
+			MethodName: "ListStatusReports",
+			Handler:    _Waypoint_ListStatusReports_Handler,
+		},
+		{
+			MethodName: "ExpediteStatusReport",
+			Handler:    _Waypoint_ExpediteStatusReport_Handler,
 		},
 		{
 			MethodName: "SetConfig",
@@ -3911,22 +3961,6 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_ConvertInviteToken_Handler,
 		},
 		{
-			MethodName: "GetStatusReport",
-			Handler:    _Waypoint_GetStatusReport_Handler,
-		},
-		{
-			MethodName: "GetLatestStatusReport",
-			Handler:    _Waypoint_GetLatestStatusReport_Handler,
-		},
-		{
-			MethodName: "ListStatusReports",
-			Handler:    _Waypoint_ListStatusReports_Handler,
-		},
-		{
-			MethodName: "ExpediteStatusReport",
-			Handler:    _Waypoint_ExpediteStatusReport_Handler,
-		},
-		{
 			MethodName: "RunnerToken",
 			Handler:    _Waypoint_RunnerToken_Handler,
 		},
@@ -3945,6 +3979,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetOnDemandRunnerConfig",
 			Handler:    _Waypoint_GetOnDemandRunnerConfig_Handler,
+		},
+		{
+			MethodName: "DeleteOnDemandRunnerConfig",
+			Handler:    _Waypoint_DeleteOnDemandRunnerConfig_Handler,
 		},
 		{
 			MethodName: "ListOnDemandRunnerConfigs",

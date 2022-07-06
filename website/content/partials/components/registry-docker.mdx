@@ -25,6 +25,26 @@ build {
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### image
+
+The image to push the local image to, fully qualified.
+
+This value must be the fully qualified name to the image. for example: gcr.io/waypoint-demo/demo.
+
+- Type: **string**
+
+#### tag
+
+The tag for the new image.
+
+This is added to image to provide the full image reference.
+
+- Type: **string**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
 #### auth (category)
 
 The authentication information to log into the docker repository.
@@ -80,26 +100,6 @@ Username of Docker registry account.
 
 - Type: **string**
 - **Optional**
-
-#### image
-
-The image to push the local image to, fully qualified.
-
-This value must be the fully qualified name to the image. for example: gcr.io/waypoint-demo/demo.
-
-- Type: **string**
-
-#### tag
-
-The tag for the new image.
-
-This is added to image to provide the full image reference.
-
-- Type: **string**
-
-### Optional Parameters
-
-These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### encoded_auth
 

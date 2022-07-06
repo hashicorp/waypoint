@@ -51,24 +51,9 @@ func instanceExecSchema() *memdb.TableSchema {
 	}
 }
 
-type InstanceExec struct {
-	Id         int64
-	InstanceId string
+var _ serverstate.InstanceExecHandler = (*State)(nil)
 
-	Args []string
-	Pty  *pb.ExecStreamRequest_PTY
-
-	ClientEventCh     <-chan *pb.ExecStreamRequest
-	EntrypointEventCh chan<- *pb.EntrypointExecRequest
-	Connected         uint32
-
-	// This is the context that the client side is running inside.
-	// It is used by the entrypoint side to detect if the client is still
-	// around or not.
-	Context context.Context
-}
-
-func (s *State) InstanceExecCreateByTargetedInstance(id string, exec *InstanceExec) error {
+func (s *State) InstanceExecCreateByTargetedInstance(id string, exec *serverstate.InstanceExec) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -109,7 +94,7 @@ func (s *State) InstanceExecCreateByTargetedInstance(id string, exec *InstanceEx
 // the instance specified. The instance does not yet have to be known (as it may
 // not yet have connected to the server) so this code will use memdb watchers
 // to detect the instance as it connects and then register the exec.
-func (s *State) InstanceExecCreateForVirtualInstance(ctx context.Context, id string, exec *InstanceExec) error {
+func (s *State) InstanceExecCreateForVirtualInstance(ctx context.Context, id string, exec *serverstate.InstanceExec) error {
 	// If the caller specified an instance id already, then just validate it.
 	if id == "" {
 		return status.Errorf(codes.NotFound, "No instance id given")
@@ -138,7 +123,7 @@ func (s *State) InstanceExecCreateForVirtualInstance(ctx context.Context, id str
 	return nil
 }
 
-func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) error {
+func (s *State) InstanceExecCreateByDeployment(did string, exec *serverstate.InstanceExec) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -230,6 +215,7 @@ func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) e
 func (s *State) InstanceExecDelete(id int64) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
+
 	if _, err := txn.DeleteAll(instanceExecTableName, instanceExecIdIndexName, id); err != nil {
 		return status.Errorf(codes.Aborted, err.Error())
 	}
@@ -238,7 +224,7 @@ func (s *State) InstanceExecDelete(id int64) error {
 	return nil
 }
 
-func (s *State) InstanceExecById(id int64) (*InstanceExec, error) {
+func (s *State) InstanceExecById(id int64) (*serverstate.InstanceExec, error) {
 	txn := s.inmem.Txn(false)
 	raw, err := txn.First(instanceExecTableName, instanceExecIdIndexName, id)
 	txn.Abort()
@@ -249,10 +235,18 @@ func (s *State) InstanceExecById(id int64) (*InstanceExec, error) {
 		return nil, status.Errorf(codes.NotFound, "instance exec ID not found")
 	}
 
-	return raw.(*InstanceExec), nil
+	return raw.(*serverstate.InstanceExec), nil
 }
 
-func (s *State) InstanceExecListByInstanceId(id string, ws memdb.WatchSet) ([]*InstanceExec, error) {
+func (s *State) InstanceExecConnect(ctx context.Context, id int64) (*serverstate.InstanceExec, error) {
+	return s.InstanceExecById(id)
+}
+
+func (s *State) InstanceExecWaitConnected(ctx context.Context, exec *serverstate.InstanceExec) error {
+	return nil
+}
+
+func (s *State) InstanceExecListByInstanceId(id string, ws memdb.WatchSet) ([]*serverstate.InstanceExec, error) {
 	txn := s.inmem.Txn(false)
 	defer txn.Abort()
 	return s.instanceExecListByInstanceId(txn, id, ws)
@@ -260,16 +254,16 @@ func (s *State) InstanceExecListByInstanceId(id string, ws memdb.WatchSet) ([]*I
 
 func (s *State) instanceExecListByInstanceId(
 	txn *memdb.Txn, id string, ws memdb.WatchSet,
-) ([]*InstanceExec, error) {
+) ([]*serverstate.InstanceExec, error) {
 	// Find all the exec sessions
 	iter, err := txn.Get(instanceExecTableName, instanceExecInstanceIdIndexName, id)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, err.Error())
 	}
 
-	var result []*InstanceExec
+	var result []*serverstate.InstanceExec
 	for raw := iter.Next(); raw != nil; raw = iter.Next() {
-		result = append(result, raw.(*InstanceExec))
+		result = append(result, raw.(*serverstate.InstanceExec))
 	}
 
 	ws.Add(iter.WatchCh())

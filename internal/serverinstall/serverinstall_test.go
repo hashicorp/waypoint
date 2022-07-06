@@ -1,6 +1,9 @@
 package serverinstall
 
-import "testing"
+import (
+	"github.com/hashicorp/waypoint/internal/installutil"
+	"testing"
+)
 
 func TestDefaultODRImage(t *testing.T) {
 	tests := []struct {
@@ -42,7 +45,7 @@ func TestDefaultODRImage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := defaultODRImage(tt.serverImage)
+			got, err := installutil.DefaultODRImage(tt.serverImage)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("defaultODRImage() error = %v, wantErr %v", err, tt.wantErr)
 				return

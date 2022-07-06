@@ -3,12 +3,15 @@ package plugin
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
+	goplugin "github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/json"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/internal-shared/protomappers"
 )
@@ -41,25 +44,43 @@ func startInstance(
 		return nil, err
 	}
 
-	var fn interface{}
-
-	cmd, err := Discover(&req.Config, pluginPaths)
-	if err != nil {
-		return nil, err
+	// Look for any reattach plugins to allow debugging task launcher plugins
+	var reattachPluginConfigs map[string]*goplugin.ReattachConfig
+	reattachPluginsStr := os.Getenv("WP_REATTACH_PLUGINS")
+	if reattachPluginsStr != "" {
+		var err error
+		reattachPluginConfigs, err = ParseReattachPlugins(reattachPluginsStr)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	if cmd != nil {
-		fn = Factory(cmd, req.Type)
-	} else {
-		// If the plugin was not found, it is only an error if
-		// we don't have that plugin as a builtin plugin (for builtin plugins
-		// we relaunch the existing process)
+	var fn interface{}
 
-		if _, ok := Builtins[req.Config.Name]; !ok {
-			return nil, fmt.Errorf("plugin %q not found", req.Config.Name)
+	// If we have a debug plugin setup use that
+	if reattachConfig, ok := reattachPluginConfigs[req.Config.Name]; ok {
+		log.Debug(fmt.Sprintf("plugin %s is declared as running for reattachment", req.Config.Name))
+		fn = ReattachPluginFactory(reattachConfig, req.Type)
+	} else {
+		// Otherwise discover and launch the plugin
+		cmd, err := Discover(&req.Config, pluginPaths)
+		if err != nil {
+			return nil, err
+		}
+
+		if cmd != nil {
+			fn = Factory(cmd, req.Type)
 		} else {
-			log.Debug("plugin found as builtin")
-			fn = BuiltinFactory(req.Config.Name, req.Type)
+			// If the plugin was not found, it is only an error if
+			// we don't have that plugin as a builtin plugin (for builtin plugins
+			// we relaunch the existing process)
+
+			if _, ok := Builtins[req.Config.Name]; !ok {
+				return nil, fmt.Errorf("plugin %q not found", req.Config.Name)
+			} else {
+				log.Debug("plugin found as builtin")
+				fn = BuiltinFactory(req.Config.Name, req.Type)
+			}
 		}
 	}
 
@@ -131,8 +152,12 @@ func Open(
 		return nil, nil, diags
 	}
 
+	// Only configure plugin config if it exists
 	if file.Body != nil {
-		component.Configure(pi.Component, file.Body, hclCtx.NewChild())
+		diag := component.Configure(pi.Component, file.Body, hclCtx.NewChild())
+		if diag.HasErrors() {
+			return nil, nil, diag
+		}
 	}
 
 	return &Plugin{req: req, Instance: pi}, pi.Component, nil

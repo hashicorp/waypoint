@@ -2,11 +2,11 @@ package core
 
 import (
 	"context"
-	"errors"
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/opaqueany"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -147,7 +147,7 @@ func (op *buildOperation) Upsert(
 		Build: msg.(*pb.Build),
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed upserting build operation")
 	}
 
 	return resp.Build, nil

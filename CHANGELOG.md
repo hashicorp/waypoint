@@ -6,6 +6,55 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+
+## 0.9.0 (July 05, 2022)
+
+FEATURES:
+
+* **Waypoint Task Tracking**: Waypoint now tracks the lifecycle of on-demand
+runner tasks through a new internal core concept `Task`. As ODR jobs run, Task
+will keep track of what part the jobs are at for better debugging and on-demand
+runner insight. [[GH-3203](https://github.com/hashicorp/waypoint/issues/3203)]
+* cli: **New `runner install` and `runner uninstall` commands** to install/uninstall Waypoint runners to a specified platform [[GH-3335](https://github.com/hashicorp/waypoint/issues/3335)]
+* cli: **New `runner profile delete` command** to delete a Waypoint runner profile [[GH-3474](https://github.com/hashicorp/waypoint/issues/3474)]
+* cli: **Refactor k8s server install to use Helm** [[GH-3335](https://github.com/hashicorp/waypoint/issues/3335)]
+* core: **Add ability to have cli and runners use OAuth2 to get an auth token** [[GH-3298](https://github.com/hashicorp/waypoint/issues/3298)]
+* plugin/aws-ecr-pull: **Introduces an `aws-ecr-pull` builder plugin**
+that enables using AWS ECR images that are built outside of Waypoint. [[GH-3396](https://github.com/hashicorp/waypoint/issues/3396)]
+* plugin/lambda-function-url: **Adds a new plugin and `releaser` component.** This leverages Lambda URLs. [[GH-3187](https://github.com/hashicorp/waypoint/issues/3187)]
+
+IMPROVEMENTS:
+
+* cli: Show list of existing default runner profiles on post-upgrade to warn user
+that only one runner profile should be default. [[GH-3497](https://github.com/hashicorp/waypoint/issues/3497)]
+* cli: Add interactive input for server upgrade, server uninstall, and destroy commands [[GH-3238](https://github.com/hashicorp/waypoint/issues/3238)]
+* cli: Remove unused flag `runner-profile` in `waypoint project apply` [[GH-3318](https://github.com/hashicorp/waypoint/issues/3318)]
+* core/api: include commit message in datasource/git response [[GH-3457](https://github.com/hashicorp/waypoint/issues/3457)]
+* core: on-demand runner logs are now captured from the underlying platform
+and stored in the job system. [[GH-3306](https://github.com/hashicorp/waypoint/issues/3306)]
+* core: show helpful errors when using invalid runner profile plugin config [[GH-3465](https://github.com/hashicorp/waypoint/issues/3465)]
+* plugin/nomad: Support Nomad service discovery in Nomad platform plugin [[GH-3461](https://github.com/hashicorp/waypoint/issues/3461)]
+* runner: runners will now accept and execute multiple jobs concurrently
+if multiple jobs are available. On-demand runners continue to execute exactly
+one job since they are purpose launched for single job execution. [[GH-3300](https://github.com/hashicorp/waypoint/issues/3300)]
+* server: Introduce basic server-side metric collections around operations [[GH-3440](https://github.com/hashicorp/waypoint/issues/3440)]
+* serverinstall/k8s: By default, do not set a mem or cpu limit or request for
+the default runner profile installed. [[GH-3475](https://github.com/hashicorp/waypoint/issues/3475)]
+* ui: Updated UI of breadcrumbs and UX to include current page [[GH-3166](https://github.com/hashicorp/waypoint/issues/3166)]
+* upgrade: Warn user if default k8s runner profile has incorrect plugin configs [[GH-3503](https://github.com/hashicorp/waypoint/issues/3503)]
+
+BUG FIXES:
+
+* cli: fix git dirty check that was broken for some versions of the git cli [[GH-3432](https://github.com/hashicorp/waypoint/issues/3432)]
+* cli: fix panic when running status report on app with zero prior deployments [[GH-3425](https://github.com/hashicorp/waypoint/issues/3425)]
+* core: Fix a rare panic when generating an invite token. [[GH-3505](https://github.com/hashicorp/waypoint/issues/3505)]
+* plugin/docker: Ensure that the docker task launcher does not require a resources
+block to be set when attempting to load a task config to launch a task. [[GH-3486](https://github.com/hashicorp/waypoint/issues/3486)]
+* plugin/docker: fix issue with remote operations for `docker-pull` builder [[GH-3398](https://github.com/hashicorp/waypoint/issues/3398)]
+* plugin/k8s: Properly parse kubernetes task launcher config on plugin invoke. [[GH-3475](https://github.com/hashicorp/waypoint/issues/3475)]
+* upgrade: Update existing runner profile during server upgrade & change naming convention of initial runner profile [[GH-3490](https://github.com/hashicorp/waypoint/issues/3490)]
+
+
 ## 0.8.2 (May 19, 2022)
 
 IMPROVEMENTS:

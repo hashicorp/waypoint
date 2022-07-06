@@ -295,8 +295,9 @@ func (s *GitSource) Get(
 	return result, &pb.Job_DataSource_Ref{
 		Ref: &pb.Job_DataSource_Ref_Git{
 			Git: &pb.Job_Git_Ref{
-				Commit:    commit.Hash.String(),
-				Timestamp: commitTs,
+				Commit:        commit.Hash.String(),
+				Timestamp:     commitTs,
+				CommitMessage: commit.Message,
 			},
 		},
 	}, closer, nil

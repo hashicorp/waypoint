@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/clisnapshot"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"github.com/hashicorp/waypoint/internal/serverinstall"
 )
 
@@ -194,10 +195,15 @@ func (c *UninstallCommand) Run(args []string) int {
 		Log: log,
 		UI:  c.ui,
 	}
+	runnerOpts := &runnerinstall.InstallOpts{
+		Log: log,
+		UI:  c.ui,
+		Id:  "static", // static is the name of the initial runner installed
+	}
 
 	// We first uninstall any runners.
 	log.Trace("calling UninstallRunner")
-	if err := p.UninstallRunner(ctx, installOpts); err != nil {
+	if err := p.UninstallRunner(ctx, runnerOpts); err != nil {
 		if !c.ignoreRunnerError {
 			c.ui.Output(
 				"Error uninstalling runners from %s: %s\n\n"+
@@ -273,8 +279,6 @@ Usage: waypoint server uninstall [options]
   specified, the CLI command will attempt to retrieve the platform defined in
   the server context.
 
-  '-auto-approve' is required.
-
   By default, this command deletes the default server's context and creates 
   a server snapshot.
 
@@ -295,7 +299,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 			Name:    "auto-approve",
 			Target:  &c.autoApprove,
 			Default: false,
-			Usage:   "Auto-approve server uninstallation.",
+			Usage:   "Auto-approve server uninstallation. If unset, confirmation will be requested.",
 		})
 
 		f.BoolVar(&flag.BoolVar{

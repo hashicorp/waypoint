@@ -3,6 +3,8 @@ package cli
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/installutil"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"sort"
 	"strings"
 	"time"
@@ -137,7 +139,11 @@ func (c *InstallCommand) Run(args []string) int {
 			sr.Status(terminal.StatusError)
 			// dont return the error yet
 		} else {
-			sr.Update("Successfully connected to Waypoint server in %s!", strings.Title(c.platform))
+			p := strings.Title(c.platform)
+			if p == "Ecs" {
+				p = strings.ToUpper(p)
+			}
+			sr.Update("Successfully connected to Waypoint server in %s!", p)
 			sr.Status(terminal.StatusOK)
 			sr.Done()
 			break
@@ -262,6 +268,11 @@ func (c *InstallCommand) Run(args []string) int {
 	callOpts = append(callOpts, grpc.PerRPCCredentials(
 		serverclient.StaticToken(contextConfig.Server.AuthToken)))
 
+	// This is our default, so let's actually set the timestamp if not set on the CLI
+	if c.contextName == "" {
+		c.contextName = fmt.Sprintf("install-%d", time.Now().Unix())
+	}
+
 	// If we connected successfully, lets immediately setup our context.
 	if c.contextName != "" {
 		if err := c.contextStorage.Set(c.contextName, contextConfig); err != nil {
@@ -330,7 +341,8 @@ func (c *InstallCommand) Run(args []string) int {
 	s.Done()
 
 	if c.flagRunner {
-		if code := installRunner(c.Ctx, log, client, c.ui, p, advertiseAddr); code > 0 {
+		// we pass nil for the ODR config because it's a fresh install
+		if code := installRunner(c.Ctx, log, client, c.ui, p, advertiseAddr, nil); code > 0 {
 			return code
 		}
 	}
@@ -356,11 +368,11 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "context-create",
-			Target:  &c.contextName,
-			Default: fmt.Sprintf("install-%d", time.Now().Unix()),
+			Name:   "context-create",
+			Target: &c.contextName,
 			Usage: "Create a context with connection information for this installation. " +
-				"The default value will be suffixed with a timestamp at the time the command is executed.",
+				"The default value if not set will be 'install-' and then be suffixed with a " +
+				"timestamp at the time the command is executed.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
@@ -462,6 +474,7 @@ func installRunner(
 	ui terminal.UI,
 	p serverinstall.Installer,
 	advertiseAddr *pb.ServerConfig_AdvertiseAddr,
+	odrConfig *pb.OnDemandRunnerConfig,
 ) int {
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -484,6 +497,8 @@ func installRunner(
 		return 1
 	}
 
+	config, err := client.GetServerConfig(ctx, &empty.Empty{})
+
 	// Build a serverconfig that uses the advertise addr and includes
 	// the token we just requested.
 	connConfig := &serverconfig.Client{
@@ -494,15 +509,22 @@ func installRunner(
 		AuthToken:     resp.Token,
 	}
 
+	// We set the ID to be "static" since it is the initial static runner
+	// Specific platform implementations should add the suffix -runner to
+	// resource names
+	id := "static"
+
 	// Install!
 	s.Update("Installing runner...")
-	err = p.InstallRunner(ctx, &serverinstall.InstallRunnerOpts{
+	err = p.InstallRunner(ctx, &runnerinstall.InstallOpts{
 		Log:             log,
 		UI:              ui,
-		AuthToken:       resp.Token,
-		AdvertiseAddr:   advertiseAddr,
+		Cookie:          config.Config.Cookie,
+		ServerAddr:      advertiseAddr.Addr,
 		AdvertiseClient: connConfig,
+		Id:              id,
 	})
+
 	if err != nil {
 		ui.Output(
 			"Error installing the runner: %s\n\n%s",
@@ -512,7 +534,14 @@ func installRunner(
 		)
 		return 1
 	}
+	s.Update("Runner %q installed", id)
 	s.Done()
+
+	err = installutil.AdoptRunner(ctx, ui, client, id, advertiseAddr.Addr)
+	if err != nil {
+		ui.Output("Error adopting runner: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+		return 1
+	}
 
 	// If this installation platform supports an out-of-the-box ODR
 	// config then we set that up. This enables on-demand runners to
@@ -520,21 +549,25 @@ func installRunner(
 	if odc, ok := p.(serverinstall.OnDemandRunnerConfigProvider); ok {
 		s = sg.Add("Registering on-demand runner configuration...")
 
-		odr := odc.OnDemandRunnerConfig()
-		if odr != nil {
-			_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
-				Config: odr,
-			})
+		if odrConfig == nil {
+			odrConfig = odc.OnDemandRunnerConfig()
+		}
 
-			if err != nil {
-				s.Update("Error creating ondemand runner: %s", err)
-				s.Status(terminal.StatusError)
-			} else {
-				s.Update("Registered ondemand runner!")
-				s.Status(terminal.StatusOK)
-			}
+		odrConfig.Name = odrConfig.PluginType + "-bootstrap-profile"
+		if err != nil {
+			ui.Output("Error getting version: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+
+		_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+			Config: odrConfig,
+		})
+		if err != nil {
+			ui.Output("Error creating ondemand runner: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
 		} else {
-			s.Update("Install type did not provide an ondemand runner config")
+			s.Update("Registered ondemand runner!")
+			s.Status(terminal.StatusOK)
 		}
 
 		s.Done()

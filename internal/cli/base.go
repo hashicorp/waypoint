@@ -301,8 +301,29 @@ func (c *baseCommand) Init(opts ...Option) error {
 		// Try parsing config
 		c.cfg, err = c.initConfig("")
 		if err != nil {
-			c.logError(c.Log, "failed to load config", err)
-			return err
+			var shouldExit bool
+
+			if validationResults, ok := err.(config.ValidationResults); ok {
+				c.ui.Output("The following validation issues were detected:", terminal.WithHeaderStyle())
+
+				for _, vr := range validationResults {
+					if vr.Error != nil {
+						shouldExit = true
+						c.ui.Output(vr.Error.Error(), terminal.WithErrorStyle())
+					} else if vr.Warning != "" {
+						c.ui.Output(vr.Warning, terminal.WithWarningStyle())
+					}
+				}
+
+				if shouldExit {
+					return err
+				}
+
+				c.ui.Output("")
+			} else {
+				c.logError(c.Log, "failed to load config", err)
+				return err
+			}
 		}
 
 		// If that worked, set our refs

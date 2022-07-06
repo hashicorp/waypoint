@@ -23,7 +23,7 @@ func TestServiceProject(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 	project := ptypes.TestProject(t, &pb.Project{
 		Name: "example",
 	})
@@ -95,7 +95,7 @@ func TestServiceProject_GetApplication(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 	project := ptypes.TestProject(t, &pb.Project{
 		Name: "example",
 	})
@@ -145,7 +145,7 @@ func TestServiceProject_UpsertApplication(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 	project := ptypes.TestProject(t, &pb.Project{
 		Name: "example",
 	})

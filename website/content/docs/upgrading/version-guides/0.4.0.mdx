@@ -1,0 +1,44 @@
+---
+layout: docs
+page_title: Version 0.4.0 - Upgrade Guide
+description: |-
+  This upgrade guide describes any considerations for upgrading to Waypoint 0.4.0.
+---
+
+# Upgrading to Waypoint 0.4.0 from 0.3.x
+
+Waypoint 0.3.x can be upgraded to Waypoint 0.4.0 using a [standard upgrade](/docs/upgrading#standard-upgrade).
+
+## Breaking Changes
+
+**[v0.4.0](https://github.com/hashicorp/waypoint/releases/tag/v0.4.0)**
+
+- plugin/netlify: Removed the netlify plugin
+
+## Other Considerations
+
+### Server Image
+
+`waypoint install` uses the `hashicorp/waypoint:latest` container image for
+Kubernetes, Nomad, ECS, and Docker. When upgrading, your platform may require
+you to pull the latest image instead of using a cache.
+
+Kubernetes and Nomad both specify an "always pull" policy for `:latest` images
+so restarting the Deployment or Job should pull the latest released version.
+Docker may require an explicit `docker pull` and container recreate.
+
+#### Verifying the Server Version with the UI
+
+You can verify the server version by loading the UI and looking at the footer.
+You should see a version starting with `v0.4`. If you see an earlier version,
+your platform may be using an old cached image.
+
+#### Verifying the Server Version with the CLI
+
+You can verify both the CLI version and server version by running:
+
+```shell-session
+$ waypoint version
+CLI: v0.4.0 (622f37bd1)
+Server: v0.4.0
+```

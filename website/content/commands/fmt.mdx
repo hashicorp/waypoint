@@ -31,13 +31,13 @@ work for older and newer configuration formats.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
 
 #### Command Options
 
-- `-write` - Overwrite the input file. If this is false, the formatted output will be written to STDOUT. This has no effect when formatting from STDIN.
+- `-write` - Overwrite the input file. If this is false, the formatted output will be written to STDOUT. This has no effect when formatting from STDIN. The default is true.
 
 @include "commands/fmt_more.mdx"
