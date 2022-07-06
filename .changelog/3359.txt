@@ -1,0 +1,4 @@
+```release-note:improvement
+plugin/nomad-jobspec: Refactor the nomad-jobspec-canary releaser plugin to not
+run by default with the nomad-jobspec platform plugin
+```
