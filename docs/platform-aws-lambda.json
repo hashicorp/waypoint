@@ -1,0 +1,160 @@
+{
+   "description": "Deploy functions as OCI Images to AWS Lambda",
+   "example": "deploy {\n\tuse \"aws-lambda\" {\n\t\tregion = \"us-east-1\"\n\t\tmemory = 512\n\t}\n}",
+   "input": "ecr.Image",
+   "mappers": null,
+   "name": "aws-lambda",
+   "optionalFields": [
+      {
+         "Field": "architecture",
+         "Type": "string",
+         "Synopsis": "The instruction set architecture that the function supports. Valid values are: \"x86_64\", \"arm64\"",
+         "Summary": "",
+         "Optional": true,
+         "Default": "x86_64",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "iam_role",
+         "Type": "string",
+         "Synopsis": "an IAM Role specified by ARN that will be used by the Lambda at execution time",
+         "Summary": "",
+         "Optional": true,
+         "Default": "created automatically",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "memory",
+         "Type": "int",
+         "Synopsis": "the amount of memory, in megabytes, to assign the function",
+         "Summary": "",
+         "Optional": true,
+         "Default": "265",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "static_environment",
+         "Type": "map of string to string",
+         "Synopsis": "environment variables to expose to the lambda function",
+         "Summary": "environment variables that are meant to configure the application in a static way. This might be to control an image that has multiple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "storagemb",
+         "Type": "int",
+         "Synopsis": "The storage size (in MB) of the Lambda function's `/tmp` directory. Must be a value between 512 and 10240.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "512",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "timeout",
+         "Type": "int",
+         "Synopsis": "the number of seconds a function has to return a result",
+         "Summary": "",
+         "Optional": true,
+         "Default": "60",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "output": "lambda.Deployment",
+   "outputAttrs": [
+      {
+         "Field": "func_arn",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "id",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "region",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "target_group_arn",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "ver_arn",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "version",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "region",
+         "Type": "string",
+         "Synopsis": "the AWS region for the ECS cluster",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "platform",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

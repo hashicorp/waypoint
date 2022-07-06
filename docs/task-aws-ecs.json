@@ -1,0 +1,135 @@
+{
+   "description": "\nLaunch an ECS task for on-demand tasks from the Waypoint server.\n\nThis will use the standard AWS environment variables and IAM Role information to\nsource authentication information for AWS, using the configured task role.\nIf no task role name is specified, Waypoint will create one with the required\npermissions.\n",
+   "mappers": null,
+   "name": "aws-ecs",
+   "optionalFields": [
+      {
+         "Field": "cluster",
+         "Type": "string",
+         "Synopsis": "Cluster name to place On-Demand runner tasks in",
+         "Summary": "ECS Cluster to place On-Demand runners in. This defaults to the cluster used by the Waypoint server",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "execution_role_name",
+         "Type": "string",
+         "Synopsis": "The name of the AWS IAM role to apply to the task's Execution Role",
+         "Summary": "ExecutionRoleName is the name of the AWS IAM role to apply to the task's Execution Role. At this time we reuse the same Role as the Waypoint server Execution Role.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "log_group",
+         "Type": "string",
+         "Synopsis": "Cloud Watch Log Group to use for On-Demand Runners",
+         "Summary": "Cloud Watch Log Group to use for On-Demand Runners. Defaults to the log group used for runners (waypoint-runner).",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "odr_cpu",
+         "Type": "string",
+         "Synopsis": "CPU to use for the On-Demand runners.",
+         "Summary": "Configure the CPU for the On-Demand runners. The default is 512. See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html for valid values",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "odr_memory",
+         "Type": "string",
+         "Synopsis": "Memory to use for the On-Demand runners.",
+         "Summary": "Configure the memory for the On-Demand runners. The default is 1024. See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html for valid values",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "region",
+         "Type": "string",
+         "Synopsis": "AWS Region to use",
+         "Summary": "AWS region to use. Defaults to the region used for the Waypoint Server.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "security_group_id",
+         "Type": "string",
+         "Synopsis": "Security Group ID to place the On-Demand Runner task in",
+         "Summary": "Security Group ID to place the On-Demand Runner task in. This defaults to the security group used for the Waypoint server",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "subnets",
+         "Type": "string",
+         "Synopsis": "List of subnets to place the On-Demand Runner task in.",
+         "Summary": "List of subnets to place the On-Demand Runner task in. This defaults to the list of subnets configured for the Waypoint server and must be either identical or a subset of the subnets used by the Waypoint server",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "task_role_name",
+         "Type": "string",
+         "Synopsis": "The name of the AWS IAM role to apply to the task's Task Role",
+         "Summary": "TaskRoleName is the name of the AWS IAM role to apply to the task. This role determines the privileges the ODR builder. If no role name is given, an IAM role will be created with the required policies",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrs": [
+      {
+         "Field": "id",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "odr_image",
+         "Type": "",
+         "Synopsis": "Docker image for the Waypoint On-Demand Runners",
+         "Summary": "Docker image for the Waypoint On-Demand Runners. This will\ndefault to the server image with the name (not label) suffixed with '-odr'.\"",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "task",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

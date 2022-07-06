@@ -1,0 +1,91 @@
+{
+   "description": "\nLaunch a Nomad job for on-demand tasks from the Waypoint server.\n\nThis will use the standard Nomad environment used for with the server install\nto launch on demand Nomad jobs for Waypoint server tasks.\n\t",
+   "example": "task {\n\tuse \"nomad\" {}\n}",
+   "mappers": null,
+   "name": "nomad",
+   "optionalFields": [
+      {
+         "Field": "datacenter",
+         "Type": "string",
+         "Synopsis": "The Nomad datacenter to deploy the on-demand runner task to.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "dc1",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "namespace",
+         "Type": "string",
+         "Synopsis": "The Nomad namespace to deploy the on-demand runner task to.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "default",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "nomad_host",
+         "Type": "string",
+         "Synopsis": "Hostname of the Nomad server to use for launching on-demand tasks.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "http://localhost:4646",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "region",
+         "Type": "string",
+         "Synopsis": "The Nomad region to deploy the on-demand runner task to.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "global",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "resources_cpu",
+         "Type": "int",
+         "Synopsis": "Amount of CPU in MHz to allocate to this task. This can be overriden with the '-nomad-runner-cpu' flag on server install.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "200",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "resources_memory",
+         "Type": "int",
+         "Synopsis": "Amount of memory in MB to allocate to this task. This can be overriden with the '-nomad-runner-memory' flag on server install.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "2000",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrs": [
+      {
+         "Field": "id",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": null,
+   "type": "task",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

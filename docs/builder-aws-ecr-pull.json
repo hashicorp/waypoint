@@ -1,0 +1,94 @@
+{
+   "description": "\nUse an existing, pre-built AWS ECR image.\n\nThis builder attempts to find an image by repository and tag in the\nspecified region. If found, it will pass along the image information\nto the next step.\n\nThis builder will not modify the image. \n\nIf you wish to rename or retag an image, please use the \"docker-pull\" component\nin conjunction with the \"aws-ecr\" registry option.\n",
+   "example": "build {\n  use \"aws-ecr-pull\" {\n    region     = \"us-east-1\"\n    repository = \"deno-http\"\n    tag        = \"latest\"\n  }\n}",
+   "input": "component.Source",
+   "mappers": null,
+   "name": "aws-ecr-pull",
+   "optionalFields": [
+      {
+         "Field": "force_architecture",
+         "Type": "string",
+         "Synopsis": "**Note**: This is a temporary field that enables overriding the `architecture` output attribute. Valid values are: `\"x86_64\"`, `\"arm64\"`",
+         "Summary": "",
+         "Optional": true,
+         "Default": "`\"\"`",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "region",
+         "Type": "string",
+         "Synopsis": "the AWS region the ECR repository is in",
+         "Summary": "if not set uses the environment variable AWS_REGION or AWS_REGION_DEFAULT.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "output": "ecr.Image",
+   "outputAttrs": [
+      {
+         "Field": "architecture",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "image",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "tag",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "repository",
+         "Type": "string",
+         "Synopsis": "the AWS ECR repository name",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "tag",
+         "Type": "string",
+         "Synopsis": "the tag of the image to pull",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "builder",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

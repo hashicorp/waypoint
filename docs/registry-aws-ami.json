@@ -1,0 +1,8 @@
+{
+   "mappers": null,
+   "name": "aws-ami",
+   "optionalFields": null,
+   "requiredFields": null,
+   "type": "registry",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

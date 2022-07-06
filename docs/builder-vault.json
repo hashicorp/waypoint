@@ -1,0 +1,8 @@
+{
+   "mappers": null,
+   "name": "vault",
+   "optionalFields": null,
+   "requiredFields": null,
+   "type": "builder",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

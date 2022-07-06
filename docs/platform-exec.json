@@ -1,0 +1,58 @@
+{
+   "description": "\nExecute any command to perform a deploy.\n\nThis plugin lets you use almost any pre-existing deployment tool for the\ndeploy step of Waypoint. This is a great way to take a pre-existing application\nand begin using Waypoint. For example, you can wrap \"kubectl\" calls if you\nalready have Kubernetes configurations, or \"helm\" if you use Helm, and so on.\n\nThe \"exec\" plugin is meant to be an escape hatch from Waypoint. In working\nthis way, you will lose many Waypoint benefits. For example, \"waypoint destroy\"\nfunctionality will not work with deploys created with the exec plugin.\n\n### Templates\n\nThe exec plugin supports templating to access input information about the\nartifact. There are two mechanisms for templates:\n\n1. Any argument in \"command\" is processed as a template.\n\n2. You may specify a file or directory to be processed for templating\nusing the \"template\" stanza. Any argument with the value `\u003cTPL\u003e` in it\nwill be replaced with the path to the template.\n\nTemplating follows the format of a Go [text/template](https://golang.org/pkg/text/template/)\ntemplate. The top of the documentation there has details on the format.\n\n#### Common Values\n\nThe following template values are always available:\n\n  - \".Env\" (map\u003cstring\\\u003estring) - These are environment variables that should\n    be set on the deployed workload. These enable the entrypoint to work so\n    you should set these if able.\n\n\n  - \".Workspace\" (string) - The workspace name that the Waypoint deploy is\n    running in. This lets you potentially deploy to different clusters based\n    on this value.\n\n#### Docker Image Input\n\nIf the build step creates a Docker image, the following template variables\nare available:\n\n  - \".Input.DockerImageFull\" (string) - The full Docker image name and tag.\n\n  - \".Input.DockerImageName\" (string) - The Docker image name, without the tag.\n\n  - \".Input.DockerImageTag\" (string) - The Docker image tag, such as \"latest\".\n\n",
+   "example": "deploy {\n  use \"exec\" {\n    command = [\"docker\", \"run\", \"{{.Input.DockerImageFull}}\"]\n  }\n}",
+   "input": "exec.Input",
+   "mappers": null,
+   "name": "exec",
+   "optionalFields": [
+      {
+         "Field": "command",
+         "Type": "list of string",
+         "Synopsis": "The command to execute for the deploy as a list of strings.",
+         "Summary": "Each value in the list will be rendered as a template, so it may contain template directives. Additionally, the special string `\u003cTPL\u003e` will be replaced with the path to the rendered file-based templates. If your template path was to a file, this will be a path a file. Otherwise, it will be a path to a directory.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "dir",
+         "Type": "string",
+         "Synopsis": "The working directory to use while executing the command.",
+         "Summary": "This will default to the same working directory as the Waypoint execution.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "output": "exec.Deployment",
+   "requiredFields": [
+      {
+         "Field": "template",
+         "Type": "exec.ConfigTemplate",
+         "Synopsis": "A stanza that declares that a file or directory should be template-rendered.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "template.path",
+         "Type": "",
+         "Synopsis": "The path to the file or directory to render as a template.",
+         "Summary": "Templating uses the following format: https://golang.org/pkg/text/template/ Available template variables depends on the input artifact.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "platform",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

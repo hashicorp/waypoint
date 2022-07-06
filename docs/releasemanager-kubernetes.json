@@ -1,0 +1,200 @@
+{
+   "description": "Manipulates the Kubernetes Service activate Deployments",
+   "mappers": null,
+   "name": "kubernetes",
+   "optionalFields": [
+      {
+         "Field": "annotations",
+         "Type": "map of string to string",
+         "Synopsis": "Annotations to be applied to the kube service",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "context",
+         "Type": "string",
+         "Synopsis": "the kubectl context to use, as defined in the kubeconfig file",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "kubeconfig",
+         "Type": "string",
+         "Synopsis": "path to the kubeconfig file to use",
+         "Summary": "by default uses from current user's home directory",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "KUBECONFIG",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "load_balancer",
+         "Type": "bool",
+         "Synopsis": "indicates if the Kubernetes Service should LoadBalancer type",
+         "Summary": "if the Kubernetes Service is not a LoadBalancer and node_port is not set, then the Service uses ClusterIP",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "namespace",
+         "Type": "string",
+         "Synopsis": "namespace to create Service in",
+         "Summary": "namespace is the name of the Kubernetes namespace to create the deployment in This is useful to create Services in non-default namespaces without creating kubeconfig contexts for each",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "node_port",
+         "Type": "uint",
+         "Synopsis": "the TCP port that the Service should consume as a NodePort",
+         "Summary": "if this is set but load_balancer is not, the service will be NodePort type, but if load_balancer is also set, it will be LoadBalancer",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "port",
+         "Type": "uint",
+         "Synopsis": "the TCP port that the application is listening on",
+         "Summary": "",
+         "Optional": true,
+         "Default": "80",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "ports",
+         "Type": "list of map of string to string",
+         "Synopsis": "a map of ports and options that the application is listening on",
+         "Summary": "used to define and configure multiple ports that the application is listening on. Available keys are 'port', 'node_port', 'name', and 'target_port'. If 'node_port' is set but 'load_balancer' is not, the service will be NodePort type. If 'load_balancer' is also set, it will be LoadBalancer. Ports defined will be TCP protocol. Note that 'name' is required if defining more than one port.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "requiredFields": [
+      {
+         "Field": "ingress",
+         "Type": "k8s.IngressConfig",
+         "Synopsis": "Configuration to set up an ingress resource to route traffic to the given application from an ingress controller",
+         "Summary": "An ingress resource can be created on release that will route traffic to the Kubernetes service. Note that before this happens, the Kubernetes cluster must already be configured with an Ingress controller. Otherwise there won't be a way for inbound traffic to be routed to the ingress resource.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "annotations",
+               "Type": "map of string to string",
+               "Synopsis": "Annotations to be applied to the ingress resource",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "default",
+               "Type": "bool",
+               "Synopsis": "sets the ingress resource to be the default backend for any traffic that doesn't match existing ingress rule paths",
+               "Summary": "",
+               "Optional": true,
+               "Default": "false",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "host",
+               "Type": "string",
+               "Synopsis": "If set, will configure the ingress resource to have the ingress controller route traffic for any inbound requests that match this host. IP addresses are not allowed, nor are ':' delimiters. Wildcards are allowed to a certain extent. For more details check out the Kubernetes documentation",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "path",
+               "Type": "string",
+               "Synopsis": "The route rule that should be used to route requests to this ingress resource. A path must begin with a '/'.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "/",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "path_type",
+               "Type": "string",
+               "Synopsis": "defines the kind of rule the path will be for the ingress controller. Valid path types are 'Exact', 'Prefix', and 'ImplementationSpecific'.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "Prefix",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "tls",
+               "Type": "k8s.IngressTls",
+               "Synopsis": "A stanza of TLS configuration options for traffic to the ingress resource",
+               "Summary": "",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": true,
+               "SubFields": [
+                  {
+                     "Field": "hosts",
+                     "Type": "",
+                     "Synopsis": "A list of hosts included in the TLS certificate",
+                     "Summary": "",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "SubFields": null
+                  },
+                  {
+                     "Field": "secret_name",
+                     "Type": "",
+                     "Synopsis": "The Kubernetes secret name that should be used to look up or store TLS configs",
+                     "Summary": "",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "SubFields": null
+                  }
+               ]
+            }
+         ]
+      }
+   ],
+   "type": "releasemanager",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}
