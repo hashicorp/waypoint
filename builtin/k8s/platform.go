@@ -1475,8 +1475,8 @@ type Config struct {
 // ResourceConfig describes the request and limit of a resource. Used for
 // cpu and memory resource configuration.
 type ResourceConfig struct {
-	Request string `hcl:"request,optional" json:"request"`
-	Limit   string `hcl:"limit,optional" json:"limit"`
+	Request string `hcl:"Requested,optional" json:"Requested,optional"`
+	Limit   string `hcl:"Limit,optional" json:"Limit,optional"`
 }
 
 // AutoscaleConfig describes the possible configuration for creating a
