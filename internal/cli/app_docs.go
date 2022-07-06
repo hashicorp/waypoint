@@ -233,15 +233,25 @@ func endingSpace(w io.Writer, i, tot int) {
 
 func splitFields(fields []*docs.FieldDocs) (required, optional []*docs.FieldDocs) {
 	var o, r []*docs.FieldDocs
-
+	// Categories and fields are both stored in FieldDocs, so if we see a category then check if any of its sub fields are not optional.
+	// If so, the whole category goes in the required section of the website docs, with the optional fields still being labelled as such
+	// within the category
 	for _, f := range fields {
-		if f.Optional {
-			o = append(o, f)
-		} else {
+		var requiredSubfield bool
+		if sf := f.SubFields; len(sf) > 0 {
+			for _, fo := range sf {
+				if !fo.Optional {
+					requiredSubfield = true
+					break
+				}
+			}
+		}
+		if requiredSubfield || (!f.Optional && !f.Category) {
 			r = append(r, f)
+		} else {
+			o = append(o, f)
 		}
 	}
-
 	return r, o
 }
 
