@@ -408,6 +408,51 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 	fmt.Fprintln(w)
 }
 
+func (c *AppDocsCommand) jsonFormatConfigSourcer(name, ct string, doc *docs.Documentation) {
+	w, err := os.Create(fmt.Sprintf("./docs/%s-%s.json", ct, name))
+	if err != nil {
+		panic(err)
+	}
+
+	var jMap map[string]interface{}
+	jMap = make(map[string]interface{})
+	jMap["name"] = name
+	jMap["type"] = ct
+
+	dets := doc.Details()
+
+	if dets.Description != "" {
+		jMap["description"] = dets.Description
+	}
+
+	if dets.Example != "" {
+		jMap["example"] = strings.TrimSpace(dets.Example)
+	}
+
+	mappers := dets.Mappers
+	jMap["mappers"] = mappers
+
+	required, optional := splitFields(doc.RequestFields())
+	jMap["requiredFields"] = required
+	jMap["optionalFields"] = optional
+
+	use := "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
+	jMap["use"] = use
+
+	if len(doc.Fields()) > 0 {
+		jMap["sourceFieldsHelp"] = "Source Parameters\n" +
+			"The parameters below are used with `waypoint config source-set` to configure\n" +
+			"the behavior this plugin. These are _not_ used in `dynamic` calls. The\n" +
+			"parameters used for `dynamic` are in the previous section.\n"
+
+		required, optional := splitFields(doc.Fields())
+		jMap["requiredSourceFields"] = required
+		jMap["optionalSourceFields"] = optional
+	}
+	t, _ := json.MarshalIndent(jMap, "", "   ")
+	fmt.Fprintf(w, "%s\n", t)
+}
+
 func (c *AppDocsCommand) mdxFormatConfigSourcer(name, ct string, doc *docs.Documentation) {
 	w, err := os.Create(fmt.Sprintf("./website/content/partials/components/%s-%s.mdx", ct, name))
 	if err != nil {
@@ -663,8 +708,7 @@ func (c *AppDocsCommand) builtinJSON() int {
 	for _, pluginDoc := range pluginDocs {
 		switch pluginDoc.pluginType {
 		case "configsourcer":
-			//TODO: Add JSON configSourcer implementation
-			//c.mdxFormatConfigSourcer(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
+			c.jsonFormatConfigSourcer(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
 
 		default:
 			c.jsonFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)

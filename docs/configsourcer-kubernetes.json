@@ -1,0 +1,56 @@
+{
+   "description": "Read configuration values from Kubernetes ConfigMap or Secret resources. Note that to read a config value from a Secret, you must set `secret = true`. Otherwise Waypoint will load a dynamic value from a ConfigMap.",
+   "example": "config {\n  env = {\n    PORT = dynamic(\"kubernetes\", {\n\t  name = \"my-config-map\"\n\t  key = \"port\"\n\t})\n\n    DATABASE_PASSWORD = dynamic(\"kubernetes\", {\n\t  name = \"database-creds\"\n\t  key = \"password\"\n\t  secret = true\n\t})\n  }\n}",
+   "mappers": null,
+   "name": "kubernetes",
+   "optionalFields": [
+      {
+         "Field": "namespace",
+         "Type": "string",
+         "Synopsis": "the namespace to load the ConfigMap or Secret from.",
+         "Summary": "by default this will use the namespace of the running pod. If this config source is used outside of a pod, this will use the namespace from the kubeconfig.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "secret",
+         "Type": "bool",
+         "Synopsis": "This must be set to true to read from a Secret. If it is false we read from a ConfigMap.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "requiredFields": [
+      {
+         "Field": "key",
+         "Type": "string",
+         "Synopsis": "the key in the ConfigMap or Secret to read the value from",
+         "Summary": "ConfigMaps and Secrets store data in key/value format. This specifies the key to read from the resource. If you want multiple values you must specify multiple dynamic values.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "name",
+         "Type": "string",
+         "Synopsis": "the name of the ConfigMap of Secret",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "configsourcer",
+   "use": "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
+}
