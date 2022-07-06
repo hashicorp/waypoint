@@ -43,6 +43,7 @@ type NomadConfig struct {
 	CsiExternalId        string            `hcl:"nomad_csi_external_id,optional"`
 	CsiPluginId          string            `hcl:"nomad_csi_plugin_id,required"`
 	CsiSecrets           map[string]string `hcl:"nomad_csi_secrets,optional"`
+	CsiVolumeName        string            `hcl:"nomad_csi_volume_name,optional"`
 
 	NomadHost string `hcl:"nomad_host,optional"`
 }
@@ -73,13 +74,16 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 		if i.Config.HostVolume != "" {
 			return fmt.Errorf("choose either CSI or host volume, not both")
 		}
+		if i.Config.CsiVolumeName == "" {
+			i.Config.CsiVolumeName = "waypoint-" + opts.Id + "-runner"
+		}
 
 		s = sg.Add("Creating persistent volume")
 		err = nomadutil.CreatePersistentVolume(
 			ctx,
 			client,
 			"waypoint-"+opts.Id+"-runner",
-			"waypoint-"+opts.Id+"-runner",
+			i.Config.CsiVolumeName,
 			i.Config.CsiPluginId,
 			i.Config.CsiVolumeProvider,
 			i.Config.CsiFS,
@@ -283,6 +287,12 @@ func (i *NomadRunnerInstaller) InstallFlags(set *flag.Set) {
 		Name:   "nomad-csi-secrets",
 		Target: &i.Config.CsiSecrets,
 		Usage:  "Credentials for publishing volume for Waypoint runner.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-csi-volume-name",
+		Target: &i.Config.CsiVolumeName,
+		Usage:  "The name of the volume to initialize within the CSI provider.",
 	})
 }
 

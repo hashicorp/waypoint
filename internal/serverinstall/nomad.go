@@ -67,6 +67,7 @@ type nomadConfig struct {
 	csiTopologies        map[string]string `hcl:"nomad_csi_topologies,optional"`
 	csiSecrets           map[string]string `hcl:"nomad_csi_secrets,optional"`
 	csiParams            map[string]string `hcl:"csi_parameters,optional"`
+	csiVolumeName        string            `hcl:"nomad_csi_volume_name,optional"`
 	nomadHost            string            `hcl:"nomad_host,optional"`
 
 	runnerResourcesCPU         string `hcl:"runner_resources_cpu,optional"`
@@ -75,6 +76,7 @@ type nomadConfig struct {
 	runnerCsiVolumeProvider    string `hcl:"runner_csi_volume_provider,optional"`
 	runnerCsiVolumeCapacityMin int64  `hcl:"runner_csi_volume_capacity_min,optional"`
 	runnerCsiVolumeCapacityMax int64  `hcl:"runner_csi_volume_capacity_max,optional"`
+	runnerCsiVolumeName        string `hcl:"runner_csi_volume_name,optional"`
 }
 
 var (
@@ -203,13 +205,16 @@ func (i *NomadInstaller) Install(
 		if i.config.hostVolume != "" {
 			return nil, fmt.Errorf("choose either CSI or host volume, not both")
 		}
+		if i.config.csiVolumeName == "" {
+			i.config.csiVolumeName = "waypoint-server"
+		}
 
 		s.Update("Creating persistent volume")
 		err = nomad.CreatePersistentVolume(
 			ctx,
 			client,
 			"waypoint-server",
-			"waypoint-server",
+			i.config.csiVolumeName,
 			i.config.csiPluginId,
 			i.config.csiVolumeProvider,
 			i.config.csiFS,
@@ -642,6 +647,7 @@ func (i *NomadInstaller) InstallRunner(
 			CsiExternalId:         i.config.csiExternalId,
 			CsiPluginId:           i.config.csiPluginId,
 			CsiSecrets:            i.config.csiSecrets,
+			CsiVolumeName:         i.config.runnerCsiVolumeName,
 			NomadHost:             i.config.nomadHost,
 		},
 	}
@@ -1159,6 +1165,12 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Usage:  "Name of the CSI volume provider to use for the Waypoint runner.",
 	})
 
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-runner-csi-volume-name",
+		Target: &i.config.runnerCsiVolumeName,
+		Usage:  "The name of the volume to initialize for the Waypoint runner within the CSI provider.",
+	})
+
 	// TODO: Update default values for runner - less space is needed for runner compared to server
 	set.Int64Var(&flag.Int64Var{
 		Name:    "nomad-runner-csi-volume-capacity-min",
@@ -1295,6 +1307,12 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Target: &i.config.csiTopologies,
 		Usage:  "Locations from which the Nomad Volume will be accessible.",
 	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-csi-volume-name",
+		Target: &i.config.csiVolumeName,
+		Usage:  "The name of the volume to initialize for Waypoint server within the CSI provider.",
+	})
 }
 
 func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
@@ -1392,6 +1410,12 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Name:   "nomad-runner-csi-volume-provider",
 		Target: &i.config.runnerCsiVolumeProvider,
 		Usage:  "Name of the CSI volume provider to use for the Waypoint runner.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-runner-csi-volume-name",
+		Target: &i.config.runnerCsiVolumeName,
+		Usage:  "The name of the volume to initialize for the Waypoint runner within the CSI provider.",
 	})
 
 	// TODO: Update default values for runner - less space is needed for runner compared to server
