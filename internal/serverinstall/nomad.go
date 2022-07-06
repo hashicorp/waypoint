@@ -844,8 +844,8 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string, upgrade bool) *api.Jo
 
 	// Include services to be registered. Currently configured to happen with Consul by default
 	// One service added for Waypoint UI, and one for Waypoint backend port
-	services := []*api.Service{}
-	if c.serviceProvider == "consul" || (c.consulService && c.serviceProvider == "consul") || (c.consulService && upgrade) {
+	var services []*api.Service
+	if (c.serviceProvider == "consul" && (c.consulService || upgrade)) || (c.consulService && (c.serviceProvider == "consul" || upgrade)) {
 		token := ""
 		if c.consulToken == "" {
 			token = os.Getenv("CONSUL_HTTP_TOKEN")
