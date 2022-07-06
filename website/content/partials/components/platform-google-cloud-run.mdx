@@ -114,24 +114,6 @@ GCP project ID where the Cloud Run instance will be deployed.
 
 - Type: **string**
 
-#### vpc_access (category)
-
-VPCAccess details.
-
-##### vpc_access.connector
-
-Set VPC Access Connector for the Cloud Run instance.
-
-- Type: **string**
-- **Optional**
-
-##### vpc_access.egress
-
-Set VPC egress. Supported values are 'all' and 'private-ranges-only'.
-
-- Type: **string**
-- **Optional**
-
 ### Optional Parameters
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
@@ -169,6 +151,24 @@ Additional environment variables to be added to the Cloud Run instance.
 Is public unauthenticated access allowed for the Cloud Run instance?.
 
 - Type: **bool**
+- **Optional**
+
+#### vpc_access (category)
+
+VPCAccess details.
+
+##### vpc_access.connector
+
+Set VPC Access Connector for the Cloud Run instance.
+
+- Type: **string**
+- **Optional**
+
+##### vpc_access.egress
+
+Set VPC egress. Supported values are 'all' and 'private-ranges-only'.
+
+- Type: **string**
 - **Optional**
 
 ### Output Attributes
