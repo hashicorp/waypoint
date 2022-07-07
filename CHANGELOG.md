@@ -43,6 +43,18 @@ the default runner profile installed. [[GH-3475](https://github.com/hashicorp/wa
 * ui: Updated UI of breadcrumbs and UX to include current page [[GH-3166](https://github.com/hashicorp/waypoint/issues/3166)]
 * upgrade: Warn user if default k8s runner profile has incorrect plugin configs [[GH-3503](https://github.com/hashicorp/waypoint/issues/3503)]
 
+DEPRECATIONS:
+
+* config: More than one app stanza within a waypoint.hcl file is deprecated, and will be removed in 0.10. Please see https://discuss.hashicorp.com/t/deprecating-projects-or-how-i-learned-to-love-apps/40888 for more information.
+
+  Since the initial version of Waypoint, the product has supported the ability to configure multiple apps within a single waypoint.hcl file. This functionality is deprecated and will be removed in the next release. The vast majority of users are not using this functionality and it served mostly as a source of confusion for users. For users who are using a monorepo pattern, we plan to add better workflows for you.
+
+  With a waypoint.hcl now focused on the configuration of a single application, the concept of a project within the Waypoint data model will be removed, moving applications to the top level. This is already how users talk about using Waypoint and we are confident that it will improve the overall understanding of Waypoint as well.
+
+  If you have questions about this change in functionality, we invite you to discuss with us at https://discuss.hashicorp.com/t/deprecating-projects-or-how-i-learned-to-love-apps/40888 or https://github.com/hashicorp/waypoint/issues.
+  
+  [[GH-3466](https://github.com/hashicorp/waypoint/pull/3466)]
+
 BUG FIXES:
 
 * cli: fix git dirty check that was broken for some versions of the git cli [[GH-3432](https://github.com/hashicorp/waypoint/issues/3432)]
