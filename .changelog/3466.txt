@@ -1,5 +1,5 @@
-```release-note:deprecated
-config: More than one app stanza within a waypoint.hcl file is deprecated, and will be removed in 0.10. Please see https://discuss.hashicorp.com/waypoint/xxyyzz for more information.
+```release-note:deprecation
+config: More than one app stanza within a waypoint.hcl file is deprecated, and will be removed in 0.10. Please see https://discuss.hashicorp.com/t/deprecating-projects-or-how-i-learned-to-love-apps/40888 for more information.
 
 Since the initial version of Waypoint, the product has supported the ability to configure multiple apps within a single waypoint.hcl file. This functionality is deprecated and will be removed in the next release. The vast majority of users are not using this functionality and it served mostly as a source of confusion for users. For users who are using a monorepo pattern, we plan to adde better workflows for you.
 
