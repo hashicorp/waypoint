@@ -75,14 +75,14 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 			return fmt.Errorf("choose either CSI or host volume, not both")
 		}
 		if i.Config.CsiVolumeName == "" {
-			i.Config.CsiVolumeName = "waypoint-" + opts.Id + "-runner"
+			i.Config.CsiVolumeName = defaultRunnerName(opts.Id)
 		}
 
 		s = sg.Add("Creating persistent volume")
 		err = nomadutil.CreatePersistentVolume(
 			ctx,
 			client,
-			"waypoint-"+opts.Id+"-runner",
+			defaultRunnerName(opts.Id),
 			i.Config.CsiVolumeName,
 			i.Config.CsiPluginId,
 			i.Config.CsiVolumeProvider,
