@@ -41,6 +41,9 @@ func (i *DockerRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) 
 
 	runnerImage := i.Config.RunnerImage
 	imageRef, err := reference.ParseNormalizedNamed(runnerImage)
+	if err != nil {
+		return err
+	}
 
 	imageList, err := cli.ImageList(ctx, types.ImageListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
