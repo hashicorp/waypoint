@@ -115,7 +115,7 @@ and disable the UI, the command would be:
 - `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task. The default is 600.
 - `-nomad-runner-host-volume=<string>` - Name of the host volume to use for the Waypoint runner.
 - `-nomad-runner-csi-volume-provider=<string>` - Name of the CSI volume provider to use for the Waypoint runner.
-- `-nomad-runner-csi-volume-name=<string>` - The name of the volume to initialize for the Waypoint runner within the CSI provider.
+- `-nomad-runner-csi-volume=<string>` - The name of the volume to initialize for the Waypoint runner within the CSI provider.
 - `-nomad-runner-csi-volume-capacity-min=<int>` - Waypoint runner Nomad CSI volume capacity minimum, in bytes. The default is 1073741824.
 - `-nomad-runner-csi-volume-capacity-max=<int>` - Waypoint runner Nomad CSI volume capacity maximum, in bytes. The default is 2147483648.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
@@ -136,6 +136,6 @@ and disable the UI, the command would be:
 - `-nomad-csi-plugin-id=<string>` - The ID of the CSI plugin that manages the volume, required for volume type 'csi'.
 - `-nomad-csi-external-id=<string>` - The ID of the physical volume from the Nomad storage provider.
 - `-nomad-csi-topologies=<key=value>` - Locations from which the Nomad Volume will be accessible.
-- `-nomad-csi-volume-name=<string>` - The name of the volume to initialize for Waypoint server within the CSI provider.
+- `-nomad-csi-volume=<string>` - The name of the volume to initialize for Waypoint server within the CSI provider. The default is waypoint-server.
 
 @include "commands/server-install_more.mdx"
