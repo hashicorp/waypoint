@@ -205,9 +205,6 @@ func (i *NomadInstaller) Install(
 		if i.config.hostVolume != "" {
 			return nil, fmt.Errorf("choose either CSI or host volume, not both")
 		}
-		if i.config.csiVolumeName == "" {
-			i.config.csiVolumeName = "waypoint-server"
-		}
 
 		s.Update("Creating persistent volume")
 		err = nomad.CreatePersistentVolume(
@@ -1309,9 +1306,10 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:   "nomad-csi-volume",
-		Target: &i.config.csiVolume,
-		Usage:  "The name of the volume to initialize for Waypoint server within the CSI provider.",
+		Name:    "nomad-csi-volume",
+		Target:  &i.config.csiVolume,
+		Usage:   "The name of the volume to initialize for Waypoint server within the CSI provider.",
+		Default: "waypoint-server",
 	})
 }
 
