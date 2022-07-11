@@ -43,7 +43,7 @@ type NomadConfig struct {
 	CsiExternalId        string            `hcl:"nomad_csi_external_id,optional"`
 	CsiPluginId          string            `hcl:"nomad_csi_plugin_id,required"`
 	CsiSecrets           map[string]string `hcl:"nomad_csi_secrets,optional"`
-	CsiVolumeName        string            `hcl:"nomad_csi_volume_name,optional"`
+	CsiVolume            string            `hcl:"nomad_csi_volume,optional"`
 
 	NomadHost string `hcl:"nomad_host,optional"`
 }
@@ -74,8 +74,8 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 		if i.Config.HostVolume != "" {
 			return fmt.Errorf("choose either CSI or host volume, not both")
 		}
-		if i.Config.CsiVolumeName == "" {
-			i.Config.CsiVolumeName = defaultRunnerName(opts.Id)
+		if i.Config.CsiVolume == "" {
+			i.Config.CsiVolume = defaultRunnerName(opts.Id)
 		}
 
 		s = sg.Add("Creating persistent volume")
@@ -83,7 +83,7 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 			ctx,
 			client,
 			defaultRunnerName(opts.Id),
-			i.Config.CsiVolumeName,
+			i.Config.CsiVolume,
 			i.Config.CsiPluginId,
 			i.Config.CsiVolumeProvider,
 			i.Config.CsiFS,
