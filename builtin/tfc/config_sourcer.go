@@ -443,7 +443,7 @@ config {
 
 	doc.SetField(
 		"skip_verify",
-		"Do not validate the TLS cert presented by the Terraform Cloud server.",
+		"Do not validate the TLS cert presented by Terraform Cloud.",
 		docs.Summary(
 			"This is not recommended unless absolutely necessary.",
 		),
