@@ -24,7 +24,7 @@ specified by ID using the '-deployment' flag.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -41,9 +41,9 @@ specified by ID using the '-deployment' flag.
 
 #### Command Options
 
-- `-repeat` - Re-release if deploy is already released.
+- `-repeat` - Re-release if deploy is already released. The default is false.
 - `-deployment=<string>` (`-d`) - Release the specified deployment.
-- `-prune` - Prune old unreleased deployments.
-- `-prune-retain=<int>` - The number of unreleased deployments to keep. If this isn't set or is set to any negative number, then this will default to 1 on the server. If you want to prune all unreleased deployments, set this to 0.
+- `-prune` - Prune old unreleased deployments. The default is true.
+- `-prune-retain=<int>` - The number of unreleased deployments to keep. If this isn't set or is set to any negative number, then this will default to 1 on the server. If you want to prune all unreleased deployments, set this to 0. The default is -1.
 
 @include "commands/release_more.mdx"

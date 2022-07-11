@@ -326,12 +326,15 @@ func (c *RunnerProfileSetCommand) Synopsis() string {
 func (c *RunnerProfileSetCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint runner profile set [OPTIONS]
+
   Create or update a runner profile.
+
   This will register a new runner profile with the given options. If
   a runner profile with the same id already exists, this will update the
   existing runner profile using the fields that are set.
   Waypoint will use a runner profile to spawn containers for
   various kinds of work as needed on the platform requested during any given
   lifecycle operation.
+
 ` + c.Flags().Help())
 }

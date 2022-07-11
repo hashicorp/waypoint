@@ -187,7 +187,7 @@ func (b *Builder) BuildODR(
 
 		err = ocis.SetupEntrypointLayer(refPath, data)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer: %s", err)
+			return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer to host: %q, err: %s", ocis.Upstream, err)
 		}
 	}
 
@@ -516,7 +516,7 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 	doc.Description(`
 Create a Docker image using CloudNative Buildpacks.
 
-**This plugin must either be run via Docker or inside an ondemand runner.**
+**This plugin must either be run via Docker or inside an ondemand runner**.
 `)
 
 	doc.Example(`

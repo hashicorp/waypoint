@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
@@ -14,6 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/hashicorp/waypoint/internal/telemetry/metrics"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/logstream"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -536,6 +538,12 @@ func (s *Service) RunnerJobStream(
 	log.Trace("loaded config sources for job", "total_sourcers", len(cfgSrcs))
 
 	log.Debug("sending job assignment to runner")
+
+	operation := operationString(job.Job)
+	defer func(start time.Time) {
+		metrics.MeasureOperation(ctx, start, operation)
+	}(time.Now())
+	metrics.CountOperation(ctx, operation)
 	// Send the job assignment.
 	//
 	// If this has an error, we continue to accumulate the error until
@@ -873,4 +881,51 @@ func (s *Service) runnerVerifyToken(
 	}
 
 	return nil
+}
+
+func operationString(job *pb.Job) string {
+	// Types that are assignable to Operation:
+	switch job.Operation.(type) {
+	case *pb.Job_Noop_:
+		return "noop"
+	case *pb.Job_Build:
+		return "build"
+	case *pb.Job_Push:
+		return "push"
+	case *pb.Job_Deploy:
+		return "deploy"
+	case *pb.Job_Destroy:
+		return "destroy"
+	case *pb.Job_Release:
+		return "release"
+	case *pb.Job_Validate:
+		return "validate"
+	case *pb.Job_Auth:
+		return "auth"
+	case *pb.Job_Docs:
+		return "docs"
+	case *pb.Job_ConfigSync:
+		return "config_sync"
+	case *pb.Job_Exec:
+		return "exec"
+	case *pb.Job_Up:
+		return "up"
+	case *pb.Job_Logs:
+		return "logs"
+	case *pb.Job_QueueProject:
+		return "queue_project"
+	case *pb.Job_Poll:
+		return "poll"
+	case *pb.Job_StatusReport:
+		return "status_report"
+	case *pb.Job_StartTask:
+		return "start_task"
+	case *pb.Job_StopTask:
+		return "stop_task"
+	case *pb.Job_WatchTask:
+		return "watch_task"
+	case *pb.Job_Init:
+		return "init"
+	}
+	return "unknown"
 }

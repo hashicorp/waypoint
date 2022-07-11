@@ -271,7 +271,8 @@ func (c *ServerRunCommand) Run(args []string) int {
 	}
 	if httpInsecureLn != nil {
 		values = append(values, terminal.NamedValue{
-			Name: "HTTP Address (Insecure)", Value: httpInsecureLn.Addr().String()})
+			Name: "HTTP Address (Insecure)", Value: httpInsecureLn.Addr().String(),
+		})
 	}
 	if auth {
 		values = append(values, terminal.NamedValue{Name: "Auth Required", Value: "yes"})
@@ -374,7 +375,9 @@ This command will bootstrap the server and setup a CLI context.
 			telemetryOptions = append(telemetryOptions, telemetry.WithDatadogExporter(
 				datadog.Options{
 					TraceAddr: c.flagTelemetryDatadogTraceAddr,
+					StatsAddr: c.flagTelemetryDatadogTraceAddr,
 					Service:   "waypoint",
+					Namespace: "waypoint",
 				},
 			))
 		}

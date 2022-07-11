@@ -25,7 +25,7 @@ func TestListInstances(t *testing.T, factory Factory) {
 		require := require.New(t)
 
 		// Create our server
-		_, client := factory(t)
+		client, _ := factory(t)
 
 		// Create a deployment
 		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -78,7 +78,7 @@ func TestListInstances(t *testing.T, factory Factory) {
 		require := require.New(t)
 
 		// Create our server
-		_, client := factory(t)
+		client, _ := factory(t)
 
 		// Create a deployment
 		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{

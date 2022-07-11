@@ -219,6 +219,14 @@
     "path": "runner-inspect"
   },
   {
+    "title": "runner install",
+    "path": "runner-install"
+  },
+  {
+    "title": "runner uninstall",
+    "path": "runner-uninstall"
+  },
+  {
     "title": "runner adopt",
     "path": "runner-adopt"
   },
@@ -233,6 +241,10 @@
   {
     "title": "runner token",
     "path": "runner-token"
+  },
+  {
+    "title": "runner profile delete",
+    "path": "runner-profile-delete"
   },
   {
     "title": "runner profile list",

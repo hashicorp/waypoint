@@ -1,0 +1,69 @@
+---
+layout: docs
+page_title: Version 0.3.0 - Upgrade Guide
+description: |-
+  This upgrade guide describes any considerations for upgrading to Waypoint 0.3.0.
+---
+
+# Upgrading to Waypoint 0.3.0 from 0.2.x
+
+Waypoint 0.2.x can be upgraded to Waypoint 0.3.0 using a [standard upgrade](/docs/upgrading#standard-upgrade).
+
+## Breaking Changes
+
+**[v0.3.0](https://github.com/hashicorp/waypoint/releases/tag/v0.3.0)**
+
+- ui: dropped support for Internet Explorer
+
+**[v0.3.2](https://github.com/hashicorp/waypoint/releases/tag/v0.3.2)**
+
+- plugin/k8s: `scratch_path` now uses an array of strings instead of a string, allowing you to specify multiple directories to be mounted as emptyDir
+
+## Other Considerations
+
+### Server Image
+
+`waypoint install` uses the `hashicorp/waypoint:latest` container image for
+Kubernetes, Nomad, and Docker. When upgrading, your platform may require
+you to pull the latest image instead of using a cache.
+
+Kubernetes and Nomad both specify an "always pull" policy for `:latest` images
+so restarting the Deployment or Job should pull the latest released version.
+Docker may require an explicit `docker pull` and container recreate.
+
+#### Verifying the Server Version with the UI
+
+You can verify the server version by loading the UI and looking at the footer.
+You should see a version starting with `v0.3`. If you see an earlier version,
+your platform may be using an old cached image.
+
+#### Verifying the Server Version with the CLI
+
+For 0.3.1 and forward, you can verify both the CLI version and server version by
+running:
+
+```shell-session
+$ waypoint version
+CLI: v0.3.1 (622f37bd1)
+Server: v0.3.1
+```
+
+For 0.3.0, you can verify the server version using the following CLI command and inspecting
+the log output in the CLI. We didn't have a better
+way prior to v0.3.1 to describe the server version. Therefore, we
+try to exchange a purposely invalid token with the verbose flag (`-v`) in order
+to see the server version advertised.
+
+```shell-session
+$ ./waypoint token exchange abcd1234 -v
+2020-12-10T10:48:33.951-0800 [INFO]  waypoint: waypoint version: full_string="Waypoint v0.3.0 (5db76632)" version=v0.3.0 prerelease= metadata= revision=5db76632
+2020-12-10T10:48:33.951-0800 [INFO]  waypoint.server: attempting to source credentials and connect
+2020-12-10T10:48:33.980-0800 [INFO]  waypoint: server version info: version=v0.3.0-177-ed413ab93 api_min=1 api_current=1 entrypoint_min=1 entrypoint_current=1
+2020-12-10T10:48:33.980-0800 [INFO]  waypoint: negotiated api version: version=1
+! An invite token is required.
+  Run `waypoint token invite` to generate an invite token.
+```
+
+In this output, find the line starting with `server version info` and verify
+that the `version` key has a version starting with `v0.3`. If it starts
+with an older version, your platform may be caching the Waypoint Docker image.

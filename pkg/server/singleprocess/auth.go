@@ -610,6 +610,9 @@ func (s *Service) GenerateInviteToken(
 	log := hclog.FromContext(ctx)
 
 	currentUser := s.userFromContext(ctx)
+	if currentUser == nil {
+		return nil, status.Errorf(codes.Unauthenticated, "current user is not authenticated")
+	}
 
 	// Old behavior, if we have the entrypoint set, we convert that to
 	// a request in the new (WP 0.5+) style. We do this right away so the rest of the

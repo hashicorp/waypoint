@@ -196,13 +196,25 @@ description: "%s"
 					}
 				}
 
+				str := fmt.Sprintf("- `-%s` - %s", name, f.Usage)
 				if len(f.Aliases) > 0 {
 					aliases := strings.Join(f.Aliases, "`, `-")
 
-					fmt.Fprintf(w, "- `-%s` (`-%s`) - %s\n", name, aliases, f.Usage)
-				} else {
-					fmt.Fprintf(w, "- `-%s` - %s\n", name, f.Usage)
+					str = fmt.Sprintf("- `-%s` (`-%s`) - %s", name, aliases, f.Usage)
 				}
+
+				// Add a period at the end of the doc sentence if the field didn't add
+				// one already.
+				if !strings.HasSuffix(str, ".") {
+					str += "."
+				}
+
+				if f.Default != "" {
+					str = fmt.Sprintf("%s The default is %s.", str, f.Default)
+				}
+				str += "\n"
+
+				fmt.Fprint(w, str)
 			})
 		})
 	} else {

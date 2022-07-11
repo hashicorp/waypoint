@@ -1,0 +1,3 @@
+```release-note:bug
+cli: fix panic when running status report on app with zero prior deployments
+```

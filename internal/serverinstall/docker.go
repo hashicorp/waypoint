@@ -3,8 +3,11 @@ package serverinstall
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"os"
 	"time"
+
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
@@ -49,7 +52,7 @@ func (i *DockerInstaller) Install(
 ) (*InstallResults, error) {
 	if i.config.odrImage == "" {
 		var err error
-		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
 		if err != nil {
 			return nil, err
 		}
@@ -152,7 +155,7 @@ func (i *DockerInstaller) Install(
 		return nil, err
 	}
 
-	if len(imageList) == 0 || i.config.serverImage == defaultServerImage {
+	if len(imageList) == 0 || i.config.serverImage == installutil.DefaultServerImage {
 		s.Update("Pulling image: %s", i.config.serverImage)
 
 		resp, err := cli.ImagePull(ctx, reference.FamiliarString(imageRef), types.ImagePullOptions{})
@@ -291,7 +294,7 @@ func (i *DockerInstaller) Upgrade(
 ) {
 	if i.config.odrImage == "" {
 		var err error
-		i.config.odrImage, err = defaultODRImage(i.config.serverImage)
+		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
 		if err != nil {
 			return nil, err
 		}
@@ -370,7 +373,7 @@ func (i *DockerInstaller) Upgrade(
 		return nil, err
 	}
 
-	if len(imageList) == 0 || i.config.serverImage == defaultServerImage {
+	if len(imageList) == 0 || i.config.serverImage == installutil.DefaultServerImage {
 		s.Done()
 		s = sg.Add("Pulling image: %s", i.config.serverImage)
 
@@ -623,83 +626,16 @@ func (i *DockerInstaller) Uninstall(
 // InstallRunner implements Installer by starting a single runner container.
 func (i *DockerInstaller) InstallRunner(
 	ctx context.Context,
-	opts *InstallRunnerOpts,
+	opts *runnerinstall.InstallOpts,
 ) error {
-	ui := opts.UI
-
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
-	s := sg.Add("Initializing Docker client...")
-	defer func() { s.Abort() }()
-
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	runnerInstaller := runnerinstall.DockerRunnerInstaller{Config: runnerinstall.DockerConfig{
+		RunnerImage: i.config.serverImage,
+		Network:     "waypoint",
+	}}
+	err := runnerInstaller.Install(ctx, opts)
 	if err != nil {
 		return err
 	}
-	cli.NegotiateAPIVersion(ctx)
-
-	s.Update("Checking for an existing runner...")
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
-		All: true, // include stopped containers
-		Filters: filters.NewArgs(filters.KeyValuePair{
-			Key:   "label",
-			Value: "waypoint-type=runner",
-		}),
-	})
-	if err != nil {
-		return err
-	}
-	if len(containers) > 0 {
-		s.Update("Detected existing Waypoint runner.")
-		s.Status(terminal.StatusWarn)
-		s.Done()
-		return nil
-	}
-
-	// The key thing in the container creation below is that the environment
-	// variables are set to the advertised address env vars which will
-	// allow our runner to connect.
-	cr, err := cli.ContainerCreate(ctx, &container.Config{
-		AttachStdout: true,
-		AttachStderr: true,
-		AttachStdin:  true,
-		OpenStdin:    true,
-		StdinOnce:    true,
-		User:         "root",
-		Image:        i.config.serverImage,
-		Env:          opts.AdvertiseClient.Env(),
-		Cmd:          []string{"runner", "agent", "-vv"},
-		Labels: map[string]string{
-			"waypoint-type": "runner",
-		},
-	}, &container.HostConfig{
-		Privileged: true,
-		CapAdd:     []string{"CAP_DAC_OVERRIDE"},
-		Binds:      []string{"/var/run/docker.sock:/var/run/docker.sock"},
-		// These security options are required for the runner so that
-		// Docker daemonless image building works properly.
-		SecurityOpt: []string{
-			"seccomp=unconfined",
-			"apparmor=unconfined",
-		},
-	}, &network.NetworkingConfig{
-		EndpointsConfig: map[string]*network.EndpointSettings{
-			"waypoint": {},
-		},
-	}, nil, "waypoint-runner")
-	if err != nil {
-		return err
-	}
-
-	err = cli.ContainerStart(ctx, cr.ID, types.ContainerStartOptions{})
-	if err != nil {
-		return err
-	}
-
-	s.Update("Waypoint runner installed and started!")
-	s.Done()
-
 	return nil
 }
 
@@ -715,66 +651,16 @@ func (i *DockerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 // UninstallRunner implements Installer.
 func (i *DockerInstaller) UninstallRunner(
 	ctx context.Context,
-	opts *InstallOpts,
+	opts *runnerinstall.InstallOpts,
 ) error {
-	sg := opts.UI.StepGroup()
-	defer sg.Wait()
+	runnerInstaller := runnerinstall.DockerRunnerInstaller{
+		Config: runnerinstall.DockerConfig{},
+	}
 
-	s := sg.Add("Initializing Docker client...")
-	defer func() { s.Abort() }()
-
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	err := runnerInstaller.Uninstall(ctx, opts)
 	if err != nil {
 		return err
 	}
-	defer cli.Close()
-	cli.NegotiateAPIVersion(ctx)
-
-	// Find and delete any runners. There could be zero, 1, or more.
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
-		All: true, // include stopped containers
-		Filters: filters.NewArgs(filters.KeyValuePair{
-			Key:   "label",
-			Value: containerKey + "=" + containerValueRunner,
-		}),
-	})
-	if err != nil {
-		return err
-	}
-
-	// If there are no containers found, we do nothing.
-	if len(containers) == 0 {
-		s.Update("No runners found to uninstall.")
-		s.Done()
-		return nil
-	}
-
-	// It is not an error for there to be zero or more than one containers
-	// since runners are optional.
-	s.Update("Uninstalling runners...")
-
-	// There should only be one but let's just delete any that exist.
-	for _, c := range containers {
-		containerId := c.ID
-
-		s.Update("Stopping container: %s", containerId)
-
-		// Stop the container gracefully, respecting the Engine's default timeout.
-		if err := cli.ContainerStop(ctx, containerId, nil); err != nil {
-			return err
-		}
-
-		removeOptions := types.ContainerRemoveOptions{
-			RemoveVolumes: true,
-			Force:         true,
-		}
-		if err := cli.ContainerRemove(ctx, containerId, removeOptions); err != nil {
-			return err
-		}
-	}
-	s.Update("%d runner(s) uninstalled", len(containers))
-	s.Done()
-
 	return nil
 }
 
@@ -810,7 +696,7 @@ func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 		Name:    "docker-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: defaultServerImage,
+		Default: installutil.DefaultServerImage,
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -826,7 +712,7 @@ func (i *DockerInstaller) UpgradeFlags(set *flag.Set) {
 		Name:    "docker-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: defaultServerImage,
+		Default: installutil.DefaultServerImage,
 	})
 
 	set.StringVar(&flag.StringVar{

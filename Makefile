@@ -62,13 +62,15 @@ docker/server: docker/server-only docker/odr
 
 .PHONY: docker/server-only
 docker/server-only:
-	DOCKER_BUILDKIT=1 docker build \
+	DOCKER_BUILDKIT=1 docker buildx build \
+					--platform linux/amd64 \
 					-t waypoint:dev \
 					.
 
 .PHONY: docker/odr
 docker/odr:
-	DOCKER_BUILDKIT=1 docker build --target odr \
+	DOCKER_BUILDKIT=1 docker buildx build --target odr \
+					--platform linux/amd64 \
 					-t waypoint-odr:dev \
 					.
 

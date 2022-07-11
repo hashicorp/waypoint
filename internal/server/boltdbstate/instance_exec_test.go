@@ -27,7 +27,7 @@ func TestInstanceExecCreateByTargetedInstance_disabled(t *testing.T) {
 
 	{
 		// Create an instance exec targetting the specific instance
-		rec := &InstanceExec{
+		rec := &serverstate.InstanceExec{
 			InstanceId: instance.Id,
 		}
 		err := s.InstanceExecCreateByTargetedInstance(instance.Id, rec)
@@ -48,7 +48,7 @@ func TestInstanceExecCreateByDeploymentId_invalidDeployment(t *testing.T) {
 	defer s.Close()
 
 	// Create an instance
-	rec := &InstanceExec{}
+	rec := &serverstate.InstanceExec{}
 	err := s.InstanceExecCreateByDeployment("nope", rec)
 	require.Error(err)
 	require.Equal(codes.ResourceExhausted, status.Code(err))
@@ -67,7 +67,7 @@ func TestInstanceExecCreateByDeploymentId_allDisabled(t *testing.T) {
 
 	{
 		// Create an instance exec targetting the specific instance
-		rec := &InstanceExec{}
+		rec := &serverstate.InstanceExec{}
 		err := s.InstanceExecCreateByDeployment(instance.DeploymentId, rec)
 		require.Error(err)
 		require.Equal(codes.ResourceExhausted, status.Code(err))
@@ -91,7 +91,7 @@ func TestInstanceExecCreateByDeploymentId_valid(t *testing.T) {
 
 	{
 		// Create an instance exec
-		rec := &InstanceExec{}
+		rec := &serverstate.InstanceExec{}
 		require.NoError(s.InstanceExecCreateByDeployment(instance.DeploymentId, rec))
 		require.NotEmpty(rec.Id)
 		require.Equal(instance.Id, rec.InstanceId)
@@ -111,7 +111,7 @@ func TestInstanceExecCreateByDeploymentId_valid(t *testing.T) {
 
 	{
 		// Next one shuld get the same instance since its all we have
-		rec := &InstanceExec{}
+		rec := &serverstate.InstanceExec{}
 		require.NoError(s.InstanceExecCreateByDeployment(instance.DeploymentId, rec))
 		require.NotEmpty(rec.Id)
 		require.Equal(instance.Id, rec.InstanceId)
@@ -130,7 +130,7 @@ func TestInstanceExecCreateByDeploymentId_valid(t *testing.T) {
 
 	{
 		// Next one shuld get the B because its less loaded
-		rec := &InstanceExec{}
+		rec := &serverstate.InstanceExec{}
 		require.NoError(s.InstanceExecCreateByDeployment(instance.DeploymentId, rec))
 		require.NotEmpty(rec.Id)
 		require.Equal(instance.Id, rec.InstanceId)
@@ -146,7 +146,7 @@ func TestInstanceExecCreateByDeploymentId_valid(t *testing.T) {
 		require.NoError(s.InstanceCreate(instance))
 
 		// Should not get C
-		rec := &InstanceExec{}
+		rec := &serverstate.InstanceExec{}
 		require.NoError(s.InstanceExecCreateByDeployment(instance.DeploymentId, rec))
 		require.NotEmpty(rec.Id)
 		require.NotEqual("C", rec.InstanceId)
@@ -157,7 +157,7 @@ func TestInstanceExecCreateByDeploymentId_valid(t *testing.T) {
 
 	{
 		// Create an instance exec targetting the specific instance
-		rec := &InstanceExec{
+		rec := &serverstate.InstanceExec{
 			InstanceId: instance.Id,
 		}
 		require.NoError(s.InstanceExecCreateByTargetedInstance(instance.Id, rec))
@@ -196,7 +196,7 @@ func TestInstanceExecCreateByDeploymentId_longrunningonly(t *testing.T) {
 	// We'll create 3 instance exec and make sure they all go to instance only
 	for i := 0; i < 3; i++ {
 		// Create an instance exec
-		rec := &InstanceExec{}
+		rec := &serverstate.InstanceExec{}
 		require.NoError(s.InstanceExecCreateByDeployment(instance.DeploymentId, rec))
 		require.NotEmpty(rec.Id)
 		require.Equal(instance.Id, rec.InstanceId)
@@ -229,7 +229,7 @@ func TestInstanceExecCreateForVirtualInstance(t *testing.T) {
 
 	{
 		// Create an instance exec
-		rec := &InstanceExec{}
+		rec := &serverstate.InstanceExec{}
 		require.NoError(s.InstanceExecCreateForVirtualInstance(ctx, instId, rec))
 		require.NotEmpty(rec.Id)
 		require.Equal(instId, rec.InstanceId)

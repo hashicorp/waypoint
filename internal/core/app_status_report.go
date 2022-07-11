@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/opaqueany"
 	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -77,7 +78,7 @@ func (a *App) DeploymentStatusReport(
 	// deployment. If there is a non-nil error, just return immediately.
 	report, rErr := a.statusReport(ctx, "deploy_statusreport", c, deployTarget, lastResp)
 	if rErr != nil {
-		return report, rErr
+		return report, errors.Wrapf(rErr, "failed generating status report")
 	}
 
 	// Currently the statusReport() call above will only return a nil report if
@@ -195,7 +196,7 @@ func (a *App) statusReport(
 		Last:      last,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed performing status report op")
 	}
 
 	reportResp, ok := msg.(*pb.StatusReport)
@@ -347,7 +348,7 @@ func (op *statusReportOperation) Upsert(
 		StatusReport: msg.(*pb.StatusReport),
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed upserting status report operation")
 	}
 
 	return resp.StatusReport, nil
