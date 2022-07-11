@@ -82,6 +82,6 @@ unless the '-skip-adopt' flag is set to true.
 - `-nomad-csi-topologies=<key=value>` - Locations from which the Nomad Volume will be accessible.
 - `-nomad-csi-external-id=<string>` - The ID of the physical volume from the Nomad storage provider.
 - `-nomad-csi-secrets=<key=value>` - Credentials for publishing volume for Waypoint runner.
-- `-nomad-csi-volume-name=<string>` - The name of the volume to initialize within the CSI provider.
+- `-nomad-csi-volume=<string>` - The name of the volume to initialize within the CSI provider. The default is waypoint-<runner_id>-runner.
 
 @include "commands/runner-install_more.mdx"
