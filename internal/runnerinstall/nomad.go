@@ -292,7 +292,7 @@ func (i *NomadRunnerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:   "nomad-csi-volume",
 		Target: &i.Config.CsiVolume,
-		Usage:  fmt.Sprintf("The name of the volume to initialize within the CSI provider. The default is %s.", defaultRunnerName("<runner_id>")),
+		Usage:  fmt.Sprintf("The name of the volume to initialize within the CSI provider. The default is %s.", defaultRunnerName("[runner_id]")),
 	})
 }
 
