@@ -339,10 +339,22 @@ func (i *NomadInstaller) Upgrade(
 	if i.config.serviceProvider == "none" && !i.config.consulService {
 		// By default, we don't auto-enable the consul service because prior to Waypoint
 		// version 0.6.2, we did not enable it by default.
-		sw := sg.Add("Service discovery is disabled for the Waypoint Nomad job. If you had previously enabled " +
-			"it in the last installation, please stop this upgrade and re-run with -nomad-service-provider flag.")
-		sw.Status(terminal.StatusWarn)
-		sw.Done()
+		proceed, err := opts.UI.Input(&terminal.Input{
+			Prompt: "Service discovery is disabled for the Waypoint Nomad job. If you had previously enabled " +
+				"it in the last installation, please stop this upgrade and re-run with the -nomad-service-provider flag. " +
+				"Otherwise, enter 'yes' to continue the upgrade: ",
+			Style:  "",
+			Secret: false,
+		})
+		if err != nil {
+			opts.UI.Output(
+				"Error upgrading server: %s",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+		} else if strings.ToLower(proceed) != "yes" {
+			return nil, err
+		}
 	}
 
 	s := sg.Add("Initializing Nomad client...")
