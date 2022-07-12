@@ -38,6 +38,8 @@ type nomadConfig struct {
 	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
 
 	serviceProvider          string   `hcl:"service_provider,optional"`
+	serviceUITags            []string `hcl:"service_ui_tags:optional"`
+	serviceBackendTags       []string `hcl:"service_backend_tags:optional"`
 	consulService            bool     `hcl:"consul_service,optional"`
 	consulServiceUITags      []string `hcl:"consul_service_ui_tags:optional"`
 	consulServiceBackendTags []string `hcl:"consul_service_backend_tags:optional"`
@@ -93,13 +95,13 @@ var (
 	defaultCSIVolumeMountFS = "xfs"
 
 	// Defaults to use for setting up Consul
-	defaultConsulServiceTag       = "waypoint"
+	defaultServiceTag             = "waypoint"
 	defaultConsulDatacenter       = "dc1"
 	defaultConsulDomain           = "consul"
 	waypointBackendServiceName    = "waypoint-server"
 	waypointUIServiceName         = "waypoint-ui"
 	defaultWaypointConsulHostname = fmt.Sprintf("%s.%s.service.%s.%s",
-		defaultConsulServiceTag, waypointBackendServiceName, defaultConsulDatacenter, defaultConsulDomain)
+		defaultServiceTag, waypointBackendServiceName, defaultConsulDatacenter, defaultConsulDomain)
 
 	defaultNomadHost = "http://localhost:4646"
 )
@@ -853,17 +855,30 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string, upgrade bool) *api.Jo
 			token = c.consulToken
 		}
 		job.ConsulToken = &token
+
+		// if the user explicitly set tags with the Consul flags, we use those
+		// otherwise, use platform-agnostic tag flags (for backwards-compatibility)
+		uiTags := c.consulServiceUITags
+		if len(uiTags) == 0 {
+			uiTags = c.serviceUITags
+		}
+
+		backendTags := c.consulServiceBackendTags
+		if len(backendTags) == 0 {
+			backendTags = c.serviceUITags
+		}
+
 		services = []*api.Service{
 			{
 				Name:      waypointUIServiceName,
 				PortLabel: "ui",
-				Tags:      c.consulServiceUITags,
+				Tags:      uiTags,
 				Provider:  "consul",
 			},
 			{
 				Name:      waypointBackendServiceName,
 				PortLabel: "server",
-				Tags:      c.consulServiceBackendTags,
+				Tags:      backendTags,
 				Provider:  "consul",
 			},
 		}
@@ -872,13 +887,13 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string, upgrade bool) *api.Jo
 			{
 				Name:      waypointUIServiceName,
 				PortLabel: "ui",
-				Tags:      c.consulServiceUITags,
+				Tags:      c.serviceUITags,
 				Provider:  "nomad",
 			},
 			{
 				Name:      waypointBackendServiceName,
 				PortLabel: "server",
-				Tags:      c.consulServiceBackendTags,
+				Tags:      c.serviceBackendTags,
 				Provider:  "nomad",
 			},
 		}
@@ -1243,6 +1258,20 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Default: "consul", //default to consul for fresh installs
 	})
 
+	set.StringSliceVar(&flag.StringSliceVar{
+		Name:    "nomad-service-ui-tags",
+		Target:  &i.config.serviceUITags,
+		Usage:   "Tags for the Waypoint UI service.",
+		Default: []string{defaultServiceTag},
+	})
+
+	set.StringSliceVar(&flag.StringSliceVar{
+		Name:    "nomad-service-backend-tags",
+		Target:  &i.config.serviceBackendTags,
+		Usage:   "Tags for the Waypoint backend service.",
+		Default: []string{defaultServiceTag},
+	})
+
 	set.BoolVar(&flag.BoolVar{
 		Name:    "nomad-consul-service",
 		Target:  &i.config.consulService,
@@ -1259,10 +1288,9 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
-		Name:    "nomad-consul-service-ui-tags",
-		Target:  &i.config.consulServiceUITags,
-		Usage:   "Tags for the Waypoint UI service generated in Consul.",
-		Default: []string{defaultConsulServiceTag},
+		Name:   "nomad-consul-service-ui-tags",
+		Target: &i.config.consulServiceUITags,
+		Usage:  "Tags for the Waypoint UI service generated in Consul.",
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
@@ -1270,7 +1298,6 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Target: &i.config.consulServiceBackendTags,
 		Usage: "Tags for the Waypoint backend service generated in Consul. The 'first' tag " +
 			"will be used when crafting the Consul DNS hostname for accessing Waypoint.",
-		Default: []string{defaultConsulServiceTag},
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -1505,6 +1532,20 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Default: "none", // default none on upgrades, make sure people opt-in to service discovery
 	})
 
+	set.StringSliceVar(&flag.StringSliceVar{
+		Name:    "nomad-service-ui-tags",
+		Target:  &i.config.serviceUITags,
+		Usage:   "Tags for the Waypoint UI service.",
+		Default: []string{defaultServiceTag},
+	})
+
+	set.StringSliceVar(&flag.StringSliceVar{
+		Name:    "nomad-service-backend-tags",
+		Target:  &i.config.serviceBackendTags,
+		Usage:   "Tags for the Waypoint backend service.",
+		Default: []string{defaultServiceTag},
+	})
+
 	set.BoolVar(&flag.BoolVar{
 		Name:    "nomad-consul-service",
 		Target:  &i.config.consulService,
@@ -1521,10 +1562,9 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
-		Name:    "nomad-consul-service-ui-tags",
-		Target:  &i.config.consulServiceUITags,
-		Usage:   "Tags for the Waypoint UI service generated in Consul.",
-		Default: []string{defaultConsulServiceTag},
+		Name:   "nomad-consul-service-ui-tags",
+		Target: &i.config.consulServiceUITags,
+		Usage:  "Tags for the Waypoint UI service generated in Consul.",
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
@@ -1532,7 +1572,6 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Target: &i.config.consulServiceBackendTags,
 		Usage: "Tags for the Waypoint backend service generated in Consul. The 'first' tag " +
 			"will be used when crafting the Consul DNS hostname for accessing Waypoint.",
-		Default: []string{defaultConsulServiceTag},
 	})
 
 	set.StringVar(&flag.StringVar{
