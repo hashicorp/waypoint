@@ -285,27 +285,10 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	}
 	var foundService *ecs.Service
 	var services *ecs.DescribeServicesOutput
-	for _, serviceName := range serviceNames {
-		ss, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
-			Cluster:  aws.String(i.Config.Cluster),
-			Services: []*string{aws.String(serviceName)},
-		})
-		services = ss
-		if err != nil {
-			s.Update("Could not get list of ECS services")
-			return err
-		}
-		if ss != nil && len(ss.Services) > 0 {
-			foundService = ss.Services[0]
-			if len(ss.Services) != 1 {
-				log.Debug("Unable to uninstall runner; expected 1 runner service named %s, found %d", serviceName, len(ss.Services))
-				return fmt.Errorf("expected 1 runner service named %s, found %d", serviceName, len(ss.Services))
-			}
-			break
-		}
-	}
-	if len(services.Failures) > 0 {
-		return fmt.Errorf("could not find runner named %q or %q, service is %q", serviceNames[0], serviceNames[1], *services.Failures[0].Reason)
+	services, foundService, err = installutil.FindServices(serviceNames, ecsSvc, i.Config.Cluster, services, foundService, log)
+	if err != nil {
+		s.Update("Could not get list of ECS services")
+		return err
 	}
 	clusterArn := foundService.ClusterArn
 
