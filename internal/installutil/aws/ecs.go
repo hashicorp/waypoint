@@ -704,14 +704,14 @@ func FindServices(serviceNames []string, ecsSvc *ecs.ECS, cluster string, servic
 		if ss != nil && len(ss.Services) > 0 {
 			foundService = ss.Services[0]
 			if len(ss.Services) != 1 {
-				log.Debug("Unable to uninstall runner; expected 1 runner service named %s, found %d", serviceName, len(ss.Services))
-				return nil, nil, fmt.Errorf("expected 1 runner service named %s, found %d", serviceName, len(ss.Services))
+				log.Debug("Unable to uninstall runner; expected 1 service named %s, found %d", serviceName, len(ss.Services))
+				return nil, nil, fmt.Errorf("expected 1 service named %s, found %d", serviceName, len(ss.Services))
 			}
 			break
 		}
 	}
 	if len(services.Failures) > 0 {
-		return nil, nil, fmt.Errorf("could not find runner named %q or %q, service is %q", serviceNames[0], serviceNames[1], *services.Failures[0].Reason)
+		return nil, nil, fmt.Errorf("could not find service named %q or %q, service is %q", serviceNames[0], serviceNames[1], *services.Failures[0].Reason)
 	}
 	return services, foundService, nil
 }
