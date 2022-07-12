@@ -251,6 +251,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	runnerOpts := &runnerinstall.InstallOpts{
 		Log: log,
 		UI:  c.ui,
+		Id:  "static",
 	}
 
 	// Upgrade in place
