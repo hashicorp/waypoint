@@ -74,6 +74,10 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 	)
 }
 
+type nomadClient struct {
+	NomadClient *api.Client
+}
+
 // getNomadJobspecClient is a value provider for our resource manager and provides
 // the client connection used by resources to interact with Nomad.
 func (p *Platform) getNomadClient() (*nomadClient, error) {
