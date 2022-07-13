@@ -947,7 +947,7 @@ func (i *ECSInstaller) HasRunner(
 	}
 	serviceNames := []string{
 		defaultRunnerTagName,
-		awsinstallutil.DefaultStaticRunnerName,
+		installutil.DefaultRunnerName("static"),
 	}
 	ecsSvc := ecs.New(sess)
 	var foundService *ecs.Service
