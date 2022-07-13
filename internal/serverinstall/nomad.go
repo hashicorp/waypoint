@@ -242,55 +242,7 @@ func (i *NomadInstaller) Install(
 	// than the direct static IP for the CLI context and server config. Otherwise
 	// if Nomad restarts the server allocation, a new IP will be assigned and any
 	// configured clients will be invalid
-	if i.config.serviceProvider == "consul" && i.config.consulService {
-		s.Update("Configuring the server context to use Consul DNS hostname")
-		if i.config.consulDatacenter == "" {
-			i.config.consulDatacenter = defaultConsulDatacenter
-		}
-		if i.config.consulDomain == "" {
-			i.config.consulDomain = defaultConsulDomain
-		}
-
-		grpcPort, _ := strconv.Atoi(defaultGrpcPort)
-		httpPort, _ := strconv.Atoi(defaultHttpPort)
-
-		if i.config.consulServiceHostname == "" {
-			addr.Addr = fmt.Sprintf("%s.service.%s.%s:%d",
-				waypointBackendServiceName, i.config.consulDatacenter, i.config.consulDomain, grpcPort)
-			httpAddr = fmt.Sprintf("%s.service.%s.%s:%d",
-				waypointUIServiceName, i.config.consulDatacenter, i.config.consulDomain, httpPort)
-		} else {
-			addr.Addr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, grpcPort)
-			httpAddr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, httpPort)
-		}
-	} else if i.config.serviceProvider == "nomad" {
-		backendService, _, err := client.Services().Get(waypointBackendServiceName, nil)
-		if err != nil {
-			return nil, err
-		}
-
-		uiService, _, err := client.Services().Get(waypointUIServiceName, nil)
-		if err != nil {
-			return nil, err
-		}
-
-		httpAddr = fmt.Sprintf("%s:%d", uiService[0].Address, uiService[0].Port)
-		addr.Addr = fmt.Sprintf("%s:%d", backendService[0].Address, backendService[0].Port)
-	} else {
-		s.Update("Configuring the server context to use the static IP address from the Nomad allocation")
-
-		serverAddr, err := getAddrFromAllocID(allocID, client)
-		if err != nil {
-			return nil, err
-		}
-		hAddr, err := getHTTPFromAllocID(allocID, client)
-		if err != nil {
-			return nil, err
-		}
-
-		httpAddr = hAddr
-		addr.Addr = serverAddr
-	}
+	httpAddr, addr.Addr, err = i.getWaypointAddress(client, allocID)
 
 	clicfg = clicontext.Config{
 		Server: serverconfig.Client{
@@ -323,6 +275,52 @@ func (i *NomadInstaller) Install(
 		AdvertiseAddr: &addr,
 		HTTPAddr:      httpAddr,
 	}, nil
+}
+
+func (i *NomadInstaller) getWaypointAddress(client *api.Client, allocID string) (string, string, error) {
+	if i.config.serviceProvider == "consul" && i.config.consulService {
+		if i.config.consulDatacenter == "" {
+			i.config.consulDatacenter = defaultConsulDatacenter
+		}
+		if i.config.consulDomain == "" {
+			i.config.consulDomain = defaultConsulDomain
+		}
+
+		grpcPort, _ := strconv.Atoi(defaultGrpcPort)
+		httpPort, _ := strconv.Atoi(defaultHttpPort)
+
+		if i.config.consulServiceHostname == "" {
+			return fmt.Sprintf("%s.service.%s.%s:%d",
+					waypointBackendServiceName, i.config.consulDatacenter, i.config.consulDomain, grpcPort), fmt.Sprintf("%s.service.%s.%s:%d",
+					waypointUIServiceName, i.config.consulDatacenter, i.config.consulDomain, httpPort), nil
+		} else {
+			return fmt.Sprintf("%s:%d", i.config.consulServiceHostname, grpcPort),
+				fmt.Sprintf("%s:%d", i.config.consulServiceHostname, httpPort), nil
+		}
+	} else if i.config.serviceProvider == "nomad" {
+		backendService, _, err := client.Services().Get(waypointBackendServiceName, nil)
+		if err != nil {
+			return "", "", err
+		}
+
+		uiService, _, err := client.Services().Get(waypointUIServiceName, nil)
+		if err != nil {
+			return "", "", err
+		}
+
+		return fmt.Sprintf("%s:%d", uiService[0].Address, uiService[0].Port),
+			fmt.Sprintf("%s:%d", backendService[0].Address, backendService[0].Port), nil
+	} else {
+		serverAddr, err := getAddrFromAllocID(allocID, client)
+		if err != nil {
+			return "", "", err
+		}
+		hAddr, err := getHTTPFromAllocID(allocID, client)
+		if err != nil {
+			return "", "", err
+		}
+		return hAddr, serverAddr, nil
+	}
 }
 
 // Upgrade is a method of NomadInstaller and implements the Installer interface to
@@ -506,55 +504,7 @@ func (i *NomadInstaller) Upgrade(
 	// than the direct static IP for the CLI context and server config. Otherwise
 	// if Nomad restarts the server allocation, a new IP will be assigned and any
 	// configured clients will be invalid
-	if i.config.serviceProvider == "consul" && i.config.consulService {
-		s.Update("Configuring the server context to use Consul DNS hostname")
-		if i.config.consulDatacenter == "" {
-			i.config.consulDatacenter = defaultConsulDatacenter
-		}
-		if i.config.consulDomain == "" {
-			i.config.consulDomain = defaultConsulDomain
-		}
-
-		grpcPort, _ := strconv.Atoi(defaultGrpcPort)
-		httpPort, _ := strconv.Atoi(defaultHttpPort)
-
-		if i.config.consulServiceHostname == "" {
-			addr.Addr = fmt.Sprintf("%s.service.%s.%s:%d",
-				waypointBackendServiceName, i.config.consulDatacenter, i.config.consulDomain, grpcPort)
-			httpAddr = fmt.Sprintf("%s.service.%s.%s:%d",
-				waypointUIServiceName, i.config.consulDatacenter, i.config.consulDomain, httpPort)
-		} else {
-			addr.Addr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, grpcPort)
-			httpAddr = fmt.Sprintf("%s:%d", i.config.consulServiceHostname, httpPort)
-		}
-	} else if i.config.serviceProvider == "nomad" {
-		backendService, _, err := client.Services().Get(waypointBackendServiceName, nil)
-		if err != nil {
-			return nil, err
-		}
-
-		uiService, _, err := client.Services().Get(waypointUIServiceName, nil)
-		if err != nil {
-			return nil, err
-		}
-
-		httpAddr = fmt.Sprintf("%s:%d", uiService[0].Address, uiService[0].Port)
-		addr.Addr = fmt.Sprintf("%s:%d", backendService[0].Address, backendService[0].Port)
-	} else {
-		s.Update("Configuring the server context to use the static IP address from the Nomad allocation")
-
-		serverAddr, err := getAddrFromAllocID(allocID, client)
-		if err != nil {
-			return nil, err
-		}
-		hAddr, err := getHTTPFromAllocID(allocID, client)
-		if err != nil {
-			return nil, err
-		}
-
-		httpAddr = hAddr
-		addr.Addr = serverAddr
-	}
+	httpAddr, addr.Addr, err = i.getWaypointAddress(client, allocID)
 
 	clicfg = clicontext.Config{
 		Server: serverconfig.Client{
