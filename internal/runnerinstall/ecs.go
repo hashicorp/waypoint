@@ -3,6 +3,7 @@ package runnerinstall
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"strconv"
 	"strings"
 	"time"
@@ -287,7 +288,7 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	var services *ecs.DescribeServicesOutput
 	services, foundService, err = installutil.FindServices(serviceNames, ecsSvc, i.Config.Cluster, services, foundService, log)
 	if err != nil {
-		s.Update("Could not get list of ECS services")
+		opts.UI.Output("Could not get list of ECS services: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
 	}
 	clusterArn := foundService.ClusterArn
