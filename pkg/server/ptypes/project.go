@@ -56,7 +56,12 @@ func ValidateProject(p *pb.Project) error {
 // ValidateProjectRules
 func ValidateProjectRules(p *pb.Project) []*validation.FieldRules {
 	return []*validation.FieldRules{
-		validation.Field(&p.Name, validation.Required),
+
+		validation.Field(&p.Name,
+			validation.Required,
+			validation.By(validatePathToken),
+		),
+
 		validation.Field(&p.WaypointHcl, isWaypointHcl(p)),
 
 		validationext.StructField(&p.DataSource, func() []*validation.FieldRules {

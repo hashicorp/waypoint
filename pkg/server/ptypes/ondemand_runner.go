@@ -56,6 +56,7 @@ func ValidateOnDemandRunnerConfigRules(p *pb.OnDemandRunnerConfig) []*validation
 	return []*validation.FieldRules{
 		validation.Field(&p.PluginType, validation.Required),
 		validation.Field(&p.PluginConfig, isPluginHcl(p)),
+		validation.Field(&p.Name, validation.By(validatePathToken)),
 	}
 }
 

@@ -16,6 +16,7 @@ func init() {
 		TestServiceProject,
 		TestServiceProject_GetApplication,
 		TestServiceProject_UpsertApplication,
+		TestServiceProject_InvalidName,
 	}
 }
 
@@ -209,4 +210,22 @@ func TestServiceProject_UpsertApplication(t *testing.T, factory Factory) {
 			require.NotNil(resp)
 		}
 	})
+}
+
+func TestServiceProject_InvalidName(t *testing.T, factory Factory) {
+	ctx := context.Background()
+	require := require.New(t)
+	client, _ := factory(t)
+
+	// GRPC Gateway interprets ../ as a path traversal, and therefore we cannot allow
+	// '../' in any fields we use as path tokens.
+	project := ptypes.TestProject(t, &pb.Project{
+		Name: "../../",
+	})
+
+	// Create a project
+	_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+		Project: project,
+	})
+	require.Error(err)
 }
