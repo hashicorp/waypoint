@@ -41,10 +41,6 @@ const (
 	// the token as valid before attempting to decode it. This is mostly a nicity to improve
 	// understanding of the token data and error messages.
 	tokenMagic = "wp24"
-
-	// hmacKeySize is the size in bytes that the HMAC keys should be. Each key will contain this number of bytes
-	// of data from rand.Reader
-	hmacKeySize = 32
 )
 
 var (
@@ -426,41 +422,14 @@ func (s *Service) decodeToken(ctx context.Context, token string) (*pb.TokenTrans
 // keyId controls which key is used to sign the key (key values are generated lazily).
 // metadata is attached to the token transport as configuration style information
 func (s *Service) encodeToken(ctx context.Context, keyId string, metadata map[string]string, body *pb.Token) (string, error) {
-	// Get the key material
-	key, err := s.state(ctx).HMACKeyCreateIfNotExist(keyId, hmacKeySize)
-	if err != nil {
-		return "", err
-	}
-
-	// Proto encode the body, this is what we sign.
-	bodyData, err := proto.Marshal(body)
-	if err != nil {
-		return "", err
-	}
-
-	// Sign it
-	h, err := blake2b.New256(key.Key)
-	if err != nil {
-		return "", err
-	}
-	h.Write(bodyData)
-
-	// Build our wrapper which is not signed or encrypted.
-	var tt pb.TokenTransport
-	tt.Body = bodyData
-	tt.KeyId = keyId
-	tt.Metadata = metadata
-	tt.Signature = h.Sum(nil)
-
-	// Marshal the wrapper and base58 encode it.
-	ttData, err := proto.Marshal(&tt)
+	ct, err := s.state(ctx).TokenEncrypt(keyId, body, metadata)
 	if err != nil {
 		return "", err
 	}
 
 	var buf bytes.Buffer
 	buf.WriteString(tokenMagic)
-	buf.Write(ttData)
+	buf.Write(ct)
 
 	return base58.Encode(buf.Bytes()), nil
 }
