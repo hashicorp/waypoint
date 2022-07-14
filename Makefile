@@ -7,6 +7,7 @@ GIT_IMPORT="github.com/hashicorp/waypoint/internal/version"
 GOLDFLAGS="-s -w -X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE)"
 CGO_ENABLED?=0
 GO_CMD?=go
+WP_SERVER_PLATFORM?="linux/amd64"
 
 # For changelog generation, default the last release to the last tag on
 # any branch, and this release to just be the current branch we're on.
@@ -63,14 +64,14 @@ docker/server: docker/server-only docker/odr
 .PHONY: docker/server-only
 docker/server-only:
 	DOCKER_BUILDKIT=1 docker buildx build \
-					--platform linux/amd64 \
+					--platform $(WP_SERVER_PLATFORM) \
 					-t waypoint:dev \
 					.
 
 .PHONY: docker/odr
 docker/odr:
 	DOCKER_BUILDKIT=1 docker buildx build --target odr \
-					--platform linux/amd64 \
+					--platform $(WP_SERVER_PLATFORM) \
 					-t waypoint-odr:dev \
 					.
 
