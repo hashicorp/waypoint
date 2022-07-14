@@ -10,7 +10,10 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/crypto/blake2b"
+	"google.golang.org/protobuf/proto"
 
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
@@ -72,6 +75,51 @@ type State struct {
 
 	// Used to track indexedJobs and prune records
 	pruneMu sync.Mutex
+}
+
+// Hashes token in OSS with HMAC
+func (s *State) TokenEncrypt(keyId string, token *pb.Token, metadata map[string]string) (ciphertext []byte, err error) {
+	// hmacKeySize is the size in bytes that the HMAC keys should be. Each key will contain this number of bytes
+	// of data from rand.Reader
+	var hmacKeySize = 32
+
+	// Get the key material
+	key, err := s.HMACKeyCreateIfNotExist(keyId, hmacKeySize)
+	if err != nil {
+		return nil, err
+	}
+
+	// Proto encode the token, this is what we sign.
+	tokenData, err := proto.Marshal(token)
+	if err != nil {
+		return nil, err
+	}
+
+	// Sign it
+	h, err := blake2b.New256(key.Key)
+	if err != nil {
+		return nil, err
+	}
+	h.Write(tokenData)
+
+	// Build our wrapper which is not signed or encrypted.
+	var tt pb.TokenTransport
+	tt.Body = tokenData
+	tt.KeyId = keyId
+	tt.Metadata = metadata
+	tt.Signature = h.Sum(nil)
+
+	// Marshal the wrapper and base58 encode it.
+	ttData, err := proto.Marshal(&tt)
+	if err != nil {
+		return nil, err
+	}
+
+	return ttData, nil
+}
+
+func (s *State) TokenDecrypt(tokenCiphertext string) (tokenPlaintext string, err error) {
+	panic("implement me")
 }
 
 // New initializes a new State store.
