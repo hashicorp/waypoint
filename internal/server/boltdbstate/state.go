@@ -133,7 +133,7 @@ func (s *State) TokenDecrypt(ciphertext []byte) (*pb.TokenTransport, *pb.Token, 
 	}
 
 	var tt pb.TokenTransport
-	err = proto.Unmarshal(ciphertext, &tt)
+	err = proto.Unmarshal(ciphertext[len(tokenMagic):], &tt)
 	if err != nil {
 		return nil, nil, err
 	}
