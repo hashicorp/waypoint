@@ -950,9 +950,8 @@ func (i *ECSInstaller) HasRunner(
 		installutil.DefaultRunnerName("static"),
 	}
 	ecsSvc := ecs.New(sess)
-	var foundService *ecs.Service
 	var services *ecs.DescribeServicesOutput
-	services, foundService, err = awsinstallutil.FindServices(serviceNames, ecsSvc, i.config.Cluster, services, foundService, log)
+	services, _, err = awsinstallutil.FindServices(serviceNames, ecsSvc, i.config.Cluster, log)
 	if err != nil {
 		opts.UI.Output("Could not get list of ECS services: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false, err

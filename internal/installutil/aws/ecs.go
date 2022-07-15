@@ -691,7 +691,9 @@ func DeleteEcsResources(
 	return nil
 }
 
-func FindServices(serviceNames []string, ecsSvc *ecs.ECS, cluster string, services *ecs.DescribeServicesOutput, foundService *ecs.Service, log hclog.Logger) (*ecs.DescribeServicesOutput, *ecs.Service, error) {
+func FindServices(serviceNames []string, ecsSvc *ecs.ECS, cluster string, log hclog.Logger) (*ecs.DescribeServicesOutput, *ecs.Service, error) {
+	var services *ecs.DescribeServicesOutput
+	var foundService *ecs.Service
 	for _, serviceName := range serviceNames {
 		ss, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
 			Cluster:  aws.String(cluster),
