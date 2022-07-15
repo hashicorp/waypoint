@@ -3,12 +3,15 @@
 package boltdbstate
 
 import (
+	"bytes"
+	"crypto/subtle"
 	"fmt"
 	"reflect"
 	"sync"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
+	"github.com/pkg/errors"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/crypto/blake2b"
 	"google.golang.org/protobuf/proto"
