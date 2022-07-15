@@ -77,8 +77,15 @@ type State struct {
 	pruneMu sync.Mutex
 }
 
+const (
+	// tokenMagic is used as a byte sequence prepended to the encoded TokenTransport to identify
+	// the token as valid before attempting to decode it. This is mostly a nicity to improve
+	// understanding of the token data and error messages.
+	tokenMagic = "wp24"
+)
+
 // Hashes token in OSS with HMAC
-func (s *State) TokenEncrypt(keyId string, token *pb.Token, metadata map[string]string) (ciphertext []byte, err error) {
+func (s *State) TokenEncrypt(token []byte, keyId string, metadata map[string]string) (ciphertext []byte, err error) {
 	// hmacKeySize is the size in bytes that the HMAC keys should be. Each key will contain this number of bytes
 	// of data from rand.Reader
 	var hmacKeySize = 32
@@ -89,37 +96,71 @@ func (s *State) TokenEncrypt(keyId string, token *pb.Token, metadata map[string]
 		return nil, err
 	}
 
-	// Proto encode the token, this is what we sign.
-	tokenData, err := proto.Marshal(token)
-	if err != nil {
-		return nil, err
-	}
-
 	// Sign it
 	h, err := blake2b.New256(key.Key)
 	if err != nil {
 		return nil, err
 	}
-	h.Write(tokenData)
+	h.Write(token)
 
 	// Build our wrapper which is not signed or encrypted.
 	var tt pb.TokenTransport
-	tt.Body = tokenData
+	tt.Body = token
 	tt.KeyId = keyId
 	tt.Metadata = metadata
 	tt.Signature = h.Sum(nil)
 
-	// Marshal the wrapper and base58 encode it.
+	// Marshal the wrapper.
 	ttData, err := proto.Marshal(&tt)
 	if err != nil {
 		return nil, err
 	}
 
-	return ttData, nil
+	var buf bytes.Buffer
+	buf.WriteString(tokenMagic)
+	buf.Write(ttData)
+
+	return buf.Bytes(), nil
 }
 
-func (s *State) TokenDecrypt(tokenCiphertext string) (tokenPlaintext string, err error) {
-	panic("implement me")
+func (s *State) TokenDecrypt(ciphertext []byte) (*pb.TokenTransport, *pb.Token, error) {
+	var err error
+	if subtle.ConstantTimeCompare(ciphertext[:len(tokenMagic)], []byte(tokenMagic)) != 1 {
+		return nil, nil, errors.Wrapf(err, "bad magic")
+	}
+
+	var tt pb.TokenTransport
+	err = proto.Unmarshal(ciphertext, &tt)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	key, err := s.HMACKeyGet(tt.KeyId)
+	if err != nil || key == nil {
+		return nil, nil, errors.Wrapf(err, "unknown key")
+	}
+
+	// Hash the token body using the HMAC key so that we can compare
+	// with our signature to ensure this hasn't been tampered with.
+	h, err := blake2b.New256(key.Key)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	h.Write(tt.Body)
+	sum := h.Sum(nil)
+	if subtle.ConstantTimeCompare(sum, tt.Signature) != 1 {
+		return nil, nil, errors.Wrapf(err, "bad signature")
+	}
+
+	// Decode the actual token structure
+	var body pb.Token
+	err = proto.Unmarshal(tt.Body, &body)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &tt, &body, nil
 }
 
 // New initializes a new State store.
