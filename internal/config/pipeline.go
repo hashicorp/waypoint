@@ -46,6 +46,9 @@ type hclStep struct {
 
 	// The plugin to use for this Step
 	Use *Use `hcl:"use,block"`
+
+	// An optional embedded pipeline stanza
+	PipelineRaw *hclPipeline `hcl:"pipeline,block"`
 }
 
 // Pipelines returns the id of all the defined pipelines
@@ -99,8 +102,45 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 			Use:       stepRaw.Use,
 		}
 
+		// Parse a nested pipeline step if defined
+		// TODO(briancain): Does this need to be a resursive function? How far down
+		// the hole do we let embedded pipelines go? Right now it's just one level
+		// of nesting
+		if stepRaw.PipelineRaw != nil {
+			var embedPipeline Pipeline
+			if diag := gohcl.DecodeBody(stepRaw.PipelineRaw.Body, finalizeContext(ctx), &embedPipeline); diag.HasErrors() {
+				return nil, diag
+			}
+
+			s.Pipeline = &Pipeline{
+				Name:   stepRaw.PipelineRaw.Name,
+				ctx:    ctx,
+				Config: c,
+			}
+			if s.Pipeline.Config != nil {
+				s.Pipeline.Config.ctx = ctx
+			}
+
+			// Parse all the steps
+			var embSteps []*Step
+			for _, embedStepRaw := range embedPipeline.StepRaw {
+				// turn stepRaw into a staged Step
+				s := Step{
+					ctx:       ctx,
+					Name:      embedStepRaw.Name,
+					DependsOn: embedStepRaw.DependsOn,
+					ImageURL:  embedStepRaw.ImageURL,
+					Use:       embedStepRaw.Use,
+				}
+				embSteps = append(embSteps, &s)
+			}
+
+			s.Pipeline.Steps = embSteps
+		}
+
 		steps = append(steps, &s)
 	}
+
 	pipeline.Steps = steps
 
 	return &pipeline, nil

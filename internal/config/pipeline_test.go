@@ -108,6 +108,49 @@ func TestPipeline(t *testing.T) {
 				require.Equal("zero", s3.DependsOn[0])
 			},
 		},
+
+		{
+			"pipeline_nested.hcl",
+			"foo",
+			func(t *testing.T, c *Pipeline) {
+				require := require.New(t)
+
+				require.NotNil(t, c)
+				require.Equal("foo", c.Name)
+
+				steps := c.Steps
+				require.Len(steps, 2)
+				s := steps[0]
+
+				var p testStepPluginConfig
+				diag := s.Configure(&p, nil)
+				if diag.HasErrors() {
+					t.Fatal(diag.Error())
+				}
+
+				require.NotEmpty(t, p.config.Foo)
+				require.Equal("example.com/test", s.ImageURL)
+
+				// This should be an embedded pipeline
+				s2 := steps[1]
+				embedPipeline := s2.Pipeline
+
+				require.Equal("bar", embedPipeline.Name)
+				require.Len(embedPipeline.Steps, 1)
+				ps := embedPipeline.Steps[0]
+				require.Equal("boo", ps.Name)
+
+				var pt testStepPluginConfig
+				diag = ps.Configure(&pt, nil)
+				if diag.HasErrors() {
+					t.Fatal(diag.Error())
+				}
+
+				require.NotEmpty(t, pt.config.Foo)
+				require.Equal("nested", pt.config.Foo)
+				require.Equal("example.com/test", ps.ImageURL)
+			},
+		},
 	}
 
 	// Test all the cases
