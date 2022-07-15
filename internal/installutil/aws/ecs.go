@@ -25,6 +25,7 @@ const (
 	defaultServerTagName     = "waypoint-server"
 	defaultServerTagValue    = "server-component"
 	ServerName               = "waypoint-server"
+	DefaultStaticRunnerName  = "waypoint-static-runner"
 	DefaultSecurityGroupName = "waypoint-server-security-group"
 	RolePolicy               = `{
   "Version": "2012-10-17",
@@ -688,4 +689,31 @@ func DeleteEcsResources(
 	}
 
 	return nil
+}
+
+func FindServices(serviceNames []string, ecsSvc *ecs.ECS, cluster string, log hclog.Logger) (*ecs.Service, error) {
+	var services *ecs.DescribeServicesOutput
+	var foundService *ecs.Service
+	for _, serviceName := range serviceNames {
+		ss, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
+			Cluster:  aws.String(cluster),
+			Services: []*string{aws.String(serviceName)},
+		})
+		services = ss
+		if err != nil {
+			return nil, err
+		}
+		if ss != nil && len(ss.Services) > 0 {
+			foundService = ss.Services[0]
+			if len(ss.Services) != 1 {
+				log.Debug("Unable to uninstall runner; expected 1 service named %s, found %d", serviceName, len(ss.Services))
+				return nil, fmt.Errorf("expected 1 service named %s, found %d", serviceName, len(ss.Services))
+			}
+			break
+		}
+	}
+	if len(services.Failures) > 0 {
+		return nil, fmt.Errorf("could not find service named %q or %q, service is %q", serviceNames[0], serviceNames[1], *services.Failures[0].Reason)
+	}
+	return foundService, nil
 }

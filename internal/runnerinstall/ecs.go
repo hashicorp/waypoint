@@ -3,6 +3,8 @@ package runnerinstall
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"strconv"
 	"strings"
 	"time"
@@ -15,7 +17,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
-	installutil "github.com/hashicorp/waypoint/internal/installutil/aws"
+	awsinstallutil "github.com/hashicorp/waypoint/internal/installutil/aws"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
@@ -128,14 +130,14 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	}
 
 	var (
-		efsInfo       *installutil.EfsInformation
+		efsInfo       *awsinstallutil.EfsInformation
 		logGroup      string
 		executionRole string
-		netInfo       *installutil.NetworkInformation
+		netInfo       *awsinstallutil.NetworkInformation
 		taskRole      string
 		runSvcArn     *string
 	)
-	lf := &installutil.Lifecycle{
+	lf := &awsinstallutil.Lifecycle{
 		Init: func(ui terminal.UI) error {
 			sess, err = utils.GetSession(&utils.SessionConfig{
 				Region: i.Config.Region,
@@ -145,15 +147,15 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				return err
 			}
 
-			if netInfo, err = installutil.SetupNetworking(ctx, ui, sess, i.Config.Subnets); err != nil {
+			if netInfo, err = awsinstallutil.SetupNetworking(ctx, ui, sess, i.Config.Subnets); err != nil {
 				return err
 			}
 
-			if efsInfo, err = installutil.SetupEFS(ctx, ui, sess, netInfo); err != nil {
+			if efsInfo, err = awsinstallutil.SetupEFS(ctx, ui, sess, netInfo); err != nil {
 				return err
 			}
 
-			if executionRole, err = installutil.SetupExecutionRole(ctx, ui, log, sess, i.Config.ExecutionRoleName); err != nil {
+			if executionRole, err = awsinstallutil.SetupExecutionRole(ctx, ui, log, sess, i.Config.ExecutionRoleName); err != nil {
 				return err
 			}
 
@@ -162,7 +164,7 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				return err
 			}
 
-			logGroup, err = installutil.SetupLogs(ctx, ui, log, sess, defaultRunnerLogGroup)
+			logGroup, err = awsinstallutil.SetupLogs(ctx, ui, log, sess, defaultRunnerLogGroup)
 			if err != nil {
 				return err
 			}
@@ -280,32 +282,15 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	// We check for the serviceName before v0.9 and v0.9+
 	ecsSvc := ecs.New(sess)
 	serviceNames := []string{
-		defaultRunnerName(opts.Id),
+		installutil.DefaultRunnerName(opts.Id),
 		DefaultRunnerTagName,
 	}
 	var foundService *ecs.Service
 	var services *ecs.DescribeServicesOutput
-	for _, serviceName := range serviceNames {
-		ss, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
-			Cluster:  aws.String(i.Config.Cluster),
-			Services: []*string{aws.String(serviceName)},
-		})
-		services = ss
-		if err != nil {
-			s.Update("Could not get list of ECS services")
-			return err
-		}
-		if ss != nil && len(ss.Services) > 0 {
-			foundService = ss.Services[0]
-			if len(ss.Services) != 1 {
-				log.Debug("Unable to uninstall runner; expected 1 runner service named %s, found %d", serviceName, len(ss.Services))
-				return fmt.Errorf("expected 1 runner service named %s, found %d", serviceName, len(ss.Services))
-			}
-			break
-		}
-	}
-	if len(services.Failures) > 0 {
-		return fmt.Errorf("could not find runner named %q or %q, service is %q", serviceNames[0], serviceNames[1], *services.Failures[0].Reason)
+	foundService, err = awsinstallutil.FindServices(serviceNames, ecsSvc, i.Config.Cluster, log)
+	if err != nil {
+		opts.UI.Output("Could not get list of ECS services: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+		return err
 	}
 	clusterArn := foundService.ClusterArn
 
@@ -361,8 +346,8 @@ func launchRunner(
 	sess *session.Session,
 	env []string,
 	executionRoleArn, taskRoleArn, logGroup, region, cpu, memory, runnerImage, cluster, cookie, id string,
-	netInfo *installutil.NetworkInformation,
-	efsInfo *installutil.EfsInformation,
+	netInfo *awsinstallutil.NetworkInformation,
+	efsInfo *awsinstallutil.EfsInformation,
 ) (*string, error) {
 
 	sg := ui.StepGroup()
@@ -481,7 +466,7 @@ func launchRunner(
 		Filters: []*ec2.Filter{
 			{
 				Name:   aws.String("group-name"),
-				Values: []*string{aws.String(installutil.DefaultSecurityGroupName)},
+				Values: []*string{aws.String(awsinstallutil.DefaultSecurityGroupName)},
 			},
 		},
 	})
@@ -492,9 +477,9 @@ func launchRunner(
 	var groupId *string
 	if len(dsg.SecurityGroups) != 0 {
 		groupId = dsg.SecurityGroups[0].GroupId
-		s.Update("Using existing security group: %s", installutil.DefaultSecurityGroupName)
+		s.Update("Using existing security group: %s", awsinstallutil.DefaultSecurityGroupName)
 	} else {
-		return nil, fmt.Errorf("could not find security group (%s)", installutil.DefaultSecurityGroupName)
+		return nil, fmt.Errorf("could not find security group (%s)", awsinstallutil.DefaultSecurityGroupName)
 	}
 
 	// Check for details of possibly existing cluster `waypoint-server`
@@ -502,7 +487,7 @@ func launchRunner(
 	// query what subnets and vpc information from the server service
 	services, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
 		Cluster:  aws.String(cluster),
-		Services: []*string{aws.String(installutil.ServerName)},
+		Services: []*string{aws.String(awsinstallutil.ServerName)},
 	})
 	if err != nil {
 		return nil, err
@@ -526,7 +511,7 @@ func launchRunner(
 		Cluster:              clusterArn,
 		DesiredCount:         aws.Int64(1),
 		LaunchType:           aws.String(defaultTaskRuntime),
-		ServiceName:          aws.String(defaultRunnerName(id)),
+		ServiceName:          aws.String(installutil.DefaultRunnerName(id)),
 		EnableECSManagedTags: aws.Bool(true),
 		TaskDefinition:       aws.String(taskDefArn),
 		NetworkConfiguration: &ecs.NetworkConfiguration{
@@ -549,7 +534,7 @@ func launchRunner(
 	}
 
 	s.Update("Creating ECS Service (%s)", DefaultRunnerTagName)
-	svc, err := installutil.CreateService(createServiceInput, ecsSvc)
+	svc, err := awsinstallutil.CreateService(createServiceInput, ecsSvc)
 	if err != nil {
 		return nil, err
 	}
@@ -639,7 +624,7 @@ func (i *ECSRunnerInstaller) setupTaskRole(
 	s.Update("Creating IAM task role: %s", roleName)
 
 	input := &iam.CreateRoleInput{
-		AssumeRolePolicyDocument: aws.String(installutil.RolePolicy),
+		AssumeRolePolicyDocument: aws.String(awsinstallutil.RolePolicy),
 		Path:                     aws.String("/"),
 		RoleName:                 aws.String(roleName),
 		Tags: []*iam.Tag{

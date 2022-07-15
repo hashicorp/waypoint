@@ -28,3 +28,7 @@ func DefaultODRImage(serverImage string) (string, error) {
 }
 
 const DefaultServerImage = "hashicorp/waypoint:latest"
+
+func DefaultRunnerName(id string) string {
+	return "waypoint-" + id + "-runner"
+}
