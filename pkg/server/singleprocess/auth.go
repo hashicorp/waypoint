@@ -1,10 +1,8 @@
 package singleprocess
 
 import (
-	"bytes"
 	"context"
 	"crypto/rand"
-	"crypto/subtle"
 	"io"
 	"strings"
 	"time"
@@ -12,7 +10,6 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/mr-tron/base58"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/blake2b"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
