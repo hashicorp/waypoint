@@ -287,7 +287,7 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	}
 	var foundService *ecs.Service
 	var services *ecs.DescribeServicesOutput
-	services, foundService, err = awsinstallutil.FindServices(serviceNames, ecsSvc, i.Config.Cluster, log)
+	foundService, err = awsinstallutil.FindServices(serviceNames, ecsSvc, i.Config.Cluster, log)
 	if err != nil {
 		opts.UI.Output("Could not get list of ECS services: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
