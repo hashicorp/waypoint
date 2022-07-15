@@ -293,11 +293,10 @@ func (c *AppDocsCommand) jsonFormat(name, ct string, doc *docs.Documentation) {
 
 	w, err := os.Create(fmt.Sprintf("./docs/%s-%s.json", ct, name))
 	if err != nil {
+		panic(err)
 	}
-	var jMap map[string]interface{}
-	jMap = make(map[string]interface{})
-	jMap["name"] = name
-	jMap["type"] = ct
+
+	jMap := map[string]interface{}{"name": name, "type": ct}
 
 	dets := doc.Details()
 	if dets.Description != "" {
@@ -415,10 +414,7 @@ func (c *AppDocsCommand) jsonFormatConfigSourcer(name, ct string, doc *docs.Docu
 		panic(err)
 	}
 
-	var jMap map[string]interface{}
-	jMap = make(map[string]interface{})
-	jMap["name"] = name
-	jMap["type"] = ct
+	jMap := map[string]interface{}{"name": name, "type": ct}
 
 	dets := doc.Details()
 
