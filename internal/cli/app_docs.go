@@ -286,7 +286,7 @@ func (c *AppDocsCommand) emitSection(w io.Writer, name, use, h string, fields []
 	}
 }
 
-// jsonFormat attempts to output all the same data as mdxFormat in the JSON file format
+// jsonFormat attempts to output all the data included in a a plugin's Documentation() function in the JSON file format
 func (c *AppDocsCommand) jsonFormat(name, ct string, doc *docs.Documentation) {
 	// we use this constant to compare to ct for some special behavior
 	const csType = "configsourcer"
@@ -408,6 +408,7 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 	fmt.Fprintln(w)
 }
 
+// jsonFormatConfigSourcer attempts to output all the data included in a a plugin's Documentation() function in the JSON file format
 func (c *AppDocsCommand) jsonFormatConfigSourcer(name, ct string, doc *docs.Documentation) {
 	w, err := os.Create(fmt.Sprintf("./docs/%s-%s.json", ct, name))
 	if err != nil {
