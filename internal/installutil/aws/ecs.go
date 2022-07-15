@@ -689,27 +689,18 @@ func DeleteEcsResources(
 }
 
 func FindServices(serviceNames []string, ecsSvc *ecs.ECS, cluster string) (*ecs.Service, error) {
-	var services *ecs.DescribeServicesOutput
-	var foundService *ecs.Service
 	for _, serviceName := range serviceNames {
 		ss, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
 			Cluster:  aws.String(cluster),
 			Services: []*string{aws.String(serviceName)},
 		})
-		services = ss
 		if err != nil {
 			return nil, err
 		}
-		if ss != nil && len(ss.Services) > 0 {
-			foundService = ss.Services[0]
-			if len(ss.Services) != 1 {
-				return nil, fmt.Errorf("expected 1 service named %s, found %d", serviceName, len(ss.Services))
-			}
-			break
+		if ss != nil && len(ss.Services) != 1 {
+			return nil, fmt.Errorf("expected 1 service named %s, found %d", serviceName, len(ss.Services))
 		}
+		return ss.Services[0], nil
 	}
-	if len(services.Failures) > 0 {
-		return nil, fmt.Errorf("could not find service named %q or %q, service is %q", serviceNames[0], serviceNames[1], *services.Failures[0].Reason)
-	}
-	return foundService, nil
+	return nil, fmt.Errorf("no services found")
 }
