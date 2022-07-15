@@ -93,7 +93,6 @@ func SetupNetworking(
 	sess *session.Session,
 	subnet []string,
 ) (*NetworkInformation, error) {
-
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -132,7 +131,6 @@ func SetupEFS(
 	ui terminal.UI,
 	sess *session.Session,
 	netInfo *NetworkInformation,
-
 ) (*EfsInformation, error) {
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -308,7 +306,6 @@ func SetupExecutionRole(
 
 	executionRoleName string,
 ) (string, error) {
-
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -691,7 +688,7 @@ func DeleteEcsResources(
 	return nil
 }
 
-func FindServices(serviceNames []string, ecsSvc *ecs.ECS, cluster string, log hclog.Logger) (*ecs.Service, error) {
+func FindServices(serviceNames []string, ecsSvc *ecs.ECS, cluster string) (*ecs.Service, error) {
 	var services *ecs.DescribeServicesOutput
 	var foundService *ecs.Service
 	for _, serviceName := range serviceNames {
@@ -706,7 +703,6 @@ func FindServices(serviceNames []string, ecsSvc *ecs.ECS, cluster string, log hc
 		if ss != nil && len(ss.Services) > 0 {
 			foundService = ss.Services[0]
 			if len(ss.Services) != 1 {
-				log.Debug("Unable to uninstall runner; expected 1 service named %s, found %d", serviceName, len(ss.Services))
 				return nil, fmt.Errorf("expected 1 service named %s, found %d", serviceName, len(ss.Services))
 			}
 			break

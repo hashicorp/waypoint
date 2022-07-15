@@ -4,10 +4,11 @@ import (
 	"context"
 	json "encoding/json"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/clierrors"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/waypoint/internal/clierrors"
 
 	"github.com/hashicorp/waypoint/internal/installutil"
 
@@ -950,17 +951,13 @@ func (i *ECSInstaller) HasRunner(
 		installutil.DefaultRunnerName("static"),
 	}
 	ecsSvc := ecs.New(sess)
-	foundService, err := awsinstallutil.FindServices(serviceNames, ecsSvc, i.config.Cluster, log)
-	if foundService == nil {
-		opts.UI.Output("No runner ECS service found to upgrade", terminal.WithWarningStyle())
-		return false, nil
-	}
+	foundService, err := awsinstallutil.FindServices(serviceNames, ecsSvc, i.config.Cluster)
 	if err != nil {
 		opts.UI.Output("Could not get list of ECS services: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false, err
 	}
 
-	return true, nil
+	return foundService != nil, nil
 }
 
 func (i *ECSInstaller) InstallFlags(set *flag.Set) {

@@ -3,11 +3,12 @@ package runnerinstall
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/clierrors"
-	"github.com/hashicorp/waypoint/internal/installutil"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/installutil"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -285,40 +286,43 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 		installutil.DefaultRunnerName(opts.Id),
 		DefaultRunnerTagName,
 	}
-	var foundService *ecs.Service
-	var services *ecs.DescribeServicesOutput
-	foundService, err = awsinstallutil.FindServices(serviceNames, ecsSvc, i.Config.Cluster, log)
-	if err != nil {
-		opts.UI.Output("Could not get list of ECS services: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-		return err
-	}
-	clusterArn := foundService.ClusterArn
 
-	// Delete associated runner service and tasks
-	// This does not remove the security group since it may be in use by other
-	// runners/waypoint infrastructure.
-	s.Update("Deleting runner service")
-	_, err = ecsSvc.DeleteService(&ecs.DeleteServiceInput{
-		Service: services.Services[0].ServiceArn,
-		Force:   aws.Bool(true),
-		Cluster: clusterArn,
-	})
+	service, err := awsinstallutil.FindServices(serviceNames, ecsSvc, i.Config.Cluster)
 	if err != nil {
-		s.Update("Unable to delete runner service.")
+		log.Debug("Unable to find desired runner; %s", err)
+		ui.Output("Could not get list of ECS services: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
 	}
 
-	s.Update("Waiting for runner service to be inactive")
-	err = ecsSvc.WaitUntilServicesInactive(&ecs.DescribeServicesInput{
-		Cluster:  clusterArn,
-		Services: []*string{services.Services[0].ServiceArn},
-	})
-	if err != nil {
-		s.Update("Unable to verify runner uninstalled", len(services.Services))
-		return err
-	}
+	if service != nil {
+		// Delete associated runner service and tasks
+		// This does not remove the security group since it may be in use by other
+		// runners/waypoint infrastructure.
+		s.Update("Deleting runner service")
+		_, err = ecsSvc.DeleteService(&ecs.DeleteServiceInput{
+			Service: service.ServiceArn,
+			Force:   aws.Bool(true),
+			Cluster: service.ClusterArn,
+		})
+		if err != nil {
+			log.Debug("error deleting runner service: %s", err)
+			ui.Output("Error Deleting Runner service: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			return err
+		}
 
-	s.Update("Runner uninstalled")
+		s.Update("Waiting for runner service to be inactive")
+		err = ecsSvc.WaitUntilServicesInactive(&ecs.DescribeServicesInput{
+			Cluster:  service.ClusterArn,
+			Services: []*string{service.ServiceArn},
+		})
+		if err != nil {
+			log.Debug("error waint for runner to deactivate: %s", err)
+			ui.Output("Error waiting for Runner service to deactivate: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			return err
+		}
+
+		s.Update("Runner uninstalled")
+	}
 	s.Done()
 	return nil
 }
@@ -336,7 +340,6 @@ func (i *ECSRunnerInstaller) UninstallFlags(set *flag.Set) {
 		Default: "waypoint-server",
 		Usage:   "The name of the ECS Cluster to install the Waypoint runner into.",
 	})
-
 }
 
 func launchRunner(
@@ -349,7 +352,6 @@ func launchRunner(
 	netInfo *awsinstallutil.NetworkInformation,
 	efsInfo *awsinstallutil.EfsInformation,
 ) (*string, error) {
-
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
