@@ -91,7 +91,9 @@ func (c *DestroyCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint destroy [options]
 
-  Delete all resources created for all apps or projects in the current workspace.
+  Delete all resources created for all apps or project in the current workspace.
+  Specify the -app to select a given app to delete resources for in a given 
+  workspace.
 
   The workspace can continue to be used after this call, this just deletes
   all the resources created for all apps in the workspace up to this point.
