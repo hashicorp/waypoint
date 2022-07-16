@@ -202,6 +202,10 @@ func (c *AppDocsCommand) emitField(w io.Writer, h, out string, f *docs.FieldDocs
 		}
 	}
 
+	if f.EnvVar != "" {
+		fmt.Fprintf(&list, "\n- Environment Variable: **%s**", f.EnvVar)
+	}
+
 	if list.Len() != 0 {
 		parts = append(parts, list.String())
 	}
