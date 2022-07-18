@@ -213,6 +213,11 @@ func (s *Service) RunPipeline(
 					},
 				},
 			}
+		case *pb.Pipeline_Step_Pipeline_:
+			// TODO(briancain): Look up pipeline by Owner and re-call this func
+			// to receieve its step jobs. Might need to validate that there are no
+			// cycles here too.
+			return nil, status.Error(codes.Unimplemented, "running an embedded pipeline is not yet supported")
 		default:
 			job.Operation = &pb.Job_PipelineStep{
 				PipelineStep: &pb.Job_PipelineStepOp{
