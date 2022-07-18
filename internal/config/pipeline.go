@@ -1,6 +1,8 @@
 package config
 
 import (
+	"strings"
+
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -158,147 +160,213 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 	// Load HCL config and convert to a Pipeline proto
 	var result []*pb.Pipeline
 	for _, pl := range c.hclConfig.Pipelines {
-		pipe := &pb.Pipeline{
-			Name: pl.Name,
-			Owner: &pb.Pipeline_Project{
-				Project: &pb.Ref_Project{
-					Project: c.hclConfig.Project,
-				},
-			},
+		pipes, err := c.buildPipelineProto(pl)
+		if err != nil {
+			return nil, err
 		}
 
-		// TODO(briancain): Use the default ODR image for image_url so that it isn't required
-		// We do this already maybe in the ODR task launcher.
-		steps := make(map[string]*pb.Pipeline_Step)
-		for i, step := range pl.StepRaw {
-			s := &pb.Pipeline_Step{
-				Name:      step.Name,
-				DependsOn: step.DependsOn,
-				Image:     step.ImageURL, //TODO(briancain): actually use this when executing steps
+		result = append(result, pipes...)
+	}
+
+	return result, nil
+}
+
+func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
+	var result []*pb.Pipeline
+	// TODO(briancain): In the future, we might allow for namespaced pipelines
+	// where the format is as follows: `project/pipeline-name`. In that case
+	// the pipeline stanza here will probably be empty, and the actual
+	// pipeline proto will need to be looked up in the servers DB on a queued run.
+	pipe := &pb.Pipeline{
+		Name: pl.Name,
+		Owner: &pb.Pipeline_Project{
+			Project: &pb.Ref_Project{
+				Project: c.hclConfig.Project,
+			},
+		},
+	}
+
+	steps := make(map[string]*pb.Pipeline_Step)
+	for i, step := range pl.StepRaw {
+		s := &pb.Pipeline_Step{
+			Name:      step.Name,
+			DependsOn: step.DependsOn,
+			Image:     step.ImageURL,
+		}
+
+		// If no dependency was explictily set, we rely on the previous step
+		if i != 0 && len(step.DependsOn) == 0 {
+			s.DependsOn = []string{pl.StepRaw[i-1].Name}
+		}
+
+		// We have an embeded pipeline for this step
+		if step.PipelineRaw != nil {
+			// TODO(briancain): It shouldn't be valid to have a "project/pipeline"
+			// defined as well as a nested pipeline. We should validate this.
+
+			// We need to determine if the embedded pipeline is defined directly
+			// inside a step, or is simply a reference to a pipeline else where
+			if len(step.PipelineRaw.StepRaw) > 0 {
+				// This means this is an embedded pipeline, i.e. the HCL definition
+				// is nested within the step PipelineRaw. we parse that pipeline
+				// directly and store it as a separate pipeline, and make _this_ step
+				// a reference to the pipeline
+
+				// Parse nested pipeline steps
+				pipelines, err := c.buildPipelineProto(step.PipelineRaw)
+				if err != nil {
+					return nil, err
+				}
+
+				result = append(result, pipelines...)
 			}
 
-			// If no dependency was explictily set, we rely on the previous step
-			if i != 0 && len(step.DependsOn) == 0 {
-				s.DependsOn = []string{pl.StepRaw[i-1].Name}
+			// We check if this step references a separate pipeline by Owner
+			pipeName := step.PipelineRaw.Name
+			pipeProject := c.hclConfig.Project
+			if pn := strings.Split(pipeName, "/"); len(pn) > 1 {
+				pipeProject = pn[0]
+				pipeName = pn[1]
 			}
 
-			// We currently only support one kind of Step plugin. But in the future
-			// maybe this would be a switch on step.Type? Or maybe we get our
-			// own Step Eval func that returns the step proto instead and does the
-			// switches there.
-			// NOTE(briancain): This is what you'd change to support future Step plugins
-			switch step.Use.Type {
-			case "build":
-				var buildBody struct {
-					DisablePush bool `hcl:"disable_push,optional"`
-				}
-
-				if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &buildBody); diag.HasErrors() {
-					return nil, diag
-				}
-
-				s.Kind = &pb.Pipeline_Step_Build_{
-					Build: &pb.Pipeline_Step_Build{
-						DisablePush: buildBody.DisablePush,
-					},
-				}
-			case "deploy":
-				var deployBody struct {
-					Release bool `hcl:"release,optional"`
-				}
-
-				if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &deployBody); diag.HasErrors() {
-					return nil, diag
-				}
-
-				s.Kind = &pb.Pipeline_Step_Deploy_{
-					Deploy: &pb.Pipeline_Step_Deploy{
-						Release: deployBody.Release,
-					},
-				}
-			case "release":
-				var releaseBody struct {
-					DeploymentRef       uint64 `hcl:"deployment_ref,optional"` // 0 or "unset" means latest
-					Prune               bool   `hcl:"prune,optional"`
-					PruneRetain         int32  `hcl:"prune_retain,optional"`
-					PruneRetainOverride bool   `hcl:"prune_retain_override,optional"`
-				}
-
-				if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &releaseBody); diag.HasErrors() {
-					return nil, diag
-				}
-
-				// For parsing pipeline configs, an unset `deployment_ref` translates
-				// to the "latest" deployment. Otherwise if people want to release
-				// a specific deployment by sequence number, they can set it explicity.
-				deployRef := &pb.Ref_Deployment{
-					Ref: &pb.Ref_Deployment_Latest{
-						Latest: true,
-					},
-				}
-				if releaseBody.DeploymentRef != 0 {
-					deployRef = &pb.Ref_Deployment{
-						Ref: &pb.Ref_Deployment_Sequence{
-							Sequence: releaseBody.DeploymentRef,
+			// Add pipeline reference as a pipeline ref step for parent pipeline
+			s.Kind = &pb.Pipeline_Step_Pipeline_{
+				Pipeline: &pb.Pipeline_Step_Pipeline{
+					Ref: &pb.Ref_Pipeline{
+						Ref: &pb.Ref_Pipeline_Owner{
+							Owner: &pb.Ref_PipelineOwner{
+								Project: &pb.Ref_Project{
+									Project: pipeProject,
+								},
+								PipelineName: pipeName,
+							},
 						},
-					}
-				}
-
-				s.Kind = &pb.Pipeline_Step_Release_{
-					Release: &pb.Pipeline_Step_Release{
-						Deployment:          deployRef,
-						Prune:               releaseBody.Prune,
-						PruneRetain:         releaseBody.PruneRetain,
-						PruneRetainOverride: releaseBody.PruneRetainOverride,
 					},
-				}
-			case "up":
-				var upBody struct {
-					Prune               bool  `hcl:"prune,optional"`
-					PruneRetain         int32 `hcl:"prune_retain,optional"`
-					PruneRetainOverride bool  `hcl:"prune_retain_override,optional"`
-				}
-
-				if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &upBody); diag.HasErrors() {
-					return nil, diag
-				}
-
-				s.Kind = &pb.Pipeline_Step_Up_{
-					Up: &pb.Pipeline_Step_Up{
-						Prune:               upBody.Prune,
-						PruneRetain:         upBody.PruneRetain,
-						PruneRetainOverride: upBody.PruneRetainOverride,
-					},
-				}
-			case "exec":
-				var execBody struct {
-					Command string   `hcl:"command,optional"`
-					Args    []string `hcl:"args,optional"`
-				}
-
-				// Evaluate the step body hcl to get options
-				if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &execBody); diag.HasErrors() {
-					return nil, diag
-				}
-
-				s.Kind = &pb.Pipeline_Step_Exec_{
-					Exec: &pb.Pipeline_Step_Exec{
-						Image:   step.ImageURL,
-						Command: execBody.Command,
-						Args:    execBody.Args,
-					},
-				}
-			default:
-				return nil, status.Errorf(codes.Internal, "unsupported step plugin type: %q", step.Use.Type)
+				},
 			}
 
 			steps[step.Name] = s
+
+			continue // continue to build the rest of the parent pipeline
+		} // else do below
+
+		// NOTE(briancain): This is what you'd change to support future Step plugins
+		// or future built-in step operations.
+		switch step.Use.Type {
+		case "build":
+			var buildBody struct {
+				DisablePush bool `hcl:"disable_push,optional"`
+			}
+
+			if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &buildBody); diag.HasErrors() {
+				return nil, diag
+			}
+
+			s.Kind = &pb.Pipeline_Step_Build_{
+				Build: &pb.Pipeline_Step_Build{
+					DisablePush: buildBody.DisablePush,
+				},
+			}
+		case "deploy":
+			var deployBody struct {
+				Release bool `hcl:"release,optional"`
+			}
+
+			if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &deployBody); diag.HasErrors() {
+				return nil, diag
+			}
+
+			s.Kind = &pb.Pipeline_Step_Deploy_{
+				Deploy: &pb.Pipeline_Step_Deploy{
+					Release: deployBody.Release,
+				},
+			}
+		case "release":
+			var releaseBody struct {
+				DeploymentRef       uint64 `hcl:"deployment_ref,optional"` // 0 or "unset" means latest
+				Prune               bool   `hcl:"prune,optional"`
+				PruneRetain         int32  `hcl:"prune_retain,optional"`
+				PruneRetainOverride bool   `hcl:"prune_retain_override,optional"`
+			}
+
+			if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &releaseBody); diag.HasErrors() {
+				return nil, diag
+			}
+
+			// For parsing pipeline configs, an unset `deployment_ref` translates
+			// to the "latest" deployment. Otherwise if people want to release
+			// a specific deployment by sequence number, they can set it explicity.
+			deployRef := &pb.Ref_Deployment{
+				Ref: &pb.Ref_Deployment_Latest{
+					Latest: true,
+				},
+			}
+			if releaseBody.DeploymentRef != 0 {
+				deployRef = &pb.Ref_Deployment{
+					Ref: &pb.Ref_Deployment_Sequence{
+						Sequence: releaseBody.DeploymentRef,
+					},
+				}
+			}
+
+			s.Kind = &pb.Pipeline_Step_Release_{
+				Release: &pb.Pipeline_Step_Release{
+					Deployment:          deployRef,
+					Prune:               releaseBody.Prune,
+					PruneRetain:         releaseBody.PruneRetain,
+					PruneRetainOverride: releaseBody.PruneRetainOverride,
+				},
+			}
+		case "up":
+			var upBody struct {
+				Prune               bool  `hcl:"prune,optional"`
+				PruneRetain         int32 `hcl:"prune_retain,optional"`
+				PruneRetainOverride bool  `hcl:"prune_retain_override,optional"`
+			}
+
+			if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &upBody); diag.HasErrors() {
+				return nil, diag
+			}
+
+			s.Kind = &pb.Pipeline_Step_Up_{
+				Up: &pb.Pipeline_Step_Up{
+					Prune:               upBody.Prune,
+					PruneRetain:         upBody.PruneRetain,
+					PruneRetainOverride: upBody.PruneRetainOverride,
+				},
+			}
+		case "exec":
+			var execBody struct {
+				Command string   `hcl:"command,optional"`
+				Args    []string `hcl:"args,optional"`
+			}
+
+			// Evaluate the step body hcl to get options
+			if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &execBody); diag.HasErrors() {
+				return nil, diag
+			}
+
+			s.Kind = &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image:   step.ImageURL,
+					Command: execBody.Command,
+					Args:    execBody.Args,
+				},
+			}
+		case "":
+			return nil, status.Error(codes.FailedPrecondition, "step use label cannot be empty")
+		default:
+			return nil, status.Errorf(codes.Internal, "unsupported step plugin type: %q", step.Use.Type)
 		}
 
-		pipe.Steps = steps
-
-		result = append(result, pipe)
+		steps[step.Name] = s
 	}
+
+	pipe.Steps = steps
+
+	result = append(result, pipe)
+
+	// Validate there are no cycles?
 
 	return result, nil
 }
