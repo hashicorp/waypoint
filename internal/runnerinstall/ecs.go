@@ -283,8 +283,8 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	// We check for the serviceName before v0.9 and v0.9+
 	ecsSvc := ecs.New(sess)
 	serviceNames := []string{
-		installutil.DefaultRunnerName(opts.Id),
 		DefaultRunnerTagName,
+		installutil.DefaultRunnerName(opts.Id),
 	}
 
 	service, err := awsinstallutil.FindServices(serviceNames, ecsSvc, i.Config.Cluster)
