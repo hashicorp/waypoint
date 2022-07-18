@@ -287,14 +287,14 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 		installutil.DefaultRunnerName(opts.Id),
 	}
 
-	service, err := awsinstallutil.FindServices(serviceNames, ecsSvc, i.Config.Cluster)
+	services, err := awsinstallutil.FindServices(serviceNames, ecsSvc, i.Config.Cluster)
 	if err != nil {
 		log.Debug("Unable to find desired runner; %s", err)
 		ui.Output("Could not get list of ECS services: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
 	}
 
-	if service != nil {
+	for _, service := range services {
 		// Delete associated runner service and tasks
 		// This does not remove the security group since it may be in use by other
 		// runners/waypoint infrastructure.

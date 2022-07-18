@@ -951,13 +951,13 @@ func (i *ECSInstaller) HasRunner(
 		installutil.DefaultRunnerName("static"),
 	}
 	ecsSvc := ecs.New(sess)
-	foundService, err := awsinstallutil.FindServices(serviceNames, ecsSvc, i.config.Cluster)
+	services, err := awsinstallutil.FindServices(serviceNames, ecsSvc, i.config.Cluster)
 	if err != nil {
 		opts.UI.Output("Could not get list of ECS services: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false, err
 	}
 
-	return foundService != nil, nil
+	return len(services) > 0, nil
 }
 
 func (i *ECSInstaller) InstallFlags(set *flag.Set) {

@@ -688,7 +688,8 @@ func DeleteEcsResources(
 	return nil
 }
 
-func FindServices(serviceNames []string, ecsSvc *ecs.ECS, cluster string) (*ecs.Service, error) {
+func FindServices(serviceNames []string, ecsSvc *ecs.ECS, cluster string) ([]*ecs.Service, error) {
+	var services []*ecs.Service
 	for _, serviceName := range serviceNames {
 		ss, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
 			Cluster:  aws.String(cluster),
@@ -697,10 +698,9 @@ func FindServices(serviceNames []string, ecsSvc *ecs.ECS, cluster string) (*ecs.
 		if err != nil {
 			return nil, err
 		}
-		if ss != nil && len(ss.Services) != 1 {
-			return nil, fmt.Errorf("expected 1 service named %s, found %d", serviceName, len(ss.Services))
+		if len(ss.Services) > 0 {
+			services = append(services, ss.Services...)
 		}
-		return ss.Services[0], nil
 	}
-	return nil, fmt.Errorf("no services found")
+	return services, nil
 }
