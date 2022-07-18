@@ -631,7 +631,11 @@ func (s *Service) RunnerJobStream(
 		}
 	}
 
-	defer logStreamWriter.Flush(ctx)
+	// We don't want the log stream writer to use the request context, because we want to
+	// ensure that flushing occurs even if it needs to happen after the request context
+	// is closed.
+	logStreamCtx := context.Background()
+	defer logStreamWriter.Flush(logStreamCtx)
 
 	// Start a goroutine that watches for job changes
 	jobCh := make(chan *serverstate.Job, 1)
