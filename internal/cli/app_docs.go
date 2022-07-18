@@ -287,12 +287,13 @@ func (c *AppDocsCommand) emitSection(w io.Writer, name, use, h string, fields []
 }
 
 // jsonFormat attempts to output all the data included in a a plugin's Documentation() function in the JSON file format
-func (c *AppDocsCommand) jsonFormat(name, ct string, doc *docs.Documentation) {
+func (c *AppDocsCommand) jsonFormat(name, ct string, doc *docs.Documentation, config bool) {
 	// we use this constant to compare to ct for some special behavior
 	const csType = "configsourcer"
 
 	w, err := os.Create(fmt.Sprintf("./docs/%s-%s.json", ct, name))
 	if err != nil {
+		c.ui.Output(fmt.Sprintf("Failed to create files: %s", clierrors.Humanize(err)), terminal.StatusError)
 		panic(err)
 	}
 
@@ -318,17 +319,34 @@ func (c *AppDocsCommand) jsonFormat(name, ct string, doc *docs.Documentation) {
 	mappers := dets.Mappers
 	jMap["mappers"] = mappers
 
-	required, optional := splitFields(doc.Fields())
+	if config {
+		required, optional := splitFields(doc.RequestFields())
+		jMap["requiredFields"] = required
+		jMap["optionalFields"] = optional
+		use := "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
+		jMap["use"] = use
 
-	use := "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
-	jMap["use"] = use
-	jMap["requiredFields"] = required
+		if len(doc.Fields()) > 0 {
+			jMap["sourceFieldsHelp"] = "Source Parameters\n" +
+				"The parameters below are used with `waypoint config source-set` to configure\n" +
+				"the behavior this plugin. These are _not_ used in `dynamic` calls. The\n" +
+				"parameters used for `dynamic` are in the previous section.\n"
 
-	jMap["optionalFields"] = optional
+			required, optional := splitFields(doc.Fields())
+			jMap["requiredSourceFields"] = required
+			jMap["optionalSourceFields"] = optional
+		}
+	} else {
+		required, optional := splitFields(doc.Fields())
+		use := "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+		jMap["use"] = use
+		jMap["requiredFields"] = required
+		jMap["optionalFields"] = optional
 
-	if fields := doc.TemplateFields(); len(fields) > 0 {
-		jMap["outputAttrsHelp"] = "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy)."
-		jMap["outputAttrs"] = fields
+		if fields := doc.TemplateFields(); len(fields) > 0 {
+			jMap["outputAttrsHelp"] = "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy)."
+			jMap["outputAttrs"] = fields
+		}
 	}
 
 	t, _ := json.MarshalIndent(jMap, "", "   ")
@@ -405,49 +423,6 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 	}
 
 	fmt.Fprintln(w)
-}
-
-// jsonFormatConfigSourcer attempts to output all the data included in a a plugin's Documentation() function in the JSON file format
-func (c *AppDocsCommand) jsonFormatConfigSourcer(name, ct string, doc *docs.Documentation) {
-	w, err := os.Create(fmt.Sprintf("./docs/%s-%s.json", ct, name))
-	if err != nil {
-		panic(err)
-	}
-
-	jMap := map[string]interface{}{"name": name, "type": ct}
-
-	dets := doc.Details()
-
-	if dets.Description != "" {
-		jMap["description"] = dets.Description
-	}
-
-	if dets.Example != "" {
-		jMap["example"] = strings.TrimSpace(dets.Example)
-	}
-
-	mappers := dets.Mappers
-	jMap["mappers"] = mappers
-
-	required, optional := splitFields(doc.RequestFields())
-	jMap["requiredFields"] = required
-	jMap["optionalFields"] = optional
-
-	use := "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
-	jMap["use"] = use
-
-	if len(doc.Fields()) > 0 {
-		jMap["sourceFieldsHelp"] = "Source Parameters\n" +
-			"The parameters below are used with `waypoint config source-set` to configure\n" +
-			"the behavior this plugin. These are _not_ used in `dynamic` calls. The\n" +
-			"parameters used for `dynamic` are in the previous section.\n"
-
-		required, optional := splitFields(doc.Fields())
-		jMap["requiredSourceFields"] = required
-		jMap["optionalSourceFields"] = optional
-	}
-	t, _ := json.MarshalIndent(jMap, "", "   ")
-	fmt.Fprintf(w, "%s\n", t)
 }
 
 func (c *AppDocsCommand) mdxFormatConfigSourcer(name, ct string, doc *docs.Documentation) {
@@ -675,7 +650,7 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 		if c.flagMarkdown {
 			c.markdownFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
 		} else if c.flagJson {
-			c.jsonFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
+			c.jsonFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc, false)
 		} else {
 			c.basicFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
 		}
@@ -698,17 +673,17 @@ func (c *AppDocsCommand) builtinJSON() int {
 
 	pluginDocs, err := getDocs(pluginNames, c.Log)
 	if err != nil {
-		c.ui.Output(fmt.Sprintf("Failed to get plugin docs: %s", err), terminal.StatusError)
+		c.ui.Output(fmt.Sprintf("Failed to get plugin docs: %s", clierrors.Humanize(err)), terminal.StatusError)
 		return 1
 	}
 
 	for _, pluginDoc := range pluginDocs {
 		switch pluginDoc.pluginType {
 		case "configsourcer":
-			c.jsonFormatConfigSourcer(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
+			c.jsonFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc, true)
 
 		default:
-			c.jsonFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
+			c.jsonFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc, false)
 		}
 	}
 
