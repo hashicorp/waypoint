@@ -105,9 +105,9 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 		}
 
 		// Parse a nested pipeline step if defined
-		// TODO(briancain): Does this need to be a resursive function? How far down
-		// the hole do we let embedded pipelines go? Right now it's just one level
-		// of nesting
+		// TODO(briancain): At the moment, we're supporting singly nestested Pipeline
+		// stanzas. If we want to support fully nested embedded pipelines we'll need
+		// to turn this into a recursive function.
 		if stepRaw.PipelineRaw != nil {
 			var embedPipeline Pipeline
 			if diag := gohcl.DecodeBody(stepRaw.PipelineRaw.Body, finalizeContext(ctx), &embedPipeline); diag.HasErrors() {
@@ -151,6 +151,9 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 // PipelineProtos will take the existing HCL eval context, eval the config
 // and translate the HCL result into a Pipeline Proto to be returned for
 // operations such as ConfigSync.
+// If a pipeline has an embedded pipeline defined, PipelineProtos will return
+// each as its own separate Pipeline proto message where the step that defined
+// the embedded pipeline is actually a Pipeline Step reference.
 func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 	if c == nil {
 		// This is likely an internal error if this happens.
@@ -171,12 +174,10 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 	return result, nil
 }
 
+// buildPipelineProto will recursively translate an hclPipeline into a protobuf
+// Pipeline message.
 func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 	var result []*pb.Pipeline
-	// TODO(briancain): In the future, we might allow for namespaced pipelines
-	// where the format is as follows: `project/pipeline-name`. In that case
-	// the pipeline stanza here will probably be empty, and the actual
-	// pipeline proto will need to be looked up in the servers DB on a queued run.
 	pipe := &pb.Pipeline{
 		Name: pl.Name,
 		Owner: &pb.Pipeline_Project{
@@ -199,7 +200,10 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 			s.DependsOn = []string{pl.StepRaw[i-1].Name}
 		}
 
-		// We have an embeded pipeline for this step
+		// We have an embeded pipeline for this step. This can either be an hclPipeline
+		// defined directly in the step, or a pipeline reference to another pipeline
+		// defined else where. If this is a ref, the raw hcl for the pipeline should
+		// be empty.
 		if step.PipelineRaw != nil {
 			// TODO(briancain): It shouldn't be valid to have a "project/pipeline"
 			// defined as well as a nested pipeline. We should validate this.
