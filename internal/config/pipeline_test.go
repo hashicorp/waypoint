@@ -6,6 +6,8 @@ import (
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestPipeline(t *testing.T) {
@@ -180,7 +182,6 @@ func TestPipelineProtos(t *testing.T) {
 		File string
 		Func func(*testing.T, *Config)
 	}{
-		// TODO verify a step exec was set properly and the fields are set on the proto
 		{
 			"pipeline_exec_step.hcl",
 			func(t *testing.T, c *Config) {
@@ -191,6 +192,17 @@ func TestPipelineProtos(t *testing.T) {
 				require.Len(pipelines, 1)
 
 				require.Equal(pipelines[0].Name, "foo")
+			},
+		},
+
+		{
+			"pipeline_invalid_step.hcl",
+			func(t *testing.T, c *Config) {
+				require := require.New(t)
+
+				_, err := c.PipelineProtos()
+				require.Error(err)
+				require.Equal(codes.Internal, status.Code(err))
 			},
 		},
 
