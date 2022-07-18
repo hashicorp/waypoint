@@ -287,7 +287,7 @@ func (c *AppDocsCommand) emitSection(w io.Writer, name, use, h string, fields []
 }
 
 // jsonFormat attempts to output all the data included in a a plugin's Documentation() function in the JSON file format
-func (c *AppDocsCommand) jsonFormat(name, ct string, doc *docs.Documentation, config bool) {
+func (c *AppDocsCommand) jsonFormat(name, ct string, doc *docs.Documentation) {
 	// we use this constant to compare to ct for some special behavior
 	const csType = "configsourcer"
 
@@ -319,7 +319,7 @@ func (c *AppDocsCommand) jsonFormat(name, ct string, doc *docs.Documentation, co
 	mappers := dets.Mappers
 	jMap["mappers"] = mappers
 
-	if config {
+	if ct == "configsourcer" {
 		required, optional := splitFields(doc.RequestFields())
 		jMap["requiredFields"] = required
 		jMap["optionalFields"] = optional
@@ -650,7 +650,7 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 		if c.flagMarkdown {
 			c.markdownFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
 		} else if c.flagJson {
-			c.jsonFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc, false)
+			c.jsonFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
 		} else {
 			c.basicFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
 		}
@@ -678,13 +678,7 @@ func (c *AppDocsCommand) builtinJSON() int {
 	}
 
 	for _, pluginDoc := range pluginDocs {
-		switch pluginDoc.pluginType {
-		case "configsourcer":
-			c.jsonFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc, true)
-
-		default:
-			c.jsonFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc, false)
-		}
+		c.jsonFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
 	}
 
 	return c.funcsMDX()
