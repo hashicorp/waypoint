@@ -127,20 +127,19 @@ func (s *State) TokenEncrypt(token []byte, keyId string, metadata map[string]str
 }
 
 func (s *State) TokenDecrypt(ciphertext []byte) (*pb.TokenTransport, *pb.Token, error) {
-	var err error
 	if subtle.ConstantTimeCompare(ciphertext[:len(tokenMagic)], []byte(tokenMagic)) != 1 {
-		return nil, nil, errors.Wrapf(err, "bad magic")
+		return nil, nil, errors.Errorf("bad magic")
 	}
 
 	var tt pb.TokenTransport
-	err = proto.Unmarshal(ciphertext[len(tokenMagic):], &tt)
+	err := proto.Unmarshal(ciphertext[len(tokenMagic):], &tt)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	key, err := s.HMACKeyGet(tt.KeyId)
 	if err != nil || key == nil {
-		return nil, nil, errors.Wrapf(err, "unknown key")
+		return nil, nil, errors.Errorf("unknown key")
 	}
 
 	// Hash the token body using the HMAC key so that we can compare
@@ -153,7 +152,7 @@ func (s *State) TokenDecrypt(ciphertext []byte) (*pb.TokenTransport, *pb.Token, 
 	h.Write(tt.Body)
 	sum := h.Sum(nil)
 	if subtle.ConstantTimeCompare(sum, tt.Signature) != 1 {
-		return nil, nil, errors.Wrapf(err, "bad signature")
+		return nil, nil, errors.Errorf("bad signature")
 	}
 
 	// Decode the actual token structure
