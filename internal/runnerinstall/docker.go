@@ -3,6 +3,7 @@ package runnerinstall
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"os"
 	"time"
 
@@ -166,7 +167,7 @@ func (d DockerRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 
 	s.Update("Finding runner container")
 	containerNames := []string{
-		defaultRunnerName(opts.Id),
+		installutil.DefaultRunnerName(opts.Id),
 		DefaultRunnerTagName,
 	}
 	var foundContainer types.Container

@@ -3,6 +3,7 @@ package runnerinstall
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"strconv"
 	"strings"
 	"time"
@@ -114,7 +115,7 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 	// Name AND ID of the Nomad job will be waypoint-runner-ID
 	// Name is cosmetic, but ID must be unique
-	jobRef := defaultRunnerName(opts.Id)
+	jobRef := installutil.DefaultRunnerName(opts.Id)
 	job := api.NewServiceJob(jobRef, jobRef, c.Region, 50)
 	job.Namespace = &c.Namespace
 	job.Datacenters = c.Datacenters
@@ -130,7 +131,7 @@ func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 	volumeRequest := api.VolumeRequest{ReadOnly: false}
 	if c.CsiVolumeProvider != "" {
 		volumeRequest.Type = "csi"
-		volumeRequest.Source = defaultRunnerName(opts.Id)
+		volumeRequest.Source = installutil.DefaultRunnerName(opts.Id)
 		volumeRequest.AccessMode = "single-node-writer"
 		volumeRequest.AttachmentMode = "file-system"
 	} else {
@@ -305,7 +306,7 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	s = sg.Add("Locate existing Waypoint runner...")
 	var waypointRunnerJobName string
 	possibleRunnerJobNames := []string{
-		defaultRunnerName(opts.Id),
+		installutil.DefaultRunnerName(opts.Id),
 		DefaultRunnerTagName,
 	}
 	for _, runnerJobName := range possibleRunnerJobNames {

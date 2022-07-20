@@ -61,10 +61,6 @@ var Platforms = map[string]RunnerInstaller{
 	"docker":     &DockerRunnerInstaller{},
 }
 
-func defaultRunnerName(id string) string {
-	return "waypoint-" + id + "-runner"
-}
-
 const (
 	DefaultRunnerTagName = "waypoint-runner"
 )
