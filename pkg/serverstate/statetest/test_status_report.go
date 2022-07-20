@@ -104,8 +104,7 @@ func TestStatusReport(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Equal(ts.AsTime(), resp.Status.CompleteTime.AsTime())
 		}
 
-		// Add another and see Latset change
-		// Add
+		// Add another and see Latest change
 		err = s.StatusReportPut(false, serverptypes.TestStatusReport(t, &pb.StatusReport{
 			Id:          "d2",
 			Application: app,
