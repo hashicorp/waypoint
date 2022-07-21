@@ -638,13 +638,6 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-		/*
-			"pipeline config-sync": func() (cli.Command, error) {
-				return &PipelineConfigSyncCommand{
-					baseCommand: baseCommand,
-				}, nil
-			},
-		*/
 
 		"project": func() (cli.Command, error) {
 			return &helpCommand{
