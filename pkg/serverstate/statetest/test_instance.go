@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/hashicorp/go-memdb"
+
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
@@ -19,10 +20,12 @@ import (
 func init() {
 	tests["instance"] = []testFunc{
 		TestInstance,
+		TestInstanceByDeployment,
 	}
 }
 
 func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
+
 	testInstance := func(t *testing.T, v *serverstate.Instance) *serverstate.Instance {
 		if v == nil {
 			v = &serverstate.Instance{}
@@ -38,6 +41,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		return v
 	}
+
 	t.Run("crud", func(t *testing.T) {
 		require := require.New(t)
 
@@ -229,6 +233,100 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		list, err = s.InstancesByApp(app, &ref2, nil)
 		require.NoError(err)
 		require.Empty(list)
+	})
+}
+
+func TestInstanceByDeployment(t *testing.T, factory Factory, _ RestartFactory) {
+	require := require.New(t)
+
+	s := factory(t)
+	defer s.Close()
+
+	ref := &pb.Ref_Project{Project: "foo"}
+	require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		Name: ref.Project,
+	})))
+
+	app := &pb.Ref_Application{
+		Project:     ref.Project,
+		Application: "testapp",
+	}
+
+	ws := &pb.Ref_Workspace{
+		Workspace: "default",
+	}
+
+	// Add two deployments
+	require.NoError(s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+		Id:          "A",
+		Application: app,
+		Workspace:   ws,
+		Status: &pb.Status{
+			State:     pb.Status_SUCCESS,
+			StartTime: timestamppb.Now(),
+		},
+	})))
+
+	require.NoError(s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+		Id:          "B",
+		Application: app,
+		Workspace:   ws,
+		Status: &pb.Status{
+			State:     pb.Status_SUCCESS,
+			StartTime: timestamppb.Now(),
+		},
+	})))
+
+	// Create three instances, for deployment A, two for B
+
+	initialAInst := &serverstate.Instance{
+		Id:           "A",
+		DeploymentId: "A",
+		Project:      ref.Project,
+		Application:  app.Application,
+		Workspace:    ws.Workspace,
+		DisableExec:  true,
+	}
+	require.NoError(s.InstanceCreate(initialAInst))
+
+	require.NoError(s.InstanceCreate(&serverstate.Instance{
+		Id:           "B1",
+		DeploymentId: "B",
+		Project:      ref.Project,
+		Application:  app.Application,
+		Workspace:    ws.Workspace,
+	}))
+
+	require.NoError(s.InstanceCreate(&serverstate.Instance{
+		Id:           "B2",
+		DeploymentId: "B",
+		Project:      ref.Project,
+		Application:  app.Application,
+		Workspace:    ws.Workspace,
+	}))
+
+	t.Run("can get deployment A's instance", func(t *testing.T) {
+		inst, err := s.InstancesByDeployment("A", nil)
+		require.NoError(err)
+		require.Len(inst, 1)
+
+		// Ensure all the fields have been set
+		require.Equal(inst[0].Id, initialAInst.Id)
+		require.Equal(inst[0].DeploymentId, initialAInst.DeploymentId)
+		require.Equal(inst[0].Application, initialAInst.Application)
+		require.Equal(inst[0].Project, initialAInst.Project)
+		require.Equal(inst[0].DisableExec, initialAInst.DisableExec)
+	})
+
+	t.Run("can get deployment B's instances", func(t *testing.T) {
+		inst, err := s.InstancesByDeployment("B", nil)
+		require.NoError(err)
+		require.Len(inst, 2)
+
+		// Ensure we got both of B's instances (but ignore order)
+		require.True(inst[0].Id == "B1" || inst[0].Id == "B2")
+		require.True(inst[1].Id == "B1" || inst[1].Id == "B2")
+		require.True(inst[0].Id != inst[1].Id)
 	})
 
 }

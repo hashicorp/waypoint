@@ -55,6 +55,7 @@ manually installed runners will not be automatically upgraded.
 - `-ecs-mem=<string>` - Configures the requested memory amount for the Waypoint server task in ECS. The default is 1024.
 - `-ecs-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners. This will default to the server image with the name (not label) suffixed with '-odr'.
 - `-ecs-task-role-name=<string>` - IAM Execution Role to assign to the on-demand runner. If this is blank, an IAM role will be created automatically with the default permissions. The default is waypoint-runner.
+- `-ecs-execution-role-name=<string>` - Configures the IAM Execution role name to use. The default is waypoint-server-execution-role.
 - `-ecs-odr-mem=<string>` - Configures the requested memory amount for the Waypoint On-Demand runner in ECS. The default is 2048.
 - `-ecs-odr-cpu=<string>` - Configures the requested CPU amount for the Waypoint On-Demand runner in ECS. The default is 512.
 

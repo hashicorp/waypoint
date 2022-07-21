@@ -25,6 +25,7 @@ const (
 	defaultServerTagName     = "waypoint-server"
 	defaultServerTagValue    = "server-component"
 	ServerName               = "waypoint-server"
+	DefaultStaticRunnerName  = "waypoint-static-runner"
 	DefaultSecurityGroupName = "waypoint-server-security-group"
 	RolePolicy               = `{
   "Version": "2012-10-17",
@@ -92,7 +93,6 @@ func SetupNetworking(
 	sess *session.Session,
 	subnet []string,
 ) (*NetworkInformation, error) {
-
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -131,7 +131,6 @@ func SetupEFS(
 	ui terminal.UI,
 	sess *session.Session,
 	netInfo *NetworkInformation,
-
 ) (*EfsInformation, error) {
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -307,7 +306,6 @@ func SetupExecutionRole(
 
 	executionRoleName string,
 ) (string, error) {
-
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -688,4 +686,21 @@ func DeleteEcsResources(
 	}
 
 	return nil
+}
+
+func FindServices(serviceNames []string, ecsSvc *ecs.ECS, cluster string) ([]*ecs.Service, error) {
+	var services []*ecs.Service
+	for _, serviceName := range serviceNames {
+		ss, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
+			Cluster:  aws.String(cluster),
+			Services: []*string{aws.String(serviceName)},
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(ss.Services) > 0 {
+			services = append(services, ss.Services...)
+		}
+	}
+	return services, nil
 }
