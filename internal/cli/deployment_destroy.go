@@ -63,7 +63,8 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 		for _, deployment := range deployments {
 			// Can't destroy a deployment that was not successful
 			if deployment.Status.GetState() != pb.Status_SUCCESS {
-				continue
+				c.ui.Output("The deployment was not successful - destroy may not completely destroy "+
+					"all resources", terminal.WithWarningStyle())
 			}
 
 			// Get our app client
