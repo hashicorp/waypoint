@@ -221,8 +221,8 @@ func (p *Project) Pipelines() []*Pipeline {
 	return result
 }
 
-// App initializes and returns the app with the given name. This
-// returns an error with codes.NotFound if the app is not found.
+// Pipeline initializes and returns the pipeline with the given name. This
+// returns an error with codes.NotFound if the pipeline is not found.
 func (p *Project) Pipeline(name string) (*Pipeline, error) {
 	if v, ok := p.pipelines[name]; ok {
 		return v, nil
