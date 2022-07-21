@@ -187,10 +187,6 @@
     "path": "job-get-stream"
   },
   {
-    "title": "plugin",
-    "path": "plugin"
-  },
-  {
     "title": "pipeline inspect",
     "path": "pipeline-inspect"
   },
@@ -201,6 +197,10 @@
   {
     "title": "pipeline run",
     "path": "pipeline-run"
+  },
+  {
+    "title": "plugin",
+    "path": "plugin"
   },
   {
     "title": "project apply",
