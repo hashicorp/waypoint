@@ -35,7 +35,7 @@ func (c *PipelineRunCommand) Run(args []string) int {
 	} else if c.flagPipelineId == "" {
 		pipelineName = c.args[0]
 	} else {
-		c.ui.Output("Both pipeline name and id was specified, using pipeline id", terminal.WithWarningStyle())
+		c.ui.Output("Both pipeline name and id were specified, using pipeline id", terminal.WithWarningStyle())
 	}
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
