@@ -51,6 +51,29 @@ func TestPipeline(t testing.T, src *pb.Pipeline) *pb.Pipeline {
 	return src
 }
 
+// TestPipelineRun returns a valid user for tests.
+func TestPipelineRun(t testing.T, src *pb.PipelineRun) *pb.PipelineRun {
+	t.Helper()
+
+	if src == nil {
+		src = &pb.PipelineRun{}
+	}
+
+	require.NoError(t, mergo.Merge(src, &pb.PipelineRun{
+		Id: "test-run",
+		Pipeline: &pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{
+					Id: "test",
+				},
+			},
+		},
+		Sequence: 1,
+	}))
+
+	return src
+}
+
 // ValidatePipeline validates the user structure.
 func ValidatePipeline(v *pb.Pipeline) error {
 	return validationext.Error(validation.ValidateStruct(v,
