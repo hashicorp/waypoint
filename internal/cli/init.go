@@ -157,8 +157,32 @@ func (c *InitCommand) Run(args []string) int {
 
 	// If we have no config, initialize a new one.
 	if path == "" {
-		if !c.initNew() {
-			return 1
+		proceed, err := c.ui.Input(&terminal.Input{
+			Prompt: "Do you want help generating a waypoint.hcl file? Type 'yes' to initialize the interactive generator or 'no' to generate a template waypoint.hcl file: ",
+			Style:  "",
+			Secret: false,
+		})
+		if err != nil {
+			c.ui.Output(
+				"Error getting input: %s",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+		} else if strings.ToLower(proceed) == "yes" {
+			c.ui.Output("Starting interactive .hcl generator.\n")
+			if !c.hclGen() {
+				return 1
+			}
+		} else if strings.ToLower(proceed) == "no" {
+			c.ui.Output("Generating template file.\n")
+			if !c.initNew() {
+				return 1
+			}
+		} else {
+			c.ui.Output("Input did not match any option, generating template file\n")
+			if !c.initNew() {
+				return 1
+			}
 		}
 
 		return 0
@@ -230,6 +254,140 @@ validate the configuration and initialize your project.
 		terminal.WithSuccessStyle(),
 	)
 
+	return true
+}
+
+func (c *InitCommand) hclGen() bool {
+	if err := ioutil.WriteFile("waypoint.hcl", []byte(""), 0644); err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	}
+	c.ui.Output("Initial waypoint.hcl created!", terminal.WithStyle(terminal.SuccessBoldStyle))
+	getAppNames := true
+	var apps []string
+	var err error
+	for getAppNames {
+		apps, err = c.getAppNames()
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return false
+		}
+		if apps != nil {
+			getAppNames = false
+		}
+	}
+	//for _, app := range apps {
+	//}
+
+	return true
+}
+
+func (c *InitCommand) getAppNames() ([]string, error) {
+	apps := make([]string, 0)
+	appName := false
+	for !appName {
+		proceed, err := c.ui.Input(&terminal.Input{
+			Prompt: "Please enter a name for your app, this prompt will be repeated in case you have multiple: ",
+			Style:  "",
+			Secret: false,
+		})
+		if err != nil {
+			c.ui.Output(
+				"Error getting input: %s",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return apps, err
+		} else if strings.ToLower(proceed) == "" {
+			c.ui.Output("You need to enter at least one app name\n")
+		} else {
+			if c.confirmAppName(proceed) {
+				apps = append(apps, proceed)
+				appName = true
+			}
+		}
+	}
+	appName = false
+	for !appName {
+		proceed, err := c.ui.Input(&terminal.Input{
+			Prompt: "If you have more apps to configure, please continue entering app names one at a time. When you are done, enter nothing: ",
+			Style:  "",
+			Secret: false,
+		})
+		if err != nil {
+			c.ui.Output(
+				"Error getting input: %s",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return apps, err
+		} else if strings.ToLower(proceed) == "" {
+			c.ui.Output("Done entering app names, app names entered:\n")
+			for _, app := range apps {
+				c.ui.Output("%s\n", app)
+			}
+			goodInput := false
+			for !goodInput {
+				okApp, err := c.ui.Input(&terminal.Input{
+					Prompt: "Enter 'yes' to proceed with this list or 'no' to start over: ",
+					Style:  "",
+					Secret: false,
+				})
+				if err != nil {
+					c.ui.Output(
+						"Error getting input: %s",
+						clierrors.Humanize(err),
+						terminal.WithErrorStyle(),
+					)
+					return apps, err
+				} else if strings.ToLower(okApp) == "yes" {
+					c.ui.Output("App names accepted\n")
+					appName = true
+					goodInput = true
+				} else if strings.ToLower(okApp) == "no" {
+					c.ui.Output("App names rejected, starting over\n")
+					appName = true
+					apps = nil
+					goodInput = true
+				} else {
+					c.ui.Output("Please enter either 'yes' or 'no'\n")
+				}
+			}
+		} else {
+			if c.confirmAppName(proceed) {
+				apps = append(apps, proceed)
+			}
+		}
+	}
+	return apps, nil
+}
+
+// Helper function for getAppNames()
+func (c *InitCommand) confirmAppName(name string) bool {
+	c.ui.Output("You entered: %s\n", name)
+	for true {
+		okApp, err := c.ui.Input(&terminal.Input{
+			Prompt: "Enter 'yes' to proceed with this name or 'no' to reenter it: ",
+			Style:  "",
+			Secret: false,
+		})
+		if err != nil {
+			c.ui.Output(
+				"Error getting input: %s",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return false
+		} else if strings.ToLower(okApp) == "yes" {
+			c.ui.Output("App name accepted\n")
+			return true
+		} else if strings.ToLower(okApp) == "no" {
+			c.ui.Output("App name rejected\n")
+			return false
+		} else {
+			c.ui.Output("Please enter either 'yes' or 'no'\n")
+		}
+	}
 	return true
 }
 
