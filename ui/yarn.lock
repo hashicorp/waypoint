@@ -1496,10 +1496,10 @@
   resolved "https://registry.yarnpkg.com/@handlebars/parser/-/parser-1.1.0.tgz#d6dbc7574774b238114582410e8fee0dc3532bdf"
   integrity sha512-rR7tJoSwJ2eooOpYGxGGW95sLq6GXUaS1UtWvN7pei6n2/okYvCGld9vsUTvkl2migxbkszsycwtMf/GEc1k1A==
 
-"@hashicorp/design-system-components@^0.12.10":
-  version "0.12.10"
-  resolved "https://registry.yarnpkg.com/@hashicorp/design-system-components/-/design-system-components-0.12.10.tgz#2f9d231803a845708240f264d8861ac6d68513d2"
-  integrity sha512-JkxEPkegERJyBYlvnCrd3nQEEDPNvXul7fCL9SFVdk0Ll9rF0/FBOkAIviRdJcYiGIx+xV2ua7le8wwfVNPKfw==
+"@hashicorp/design-system-components@^0.12.13":
+  version "0.12.13"
+  resolved "https://registry.yarnpkg.com/@hashicorp/design-system-components/-/design-system-components-0.12.13.tgz#711f96c68042047d042db2862c965618197c7cb4"
+  integrity sha512-JZtLI3FQ5rm3ln6ZpTtYBKzDsP/mEVH4KD9XVa67zvVfkBk3kqEyO2K/Izv3mqm+a7m0PVj/t98GrjNrEnuJvQ==
   dependencies:
     "@hashicorp/design-system-tokens" "^0.8.1"
     "@hashicorp/ember-flight-icons" "^2.0.8"
