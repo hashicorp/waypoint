@@ -22,7 +22,7 @@ pipeline "foo" {
     image_url = "example.com/different"
     depends_on = ["zero"]
 
-    use "test/hunger" {
+    use "hunger" {
       foo = "food"
       bar = "drink"
     }
