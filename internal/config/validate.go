@@ -134,10 +134,22 @@ func (c *Config) Validate() (ValidationResults, error) {
 	}
 
 	// Validate pipelines
-	for _, block := range content.Blocks.OfType("pipeline") {
+	for i, block := range content.Blocks.OfType("pipeline") {
 		pipelineRes := c.validatePipeline(block)
 		if pipelineRes != nil {
 			results = append(results, pipelineRes...)
+		}
+
+		// Validate there's no duplicate names
+		for j, bl := range content.Blocks.OfType("pipeline") {
+			if i != j && bl.Labels[0] == block.Labels[0] {
+				results = append(results, ValidationResult{Error: &hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "'pipeline' stanza names must be unique per project",
+					Subject:  &block.DefRange,
+					Context:  &block.TypeRange,
+				}})
+			}
 		}
 	}
 

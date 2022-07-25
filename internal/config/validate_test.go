@@ -69,6 +69,10 @@ func TestConfigValidatePipelines(t *testing.T) {
 			"pipeline_no_step.hcl",
 			"'step' stanza",
 		},
+		{
+			"pipeline_dupe_name.hcl",
+			"'pipeline' stanza",
+		},
 	}
 
 	for _, tt := range cases {
