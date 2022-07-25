@@ -29,7 +29,7 @@ func TestPipeline(t *testing.T, factory Factory, restartF RestartFactory) {
 		err := s.PipelinePut(p)
 		require.NoError(err) // no job id set
 
-		// Set again
+		// Set again, should overwrite and not error
 		err = s.PipelinePut(p)
 		require.NoError(err)
 
