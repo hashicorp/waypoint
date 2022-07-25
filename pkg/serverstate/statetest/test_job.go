@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/hashicorp/go-memdb"
+
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"

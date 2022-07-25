@@ -50,4 +50,54 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Equal(resp.Sequence, r.Sequence)
 		}
 	})
+
+	t.Run("List", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Set Pipeline
+		p := ptypes.TestPipeline(t, nil)
+		err := s.PipelinePut(p)
+		require.NoError(err)
+
+		// Set Pipeline Run
+		pr := &pb.PipelineRun{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: &pb.Ref_PipelineId{
+						Id: p.Id,
+					},
+				},
+			},
+		}
+		r := ptypes.TestPipelineRun(t, pr)
+		err = s.PipelineRunPut(r)
+		require.NoError(err)
+
+		// List
+		{
+			resp, err := s.PipelineRunList(pr.Pipeline)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Len(resp, 1)
+			require.Equal(resp[0].Id, pr.Id)
+		}
+
+		// Set Another Pipeline Run
+		//pr := &pb.PipelineRun{
+		//	Pipeline: &pb.Ref_Pipeline{
+		//		Ref: &pb.Ref_Pipeline_Id{
+		//			Id: &pb.Ref_PipelineId{
+		//				Id: p.Id,
+		//			},
+		//		},
+		//	},
+		//}
+		//r := ptypes.TestPipelineRun(t, pr)
+		//err = s.PipelineRunPut(r)
+		//require.NoError(err)
+
+	})
 }

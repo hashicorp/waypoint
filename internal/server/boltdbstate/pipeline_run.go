@@ -76,7 +76,7 @@ func (s *State) pipelineRunPut(
 	return s.pipelineRunIndexSet(memTxn, id, value)
 }
 
-// PipelineRunGet gets a PipelineRun by sequence or UUID.
+// PipelineRunGet gets a PipelineRun by pipeline and sequence.
 func (s *State) PipelineRunGet(ref *pb.Ref_Pipeline, seq uint64) (*pb.PipelineRun, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
@@ -84,7 +84,7 @@ func (s *State) PipelineRunGet(ref *pb.Ref_Pipeline, seq uint64) (*pb.PipelineRu
 	var result *pb.PipelineRun
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
 		p, err := s.pipelineGet(dbTxn, memTxn, ref)
-		result, err = s.pipelineRunGet(dbTxn, memTxn, p, fmt.Sprint(seq))
+		result, err = s.pipelineRunGet(dbTxn, memTxn, p.Id, fmt.Sprint(seq))
 		return err
 	})
 
@@ -94,7 +94,7 @@ func (s *State) PipelineRunGet(ref *pb.Ref_Pipeline, seq uint64) (*pb.PipelineRu
 func (s *State) pipelineRunGet(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
-	p *pb.Pipeline,
+	pId string,
 	seq string,
 ) (*pb.PipelineRun, error) {
 	var result pb.PipelineRun
@@ -102,14 +102,14 @@ func (s *State) pipelineRunGet(
 
 	// Look up the first instance of the pipeline run where the sequence number and pipeline ref match
 	raw, err := memTxn.First(pipelineRunIndexTableName,
-		pipelineRunIndexIdBySeq, p.Id, seq)
+		pipelineRunIndexIdBySeq, pId, seq)
 	if err != nil {
 		return nil, err
 	}
 	if raw == nil {
 		return nil, status.Errorf(codes.NotFound,
-			"pipeline run v%q could not found for pipeline name: %q, uuid: %q",
-			seq, p.Name, p.Id)
+			"pipeline run v%q could not found for pipeline Id: %q",
+			seq, pId)
 	}
 	// set the id to be looked up for GET
 	idx, ok := raw.(*pipelineRunIndexRecord)
@@ -124,64 +124,62 @@ func (s *State) pipelineRunGet(
 	return &result, dbGet(b, []byte(strings.ToLower(pipelineRunId)), &result)
 }
 
-//////// ---------------------------- ////
-//func (s *State) PipelineRunList(pRef *pb.Ref_Project) ([]*pb.PipelineRun, error) {
-//	memTxn := s.inmem.Txn(false)
-//	defer memTxn.Abort()
-//
-//	refs, err := s.pipelineRunList(memTxn, pRef)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var out []*pb.PipelineRun
-//	err = s.db.View(func(dbTxn *bolt.Tx) error {
-//		for _, ref := range refs {
-//			val, err := s.pipelineRunGet(dbTxn, memTxn, ref)
-//			if err != nil {
-//				return err
-//			}
-//
-//			out = append(out, val)
-//		}
-//
-//		return nil
-//	})
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return out, nil
-//}
+func (s *State) PipelineRunList(pRef *pb.Ref_Pipeline) ([]*pb.PipelineRun, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
 
-//func (s *State) pipelineRunList(
-//	memTxn *memdb.Txn,
-//	ref *pb.Ref_Project,
-//) ([]*pb.Ref_PipelineRun, error) {
-//	iter, err := memTxn.Get(pipelineRunIndexTableName, pipelineRunIndexId+"_prefix", "")
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var result []*pb.Ref_pipelineRun
-//	for {
-//		next := iter.Next()
-//		if next == nil {
-//			break
-//		}
-//		idx := next.(*pipelineRunIndexRecord)
-//
-//		result = append(result, &pb.Ref_pipelineRun{
-//			Ref: &pb.Ref_pipelineRun_Id{
-//				Id: &pb.Ref_pipelineRunId{
-//					Id: idx.Id,
-//				},
-//			},
-//		})
-//	}
-//
-//	return result, nil
-//}
+	pId, ok := pRef.Ref.(*pb.Ref_Pipeline_Id)
+	if !ok {
+		return nil, status.Errorf(codes.Internal,
+			"could not convert Ref %t to pipeline ID", pRef.Ref)
+	}
+
+	var out []*pb.PipelineRun
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		rrs, err := s.pipelineRunList(memTxn, pId.Id.Id)
+		if err != nil {
+			return err
+		}
+
+		for _, idx := range rrs {
+			var pr *pb.PipelineRun
+			pr, err = s.pipelineRunGet(dbTxn, memTxn, idx.PipelineId, idx.Sequence)
+			if err != nil {
+				return err
+			}
+			out = append(out, pr)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *State) pipelineRunList(
+	memTxn *memdb.Txn,
+	pipeline string,
+) ([]*pipelineRunIndexRecord, error) {
+	iter, err := memTxn.Get(pipelineRunIndexTableName, pipelineRunIndexId+"_prefix", pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*pipelineRunIndexRecord
+	for {
+		next := iter.Next()
+		if next == nil {
+			break
+		}
+		idx := next.(*pipelineRunIndexRecord)
+
+		result = append(result, idx)
+	}
+
+	return result, nil
+}
 
 // pipelineRunIndexSet writes an index record for a single pipelineRun.
 func (s *State) pipelineRunIndexSet(txn *memdb.Txn, id []byte, value *pb.PipelineRun) error {
