@@ -34,9 +34,9 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 	if len(c.args) == 0 {
 		c.ui.Output("Pipeline ID required.\n\n%s", c.Help(), terminal.WithErrorStyle())
 		return 1
-	} else {
-		pipelineId = c.args[0]
 	}
+
+	pipelineId = c.args[0]
 
 	// Pre-calculate our project ref
 	projectRef := &pb.Ref_Project{Project: c.flagProject}
