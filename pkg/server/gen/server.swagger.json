@@ -7891,6 +7891,10 @@
         "task": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.Task",
           "description": "task is a reference to a given Task that this job might be apart of. If\nthe task is Nil, it means the server does not associate this job with\nan on-demand runner task. If the Task Ref is set, that means this job\nis part of the referenced task id."
+        },
+        "pipeline": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline",
+          "description": "pipeline is a reference to a Pipeline that this job might be apart of. If\nthe pipeline is Nil, it means this job was not initiated by a pipeline.\nIf the Pipeline Ref is set, that means this job is part of the referenced pipeline id."
         }
       },
       "description": "A Job is a job that executes on a runner and is queued by QueueOperation."
@@ -9375,7 +9379,7 @@
         },
         "owner": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineOwner",
-          "description": "Reference an existing pipeline by Project owner and Pipeline Name\nThis assumes that a project cannot have two pipelines with the same name."
+          "description": "Reference an existing pipeline by Project name and Pipeline name\nFormat: \"project-name/pipeline-name\"\nThis assumes that a project cannot have two pipelines with the same name."
         }
       },
       "description": "Pipeline references a pipeline using one or more lookup types."
@@ -10238,7 +10242,7 @@
         },
         "start_job": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.Job",
-          "description": "Both start_job and stop_job relate to task_job.These jobs were\nresponsibile for starting and stopping the runner which executed the task\njob."
+          "description": "Both start_job and stop_job relate to task_job.These jobs were\nresponsible for starting and stopping the runner which executed the task\njob."
         },
         "stop_job": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.Job"
@@ -10253,7 +10257,7 @@
         },
         "job_state": {
           "$ref": "#/definitions/hashicorp.waypoint.Task.State",
-          "description": "The overall state of the Task triple. See the enum def for details for\neach possible Task state. This will be computed for each GetTaskResponse\nbased on the Task job ids receieved from the database."
+          "description": "The overall state of the Task triple. See the enum def for details for\neach possible Task state. This will be computed for each GetTaskResponse\nbased on the Task job ids received from the database."
         },
         "resource_name": {
           "type": "string",
