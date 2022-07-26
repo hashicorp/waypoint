@@ -1,0 +1,4 @@
+```release-note:bug
+cli: Update deployment destroy to proceed with deleting resources for failed
+deployments
+```
