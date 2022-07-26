@@ -70,7 +70,7 @@ page:
   project:
     deprecation-banner:
       title: Upcoming changes to projects
-      description: In our upcoming Waypoint 0.10 release, we will be removing "projects" from Waypoint. With this change, all projects settings and variables will be assigned directly to applications. To learn more about this change, visit the link below.
+      description: More than one app stanza within a waypoint.hcl file is under consideration for change or removal in a future version. If you are interested in more information or providing feedback, visit the link below.
       link: Upcoming changes to projects
   release:
     title: 'Release'
