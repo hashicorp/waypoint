@@ -49,6 +49,11 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Equal(resp.Id, pr.Id)
 			require.Equal(resp.Sequence, r.Sequence)
 		}
+
+		pr = &pb.PipelineRun{
+			Id:       "test-run2",
+			Sequence: 2,
+		}
 	})
 
 	t.Run("List", func(t *testing.T) {
@@ -62,42 +67,38 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 		err := s.PipelinePut(p)
 		require.NoError(err)
 
+		pipeline := &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: &pb.Ref_PipelineId{Id: p.Id}}}
 		// Set Pipeline Run
-		pr := &pb.PipelineRun{
-			Pipeline: &pb.Ref_Pipeline{
-				Ref: &pb.Ref_Pipeline_Id{
-					Id: &pb.Ref_PipelineId{
-						Id: p.Id,
-					},
-				},
-			},
-		}
-		r := ptypes.TestPipelineRun(t, pr)
+		r := ptypes.TestPipelineRun(t, nil)
 		err = s.PipelineRunPut(r)
 		require.NoError(err)
 
 		// List
 		{
-			resp, err := s.PipelineRunList(pr.Pipeline)
+			resp, err := s.PipelineRunList(pipeline)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Len(resp, 1)
-			require.Equal(resp[0].Id, pr.Id)
+			require.Equal(resp[0].Id, r.Id)
+		}
+
+		pr := &pb.PipelineRun{
+			Id:       "test-run2",
+			Sequence: 2,
 		}
 
 		// Set Another Pipeline Run
-		//pr := &pb.PipelineRun{
-		//	Pipeline: &pb.Ref_Pipeline{
-		//		Ref: &pb.Ref_Pipeline_Id{
-		//			Id: &pb.Ref_PipelineId{
-		//				Id: p.Id,
-		//			},
-		//		},
-		//	},
-		//}
-		//r := ptypes.TestPipelineRun(t, pr)
-		//err = s.PipelineRunPut(r)
-		//require.NoError(err)
+		r = ptypes.TestPipelineRun(t, pr)
+		err = s.PipelineRunPut(r)
+		require.NoError(err)
 
+		// List multiple runs
+		{
+			resp, err := s.PipelineRunList(pipeline)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Len(resp, 2)
+			require.Equal(resp[1].Id, pr.Id)
+		}
 	})
 }

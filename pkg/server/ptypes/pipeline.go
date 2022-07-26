@@ -20,7 +20,7 @@ func PipelineGraph(v *pb.Pipeline) (*graph.Graph, error) {
 	return pipelineGraph(v.Steps)
 }
 
-// TestPipeline returns a valid user for tests.
+// TestPipeline returns a valid pipeline for tests.
 func TestPipeline(t testing.T, src *pb.Pipeline) *pb.Pipeline {
 	t.Helper()
 
@@ -51,7 +51,7 @@ func TestPipeline(t testing.T, src *pb.Pipeline) *pb.Pipeline {
 	return src
 }
 
-// TestPipelineRun returns a valid user for tests.
+// TestPipelineRun returns a valid pipeline run for tests.
 func TestPipelineRun(t testing.T, src *pb.PipelineRun) *pb.PipelineRun {
 	t.Helper()
 
