@@ -82,7 +82,7 @@ func (v ValidationResults) Errors() bool {
 	return false
 }
 
-const AppeningHappening = "[DEPRECATION] More than one app stanza within a waypoint.hcl file is deprecated, and will be removed in a future version.\nPlease see https://discuss.hashicorp.com/t/deprecating-projects-or-how-i-learned-to-love-apps/40888 for more information."
+const AppeningHappening = "[NOTICE] More than one app stanza within a waypoint.hcl file is under consideration for change or removal in a future version.\nTo give feedback, visit https://discuss.hashicorp.com/t/deprecating-projects-or-how-i-learned-to-love-apps/40888"
 
 // Validate the structure of the configuration.
 //
