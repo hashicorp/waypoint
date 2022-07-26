@@ -106,7 +106,7 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	if p.dir == nil {
 		return nil, fmt.Errorf("WithDataDir must be specified")
 	}
-	if err := opts.Config.Validate(); err != nil {
+	if _, err := opts.Config.Validate(); err != nil {
 		return nil, err
 	}
 	if err := config.ValidateLabels(p.overrideLabels); err != nil {
@@ -136,7 +136,7 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error loading app %q: %w", name, err)
 		}
-		if err := appConfig.Validate(); err != nil {
+		if _, err := appConfig.Validate(); err != nil {
 			return nil, fmt.Errorf("error loading app %q: %w", name, err)
 		}
 
