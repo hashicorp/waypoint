@@ -3,6 +3,7 @@ package serverinstall
 import (
 	"context"
 	json "encoding/json"
+	"errors"
 	"fmt"
 	"github.com/hashicorp/waypoint/internal/installutil"
 	"os"
@@ -350,8 +351,9 @@ func (i *NomadInstaller) Upgrade(
 				clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
-		} else if strings.ToLower(proceed) != "yes" {
 			return nil, err
+		} else if strings.ToLower(proceed) != "yes" {
+			return nil, errors.New("upgrade aborted")
 		}
 	}
 
