@@ -72,7 +72,7 @@ func (v ValidationResults) Error() string {
 	return fmt.Sprintf("%d validation errors: %s", len(v), strings.Join(values, ", "))
 }
 
-func (v ValidationResults) Errors() bool {
+func (v ValidationResults) HasErrors() bool {
 	for _, vr := range v {
 		if vr.Error != nil {
 			return true
@@ -135,7 +135,7 @@ func (c *Config) Validate() (ValidationResults, error) {
 		return results, nil
 	}
 
-	if results.Errors() {
+	if results.HasErrors() {
 		return results, results
 	}
 
@@ -259,7 +259,7 @@ func (c *App) Validate() (ValidationResults, error) {
 		return nil, nil
 	}
 
-	if results.Errors() {
+	if results.HasErrors() {
 		return results, results
 	}
 
