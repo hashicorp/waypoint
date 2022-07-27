@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package hashicorp.keepalive;
+
+option go_package = "pkg/keepalive/gen";
+
+// TODO(izaak): comment
+service Keepalive {
+  rpc Keepalive(KeepaliveRequest) returns (KeepaliveResponse);
+}
+
+message KeepaliveRequest {}
+
+message KeepaliveResponse {}

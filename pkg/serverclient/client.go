@@ -8,17 +8,18 @@ import (
 	"os"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/hashicorp/go-hclog"
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2/clientcredentials"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/oauth"
 	"google.golang.org/grpc/keepalive"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/env"
+	keepalivePb "github.com/hashicorp/waypoint/pkg/keepalive/gen"
 	"github.com/hashicorp/waypoint/pkg/protocolversion"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
@@ -34,6 +35,108 @@ var (
 // ConnectOption is used to configure how Waypoint server connection
 // configuration is sourced.
 type ConnectOption func(*connectConfig) error
+
+// KeepAliveClientStream implements grpc.ClientStream
+type KeepAliveClientStream struct {
+	ctx     context.Context
+	handler grpc.ClientStream
+}
+
+func (k *KeepAliveClientStream) Header() (metadata.MD, error) {
+	return k.handler.Header()
+}
+
+func (k *KeepAliveClientStream) Trailer() metadata.MD {
+	return k.handler.Trailer()
+}
+
+func (k *KeepAliveClientStream) CloseSend() error {
+	return k.handler.CloseSend()
+}
+
+func (k *KeepAliveClientStream) Context() context.Context {
+	return k.handler.Context()
+}
+
+func (k *KeepAliveClientStream) SendMsg(m interface{}) error {
+	return k.handler.SendMsg(m)
+}
+
+func (k *KeepAliveClientStream) RecvMsg(m interface{}) error {
+
+	return k.handler.RecvMsg(m)
+
+	//for {
+	//	err := k.handler.RecvMsg(m)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	pm, ok := m.(protoreflect.ProtoMessage)
+	//	if !ok {
+	//		// Weird, not a protobuf message, but not our keepalive, so continue as normal
+	//		return nil
+	//	}
+	//
+	//	// performance enhancement
+	//	unknownFields := pm.ProtoReflect().GetUnknown()
+	//	if unknownFields == nil {
+	//		// No unknown fields here, not our keepalive, continue as normal
+	//		return nil
+	//	}
+	//
+	//	keepAlive := pb.KeepAlive{}
+	//	err = proto.Unmarshal(unknownFields, &keepAlive)
+	//	if err != nil {
+	//		// couldn't marshal to the keepalive message, continue as normal
+	//		return nil
+	//	}
+	//
+	//	// It's a keepalive message! Lets ignore it and recv again
+	//	continue
+	//}
+
+	//return nil
+}
+
+// TODO(izaak): relocate
+func KeepAliveInterceptor() grpc.StreamClientInterceptor {
+	return func(
+		ctx context.Context,
+		desc *grpc.StreamDesc,
+		cc *grpc.ClientConn,
+		method string,
+		streamer grpc.Streamer,
+		opts ...grpc.CallOption,
+	) (grpc.ClientStream, error) {
+
+		log := hclog.FromContext(ctx).With("method", method)
+
+		go func() {
+			log.Trace("Starting a keepalives for stream")
+			ticker := time.NewTicker(time.Duration(1) * time.Second)
+			keepaliveClient := keepalivePb.NewKeepaliveClient(cc)
+
+			for {
+				// TODO(izaak): check to see that the server implements KeepaliveServer, and if not,
+				// don't keep doing this.
+				_, err := keepaliveClient.Keepalive(ctx, &keepalivePb.KeepaliveRequest{})
+				if err != nil {
+					log.Warn("error making keepalive request", "err", err)
+					return
+				}
+				select {
+				case <-ticker.C:
+					continue
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+
+		return streamer(ctx, desc, cc, method, opts...)
+	}
+}
 
 // Connect connects to the Waypoint server. This returns the raw gRPC connection.
 // You'll have to wrap it in NewWaypointClient to get the Waypoint client.
@@ -70,7 +173,10 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 	grpcOpts := []grpc.DialOption{
 		grpc.WithBlock(),
 		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(protocolversion.Current())),
-		grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(protocolversion.Current())),
+		grpc.WithChainStreamInterceptor([]grpc.StreamClientInterceptor{
+			KeepAliveInterceptor(),
+			protocolversion.StreamClientInterceptor(protocolversion.Current()),
+		}...),
 		grpc.WithKeepaliveParams(
 			keepalive.ClientParameters{
 				// ping after this amount of time of inactivity

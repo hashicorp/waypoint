@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/waypoint/builtin/google/cloudrun"
 	"github.com/hashicorp/waypoint/builtin/k8s"
 	k8sapply "github.com/hashicorp/waypoint/builtin/k8s/apply"
-	k8shelm "github.com/hashicorp/waypoint/builtin/k8s/helm"
 	"github.com/hashicorp/waypoint/builtin/nomad"
 	"github.com/hashicorp/waypoint/builtin/nomad/jobspec"
 	"github.com/hashicorp/waypoint/builtin/null"
@@ -44,22 +43,22 @@ var (
 		"azure-container-instance": aci.Options,
 		"kubernetes":               k8s.Options,
 		"kubernetes-apply":         k8sapply.Options,
-		"helm":                     k8shelm.Options,
-		"aws-ecs":                  ecs.Options,
-		"aws-ecr":                  ecr.Options,
-		"aws-ecr-pull":             awsecrpull.Options,
-		"nomad":                    nomad.Options,
-		"nomad-jobspec":            jobspec.Options,
-		"nomad-jobspec-canary":     jobspec.Options,
-		"aws-ami":                  ami.Options,
-		"aws-ec2":                  ec2.Options,
-		"aws-alb":                  alb.Options,
-		"aws-ssm":                  ssm.Options,
-		"aws-lambda":               lambda.Options,
-		"lambda-function-url":      lambdaFunctionUrl.Options,
-		"vault":                    vault.Options,
-		"terraform-cloud":          tfc.Options,
-		"null":                     null.Options,
+		//"helm":                     k8shelm.Options,
+		"aws-ecs":              ecs.Options,
+		"aws-ecr":              ecr.Options,
+		"aws-ecr-pull":         awsecrpull.Options,
+		"nomad":                nomad.Options,
+		"nomad-jobspec":        jobspec.Options,
+		"nomad-jobspec-canary": jobspec.Options,
+		"aws-ami":              ami.Options,
+		"aws-ec2":              ec2.Options,
+		"aws-alb":              alb.Options,
+		"aws-ssm":              ssm.Options,
+		"aws-lambda":           lambda.Options,
+		"lambda-function-url":  lambdaFunctionUrl.Options,
+		"vault":                vault.Options,
+		"terraform-cloud":      tfc.Options,
+		"null":                 null.Options,
 	}
 
 	// BaseFactories is the set of base plugin factories. This will include any
