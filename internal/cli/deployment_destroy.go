@@ -76,9 +76,11 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 					Deployment: deployment,
 				},
 			}); err != nil {
-				c.ui.Output("Error destroying the deployment: %s", err.Error(), terminal.WithErrorStyle())
-				return ErrSentinel
+				c.ui.Output("Error destroying deployment %d: %s", deployment.Sequence, err.Error(), terminal.WithErrorStyle())
 			}
+		}
+		if err != nil {
+			return ErrSentinel
 		}
 		return nil
 	})
