@@ -155,7 +155,7 @@ func (r *Runner) executeJob(
 	}
 
 	// Validate our configuration
-	if err := cfg.Validate(); err != nil {
+	if _, err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 

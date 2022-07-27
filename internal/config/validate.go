@@ -72,7 +72,17 @@ func (v ValidationResults) Error() string {
 	return fmt.Sprintf("%d validation errors: %s", len(v), strings.Join(values, ", "))
 }
 
-const AppeningHappening = "[DEPRECATION] More than one app stanza within a waypoint.hcl file is deprecated, and will be removed in 0.10.\nPlease see https://discuss.hashicorp.com/t/deprecating-projects-or-how-i-learned-to-love-apps/40888 for more information."
+func (v ValidationResults) HasErrors() bool {
+	for _, vr := range v {
+		if vr.Error != nil {
+			return true
+		}
+	}
+
+	return false
+}
+
+const AppeningHappening = "[NOTICE] More than one app stanza within a waypoint.hcl file is under consideration for change or removal in a future version.\nTo give feedback, visit https://discuss.hashicorp.com/t/deprecating-projects-or-how-i-learned-to-love-apps/40888"
 
 // Validate the structure of the configuration.
 //
@@ -82,7 +92,7 @@ const AppeningHappening = "[DEPRECATION] More than one app stanza within a waypo
 //
 // Users of this package should call Validate on each subsequent configuration
 // that is loaded (Apps, Builds, Deploys, etc.) for further rich validation.
-func (c *Config) Validate() error {
+func (c *Config) Validate() (ValidationResults, error) {
 	var results ValidationResults
 
 	// Validate root
@@ -92,7 +102,7 @@ func (c *Config) Validate() error {
 		results = append(results, ValidationResult{Error: diag})
 
 		if content == nil {
-			return results
+			return results, results
 		}
 	}
 
@@ -122,10 +132,14 @@ func (c *Config) Validate() error {
 	// So that callers that test the result for nil can still do so
 	// (they test for nil because this return type used to be error)
 	if len(results) == 0 {
-		return nil
+		return results, nil
 	}
 
-	return results
+	if results.HasErrors() {
+		return results, results
+	}
+
+	return results, nil
 }
 
 func (c *Config) validateApp(b *hcl.Block) []ValidationResult {
@@ -170,7 +184,7 @@ func (c *Config) validateApp(b *hcl.Block) []ValidationResult {
 // Similar to Config.App, this doesn't validate configuration that is
 // further deferred such as build, deploy, etc. stanzas so call Validate
 // on those as they're loaded.
-func (c *App) Validate() error {
+func (c *App) Validate() (ValidationResults, error) {
 	var results ValidationResults
 
 	// Validate labels
@@ -242,10 +256,14 @@ func (c *App) Validate() error {
 	}
 
 	if len(results) == 0 {
-		return nil
+		return nil, nil
 	}
 
-	return results
+	if results.HasErrors() {
+		return results, results
+	}
+
+	return results, nil
 }
 
 // ValidateLabels validates a set of labels. This ensures that labels are
