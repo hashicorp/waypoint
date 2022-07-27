@@ -244,6 +244,9 @@ func (i *NomadInstaller) Install(
 	// if Nomad restarts the server allocation, a new IP will be assigned and any
 	// configured clients will be invalid
 	httpAddr, addr.Addr, err = i.getWaypointAddress(client, allocID)
+	if err != nil {
+		return nil, err
+	}
 
 	clicfg = clicontext.Config{
 		Server: serverconfig.Client{
@@ -507,6 +510,9 @@ func (i *NomadInstaller) Upgrade(
 	// if Nomad restarts the server allocation, a new IP will be assigned and any
 	// configured clients will be invalid
 	httpAddr, addr.Addr, err = i.getWaypointAddress(client, allocID)
+	if err != nil {
+		return nil, err
+	}
 
 	clicfg = clicontext.Config{
 		Server: serverconfig.Client{
