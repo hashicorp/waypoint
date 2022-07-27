@@ -238,11 +238,12 @@ func (c *InitCommand) validateConfig() bool {
 	defer sg.Wait()
 
 	s := sg.Add("Validating configuration file...")
-	cfg, err := c.initConfig(c.fromProject)
+	cfg, _, err := c.initConfig(c.fromProject)
 	if err != nil {
 		c.stepError(s, initStepConfig, err)
 		return false
 	}
+
 	if cfg == nil {
 		// This should never happen, because if there is no config, init should have created
 		// it and exited earlier.
