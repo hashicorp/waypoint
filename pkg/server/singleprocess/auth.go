@@ -611,6 +611,13 @@ func (s *Service) newToken(
 		return "", err
 	}
 
+	if s.processToken != nil {
+		body, err = s.processToken(ctx, body)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	return s.encodeToken(ctx, keyId, metadata, body)
 }
 
