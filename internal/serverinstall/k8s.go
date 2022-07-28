@@ -645,7 +645,9 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=%s,component=server", "waypoint"),
 	}
 	err = i.CleanPVC(ctx, ui, opts.Log, listOptions)
-
+	if err != nil {
+		return err
+	}
 	// TODO: Delete runner (or all runners?)
 
 	return nil
