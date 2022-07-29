@@ -1044,7 +1044,7 @@ message Ref {
   }
 
   message PipelineStep {
-    // ID of te pipeline
+    // ID of the pipeline
     string pipeline = 1;
 
     // Step name within the pipeline.
@@ -1678,6 +1678,7 @@ message Job {
   // This can be used to run custom runner binaries or custom tasks without
   // a runner.
   TaskOverride ondemand_runner_task = 115;
+
   message TaskOverride {
     // Launch info for the task. The environment variables will be merged
     // with the defaults. If no OCI URL is specified, the ODR profile
@@ -1807,10 +1808,10 @@ message Job {
   // is part of the referenced task id.
   Ref.Task task = 114;
 
-  // pipeline is a reference to a Pipeline that this job might be apart of. If
-  // the pipeline is Nil, it means this job was not initiated by a pipeline.
-  // If the Pipeline Ref is set, that means this job is part of the referenced pipeline id.
-  Ref.Pipeline pipeline = 116;
+  // PipelineStep is a reference to the pipeline and step that might have triggered this job.
+  // If the PipelineStep is nil, this job was not initiated by a pipeline.
+  // If the Pipeline Ref is set, this job is part of the referenced pipeline.
+  Ref.PipelineStep pipeline = 117;
 
   enum State {
     UNKNOWN = 0;
@@ -4665,7 +4666,7 @@ message Pipeline {
 
       //
       // "reserved" built-in pipeline step operations. These map directly to
-      // the lifecylce operations in Waypoint, i.e. Build, Deploy, Release, Up.
+      // the lifecycle operations in Waypoint, i.e. Build, Deploy, Release, Up.
       //
 
       // Built-in build operation
@@ -4741,10 +4742,9 @@ message PipelineRun {
 
   Ref.Pipeline pipeline = 3;
 
-  Ref.Job root_job = 4;
-  Ref.Job last_job = 5;
+  repeated Ref.Job jobs = 4;
 
-  State status = 6;
+  State status = 5;
 
   enum State {
     UNKNOWN = 0; // no state defined, the default

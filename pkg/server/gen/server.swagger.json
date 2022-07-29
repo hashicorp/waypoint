@@ -7893,8 +7893,8 @@
           "description": "task is a reference to a given Task that this job might be apart of. If\nthe task is Nil, it means the server does not associate this job with\nan on-demand runner task. If the Task Ref is set, that means this job\nis part of the referenced task id."
         },
         "pipeline": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline",
-          "description": "pipeline is a reference to a Pipeline that this job might be apart of. If\nthe pipeline is Nil, it means this job was not initiated by a pipeline.\nIf the Pipeline Ref is set, that means this job is part of the referenced pipeline id."
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineStep",
+          "description": "PipelineStep is a reference to the pipeline and step that might have triggered this job.\nIf the PipelineStep is nil, this job was not initiated by a pipeline.\nIf the Pipeline Ref is set, this job is part of the referenced pipeline."
         }
       },
       "description": "A Job is a job that executes on a runner and is queued by QueueOperation."
@@ -9410,7 +9410,7 @@
       "properties": {
         "pipeline": {
           "type": "string",
-          "title": "ID of te pipeline"
+          "title": "ID of the pipeline"
         },
         "step": {
           "type": "string",
