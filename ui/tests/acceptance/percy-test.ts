@@ -41,13 +41,17 @@ module('Acceptance | Percy', function (hooks) {
     assert.ok(true);
   });
 
-  test('populated projects list', async function (assert) {
-    this.server.create('project', { name: 'acme-project' });
+  test('project snapshots', async function (assert) {
+    let myProject = this.server.create('project', { name: 'acme-project' });
     this.server.create('project', { name: 'acme-marketing' });
     this.server.create('project', { name: 'acme-anvils' });
 
     await visit('/default');
     await snapshot('Populated projects list');
+
+    await visit(`/default/${myProject.name}/settings`);
+    await snapshot('Project settings: Git repository form');
+
     assert.ok(true);
   });
 
