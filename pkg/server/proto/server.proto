@@ -804,6 +804,13 @@ message Project {
     // than the minimum will be ignored.
     string interval = 2;
   }
+
+  ProjectState state = 11;
+
+  enum ProjectState {
+    ACTIVE = 0;
+    DESTROYING = 1;
+  }
 }
 
 message Workspace {

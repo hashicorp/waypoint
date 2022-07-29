@@ -9240,6 +9240,9 @@
         "status_report_poll": {
           "$ref": "#/definitions/hashicorp.waypoint.Project.AppStatusPoll",
           "description": "Application polling settings. Polling will trigger a \"StatusFunc\" for collecting a\nreport on the current status of the application.\nFor now, polling is only done on the `default` workspace. A future\nversion of Waypoint will expand polling to other workspaces.\n\nEach polling event is tracked as a separate job. You can query the\npoll operations and their success/failure by using the ListJobs API."
+        },
+        "state": {
+          "$ref": "#/definitions/hashicorp.waypoint.Project.ProjectState"
         }
       }
     },
@@ -9268,6 +9271,14 @@
           "description": "interval is a duration string of how often to poll, such as \"5s\".\nThe server may enforce minimum values, in which case a value lower\nthan the minimum will be ignored."
         }
       }
+    },
+    "hashicorp.waypoint.Project.ProjectState": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "DESTROYING"
+      ],
+      "default": "ACTIVE"
     },
     "hashicorp.waypoint.PushedArtifact": {
       "type": "object",
