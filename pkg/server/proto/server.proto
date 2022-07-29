@@ -425,6 +425,13 @@ service Waypoint {
   rpc UI_ListReleases(UI.ListReleasesRequest) returns (UI.ListReleasesResponse);
 }
 
+// TODO(izaak): comment and relocate
+message KeepAlive{
+  // Signature for validating that the message is, in fact, a keepalive message.
+  // Must be set to value "waypoint_keepalive"
+  string signature = 1000000;
+}
+
 /********************************************************************
 * UI
 ********************************************************************/
