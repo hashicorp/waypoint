@@ -119,24 +119,14 @@ func (s *Service) RunPipeline(
 		return nil, err
 	}
 
-	// Generate job IDs for each of the steps. We need to know the IDs in
-	// advance to set up the dependency chain.
-	stepIds := map[string]string{}
-	for name := range pipeline.Steps {
-		var err error
-		stepIds[name], err = server.Id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	stepJobs, pipelineRun, err := s.buildStepJobs(ctx, log, req, stepIds, pipeline, pipelineRun)
+	stepJobs, pipelineRun, stepIds, err := s.buildStepJobs(ctx, log, req, pipeline, pipelineRun)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get the graph for the steps so we can get the root. We enforce a
 	// single root so the root is always the first step.
+	// TODO(briancain): Update PipelineGraph to account for any nested pipeline steps
 	stepGraph, err := serverptypes.PipelineGraph(pipeline)
 	if err != nil {
 		return nil, err
@@ -176,14 +166,22 @@ func (s *Service) buildStepJobs(
 	ctx context.Context,
 	log hclog.Logger,
 	req *pb.RunPipelineRequest,
-	stepIds map[string]string,
 	pipeline *pb.Pipeline,
 	pipelineRun *pb.PipelineRun,
-) ([]*pb.QueueJobRequest, *pb.PipelineRun, error) {
+) ([]*pb.QueueJobRequest, *pb.PipelineRun, map[string]string, error) {
 	// Generate job IDs for each of the steps. We need to know the IDs in
 	// advance to setup the dependency chain.
-	var stepJobs []*pb.QueueJobRequest
+	stepIds := map[string]string{}
+	for name := range pipeline.Steps {
+		// TODO(briancain) should step id keys be project/pipeline/name to avoid embedded collisions?
+		var err error
+		stepIds[name], err = server.Id()
+		if err != nil {
+			return nil, nil, nil, err
+		}
+	}
 
+	var stepJobs []*pb.QueueJobRequest
 	for name, step := range pipeline.Steps {
 		var dependsOn []string
 		for _, dep := range step.DependsOn {
@@ -214,9 +212,9 @@ func (s *Service) buildStepJobs(
 			}
 
 			if o.Deploy.Release {
-				// TODO(briancain): do it
-				// copy `job` and update Operation to be release I think. then append
-				// job to stepJobs
+				// NOTE(briancain): Unclear if this is really a behavior we want to
+				// encourage, unlike the CLI. If users want to release after a deploy
+				// they can just add a Release step to their pipeline
 
 				// Queue a release job too
 				log.Warn("Currently not queueing a release job yet....sry!!!")
@@ -242,7 +240,7 @@ func (s *Service) buildStepJobs(
 						LoadDetails: pb.Deployment_ARTIFACT,
 					})
 					if err != nil {
-						return nil, nil, err
+						return nil, nil, nil, err
 					}
 					if deployment == nil {
 						log.Debug("could not find deploy sequence, using latest instead", "seq", d.Sequence)
@@ -250,7 +248,7 @@ func (s *Service) buildStepJobs(
 				default:
 					// return an error
 					log.Error("invalid deployment ref received", "ref", d)
-					return nil, nil, status.Errorf(codes.Internal, "invalid deployment ref received: %T", d)
+					return nil, nil, nil, status.Errorf(codes.Internal, "invalid deployment ref received: %T", d)
 				}
 			}
 
@@ -273,10 +271,29 @@ func (s *Service) buildStepJobs(
 				},
 			}
 		case *pb.Pipeline_Step_Pipeline_:
-			// TODO(briancain): Look up pipeline by Owner and re-call this func
-			// to receieve its step jobs. Might need to validate that there are no
-			// cycles here too.
-			return nil, nil, status.Error(codes.Unimplemented, "running an embedded pipeline is not yet supported")
+			embeddedPipeline, err := s.state(ctx).PipelineGet(o.Pipeline.Ref)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+
+			embedJobs, embedRun, embedStepIds, err := s.buildStepJobs(ctx, log, req, embeddedPipeline, pipelineRun)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+
+			// add the nested jobs
+			stepJobs = append(stepJobs, embedJobs...)
+			pipelineRun = embedRun
+
+			// Include nested pipeline steps in stepId map
+			for k, v := range embedStepIds {
+				if _, ok := stepIds[k]; !ok {
+					stepIds[k] = v
+				} else {
+					// Embedded pipeline steps match an existing step id
+					return nil, nil, nil, status.Errorf(codes.Internal, "an embedded pipeline step matches a parent step name: %s", k)
+				}
+			}
 		default:
 			job.Operation = &pb.Job_PipelineStep{
 				PipelineStep: &pb.Job_PipelineStepOp{
@@ -291,5 +308,5 @@ func (s *Service) buildStepJobs(
 		})
 	}
 
-	return stepJobs, pipelineRun, nil
+	return stepJobs, pipelineRun, stepIds, nil
 }
