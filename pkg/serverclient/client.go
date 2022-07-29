@@ -8,9 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/hashicorp/go-hclog"
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2/clientcredentials"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -19,6 +18,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/env"
+	"github.com/hashicorp/waypoint/pkg/inlinekeepalive"
 	"github.com/hashicorp/waypoint/pkg/protocolversion"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
@@ -70,7 +70,17 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 	grpcOpts := []grpc.DialOption{
 		grpc.WithBlock(),
 		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(protocolversion.Current())),
-		grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(protocolversion.Current())),
+		grpc.WithChainStreamInterceptor([]grpc.StreamClientInterceptor{
+			protocolversion.StreamClientInterceptor(protocolversion.Current()),
+
+			// Send and receive keepalive messages along grpc streams.
+			// Some loadbalancers (ALBs) don't respect http2 pings.
+			// (https://stackoverflow.com/questions/66818645/http2-ping-frames-over-aws-alb-grpc-keepalive-ping)
+			// This interceptor keeps low-traffic streams active and not timed out.
+			// NOTE(izaak): long-term, we should ensure that all of our
+			// streaming endpoints are robust to disconnect/resume.
+			inlinekeepalive.KeepaliveClientStreamInterceptor(),
+		}...),
 		grpc.WithKeepaliveParams(
 			keepalive.ClientParameters{
 				// ping after this amount of time of inactivity

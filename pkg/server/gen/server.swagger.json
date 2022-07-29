@@ -7561,6 +7561,13 @@
       "properties": {
         "info": {
           "$ref": "#/definitions/hashicorp.waypoint.VersionInfo"
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Represents additional features that the current server supports.\nUseful for ensuring compatibility between clients and servers."
         }
       }
     },

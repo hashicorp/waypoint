@@ -26,6 +26,7 @@ import (
 
 	wphzn "github.com/hashicorp/waypoint-hzn/pkg/server"
 	"github.com/hashicorp/waypoint/internal/server/boltdbstate"
+	"github.com/hashicorp/waypoint/pkg/inlinekeepalive"
 	"github.com/hashicorp/waypoint/pkg/server/singleprocess"
 
 	"github.com/hashicorp/waypoint/internal/telemetry"
@@ -183,6 +184,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 		singleprocess.WithConfig(&c.config),
 		singleprocess.WithLogger(log.Named("singleprocess")),
 		singleprocess.WithAcceptURLTerms(c.flagAcceptTOS),
+		singleprocess.WithFeatures(inlinekeepalive.FeatureName),
 	)
 	if c, ok := impl.(io.Closer); ok {
 		defer c.Close()

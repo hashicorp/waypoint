@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/hashicorp/waypoint/pkg/inlinekeepalive"
 	"github.com/hashicorp/waypoint/pkg/protocolversion"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -79,7 +80,17 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 	grpcOpts := []grpc.DialOption{
 		grpc.WithTimeout(5 * time.Second),
 		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(protocolversion.Current())),
-		grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(protocolversion.Current())),
+		grpc.WithChainStreamInterceptor(
+			protocolversion.StreamClientInterceptor(protocolversion.Current()),
+
+			// Send and receive keepalive messages along grpc streams.
+			// Some loadbalancers (ALBs) don't respect http2 pings.
+			// (https://stackoverflow.com/questions/66818645/http2-ping-frames-over-aws-alb-grpc-keepalive-ping)
+			// This interceptor keeps low-traffic streams active and not timed out.
+			// NOTE(izaak): long-term, we should ensure that all of our
+			// streaming endpoints are robust to disconnect/resume.
+			inlinekeepalive.KeepaliveClientStreamInterceptor(),
+		),
 	}
 	if !cfg.ServerTls {
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
