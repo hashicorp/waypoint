@@ -6664,6 +6664,14 @@
         }
       }
     },
+    "hashicorp.waypoint.DestroyProjectResponse": {
+      "type": "object",
+      "properties": {
+        "job_id": {
+          "type": "string"
+        }
+      }
+    },
     "hashicorp.waypoint.Documentation": {
       "type": "object",
       "properties": {
