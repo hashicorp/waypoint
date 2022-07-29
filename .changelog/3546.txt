@@ -1,0 +1,4 @@
+```release-note:improvement
+CLI: Nomad CSI volumes names can be specified during installation and upgrades for both Waypoint runners and Waypoint server installations
+```
+
