@@ -95,6 +95,7 @@ gen/changelog:
 		-changelog-template .changelog/changelog.tmpl \
 		-note-template .changelog/note.tmpl \
 		-this-release $(THIS_RELEASE)
+	@echo
 
 # generates protos for the plugins inside builtin
 .PHONY: gen/plugins
