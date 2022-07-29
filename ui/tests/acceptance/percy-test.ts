@@ -59,4 +59,25 @@ module('Acceptance | Percy', function (hooks) {
     await snapshot('Application list');
     assert.ok(true);
   });
+
+  test('Builds and releases pages', async function (assert) {
+    let project = this.server.create('project', { name: 'acme-project' });
+    let application = this.server.create('application', { name: 'acme-app', project });
+    let build = this.server.create('build', 'random', { application });
+    let release = this.server.create('release', 'random', { application });
+
+    await visit(`/default/${project.name}/app/${application.name}/builds`);
+    await snapshot('Builds page');
+
+    await visit(`/default/${project.name}/app/${application.name}/build/${build.id}`);
+    await snapshot('Build detail page');
+
+    await visit(`/default/${project.name}/app/${application.name}/releases`);
+    await snapshot('Releases page');
+
+    await visit(`/default/${project.name}/app/${application.name}/release/seq/${release.sequence}`);
+    await snapshot('Release detail page');
+
+    assert.ok(true);
+  });
 });

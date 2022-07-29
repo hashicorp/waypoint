@@ -1,0 +1,3 @@
+```release-note:improvement
+ui: Fix header spacing on build/release detail pages
+```
