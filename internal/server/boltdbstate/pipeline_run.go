@@ -2,7 +2,9 @@ package boltdbstate
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+	"sync/atomic"
 
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
@@ -22,27 +24,54 @@ func init() {
 	schemas = append(schemas, pipelineRunIndexSchema)
 }
 
+//func (s *State) nextSequence(
+//	dbTxn *bolt.Tx,
+//	memTxn *memdb.Txn,
+//	update bool,
+//	value proto.Message,
+//) {
+//
+//
+//}
+
 // PipelineRunPut creates or updates the given PipelineRun.
-func (s *State) PipelineRunPut(p *pb.PipelineRun) error {
+func (s *State) PipelineRunPut(pr *pb.PipelineRun) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
-		if p.Pipeline == nil {
+		if pr.Pipeline == nil {
 			return status.Error(codes.FailedPrecondition,
 				"A pipeline ref for the pipeline run is required")
 		}
 
-		if p.Id == "" {
+		if pr.Id == "" {
 			id, err := ulid()
 			if err != nil {
 				return err
 			}
-
-			p.Id = id
+			pr.Id = id
 		}
 
-		return s.pipelineRunPut(dbTxn, memTxn, p)
+		pId := pr.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id
+		raw, err := memTxn.Last(
+			pipelineRunIndexTableName,
+			pipelineRunIndexPId,
+			pId)
+		if err != nil {
+			return err
+		}
+		if raw != nil {
+			idx := raw.(*pipelineRunIndexRecord)
+			if idx.PipelineId == pId {
+				seq, _ := strconv.ParseUint(idx.Sequence, 10, 64)
+				pr.Sequence = atomic.AddUint64(&seq, 1)
+			}
+		} else {
+			pr.Sequence = 1
+		}
+
+		return s.pipelineRunPut(dbTxn, memTxn, pr)
 	})
 	if err == nil {
 		memTxn.Commit()
@@ -100,13 +129,13 @@ func (s *State) pipelineRunGet(
 
 	// Look up the first instance of the pipeline run where the sequence number and pipeline ref match
 	raw, err := memTxn.First(pipelineRunIndexTableName,
-		pipelineRunIndexIdBySeq, pId, seq)
+		pipelineRunIndexPIdBySeq, pId, seq)
 	if err != nil {
 		return nil, err
 	}
 	if raw == nil {
 		return nil, status.Errorf(codes.NotFound,
-			"pipeline run v%q could not found for pipeline Id: %q",
+			"pipeline run v%q could not be found for pipeline Id: %q",
 			seq, pId)
 	}
 	// set the id to be looked up for GET
@@ -225,8 +254,8 @@ func pipelineRunIndexSchema() *memdb.TableSchema {
 					Lowercase: true,
 				},
 			},
-			pipelineRunIndexIdBySeq: {
-				Name:         pipelineRunIndexIdBySeq,
+			pipelineRunIndexPIdBySeq: {
+				Name:         pipelineRunIndexPIdBySeq,
 				AllowMissing: false,
 				Unique:       true,
 				Indexer: &memdb.CompoundIndex{
@@ -243,6 +272,15 @@ func pipelineRunIndexSchema() *memdb.TableSchema {
 					},
 				},
 			},
+			pipelineRunIndexPId: {
+				Name:         pipelineRunIndexPId,
+				AllowMissing: false,
+				Unique:       false,
+				Indexer: &memdb.StringFieldIndex{
+					Field:     "PipelineId",
+					Lowercase: true,
+				},
+			},
 		},
 	}
 }
@@ -250,7 +288,8 @@ func pipelineRunIndexSchema() *memdb.TableSchema {
 const (
 	pipelineRunIndexTableName = "pipelineRun-index"
 	pipelineRunIndexId        = "id"
-	pipelineRunIndexIdBySeq   = "seq"
+	pipelineRunIndexPId       = "pipeline-id"
+	pipelineRunIndexPIdBySeq  = "seq"
 )
 
 type pipelineRunIndexRecord struct {

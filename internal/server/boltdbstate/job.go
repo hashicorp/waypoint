@@ -669,9 +669,9 @@ RETRY_ASSIGN:
 // JobAck acknowledges that a job has been accepted or rejected by the runner.
 // If ack is false, then this will move the job back to the queued state
 // and be eligible for assignment.
-// Additionally, if a job is associated with an on-demand runner task, this
-// func will progress the Tasks state machine depending on which job has
-// currently been acked.
+// Additionally, if a job is associated with an on-demand runner task and/or pipeline,
+// this func will progress the Tasks and Pipeline state machines depending on which job
+// has currently been acked.
 func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
@@ -731,8 +731,7 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	job.StateTimer = time.AfterFunc(serverstate.JobHeartbeatTimeout, func() {
 		s.log.Info("canceling job due to heartbeat timeout", "job", job.Id)
 		// Force cancel
-		err := s.JobCancel(job.Id, true)
-		if err != nil {
+		if err := s.JobCancel(job.Id, true); err != nil {
 			s.log.Error("error canceling job due to heartbeat failure", "error", err, "job", job.Id)
 		}
 	})
@@ -759,7 +758,10 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 		return nil, err
 	}
 
-	// TODO:XX THIS IS WHERE PIPELINE ACK GOES
+	if err := s.pipelineAck(job.Id); err != nil {
+		s.log.Error("error updating pipeline state", "error", err, "job", job.Id)
+		return nil, err
+	}
 
 	return job.Job(result), nil
 }
@@ -1716,14 +1718,43 @@ func (s *State) taskComplete(jobId string) error {
 // pipelineAck checks if the referenced job id has a Task ref associated with it,
 // and if so, Ack the specific job inside the Task job triple to progress the
 // Task state machine.
+// TODO:XX HERE
 func (s *State) pipelineAck(jobId string) error {
 	job, err := s.JobById(jobId, nil)
 	if err != nil {
 		s.log.Error("error getting job by id", "job", jobId, "err", err)
 		return err
 	} else if job.Pipeline == nil {
-		s.log.Trace("job is not an on-demand runner task", "job", jobId)
+		s.log.Trace("job is not part of a pipeline", "job", jobId)
 		return nil
+	}
+
+	// grab pipeline based on the PipelineTask Ref on the job
+	pipeline, err := s.PipelineGet(&pb.Ref_Pipeline{
+		Ref: &pb.Ref_Pipeline_Id{
+			Id: &pb.Ref_PipelineId{
+				Id: job.Pipeline.Pipeline,
+			},
+		},
+	})
+	if err != nil {
+		s.log.Error("failed to get pipeline to ack job", "job", job.Id, "pipeline id", job.Pipeline.Pipeline)
+		return err
+	}
+
+	pr := &pb.PipelineRun{
+		Pipeline: &pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{
+					Id: pipeline.Id,
+				},
+			},
+		},
+	}
+	// PipelineRunPut the new state
+	if err := s.PipelineRunPut(pr); err != nil {
+		s.log.Error("failed to ack pipeline state", "job", job.Id, "pipeline", pipeline.Id)
+		return err
 	}
 
 	return nil

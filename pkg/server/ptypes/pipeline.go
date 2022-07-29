@@ -68,7 +68,6 @@ func TestPipelineRun(t testing.T, src *pb.PipelineRun) *pb.PipelineRun {
 				},
 			},
 		},
-		Sequence: 1,
 	}))
 
 	return src
