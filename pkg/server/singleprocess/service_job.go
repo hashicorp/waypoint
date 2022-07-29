@@ -367,6 +367,9 @@ func (s *Service) wrapJobWithRunner(
 		watchJob.Task = taskRef
 	}
 
+	// TODO:XX determine if this job is a part of a pipeline, and if it's the root job
+	// if root job, upsert new pipeline run
+
 	jobs := []*pb.Job{startJob, watchJob, stopJob}
 	if !skip {
 		jobs = append(jobs, source)

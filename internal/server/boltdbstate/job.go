@@ -759,6 +759,8 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 		return nil, err
 	}
 
+	// TODO:XX THIS IS WHERE PIPELINE ACK GOES
+
 	return job.Job(result), nil
 }
 
@@ -887,6 +889,8 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 		s.log.Error("error updating task state for complete", "error", err, "job", job.Id)
 		return err
 	}
+
+	// (TODO:XX) add pipeline complete if this is last job in the pipeline
 
 	return nil
 }
@@ -1609,7 +1613,7 @@ func (s *State) jobCandidateAny(
 	return nil, nil
 }
 
-// taskAck looks to see if the referenced job id has a Task ref associated with it,
+// taskAck checks if the referenced job id has a Task ref associated with it,
 // and if so, Ack the specific job inside the Task job triple to progress the
 // Task state machine.
 func (s *State) taskAck(jobId string) error {
@@ -1704,6 +1708,22 @@ func (s *State) taskComplete(jobId string) error {
 	if err := s.TaskPut(task); err != nil {
 		s.log.Error("failed to complete task state", "job", job.Id, "task", task.Id)
 		return err
+	}
+
+	return nil
+}
+
+// pipelineAck checks if the referenced job id has a Task ref associated with it,
+// and if so, Ack the specific job inside the Task job triple to progress the
+// Task state machine.
+func (s *State) pipelineAck(jobId string) error {
+	job, err := s.JobById(jobId, nil)
+	if err != nil {
+		s.log.Error("error getting job by id", "job", jobId, "err", err)
+		return err
+	} else if job.Pipeline == nil {
+		s.log.Trace("job is not an on-demand runner task", "job", jobId)
+		return nil
 	}
 
 	return nil

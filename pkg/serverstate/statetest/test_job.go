@@ -1672,6 +1672,8 @@ func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory
 	})
 }
 
+// TODO:XX add test for pipeline state matching job state. Similar to Task above.
+
 func TestJobIsAssignable(t *testing.T, factory Factory, rf RestartFactory) {
 	t.Run("no runners", func(t *testing.T) {
 		require := require.New(t)

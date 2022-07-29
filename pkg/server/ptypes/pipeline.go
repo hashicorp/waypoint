@@ -20,7 +20,7 @@ func PipelineGraph(v *pb.Pipeline) (*graph.Graph, error) {
 	return pipelineGraph(v.Steps)
 }
 
-// TestPipeline returns a valid pipeline for tests.
+// TestPipeline returns a valid pipeline proto for tests.
 func TestPipeline(t testing.T, src *pb.Pipeline) *pb.Pipeline {
 	t.Helper()
 
