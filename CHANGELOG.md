@@ -6,6 +6,17 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## 0.9.1 (July 28, 2022)
+
+IMPROVEMENTS:
+
+* core: Adds string `replace` function for HCL configs [[GH-3522](https://github.com/hashicorp/waypoint/issues/3522)]
+* plugin/nomad: Convert Nomad job for ODR to batch job [[GH-3468](https://github.com/hashicorp/waypoint/issues/3468)]
+
+BUG FIXES:
+
+* internal: Fix deprecation warning being fatal [[GH-3605](https://github.com/hashicorp/waypoint/issues/3605)]
+* plugin/tfc: Fix HCL field, `refresh_interval` [[GH-3524](https://github.com/hashicorp/waypoint/issues/3524)]
 
 ## 0.9.0 (July 05, 2022)
 
