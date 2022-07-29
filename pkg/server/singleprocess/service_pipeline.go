@@ -3,11 +3,10 @@ package singleprocess
 import (
 	"context"
 
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
-
-	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -101,16 +100,6 @@ func (s *Service) RunPipeline(
 		return nil, err
 	}
 
-	// Generate job IDs for each of the steps. We need to know the IDs in
-	// advance to set up the dependency chain.
-	stepIds := map[string]string{}
-	for name := range pipeline.Steps {
-		stepIds[name], err = server.Id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	// Initialize a pipeline run
 	if err = s.state(ctx).PipelineRunPut(&pb.PipelineRun{
 		Pipeline: &pb.Ref_Pipeline{
@@ -124,13 +113,77 @@ func (s *Service) RunPipeline(
 	}); err != nil {
 		return nil, err
 	}
-	run, err := s.state(ctx).PipelineRunGetLatest(pipeline.Id)
+
+	pipelineRun, err := s.state(ctx).PipelineRunGetLatest(pipeline.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	// Generate the jobs for each of the steps
+	// Generate job IDs for each of the steps. We need to know the IDs in
+	// advance to set up the dependency chain.
+	stepIds := map[string]string{}
+	for name := range pipeline.Steps {
+		var err error
+		stepIds[name], err = server.Id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	stepJobs, pipelineRun, err := s.buildStepJobs(ctx, log, req, stepIds, pipeline, pipelineRun)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the graph for the steps so we can get the root. We enforce a
+	// single root so the root is always the first step.
+	stepGraph, err := serverptypes.PipelineGraph(pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the ordered jobs.
+	var jobIds []string
+	jobMap := map[string]*pb.Ref_PipelineStep{}
+	for _, v := range stepGraph.KahnSort() {
+		jobId := stepIds[v.(string)]
+		jobIds = append(jobIds, jobId)
+		jobMap[jobId] = &pb.Ref_PipelineStep{
+			Pipeline:    pipeline.Id,
+			Step:        v.(string),
+			RunSequence: pipelineRun.Sequence,
+		}
+	}
+
+	pipelineRun.State = pb.PipelineRun_STARTING
+	if err = s.state(ctx).PipelineRunPut(pipelineRun); err != nil {
+		return nil, err
+	}
+
+	// Queue all the jobs atomically
+	if _, err := s.queueJobMulti(ctx, stepJobs); err != nil {
+		return nil, err
+	}
+
+	return &pb.RunPipelineResponse{
+		JobId:     jobIds[0],
+		AllJobIds: jobIds,
+		JobMap:    jobMap,
+	}, nil
+}
+
+func (s *Service) buildStepJobs(
+	ctx context.Context,
+	log hclog.Logger,
+	req *pb.RunPipelineRequest,
+	stepIds map[string]string,
+	pipeline *pb.Pipeline,
+	pipelineRun *pb.PipelineRun,
+) ([]*pb.QueueJobRequest, *pb.PipelineRun, error) {
+	// Generate job IDs for each of the steps. We need to know the IDs in
+	// advance to setup the dependency chain.
 	var stepJobs []*pb.QueueJobRequest
+
 	for name, step := range pipeline.Steps {
 		var dependsOn []string
 		for _, dep := range step.DependsOn {
@@ -143,7 +196,7 @@ func (s *Service) RunPipeline(
 		job.Pipeline = &pb.Ref_PipelineStep{
 			Pipeline:    pipeline.Id,
 			Step:        step.Name,
-			RunSequence: run.Sequence,
+			RunSequence: pipelineRun.Sequence,
 		}
 
 		// Queue the right job depending on the Step type. We will queue a Waypoint
@@ -177,7 +230,7 @@ func (s *Service) RunPipeline(
 					log.Trace("using nil deployment to queue job, which is latest deployment")
 				case *pb.Ref_Deployment_Sequence:
 					// Look up deployment sequence here and set proto?
-					deployment, err = s.GetDeployment(ctx, &pb.GetDeploymentRequest{
+					deployment, err := s.GetDeployment(ctx, &pb.GetDeploymentRequest{
 						Ref: &pb.Ref_Operation{
 							Target: &pb.Ref_Operation_Sequence{
 								Sequence: &pb.Ref_OperationSeq{
@@ -189,7 +242,7 @@ func (s *Service) RunPipeline(
 						LoadDetails: pb.Deployment_ARTIFACT,
 					})
 					if err != nil {
-						return nil, err
+						return nil, nil, err
 					}
 					if deployment == nil {
 						log.Debug("could not find deploy sequence, using latest instead", "seq", d.Sequence)
@@ -197,7 +250,7 @@ func (s *Service) RunPipeline(
 				default:
 					// return an error
 					log.Error("invalid deployment ref received", "ref", d)
-					return nil, status.Errorf(codes.Internal, "invalid deployment ref received: %T", d)
+					return nil, nil, status.Errorf(codes.Internal, "invalid deployment ref received: %T", d)
 				}
 			}
 
@@ -223,7 +276,7 @@ func (s *Service) RunPipeline(
 			// TODO(briancain): Look up pipeline by Owner and re-call this func
 			// to receieve its step jobs. Might need to validate that there are no
 			// cycles here too.
-			return nil, status.Error(codes.Unimplemented, "running an embedded pipeline is not yet supported")
+			return nil, nil, status.Error(codes.Unimplemented, "running an embedded pipeline is not yet supported")
 		default:
 			job.Operation = &pb.Job_PipelineStep{
 				PipelineStep: &pb.Job_PipelineStepOp{
@@ -232,45 +285,11 @@ func (s *Service) RunPipeline(
 			}
 		}
 
-		run.Jobs = append(run.Jobs, &pb.Ref_Job{Id: job.Id})
+		pipelineRun.Jobs = append(pipelineRun.Jobs, &pb.Ref_Job{Id: job.Id})
 		stepJobs = append(stepJobs, &pb.QueueJobRequest{
 			Job: job,
 		})
 	}
 
-	// Get the graph for the steps so we can get the root. We enforce a
-	// single root so the root is always the first step.
-	stepGraph, err := serverptypes.PipelineGraph(pipeline)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the ordered jobs.
-	var jobIds []string
-	jobMap := map[string]*pb.Ref_PipelineStep{}
-	for _, v := range stepGraph.KahnSort() {
-		jobId := stepIds[v.(string)]
-		jobIds = append(jobIds, jobId)
-		jobMap[jobId] = &pb.Ref_PipelineStep{
-			Pipeline:    pipeline.Id,
-			Step:        v.(string),
-			RunSequence: run.Sequence,
-		}
-	}
-
-	run.State = pb.PipelineRun_STARTING
-	if err = s.state(ctx).PipelineRunPut(run); err != nil {
-		return nil, err
-	}
-
-	// Queue all the jobs atomically
-	if _, err := s.queueJobMulti(ctx, stepJobs); err != nil {
-		return nil, err
-	}
-
-	return &pb.RunPipelineResponse{
-		JobId:     jobIds[0],
-		AllJobIds: jobIds,
-		JobMap:    jobMap,
-	}, nil
+	return stepJobs, pipelineRun, nil
 }
