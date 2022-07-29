@@ -59,7 +59,6 @@ func (s *State) pipelineRunPut(
 	// The data should be validated before this, but since it is a critical
 	// issue if there are validation errors, we test again.
 
-	// TODO:XX add validation later
 	if err := ptypes.ValidatePipelineRun(value); err != nil {
 		return status.Errorf(codes.FailedPrecondition, err.Error())
 	}
