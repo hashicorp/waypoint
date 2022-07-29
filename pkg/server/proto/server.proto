@@ -4744,7 +4744,7 @@ message PipelineRun {
   Ref.Job root_job = 4;
   Ref.Job last_job = 5;
 
-  State pipeline_state = 6;
+  State status = 6;
 
   enum State {
     UNKNOWN = 0; // no state defined, the default

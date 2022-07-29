@@ -74,7 +74,7 @@ func TestPipelineRun(t testing.T, src *pb.PipelineRun) *pb.PipelineRun {
 	return src
 }
 
-// ValidatePipeline validates the user structure.
+// ValidatePipeline validates the pipeline structure.
 func ValidatePipeline(v *pb.Pipeline) error {
 	return validationext.Error(validation.ValidateStruct(v,
 		ValidatePipelineRules(v)...,
@@ -103,6 +103,27 @@ func ValidatePipelineRules(v *pb.Pipeline) []*validation.FieldRules {
 				return validation.ValidateStruct(s, ValidateStepRules(s)...)
 			})),
 		),
+	}
+}
+
+// ValidatePipelineRun validates the pipeline run structure.
+func ValidatePipelineRun(v *pb.PipelineRun) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		ValidatePipelineRunRules(v)...,
+	))
+}
+
+// ValidatePipelineRunRules
+func ValidatePipelineRunRules(v *pb.PipelineRun) []*validation.FieldRules {
+	return []*validation.FieldRules{
+		validation.Field(&v.Sequence, validation.Required),
+		validation.Field(&v.Pipeline, validation.Required),
+
+		validationext.StructField(&v.Pipeline, func() []*validation.FieldRules {
+			return []*validation.FieldRules{
+				validation.Field(&v.Pipeline.Ref, validation.Required),
+			}
+		}),
 	}
 }
 

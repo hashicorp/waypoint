@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	//"github.com/hashicorp/waypoint/pkg/server/ptypes"
+	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 var pipelineRunBucket = []byte("pipeline_run")
@@ -30,7 +30,7 @@ func (s *State) PipelineRunPut(p *pb.PipelineRun) error {
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
 		if p.Pipeline == nil {
 			return status.Error(codes.FailedPrecondition,
-				"a Pipeline ref for the pipeline run is required")
+				"A pipeline ref for the pipeline run is required")
 		}
 
 		if p.Id == "" {
@@ -56,14 +56,13 @@ func (s *State) pipelineRunPut(
 	memTxn *memdb.Txn,
 	value *pb.PipelineRun,
 ) error {
-	// The data should be validated before this, but it is a critical
-	// issue if there are validation errors so we test again.
+	// The data should be validated before this, but since it is a critical
+	// issue if there are validation errors, we test again.
 
 	// TODO:XX add validation later
-	//if err := ptypes.ValidatePipelineRun(value); err != nil {
-	//	return status.Errorf(codes.FailedPrecondition, err.Error())
-	//}
-	//
+	if err := ptypes.ValidatePipelineRun(value); err != nil {
+		return status.Errorf(codes.FailedPrecondition, err.Error())
+	}
 
 	// Get the global bucket and write the value to it.
 	id := s.pipelineRunId(value)
