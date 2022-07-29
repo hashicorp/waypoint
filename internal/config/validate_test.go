@@ -82,7 +82,7 @@ func TestConfigValidatePipelines(t *testing.T) {
 			cfg, err := Load(filepath.Join("testdata", "pipelines", tt.File), nil)
 			require.NoError(err)
 
-			err = cfg.Validate()
+			_, err = cfg.Validate()
 			if tt.Err == "" {
 				require.NoError(err)
 				return
