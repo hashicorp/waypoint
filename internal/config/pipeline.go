@@ -65,6 +65,8 @@ func (c *Config) Pipelines() []string {
 
 // Pipeline returns the configured pipeline named n. If the pipeline doesn't
 // exist, this will return (nil, nil).
+// Note that currently this parsing function does not attempt to detect cycles
+// between embedded pipelines.
 func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 	ctx = appendContext(c.ctx, ctx)
 
@@ -126,6 +128,9 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 			// Parse all the steps
 			var embSteps []*Step
 			for _, embedStepRaw := range embedPipeline.StepRaw {
+				// TODO(briancain): Do we add an error here if we detect another level
+				// of pipeline nesting?
+
 				// turn stepRaw into a staged Step
 				s := Step{
 					ctx:       ctx,
@@ -170,6 +175,8 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 
 		result = append(result, pipes...)
 	}
+
+	// We should validate cycles across pipelines here
 
 	return result, nil
 }
@@ -369,8 +376,6 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 	pipe.Steps = steps
 
 	result = append(result, pipe)
-
-	// Validate there are no cycles?
 
 	return result, nil
 }

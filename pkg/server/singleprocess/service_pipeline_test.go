@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -88,6 +90,17 @@ func TestServicePipeline(t *testing.T) {
 
 		pipeline := pResp.Pipeline
 		require.Equal(pipeline.Name, "test")
+	})
+
+	t.Run("get an existing pipeline that has cycles returns error", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should return an error about a cycle
+		_, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: serverptypes.TestPipelineCycle(t, nil),
+		})
+		require.Error(err)
+		require.Equal(codes.InvalidArgument, status.Code(err))
 	})
 
 }
