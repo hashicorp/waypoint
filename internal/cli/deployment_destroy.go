@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
 	"github.com/posener/complete"
@@ -60,6 +61,7 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 
 		// Destroy each deployment
 		c.ui.Output("%d deployments will be destroyed.", len(deployments), terminal.WithHeaderStyle())
+		var destroymentErrors []error
 		for _, deployment := range deployments {
 			// Can't destroy a deployment that was not successful
 			if deployment.Status.GetState() != pb.Status_SUCCESS {
@@ -77,10 +79,11 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 				},
 			}); err != nil {
 				c.ui.Output("Error destroying deployment %d: %s", deployment.Sequence, err.Error(), terminal.WithErrorStyle())
+				destroymentErrors = append(destroymentErrors, err)
 			}
 		}
-		if err != nil {
-			return ErrSentinel
+		if len(destroymentErrors) > 0 {
+			return errors.New("one or more deployments failed to be destroyed")
 		}
 		return nil
 	})
