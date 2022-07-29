@@ -98,6 +98,8 @@ service Waypoint {
   // can use GetProject to get more information about the project.
   rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse) {}
 
+  rpc DestroyProject(DestroyProjectRequest) returns (DestroyProjectResponse) {};
+
   // GetApplication returns one application on the project.
   rpc GetApplication(GetApplicationRequest) returns (GetApplicationResponse);
 
@@ -3054,6 +3056,15 @@ message GetProjectResponse {
 
 message ListProjectsResponse {
   repeated Ref.Project projects = 1;
+}
+
+message DestroyProjectRequest {
+  Ref.Project project = 1;
+  bool skip_destroy_resource = 2;
+}
+
+message DestroyProjectResponse {
+  string job_id = 1;
 }
 
 message GetApplicationRequest {

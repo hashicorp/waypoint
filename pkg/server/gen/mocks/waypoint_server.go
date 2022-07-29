@@ -352,6 +352,29 @@ func (_m *WaypointServer) DeleteUser(_a0 context.Context, _a1 *gen.DeleteUserReq
 	return r0, r1
 }
 
+// DestroyProject provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) DestroyProject(_a0 context.Context, _a1 *gen.DestroyProjectRequest) (*gen.DestroyProjectResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.DestroyProjectResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DestroyProjectRequest) *gen.DestroyProjectResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.DestroyProjectResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DestroyProjectRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // EntrypointConfig provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) EntrypointConfig(_a0 *gen.EntrypointConfigRequest, _a1 gen.Waypoint_EntrypointConfigServer) error {
 	ret := _m.Called(_a0, _a1)
