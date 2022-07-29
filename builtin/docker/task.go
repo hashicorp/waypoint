@@ -478,7 +478,7 @@ func (p *TaskLauncher) WatchTask(
 	go func() {
 		defer close(logsDoneCh)
 		_, err := stdcopy.StdCopy(outW, errW, logsR)
-		if err != io.EOF {
+		if err != nil && err != io.EOF {
 			log.Warn("error reading container logs", "err", err)
 			ui.Output("Error reading container logs: %s", err, terminal.WithErrorStyle())
 		}

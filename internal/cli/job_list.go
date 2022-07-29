@@ -194,6 +194,8 @@ func (c *JobListCommand) Run(args []string) int {
 			op = "WatchTask"
 		case *pb.Job_Init:
 			op = "Init"
+		case *pb.Job_PipelineStep:
+			op = "PipelineStep"
 		default:
 			op = "Unknown"
 		}
