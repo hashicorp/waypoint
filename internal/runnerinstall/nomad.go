@@ -76,14 +76,14 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 			return fmt.Errorf("choose either CSI or host volume, not both")
 		}
 		if i.Config.CsiVolume == "" {
-			i.Config.CsiVolume = defaultRunnerName(opts.Id)
+			i.Config.CsiVolume = installutil.DefaultRunnerName(opts.Id)
 		}
 
 		s = sg.Add("Creating persistent volume")
 		err = nomadutil.CreatePersistentVolume(
 			ctx,
 			client,
-			defaultRunnerName(opts.Id),
+			installutil.DefaultRunnerName(opts.Id),
 			i.Config.CsiVolume,
 			i.Config.CsiPluginId,
 			i.Config.CsiVolumeProvider,
@@ -293,7 +293,7 @@ func (i *NomadRunnerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:   "nomad-csi-volume",
 		Target: &i.Config.CsiVolume,
-		Usage:  fmt.Sprintf("The name of the volume to initialize within the CSI provider. The default is %s.", defaultRunnerName("[runner_id]")),
+		Usage:  fmt.Sprintf("The name of the volume to initialize within the CSI provider. The default is %s.", installutil.DefaultRunnerName("[runner_id]")),
 	})
 }
 
