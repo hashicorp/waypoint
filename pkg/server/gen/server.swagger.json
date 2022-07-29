@@ -6664,14 +6664,6 @@
         }
       }
     },
-    "hashicorp.waypoint.DestroyProjectResponse": {
-      "type": "object",
-      "properties": {
-        "job_id": {
-          "type": "string"
-        }
-      }
-    },
     "hashicorp.waypoint.Documentation": {
       "type": "object",
       "properties": {
@@ -7851,6 +7843,9 @@
         "pipeline_step": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.PipelineStepOp"
         },
+        "destroy_project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.DestroyProjectOp"
+        },
         "state": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.State",
           "title": "state of the job"
@@ -8078,6 +8073,17 @@
         },
         "deployment": {
           "$ref": "#/definitions/hashicorp.waypoint.Deployment"
+        }
+      }
+    },
+    "hashicorp.waypoint.Job.DestroyProjectOp": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Project"
+        },
+        "skip_destroy_resources": {
+          "type": "boolean"
         }
       }
     },

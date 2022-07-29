@@ -469,7 +469,7 @@ func (_m *WaypointClient) DeleteUser(ctx context.Context, in *gen.DeleteUserRequ
 }
 
 // DestroyProject provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) DestroyProject(ctx context.Context, in *gen.DestroyProjectRequest, opts ...grpc.CallOption) (*gen.DestroyProjectResponse, error) {
+func (_m *WaypointClient) DestroyProject(ctx context.Context, in *gen.DestroyProjectRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -479,12 +479,12 @@ func (_m *WaypointClient) DestroyProject(ctx context.Context, in *gen.DestroyPro
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *gen.DestroyProjectResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.DestroyProjectRequest, ...grpc.CallOption) *gen.DestroyProjectResponse); ok {
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DestroyProjectRequest, ...grpc.CallOption) *emptypb.Empty); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.DestroyProjectResponse)
+			r0 = ret.Get(0).(*emptypb.Empty)
 		}
 	}
 
