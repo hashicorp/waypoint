@@ -1772,6 +1772,7 @@ message Job {
     InitOp init = 68;
     WatchTaskOp watch_task = 69;
     PipelineStepOp pipeline_step = 70;
+    DestroyProjectOp destroy_project = 71;
   }
 
   //-----------------------------------------------------------------
@@ -2308,6 +2309,10 @@ message Job {
   message PipelineStepOp {
     // The step to execute.
     Pipeline.Step step = 1;
+  }
+
+  message DestroyProjectOp {
+    Project project = 1;
   }
 
   // Note that since we run pipeline steps as jobs, the output of the pipeline
