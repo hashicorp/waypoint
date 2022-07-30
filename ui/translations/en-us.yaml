@@ -314,3 +314,8 @@ image-ref:
 
 workspace-switcher:
   error: Failed to load workspaces
+
+runner-alert: 
+  title: Remote runner required
+  description: In order to connect to a repository, you must install a remote runner first.
+  link: Waypoint Runners documentation

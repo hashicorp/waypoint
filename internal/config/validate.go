@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/zclconf/go-cty/cty"
@@ -22,6 +23,7 @@ type validateStruct struct {
 	Variables []*validateVariable `hcl:"variable,block"`
 	Plugin    []*Plugin           `hcl:"plugin,block"`
 	Apps      []*validateApp      `hcl:"app,block"`
+	Pipelines []*validatePipeline `hcl:"pipeline,block"`
 	Config    *genericConfig      `hcl:"config,block"`
 }
 
@@ -45,6 +47,12 @@ type validateVariable struct {
 	Default     cty.Value `hcl:"default,optional"`
 	Type        cty.Type  `hcl:"type,optional"`
 	Description string    `hcl:"description,optional"`
+}
+
+type validatePipeline struct {
+	Name   string            `hcl:",label"`
+	Labels map[string]string `hcl:"labels,optional"`
+	Step   []*Step           `hcl:"step,block"`
 }
 
 type ValidationResult struct {
@@ -123,6 +131,26 @@ func (c *Config) Validate() (ValidationResults, error) {
 
 	if len(apps) > 1 {
 		results = append(results, ValidationResult{Warning: AppeningHappening})
+	}
+
+	// Validate pipelines
+	for i, block := range content.Blocks.OfType("pipeline") {
+		pipelineRes := c.validatePipeline(block)
+		if pipelineRes != nil {
+			results = append(results, pipelineRes...)
+		}
+
+		// Validate there's no duplicate names
+		for j, bl := range content.Blocks.OfType("pipeline") {
+			if i != j && bl.Labels[0] == block.Labels[0] {
+				results = append(results, ValidationResult{Error: &hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "'pipeline' stanza names must be unique per project",
+					Subject:  &block.DefRange,
+					Context:  &block.TypeRange,
+				}})
+			}
+		}
 	}
 
 	// Validate labels
@@ -264,6 +292,49 @@ func (c *App) Validate() (ValidationResults, error) {
 	}
 
 	return results, nil
+}
+
+// validatePipeline validates that a given pipeline block has at least
+// one step stanza
+func (c *Config) validatePipeline(b *hcl.Block) []ValidationResult {
+	var results []ValidationResult
+
+	// Validate root
+	schema, _ := gohcl.ImpliedBodySchema(&validatePipeline{})
+	content, diag := b.Body.Content(schema)
+	if diag.HasErrors() {
+		results = append(results, ValidationResult{Error: diag})
+
+		if content == nil {
+			return results
+		}
+	}
+
+	// At least one Step required
+	if len(content.Blocks.OfType("step")) < 1 {
+		results = append(results, ValidationResult{Error: &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "'step' stanza required",
+			Subject:  &b.DefRange,
+			Context:  &b.TypeRange,
+		}})
+	}
+
+	return results
+}
+
+func (c *Pipeline) Validate() error {
+	var result error
+
+	for _, stepRaw := range c.StepRaw {
+		if stepRaw == nil || stepRaw.Use == nil || stepRaw.Use.Type == "" {
+			result = multierror.Append(result, fmt.Errorf(
+				"step stage with a default 'use' stanza is required"))
+		}
+
+		// else, other step validations?
+	}
+	return result
 }
 
 // ValidateLabels validates a set of labels. This ensures that labels are

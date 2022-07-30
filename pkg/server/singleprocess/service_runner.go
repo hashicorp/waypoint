@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	empty "google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/hashicorp/waypoint/internal/telemetry/metrics"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -365,6 +366,21 @@ func (s *Service) RunnerConfig(
 
 		// Set our job
 		job = sjob.Job
+
+		// We know a job was accepted, so it shouldn't be hanging around because this runner
+		// is available.
+		log.Trace("updating expiry time for job to be 60 seconds now that runner has been assigned job")
+		dur, err := time.ParseDuration("60s")
+		if err != nil {
+			return status.Errorf(codes.FailedPrecondition,
+				"Invalid expiry duration: %s", err.Error())
+		}
+
+		newExpireTime := timestamppb.New(time.Now().Add(dur))
+		if err := s.state(ctx).JobUpdateExpiry(job.Id, newExpireTime); err != nil {
+			log.Error("failed to update job expiry time after runner accepted job!", "err", err)
+			return err
+		}
 
 		log.Debug("runner is scoped for config",
 			"project/application", job.Application,
@@ -725,6 +741,7 @@ func (s *Service) RunnerJobStream(
 				select {
 				case req := <-eventCh:
 					if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
+						log.Error("error handling job stream request during drain", "err", err, "req", req)
 						return err
 					}
 				default:
@@ -733,10 +750,12 @@ func (s *Service) RunnerJobStream(
 			}
 
 		case err := <-errCh:
+			log.Error("err from err channel", "err", err)
 			return err
 
 		case req := <-eventCh:
 			if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
+				log.Error("error handling job stream request", "err", err, "req", req)
 				return err
 			}
 
@@ -750,6 +769,8 @@ func (s *Service) RunnerJobStream(
 			// cancel requests are made.
 			if job.CancelTime != nil &&
 				(lastJob == nil || !lastJob.CancelTime.AsTime().Equal(job.CancelTime.AsTime())) {
+				log.Trace("job cancellation request receieved")
+
 				// The job is forced if we're in an error state. This must be true
 				// because we would've already exited the loop if we naturally
 				// got a terminal event.
@@ -763,6 +784,7 @@ func (s *Service) RunnerJobStream(
 					},
 				})
 				if err != nil {
+					log.Error("error sending job cancel event to runner", "err", err)
 					return err
 				}
 
@@ -772,6 +794,7 @@ func (s *Service) RunnerJobStream(
 				}
 			}
 
+			log.Trace("updating job from state store", "last_job", lastJob, "job", job.Job)
 			lastJob = job.Job
 		}
 	}

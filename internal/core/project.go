@@ -29,6 +29,7 @@ import (
 type Project struct {
 	logger    hclog.Logger
 	apps      map[string]*App
+	pipelines map[string]*Pipeline
 	factories map[component.Type]*factory.Factory
 	dir       *datadir.Project
 	mappers   []*argmapper.Func
@@ -72,6 +73,7 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		logger:    hclog.L(),
 		workspace: "default",
 		apps:      make(map[string]*App),
+		pipelines: make(map[string]*Pipeline),
 		jobInfo:   &component.JobInfo{},
 		factories: map[component.Type]*factory.Factory{
 			component.BuilderType:        plugin.BaseFactories[component.BuilderType],
@@ -148,6 +150,27 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		p.apps[appConfig.Name] = app
 	}
 
+	// configure pipelines for project and its apps
+	for _, name := range opts.Config.Pipelines() {
+		evalCtx := config.EvalContext(nil, p.dir.DataDir()).NewChild()
+		// TODO: Add variables
+
+		pipelineConfig, err := opts.Config.Pipeline(name, evalCtx)
+		if err != nil {
+			return nil, fmt.Errorf("error loading pipeline %q: %w", name, err)
+		}
+		if err := pipelineConfig.Validate(); err != nil {
+			return nil, fmt.Errorf("error loading pipeline %q: %w", name, err)
+		}
+
+		pipeline, err := newPipeline(ctx, p, pipelineConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		p.pipelines[pipelineConfig.Name] = pipeline
+	}
+
 	p.logger.Info("project initialized", "workspace", p.workspace)
 
 	// Output all the variables that this project will use along with
@@ -183,6 +206,30 @@ func (p *Project) App(name string) (*App, error) {
 
 	return nil, status.Errorf(codes.NotFound,
 		"Application %q was not found in this project. Please ensure that "+
+			"you've created this project in the waypoint.hcl configuration.",
+		name,
+	)
+}
+
+// Pipelines returns all of the defined pipelines as a list for a given project.
+func (p *Project) Pipelines() []*Pipeline {
+	var result []*Pipeline
+	for _, pipeline := range p.pipelines {
+		result = append(result, pipeline)
+	}
+
+	return result
+}
+
+// Pipeline initializes and returns the pipeline with the given name. This
+// returns an error with codes.NotFound if the pipeline is not found.
+func (p *Project) Pipeline(name string) (*Pipeline, error) {
+	if v, ok := p.pipelines[name]; ok {
+		return v, nil
+	}
+
+	return nil, status.Errorf(codes.NotFound,
+		"Pipeline %q was not found in this project. Please ensure that "+
 			"you've created this project in the waypoint.hcl configuration.",
 		name,
 	)

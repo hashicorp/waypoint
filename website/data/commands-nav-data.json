@@ -187,6 +187,18 @@
     "path": "job-get-stream"
   },
   {
+    "title": "pipeline inspect",
+    "path": "pipeline-inspect"
+  },
+  {
+    "title": "pipeline list",
+    "path": "pipeline-list"
+  },
+  {
+    "title": "pipeline run",
+    "path": "pipeline-run"
+  },
+  {
     "title": "plugin",
     "path": "plugin"
   },

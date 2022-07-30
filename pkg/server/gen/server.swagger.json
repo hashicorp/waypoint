@@ -6331,6 +6331,18 @@
         }
       }
     },
+    "hashicorp.waypoint.ConfigSyncPipelineResponse": {
+      "type": "object",
+      "properties": {
+        "synced_pipelines": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline"
+          },
+          "description": "synced_pipelines is a map of Pipeline Name Keys to Pipeline ID Refs for\neach pipeline that was synced in the config sync request."
+        }
+      }
+    },
     "hashicorp.waypoint.ConfigVar": {
       "type": "object",
       "properties": {
@@ -7445,6 +7457,44 @@
         }
       }
     },
+    "hashicorp.waypoint.GetPipelineResponse": {
+      "type": "object",
+      "properties": {
+        "pipeline": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline",
+          "description": "Pipeline is the pipeline that was requested."
+        },
+        "root_step": {
+          "type": "string",
+          "description": "Root step is the name of the step in pipeline that is the first\nstep executed."
+        },
+        "graph": {
+          "$ref": "#/definitions/hashicorp.waypoint.GetPipelineResponse.Graph",
+          "description": "Graph is the execution graph for the pipeline steps. This can be\nused to better visualize pipeline execution since the internal data\nformat of pipeline.steps is optimized more for storage rather than usage."
+        }
+      }
+    },
+    "hashicorp.waypoint.GetPipelineResponse.Graph": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string",
+          "format": "byte"
+        },
+        "format": {
+          "$ref": "#/definitions/hashicorp.waypoint.GetPipelineResponse.Graph.Format"
+        }
+      },
+      "description": "Graph represents the execution graph for the pipeline steps. This\nmay support multiple formats."
+    },
+    "hashicorp.waypoint.GetPipelineResponse.Graph.Format": {
+      "type": "string",
+      "enum": [
+        "INVALID",
+        "MERMAID"
+      ],
+      "default": "INVALID"
+    },
     "hashicorp.waypoint.GetProjectResponse": {
       "type": "object",
       "properties": {
@@ -7685,6 +7735,10 @@
           "$ref": "#/definitions/hashicorp.waypoint.Ref.OnDemandRunnerConfig",
           "description": "If target_runner is Any and this is set, the job will be executed\non an ODR spawned from this config."
         },
+        "ondemand_runner_task": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.TaskOverride",
+          "description": "This is optional and overrides the task that is used by the on-demand\nrunner. This requires ODR to exist since the ODR system is used to\nlaunch tasks. If an ODR config is not available, queueing this job will\nfail.\n\nThis can be used to run custom runner binaries or custom tasks without\na runner."
+        },
         "labels": {
           "type": "object",
           "additionalProperties": {
@@ -7772,6 +7826,9 @@
         },
         "watch_task": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.WatchTaskOp"
+        },
+        "pipeline_step": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.PipelineStepOp"
         },
         "state": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.State",
@@ -8158,6 +8215,38 @@
       "type": "object",
       "description": "Noop operations do nothing. This is primarily used for testing.\nThis operation will still download the data from the data source.\nA noop may be useful outside of testing to verify a runner is\nexecuting properly or can access data properly."
     },
+    "hashicorp.waypoint.Job.PipelineConfigSyncResult": {
+      "type": "object",
+      "properties": {
+        "synced_pipelines": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline"
+          },
+          "description": "synced_pipelines is a map of Pipeline Name Keys to Pipeline ID Refs for\neach pipeline that was synced in the config sync request."
+        }
+      }
+    },
+    "hashicorp.waypoint.Job.PipelineStepOp": {
+      "type": "object",
+      "properties": {
+        "step": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step",
+          "description": "The step to execute."
+        }
+      },
+      "description": "PipelineStepOp triggers the execution of a pipeline step."
+    },
+    "hashicorp.waypoint.Job.PipelineStepResult": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/google.rpc.Status",
+          "description": "The resulting status from the pipeline step execution. This will\nalways be non-nil. On success the code will be OK."
+        }
+      },
+      "description": "Note that since we run pipeline steps as jobs, the output of the pipeline\nexecution is in the job log."
+    },
     "hashicorp.waypoint.Job.PollOp": {
       "type": "object",
       "description": "PollOp triggers a poll action for a project. The job will fail if there\nis no data source configured for the project.\n\nA poll operation can be queued even if a project has polling disabled.\nIf a project has polling enabled, a manually queued poll operation will\nhave no effect on the poll timer or intervals."
@@ -8306,6 +8395,12 @@
         },
         "watch_task": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.WatchTaskResult"
+        },
+        "pipeline_step": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.PipelineStepResult"
+        },
+        "pipeline_config_sync": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.PipelineConfigSyncResult"
         }
       }
     },
@@ -8379,6 +8474,19 @@
         "start_job_id": {
           "type": "string",
           "description": "The state can be looked up from the result of a StartTask job."
+        }
+      }
+    },
+    "hashicorp.waypoint.Job.TaskOverride": {
+      "type": "object",
+      "properties": {
+        "launch_info": {
+          "$ref": "#/definitions/hashicorp.waypoint.TaskLaunchInfo",
+          "description": "Launch info for the task. The environment variables will be merged\nwith the defaults. If no OCI URL is specified, the ODR profile\nsettings are used."
+        },
+        "skip_operation": {
+          "type": "boolean",
+          "description": "If true, the operation will not be queued. This only works with\nNoop operations out of safety. This is primarliy for tasks that\nare NOT runners."
         }
       }
     },
@@ -8553,6 +8661,18 @@
           "items": {
             "$ref": "#/definitions/hashicorp.waypoint.OnDemandRunnerConfig"
           }
+        }
+      }
+    },
+    "hashicorp.waypoint.ListPipelinesResponse": {
+      "type": "object",
+      "properties": {
+        "pipelines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.Pipeline"
+          },
+          "title": "All of the listed pipelines"
         }
       }
     },
@@ -8836,6 +8956,143 @@
       ],
       "default": "UNSET"
     },
+    "hashicorp.waypoint.Pipeline": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique ID for this pipeline."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-friendly name for the pipeline. This is not unique! Users should\nuse the ID and other metadata to differentiate pipelines. In general,\nwe recommend avoiding reusing names."
+        },
+        "project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project",
+          "description": "This pipeline is created from a waypoint.hcl file that is synced via VCS."
+        },
+        "steps": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step"
+          },
+          "description": "The steps that make up this pipeline. This is a set and the order\nhas no meaning; it does not imply any ordering that the steps will\nbe executed. The execution order is purely defined by the \"depends_on\"\nfields on the steps.\n\nThere must be only one \"root\" step. A root step is a step with no\ndependencies. It is an error for there to be more than one root step.\n\nFor API users, the GetPipelineResponse has a number of fields that\nhelp make this much easier to consume, such as a dedicated field for\nthe root step, mermaid-formatted graph output, and more.\n\nThese requirements are usually hidden from users through nicer user\nexperiences for editing: waypoint.hcl syntax (which implicitly creates\nordering and root steps), UIs, etc. All these requirements are noted for\n_internal_ users who are modifying pipelines via the API. For those\ninternal users, they must manage the tedium of adhering to these requirements."
+        }
+      }
+    },
+    "hashicorp.waypoint.Pipeline.Step": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the step. This is unique within a pipeline. In the \"steps\"\nmap, this must match the map key."
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The steps that must come before this step. If this is empty,\nthis is considered a \"root\" step. Only one step may be root.\nSee \"steps\" on the Pipeline message for details."
+        },
+        "exec": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Exec",
+          "description": "Docker execute."
+        },
+        "build": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Build",
+          "title": "Built-in build operation"
+        },
+        "deploy": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Deploy",
+          "title": "Built-in deploy operation"
+        },
+        "release": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Release",
+          "title": "Built-in release operation"
+        },
+        "up": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Up",
+          "title": "Built-in up operation"
+        },
+        "image": {
+          "type": "string",
+          "description": "Docker image to execute. This should be a fully qualified image URL."
+        }
+      },
+      "description": "A single step within the pipeline."
+    },
+    "hashicorp.waypoint.Pipeline.Step.Build": {
+      "type": "object",
+      "properties": {
+        "disable_push": {
+          "type": "boolean",
+          "title": "Whether or not to push the built artifact to a remote container registry\nTODO(briancain): ensure default to false because this will be inside\nan ODR container"
+        }
+      }
+    },
+    "hashicorp.waypoint.Pipeline.Step.Deploy": {
+      "type": "object",
+      "properties": {
+        "release": {
+          "type": "boolean",
+          "description": "Whether or not to run a release immediately after the deploy. Defaults\nto false. Users would probably write a Release step to opt into a release\nbut lets support the option here just like the CLI does."
+        }
+      }
+    },
+    "hashicorp.waypoint.Pipeline.Step.Exec": {
+      "type": "object",
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "TODO(briancain): update this to use the Step exec instead of the plugin\nDocker image to execute. This should be a fully qualified image URL."
+        },
+        "command": {
+          "type": "string",
+          "description": "Command to execute within the image. If blank, the default command\nwill be executed."
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "hashicorp.waypoint.Pipeline.Step.Release": {
+      "type": "object",
+      "properties": {
+        "deployment": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Deployment"
+        },
+        "prune": {
+          "type": "boolean"
+        },
+        "prune_retain": {
+          "type": "integer",
+          "format": "int32",
+          "description": "This sets the number of unreleased deployments to retain when pruning.\nThis only has an effect if \"prune_retain_override\" is true. If that\nis false, then pruning uses the default behavior (retain 2)."
+        },
+        "prune_retain_override": {
+          "type": "boolean"
+        }
+      }
+    },
+    "hashicorp.waypoint.Pipeline.Step.Up": {
+      "type": "object",
+      "properties": {
+        "prune": {
+          "type": "boolean"
+        },
+        "prune_retain": {
+          "type": "integer",
+          "format": "int32",
+          "description": "This sets the number of unreleased deployments to retain when pruning.\nThis only has an effect if \"prune_retain_override\" is true. If that\nis false, then pruning uses the default behavior (retain 2)."
+        },
+        "prune_retain_override": {
+          "type": "boolean"
+        }
+      }
+    },
     "hashicorp.waypoint.Project": {
       "type": "object",
       "properties": {
@@ -9047,6 +9304,18 @@
       },
       "description": "DeclaredResource references a declared resource."
     },
+    "hashicorp.waypoint.Ref.Deployment": {
+      "type": "object",
+      "properties": {
+        "latest": {
+          "type": "boolean"
+        },
+        "sequence": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
     "hashicorp.waypoint.Ref.Global": {
       "type": "object",
       "description": "Global references the entire server. This is used in some APIs\nas a way to read/write values that are server-global."
@@ -9096,6 +9365,54 @@
         }
       },
       "description": "OperationSeq references an operation by sequence number."
+    },
+    "hashicorp.waypoint.Ref.Pipeline": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineId",
+          "description": "Reference a single pipeline by ID."
+        },
+        "owner": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineOwner",
+          "description": "Reference an existing pipeline by Project owner and Pipeline Name\nThis assumes that a project cannot have two pipelines with the same name."
+        }
+      },
+      "description": "Pipeline references a pipeline using one or more lookup types."
+    },
+    "hashicorp.waypoint.Ref.PipelineId": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "hashicorp.waypoint.Ref.PipelineOwner": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project",
+          "title": "the project this pipeline is associated with"
+        },
+        "pipeline_name": {
+          "type": "string",
+          "title": "the name of the defined pipeline config"
+        }
+      }
+    },
+    "hashicorp.waypoint.Ref.PipelineStep": {
+      "type": "object",
+      "properties": {
+        "pipeline": {
+          "type": "string",
+          "title": "ID of te pipeline"
+        },
+        "step": {
+          "type": "string",
+          "description": "Step name within the pipeline."
+        }
+      }
     },
     "hashicorp.waypoint.Ref.Project": {
       "type": "object",
@@ -9341,6 +9658,29 @@
         "exit": {
           "type": "boolean",
           "description": "If true, the server will exit after the restore is staged. This will\nSHUT DOWN the server and some external process you created is expected\nto bring it back. The Waypoint server on its own WILL NOT automatically\nrestart. You should only set this if you have some operation to\nautomate restart such as running in Nomad or Kubernetes."
+        }
+      }
+    },
+    "hashicorp.waypoint.RunPipelineResponse": {
+      "type": "object",
+      "properties": {
+        "job_id": {
+          "type": "string",
+          "description": "The root job of the pipeline."
+        },
+        "all_job_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "All job IDs are the list of all jobs that were queued for this pipeline.\nThey are in topologically sorted order. This means that a job's dependencies\nare guaranteed to be satisfied by previous jobs in the list, but all\nprevious jobs may not be necessary. This is because two jobs may be\ntotally independent of each other and can execute concurrently. To get\na better view, a graph should be built using step dependencies, and\nthe job IDs can be correlated using the job_map field."
+        },
+        "job_map": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineStep"
+          },
+          "description": "This provides a lookup from job ID to what step and pipeline a job\ncorresponds to. Note that some jobs may correspond to pipelines other\nthan the initial pipeline if nested pipelines are used."
         }
       }
     },
@@ -10390,6 +10730,15 @@
         "config": {
           "$ref": "#/definitions/hashicorp.waypoint.OnDemandRunnerConfig",
           "description": "The resulting ondemand runner value. It should replace the one that was\nsent in the request."
+        }
+      }
+    },
+    "hashicorp.waypoint.UpsertPipelineResponse": {
+      "type": "object",
+      "properties": {
+        "pipeline": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline",
+          "description": "This is the inserted/updated pipeline. This may not match the\ninput since this will contain fully normalized data."
         }
       }
     },
