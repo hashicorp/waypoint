@@ -58,7 +58,6 @@ func (t *testStream) SendHeader(metadata.MD) error {
 
 func (t *testStream) SetTrailer(metadata.MD) {
 	t.t.Fatal("unexpected usage of TestStream")
-	return
 }
 
 func (t *testStream) Header() (metadata.MD, error) {

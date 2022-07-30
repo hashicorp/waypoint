@@ -26,7 +26,6 @@ func (k *KeepaliveServerStream) SendHeader(md metadata.MD) error {
 
 func (k *KeepaliveServerStream) SetTrailer(md metadata.MD) {
 	k.ss.SetTrailer(md)
-	return
 }
 
 func (k *KeepaliveServerStream) Context() context.Context {
