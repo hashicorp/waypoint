@@ -93,6 +93,13 @@ func ValidateGetProjectRequest(v *pb.GetProjectRequest) error {
 	))
 }
 
+// ValidateDestroyProjectRequest
+func ValidateDestroyProjectRequest(v *pb.DestroyProjectRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Project, validation.Required),
+	))
+}
+
 // ValidateUIGetProjectRequest
 func ValidateUIGetProjectRequest(v *pb.UI_GetProjectRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
