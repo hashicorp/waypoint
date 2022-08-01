@@ -28,7 +28,16 @@ func (p *Platform) Status(
 	deployment *Deployment,
 	ui terminal.UI,
 ) (*sdk.StatusReport, error) {
-	actionConfig, err := p.actionInit(log)
+	chartNS := ""
+	if v := p.config.Namespace; v != "" {
+		chartNS = v
+	}
+
+	if chartNS == "" {
+		// If all else fails, default the namespace to "default"
+		chartNS = "default"
+	}
+	actionConfig, err := p.actionInit(log, chartNS)
 	if err != nil {
 		return nil, err
 	}

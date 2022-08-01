@@ -21,7 +21,7 @@ func (p *Platform) settingsInit() (*cli.EnvSettings, error) {
 	return cli.New(), nil
 }
 
-func (p *Platform) actionInit(log hclog.Logger) (*action.Configuration, error) {
+func (p *Platform) actionInit(log hclog.Logger, userNS string) (*action.Configuration, error) {
 	// Get our K8S API
 	_, ns, rc, err := k8s.Clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
@@ -37,6 +37,10 @@ func (p *Platform) actionInit(log hclog.Logger) (*action.Configuration, error) {
 	actionlog := log.Named("helm_action")
 	debug := func(format string, v ...interface{}) {
 		actionlog.Debug(fmt.Sprintf(format, v...))
+	}
+
+	if userNS != "default" {
+		ns = userNS
 	}
 
 	// Initialize our action

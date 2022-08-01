@@ -55,7 +55,17 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	actionConfig, err := p.actionInit(log)
+	chartNS := ""
+	if v := p.config.Namespace; v != "" {
+		chartNS = v
+	}
+
+	if chartNS == "" {
+		// If all else fails, default the namespace to "default"
+		chartNS = "default"
+	}
+
+	actionConfig, err := p.actionInit(log, chartNS)
 	if err != nil {
 		return nil, err
 	}
@@ -87,15 +97,6 @@ func (p *Platform) Deploy(
 	values, err := p.chartValues()
 	if err != nil {
 		return nil, err
-	}
-
-	chartNS := ""
-	if v := p.config.Namespace; v != "" {
-		chartNS = v
-	}
-	if chartNS == "" {
-		// If all else fails, default the namespace to "default"
-		chartNS = "default"
 	}
 
 	// From here on out, we will always return a partial deployment if we error.
@@ -189,7 +190,17 @@ func (p *Platform) Destroy(
 	s := sg.Add("Uninstalling Helm release...")
 	defer func() { s.Abort() }()
 
-	actionConfig, err := p.actionInit(log)
+	chartNS := ""
+	if v := p.config.Namespace; v != "" {
+		chartNS = v
+	}
+
+	if chartNS == "" {
+		// If all else fails, default the namespace to "default"
+		chartNS = "default"
+	}
+
+	actionConfig, err := p.actionInit(log, chartNS)
 	if err != nil {
 		return err
 	}
