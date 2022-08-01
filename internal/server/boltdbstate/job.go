@@ -551,7 +551,7 @@ RETRY_ASSIGN:
 	if len(candidates) == 0 {
 		if block {
 			ws.WatchCtx(ctx)
-			if err := ctx.Err(); err != nil {
+			if err = ctx.Err(); err != nil {
 				return nil, err
 			}
 		}
@@ -590,7 +590,7 @@ RETRY_ASSIGN:
 		// We need to verify that in the time between our candidate search
 		// and our write lock acquisition, that this job hasn't been assigned,
 		// canceled, etc. If so, this is an invalid candidate.
-		job := raw.(*jobIndex)
+		job = raw.(*jobIndex)
 		if job == nil || job.State != pb.Job_QUEUED {
 			continue
 		}
@@ -647,12 +647,12 @@ RETRY_ASSIGN:
 			s.JobAck(job.Id, false)
 		})
 
-		if err := txn.Insert(jobTableName, job); err != nil {
+		if err = txn.Insert(jobTableName, job); err != nil {
 			return nil, err
 		}
 
 		// Update our assignment state
-		if err := s.jobAssignedSet(txn, job, true); err != nil {
+		if err = s.jobAssignedSet(txn, job, true); err != nil {
 			s.JobAck(job.Id, false)
 			return nil, err
 		}
@@ -731,7 +731,7 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	job.StateTimer = time.AfterFunc(serverstate.JobHeartbeatTimeout, func() {
 		s.log.Info("canceling job due to heartbeat timeout", "job", job.Id)
 		// Force cancel
-		if err := s.JobCancel(job.Id, true); err != nil {
+		if err = s.JobCancel(job.Id, true); err != nil {
 			s.log.Error("error canceling job due to heartbeat failure", "error", err, "job", job.Id)
 		}
 	})
@@ -739,13 +739,13 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	s.log.Debug("heartbeat timer set", "job", job.Id, "timeout", serverstate.JobHeartbeatTimeout)
 
 	// Insert to update
-	if err := txn.Insert(jobTableName, job); err != nil {
+	if err = txn.Insert(jobTableName, job); err != nil {
 		return nil, err
 	}
 
 	// Update our assigned state if we nacked
 	if !ack {
-		if err := s.jobAssignedSet(txn, job, false); err != nil {
+		if err = s.jobAssignedSet(txn, job, false); err != nil {
 			return nil, err
 		}
 	}
@@ -753,12 +753,12 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	txn.Commit()
 
 	// Update the task state machine if acked job is part of an on-demand runner task.
-	if err := s.taskAck(job.Id); err != nil {
+	if err = s.taskAck(job.Id); err != nil {
 		s.log.Error("error updating task state", "error", err, "job", job.Id)
 		return nil, err
 	}
 
-	if err := s.pipelineAck(job.Id); err != nil {
+	if err = s.pipelineAck(job.Id); err != nil {
 		s.log.Error("error updating pipeline state", "error", err, "job", job.Id)
 		return nil, err
 	}
@@ -919,7 +919,11 @@ func (s *State) JobCancel(id string, force bool) error {
 	}
 	job := raw.(*jobIndex)
 
-	if err := s.jobCancel(txn, job, force); err != nil {
+	if err = s.jobCancel(txn, job, force); err != nil {
+		return err
+	}
+
+	if err = s.pipelineCancel(job.Id); err != nil {
 		return err
 	}
 
@@ -987,7 +991,7 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 	// This will be seen by a currently running RunnerJobStream goroutine, which
 	// will then see that the job has been canceled and send the request to cancel
 	// down to the runner.
-	if err := txn.Insert(jobTableName, job); err != nil {
+	if err = txn.Insert(jobTableName, job); err != nil {
 		return err
 	}
 
@@ -1748,9 +1752,15 @@ func (s *State) pipelineComplete(jobId string) error {
 	// If job Id matches last job queued by pipeline
 	if job.Id == run.Jobs[len(run.Jobs)-1].Id {
 		run.Status = pb.PipelineRun_COMPLETED
-		s.log.Trace("pipeline is complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
+		s.log.Trace("pipeline run is complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
 	} else {
 		return status.Errorf(codes.Internal, "no job queued by pipeline %q run %q matches the requested job id %q", job.Pipeline.Pipeline, job.Pipeline.RunSequence, job.Id)
+	}
+
+	// PipelineRunPut the new state
+	if err := s.PipelineRunPut(run); err != nil {
+		s.log.Error("failed to complete pipeline run", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
+		return err
 	}
 
 	return nil
@@ -1787,7 +1797,7 @@ func (s *State) pipelineAck(jobId string) error {
 			// first job is the start job
 			if i == 0 {
 				run.Status = pb.PipelineRun_STARTING
-				s.log.Trace("pipeline is starting", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
+				s.log.Trace("pipeline run is starting", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
 			} else {
 				// any other queued job indicates the pipeline is running
 				run.Status = pb.PipelineRun_RUNNING
@@ -1800,7 +1810,55 @@ func (s *State) pipelineAck(jobId string) error {
 
 	// PipelineRunPut the new state
 	if err := s.PipelineRunPut(run); err != nil {
-		s.log.Error("failed to ack pipeline state", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
+		s.log.Error("failed to ack pipeline run state", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
+		return err
+	}
+
+	return nil
+}
+
+// pipelineCancel will look up the referenced job to see if it has a PipelineStep ref
+// associated with it, and if so, progress the pipelineRun state machine.
+func (s *State) pipelineCancel(jobId string) error {
+	job, err := s.JobById(jobId, nil)
+	if err != nil {
+		s.log.Error("error getting job by id", "job", jobId, "err", err)
+		return err
+	} else if job.Pipeline == nil {
+		s.log.Trace("job is not part of a pipeline", "job", jobId)
+		return nil
+	}
+
+	// grab the pipeline run
+	run, err := s.PipelineRunGet(&pb.Ref_Pipeline{
+		Ref: &pb.Ref_Pipeline_Id{
+			Id: &pb.Ref_PipelineId{
+				Id: job.Pipeline.Pipeline,
+			},
+		},
+	}, job.Pipeline.RunSequence)
+	if err != nil || len(run.Jobs) < 1 {
+		s.log.Error("failed to retrieve pipeline to complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
+		return err
+	}
+
+	// mark pipeline run state as cancelled
+	for _, j := range run.Jobs {
+		if j.Id == job.Id {
+			if job.State == pb.Job_ERROR || job.State == pb.Job_SUCCESS {
+				return nil
+			} else {
+				run.Status = pb.PipelineRun_CANCELLED
+				s.log.Trace("pipeline run cancelled", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
+			}
+		} else {
+			return status.Errorf(codes.Internal, "no job queued by pipeline %q run %q matches the requested job id %q", job.Pipeline.Pipeline, job.Pipeline.RunSequence, job.Id)
+		}
+	}
+
+	// PipelineRunPut the new state
+	if err := s.PipelineRunPut(run); err != nil {
+		s.log.Error("failed to cancel pipeline run", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
 		return err
 	}
 
