@@ -64,7 +64,7 @@ func (k *KeepaliveClientStream) RecvMsg(m interface{}) error {
 }
 
 // isServerCompatible determines if a server is able to receive inline keepalives
-// by examining the features it advertises.
+// by examining the features it advertises on GetVersionInfo. Triggers an RPC call.
 func isServerCompatible(ctx context.Context, cc *grpc.ClientConn) (bool, error) {
 	client := pb.NewWaypointClient(cc)
 
@@ -103,16 +103,23 @@ func KeepaliveClientStreamInterceptor() grpc.StreamClientInterceptor {
 			return nil, errors.Wrapf(err, "failed to get the client handler when setting up the inlinekeepalive interceptor on method %q", method)
 		}
 
-		serverCompatible, err := isServerCompatible(ctx, cc)
-		if err != nil {
-			log.Warn("Failed to determine if server is capatible with inline keepalives - will not send them.", "err", err)
-		}
+		// Check compatibility and serve keepalives in a separate goroutine. This way, we don't
+		// slow down the initiation of the stream.
+		go func() {
+			if !desc.ClientStreams {
+				return
+			}
+			serverCompatible, err := isServerCompatible(ctx, cc)
+			if err != nil {
+				log.Warn("Failed to determine if server is capatible with inline keepalives - will not send them.", "err", err)
+			}
 
-		// Only send keepalives if this is a client stream - not allowed otherwise.
-		if desc.ClientStreams && serverCompatible {
-			// Send keepalives for as long as the handler has the connection open
-			go ServeKeepalives(ctx, log, handler)
-		}
+			// Only send keepalives if this is a client stream - not allowed otherwise.
+			if serverCompatible {
+				// Send keepalives for as long as the handler has the connection open.
+				ServeKeepalives(ctx, log, handler)
+			}
+		}()
 
 		return &KeepaliveClientStream{handler: handler}, nil
 	}

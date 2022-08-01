@@ -10,9 +10,9 @@
 // and those streams don't yet have transparent reconnect/resume functionality. It's
 // a bad experience for users for a log stream with no messages to time out after 60 seconds.
 
-// This package provides GRPC server and client interceptors. One interceptor will send
-// "keepalive" protobuf messages that use a high-order field, and the other interceptor
-// will detect and intercept those messages without exposing them to the underlying handlers.
+// This package provides GRPC server and client interceptors. Every time a new streaming client is created,
+// one interceptor will create a new goroutine to send "keepalive" protobuf messages that use a high-order field.
+// The other interceptor will detect and intercept those messages without exposing them to the underlying handlers.
 // In this method, we keep some traffic on all of our streams without needing to be aware
 // of it in every RPC.
 
