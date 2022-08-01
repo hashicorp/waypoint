@@ -85,6 +85,10 @@ func isServerCompatible(ctx context.Context, cc *grpc.ClientConn) (bool, error) 
 // KeepaliveClientStreamInterceptor returns a stream interceptor
 // that sends inline keepalive messages on client streams (if the server
 // is compatible), and intercepts inline keepalives from the server.
+// This is intended to be invoked once at the beginning of an RPC, may call
+// the server's GetVersionInfo RPC, and if the server is compatible and this
+// is a ClientStream, will spawn a goroutine that runs for the duration
+// of the stream to send inline keepalives.
 func KeepaliveClientStreamInterceptor() grpc.StreamClientInterceptor {
 	return func(
 		ctx context.Context,
