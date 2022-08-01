@@ -2,22 +2,31 @@ package runner
 
 import (
 	"context"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func (r *Runner) executeDestroyProjectOp(
 	ctx context.Context,
+	log hclog.Logger,
 	job *pb.Job,
 	project *core.Project,
 ) (*pb.Job_Result, error) {
 	client := project.Client()
+	destroyProjectOp, ok := job.Operation.(*pb.Job_DestroyProject)
+	if !ok {
+		// this shouldn't happen since the call to this function is gated
+		// on the above type match.
+		panic("operation not expected type")
+	}
 
 	// Update the project state to indicate that it's being destroyed
 	// TODO: Do we need to do something with the response here?
 	_, err := client.UpsertProject(ctx,
 		&pb.UpsertProjectRequest{
 			Project: &pb.Project{
+				Name:  destroyProjectOp.DestroyProject.Project.Name,
 				State: pb.Project_DESTROYING,
 			},
 		},
@@ -25,8 +34,6 @@ func (r *Runner) executeDestroyProjectOp(
 	if err != nil {
 		return nil, err
 	}
-
-	destroyProjectOp := job.Operation.(*pb.Job_DestroyProject)
 	if !destroyProjectOp.DestroyProject.SkipDestroyResources {
 		for _, app := range project.Apps() {
 			// TODO: Do we need to do something with the response here?
