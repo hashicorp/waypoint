@@ -840,7 +840,7 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 	job := raw.(*jobIndex)
 
 	// Update our assigned state
-	if err := s.jobAssignedSet(txn, job, false); err != nil {
+	if err = s.jobAssignedSet(txn, job, false); err != nil {
 		return err
 	}
 
@@ -879,7 +879,7 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 	job.End()
 
 	// Insert to update
-	if err := txn.Insert(jobTableName, job); err != nil {
+	if err = txn.Insert(jobTableName, job); err != nil {
 		return err
 	}
 
@@ -887,19 +887,17 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 
 	// If the job is part of an on-demand runner task, update the task state machine
 	// to mark the job in the task as complete
-	if err := s.taskComplete(job.Id); err != nil {
+	if err = s.taskComplete(job.Id); err != nil {
 		s.log.Error("error updating task state for complete", "error", err, "job", job.Id)
 		return err
 	}
 
 	// If the job is part of a pipeline, update the pipeline state machine
 	// to mark the pipeline as complete
-	if err := s.taskComplete(job.Id); err != nil {
+	if err = s.pipelineComplete(job.Id); err != nil {
 		s.log.Error("error updating pipeline state for complete", "error", err, "job", job.Id)
 		return err
 	}
-
-	// (TODO:XX) add pipeline complete if this is last job in the pipeline
 
 	return nil
 }
