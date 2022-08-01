@@ -214,6 +214,7 @@ func TestServiceRunPipeline(t *testing.T) {
 
 		// Initialize our app
 		TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
 		// Create our pipeline
 		pipeline := serverptypes.TestPipeline(t, nil)
 		pipeline.Steps["B"] = &pb.Pipeline_Step{
@@ -234,28 +235,15 @@ func TestServiceRunPipeline(t *testing.T) {
 				},
 			},
 		}
-
-		// Create, should get an ID back
-		_, err = client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
-			Pipeline: pipeline,
-		})
-		require.NoError(err)
-
-		// Create another pipeline that references the first one
-		// Create our pipeline
-		embedPipeline := serverptypes.TestPipeline(t, &pb.Pipeline{
-			Id: "embed",
-		})
-
-		pipeline.Steps["another_pipeline"] = &pb.Pipeline_Step{
-			Name:      "another_pipeline",
-			DependsOn: []string{"root"},
+		pipeline.Steps["Embed"] = &pb.Pipeline_Step{
+			Name:      "Embed",
+			DependsOn: []string{"C"},
 			Kind: &pb.Pipeline_Step_Pipeline_{
 				Pipeline: &pb.Pipeline_Step_Pipeline{
 					Ref: &pb.Ref_Pipeline{
 						Ref: &pb.Ref_Pipeline_Id{
 							Id: &pb.Ref_PipelineId{
-								Id: pipeline.Id,
+								Id: "embed",
 							},
 						},
 					},
@@ -264,7 +252,44 @@ func TestServiceRunPipeline(t *testing.T) {
 		}
 
 		// Create, should get an ID back
-		embedPipeResp, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+		pipeResp, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: pipeline,
+		})
+		require.NoError(err)
+
+		// Create another pipeline that references the first one
+		// Create our pipeline
+		embedPipeline := &pb.Pipeline{
+			Id:   "embed",
+			Name: "embed",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "project",
+				},
+			},
+			Steps: map[string]*pb.Pipeline_Step{
+				"first": {
+					Name: "first",
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+				"second": {
+					Name:      "second",
+					DependsOn: []string{"first"},
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+			},
+		}
+
+		// Create, should get an ID back
+		_, err = client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
 			Pipeline: embedPipeline,
 		})
 		require.NoError(err)
@@ -275,7 +300,7 @@ func TestServiceRunPipeline(t *testing.T) {
 			Pipeline: &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
 					Id: &pb.Ref_PipelineId{
-						Id: embedPipeResp.Pipeline.Id,
+						Id: pipeResp.Pipeline.Id,
 					},
 				},
 			},
@@ -290,9 +315,132 @@ func TestServiceRunPipeline(t *testing.T) {
 		require.Equal(pb.Job_QUEUED, job.State)
 
 		// We should have all the job IDs
-		// TODO(briancain) fix me, add more tests
-		//require.Len(resp.AllJobIds, 5)
+		require.Len(resp.JobMap, 6)
+		require.Len(resp.AllJobIds, 6)
+	})
 
+	t.Run("returns an error if there's a cycle detected", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Initialize our app
+		TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+		// Create our pipeline
+		pipeline := serverptypes.TestPipeline(t, nil)
+		pipeline.Steps["B"] = &pb.Pipeline_Step{
+			Name:      "B",
+			DependsOn: []string{"root"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		pipeline.Steps["C"] = &pb.Pipeline_Step{
+			Name:      "C",
+			DependsOn: []string{"B"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		pipeline.Steps["Embed"] = &pb.Pipeline_Step{
+			Name:      "Embed",
+			DependsOn: []string{"C"},
+			Kind: &pb.Pipeline_Step_Pipeline_{
+				Pipeline: &pb.Pipeline_Step_Pipeline{
+					Ref: &pb.Ref_Pipeline{
+						Ref: &pb.Ref_Pipeline_Id{
+							Id: &pb.Ref_PipelineId{
+								Id: "embed",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		// Create, should get an ID back
+		_, err = client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: pipeline,
+		})
+		require.NoError(err)
+
+		// Create another pipeline that references the first one
+		// Create our pipeline
+		embedPipeline := &pb.Pipeline{
+			Id:   "embed",
+			Name: "embed",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "project",
+				},
+			},
+			Steps: map[string]*pb.Pipeline_Step{
+				"first": {
+					Name: "first",
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+				"second": {
+					Name:      "second",
+					DependsOn: []string{"first"},
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+				"embedpt2": {
+					Name:      "embedpt2",
+					DependsOn: []string{"second"},
+					Kind: &pb.Pipeline_Step_Pipeline_{
+						Pipeline: &pb.Pipeline_Step_Pipeline{
+							Ref: &pb.Ref_Pipeline{
+								Ref: &pb.Ref_Pipeline_Id{
+									Id: &pb.Ref_PipelineId{
+										Id: "test",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		// Create, should get an ID back
+		pipeResp, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: embedPipeline,
+		})
+		require.NoError(err)
+
+		// Build our job template
+		jobTemplate := serverptypes.TestJobNew(t, nil)
+		resp, err := client.RunPipeline(ctx, &pb.RunPipelineRequest{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: &pb.Ref_PipelineId{
+						Id: pipeResp.Pipeline.Id,
+					},
+				},
+			},
+			JobTemplate: jobTemplate,
+		})
+
+		// You shouldn't be able to run a cyclic pipeline
+		require.Error(err)
+		require.Nil(resp)
 	})
 }
 
