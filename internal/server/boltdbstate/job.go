@@ -892,6 +892,13 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 		return err
 	}
 
+	// If the job is part of a pipeline, update the pipeline state machine
+	// to mark the pipeline as complete
+	if err := s.taskComplete(job.Id); err != nil {
+		s.log.Error("error updating pipeline state for complete", "error", err, "job", job.Id)
+		return err
+	}
+
 	// (TODO:XX) add pipeline complete if this is last job in the pipeline
 
 	return nil
@@ -1715,10 +1722,44 @@ func (s *State) taskComplete(jobId string) error {
 	return nil
 }
 
-// pipelineAck checks if the referenced job id has a Pipeline ref associated with it,
-// and if so, Ack the specific job inside the Task job triple to progress the
-// Task state machine.
-// TODO:XX HERE
+// pipelineComplete will look up the referenced job to see if it has a PipelineStep ref
+// associated with it, and if so, progress the pipelineRun state machine.
+func (s *State) pipelineComplete(jobId string) error {
+	job, err := s.JobById(jobId, nil)
+	if err != nil {
+		s.log.Error("error getting job by id", "job", jobId, "err", err)
+		return err
+	} else if job.Pipeline == nil {
+		s.log.Trace("job is not part of a pipeline", "job", jobId)
+		return nil
+	}
+
+	// grab the pipeline run
+	run, err := s.PipelineRunGet(&pb.Ref_Pipeline{
+		Ref: &pb.Ref_Pipeline_Id{
+			Id: &pb.Ref_PipelineId{
+				Id: job.Pipeline.Pipeline,
+			},
+		},
+	}, job.Pipeline.RunSequence)
+	if err != nil || len(run.Jobs) < 1 {
+		s.log.Error("failed to retrieve pipeline to complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
+		return err
+	}
+
+	// If job Id matches last job queued by pipeline
+	if job.Id == run.Jobs[len(run.Jobs)-1].Id {
+		run.Status = pb.PipelineRun_COMPLETED
+		s.log.Trace("pipeline is complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
+	} else {
+		return status.Errorf(codes.Internal, "no job queued by pipeline %q run %q matches the requested job id %q", job.Pipeline.Pipeline, job.Pipeline.RunSequence, job.Id)
+	}
+
+	return nil
+}
+
+// pipelineAck checks if the referenced job id has a PipelineStep ref associated with it,
+// and if so, progress the PipelineRun state machine.
 func (s *State) pipelineAck(jobId string) error {
 	job, err := s.JobById(jobId, nil)
 	if err != nil {
@@ -1730,33 +1771,38 @@ func (s *State) pipelineAck(jobId string) error {
 	}
 
 	// grab pipeline run that triggered the job based on the PipelineTask Ref
-	pr, err := s.PipelineRunGet(&pb.Ref_Pipeline{
+	run, err := s.PipelineRunGet(&pb.Ref_Pipeline{
 		Ref: &pb.Ref_Pipeline_Id{
 			Id: &pb.Ref_PipelineId{
 				Id: job.Pipeline.Pipeline,
 			},
-		}}, job.Pipeline.RunSequence)
-	if err != nil {
-		s.log.Error("failed to get pipeline run to ack job", "job", job.Id, "pipeline run id", pr.Id)
+		},
+	}, job.Pipeline.RunSequence)
+	if err != nil || len(run.Jobs) < 1 {
+		s.log.Error("failed to retrieve pipeline to ack", "job", job.Id, "pipeline id", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
 		return err
 	}
 
-	// now figure out which job has been acked for the pipeline run, and update the state
-	switch job.Id {
-	case pr.Jobs[0].Id:
-		// First queued job has been Acked
-		pr.Status = pb.PipelineRun_RUNNING
-		s.log.Trace("root job is starting", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", pr.Sequence)
-	case pr.Jobs[len(pr.Jobs)-1].Id:
-		pr.Status = pb.PipelineRun_COMPLETED
-		s.log.Trace("root job is completed", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", pr.Sequence)
-	default:
-		return status.Errorf(codes.Internal, "no pipeline queued the requested job, id %q", job.Id)
+	for i, j := range run.Jobs {
+		// If job ID matches the job queued by the pipeline run
+		if j.Id == job.Id {
+			// first job is the start job
+			if i == 0 {
+				run.Status = pb.PipelineRun_STARTING
+				s.log.Trace("pipeline is starting", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
+			} else {
+				// any other queued job indicates the pipeline is running
+				run.Status = pb.PipelineRun_RUNNING
+				s.log.Trace("pipeline is running", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
+			}
+		} else {
+			return status.Errorf(codes.Internal, "no job queued by pipeline %q run %q matches the requested job id %q", job.Pipeline.Pipeline, job.Pipeline.RunSequence, job.Id)
+		}
 	}
 
 	// PipelineRunPut the new state
-	if err := s.PipelineRunPut(pr); err != nil {
-		s.log.Error("failed to ack pipeline state", "job", job.Id, "pipeline", job.Pipeline.Pipeline)
+	if err := s.PipelineRunPut(run); err != nil {
+		s.log.Error("failed to ack pipeline state", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
 		return err
 	}
 
