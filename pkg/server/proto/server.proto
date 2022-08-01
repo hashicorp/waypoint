@@ -1049,6 +1049,9 @@ message Ref {
 
     // Step name within the pipeline.
     string step = 2;
+
+    // Pipeline run sequence
+    uint64 run_sequence = 3;
   }
 }
 
@@ -4748,8 +4751,8 @@ message PipelineRun {
 
   enum State {
     UNKNOWN = 0; // no state defined, the default
-    PENDING = 1; // initial state
-    RUNNING = 2; // root_job initiated
+    STARTING = 1; // root_job initiated
+    RUNNING = 2; // jobs are working
     FAILED = 3; // when any job fails, the pipeline aborts
     CANCELLED = 4; // when any job gets manually cancelled, the entire pipeline aborts
     COMPLETED = 5; // last_job completed

@@ -9415,6 +9415,11 @@
         "step": {
           "type": "string",
           "description": "Step name within the pipeline."
+        },
+        "run_sequence": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Pipeline run sequence"
         }
       }
     },
