@@ -24,16 +24,6 @@ func init() {
 	schemas = append(schemas, pipelineRunIndexSchema)
 }
 
-//func (s *State) nextSequence(
-//	dbTxn *bolt.Tx,
-//	memTxn *memdb.Txn,
-//	update bool,
-//	value proto.Message,
-//) {
-//
-//
-//}
-
 // PipelineRunPut creates or updates the given PipelineRun.
 func (s *State) PipelineRunPut(pr *pb.PipelineRun) error {
 	memTxn := s.inmem.Txn(true)

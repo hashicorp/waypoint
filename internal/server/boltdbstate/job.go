@@ -1715,7 +1715,7 @@ func (s *State) taskComplete(jobId string) error {
 	return nil
 }
 
-// pipelineAck checks if the referenced job id has a Task ref associated with it,
+// pipelineAck checks if the referenced job id has a Pipeline ref associated with it,
 // and if so, Ack the specific job inside the Task job triple to progress the
 // Task state machine.
 // TODO:XX HERE
@@ -1729,31 +1729,34 @@ func (s *State) pipelineAck(jobId string) error {
 		return nil
 	}
 
-	// grab pipeline based on the PipelineTask Ref on the job
-	pipeline, err := s.PipelineGet(&pb.Ref_Pipeline{
+	// grab pipeline run that triggered the job based on the PipelineTask Ref
+	pr, err := s.PipelineRunGet(&pb.Ref_Pipeline{
 		Ref: &pb.Ref_Pipeline_Id{
 			Id: &pb.Ref_PipelineId{
 				Id: job.Pipeline.Pipeline,
 			},
-		},
-	})
+		}}, job.Pipeline.RunSequence)
 	if err != nil {
-		s.log.Error("failed to get pipeline to ack job", "job", job.Id, "pipeline id", job.Pipeline.Pipeline)
+		s.log.Error("failed to get pipeline run to ack job", "job", job.Id, "pipeline run id", pr.Id)
 		return err
 	}
 
-	pr := &pb.PipelineRun{
-		Pipeline: &pb.Ref_Pipeline{
-			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: pipeline.Id,
-				},
-			},
-		},
+	// now figure out which job has been acked for the pipeline run, and update the state
+	switch job.Id {
+	case pr.Jobs[0].Id:
+		// First queued job has been Acked
+		pr.Status = pb.PipelineRun_RUNNING
+		s.log.Trace("root job is starting", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", pr.Sequence)
+	case pr.Jobs[len(pr.Jobs)-1].Id:
+		pr.Status = pb.PipelineRun_COMPLETED
+		s.log.Trace("root job is completed", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", pr.Sequence)
+	default:
+		return status.Errorf(codes.Internal, "no pipeline queued the requested job, id %q", job.Id)
 	}
+
 	// PipelineRunPut the new state
 	if err := s.PipelineRunPut(pr); err != nil {
-		s.log.Error("failed to ack pipeline state", "job", job.Id, "pipeline", pipeline.Id)
+		s.log.Error("failed to ack pipeline state", "job", job.Id, "pipeline", job.Pipeline.Pipeline)
 		return err
 	}
 
