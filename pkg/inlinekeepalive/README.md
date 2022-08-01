@@ -39,9 +39,9 @@ loop Async send inline keepalives for duration of RPC
     activate ClientInterceptor
     ClientInterceptor -) +ServerInterceptor: SendMsg(InlineKeepalive)
 
-    critical critical
-        ServerInterceptor -x RunnerConfig Server Handler: Recognizes InlineKeepalive. DOES NOT forward.
-    end
+    %% Critical
+    ServerInterceptor -x RunnerConfig Server Handler: Recognizes InlineKeepalive. DOES NOT forward.
+   
     deactivate ServerInterceptor
     deactivate ClientInterceptor
 end
@@ -50,9 +50,8 @@ Waypoint Runner ->> Client: Send(event)
 Client ->> ClientInterceptor: Send(event) to interceptor
 ClientInterceptor ->> ServerInterceptor: Passthrough event to server
 
-critical critical
-    ServerInterceptor ->> RunnerConfig Server Handler: Not a keepalive, passthrough
-end
+%% Critical
+ServerInterceptor ->> RunnerConfig Server Handler: Not a keepalive, passthrough
 
 deactivate Client
 
@@ -80,10 +79,10 @@ Client ->> +ServerInterceptor: Open connection for RunnerConfig, including inlin
 
 loop Async send inline keepalives for duration of RPC
     ServerInterceptor -) +ClientInterceptor: SendMsg(InlineKeepalive)
-
-    critical critical
-        ClientInterceptor -x Client: Recognizes InlineKeepalive. DOES NOT forward.
-    end
+    
+    %% Critical
+    ClientInterceptor -x Client: Recognizes InlineKeepalive. DOES NOT forward.
+    
     deactivate ClientInterceptor
 end
 
@@ -93,9 +92,8 @@ CEB ->> GetLogStream Server Handler: Send(Log)
 GetLogStream Server Handler ->> ServerInterceptor: Send(Log)
 ServerInterceptor ->> ClientInterceptor: Send(event) to interceptor
 
-critical critical
-    ClientInterceptor ->> Client: Not a keepalive, passthrough
-end
+%% Critical
+ClientInterceptor ->> Client: Not a keepalive, passthrough
 
 Client ->> User: 
 
