@@ -21,7 +21,7 @@ echo "Beginning Waypoint end-to-end tests..."
 echo
 
 # For running script outside of `test-e2e` folder
-TESTDIR="${WP_TESTE2E_DIR:-"."}"
+TESTDIR="${WP_TESTE2E_DIR:-$(pwd)}"
 
 echo "==> Installing dependencies..."
 echo
@@ -42,6 +42,11 @@ export GOARCH="$(go env GOARCH)"
 export GOEXE="$(go env GOEXE)"
 export OUTDIR="build/${GOOS}_${GOARCH}"
 
+if [ -z "$WP_EXAMPLES_PATH" ]; then
+  echo "WP_EXAMPLES_PATH unset; setting to ${TESTDIR}/waypoint-examples"
+  export WP_EXAMPLES_PATH="${TESTDIR}/waypoint-examples"
+fi
+
 echo "==> Building waypoint binary..."
 echo
 
@@ -59,7 +64,7 @@ echo
 
 # Bring in test apps (potentially at a certain sha rather than `main`?)
 # git clone --depth 1 git@github.com:hashicorp/waypoint-examples.git
-if [[ ! -v WP_EXAMPLES_PATH ]]; then
+if [ ! -d "$WP_EXAMPLES_PATH" ]; then
   echo "==> Pulling in waypoint-examples for test..."
   echo
 
@@ -70,9 +75,11 @@ else
 fi
 
 # Test env vars
-export WP_BINARY="waypoint"
+export WP_BINARY="$TESTDIR/waypoint"
 export WP_SERVERIMAGE="hashicorp/waypoint:latest"
-export WP_SERVERIMAGE_UPGRADE="hashicorp/waypoint:latest"
+export WP_SERVERIMAGE_UPGRADE="waypoint:dev"
+
+# 
 
 echo
 echo "==> Running Waypoint end-to-end tests..."
@@ -81,7 +88,7 @@ echo
 # TODO: allow for running all platforms, or only certain ones
 
 # only spin for local devs running on machine to show tests aren't frozen
-if [[ ! -v CI_ENV ]]; then
+if [ -z "$CI_ENV" ]; then
   spin &
   SPIN_PID=$!
   trap "kill -9 $SPIN_PID" `seq 0 15`
@@ -95,7 +102,7 @@ if [[ "$testResult" -eq 0 ]]; then
   echo "==> Cleaning up after finishing tests..."
   echo
 
-  if [[ ! -v WP_EXAMPLES_PATH ]]; then
+  if [[ ! -d WP_EXAMPLES_PATH ]]; then
     # Test clean up
     echo
     echo "* Cleaning up 'waypoint-examples'"
@@ -106,6 +113,6 @@ if [[ "$testResult" -eq 0 ]]; then
 fi
 
 # must be at end of script
-if [[ ! -v CI_ENV ]]; then
+if [ -z "$CI_ENV" ]; then
   kill -9 $SPIN_PID
 fi
