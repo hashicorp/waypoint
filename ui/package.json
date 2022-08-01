@@ -135,7 +135,7 @@
   },
   "dependencies": {
     "@hashicorp/design-system-components": "^0.12.13",
-    "@hashicorp/ember-flight-icons": "^2.0.6",
+    "@hashicorp/ember-flight-icons": "^2.0.10",
     "@types/google-protobuf": "^3.7.2",
     "api-common-protos": "link:./lib/api-common-protos",
     "ember-cli-typescript-blueprints": "^3.0.0",
