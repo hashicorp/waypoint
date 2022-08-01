@@ -362,6 +362,9 @@ func (r *Runner) executeJob(
 	case *pb.Job_QueueProject:
 		return r.executeQueueProjectOp(ctx, log, job, project)
 
+	case *pb.Job_DestroyProject:
+		return r.executeDestroyProjectOp(ctx, job, project)
+
 	case *pb.Job_StatusReport:
 		return r.executeStatusReportOp(ctx, log, job, project)
 

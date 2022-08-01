@@ -160,6 +160,22 @@ func (c *App) Destroy(ctx context.Context, op *pb.Job_DestroyOp) error {
 	return err
 }
 
+func (c *App) DestroyProject(ctx context.Context, op *pb.Job_DestroyProjectOp) error {
+	if op == nil {
+		op = &pb.Job_DestroyProjectOp{}
+	}
+
+	// Build our job
+	job := c.job()
+	job.Operation = &pb.Job_DestroyProject{
+		DestroyProject: op,
+	}
+
+	// Execute it
+	_, err := c.doJob(ctx, job)
+	return err
+}
+
 func (c *App) Exec(ctx context.Context, ec *execclient.Client) (exitCode int, err error) {
 
 	// Depending on which deployments are at play, and which plugins those deployments
