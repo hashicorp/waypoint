@@ -98,7 +98,7 @@ service Waypoint {
   // can use GetProject to get more information about the project.
   rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse) {}
 
-  rpc DestroyProject(DestroyProjectRequest) returns (DestroyProjectResponse) {};
+  rpc DestroyProject(DestroyProjectRequest) returns (google.protobuf.Empty) {};
 
   // GetApplication returns one application on the project.
   rpc GetApplication(GetApplicationRequest) returns (GetApplicationResponse);
@@ -2313,6 +2313,7 @@ message Job {
 
   message DestroyProjectOp {
     Project project = 1;
+    bool skip_destroy_resources = 2;
   }
 
   // Note that since we run pipeline steps as jobs, the output of the pipeline
@@ -3045,11 +3046,6 @@ message ListProjectsResponse {
 
 message DestroyProjectRequest {
   Ref.Project project = 1;
-  bool skip_destroy_resource = 2;
-}
-
-message DestroyProjectResponse {
-  string job_id = 1;
 }
 
 message GetApplicationRequest {
