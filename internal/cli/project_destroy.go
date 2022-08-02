@@ -103,8 +103,5 @@ Usage: waypoint project destroy [options]
 
   You can optionally skip destroying the resources by setting
   -skip-destroy-resources to true.
-
-  The workspace can continue to be used after this call, this just deletes
-  all the resources created for all apps up to this point.
 ` + c.Flags().Help())
 }
