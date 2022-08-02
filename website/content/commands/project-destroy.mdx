@@ -2,14 +2,14 @@
 layout: commands
 page_title: 'Commands: Project destroy'
 sidebar_title: 'project destroy'
-description: 'Delete the specified project.'
+description: 'Delete the specified project and optionally destroy its resources.'
 ---
 
 # Waypoint Project destroy
 
 Command: `waypoint project destroy`
 
-Delete the specified project.
+Delete the specified project and optionally destroy its resources.
 
 @include "commands/project-destroy_desc.mdx"
 
@@ -45,6 +45,6 @@ all the resources created for all apps up to this point.
 #### Command Options
 
 - `-skip-destroy-resources` - Skips destroying resources created for the Waypoint project. The default is false.
-- `-auto-approve` - Auto-approve destroying the project & all resources. If unset, confirmation will be requested. The default is false.
+- `-auto-approve` - Destroy the project and all of its resources without confirmation. The default is false.
 
 @include "commands/project-destroy_more.mdx"
