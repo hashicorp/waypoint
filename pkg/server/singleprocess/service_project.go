@@ -94,7 +94,6 @@ func (s *Service) DestroyProject(
 		return nil, err
 	}
 
-	// TODO: Do we need to return something other than empty?
 	return &empty.Empty{}, nil
 }
 

@@ -20,7 +20,6 @@ func (r *Runner) executeDestroyProjectOp(
 	}
 
 	// Update the project state to indicate that it's being destroyed
-	// TODO: Do we need to do something with the response here?
 	_, err := client.UpsertProject(ctx,
 		&pb.UpsertProjectRequest{
 			Project: &pb.Project{
@@ -34,7 +33,6 @@ func (r *Runner) executeDestroyProjectOp(
 	}
 	if !destroyProjectOp.DestroyProject.SkipDestroyResources {
 		for _, app := range project.Apps() {
-			// TODO: Do we need to do something with the response here?
 			_, err := r.executeDestroyOp(ctx,
 				&pb.Job{
 					Application: &pb.Ref_Application{
@@ -56,7 +54,6 @@ func (r *Runner) executeDestroyProjectOp(
 	}
 
 	// Delete the project from the database
-	// TODO: Do we need to do something with the response here?
 	_, err = client.DestroyProject(ctx, &pb.DestroyProjectRequest{
 		Project: &pb.Ref_Project{
 			Project: destroyProjectOp.DestroyProject.Project.Name,
@@ -66,6 +63,5 @@ func (r *Runner) executeDestroyProjectOp(
 		return nil, err
 	}
 
-	// TODO: Need specific job result type?
 	return &pb.Job_Result{}, nil
 }
