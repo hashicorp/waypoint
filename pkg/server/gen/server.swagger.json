@@ -8085,7 +8085,8 @@
         "skip_destroy_resources": {
           "type": "boolean"
         }
-      }
+      },
+      "title": "DestroyProjectOp triggers the deletion of a project from the database\nas well as (optionally) the destruction of all resources created within\na project"
     },
     "hashicorp.waypoint.Job.DocsOp": {
       "type": "object"
@@ -8302,6 +8303,14 @@
         }
       }
     },
+    "hashicorp.waypoint.Job.ProjectDestroyResult": {
+      "type": "object",
+      "properties": {
+        "job_id": {
+          "type": "string"
+        }
+      }
+    },
     "hashicorp.waypoint.Job.PushOp": {
       "type": "object",
       "properties": {
@@ -8445,6 +8454,9 @@
         },
         "pipeline_config_sync": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.PipelineConfigSyncResult"
+        },
+        "project_destroy": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.ProjectDestroyResult"
         }
       }
     },

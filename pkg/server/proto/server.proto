@@ -1883,6 +1883,7 @@ message Job {
     WatchTaskResult watch_task = 15;
     PipelineStepResult pipeline_step = 16;
     PipelineConfigSyncResult pipeline_config_sync = 17;
+    ProjectDestroyResult project_destroy = 18;
   }
 
   message Config {
@@ -2295,6 +2296,10 @@ message Job {
     // synced_pipelines is a map of Pipeline Name Keys to Pipeline ID Refs for
     // each pipeline that was synced in the config sync request.
     map<string, Ref.Pipeline> synced_pipelines = 1;
+  }
+
+  message ProjectDestroyResult {
+    string job_id = 1;
   }
 
   // PollOp triggers a poll action for a project. The job will fail if there

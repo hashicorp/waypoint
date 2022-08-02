@@ -160,7 +160,7 @@ func (c *App) Destroy(ctx context.Context, op *pb.Job_DestroyOp) error {
 	return err
 }
 
-func (c *App) DestroyProject(ctx context.Context, op *pb.Job_DestroyProjectOp) error {
+func (c *App) DestroyProject(ctx context.Context, op *pb.Job_DestroyProjectOp) (*pb.Job_ProjectDestroyResult, error) {
 	if op == nil {
 		op = &pb.Job_DestroyProjectOp{}
 	}
@@ -172,8 +172,8 @@ func (c *App) DestroyProject(ctx context.Context, op *pb.Job_DestroyProjectOp) e
 	}
 
 	// Execute it
-	_, err := c.doJob(ctx, job)
-	return err
+	result, err := c.doJob(ctx, job)
+	return result.ProjectDestroy, err
 }
 
 func (c *App) Exec(ctx context.Context, ec *execclient.Client) (exitCode int, err error) {
