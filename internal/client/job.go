@@ -180,9 +180,12 @@ func (c *Project) setupLocalJobSystem(ctx context.Context) (isLocal bool, newCtx
 				}
 			} else {
 				dirty, err = gitdirty.RepoIsDirty(log, repoRoot, gitDs.Git.Url, gitDs.Git.Ref)
-				return errors.Wrapf(err, "failed to diff repo at %q against remote with url %q ref %q",
-					repoRoot, gitDs.Git.Url, gitDs.Git.Ref,
-				)
+				if err != nil {
+					return errors.Wrapf(err, "failed to diff repo at %q against remote with url %q ref %q",
+						repoRoot, gitDs.Git.Url, gitDs.Git.Ref,
+					)
+				}
+
 			}
 			if dirty {
 				c.UI.Output(warnGitDirty, terminal.WithWarningStyle())
@@ -517,7 +520,7 @@ func (c *Project) queueAndStreamJob(
 				case *pb.Runner_Remote_:
 					ui.Output("Performing this operation on a remote runner with id %q", runner.Id, terminal.WithInfoStyle())
 				case *pb.Runner_Odr:
-					log.Debug("Executing operation on an on-demand runner from profile with ID %q", runnerType.Odr.ProfileId)
+					log.Debug("Executing operation on an on-demand runner from profile with ID", runnerType.Odr.ProfileId)
 					profile, err := c.client.GetOnDemandRunnerConfig(
 						ctx, &pb.GetOnDemandRunnerConfigRequest{
 							Config: &pb.Ref_OnDemandRunnerConfig{

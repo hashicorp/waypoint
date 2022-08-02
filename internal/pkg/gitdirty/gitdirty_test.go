@@ -282,6 +282,20 @@ func Test_getRemoteName(t *testing.T) {
 			"upstream",
 			"",
 		},
+		{
+			"ssh-remote repo test no git@",
+			"ssh-remote",
+			"git.test:testorg/testrepo.git",
+			"origin",
+			"",
+		},
+		{
+			"https-remote repo test no https:// so ssh",
+			"https-remote",
+			"git.test:testorg/testrepo.git",
+			"origin",
+			"",
+		},
 	}
 	log := hclog.Default()
 	hclog.Default().SetLevel(hclog.Debug)
@@ -301,7 +315,7 @@ func Test_getRemoteName(t *testing.T) {
 			require.NoError(err)
 			defer os.RemoveAll(td)
 
-			// Copy our test fixture so we don't have any side effects
+			// Copy our test fixture, so we don't have any side effects
 			path := filepath.Join("testdata", tt.Fixture)
 			dstPath := filepath.Join(td, "fixture")
 			require.NoError(copy.CopyDir(path, dstPath))
