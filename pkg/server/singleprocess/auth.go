@@ -237,6 +237,9 @@ func (s *Service) authRunner(
 		(r.AdoptionState != pb.Runner_ADOPTED &&
 			r.AdoptionState != pb.Runner_PREADOPTED)
 	if notAdopted {
+		// We sleep here to tarpit any runaway runners that are going to thrashing
+		// trying to connect over and over and over even though they're not allowed in.
+		time.Sleep(5 * time.Second)
 		return nil, status.Errorf(codes.PermissionDenied,
 			"runner is not adopted")
 	}
