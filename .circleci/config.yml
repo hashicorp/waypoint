@@ -231,7 +231,7 @@ jobs:
       - run:
           name: Setup k3s
           command: |
-            curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode 664" sh -
+            curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.23.8+k3s2" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode 664" sh -
             sleep 5
       - run:
           name: Get k3s nodes

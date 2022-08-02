@@ -1,0 +1,3 @@
+```release-note:bug
+internal: Fix deprecation warning being fatal.
+```

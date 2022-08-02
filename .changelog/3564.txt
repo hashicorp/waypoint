@@ -1,0 +1,4 @@
+```release-note:improvement
+serverinstall/ecs: Improve server upgrade process by stopping task and reducing
+target group drain time
+```

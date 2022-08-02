@@ -3,6 +3,7 @@ package runnerinstall
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"strconv"
 	"strings"
 	"time"
@@ -43,6 +44,7 @@ type NomadConfig struct {
 	CsiExternalId        string            `hcl:"nomad_csi_external_id,optional"`
 	CsiPluginId          string            `hcl:"nomad_csi_plugin_id,required"`
 	CsiSecrets           map[string]string `hcl:"nomad_csi_secrets,optional"`
+	CsiVolume            string            `hcl:"nomad_csi_volume,optional"`
 
 	NomadHost string `hcl:"nomad_host,optional"`
 }
@@ -73,13 +75,16 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 		if i.Config.HostVolume != "" {
 			return fmt.Errorf("choose either CSI or host volume, not both")
 		}
+		if i.Config.CsiVolume == "" {
+			i.Config.CsiVolume = installutil.DefaultRunnerName(opts.Id)
+		}
 
 		s = sg.Add("Creating persistent volume")
 		err = nomadutil.CreatePersistentVolume(
 			ctx,
 			client,
-			"waypoint-"+opts.Id+"-runner",
-			"waypoint-"+opts.Id+"-runner",
+			installutil.DefaultRunnerName(opts.Id),
+			i.Config.CsiVolume,
 			i.Config.CsiPluginId,
 			i.Config.CsiVolumeProvider,
 			i.Config.CsiFS,
@@ -114,7 +119,7 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 	// Name AND ID of the Nomad job will be waypoint-runner-ID
 	// Name is cosmetic, but ID must be unique
-	jobRef := defaultRunnerName(opts.Id)
+	jobRef := installutil.DefaultRunnerName(opts.Id)
 	job := api.NewServiceJob(jobRef, jobRef, c.Region, 50)
 	job.Namespace = &c.Namespace
 	job.Datacenters = c.Datacenters
@@ -130,7 +135,7 @@ func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 	volumeRequest := api.VolumeRequest{ReadOnly: false}
 	if c.CsiVolumeProvider != "" {
 		volumeRequest.Type = "csi"
-		volumeRequest.Source = defaultRunnerName(opts.Id)
+		volumeRequest.Source = installutil.DefaultRunnerName(opts.Id)
 		volumeRequest.AccessMode = "single-node-writer"
 		volumeRequest.AttachmentMode = "file-system"
 	} else {
@@ -284,6 +289,12 @@ func (i *NomadRunnerInstaller) InstallFlags(set *flag.Set) {
 		Target: &i.Config.CsiSecrets,
 		Usage:  "Credentials for publishing volume for Waypoint runner.",
 	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-csi-volume",
+		Target: &i.Config.CsiVolume,
+		Usage:  fmt.Sprintf("The name of the volume to initialize within the CSI provider. The default is %s.", installutil.DefaultRunnerName("[runner_id]")),
+	})
 }
 
 func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
@@ -305,7 +316,7 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	s = sg.Add("Locate existing Waypoint runner...")
 	var waypointRunnerJobName string
 	possibleRunnerJobNames := []string{
-		defaultRunnerName(opts.Id),
+		installutil.DefaultRunnerName(opts.Id),
 		DefaultRunnerTagName,
 	}
 	for _, runnerJobName := range possibleRunnerJobNames {

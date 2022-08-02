@@ -35,9 +35,7 @@ LOOP:
 		// If it's found, adopt it. Otherwise, try until deadline.
 		runners, err := client.ListRunners(ctx, &pb.ListRunnersRequest{})
 		if err != nil {
-			ui.Output(runnerFailedToConnectToServer, clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
+			ui.Output(runnerFailedToConnectToServer, terminal.WithErrorStyle())
 			return err
 		}
 		for _, myRunner := range runners.Runners {

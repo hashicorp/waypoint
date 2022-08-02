@@ -84,7 +84,7 @@ type TaskLauncherConfig struct {
 	// How long WatchTask should wait for a pod to startup. This option is specifically
 	// wordy because it's only for the WatchTask timing out waiting for the pod
 	// its watching to start up before it attempts to stream its logs.
-	WatchTaskStartupTimeoutSeconds int `hcl:watchtask_startup_timeout_seconds,optional"`
+	WatchTaskStartupTimeoutSeconds int `hcl:"watchtask_startup_timeout_seconds,optional"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {

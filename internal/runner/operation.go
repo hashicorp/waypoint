@@ -155,7 +155,7 @@ func (r *Runner) executeJob(
 	}
 
 	// Validate our configuration
-	if err := cfg.Validate(); err != nil {
+	if _, err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -367,6 +367,9 @@ func (r *Runner) executeJob(
 
 	case *pb.Job_Init:
 		return r.executeInitOp(ctx, log, project)
+
+	case *pb.Job_PipelineStep:
+		return r.executePipelineStepOp(ctx, log, job, project)
 
 	default:
 		return nil, status.Errorf(codes.Aborted, "unknown operation %T", job.Operation)

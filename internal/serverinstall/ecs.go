@@ -4,10 +4,13 @@ import (
 	"context"
 	json "encoding/json"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/installutil"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/waypoint/internal/clierrors"
+
+	"github.com/hashicorp/waypoint/internal/installutil"
 
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
 
@@ -99,7 +102,6 @@ func (i *ECSInstaller) Install(
 	ctx context.Context,
 	opts *InstallOpts,
 ) (*InstallResults, error) {
-
 	ui := opts.UI
 	log := opts.Log
 
@@ -227,7 +229,6 @@ func (i *ECSInstaller) Launch(
 	netInfo *awsinstallutil.NetworkInformation,
 	executionRoleArn, clusterName, logGroup string, rawRunFlags []string,
 ) (*ecsServer, error) {
-
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -351,7 +352,7 @@ func (i *ECSInstaller) Launch(
 		ServiceName:                   aws.String(serverName),
 		TaskDefinition:                aws.String(taskDefArn),
 		EnableECSManagedTags:          aws.Bool(true),
-		HealthCheckGracePeriodSeconds: aws.Int64(int64(600)),
+		HealthCheckGracePeriodSeconds: aws.Int64(int64(60)),
 		NetworkConfiguration: &ecs.NetworkConfiguration{
 			AwsvpcConfiguration: &ecs.AwsVpcConfiguration{
 				Subnets:        netInfo.Subnets,
@@ -480,7 +481,7 @@ func (i *ECSInstaller) Upgrade(
 		return nil, fmt.Errorf("error: could not find ecs cluster")
 	}
 	s.Done()
-	s = sg.Add("Updating task definition")
+	s = sg.Add("Inspecting load balancer target groups")
 	// list the services to find the task descriptions
 	services, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
 		Cluster:  aws.String(i.config.Cluster),
@@ -495,6 +496,24 @@ func (i *ECSInstaller) Upgrade(
 		return nil, fmt.Errorf("no waypoint-server service found")
 	}
 
+	// Set or update the deregistration delay in the target groups. Waypoint
+	// server installations pre-0.9.1 used the default 300 second delay, which
+	// we need to lower. Note: "serverSvc.LoadBalancers" below is a slice of
+	// load balancer + target group pairs. We expect two target groups attached
+	// to the same load balancer.
+	// See
+	// https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeServices.html
+	for _, lb := range serverSvc.LoadBalancers {
+		if lb.TargetGroupArn != nil {
+			s.Update("Updating deregistration delay and termination for Target Groups")
+			if err := modifyTargetGroups(elbv2.New(sess), *lb.TargetGroupArn); err != nil {
+				s.Update("Error updating Target Group %s: %w", *lb, err)
+			}
+		}
+	}
+
+	s.Done()
+	s = sg.Add("Updating task definition")
 	def, err := ecsSvc.DescribeTaskDefinition(&ecs.DescribeTaskDefinitionInput{
 		Include:        []*string{aws.String("TAGS")},
 		TaskDefinition: serverSvc.TaskDefinition,
@@ -516,6 +535,7 @@ func (i *ECSInstaller) Upgrade(
 	s.Done()
 	s = sg.Add("Updating task definition")
 	defer func() { s.Abort() }()
+
 	// assume upgrade to latest
 	if *containerDef.Image == installutil.DefaultServerImage {
 		// we can just update/force-deploy the service
@@ -558,6 +578,34 @@ func (i *ECSInstaller) Upgrade(
 		})
 		if err != nil {
 			return nil, err
+		}
+	}
+	// after updating the service, we need to stop the existing task so that the
+	// new task that is created will be able to open the db and respond to
+	// health checks
+	tasks, err := ecsSvc.ListTasks(&ecs.ListTasksInput{
+		Cluster:     &clusterArn,
+		ServiceName: serverSvc.ServiceName,
+	})
+	if err != nil {
+		s.Update("failed to list tasks for service %s, error: %w", *serverSvc.ServiceName, err)
+	}
+
+	if len(tasks.TaskArns) > 1 {
+		s.Update("Warning: multiple running server tasks detected; there can" +
+			"be only 1 active server task at a time")
+	}
+
+	// STOP any running tasks. Ideally this completes before the service starts
+	// the new task
+	for _, taskArn := range tasks.TaskArns {
+		_, err := ecsSvc.StopTask(&ecs.StopTaskInput{
+			Cluster: &clusterArn,
+			Reason:  aws.String("Waypoint server upgrade"),
+			Task:    taskArn,
+		})
+		if err != nil {
+			s.Update("failed to stop task %s, error: %w", *taskArn, err)
 		}
 	}
 
@@ -761,7 +809,6 @@ func deleteNLBResources(
 	sess *session.Session,
 	resources []*resourcegroups.ResourceIdentifier,
 ) error {
-
 	elbSvc := elbv2.New(sess)
 	for _, r := range resources {
 		if *r.ResourceType == "AWS::ElasticLoadBalancingV2::LoadBalancer" {
@@ -899,17 +946,18 @@ func (i *ECSInstaller) HasRunner(
 	if err != nil {
 		return false, err
 	}
+	serviceNames := []string{
+		defaultRunnerTagName,
+		installutil.DefaultRunnerName("static"),
+	}
 	ecsSvc := ecs.New(sess)
-	// query what subnets and vpc information from the server service
-	services, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
-		Cluster:  aws.String(i.config.Cluster),
-		Services: []*string{aws.String(runnerName)},
-	})
+	services, err := awsinstallutil.FindServices(serviceNames, ecsSvc, i.config.Cluster)
 	if err != nil {
+		opts.UI.Output("Could not get list of ECS services: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false, err
 	}
 
-	return len(services.Services) > 0, nil
+	return len(services) > 0, nil
 }
 
 func (i *ECSInstaller) InstallFlags(set *flag.Set) {
@@ -1026,6 +1074,12 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 			"an IAM role will be created automatically with the default permissions.",
 		Default: "waypoint-runner",
 	})
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-execution-role-name",
+		Target:  &i.config.ExecutionRoleName,
+		Usage:   "Configures the IAM Execution role name to use.",
+		Default: "waypoint-server-execution-role",
+	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-odr-mem",
@@ -1095,7 +1149,6 @@ func (i *ECSInstaller) SetupCluster(
 	ui terminal.UI,
 	sess *session.Session,
 ) (string, error) {
-
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -1236,7 +1289,6 @@ func createNLB(
 	httpPort *int64,
 	subnets []*string,
 ) (serverNLB *nlb, err error) {
-
 	s.Update("Creating NLB target groups")
 	elbsrv := elbv2.New(sess)
 
@@ -1283,8 +1335,16 @@ func createNLB(
 	httpTgArn := htgGPRC.TargetGroups[0].TargetGroupArn
 	grpcTgArn := ctgGPRC.TargetGroups[0].TargetGroupArn
 
-	// Create the load balancer OR modify the existing one to have this new target
-	// group but with a weight of 0
+	s.Update("Updating deregistration delay and termination for Target Groups")
+	for _, tgArn := range []*string{httpTgArn, grpcTgArn} {
+		if err := modifyTargetGroups(elbsrv, *tgArn); err != nil {
+			s.Update("Error updating Target Group %s: %w", *tgArn, err)
+		}
+	}
+
+	// Create the load balancer OR modify the existing one to have this new
+	// target group. Note: Network Load Balancers do not use the weight
+	// attribute of TargetGroupTuple.
 	htgs := []*elbv2.TargetGroupTuple{
 		{
 			TargetGroupArn: httpTgArn,
@@ -1463,4 +1523,24 @@ func (i *ECSInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		PluginConfig: cfgJson,
 		ConfigFormat: pb.Hcl_JSON,
 	}
+}
+
+// modifyTargetGroups modifies the target group  to support a shorter
+// deregistration period. This helps with upgrades and fail-overs, to route
+// traffic more quickly to any new server tasks.
+func modifyTargetGroups(elbsrv *elbv2.ELBV2, targetGroupArn string) error {
+	_, err := elbsrv.ModifyTargetGroupAttributes(&elbv2.ModifyTargetGroupAttributesInput{
+		TargetGroupArn: &targetGroupArn,
+		Attributes: []*elbv2.TargetGroupAttribute{
+			{
+				Key:   aws.String("deregistration_delay.timeout_seconds"),
+				Value: aws.String("5"),
+			},
+			{
+				Key:   aws.String("deregistration_delay.connection_termination.enabled"),
+				Value: aws.String("true"),
+			},
+		},
+	})
+	return err
 }

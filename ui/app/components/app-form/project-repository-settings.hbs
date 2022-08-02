@@ -1,6 +1,20 @@
 <form class="pds-form" {{on "submit" this.saveSettings}}>
 
   <div part="fields" class="card">
+    <Hds::Alert @type='inline' @color='warning' class='card-alert' as |A|>
+      <A.Title>
+        {{t 'runner-alert.title'}}
+      </A.Title>
+      <A.Description>
+        {{t 'runner-alert.description'}}
+      </A.Description>
+      <A.Link::Standalone
+        @icon='external-link'
+        @iconPosition='trailing'
+        @text={{t 'runner-alert.link'}}
+        @href='https://developer.hashicorp.com/waypoint/docs/runner'
+      />
+    </Hds::Alert>
     <div class="card-header">
       <h4>{{t "form.project_git_settings.git_title"}}</h4>
     </div>

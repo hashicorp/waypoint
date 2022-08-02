@@ -55,6 +55,7 @@ manually installed runners will not be automatically upgraded.
 - `-ecs-mem=<string>` - Configures the requested memory amount for the Waypoint server task in ECS. The default is 1024.
 - `-ecs-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners. This will default to the server image with the name (not label) suffixed with '-odr'.
 - `-ecs-task-role-name=<string>` - IAM Execution Role to assign to the on-demand runner. If this is blank, an IAM role will be created automatically with the default permissions. The default is waypoint-runner.
+- `-ecs-execution-role-name=<string>` - Configures the IAM Execution role name to use. The default is waypoint-server-execution-role.
 - `-ecs-odr-mem=<string>` - Configures the requested memory amount for the Waypoint On-Demand runner in ECS. The default is 2048.
 - `-ecs-odr-cpu=<string>` - Configures the requested CPU amount for the Waypoint On-Demand runner in ECS. The default is 512.
 
@@ -84,6 +85,7 @@ manually installed runners will not be automatically upgraded.
 - `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task. The default is 600.
 - `-nomad-runner-host-volume=<string>` - Name of the host volume to use for the Waypoint runner.
 - `-nomad-runner-csi-volume-provider=<string>` - Name of the CSI volume provider to use for the Waypoint runner.
+- `-nomad-runner-csi-volume=<string>` - The name of the volume to initialize for the Waypoint runner within the CSI provider.
 - `-nomad-runner-csi-volume-capacity-min=<int>` - Waypoint runner Nomad CSI volume capacity minimum, in bytes. The default is 1073741824.
 - `-nomad-runner-csi-volume-capacity-max=<int>` - Waypoint runner Nomad CSI volume capacity maximum, in bytes. The default is 2147483648.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.

@@ -15,7 +15,7 @@
 }}
 <header data-test-panel-header class="panel-header {{if vars.icon "icon-header"}}">
   {{#if vars.icon}}
-    <IconTile @icon={{vars.icon}} />
+    <Hds::IconTile @icon={{vars.icon}} @size="large" />
   {{/if}}
   <div class={{if vars.icon "icon-header--title"}}>
     <h1>{{t vars.title}}
