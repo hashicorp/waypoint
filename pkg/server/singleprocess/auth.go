@@ -203,6 +203,8 @@ func (s *Service) authRunner(
 	ctx context.Context, tokenRunner *pb.Token_Runner, endpoint string,
 ) (context.Context, error) {
 
+	log := hclog.FromContext(ctx)
+
 	runnerId, err := s.decodeId(tokenRunner.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to decode id in runner token")
@@ -237,6 +239,12 @@ func (s *Service) authRunner(
 		(r.AdoptionState != pb.Runner_ADOPTED &&
 			r.AdoptionState != pb.Runner_PREADOPTED)
 	if notAdopted {
+		if r == nil {
+			log.Debug("unknown runner attempted to connect", "id", runnerId)
+		} else {
+			log.Debug("rejecting runner due to adoption state", "id", runnerId, "state", r.AdoptionState.String())
+		}
+
 		// We sleep here to tarpit any runaway runners that are going to thrashing
 		// trying to connect over and over and over even though they're not allowed in.
 		time.Sleep(5 * time.Second)
