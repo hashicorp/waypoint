@@ -89,5 +89,9 @@ func (r *Runner) executeDestroyProjectOp(
 		return nil, err
 	}
 
-	return &pb.Job_Result{}, nil
+	return &pb.Job_Result{
+		ProjectDestroy: &pb.Job_ProjectDestroyResult{
+			JobId: job.Id,
+		},
+	}, nil
 }

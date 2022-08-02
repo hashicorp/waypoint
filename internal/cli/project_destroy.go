@@ -53,7 +53,7 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 				return nil
 			}
 		}
-		err = app.DestroyProject(ctx, &pb.Job_DestroyProjectOp{
+		_, err = app.DestroyProject(ctx, &pb.Job_DestroyProjectOp{
 			Project:              project.Project,
 			SkipDestroyResources: c.skipDestroyResources,
 		},
