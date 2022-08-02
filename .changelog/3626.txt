@@ -1,0 +1,3 @@
+```release-note:feature
+core: Add ability for projects to be deleted from the database with their resources
+```
