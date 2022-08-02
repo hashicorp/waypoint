@@ -4751,11 +4751,12 @@ message PipelineRun {
 
   enum State {
     UNKNOWN = 0; // no state defined, the default
-    STARTING = 1; // root_job initiated
-    RUNNING = 2; // jobs are working
-    FAILED = 3; // when any job fails, the pipeline aborts
-    CANCELLED = 4; // when any job gets manually cancelled, the entire pipeline aborts
-    COMPLETED = 5; // last_job completed
+    PENDING = 1; // root_job queued
+    STARTING = 2; // root_job initiated
+    RUNNING = 3; // jobs are working
+    FAILED = 4; // when any job fails, the pipeline aborts
+    CANCELLED = 5; // when any job gets manually cancelled, the entire pipeline aborts
+    COMPLETED = 6; // last_job completed
   }
 }
 

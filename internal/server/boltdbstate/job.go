@@ -551,7 +551,7 @@ RETRY_ASSIGN:
 	if len(candidates) == 0 {
 		if block {
 			ws.WatchCtx(ctx)
-			if err = ctx.Err(); err != nil {
+			if err := ctx.Err(); err != nil {
 				return nil, err
 			}
 		}
@@ -590,7 +590,7 @@ RETRY_ASSIGN:
 		// We need to verify that in the time between our candidate search
 		// and our write lock acquisition, that this job hasn't been assigned,
 		// canceled, etc. If so, this is an invalid candidate.
-		job = raw.(*jobIndex)
+		job := raw.(*jobIndex)
 		if job == nil || job.State != pb.Job_QUEUED {
 			continue
 		}
@@ -647,12 +647,12 @@ RETRY_ASSIGN:
 			s.JobAck(job.Id, false)
 		})
 
-		if err = txn.Insert(jobTableName, job); err != nil {
+		if err := txn.Insert(jobTableName, job); err != nil {
 			return nil, err
 		}
 
 		// Update our assignment state
-		if err = s.jobAssignedSet(txn, job, true); err != nil {
+		if err := s.jobAssignedSet(txn, job, true); err != nil {
 			s.JobAck(job.Id, false)
 			return nil, err
 		}
@@ -731,7 +731,7 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	job.StateTimer = time.AfterFunc(serverstate.JobHeartbeatTimeout, func() {
 		s.log.Info("canceling job due to heartbeat timeout", "job", job.Id)
 		// Force cancel
-		if err = s.JobCancel(job.Id, true); err != nil {
+		if err := s.JobCancel(job.Id, true); err != nil {
 			s.log.Error("error canceling job due to heartbeat failure", "error", err, "job", job.Id)
 		}
 	})
@@ -739,13 +739,13 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	s.log.Debug("heartbeat timer set", "job", job.Id, "timeout", serverstate.JobHeartbeatTimeout)
 
 	// Insert to update
-	if err = txn.Insert(jobTableName, job); err != nil {
+	if err := txn.Insert(jobTableName, job); err != nil {
 		return nil, err
 	}
 
 	// Update our assigned state if we nacked
 	if !ack {
-		if err = s.jobAssignedSet(txn, job, false); err != nil {
+		if err := s.jobAssignedSet(txn, job, false); err != nil {
 			return nil, err
 		}
 	}
@@ -753,12 +753,12 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	txn.Commit()
 
 	// Update the task state machine if acked job is part of an on-demand runner task.
-	if err = s.taskAck(job.Id); err != nil {
+	if err := s.taskAck(job.Id); err != nil {
 		s.log.Error("error updating task state", "error", err, "job", job.Id)
 		return nil, err
 	}
 
-	if err = s.pipelineAck(job.Id); err != nil {
+	if err := s.pipelineAck(job.Id); err != nil {
 		s.log.Error("error updating pipeline state", "error", err, "job", job.Id)
 		return nil, err
 	}
@@ -840,7 +840,7 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 	job := raw.(*jobIndex)
 
 	// Update our assigned state
-	if err = s.jobAssignedSet(txn, job, false); err != nil {
+	if err := s.jobAssignedSet(txn, job, false); err != nil {
 		return err
 	}
 
@@ -879,7 +879,7 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 	job.End()
 
 	// Insert to update
-	if err = txn.Insert(jobTableName, job); err != nil {
+	if err := txn.Insert(jobTableName, job); err != nil {
 		return err
 	}
 
@@ -887,14 +887,14 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 
 	// If the job is part of an on-demand runner task, update the task state machine
 	// to mark the job in the task as complete
-	if err = s.taskComplete(job.Id); err != nil {
+	if err := s.taskComplete(job.Id); err != nil {
 		s.log.Error("error updating task state for complete", "error", err, "job", job.Id)
 		return err
 	}
 
 	// If the job is part of a pipeline, update the pipeline state machine
 	// to mark the pipeline as complete
-	if err = s.pipelineComplete(job.Id); err != nil {
+	if err := s.pipelineComplete(job.Id); err != nil {
 		s.log.Error("error updating pipeline state for complete", "error", err, "job", job.Id)
 		return err
 	}
@@ -919,11 +919,11 @@ func (s *State) JobCancel(id string, force bool) error {
 	}
 	job := raw.(*jobIndex)
 
-	if err = s.jobCancel(txn, job, force); err != nil {
+	if err := s.jobCancel(txn, job, force); err != nil {
 		return err
 	}
 
-	if err = s.pipelineCancel(job.Id); err != nil {
+	if err := s.pipelineCancel(job.Id); err != nil {
 		return err
 	}
 
@@ -991,7 +991,7 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 	// This will be seen by a currently running RunnerJobStream goroutine, which
 	// will then see that the job has been canceled and send the request to cancel
 	// down to the runner.
-	if err = txn.Insert(jobTableName, job); err != nil {
+	if err := txn.Insert(jobTableName, job); err != nil {
 		return err
 	}
 
