@@ -203,10 +203,8 @@ func (s *serverImpl) RunnerConfig(
 	// Send down responses as we receive them
 	go func() {
 		for {
-			select {
-			case msg := <-s.Send:
-				require.NoError(s.t, srv.Send(msg.(*pb.RunnerConfigResponse)))
-			}
+			msg := <-s.Send
+			require.NoError(s.t, srv.Send(msg.(*pb.RunnerConfigResponse)))
 		}
 	}()
 
