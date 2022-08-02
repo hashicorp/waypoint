@@ -112,6 +112,8 @@ func (c *JobInspectCommand) Run(args []string) int {
 		op = "Init"
 	case *pb.Job_PipelineStep:
 		op = "PipelineStep"
+	case *pb.Job_DestroyProject:
+		op = "DestroyProject"
 	default:
 		op = "Unknown"
 	}
