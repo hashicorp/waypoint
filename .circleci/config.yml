@@ -241,6 +241,32 @@ jobs:
           command: ./ci/integration.sh
       - notify_main_failure
 
+  e2e-docker:
+    machine:
+      image: ubuntu-2204:current
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: go version
+      - run:
+          name: Install go
+          command: |
+            curl -SL --fail -o /tmp/golang.tar.gz https://dl.google.com/go/go1.17.6.linux-amd64.tar.gz
+            sudo rm -rf /usr/local/go
+            sudo tar -C /usr/local/ -xzf /tmp/golang.tar.gz
+            rm -rf /tmp/golang.tar.gz
+            go version
+      - run:
+          name: Execute Integration Tests
+          command: |
+            echo "===> Set env vars"
+            export E2E_PLATFORM=Docker
+            export WP_BINARY="$(pwd)/waypoint"
+            echo "===> Run tests"
+            ./test-e2e/run-test.sh
+      - notify_main_failure
+
   image-release:
     docker:
       # Use a modern Circle image as we just need up-to-date Docker here
@@ -441,90 +467,97 @@ jobs:
 
 workflows:
   version: 2
-  go-tests:
-    jobs:
-      - lint
-      - check-vendor:
-          requires:
-            - lint
-      - go-test:
-          requires:
-            - lint
-      - dev-build:
-          requires:
-            - lint
-          filters:
-            branches:
-              ignore:
-                - main
-      - dev-build-windows:
-          requires:
-            - lint
-          filters:
-            branches:
-              ignore:
-                - main
+  # go-tests:
+  #   jobs:
+  #     - lint
+  #     - check-vendor:
+  #         requires:
+  #           - lint
+  #     - go-test:
+  #         requires:
+  #           - lint
+  #     - dev-build:
+  #         requires:
+  #           - lint
+  #         filters:
+  #           branches:
+  #             ignore:
+  #               - main
+  #     - dev-build-windows:
+  #         requires:
+  #           - lint
+  #         filters:
+  #           branches:
+  #             ignore:
+  #               - main
 
-  integration:
+  # integration:
+  #   jobs:
+  #     - lint
+  #     - frontend-cache:
+  #         requires:
+  #           - lint
+  #     - ember-build-prod:
+  #         requires:
+  #           - frontend-cache
+  #     - build-static-assets:
+  #         requires:
+  #           - ember-build-prod
+  #     - dev-build:
+  #         requires:
+  #           - build-static-assets
+  #     - publish-static-assets:
+  #         filters:
+  #           branches:
+  #             only:
+  #               - main
+  #         requires:
+  #           - build-static-assets
+  #     - integration:
+  #         requires:
+  #           - dev-build
+  #     - image-release:
+  #         requires:
+  #           - integration
+  #         filters:
+  #           branches:
+  #             only:
+  #               - main
+
+  e2e:
     jobs:
-      - lint
-      - frontend-cache:
-          requires:
-            - lint
-      - ember-build-prod:
-          requires:
-            - frontend-cache
-      - build-static-assets:
-          requires:
-            - ember-build-prod
-      - dev-build:
-          requires:
-            - build-static-assets
-      - publish-static-assets:
-          filters:
-            branches:
-              only:
-                - main
-          requires:
-            - build-static-assets
-      - integration:
+      - dev-build
+      - e2e-docker:
           requires:
             - dev-build
-      - image-release:
-          requires:
-            - integration
-          filters:
-            branches:
-              only:
-                - main
 
-  website-mdx:
-    jobs:
-      - generate-website-mdx:
-          filters:
-            branches:
-              ignore:
-                - main
-      - check-website-mdx:
-          requires:
-            - generate-website-mdx
-          filters:
-            branches:
-              ignore:
-                - main
+  # website-mdx:
+  #   jobs:
+  #     - generate-website-mdx:
+  #         filters:
+  #           branches:
+  #             ignore:
+  #               - main
+  #     - check-website-mdx:
+  #         requires:
+  #           - generate-website-mdx
+  #         filters:
+  #           branches:
+  #             ignore:
+  #               - main
 
-  frontend:
-    jobs:
-      - frontend-cache
-      - frontend-lint:
-          requires:
-            - frontend-cache
-      - ember-build-tests:
-          requires:
-            - frontend-lint
-      - ember-test:
-          requires:
-            - ember-build-tests
+  # frontend:
+  #   jobs:
+  #     - frontend-cache
+  #     - frontend-lint:
+  #         requires:
+  #           - frontend-cache
+  #     - ember-build-tests:
+  #         requires:
+  #           - frontend-lint
+  #     - ember-test:
+  #         requires:
+  #           - ember-build-tests
 
 commands:
   md5uilib:

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 
 # Waypoint end to end test runner
 
@@ -31,6 +32,8 @@ TESTDIR="${WP_TESTE2E_DIR:-$(pwd)}"
 echo "==> Installing dependencies..."
 echo
 
+make tools
+
 echo "Skipping for now"
 echo
 
@@ -47,17 +50,26 @@ export GOARCH="$(go env GOARCH)"
 export GOEXE="$(go env GOEXE)"
 export OUTDIR="build/${GOOS}_${GOARCH}"
 
+# Test env vars
+export WP_BINARY="${WP_BINARY:-$TESTDIR/waypoint}"
+export WP_SERVERIMAGE="hashicorp/waypoint:latest"
+export WP_SERVERIMAGE_UPGRADE="hashicorp/waypoint:latest"
+
 if [ -z "$WP_EXAMPLES_PATH" ]; then
   echo "WP_EXAMPLES_PATH unset; setting to ${TESTDIR}/waypoint-examples"
   export WP_EXAMPLES_PATH="${TESTDIR}/waypoint-examples"
 fi
 
-echo "==> Building waypoint binary..."
-echo
-
-echo "Skipping for now"
-echo "Assuming waypoint is available on the path"
-echo
+echo "==> Checking if Waypoint binary is built..."
+if [ -f "${WP_BINARY}" ]; then
+  "${WP_BINARY}" version
+  echo
+else
+  echo "==> Building waypoint binary..."
+  echo
+  make
+  echo
+fi
 
 # TODO: build waypoint OR download a package, add a switch for this
 #   - add param for installing a certain waypoint server, allow install from alpha package
@@ -78,11 +90,6 @@ else
   echo "==> Using existing waypoint-examples repo for test..."
   echo
 fi
-
-# Test env vars
-export WP_BINARY="$TESTDIR/waypoint"
-export WP_SERVERIMAGE="hashicorp/waypoint:latest"
-export WP_SERVERIMAGE_UPGRADE="hashicorp/waypoint:latest"
 
 # 
 
