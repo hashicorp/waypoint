@@ -20,6 +20,11 @@ spin()
 echo "Beginning Waypoint end-to-end tests..."
 echo
 
+if [ "${E2E_PLATFORM}" != "Docker" ] && [ "${E2E_PLATFORM}" != "Kubernetes" ] && [ "${E2E_PLATFORM}" != "Ecs" ] && [ "${E2E_PLATFORM}" != "Nomad" ]; then
+  echo "Environment variable 'E2E_PLATFORM' must be one of: 'Docker', 'Kubernetes', 'Ecs', 'Nomad'"
+  exit 1
+fi
+
 # For running script outside of `test-e2e` folder
 TESTDIR="${WP_TESTE2E_DIR:-$(pwd)}"
 
@@ -77,7 +82,7 @@ fi
 # Test env vars
 export WP_BINARY="$TESTDIR/waypoint"
 export WP_SERVERIMAGE="hashicorp/waypoint:latest"
-export WP_SERVERIMAGE_UPGRADE="waypoint:dev"
+export WP_SERVERIMAGE_UPGRADE="hashicorp/waypoint:latest"
 
 # 
 
@@ -91,11 +96,21 @@ echo
 if [ -z "$CI_ENV" ]; then
   spin &
   SPIN_PID=$!
-  trap "kill -9 $SPIN_PID" `seq 0 15`
+  trap 'kill -9 $SPIN_PID' $(seq 0 15)
 fi
 
-go test -v "github.com/hashicorp/waypoint/test-e2e"
+# Run Docker tests
+go test -v "github.com/hashicorp/waypoint/test-e2e" -run "$E2E_PLATFORM"
 testResult=$?
+
+# Set up Nomad
+# Run Nomad tests
+
+# Set up K8S/K3S
+# Run K8S tests
+
+# Set up ECS
+# Run ECS tests
 
 if [[ "$testResult" -eq 0 ]]; then
   echo

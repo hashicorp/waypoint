@@ -20,7 +20,7 @@ import (
 // Test config settings used by the tests
 var (
 	wpBinary             = Getenv("WP_BINARY", "waypoint")
-	wpServerImage        = Getenv("WP_SERVERIMAGE", "hashicorp/waypoint:0.2.0")
+	wpServerImage        = Getenv("WP_SERVERIMAGE", "hashicorp/waypoint:latest")
 	wpServerImageUpgrade = Getenv("WP_SERVERIMAGE_UPGRADE", "hashicorp/waypoint:latest")
 
 	examplesRootDir = Getenv("WP_EXAMPLES_PATH", "waypoint-examples")
