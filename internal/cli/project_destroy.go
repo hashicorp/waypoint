@@ -38,7 +38,7 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 		// Confirmation is required for destroying a project &/or its resources
 		if !c.confirm {
 			proceed, err := c.ui.Input(&terminal.Input{
-				Prompt: "Do you really want to destroy this project and its resources? Only 'yes' will be accepted to approve: ",
+				Prompt: "Do you really want to destroy project \"" + project.Project.Name + "\" and its resources? Only 'yes' will be accepted to approve: ",
 				Style:  "",
 				Secret: false,
 			})
@@ -49,7 +49,7 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 					terminal.WithErrorStyle(),
 				)
 			} else if strings.ToLower(proceed) != "yes" {
-				app.UI.Output("Destroying project and resources requires confirmation.", terminal.WithWarningStyle())
+				app.UI.Output("Destroying project %q and resources requires confirmation.", project.Project.Name, terminal.WithWarningStyle())
 				return nil
 			}
 		}
@@ -84,7 +84,7 @@ func (c *ProjectDestroyCommand) Flags() *flag.Sets {
 
 		f.BoolVar(&flag.BoolVar{
 			Name:    "auto-approve",
-			Usage:   "Auto-approve destroying the project & all resources. If unset, confirmation will be requested.",
+			Usage:   "Destroy the project and all of its resources without confirmation.",
 			Default: false,
 			Target:  &c.confirm,
 		})
@@ -92,7 +92,7 @@ func (c *ProjectDestroyCommand) Flags() *flag.Sets {
 }
 
 func (c *ProjectDestroyCommand) Synopsis() string {
-	return "Delete the specified project."
+	return "Delete the specified project and optionally destroy its resources."
 }
 
 func (c *ProjectDestroyCommand) Help() string {
