@@ -70,7 +70,7 @@ func ServeKeepalives(
 		err := stream.SendMsg(&pb.InlineKeepalive{Signature: KeepaliveProtoSignature})
 		sendMx.Unlock()
 		if err != nil {
-			log.Warn("Failed sending inlinekeepalive", "err", err)
+			log.Error("Failed sending inlinekeepalive", "err", err)
 		}
 
 		select {
