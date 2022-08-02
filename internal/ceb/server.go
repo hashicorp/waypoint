@@ -89,7 +89,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 			// This interceptor keeps low-traffic streams active and not timed out.
 			// NOTE(izaak): long-term, we should ensure that all of our
 			// streaming endpoints are robust to disconnect/resume.
-			inlinekeepalive.KeepaliveClientStreamInterceptor(),
+			inlinekeepalive.KeepaliveClientStreamInterceptor(time.Duration(5)*time.Second),
 		),
 	}
 	if !cfg.ServerTls {

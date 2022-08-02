@@ -96,7 +96,7 @@ type execImpl struct {
 }
 
 // InlineKeepaliveInterceptor may call this
-func (v *execImpl) GetVersionInfo(ctx context.Context, req *empty.Empty) (*pb.GetVersionInfoResponse, error) {
+func (v *execImpl) GetVersionInfo(_ context.Context, _ *empty.Empty) (*pb.GetVersionInfoResponse, error) {
 	return &pb.GetVersionInfoResponse{
 		Info: protocolversion.Current(),
 	}, nil

@@ -2,6 +2,7 @@ package inlinekeepalive
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -12,9 +13,10 @@ import (
 )
 
 const (
-	KeepaliveProtoSignature = "inline_keepalive"
-	HeaderSendKeepalives    = "wp-inline-keepalives"
-	FeatureName             = "inline-keepalives"
+	KeepaliveProtoSignature   = "inline_keepalive"
+	HeaderSendKeepalivesKey   = "wp-inline-keepalives"
+	HeaderSendKeepalivesValue = "true"
+	FeatureName               = "inline-keepalives"
 )
 
 // IsInlineKeepalive determines if a given proto message is
@@ -51,16 +53,22 @@ type GrpcStream interface {
 // ServeKeepalives sends keepalive messages along the provided grpc stream
 // at a rate of one every five seconds.
 // It returns when the context is cancelled.
+// NOTE: this will call SendMsg, and concurrent calls to SendMsg are unsafe.
+// This will not call SendMsg unless it holds the sendMx lock.
 func ServeKeepalives(
 	ctx context.Context,
 	log hclog.Logger,
 	stream GrpcStream,
+	sendInterval time.Duration,
+	sendMx *sync.Mutex,
 ) {
 	log.Trace("Starting a inlinekeepalive interceptor for request")
 
-	intervalTicker := time.NewTicker(time.Duration(5) * time.Second)
+	intervalTicker := time.NewTicker(sendInterval)
 	for {
+		sendMx.Lock()
 		err := stream.SendMsg(&pb.InlineKeepalive{Signature: KeepaliveProtoSignature})
+		sendMx.Unlock()
 		if err != nil {
 			log.Warn("Failed sending inlinekeepalive", "err", err)
 		}

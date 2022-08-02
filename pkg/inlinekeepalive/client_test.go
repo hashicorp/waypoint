@@ -1,6 +1,7 @@
 package inlinekeepalive
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
@@ -33,6 +34,7 @@ func TestKeepaliveClientStream_RecvMsg(t *testing.T) {
 	k := &KeepaliveClientStream{
 		log:     log,
 		handler: TestClientStream(t, messages),
+		sendMx:  &sync.Mutex{},
 	}
 
 	msg := &pb.LogBatch{}

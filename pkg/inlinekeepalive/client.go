@@ -2,6 +2,8 @@ package inlinekeepalive
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
@@ -17,6 +19,7 @@ import (
 type KeepaliveClientStream struct {
 	log     hclog.Logger
 	handler grpc.ClientStream
+	sendMx  *sync.Mutex
 }
 
 func (k *KeepaliveClientStream) Header() (metadata.MD, error) {
@@ -36,6 +39,11 @@ func (k *KeepaliveClientStream) Context() context.Context {
 }
 
 func (k *KeepaliveClientStream) SendMsg(m interface{}) error {
+	// Concurrent calls to SendMsg are unsafe, and there may be another
+	// goroutine sending keepalives. Lock before sending.
+	k.sendMx.Lock()
+	defer k.sendMx.Unlock()
+
 	return k.handler.SendMsg(m)
 }
 
@@ -89,7 +97,8 @@ func isServerCompatible(ctx context.Context, cc *grpc.ClientConn) (bool, error) 
 // the server's GetVersionInfo RPC, and if the server is compatible and this
 // is a ClientStream, will spawn a goroutine that runs for the duration
 // of the stream to send inline keepalives.
-func KeepaliveClientStreamInterceptor() grpc.StreamClientInterceptor {
+// Will send a keepalive every sendInterval
+func KeepaliveClientStreamInterceptor(sendInterval time.Duration) grpc.StreamClientInterceptor {
 	return func(
 		ctx context.Context,
 		desc *grpc.StreamDesc,
@@ -100,12 +109,15 @@ func KeepaliveClientStreamInterceptor() grpc.StreamClientInterceptor {
 	) (grpc.ClientStream, error) {
 		log := hclog.FromContext(ctx).With("method", method)
 
-		ctx = metadata.AppendToOutgoingContext(ctx, HeaderSendKeepalives, "true")
+		ctx = metadata.AppendToOutgoingContext(ctx, HeaderSendKeepalivesKey, HeaderSendKeepalivesValue)
 
 		handler, err := streamer(ctx, desc, cc, method, opts...)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get the client handler when setting up the inlinekeepalive interceptor on method %q", method)
 		}
+
+		// Ensures SendMsg is not called concurrently.
+		sendMx := &sync.Mutex{}
 
 		// Check compatibility and serve keepalives in a separate goroutine. This way, we don't
 		// slow down the initiation of the stream.
@@ -115,16 +127,21 @@ func KeepaliveClientStreamInterceptor() grpc.StreamClientInterceptor {
 			}
 			serverCompatible, err := isServerCompatible(ctx, cc)
 			if err != nil {
-				log.Warn("Failed to determine if server is capatible with inline keepalives - will not send them.", "err", err)
+				log.Warn("Failed to determine if server is compatible with inline keepalives - will not send them.", "err", err)
+				return
 			}
 
 			// Only send keepalives if this is a client stream - not allowed otherwise.
 			if serverCompatible {
 				// Send keepalives for as long as the handler has the connection open.
-				ServeKeepalives(ctx, log, handler)
+				ServeKeepalives(ctx, log, handler, sendInterval, sendMx)
 			}
 		}()
 
-		return &KeepaliveClientStream{handler: handler}, nil
+		return &KeepaliveClientStream{
+			handler: handler,
+			log:     log.With("interceptor", "inlinekeepalive"),
+			sendMx:  sendMx,
+		}, nil
 	}
 }

@@ -79,7 +79,7 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 			// This interceptor keeps low-traffic streams active and not timed out.
 			// NOTE(izaak): long-term, we should ensure that all of our
 			// streaming endpoints are robust to disconnect/resume.
-			inlinekeepalive.KeepaliveClientStreamInterceptor(),
+			inlinekeepalive.KeepaliveClientStreamInterceptor(time.Duration(5) * time.Second),
 		}...),
 		grpc.WithKeepaliveParams(
 			keepalive.ClientParameters{

@@ -2,9 +2,10 @@ package inlinekeepalive
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -12,8 +13,9 @@ import (
 
 // KeepaliveClientStream implements grpc.ServerStream
 type KeepaliveServerStream struct {
-	log hclog.Logger
-	ss  grpc.ServerStream
+	log    hclog.Logger
+	ss     grpc.ServerStream
+	sendMx *sync.Mutex
 }
 
 func (k *KeepaliveServerStream) SetHeader(md metadata.MD) error {
@@ -33,6 +35,11 @@ func (k *KeepaliveServerStream) Context() context.Context {
 }
 
 func (k *KeepaliveServerStream) SendMsg(m interface{}) error {
+	// Concurrent calls to SendMsg are unsafe, and there may be another
+	// goroutine sending keepalives. Lock before sending.
+	k.sendMx.Lock()
+	defer k.sendMx.Unlock()
+
 	return k.ss.SendMsg(m)
 }
 
@@ -68,15 +75,13 @@ func isClientCompatible(ctx context.Context) bool {
 		return false
 	}
 
-	vals := md.Get(HeaderSendKeepalives)
-	if len(vals) == 0 {
-		return false
+	vals := md.Get(HeaderSendKeepalivesKey)
+	for _, val := range vals {
+		if val == HeaderSendKeepalivesValue {
+			return true
+		}
 	}
-	if vals[0] != "true" {
-		return false
-	}
-
-	return true
+	return false
 }
 
 // KeepaliveServerStreamInterceptor returns a stream interceptor
@@ -85,29 +90,29 @@ func isClientCompatible(ctx context.Context) bool {
 // This is intended to be invoked once at the beginning of an RPC. If
 // the client is compatible and this is a ServerStream, will spawn a
 // goroutine that runs for the duration of the stream to send inline keepalives.
-func KeepaliveServerStreamInterceptor() grpc.StreamServerInterceptor {
+// Will send a keepalive every sendInterval.
+func KeepaliveServerStreamInterceptor(sendInterval time.Duration) grpc.StreamServerInterceptor {
 	return func(
 		srv interface{},
 		ss grpc.ServerStream,
 		info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler,
 	) error {
-		if err := ss.SetHeader(metadata.MD{"send_inline_keepalives": []string{"true"}}); err != nil {
-			return errors.Wrap(err, "failed setting inline keepalive header")
-		}
-
-		//ctx := metadata.AppendToOutgoingContext(ss.Context(), HeaderSendKeepalives, "true")
 		ctx := ss.Context()
 		log := hclog.FromContext(ctx).With("method", info.FullMethod)
 
+		// Ensures SendMsg is not called concurrently.
+		sendMx := &sync.Mutex{}
+
 		// Only send keepalives if this is a server stream - not allowed otherwise
 		if info.IsServerStream && isClientCompatible(ctx) {
-			go ServeKeepalives(ctx, log, ss)
+			go ServeKeepalives(ctx, log, ss, sendInterval, sendMx)
 		}
 
 		return handler(srv, &KeepaliveServerStream{
-			ss:  ss,
-			log: hclog.FromContext(ctx).With("interceptor", "inlinekeepalive"),
+			ss:     ss,
+			log:    log.With("interceptor", "inlinekeepalive"),
+			sendMx: sendMx,
 		})
 	}
 }
