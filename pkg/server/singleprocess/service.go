@@ -70,7 +70,7 @@ type Service struct {
 
 	// features that this waypoint service supports, and will advertise
 	// on the GetVersionInfo RPC
-	features []string
+	features []pb.ServerFeaturesFeature
 }
 
 // New returns a Waypoint server implementation that uses BotlDB plus
@@ -264,7 +264,7 @@ type config struct {
 	logStreamProvider    logstream.Provider
 	serverId             string
 	skipServerConfigInit bool
-	features             []string
+	features             []pb.ServerFeaturesFeature
 
 	acceptUrlTerms bool
 }
@@ -396,7 +396,7 @@ func WithServerConfigSkipInit() Option {
 // WithFeatures adds features that the server will advertise on the
 // GetVersionInfo rpc, that clients can use to ensure compatibility
 // before attempting to exercise features.
-func WithFeatures(features ...string) Option {
+func WithFeatures(features ...pb.ServerFeaturesFeature) Option {
 	return func(s *Service, cfg *config) error {
 		cfg.features = features
 		return nil

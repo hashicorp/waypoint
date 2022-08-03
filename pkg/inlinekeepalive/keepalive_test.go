@@ -21,7 +21,7 @@ import (
 // Happy path - server and client both support inline keepalives
 func TestCompatibility_NewServerNewClient(t *testing.T) {
 	impl := &serverImpl{
-		features: []string{FeatureName},
+		features: []pb.ServerFeaturesFeature{pb.ServerFeatures_INLINE_KEEPALIVES},
 	}
 	sendInterval := time.Duration(50) * time.Millisecond
 
@@ -34,7 +34,7 @@ func TestCompatibility_NewServerNewClient(t *testing.T) {
 // Server should not send inline keepalives to a client that does not have the interceptor configured
 func TestCompatibility_NewServerOldClient(t *testing.T) {
 	impl := &serverImpl{
-		features: []string{FeatureName},
+		features: []pb.ServerFeaturesFeature{pb.ServerFeatures_INLINE_KEEPALIVES},
 	}
 	sendInterval := time.Duration(50) * time.Millisecond
 
@@ -187,7 +187,7 @@ type serverImpl struct {
 	t *testing.T
 
 	// Features to serve on GetVersionInfo
-	features []string
+	features []pb.ServerFeaturesFeature
 
 	// Send is the list of responses to send
 	Send chan proto.Message
@@ -223,7 +223,7 @@ func (s *serverImpl) RunnerConfig(
 
 func (s *serverImpl) GetVersionInfo(_ context.Context, _ *empty.Empty) (*pb.GetVersionInfoResponse, error) {
 	return &pb.GetVersionInfoResponse{
-		Info:     protocolversion.Current(),
-		Features: s.features,
+		Info:           protocolversion.Current(),
+		ServerFeatures: &pb.ServerFeatures{Features: s.features},
 	}, nil
 }

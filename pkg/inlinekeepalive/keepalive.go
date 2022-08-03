@@ -14,10 +14,9 @@ import (
 )
 
 const (
-	KeepaliveProtoSignature   = "inline_keepalive"
-	HeaderSendKeepalivesKey   = "wp-inline-keepalives"
-	HeaderSendKeepalivesValue = "true"
-	FeatureName               = "inline-keepalives"
+	KeepaliveProtoSignature     = "inline_keepalive"
+	GrpcMetaSendKeepalivesKey   = "wp-inline-keepalives"
+	GrpcMetaSendKeepalivesValue = "true"
 )
 
 // IsInlineKeepalive determines if a given proto message is

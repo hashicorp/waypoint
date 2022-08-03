@@ -571,8 +571,18 @@ message GetVersionInfoResponse {
   VersionInfo info = 1;
 
   // Represents additional features that the current server supports.
-  // Useful for ensuring compatibility between clients and servers.
-  repeated string features = 4;
+  ServerFeatures server_features = 2;
+}
+
+// Represents features that the server supports.
+// Useful for ensuring compatibility between clients and servers.
+message ServerFeatures {
+  repeated feature features = 1;
+
+  enum feature {
+    // Advertises that this server is capable of receiving inline keepalive messages
+    INLINE_KEEPALIVES = 0;
+  }
 }
 
 message VersionInfo {

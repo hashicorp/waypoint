@@ -83,9 +83,9 @@ func isClientCompatible(ctx context.Context) bool {
 		return false
 	}
 
-	vals := md.Get(HeaderSendKeepalivesKey)
+	vals := md.Get(GrpcMetaSendKeepalivesKey)
 	for _, val := range vals {
-		if val == HeaderSendKeepalivesValue {
+		if val == GrpcMetaSendKeepalivesValue {
 			return true
 		}
 	}

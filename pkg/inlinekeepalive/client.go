@@ -81,9 +81,11 @@ func isServerCompatible(ctx context.Context, cc *grpc.ClientConn) (bool, error) 
 		return false, errors.Wrapf(err, "failed getting version info to determine if server is inline-keepalive compatible")
 	}
 
-	for _, feature := range versionInfo.Features {
-		if feature == FeatureName {
-			return true, nil
+	if versionInfo.ServerFeatures != nil {
+		for _, feature := range versionInfo.ServerFeatures.Features {
+			if feature == pb.ServerFeatures_INLINE_KEEPALIVES {
+				return true, nil
+			}
 		}
 	}
 
@@ -109,7 +111,7 @@ func KeepaliveClientStreamInterceptor(sendInterval time.Duration) grpc.StreamCli
 	) (grpc.ClientStream, error) {
 		log := hclog.FromContext(ctx).With("method", method)
 
-		ctx = metadata.AppendToOutgoingContext(ctx, HeaderSendKeepalivesKey, HeaderSendKeepalivesValue)
+		ctx = metadata.AppendToOutgoingContext(ctx, GrpcMetaSendKeepalivesKey, GrpcMetaSendKeepalivesValue)
 
 		handler, err := streamer(ctx, desc, cc, method, opts...)
 		if err != nil {

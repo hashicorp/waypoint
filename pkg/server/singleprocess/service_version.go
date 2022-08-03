@@ -14,7 +14,9 @@ func (s *Service) GetVersionInfo(
 	req *empty.Empty,
 ) (*pb.GetVersionInfoResponse, error) {
 	return &pb.GetVersionInfoResponse{
-		Info:     protocolversion.Current(),
-		Features: s.features,
+		Info: protocolversion.Current(),
+		ServerFeatures: &pb.ServerFeatures{
+			Features: s.features,
+		},
 	}, nil
 }
