@@ -4,7 +4,6 @@ version: 2.1
 references:
   images:
     go: &GOLANG_IMAGE docker.mirror.hashicorp.services/cimg/go:1.17
-    middleman: &MIDDLEMAN_IMAGE docker.mirror.hashicorp.services/hashicorp/middleman-hashicorp:0.3.44
     ember: &EMBER_IMAGE docker.mirror.hashicorp.services/circleci/node:14-browsers
     website: &WEBSITE_IMAGE docker.mirror.hashicorp.services/node:14
 
@@ -13,7 +12,6 @@ references:
 
   cache:
     yarn: &YARN_CACHE_KEY waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
-    rubygem: &RUBYGEM_CACHE_KEY static-site-gems-v1-{{ checksum "Gemfile.lock" }}
 
   environment: &ENVIRONMENT
     TEST_RESULTS_DIR: *TEST_RESULTS_DIR
@@ -23,7 +21,6 @@ references:
     GIT_COMMITTER_NAME: circleci-waypoint
     BASH_ENV: /home/circleci/project/.circleci/bash_env.sh
     DOCKER_BUILDKIT: 1
-    REBUILD_UI: &REBUILD_UI 1
 
 jobs:
   # Runs Go linters
@@ -42,7 +39,7 @@ jobs:
       - run: go mod download
       - run:
           name: lint
-          command: &lintcmd |
+          command: |
             golangci-lint run --build-tags="$GOTAGS" -v --concurrency 2 \
               --disable-all \
               --timeout 10m \
@@ -149,7 +146,7 @@ jobs:
           at: /go/bin
       - setup_remote_docker:
           docker_layer_caching: true
-      - run: &install_gotestsum
+      - run:
           name: Install gotestsum
           command: |
             url=https://github.com/gotestyourself/gotestsum/releases/download
