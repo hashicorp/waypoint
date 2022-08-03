@@ -5211,7 +5211,7 @@ message WaypointHclFmtResponse {
 // that do not have this message as part of their protobuf contract. Client and
 // server grpc interceptors intercept these messages and prevent them from being
 // exposed to the rpc handlers.
-message InlineKeepalive{
+message InlineKeepalive {
   // Signature for validating that the message is, in fact, a keepalive message.
   // Must be set to value "inline_keepalive".
 
