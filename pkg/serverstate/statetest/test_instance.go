@@ -1,3 +1,4 @@
+//nolint:govet,copylocks
 package statetest
 
 import (
@@ -164,8 +165,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.Len(list, 1)
 
 		// Should not for other app
-		//nolint:copylocks
-		ref2 := *app
+		ref2 := *app //nolint:copylocks
 		ref2.Application = "NO"
 		list, err = s.InstancesByApp(&ref2, nil, nil)
 		require.NoError(err)
@@ -227,7 +227,6 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.Len(list, 1)
 
 		// Should not for other app
-		//nolint:copylocks
 		ref2 := *wsRef
 		ref2.Workspace = "NO"
 		list, err = s.InstancesByApp(app, &ref2, nil)

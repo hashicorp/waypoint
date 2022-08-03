@@ -113,7 +113,7 @@ func (r *Runner) AcceptExact(ctx context.Context, id string) error {
 
 var testRecvDelay time.Duration
 
-//nolint:lostcancel
+//nolint:govet,lostcancel
 func (r *Runner) accept(ctx context.Context, id string) error {
 	if r.readState(&r.stateExit) > 0 {
 		return ErrClosed
