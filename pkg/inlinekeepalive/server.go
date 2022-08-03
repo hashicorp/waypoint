@@ -49,6 +49,14 @@ func (k *KeepaliveServerStream) RecvMsg(m interface{}) error {
 	for {
 		err := k.ss.RecvMsg(m)
 		if err != nil {
+			// NOTE(izaak): If we received an inline keepalive, but m is a proto message that also has a field
+			// number 10000000, but a different type, we will get (as of this writing)
+			// a GRPC status error (code 13) with this message:
+			// > "grpc: failed to unmarshal the received message proto: cannot parse invalid wire-format data"
+			// At this point, I don't see a way to distinguish between a waypoint developer accidentally adding
+			// a field 10000000 to a stream message, vs any other cause for a parse error. It may be
+			// possible to pull the expected field numbers out of m and notice that it's expecting a
+			// field 10000000, but I don't see a way to get that via protoreflect.
 			return err
 		}
 
