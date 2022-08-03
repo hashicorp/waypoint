@@ -3,9 +3,9 @@ version: 2.1
 
 references:
   images:
-    go: &GOLANG_IMAGE docker.mirror.hashicorp.services/circleci/golang:1.17
+    go: &GOLANG_IMAGE docker.mirror.hashicorp.services/cimg/go:1.17
     middleman: &MIDDLEMAN_IMAGE docker.mirror.hashicorp.services/hashicorp/middleman-hashicorp:0.3.44
-    ember: &EMBER_IMAGE docker.mirror.hashicorp.services/circleci/node:14-browsers
+    ember: &EMBER_IMAGE docker.mirror.hashicorp.services/cimg/node:14-browsers
     website: &WEBSITE_IMAGE docker.mirror.hashicorp.services/node:14
 
   paths:
@@ -148,7 +148,7 @@ jobs:
       - attach_workspace:
           at: /go/bin
       - setup_remote_docker:
-          docker_layer_cache: true
+          docker_layer_caching: true
       - run: &install_gotestsum
           name: Install gotestsum
           command: |
@@ -412,7 +412,7 @@ jobs:
     resource_class: xlarge
     environment:
       EMBER_TEST_REPORT: test-results/report-oss.xml #outputs test report for CircleCI test summary
-      EMBER_TEST_PARALLEL: true #enables test parallelization with ember-exam
+      EMBER_TEST_PARALLEL: "true" #enables test parallelization with ember-exam
     steps:
       - checkout
       - md5uilib
