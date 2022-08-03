@@ -143,7 +143,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: /go/bin
+          at: /home/circleci/go/bin
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
@@ -194,11 +194,11 @@ jobs:
       - run:
           command: |
             go get github.com/kevinburke/go-bindata/...
-            PATH=/go/bin:$PATH make bin
-            cp waypoint /go/bin
+            PATH=/home/circleci/go/bin:$PATH make bin
+            cp waypoint /home/circleci/go/bin
       # save dev build to pass to downstream jobs
       - persist_to_workspace:
-          root: /go/bin
+          root: /home/circleci/go/bin
           paths:
             - waypoint
       - notify_main_failure
@@ -217,7 +217,7 @@ jobs:
       - run:
           command: |
             go get github.com/kevinburke/go-bindata/...
-            PATH=/go/bin:$PATH make bin/windows
+            PATH=/home/circleci/go/bin:$PATH make bin/windows
       - notify_main_failure
 
   integration:
