@@ -51,7 +51,7 @@ type GrpcStream interface {
 }
 
 // ServeKeepalives sends keepalive messages along the provided grpc stream
-// at a rate of one every five seconds.
+// at the rate specified by sendInterval.
 // It returns when the context is cancelled.
 // NOTE: this will call SendMsg, and concurrent calls to SendMsg are unsafe.
 // This will not call SendMsg unless it holds the sendMx lock.
