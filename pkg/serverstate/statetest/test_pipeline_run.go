@@ -44,6 +44,16 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.NotNil(resp)
 			require.Equal(pr.Id, resp.Id)
 			require.Equal(r.Sequence, resp.Sequence)
+			require.Equal(pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id, resp.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id)
+		}
+
+		// Get run by Id
+		{
+			resp, err := s.PipelineRunGetById(r.Id)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal(pr.Id, resp.Id)
+			require.Equal(r.Sequence, resp.Sequence)
 		}
 
 		// Set another pipeline run

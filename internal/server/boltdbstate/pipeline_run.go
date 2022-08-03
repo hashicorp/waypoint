@@ -141,6 +141,32 @@ func (s *State) pipelineRunGet(
 	return &result, dbGet(b, []byte(strings.ToLower(pipelineRunId)), &result)
 }
 
+// PipelineRunGetById gets a PipelineRun by pipeline.
+func (s *State) PipelineRunGetById(id string) (*pb.PipelineRun, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	var result *pb.PipelineRun
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		var err error
+		result, err = s.pipelineRunGetById(dbTxn, memTxn, id)
+		return err
+	})
+
+	return result, err
+}
+
+func (s *State) pipelineRunGetById(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	Id string,
+) (*pb.PipelineRun, error) {
+	var result pb.PipelineRun
+	b := dbTxn.Bucket(pipelineRunBucket)
+
+	return &result, dbGet(b, []byte(strings.ToLower(Id)), &result)
+}
+
 func (s *State) PipelineRunList(pRef *pb.Ref_Pipeline) ([]*pb.PipelineRun, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
@@ -177,9 +203,9 @@ func (s *State) PipelineRunList(pRef *pb.Ref_Pipeline) ([]*pb.PipelineRun, error
 
 func (s *State) pipelineRunList(
 	memTxn *memdb.Txn,
-	pipeline string,
+	pId string,
 ) ([]*pipelineRunIndexRecord, error) {
-	iter, err := memTxn.Get(pipelineRunIndexTableName, pipelineRunIndexId+"_prefix", pipeline)
+	iter, err := memTxn.Get(pipelineRunIndexTableName, pipelineRunIndexPId+"_prefix", pId)
 	if err != nil {
 		return nil, err
 	}

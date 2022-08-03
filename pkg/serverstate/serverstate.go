@@ -191,6 +191,7 @@ type Interface interface {
 
 	PipelineRunPut(*pb.PipelineRun) error
 	PipelineRunGet(*pb.Ref_Pipeline, uint64) (*pb.PipelineRun, error)
+	PipelineRunGetById(string) (*pb.PipelineRun, error)
 	PipelineRunList(*pb.Ref_Pipeline) ([]*pb.PipelineRun, error)
 }
 
