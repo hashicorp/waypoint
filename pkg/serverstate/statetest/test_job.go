@@ -26,6 +26,7 @@ func init() {
 		TestJobAck,
 		TestJobComplete,
 		TestJobTask_AckAndComplete,
+		TestJobPipeline_AckAndComplete,
 		TestJobIsAssignable,
 		TestJobCancel,
 		TestJobHeartbeat,
@@ -1669,6 +1670,83 @@ func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory
 		require.NoError(err)
 		require.NotNil(task)
 		require.Equal(pb.Task_STOPPED, task.JobState)
+	})
+}
+
+func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory) {
+	t.Run("ack and complete on-demand runner jobs", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		runId := "test_run"
+		jobRef := &pb.Ref_Job{Id: "root_job"}
+
+		p := serverptypes.TestPipeline(t, nil)
+		err := s.PipelinePut(p)
+		require.NoError(err)
+		pipeline := &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: &pb.Ref_PipelineId{Id: p.Id}}}
+
+		// Create a pending pipeline run
+		pr := &pb.PipelineRun{
+			Id:       runId,
+			Pipeline: pipeline,
+			Status:   pb.PipelineRun_PENDING,
+			Sequence: 1,
+		}
+		r := serverptypes.TestPipelineRun(t, pr)
+		err = s.PipelineRunPut(r)
+		require.NoError(err)
+
+		// Create a job
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: jobRef.Id,
+			Pipeline: &pb.Ref_PipelineStep{
+				Pipeline:    pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id,
+				RunSequence: 1,
+			},
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal(jobRef.Id, job.Id)
+
+		// Ack it
+		_, err = s.JobAck(job.Id, true)
+		require.NoError(err)
+
+		run, err := s.PipelineRunGetById(runId)
+		require.NoError(err)
+		require.NotNil(run)
+		require.Equal(pb.PipelineRun_STARTING, run.Status)
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id, nil)
+		require.NoError(err)
+		require.Equal(pb.Job_RUNNING, job.Job.State)
+
+		// We should have an output buffer
+		require.NotNil(job.OutputBuffer)
+
+		// Complete it
+		require.NoError(s.JobComplete(job.Id, &pb.Job_Result{
+			Build: &pb.Job_BuildResult{},
+		}, nil))
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id, nil)
+		require.NoError(err)
+		require.Equal(pb.Job_SUCCESS, job.State)
+		require.Nil(job.Error)
+		require.NotNil(job.Result)
+
+		run, err = s.PipelineRunGetById(runId)
+		require.NoError(err)
+		require.NotNil(run)
+		require.Equal(pb.PipelineRun_RUNNING, run.Status)
 	})
 }
 
