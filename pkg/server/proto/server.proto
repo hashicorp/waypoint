@@ -1244,6 +1244,24 @@ message DeclaredResource {
   ResourceCategoryDisplayHint category_display_hint = 5;
 }
 
+message DestroyedResource {
+  // Unique name name for the resource. Usually derived from the platform. Required.
+  string name = 1;
+
+  // platform-specific type of the resource type. i.e. instance, pod, auto-scaling group, etc
+  string type = 2;
+
+  // The platform on which the resource should exist, i.e. docker, gcp, k8s, etc.
+  string platform = 3;
+
+  // Internal ResourceManager representation of the resource.
+  opaqueany.Any state = 4;
+
+  // Any additional information a plugin wants to expose on this resource.
+  // EX: Availability zones on a load balancer, concurrency limit on a lambda function, etc.
+  string state_json = 5;
+}
+
 enum ResourceCategoryDisplayHint {
   UNKNOWN = 0;
   OTHER = 1; // catch-all for types that do not fit well into other predefined roles. i.e. aws target group
@@ -3545,6 +3563,8 @@ message Deployment {
 
   // Resources that this deployment has created or manages.
   repeated DeclaredResource declared_resources = 19;
+
+  repeated DestroyedResource destroyed_resources = 21;
 
   // This is the populated preload data. Most of this data can be retrieved
   // through additional API calls or manually computed, but certain API
