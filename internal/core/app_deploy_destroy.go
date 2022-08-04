@@ -123,7 +123,10 @@ func (a *App) destroyDeploy(
 		Deployment: d,
 	})
 
-	destroyProto := destroyment.(*pb.Deployment)
+	destroyProto, ok := destroyment.(*pb.Deployment)
+	if !ok {
+		return err
+	}
 
 	a.UI.Output("These resources were not destroyed for app %q:", a.ref.Application, terminal.WithWarningStyle())
 	for _, resource := range destroyProto.DeclaredResources {
