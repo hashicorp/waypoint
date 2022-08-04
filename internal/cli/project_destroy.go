@@ -23,7 +23,7 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
-	
+
 	// Get the project we're destroying
 	project, err := c.project.Client().GetProject(c.Ctx, &pb.GetProjectRequest{
 		Project: c.project.Ref(),
