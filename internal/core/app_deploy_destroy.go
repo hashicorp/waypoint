@@ -128,14 +128,18 @@ func (a *App) destroyDeploy(
 		return err
 	}
 
-	a.UI.Output("These resources were not destroyed for app %q:", a.ref.Application, terminal.WithWarningStyle())
-	for _, resource := range destroyProto.DeclaredResources {
-		a.UI.Output(resource.Name, terminal.WithWarningStyle())
+	if len(destroyProto.DeclaredResources) > 0 {
+		a.UI.Output("These resources were not destroyed for app %q:", a.ref.Application, terminal.WithWarningStyle())
+		for _, resource := range destroyProto.DeclaredResources {
+			a.UI.Output(resource.Name, terminal.WithWarningStyle())
+		}
 	}
 
-	a.UI.Output("These resources were destroyed for app %q:", a.ref.Application, terminal.WithSuccessStyle())
-	for _, resource := range destroyProto.DestroyedResources {
-		a.UI.Output(resource.Name, terminal.WithSuccessStyle())
+	if len(destroyProto.DestroyedResources) > 0 {
+		a.UI.Output("These resources were destroyed for app %q:", a.ref.Application, terminal.WithSuccessStyle())
+		for _, resource := range destroyProto.DestroyedResources {
+			a.UI.Output(resource.Name, terminal.WithSuccessStyle())
+		}
 	}
 
 	return nil
