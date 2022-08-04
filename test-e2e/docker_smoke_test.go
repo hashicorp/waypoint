@@ -8,12 +8,12 @@ import (
 
 var (
 	dockerTestDir = fmt.Sprintf("%s/docker/go", examplesRootDir)
-	dockerMultiAppTestDir = fmt.Sprintf("%s/docker/go-multiapp", examplesRootDir)
+	// dockerMultiAppTestDir = fmt.Sprintf("%s/docker/go-multiapp", examplesRootDir)
 )
 
 func TestWaypointDockerInstall(t *testing.T) {
 	wp := NewBinary(t, wpBinary, dockerTestDir)
-	stdout, stderr, err := wp.RunRaw("install", "-platform=docker", "-accept-tos", fmt.Sprintf("-docker-server-image=%s", wpServerImage))
+	stdout, stderr, err := wp.RunRaw("install", "-platform=docker", "-accept-tos", fmt.Sprintf("-docker-server-image=%s", wpServerImage), fmt.Sprintf("-docker-odr-image=%s", wpOdrImage))
 
 	if err != nil {
 		t.Errorf("unexpected error installing server to docker: %s", err)
@@ -59,40 +59,40 @@ func TestWaypointDockerUp(t *testing.T) {
 	}
 }
 
-func TestWaypointDockerMultiAppUp(t *testing.T) {
-	wp := NewBinary(t, wpBinary, dockerMultiAppTestDir)
-	stdout, stderr, err := wp.RunRaw("init")
+// func TestWaypointDockerMultiAppUp(t *testing.T) {
+// 	wp := NewBinary(t, wpBinary, dockerMultiAppTestDir)
+// 	stdout, stderr, err := wp.RunRaw("init")
 
-	if err != nil {
-		t.Errorf("unexpected error initializing waypoint project: %s", err)
-	}
+// 	if err != nil {
+// 		t.Errorf("unexpected error initializing waypoint project: %s", err)
+// 	}
 
-	if stderr != "" {
-		t.Errorf("unexpected stderr output initializing waypoint project: %s", err)
-	}
+// 	if stderr != "" {
+// 		t.Errorf("unexpected stderr output initializing waypoint project: %s", err)
+// 	}
 
-	if !strings.Contains(stdout, "Project initialized!") {
-		t.Errorf("No success message detected after initializing project:\n%s", stdout)
-	}
+// 	if !strings.Contains(stdout, "Project initialized!") {
+// 		t.Errorf("No success message detected after initializing project:\n%s", stdout)
+// 	}
 
-	stdout, stderr, err = wp.RunRaw("up")
+// 	stdout, stderr, err = wp.RunRaw("up")
 
-	if err != nil {
-		t.Errorf("unexpected error deploying waypoint project: %s", err)
-	}
+// 	if err != nil {
+// 		t.Errorf("unexpected error deploying waypoint project: %s", err)
+// 	}
 
-	if stderr != "" {
-		t.Errorf("unexpected stderr output deploying waypoint project: %s", err)
-	}
+// 	if stderr != "" {
+// 		t.Errorf("unexpected stderr output deploying waypoint project: %s", err)
+// 	}
 
-	if !strings.Contains(stdout, "The deploy was successful!") {
-		t.Errorf("No success message detected after deploying project:\n%s", stdout)
-	}
-}
+// 	if !strings.Contains(stdout, "The deploy was successful!") {
+// 		t.Errorf("No success message detected after deploying project:\n%s", stdout)
+// 	}
+// }
 
 func TestWaypointDockerUpgrade(t *testing.T) {
 	wp := NewBinary(t, wpBinary, dockerTestDir)
-	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=docker", "-auto-approve", fmt.Sprintf("-docker-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
+	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=docker", "-auto-approve", fmt.Sprintf("-docker-server-image=%s", wpServerImageUpgrade), fmt.Sprintf("-docker-odr-image=%s", wpOdrImageUpgrade), "-snapshot=false")
 
 	if err != nil {
 		t.Errorf("unexpected error upgrading server in docker: %s", err)
@@ -124,36 +124,36 @@ func TestWaypointDockerUpAfterUpgrade(t *testing.T) {
 	}
 }
 
-func TestWaypointDockerMultiAppUpAfterUpgrade(t *testing.T) {
-	wp := NewBinary(t, wpBinary, dockerMultiAppTestDir)
-	stdout, stderr, err := wp.RunRaw("init")
+// func TestWaypointDockerMultiAppUpAfterUpgrade(t *testing.T) {
+// 	wp := NewBinary(t, wpBinary, dockerMultiAppTestDir)
+// 	stdout, stderr, err := wp.RunRaw("init")
 
-	if err != nil {
-		t.Errorf("unexpected error initializing waypoint project: %s", err)
-	}
+// 	if err != nil {
+// 		t.Errorf("unexpected error initializing waypoint project: %s", err)
+// 	}
 
-	if stderr != "" {
-		t.Errorf("unexpected stderr output initializing waypoint project: %s", err)
-	}
+// 	if stderr != "" {
+// 		t.Errorf("unexpected stderr output initializing waypoint project: %s", err)
+// 	}
 
-	if !strings.Contains(stdout, "Project initialized!") {
-		t.Errorf("No success message detected after initializing project:\n%s", stdout)
-	}
+// 	if !strings.Contains(stdout, "Project initialized!") {
+// 		t.Errorf("No success message detected after initializing project:\n%s", stdout)
+// 	}
 
-	stdout, stderr, err = wp.RunRaw("up")
+// 	stdout, stderr, err = wp.RunRaw("up")
 
-	if err != nil {
-		t.Errorf("unexpected error deploying waypoint project: %s", err)
-	}
+// 	if err != nil {
+// 		t.Errorf("unexpected error deploying waypoint project: %s", err)
+// 	}
 
-	if stderr != "" {
-		t.Errorf("unexpected stderr output deploying waypoint project: %s", err)
-	}
+// 	if stderr != "" {
+// 		t.Errorf("unexpected stderr output deploying waypoint project: %s", err)
+// 	}
 
-	if !strings.Contains(stdout, "The deploy was successful!") {
-		t.Errorf("No success message detected after deploying project:\n%s", stdout)
-	}
-}
+// 	if !strings.Contains(stdout, "The deploy was successful!") {
+// 		t.Errorf("No success message detected after deploying project:\n%s", stdout)
+// 	}
+// }
 
 func TestWaypointDockerDestroy(t *testing.T) {
 	wp := NewBinary(t, wpBinary, dockerTestDir)

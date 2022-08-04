@@ -13,7 +13,7 @@ var (
 
 func TestWaypointEcsInstall(t *testing.T) {
 	wp := NewBinary(t, wpBinary, ecsTestDir)
-	stdout, stderr, err := wp.RunRaw("install", "-platform=ecs", "-accept-tos", fmt.Sprintf("-ecs-server-image=%s", wpServerImage))
+	stdout, stderr, err := wp.RunRaw("install", "-platform=ecs", "-accept-tos", fmt.Sprintf("-ecs-server-image=%s", wpServerImage), fmt.Sprintf("-ecs-odr-image=%s", wpOdrImage))
 
 	if err != nil {
 		t.Errorf("unexpected error installing server to ecs: %s", err)
@@ -61,7 +61,7 @@ func TestWaypointEcsUp(t *testing.T) {
 
 func TestWaypointEcsUpgrade(t *testing.T) {
 	wp := NewBinary(t, wpBinary, ecsTestDir)
-	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=ecs", "-auto-approve", fmt.Sprintf("-ecs-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
+	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=ecs", "-auto-approve", fmt.Sprintf("-ecs-server-image=%s", wpServerImageUpgrade), fmt.Sprintf("-ecs-odr-image=%s", wpOdrImageUpgrade), "-snapshot=false")
 
 	if err != nil {
 		t.Errorf("unexpected error upgrading server in ecs: %s", err)

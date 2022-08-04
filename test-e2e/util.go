@@ -21,7 +21,9 @@ import (
 var (
 	wpBinary             = Getenv("WP_BINARY", "waypoint")
 	wpServerImage        = Getenv("WP_SERVERIMAGE", "hashicorp/waypoint:latest")
-	wpServerImageUpgrade = Getenv("WP_SERVERIMAGE_UPGRADE", "hashicorp/waypoint:latest")
+	wpOdrImage           = Getenv("WP_ODRIMAGE", "hashicorp/waypoint-odr:latest")
+	wpServerImageUpgrade = Getenv("WP_SERVERIMAGE_UPGRADE", "ghcr.io/hashicorp/waypoint/alpha:latest")
+	wpOdrImageUpgrade    = Getenv("WP_ODRIMAGE_UPGRADE", "ghcr.io/hashicorp/waypoint/alpha-odr:latest")
 
 	examplesRootDir = Getenv("WP_EXAMPLES_PATH", "waypoint-examples")
 )

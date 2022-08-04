@@ -22,6 +22,9 @@ references:
     BASH_ENV: /home/circleci/project/.circleci/bash_env.sh
     DOCKER_BUILDKIT: 1
 
+  e2e-env: &e2e-env
+    WP_SERVERIMAGE_UPGRADE: blah
+
 jobs:
   # Runs Go linters
   lint:
@@ -247,6 +250,8 @@ jobs:
     # things, whereas k3s does not like the updated docker things; le sigh
     machine:
       image: ubuntu-2204:current
+    environment:
+      <<: *e2e-env
     steps:
       - checkout
       - attach_workspace:

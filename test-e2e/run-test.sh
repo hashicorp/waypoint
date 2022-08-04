@@ -26,6 +26,11 @@ if [ "${E2E_PLATFORM}" != "Docker" ] && [ "${E2E_PLATFORM}" != "Kubernetes" ] &&
   exit 1
 fi
 
+if [ -z "$WP_SERVERIMAGE_UPGRADE" ]; then
+  echo "Env var 'WP_SERVERIMAGE_UPGRADE' must be set (e.g. 'hashicorp/waypoint:latest')"
+  exit 1
+fi
+
 # For running script outside of `test-e2e` folder
 TESTDIR="${WP_TESTE2E_DIR:-$(pwd)}"
 
@@ -50,7 +55,9 @@ export OUTDIR="build/${GOOS}_${GOARCH}"
 # Test env vars
 export WP_BINARY="${WP_BINARY:-$TESTDIR/waypoint}"
 export WP_SERVERIMAGE="hashicorp/waypoint:latest"
-export WP_SERVERIMAGE_UPGRADE="hashicorp/waypoint:latest"
+export WP_ODRIMAGE="hashicorp/waypoint-odr:latest"
+export WP_SERVERIMAGE_UPGRADE="ghcr.io/hashicorp/waypoint/alpha:latest"
+export WP_ODRIMAGE_UPGRADE="ghcr.io/hashicorp/waypoint/alpha-odr:latest"
 
 if [ -z "$WP_EXAMPLES_PATH" ]; then
   echo "WP_EXAMPLES_PATH unset; setting to ${TESTDIR}/waypoint-examples"

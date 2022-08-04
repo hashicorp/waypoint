@@ -12,7 +12,7 @@ var (
 
 func TestWaypointKubernetesInstall(t *testing.T) {
 	wp := NewBinary(t, wpBinary, kubernetesTestDir)
-	stdout, stderr, err := wp.RunRaw("install", "-platform=kubernetes", "-accept-tos", fmt.Sprintf("-k8s-server-image=%s", wpServerImage))
+	stdout, stderr, err := wp.RunRaw("install", "-platform=kubernetes", "-accept-tos", fmt.Sprintf("-k8s-server-image=%s", wpServerImage), fmt.Sprintf("-k8s-odr-image=%s", wpOdrImage))
 
 	if err != nil {
 		t.Errorf("unexpected error installing server to kubernetes: %s", err)
@@ -60,7 +60,7 @@ func TestWaypointKubernetesUp(t *testing.T) {
 
 func TestWaypointKubernetesUpgrade(t *testing.T) {
 	wp := NewBinary(t, wpBinary, kubernetesTestDir)
-	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=kubernetes", "-auto-approve", fmt.Sprintf("-k8s-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
+	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=kubernetes", "-auto-approve", fmt.Sprintf("-k8s-server-image=%s", wpServerImageUpgrade), fmt.Sprintf("-k8s-odr-image=%s", wpOdrImageUpgrade), "-snapshot=false")
 
 	if err != nil {
 		t.Errorf("unexpected error upgrading server in kubernetes: %s", err)
