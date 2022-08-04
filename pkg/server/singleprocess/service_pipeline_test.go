@@ -442,6 +442,116 @@ func TestServiceRunPipeline(t *testing.T) {
 		require.Error(err)
 		require.Nil(resp)
 	})
+
+	// This is likely an internal error.
+	t.Run("does not error when multiple pipelines have the same step names", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Initialize our app
+		TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+		// Create our pipeline
+		pipeline := serverptypes.TestPipeline(t, nil)
+		pipeline.Steps["B"] = &pb.Pipeline_Step{
+			Name:      "B",
+			DependsOn: []string{"root"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		pipeline.Steps["C"] = &pb.Pipeline_Step{
+			Name:      "C",
+			DependsOn: []string{"B"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		pipeline.Steps["Embed"] = &pb.Pipeline_Step{
+			Name:      "Embed",
+			DependsOn: []string{"C"},
+			Kind: &pb.Pipeline_Step_Pipeline_{
+				Pipeline: &pb.Pipeline_Step_Pipeline{
+					Ref: &pb.Ref_Pipeline{
+						Ref: &pb.Ref_Pipeline_Id{
+							Id: &pb.Ref_PipelineId{
+								Id: "embed",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		// Create, should get an ID back
+		pipeResp, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: pipeline,
+		})
+		require.NoError(err)
+
+		// Create another pipeline that references the first one
+		// Create our pipeline
+		embedPipeline := &pb.Pipeline{
+			Id:   "embed",
+			Name: "embed",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "project",
+				},
+			},
+			Steps: map[string]*pb.Pipeline_Step{
+				"B": {
+					Name: "B",
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+				"C": {
+					Name:      "C",
+					DependsOn: []string{"B"},
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+			},
+		}
+
+		// Create, should get an ID back
+		_, err = client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: embedPipeline,
+		})
+		require.NoError(err)
+
+		// Build our job template
+		jobTemplate := serverptypes.TestJobNew(t, nil)
+		resp, err := client.RunPipeline(ctx, &pb.RunPipelineRequest{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: &pb.Ref_PipelineId{
+						Id: pipeResp.Pipeline.Id,
+					},
+				},
+			},
+			JobTemplate: jobTemplate,
+		})
+
+		require.NoError(err)
+		require.NotNil(resp)
+	})
+
 }
 
 func TestServiceListPipelines(t *testing.T) {
