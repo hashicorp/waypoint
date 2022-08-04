@@ -1,0 +1,3 @@
+```release-note:bug
+internal/pkg/gitdirty: Fix vcs git dirty err from showing when wpUrl is inputted without git@ prepended to url
+```
