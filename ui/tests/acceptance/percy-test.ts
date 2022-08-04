@@ -67,8 +67,8 @@ module('Acceptance | Percy', function (hooks) {
   test('Builds and releases pages', async function (assert) {
     let project = this.server.create('project', { name: 'acme-project' });
     let application = this.server.create('application', { name: 'acme-app', project });
-    let build = this.server.create('build', 'random', { application });
-    let release = this.server.create('release', 'random', { application });
+    let build = this.server.create('build', 'random', 'minutes-old-success', { application });
+    let release = this.server.create('release', 'random', 'minutes-old-success', { application });
 
     await visit(`/default/${project.name}/app/${application.name}/builds`);
     await snapshot('Builds page');
