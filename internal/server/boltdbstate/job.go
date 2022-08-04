@@ -1825,22 +1825,15 @@ func (s *State) pipelineCancel(jobId string) error {
 		},
 	}, job.Pipeline.RunSequence)
 	if err != nil || len(run.Jobs) < 1 {
-		s.log.Error("failed to retrieve pipeline to complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
+		s.log.Error("failed to retrieve pipeline to cancel", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
 		return err
 	}
 
-	// mark pipeline run state as cancelled
-	for _, j := range run.Jobs {
-		if j.Id == job.Id {
-			if job.State == pb.Job_ERROR || job.State == pb.Job_SUCCESS {
-				return nil
-			} else {
-				run.Status = pb.PipelineRun_CANCELLED
-				s.log.Trace("pipeline run cancelled", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
-			}
-		} else {
-			return status.Errorf(codes.Internal, "no job queued by pipeline %q run %q matches the requested job id %q", job.Pipeline.Pipeline, job.Pipeline.RunSequence, job.Id)
-		}
+	if job.State == pb.Job_SUCCESS {
+		return nil
+	} else {
+		run.Status = pb.PipelineRun_CANCELLED
+		s.log.Trace("pipeline run cancelled", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
 	}
 
 	// PipelineRunPut the new state
