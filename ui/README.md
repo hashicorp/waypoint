@@ -116,7 +116,7 @@ Make use of the many generators for code, try `ember help generate` for more det
 
 We use [Percy](https://percy.io) for visual regression testing.
 
-All the Percy snapshotting happens in [percy-test.ts](./tests/acceptance/percy-test.ts). The aim is to have a test for every significant state in this file. We keep it all in one file, rather than weaving Percy snapshotting through the rest of the test suite. We think this makes it more maintainable.
+All the Percy snapshotting happens in [percy-test.ts](./tests/acceptance/percy-test.ts). The aim is to have a test for every significant state in the UI in this file. We keep it all in one file, rather than weaving Percy snapshotting through the rest of the test suite. We think this makes it more maintainable.
 
 We are incrementally adding Percy tests, so it’s rather minimal at the moment. If you’d like to add a Percy test, please go ahead.
 
@@ -128,7 +128,10 @@ yarn ember:test:percy
 
 This is exactly the same command we run in CI. You will need to set the env var `PERCY_TOKEN` with a valid Percy token.
 
-If you need access to our Percy account, please ask someone from @hashicorp/waypoint-frontend.
+#### Percy troubleshooting
+
+- If you need access to our Percy account (for approvals), please ask someone from @hashicorp/waypoint-frontend.
+- Percy should only trigger visual diffs for changes to the UI. If you notice an unexpected Percy snapshot, that part of the UI may need the class `hide-in-percy` added to the Mirage test. It's safe to approve the Percy snapshot and tag @hashicorp/waypoint-frontend to fix the frontend Mirage tests in a separate PR.
 
 ### Building
 
