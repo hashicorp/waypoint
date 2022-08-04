@@ -21,7 +21,7 @@ import (
 // Happy path - server and client both support inline keepalives
 func TestCompatibility_NewServerNewClient(t *testing.T) {
 	impl := &serverImpl{
-		features: []pb.ServerFeaturesFeature{pb.ServerFeatures_INLINE_KEEPALIVES},
+		features: []pb.ServerFeaturesFeature{pb.ServerFeatures_FEATURE_INLINE_KEEPALIVES},
 	}
 	sendInterval := time.Duration(50) * time.Millisecond
 
@@ -34,7 +34,7 @@ func TestCompatibility_NewServerNewClient(t *testing.T) {
 // Server should not send inline keepalives to a client that does not have the interceptor configured
 func TestCompatibility_NewServerOldClient(t *testing.T) {
 	impl := &serverImpl{
-		features: []pb.ServerFeaturesFeature{pb.ServerFeatures_INLINE_KEEPALIVES},
+		features: []pb.ServerFeaturesFeature{pb.ServerFeatures_FEATURE_INLINE_KEEPALIVES},
 	}
 	sendInterval := time.Duration(50) * time.Millisecond
 

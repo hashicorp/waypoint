@@ -10005,10 +10005,11 @@
     "hashicorp.waypoint.ServerFeatures.feature": {
       "type": "string",
       "enum": [
-        "INLINE_KEEPALIVES"
+        "FEATURE_UNSPECIFIED",
+        "FEATURE_INLINE_KEEPALIVES"
       ],
-      "default": "INLINE_KEEPALIVES",
-      "title": "- INLINE_KEEPALIVES: Advertises that this server is capable of receiving inline keepalive messages"
+      "default": "FEATURE_UNSPECIFIED",
+      "title": "- FEATURE_INLINE_KEEPALIVES: Advertises that this server is capable of receiving inline keepalive messages"
     },
     "hashicorp.waypoint.SetConfigSourceRequest": {
       "type": "object",

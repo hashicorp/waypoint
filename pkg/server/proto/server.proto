@@ -580,8 +580,10 @@ message ServerFeatures {
   repeated feature features = 1;
 
   enum feature {
+    FEATURE_UNSPECIFIED = 0;
+
     // Advertises that this server is capable of receiving inline keepalive messages
-    INLINE_KEEPALIVES = 0;
+    FEATURE_INLINE_KEEPALIVES = 1;
   }
 }
 

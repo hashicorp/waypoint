@@ -83,7 +83,7 @@ func isServerCompatible(ctx context.Context, cc *grpc.ClientConn) (bool, error) 
 
 	if versionInfo.ServerFeatures != nil {
 		for _, feature := range versionInfo.ServerFeatures.Features {
-			if feature == pb.ServerFeatures_INLINE_KEEPALIVES {
+			if feature == pb.ServerFeatures_FEATURE_INLINE_KEEPALIVES {
 				return true, nil
 			}
 		}

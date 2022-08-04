@@ -184,7 +184,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 		singleprocess.WithConfig(&c.config),
 		singleprocess.WithLogger(log.Named("singleprocess")),
 		singleprocess.WithAcceptURLTerms(c.flagAcceptTOS),
-		singleprocess.WithFeatures(pb.ServerFeatures_INLINE_KEEPALIVES),
+		singleprocess.WithFeatures(pb.ServerFeatures_FEATURE_INLINE_KEEPALIVES),
 	)
 	if c, ok := impl.(io.Closer); ok {
 		defer c.Close()
