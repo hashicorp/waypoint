@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	ecsTestDir = fmt.Sprintf("%s/ecs/nodejs", examplesRootDir)
+	// this one uses python instead of node just for kicks
+	ecsTestDir = fmt.Sprintf("%s/aws/aws-ecs/python", examplesRootDir)
 )
 
 func TestWaypointEcsInstall(t *testing.T) {

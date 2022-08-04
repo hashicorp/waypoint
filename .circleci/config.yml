@@ -242,15 +242,20 @@ jobs:
       - notify_main_failure
 
   e2e-docker:
+    # we use the latest version of ubuntu on circleci here, as opposed to the 2004
+    # version that our integration test uses, because we need the updated docker
+    # things, whereas k3s does not like the updated docker things; le sigh
     machine:
       image: ubuntu-2204:current
     steps:
       - checkout
       - attach_workspace:
           at: .
+      # This is just to remind ourselves of what version of Go is default
+      # on this machine image; currently it's 1.18, but we should use 1.17
       - run: go version
       - run:
-          name: Install go
+          name: Install go v1.17.6
           command: |
             curl -SL --fail -o /tmp/golang.tar.gz https://dl.google.com/go/go1.17.6.linux-amd64.tar.gz
             sudo rm -rf /usr/local/go

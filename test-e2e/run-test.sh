@@ -34,9 +34,6 @@ echo
 
 make tools
 
-echo "Skipping for now"
-echo
-
 # TODO: install packages for building waypoint and running supported platforms:
 # - git, curl, (probably more)
 # - golang
