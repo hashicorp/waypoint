@@ -1749,12 +1749,14 @@ func (s *State) pipelineComplete(jobId string) error {
 		return err
 	}
 
-	// If job Id matches last job queued by pipeline
-	if job.Id == run.Jobs[len(run.Jobs)-1].Id {
-		run.Status = pb.PipelineRun_COMPLETED
-		s.log.Trace("pipeline run is complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
-	} else {
-		return status.Errorf(codes.Internal, "no job queued by pipeline %q run %q matches the requested job id %q", job.Pipeline.Pipeline, job.Pipeline.RunSequence, job.Id)
+	if job.State == pb.Job_ERROR {
+		run.Status = pb.PipelineRun_FAILED
+	} else if job.State == pb.Job_SUCCESS {
+		// If job Id matches last job queued by pipeline
+		if job.Id == run.Jobs[len(run.Jobs)-1].Id {
+			run.Status = pb.PipelineRun_COMPLETED
+			s.log.Trace("pipeline run is complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
+		}
 	}
 
 	// PipelineRunPut the new state
@@ -1791,24 +1793,9 @@ func (s *State) pipelineAck(jobId string) error {
 		return err
 	}
 
-	for i, j := range run.Jobs {
-		// If job ID matches the job queued by the pipeline run
-		if j.Id == job.Id {
-			// first job is the start job
-			if i == 0 {
-				run.Status = pb.PipelineRun_STARTING
-				s.log.Trace("pipeline run is starting", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
-			} else {
-				// any other queued job indicates the pipeline is running
-				run.Status = pb.PipelineRun_RUNNING
-				s.log.Trace("pipeline is running", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
-			}
-		} else {
-			return status.Errorf(codes.Internal, "no job queued by pipeline %q run %q matches the requested job id %q", job.Pipeline.Pipeline, job.Pipeline.RunSequence, job.Id)
-		}
-	}
-
-	// PipelineRunPut the new state
+	// Update the new pipeline run state
+	run.Status = pb.PipelineRun_RUNNING
+	s.log.Trace("pipeline is running", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
 	if err := s.PipelineRunPut(run); err != nil {
 		s.log.Error("failed to ack pipeline run state", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
 		return err
