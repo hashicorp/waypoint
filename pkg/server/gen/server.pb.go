@@ -1095,8 +1095,8 @@ type PipelineRun_State int32
 
 const (
 	PipelineRun_UNKNOWN   PipelineRun_State = 0 // no state defined, the default
-	PipelineRun_PENDING   PipelineRun_State = 1 // root_job queued
-	PipelineRun_STARTING  PipelineRun_State = 2 // root_job initiated
+	PipelineRun_PENDING   PipelineRun_State = 1 // pipeline run created
+	PipelineRun_STARTING  PipelineRun_State = 2 // root_job queued
 	PipelineRun_RUNNING   PipelineRun_State = 3 // jobs are working
 	PipelineRun_FAILED    PipelineRun_State = 4 // when any job fails, the pipeline aborts
 	PipelineRun_CANCELLED PipelineRun_State = 5 // when any job gets manually cancelled, the entire pipeline aborts

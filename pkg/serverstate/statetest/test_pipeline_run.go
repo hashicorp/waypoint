@@ -89,6 +89,15 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Equal(r.Id, resp.Id)
 			require.Equal(r.Sequence, resp.Sequence)
 		}
+
+		// Get latest run by pipeline ID
+		{
+			resp, err := s.PipelineRunGetLatest(pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal(r.Id, resp.Id)
+			require.Equal(r.Sequence, resp.Sequence)
+		}
 	})
 
 	t.Run("List", func(t *testing.T) {

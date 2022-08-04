@@ -117,7 +117,7 @@ func (s *State) pipelineRunGet(
 	var result pb.PipelineRun
 	b := dbTxn.Bucket(pipelineRunBucket)
 
-	// Look up the first instance of the pipeline run where the sequence number and pipeline ref match
+	// Look up the first instance of the pipeline run where the sequence number and pipeline match
 	raw, err := memTxn.First(pipelineRunIndexTableName,
 		pipelineRunIndexPIdBySeq, pId, seq)
 	if err != nil {
@@ -141,7 +141,53 @@ func (s *State) pipelineRunGet(
 	return &result, dbGet(b, []byte(strings.ToLower(pipelineRunId)), &result)
 }
 
-// PipelineRunGetById gets a PipelineRun by pipeline.
+// PipelineRunGetLatest gets the latest PipelineRun by pipeline ID.
+func (s *State) PipelineRunGetLatest(pId string) (*pb.PipelineRun, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	var result *pb.PipelineRun
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		var err error
+		result, err = s.pipelineRunGetLatest(dbTxn, memTxn, pId)
+		return err
+	})
+
+	return result, err
+}
+
+func (s *State) pipelineRunGetLatest(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	pId string,
+) (*pb.PipelineRun, error) {
+	var result pb.PipelineRun
+	b := dbTxn.Bucket(pipelineRunBucket)
+
+	// Look up the last instance of the pipeline run where the pipeline matches
+	raw, err := memTxn.Last(pipelineRunIndexTableName,
+		pipelineRunIndexPId, pId)
+	if err != nil {
+		return nil, err
+	}
+	if raw == nil {
+		return nil, status.Errorf(codes.NotFound,
+			"pipeline run could not be found for pipeline Id: %q", pId)
+	}
+	// set the id to be looked up for GET
+	idx, ok := raw.(*pipelineRunIndexRecord)
+	if !ok {
+		// This shouldn't happen, but guard against it...
+		return nil, status.Error(codes.Internal,
+			"failed to decode raw result to *pipelineRunIndexRecord!")
+	}
+	var pipelineRunId string
+	pipelineRunId = idx.Id
+
+	return &result, dbGet(b, []byte(strings.ToLower(pipelineRunId)), &result)
+}
+
+// PipelineRunGetById gets a PipelineRun by pipeline run ID.
 func (s *State) PipelineRunGetById(id string) (*pb.PipelineRun, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()

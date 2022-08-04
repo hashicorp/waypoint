@@ -4751,8 +4751,8 @@ message PipelineRun {
 
   enum State {
     UNKNOWN = 0; // no state defined, the default
-    PENDING = 1; // root_job queued
-    STARTING = 2; // root_job initiated
+    PENDING = 1; // pipeline run created
+    STARTING = 2; // root_job queued
     RUNNING = 3; // jobs are working
     FAILED = 4; // when any job fails, the pipeline aborts
     CANCELLED = 5; // when any job gets manually cancelled, the entire pipeline aborts
