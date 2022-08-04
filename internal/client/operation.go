@@ -28,6 +28,21 @@ func (c *Project) Validate(ctx context.Context, op *pb.Job_ValidateOp) (*pb.Job_
 	return result.Validate, nil
 }
 
+func (c *Project) DestroyProject(ctx context.Context, op *pb.Job_DestroyProjectOp) (*pb.Job_ProjectDestroyResult, error) {
+	if op == nil {
+		op = &pb.Job_DestroyProjectOp{}
+	}
+	// Build our job
+	job := c.job()
+	job.Operation = &pb.Job_DestroyProject{
+		DestroyProject: op,
+	}
+
+	// Execute it
+	result, err := c.doJob(ctx, job, c.UI)
+	return result.ProjectDestroy, err
+}
+
 func (c *App) Auth(ctx context.Context, op *pb.Job_AuthOp) (*pb.Job_AuthResult, error) {
 	if op == nil {
 		op = &pb.Job_AuthOp{}
@@ -158,22 +173,6 @@ func (c *App) Destroy(ctx context.Context, op *pb.Job_DestroyOp) error {
 	// Execute it
 	_, err := c.doJob(ctx, job)
 	return err
-}
-
-func (c *App) DestroyProject(ctx context.Context, op *pb.Job_DestroyProjectOp) (*pb.Job_ProjectDestroyResult, error) {
-	if op == nil {
-		op = &pb.Job_DestroyProjectOp{}
-	}
-
-	// Build our job
-	job := c.job()
-	job.Operation = &pb.Job_DestroyProject{
-		DestroyProject: op,
-	}
-
-	// Execute it
-	result, err := c.doJob(ctx, job)
-	return result.ProjectDestroy, err
 }
 
 func (c *App) Exec(ctx context.Context, ec *execclient.Client) (exitCode int, err error) {

@@ -1,9 +1,7 @@
 package cli
 
 import (
-	"context"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -25,49 +23,44 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
-
-	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		// Get the project we're destroying
-		project, err := c.project.Client().GetProject(ctx, &pb.GetProjectRequest{
-			Project: c.project.Ref(),
-		})
-		if err != nil {
-			return err
-		}
-
-		// Confirmation is required for destroying a project &/or its resources
-		if !c.confirm {
-			proceed, err := c.ui.Input(&terminal.Input{
-				Prompt: "Do you really want to destroy project \"" + project.Project.Name + "\" and its resources? Only 'yes' will be accepted to approve: ",
-				Style:  "",
-				Secret: false,
-			})
-			if err != nil {
-				c.ui.Output(
-					"Error getting input: %s",
-					clierrors.Humanize(err),
-					terminal.WithErrorStyle(),
-				)
-			} else if strings.ToLower(proceed) != "yes" {
-				app.UI.Output("Destroying project %q and resources requires confirmation.", project.Project.Name, terminal.WithWarningStyle())
-				return nil
-			}
-		}
-		_, err = app.DestroyProject(ctx, &pb.Job_DestroyProjectOp{
-			Project:              project.Project,
-			SkipDestroyResources: c.skipDestroyResources,
-		},
-		)
-		if err != nil {
-			return err
-		}
-		c.ui.Output("Project %q destroyed!", project.Project.Name, terminal.WithSuccessStyle())
-		return nil
+	
+	// Get the project we're destroying
+	project, err := c.project.Client().GetProject(c.Ctx, &pb.GetProjectRequest{
+		Project: c.project.Ref(),
 	})
 	if err != nil {
-		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
+
+	// Confirmation is required for destroying a project &/or its resources
+	if !c.confirm {
+		proceed, err := c.ui.Input(&terminal.Input{
+			Prompt: "Do you really want to destroy project \"" + project.Project.Name + "\" and its resources? Only 'yes' will be accepted to approve: ",
+			Style:  "",
+			Secret: false,
+		})
+		if err != nil {
+			c.ui.Output(
+				"Error getting input: %s",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+		} else if strings.ToLower(proceed) != "yes" {
+			c.ui.Output("Destroying project %q and resources requires confirmation.", project.Project.Name, terminal.WithWarningStyle())
+			return 1
+		}
+	}
+	_, err = c.project.DestroyProject(c.Ctx, &pb.Job_DestroyProjectOp{
+		Project:              project.Project,
+		SkipDestroyResources: c.skipDestroyResources,
+	},
+	)
+	if err != nil {
+		c.ui.Output("Error destroying project: %s", err.Error(), terminal.WithErrorStyle())
+		return 1
+	}
+	c.ui.Output("Project %q destroyed!", project.Project.Name, terminal.WithSuccessStyle())
+
 	return 0
 }
 
