@@ -921,11 +921,13 @@ func (s *State) JobCancel(id string, force bool) error {
 	if err := s.jobCancel(txn, job, force); err != nil {
 		return err
 	}
-	if err := s.pipelineCancel(job.Id); err != nil {
+
+	txn.Commit()
+
+	if err := s.pipelineCancel(id); err != nil {
 		return err
 	}
 
-	txn.Commit()
 	return nil
 }
 

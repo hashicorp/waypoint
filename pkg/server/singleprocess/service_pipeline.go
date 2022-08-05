@@ -107,7 +107,13 @@ func (s *Service) RunPipeline(
 
 	// Initialize a pipeline run
 	if err = s.state(ctx).PipelineRunPut(&pb.PipelineRun{
-		Id:     pipeline.Id,
+		Pipeline: &pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{
+					Id: pipeline.Id,
+				},
+			},
+		},
 		Status: pb.PipelineRun_PENDING,
 	}); err != nil {
 		return nil, err

@@ -1699,7 +1699,7 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: jobRef.Id,
 			Pipeline: &pb.Ref_PipelineStep{
-				Pipeline:    pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id,
+				Pipeline:    p.Id,
 				RunSequence: 1,
 			},
 		})))
@@ -2040,10 +2040,12 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 
 		// Create jobs
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
-			Id: "A",
+			Id:       "A",
+			Pipeline: &pb.Ref_PipelineStep{Pipeline: p.Id, RunSequence: 1},
 		})))
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id:        "B",
+			Pipeline:  &pb.Ref_PipelineStep{Pipeline: p.Id, RunSequence: 1},
 			DependsOn: []string{"A"},
 		})))
 
