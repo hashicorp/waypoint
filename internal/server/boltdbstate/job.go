@@ -757,7 +757,6 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 		s.log.Error("error updating task state", "error", err, "job", job.Id)
 		return nil, err
 	}
-
 	if err := s.pipelineAck(job.Id); err != nil {
 		s.log.Error("error updating pipeline state", "error", err, "job", job.Id)
 		return nil, err
@@ -922,7 +921,6 @@ func (s *State) JobCancel(id string, force bool) error {
 	if err := s.jobCancel(txn, job, force); err != nil {
 		return err
 	}
-
 	if err := s.pipelineCancel(job.Id); err != nil {
 		return err
 	}
@@ -1792,7 +1790,6 @@ func (s *State) pipelineAck(jobId string) error {
 		s.log.Error("failed to retrieve pipeline to ack", "job", job.Id, "pipeline id", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
 		return err
 	}
-
 	// Update the new pipeline run state
 	run.Status = pb.PipelineRun_RUNNING
 	s.log.Trace("pipeline is running", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
@@ -1835,7 +1832,6 @@ func (s *State) pipelineCancel(jobId string) error {
 		run.Status = pb.PipelineRun_CANCELLED
 		s.log.Trace("pipeline run cancelled", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
 	}
-
 	// PipelineRunPut the new state
 	if err := s.PipelineRunPut(run); err != nil {
 		s.log.Error("failed to cancel pipeline run", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
