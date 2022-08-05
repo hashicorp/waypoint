@@ -30,7 +30,7 @@ func NewCallbackServer() (*CallbackServer, error) {
 		return nil, err
 	}
 
-	ln, err := net.Listen("tcp", "127.0.0.1:")
+	ln, err := net.Listen("tcp", "127.0.0.1:8087")
 	if err != nil {
 		return nil, nil
 	}
