@@ -2,6 +2,8 @@ package singleprocess
 
 import (
 	"context"
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -55,7 +57,7 @@ func (s *Service) ListBuilds(
 		serverstate.ListWithOrder(req.Order),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to list builds for app", "app", req.Application.Application, "project", req.Application.Project)
 	}
 
 	return &pb.ListBuildsResponse{Builds: result}, nil
