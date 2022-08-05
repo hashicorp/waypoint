@@ -1,4 +1,3 @@
-//nolint:govet,copylocks
 package boltdbstate
 
 import (
@@ -84,6 +83,7 @@ func TestInstancesByApp(t *testing.T) {
 	require.Len(list, 1)
 
 	// Should not for other app
+	//nolint:govet,copylocks
 	ref2 := *ref
 	ref2.Application = "NO"
 	list, err = s.InstancesByApp(&ref2, nil, nil)
@@ -130,6 +130,7 @@ func TestInstancesByAppWorkspace(t *testing.T) {
 	require.Len(list, 1)
 
 	// Should not for other app
+	//nolint:govet,copylocks
 	ref2 := *refWs
 	ref2.Workspace = "NO"
 	list, err = s.InstancesByApp(ref, &ref2, nil)
