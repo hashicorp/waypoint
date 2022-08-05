@@ -469,97 +469,97 @@ jobs:
 
 workflows:
   version: 2
-  # go-tests:
-  #   jobs:
-  #     - lint
-  #     - check-vendor:
-  #         requires:
-  #           - lint
-  #     - go-test:
-  #         requires:
-  #           - lint
-  #     - dev-build:
-  #         requires:
-  #           - lint
-  #         filters:
-  #           branches:
-  #             ignore:
-  #               - main
-  #     - dev-build-windows:
-  #         requires:
-  #           - lint
-  #         filters:
-  #           branches:
-  #             ignore:
-  #               - main
-
-  # integration:
-  #   jobs:
-  #     - lint
-  #     - frontend-cache:
-  #         requires:
-  #           - lint
-  #     - ember-build-prod:
-  #         requires:
-  #           - frontend-cache
-  #     - build-static-assets:
-  #         requires:
-  #           - ember-build-prod
-  #     - dev-build:
-  #         requires:
-  #           - build-static-assets
-  #     - publish-static-assets:
-  #         filters:
-  #           branches:
-  #             only:
-  #               - main
-  #         requires:
-  #           - build-static-assets
-  #     - integration:
-  #         requires:
-  #           - dev-build
-  #     - image-release:
-  #         requires:
-  #           - integration
-  #         filters:
-  #           branches:
-  #             only:
-  #               - main
-
-  e2e:
+  go-tests:
     jobs:
-      - dev-build
-      - e2e-docker:
+      - lint
+      - check-vendor:
+          requires:
+            - lint
+      - go-test:
+          requires:
+            - lint
+      - dev-build:
+          requires:
+            - lint
+          filters:
+            branches:
+              ignore:
+                - main
+      - dev-build-windows:
+          requires:
+            - lint
+          filters:
+            branches:
+              ignore:
+                - main
+
+  integration:
+    jobs:
+      - lint
+      - frontend-cache:
+          requires:
+            - lint
+      - ember-build-prod:
+          requires:
+            - frontend-cache
+      - build-static-assets:
+          requires:
+            - ember-build-prod
+      - dev-build:
+          requires:
+            - build-static-assets
+      - publish-static-assets:
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+            - build-static-assets
+      - integration:
           requires:
             - dev-build
+      - image-release:
+          requires:
+            - integration
+          filters:
+            branches:
+              only:
+                - main
+      - e2e-docker:
+          requires:
+            - image-release
+          filters:
+            branches:
+              only:
+                - main
 
-  # website-mdx:
-  #   jobs:
-  #     - generate-website-mdx:
-  #         filters:
-  #           branches:
-  #             ignore:
-  #               - main
-  #     - check-website-mdx:
-  #         requires:
-  #           - generate-website-mdx
-  #         filters:
-  #           branches:
-  #             ignore:
-  #               - main
+  website-mdx:
+    jobs:
+      - generate-website-mdx:
+          filters:
+            branches:
+              ignore:
+                - main
+      - check-website-mdx:
+          requires:
+            - generate-website-mdx
+          filters:
+            branches:
+              ignore:
+                - main
 
-  # frontend:
-  #   jobs:
-  #     - frontend-cache
-  #     - frontend-lint:
-  #         requires:
-  #           - frontend-cache
-  #     - ember-build-tests:
-  #         requires:
-  #           - frontend-lint
-  #     - ember-test:
-  #         requires:
-  #           - ember-build-tests
+  frontend:
+    jobs:
+      - frontend-cache
+      - frontend-lint:
+          requires:
+            - frontend-cache
+      - ember-build-tests:
+          requires:
+            - frontend-lint
+      - ember-test:
+          requires:
+            - ember-build-tests
 
 commands:
   md5uilib:
