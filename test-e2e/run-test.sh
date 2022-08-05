@@ -26,11 +26,6 @@ if [ "${E2E_PLATFORM}" != "Docker" ] && [ "${E2E_PLATFORM}" != "Kubernetes" ] &&
   exit 1
 fi
 
-if [ -z "$WP_SERVERIMAGE_UPGRADE" ]; then
-  echo "Env var 'WP_SERVERIMAGE_UPGRADE' must be set (e.g. 'hashicorp/waypoint:latest')"
-  exit 1
-fi
-
 # For running script outside of `test-e2e` folder
 TESTDIR="${WP_TESTE2E_DIR:-$(pwd)}"
 
