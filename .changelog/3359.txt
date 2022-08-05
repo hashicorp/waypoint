@@ -1,0 +1,4 @@
+```release-note:improvement
+plugin/nomad: nomad-jobspec deployments will no longer utilize the 
+nomad-jobspec-canary releaser by default. 
+```
