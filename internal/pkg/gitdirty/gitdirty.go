@@ -258,11 +258,11 @@ func getRemoteName(log hclog.Logger, repoPath string, wpRemoteUrl string) (name 
 
 	localRepoRemotes, err := repo.Remotes()
 	if err != nil {
-		return "", errors.Wrap(err, "failed to list localRepoRemotes")
+		return "", errors.Wrap(err, "failed to list remotes")
 	}
 
 	if len(localRepoRemotes) == 0 {
-		return "", fmt.Errorf("no localRepoRemotes found for repo at path %q", repoPath)
+		return "", fmt.Errorf("no remotes found for repo at path %q", repoPath)
 	}
 
 	var exactMatchRemoteName string
@@ -281,7 +281,7 @@ func getRemoteName(log hclog.Logger, repoPath string, wpRemoteUrl string) (name 
 					// NOTE(izaak): I can't think of a dev setup where you'd get multiple localRepoRemotes with the same url.
 					// If it does though, I think it's likely that any remote will work for us for diffing purposes,
 					// wo we'll warn and continue.
-					log.Warn("Found multiple localRepoRemotes with the target url. Will choose remote-1.", "url", localRemoteUrl, "remote-1", exactMatchRemoteName, "remote-2", localRepoRemoteConfig.Name)
+					log.Warn("Found multiple remotes with the target url. Will choose remote-1.", "url", localRemoteUrl, "remote-1", exactMatchRemoteName, "remote-2", localRepoRemoteConfig.Name)
 				} else {
 					exactMatchRemoteName = localRepoRemoteConfig.Name
 				}
@@ -325,7 +325,7 @@ func getRemoteName(log hclog.Logger, repoPath string, wpRemoteUrl string) (name 
 					// NOTE(izaak): I can't think of a dev setup where you'd get multiple localRepoRemotes with the same url.
 					// If it does though, I think it's likely that any remote will work for us for diffing purposes,
 					// wo we'll warn and continue.
-					log.Warn("Found multiple localRepoRemotes that match the target URL, albeit with a different protocol. Will choose remote-1.", "url", wpRemoteUrl, "remote-1", exactMatchRemoteName, "remote-2", localRepoRemoteConfig.Name)
+					log.Warn("Found multiple remotes that match the target URL, albeit with a different protocol. Will choose remote-1.", "url", wpRemoteUrl, "remote-1", exactMatchRemoteName, "remote-2", localRepoRemoteConfig.Name)
 				} else {
 					alternateProtocolRemoteName = localRepoRemoteConfig.Name
 				}
