@@ -99,7 +99,7 @@ service Waypoint {
   rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse) {}
 
   // DestroyProject deletes a project from the database as well as (optionally)
-  // the destruction of all resources created within a project
+  // destroys all resources created within a project
   rpc DestroyProject(DestroyProjectRequest) returns (google.protobuf.Empty) {};
 
   // GetApplication returns one application on the project.
