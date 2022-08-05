@@ -100,6 +100,54 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 	})
 
+	t.Run("Update existing run", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Set Pipeline
+		p := ptypes.TestPipeline(t, nil)
+		err := s.PipelinePut(p)
+		require.NoError(err)
+		pipeline := &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: &pb.Ref_PipelineId{Id: p.Id}}}
+
+		// Set Pipeline Run
+		pr := &pb.PipelineRun{
+			Id:       "test-pr",
+			Pipeline: pipeline,
+			Sequence: 1,
+		}
+		r := ptypes.TestPipelineRun(t, pr)
+		err = s.PipelineRunPut(r)
+		require.NoError(err)
+
+		// Get latest run by pipeline
+		{
+			resp, err := s.PipelineRunGetLatest(pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal(r.Id, resp.Id)
+			require.Equal(r.Sequence, resp.Sequence)
+			require.Equal(pb.PipelineRun_PENDING, resp.Status)
+		}
+
+		// Update existing pipeline run
+		r.Status = pb.PipelineRun_FAILED
+		err = s.PipelineRunPut(r)
+		require.NoError(err)
+
+		// Get pipeline run, ID and sequence should not change
+		{
+			resp, err := s.PipelineRunGetLatest(pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal(r.Id, resp.Id)
+			require.Equal(uint64(1), resp.Sequence)
+			require.Equal(r.Status, resp.Status)
+		}
+	})
+
 	t.Run("List", func(t *testing.T) {
 		require := require.New(t)
 
@@ -134,7 +182,7 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 		err = s.PipelineRunPut(r3)
 		require.NoError(err)
 
-		// List multiple runs, check sequence increments
+		// List all runs, check that sequence increments
 		{
 			resp, err := s.PipelineRunList(pipeline)
 			require.NoError(err)

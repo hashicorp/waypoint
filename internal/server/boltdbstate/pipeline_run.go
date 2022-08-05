@@ -43,22 +43,24 @@ func (s *State) PipelineRunPut(pr *pb.PipelineRun) error {
 			pr.Id = id
 		}
 
-		pId := pr.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id
-		raw, err := memTxn.Last(
-			pipelineRunIndexTableName,
-			pipelineRunIndexPId,
-			pId)
-		if err != nil {
-			return err
-		}
-		if raw != nil {
-			idx := raw.(*pipelineRunIndexRecord)
-			if idx.PipelineId == pId {
+		// only alter sequence if this is a new pipeline run
+		if pr.Status == pb.PipelineRun_PENDING {
+			pId := pr.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id
+			raw, err := memTxn.Last(
+				pipelineRunIndexTableName,
+				pipelineRunIndexPId,
+				pId)
+			if err != nil {
+				return err
+			}
+			// increment sequence if this is not the first run
+			if raw != nil {
+				idx := raw.(*pipelineRunIndexRecord)
 				seq, _ := strconv.ParseUint(idx.Sequence, 10, 64)
 				pr.Sequence = atomic.AddUint64(&seq, 1)
+			} else {
+				pr.Sequence = 1
 			}
-		} else {
-			pr.Sequence = 1
 		}
 
 		return s.pipelineRunPut(dbTxn, memTxn, pr)
