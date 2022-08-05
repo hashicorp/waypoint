@@ -135,10 +135,8 @@ func (s *State) pipelineRunGet(
 		return nil, status.Error(codes.Internal,
 			"failed to decode raw result to *pipelineRunIndexRecord!")
 	}
-	var pipelineRunId string
-	pipelineRunId = idx.Id
 
-	return &result, dbGet(b, []byte(strings.ToLower(pipelineRunId)), &result)
+	return &result, dbGet(b, []byte(strings.ToLower(idx.Id)), &result)
 }
 
 // PipelineRunGetLatest gets the latest PipelineRun by pipeline ID.
@@ -181,10 +179,8 @@ func (s *State) pipelineRunGetLatest(
 		return nil, status.Error(codes.Internal,
 			"failed to decode raw result to *pipelineRunIndexRecord!")
 	}
-	var pipelineRunId string
-	pipelineRunId = idx.Id
 
-	return &result, dbGet(b, []byte(strings.ToLower(pipelineRunId)), &result)
+	return &result, dbGet(b, []byte(strings.ToLower(idx.Id)), &result)
 }
 
 // PipelineRunGetById gets a PipelineRun by pipeline run ID.
