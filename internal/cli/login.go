@@ -28,12 +28,13 @@ import (
 type LoginCommand struct {
 	*baseCommand
 
-	flagAuthMethod     string
-	flagToken          string
-	flagK8S            bool
-	flagK8SService     string
-	flagK8STokenSecret string
-	flagK8SNamespace   string
+	flagAuthMethod             string
+	flagToken                  string
+	flagK8S                    bool
+	flagK8SService             string
+	flagK8STokenSecret         string
+	flagK8SNamespace           string
+	flagOidcCallbackServerPort uint
 }
 
 func (c *LoginCommand) Run(args []string) int {
@@ -260,8 +261,12 @@ func (c *LoginCommand) loginOIDC(ctx context.Context) (string, int) {
 	}
 	refAM := &pb.Ref_AuthMethod{Name: c.flagAuthMethod}
 
+	if c.flagOidcCallbackServerPort == 0 {
+		c.flagOidcCallbackServerPort = 8087 // Default port
+	}
+
 	// Start our callback server
-	callbackSrv, err := wpoidc.NewCallbackServer()
+	callbackSrv, err := wpoidc.NewCallbackServer(c.flagOidcCallbackServerPort)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return "", 1
@@ -463,6 +468,12 @@ func (c *LoginCommand) Flags() *flag.Sets {
 			Target: &c.flagK8SNamespace,
 			Usage: "The name of the Kubernetes namespace that has the Waypoint token " +
 				"when using the -from-kubernetes flag.",
+		})
+
+		f.UintVar(&flag.UintVar{
+			Name:   "oidc-callback-server-port",
+			Target: &c.flagOidcCallbackServerPort,
+			Usage:  "The port to be used when listening for an OIDC callback",
 		})
 	})
 }

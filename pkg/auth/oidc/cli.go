@@ -23,14 +23,18 @@ type CallbackServer struct {
 // NewCallbackServer creates and starts a new local HTTP server for
 // OIDC authentication to redirect to. This is used to capture the
 // necessary information to complete the authentication.
-func NewCallbackServer() (*CallbackServer, error) {
+func NewCallbackServer(listenPort uint) (*CallbackServer, error) {
+	if listenPort < 1024 || listenPort > 65535 {
+		return nil, fmt.Errorf("invalid listen port: please specify a port between 1024 and 65535")
+	}
+
 	// Generate our nonce
 	nonce, err := oidc.NewID()
 	if err != nil {
 		return nil, err
 	}
 
-	ln, err := net.Listen("tcp", "127.0.0.1:8087")
+	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", listenPort))
 	if err != nil {
 		return nil, nil
 	}
