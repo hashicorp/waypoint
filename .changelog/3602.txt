@@ -1,0 +1,4 @@
+```release-note:bug
+cli: `deployment destroy` will now attempt to destroy any known resources for failed
+deployments. Previously, `destroy` would skip unsuccessful deployments.
+```
