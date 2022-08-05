@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	dockerTestDir = fmt.Sprintf("%s/docker/go", examplesRootDir)
+	dockerTestDir         = fmt.Sprintf("%s/docker/go", examplesRootDir)
 	dockerMultiAppTestDir = fmt.Sprintf("%s/docker/go-multiapp", examplesRootDir)
 )
 
