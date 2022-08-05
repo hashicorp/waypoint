@@ -282,6 +282,20 @@ func Test_getRemoteName(t *testing.T) {
 			"upstream",
 			"",
 		},
+		{
+			"ssh-remote repo test no git@",
+			"ssh-remote",
+			"git.test:testorg/testrepo.git",
+			"origin",
+			"",
+		},
+		{
+			"https-remote repo test no https:// so ssh",
+			"https-remote",
+			"git.test:testorg/testrepo.git",
+			"origin",
+			"",
+		},
 	}
 	log := hclog.Default()
 	hclog.Default().SetLevel(hclog.Debug)
@@ -301,7 +315,7 @@ func Test_getRemoteName(t *testing.T) {
 			require.NoError(err)
 			defer os.RemoveAll(td)
 
-			// Copy our test fixture so we don't have any side effects
+			// Copy our test fixture, so we don't have any side effects
 			path := filepath.Join("testdata", tt.Fixture)
 			dstPath := filepath.Join(td, "fixture")
 			require.NoError(copy.CopyDir(path, dstPath))
@@ -346,13 +360,35 @@ func testGitFixture(t *testing.T, path string) {
 }
 
 func Test_remoteConvertSSHtoHTTPS(t *testing.T) {
-	require := require.New(t)
-	httpRemote := "https://git.test/testorg/testrepo.git"
-	sshRemote := "git@git.test:testorg/testrepo.git"
+	tests := []struct {
+		name        string
+		httpsRemote string
+		sshRemote   string
+		wantErr     bool
+	}{
+		{
+			"both normal",
+			"https://git.test/testorg/testrepo.git",
+			"git@git.test:testorg/testrepo.git",
+			false,
+		},
+		{
+			"no git@ for ssh",
+			"https://git.test/testorg/testrepo.git",
+			"git.test:testorg/testrepo.git",
+			false,
+		},
+	}
+	for _, tt := range tests {
+		name := tt.name
 
-	newHttpRemote, err := remoteConvertSSHtoHTTPS(sshRemote)
-	require.NoError(err)
-	require.Equal(httpRemote, newHttpRemote)
+		t.Run(name, func(t *testing.T) {
+			require := require.New(t)
+			newHttpRemote, err := remoteConvertSSHtoHTTPS(tt.sshRemote)
+			require.NoError(err)
+			require.Equal(tt.httpsRemote, newHttpRemote)
+		})
+	}
 }
 
 func Test_remoteConverters(t *testing.T) {
