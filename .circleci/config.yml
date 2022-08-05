@@ -22,9 +22,6 @@ references:
     BASH_ENV: /home/circleci/project/.circleci/bash_env.sh
     DOCKER_BUILDKIT: 1
 
-  e2e-env: &e2e-env
-    WP_SERVERIMAGE_UPGRADE: blah
-
 jobs:
   # Runs Go linters
   lint:
@@ -251,7 +248,7 @@ jobs:
     machine:
       image: ubuntu-2204:current
     environment:
-      <<: *e2e-env
+      E2E_PLATFORM: "Docker"
     steps:
       - checkout
       - attach_workspace:
@@ -268,13 +265,8 @@ jobs:
             rm -rf /tmp/golang.tar.gz
             go version
       - run:
-          name: Execute Integration Tests
-          command: |
-            echo "===> Set env vars"
-            export E2E_PLATFORM=Docker
-            export WP_BINARY="$(pwd)/waypoint"
-            echo "===> Run tests"
-            ./test-e2e/run-test.sh
+          name: Execute E2E Docker Tests
+          command: ./test-e2e/run-test.sh
       - notify_main_failure
 
   image-release:

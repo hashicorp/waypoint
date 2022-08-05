@@ -52,12 +52,8 @@ export GOARCH="$(go env GOARCH)"
 export GOEXE="$(go env GOEXE)"
 export OUTDIR="build/${GOOS}_${GOARCH}"
 
-# Test env vars
+# Target working directory for the binary location if not specified
 export WP_BINARY="${WP_BINARY:-$TESTDIR/waypoint}"
-export WP_SERVERIMAGE="hashicorp/waypoint:latest"
-export WP_ODRIMAGE="hashicorp/waypoint-odr:latest"
-export WP_SERVERIMAGE_UPGRADE="ghcr.io/hashicorp/waypoint/alpha:latest"
-export WP_ODRIMAGE_UPGRADE="ghcr.io/hashicorp/waypoint/alpha-odr:latest"
 
 if [ -z "$WP_EXAMPLES_PATH" ]; then
   echo "WP_EXAMPLES_PATH unset; setting to ${TESTDIR}/waypoint-examples"
