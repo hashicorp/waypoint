@@ -3,9 +3,11 @@ package singleprocess
 import (
 	"context"
 
+	"github.com/hashicorp/go-hclog"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
@@ -35,7 +37,7 @@ func (s *Service) UpsertProject(
 			// An error here indicates a failure to enqueue an
 			// InitOp, not a failure during the operation itself,
 			// which happen out-of-band.
-			return nil, err
+			return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed queueing init job")
 		}
 	}
 

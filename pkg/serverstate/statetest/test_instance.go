@@ -164,7 +164,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.Len(list, 1)
 
 		// Should not for other app
-		//nolint:copylocks
+		//nolint:govet,copylocks
 		ref2 := *app
 		ref2.Application = "NO"
 		list, err = s.InstancesByApp(&ref2, nil, nil)
@@ -227,7 +227,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.Len(list, 1)
 
 		// Should not for other app
-		//nolint:copylocks
+		//nolint:govet,copylocks
 		ref2 := *wsRef
 		ref2.Workspace = "NO"
 		list, err = s.InstancesByApp(app, &ref2, nil)
