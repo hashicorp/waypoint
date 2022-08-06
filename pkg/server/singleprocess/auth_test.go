@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/hashicorp/waypoint/internal/server/boltdbstate"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
@@ -279,7 +280,7 @@ func TestServiceAuth(t *testing.T) {
 		require.NoError(err)
 
 		var buf bytes.Buffer
-		buf.WriteString("wp24")
+		buf.WriteString(boltdbstate.TokenMagic)
 		buf.Write(ttData)
 
 		rogue := base58.Encode(buf.Bytes())

@@ -81,10 +81,10 @@ type State struct {
 }
 
 const (
-	// tokenMagic is used as a byte sequence prepended to the encoded TokenTransport to identify
+	// TokenMagic is used as a byte sequence prepended to the encoded TokenTransport to identify
 	// the token as valid before attempting to decode it. This is mostly a nicity to improve
 	// understanding of the token data and error messages.
-	tokenMagic = "wp24"
+	TokenMagic = "wp24"
 )
 
 // Hashes token in OSS with HMAC
@@ -120,19 +120,19 @@ func (s *State) TokenEncrypt(token []byte, keyId string, metadata map[string]str
 	}
 
 	var buf bytes.Buffer
-	buf.WriteString(tokenMagic)
+	buf.WriteString(TokenMagic)
 	buf.Write(ttData)
 
 	return buf.Bytes(), nil
 }
 
 func (s *State) TokenDecrypt(ciphertext []byte) (*pb.TokenTransport, *pb.Token, error) {
-	if subtle.ConstantTimeCompare(ciphertext[:len(tokenMagic)], []byte(tokenMagic)) != 1 {
+	if subtle.ConstantTimeCompare(ciphertext[:len(TokenMagic)], []byte(TokenMagic)) != 1 {
 		return nil, nil, errors.Errorf("bad magic")
 	}
 
 	var tt pb.TokenTransport
-	err := proto.Unmarshal(ciphertext[len(tokenMagic):], &tt)
+	err := proto.Unmarshal(ciphertext[len(TokenMagic):], &tt)
 	if err != nil {
 		return nil, nil, err
 	}
