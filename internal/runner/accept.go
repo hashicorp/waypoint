@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math/rand"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -62,6 +63,12 @@ func (r *Runner) AcceptMany(ctx context.Context) {
 				// the context being closed first, in which case we honor that as a valid
 				// reason to stop accepting jobs.
 				return
+			case codes.PermissionDenied:
+				// This means the runner was deregistered and we must exit.
+				// This won't be fixed unless the runner is closed and restarted.
+				r.logger.Error("runner unexpectedly deregistered, exiting")
+				time.Sleep(5 * time.Second)
+				return
 
 			case codes.NotFound:
 				// This means the runner was deregistered and we must exit.
@@ -113,7 +120,7 @@ func (r *Runner) AcceptExact(ctx context.Context, id string) error {
 
 var testRecvDelay time.Duration
 
-//nolint:lostcancel
+//nolint:govet,lostcancel
 func (r *Runner) accept(ctx context.Context, id string) error {
 	if r.readState(&r.stateExit) > 0 {
 		return ErrClosed
@@ -232,6 +239,9 @@ RESTART_JOB_STREAM:
 		if atomic.LoadInt32(&canceled) > 0 ||
 			status.Code(err) == codes.Unavailable ||
 			status.Code(err) == codes.NotFound {
+			// Throttle ourselves so that we don't hammer the server in the case that
+			// we've been deleted and are not likely to return.
+			time.Sleep(time.Duration(2+rand.Intn(3)) * time.Second)
 			goto RESTART_JOB_STREAM
 		}
 

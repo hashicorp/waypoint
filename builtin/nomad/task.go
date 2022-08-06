@@ -147,7 +147,7 @@ func (p *TaskLauncher) StopTask(
 	log hclog.Logger,
 	ti *TaskInfo,
 ) error {
-	client, err := p.getNomadClient()
+	client, err := getNomadClient()
 	if err != nil {
 		log.Error("failed to create a Nomad API client to stop an ODR task")
 		return err
@@ -163,7 +163,7 @@ func (p *TaskLauncher) StartTask(
 	log hclog.Logger,
 	tli *component.TaskLaunchInfo,
 ) (*TaskInfo, error) {
-	client, err := p.getNomadClient()
+	client, err := getNomadClient()
 	if err != nil {
 		log.Error("failed to create a Nomad API client to start an ODR task")
 		return nil, err
@@ -280,16 +280,6 @@ func (p *TaskLauncher) StartTask(
 	return &TaskInfo{
 		Id: taskName,
 	}, nil
-}
-
-// getNomadClient provides the client connection used by resources to interact with Nomad.
-func (p *TaskLauncher) getNomadClient() (*api.Client, error) {
-	// Get our client
-	client, err := api.NewClient(api.DefaultConfig())
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
 }
 
 // WatchTask implements TaskLauncher

@@ -1,0 +1,3 @@
+```release-note:bug
+internal/pkg/gitdirty: Fix an issue detecting dirty local source code when using git@ remotes.
+```

@@ -306,7 +306,7 @@ func (c *Project) queueAndStreamJob(
 
 // The time here is meant to encompass the typical case for an operation to begin.
 // With the introduction of ondemand runners, we bumped it up from 1500 to 3000
-// to accomidate the additional time before the job was picked up when testing in
+// to accommodate the additional time before the job was picked up when testing in
 // local Docker.
 const stateEventPause = 3000 * time.Millisecond
 

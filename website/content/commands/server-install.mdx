@@ -119,10 +119,13 @@ and disable the UI, the command would be:
 - `-nomad-runner-csi-volume-capacity-min=<int>` - Waypoint runner Nomad CSI volume capacity minimum, in bytes. The default is 1073741824.
 - `-nomad-runner-csi-volume-capacity-max=<int>` - Waypoint runner Nomad CSI volume capacity maximum, in bytes. The default is 2147483648.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
+- `-nomad-service-provider=<string>` - Create service for Waypoint UI and Server in Consul. One possible value from: consul, nomad, none. The default is consul.
+- `-nomad-service-ui-tags=<string>` - Tags for the Waypoint UI service. The default is waypoint.
+- `-nomad-service-backend-tags=<string>` - Tags for the Waypoint backend service. The default is waypoint.
 - `-nomad-consul-service` - Create service for Waypoint UI and Server in Consul. The default is true.
 - `-nomad-consul-service-hostname=<string>` - If set, will use this hostname for Consul DNS rather than the default, i.e. "waypoint-server.service.consul".
-- `-nomad-consul-service-ui-tags=<string>` - Tags for the Waypoint UI service generated in Consul. The default is waypoint.
-- `-nomad-consul-service-backend-tags=<string>` - Tags for the Waypoint backend service generated in Consul. The 'first' tag will be used when crafting the Consul DNS hostname for accessing Waypoint. The default is waypoint.
+- `-nomad-consul-service-ui-tags=<string>` - Tags for the Waypoint UI service generated in Consul.
+- `-nomad-consul-service-backend-tags=<string>` - Tags for the Waypoint backend service generated in Consul. The 'first' tag will be used when crafting the Consul DNS hostname for accessing Waypoint.
 - `-nomad-consul-datacenter=<string>` - The datacenter where Consul is located. The default is dc1.
 - `-nomad-consul-domain=<string>` - The domain where Consul is located. The default is consul.
 - `-nomad-consul-token=<string>` - If set, the passed Consul token is stored in the job before sending to the Nomad servers. Overrides the CONSUL_HTTP_TOKEN environment variable if set.
