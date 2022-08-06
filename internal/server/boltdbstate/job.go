@@ -1744,7 +1744,12 @@ func (s *State) pipelineComplete(jobId string) error {
 			},
 		},
 	}, job.Pipeline.RunSequence)
-	if err != nil || len(run.Jobs) < 1 {
+	if run != nil && len(run.Jobs) < 1 {
+		err = status.Errorf(codes.FailedPrecondition,
+			"no jobs queued for pipeline run %q", run,
+		)
+	}
+	if err != nil {
 		s.log.Error("failed to retrieve pipeline to complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
 		return err
 	}
@@ -1788,7 +1793,12 @@ func (s *State) pipelineAck(jobId string) error {
 			},
 		},
 	}, job.Pipeline.RunSequence)
-	if err != nil || len(run.Jobs) < 1 {
+	if run != nil && len(run.Jobs) < 1 {
+		err = status.Errorf(codes.FailedPrecondition,
+			"no jobs queued for pipeline run %q", run,
+		)
+	}
+	if err != nil {
 		s.log.Error("failed to retrieve pipeline to ack", "job", job.Id, "pipeline id", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
 		return err
 	}
@@ -1823,7 +1833,7 @@ func (s *State) pipelineCancel(jobId string) error {
 			},
 		},
 	}, job.Pipeline.RunSequence)
-	if err != nil || len(run.Jobs) < 1 {
+	if err != nil {
 		s.log.Error("failed to retrieve pipeline to cancel", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
 		return err
 	}
