@@ -27,11 +27,12 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 		defer s.Close()
 
 		// Set
-		_, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+		ret, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
 			Id: "foo",
 		})
 		require.Error(err)
 		require.Equal(codes.NotFound, status.Code(err))
+		require.Equal(ret.Name, "foo")
 	})
 
 	t.Run("Put and Get", func(t *testing.T) {
@@ -51,7 +52,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 			Default:              true,
 		})
 
-		err := s.OnDemandRunnerConfigPut(rec)
+		_, err := s.OnDemandRunnerConfigPut(rec)
 		require.NoError(err)
 
 		// Get exact
@@ -108,7 +109,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 		// Set
 		rec := serverptypes.TestOnDemandRunnerConfig(t, serverptypes.TestOnDemandRunnerConfig(t, nil))
 
-		err := s.OnDemandRunnerConfigPut(rec)
+		_, err := s.OnDemandRunnerConfigPut(rec)
 		require.NoError(err)
 
 		// Read
@@ -165,7 +166,7 @@ func TestOnDemandRunnerConfig_LabelTargeting(t *testing.T, factory Factory, rest
 		},
 	})
 
-	err := s.OnDemandRunnerConfigPut(rec)
+	_, err := s.OnDemandRunnerConfigPut(rec)
 	require.NoError(err)
 
 	resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
