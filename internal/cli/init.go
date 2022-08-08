@@ -1,11 +1,14 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -168,7 +171,7 @@ func (c *InitCommand) Run(args []string) int {
 				clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
-		} else if strings.ToLower(proceed) == "yes" {
+		} else if strings.ToLower(proceed) == "yes" || strings.ToLower(proceed) == "y" {
 			c.ui.Output("Starting interactive .hcl generator.\n")
 			if !c.hclGen() {
 				return 1
@@ -257,60 +260,288 @@ validate the configuration and initialize your project.
 	return true
 }
 
+type PlugDocs struct {
+	PlugDocs []struct {
+		PlugSubDocs []struct {
+			Field    string `json:"Field"`
+			Type     string `json:"Type"`
+			Synopsis string `json:"Synopsis"`
+			Optional bool   `json:"Optional"`
+			Category bool   `json:"Category"`
+			EnvVar   string `json:"EnvVar"`
+		}
+		Field    string `json:"Field"`
+		Type     string `json:"Type"`
+		Synopsis string `json:"Synopsis"`
+		Optional bool   `json:"Optional"`
+		Category bool   `json:"Category"`
+		EnvVar   string `json:"EnvVar"`
+	} `json:"requiredFields"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Type        string `json:"type"`
+}
+
 func (c *InitCommand) hclGen() bool {
-	if err := ioutil.WriteFile("waypoint.hcl", []byte(""), 0644); err != nil {
+	brackets := 0
+	hclFile, err := os.Create("waypoint.hcl")
+	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
 	}
+	defer hclFile.Close()
 	c.ui.Output("Initial waypoint.hcl created!", terminal.WithStyle(terminal.SuccessBoldStyle))
-	getAppNames := true
-	var apps []string
-	var err error
-	for getAppNames {
-		apps, err = c.getAppNames()
+	c.ui.Output("Type \"exit\" at any point to exit the generator")
+	projName, err, close := c.getName("project")
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	} else if close == true {
+		c.closeBrackets(hclFile, brackets, brackets)
+		c.ui.Output("Generator exited")
+		return false
+	}
+	hclFile.Write([]byte(fmt.Sprintf("project = \"%s\"\n", projName)))
+	appName, err, close := c.getName("app")
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	} else if close == true {
+		c.closeBrackets(hclFile, brackets, brackets)
+		c.ui.Output("Generator exited")
+		return false
+	}
+	hclFile.Write([]byte(fmt.Sprintf("app \"%s\" {\n", appName)))
+	brackets++
+
+	// TODO: this is a placeholder, the real implementation will use the JSON files as they are included in the waypoint binary
+	// Not a final implemenation so hardcoded with a relative path
+	fPath := "./docs/gen"
+	file, err := os.Open(fPath)
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	}
+	defer file.Close()
+	fList, err := file.Readdirnames(0)
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	}
+
+	// Select a builder
+	plug, err, close := c.selectPlugin(1, fList, fPath)
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	} else if close == true {
+		c.closeBrackets(hclFile, brackets, brackets)
+		c.ui.Output("Generator exited")
+		return false
+	}
+	hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets) + "build {\n")))
+	brackets++
+	if plug.Name != "" {
+		hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"use \"%s\" {\n", plug.Name)))
+		brackets++
+		fieldMap, err, close := c.populatePlugins(plug)
 		if err != nil {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return false
+		} else if close == true {
+			c.closeBrackets(hclFile, brackets, brackets)
+			c.ui.Output("Generator exited")
+			return false
 		}
-		if apps != nil {
-			getAppNames = false
+		for key, elem := range fieldMap {
+			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
 		}
 	}
-	//for _, app := range apps {
-	//}
 
+	// Select a registry
+	plug, err, close = c.selectPlugin(4, fList, fPath)
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	} else if close == true {
+		c.closeBrackets(hclFile, brackets, brackets)
+		c.ui.Output("Generator exited")
+		return false
+	}
+	// A registry stanza will only appear in the file if one is chosen
+	if plug.Name != "" {
+		hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets) + "registry {\n")))
+		brackets++
+		hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"use \"%s\" {\n", plug.Name)))
+		brackets++
+		fieldMap, err, close := c.populatePlugins(plug)
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return false
+		} else if close == true {
+			c.closeBrackets(hclFile, brackets, brackets)
+			c.ui.Output("Generator exited")
+			return false
+		}
+		for key, elem := range fieldMap {
+			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
+		}
+	}
+
+	// After the registry stanza we want to close the brackets on the build and registry (if it exists) stanzas
+	err = c.closeBrackets(hclFile, brackets-1, brackets)
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	}
+	brackets = 1
+
+	// Select a deployer
+	plug, err, close = c.selectPlugin(2, fList, fPath)
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	} else if close == true {
+		c.closeBrackets(hclFile, brackets, brackets)
+		c.ui.Output("Generator exited")
+		return false
+	}
+
+	// A deployer stanza will only appear in the file if one is chosen
+	if plug.Name != "" {
+		hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets) + "deploy {\n")))
+		brackets++
+		hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"use \"%s\" {\n", plug.Name)))
+		brackets++
+		fieldMap, err, close := c.populatePlugins(plug)
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return false
+		} else if close == true {
+			c.closeBrackets(hclFile, brackets, brackets)
+			c.ui.Output("Generator exited")
+			return false
+		}
+		for key, elem := range fieldMap {
+			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
+		}
+	}
+	// After the deployer stanza we want to close the brackets on the deployer stanza
+	err = c.closeBrackets(hclFile, brackets-1, brackets)
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	}
+	brackets = 1
+
+	// Select a releaser
+	plug, err, close = c.selectPlugin(3, fList, fPath)
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	} else if close == true {
+		c.closeBrackets(hclFile, brackets, brackets)
+		c.ui.Output("Generator exited")
+		return false
+	}
+
+	// A releaser stanza will only appear in the file if one is chosen
+	if plug.Name != "" {
+		hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets) + "release {\n")))
+		brackets++
+		hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"use \"%s\" {\n", plug.Name)))
+		brackets++
+		fieldMap, err, close := c.populatePlugins(plug)
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return false
+		} else if close == true {
+			c.closeBrackets(hclFile, brackets, brackets)
+			c.ui.Output("Generator exited")
+			return false
+		}
+		for key, elem := range fieldMap {
+			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
+		}
+	}
+	// After the releaser stanza we want to close all the brackets
+	err = c.closeBrackets(hclFile, brackets, brackets)
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	}
 	return true
 }
 
-func (c *InitCommand) getAppNames() ([]string, error) {
-	apps := make([]string, 0)
-	appName := false
-	for !appName {
-		proceed, err := c.ui.Input(&terminal.Input{
-			Prompt: "Please enter a name for your app, this prompt will be repeated in case you have multiple: ",
-			Style:  "",
-			Secret: false,
-		})
-		if err != nil {
-			c.ui.Output(
-				"Error getting input: %s",
-				clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return apps, err
-		} else if strings.ToLower(proceed) == "" {
-			c.ui.Output("You need to enter at least one app name\n")
-		} else {
-			if c.confirmAppName(proceed) {
-				apps = append(apps, proceed)
-				appName = true
+func (c *InitCommand) closeBrackets(file *os.File, toClose int, outstanding int) error {
+	extra := outstanding - toClose
+	toPrint := ""
+	for i := toClose; i > 0; i-- {
+		for k := extra + i; k > 1; k-- {
+			toPrint = toPrint + "    "
+		}
+		toPrint = toPrint + "}\n"
+		file.Write([]byte(fmt.Sprintf(toPrint)))
+		toPrint = ""
+	}
+	return nil
+}
+
+func (c *InitCommand) genIndent(outstanding int) string {
+	spaces := ""
+	for i := outstanding; i > 0; i-- {
+		spaces = spaces + "    "
+	}
+	return spaces
+}
+
+func (c *InitCommand) populatePlugins(plug PlugDocs) (map[string]string, error, bool) {
+	m := make(map[string]string)
+	if plug.PlugDocs == nil {
+		c.ui.Output("There are no required fields for this %s plugin, but there may be optional fields you can add to your .hcl file later. See the Waypoint plugin documentation for more information.", plug.Type)
+	} else {
+		for _, field := range plug.PlugDocs {
+			if field.Category == true {
+				// Subfield handling
+				for _, sfield := range field.PlugSubDocs {
+					if sfield.Optional == true {
+						continue
+					}
+					cont, err, close := c.populateField(sfield.Field, sfield.Type)
+					if err != nil {
+						return m, err, false
+					} else if close == true {
+						return m, nil, true
+					}
+					m[field.Field] = cont
+				}
+
+			} else {
+				//TEST CODE
+				c.ui.Output("Required field: %s", field.Field)
+
+				cont, err, close := c.populateField(field.Field, field.Type)
+				if err != nil {
+					return m, err, false
+				} else if close == true {
+					return m, nil, true
+				}
+				m[field.Field] = cont
 			}
 		}
 	}
-	appName = false
-	for !appName {
-		proceed, err := c.ui.Input(&terminal.Input{
-			Prompt: "If you have more apps to configure, please continue entering app names one at a time. When you are done, enter nothing: ",
+	return m, nil, false
+}
+
+func (c *InitCommand) populateField(name string, fType string) (string, error, bool) {
+	getField := true
+	typeString := fType
+	if typeString == "" {
+		typeString = "<No_Type_Specified>"
+	}
+	for getField {
+		fieldVal, err := c.ui.Input(&terminal.Input{
+			Prompt: fmt.Sprintf("Please enter the contents of the %s field. This should be of type %s:", name, typeString),
 			Style:  "",
 			Secret: false,
 		})
@@ -320,54 +551,144 @@ func (c *InitCommand) getAppNames() ([]string, error) {
 				clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
-			return apps, err
-		} else if strings.ToLower(proceed) == "" {
-			c.ui.Output("Done entering app names, app names entered:\n")
-			for _, app := range apps {
-				c.ui.Output("%s\n", app)
+			return "", err, false
+		} else if strings.ToLower(fieldVal) == "exit" {
+			return "", nil, true
+		} else if strings.ToLower(fieldVal) == "" {
+			c.ui.Output(fmt.Sprintf("You have selected to skip the %s field.", name))
+			pNameConfirm, err := c.ui.Input(&terminal.Input{
+				Prompt: fmt.Sprintf("Do you really want to skip the %s field? (y/N):", name),
+				Style:  "",
+				Secret: false,
+			})
+			if err != nil {
+				c.ui.Output(
+					"Error getting input: %s",
+					clierrors.Humanize(err),
+					terminal.WithErrorStyle(),
+				)
+				return "", err, false
+			} else if strings.ToLower(pNameConfirm) == "exit" {
+				return "", nil, true
+			} else if strings.ToLower(pNameConfirm) == "yes" || strings.ToLower(pNameConfirm) == "y" {
+				c.ui.Output("%s field skipped\n", strings.Title(name))
+				getField = false
+			} else {
+				c.ui.Output("Skip cancelled\n")
 			}
-			goodInput := false
-			for !goodInput {
-				okApp, err := c.ui.Input(&terminal.Input{
-					Prompt: "Enter 'yes' to proceed with this list or 'no' to start over: ",
-					Style:  "",
-					Secret: false,
-				})
-				if err != nil {
-					c.ui.Output(
-						"Error getting input: %s",
-						clierrors.Humanize(err),
-						terminal.WithErrorStyle(),
-					)
-					return apps, err
-				} else if strings.ToLower(okApp) == "yes" {
-					c.ui.Output("App names accepted\n")
-					appName = true
-					goodInput = true
-				} else if strings.ToLower(okApp) == "no" {
-					c.ui.Output("App names rejected, starting over\n")
-					appName = true
-					apps = nil
-					goodInput = true
-				} else {
-					c.ui.Output("Please enter either 'yes' or 'no'\n")
+		} else {
+			// TODO: field input type checking
+			c.ui.Output("You inputted \"%s\"\n", fieldVal)
+			fieldConfirm, err := c.ui.Input(&terminal.Input{
+				Prompt: fmt.Sprintf("Is this correct? (y/N):"),
+				Style:  "",
+				Secret: false,
+			})
+			if err != nil {
+				c.ui.Output(
+					"Error getting input: %s",
+					clierrors.Humanize(err),
+					terminal.WithErrorStyle(),
+				)
+				return "", err, false
+			} else if strings.ToLower(fieldConfirm) == "exit" {
+				return "", nil, true
+			} else if strings.ToLower(fieldConfirm) == "yes" || strings.ToLower(fieldConfirm) == "y" {
+				c.ui.Output("Field contents confirmed\n")
+				return fieldVal, nil, false
+			} else {
+				c.ui.Output("Field contents rejected\n")
+			}
+		}
+	}
+	return "", nil, true
+}
+
+// plug indicates the plugin that the user needs to select. 1: Builder, 2: Deployer/Platform, 3: Releaser, 4: Registry
+func (c *InitCommand) selectPlugin(plug int, fList []string, fPath string) (PlugDocs, error, bool) {
+	var plugType string
+	var plugDocs PlugDocs
+	switch plug {
+	case 1:
+		plugType = "builder"
+	case 2:
+		plugType = "deployment platform"
+	case 3:
+		plugType = "releaser"
+	case 4:
+		plugType = "registry"
+	}
+	var plugList []string
+	for _, file := range fList {
+		if filepath.Ext(file) == ".json" {
+			switch plug {
+			case 1:
+				if strings.HasPrefix(file, "builder") {
+					plugList = append(plugList, file)
+				}
+			case 2:
+				if strings.HasPrefix(file, "platform") {
+					plugList = append(plugList, file)
+				}
+			case 3:
+				if strings.HasPrefix(file, "release") {
+					plugList = append(plugList, file)
+				}
+			case 4:
+				if strings.HasPrefix(file, "registry") {
+					plugList = append(plugList, file)
 				}
 			}
-		} else {
-			if c.confirmAppName(proceed) {
-				apps = append(apps, proceed)
-			}
 		}
 	}
-	return apps, nil
-}
+	sort.Strings(plugList)
+	c.ui.Output(fmt.Sprintf("Select a %s: learn more at https://www.waypointproject.io/plugins. To use a %s that’s not shown here (see https://www.waypointproject.io/unsupportedplugins), enter nothing, then edit the .hcl file after it’s been generated.\n", plugType, plugType))
+	jMap := make(map[string]interface{})
+	var selList []string
+	var nameSelList []string
+	count := 1
+	for _, f := range plugList {
+		jsonFile, err := os.Open(fmt.Sprintf("%s/%s", fPath, f))
+		if err != nil {
+			return plugDocs, err, false
+		}
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+		json.Unmarshal(byteValue, &jMap)
 
-// Helper function for getAppNames()
-func (c *InitCommand) confirmAppName(name string) bool {
-	c.ui.Output("You entered: %s\n", name)
-	for true {
-		okApp, err := c.ui.Input(&terminal.Input{
-			Prompt: "Enter 'yes' to proceed with this name or 'no' to reenter it: ",
+		//TEST CODE
+		json.Unmarshal(byteValue, &plugDocs)
+
+		// There is an assumption here that all plugins will have a description, we have to unmarshal all the plugins
+		// for a given plugin to get an accurate name and ensure that they exist
+		if _, ok := jMap["description"]; ok {
+
+			//TEST CODE
+			/*if plugDocs.PlugDocs == nil {
+				c.ui.Output("There are no required fields for this %s plugin, but there may be optional fields you can add to your .hcl file later. See the Waypoint plugin documentation for more information.", plugDocs.Type)
+			} else {
+				for _, field := range plugDocs.PlugDocs {
+					//TODO: add handling for subfields
+					c.ui.Output("Required field: %s", field.Field)
+				}
+			}
+			if jMap["requiredFields"] != nil {
+				c.ui.Output("Well the jmap says: %s", jMap["requiredFields"])
+			}*/
+
+			c.ui.Output(fmt.Sprintf("%d: %s", count, jMap["name"]))
+			count++
+			selList = append(selList, f)
+			nameSelList = append(nameSelList, fmt.Sprintf("%s", jMap["name"]))
+		}
+		for k := range jMap {
+			delete(jMap, k)
+		}
+	}
+	selFileName := ""
+	getSelect := true
+	for getSelect {
+		num, err := c.ui.Input(&terminal.Input{
+			Prompt: fmt.Sprintf("Please select a plugin by typing its corresponding number or type nothing to skip (1-%d):", count-1),
 			Style:  "",
 			Secret: false,
 		})
@@ -377,18 +698,135 @@ func (c *InitCommand) confirmAppName(name string) bool {
 				clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
-			return false
-		} else if strings.ToLower(okApp) == "yes" {
-			c.ui.Output("App name accepted\n")
-			return true
-		} else if strings.ToLower(okApp) == "no" {
-			c.ui.Output("App name rejected\n")
-			return false
+			return plugDocs, err, false
+		} else if strings.ToLower(num) == "exit" {
+			return plugDocs, nil, true
+		} else if val, err := strconv.Atoi(num); err == nil && (0 < val && val < count) {
+			c.ui.Output(fmt.Sprintf("You have selected the %s plugin.", nameSelList[val-1]))
+			pNameConfirm, err := c.ui.Input(&terminal.Input{
+				Prompt: fmt.Sprintf("Is this %s plugin correct? (y/N):", plugType),
+				Style:  "",
+				Secret: false,
+			})
+			if err != nil {
+				c.ui.Output(
+					"Error getting input: %s",
+					clierrors.Humanize(err),
+					terminal.WithErrorStyle(),
+				)
+				return plugDocs, err, false
+			} else if strings.ToLower(pNameConfirm) == "exit" {
+				return plugDocs, nil, true
+			} else if strings.ToLower(pNameConfirm) == "yes" || strings.ToLower(pNameConfirm) == "y" {
+				c.ui.Output("%s plugin confirmed\n", strings.Title(plugType))
+				selFileName = selList[val-1]
+				getSelect = false
+			} else {
+				c.ui.Output("%s plugin rejected\n", strings.Title(plugType))
+			}
+		} else if num == "" {
+			c.ui.Output(fmt.Sprintf("You have selected to skip the %s stage.", plugType))
+			pNameConfirm, err := c.ui.Input(&terminal.Input{
+				Prompt: fmt.Sprintf("Do you really want to skip the %s stage? (y/N):", plugType),
+				Style:  "",
+				Secret: false,
+			})
+			if err != nil {
+				c.ui.Output(
+					"Error getting input: %s",
+					clierrors.Humanize(err),
+					terminal.WithErrorStyle(),
+				)
+				return plugDocs, err, false
+			} else if strings.ToLower(pNameConfirm) == "exit" {
+				return plugDocs, nil, true
+			} else if strings.ToLower(pNameConfirm) == "yes" || strings.ToLower(pNameConfirm) == "y" {
+				c.ui.Output("%s stage skipped\n", strings.Title(plugType))
+				plugDocs.Name = ""
+				return plugDocs, nil, false
+			} else {
+				c.ui.Output("Skip cancelled\n")
+			}
 		} else {
-			c.ui.Output("Please enter either 'yes' or 'no'\n")
+			c.ui.Output("Please select a numbered entry or type nothing to skip.\n")
 		}
 	}
-	return true
+	// We again unmarshal the JSON file corresponding to the file the user has selected
+	if selFileName != "" {
+
+		jsonFile, err := os.Open(fmt.Sprintf("%s/%s", fPath, selFileName))
+		if err != nil {
+			return plugDocs, err, false
+		}
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+		json.Unmarshal(byteValue, &plugDocs)
+		if plugDocs.Name != "" {
+			c.ui.Output(fmt.Sprintf("You have selected the %s %s plugin.", plugDocs.Name, plugType))
+		} else {
+			//TODO: better error here, do we need to check again here?
+			return plugDocs, nil, true
+		}
+		return plugDocs, nil, false
+	}
+	return plugDocs, nil, false
+}
+
+// Gets either a project or app name for an HCL file, pa should be either "project" or "app"
+func (c *InitCommand) getName(pa string) (string, error, bool) {
+	if pa == "project" {
+		c.ui.Output("Please enter the name of your project. A project typically maps 1:1 to a VCS repository. This name must be unique for your Waypoint server. If you're running in local mode, this must be unique to your machine.\n")
+	}
+	prompt := ""
+	if pa == "project" {
+		prompt = "Please enter a project name"
+	} else {
+		prompt = "Please enter an app name"
+	}
+	getName := true
+	name := ""
+	for getName {
+		paName, err := c.ui.Input(&terminal.Input{
+			Prompt: prompt + ":",
+			Style:  "",
+			Secret: false,
+		})
+		if err != nil {
+			c.ui.Output(
+				"Error getting input: %s",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return "", err, false
+		} else if strings.ToLower(paName) == "exit" {
+			return "", nil, true
+		} else if strings.ToLower(paName) == "" {
+			c.ui.Output(prompt + ".\n")
+		} else {
+			c.ui.Output("You inputted \"%s\"\n", paName)
+			pNameConfirm, err := c.ui.Input(&terminal.Input{
+				Prompt: fmt.Sprintf("Is this %s name correct? (y/N):", pa),
+				Style:  "",
+				Secret: false,
+			})
+			if err != nil {
+				c.ui.Output(
+					"Error getting input: %s",
+					clierrors.Humanize(err),
+					terminal.WithErrorStyle(),
+				)
+				return "", err, false
+			} else if strings.ToLower(pNameConfirm) == "exit" {
+				return "", nil, true
+			} else if strings.ToLower(pNameConfirm) == "yes" || strings.ToLower(pNameConfirm) == "y" {
+				c.ui.Output("%s name confirmed\n", strings.Title(pa))
+				name = paName
+				getName = false
+			} else {
+				c.ui.Output("%s name rejected\n", strings.Title(pa))
+			}
+		}
+	}
+	return name, nil, false
 }
 
 func (c *InitCommand) validateConfig() bool {
