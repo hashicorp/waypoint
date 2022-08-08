@@ -102,7 +102,7 @@ func TestServiceProject(t *testing.T, factory Factory) {
 			require.NoError(err)
 
 			resp, err := client.GetProject(ctx, &pb.GetProjectRequest{
-				Project: &pb.Ref_Project{Project: "not-found"},
+				Project: &pb.Ref_Project{Project: "example"},
 			})
 			require.Error(err)
 			require.Nil(resp)
