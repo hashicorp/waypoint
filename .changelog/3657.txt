@@ -1,0 +1,4 @@
+```release-note:bug
+cli: Fix issue where the CLI would exit with no error or action taken if a local
+  waypoint.hcl file was invalid
+```
