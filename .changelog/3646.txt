@@ -1,0 +1,3 @@
+``release-note:improvement
+cli: Support OIDC Callback Server port customization via -oidc-callback-server-port, use 8087 as a default
+```
