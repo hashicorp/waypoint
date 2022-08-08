@@ -3,7 +3,6 @@
 package boltdbstate
 
 import (
-	"bytes"
 	"crypto/subtle"
 	"fmt"
 	"reflect"
@@ -14,9 +13,7 @@ import (
 	"github.com/pkg/errors"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/crypto/blake2b"
-	"google.golang.org/protobuf/proto"
 
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
@@ -80,15 +77,13 @@ type State struct {
 	pruneMu sync.Mutex
 }
 
-const (
-	// tokenMagic is used as a byte sequence prepended to the encoded TokenTransport to identify
-	// the token as valid before attempting to decode it. This is mostly a nicity to improve
-	// understanding of the token data and error messages.
-	tokenMagic = "wp24"
-)
+// TODO(izaak): move token methods to a separate file
 
-// Hashes token in OSS with HMAC
-func (s *State) TokenEncrypt(token []byte, keyId string, metadata map[string]string) (ciphertext []byte, err error) {
+// TokenSignature generates a secure hash signature for the given pb.Token, using the existing keyId.
+// The token, keyId, and signature can later be presented to TokenSignatureVerify to
+// determine if the signature was produced by us, using this method.
+// TODO(izaak): fix comment (token body, not pb token)
+func (s *State) TokenSignature(tokenBody []byte, keyId string) (signature []byte, err error) {
 	// hmacKeySize is the size in bytes that the HMAC keys should be. Each key will contain this number of bytes
 	// of data from rand.Reader
 	var hmacKeySize = 32
@@ -104,65 +99,34 @@ func (s *State) TokenEncrypt(token []byte, keyId string, metadata map[string]str
 	if err != nil {
 		return nil, err
 	}
-	h.Write(token)
+	h.Write(tokenBody)
 
-	// Build our wrapper which is not signed or encrypted.
-	var tt pb.TokenTransport
-	tt.Body = token
-	tt.KeyId = keyId
-	tt.Metadata = metadata
-	tt.Signature = h.Sum(nil)
-
-	// Marshal the wrapper.
-	ttData, err := proto.Marshal(&tt)
-	if err != nil {
-		return nil, err
-	}
-
-	var buf bytes.Buffer
-	buf.WriteString(tokenMagic)
-	buf.Write(ttData)
-
-	return buf.Bytes(), nil
+	return h.Sum(nil), nil
 }
 
-func (s *State) TokenDecrypt(ciphertext []byte) (*pb.TokenTransport, *pb.Token, error) {
-	if subtle.ConstantTimeCompare(ciphertext[:len(tokenMagic)], []byte(tokenMagic)) != 1 {
-		return nil, nil, errors.Errorf("bad magic")
-	}
+// TODO(izaak): comment
+func (s *State) TokenSignatureVerify(tokenBody []byte, signature []byte, keyId string) (isValid bool, err error) {
 
-	var tt pb.TokenTransport
-	err := proto.Unmarshal(ciphertext[len(tokenMagic):], &tt)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	key, err := s.HMACKeyGet(tt.KeyId)
+	key, err := s.HMACKeyGet(keyId)
 	if err != nil || key == nil {
-		return nil, nil, errors.Errorf("unknown key")
+		return false, errors.Errorf("unknown key id %q", keyId)
 	}
 
 	// Hash the token body using the HMAC key so that we can compare
 	// with our signature to ensure this hasn't been tampered with.
 	h, err := blake2b.New256(key.Key)
 	if err != nil {
-		return nil, nil, err
+		return false, errors.Wrapf(err, "failed to create BLAKE2b checksum computing digest for key id %q", keyId)
 	}
 
-	h.Write(tt.Body)
+	h.Write(tokenBody)
 	sum := h.Sum(nil)
-	if subtle.ConstantTimeCompare(sum, tt.Signature) != 1 {
-		return nil, nil, errors.Errorf("bad signature")
+	if subtle.ConstantTimeCompare(sum, signature) != 1 {
+		return false, nil
 	}
 
-	// Decode the actual token structure
-	var body pb.Token
-	err = proto.Unmarshal(tt.Body, &body)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return &tt, &body, nil
+	// The compare is good - the token signature is valid.
+	return true, nil
 }
 
 // New initializes a new State store.

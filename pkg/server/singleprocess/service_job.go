@@ -394,7 +394,7 @@ func (s *Service) onDemandRunnerStartJob(
 	// We generate a new login token for each ondemand-runner used. This will inherit
 	// the user of the token to be the user that queued the original job, which is
 	// the correct behavior.
-	token, err := s.newToken(ctx, 60*time.Minute, DefaultKeyId, nil, &pb.Token{
+	token, err := s.newToken(ctx, 60*time.Minute, s.activeAuthKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Login_{Login: &pb.Token_Login{
 			UserId: encodedDefaultUserId,
 		}},
