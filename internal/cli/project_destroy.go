@@ -45,6 +45,7 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 				clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
+			return 1
 		} else if strings.ToLower(proceed) != "yes" {
 			c.ui.Output("Destroying project %q and resources requires confirmation.", project.Project.Name, terminal.WithWarningStyle())
 			return 1
