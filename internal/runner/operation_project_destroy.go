@@ -85,7 +85,16 @@ func (r *Runner) executeDestroyProjectOp(
 			Project: destroyProjectOp.DestroyProject.Project.Name,
 		},
 	})
+	// If there is an error destroying a project, reset it's state to ACTIVE
 	if err != nil {
+		_, err := client.UpsertProject(ctx,
+			&pb.UpsertProjectRequest{
+				Project: &pb.Project{
+					Name:  destroyProjectOp.DestroyProject.Project.Name,
+					State: pb.Project_ACTIVE,
+				},
+			},
+		)
 		return nil, err
 	}
 
