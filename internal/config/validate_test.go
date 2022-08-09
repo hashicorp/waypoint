@@ -66,6 +66,10 @@ func TestConfigValidatePipelines(t *testing.T) {
 			"",
 		},
 		{
+			"pipeline_nested_pipes.hcl",
+			"",
+		},
+		{
 			"pipeline_no_step.hcl",
 			"'step' stanza",
 		},
