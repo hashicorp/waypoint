@@ -67,6 +67,10 @@ type Service struct {
 
 	// oidcCache is the cache for OIDC providers.
 	oidcCache *wpoidc.ProviderCache
+
+	// features that this waypoint service supports, and will advertise
+	// on the GetVersionInfo RPC
+	features []pb.ServerFeaturesFeature
 }
 
 // New returns a Waypoint server implementation that uses BotlDB plus
@@ -93,6 +97,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 
 	s.encodeId = cfg.idEncoder
 	s.decodeId = cfg.idDecoder
+	s.features = cfg.features
 
 	if !cfg.oidcDisabled {
 		s.oidcCache = wpoidc.NewProviderCache()
@@ -259,6 +264,7 @@ type config struct {
 	logStreamProvider    logstream.Provider
 	serverId             string
 	skipServerConfigInit bool
+	features             []pb.ServerFeaturesFeature
 
 	acceptUrlTerms bool
 }
@@ -383,6 +389,16 @@ func WithServerId(serverId string) Option {
 func WithServerConfigSkipInit() Option {
 	return func(s *Service, cfg *config) error {
 		cfg.skipServerConfigInit = true
+		return nil
+	}
+}
+
+// WithFeatures adds features that the server will advertise on the
+// GetVersionInfo rpc, that clients can use to ensure compatibility
+// before attempting to exercise features.
+func WithFeatures(features ...pb.ServerFeaturesFeature) Option {
+	return func(s *Service, cfg *config) error {
+		cfg.features = features
 		return nil
 	}
 }

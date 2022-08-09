@@ -7561,6 +7561,10 @@
       "properties": {
         "info": {
           "$ref": "#/definitions/hashicorp.waypoint.VersionInfo"
+        },
+        "server_features": {
+          "$ref": "#/definitions/hashicorp.waypoint.ServerFeatures",
+          "description": "Represents additional features that the current server supports."
         }
       }
     },
@@ -9985,6 +9989,27 @@
           "type": "boolean"
         }
       }
+    },
+    "hashicorp.waypoint.ServerFeatures": {
+      "type": "object",
+      "properties": {
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.ServerFeatures.feature"
+          }
+        }
+      },
+      "description": "Represents features that the server supports.\nUseful for ensuring compatibility between clients and servers."
+    },
+    "hashicorp.waypoint.ServerFeatures.feature": {
+      "type": "string",
+      "enum": [
+        "FEATURE_UNSPECIFIED",
+        "FEATURE_INLINE_KEEPALIVES"
+      ],
+      "default": "FEATURE_UNSPECIFIED",
+      "title": "- FEATURE_INLINE_KEEPALIVES: Advertises that this server is capable of receiving inline keepalive messages"
     },
     "hashicorp.waypoint.SetConfigSourceRequest": {
       "type": "object",
