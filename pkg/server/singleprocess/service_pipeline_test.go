@@ -315,8 +315,8 @@ func TestServiceRunPipeline(t *testing.T) {
 		require.Equal(pb.Job_QUEUED, job.State)
 
 		// We should have all the job IDs
-		require.Len(resp.JobMap, 6)
-		require.Len(resp.AllJobIds, 6)
+		require.Len(resp.JobMap, 5)
+		require.Len(resp.AllJobIds, 5)
 	})
 
 	t.Run("returns an error if there's a cycle detected", func(t *testing.T) {

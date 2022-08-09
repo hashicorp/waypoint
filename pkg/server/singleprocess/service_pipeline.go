@@ -134,23 +134,26 @@ func (s *Service) RunPipeline(
 	var jobIds []string
 	jobMap := map[string]*pb.Ref_PipelineStep{}
 	for _, v := range stepGraph.KahnSort() {
+		// Look up step name and ref by the assigned node ID from graph generation
 		nodeId := v.(string)
 		stepRef, ok := nodeIdMap[nodeId]
 		if !ok {
-			fmt.Println(nodeIdMap)
 			return nil, status.Errorf(codes.Internal, "could not get pipeline step ref for node id %q", nodeId)
 		} else if stepRef == nil {
 			return nil, status.Errorf(codes.Internal, "node id %q returned a nil pipeline step ref", nodeId)
 		}
 
-		// NOTE(briancain):
-		// This could be better. It's basically here because we want to keep track
-		// of an embedded pipeline step ref within the step graph, but it doesn't have
-		// a "job id" because the root of the embedded pipeline is the actual ID where
-		// this is simply a reference
-		jobId, ok := stepIds[v.(string)]
+		// get the generated queued job request
+		jobId, ok := stepIds[nodeId]
 		if !ok {
-			jobId = "embedded-pipeline-ref-" + v.(string)
+			// NOTE(briancain):
+			// This could be better. It's basically here because we want to keep track
+			// of an embedded pipeline step ref within the step graph, but it doesn't have
+			// a "job id" because the root of the embedded pipeline is the actual ID where
+			// this is simply a reference.
+			// We don't want to add it as a job id because it doesn't actually create a job.
+			// jobId = "embedded-pipeline-ref-" + nodeId
+			continue
 		}
 
 		jobIds = append(jobIds, jobId)
