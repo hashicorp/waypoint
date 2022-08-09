@@ -157,16 +157,14 @@ func TestWaypointDockerMultiAppUpAfterUpgrade(t *testing.T) {
 
 func TestWaypointDockerDestroy(t *testing.T) {
 	wp := NewBinary(t, wpBinary, dockerTestDir)
-	stdout, stderr, err := wp.RunRaw("destroy", "-auto-approve", "-vvv")
+	stdout, stderr, err := wp.RunRaw("destroy", "-auto-approve")
 
 	if err != nil {
 		t.Errorf("unexpected error destroying waypoint project: %s", err)
 	}
 
 	if stderr != "" {
-		// t.Errorf("unexpected stderr output destroying waypoint project: %v", stderr)
-		fmt.Println("got a stderr")
-		fmt.Println(stderr)
+		t.Errorf("unexpected stderr output destroying waypoint project: %v", stderr)
 	}
 
 	if !strings.Contains(stdout, "Destroy successful!") {
@@ -176,16 +174,14 @@ func TestWaypointDockerDestroy(t *testing.T) {
 
 func TestWaypointDockerDestroyMultiApp(t *testing.T) {
 	wp := NewBinary(t, wpBinary, dockerMultiAppTestDir)
-	stdout, stderr, err := wp.RunRaw("destroy", "-auto-approve", "-vvv")
+	stdout, stderr, err := wp.RunRaw("destroy", "-auto-approve")
 
 	if err != nil {
 		t.Errorf("unexpected error destroying waypoint project: %s", err)
 	}
 
 	if stderr != "" {
-		// t.Errorf("unexpected stderr output destroying waypoint project: %v", stderr)
-		fmt.Println("got a stderr")
-		fmt.Println(stderr)
+		t.Errorf("unexpected stderr output destroying waypoint project: %v", stderr)
 	}
 
 	if !strings.Contains(stdout, "Destroy successful!") {
