@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/hashicorp/waypoint/internal/server/execclient"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -194,7 +195,7 @@ func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_Releas
 	return result.Release, nil
 }
 
-func (a *App) Logs(ctx context.Context) (pb.Waypoint_GetLogStreamClient, error) {
+func (a *App) Logs(ctx context.Context, deployment string) (pb.Waypoint_GetLogStreamClient, error) {
 	log := a.project.logger.Named("logs")
 
 	// Depending on which deployments are at play, and which plugins those deployments
@@ -205,17 +206,44 @@ func (a *App) Logs(ctx context.Context) (pb.Waypoint_GetLogStreamClient, error) 
 	if err != nil {
 		return nil, err
 	}
+	var logStreamRequest *pb.GetLogStreamRequest
+
+	if deployment != "" {
+		i, err := strconv.ParseUint(deployment, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		deploy, err := a.project.client.GetDeployment(ctx, &pb.GetDeploymentRequest{
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Sequence{
+					Sequence: &pb.Ref_OperationSeq{
+						Application: a.Ref(),
+						Number:      i,
+					},
+				},
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		logStreamRequest = &pb.GetLogStreamRequest{
+			Scope: &pb.GetLogStreamRequest_DeploymentId{
+				DeploymentId: deploy.Id,
+			},
+		}
+	} else {
+		logStreamRequest = &pb.GetLogStreamRequest{
+			Scope: &pb.GetLogStreamRequest_Application_{
+				Application: &pb.GetLogStreamRequest_Application{
+					Application: a.Ref(),
+					Workspace:   a.project.WorkspaceRef(),
+				},
+			}}
+	}
 
 	// First we attempt to query the server for logs for this deployment.
 	log.Info("requesting log stream")
-	client, err := a.project.client.GetLogStream(ctx, &pb.GetLogStreamRequest{
-		Scope: &pb.GetLogStreamRequest_Application_{
-			Application: &pb.GetLogStreamRequest_Application{
-				Application: a.Ref(),
-				Workspace:   a.project.WorkspaceRef(),
-			},
-		},
-	})
+	client, err := a.project.client.GetLogStream(ctx, logStreamRequest)
 	if err != nil {
 		return nil, err
 	}
