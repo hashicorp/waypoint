@@ -52,7 +52,7 @@ type Interface interface {
 	RunnerById(string, memdb.WatchSet) (*pb.Runner, error)
 	RunnerList() ([]*pb.Runner, error)
 
-	OnDemandRunnerConfigPut(*pb.OnDemandRunnerConfig) error
+	OnDemandRunnerConfigPut(*pb.OnDemandRunnerConfig) (*pb.OnDemandRunnerConfig, error)
 	OnDemandRunnerConfigGet(*pb.Ref_OnDemandRunnerConfig) (*pb.OnDemandRunnerConfig, error)
 	OnDemandRunnerConfigDelete(*pb.Ref_OnDemandRunnerConfig) error
 	OnDemandRunnerConfigList() ([]*pb.OnDemandRunnerConfig, error)
