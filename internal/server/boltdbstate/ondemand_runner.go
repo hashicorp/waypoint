@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-memdb"
+	"github.com/pkg/errors"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,7 +24,7 @@ func init() {
 // OnDemandRunnerConfigPut creates or updates the given ondemandRunner.
 //
 // Application changes will be ignored, you must use the Application APIs.
-func (s *State) OnDemandRunnerConfigPut(o *pb.OnDemandRunnerConfig) error {
+func (s *State) OnDemandRunnerConfigPut(o *pb.OnDemandRunnerConfig) (*pb.OnDemandRunnerConfig, error) {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -39,15 +40,26 @@ func (s *State) OnDemandRunnerConfigPut(o *pb.OnDemandRunnerConfig) error {
 				return err
 			}
 			o.Id = id
+
+			// If no name was given, set it to the id.
+			if o.Name == "" {
+				o.Name = o.Id
+			}
 		}
 
 		return s.ondemandRunnerPut(dbTxn, memTxn, o)
 	})
 	if err == nil {
 		memTxn.Commit()
+	} else {
+		return nil, err
 	}
 
-	return err
+	ret, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{Id: o.Id, Name: o.Name})
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed getting on-demand runner config after setting it.")
+	}
+	return ret, nil
 }
 
 // OnDemandRunnerConfigGet gets a ondemandRunner by reference.
@@ -134,11 +146,6 @@ func (s *State) ondemandRunnerPut(
 		return status.Errorf(codes.FailedPrecondition,
 			"ondemandRunner 'waypoint_hcl' exceeds maximum size (5MB)",
 		)
-	}
-
-	// If no name was given, set it to the id.
-	if value.Name == "" {
-		value.Name = value.Id
 	}
 
 	id := s.onDemandRunnerId(value)

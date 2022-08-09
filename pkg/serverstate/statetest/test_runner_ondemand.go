@@ -34,6 +34,28 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 		require.Equal(codes.NotFound, status.Code(err))
 	})
 
+	t.Run("Set with no name", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Set
+		rec := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
+			OciUrl:               "h/w:s",
+			EnvironmentVariables: map[string]string{"CONTAINER": "DOCKER", "FOO": "BAR"},
+			TargetRunner:         &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{Any: &pb.Ref_RunnerAny{}}},
+			PluginConfig:         []byte(`{"foo":"bar"}`),
+			ConfigFormat:         pb.Hcl_JSON,
+			Default:              true,
+		})
+
+		result, err := s.OnDemandRunnerConfigPut(rec)
+		require.NoError(err)
+		require.NotEmpty(result.Id)
+		require.NotEmpty(result.Name)
+	})
+
 	t.Run("Put and Get", func(t *testing.T) {
 		require := require.New(t)
 
@@ -51,7 +73,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 			Default:              true,
 		})
 
-		err := s.OnDemandRunnerConfigPut(rec)
+		_, err := s.OnDemandRunnerConfigPut(rec)
 		require.NoError(err)
 
 		// Get exact
@@ -108,7 +130,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 		// Set
 		rec := serverptypes.TestOnDemandRunnerConfig(t, serverptypes.TestOnDemandRunnerConfig(t, nil))
 
-		err := s.OnDemandRunnerConfigPut(rec)
+		_, err := s.OnDemandRunnerConfigPut(rec)
 		require.NoError(err)
 
 		// Read
@@ -165,7 +187,7 @@ func TestOnDemandRunnerConfig_LabelTargeting(t *testing.T, factory Factory, rest
 		},
 	})
 
-	err := s.OnDemandRunnerConfigPut(rec)
+	_, err := s.OnDemandRunnerConfigPut(rec)
 	require.NoError(err)
 
 	resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{

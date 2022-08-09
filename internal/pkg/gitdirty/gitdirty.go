@@ -12,8 +12,10 @@ import (
 )
 
 var (
-	githubStyleSshRemoteRegexp  *regexp.Regexp
-	githubStyleHttpRemoteRegexp *regexp.Regexp
+	githubStyleSshRemoteRegexp     *regexp.Regexp
+	githubStyleHttpRemoteRegexp    *regexp.Regexp
+	githubStyleSshRemoteNoAtRegexp *regexp.Regexp
+	valid1123HostnameRegex         *regexp.Regexp
 )
 
 func init() {
@@ -21,6 +23,14 @@ func init() {
 	// Works for github, gitlab, sourcehut, and other remotes using this style.
 	githubStyleSshRemoteRegexp = regexp.MustCompile(`git@(.*?\..*?):(.*)`)            // Example: git@git.test:testorg/testrepo.git
 	githubStyleHttpRemoteRegexp = regexp.MustCompile(`http[s]?:\/\/(.*?\..*?)\/(.*)`) // Example: https://git.test/testorg/testrepo.git
+	// Regex to match if the url is ssh, but w/o the git@ in the beginning
+	// To compile, currently ^(?!git@) is not supported (basically not git@ at the beginning)
+	// And will panic, so this should be used after confirming the string is not of type
+	// githubStyleSshRemoteRegexp with the git@ in the beginning, but this is needed for
+	// Checking the url to properly do the ReplaceAllString to convert it from ssh -> https.
+	githubStyleSshRemoteNoAtRegexp = regexp.MustCompile(`(.*?\..*?):(.*)`) // Example: git.test:testorg/testrepo.git
+	// Regex to validate hostname via RFC 1123 (https://www.rfc-editor.org/rfc/rfc1123) followed by a colon
+	valid1123HostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):`)
 }
 
 // GitInstalled checks if the command-line tool `git` is installed
@@ -161,7 +171,21 @@ func remoteHasBranch(log hclog.Logger, repoPath string, branch string) (bool, er
 }
 
 func isSSHRemote(remote string) bool {
-	return githubStyleSshRemoteRegexp.MatchString(remote)
+	// Check if remote url is of type ssh via regex (has git@ at the beginning)
+	if githubStyleSshRemoteRegexp.MatchString(remote) {
+		return true
+	}
+	// This is needed if the remote url is ssh, but the url has no git@
+	// Example input: git.test:testorg/testrepo.git
+	// Check if it is a valid host name via regex
+	if valid1123HostnameRegex.MatchString(remote) {
+		// Check if remote is not https:// because it can get through the valid1123HostnameRegex,
+		// and we return true if it is not of type http, because inherently we only want to return true if it is ssh
+		if !githubStyleHttpRemoteRegexp.MatchString(remote) {
+			return true
+		}
+	}
+	return false
 }
 
 func isHTTPSRemote(remote string) bool {
@@ -188,22 +212,35 @@ func remoteConvertHTTPStoSSH(httpsRemote string) (string, error) {
 // Based on regex, and may not match every possible style of remote, but tested on github and gitlab.
 //    Example input: git@git.test:testorg/testrepo.git
 //           output: https://git.test/testorg/testrepo.git
+//    Example input: git.test:testorg/testrepo.git
+//           output: https://git.test/testorg/testrepo.git
 func remoteConvertSSHtoHTTPS(sshRemote string) (string, error) {
 	if !isSSHRemote(sshRemote) {
 		return "", fmt.Errorf("%s is not an ssh remote", sshRemote)
 	}
 
-	httpsRemote := githubStyleSshRemoteRegexp.ReplaceAllString(sshRemote, "https://$1/$2")
+	var httpsRemote string
+	// Check if it has git@
+	if githubStyleSshRemoteRegexp.MatchString(sshRemote) {
+		httpsRemote = githubStyleSshRemoteRegexp.ReplaceAllString(sshRemote, "https://$1/$2")
+	} else {
+		// Doesn't have the git@ at the front of the url
+		httpsRemote = githubStyleSshRemoteNoAtRegexp.ReplaceAllString(sshRemote, "https://$1/$2")
+	}
+
 	if !isHTTPSRemote(httpsRemote) {
 		return "", fmt.Errorf("failed to convert ssh remote %q to https remote: got %q, which is not valid", sshRemote, httpsRemote)
 	}
 	return httpsRemote, nil
 }
 
-// nomralizeRemote returns a normalized form of the remote url.
-// The .git extension at the end of a remote url is optional for github
+// normalizeRemote returns a normalized form of the remote url.
+// The .git extension at the end of a remote url is optional for github.
+// Remote urls of type ssh may not start with git@, so this is trimmed.
 func normalizeRemote(remoteUrl string) string {
-	return strings.TrimRight(remoteUrl, ".git")
+	// Trim the git@ bc you can still have a remote url of type ssh w/o the git@
+	trimmedRemoteUrl := strings.TrimLeft(remoteUrl, "git@")
+	return strings.TrimRight(trimmedRemoteUrl, ".git")
 }
 
 // getRemoteName queries the repo at GitDirty.path for all remotes, and then
@@ -211,7 +248,7 @@ func normalizeRemote(remoteUrl string) string {
 // no remote url is found.
 // It will also attempt to match against different protocols - if an https protocol is
 // specified, if it can't find an exact match, it will look for an ssh-style match (and vice-versa)
-func getRemoteName(log hclog.Logger, repoPath string, remoteUrl string) (name string, err error) {
+func getRemoteName(log hclog.Logger, repoPath string, wpRemoteUrl string) (name string, err error) {
 	repo, err := git.PlainOpenWithOptions(repoPath, &git.PlainOpenOptions{
 		DetectDotGit: true,
 	})
@@ -219,34 +256,34 @@ func getRemoteName(log hclog.Logger, repoPath string, remoteUrl string) (name st
 		return "", errors.Wrapf(err, "failed to open git repo at path %q", repoPath)
 	}
 
-	remotes, err := repo.Remotes()
+	localRepoRemotes, err := repo.Remotes()
 	if err != nil {
 		return "", errors.Wrap(err, "failed to list remotes")
 	}
 
-	if len(remotes) == 0 {
+	if len(localRepoRemotes) == 0 {
 		return "", fmt.Errorf("no remotes found for repo at path %q", repoPath)
 	}
 
 	var exactMatchRemoteName string
-	for _, remote := range remotes {
-		remoteConfig := remote.Config()
-		if remoteConfig == nil {
+	for _, localRepoRemote := range localRepoRemotes {
+		localRepoRemoteConfig := localRepoRemote.Config()
+		if localRepoRemoteConfig == nil {
 			continue
 		}
-		if len(remoteConfig.Fetch) == 0 {
+		if len(localRepoRemoteConfig.Fetch) == 0 {
 			// Must be able to fetch from the remote. This could happen if a remote is set up as a push mirror.
 			continue
 		}
-		for _, thisRemoteUrl := range remoteConfig.URLs {
-			if normalizeRemote(thisRemoteUrl) == normalizeRemote(remoteUrl) {
+		for _, localRemoteUrl := range localRepoRemoteConfig.URLs {
+			if normalizeRemote(localRemoteUrl) == normalizeRemote(wpRemoteUrl) {
 				if exactMatchRemoteName != "" {
-					// NOTE(izaak): I can't think of a dev setup where you'd get multiple remotes with the same url.
+					// NOTE(izaak): I can't think of a dev setup where you'd get multiple localRepoRemotes with the same url.
 					// If it does though, I think it's likely that any remote will work for us for diffing purposes,
 					// wo we'll warn and continue.
-					log.Warn("Found multiple remotes with the target url. Will choose remote-1.", "url", thisRemoteUrl, "remote-1", exactMatchRemoteName, "remote-2", remoteConfig.Name)
+					log.Warn("Found multiple remotes with the target url. Will choose remote-1.", "url", localRemoteUrl, "remote-1", exactMatchRemoteName, "remote-2", localRepoRemoteConfig.Name)
 				} else {
-					exactMatchRemoteName = remoteConfig.Name
+					exactMatchRemoteName = localRepoRemoteConfig.Name
 				}
 			}
 		}
@@ -259,38 +296,38 @@ func getRemoteName(log hclog.Logger, repoPath string, remoteUrl string) (name st
 	// Try to find an alternate match
 	var alternateProtocolRemoteName string
 
-	for _, remote := range remotes {
-		remoteConfig := remote.Config()
-		if remoteConfig == nil {
+	for _, localRepoRemote := range localRepoRemotes {
+		localRepoRemoteConfig := localRepoRemote.Config()
+		if localRepoRemoteConfig == nil {
 			continue
 		}
-		if len(remoteConfig.Fetch) == 0 {
+		if len(localRepoRemoteConfig.Fetch) == 0 {
 			// Must be able to fetch from the remote. This could happen if a remote is set up as a push mirror.
 			continue
 		}
-		for _, thisRemoteUrl := range remoteConfig.URLs {
+		for _, localRemoteUrl := range localRepoRemoteConfig.URLs {
 			var convertedUrl string
-			if isHTTPSRemote(remoteUrl) && isSSHRemote(thisRemoteUrl) {
-				convertedUrl, err = remoteConvertHTTPStoSSH(remoteUrl)
+			if isHTTPSRemote(wpRemoteUrl) && isSSHRemote(localRemoteUrl) {
+				convertedUrl, err = remoteConvertHTTPStoSSH(wpRemoteUrl)
 				if err != nil {
-					log.Debug("failed to convert https remote to ssh remote", "httpsRemote", remoteUrl, "error", err)
+					log.Debug("failed to convert https remote to ssh remote", "httpsRemote", wpRemoteUrl, "error", err)
 				}
 			}
-			if isSSHRemote(remoteUrl) && isHTTPSRemote(thisRemoteUrl) {
-				convertedUrl, err = remoteConvertSSHtoHTTPS(remoteUrl)
+			if isSSHRemote(wpRemoteUrl) && isHTTPSRemote(localRemoteUrl) {
+				convertedUrl, err = remoteConvertSSHtoHTTPS(wpRemoteUrl)
 				if err != nil {
-					log.Debug("failed to convert ssh remote to https remote", "sshRemote", remoteUrl, "error", err)
+					log.Debug("failed to convert ssh remote to https remote", "sshRemote", wpRemoteUrl, "error", err)
 				}
 			}
 
-			if convertedUrl != "" && normalizeRemote(convertedUrl) == normalizeRemote(thisRemoteUrl) {
+			if convertedUrl != "" && normalizeRemote(convertedUrl) == normalizeRemote(localRemoteUrl) {
 				if alternateProtocolRemoteName != "" {
-					// NOTE(izaak): I can't think of a dev setup where you'd get multiple remotes with the same url.
+					// NOTE(izaak): I can't think of a dev setup where you'd get multiple localRepoRemotes with the same url.
 					// If it does though, I think it's likely that any remote will work for us for diffing purposes,
 					// wo we'll warn and continue.
-					log.Warn("Found multiple remotes that match the target URL, albeit with a different protocol. Will choose remote-1.", "url", remoteUrl, "remote-1", exactMatchRemoteName, "remote-2", remoteConfig.Name)
+					log.Warn("Found multiple remotes that match the target URL, albeit with a different protocol. Will choose remote-1.", "url", wpRemoteUrl, "remote-1", exactMatchRemoteName, "remote-2", localRepoRemoteConfig.Name)
 				} else {
-					alternateProtocolRemoteName = remoteConfig.Name
+					alternateProtocolRemoteName = localRepoRemoteConfig.Name
 				}
 			}
 		}
@@ -298,13 +335,13 @@ func getRemoteName(log hclog.Logger, repoPath string, remoteUrl string) (name st
 
 	if alternateProtocolRemoteName != "" {
 		log.Debug("found remote with an alternate protocol that matches remote url",
-			"url", remoteUrl,
+			"url", wpRemoteUrl,
 			"matching remote name", alternateProtocolRemoteName,
 		)
 		return alternateProtocolRemoteName, nil
 	}
 
-	return "", fmt.Errorf("no remote with url matching %q found", remoteUrl)
+	return "", fmt.Errorf("no remote with url matching %q found", wpRemoteUrl)
 }
 
 // remoteHasDiff compares the local repo to the specified branch on the configured remote.
