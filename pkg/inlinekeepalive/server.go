@@ -114,7 +114,10 @@ func KeepaliveServerStreamInterceptor(sendInterval time.Duration) grpc.StreamSer
 
 		// Only send keepalives if this is a server stream - not allowed otherwise
 		if info.IsServerStream && isClientCompatible(ctx) {
-			go ServeKeepalives(ctx, log, ss, sendInterval, sendMx)
+			go func() {
+				ServeKeepalives(ctx, log, ss, sendInterval, sendMx)
+				log.Trace("stopped sending inline keepalives")
+			}()
 		}
 
 		return handler(srv, &KeepaliveServerStream{

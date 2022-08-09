@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -71,27 +73,6 @@ func (k *KeepaliveClientStream) RecvMsg(m interface{}) error {
 	}
 }
 
-// isServerCompatible determines if a server is able to receive inline keepalives
-// by examining the features it advertises on GetVersionInfo. Triggers an RPC call.
-func isServerCompatible(ctx context.Context, cc *grpc.ClientConn) (bool, error) {
-	client := pb.NewWaypointClient(cc)
-
-	versionInfo, err := client.GetVersionInfo(ctx, &emptypb.Empty{})
-	if err != nil {
-		return false, errors.Wrapf(err, "failed getting version info to determine if server is inline-keepalive compatible")
-	}
-
-	if versionInfo.ServerFeatures != nil {
-		for _, feature := range versionInfo.ServerFeatures.Features {
-			if feature == pb.ServerFeatures_FEATURE_INLINE_KEEPALIVES {
-				return true, nil
-			}
-		}
-	}
-
-	return false, nil
-}
-
 // KeepaliveClientStreamInterceptor returns a stream interceptor
 // that sends inline keepalive messages on client streams (if the server
 // is compatible), and intercepts inline keepalives from the server.
@@ -127,17 +108,37 @@ func KeepaliveClientStreamInterceptor(sendInterval time.Duration) grpc.StreamCli
 			if !desc.ClientStreams {
 				return
 			}
-			serverCompatible, err := isServerCompatible(ctx, cc)
+
+			client := pb.NewWaypointClient(cc)
+
+			versionInfo, err := client.GetVersionInfo(ctx, &emptypb.Empty{})
 			if err != nil {
-				log.Warn("Failed to determine if server is compatible with inline keepalives - will not send them.", "err", err)
+				if status.Code(err) == codes.Canceled {
+					log.Trace("context canceled while determining if server is compatible with inline keepalives - will not send.")
+					return
+				}
+				log.Warn("failed getting version info to determine if server is inline-keepalive compatible - will not send them", "err", err)
 				return
 			}
 
-			// Only send keepalives if this is a client stream - not allowed otherwise.
-			if serverCompatible {
-				// Send keepalives for as long as the handler has the connection open.
-				ServeKeepalives(ctx, log, handler, sendInterval, sendMx)
+			isCompatible := false
+			if versionInfo.ServerFeatures != nil {
+				for _, feature := range versionInfo.ServerFeatures.Features {
+					if feature == pb.ServerFeatures_FEATURE_INLINE_KEEPALIVES {
+						isCompatible = true
+						break
+					}
+				}
 			}
+
+			if !isCompatible {
+				log.Trace("server not compatible with inline keepalives - will not send them")
+				return
+			}
+
+			// Send keepalives for as long as the handler has the connection open.
+			ServeKeepalives(ctx, log, handler, sendInterval, sendMx)
+			log.Trace("stopped sending inline keepalives")
 		}()
 
 		return &KeepaliveClientStream{
