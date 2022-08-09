@@ -7,28 +7,29 @@ import (
 )
 
 var (
-	kubernetesTestDir = fmt.Sprintf("%s/kubernetes/nodejs", examplesRootDir)
+	// this one uses python instead of node just for kicks
+	ecsTestDir = fmt.Sprintf("%s/aws/aws-ecs/python", examplesRootDir)
 )
 
-func TestWaypointKubernetesInstall(t *testing.T) {
-	wp := NewBinary(t, wpBinary, kubernetesTestDir)
-	stdout, stderr, err := wp.RunRaw("install", "-platform=kubernetes", "-accept-tos", fmt.Sprintf("-k8s-server-image=%s", wpServerImage), fmt.Sprintf("-k8s-odr-image=%s", wpOdrImage))
+func TestWaypointEcsInstall(t *testing.T) {
+	wp := NewBinary(t, wpBinary, ecsTestDir)
+	stdout, stderr, err := wp.RunRaw("install", "-platform=ecs", "-accept-tos", fmt.Sprintf("-ecs-server-image=%s", wpServerImage), fmt.Sprintf("-ecs-odr-image=%s", wpOdrImage))
 
 	if err != nil {
-		t.Errorf("unexpected error installing server to kubernetes: %s", err)
+		t.Errorf("unexpected error installing server to ecs: %s", err)
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output installing server to kubernetes: %s", err)
+		t.Errorf("unexpected stderr output installing server to ecs: %s", err)
 	}
 
 	if !strings.Contains(stdout, "Waypoint server successfully installed and configured!") {
-		t.Errorf("No success message detected after kubernetes server install:\n%s", stdout)
+		t.Errorf("No success message detected after ecs server install:\n%s", stdout)
 	}
 }
 
-func TestWaypointKubernetesUp(t *testing.T) {
-	wp := NewBinary(t, wpBinary, kubernetesTestDir)
+func TestWaypointEcsUp(t *testing.T) {
+	wp := NewBinary(t, wpBinary, ecsTestDir)
 	stdout, stderr, err := wp.RunRaw("init")
 
 	if err != nil {
@@ -58,25 +59,25 @@ func TestWaypointKubernetesUp(t *testing.T) {
 	}
 }
 
-func TestWaypointKubernetesUpgrade(t *testing.T) {
-	wp := NewBinary(t, wpBinary, kubernetesTestDir)
-	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=kubernetes", "-auto-approve", fmt.Sprintf("-k8s-server-image=%s", wpServerImageUpgrade), fmt.Sprintf("-k8s-odr-image=%s", wpOdrImageUpgrade), "-snapshot=false")
+func TestWaypointEcsUpgrade(t *testing.T) {
+	wp := NewBinary(t, wpBinary, ecsTestDir)
+	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=ecs", "-auto-approve", fmt.Sprintf("-ecs-server-image=%s", wpServerImageUpgrade), fmt.Sprintf("-ecs-odr-image=%s", wpOdrImageUpgrade), "-snapshot=false")
 
 	if err != nil {
-		t.Errorf("unexpected error upgrading server in kubernetes: %s", err)
+		t.Errorf("unexpected error upgrading server in ecs: %s", err)
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output upgrading server in kubernetes: %s", err)
+		t.Errorf("unexpected stderr output upgrading server in ecs: %s", err)
 	}
 
 	if !strings.Contains(stdout, "Waypoint has finished upgrading the server") {
-		t.Errorf("No success message detected after kubernetes server install:\n%s", stdout)
+		t.Errorf("No success message detected after ecs server install:\n%s", stdout)
 	}
 }
 
-func TestWaypointKubernetesUpAfterUpgrade(t *testing.T) {
-	wp := NewBinary(t, wpBinary, kubernetesTestDir)
+func TestWaypointEcsUpAfterUpgrade(t *testing.T) {
+	wp := NewBinary(t, wpBinary, ecsTestDir)
 	stdout, stderr, err := wp.RunRaw("up")
 
 	if err != nil {
@@ -92,8 +93,8 @@ func TestWaypointKubernetesUpAfterUpgrade(t *testing.T) {
 	}
 }
 
-func TestWaypointKubernetesDestroy(t *testing.T) {
-	wp := NewBinary(t, wpBinary, kubernetesTestDir)
+func TestWaypointEcsDestroy(t *testing.T) {
+	wp := NewBinary(t, wpBinary, ecsTestDir)
 	stdout, stderr, err := wp.RunRaw("destroy")
 
 	if err != nil {
@@ -109,9 +110,9 @@ func TestWaypointKubernetesDestroy(t *testing.T) {
 	}
 }
 
-func TestWaypointKubernetesUninstall(t *testing.T) {
-	wp := NewBinary(t, wpBinary, kubernetesTestDir)
-	stdout, stderr, err := wp.RunRaw("server", "uninstall", "-platform=kubernetes", "-auto-approve", "-snapshot=false")
+func TestWaypointEcsUninstall(t *testing.T) {
+	wp := NewBinary(t, wpBinary, ecsTestDir)
+	stdout, stderr, err := wp.RunRaw("server", "uninstall", "-platform=ecs", "-auto-approve", "-snapshot=false")
 
 	if err != nil {
 		t.Errorf("unexpected error uninstalling waypoint server: %s", err)

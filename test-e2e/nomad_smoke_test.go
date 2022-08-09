@@ -12,7 +12,7 @@ var (
 
 func TestWaypointNomadInstall(t *testing.T) {
 	wp := NewBinary(t, wpBinary, nomadTestDir)
-	stdout, stderr, err := wp.RunRaw("install", "-platform=nomad", "-accept-tos", fmt.Sprintf("-nomad-server-image=%s", wpServerImage))
+	stdout, stderr, err := wp.RunRaw("install", "-platform=nomad", "-accept-tos", fmt.Sprintf("-nomad-server-image=%s", wpServerImage), fmt.Sprintf("-nomad-odr-image=%s", wpOdrImage))
 
 	if err != nil {
 		t.Errorf("unexpected error installing server to nomad: %s", err)
@@ -60,7 +60,7 @@ func TestWaypointNomadUp(t *testing.T) {
 
 func TestWaypointNomadUpgrade(t *testing.T) {
 	wp := NewBinary(t, wpBinary, nomadTestDir)
-	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=nomad", "-auto-approve", fmt.Sprintf("-nomad-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
+	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=nomad", "-auto-approve", fmt.Sprintf("-nomad-server-image=%s", wpServerImageUpgrade), fmt.Sprintf("-nomad-odr-image=%s", wpOdrImageUpgrade), "-snapshot=false")
 
 	if err != nil {
 		t.Errorf("unexpected error upgrading server in nomad: %s", err)
