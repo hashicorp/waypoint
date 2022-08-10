@@ -602,7 +602,7 @@ workflows:
             branches:
               ignore:
                 - main
-      - check-json docs:
+      - check-json-docs:
           requires:
             - generate-json-docs
           filters:
