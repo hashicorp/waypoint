@@ -172,6 +172,23 @@ func (op *appOperation) Get(s *State, ref *pb.Ref_Operation) (interface{}, error
 	return result, nil
 }
 
+// Delete deletes an operation record by reference
+func (op *appOperation) Delete(s *State, ref *pb.Ref_Operation) error {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	target, ok := ref.Target.(*pb.Ref_Operation_Id)
+	if !ok {
+		return status.Errorf(codes.FailedPrecondition,
+			"unknown operation reference type: %T", ref.Target)
+	}
+	id := target.Id
+
+	return s.db.Update(func(dbTxn *bolt.Tx) error {
+		return op.dbDelete(dbTxn, []byte(id))
+	})
+}
+
 func (op *appOperation) getIdForSeq(
 	s *State,
 	dbTxn *bolt.Tx,
@@ -452,6 +469,15 @@ func (op *appOperation) dbGet(
 	}
 
 	return nil
+}
+
+// dbDelete deletes the value from the database
+func (op *appOperation) dbDelete(
+	dbTxn *bolt.Tx,
+	id []byte,
+) error {
+	b := dbTxn.Bucket(op.Bucket)
+	return b.Delete(id)
 }
 
 // dbPut wites the value to the database and also sets up any index records.
