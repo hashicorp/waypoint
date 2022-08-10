@@ -36,6 +36,11 @@ type Service struct {
 	// with EncodeId), and returns only the waypoint-relevant ID.
 	decodeId func(encodedId string) (id string, err error)
 
+	// processToken allows an implementation the ability to alter a to be
+	// generated token before it's generated. This can be used to alter semantics
+	// about the token, such as adding labels, metadata, or additional info
+	processToken func(ctx context.Context, token *pb.Token) (*pb.Token, error)
+
 	logStreamProvider logstream.Provider
 
 	// urlConfig is not nil if the URL service is enabled. This is guaranteed
@@ -98,6 +103,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	s.encodeId = cfg.idEncoder
 	s.decodeId = cfg.idDecoder
 	s.features = cfg.features
+	s.processToken = cfg.processToken
 
 	if !cfg.oidcDisabled {
 		s.oidcCache = wpoidc.NewProviderCache()
@@ -256,6 +262,8 @@ type config struct {
 	idEncoder func(ctx context.Context, id string) (encodedId string, err error)
 	idDecoder func(encodedId string) (id string, err error)
 
+	processToken func(ctx context.Context, token *pb.Token) (*pb.Token, error)
+
 	serverConfig         *serverconfig.Config
 	log                  hclog.Logger
 	superuser            bool
@@ -399,6 +407,16 @@ func WithServerConfigSkipInit() Option {
 func WithFeatures(features ...pb.ServerFeaturesFeature) Option {
 	return func(s *Service, cfg *config) error {
 		cfg.features = features
+		return nil
+	}
+}
+
+// WithTokenProcessor installs a function that will be called just before
+// a new token is encoded. This allows customization of that Token to include
+// additional information.
+func WithTokenProcessor(fn func(context.Context, *pb.Token) (*pb.Token, error)) Option {
+	return func(s *Service, cfg *config) error {
+		cfg.processToken = fn
 		return nil
 	}
 }
