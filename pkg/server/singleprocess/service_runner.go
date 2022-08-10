@@ -623,6 +623,10 @@ func (s *Service) RunnerJobStream(
 			// If this fails, we just log, there is nothing more we can do.
 			log.Warn("job ack failed", "outer_error", err, "error", ackerr)
 
+			// Check if job is nil, so not to panic later on
+			if job == nil {
+				return hcerr.Externalize(log, ackerr, "job is nil, db might not be open")
+			}
 			// If we had no outer error, set the ackerr so that we exit. If
 			// we do have an outer error, then the ack error only shows up in
 			// the log.
@@ -644,7 +648,7 @@ func (s *Service) RunnerJobStream(
 	// If we have an error, return that. We also return if we didn't ack for
 	// any reason. This error can be set at any point since job assignment.
 	if err != nil || !ack {
-		return hcerr.Externalize(log, err, "failed to ack the job or the job was cancelled", "id", runnerId)
+		return hcerr.Externalize(log, err, "failed to ack the job or the job was cancelled", "id", runnerId, "job", job.Id)
 	}
 
 	var logStreamWriter logstream.Writer
