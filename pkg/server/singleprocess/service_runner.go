@@ -647,8 +647,12 @@ func (s *Service) RunnerJobStream(
 
 	// If we have an error, return that. We also return if we didn't ack for
 	// any reason. This error can be set at any point since job assignment.
-	if err != nil || !ack {
+	if err != nil {
 		return hcerr.Externalize(log, err, "failed to ack the job or the job was cancelled", "id", runnerId, "job", job.Id)
+	}
+	if !ack {
+		// If runners don't ack the job, this means close the stream
+		return nil
 	}
 
 	var logStreamWriter logstream.Writer
