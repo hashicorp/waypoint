@@ -42,7 +42,7 @@ func (s *Service) GetRunner(
 ) (*pb.Runner, error) {
 	result, err := s.state(ctx).RunnerById(req.RunnerId, nil)
 	if err != nil {
-		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "unknown runner connected", "id", req.RunnerId)
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get runner", "id", req.RunnerId)
 	}
 	return result, err
 }
@@ -102,7 +102,7 @@ func (s *Service) AdoptRunner(
 		}
 	}
 
-	return &empty.Empty{}, err
+	return &empty.Empty{}, nil
 }
 
 func (s *Service) ForgetRunner(
@@ -116,7 +116,7 @@ func (s *Service) ForgetRunner(
 	if err = s.state(ctx).RunnerDelete(req.RunnerId); err != nil {
 		return &empty.Empty{}, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to delete runner", "id", req.RunnerId)
 	}
-	return &empty.Empty{}, err
+	return &empty.Empty{}, nil
 }
 
 func (s *Service) RunnerToken(
@@ -190,7 +190,7 @@ func (s *Service) RunnerToken(
 	log = log.With("runner_id", record.Id)
 	log.Trace("registering runner")
 	if err := s.state(ctx).RunnerCreate(record); err != nil {
-		return nil, hcerr.Externalize(log, err, "failed to create runner", "id", req.Runner.Id)
+		return nil, hcerr.Externalize(log, err, "failed to create runner", "id", record.Id)
 	}
 
 	// When we exit, mark the runner as offline. This will delete the record
@@ -228,7 +228,7 @@ func (s *Service) RunnerToken(
 		ws := memdb.NewWatchSet()
 		r, err := s.state(ctx).RunnerById(record.Id, ws)
 		if err != nil {
-			return nil, hcerr.Externalize(log, err, "unknown runner connected", "id", record.Id)
+			return nil, hcerr.Externalize(log, err, "failed to get runner while waiting for adoption state to change", "id", record.Id)
 		}
 
 		switch r.AdoptionState {
@@ -325,7 +325,7 @@ func (s *Service) RunnerConfig(
 	// do not allow it to continue, even with a preadoption token.
 	r, err := s.state(ctx).RunnerById(record.Id, nil)
 	if err != nil {
-		return hcerr.Externalize(log, err, "unknown runner connected", "id", record.Id)
+		return hcerr.Externalize(log, err, "failed to get newly-registered runner", "id", record.Id)
 	}
 	if r.AdoptionState == pb.Runner_REJECTED {
 		return status.Errorf(codes.PermissionDenied,
@@ -389,7 +389,7 @@ func (s *Service) RunnerConfig(
 
 		newExpireTime := timestamppb.New(time.Now().Add(dur))
 		if err := s.state(ctx).JobUpdateExpiry(job.Id, newExpireTime); err != nil {
-			return hcerr.Externalize(log, err, "failed to update job expiry time after runner accepted job", "id", record.Id)
+			return hcerr.Externalize(log, err, "failed to update job expiry time after runner accepted job", "id", job.Id)
 		}
 
 		log.Debug("runner is scoped for config",
@@ -491,7 +491,7 @@ func (s *Service) RunnerJobStream(
 
 	runner, err := s.state(ctx).RunnerById(runnerId, nil)
 	if err != nil {
-		return hcerr.Externalize(log, err, "unknown runner connected", "id", runnerId)
+		return hcerr.Externalize(log, err, "failed to get this runner", "id", runnerId)
 	}
 	log.With("runner-id", runner.Id)
 
