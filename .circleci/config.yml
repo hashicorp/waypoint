@@ -145,10 +145,6 @@ jobs:
           at: .
       - run:
           command: git status
-      - run:
-          command: cd ./docs; npm i -g npm@latest; npm install
-      - run:
-          command: cd ./docs; npx --no-install next-hashicorp format
       - run: |
           if ! git diff --exit-code docs/gen > /dev/null; then
             echo "Website directory has unstaged json changes. This is because you have modified doc strings"
@@ -156,7 +152,7 @@ jobs:
             echo
             echo "make gen/website-mdx"
             echo
-            echo "And then validate that the corresponding website pages look acceptable."
+            echo "And then validate that the corresponding json docs look acceptable."
             git status
             exit 1
           fi
