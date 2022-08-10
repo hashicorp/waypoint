@@ -3,6 +3,7 @@ package singleprocess
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"strings"
 	"time"
 
@@ -40,7 +41,7 @@ func (s *Service) UpsertDeployment(
 	}
 
 	if err := s.state(ctx).DeploymentPut(!insert, result); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to insert deployment for app", "app", req.Deployment.Application, "id", req.Deployment.Id)
 	}
 
 	// This requires: (1) URL service is enabled (2) auto hostname isn't
@@ -90,7 +91,7 @@ func (s *Service) ListDeployments(
 		serverstate.ListWithPhysicalState(req.PhysicalState),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to list deployments for app", "app", req.Application.Application, "project", req.Application.Project)
 	}
 
 	for _, dep := range result {
@@ -127,7 +128,7 @@ func (s *Service) GetDeployment(
 
 	d, err := s.state(ctx).DeploymentGet(req.Ref)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get deployment", "target", req.Ref.Target)
 	}
 
 	setDeploymentUrlIfNeeded(d)
