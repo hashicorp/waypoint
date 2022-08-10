@@ -20,7 +20,7 @@ func TestWaypointDockerInstall(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output installing server to docker: %s", err)
+		t.Errorf("unexpected stderr output installing server to docker: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Waypoint server successfully installed and configured!") {
@@ -37,7 +37,7 @@ func TestWaypointDockerUp(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output initializing waypoint project: %s", err)
+		t.Errorf("unexpected stderr output initializing waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Project initialized!") {
@@ -51,7 +51,7 @@ func TestWaypointDockerUp(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output deploying waypoint project: %s", err)
+		t.Errorf("unexpected stderr output deploying waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "The deploy was successful!") {
@@ -68,7 +68,7 @@ func TestWaypointDockerMultiAppUp(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output initializing waypoint project: %s", err)
+		t.Errorf("unexpected stderr output initializing waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Project initialized!") {
@@ -82,7 +82,7 @@ func TestWaypointDockerMultiAppUp(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output deploying waypoint project: %s", err)
+		t.Errorf("unexpected stderr output deploying waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "The deploy was successful!") {
@@ -99,7 +99,7 @@ func TestWaypointDockerUpgrade(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output upgrading server in docker: %s", err)
+		t.Errorf("unexpected stderr output upgrading server in docker: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Waypoint has finished upgrading the server") {
@@ -116,7 +116,7 @@ func TestWaypointDockerUpAfterUpgrade(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output deploying waypoint project: %s", err)
+		t.Errorf("unexpected stderr output deploying waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "The deploy was successful!") {
@@ -133,7 +133,7 @@ func TestWaypointDockerMultiAppUpAfterUpgrade(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output initializing waypoint project: %s", err)
+		t.Errorf("unexpected stderr output initializing waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Project initialized!") {
@@ -147,7 +147,7 @@ func TestWaypointDockerMultiAppUpAfterUpgrade(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output deploying waypoint project: %s", err)
+		t.Errorf("unexpected stderr output deploying waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "The deploy was successful!") {
@@ -157,14 +157,31 @@ func TestWaypointDockerMultiAppUpAfterUpgrade(t *testing.T) {
 
 func TestWaypointDockerDestroy(t *testing.T) {
 	wp := NewBinary(t, wpBinary, dockerTestDir)
-	stdout, stderr, err := wp.RunRaw("destroy")
+	stdout, stderr, err := wp.RunRaw("destroy", "-auto-approve")
 
 	if err != nil {
 		t.Errorf("unexpected error destroying waypoint project: %s", err)
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output destroying waypoint project: %s", err)
+		t.Errorf("unexpected stderr output destroying waypoint project: %v", stderr)
+	}
+
+	if !strings.Contains(stdout, "Destroy successful!") {
+		t.Errorf("No success message detected after destroying project:\n%s", stdout)
+	}
+}
+
+func TestWaypointDockerDestroyMultiApp(t *testing.T) {
+	wp := NewBinary(t, wpBinary, dockerMultiAppTestDir)
+	stdout, stderr, err := wp.RunRaw("destroy", "-auto-approve")
+
+	if err != nil {
+		t.Errorf("unexpected error destroying waypoint project: %s", err)
+	}
+
+	if stderr != "" {
+		t.Errorf("unexpected stderr output destroying waypoint project: %v", stderr)
 	}
 
 	if !strings.Contains(stdout, "Destroy successful!") {
@@ -181,7 +198,7 @@ func TestWaypointDockerUninstall(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output uninstalling waypoint server: %s", err)
+		t.Errorf("unexpected stderr output uninstalling waypoint server: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Waypoint server successfully uninstalled") {
