@@ -128,7 +128,7 @@ func (s *Service) GetDeployment(
 
 	d, err := s.state(ctx).DeploymentGet(req.Ref)
 	if err != nil {
-		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get deployment", "id", req.Ref.Target)
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get deployment", "target", req.Ref.Target)
 	}
 
 	setDeploymentUrlIfNeeded(d)
