@@ -3,6 +3,7 @@ package singleprocess
 import (
 	"context"
 	"fmt"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -240,4 +241,16 @@ func (s *Service) ExpediteStatusReport(
 	return &pb.ExpediteStatusReportResponse{
 		JobId: jobID,
 	}, nil
+}
+
+// DeleteStatusReport returns a StatusReport based on ID
+func (s *Service) DeleteStatusReport(
+	ctx context.Context,
+	req *pb.DeleteStatusReportRequest,
+) (*empty.Empty, error) {
+	if err := serverptypes.ValidateDeleteStatusReportRequest(req); err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, s.state(ctx).StatusReportDelete(req.Ref)
 }

@@ -58,3 +58,10 @@ func (s *State) ReleaseLatest(
 
 	return result.(*pb.Release), nil
 }
+
+// ReleaseDelete deletes the release from the DB
+func (s *State) ReleaseDelete(
+	ref *pb.Ref_Operation,
+) error {
+	return releaseOp.Delete(s, ref)
+}

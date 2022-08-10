@@ -69,6 +69,30 @@ func TestServiceDeployment(t *testing.T, factory Factory) {
 		require.True(ok)
 		require.Equal(codes.NotFound, st.Code())
 	})
+
+	t.Run("create and delete", func(t *testing.T) {
+		require := require.New(t)
+
+		deploy := serverptypes.TestValidDeployment(t, nil)
+
+		// Create, should get an ID back
+		resp, err := client.UpsertDeployment(ctx, &Req{
+			Deployment: deploy,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		result := resp.Deployment
+		require.NotEmpty(result.Id)
+
+		_, err = client.DeleteDeployment(ctx, &pb.DeleteDeploymentRequest{
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: result.Id,
+				},
+			},
+		})
+		require.Nil(err)
+	})
 }
 
 func TestServiceDeployment_GetDeployment(t *testing.T, factory Factory) {

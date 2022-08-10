@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -100,4 +101,16 @@ func (s *Service) GetPushedArtifact(
 	}
 
 	return s.state(ctx).ArtifactGet(req.Ref)
+}
+
+// DeleteArtifact deletes an artifact based on ID
+func (s *Service) DeleteArtifact(
+	ctx context.Context,
+	req *pb.DeletePushedArtifactRequest,
+) (*empty.Empty, error) {
+	if err := serverptypes.ValidateDeletePushedArtifactRequest(req); err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, s.state(ctx).ArtifactDelete(req.Ref)
 }

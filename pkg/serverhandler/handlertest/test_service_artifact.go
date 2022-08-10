@@ -69,6 +69,28 @@ func TestServiceArtifact(t *testing.T, factory Factory) {
 		require.Equal(codes.NotFound, st.Code())
 	})
 
+	t.Run("create and delete", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		resp, err := client.UpsertPushedArtifact(ctx, &Req{
+			Artifact: serverptypes.TestValidArtifact(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		result := resp.Artifact
+		require.NotEmpty(result.Id)
+
+		_, err = client.DeletePushedArtifact(ctx, &pb.DeletePushedArtifactRequest{
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: result.Id,
+				},
+			},
+		})
+		require.Nil(err)
+	})
+
 }
 
 func TestServiceArtifact_List(t *testing.T, factory Factory) {

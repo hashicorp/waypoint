@@ -60,3 +60,10 @@ func (s *State) DeploymentLatest(
 
 	return result.(*pb.Deployment), nil
 }
+
+// DeploymentDelete deletes the deployment from the DB
+func (s *State) DeploymentDelete(
+	ref *pb.Ref_Operation,
+) error {
+	return deploymentOp.Delete(s, ref)
+}

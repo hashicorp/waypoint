@@ -58,3 +58,10 @@ func (s *State) ArtifactLatest(
 
 	return result.(*pb.PushedArtifact), nil
 }
+
+// ArtifactDelete deletes the artifact from the DB
+func (s *State) ArtifactDelete(
+	ref *pb.Ref_Operation,
+) error {
+	return artifactOp.Delete(s, ref)
+}

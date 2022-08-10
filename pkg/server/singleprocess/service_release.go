@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -153,4 +154,16 @@ func (s *Service) releasePreloadDetails(
 	}
 
 	return nil
+}
+
+// DeleteRelease deletes a release based on ID
+func (s *Service) DeleteRelease(
+	ctx context.Context,
+	req *pb.DeleteReleaseRequest,
+) (*empty.Empty, error) {
+	if err := ptypes.ValidateDeleteReleaseRequest(req); err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, s.state(ctx).ReleaseDelete(req.Ref)
 }

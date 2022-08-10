@@ -69,6 +69,28 @@ func TestServiceRelease(t *testing.T, factory Factory) {
 		require.True(ok)
 		require.Equal(codes.NotFound, st.Code())
 	})
+
+	t.Run("create and delete", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		resp, err := client.UpsertRelease(ctx, &Req{
+			Release: serverptypes.TestValidRelease(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		result := resp.Release
+		require.NotEmpty(result.Id)
+
+		_, err = client.DeleteRelease(ctx, &pb.DeleteReleaseRequest{
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: result.Id,
+				},
+			},
+		})
+		require.Nil(err)
+	})
 }
 
 func TestServiceRelease_GetRelease(t *testing.T, factory Factory) {
