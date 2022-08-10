@@ -64,4 +64,25 @@ func TestServiceBuild(t *testing.T, factory Factory) {
 		require.True(ok)
 		require.Equal(codes.NotFound, st.Code())
 	})
+
+	t.Run("create and delete", func(t *testing.T) {
+		require := require.New(t)
+
+		resp, err := client.UpsertBuild(ctx, &Req{
+			Build: serverptypes.TestValidBuild(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		result := resp.Build
+		require.NotEmpty(result.Id)
+
+		_, err = client.DeleteBuild(ctx, &pb.DeleteBuildRequest{
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: resp.Build.Id,
+				},
+			},
+		})
+		require.Nil(err)
+	})
 }

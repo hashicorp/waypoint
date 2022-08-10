@@ -69,6 +69,28 @@ func TestServiceStatusReport(t *testing.T, factory Factory) {
 		require.True(ok)
 		require.Equal(codes.NotFound, st.Code())
 	})
+
+	t.Run("create and delete", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		resp, err := client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
+			StatusReport: serverptypes.TestValidStatusReport(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		result := resp.StatusReport
+		require.NotEmpty(result.Id)
+
+		_, err = client.DeleteStatusReport(ctx, &pb.DeleteStatusReportRequest{
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: result.Id,
+				},
+			},
+		})
+		require.Nil(err)
+	})
 }
 
 func TestServiceStatusReport_GetStatusReport(t *testing.T, factory Factory) {

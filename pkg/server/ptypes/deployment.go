@@ -78,3 +78,13 @@ func ValidateGetDeploymentRequest(v *pb.GetDeploymentRequest) error {
 		}),
 	))
 }
+
+// ValidateDeleteDeploymentRequest
+func ValidateDeleteDeploymentRequest(v *pb.DeleteDeploymentRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Ref, validation.Required),
+		validationext.StructField(&v.Ref, func() []*validation.FieldRules {
+			return ValidateRefOperationRules(v.Ref)
+		}),
+	))
+}

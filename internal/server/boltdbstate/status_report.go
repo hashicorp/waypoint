@@ -70,3 +70,8 @@ func (s *State) StatusReportLatest(
 
 	return result.(*pb.StatusReport), nil
 }
+
+// StatusReportDelete deletes a status report from the database
+func (s *State) StatusReportDelete(ref *pb.Ref_Operation) error {
+	return statusReportOp.Delete(s, ref)
+}

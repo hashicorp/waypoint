@@ -58,3 +58,10 @@ func (s *State) BuildLatest(
 
 	return result.(*pb.Build), nil
 }
+
+// BuildDelete deletes the build from the DB
+func (s *State) BuildDelete(
+	ref *pb.Ref_Operation,
+) error {
+	return buildOp.Delete(s, ref)
+}

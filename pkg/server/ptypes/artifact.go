@@ -86,3 +86,13 @@ func ValidateGetPushedArtifactRequest(v *pb.GetPushedArtifactRequest) error {
 		}),
 	))
 }
+
+// ValidateGetPushedArtifactRequest
+func ValidateDeletePushedArtifactRequest(v *pb.DeletePushedArtifactRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Ref, validation.Required),
+		validationext.StructField(&v.Ref, func() []*validation.FieldRules {
+			return ValidateRefOperationRules(v.Ref)
+		}),
+	))
+}
