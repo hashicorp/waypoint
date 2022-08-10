@@ -133,7 +133,7 @@ func TestWaypointDockerMultiAppUpAfterUpgrade(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output initializing waypoint project: %s", err)
+		t.Errorf("unexpected stderr output initializing waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Project initialized!") {
@@ -147,7 +147,7 @@ func TestWaypointDockerMultiAppUpAfterUpgrade(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output deploying waypoint project: %s", err)
+		t.Errorf("unexpected stderr output deploying waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "The deploy was successful!") {

@@ -20,7 +20,7 @@ func TestWaypointEcsInstall(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output installing server to ecs: %s", err)
+		t.Errorf("unexpected stderr output installing server to ecs: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Waypoint server successfully installed and configured!") {
@@ -37,7 +37,7 @@ func TestWaypointEcsUp(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output initializing waypoint project: %s", err)
+		t.Errorf("unexpected stderr output initializing waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Project initialized!") {
@@ -51,7 +51,7 @@ func TestWaypointEcsUp(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output deploying waypoint project: %s", err)
+		t.Errorf("unexpected stderr output deploying waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "The deploy was successful!") {
@@ -68,7 +68,7 @@ func TestWaypointEcsUpgrade(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output upgrading server in ecs: %s", err)
+		t.Errorf("unexpected stderr output upgrading server in ecs: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Waypoint has finished upgrading the server") {
@@ -85,7 +85,7 @@ func TestWaypointEcsUpAfterUpgrade(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output deploying waypoint project: %s", err)
+		t.Errorf("unexpected stderr output deploying waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "The deploy was successful!") {
@@ -102,7 +102,7 @@ func TestWaypointEcsDestroy(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output destroying waypoint project: %s", err)
+		t.Errorf("unexpected stderr output destroying waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Destroy successful!") {
@@ -119,7 +119,7 @@ func TestWaypointEcsUninstall(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output uninstalling waypoint server: %s", err)
+		t.Errorf("unexpected stderr output uninstalling waypoint server: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Waypoint server successfully uninstalled") {
