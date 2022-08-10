@@ -95,7 +95,7 @@ echo
 # TODO: allow for running all platforms, or only certain ones
 
 # only spin for local devs running on machine to show tests aren't frozen
-if [ -z "$CI_ENV" ]; then
+if [ -z "$CI" ]; then
   spin &
   SPIN_PID=$!
   trap 'kill -9 $SPIN_PID' $(seq 0 15)
@@ -130,6 +130,6 @@ if [[ "$testResult" -eq 0 ]]; then
 fi
 
 # must be at end of script
-if [ -z "$CI_ENV" ]; then
+if [ -z "$CI" ]; then
   kill -9 $SPIN_PID
 fi
