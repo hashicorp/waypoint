@@ -24,7 +24,7 @@ func TestAppOperation(t *testing.T) {
 
 	op.Test(t)
 
-	t.Run("basic put and get", func(t *testing.T) {
+	t.Run("basic put and get and delete", func(t *testing.T) {
 		require := require.New(t)
 
 		s := TestState(t)
@@ -63,25 +63,31 @@ func TestAppOperation(t *testing.T) {
 		require.Equal("A", b.Id)
 		require.Equal(uint64(1), b.Sequence)
 
-		{
-			// Get it by sequence
-			raw, err = op.Get(s, &pb.Ref_Operation{
-				Target: &pb.Ref_Operation_Sequence{
-					Sequence: &pb.Ref_OperationSeq{
-						Application: b.Application,
-						Number:      b.Sequence,
-					},
+		// Get it by sequence
+		raw, err = op.Get(s, &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Sequence{
+				Sequence: &pb.Ref_OperationSeq{
+					Application: b.Application,
+					Number:      b.Sequence,
 				},
-			})
-			require.NoError(err)
-			require.NotNil(raw)
+			},
+		})
+		require.NoError(err)
+		require.NotNil(raw)
 
-			b, ok = raw.(*pb.Build)
-			require.True(ok)
-			require.NotNil(b.Application)
-			require.Equal("A", b.Id)
-			require.Equal(uint64(1), b.Sequence)
-		}
+		b, ok = raw.(*pb.Build)
+		require.True(ok)
+		require.NotNil(b.Application)
+		require.Equal("A", b.Id)
+		require.Equal(uint64(1), b.Sequence)
+
+		// Delete it by ID
+		err = op.Delete(s, &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: b.Id,
+			},
+		})
+		require.Nil(err)
 	})
 
 	t.Run("get with data source ref", func(t *testing.T) {
