@@ -76,9 +76,8 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 	// workspaces and config are deleted with a project
 	// Jobs and tasks will NOT be deleted along with a project
 	// Instances are expected to be deleted before ProjectDelete, via the destroy op
-	// TODO: Delete workspaces and config
+	// TODO: Delete config
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
-		// TODO: Delete workspaces and config
 		project, err := s.ProjectGet(ref)
 		if err != nil {
 			return err
@@ -132,7 +131,7 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 				return err
 			} else {
 				for _, statusReport := range statusReports {
-					if err = s.ReleaseDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: statusReport.Id}}); err != nil {
+					if err = s.StatusReportDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: statusReport.Id}}); err != nil {
 						return err
 					}
 				}
@@ -158,6 +157,14 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 		pipelines, err := s.pipelineList(memTxn, ref)
 		for _, pipeline := range pipelines {
 			if err = s.PipelineDelete(pipeline); err != nil {
+				return err
+			}
+		}
+
+		// delete workspaces for a project
+		workspaces, err := s.WorkspaceListByProject(ref)
+		for _, workspace := range workspaces {
+			if err = s.WorkspaceDelete(workspace.Name); err != nil {
 				return err
 			}
 		}
