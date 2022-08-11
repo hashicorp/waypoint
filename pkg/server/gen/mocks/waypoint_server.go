@@ -260,52 +260,6 @@ func (_m *WaypointServer) DeleteAuthMethod(_a0 context.Context, _a1 *gen.DeleteA
 	return r0, r1
 }
 
-// DeleteBuild provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) DeleteBuild(_a0 context.Context, _a1 *gen.DeleteBuildRequest) (*emptypb.Empty, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *emptypb.Empty
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteBuildRequest) *emptypb.Empty); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*emptypb.Empty)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteBuildRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// DeleteDeployment provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) DeleteDeployment(_a0 context.Context, _a1 *gen.DeleteDeploymentRequest) (*emptypb.Empty, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *emptypb.Empty
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteDeploymentRequest) *emptypb.Empty); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*emptypb.Empty)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteDeploymentRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // DeleteHostname provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) DeleteHostname(_a0 context.Context, _a1 *gen.DeleteHostnameRequest) (*emptypb.Empty, error) {
 	ret := _m.Called(_a0, _a1)
@@ -344,75 +298,6 @@ func (_m *WaypointServer) DeleteOnDemandRunnerConfig(_a0 context.Context, _a1 *g
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteOnDemandRunnerConfigRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// DeletePushedArtifact provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) DeletePushedArtifact(_a0 context.Context, _a1 *gen.DeletePushedArtifactRequest) (*emptypb.Empty, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *emptypb.Empty
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeletePushedArtifactRequest) *emptypb.Empty); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*emptypb.Empty)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeletePushedArtifactRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// DeleteRelease provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) DeleteRelease(_a0 context.Context, _a1 *gen.DeleteReleaseRequest) (*emptypb.Empty, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *emptypb.Empty
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteReleaseRequest) *emptypb.Empty); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*emptypb.Empty)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteReleaseRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// DeleteStatusReport provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) DeleteStatusReport(_a0 context.Context, _a1 *gen.DeleteStatusReportRequest) (*emptypb.Empty, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *emptypb.Empty
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteStatusReportRequest) *emptypb.Empty); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*emptypb.Empty)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteStatusReportRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

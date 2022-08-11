@@ -60,16 +60,6 @@ func ValidateGetBuildRequest(v *pb.GetBuildRequest) error {
 	))
 }
 
-// ValidateDeleteBuildRequest
-func ValidateDeleteBuildRequest(v *pb.DeleteBuildRequest) error {
-	return validationext.Error(validation.ValidateStruct(v,
-		validation.Field(&v.Ref, validation.Required),
-		validationext.StructField(&v.Ref, func() []*validation.FieldRules {
-			return ValidateRefOperationRules(v.Ref)
-		}),
-	))
-}
-
 // ValidateListBuildsRequest
 func ValidateListBuildsRequest(v *pb.ListBuildsRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
