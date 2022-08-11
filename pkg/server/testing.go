@@ -17,7 +17,7 @@ import (
 
 	"github.com/hashicorp/waypoint/pkg/protocolversion"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/serverclient"
+	"github.com/hashicorp/waypoint/pkg/tokenutil"
 )
 
 // TestServer starts a server and returns a gRPC client to that server.
@@ -105,7 +105,7 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 			grpc.WithInsecure(),
 			grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(vsnInfo)),
 			grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(vsnInfo)),
-			grpc.WithPerRPCCredentials(serverclient.ContextToken(token)),
+			grpc.WithPerRPCCredentials(tokenutil.ContextToken(token)),
 		}
 
 		return grpc.DialContext(context.Background(), ln.Addr().String(), opts...)

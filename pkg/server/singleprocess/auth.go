@@ -76,7 +76,7 @@ func UserWithContext(ctx context.Context, u *pb.User) context.Context {
 // userFromContext returns the authenticated user in the request context.
 // This will return nil if the user is not authenticated. Note that a user
 // may not be authenticated but the request can still be authenticated
-// using a non-user token type. The safeste way to check is tokenFromContext.
+// using a non-user token type. The safeste way to check is decodedTokenFromContext.
 func (s *Service) userFromContext(ctx context.Context) *pb.User {
 	value, ok := ctx.Value(userKey{}).(*pb.User)
 	if !ok && s.superuser {
@@ -86,19 +86,19 @@ func (s *Service) userFromContext(ctx context.Context) *pb.User {
 	return value
 }
 
-type tokenKey struct{}
+type decodedTokenKey struct{}
 
-// TokenWithContext inserts the decrypted token t into the context.
-func TokenWithContext(ctx context.Context, t *pb.Token) context.Context {
-	return context.WithValue(ctx, tokenKey{}, t)
+// DecodedTokenWithContext inserts the decrypted token t into the context.
+func DecodedTokenWithContext(ctx context.Context, t *pb.Token) context.Context {
+	return context.WithValue(ctx, decodedTokenKey{}, t)
 }
 
-// tokenFromContext returns the validated token used with the request.
+// decodedTokenFromContext returns the validated token used with the request.
 // The token is guaranteed to be valid, meaning that it successfully
 // was signed and decrypted. This will return nil if no token was present
 // for the request.
-func (s *Service) tokenFromContext(ctx context.Context) *pb.Token {
-	value, ok := ctx.Value(tokenKey{}).(*pb.Token)
+func (s *Service) decodedTokenFromContext(ctx context.Context) *pb.Token {
+	value, ok := ctx.Value(decodedTokenKey{}).(*pb.Token)
 	if !ok && s.superuser {
 		// We are in implicit superuser mode meaning everything is always
 		// allowed. Create a login token for the superuser.
@@ -168,7 +168,7 @@ func (s *Service) Authenticate(
 	}
 
 	// Store the token in the context
-	ctx = TokenWithContext(ctx, body)
+	ctx = DecodedTokenWithContext(ctx, body)
 
 	// If we are at an unauthenticated endpoint, no need to verify further.
 	if anonEndpoint {
@@ -409,27 +409,24 @@ func (s *Service) decodeToken(ctx context.Context, token string) (*pb.TokenTrans
 // encodeToken Encodes the given token with the given key and metadata.
 // keyId controls which key is used to sign the key (key values are generated lazily).
 // metadata is attached to the token transport as configuration style information
-func (s *Service) encodeToken(ctx context.Context, keyId string, metadata map[string]string, body *pb.Token) (string, error) {
+func (s *Service) encodeToken(ctx context.Context, tt *pb.TokenTransport, body *pb.Token) (string, error) {
 	// Proto encode the token, this is what we encrypt (HCP) or sign/hash (OSS).
 	tokenBodyData, err := proto.Marshal(body)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to proto marshal the token")
 	}
 
-	tokenSignature, err := s.state(ctx).TokenSignature(tokenBodyData, keyId)
+	tokenSignature, err := s.state(ctx).TokenSignature(tokenBodyData, tt.KeyId)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed getting token signature")
 	}
 
 	// Build our wrapper which is not signed or encrypted.
-	var tt pb.TokenTransport
 	tt.Body = tokenBodyData
-	tt.KeyId = keyId
-	tt.Metadata = metadata
 	tt.Signature = tokenSignature
 
-	// Marshal the wrapper.
-	ttData, err := proto.Marshal(&tt)
+	// Marshal the wrapper and base58 encode it.
+	ttData, err := proto.Marshal(tt)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed proto marshalling token transport")
 	}
@@ -588,14 +585,19 @@ func (s *Service) newToken(
 		return "", err
 	}
 
+	// Build our wrapper which is not signed or encrypted.
+	var tt pb.TokenTransport
+	tt.KeyId = keyId
+	tt.Metadata = metadata
+
 	if s.processToken != nil {
-		body, err = s.processToken(ctx, body)
+		body, err = s.processToken(ctx, &tt, body)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	return s.encodeToken(ctx, keyId, metadata, body)
+	return s.encodeToken(ctx, &tt, body)
 }
 
 // Create a new invite token.

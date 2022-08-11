@@ -18,7 +18,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/serverclient"
+	"github.com/hashicorp/waypoint/pkg/tokenutil"
 )
 
 var heartbeatDuration = 5 * time.Second
@@ -131,8 +131,8 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	// The runningCtx has the token that is set during runner adoption.
 	// This is required for API calls to succeed. Put the token into ctx
 	// as well so that this can be used for API calls.
-	if tok := serverclient.TokenFromContext(r.runningCtx); tok != "" {
-		ctx = serverclient.TokenWithContext(ctx, tok)
+	if tok := tokenutil.TokenFromContext(r.runningCtx); tok != "" {
+		ctx = tokenutil.TokenWithContext(ctx, tok)
 	}
 
 	// Retry tracks whether we're trying a job stream connection or not.
