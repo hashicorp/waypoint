@@ -87,13 +87,3 @@ func ValidateGetStatusReportRequest(v *pb.GetStatusReportRequest) error {
 		}),
 	))
 }
-
-// ValidateDeleteStatusReportRequest
-func ValidateDeleteStatusReportRequest(v *pb.DeleteStatusReportRequest) error {
-	return validationext.Error(validation.ValidateStruct(v,
-		validation.Field(&v.Ref, validation.Required),
-		validationext.StructField(&v.Ref, func() []*validation.FieldRules {
-			return ValidateRefOperationRules(v.Ref)
-		}),
-	))
-}

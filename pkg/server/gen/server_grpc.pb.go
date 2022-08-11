@@ -93,8 +93,6 @@ type WaypointClient interface {
 	ListPushedArtifacts(ctx context.Context, in *ListPushedArtifactsRequest, opts ...grpc.CallOption) (*ListPushedArtifactsResponse, error)
 	// GetPushedArtifact returns a deployment
 	GetPushedArtifact(ctx context.Context, in *GetPushedArtifactRequest, opts ...grpc.CallOption) (*PushedArtifact, error)
-	// DeletePushedArtifact deletes an artifact
-	DeletePushedArtifact(ctx context.Context, in *DeletePushedArtifactRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// GetLatestPushedArtifact returns the most recent successfully completed
 	// artifact push for an app.
 	GetLatestPushedArtifact(ctx context.Context, in *GetLatestPushedArtifactRequest, opts ...grpc.CallOption) (*PushedArtifact, error)
@@ -102,23 +100,17 @@ type WaypointClient interface {
 	ListDeployments(ctx context.Context, in *ListDeploymentsRequest, opts ...grpc.CallOption) (*ListDeploymentsResponse, error)
 	// GetDeployment returns a deployment
 	GetDeployment(ctx context.Context, in *GetDeploymentRequest, opts ...grpc.CallOption) (*Deployment, error)
-	// DeleteDeployment deletes a deployment
-	DeleteDeployment(ctx context.Context, in *DeleteDeploymentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// ListInstances returns the running instances of deployments.
 	ListInstances(ctx context.Context, in *ListInstancesRequest, opts ...grpc.CallOption) (*ListInstancesResponse, error)
 	// ListReleases returns the releases.
 	ListReleases(ctx context.Context, in *ListReleasesRequest, opts ...grpc.CallOption) (*ListReleasesResponse, error)
 	// GetRelease returns a release
 	GetRelease(ctx context.Context, in *GetReleaseRequest, opts ...grpc.CallOption) (*Release, error)
-	// DeleteRelease deletes a release
-	DeleteRelease(ctx context.Context, in *DeleteReleaseRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// GetLatestRelease returns the most recent successfully completed
 	// release for an app.
 	GetLatestRelease(ctx context.Context, in *GetLatestReleaseRequest, opts ...grpc.CallOption) (*Release, error)
 	// GetStatusReport returns a StatusReport
 	GetStatusReport(ctx context.Context, in *GetStatusReportRequest, opts ...grpc.CallOption) (*StatusReport, error)
-	// DeleteStatusReport deletes a StatusReport
-	DeleteStatusReport(ctx context.Context, in *DeleteStatusReportRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// GetLatestStatusReport returns the most recent successfully completed
 	// health report for an app
 	GetLatestStatusReport(ctx context.Context, in *GetLatestStatusReportRequest, opts ...grpc.CallOption) (*StatusReport, error)
@@ -570,15 +562,6 @@ func (c *waypointClient) GetPushedArtifact(ctx context.Context, in *GetPushedArt
 	return out, nil
 }
 
-func (c *waypointClient) DeletePushedArtifact(ctx context.Context, in *DeletePushedArtifactRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeletePushedArtifact", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *waypointClient) GetLatestPushedArtifact(ctx context.Context, in *GetLatestPushedArtifactRequest, opts ...grpc.CallOption) (*PushedArtifact, error) {
 	out := new(PushedArtifact)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact", in, out, opts...)
@@ -600,15 +583,6 @@ func (c *waypointClient) ListDeployments(ctx context.Context, in *ListDeployment
 func (c *waypointClient) GetDeployment(ctx context.Context, in *GetDeploymentRequest, opts ...grpc.CallOption) (*Deployment, error) {
 	out := new(Deployment)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetDeployment", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *waypointClient) DeleteDeployment(ctx context.Context, in *DeleteDeploymentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteDeployment", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -642,15 +616,6 @@ func (c *waypointClient) GetRelease(ctx context.Context, in *GetReleaseRequest, 
 	return out, nil
 }
 
-func (c *waypointClient) DeleteRelease(ctx context.Context, in *DeleteReleaseRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteRelease", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *waypointClient) GetLatestRelease(ctx context.Context, in *GetLatestReleaseRequest, opts ...grpc.CallOption) (*Release, error) {
 	out := new(Release)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestRelease", in, out, opts...)
@@ -663,15 +628,6 @@ func (c *waypointClient) GetLatestRelease(ctx context.Context, in *GetLatestRele
 func (c *waypointClient) GetStatusReport(ctx context.Context, in *GetStatusReportRequest, opts ...grpc.CallOption) (*StatusReport, error) {
 	out := new(StatusReport)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetStatusReport", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *waypointClient) DeleteStatusReport(ctx context.Context, in *DeleteStatusReportRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteStatusReport", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1585,8 +1541,6 @@ type WaypointServer interface {
 	ListPushedArtifacts(context.Context, *ListPushedArtifactsRequest) (*ListPushedArtifactsResponse, error)
 	// GetPushedArtifact returns a deployment
 	GetPushedArtifact(context.Context, *GetPushedArtifactRequest) (*PushedArtifact, error)
-	// DeletePushedArtifact deletes an artifact
-	DeletePushedArtifact(context.Context, *DeletePushedArtifactRequest) (*emptypb.Empty, error)
 	// GetLatestPushedArtifact returns the most recent successfully completed
 	// artifact push for an app.
 	GetLatestPushedArtifact(context.Context, *GetLatestPushedArtifactRequest) (*PushedArtifact, error)
@@ -1594,23 +1548,17 @@ type WaypointServer interface {
 	ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error)
 	// GetDeployment returns a deployment
 	GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error)
-	// DeleteDeployment deletes a deployment
-	DeleteDeployment(context.Context, *DeleteDeploymentRequest) (*emptypb.Empty, error)
 	// ListInstances returns the running instances of deployments.
 	ListInstances(context.Context, *ListInstancesRequest) (*ListInstancesResponse, error)
 	// ListReleases returns the releases.
 	ListReleases(context.Context, *ListReleasesRequest) (*ListReleasesResponse, error)
 	// GetRelease returns a release
 	GetRelease(context.Context, *GetReleaseRequest) (*Release, error)
-	// DeleteRelease deletes a release
-	DeleteRelease(context.Context, *DeleteReleaseRequest) (*emptypb.Empty, error)
 	// GetLatestRelease returns the most recent successfully completed
 	// release for an app.
 	GetLatestRelease(context.Context, *GetLatestReleaseRequest) (*Release, error)
 	// GetStatusReport returns a StatusReport
 	GetStatusReport(context.Context, *GetStatusReportRequest) (*StatusReport, error)
-	// DeleteStatusReport deletes a StatusReport
-	DeleteStatusReport(context.Context, *DeleteStatusReportRequest) (*emptypb.Empty, error)
 	// GetLatestStatusReport returns the most recent successfully completed
 	// health report for an app
 	GetLatestStatusReport(context.Context, *GetLatestStatusReportRequest) (*StatusReport, error)
@@ -1903,9 +1851,6 @@ func (UnimplementedWaypointServer) ListPushedArtifacts(context.Context, *ListPus
 func (UnimplementedWaypointServer) GetPushedArtifact(context.Context, *GetPushedArtifactRequest) (*PushedArtifact, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPushedArtifact not implemented")
 }
-func (UnimplementedWaypointServer) DeletePushedArtifact(context.Context, *DeletePushedArtifactRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeletePushedArtifact not implemented")
-}
 func (UnimplementedWaypointServer) GetLatestPushedArtifact(context.Context, *GetLatestPushedArtifactRequest) (*PushedArtifact, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLatestPushedArtifact not implemented")
 }
@@ -1914,9 +1859,6 @@ func (UnimplementedWaypointServer) ListDeployments(context.Context, *ListDeploym
 }
 func (UnimplementedWaypointServer) GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDeployment not implemented")
-}
-func (UnimplementedWaypointServer) DeleteDeployment(context.Context, *DeleteDeploymentRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteDeployment not implemented")
 }
 func (UnimplementedWaypointServer) ListInstances(context.Context, *ListInstancesRequest) (*ListInstancesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
@@ -1927,17 +1869,11 @@ func (UnimplementedWaypointServer) ListReleases(context.Context, *ListReleasesRe
 func (UnimplementedWaypointServer) GetRelease(context.Context, *GetReleaseRequest) (*Release, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRelease not implemented")
 }
-func (UnimplementedWaypointServer) DeleteRelease(context.Context, *DeleteReleaseRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteRelease not implemented")
-}
 func (UnimplementedWaypointServer) GetLatestRelease(context.Context, *GetLatestReleaseRequest) (*Release, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLatestRelease not implemented")
 }
 func (UnimplementedWaypointServer) GetStatusReport(context.Context, *GetStatusReportRequest) (*StatusReport, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStatusReport not implemented")
-}
-func (UnimplementedWaypointServer) DeleteStatusReport(context.Context, *DeleteStatusReportRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteStatusReport not implemented")
 }
 func (UnimplementedWaypointServer) GetLatestStatusReport(context.Context, *GetLatestStatusReportRequest) (*StatusReport, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLatestStatusReport not implemented")
@@ -2621,24 +2557,6 @@ func _Waypoint_GetPushedArtifact_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Waypoint_DeletePushedArtifact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeletePushedArtifactRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).DeletePushedArtifact(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/DeletePushedArtifact",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).DeletePushedArtifact(ctx, req.(*DeletePushedArtifactRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Waypoint_GetLatestPushedArtifact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetLatestPushedArtifactRequest)
 	if err := dec(in); err != nil {
@@ -2689,24 +2607,6 @@ func _Waypoint_GetDeployment_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).GetDeployment(ctx, req.(*GetDeploymentRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Waypoint_DeleteDeployment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteDeploymentRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).DeleteDeployment(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteDeployment",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).DeleteDeployment(ctx, req.(*DeleteDeploymentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2765,24 +2665,6 @@ func _Waypoint_GetRelease_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Waypoint_DeleteRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteReleaseRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).DeleteRelease(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteRelease",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).DeleteRelease(ctx, req.(*DeleteReleaseRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Waypoint_GetLatestRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetLatestReleaseRequest)
 	if err := dec(in); err != nil {
@@ -2815,24 +2697,6 @@ func _Waypoint_GetStatusReport_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).GetStatusReport(ctx, req.(*GetStatusReportRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Waypoint_DeleteStatusReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteStatusReportRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).DeleteStatusReport(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteStatusReport",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).DeleteStatusReport(ctx, req.(*DeleteStatusReportRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4215,10 +4079,6 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_GetPushedArtifact_Handler,
 		},
 		{
-			MethodName: "DeletePushedArtifact",
-			Handler:    _Waypoint_DeletePushedArtifact_Handler,
-		},
-		{
 			MethodName: "GetLatestPushedArtifact",
 			Handler:    _Waypoint_GetLatestPushedArtifact_Handler,
 		},
@@ -4229,10 +4089,6 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDeployment",
 			Handler:    _Waypoint_GetDeployment_Handler,
-		},
-		{
-			MethodName: "DeleteDeployment",
-			Handler:    _Waypoint_DeleteDeployment_Handler,
 		},
 		{
 			MethodName: "ListInstances",
@@ -4247,20 +4103,12 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_GetRelease_Handler,
 		},
 		{
-			MethodName: "DeleteRelease",
-			Handler:    _Waypoint_DeleteRelease_Handler,
-		},
-		{
 			MethodName: "GetLatestRelease",
 			Handler:    _Waypoint_GetLatestRelease_Handler,
 		},
 		{
 			MethodName: "GetStatusReport",
 			Handler:    _Waypoint_GetStatusReport_Handler,
-		},
-		{
-			MethodName: "DeleteStatusReport",
-			Handler:    _Waypoint_DeleteStatusReport_Handler,
 		},
 		{
 			MethodName: "GetLatestStatusReport",

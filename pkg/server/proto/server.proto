@@ -114,9 +114,6 @@ service Waypoint {
   // GetBuild returns a build
   rpc GetBuild(GetBuildRequest) returns (Build) {}
 
-  // DeleteBuild deletes a build
-  rpc DeleteBuild(DeleteBuildRequest) returns (google.protobuf.Empty) {}
-
   // GetLatestBuild returns the most recent successfully completed build
   // for an app.
   rpc GetLatestBuild(GetLatestBuildRequest) returns (Build);
@@ -126,9 +123,6 @@ service Waypoint {
 
   // GetPushedArtifact returns a deployment
   rpc GetPushedArtifact(GetPushedArtifactRequest) returns (PushedArtifact);
-
-  // DeletePushedArtifact deletes an artifact
-  rpc DeletePushedArtifact(DeletePushedArtifactRequest) returns (google.protobuf.Empty);
 
   // GetLatestPushedArtifact returns the most recent successfully completed
   // artifact push for an app.
@@ -140,9 +134,6 @@ service Waypoint {
   // GetDeployment returns a deployment
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment) {}
 
-  // DeleteDeployment deletes a deployment
-  rpc DeleteDeployment(DeleteDeploymentRequest) returns (google.protobuf.Empty);
-
   // ListInstances returns the running instances of deployments.
   rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse);
 
@@ -152,18 +143,12 @@ service Waypoint {
   // GetRelease returns a release
   rpc GetRelease(GetReleaseRequest) returns (Release) {}
 
-  // DeleteRelease deletes a release
-  rpc DeleteRelease(DeleteReleaseRequest) returns (google.protobuf.Empty);
-
   // GetLatestRelease returns the most recent successfully completed
   // release for an app.
   rpc GetLatestRelease(GetLatestReleaseRequest) returns (Release);
 
   // GetStatusReport returns a StatusReport
   rpc GetStatusReport(GetStatusReportRequest) returns (StatusReport);
-
-  // DeleteStatusReport deletes a StatusReport
-  rpc DeleteStatusReport(DeleteStatusReportRequest) returns (google.protobuf.Empty);
 
   // GetLatestStatusReport returns the most recent successfully completed
   // health report for an app
@@ -3183,10 +3168,6 @@ message GetBuildRequest {
   Ref.Operation ref = 1;
 }
 
-message DeleteBuildRequest {
-  Ref.Operation ref = 1;
-}
-
 // Build represents a process of creating an artifact that can be in any state,
 // such as complete. A successful complete build produces an artifact.
 message Build {
@@ -3353,10 +3334,6 @@ message GetPushedArtifactRequest {
   Ref.Operation ref = 1;
 }
 
-message DeletePushedArtifactRequest {
-  Ref.Operation ref = 1;
-}
-
 message ListPushedArtifactsRequest {
   // application that this belongs to
   Ref.Application application = 3;
@@ -3450,10 +3427,6 @@ message GetDeploymentRequest {
   // Indicate if the fetched deployments should include additional information
   // about each deployment.
   Deployment.LoadDetails load_details = 2;
-}
-
-message DeleteDeploymentRequest {
-  Ref.Operation ref = 1;
 }
 
 message UpsertDeploymentRequest {
@@ -3771,10 +3744,6 @@ message GetReleaseRequest {
   Release.LoadDetails load_details = 2;
 }
 
-message DeleteReleaseRequest {
-  Ref.Operation ref = 1;
-}
-
 message Release {
   // application that this release belongs to
   Ref.Application application = 7;
@@ -4069,10 +4038,6 @@ message ListStatusReportsResponse {
 }
 
 message GetStatusReportRequest {
-  Ref.Operation ref = 1;
-}
-
-message DeleteStatusReportRequest {
   Ref.Operation ref = 1;
 }
 
