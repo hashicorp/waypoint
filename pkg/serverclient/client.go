@@ -200,7 +200,12 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 					return nil, err
 				}
 
-				perRPC = oauth.NewOauthAccess(oauthToken)
+				// We pass back the oauth access token and the waypoint token because
+				// the waypoint server uses the token for identity as well.
+				perRPC = &tokenAndAuth{
+					PerRPCCredentials: oauth.NewOauthAccess(oauthToken),
+					token:             token,
+				}
 
 				logArgs = append(logArgs,
 					"oauth-url", oc.OauthCreds.Url,
@@ -366,6 +371,24 @@ func Logger(v hclog.Logger) ConnectOption {
 		c.Log = v
 		return nil
 	}
+}
+
+// tokenAndAuth is a special version of PerRPCCredentials that lets us pass
+// the authorization metadata as well as the waypoint token in a separate field
+type tokenAndAuth struct {
+	credentials.PerRPCCredentials
+	token string
+}
+
+func (t *tokenAndAuth) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	data, err := t.PerRPCCredentials.GetRequestMetadata(ctx, uri...)
+	if err != nil {
+		return data, err
+	}
+
+	data["waypoint-token"] = t.token
+
+	return data, nil
 }
 
 // Common environment variables.

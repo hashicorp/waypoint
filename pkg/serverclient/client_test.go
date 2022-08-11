@@ -92,7 +92,10 @@ func TestConnect(t *testing.T) {
 
 		go serv.Serve(l)
 
-		var seenToken []string
+		var (
+			seenToken   []string
+			seenWPToken []string
+		)
 
 		gs := grpc.NewServer(
 			grpc.UnaryInterceptor(func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
@@ -102,6 +105,7 @@ func TestConnect(t *testing.T) {
 				}
 
 				seenToken = md["authorization"]
+				seenWPToken = md["waypoint-token"]
 
 				return nil, fmt.Errorf("nope 2")
 			}))
@@ -129,6 +133,7 @@ func TestConnect(t *testing.T) {
 		require.Error(t, err)
 
 		assert.Equal(t, "debug this-is-an-oauth-token", seenToken[0])
+		assert.Equal(t, strToken, seenWPToken[0])
 	})
 }
 

@@ -194,7 +194,12 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 						return err
 					}
 
-					perRPC = oauth.NewOauthAccess(oauthToken)
+					// This type lets us return the oauth2 access-token AND the waypoint token,
+					// passing the waypoint token in special waypoint-token metadata field.
+					perRPC = &tokenAndAuth{
+						PerRPCCredentials: oauth.NewOauthAccess(oauthToken),
+						token:             token,
+					}
 
 					ceb.logger.Debug("using oauth information in token to authenticate with server")
 					authMethod = "oauth2"
@@ -247,6 +252,22 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 	ceb.cleanup(func() { connCopy.Close() })
 
 	return nil
+}
+
+type tokenAndAuth struct {
+	credentials.PerRPCCredentials
+	token string
+}
+
+func (t *tokenAndAuth) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	data, err := t.PerRPCCredentials.GetRequestMetadata(ctx, uri...)
+	if err != nil {
+		return data, err
+	}
+
+	data["waypoint-token"] = t.token
+
+	return data, nil
 }
 
 // This is a weird type that only exists to satisify the interface required by
