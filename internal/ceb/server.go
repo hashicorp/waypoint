@@ -3,19 +3,23 @@ package ceb
 import (
 	"context"
 	"crypto/tls"
+	"net/url"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"golang.org/x/oauth2/clientcredentials"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/oauth"
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint/pkg/inlinekeepalive"
 	"github.com/hashicorp/waypoint/pkg/protocolversion"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverclient"
 )
 
 // client returns the Waypoint client or blocks until it is set or the
@@ -152,6 +156,8 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 	// Init our client
 	client := pb.NewWaypointClient(conn)
 
+	authMethod := "token"
+
 	// If we have an invite token, we have to exchange that and re-establish
 	// the connection with the auth setup. If we have no token, we're done.
 	if cfg.InviteToken != "" {
@@ -164,8 +170,40 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 			return err
 		}
 
+		token := resp.Token
+
+		var perRPC credentials.PerRPCCredentials = staticToken(token)
+
+		if token != "" {
+			tokenData, err := serverclient.TokenDecode(token)
+			if err != nil {
+				return err
+			}
+
+			if tokenData.ExternalCreds != nil {
+				if oc, ok := tokenData.ExternalCreds.(*pb.Token_OauthCreds); ok {
+					conf := &clientcredentials.Config{
+						ClientID:       oc.OauthCreds.ClientId,
+						ClientSecret:   oc.OauthCreds.ClientSecret,
+						TokenURL:       oc.OauthCreds.Url,
+						EndpointParams: url.Values{"audience": {"waypoint-ceb"}},
+					}
+
+					oauthToken, err := conf.Token(ctx)
+					if err != nil {
+						return err
+					}
+
+					perRPC = oauth.NewOauthAccess(oauthToken)
+
+					ceb.logger.Debug("using oauth information in token to authenticate with server")
+					authMethod = "oauth2"
+				}
+			}
+		}
+
 		// We have our token, setup that usage
-		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(staticToken(resp.Token)))
+		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(perRPC))
 
 		// Reconnect and return
 		conn.Close()
@@ -190,6 +228,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 		"api_current", vsnResp.Info.Api.Current,
 		"entrypoint_min", vsnResp.Info.Entrypoint.Minimum,
 		"entrypoint_current", vsnResp.Info.Entrypoint.Current,
+		"auth_method", authMethod,
 	)
 
 	vsn, err := protocolversion.Negotiate(protocolversion.Current().Entrypoint, vsnResp.Info.Entrypoint)
