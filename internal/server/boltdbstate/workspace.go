@@ -193,6 +193,46 @@ func (s *State) workspaceGet(
 	return &result, dbGet(b, []byte(strings.ToLower(ref.Workspace)), &result)
 }
 
+func (s *State) WorkspaceDelete(n string) error {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		return s.workspaceDelete(dbTxn, memTxn, &pb.Ref_Workspace{Workspace: n})
+	})
+	if err == nil {
+		memTxn.Commit()
+	}
+
+	return err
+}
+
+func (s *State) workspaceDelete(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref *pb.Ref_Workspace,
+) error {
+	w, err := s.workspaceGet(dbTxn, memTxn, ref)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil
+		}
+		return err
+	}
+
+	id := s.workspaceId(w)
+	if err := dbTxn.Bucket(workspaceBucket).Delete([]byte(id)); err != nil {
+		return err
+	}
+
+	// Delete from memdb
+	if _, err := memTxn.DeleteAll(workspaceTableName, workspaceIdIndexName, id); err != nil {
+		return status.Errorf(codes.Aborted, err.Error())
+	}
+
+	return nil
+}
+
 // workspaceTouchApp updates a workspace with the given project/application
 // usage. This will create the workspace if it does not exist. This updates
 // the LastActiveAt times.
@@ -407,6 +447,10 @@ func (s *State) workspaceIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 
 		return nil
 	})
+}
+
+func (s *State) workspaceId(w *pb.Workspace) []byte {
+	return []byte(strings.ToLower(w.Name))
 }
 
 // workspaceIndexSet writes an index record for a single workspace.

@@ -79,6 +79,7 @@ func (r *Runner) executeDestroyProjectOp(
 		}
 	}
 
+	log.Debug("Deleting DB records for project")
 	// Delete the project from the database
 	_, err = client.DestroyProject(ctx, &pb.DestroyProjectRequest{
 		Project: &pb.Ref_Project{
