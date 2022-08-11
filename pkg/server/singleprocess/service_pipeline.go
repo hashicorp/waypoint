@@ -138,9 +138,11 @@ func (s *Service) RunPipeline(
 		nodeId := v.(string)
 		stepRef, ok := nodeIdMap[nodeId]
 		if !ok {
-			return nil, status.Errorf(codes.Internal, "could not get pipeline step ref for node id %q", nodeId)
+			return nil, status.Errorf(codes.Internal,
+				"could not get pipeline step ref for node id %q", nodeId)
 		} else if stepRef == nil {
-			return nil, status.Errorf(codes.Internal, "node id %q returned a nil pipeline step ref", nodeId)
+			return nil, status.Errorf(codes.Internal,
+				"node id %q returned a nil pipeline step ref", nodeId)
 		}
 
 		// get the generated queued job request
@@ -348,7 +350,8 @@ func (s *Service) buildStepJobs(
 					stepIds[k] = v
 				} else {
 					// Embedded pipeline steps match an existing step id
-					return nil, nil, nil, status.Errorf(codes.Internal, "an embedded pipeline step matches a parent step name: %s", k)
+					return nil, nil, nil, status.Errorf(codes.Internal,
+						"an embedded pipeline step matches a parent step name: %s", k)
 				}
 			}
 		default:
