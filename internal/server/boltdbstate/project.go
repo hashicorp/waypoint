@@ -84,7 +84,7 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 	var deployments []*pb.Deployment
 	var releases []*pb.Release
 	var statusReports []*pb.StatusReport
-	var workspaces []*pb.Workspace
+	var workspaces []*pb.Workspace_Project
 	var triggers []*pb.Trigger
 	var pipelines []*pb.Pipeline
 	if err = s.db.View(func(dbTxn *bolt.Tx) error {
@@ -110,11 +110,11 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 			}
 		}
 
-		if workspaces, err = s.WorkspaceListByProject(ref); err != nil {
+		if workspaces, err = s.ProjectListWorkspaces(ref); err != nil {
 			return err
 		}
 		for _, workspace := range workspaces {
-			if triggers, err = s.TriggerList(&pb.Ref_Workspace{Workspace: workspace.Name}, &pb.Ref_Project{Project: project.Name}, nil, []string{}); err != nil {
+			if triggers, err = s.TriggerList(&pb.Ref_Workspace{Workspace: workspace.Workspace.Workspace}, &pb.Ref_Project{Project: project.Name}, nil, []string{}); err != nil {
 				return err
 			}
 		}
@@ -160,7 +160,7 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 
 	// delete workspaces for a project
 	for _, workspace := range workspaces {
-		if err = s.WorkspaceDelete(workspace.Name); err != nil {
+		if err = s.WorkspaceDelete(workspace.Workspace.Workspace); err != nil {
 			return err
 		}
 	}

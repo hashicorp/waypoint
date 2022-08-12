@@ -75,6 +75,15 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
+		require.NoError(s.WorkspacePut(&pb.Workspace{
+			Name: "testWorkspace",
+			Projects: []*pb.Workspace_Project{
+				{
+					Project: &pb.Ref_Project{Project: "testProject"},
+				},
+			},
+		}))
+
 		require.NoError(s.PipelinePut(&pb.Pipeline{
 			Id:   "testPipeline",
 			Name: "testPipeline",
@@ -122,7 +131,10 @@ func TestProject(t *testing.T) {
 		_, err = s.StatusReportGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport"}})
 		require.Error(err)
 
-		//_, err = s.PipelineGet(&pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: &pb.Ref_PipelineId{Id: "testPipeline"}}})
-		//require.Error(err)
+		_, err = s.WorkspaceGet("testWorkspace")
+		require.Error(err)
+
+		_, err = s.PipelineGet(&pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: &pb.Ref_PipelineId{Id: "testPipeline"}}})
+		require.Error(err)
 	})
 }

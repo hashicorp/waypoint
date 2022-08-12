@@ -221,7 +221,7 @@ func (s *State) workspaceDelete(
 	}
 
 	id := s.workspaceId(w)
-	if err := dbTxn.Bucket(workspaceBucket).Delete([]byte(id)); err != nil {
+	if err := dbTxn.Bucket(workspaceBucket).Delete(id); err != nil {
 		return err
 	}
 
