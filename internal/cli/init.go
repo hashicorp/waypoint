@@ -324,6 +324,8 @@ func (c *InitCommand) hclGen() bool {
 	}
 	defer file.Close()
 	fList, err := file.Readdirnames(0)
+	//TODO: replace all above file code with this line
+	//fList, err := fs.Glob(embedJson.files, "*.json")
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
@@ -331,7 +333,7 @@ func (c *InitCommand) hclGen() bool {
 
 	c.ui.Output("Choose build, registry, deployment platform, and releaser plugins", terminal.WithHeaderStyle())
 
-	c.ui.Output("Select a builder", terminal.WithHeaderStyle())
+	c.ui.Output("Configure builder", terminal.WithHeaderStyle())
 	// Select a builder
 	plug, err, close := c.selectPlugin(1, fList, fPath)
 	if err != nil {
@@ -360,7 +362,7 @@ func (c *InitCommand) hclGen() bool {
 		c.ui.Output("Step complete: builder configuration complete", terminal.WithSuccessStyle())
 	}
 
-	c.ui.Output("Select a registry", terminal.WithHeaderStyle())
+	c.ui.Output("Configure registry", terminal.WithHeaderStyle())
 	// Select a registry
 	plug, err, close = c.selectPlugin(4, fList, fPath)
 	if err != nil {
@@ -398,7 +400,7 @@ func (c *InitCommand) hclGen() bool {
 	}
 	brackets = 1
 
-	c.ui.Output("Select a deployment platform", terminal.WithHeaderStyle())
+	c.ui.Output("Configure deployment platform", terminal.WithHeaderStyle())
 	// Select a deployer
 	plug, err, close = c.selectPlugin(2, fList, fPath)
 	if err != nil {
@@ -436,7 +438,7 @@ func (c *InitCommand) hclGen() bool {
 	}
 	brackets = 1
 
-	c.ui.Output("Select a releaser", terminal.WithHeaderStyle())
+	c.ui.Output("Configure releaser", terminal.WithHeaderStyle())
 	// Select a releaser
 	plug, err, close = c.selectPlugin(3, fList, fPath)
 	if err != nil {
@@ -473,7 +475,9 @@ func (c *InitCommand) hclGen() bool {
 		return false
 	}
 	c.ui.Output("All plugin configuration complete", terminal.WithSuccessStyle())
-	c.ui.Output("\"waypoint.hcl\" generated!", terminal.WithStyle(terminal.SuccessBoldStyle))
+	c.ui.Output("waypoint.hcl saved!", terminal.WithStyle(terminal.SuccessBoldStyle))
+	c.ui.Output("If you skipped any steps, open your waypoint.hcl file to add missing plugins or fields before continuing. (See https://www.waypointproject.io/plugins)")
+	c.ui.Output("Otherwise, run \"waypoint init\" again to start using Waypoint!")
 	return true
 }
 
@@ -510,13 +514,31 @@ func (c *InitCommand) populatePlugins(plug PlugDocs) (map[string]string, error, 
 	if plug.PlugDocs == nil {
 		c.ui.Output("There are no required fields for this %s plugin, but there may be optional fields you can add to your .hcl file later. See the Waypoint plugin documentation for more information.", plug.Type)
 	} else {
-		c.ui.Output("Please complete the following required fields for %s", plug.Name, terminal.WithHeaderStyle())
+		fCount := 0
+		for _, f := range plug.PlugDocs {
+			if f.Category == true {
+				for _, sf := range f.PlugSubDocs {
+					if sf.Optional == false {
+						fCount++
+					}
+				}
+			} else {
+				fCount++
+			}
+		}
+		if fCount == 1 {
+			c.ui.Output("Please complete the following %d required field for %s, or hit \"return\" to skip.", fCount, plug.Name, terminal.WithHeaderStyle())
+		} else {
+			c.ui.Output("Please complete the following %d required fields for %s, or hit \"return\" to skip.", fCount, plug.Name, terminal.WithHeaderStyle())
+		}
+		fCount = 0
 		for _, field := range plug.PlugDocs {
 			if field.Category == true {
 				// Subfield handling
 				for _, sfield := range field.PlugSubDocs {
 					if sfield.Optional == false {
-						cont, err, close := c.populateField(sfield.Field, sfield.Type, plug.Name)
+						cont, err, close := c.populateField(sfield.Field, sfield.Type, fCount)
+						fCount++
 						if err != nil {
 							return m, err, false
 						} else if close == true {
@@ -527,10 +549,8 @@ func (c *InitCommand) populatePlugins(plug PlugDocs) (map[string]string, error, 
 				}
 
 			} else {
-				//TEST CODE
-				c.ui.Output("Required field: %s", field.Field)
-
-				cont, err, close := c.populateField(field.Field, field.Type, plug.Name)
+				cont, err, close := c.populateField(field.Field, field.Type, fCount)
+				fCount++
 				if err != nil {
 					return m, err, false
 				} else if close == true {
@@ -543,15 +563,15 @@ func (c *InitCommand) populatePlugins(plug PlugDocs) (map[string]string, error, 
 	return m, nil, false
 }
 
-func (c *InitCommand) populateField(name string, fType string, plugName string) (string, error, bool) {
+func (c *InitCommand) populateField(name string, fType string, count int) (string, error, bool) {
 	getField := true
 	typeString := fType
 	if typeString == "" {
-		typeString = "<No_Type_Specified>"
+		typeString = "No_Type_Specified"
 	}
 	for getField {
 		fieldVal, err := c.ui.Input(&terminal.Input{
-			Prompt: fmt.Sprintf("Please enter the contents of the %s field for the %s plugin. This should be of type %s: ", name, plugName, typeString),
+			Prompt: fmt.Sprintf("%s <%s>: ", strings.Title(name), typeString),
 			Style:  "",
 			Secret: false,
 		})
@@ -581,7 +601,7 @@ func (c *InitCommand) populateField(name string, fType string, plugName string) 
 			} else if strings.ToLower(pNameConfirm) == "exit" {
 				return "", nil, true
 			} else if strings.ToLower(pNameConfirm) == "yes" || strings.ToLower(pNameConfirm) == "y" {
-				c.ui.Output("%s field skipped\n", strings.Title(name))
+				c.ui.Output("%s skipped\n", strings.Title(name), terminal.WithWarningStyle())
 				getField = false
 			} else {
 				c.ui.Output("Skip cancelled\n")
@@ -604,10 +624,10 @@ func (c *InitCommand) populateField(name string, fType string, plugName string) 
 			} else if strings.ToLower(fieldConfirm) == "exit" {
 				return "", nil, true
 			} else if strings.ToLower(fieldConfirm) == "yes" || strings.ToLower(fieldConfirm) == "y" {
-				c.ui.Output("Field contents confirmed\n")
+				c.ui.Output("%s confirmed\n", strings.Title(name), terminal.WithSuccessStyle())
 				return fieldVal, nil, false
 			} else {
-				c.ui.Output("Field contents rejected\n")
+				c.ui.Output("%s rejected\n", strings.Title(name))
 			}
 		}
 	}
@@ -652,7 +672,7 @@ func (c *InitCommand) selectPlugin(plug int, fList []string, fPath string) (Plug
 		}
 	}
 	sort.Strings(plugList)
-	c.ui.Output(fmt.Sprintf("Select a %s: learn more at https://www.waypointproject.io/plugins. To use a %s that’s not shown here (see https://www.waypointproject.io/unsupportedplugins), enter nothing, then edit the .hcl file after it’s been generated.\n", plugType, plugType))
+	c.ui.Output(fmt.Sprintf("Select a %s: learn more at https://www.waypointproject.io/plugins. To use a %s that’s not shown here enter nothing, then edit the .hcl file after it’s been generated.\n", plugType, plugType))
 	jMap := make(map[string]interface{})
 	var selList []string
 	var nameSelList []string
@@ -671,7 +691,7 @@ func (c *InitCommand) selectPlugin(plug int, fList []string, fPath string) (Plug
 		// There is an assumption here that all plugins will have a description, we have to unmarshal all the plugins
 		// for a given plugin to get an accurate name and ensure that they exist
 		if _, ok := jMap["description"]; ok {
-			c.ui.Output(fmt.Sprintf("%d: %s", count, jMap["name"]))
+			c.ui.Output(fmt.Sprintf("%d: %s", count, jMap["name"]), terminal.WithInfoStyle())
 			count++
 			selList = append(selList, f)
 			nameSelList = append(nameSelList, fmt.Sprintf("%s", jMap["name"]))
@@ -686,7 +706,7 @@ func (c *InitCommand) selectPlugin(plug int, fList []string, fPath string) (Plug
 	getSelect := true
 	for getSelect {
 		num, err := c.ui.Input(&terminal.Input{
-			Prompt: fmt.Sprintf("Please select a plugin by typing its corresponding number or type nothing to skip (1-%d): ", count-1),
+			Prompt: fmt.Sprintf("Please select a plugin by typing its corresponding number or hit \"return\" to skip this step (1-%d): ", count-1),
 			Style:  "",
 			Secret: false,
 		})
@@ -739,7 +759,7 @@ func (c *InitCommand) selectPlugin(plug int, fList []string, fPath string) (Plug
 			} else if strings.ToLower(pNameConfirm) == "exit" {
 				return plugDocs, nil, true
 			} else if strings.ToLower(pNameConfirm) == "yes" || strings.ToLower(pNameConfirm) == "y" {
-				c.ui.Output("Step complete: %s stage skipped", strings.Title(plugType), terminal.WithSuccessStyle())
+				c.ui.Output("Step complete: %s stage skipped", strings.Title(plugType), terminal.WithWarningStyle())
 				plugDocs.Name = ""
 				return plugDocs, nil, false
 			} else {
@@ -817,11 +837,11 @@ func (c *InitCommand) getName(pa string) (string, error, bool) {
 			} else if strings.ToLower(pNameConfirm) == "exit" {
 				return "", nil, true
 			} else if strings.ToLower(pNameConfirm) == "yes" || strings.ToLower(pNameConfirm) == "y" {
-				c.ui.Output("%s name confirmed\n", strings.Title(pa))
+				c.ui.Output("%s name confirmed", strings.Title(pa), terminal.WithSuccessStyle())
 				name = paName
 				getName = false
 			} else {
-				c.ui.Output("%s name rejected\n", strings.Title(pa))
+				c.ui.Output("%s name rejected", strings.Title(pa))
 			}
 		}
 	}
