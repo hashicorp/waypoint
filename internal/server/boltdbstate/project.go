@@ -110,14 +110,29 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 			}
 		}
 
-		if workspaces, err = s.ProjectListWorkspaces(ref); err != nil {
+		if workspaceList, err := s.ProjectListWorkspaces(ref); err != nil {
 			return err
-		}
-		for _, workspace := range workspaces {
-			if triggers, err = s.TriggerList(&pb.Ref_Workspace{Workspace: workspace.Workspace.Workspace}, &pb.Ref_Project{Project: project.Name}, nil, []string{}); err != nil {
-				return err
+		} else {
+			for _, workspace := range workspaceList {
+				// Get the triggers for a project in the workspace
+				if triggerList, err := s.TriggerList(workspace.Workspace, &pb.Ref_Project{Project: project.Name}, nil, []string{}); err != nil {
+					return err
+				} else {
+					triggers = append(triggers, triggerList...)
+				}
+				if workspaceDetail, err := s.WorkspaceGet(workspace.Workspace.Workspace); err != nil {
+					return err
+				} else {
+					// If the project we're deleting is the only project in the workspace, we delete the workspace
+					// We don't delete the default workspace
+					if len(workspaceDetail.Projects) == 1 && workspace.Workspace.Workspace != "default" {
+						workspaces = append(workspaces, workspace)
+					}
+				}
+
 			}
 		}
+
 		if pipelines, err = s.PipelineList(ref); err != nil {
 			return err
 		}
