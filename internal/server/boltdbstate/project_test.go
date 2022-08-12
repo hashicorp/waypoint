@@ -77,6 +77,29 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Project{Project: &pb.Ref_Project{Project: projectName}},
+			},
+			Name:       "testProjectConfig",
+			Value:      &pb.ConfigVar_Static{Static: "paladin"},
+			Internal:   false,
+			NameIsPath: false,
+		}))
+
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Application{Application: &pb.Ref_Application{
+					Project:     projectName,
+					Application: appName,
+				}},
+			},
+			Name:       "testAppConfig",
+			Value:      &pb.ConfigVar_Static{Static: "devops"},
+			Internal:   false,
+			NameIsPath: false,
+		}))
+
 		require.NoError(s.WorkspacePut(&pb.Workspace{
 			Name: "testWorkspace",
 			Projects: []*pb.Workspace_Project{
@@ -133,6 +156,10 @@ func TestProject(t *testing.T) {
 
 		_, err = s.StatusReportGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport"}})
 		require.Error(err)
+
+		configVars, err := s.ConfigGet(&pb.ConfigGetRequest{})
+		require.NoError(err)
+		require.Equal(0, len(configVars))
 
 		_, err = s.WorkspaceGet("testWorkspace")
 		require.Error(err)
