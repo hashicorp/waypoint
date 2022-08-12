@@ -140,7 +140,7 @@ func TestProject(t *testing.T) {
 		_, err = s.TriggerGet(&pb.Ref_Trigger{Id: "testTrigger"})
 		require.Error(err)
 
-		_, err = s.PipelineGet(&pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Owner{&pb.Ref_PipelineOwner{
+		_, err = s.PipelineGet(&pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Owner{Owner: &pb.Ref_PipelineOwner{
 			Project:      &pb.Ref_Project{Project: projectName},
 			PipelineName: "testPipeline",
 		}}})
