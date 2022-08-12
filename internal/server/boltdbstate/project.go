@@ -72,103 +72,122 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
+	// Get our project to delete
+	// TODO: if not found error, return early
+	project, err := s.ProjectGet(ref)
+	if err != nil {
+		return err
+	}
+
+	// We perform all of our reads before our write to avoid the deadlocked state
+	var builds []*pb.Build
+	var artifacts []*pb.PushedArtifact
+	var deployments []*pb.Deployment
+	var releases []*pb.Release
+	var statusReports []*pb.StatusReport
+	var triggers []*pb.Ref_Trigger
+	var pipelines []*pb.Ref_Pipeline
+	if err = s.db.View(func(dbTxn *bolt.Tx) error {
+		for _, app := range project.Applications {
+			appRef := &pb.Ref_Application{
+				Application: app.Name,
+				Project:     project.Name,
+			}
+			if builds, err = s.BuildList(appRef); err != nil {
+				return err
+			}
+			if artifacts, err = s.ArtifactList(appRef); err != nil {
+				return err
+			}
+			if deployments, err = s.DeploymentList(appRef); err != nil {
+				return err
+			}
+			if releases, err = s.ReleaseList(appRef); err != nil {
+				return err
+			}
+			if statusReports, err = s.StatusReportList(appRef); err != nil {
+				return err
+			}
+		}
+		// We must check all triggers and add the ones for this project to the slice of
+		// triggers to be deleted
+		if triggerList, err := s.triggerList(memTxn); err != nil {
+			return err
+		} else {
+			for _, trigger := range triggerList {
+				if triggerDetail, err := s.TriggerGet(trigger); err != nil {
+					return err
+				} else {
+					if triggerDetail.Project == ref {
+						triggers = append(triggers, trigger)
+					}
+				}
+			}
+		}
+		if pipelines, err = s.pipelineList(memTxn, ref); err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
 	// Builds, artifacts, deployments, releases, status reports, pipelines, triggers,
 	// workspaces and config are deleted with a project
 	// Jobs and tasks will NOT be deleted along with a project
 	// Instances are expected to be deleted before ProjectDelete, via the destroy op
-	// TODO: Delete config
-	err := s.db.Update(func(dbTxn *bolt.Tx) error {
-		project, err := s.ProjectGet(ref)
-		if err != nil {
+	// delete builds, artifacts, deployments, releases and status reports for each app in the project
+	for _, build := range builds {
+		if err = s.BuildDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: build.Id}}); err != nil {
 			return err
 		}
-
-		// delete builds, artifacts, deployments, releases and status reports for each app in the project
-		for _, app := range project.Applications {
-			appRef := &pb.Ref_Application{Application: app.Name}
-			// delete the app's builds
-			if builds, err := s.BuildList(appRef); err != nil {
-				return err
-			} else {
-				for _, build := range builds {
-					if err = s.BuildDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: build.Id}}); err != nil {
-						return err
-					}
-				}
-			}
-
-			if artifacts, err := s.ArtifactList(appRef); err != nil {
-				return err
-			} else {
-				for _, artifact := range artifacts {
-					if err = s.ArtifactDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: artifact.Id}}); err != nil {
-						return err
-					}
-				}
-			}
-
-			if deployments, err := s.DeploymentList(appRef); err != nil {
-				return err
-			} else {
-				for _, deployment := range deployments {
-					if err = s.DeploymentDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: deployment.Id}}); err != nil {
-						return err
-					}
-				}
-			}
-
-			if releases, err := s.ReleaseList(appRef); err != nil {
-				return err
-			} else {
-				for _, release := range releases {
-					if err = s.ReleaseDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: release.Id}}); err != nil {
-						return err
-					}
-				}
-			}
-
-			if statusReports, err := s.StatusReportList(appRef); err != nil {
-				return err
-			} else {
-				for _, statusReport := range statusReports {
-					if err = s.StatusReportDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: statusReport.Id}}); err != nil {
-						return err
-					}
-				}
-			}
-
+	}
+	for _, artifact := range artifacts {
+		if err = s.ArtifactDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: artifact.Id}}); err != nil {
+			return err
 		}
-
-		// delete triggers for project
-		triggers, err := s.triggerList(memTxn)
-		for _, trigger := range triggers {
-			if triggerDetail, err := s.triggerGet(dbTxn, memTxn, trigger); err != nil {
-				return err
-			} else {
-				if triggerDetail.Project == ref {
-					if err = s.TriggerDelete(trigger); err != nil {
-						return err
-					}
-				}
-			}
+	}
+	for _, deployment := range deployments {
+		if err = s.DeploymentDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: deployment.Id}}); err != nil {
+			return err
 		}
-
-		// delete pipelines for project
-		pipelines, err := s.pipelineList(memTxn, ref)
-		for _, pipeline := range pipelines {
-			if err = s.PipelineDelete(pipeline); err != nil {
-				return err
-			}
+	}
+	for _, release := range releases {
+		if err = s.ReleaseDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: release.Id}}); err != nil {
+			return err
 		}
-
-		// delete workspaces for a project
-		workspaces, err := s.WorkspaceListByProject(ref)
-		for _, workspace := range workspaces {
-			if err = s.WorkspaceDelete(workspace.Name); err != nil {
-				return err
-			}
+	}
+	for _, statusReport := range statusReports {
+		if err = s.StatusReportDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: statusReport.Id}}); err != nil {
+			return err
 		}
+	}
 
+	// delete triggers for project
+	for _, trigger := range triggers {
+		if err = s.TriggerDelete(trigger); err != nil {
+			return err
+		}
+	}
+
+	// delete pipelines for project
+	for _, pipeline := range pipelines {
+		if err = s.PipelineDelete(pipeline); err != nil {
+			return err
+		}
+	}
+
+	// delete workspaces for a project
+	//workspaces, err := s.WorkspaceListByProject(ref)
+	//for _, workspace := range workspaces {
+	//	if err = s.WorkspaceDelete(workspace.Name); err != nil {
+	//		return err
+	//	}
+	//}
+
+	// TODO: Delete config
+	err = s.db.Update(func(dbTxn *bolt.Tx) error {
 		return s.projectDelete(dbTxn, memTxn, ref)
 	})
 	if err == nil {
