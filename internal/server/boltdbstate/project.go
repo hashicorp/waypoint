@@ -87,6 +87,7 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 	var workspaces []*pb.Workspace_Project
 	var triggers []*pb.Trigger
 	var pipelines []*pb.Pipeline
+	var configVars []*pb.ConfigVar
 	if err = s.db.View(func(dbTxn *bolt.Tx) error {
 		for _, app := range project.Applications {
 			appRef := &pb.Ref_Application{
@@ -108,6 +109,27 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 			if statusReports, err = s.StatusReportList(appRef); err != nil {
 				return err
 			}
+
+			// Get app-scoped config
+			if appConfigVars, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Application{Application: &pb.Ref_Application{
+					Project:     project.Name,
+					Application: app.Name,
+				}},
+			}); err != nil {
+				return err
+			} else {
+				configVars = append(configVars, appConfigVars...)
+			}
+		}
+
+		// Get project-scoped config
+		if projectConfigVars, err := s.ConfigGet(&pb.ConfigGetRequest{
+			Scope: &pb.ConfigGetRequest_Project{Project: ref},
+		}); err != nil {
+			return err
+		} else {
+			configVars = append(configVars, projectConfigVars...)
 		}
 
 		if workspaceList, err := s.ProjectListWorkspaces(ref); err != nil {
@@ -146,7 +168,6 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 	// workspaces and config are deleted with a project
 	// Jobs and tasks will NOT be deleted along with a project
 	// Instances are expected to be deleted before ProjectDelete, via the destroy op
-	// delete builds, artifacts, deployments, releases and status reports for each app in the project
 	for _, build := range builds {
 		if err = s.BuildDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: build.Id}}); err != nil {
 			return err
@@ -169,6 +190,19 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 	}
 	for _, statusReport := range statusReports {
 		if err = s.StatusReportDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: statusReport.Id}}); err != nil {
+			return err
+		}
+	}
+
+	// Unset all configs we retrieved
+	for _, config := range configVars {
+		if err = s.ConfigSet(&pb.ConfigVar{
+			Target:     config.Target,
+			Name:       config.Name,
+			Value:      &pb.ConfigVar_Unset{},
+			Internal:   config.Internal,
+			NameIsPath: config.NameIsPath,
+		}); err != nil {
 			return err
 		}
 	}
@@ -200,7 +234,6 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
-	// TODO: Delete config
 	err = s.db.Update(func(dbTxn *bolt.Tx) error {
 		return s.projectDelete(dbTxn, memTxn, ref)
 	})

@@ -31,7 +31,8 @@ func TestProject(t *testing.T) {
 		require.NoError(err)
 		require.NotNil(projectBeforeDelete)
 
-		// Create a build
+		// Create a build, artifact, deployment, release, trigger, workspace, and pipeline
+		// Set a config at the project and app scope
 		require.NoError(s.BuildPut(false, &pb.Build{
 			Id: "testBuild",
 			Application: &pb.Ref_Application{
@@ -77,6 +78,29 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Project{Project: &pb.Ref_Project{Project: projectName}},
+			},
+			Name:       "testProjectConfig",
+			Value:      &pb.ConfigVar_Static{Static: "paladin"},
+			Internal:   false,
+			NameIsPath: false,
+		}))
+
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Application{Application: &pb.Ref_Application{
+					Project:     projectName,
+					Application: appName,
+				}},
+			},
+			Name:       "testAppConfig",
+			Value:      &pb.ConfigVar_Static{Static: "devops"},
+			Internal:   false,
+			NameIsPath: false,
+		}))
+
 		require.NoError(s.WorkspacePut(&pb.Workspace{
 			Name: "testWorkspace",
 			Projects: []*pb.Workspace_Project{
@@ -119,6 +143,8 @@ func TestProject(t *testing.T) {
 		_, err = s.ProjectGet(&pb.Ref_Project{Project: projectName})
 		require.Error(err)
 
+		// Verify that all builds, artifacts, deployments, releases, status reports,
+		// triggers, pipelines and workspaces were deleted, and that configs were unset
 		_, err = s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild"}})
 		require.Error(err)
 
@@ -133,6 +159,10 @@ func TestProject(t *testing.T) {
 
 		_, err = s.StatusReportGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport"}})
 		require.Error(err)
+
+		configVars, err := s.ConfigGet(&pb.ConfigGetRequest{})
+		require.NoError(err)
+		require.Equal(0, len(configVars))
 
 		_, err = s.WorkspaceGet("testWorkspace")
 		require.Error(err)
