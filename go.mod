@@ -66,7 +66,7 @@ require (
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
 	github.com/imdario/mergo v0.3.12
 	github.com/improbable-eng/grpc-web v0.13.0
-	github.com/kevinburke/go-bindata v3.22.0+incompatible
+	github.com/kevinburke/go-bindata v3.23.0+incompatible
 	github.com/kr/text v0.2.0
 	github.com/mitchellh/cli v1.1.2
 	github.com/mitchellh/copystructure v1.1.1

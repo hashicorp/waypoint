@@ -1247,6 +1247,8 @@ github.com/karrick/godirwalk v1.15.8 h1:7+rWAZPn9zuRxaIqqT8Ohs2Q2Ac0msBqwRdxNCr2
 github.com/karrick/godirwalk v1.15.8/go.mod h1:j4mkqPuvaLI8mp1DroR3P6ad7cyYd4c1qeJ3RV7ULlk=
 github.com/kevinburke/go-bindata v3.22.0+incompatible h1:/JmqEhIWQ7GRScV0WjX/0tqBrC5D21ALg0H0U/KZ/ts=
 github.com/kevinburke/go-bindata v3.22.0+incompatible/go.mod h1:/pEEZ72flUW2p0yi30bslSp9YqD9pysLxunQDdb2CPM=
+github.com/kevinburke/go-bindata v3.23.0+incompatible h1:rqNOXZlqrYhMVVAsQx8wuc+LaA73YcfbQ407wAykyS8=
+github.com/kevinburke/go-bindata v3.23.0+incompatible/go.mod h1:/pEEZ72flUW2p0yi30bslSp9YqD9pysLxunQDdb2CPM=
 github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd h1:Coekwdh0v2wtGp9Gmz1Ze3eVRAWJMLokvN3QjdzCHLY=
 github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
