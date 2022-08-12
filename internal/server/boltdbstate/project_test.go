@@ -103,9 +103,10 @@ func TestProject(t *testing.T) {
 		}))
 
 		require.NoError(s.TriggerPut(&pb.Trigger{
-			Id:      "testTrigger",
-			Name:    "testTrigger",
-			Project: &pb.Ref_Project{Project: "testProject"},
+			Id:        "testTrigger",
+			Name:      "testTrigger",
+			Project:   &pb.Ref_Project{Project: "testProject"},
+			Workspace: &pb.Ref_Workspace{Workspace: "testWorkspace"},
 		}))
 
 		// Delete the project (this should also delete the build)
@@ -132,6 +133,9 @@ func TestProject(t *testing.T) {
 		require.Error(err)
 
 		_, err = s.WorkspaceGet("testWorkspace")
+		require.Error(err)
+
+		_, err = s.TriggerGet(&pb.Ref_Trigger{Id: "testTrigger"})
 		require.Error(err)
 
 		_, err = s.PipelineGet(&pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: &pb.Ref_PipelineId{Id: "testPipeline"}}})
