@@ -69,13 +69,12 @@ func (s *State) ProjectGet(ref *pb.Ref_Project) (*pb.Project, error) {
 // delete. This will delete all operations associated with this project
 // as well.
 func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
-	memTxn := s.inmem.Txn(true)
-	defer memTxn.Abort()
-
 	// Get our project to delete
-	// TODO: if not found error, return early
 	project, err := s.ProjectGet(ref)
 	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil
+		}
 		return err
 	}
 
@@ -85,8 +84,8 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 	var deployments []*pb.Deployment
 	var releases []*pb.Release
 	var statusReports []*pb.StatusReport
-	var triggers []*pb.Ref_Trigger
-	var pipelines []*pb.Ref_Pipeline
+	//var triggers []*pb.Ref_Trigger
+	var pipelines []*pb.Pipeline
 	if err = s.db.View(func(dbTxn *bolt.Tx) error {
 		for _, app := range project.Applications {
 			appRef := &pb.Ref_Application{
@@ -111,20 +110,20 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 		}
 		// We must check all triggers and add the ones for this project to the slice of
 		// triggers to be deleted
-		if triggerList, err := s.triggerList(memTxn); err != nil {
-			return err
-		} else {
-			for _, trigger := range triggerList {
-				if triggerDetail, err := s.TriggerGet(trigger); err != nil {
-					return err
-				} else {
-					if triggerDetail.Project == ref {
-						triggers = append(triggers, trigger)
-					}
-				}
-			}
-		}
-		if pipelines, err = s.pipelineList(memTxn, ref); err != nil {
+		//if triggerList, err := s.TriggerList(); err != nil {
+		//	return err
+		//} else {
+		//	for _, trigger := range triggerList {
+		//		if triggerDetail, err := s.TriggerGet(trigger); err != nil {
+		//			return err
+		//		} else {
+		//			if triggerDetail.Project == ref {
+		//				triggers = append(triggers, trigger)
+		//			}
+		//		}
+		//	}
+		//}
+		if pipelines, err = s.PipelineList(ref); err != nil {
 			return err
 		}
 
@@ -164,16 +163,19 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 		}
 	}
 
-	// delete triggers for project
-	for _, trigger := range triggers {
-		if err = s.TriggerDelete(trigger); err != nil {
-			return err
-		}
-	}
+	//// delete triggers for project
+	//for _, trigger := range triggers {
+	//	if err = s.TriggerDelete(trigger); err != nil {
+	//		return err
+	//	}
+	//}
 
 	// delete pipelines for project
 	for _, pipeline := range pipelines {
-		if err = s.PipelineDelete(pipeline); err != nil {
+		if err = s.PipelineDelete(&pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{
+			Id: &pb.Ref_PipelineId{Id: pipeline.Id},
+		},
+		}); err != nil {
 			return err
 		}
 	}
@@ -185,6 +187,9 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 	//		return err
 	//	}
 	//}
+
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
 
 	// TODO: Delete config
 	err = s.db.Update(func(dbTxn *bolt.Tx) error {
