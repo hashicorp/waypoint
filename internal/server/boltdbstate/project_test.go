@@ -31,7 +31,8 @@ func TestProject(t *testing.T) {
 		require.NoError(err)
 		require.NotNil(projectBeforeDelete)
 
-		// Create a build
+		// Create a build, artifact, deployment, release, trigger, workspace, and pipeline
+		// Set a config at the project and app scope
 		require.NoError(s.BuildPut(false, &pb.Build{
 			Id: "testBuild",
 			Application: &pb.Ref_Application{
@@ -142,6 +143,8 @@ func TestProject(t *testing.T) {
 		_, err = s.ProjectGet(&pb.Ref_Project{Project: projectName})
 		require.Error(err)
 
+		// Verify that all builds, artifacts, deployments, releases, status reports,
+		// triggers, pipelines and workspaces were deleted, and that configs were unset
 		_, err = s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild"}})
 		require.Error(err)
 

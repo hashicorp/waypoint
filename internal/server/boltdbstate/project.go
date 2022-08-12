@@ -168,7 +168,6 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 	// workspaces and config are deleted with a project
 	// Jobs and tasks will NOT be deleted along with a project
 	// Instances are expected to be deleted before ProjectDelete, via the destroy op
-	// delete builds, artifacts, deployments, releases and status reports for each app in the project
 	for _, build := range builds {
 		if err = s.BuildDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: build.Id}}); err != nil {
 			return err
@@ -235,7 +234,6 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
-	// TODO: Delete config
 	err = s.db.Update(func(dbTxn *bolt.Tx) error {
 		return s.projectDelete(dbTxn, memTxn, ref)
 	})
