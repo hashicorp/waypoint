@@ -176,4 +176,66 @@ func TestProject(t *testing.T) {
 		}}})
 		require.Error(err)
 	})
+
+	t.Run("delete project workspaces", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		const projectName1 = "testproject1"
+		const appName1 = "testapp1"
+		const projectName2 = "testproject2"
+		const appName2 = "testapp2"
+		require.NoError(s.ProjectPut(&pb.Project{
+			Name: projectName1,
+			Applications: []*pb.Application{
+				{
+					Project: &pb.Ref_Project{Project: projectName1},
+					Name:    appName1,
+				},
+			},
+		}))
+
+		require.NoError(s.ProjectPut(&pb.Project{
+			Name: projectName2,
+			Applications: []*pb.Application{
+				{
+					Project: &pb.Ref_Project{Project: projectName2},
+					Name:    appName2,
+				},
+			},
+		}))
+
+		require.NoError(s.WorkspacePut(&pb.Workspace{
+			Name: "one-project-workspace",
+			Projects: []*pb.Workspace_Project{
+				{
+					Project: &pb.Ref_Project{Project: projectName1},
+				},
+			},
+			ActiveTime: nil,
+		}))
+
+		require.NoError(s.WorkspacePut(&pb.Workspace{
+			Name: "two-project-workspace",
+			Projects: []*pb.Workspace_Project{
+				{
+					Project: &pb.Ref_Project{Project: projectName1},
+				},
+				{
+					Project: &pb.Ref_Project{Project: projectName2},
+				},
+			},
+			ActiveTime: nil,
+		}))
+
+		require.NoError(s.ProjectDelete(&pb.Ref_Project{Project: projectName1}))
+
+		workspaces, err := s.WorkspaceList()
+		require.NoError(err)
+
+		// After the project is deleted, only the 2nd workspace should exist
+		require.Equal(1, len(workspaces))
+	})
 }
