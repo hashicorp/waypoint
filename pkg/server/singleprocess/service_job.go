@@ -324,15 +324,15 @@ func (s *Service) wrapJobWithRunner(
 
 	// For our task tracking, the primary job is usually the job. But
 	// if we're skipping, then it is the watch task.
-	taskSource := source
+	sourceJob := source
 	if skip {
-		taskSource = watchJob
+		sourceJob = watchJob
 	}
 
 	// Write a Task state with the On-Demand Runner job triple
 	task := &pb.Task{
 		StartJob: &pb.Ref_Job{Id: startJob.Id},
-		TaskJob:  &pb.Ref_Job{Id: taskSource.Id},
+		TaskJob:  &pb.Ref_Job{Id: sourceJob.Id},
 		StopJob:  &pb.Ref_Job{Id: stopJob.Id},
 		WatchJob: &pb.Ref_Job{Id: watchJob.Id},
 		JobState: pb.Task_PENDING,
@@ -346,7 +346,7 @@ func (s *Service) wrapJobWithRunner(
 	} else {
 		task, err := s.state(ctx).TaskGet(&pb.Ref_Task{
 			Ref: &pb.Ref_Task_JobId{
-				JobId: taskSource.Id,
+				JobId: sourceJob.Id,
 			},
 		})
 		if err != nil {
@@ -362,14 +362,14 @@ func (s *Service) wrapJobWithRunner(
 		}
 
 		startJob.Task = taskRef
-		taskSource.Task = taskRef
+		sourceJob.Task = taskRef
 		stopJob.Task = taskRef
 		watchJob.Task = taskRef
 	}
 
 	jobs := []*pb.Job{startJob, watchJob, stopJob}
 	if !skip {
-		jobs = append(jobs, source)
+		jobs = append(jobs, sourceJob)
 	}
 
 	return jobs, nil
