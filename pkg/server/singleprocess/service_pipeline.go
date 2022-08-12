@@ -398,19 +398,19 @@ func (s *Service) pipelineGraphFull(
 	for _, step := range pipeline.Steps {
 		if len(visistedNodes) != 0 {
 			if pipeName, ok := visistedNodes[step.Name]; ok && pipeName == pipeline.Name {
-				// we've been here already! keep building the graph with other steps
-				continue
+				log.Trace("we've cycled to a node we've already visisted!", "pipeline", pipeName, "step", step.Name)
+				return nil, nil, status.Error(codes.FailedPrecondition,
+					"we've already visisted this node, that means we've got a cycle")
 			}
 		}
 
-		// Keep track of the fact that we've visited this step node to prevent
-		// infinite cycles as we build embedded pipeline graphs
-		visistedNodes[step.Name] = pipeline.Name
-
+		// Look up step and pipeline id in case we generated the id when we added
+		// dependencies from a different step
 		nodeId, ok := s.stepToNodeId(ctx, log, pipeline.Id, step.Name, nodeIdMap)
 		if !ok {
 			var err error
-			nodeId, err = server.Id() // unique node graph id for full graph
+			// unique node graph id for full graph
+			nodeId, err = server.Id()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -421,16 +421,23 @@ func (s *Service) pipelineGraphFull(
 			Step:     step.Name,
 		}
 
-		// Add our job
+		// Add our step to the graph as a vertex
 		stepGraph.Add(nodeId)
+
+		// Keep track of the fact that we've visited this step node in this pipeline
+		// to prevent infinite cycles as we build embedded pipeline graphs
+		visistedNodes[step.Name] = pipeline.Name
 
 		if g != nil {
 			if parentStep == "" {
-				return nil, nil, status.Error(codes.Internal,
-					"parentStep cannot be empty string")
+				// if we're building an embedded graph and g is not nil but parentStep
+				// is then that's an internal error on the caller
+				return nil, nil, status.Errorf(codes.Internal,
+					"parentStep cannot be empty string if building an embedded graph for pipeline %q!",
+					pipeline.Name)
 			}
 
-			// Add an edge to the parent step as a dependency
+			// Add an edge to the parent step as an implicit dependency
 			// Embedded pipeline steps have an implicit dependency on the parent step
 			// from the parent pipeline.
 			stepGraph.AddEdge(parentStep, nodeId)
@@ -438,25 +445,33 @@ func (s *Service) pipelineGraphFull(
 
 		// Add any dependencies as defined by the current Step
 		for _, dep := range step.DependsOn {
+			// Look up the dependency step by name in case we've already generated
+			// a node ID for it for our stepGraph
 			depId, ok := s.stepToNodeId(ctx, log, pipeline.Id, dep, nodeIdMap)
 			if !ok {
 				var err error
-				// we haven't reached this node yet, but we're adding it to the graph so
-				// I guess we generate an id here too.
+				// We haven't reached this node yet, but we're adding it to the graph so
+				// we generate an id here too so we can add it to the graph as a vertex
+				// and create an edge to the given step with the depencny
 				depId, err = server.Id() // unique node graph id for full graph
 				if err != nil {
 					return nil, nil, err
 				}
 
+				// add node id to map
 				nodeIdMap[depId] = &pb.Ref_PipelineStep{
 					Pipeline: pipeline.Id,
 					Step:     dep,
 				}
 			}
 
+			// Add the dependency as a vertex and draw an edge to *this* steps node ID
 			stepGraph.Add(depId)
 			stepGraph.AddEdge(depId, nodeId)
 
+			// This only checks for steps inside *this* pipeline. Plain steps cannot
+			// reference other steps in other pipelines as a depenency without being
+			// an embedded pipeline reference.
 			if _, ok := pipeline.Steps[dep]; !ok {
 				return nil, nil, fmt.Errorf(
 					"step %q depends on non-existent step %q", step, dep)
@@ -486,8 +501,9 @@ func (s *Service) pipelineGraphFull(
 	}
 
 	if cycles := stepGraph.Cycles(); len(cycles) > 0 {
-		return nil, nil, fmt.Errorf(
-			"step dependencies contain one or more cycles: %s", cycles)
+		return nil, nil, status.Errorf(codes.FailedPrecondition,
+			"step dependencies in pipeline %q contain one or more cycles: %s",
+			pipeline.Name, cycles)
 	}
 
 	return stepGraph, nodeIdMap, nil

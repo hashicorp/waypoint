@@ -319,7 +319,7 @@ func TestServiceRunPipeline(t *testing.T) {
 		require.Len(resp.AllJobIds, 5)
 	})
 
-	t.Run("returns an error if there's a cycle detected", func(t *testing.T) {
+	t.Run("returns an error if theres a cycle detected", func(t *testing.T) {
 		require := require.New(t)
 		ctx := context.Background()
 
@@ -332,34 +332,43 @@ func TestServiceRunPipeline(t *testing.T) {
 		TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
 
 		// Create our pipeline
-		pipeline := serverptypes.TestPipeline(t, nil)
-		pipeline.Steps["B"] = &pb.Pipeline_Step{
-			Name:      "B",
-			DependsOn: []string{"root"},
-			Kind: &pb.Pipeline_Step_Exec_{
-				Exec: &pb.Pipeline_Step_Exec{
-					Image: "hashicorp/waypoint",
+		pipeline := &pb.Pipeline{
+			Id:   "test",
+			Name: "test",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "project",
 				},
 			},
-		}
-		pipeline.Steps["C"] = &pb.Pipeline_Step{
-			Name:      "C",
-			DependsOn: []string{"B"},
-			Kind: &pb.Pipeline_Step_Exec_{
-				Exec: &pb.Pipeline_Step_Exec{
-					Image: "hashicorp/waypoint",
+			Steps: map[string]*pb.Pipeline_Step{
+				"A": {
+					Name: "A",
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
 				},
-			},
-		}
-		pipeline.Steps["Embed"] = &pb.Pipeline_Step{
-			Name:      "Embed",
-			DependsOn: []string{"C"},
-			Kind: &pb.Pipeline_Step_Pipeline_{
-				Pipeline: &pb.Pipeline_Step_Pipeline{
-					Ref: &pb.Ref_Pipeline{
-						Ref: &pb.Ref_Pipeline_Id{
-							Id: &pb.Ref_PipelineId{
-								Id: "embed",
+				"B": {
+					Name:      "B",
+					DependsOn: []string{"A"},
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+				"Embed": {
+					Name:      "Embed",
+					DependsOn: []string{"B"},
+					Kind: &pb.Pipeline_Step_Pipeline_{
+						Pipeline: &pb.Pipeline_Step_Pipeline{
+							Ref: &pb.Ref_Pipeline{
+								Ref: &pb.Ref_Pipeline_Id{
+									Id: &pb.Ref_PipelineId{
+										Id: "embed",
+									},
+								},
 							},
 						},
 					},
@@ -550,6 +559,7 @@ func TestServiceRunPipeline(t *testing.T) {
 
 		require.NoError(err)
 		require.NotNil(resp)
+		require.Len(resp.AllJobIds, 5)
 	})
 
 }
