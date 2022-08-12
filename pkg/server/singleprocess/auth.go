@@ -1,8 +1,10 @@
 package singleprocess
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
+	"crypto/subtle"
 	"io"
 	"strings"
 	"time"
@@ -33,6 +35,11 @@ const (
 
 	// DefaultKeyId is the identifier for the default key to use to generating tokens.
 	DefaultKeyId = "k1"
+
+	// tokenMagic is used as a byte sequence prepended to the encoded TokenTransport to identify
+	// the token as valid before attempting to decode it. This is mostly a nicity to improve
+	// understanding of the token data and error messages.
+	tokenMagic = "wp24"
 )
 
 var (
@@ -331,12 +338,32 @@ func (s *Service) authLogin(
 func (s *Service) decodeToken(ctx context.Context, token string) (*pb.TokenTransport, *pb.Token, error) {
 	data, err := base58.Decode(token)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrapf(err, "failed to base58 decode token")
 	}
 
-	tt, body, err := s.state(ctx).TokenDecrypt(data)
+	if subtle.ConstantTimeCompare(data[:len(tokenMagic)], []byte(tokenMagic)) != 1 {
+		return nil, nil, errors.Errorf("bad magic")
+	}
+
+	var tt pb.TokenTransport
+	err = proto.Unmarshal(data[len(tokenMagic):], &tt)
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "failed to proto unmarshal token")
+	}
+
+	isValid, err := s.state(ctx).TokenSignatureVerify(tt.Body, tt.Signature, tt.KeyId)
 	if err != nil {
 		return nil, nil, errors.Wrapf(ErrInvalidToken, err.Error())
+	}
+	if !isValid {
+		return nil, nil, errors.Wrapf(ErrInvalidToken, "bad token signature")
+	}
+
+	// Decode the actual token structure
+	var body pb.Token
+	err = proto.Unmarshal(tt.Body, &body)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	if body.ValidUntil != nil {
@@ -376,7 +403,7 @@ func (s *Service) decodeToken(ctx context.Context, token string) (*pb.TokenTrans
 		}
 	}
 
-	return tt, body, nil
+	return &tt, &body, nil
 }
 
 // encodeToken Encodes the given token with the given key and metadata.
@@ -384,18 +411,35 @@ func (s *Service) decodeToken(ctx context.Context, token string) (*pb.TokenTrans
 // metadata is attached to the token transport as configuration style information
 func (s *Service) encodeToken(ctx context.Context, keyId string, metadata map[string]string, body *pb.Token) (string, error) {
 	// Proto encode the token, this is what we encrypt (HCP) or sign/hash (OSS).
-	token, err := proto.Marshal(body)
+	tokenBodyData, err := proto.Marshal(body)
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "failed to proto marshal the token")
 	}
 
-	tokenCiphertext, err := s.state(ctx).TokenEncrypt(token, keyId, metadata)
+	tokenSignature, err := s.state(ctx).TokenSignature(tokenBodyData, keyId)
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "failed getting token signature")
 	}
+
+	// Build our wrapper which is not signed or encrypted.
+	var tt pb.TokenTransport
+	tt.Body = tokenBodyData
+	tt.KeyId = keyId
+	tt.Metadata = metadata
+	tt.Signature = tokenSignature
+
+	// Marshal the wrapper.
+	ttData, err := proto.Marshal(&tt)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed proto marshalling token transport")
+	}
+
+	var buf bytes.Buffer
+	buf.WriteString(tokenMagic)
+	buf.Write(ttData)
 
 	// Encode token
-	return base58.Encode(tokenCiphertext), nil
+	return base58.Encode(buf.Bytes()), nil
 }
 
 // Create a new login token. This is just a gRPC wrapper around newToken.
@@ -460,7 +504,7 @@ func (s *Service) GenerateLoginToken(
 		createToken.Kind = &pb.Token_Login_{Login: login}
 	}
 
-	token, err := s.newToken(ctx, dur, DefaultKeyId, nil, createToken)
+	token, err := s.newToken(ctx, dur, s.activeAuthKeyId, nil, createToken)
 	if err != nil {
 		return nil, err
 	}
@@ -508,7 +552,7 @@ func (s *Service) GenerateRunnerToken(
 		},
 	}
 
-	token, err := s.newToken(ctx, dur, DefaultKeyId, nil, createToken)
+	token, err := s.newToken(ctx, dur, s.activeAuthKeyId, nil, createToken)
 	if err != nil {
 		return nil, err
 	}
@@ -629,7 +673,7 @@ func (s *Service) GenerateInviteToken(
 		Signup:     req.Signup,
 	}
 
-	token, err := s.newToken(ctx, dur, DefaultKeyId, nil, &pb.Token{
+	token, err := s.newToken(ctx, dur, s.activeAuthKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Invite_{Invite: invite},
 	})
 	if err != nil {
@@ -672,7 +716,7 @@ func (s *Service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteT
 	// Our login token is just the login token on the invite.
 	login := invite.Login
 
-	token, err := s.newToken(ctx, 0, DefaultKeyId, nil, &pb.Token{
+	token, err := s.newToken(ctx, 0, s.activeAuthKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Login_{Login: login},
 	})
 	if err != nil {
@@ -695,7 +739,7 @@ func (s *Service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.New
 	}
 
 	// Create a new token pointed to our existing user
-	token, err := s.newToken(ctx, 0, DefaultKeyId, nil, &pb.Token{
+	token, err := s.newToken(ctx, 0, s.activeAuthKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Login_{
 			Login: &pb.Token_Login{
 				UserId: user.Id,
