@@ -24,6 +24,8 @@ type Interface interface {
 	HMACKeyEmpty() bool
 	HMACKeyCreateIfNotExist(id string, size int) (*pb.HMACKey, error)
 	HMACKeyGet(id string) (*pb.HMACKey, error)
+	TokenSignature(tokenBody []byte, keyId string) (signature []byte, err error)
+	TokenSignatureVerify(tokenBody []byte, signature []byte, keyId string) (isValid bool, err error)
 
 	ServerConfigSet(*pb.ServerConfig) error
 	ServerConfigGet() (*pb.ServerConfig, error)
