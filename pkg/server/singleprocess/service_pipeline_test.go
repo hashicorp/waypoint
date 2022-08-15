@@ -452,7 +452,10 @@ func TestServiceRunPipeline(t *testing.T) {
 		require.Nil(resp)
 	})
 
-	// This is likely an internal error.
+	// This is likely an internal error if it does error. When we go to construct
+	// a full graph including any embedded pipeline graphs, we rename the step nodes
+	// to have their own unique ids and keep track of which node id is associated to
+	// which pipeline and step name.
 	t.Run("does not error when multiple pipelines have the same step names", func(t *testing.T) {
 		require := require.New(t)
 		ctx := context.Background()
@@ -560,6 +563,213 @@ func TestServiceRunPipeline(t *testing.T) {
 		require.NoError(err)
 		require.NotNil(resp)
 		require.Len(resp.AllJobIds, 5)
+	})
+
+	// This is a nasty cycle graph
+	t.Run("returns an error if theres a cycle detected on a deeply cyclic graph", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Initialize our app
+		TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+		// Create our pipeline
+		pipeline := &pb.Pipeline{
+			Id:   "test",
+			Name: "test",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "project",
+				},
+			},
+			Steps: map[string]*pb.Pipeline_Step{
+				"A": {
+					Name: "A",
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+				"Uzumaki": {
+					Name:      "Uzumaki",
+					DependsOn: []string{"Embed"},
+					Kind: &pb.Pipeline_Step_Pipeline_{
+						Pipeline: &pb.Pipeline_Step_Pipeline{
+							Ref: &pb.Ref_Pipeline{
+								Ref: &pb.Ref_Pipeline_Id{
+									Id: &pb.Ref_PipelineId{
+										Id: "uzumaki",
+									},
+								},
+							},
+						},
+					},
+				},
+				"B": {
+					Name:      "B",
+					DependsOn: []string{"A"},
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+				"Embed": {
+					Name:      "Embed",
+					DependsOn: []string{"B"},
+					Kind: &pb.Pipeline_Step_Pipeline_{
+						Pipeline: &pb.Pipeline_Step_Pipeline{
+							Ref: &pb.Ref_Pipeline{
+								Ref: &pb.Ref_Pipeline_Id{
+									Id: &pb.Ref_PipelineId{
+										Id: "embed",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		// Create, should get an ID back
+		_, err = client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: pipeline,
+		})
+		require.NoError(err)
+
+		// Create another pipeline that references the first one
+		// Create our pipeline
+		embedPipeline := &pb.Pipeline{
+			Id:   "embed",
+			Name: "embed",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "project",
+				},
+			},
+			Steps: map[string]*pb.Pipeline_Step{
+				"first": {
+					Name: "first",
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+				"second": {
+					Name:      "second",
+					DependsOn: []string{"first"},
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+				"embedpt2": {
+					Name:      "embedpt2",
+					DependsOn: []string{"second"},
+					Kind: &pb.Pipeline_Step_Pipeline_{
+						Pipeline: &pb.Pipeline_Step_Pipeline{
+							Ref: &pb.Ref_Pipeline{
+								Ref: &pb.Ref_Pipeline_Id{
+									Id: &pb.Ref_PipelineId{
+										Id: "test",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		// Create, should get an ID back
+		_, err = client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: embedPipeline,
+		})
+		require.NoError(err)
+
+		// Create another pipeline that references the first one
+		// Create our pipeline
+		uzumakiPipeline := &pb.Pipeline{
+			Id:   "uzumaki",
+			Name: "uzumaki",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "project",
+				},
+			},
+			Steps: map[string]*pb.Pipeline_Step{
+				"spiral": {
+					Name: "spiral",
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+				"self": {
+					Name:      "self",
+					DependsOn: []string{"spiral"},
+					Kind: &pb.Pipeline_Step_Pipeline_{
+						Pipeline: &pb.Pipeline_Step_Pipeline{
+							Ref: &pb.Ref_Pipeline{
+								Ref: &pb.Ref_Pipeline_Id{
+									Id: &pb.Ref_PipelineId{
+										Id: "uzumaki",
+									},
+								},
+							},
+						},
+					},
+				},
+				"vortex": {
+					Name:      "vortex",
+					DependsOn: []string{"spiral"},
+					Kind: &pb.Pipeline_Step_Pipeline_{
+						Pipeline: &pb.Pipeline_Step_Pipeline{
+							Ref: &pb.Ref_Pipeline{
+								Ref: &pb.Ref_Pipeline_Id{
+									Id: &pb.Ref_PipelineId{
+										Id: "test",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		// Create, should get an ID back
+		_, err = client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: uzumakiPipeline,
+		})
+		require.NoError(err)
+
+		// Build our job template
+		jobTemplate := serverptypes.TestJobNew(t, nil)
+		resp, err := client.RunPipeline(ctx, &pb.RunPipelineRequest{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: &pb.Ref_PipelineId{
+						Id: "test",
+					},
+				},
+			},
+			JobTemplate: jobTemplate,
+		})
+
+		// You shouldn't be able to run a cyclic pipeline
+		require.Error(err)
+		require.Nil(resp)
 	})
 
 }
