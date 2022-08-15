@@ -81,6 +81,9 @@ type TaskLauncherConfig struct {
 	// Optionally define various memory resource limits and requests for kubernetes pod containers
 	Memory *ResourceConfig `hcl:"memory,block"`
 
+	// Optionally define various ephemeral storage resource limits and requests for kubernetes pod containers
+	EphemeralStorage *ResourceConfig `hcl:"ephemeral_storage,block"`
+
 	// How long WatchTask should wait for a pod to startup. This option is specifically
 	// wordy because it's only for the WatchTask timing out waiting for the pod
 	// its watching to start up before it attempts to stream its logs.
@@ -150,6 +153,11 @@ task {
 	doc.SetField(
 		"cpu",
 		"cpu resource request to be added to the task container",
+	)
+
+	doc.SetField(
+		"ephemeral_storage",
+		"ephemeral_storage resource request to be added to the task container",
 	)
 
 	doc.SetField(
@@ -348,6 +356,26 @@ func (p *TaskLauncher) StartTask(
 					status.Errorf(codes.InvalidArgument, "failed to parse memory limit %q to k8s quantity: %s", p.config.Memory.Limit, err)
 			}
 			resourceLimits[corev1.ResourceMemory] = q
+		}
+	}
+
+	if p.config.EphemeralStorage != nil {
+		if p.config.EphemeralStorage.Request != "" {
+			q, err := k8sresource.ParseQuantity(p.config.EphemeralStorage.Request)
+			if err != nil {
+				return nil,
+					status.Errorf(codes.InvalidArgument, "failed to parse ephemeral-storage requested %q to k8s quantity: %s", p.config.EphemeralStorage.Request, err)
+			}
+			resourceRequests[corev1.ResourceEphemeralStorage] = q
+		}
+
+		if p.config.EphemeralStorage.Limit != "" {
+			q, err := k8sresource.ParseQuantity(p.config.EphemeralStorage.Limit)
+			if err != nil {
+				return nil,
+					status.Errorf(codes.InvalidArgument, "failed to parse ephemeral-storage limit %q to k8s quantity: %s", p.config.EphemeralStorage.Limit, err)
+			}
+			resourceLimits[corev1.ResourceEphemeralStorage] = q
 		}
 	}
 
