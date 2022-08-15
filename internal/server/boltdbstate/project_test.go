@@ -136,8 +136,7 @@ func TestProject(t *testing.T) {
 		}))
 
 		// Delete the project (this should also delete the build)
-		err = s.ProjectDelete(&pb.Ref_Project{Project: projectName})
-		require.NoError(err)
+		require.NoError(s.ProjectDelete(&pb.Ref_Project{Project: projectName}))
 
 		// Attempt to get the project again (expected error)
 		_, err = s.ProjectGet(&pb.Ref_Project{Project: projectName})
