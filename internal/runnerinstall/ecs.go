@@ -110,12 +110,12 @@ type ECSRunnerInstaller struct {
 
 type EcsConfig struct {
 	Region            string   `hcl:"region,required"`
+	Cluster           string   `hcl:"cluster,required"`
 	ExecutionRoleName string   `hcl:"execution_role_name,optional"`
 	TaskRoleName      string   `hcl:"task_role_name,optional"`
 	CPU               string   `hcl:"runner_cpu,optional"`
 	Memory            string   `hcl:"memory_cpu,optional"`
 	RunnerImage       string   `hcl:"runner_image,optional"`
-	Cluster           string   `hcl:"cluster,required"`
 	Subnets           []string `hcl:"subnets,optional"`
 }
 
