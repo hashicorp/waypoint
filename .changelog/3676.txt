@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/k8s: Add ephemeral-storage resource limits to on-demand runners through runner profiles.
+```
