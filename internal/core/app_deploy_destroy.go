@@ -133,12 +133,11 @@ func (a *App) destroyDeploy(
 		for _, resource := range destroyProto.DeclaredResources {
 			a.UI.Output("- "+resource.Name, terminal.WithWarningStyle())
 		}
-	}
-
-	if len(destroyProto.DestroyedResources) > 0 {
-		a.UI.Output("These resources were destroyed for app %q:", a.ref.Application, terminal.WithSuccessStyle())
-		for _, resource := range destroyProto.DestroyedResources {
-			a.UI.Output("- "+resource.Name, terminal.WithSuccessStyle())
+		if len(destroyProto.DestroyedResources) > 0 {
+			a.UI.Output("These resources were destroyed for app %q:", a.ref.Application, terminal.WithSuccessStyle())
+			for _, resource := range destroyProto.DestroyedResources {
+				a.UI.Output("- "+resource.Name, terminal.WithSuccessStyle())
+			}
 		}
 	}
 
