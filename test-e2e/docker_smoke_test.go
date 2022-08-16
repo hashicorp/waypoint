@@ -16,7 +16,7 @@ func TestWaypointDockerInstall(t *testing.T) {
 	stdout, stderr, err := wp.RunRaw("install", "-platform=docker", "-accept-tos", fmt.Sprintf("-docker-server-image=%s", wpServerImage), fmt.Sprintf("-docker-odr-image=%s", wpOdrImage))
 
 	if err != nil {
-		t.Errorf("unexpected error installing server to docker: %s", err)
+		t.Errorf("unexpected error installing server to docker: %s\nstderr: %s", err, stderr)
 	}
 
 	if stderr != "" {
@@ -33,7 +33,7 @@ func TestWaypointDockerUp(t *testing.T) {
 	stdout, stderr, err := wp.RunRaw("init")
 
 	if err != nil {
-		t.Errorf("unexpected error initializing waypoint project: %s", err)
+		t.Errorf("unexpected error initializing waypoint project: %s\nstderr: %s", err, stderr)
 	}
 
 	if stderr != "" {
@@ -47,7 +47,7 @@ func TestWaypointDockerUp(t *testing.T) {
 	stdout, stderr, err = wp.RunRaw("up")
 
 	if err != nil {
-		t.Errorf("unexpected error deploying waypoint project: %s", err)
+		t.Errorf("unexpected error deploying waypoint project: %s\nstderr: %s", err, stderr)
 	}
 
 	if stderr != "" {
@@ -64,7 +64,7 @@ func TestWaypointDockerMultiAppUp(t *testing.T) {
 	stdout, stderr, err := wp.RunRaw("init")
 
 	if err != nil {
-		t.Errorf("unexpected error initializing waypoint project: %s", err)
+		t.Errorf("unexpected error initializing waypoint project: %s\nstderr: %s", err, stderr)
 	}
 
 	if stderr != "" {
@@ -78,7 +78,7 @@ func TestWaypointDockerMultiAppUp(t *testing.T) {
 	stdout, stderr, err = wp.RunRaw("up")
 
 	if err != nil {
-		t.Errorf("unexpected error deploying waypoint project: %s", err)
+		t.Errorf("unexpected error deploying waypoint project: %s\nstderr: %s", err, stderr)
 	}
 
 	if stderr != "" {
@@ -95,7 +95,7 @@ func TestWaypointDockerUpgrade(t *testing.T) {
 	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=docker", "-auto-approve", fmt.Sprintf("-docker-server-image=%s", wpServerImageUpgrade), fmt.Sprintf("-docker-odr-image=%s", wpOdrImageUpgrade), "-snapshot=false")
 
 	if err != nil {
-		t.Errorf("unexpected error upgrading server in docker: %s", err)
+		t.Errorf("unexpected error upgrading server in docker: %s\nstderr: %s", err, stderr)
 	}
 
 	if stderr != "" {
@@ -112,7 +112,7 @@ func TestWaypointDockerUpAfterUpgrade(t *testing.T) {
 	stdout, stderr, err := wp.RunRaw("up")
 
 	if err != nil {
-		t.Errorf("unexpected error deploying waypoint project: %s", err)
+		t.Errorf("unexpected error deploying waypoint project: %s\nstderr: %s", err, stderr)
 	}
 
 	if stderr != "" {
@@ -129,7 +129,7 @@ func TestWaypointDockerMultiAppUpAfterUpgrade(t *testing.T) {
 	stdout, stderr, err := wp.RunRaw("init")
 
 	if err != nil {
-		t.Errorf("unexpected error initializing waypoint project: %s", err)
+		t.Errorf("unexpected error initializing waypoint project: %s\nstderr: %s", err, stderr)
 	}
 
 	if stderr != "" {
@@ -143,7 +143,7 @@ func TestWaypointDockerMultiAppUpAfterUpgrade(t *testing.T) {
 	stdout, stderr, err = wp.RunRaw("up")
 
 	if err != nil {
-		t.Errorf("unexpected error deploying waypoint project: %s", err)
+		t.Errorf("unexpected error deploying waypoint project: %s\nstderr: %s", err, stderr)
 	}
 
 	if stderr != "" {
@@ -160,7 +160,7 @@ func TestWaypointDockerDestroy(t *testing.T) {
 	stdout, stderr, err := wp.RunRaw("destroy", "-auto-approve")
 
 	if err != nil {
-		t.Errorf("unexpected error destroying waypoint project: %s", err)
+		t.Errorf("unexpected error destroying waypoint project: %s\nstderr: %s", err, stderr)
 	}
 
 	if stderr != "" {
@@ -177,7 +177,7 @@ func TestWaypointDockerDestroyMultiApp(t *testing.T) {
 	stdout, stderr, err := wp.RunRaw("destroy", "-auto-approve")
 
 	if err != nil {
-		t.Errorf("unexpected error destroying waypoint project: %s", err)
+		t.Errorf("unexpected error destroying waypoint project: %s\nstderr: %s", err, stderr)
 	}
 
 	if stderr != "" {
@@ -194,7 +194,7 @@ func TestWaypointDockerUninstall(t *testing.T) {
 	stdout, stderr, err := wp.RunRaw("server", "uninstall", "-platform=docker", "-auto-approve", "-snapshot=false")
 
 	if err != nil {
-		t.Errorf("unexpected error uninstalling waypoint server: %s", err)
+		t.Errorf("unexpected error uninstalling waypoint server: %s\nstderr: %s", err, stderr)
 	}
 
 	if stderr != "" {
