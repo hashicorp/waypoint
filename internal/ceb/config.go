@@ -320,7 +320,7 @@ func (ceb *CEB) recvConfig(
 			// If we get the unavailable error then the connection died.
 			// We restablish the connection.
 			if status.Code(err) == codes.Unavailable {
-				log.Error("ceb disconnected from server, attempting reconnect")
+				log.Warn("ceb disconnected from server, attempting reconnect")
 				err = reconnect()
 
 				// If we successfully reconnected, then exit this.
