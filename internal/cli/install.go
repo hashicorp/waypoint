@@ -546,7 +546,7 @@ func installRunner(
 	// If this installation platform supports an out-of-the-box ODR
 	// config then we set that up. This enables on-demand runners to
 	// work immediately.
-	if odc, ok := p.(serverinstall.OnDemandRunnerConfigProvider); ok {
+	if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
 		s = sg.Add("Registering on-demand runner configuration...")
 
 		if odrConfig == nil {
@@ -554,10 +554,6 @@ func installRunner(
 		}
 
 		odrConfig.Name = odrConfig.PluginType + "-bootstrap-profile"
-		if err != nil {
-			ui.Output("Error getting version: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		}
 
 		_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 			Config: odrConfig,
