@@ -506,9 +506,11 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 				}
 			}
 
-			c.ui.Output("")
-			c.ui.Output(runnerMultiDefault, strings.Join(runnerDefaultNames[:], "\n"), strings.Join(runnerUnsetStr[:], "\n"), terminal.WithWarningStyle())
-			c.ui.Output("")
+			if len(runnerDefaultNames) > 0 {
+				c.ui.Output("")
+				c.ui.Output(runnerMultiDefault, strings.Join(runnerDefaultNames[:], "\n"), strings.Join(runnerUnsetStr[:], "\n"), terminal.WithWarningStyle())
+				c.ui.Output("")
+			}
 		}
 
 		// TODO(mitchellh): This creates a new auth token for the new runner.
