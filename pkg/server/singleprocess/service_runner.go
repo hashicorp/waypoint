@@ -2,10 +2,11 @@ package singleprocess
 
 import (
 	"context"
-	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"io"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
@@ -256,7 +257,7 @@ func (s *Service) RunnerToken(
 				// expire and introduce rotation as a feature of adoption.
 				0,
 
-				DefaultKeyId,
+				s.activeAuthKeyId,
 				nil,
 				&pb.Token{
 					Kind: &pb.Token_Runner_{
