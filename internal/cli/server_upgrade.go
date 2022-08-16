@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"os"
 	"sort"
 	"strings"
@@ -411,7 +412,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 	s.Update("Previous runner uninstalled")
 	s.Done()
 
-	if odc, ok := p.(serverinstall.OnDemandRunnerConfigProvider); ok {
+	if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
 		odr := odc.OnDemandRunnerConfig()
 
 		runnerConfigName := odr.PluginType + "-bootstrap-profile"
