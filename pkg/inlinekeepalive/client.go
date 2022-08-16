@@ -113,8 +113,8 @@ func KeepaliveClientStreamInterceptor(sendInterval time.Duration) grpc.StreamCli
 
 			versionInfo, err := client.GetVersionInfo(ctx, &emptypb.Empty{})
 			if err != nil {
-				if status.Code(err) == codes.Canceled {
-					log.Trace("context canceled while determining if server is compatible with inline keepalives - will not send.")
+				if status.Code(err) == codes.Canceled || status.Code(err) == codes.Unavailable {
+					log.Trace("context canceled while determining if server is compatible with inline keepalives - will not send.", "err", err)
 					return
 				}
 				log.Warn("failed getting version info to determine if server is inline-keepalive compatible - will not send them", "err", err)
