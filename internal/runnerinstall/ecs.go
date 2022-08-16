@@ -701,11 +701,7 @@ func (i *ECSRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	}
 
 	if i.Config.Subnets != nil {
-		var subnets []string
-		for _, s := range i.Config.Subnets {
-			subnets = append(subnets, s)
-		}
-		cfgMap["subnets"] = strings.Join(subnets, ",")
+		cfgMap["subnets"] = strings.Join(i.Config.Subnets, ",")
 		// TODO: set security group
 	}
 
