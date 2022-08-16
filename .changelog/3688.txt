@@ -1,0 +1,4 @@
+```release-note:bug
+cli: Only show runner profile default deletion hint if more than 0 default
+profiles are detected on upgrades.
+```
