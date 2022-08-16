@@ -79,15 +79,17 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 	}
 
 	// We perform all of our reads before our write to avoid the deadlocked state
-	var builds []*pb.Build
-	var artifacts []*pb.PushedArtifact
-	var deployments []*pb.Deployment
-	var releases []*pb.Release
-	var statusReports []*pb.StatusReport
-	var workspaces []*pb.Workspace_Project
-	var triggers []*pb.Trigger
-	var pipelines []*pb.Pipeline
-	var configVars []*pb.ConfigVar
+	var (
+		builds        []*pb.Build
+		artifacts     []*pb.PushedArtifact
+		deployments   []*pb.Deployment
+		releases      []*pb.Release
+		statusReports []*pb.StatusReport
+		workspaces    []*pb.Workspace_Project
+		triggers      []*pb.Trigger
+		pipelines     []*pb.Pipeline
+		configVars    []*pb.ConfigVar
+	)
 	if err = s.db.View(func(dbTxn *bolt.Tx) error {
 		for _, app := range project.Applications {
 			appRef := &pb.Ref_Application{
