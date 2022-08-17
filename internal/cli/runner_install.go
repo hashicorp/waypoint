@@ -160,7 +160,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	p, ok := runnerinstall.Platforms[strings.ToLower(platform[0])]
 	if !ok {
 		c.ui.Output(
-			"Error installing server into %q: unsupported platform",
+			"Error installing runner into %q: unsupported platform",
 			platform[0],
 			terminal.WithErrorStyle(),
 		)

@@ -2,6 +2,7 @@ package runnerinstall
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -109,18 +110,24 @@ type ECSRunnerInstaller struct {
 
 type EcsConfig struct {
 	Region            string   `hcl:"region,required"`
+	Cluster           string   `hcl:"cluster,required"`
 	ExecutionRoleName string   `hcl:"execution_role_name,optional"`
 	TaskRoleName      string   `hcl:"task_role_name,optional"`
 	CPU               string   `hcl:"runner_cpu,optional"`
 	Memory            string   `hcl:"memory_cpu,optional"`
 	RunnerImage       string   `hcl:"runner_image,optional"`
-	Cluster           string   `hcl:"cluster,optional"`
 	Subnets           []string `hcl:"subnets,optional"`
 }
 
 func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) error {
 	ui := opts.UI
 	log := opts.Log
+
+	if i.Config.Cluster == "" {
+		return errors.New("cluster name not specified")
+	} else if i.Config.Region == "" {
+		return errors.New("region not specified")
+	}
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: i.Config.Region,
