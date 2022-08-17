@@ -517,6 +517,23 @@ func TestAppOperation(t *testing.T) {
 		// Observe that the watch fires
 		require.False(ws.Watch(time.After(1 * time.Second)))
 	})
+
+	t.Run("attempt deletion of non-existest operation id", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Attempt to delete an operation that doesn't exist
+		err := op.Delete(s, &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: "abc123",
+			},
+		})
+		// We expect no error here because attempting deletion of a record whose key does
+		// not exist returns no error in bolt: https://pkg.go.dev/go.etcd.io/bbolt@v1.3.6#Bucket.Delete
+		require.NoError(err)
+	})
 }
 
 func TestAppOperation_deploy(t *testing.T) {
