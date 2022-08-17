@@ -59,7 +59,11 @@ func (a *App) Build(ctx context.Context, optFuncs ...BuildOption) (
 	if err != nil {
 		return nil, nil, err
 	}
-	build := msg.(*pb.Build)
+	build, ok := msg.(*pb.Build)
+	if !ok {
+		return nil, nil, status.Error(codes.Internal,
+			"app_build failed to convert the operation message into a Build proto message")
+	}
 
 	// If we're not pushing, then we're done!
 	if !opts.Push {

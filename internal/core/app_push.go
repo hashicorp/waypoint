@@ -64,7 +64,12 @@ func (a *App) PushBuild(ctx context.Context, optFuncs ...PushBuildOption) (*pb.P
 		return nil, err
 	}
 
-	return msg.(*pb.PushedArtifact), nil
+	result, ok := msg.(*pb.PushedArtifact)
+	if !ok {
+		return nil, status.Error(codes.Internal, "app_push failed to convert the operation message into a PushedArtifact proto")
+	}
+
+	return result, nil
 }
 
 // PushBuildOption is used to configure a Build
