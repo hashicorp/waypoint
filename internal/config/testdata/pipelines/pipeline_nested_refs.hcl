@@ -10,8 +10,9 @@ pipeline "foo" {
   }
 
   step "pipe" {
-    pipeline "foo/pipe2" {
-
+    use "pipeline" {
+      project = "foo"
+      name = "pipe2"
     }
   }
 }

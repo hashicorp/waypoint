@@ -1,8 +1,6 @@
 package config
 
 import (
-	"strings"
-
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -230,33 +228,29 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 				}
 
 				result = append(result, pipelines...)
-			}
 
-			// We check if this step references a separate pipeline by Owner
-			pipeName := step.PipelineRaw.Name
-			pipeProject := c.hclConfig.Project
-			if pn := strings.Split(pipeName, "/"); len(pn) > 1 {
-				pipeProject = pn[0]
-				pipeName = pn[1]
-			}
+				// We check if this step references a separate pipeline by Owner
+				pipeName := step.PipelineRaw.Name
+				pipeProject := c.hclConfig.Project
 
-			// Add pipeline reference as a pipeline ref step for parent pipeline
-			s.Kind = &pb.Pipeline_Step_Pipeline_{
-				Pipeline: &pb.Pipeline_Step_Pipeline{
-					Ref: &pb.Ref_Pipeline{
-						Ref: &pb.Ref_Pipeline_Owner{
-							Owner: &pb.Ref_PipelineOwner{
-								Project: &pb.Ref_Project{
-									Project: pipeProject,
+				// Add pipeline reference as a pipeline ref step for parent pipeline
+				s.Kind = &pb.Pipeline_Step_Pipeline_{
+					Pipeline: &pb.Pipeline_Step_Pipeline{
+						Ref: &pb.Ref_Pipeline{
+							Ref: &pb.Ref_Pipeline_Owner{
+								Owner: &pb.Ref_PipelineOwner{
+									Project: &pb.Ref_Project{
+										Project: pipeProject,
+									},
+									PipelineName: pipeName,
 								},
-								PipelineName: pipeName,
 							},
 						},
 					},
-				},
-			}
+				}
 
-			steps[step.Name] = s
+				steps[step.Name] = s
+			}
 
 			continue // continue to build the rest of the parent pipeline
 		} // else do below
@@ -362,6 +356,39 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 					Image:   step.ImageURL,
 					Command: execBody.Command,
 					Args:    execBody.Args,
+				},
+			}
+		case "pipeline":
+			// TODO(briancain): setting name to 'required' makes the HCL parser
+			// panic saying 'required' is an invalid hcl tag :thinking:
+			var pipelineBody struct {
+				Project string `hcl:"project,optional"`
+				Name    string `hcl:"name,optional"`
+			}
+
+			// Evaluate the step body hcl to get options
+			if diag := gohcl.DecodeBody(step.Use.Body, finalizeContext(c.ctx), &pipelineBody); diag.HasErrors() {
+				return nil, diag
+			}
+
+			// set to *Current* project if not set
+			if pipelineBody.Project == "" {
+				pipelineBody.Project = c.hclConfig.Project
+			}
+
+			// Add pipeline reference as a pipeline ref step for parent pipeline
+			s.Kind = &pb.Pipeline_Step_Pipeline_{
+				Pipeline: &pb.Pipeline_Step_Pipeline{
+					Ref: &pb.Ref_Pipeline{
+						Ref: &pb.Ref_Pipeline_Owner{
+							Owner: &pb.Ref_PipelineOwner{
+								Project: &pb.Ref_Project{
+									Project: pipelineBody.Project,
+								},
+								PipelineName: pipelineBody.Name,
+							},
+						},
+					},
 				},
 			}
 		case "":
