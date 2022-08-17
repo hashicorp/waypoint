@@ -96,20 +96,30 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 				Application: app.Name,
 				Project:     project.Name,
 			}
-			if builds, err = s.BuildList(appRef); err != nil {
+			if buildList, err := s.BuildList(appRef); err != nil {
 				return err
+			} else {
+				builds = append(builds, buildList...)
 			}
-			if artifacts, err = s.ArtifactList(appRef); err != nil {
+			if artifactList, err := s.ArtifactList(appRef); err != nil {
 				return err
+			} else {
+				artifacts = append(artifacts, artifactList...)
 			}
-			if deployments, err = s.DeploymentList(appRef); err != nil {
+			if deploymentList, err := s.DeploymentList(appRef); err != nil {
 				return err
+			} else {
+				deployments = append(deployments, deploymentList...)
 			}
-			if releases, err = s.ReleaseList(appRef); err != nil {
+			if releaseList, err := s.ReleaseList(appRef); err != nil {
 				return err
+			} else {
+				releases = append(releases, releaseList...)
 			}
-			if statusReports, err = s.StatusReportList(appRef); err != nil {
+			if statusReportList, err := s.StatusReportList(appRef); err != nil {
 				return err
+			} else {
+				statusReports = append(statusReports, statusReportList...)
 			}
 
 			// Get app-scoped config
@@ -174,6 +184,7 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 		if err = s.BuildDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: build.Id}}); err != nil {
 			return err
 		}
+		s.log.Debug("deleted build " + build.Id)
 	}
 	for _, artifact := range artifacts {
 		if err = s.ArtifactDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: artifact.Id}}); err != nil {
