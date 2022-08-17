@@ -1,0 +1,4 @@
+```release-note:bug
+cli: Do not set runner profile defaultness to false if default flag not specified.
+```
+
