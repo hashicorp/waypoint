@@ -5,6 +5,106 @@
    "name": "docker",
    "optionalFields": [
       {
+         "Field": "auth",
+         "Type": "docker.Auth",
+         "Synopsis": "the authentication information to log into the docker repository",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "auth",
+               "Type": "string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "email",
+               "Type": "string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "hostname",
+               "Type": "string",
+               "Synopsis": "Hostname of Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "identityToken",
+               "Type": "string",
+               "Synopsis": "Token used to authenticate user",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "password",
+               "Type": "string",
+               "Synopsis": "Password of Docker registry account",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "registryToken",
+               "Type": "string",
+               "Synopsis": "Bearer tokens to be sent to Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "serverAddress",
+               "Type": "string",
+               "Synopsis": "Address of Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "username",
+               "Type": "string",
+               "Synopsis": "Username of Docker registry account",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
          "Field": "build_args",
          "Type": "map of string to string",
          "Synopsis": "build args to pass to docker for the build step",
@@ -141,108 +241,7 @@
       }
    ],
    "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
-   "requiredFields": [
-      {
-         "Field": "auth",
-         "Type": "docker.Auth",
-         "Synopsis": "the authentication information to log into the docker repository",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": true,
-         "SubFields": [
-            {
-               "Field": "auth",
-               "Type": "string",
-               "Synopsis": "",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "email",
-               "Type": "string",
-               "Synopsis": "",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "hostname",
-               "Type": "string",
-               "Synopsis": "Hostname of Docker registry",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "identityToken",
-               "Type": "string",
-               "Synopsis": "Token used to authenticate user",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "password",
-               "Type": "string",
-               "Synopsis": "Password of Docker registry account",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "registryToken",
-               "Type": "string",
-               "Synopsis": "Bearer tokens to be sent to Docker registry",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "serverAddress",
-               "Type": "string",
-               "Synopsis": "Address of Docker registry",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "username",
-               "Type": "string",
-               "Synopsis": "Username of Docker registry account",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            }
-         ]
-      }
-   ],
+   "requiredFields": null,
    "type": "builder",
    "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
 }

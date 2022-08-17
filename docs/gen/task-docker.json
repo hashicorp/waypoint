@@ -60,6 +60,40 @@
          "SubFields": null
       },
       {
+         "Field": "resources",
+         "Type": "docker.TaskResources",
+         "Synopsis": "The resources that the tasks should use.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "cpu",
+               "Type": "int64",
+               "Synopsis": "The cpu shares that the tasks should use",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "memory",
+               "Type": "string",
+               "Synopsis": "The amount of memory to use. Defined as '512MB', '44kB', etc.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
          "Field": "static_environment",
          "Type": "map of string to string",
          "Synopsis": "environment variables to expose to the application",
@@ -96,40 +130,6 @@
          "EnvVar": "",
          "Category": false,
          "SubFields": null
-      },
-      {
-         "Field": "resources",
-         "Type": "docker.TaskResources",
-         "Synopsis": "The resources that the tasks should use.",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": true,
-         "SubFields": [
-            {
-               "Field": "cpu",
-               "Type": "int64",
-               "Synopsis": "The cpu shares that the tasks should use",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "memory",
-               "Type": "string",
-               "Synopsis": "The amount of memory to use. Defined as '512MB', '44kB', etc.",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            }
-         ]
       }
    ],
    "type": "task",

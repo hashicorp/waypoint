@@ -16,6 +16,51 @@
          "SubFields": null
       },
       {
+         "Field": "autoscale",
+         "Type": "k8s.AutoscaleConfig",
+         "Synopsis": "sets up a horizontal pod autoscaler to scale deployments automatically",
+         "Summary": "This configuration will automatically set up and associate the current deployment with a horizontal pod autoscaler in Kuberentes. Note that for this to work, you must also define resource limits and requests for a deployment otherwise the metrics-server will not be able to properly determine a deployments target CPU utilization",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "cpu_percent",
+               "Type": "int32",
+               "Synopsis": "the target CPU percent utilization before the horizontal pod autoscaler scales up a deployments replicas",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "max_replicas",
+               "Type": "int32",
+               "Synopsis": "the maximum amount of pods to scale to for a deployment",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "min_replicas",
+               "Type": "int32",
+               "Synopsis": "the minimum amount of pods to have for a deployment",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
          "Field": "context",
          "Type": "string",
          "Synopsis": "the kubectl context to use, as defined in the kubeconfig file",
@@ -25,6 +70,40 @@
          "EnvVar": "",
          "Category": false,
          "SubFields": null
+      },
+      {
+         "Field": "cpu",
+         "Type": "k8s.ResourceConfig",
+         "Synopsis": "cpu resource configuration",
+         "Summary": "CPU lets you define resource limits and requests for a container in a deployment.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "limit",
+               "Type": "string",
+               "Synopsis": "maximum amount of cpu to give the container. Supports m to indicate milli-cores",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "request",
+               "Type": "string",
+               "Synopsis": "how much cpu to give the container in cpu cores. Supports m to indicate milli-cores",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
       },
       {
          "Field": "image_secret",
@@ -60,6 +139,40 @@
          "SubFields": null
       },
       {
+         "Field": "memory",
+         "Type": "k8s.ResourceConfig",
+         "Synopsis": "memory resource configuration",
+         "Summary": "Memory lets you define resource limits and requests for a container in a deployment.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "limit",
+               "Type": "string",
+               "Synopsis": "maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "request",
+               "Type": "string",
+               "Synopsis": "how much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
          "Field": "namespace",
          "Type": "string",
          "Synopsis": "namespace to target deployment into",
@@ -69,6 +182,51 @@
          "EnvVar": "",
          "Category": false,
          "SubFields": null
+      },
+      {
+         "Field": "probe",
+         "Type": "k8s.Probe",
+         "Synopsis": "configuration to control liveness and readiness probes",
+         "Summary": "Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "failure_threshold",
+               "Type": "uint",
+               "Synopsis": "number of times a liveness probe can fail before the container is killed",
+               "Summary": "failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
+               "Optional": true,
+               "Default": "30",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "initial_delay",
+               "Type": "uint",
+               "Synopsis": "time in seconds to wait before performing the initial liveness and readiness probes",
+               "Summary": "",
+               "Optional": true,
+               "Default": "5",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "timeout",
+               "Type": "uint",
+               "Synopsis": "time in seconds before the probe fails",
+               "Summary": "",
+               "Optional": true,
+               "Default": "5",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
       },
       {
          "Field": "probe_path",
@@ -185,119 +343,6 @@
    ],
    "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
    "requiredFields": [
-      {
-         "Field": "autoscale",
-         "Type": "k8s.AutoscaleConfig",
-         "Synopsis": "sets up a horizontal pod autoscaler to scale deployments automatically",
-         "Summary": "This configuration will automatically set up and associate the current deployment with a horizontal pod autoscaler in Kuberentes. Note that for this to work, you must also define resource limits and requests for a deployment otherwise the metrics-server will not be able to properly determine a deployments target CPU utilization",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": true,
-         "SubFields": [
-            {
-               "Field": "cpu_percent",
-               "Type": "int32",
-               "Synopsis": "the target CPU percent utilization before the horizontal pod autoscaler scales up a deployments replicas",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "max_replicas",
-               "Type": "int32",
-               "Synopsis": "the maximum amount of pods to scale to for a deployment",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "min_replicas",
-               "Type": "int32",
-               "Synopsis": "the minimum amount of pods to have for a deployment",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            }
-         ]
-      },
-      {
-         "Field": "cpu",
-         "Type": "k8s.ResourceConfig",
-         "Synopsis": "cpu resource configuration",
-         "Summary": "CPU lets you define resource limits and requests for a container in a deployment.",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": true,
-         "SubFields": [
-            {
-               "Field": "limit",
-               "Type": "string",
-               "Synopsis": "maximum amount of cpu to give the container. Supports m to indicate milli-cores",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "request",
-               "Type": "string",
-               "Synopsis": "how much cpu to give the container in cpu cores. Supports m to indicate milli-cores",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            }
-         ]
-      },
-      {
-         "Field": "memory",
-         "Type": "k8s.ResourceConfig",
-         "Synopsis": "memory resource configuration",
-         "Summary": "Memory lets you define resource limits and requests for a container in a deployment.",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": true,
-         "SubFields": [
-            {
-               "Field": "limit",
-               "Type": "string",
-               "Synopsis": "maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "request",
-               "Type": "string",
-               "Synopsis": "how much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            }
-         ]
-      },
       {
          "Field": "pod",
          "Type": "k8s.Pod",
@@ -891,51 +936,6 @@
                      "SubFields": null
                   }
                ]
-            }
-         ]
-      },
-      {
-         "Field": "probe",
-         "Type": "k8s.Probe",
-         "Synopsis": "configuration to control liveness and readiness probes",
-         "Summary": "Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": true,
-         "SubFields": [
-            {
-               "Field": "failure_threshold",
-               "Type": "uint",
-               "Synopsis": "number of times a liveness probe can fail before the container is killed",
-               "Summary": "failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
-               "Optional": true,
-               "Default": "30",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "initial_delay",
-               "Type": "uint",
-               "Synopsis": "time in seconds to wait before performing the initial liveness and readiness probes",
-               "Summary": "",
-               "Optional": true,
-               "Default": "5",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "timeout",
-               "Type": "uint",
-               "Synopsis": "time in seconds before the probe fails",
-               "Summary": "",
-               "Optional": true,
-               "Default": "5",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
             }
          ]
       }

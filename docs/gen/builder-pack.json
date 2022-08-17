@@ -1,5 +1,5 @@
 {
-   "description": "\nCreate a Docker image using CloudNative Buildpacks.\n\n**This plugin must either be run via Docker or inside an ondemand runner.**\n",
+   "description": "\nCreate a Docker image using CloudNative Buildpacks.\n\n**This plugin must either be run via Docker or inside an ondemand runner**.\n",
    "example": "build {\n  use \"pack\" {\n\tbuilder     = \"heroku/buildpacks:20\"\n\tdisable_entrypoint = false\n  }\n}",
    "input": "component.Source",
    "mappers": [

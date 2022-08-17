@@ -58,6 +58,40 @@
          "EnvVar": "",
          "Category": false,
          "SubFields": null
+      },
+      {
+         "Field": "vpc_access",
+         "Type": "cloudrun.VPCAccess",
+         "Synopsis": "VPCAccess details",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "connector",
+               "Type": "string",
+               "Synopsis": "Set VPC Access Connector for the Cloud Run instance.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "egress",
+               "Type": "string",
+               "Synopsis": "Set VPC egress. Supported values are 'all' and 'private-ranges-only'.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
       }
    ],
    "outputAttrs": [
@@ -228,40 +262,6 @@
          "EnvVar": "",
          "Category": false,
          "SubFields": null
-      },
-      {
-         "Field": "vpc_access",
-         "Type": "cloudrun.VPCAccess",
-         "Synopsis": "VPCAccess details",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": true,
-         "SubFields": [
-            {
-               "Field": "connector",
-               "Type": "string",
-               "Synopsis": "Set VPC Access Connector for the Cloud Run instance.",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "egress",
-               "Type": "string",
-               "Synopsis": "Set VPC egress. Supported values are 'all' and 'private-ranges-only'.",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            }
-         ]
       }
    ],
    "type": "platform",

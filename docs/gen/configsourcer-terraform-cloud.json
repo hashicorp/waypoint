@@ -17,12 +17,12 @@
          "SubFields": null
       },
       {
-         "Field": "refresh_internal",
+         "Field": "refresh_interval",
          "Type": "string",
-         "Synopsis": "",
-         "Summary": "",
+         "Synopsis": "How often the outputs should be fetch.",
+         "Summary": "The format of this value is the Go time duration format. Specifically a whole number followed by: s for seconds, m for minutes, h for hours. The minimum value for this setting is 60 seconds, with no specified maximum.",
          "Optional": true,
-         "Default": "",
+         "Default": "10m0s",
          "EnvVar": "",
          "Category": false,
          "SubFields": null
@@ -30,7 +30,7 @@
       {
          "Field": "skip_verify",
          "Type": "bool",
-         "Synopsis": "Do not validate the TLS cert presented by the Vault server.",
+         "Synopsis": "Do not validate the TLS cert presented by Terraform Cloud.",
          "Summary": "This is not recommended unless absolutely necessary.",
          "Optional": true,
          "Default": "",
@@ -75,17 +75,6 @@
       }
    ],
    "requiredSourceFields": [
-      {
-         "Field": "refresh_interval",
-         "Type": "",
-         "Synopsis": "How often the outputs should be fetch.",
-         "Summary": "The format of this value is the Go time duration format. Specifically a whole number followed by: s for seconds, m for minutes, h for hours. The minimum value for this setting is 60 seconds, with no specified maximum.",
-         "Optional": false,
-         "Default": "10m0s",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
       {
          "Field": "token",
          "Type": "string",

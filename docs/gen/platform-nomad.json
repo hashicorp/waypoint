@@ -49,6 +49,40 @@
          "SubFields": null
       },
       {
+         "Field": "resources",
+         "Type": "nomad.Resources",
+         "Synopsis": "The amount of resources to allocate to the deployed allocation.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "cpu",
+               "Type": "int",
+               "Synopsis": "Amount of CPU in MHz to allocate to this task",
+               "Summary": "",
+               "Optional": true,
+               "Default": "100",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "memorymb",
+               "Type": "int",
+               "Synopsis": "Amount of memory in MB to allocate to this task.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "300",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
          "Field": "service_port",
          "Type": "uint",
          "Synopsis": "TCP port the job is listening on.",
@@ -140,40 +174,6 @@
          "EnvVar": "CONSUL_HTTP_TOKEN",
          "Category": false,
          "SubFields": null
-      },
-      {
-         "Field": "resources",
-         "Type": "nomad.Resources",
-         "Synopsis": "The amount of resources to allocate to the deployed allocation.",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": true,
-         "SubFields": [
-            {
-               "Field": "cpu",
-               "Type": "int",
-               "Synopsis": "Amount of CPU in MHz to allocate to this task",
-               "Summary": "",
-               "Optional": true,
-               "Default": "100",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            },
-            {
-               "Field": "memorymb",
-               "Type": "int",
-               "Synopsis": "Amount of memory in MB to allocate to this task.",
-               "Summary": "",
-               "Optional": true,
-               "Default": "300",
-               "EnvVar": "",
-               "Category": false,
-               "SubFields": null
-            }
-         ]
       },
       {
          "Field": "vault_token",

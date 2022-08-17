@@ -6,78 +6,6 @@
    "name": "docker-pull",
    "optionalFields": [
       {
-         "Field": "disable_entrypoint",
-         "Type": "bool",
-         "Synopsis": "if set, the entrypoint binary won't be injected into the image",
-         "Summary": "The entrypoint binary is what provides extended functionality such as logs and exec. If it is not injected at build time the expectation is that the image already contains it",
-         "Optional": true,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "encoded_auth",
-         "Type": "string",
-         "Synopsis": "the authentication information to log into the docker repository",
-         "Summary": "WARNING: be very careful to not leak the authentication information by hardcoding it here. Use a helper function like `file()` to read the information from a file not stored in VCS",
-         "Optional": true,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      }
-   ],
-   "output": "docker.Image",
-   "outputAttrs": [
-      {
-         "Field": "architecture",
-         "Type": "string",
-         "Synopsis": "",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "image",
-         "Type": "string",
-         "Synopsis": "",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "location",
-         "Type": "docker.isImage_Location",
-         "Synopsis": "",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "tag",
-         "Type": "string",
-         "Synopsis": "",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      }
-   ],
-   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
-   "requiredFields": [
-      {
          "Field": "auth",
          "Type": "docker.Auth",
          "Synopsis": "the authentication information to log into the docker repository",
@@ -177,6 +105,78 @@
             }
          ]
       },
+      {
+         "Field": "disable_entrypoint",
+         "Type": "bool",
+         "Synopsis": "if set, the entrypoint binary won't be injected into the image",
+         "Summary": "The entrypoint binary is what provides extended functionality such as logs and exec. If it is not injected at build time the expectation is that the image already contains it",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "encoded_auth",
+         "Type": "string",
+         "Synopsis": "the authentication information to log into the docker repository",
+         "Summary": "WARNING: be very careful to not leak the authentication information by hardcoding it here. Use a helper function like `file()` to read the information from a file not stored in VCS",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "output": "docker.Image",
+   "outputAttrs": [
+      {
+         "Field": "architecture",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "image",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "location",
+         "Type": "docker.isImage_Location",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "tag",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
       {
          "Field": "image",
          "Type": "string",
