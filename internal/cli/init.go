@@ -300,7 +300,7 @@ func (c *InitCommand) hclGen() bool {
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
-	} else if close == true {
+	} else if close {
 		c.exitSafe(hclFile, brackets)
 		return false
 	}
@@ -310,7 +310,7 @@ func (c *InitCommand) hclGen() bool {
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
-	} else if close == true {
+	} else if close {
 		c.exitSafe(hclFile, brackets)
 		return false
 	}
@@ -338,7 +338,7 @@ func (c *InitCommand) hclGen() bool {
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
-	} else if close == true {
+	} else if close {
 		c.exitSafe(hclFile, brackets)
 		return false
 	}
@@ -351,7 +351,7 @@ func (c *InitCommand) hclGen() bool {
 		if err != nil {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return false
-		} else if close == true {
+		} else if close {
 			c.exitSafe(hclFile, brackets)
 			return false
 		}
@@ -370,7 +370,7 @@ func (c *InitCommand) hclGen() bool {
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
-	} else if close == true {
+	} else if close {
 		c.exitSafe(hclFile, brackets)
 		return false
 	}
@@ -384,7 +384,7 @@ func (c *InitCommand) hclGen() bool {
 		if err != nil {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return false
-		} else if close == true {
+		} else if close {
 			c.exitSafe(hclFile, brackets)
 			return false
 		}
@@ -412,7 +412,7 @@ func (c *InitCommand) hclGen() bool {
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
-	} else if close == true {
+	} else if close {
 		c.exitSafe(hclFile, brackets)
 		return false
 	}
@@ -427,7 +427,7 @@ func (c *InitCommand) hclGen() bool {
 		if err != nil {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return false
-		} else if close == true {
+		} else if close {
 			c.exitSafe(hclFile, brackets)
 			return false
 		}
@@ -453,7 +453,7 @@ func (c *InitCommand) hclGen() bool {
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
-	} else if close == true {
+	} else if close {
 		c.exitSafe(hclFile, brackets)
 		return false
 	}
@@ -468,7 +468,7 @@ func (c *InitCommand) hclGen() bool {
 		if err != nil {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return false
-		} else if close == true {
+		} else if close {
 			c.exitSafe(hclFile, brackets)
 			return false
 		}
@@ -524,9 +524,9 @@ func (c *InitCommand) populatePlugins(plug PlugDocs) (map[string]string, error, 
 	m := make(map[string]string)
 	fCount := 0
 	for _, f := range plug.PlugDocs {
-		if f.Category == true {
+		if f.Category {
 			for _, sf := range f.PlugSubDocs {
-				if sf.Optional == false {
+				if !sf.Optional {
 					fCount++
 				}
 			}
@@ -555,15 +555,15 @@ func (c *InitCommand) populatePlugins(plug PlugDocs) (map[string]string, error, 
 		}
 		fCount = 0
 		for _, field := range plug.PlugDocs {
-			if field.Category == true {
+			if field.Category {
 				// Subfield handling
 				for _, sfield := range field.PlugSubDocs {
-					if sfield.Optional == false {
+					if !sfield.Optional {
 						cont, err, close := c.populateField(sfield.Field, sfield.Type, fCount)
 						fCount++
 						if err != nil {
 							return m, err, false
-						} else if close == true {
+						} else if close {
 							return m, nil, true
 						}
 						m[sfield.Field] = cont
@@ -575,7 +575,7 @@ func (c *InitCommand) populatePlugins(plug PlugDocs) (map[string]string, error, 
 				fCount++
 				if err != nil {
 					return m, err, false
-				} else if close == true {
+				} else if close {
 					return m, nil, true
 				}
 				m[field.Field] = cont
@@ -632,7 +632,7 @@ func (c *InitCommand) populateField(name string, fType string, count int) (strin
 			// TODO: field input type checking
 			c.ui.Output("You inputted \"%s\"\n", fieldVal)
 			fieldConfirm, err := c.ui.Input(&terminal.Input{
-				Prompt: fmt.Sprintf("Is this correct? (y/N): "),
+				Prompt: "Is this correct? (y/N): ",
 				Style:  "",
 				Secret: false,
 			})
@@ -815,7 +815,7 @@ func (c *InitCommand) selectPlugin(plug int, fList []string, fSystem embed.FS) (
 func (c *InitCommand) getName(pa string) (string, error, bool) {
 	if pa == "project" {
 		c.ui.Output(
-			"Please enter the name of your project. A project typically maps 1:1 to a VCS repository. This name must be unique for your Waypoint server. If you're running in local mode, this must be unique to your machine.\n",
+			"A project contains your app and typically maps 1:1 to a VCS repository. This name must be unique for your Waypoint server. If you're running in local mode, this must be unique to your machine.\n",
 		)
 	}
 	prompt := ""
