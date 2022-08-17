@@ -291,7 +291,7 @@ func (c *AppDocsCommand) jsonFormat(name, ct string, doc *docs.Documentation) {
 	// we use this constant to compare to ct for some special behavior
 	const csType = "configsourcer"
 
-	w, err := os.Create(fmt.Sprintf("./docs/gen/%s-%s.json", ct, name))
+	w, err := os.Create(fmt.Sprintf("./embedJson/gen/%s-%s.json", ct, name))
 	if err != nil {
 		c.ui.Output(fmt.Sprintf("Failed to create files: %s", clierrors.Humanize(err)), terminal.StatusError)
 		panic(err)

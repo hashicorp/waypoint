@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -20,12 +21,14 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
+	"github.com/hashicorp/waypoint/embedJson"
 	"github.com/hashicorp/waypoint/internal/cli/datagen"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/datasource"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
@@ -314,28 +317,24 @@ func (c *InitCommand) hclGen() bool {
 	hclFile.Write([]byte(fmt.Sprintf("app \"%s\" {\n", appName)))
 	brackets++
 
-	// TODO: this is a placeholder, the real implementation will use the JSON files as they are included in the waypoint binary
-	// Not a final implemenation so hardcoded with a relative path
-	fPath := "./docs/gen"
-	file, err := os.Open(fPath)
-	if err != nil {
-		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return false
+	var pluginNames []string
+	for pluginName := range plugin.Builtins {
+		pluginNames = append(pluginNames, pluginName)
 	}
-	defer file.Close()
-	fList, err := file.Readdirnames(0)
-	//TODO: replace all above file code with this line
-	//fList, err := fs.Glob(embedJson.files, "*.json")
-	if err != nil {
-		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return false
+	var fList []string
+	dirList, _ := embedJson.Files.ReadDir("gen")
+	for _, dirE := range dirList {
+		fList = append(fList, dirE.Name())
 	}
 
-	c.ui.Output("Choose build, registry, deployment platform, and releaser plugins", terminal.WithHeaderStyle())
+	c.ui.Output(
+		"Choose build, registry, deployment platform, and releaser plugins",
+		terminal.WithHeaderStyle(),
+	)
 
 	c.ui.Output("Configure builder", terminal.WithHeaderStyle())
 	// Select a builder
-	plug, err, close := c.selectPlugin(1, fList, fPath)
+	plug, err, close := c.selectPlugin(1, fList, embedJson.Files)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
@@ -359,12 +358,15 @@ func (c *InitCommand) hclGen() bool {
 		for key, elem := range fieldMap {
 			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
 		}
-		c.ui.Output("Step complete: builder configuration complete", terminal.WithSuccessStyle())
+		c.ui.Output(
+			"Step complete: builder configuration complete",
+			terminal.WithSuccessStyle(),
+		)
 	}
 
 	c.ui.Output("Configure registry", terminal.WithHeaderStyle())
 	// Select a registry
-	plug, err, close = c.selectPlugin(4, fList, fPath)
+	plug, err, close = c.selectPlugin(4, fList, embedJson.Files)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
@@ -389,10 +391,14 @@ func (c *InitCommand) hclGen() bool {
 		for key, elem := range fieldMap {
 			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
 		}
-		c.ui.Output("Step complete: registry configuration complete", terminal.WithSuccessStyle())
+		c.ui.Output(
+			"Step complete: registry configuration complete",
+			terminal.WithSuccessStyle(),
+		)
 	}
 
-	// After the registry stanza we want to close the brackets on the build and registry (if it exists) stanzas
+	// After the registry stanza we want to close the brackets on the build
+	// and registry (if it exists) stanzas
 	err = c.closeBrackets(hclFile, brackets-1, brackets)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -402,7 +408,7 @@ func (c *InitCommand) hclGen() bool {
 
 	c.ui.Output("Configure deployment platform", terminal.WithHeaderStyle())
 	// Select a deployer
-	plug, err, close = c.selectPlugin(2, fList, fPath)
+	plug, err, close = c.selectPlugin(2, fList, embedJson.Files)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
@@ -428,7 +434,10 @@ func (c *InitCommand) hclGen() bool {
 		for key, elem := range fieldMap {
 			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
 		}
-		c.ui.Output("Step complete: deployment platform configuration complete", terminal.WithSuccessStyle())
+		c.ui.Output(
+			"Step complete: deployment platform configuration complete",
+			terminal.WithSuccessStyle(),
+		)
 	}
 	// After the deployer stanza we want to close the brackets on the deployer stanza
 	err = c.closeBrackets(hclFile, brackets-1, brackets)
@@ -440,7 +449,7 @@ func (c *InitCommand) hclGen() bool {
 
 	c.ui.Output("Configure releaser", terminal.WithHeaderStyle())
 	// Select a releaser
-	plug, err, close = c.selectPlugin(3, fList, fPath)
+	plug, err, close = c.selectPlugin(3, fList, embedJson.Files)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
@@ -476,7 +485,9 @@ func (c *InitCommand) hclGen() bool {
 	}
 	c.ui.Output("All plugin configuration complete", terminal.WithSuccessStyle())
 	c.ui.Output("waypoint.hcl saved!", terminal.WithStyle(terminal.SuccessBoldStyle))
-	c.ui.Output("If you skipped any steps, open your waypoint.hcl file to add missing plugins or fields before continuing. (See https://www.waypointproject.io/plugins)")
+	c.ui.Output(
+		"If you skipped any steps, open your waypoint.hcl file to add missing plugins or fields before continuing. (See https://www.waypointproject.io/plugins)",
+	)
 	c.ui.Output("Otherwise, run \"waypoint init\" again to start using Waypoint!")
 	return true
 }
@@ -511,25 +522,36 @@ func (c *InitCommand) genIndent(outstanding int) string {
 
 func (c *InitCommand) populatePlugins(plug PlugDocs) (map[string]string, error, bool) {
 	m := make(map[string]string)
-	if plug.PlugDocs == nil {
-		c.ui.Output("There are no required fields for this %s plugin, but there may be optional fields you can add to your .hcl file later. See the Waypoint plugin documentation for more information.", plug.Type)
-	} else {
-		fCount := 0
-		for _, f := range plug.PlugDocs {
-			if f.Category == true {
-				for _, sf := range f.PlugSubDocs {
-					if sf.Optional == false {
-						fCount++
-					}
+	fCount := 0
+	for _, f := range plug.PlugDocs {
+		if f.Category == true {
+			for _, sf := range f.PlugSubDocs {
+				if sf.Optional == false {
+					fCount++
 				}
-			} else {
-				fCount++
 			}
-		}
-		if fCount == 1 {
-			c.ui.Output("Please complete the following %d required field for %s, or hit \"return\" to skip.", fCount, plug.Name, terminal.WithHeaderStyle())
 		} else {
-			c.ui.Output("Please complete the following %d required fields for %s, or hit \"return\" to skip.", fCount, plug.Name, terminal.WithHeaderStyle())
+			fCount++
+		}
+	}
+	if plug.PlugDocs == nil || fCount == 0 {
+		c.ui.Output(
+			"There are no required fields for this %s plugin, but there may be optional fields you can add to your .hcl file later. See the Waypoint plugin documentation for more information.",
+			plug.Type,
+		)
+	} else {
+		if fCount == 1 {
+			c.ui.Output(
+				"Please complete the following %d required field for %s, or hit \"return\" to skip.",
+				fCount, plug.Name,
+				terminal.WithHeaderStyle(),
+			)
+		} else {
+			c.ui.Output(
+				"Please complete the following %d required fields for %s, or hit \"return\" to skip.",
+				fCount, plug.Name,
+				terminal.WithHeaderStyle(),
+			)
 		}
 		fCount = 0
 		for _, field := range plug.PlugDocs {
@@ -602,7 +624,7 @@ func (c *InitCommand) populateField(name string, fType string, count int) (strin
 				return "", nil, true
 			} else if strings.ToLower(pNameConfirm) == "yes" || strings.ToLower(pNameConfirm) == "y" {
 				c.ui.Output("%s skipped\n", strings.Title(name), terminal.WithWarningStyle())
-				getField = false
+				return "", nil, false
 			} else {
 				c.ui.Output("Skip cancelled\n")
 			}
@@ -634,8 +656,8 @@ func (c *InitCommand) populateField(name string, fType string, count int) (strin
 	return "", nil, true
 }
 
-// plug indicates the plugin that the user needs to select. 1: Builder, 2: Deployer/Platform, 3: Releaser, 4: Registry
-func (c *InitCommand) selectPlugin(plug int, fList []string, fPath string) (PlugDocs, error, bool) {
+// <plug> indicates the plugin that the user needs to select. 1: Builder, 2: Deployer/Platform, 3: Releaser, 4: Registry
+func (c *InitCommand) selectPlugin(plug int, fList []string, fSystem embed.FS) (PlugDocs, error, bool) {
 	var plugType string
 	var plugDocs PlugDocs
 	switch plug {
@@ -672,24 +694,22 @@ func (c *InitCommand) selectPlugin(plug int, fList []string, fPath string) (Plug
 		}
 	}
 	sort.Strings(plugList)
-	c.ui.Output(fmt.Sprintf("Select a %s: learn more at https://www.waypointproject.io/plugins. To use a %s that’s not shown here enter nothing, then edit the .hcl file after it’s been generated.\n", plugType, plugType))
+	c.ui.Output(fmt.Sprintf("Select a %s: learn more at https://www.waypointproject.io/plugins. To use a %s that’s not shown here enter nothing, then edit the .hcl file after it’s been generated.\n",
+		plugType, plugType))
 	jMap := make(map[string]interface{})
 	var selList []string
 	var nameSelList []string
 	count := 1
 	for _, f := range plugList {
-		jsonFile, err := os.Open(fmt.Sprintf("%s/%s", fPath, f))
+		byteValue, err := fSystem.ReadFile(fmt.Sprintf("gen/%s", f))
 		if err != nil {
 			return plugDocs, err, false
 		}
-		byteValue, _ := ioutil.ReadAll(jsonFile)
 		json.Unmarshal(byteValue, &jMap)
 
-		//TODO: REMOVE TEST CODE
-		json.Unmarshal(byteValue, &plugDocs)
-
-		// There is an assumption here that all plugins will have a description, we have to unmarshal all the plugins
-		// for a given plugin to get an accurate name and ensure that they exist
+		// There is an assumption here that all valid plugins will have a description,
+		// we have to unmarshal all the plugins for a given stage to get an accurate name
+		// and ensure that they exist
 		if _, ok := jMap["description"]; ok {
 			c.ui.Output(fmt.Sprintf("%d: %s", count, jMap["name"]), terminal.WithInfoStyle())
 			count++
@@ -706,7 +726,10 @@ func (c *InitCommand) selectPlugin(plug int, fList []string, fPath string) (Plug
 	getSelect := true
 	for getSelect {
 		num, err := c.ui.Input(&terminal.Input{
-			Prompt: fmt.Sprintf("Please select a plugin by typing its corresponding number or hit \"return\" to skip this step (1-%d): ", count-1),
+			Prompt: fmt.Sprintf(
+				"Please select a plugin by typing its corresponding number or hit \"return\" to skip this step (1-%d): ",
+				count-1,
+			),
 			Style:  "",
 			Secret: false,
 		})
@@ -771,12 +794,10 @@ func (c *InitCommand) selectPlugin(plug int, fList []string, fPath string) (Plug
 	}
 	// We again unmarshal the JSON file corresponding to the file the user has selected
 	if selFileName != "" {
-
-		jsonFile, err := os.Open(fmt.Sprintf("%s/%s", fPath, selFileName))
+		byteValue, err := fSystem.ReadFile(fmt.Sprintf("gen/%s", selFileName))
 		if err != nil {
 			return plugDocs, err, false
 		}
-		byteValue, _ := ioutil.ReadAll(jsonFile)
 		json.Unmarshal(byteValue, &plugDocs)
 		if plugDocs.Name != "" {
 			c.ui.Output(fmt.Sprintf("You have selected the %s %s plugin.", plugDocs.Name, plugType))
@@ -793,7 +814,9 @@ func (c *InitCommand) selectPlugin(plug int, fList []string, fPath string) (Plug
 // Gets either a project or app name for an HCL file, pa should be either "project" or "app"
 func (c *InitCommand) getName(pa string) (string, error, bool) {
 	if pa == "project" {
-		c.ui.Output("Please enter the name of your project. A project typically maps 1:1 to a VCS repository. This name must be unique for your Waypoint server. If you're running in local mode, this must be unique to your machine.\n")
+		c.ui.Output(
+			"Please enter the name of your project. A project typically maps 1:1 to a VCS repository. This name must be unique for your Waypoint server. If you're running in local mode, this must be unique to your machine.\n",
+		)
 	}
 	prompt := ""
 	if pa == "project" {
