@@ -63,10 +63,10 @@ type TaskLauncherConfig struct {
 
 	// Subnets are the list of subnets for the cluster. These will match the
 	// subnets used for the Cluster
-	Subnets string `hcl:"subnets,optional"`
+	Subnets string `hcl:"subnets,required"`
 
 	// SecurityGroupId is the security group used for the Waypoint tasks.
-	SecurityGroupId string `hcl:"security_group_id,optional"`
+	SecurityGroupId string `hcl:"security_group_id,required"`
 
 	// LogGroup is the CloudWatch log group name to use.
 	LogGroup string `hcl:"log_group,optional"`

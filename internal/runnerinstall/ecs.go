@@ -107,7 +107,8 @@ const odrRolePolicy = `{
 }`
 
 type ECSRunnerInstaller struct {
-	Config EcsConfig
+	Config  EcsConfig
+	netInfo *awsinstallutil.NetworkInformation
 }
 
 type EcsConfig struct {
@@ -160,6 +161,7 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			if netInfo, err = awsinstallutil.SetupNetworking(ctx, ui, sess, i.Config.Subnets); err != nil {
 				return err
 			}
+			i.netInfo = netInfo
 
 			if efsInfo, err = awsinstallutil.SetupEFS(ctx, ui, sess, netInfo); err != nil {
 				return err
@@ -700,9 +702,13 @@ func (i *ECSRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		"odr_memory":          i.Config.Memory,
 	}
 
-	if i.Config.Subnets != nil {
-		cfgMap["subnets"] = strings.Join(i.Config.Subnets, ",")
-		// TODO: set security group
+	if i.netInfo != nil {
+		var subnets []string
+		for _, s := range i.netInfo.Subnets {
+			subnets = append(subnets, *s)
+		}
+		cfgMap["subnets"] = strings.Join(subnets, ",")
+		cfgMap["security_group_id"] = i.netInfo.SgID
 	}
 
 	// Marshal our config
