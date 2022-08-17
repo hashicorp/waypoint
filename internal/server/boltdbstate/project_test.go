@@ -237,4 +237,291 @@ func TestProject(t *testing.T) {
 		// After the project is deleted, only the 2nd workspace should exist
 		require.Equal(1, len(workspaces))
 	})
+
+	t.Run("create multi app project and delete", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		const (
+			projectName = "testproject"
+			appName1    = "testapp"
+			appName2    = "testapp2"
+		)
+		// Create a project with one app
+		require.NoError(s.ProjectPut(&pb.Project{
+			Name: projectName,
+			Applications: []*pb.Application{
+				{
+					Project: &pb.Ref_Project{Project: projectName},
+					Name:    appName1,
+				},
+				{
+					Project: &pb.Ref_Project{Project: projectName},
+					Name:    appName2,
+				},
+			},
+		}))
+
+		// Read it back
+		projectBeforeDelete, err := s.ProjectGet(&pb.Ref_Project{Project: projectName})
+		require.NoError(err)
+		require.NotNil(projectBeforeDelete)
+
+		// Create multiple builds for each app
+		require.NoError(s.BuildPut(false, &pb.Build{
+			Id:       "testBuild1App1",
+			Sequence: 1,
+			Application: &pb.Ref_Application{
+				Application: appName1,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.BuildPut(false, &pb.Build{
+			Id:       "testBuild2App1",
+			Sequence: 2,
+			Application: &pb.Ref_Application{
+				Application: appName1,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.BuildPut(false, &pb.Build{
+			Id: "testBuild1App2",
+			Application: &pb.Ref_Application{
+				Application: appName2,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.BuildPut(false, &pb.Build{
+			Id: "testBuild2App2",
+			Application: &pb.Ref_Application{
+				Application: appName2,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		// Create multiple artifacts for each app
+		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+			Id: "testArtifact1",
+			Application: &pb.Ref_Application{
+				Application: appName1,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+			Id: "testArtifact2",
+			Application: &pb.Ref_Application{
+				Application: appName1,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+			Id: "testArtifact1",
+			Application: &pb.Ref_Application{
+				Application: appName2,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+			Id: "testArtifact2",
+			Application: &pb.Ref_Application{
+				Application: appName2,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		// Create multiple deployments for each app
+		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+			Id: "testDeployment1App1",
+			Application: &pb.Ref_Application{
+				Application: appName1,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+			Id: "testDeployment2App1",
+			Application: &pb.Ref_Application{
+				Application: appName1,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+			Id: "testDeployment1App2",
+			Application: &pb.Ref_Application{
+				Application: appName2,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+			Id: "testDeployment2App2",
+			Application: &pb.Ref_Application{
+				Application: appName2,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		// Create multiple releases for each app
+		require.NoError(s.ReleasePut(false, &pb.Release{
+			Id: "testRelease1App1",
+			Application: &pb.Ref_Application{
+				Application: appName1,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.ReleasePut(false, &pb.Release{
+			Id: "testRelease2App1",
+			Application: &pb.Ref_Application{
+				Application: appName1,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.ReleasePut(false, &pb.Release{
+			Id: "testRelease1App2",
+			Application: &pb.Ref_Application{
+				Application: appName2,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.ReleasePut(false, &pb.Release{
+			Id: "testRelease2App2",
+			Application: &pb.Ref_Application{
+				Application: appName2,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		// Create multiple status reports for each app
+		require.NoError(s.StatusReportPut(false, &pb.StatusReport{
+			Id: "testStatusReport1App1",
+			Application: &pb.Ref_Application{
+				Application: appName1,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.StatusReportPut(false, &pb.StatusReport{
+			Id: "testStatusReport2App1",
+			Application: &pb.Ref_Application{
+				Application: appName1,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.StatusReportPut(false, &pb.StatusReport{
+			Id: "testStatusReport1App2",
+			Application: &pb.Ref_Application{
+				Application: appName2,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.StatusReportPut(false, &pb.StatusReport{
+			Id: "testStatusReport2App2",
+			Application: &pb.Ref_Application{
+				Application: appName2,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		// Delete the project (this should also delete the other records)
+		require.NoError(s.ProjectDelete(&pb.Ref_Project{Project: projectName}))
+
+		// Attempt to get the project again (expected error)
+		_, err = s.ProjectGet(&pb.Ref_Project{Project: projectName})
+		require.Error(err)
+
+		// Verify that all builds, artifacts, deployments, releases, and status reports were deleted with the project
+		_, err = s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild1App1"}})
+		require.Error(err)
+
+		_, err = s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild2App1"}})
+		require.Error(err)
+
+		_, err = s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild1App2"}})
+		require.Error(err)
+
+		_, err = s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild2App2"}})
+		require.Error(err)
+
+		_, err = s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact1App1"}})
+		require.Error(err)
+
+		_, err = s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact2App1"}})
+		require.Error(err)
+
+		_, err = s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact1App2"}})
+		require.Error(err)
+
+		_, err = s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact2App2"}})
+		require.Error(err)
+
+		_, err = s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment1App1"}})
+		require.Error(err)
+
+		_, err = s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment2App1"}})
+		require.Error(err)
+
+		_, err = s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment1App2"}})
+		require.Error(err)
+
+		_, err = s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment2App2"}})
+		require.Error(err)
+
+		_, err = s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease1App1"}})
+		require.Error(err)
+
+		_, err = s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease2App1"}})
+		require.Error(err)
+
+		_, err = s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease1App2"}})
+		require.Error(err)
+
+		_, err = s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease2App2"}})
+		require.Error(err)
+
+		_, err = s.StatusReportGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport1App1"}})
+		require.Error(err)
+
+		_, err = s.StatusReportGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport2App1"}})
+		require.Error(err)
+
+		_, err = s.StatusReportGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport1App2"}})
+		require.Error(err)
+
+		_, err = s.StatusReportGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport2App2"}})
+		require.Error(err)
+	})
 }
