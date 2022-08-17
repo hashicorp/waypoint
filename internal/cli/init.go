@@ -359,7 +359,7 @@ func (c *InitCommand) hclGen() bool {
 			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
 		}
 		c.ui.Output(
-			"Step complete: builder configuration complete",
+			"Step complete: builder configuration",
 			terminal.WithSuccessStyle(),
 		)
 	}
@@ -392,7 +392,7 @@ func (c *InitCommand) hclGen() bool {
 			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
 		}
 		c.ui.Output(
-			"Step complete: registry configuration complete",
+			"Step complete: registry configuration",
 			terminal.WithSuccessStyle(),
 		)
 	}
@@ -435,7 +435,7 @@ func (c *InitCommand) hclGen() bool {
 			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
 		}
 		c.ui.Output(
-			"Step complete: deployment platform configuration complete",
+			"Step complete: deployment platform configuration",
 			terminal.WithSuccessStyle(),
 		)
 	}
@@ -475,7 +475,7 @@ func (c *InitCommand) hclGen() bool {
 		for key, elem := range fieldMap {
 			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
 		}
-		c.ui.Output("Step complete: releaser configuration complete", terminal.WithSuccessStyle())
+		c.ui.Output("Step complete: releaser configuration", terminal.WithSuccessStyle())
 	}
 	// After the releaser stanza we want to close all the brackets
 	err = c.closeBrackets(hclFile, brackets, brackets)
@@ -483,18 +483,18 @@ func (c *InitCommand) hclGen() bool {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
 	}
-	c.ui.Output("All plugin configuration complete", terminal.WithSuccessStyle())
-	c.ui.Output("waypoint.hcl saved!", terminal.WithStyle(terminal.SuccessBoldStyle))
+	c.ui.Output("\nAll plugin configuration complete", terminal.WithSuccessStyle())
+	c.ui.Output("\nwaypoint.hcl saved!", terminal.WithStyle(terminal.SuccessBoldStyle))
 	c.ui.Output(
-		"If you skipped any steps, open your waypoint.hcl file to add missing plugins or fields before continuing. (See https://www.waypointproject.io/plugins)",
+		"\nIf you skipped any steps, open your waypoint.hcl file to add missing plugins or fields before continuing. (See https://www.waypointproject.io/plugins)",
 	)
-	c.ui.Output("Otherwise, run \"waypoint init\" again to start using Waypoint!")
+	c.ui.Output("Otherwise, run \"waypoint init\" again to start using Waypoint!\n")
 	return true
 }
 
 func (c *InitCommand) exitSafe(file *os.File, outstanding int) error {
 	c.closeBrackets(file, outstanding, outstanding)
-	c.ui.Output("Generator exited")
+	c.ui.Output("Generator exited. Any information you added before exiting has been included in your waypoint.hcl file. Edit this file manually before using Waypoint.")
 	return nil
 }
 
@@ -694,7 +694,7 @@ func (c *InitCommand) selectPlugin(plug int, fList []string, fSystem embed.FS) (
 		}
 	}
 	sort.Strings(plugList)
-	c.ui.Output(fmt.Sprintf("Select a %s: learn more at https://www.waypointproject.io/plugins. To use a %s that’s not shown here enter nothing, then edit the .hcl file after it’s been generated.\n",
+	c.ui.Output(fmt.Sprintf("Select a %s: learn more at https://www.waypointproject.io/plugins. To use a %s that’s not shown here hit return, then edit the .hcl file after it’s been generated.\n",
 		plugType, plugType))
 	jMap := make(map[string]interface{})
 	var selList []string
@@ -759,7 +759,7 @@ func (c *InitCommand) selectPlugin(plug int, fList []string, fSystem embed.FS) (
 			} else if strings.ToLower(pNameConfirm) == "exit" {
 				return plugDocs, nil, true
 			} else if strings.ToLower(pNameConfirm) == "yes" || strings.ToLower(pNameConfirm) == "y" {
-				c.ui.Output("%s plugin confirmed\n", strings.Title(plugType))
+				c.ui.Output("%s plugin confirmed\n", strings.Title(plugType), terminal.WithSuccessStyle())
 				selFileName = selList[val-1]
 				getSelect = false
 			} else {
