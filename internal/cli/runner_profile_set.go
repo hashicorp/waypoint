@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	hcljson "github.com/hashicorp/hcl/v2/json"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -27,7 +28,7 @@ type RunnerProfileSetCommand struct {
 	flagEnvVars            []string
 	flagPluginType         string
 	flagPluginConfig       string
-	flagDefault            bool
+	flagDefault            *bool
 	flagTargetRunnerId     string
 	flagTargetRunnerLabels map[string]string
 }
@@ -188,7 +189,9 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 
 	od.OciUrl = c.flagOCIUrl
 	od.EnvironmentVariables = map[string]string{}
-	od.Default = c.flagDefault
+	if c.flagDefault != nil {
+		od.Default = *c.flagDefault
+	}
 
 	if c.flagEnvVars != nil {
 		//TODO(XX): Deprecate -env-vars and this logic
@@ -287,10 +290,9 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 				"the environment the plugin will launch the on-demand runner in.",
 		})
 
-		f.BoolVar(&flag.BoolVar{
-			Name:    "default",
-			Target:  &c.flagDefault,
-			Default: false,
+		f.BoolPtrVar(&flag.BoolPtrVar{
+			Name:   "default",
+			Target: &c.flagDefault,
 			Usage: "Indicates that this remote runner profile should be the default for any project that doesn't " +
 				"otherwise specify its own remote runner.",
 		})
