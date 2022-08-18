@@ -1,3 +1,3 @@
 ```release-note:feature
-core: Add ability for projects to be deleted from the database with their resources
+core: Introduce a new CLI command `project destroy` to delete projects in Waypoint and destroy their associated resources
 ```
