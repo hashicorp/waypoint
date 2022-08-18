@@ -1516,7 +1516,7 @@ func (i *ECSInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	}
 
 	return &pb.OnDemandRunnerConfig{
-		Name:         "ecs",
+		Name:         "aws-ecs",
 		OciUrl:       i.config.OdrImage,
 		PluginType:   "aws-ecs",
 		Default:      true,

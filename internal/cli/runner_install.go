@@ -236,9 +236,12 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		}
 
 		// Creating a new runner profile for the newly adopted runner
+		var odrConfig *pb.OnDemandRunnerConfig
 		s = sg.Add("Creating runner profile and targeting runner %s", strings.ToUpper(id))
-		runnerProfile, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
-			Config: &pb.OnDemandRunnerConfig{
+		if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
+			odrConfig = odc.OnDemandRunnerConfig()
+		} else {
+			odrConfig = &pb.OnDemandRunnerConfig{
 				Name: platform[0] + "-" + strings.ToUpper(id),
 				TargetRunner: &pb.Ref_Runner{
 					Target: &pb.Ref_Runner_Id{
@@ -249,8 +252,9 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 				},
 				OciUrl:     c.runnerProfileOdrImage,
 				PluginType: platform[0],
-			},
-		})
+			}
+		}
+		runnerProfile, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{Config: odrConfig})
 		if err != nil {
 			c.ui.Output("Error creating runner profile: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),

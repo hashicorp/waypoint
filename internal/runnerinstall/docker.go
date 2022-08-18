@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/waypoint/internal/installutil"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"os"
 	"time"
 
@@ -210,5 +211,14 @@ func (d DockerRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	return nil
 }
 
-func (d DockerRunnerInstaller) UninstallFlags(set *flag.Set) {
+func (d DockerRunnerInstaller) UninstallFlags(set *flag.Set) {}
+
+func (i *DockerRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	// TODO: Add options for plugin config here
+	return &pb.OnDemandRunnerConfig{
+		Name:       "docker",
+		OciUrl:     i.Config.RunnerImage,
+		PluginType: "docker",
+		Default:    true,
+	}
 }

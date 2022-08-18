@@ -3,6 +3,7 @@ package installutil
 import (
 	"fmt"
 	"github.com/distribution/distribution/v3/reference"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // DefaultODRImage returns the default Waypoint ODR image based on the
@@ -31,4 +32,10 @@ const DefaultServerImage = "hashicorp/waypoint:latest"
 
 func DefaultRunnerName(id string) string {
 	return "waypoint-" + id + "-runner"
+}
+
+// An optional interface that the installer can implement to request
+// an ondemand runner be registered.
+type OnDemandRunnerConfigProvider interface {
+	OnDemandRunnerConfig() *pb.OnDemandRunnerConfig
 }

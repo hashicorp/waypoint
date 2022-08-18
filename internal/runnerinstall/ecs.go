@@ -2,8 +2,10 @@ package runnerinstall
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"strconv"
 	"strings"
 	"time"
@@ -105,7 +107,8 @@ const odrRolePolicy = `{
 }`
 
 type ECSRunnerInstaller struct {
-	Config EcsConfig
+	Config  EcsConfig
+	netInfo *awsinstallutil.NetworkInformation
 }
 
 type EcsConfig struct {
@@ -158,6 +161,7 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			if netInfo, err = awsinstallutil.SetupNetworking(ctx, ui, sess, i.Config.Subnets); err != nil {
 				return err
 			}
+			i.netInfo = netInfo
 
 			if efsInfo, err = awsinstallutil.SetupEFS(ctx, ui, sess, netInfo); err != nil {
 				return err
@@ -682,6 +686,48 @@ func (i *ECSRunnerInstaller) setupTaskRole(
 	s.Update("Created IAM task role: %s", roleName)
 	s.Done()
 	return roleArn, nil
+}
+
+// OnDemandRunnerConfig implements OnDemandRunnerConfigProvider
+func (i *ECSRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	// Generate some configuration. Some of the OnDemand configurations have
+	// defaults so we should be fine to directly use them
+	cfgMap := map[string]interface{}{
+		"log_group":           defaultRunnerLogGroup,
+		"execution_role_name": i.Config.ExecutionRoleName,
+		"task_role_name":      i.Config.TaskRoleName,
+		"cluster":             i.Config.Cluster,
+		"region":              i.Config.Region,
+		"odr_cpu":             i.Config.CPU,
+		"odr_memory":          i.Config.Memory,
+	}
+
+	if i.netInfo != nil {
+		var subnets []string
+		for _, s := range i.netInfo.Subnets {
+			subnets = append(subnets, *s)
+		}
+		cfgMap["subnets"] = strings.Join(subnets, ",")
+		cfgMap["security_group_id"] = i.netInfo.SgID
+	}
+
+	// Marshal our config
+	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
+	if err != nil {
+		// This shouldn't happen cause we control our input. If it does,
+		// just panic cause this will be in a `server install` CLI and
+		// we want the user to report a bug.
+		panic(err)
+	}
+
+	return &pb.OnDemandRunnerConfig{
+		Name:         "ecs",
+		OciUrl:       i.Config.RunnerImage,
+		PluginType:   "aws-ecs",
+		Default:      true,
+		PluginConfig: cfgJson,
+		ConfigFormat: pb.Hcl_JSON,
+	}
 }
 
 type Logging struct {
