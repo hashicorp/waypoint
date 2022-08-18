@@ -1727,28 +1727,17 @@ func (s *State) taskComplete(jobId string) error {
 // pipelineComplete will look up the referenced job to see if it has a PipelineStep ref
 // associated with it, and if so, progress the pipelineRun state machine.
 func (s *State) pipelineComplete(jobId string) error {
+	// grab the job
 	job, err := s.JobById(jobId, nil)
 	if err != nil {
 		s.log.Error("error getting job by id", "job", jobId, "err", err)
 		return err
 	} else if job.Pipeline == nil {
 		s.log.Trace("job is not part of a pipeline", "job", jobId)
-		return nil
+		return err
 	}
-
 	// grab the pipeline run
-	run, err := s.PipelineRunGet(&pb.Ref_Pipeline{
-		Ref: &pb.Ref_Pipeline_Id{
-			Id: &pb.Ref_PipelineId{
-				Id: job.Pipeline.Pipeline,
-			},
-		},
-	}, job.Pipeline.RunSequence)
-	if run != nil && len(run.Jobs) < 1 {
-		err = status.Errorf(codes.FailedPrecondition,
-			"no jobs queued for pipeline run %q", run,
-		)
-	}
+	run, err := s.PipelineRunGetByJobId(jobId)
 	if err != nil {
 		s.log.Error("failed to retrieve pipeline to complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
 		return err
@@ -1765,7 +1754,7 @@ func (s *State) pipelineComplete(jobId string) error {
 	}
 
 	// PipelineRunPut the new state
-	if err := s.PipelineRunPut(run); err != nil {
+	if err = s.PipelineRunPut(run); err != nil {
 		s.log.Error("failed to complete pipeline run", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
 		return err
 	}
@@ -1776,37 +1765,18 @@ func (s *State) pipelineComplete(jobId string) error {
 // pipelineAck checks if the referenced job id has a PipelineStep ref associated with it,
 // and if so, progress the PipelineRun state machine.
 func (s *State) pipelineAck(jobId string) error {
-	job, err := s.JobById(jobId, nil)
+	// grab pipeline run that triggered the job based on the PipelineTask Ref
+	run, err := s.PipelineRunGetByJobId(jobId)
 	if err != nil {
-		s.log.Error("error getting job by id", "job", jobId, "err", err)
+		s.log.Error("failed to retrieve pipeline to complete", "job", jobId, "pipeline", run.Pipeline, "run", run.Sequence)
 		return err
-	} else if job.Pipeline == nil {
-		s.log.Trace("job is not part of a pipeline", "job", jobId)
-		return nil
 	}
 
-	// grab pipeline run that triggered the job based on the PipelineTask Ref
-	run, err := s.PipelineRunGet(&pb.Ref_Pipeline{
-		Ref: &pb.Ref_Pipeline_Id{
-			Id: &pb.Ref_PipelineId{
-				Id: job.Pipeline.Pipeline,
-			},
-		},
-	}, job.Pipeline.RunSequence)
-	if run != nil && len(run.Jobs) < 1 {
-		err = status.Errorf(codes.FailedPrecondition,
-			"no jobs queued for pipeline run %q", run,
-		)
-	}
-	if err != nil {
-		s.log.Error("failed to retrieve pipeline to ack", "job", job.Id, "pipeline id", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
-		return err
-	}
 	// Update the new pipeline run state
 	run.Status = pb.PipelineRun_RUNNING
-	s.log.Trace("pipeline is running", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
+	s.log.Trace("pipeline is running", "job", jobId, "pipeline", run.Pipeline, "run", run.Sequence)
 	if err := s.PipelineRunPut(run); err != nil {
-		s.log.Error("failed to ack pipeline run state", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
+		s.log.Error("failed to ack pipeline run state", "job", jobId, "pipeline", run.Pipeline, "run", run.Sequence)
 		return err
 	}
 
@@ -1822,19 +1792,12 @@ func (s *State) pipelineCancel(jobId string) error {
 		return err
 	} else if job.Pipeline == nil {
 		s.log.Trace("job is not part of a pipeline", "job", jobId)
-		return nil
+		return err
 	}
 
-	// grab the pipeline run
-	run, err := s.PipelineRunGet(&pb.Ref_Pipeline{
-		Ref: &pb.Ref_Pipeline_Id{
-			Id: &pb.Ref_PipelineId{
-				Id: job.Pipeline.Pipeline,
-			},
-		},
-	}, job.Pipeline.RunSequence)
+	run, err := s.PipelineRunGetByJobId(jobId)
 	if err != nil {
-		s.log.Error("failed to retrieve pipeline to cancel", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
+		s.log.Error("failed to retrieve pipeline to complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
 		return err
 	}
 

@@ -95,6 +95,34 @@ func (s *State) pipelineRunPut(
 	return s.pipelineRunIndexSet(memTxn, id, value)
 }
 
+func (s *State) PipelineRunGetByJobId(jobId string) (*pb.PipelineRun, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	var result *pb.PipelineRun
+
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		job, err := s.jobById(dbTxn, jobId)
+		ref := &pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{
+					Id: job.Pipeline.Pipeline,
+				},
+			},
+		}
+		p, err := s.pipelineGet(dbTxn, memTxn, ref)
+		result, err = s.pipelineRunGet(dbTxn, memTxn, p.Id, fmt.Sprint(job.Pipeline.RunSequence))
+		return err
+	})
+
+	if result != nil && len(result.Jobs) < 1 {
+		err = status.Errorf(codes.FailedPrecondition,
+			"no jobs queued for pipeline run %q", result,
+		)
+	}
+	return result, err
+}
+
 // PipelineRunGet gets a PipelineRun by pipeline and sequence.
 func (s *State) PipelineRunGet(ref *pb.Ref_Pipeline, seq uint64) (*pb.PipelineRun, error) {
 	memTxn := s.inmem.Txn(false)
