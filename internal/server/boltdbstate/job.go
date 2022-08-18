@@ -1746,11 +1746,14 @@ func (s *State) pipelineComplete(jobId string) error {
 	}
 
 	if job.State == pb.Job_ERROR {
-		run.Status = pb.PipelineRun_FAILED
+		run.Status = pb.PipelineRun_ERROR
 	} else if job.State == pb.Job_SUCCESS {
-		// If job Id matches last job queued by pipeline
+		// If job Id matches last job queued by pipeline.
+		// We will have to change this in the future when pipeline steps run in parallel,
+		// and the last job queued may not be the last job to complete in the pipeline
+		// TODO:XX figure out how ^
 		if job.Id == run.Jobs[len(run.Jobs)-1].Id {
-			run.Status = pb.PipelineRun_COMPLETED
+			run.Status = pb.PipelineRun_SUCCESS
 			s.log.Trace("pipeline run is complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
 		}
 	}
@@ -1777,8 +1780,10 @@ func (s *State) pipelineAck(jobId string) error {
 		return err
 	}
 
-	// Update the new pipeline run state
-	run.Status = pb.PipelineRun_RUNNING
+	// Update the new pipeline run state if it's not already running
+	if run.Status != pb.PipelineRun_RUNNING {
+		run.Status = pb.PipelineRun_RUNNING
+	}
 	s.log.Trace("pipeline is running", "job", jobId, "pipeline", run.Pipeline, "run", run.Sequence)
 	if err := s.PipelineRunPut(run); err != nil {
 		s.log.Error("failed to ack pipeline run state", "job", jobId, "pipeline", run.Pipeline, "run", run.Sequence)

@@ -133,7 +133,7 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Update existing pipeline run
-		r.Status = pb.PipelineRun_FAILED
+		r.Status = pb.PipelineRun_ERROR
 		err = s.PipelineRunPut(r)
 		require.NoError(err)
 

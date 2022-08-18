@@ -4754,9 +4754,9 @@ message PipelineRun {
     PENDING = 1; // pipeline run created
     STARTING = 2; // root_job queued
     RUNNING = 3; // jobs are working
-    FAILED = 4; // when any job fails, the pipeline aborts
+    ERROR = 4; // when any job errors, the pipeline aborts
     CANCELLED = 5; // when any job gets manually cancelled, the entire pipeline aborts
-    COMPLETED = 6; // last_job completed
+    SUCCESS = 6; // last_job completed
   }
 }
 

@@ -1748,7 +1748,7 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		run, err = s.PipelineRunGetById(runId)
 		require.NoError(err)
 		require.NotNil(run)
-		require.Equal(pb.PipelineRun_COMPLETED, run.Status)
+		require.Equal(pb.PipelineRun_SUCCESS, run.Status)
 	})
 }
 
