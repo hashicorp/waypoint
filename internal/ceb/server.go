@@ -3,23 +3,20 @@ package ceb
 import (
 	"context"
 	"crypto/tls"
-	"net/url"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
-	"golang.org/x/oauth2/clientcredentials"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/oauth"
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint/pkg/inlinekeepalive"
 	"github.com/hashicorp/waypoint/pkg/protocolversion"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/serverclient"
+	"github.com/hashicorp/waypoint/pkg/tokenutil"
 )
 
 // client returns the Waypoint client or blocks until it is set or the
@@ -172,33 +169,17 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 
 		token := resp.Token
 
-		var perRPC credentials.PerRPCCredentials = staticToken(token)
+		var perRPC credentials.PerRPCCredentials = tokenutil.StaticToken(token)
 
 		if token != "" {
-			tokenData, err := serverclient.TokenDecode(token)
+			externalRPC, err := tokenutil.SetupExternalCreds(ctx, ceb.logger, token, "waypoint-ceb")
 			if err != nil {
 				return err
 			}
 
-			if tokenData.ExternalCreds != nil {
-				if oc, ok := tokenData.ExternalCreds.(*pb.Token_OauthCreds); ok {
-					conf := &clientcredentials.Config{
-						ClientID:       oc.OauthCreds.ClientId,
-						ClientSecret:   oc.OauthCreds.ClientSecret,
-						TokenURL:       oc.OauthCreds.Url,
-						EndpointParams: url.Values{"audience": {"waypoint-ceb"}},
-					}
-
-					oauthToken, err := conf.Token(ctx)
-					if err != nil {
-						return err
-					}
-
-					perRPC = oauth.NewOauthAccess(oauthToken)
-
-					ceb.logger.Debug("using oauth information in token to authenticate with server")
-					authMethod = "oauth2"
-				}
+			if externalRPC != nil {
+				perRPC = externalRPC
+				authMethod = "oauth2"
 			}
 		}
 
@@ -247,20 +228,4 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 	ceb.cleanup(func() { connCopy.Close() })
 
 	return nil
-}
-
-// This is a weird type that only exists to satisify the interface required by
-// grpc.WithPerRPCCredentials. That api is designed to incorporate things like OAuth
-// but in our case, we really just want to send this static token through, but we still
-// need to do the dance.
-type staticToken string
-
-func (t staticToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	return map[string]string{
-		"authorization": string(t),
-	}, nil
-}
-
-func (t staticToken) RequireTransportSecurity() bool {
-	return false
 }

@@ -3,11 +3,12 @@ package cli
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/installutil"
-	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/waypoint/internal/installutil"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/posener/complete"
@@ -24,6 +25,7 @@ import (
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverclient"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
+	"github.com/hashicorp/waypoint/pkg/tokenutil"
 )
 
 type InstallCommand struct {
@@ -265,8 +267,10 @@ func (c *InstallCommand) Run(args []string) int {
 		}
 	}
 
+	// TODO this should eventually not use StaticToken but something that can
+	// setup access via oauth if the token contains that as well.
 	callOpts = append(callOpts, grpc.PerRPCCredentials(
-		serverclient.StaticToken(contextConfig.Server.AuthToken)))
+		tokenutil.StaticToken(contextConfig.Server.AuthToken)))
 
 	// This is our default, so let's actually set the timestamp if not set on the CLI
 	if c.contextName == "" {
