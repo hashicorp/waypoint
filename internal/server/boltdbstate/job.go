@@ -761,7 +761,6 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 		s.log.Error("error updating pipeline state", "error", err, "job", job.Id)
 		return nil, err
 	}
-
 	return job.Job(result), nil
 }
 
@@ -1734,12 +1733,15 @@ func (s *State) pipelineComplete(jobId string) error {
 		return err
 	} else if job.Pipeline == nil {
 		s.log.Trace("job is not part of a pipeline", "job", jobId)
-		return err
+		return nil
 	}
 	// grab the pipeline run
 	run, err := s.PipelineRunGetByJobId(jobId)
+	if run == nil {
+		return nil
+	}
 	if err != nil {
-		s.log.Error("failed to retrieve pipeline to complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
+		s.log.Error("failed to retrieve pipeline to complete", "job", job.Id)
 		return err
 	}
 
@@ -1767,8 +1769,11 @@ func (s *State) pipelineComplete(jobId string) error {
 func (s *State) pipelineAck(jobId string) error {
 	// grab pipeline run that triggered the job based on the PipelineTask Ref
 	run, err := s.PipelineRunGetByJobId(jobId)
+	if run == nil {
+		return nil
+	}
 	if err != nil {
-		s.log.Error("failed to retrieve pipeline to complete", "job", jobId, "pipeline", run.Pipeline, "run", run.Sequence)
+		s.log.Error("failed to retrieve pipeline to complete", "job", jobId)
 		return err
 	}
 
@@ -1792,12 +1797,15 @@ func (s *State) pipelineCancel(jobId string) error {
 		return err
 	} else if job.Pipeline == nil {
 		s.log.Trace("job is not part of a pipeline", "job", jobId)
-		return err
+		return nil
 	}
 
 	run, err := s.PipelineRunGetByJobId(jobId)
+	if run == nil {
+		return nil
+	}
 	if err != nil {
-		s.log.Error("failed to retrieve pipeline to complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
+		s.log.Error("failed to retrieve pipeline to complete", "job", job.Id)
 		return err
 	}
 

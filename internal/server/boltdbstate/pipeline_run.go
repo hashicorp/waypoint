@@ -100,9 +100,12 @@ func (s *State) PipelineRunGetByJobId(jobId string) (*pb.PipelineRun, error) {
 	defer memTxn.Abort()
 
 	var result *pb.PipelineRun
-
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
 		job, err := s.jobById(dbTxn, jobId)
+		if job.Pipeline == nil {
+			err = status.Errorf(codes.FailedPrecondition, "no pipeline run associated with job %q", job)
+			return err
+		}
 		ref := &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
 				Id: &pb.Ref_PipelineId{
@@ -116,9 +119,7 @@ func (s *State) PipelineRunGetByJobId(jobId string) (*pb.PipelineRun, error) {
 	})
 
 	if result != nil && len(result.Jobs) < 1 {
-		err = status.Errorf(codes.FailedPrecondition,
-			"no jobs queued for pipeline run %q", result,
-		)
+		err = status.Errorf(codes.FailedPrecondition, "no jobs queued for pipeline run %q", result)
 	}
 	return result, err
 }
