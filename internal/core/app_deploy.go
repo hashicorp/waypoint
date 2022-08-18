@@ -50,7 +50,12 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 		return nil, err
 	}
 
-	return msg.(*pb.Deployment), nil
+	result, ok := msg.(*pb.Deployment)
+	if !ok {
+		return nil, status.Error(codes.Internal, "app_deploy failed to convert the operation message into a Deployment proto")
+	}
+
+	return result, nil
 }
 
 // deployEvalContext sets the HCL evaluation context for `deploy` blocks.

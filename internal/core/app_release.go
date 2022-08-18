@@ -84,7 +84,12 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 		release = result.(component.Release)
 	}
 
-	return releasepb.(*pb.Release), release, nil
+	releaseResult, ok := releasepb.(*pb.Release)
+	if !ok {
+		return nil, nil, status.Error(codes.Internal, "app_release failed to convert the operation message into a Release proto")
+	}
+
+	return releaseResult, release, nil
 }
 
 // createReleaser creates the releaser component instance by trying to
