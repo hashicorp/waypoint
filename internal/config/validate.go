@@ -329,7 +329,7 @@ func (c *Pipeline) Validate() error {
 	for _, stepRaw := range c.StepRaw {
 		if stepRaw == nil && stepRaw.PipelineRaw == nil {
 			result = multierror.Append(result, fmt.Errorf(
-				"step stage with a default 'use' stanza is required"))
+				"step stage with a default 'use' stanza or a 'pipeline' stanza is required"))
 		} else if stepRaw.Use != nil && stepRaw.PipelineRaw != nil {
 			result = multierror.Append(result, fmt.Errorf(
 				"step stage with a 'use' stanza and pipeline stanza is not valid"))
