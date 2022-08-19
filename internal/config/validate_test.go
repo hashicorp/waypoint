@@ -70,6 +70,10 @@ func TestConfigValidatePipelines(t *testing.T) {
 			"",
 		},
 		{
+			"pipeline_nested_refs.hcl",
+			"",
+		},
+		{
 			"pipeline_no_step.hcl",
 			"'step' stanza",
 		},
