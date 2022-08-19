@@ -210,9 +210,6 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 		// defined else where. If this is a ref, the raw hcl for the pipeline should
 		// be empty.
 		if step.PipelineRaw != nil {
-			// TODO(briancain): It shouldn't be valid to have a "project/pipeline"
-			// defined as well as a nested pipeline. We should validate this.
-
 			// We need to determine if the embedded pipeline is defined directly
 			// inside a step, or is simply a reference to a pipeline else where
 			if len(step.PipelineRaw.StepRaw) > 0 {
