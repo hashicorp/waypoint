@@ -233,7 +233,23 @@ func (s *Service) buildStepJobs(
 					"failed to get node ID from pipeline %q and step name %q",
 					pipeline.Id, dep)
 			}
-			dependsOn = append(dependsOn, stepIds[nodeDepId])
+			if nodeDepId == "" {
+				return nil, nil, status.Errorf(codes.Internal,
+					"node ID was blank from pipeline %q and step name %q!!",
+					pipeline.Id, dep)
+			}
+
+			// TODO(briancain): not sure if this is the right solution here....
+			// maybe we gotta look to see if the step is a pipeline ref and don't
+			// add it as a DependsOn because it won't have a job id
+			// Committing this for now, will be fixed next week.
+			d, ok := stepIds[nodeDepId]
+			if !ok {
+				log.Info("No step id found for nodeDepId", "pipeline", pipeline.Name,
+					"step", step.Name, "dep_id", nodeDepId)
+				continue
+			}
+			dependsOn = append(dependsOn, d)
 		}
 
 		nodeId, ok := s.stepToNodeId(ctx, log, pipeline.Id, name, nodeIdMap)
