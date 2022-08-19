@@ -126,8 +126,28 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 			// Parse all the steps
 			var embSteps []*Step
 			for _, embedStepRaw := range embedPipeline.StepRaw {
-				// TODO(briancain): Do we add an error here if we detect another level
-				// of pipeline nesting?
+				if embedStepRaw.PipelineRaw != nil {
+					// NOTE(briancain): For now, we artificially don't allow for more than
+					// one level of embedded pipeline nesting. That means this is invalid:
+					/*
+						  pipeline "example" {
+								step "invalid" {
+									pipeline "level-one" {
+										step "nested" {
+											pipeline "level-two" {
+												// etc etc...
+											}
+										}
+									}
+								}
+						  }
+					*/
+					return nil, status.Errorf(codes.FailedPrecondition,
+						"step %q defined 2 levels of nesting for an embedded pipeline %q. "+
+							"currently Waypoint only supports 1 level of nesting for embedded pipelines. "+
+							"You can instead define a pipeline and refer to it as a step rather than "+
+							"defining it directly inside a step.", embedStepRaw.Name, pipeline.Name)
+				}
 
 				// turn stepRaw into a staged Step
 				s := Step{
