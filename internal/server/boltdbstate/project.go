@@ -190,21 +190,25 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 		if err = s.ArtifactDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: artifact.Id}}); err != nil {
 			return err
 		}
+		s.log.Debug("deleted artifact " + artifact.Id)
 	}
 	for _, deployment := range deployments {
 		if err = s.DeploymentDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: deployment.Id}}); err != nil {
 			return err
 		}
+		s.log.Debug("deleted deployment " + deployment.Id)
 	}
 	for _, release := range releases {
 		if err = s.ReleaseDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: release.Id}}); err != nil {
 			return err
 		}
+		s.log.Debug("deleted release " + release.Id)
 	}
 	for _, statusReport := range statusReports {
 		if err = s.StatusReportDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: statusReport.Id}}); err != nil {
 			return err
 		}
+		s.log.Debug("deleted status report " + statusReport.Id)
 	}
 
 	// Unset all configs we retrieved
