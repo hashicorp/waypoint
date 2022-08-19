@@ -41,7 +41,7 @@ lifecycle operation.
 - `-env-vars=<string>` - DEPRECATED. Please see `-env-var`.
 - `-plugin-type=<string>` - The type of the plugin to launch for the on-demand runner, such as aws-ecs, kubernetes, etc.
 - `-plugin-config=<string>` - Path to an hcl file that contains the configuration for the plugin. This is only necessary when the plugin's defaults need to be adjusted for the environment the plugin will launch the on-demand runner in.
-- `-default` - Indicates that this remote runner profile should be the default for any project that doesn't otherwise specify its own remote runner. The default is false.
+- `-default` - Indicates that this remote runner profile should be the default for any project that doesn't otherwise specify its own remote runner.
 - `-target-runner-id=<string>` - ID of the runner to target for this remote runner profile.
 - `-target-runner-label=<key=value>` - Labels on the runner to target for this remote runner profile. e.g. `-target-runner-label=k=v`. Can be specified multiple times.
 

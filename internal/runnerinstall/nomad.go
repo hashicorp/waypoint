@@ -2,8 +2,10 @@ package runnerinstall
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/waypoint/internal/installutil"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"strconv"
 	"strings"
 	"time"
@@ -391,5 +393,45 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	return nil
 }
 
-func (i *NomadRunnerInstaller) UninstallFlags(set *flag.Set) {
+func (i *NomadRunnerInstaller) UninstallFlags(set *flag.Set) {}
+
+func (i *NomadRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	// Generate some configuration
+	cfgMap := map[string]interface{}{}
+	if v := i.Config.RunnerResourcesCPU; v != "" {
+		cfgMap["resources_cpu"] = v
+	}
+	if v := i.Config.RunnerResourcesMemory; v != "" {
+		cfgMap["resources_memory"] = v
+	}
+	if v := i.Config.Datacenters[0]; v != "" {
+		cfgMap["datacenter"] = v
+	}
+	if v := i.Config.Namespace; v != "" {
+		cfgMap["namespace"] = v
+	}
+	if v := i.Config.Region; v != "" {
+		cfgMap["region"] = v
+	}
+	if v := i.Config.NomadHost; v != "" {
+		cfgMap["nomad_host"] = v
+	}
+
+	// Marshal our config
+	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
+	if err != nil {
+		// This shouldn't happen cause we control our input. If it does,
+		// just panic cause this will be in a `server install` CLI and
+		// we want the user to report a bug.
+		panic(err)
+	}
+
+	return &pb.OnDemandRunnerConfig{
+		Name:         "nomad",
+		OciUrl:       i.Config.RunnerImage,
+		PluginType:   "nomad",
+		Default:      true,
+		PluginConfig: cfgJson,
+		ConfigFormat: pb.Hcl_JSON,
+	}
 }

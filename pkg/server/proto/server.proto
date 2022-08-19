@@ -4860,6 +4860,30 @@ message TokenTransport {
   // Any configuration style metadata that can be passed along with the token
   // without invalidating the token body itself.
   map<string, string> metadata = 4;
+
+  // The external creds are stored outside of the authenticated token body
+  // because we want clients that see the creds in the transport to use
+  // them BUT then strip them out before transmitting the token, so that
+  // the creds aren't be transfer constantly.
+  oneof external_creds {
+    // A client that sees this populated will use the details to fetch a token
+    // via oauth instead of submitting this token directly.
+    OAuthCredentials oauth_creds = 12;
+  }
+
+  // The OAuth message contains information that the client should use
+  // to generate on OAuth token for authenticating with the server rather
+  // than just submitting the waypoint token directly.
+  message OAuthCredentials {
+    // The url for the oauth2 provider
+    string url = 1;
+
+    // The OAuth client id to submit
+    string client_id = 2;
+
+    // The OAuth client secret that goes along with the client_id
+    string client_secret = 3;
+  }
 }
 
 // The authenticated Token information. This is used to authenticate requests.
@@ -4893,12 +4917,6 @@ message Token {
 
     // trigger tokens can be used to trigger lifecycle actions via HTTP
     Trigger trigger = 10;
-  }
-
-  oneof external_creds {
-    // A client that sees this populated will use the details to fetch a token
-    // via oauth instead of submitting this token directly.
-    OAuthCredentials oauth_creds = 12;
   }
 
   message Login {
@@ -4959,20 +4977,6 @@ message Token {
   message Trigger {
     // The user that initiated the trigger token generation
     string from_user_id = 1;
-  }
-
-  // The OAuth message contains information that the client should use
-  // to generate on OAuth token for authenticating with the server rather
-  // than just submitting the waypoint token directly.
-  message OAuthCredentials {
-    // The url for the oauth2 provider
-    string url = 1;
-
-    // The OAuth client id to submit
-    string client_id = 2;
-
-    // The OAuth client secret that goes along with the client_id
-    string client_secret = 3;
   }
 
   // OLD FIELDS FOR BACKWARDS COMPATIBILITY. These are no longer used

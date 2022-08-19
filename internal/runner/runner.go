@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/plugin"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/serverclient"
+	"github.com/hashicorp/waypoint/pkg/tokenutil"
 )
 
 var (
@@ -252,8 +252,8 @@ func (r *Runner) Start(ctx context.Context) error {
 	} else if t != "" {
 		adopt = true
 		log.Debug("will use prior token from state directory")
-		tokenCtx = serverclient.TokenWithContext(tokenCtx, t)
-		r.runningCtx = serverclient.TokenWithContext(r.runningCtx, t)
+		tokenCtx = tokenutil.TokenWithContext(tokenCtx, t)
+		r.runningCtx = tokenutil.TokenWithContext(r.runningCtx, t)
 	}
 
 	// If we have a cookie set, we always adopt.
@@ -292,7 +292,7 @@ func (r *Runner) Start(ctx context.Context) error {
 				// It is possible that we do NOT have a token, because our current
 				// token is already valid.
 				log.Debug("runner adoption complete, new token received")
-				r.runningCtx = serverclient.TokenWithContext(r.runningCtx, tokenResp.Token)
+				r.runningCtx = tokenutil.TokenWithContext(r.runningCtx, tokenResp.Token)
 
 				// Persist our token
 				if err := r.statePutToken(tokenResp.Token); err != nil {
@@ -419,7 +419,7 @@ type Option func(*Runner, *config) error
 // attempt any connection at all regardless of other configuration (env
 // vars or waypoint config file). This will be used.
 //
-// If this is specified, the client MUST use a serverclient.ContextToken
+// If this is specified, the client MUST use a tokenutil.ContextToken
 // type for the PerRPCCredentials setting. This package and others will use
 // context overrides for the token. If you do not use this, things will break.
 func WithClient(client pb.WaypointClient) Option {

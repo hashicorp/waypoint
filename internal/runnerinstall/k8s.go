@@ -2,8 +2,11 @@ package runnerinstall
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/waypoint/builtin/k8s"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"strings"
 	"time"
 
@@ -519,4 +522,52 @@ func (i *K8sRunnerInstaller) UninstallFlags(set *flag.Set) {
 		Usage: "The namespace in the Kubernetes cluster into which the Waypoint " +
 			"runner will be installed.",
 	})
+}
+
+// OnDemandRunnerConfig implements OnDemandRunnerConfigProvider
+func (i *K8sRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+	// Generate some configuration
+	cfgMap := map[string]interface{}{}
+	if v := i.Config.ImagePullSecret; v != "" {
+		cfgMap["image_secret"] = v
+	}
+	// TODO: Enable specification of service account name
+	if v := i.Config.imagePullPolicy; v != "" {
+		cfgMap["image_pull_policy"] = v
+	}
+
+	var cpuConfig k8s.ResourceConfig
+	var memConfig k8s.ResourceConfig
+	if v := i.Config.CpuRequest; v != "" {
+		cpuConfig.Request = v
+	}
+	if v := i.Config.MemRequest; v != "" {
+		memConfig.Request = v
+	}
+	if v := i.Config.CpuLimit; v != "" {
+		cpuConfig.Limit = v
+	}
+	if v := i.Config.MemLimit; v != "" {
+		memConfig.Limit = v
+	}
+	cfgMap["cpu"] = cpuConfig
+	cfgMap["memory"] = memConfig
+
+	// Marshal our config
+	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
+	if err != nil {
+		// This shouldn't happen cause we control our input. If it does,
+		// just panic cause this will be in a `server install` CLI and
+		// we want the user to report a bug.
+		panic(err)
+	}
+
+	return &pb.OnDemandRunnerConfig{
+		Name:         "kubernetes",
+		OciUrl:       i.Config.RunnerImage,
+		PluginType:   "kubernetes",
+		Default:      true,
+		PluginConfig: cfgJson,
+		ConfigFormat: pb.Hcl_JSON,
+	}
 }

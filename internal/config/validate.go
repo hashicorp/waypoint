@@ -241,12 +241,12 @@ func (c *App) Validate() (ValidationResults, error) {
 
 	if c.BuildRaw == nil || c.BuildRaw.Use == nil || c.BuildRaw.Use.Type == "" {
 		results = append(results, ValidationResult{Error: fmt.Errorf(
-			"build stage with a default 'use' stanza is required")})
+			"build stage with a default non-workspace scoped 'use' stanza is required")})
 	}
 
 	if c.DeployRaw == nil || c.DeployRaw.Use == nil || c.DeployRaw.Use.Type == "" {
 		results = append(results, ValidationResult{Error: fmt.Errorf(
-			"deploy stage with a default 'use' stanza is required")})
+			"deploy stage with a default non-workspace scoped 'use' stanza is required")})
 	}
 
 	for _, scope := range c.BuildRaw.WorkspaceScoped {
