@@ -29,22 +29,33 @@ func (s *State) OnDemandRunnerConfigPut(o *pb.OnDemandRunnerConfig) (*pb.OnDeman
 	defer memTxn.Abort()
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
-		if o.Id != "" {
-			_, err := s.onDemandRunnerGet(dbTxn, memTxn, &pb.Ref_OnDemandRunnerConfig{Id: o.Id})
-			if err != nil {
-				return err
-			}
-		} else {
-			id, err := ulid()
-			if err != nil {
-				return err
-			}
-			o.Id = id
 
-			// If no name was given, set it to the id.
-			if o.Name == "" {
-				o.Name = o.Id
-			}
+		existingConfig, err := s.onDemandRunnerGet(dbTxn, memTxn, &pb.Ref_OnDemandRunnerConfig{Id: o.Id})
+		if err != nil && status.Code(err) != codes.NotFound {
+			return errors.Wrapf(err, "failed to check for existing on-demand runner config")
+		}
+
+		if status.Code(err) == codes.NotFound && o.Id != "" {
+			return status.Errorf(codes.InvalidArgument, "cannot set the ID of a new odr profile")
+		}
+
+		if existingConfig != nil && o.Name != "" && existingConfig.Id != "" && o.Id != existingConfig.Id {
+			return status.Errorf(codes.InvalidArgument, "cannot update the ID id existing runner profile with name %q", o.Name)
+		}
+
+		if o.Id != "" && status.Code(err) == codes.NotFound {
+			return err
+		}
+
+		id, err := ulid()
+		if err != nil {
+			return err
+		}
+		o.Id = id
+
+		// If no name was given, set it to the id.
+		if o.Name == "" {
+			o.Name = o.Id
 		}
 
 		return s.ondemandRunnerPut(dbTxn, memTxn, o)
