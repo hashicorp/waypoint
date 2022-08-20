@@ -31,7 +31,7 @@ plugin, you must download the correct binary for your operating system,
 place it at the correct location, and use it within your
 [waypoint configuration](/docs/waypoint-hcl/use).
 
-### Installing an External Plugin
+### Installing an External Plugin - Local Operations
 
 To install an external plugin, the binary must first be named
 `waypoint-plugin-<name>` where `<name>` is the same label that is used
@@ -57,6 +57,22 @@ will look for plugins in the following locations in the following order:
 3. In `$XDG_CONFIG_HOME/waypoint/plugins`
 
 Once a plugin is found, it will not search the later paths.
+
+### Installing an External Plugin - Remote Operations
+
+In order to use a custom plugin with remote operations, the plugin must be built-in
+to the Docker image used for the on-demand runner profile configured to execute your
+remote operations. The default on-demand runner image, hashicorp/waypoint-odr:latest,
+contains only the plugins which are built-in to the Waypoint binary. To add a custom
+plugin, you may extend this image to add your own plugin:
+
+```Dockerfile
+FROM hashicorp/waypoint:latest
+
+COPY ./waypoint-plugin-myplugin $HOME/.config/waypoint/plugins/waypoint-plugin-myplugin
+```
+
+How to configure your runner profile to use the new image is detailed [here](/docs/runner/profiles#oci-url).
 
 #### Troubleshooting
 
