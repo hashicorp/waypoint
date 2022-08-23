@@ -40,6 +40,9 @@ func (c *Project) DestroyProject(ctx context.Context, op *pb.Job_DestroyProjectO
 
 	// Execute it
 	result, err := c.doJob(ctx, job, c.UI)
+	if err != nil {
+		return nil, err
+	}
 	return result.ProjectDestroy, err
 }
 
