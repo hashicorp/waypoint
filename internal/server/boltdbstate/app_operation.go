@@ -185,13 +185,25 @@ func (op *appOperation) Delete(s *State, ref *pb.Ref_Operation) error {
 	id := target.Id
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
-		return op.dbDelete(dbTxn, []byte(id))
+		return op.delete(dbTxn, []byte(id))
 	})
 	if err == nil {
 		memTxn.Commit()
 	}
 
 	return err
+}
+
+func (op *appOperation) delete(
+	dbTxn *bolt.Tx,
+	id []byte,
+) error {
+	// Delete the value from the bucket
+	if err := op.dbDelete(dbTxn, id); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (op *appOperation) getIdForSeq(

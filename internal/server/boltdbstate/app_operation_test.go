@@ -518,7 +518,7 @@ func TestAppOperation(t *testing.T) {
 		require.False(ws.Watch(time.After(1 * time.Second)))
 	})
 
-	t.Run("attempt deletion of non-existest operation id", func(t *testing.T) {
+	t.Run("attempt deletion of non-existent operation id", func(t *testing.T) {
 		require := require.New(t)
 
 		s := TestState(t)
