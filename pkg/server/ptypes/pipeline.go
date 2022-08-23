@@ -60,7 +60,6 @@ func TestPipelineRun(t testing.T, src *pb.PipelineRun) *pb.PipelineRun {
 	}
 
 	require.NoError(t, mergo.Merge(src, &pb.PipelineRun{
-		Id: "test-run",
 		Pipeline: &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
 				Id: &pb.Ref_PipelineId{

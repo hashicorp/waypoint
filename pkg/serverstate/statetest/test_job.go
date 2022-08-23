@@ -1680,7 +1680,6 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		s := factory(t)
 		defer s.Close()
 
-		runId := "test_run"
 		jobRef := &pb.Ref_Job{Id: "root_job"}
 
 		p := serverptypes.TestPipeline(t, nil)
@@ -1688,29 +1687,30 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		require.NoError(err)
 		pipeline := &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: &pb.Ref_PipelineId{Id: p.Id}}}
 
-		// Create a pending pipeline run
-		pr := &pb.PipelineRun{
-			Id:       runId,
-			Pipeline: pipeline,
-			Status:   pb.PipelineRun_PENDING,
-		}
+		// Create a new pipeline run
+		pr := &pb.PipelineRun{Pipeline: pipeline}
+		r := serverptypes.TestPipelineRun(t, pr)
+		err = s.PipelineRunPut(r)
+		require.NoError(err)
+		require.Equal(uint64(1), r.Sequence)
 
 		// Create a job
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: jobRef.Id,
 			Pipeline: &pb.Ref_PipelineStep{
 				Pipeline:    p.Id,
-				RunSequence: 1,
+				RunSequence: r.Sequence,
 			},
 		})))
 
-		pr.Jobs = append(pr.Jobs, jobRef)
-		r := serverptypes.TestPipelineRun(t, pr)
+		// Update pipeline run with job information
+		r.Jobs = append(pr.Jobs, jobRef)
 		err = s.PipelineRunPut(r)
 		require.NoError(err)
 		require.Equal(uint64(1), r.Sequence)
+		require.Equal(pb.PipelineRun_PENDING, r.Status)
 
-		// Assign it, we should get this build
+		// Assign the job, we should get this build
 		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
@@ -1725,10 +1725,11 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		require.NoError(err)
 		require.Equal(pb.Job_RUNNING, job.Job.State)
 
-		run, err := s.PipelineRunGetById(runId)
+		run, err := s.PipelineRunGetById(r.Id)
 		require.NoError(err)
 		require.NotNil(run)
 		require.Equal(pb.PipelineRun_RUNNING, run.Status)
+		require.Equal(job.Pipeline.RunSequence, run.Sequence)
 
 		// We should have an output buffer
 		require.NotNil(job.OutputBuffer)
@@ -1745,10 +1746,11 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		require.Nil(job.Error)
 		require.NotNil(job.Result)
 
-		run, err = s.PipelineRunGetById(runId)
+		run, err = s.PipelineRunGetById(pr.Id)
 		require.NoError(err)
 		require.NotNil(run)
 		require.Equal(pb.PipelineRun_SUCCESS, run.Status)
+		require.Equal(job.Pipeline.RunSequence, run.Sequence)
 	})
 }
 
@@ -2028,15 +2030,15 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		defer s.Close()
 
 		// Create a pending pipeline run
-		runId := "test-run"
 		p := serverptypes.TestPipeline(t, nil)
 		err := s.PipelinePut(p)
 		require.NoError(err)
 		pr := &pb.PipelineRun{
-			Id:       runId,
 			Pipeline: &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: &pb.Ref_PipelineId{Id: p.Id}}},
-			Status:   pb.PipelineRun_PENDING,
 		}
+		r := serverptypes.TestPipelineRun(t, pr)
+		err = s.PipelineRunPut(r)
+		require.NoError(err)
 
 		// Create jobs
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
@@ -2049,11 +2051,11 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 			DependsOn: []string{"A"},
 		})))
 
-		// Create pipeline run
-		pr.Jobs = []*pb.Ref_Job{{Id: "A"}, {Id: "B"}}
-		r := serverptypes.TestPipelineRun(t, pr)
+		// Update pipeline run with jobs
+		r.Jobs = []*pb.Ref_Job{{Id: "A"}, {Id: "B"}}
 		err = s.PipelineRunPut(r)
 		require.NoError(err)
+		require.Equal(pb.PipelineRun_PENDING, r.Status)
 
 		// Cancel parent
 		require.NoError(s.JobCancel("A", false))
@@ -2073,7 +2075,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		require.NotEmpty(job.CancelTime)
 
 		// Verify pipeline run is cancelled
-		run, err := s.PipelineRunGetById(runId)
+		run, err := s.PipelineRunGetById(r.Id)
 		require.NoError(err)
 		require.NotNil(run)
 		require.NotEmpty(run.Jobs)
