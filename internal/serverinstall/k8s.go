@@ -152,10 +152,11 @@ func (i *K8sInstaller) Install(
 	if isKind {
 		s.Update(warnK8SKind)
 		s.Status(terminal.StatusWarn)
+		s.Done()
+		s = sg.Add("")
 	}
-	s.Done()
 
-	s = sg.Add("Getting Helm configs...")
+	s.Update("Getting Helm configs...")
 	defer func() { s.Abort() }()
 	settings, err := helminstallutil.SettingsInit()
 	if err != nil {
