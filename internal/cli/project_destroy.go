@@ -94,7 +94,7 @@ func (c *ProjectDestroyCommand) Help() string {
 Usage: waypoint project destroy [options]
 
   Delete the project and all resources created for all apps in the project, within
-  each app's plugin platform.
+  the platform each app was deployed to.
 
   You can optionally skip destroying the resources by setting
   -skip-destroy-resources to true.
