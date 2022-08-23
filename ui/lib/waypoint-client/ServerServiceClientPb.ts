@@ -1025,6 +1025,49 @@ export class WaypointClient {
     this.methodDescriptorGetBuild);
   }
 
+  methodDescriptorGetLatestBuild = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetLatestBuild',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetLatestBuildRequest,
+    pkg_server_proto_server_pb.Build,
+    (request: pkg_server_proto_server_pb.GetLatestBuildRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.Build.deserializeBinary
+  );
+
+  getLatestBuild(
+    request: pkg_server_proto_server_pb.GetLatestBuildRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.Build>;
+
+  getLatestBuild(
+    request: pkg_server_proto_server_pb.GetLatestBuildRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Build) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.Build>;
+
+  getLatestBuild(
+    request: pkg_server_proto_server_pb.GetLatestBuildRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.Build) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/GetLatestBuild',
+        request,
+        metadata || {},
+        this.methodDescriptorGetLatestBuild,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/GetLatestBuild',
+    request,
+    metadata || {},
+    this.methodDescriptorGetLatestBuild);
+  }
+
   methodDescriptorListPushedArtifacts = new grpcWeb.MethodDescriptor(
     '/hashicorp.waypoint.Waypoint/ListPushedArtifacts',
     grpcWeb.MethodType.UNARY,
@@ -1111,6 +1154,49 @@ export class WaypointClient {
     this.methodDescriptorGetPushedArtifact);
   }
 
+  methodDescriptorGetLatestPushedArtifact = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetLatestPushedArtifactRequest,
+    pkg_server_proto_server_pb.PushedArtifact,
+    (request: pkg_server_proto_server_pb.GetLatestPushedArtifactRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.PushedArtifact.deserializeBinary
+  );
+
+  getLatestPushedArtifact(
+    request: pkg_server_proto_server_pb.GetLatestPushedArtifactRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.PushedArtifact>;
+
+  getLatestPushedArtifact(
+    request: pkg_server_proto_server_pb.GetLatestPushedArtifactRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.PushedArtifact) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.PushedArtifact>;
+
+  getLatestPushedArtifact(
+    request: pkg_server_proto_server_pb.GetLatestPushedArtifactRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.PushedArtifact) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact',
+        request,
+        metadata || {},
+        this.methodDescriptorGetLatestPushedArtifact,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact',
+    request,
+    metadata || {},
+    this.methodDescriptorGetLatestPushedArtifact);
+  }
+
   methodDescriptorListDeployments = new grpcWeb.MethodDescriptor(
     '/hashicorp.waypoint.Waypoint/ListDeployments',
     grpcWeb.MethodType.UNARY,
@@ -1152,49 +1238,6 @@ export class WaypointClient {
     request,
     metadata || {},
     this.methodDescriptorListDeployments);
-  }
-
-  methodDescriptorListInstances = new grpcWeb.MethodDescriptor(
-    '/hashicorp.waypoint.Waypoint/ListInstances',
-    grpcWeb.MethodType.UNARY,
-    pkg_server_proto_server_pb.ListInstancesRequest,
-    pkg_server_proto_server_pb.ListInstancesResponse,
-    (request: pkg_server_proto_server_pb.ListInstancesRequest) => {
-      return request.serializeBinary();
-    },
-    pkg_server_proto_server_pb.ListInstancesResponse.deserializeBinary
-  );
-
-  listInstances(
-    request: pkg_server_proto_server_pb.ListInstancesRequest,
-    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListInstancesResponse>;
-
-  listInstances(
-    request: pkg_server_proto_server_pb.ListInstancesRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.ListInstancesResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListInstancesResponse>;
-
-  listInstances(
-    request: pkg_server_proto_server_pb.ListInstancesRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.ListInstancesResponse) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/hashicorp.waypoint.Waypoint/ListInstances',
-        request,
-        metadata || {},
-        this.methodDescriptorListInstances,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/hashicorp.waypoint.Waypoint/ListInstances',
-    request,
-    metadata || {},
-    this.methodDescriptorListInstances);
   }
 
   methodDescriptorGetDeployment = new grpcWeb.MethodDescriptor(
@@ -1240,90 +1283,47 @@ export class WaypointClient {
     this.methodDescriptorGetDeployment);
   }
 
-  methodDescriptorGetLatestBuild = new grpcWeb.MethodDescriptor(
-    '/hashicorp.waypoint.Waypoint/GetLatestBuild',
+  methodDescriptorListInstances = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListInstances',
     grpcWeb.MethodType.UNARY,
-    pkg_server_proto_server_pb.GetLatestBuildRequest,
-    pkg_server_proto_server_pb.Build,
-    (request: pkg_server_proto_server_pb.GetLatestBuildRequest) => {
+    pkg_server_proto_server_pb.ListInstancesRequest,
+    pkg_server_proto_server_pb.ListInstancesResponse,
+    (request: pkg_server_proto_server_pb.ListInstancesRequest) => {
       return request.serializeBinary();
     },
-    pkg_server_proto_server_pb.Build.deserializeBinary
+    pkg_server_proto_server_pb.ListInstancesResponse.deserializeBinary
   );
 
-  getLatestBuild(
-    request: pkg_server_proto_server_pb.GetLatestBuildRequest,
-    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.Build>;
+  listInstances(
+    request: pkg_server_proto_server_pb.ListInstancesRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListInstancesResponse>;
 
-  getLatestBuild(
-    request: pkg_server_proto_server_pb.GetLatestBuildRequest,
+  listInstances(
+    request: pkg_server_proto_server_pb.ListInstancesRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.Build) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.Build>;
+               response: pkg_server_proto_server_pb.ListInstancesResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListInstancesResponse>;
 
-  getLatestBuild(
-    request: pkg_server_proto_server_pb.GetLatestBuildRequest,
+  listInstances(
+    request: pkg_server_proto_server_pb.ListInstancesRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.Build) => void) {
+               response: pkg_server_proto_server_pb.ListInstancesResponse) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
-          '/hashicorp.waypoint.Waypoint/GetLatestBuild',
+          '/hashicorp.waypoint.Waypoint/ListInstances',
         request,
         metadata || {},
-        this.methodDescriptorGetLatestBuild,
+        this.methodDescriptorListInstances,
         callback);
     }
     return this.client_.unaryCall(
     this.hostname_ +
-      '/hashicorp.waypoint.Waypoint/GetLatestBuild',
+      '/hashicorp.waypoint.Waypoint/ListInstances',
     request,
     metadata || {},
-    this.methodDescriptorGetLatestBuild);
-  }
-
-  methodDescriptorGetLatestPushedArtifact = new grpcWeb.MethodDescriptor(
-    '/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact',
-    grpcWeb.MethodType.UNARY,
-    pkg_server_proto_server_pb.GetLatestPushedArtifactRequest,
-    pkg_server_proto_server_pb.PushedArtifact,
-    (request: pkg_server_proto_server_pb.GetLatestPushedArtifactRequest) => {
-      return request.serializeBinary();
-    },
-    pkg_server_proto_server_pb.PushedArtifact.deserializeBinary
-  );
-
-  getLatestPushedArtifact(
-    request: pkg_server_proto_server_pb.GetLatestPushedArtifactRequest,
-    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.PushedArtifact>;
-
-  getLatestPushedArtifact(
-    request: pkg_server_proto_server_pb.GetLatestPushedArtifactRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.PushedArtifact) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.PushedArtifact>;
-
-  getLatestPushedArtifact(
-    request: pkg_server_proto_server_pb.GetLatestPushedArtifactRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.PushedArtifact) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact',
-        request,
-        metadata || {},
-        this.methodDescriptorGetLatestPushedArtifact,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact',
-    request,
-    metadata || {},
-    this.methodDescriptorGetLatestPushedArtifact);
+    this.methodDescriptorListInstances);
   }
 
   methodDescriptorListReleases = new grpcWeb.MethodDescriptor(
@@ -1453,6 +1453,178 @@ export class WaypointClient {
     request,
     metadata || {},
     this.methodDescriptorGetLatestRelease);
+  }
+
+  methodDescriptorGetStatusReport = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetStatusReport',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetStatusReportRequest,
+    pkg_server_proto_server_pb.StatusReport,
+    (request: pkg_server_proto_server_pb.GetStatusReportRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.StatusReport.deserializeBinary
+  );
+
+  getStatusReport(
+    request: pkg_server_proto_server_pb.GetStatusReportRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.StatusReport>;
+
+  getStatusReport(
+    request: pkg_server_proto_server_pb.GetStatusReportRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.StatusReport) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.StatusReport>;
+
+  getStatusReport(
+    request: pkg_server_proto_server_pb.GetStatusReportRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.StatusReport) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/GetStatusReport',
+        request,
+        metadata || {},
+        this.methodDescriptorGetStatusReport,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/GetStatusReport',
+    request,
+    metadata || {},
+    this.methodDescriptorGetStatusReport);
+  }
+
+  methodDescriptorGetLatestStatusReport = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetLatestStatusReport',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetLatestStatusReportRequest,
+    pkg_server_proto_server_pb.StatusReport,
+    (request: pkg_server_proto_server_pb.GetLatestStatusReportRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.StatusReport.deserializeBinary
+  );
+
+  getLatestStatusReport(
+    request: pkg_server_proto_server_pb.GetLatestStatusReportRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.StatusReport>;
+
+  getLatestStatusReport(
+    request: pkg_server_proto_server_pb.GetLatestStatusReportRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.StatusReport) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.StatusReport>;
+
+  getLatestStatusReport(
+    request: pkg_server_proto_server_pb.GetLatestStatusReportRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.StatusReport) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/GetLatestStatusReport',
+        request,
+        metadata || {},
+        this.methodDescriptorGetLatestStatusReport,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/GetLatestStatusReport',
+    request,
+    metadata || {},
+    this.methodDescriptorGetLatestStatusReport);
+  }
+
+  methodDescriptorListStatusReports = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListStatusReports',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListStatusReportsRequest,
+    pkg_server_proto_server_pb.ListStatusReportsResponse,
+    (request: pkg_server_proto_server_pb.ListStatusReportsRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.ListStatusReportsResponse.deserializeBinary
+  );
+
+  listStatusReports(
+    request: pkg_server_proto_server_pb.ListStatusReportsRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListStatusReportsResponse>;
+
+  listStatusReports(
+    request: pkg_server_proto_server_pb.ListStatusReportsRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListStatusReportsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListStatusReportsResponse>;
+
+  listStatusReports(
+    request: pkg_server_proto_server_pb.ListStatusReportsRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListStatusReportsResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/ListStatusReports',
+        request,
+        metadata || {},
+        this.methodDescriptorListStatusReports,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/ListStatusReports',
+    request,
+    metadata || {},
+    this.methodDescriptorListStatusReports);
+  }
+
+  methodDescriptorExpediteStatusReport = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ExpediteStatusReport',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ExpediteStatusReportRequest,
+    pkg_server_proto_server_pb.ExpediteStatusReportResponse,
+    (request: pkg_server_proto_server_pb.ExpediteStatusReportRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.ExpediteStatusReportResponse.deserializeBinary
+  );
+
+  expediteStatusReport(
+    request: pkg_server_proto_server_pb.ExpediteStatusReportRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ExpediteStatusReportResponse>;
+
+  expediteStatusReport(
+    request: pkg_server_proto_server_pb.ExpediteStatusReportRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ExpediteStatusReportResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ExpediteStatusReportResponse>;
+
+  expediteStatusReport(
+    request: pkg_server_proto_server_pb.ExpediteStatusReportRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ExpediteStatusReportResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/ExpediteStatusReport',
+        request,
+        metadata || {},
+        this.methodDescriptorExpediteStatusReport,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/ExpediteStatusReport',
+    request,
+    metadata || {},
+    this.methodDescriptorExpediteStatusReport);
   }
 
   methodDescriptorGetLogStream = new grpcWeb.MethodDescriptor(
@@ -2553,178 +2725,6 @@ export class WaypointClient {
     this.methodDescriptorConvertInviteToken);
   }
 
-  methodDescriptorGetStatusReport = new grpcWeb.MethodDescriptor(
-    '/hashicorp.waypoint.Waypoint/GetStatusReport',
-    grpcWeb.MethodType.UNARY,
-    pkg_server_proto_server_pb.GetStatusReportRequest,
-    pkg_server_proto_server_pb.StatusReport,
-    (request: pkg_server_proto_server_pb.GetStatusReportRequest) => {
-      return request.serializeBinary();
-    },
-    pkg_server_proto_server_pb.StatusReport.deserializeBinary
-  );
-
-  getStatusReport(
-    request: pkg_server_proto_server_pb.GetStatusReportRequest,
-    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.StatusReport>;
-
-  getStatusReport(
-    request: pkg_server_proto_server_pb.GetStatusReportRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.StatusReport) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.StatusReport>;
-
-  getStatusReport(
-    request: pkg_server_proto_server_pb.GetStatusReportRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.StatusReport) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/hashicorp.waypoint.Waypoint/GetStatusReport',
-        request,
-        metadata || {},
-        this.methodDescriptorGetStatusReport,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/hashicorp.waypoint.Waypoint/GetStatusReport',
-    request,
-    metadata || {},
-    this.methodDescriptorGetStatusReport);
-  }
-
-  methodDescriptorGetLatestStatusReport = new grpcWeb.MethodDescriptor(
-    '/hashicorp.waypoint.Waypoint/GetLatestStatusReport',
-    grpcWeb.MethodType.UNARY,
-    pkg_server_proto_server_pb.GetLatestStatusReportRequest,
-    pkg_server_proto_server_pb.StatusReport,
-    (request: pkg_server_proto_server_pb.GetLatestStatusReportRequest) => {
-      return request.serializeBinary();
-    },
-    pkg_server_proto_server_pb.StatusReport.deserializeBinary
-  );
-
-  getLatestStatusReport(
-    request: pkg_server_proto_server_pb.GetLatestStatusReportRequest,
-    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.StatusReport>;
-
-  getLatestStatusReport(
-    request: pkg_server_proto_server_pb.GetLatestStatusReportRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.StatusReport) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.StatusReport>;
-
-  getLatestStatusReport(
-    request: pkg_server_proto_server_pb.GetLatestStatusReportRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.StatusReport) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/hashicorp.waypoint.Waypoint/GetLatestStatusReport',
-        request,
-        metadata || {},
-        this.methodDescriptorGetLatestStatusReport,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/hashicorp.waypoint.Waypoint/GetLatestStatusReport',
-    request,
-    metadata || {},
-    this.methodDescriptorGetLatestStatusReport);
-  }
-
-  methodDescriptorListStatusReports = new grpcWeb.MethodDescriptor(
-    '/hashicorp.waypoint.Waypoint/ListStatusReports',
-    grpcWeb.MethodType.UNARY,
-    pkg_server_proto_server_pb.ListStatusReportsRequest,
-    pkg_server_proto_server_pb.ListStatusReportsResponse,
-    (request: pkg_server_proto_server_pb.ListStatusReportsRequest) => {
-      return request.serializeBinary();
-    },
-    pkg_server_proto_server_pb.ListStatusReportsResponse.deserializeBinary
-  );
-
-  listStatusReports(
-    request: pkg_server_proto_server_pb.ListStatusReportsRequest,
-    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListStatusReportsResponse>;
-
-  listStatusReports(
-    request: pkg_server_proto_server_pb.ListStatusReportsRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.ListStatusReportsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListStatusReportsResponse>;
-
-  listStatusReports(
-    request: pkg_server_proto_server_pb.ListStatusReportsRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.ListStatusReportsResponse) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/hashicorp.waypoint.Waypoint/ListStatusReports',
-        request,
-        metadata || {},
-        this.methodDescriptorListStatusReports,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/hashicorp.waypoint.Waypoint/ListStatusReports',
-    request,
-    metadata || {},
-    this.methodDescriptorListStatusReports);
-  }
-
-  methodDescriptorExpediteStatusReport = new grpcWeb.MethodDescriptor(
-    '/hashicorp.waypoint.Waypoint/ExpediteStatusReport',
-    grpcWeb.MethodType.UNARY,
-    pkg_server_proto_server_pb.ExpediteStatusReportRequest,
-    pkg_server_proto_server_pb.ExpediteStatusReportResponse,
-    (request: pkg_server_proto_server_pb.ExpediteStatusReportRequest) => {
-      return request.serializeBinary();
-    },
-    pkg_server_proto_server_pb.ExpediteStatusReportResponse.deserializeBinary
-  );
-
-  expediteStatusReport(
-    request: pkg_server_proto_server_pb.ExpediteStatusReportRequest,
-    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ExpediteStatusReportResponse>;
-
-  expediteStatusReport(
-    request: pkg_server_proto_server_pb.ExpediteStatusReportRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.ExpediteStatusReportResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ExpediteStatusReportResponse>;
-
-  expediteStatusReport(
-    request: pkg_server_proto_server_pb.ExpediteStatusReportRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: pkg_server_proto_server_pb.ExpediteStatusReportResponse) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/hashicorp.waypoint.Waypoint/ExpediteStatusReport',
-        request,
-        metadata || {},
-        this.methodDescriptorExpediteStatusReport,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/hashicorp.waypoint.Waypoint/ExpediteStatusReport',
-    request,
-    metadata || {},
-    this.methodDescriptorExpediteStatusReport);
-  }
-
   methodDescriptorRunnerToken = new grpcWeb.MethodDescriptor(
     '/hashicorp.waypoint.Waypoint/RunnerToken',
     grpcWeb.MethodType.UNARY,
@@ -2960,6 +2960,49 @@ export class WaypointClient {
     request,
     metadata || {},
     this.methodDescriptorGetOnDemandRunnerConfig);
+  }
+
+  methodDescriptorDeleteOnDemandRunnerConfig = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/DeleteOnDemandRunnerConfig',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.DeleteOnDemandRunnerConfigRequest,
+    pkg_server_proto_server_pb.DeleteOnDemandRunnerConfigResponse,
+    (request: pkg_server_proto_server_pb.DeleteOnDemandRunnerConfigRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.DeleteOnDemandRunnerConfigResponse.deserializeBinary
+  );
+
+  deleteOnDemandRunnerConfig(
+    request: pkg_server_proto_server_pb.DeleteOnDemandRunnerConfigRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.DeleteOnDemandRunnerConfigResponse>;
+
+  deleteOnDemandRunnerConfig(
+    request: pkg_server_proto_server_pb.DeleteOnDemandRunnerConfigRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.DeleteOnDemandRunnerConfigResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.DeleteOnDemandRunnerConfigResponse>;
+
+  deleteOnDemandRunnerConfig(
+    request: pkg_server_proto_server_pb.DeleteOnDemandRunnerConfigRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.DeleteOnDemandRunnerConfigResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/DeleteOnDemandRunnerConfig',
+        request,
+        metadata || {},
+        this.methodDescriptorDeleteOnDemandRunnerConfig,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/DeleteOnDemandRunnerConfig',
+    request,
+    metadata || {},
+    this.methodDescriptorDeleteOnDemandRunnerConfig);
   }
 
   methodDescriptorListOnDemandRunnerConfigs = new grpcWeb.MethodDescriptor(
@@ -3220,6 +3263,135 @@ export class WaypointClient {
     this.methodDescriptorUpsertStatusReport);
   }
 
+  methodDescriptorGetTask = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetTask',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetTaskRequest,
+    pkg_server_proto_server_pb.GetTaskResponse,
+    (request: pkg_server_proto_server_pb.GetTaskRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.GetTaskResponse.deserializeBinary
+  );
+
+  getTask(
+    request: pkg_server_proto_server_pb.GetTaskRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetTaskResponse>;
+
+  getTask(
+    request: pkg_server_proto_server_pb.GetTaskRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetTaskResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetTaskResponse>;
+
+  getTask(
+    request: pkg_server_proto_server_pb.GetTaskRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetTaskResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/GetTask',
+        request,
+        metadata || {},
+        this.methodDescriptorGetTask,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/GetTask',
+    request,
+    metadata || {},
+    this.methodDescriptorGetTask);
+  }
+
+  methodDescriptorListTask = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListTask',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListTaskRequest,
+    pkg_server_proto_server_pb.ListTaskResponse,
+    (request: pkg_server_proto_server_pb.ListTaskRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.ListTaskResponse.deserializeBinary
+  );
+
+  listTask(
+    request: pkg_server_proto_server_pb.ListTaskRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListTaskResponse>;
+
+  listTask(
+    request: pkg_server_proto_server_pb.ListTaskRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListTaskResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListTaskResponse>;
+
+  listTask(
+    request: pkg_server_proto_server_pb.ListTaskRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListTaskResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/ListTask',
+        request,
+        metadata || {},
+        this.methodDescriptorListTask,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/ListTask',
+    request,
+    metadata || {},
+    this.methodDescriptorListTask);
+  }
+
+  methodDescriptorCancelTask = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/CancelTask',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.CancelTaskRequest,
+    google_protobuf_empty_pb.Empty,
+    (request: pkg_server_proto_server_pb.CancelTaskRequest) => {
+      return request.serializeBinary();
+    },
+    google_protobuf_empty_pb.Empty.deserializeBinary
+  );
+
+  cancelTask(
+    request: pkg_server_proto_server_pb.CancelTaskRequest,
+    metadata: grpcWeb.Metadata | null): Promise<google_protobuf_empty_pb.Empty>;
+
+  cancelTask(
+    request: pkg_server_proto_server_pb.CancelTaskRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: google_protobuf_empty_pb.Empty) => void): grpcWeb.ClientReadableStream<google_protobuf_empty_pb.Empty>;
+
+  cancelTask(
+    request: pkg_server_proto_server_pb.CancelTaskRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: google_protobuf_empty_pb.Empty) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/CancelTask',
+        request,
+        metadata || {},
+        this.methodDescriptorCancelTask,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/CancelTask',
+    request,
+    metadata || {},
+    this.methodDescriptorCancelTask);
+  }
+
   methodDescriptorUpsertTrigger = new grpcWeb.MethodDescriptor(
     '/hashicorp.waypoint.Waypoint/UpsertTrigger',
     grpcWeb.MethodType.UNARY,
@@ -3433,6 +3605,221 @@ export class WaypointClient {
     request,
     metadata || {},
     this.methodDescriptorRunTrigger);
+  }
+
+  methodDescriptorUpsertPipeline = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UpsertPipeline',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UpsertPipelineRequest,
+    pkg_server_proto_server_pb.UpsertPipelineResponse,
+    (request: pkg_server_proto_server_pb.UpsertPipelineRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.UpsertPipelineResponse.deserializeBinary
+  );
+
+  upsertPipeline(
+    request: pkg_server_proto_server_pb.UpsertPipelineRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UpsertPipelineResponse>;
+
+  upsertPipeline(
+    request: pkg_server_proto_server_pb.UpsertPipelineRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertPipelineResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UpsertPipelineResponse>;
+
+  upsertPipeline(
+    request: pkg_server_proto_server_pb.UpsertPipelineRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UpsertPipelineResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/UpsertPipeline',
+        request,
+        metadata || {},
+        this.methodDescriptorUpsertPipeline,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/UpsertPipeline',
+    request,
+    metadata || {},
+    this.methodDescriptorUpsertPipeline);
+  }
+
+  methodDescriptorRunPipeline = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/RunPipeline',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.RunPipelineRequest,
+    pkg_server_proto_server_pb.RunPipelineResponse,
+    (request: pkg_server_proto_server_pb.RunPipelineRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.RunPipelineResponse.deserializeBinary
+  );
+
+  runPipeline(
+    request: pkg_server_proto_server_pb.RunPipelineRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.RunPipelineResponse>;
+
+  runPipeline(
+    request: pkg_server_proto_server_pb.RunPipelineRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.RunPipelineResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.RunPipelineResponse>;
+
+  runPipeline(
+    request: pkg_server_proto_server_pb.RunPipelineRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.RunPipelineResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/RunPipeline',
+        request,
+        metadata || {},
+        this.methodDescriptorRunPipeline,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/RunPipeline',
+    request,
+    metadata || {},
+    this.methodDescriptorRunPipeline);
+  }
+
+  methodDescriptorGetPipeline = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetPipeline',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetPipelineRequest,
+    pkg_server_proto_server_pb.GetPipelineResponse,
+    (request: pkg_server_proto_server_pb.GetPipelineRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.GetPipelineResponse.deserializeBinary
+  );
+
+  getPipeline(
+    request: pkg_server_proto_server_pb.GetPipelineRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetPipelineResponse>;
+
+  getPipeline(
+    request: pkg_server_proto_server_pb.GetPipelineRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetPipelineResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetPipelineResponse>;
+
+  getPipeline(
+    request: pkg_server_proto_server_pb.GetPipelineRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetPipelineResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/GetPipeline',
+        request,
+        metadata || {},
+        this.methodDescriptorGetPipeline,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/GetPipeline',
+    request,
+    metadata || {},
+    this.methodDescriptorGetPipeline);
+  }
+
+  methodDescriptorListPipelines = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListPipelines',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListPipelinesRequest,
+    pkg_server_proto_server_pb.ListPipelinesResponse,
+    (request: pkg_server_proto_server_pb.ListPipelinesRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.ListPipelinesResponse.deserializeBinary
+  );
+
+  listPipelines(
+    request: pkg_server_proto_server_pb.ListPipelinesRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListPipelinesResponse>;
+
+  listPipelines(
+    request: pkg_server_proto_server_pb.ListPipelinesRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListPipelinesResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListPipelinesResponse>;
+
+  listPipelines(
+    request: pkg_server_proto_server_pb.ListPipelinesRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListPipelinesResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/ListPipelines',
+        request,
+        metadata || {},
+        this.methodDescriptorListPipelines,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/ListPipelines',
+    request,
+    metadata || {},
+    this.methodDescriptorListPipelines);
+  }
+
+  methodDescriptorConfigSyncPipeline = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ConfigSyncPipeline',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ConfigSyncPipelineRequest,
+    pkg_server_proto_server_pb.ConfigSyncPipelineResponse,
+    (request: pkg_server_proto_server_pb.ConfigSyncPipelineRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.ConfigSyncPipelineResponse.deserializeBinary
+  );
+
+  configSyncPipeline(
+    request: pkg_server_proto_server_pb.ConfigSyncPipelineRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ConfigSyncPipelineResponse>;
+
+  configSyncPipeline(
+    request: pkg_server_proto_server_pb.ConfigSyncPipelineRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ConfigSyncPipelineResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ConfigSyncPipelineResponse>;
+
+  configSyncPipeline(
+    request: pkg_server_proto_server_pb.ConfigSyncPipelineRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ConfigSyncPipelineResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/ConfigSyncPipeline',
+        request,
+        metadata || {},
+        this.methodDescriptorConfigSyncPipeline,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/ConfigSyncPipeline',
+    request,
+    metadata || {},
+    this.methodDescriptorConfigSyncPipeline);
   }
 
   methodDescriptorUI_GetProject = new grpcWeb.MethodDescriptor(

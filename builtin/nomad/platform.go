@@ -81,7 +81,7 @@ func (p *Platform) StatusFunc() interface{} {
 func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
 	return resource.NewManager(
 		resource.WithLogger(log.Named("resource_manager")),
-		resource.WithValueProvider(p.getNomadClient),
+		resource.WithValueProvider(getNomadClient),
 		resource.WithResource(resource.NewResource(
 			resource.WithName(rmResourceJobName),
 			resource.WithState(&Resource_Job{}),
@@ -93,7 +93,7 @@ func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
 
 // getNomadClient is a value provider for our resource manager and provides
 // the client connection used by resources to interact with Nomad.
-func (p *Platform) getNomadClient() (*api.Client, error) {
+func getNomadClient() (*api.Client, error) {
 	// Get our client
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {

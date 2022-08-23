@@ -50,7 +50,7 @@ func TestWaypointAvailable(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output getting version: %s", err)
+		t.Errorf("unexpected stderr output getting version: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Waypoint v") {

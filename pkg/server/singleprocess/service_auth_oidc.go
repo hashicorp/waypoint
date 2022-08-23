@@ -253,7 +253,7 @@ func (s *Service) CompleteOIDCAuth(
 	}
 
 	// Generate a token for this user
-	token, err := s.newToken(ctx, oidcAuthExpiry, DefaultKeyId, nil, &pb.Token{
+	token, err := s.newToken(ctx, oidcAuthExpiry, s.activeAuthKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Login_{
 			Login: &pb.Token_Login{UserId: user.Id},
 		},

@@ -34,6 +34,64 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 		require.Equal(codes.NotFound, status.Code(err))
 	})
 
+	t.Run("Set with no name", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Set
+		rec := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
+			OciUrl:               "h/w:s",
+			EnvironmentVariables: map[string]string{"CONTAINER": "DOCKER", "FOO": "BAR"},
+			TargetRunner:         &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{Any: &pb.Ref_RunnerAny{}}},
+			PluginConfig:         []byte(`{"foo":"bar"}`),
+			ConfigFormat:         pb.Hcl_JSON,
+			Default:              true,
+		})
+
+		result, err := s.OnDemandRunnerConfigPut(rec)
+		require.NoError(err)
+		require.NotEmpty(result.Id)
+		require.NotEmpty(result.Name)
+	})
+
+	t.Run("Client cannot control the ID", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		{
+			// Setting the ID for a new profile
+			rec := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
+				Id: "client-chooses",
+			})
+
+			_, err := s.OnDemandRunnerConfigPut(rec)
+			require.Error(err)
+		}
+
+		{
+			// Setting the ID for an existing profile
+			rec := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
+				Name: "client-chooses-name",
+			})
+
+			resp, err := s.OnDemandRunnerConfigPut(rec)
+			require.NoError(err)
+			require.NotEmpty(resp.Id) // server chose the ID
+
+			updateRec := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
+				Name: rec.Name,
+				Id:   "trying to overwrite the ID",
+			})
+
+			_, err = s.OnDemandRunnerConfigPut(updateRec)
+			require.Error(err)
+		}
+	})
+
 	t.Run("Put and Get", func(t *testing.T) {
 		require := require.New(t)
 
@@ -51,8 +109,16 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 			Default:              true,
 		})
 
-		err := s.OnDemandRunnerConfigPut(rec)
+		putResp, err := s.OnDemandRunnerConfigPut(rec)
 		require.NoError(err)
+		require.NotEmpty(putResp.Id) // must have chosen an id
+		require.Equal(rec.Name, putResp.Name)
+		require.Equal(rec.TargetRunner.Target, putResp.TargetRunner.Target)
+		require.Equal(rec.OciUrl, putResp.OciUrl)
+		require.Equal(rec.EnvironmentVariables, putResp.EnvironmentVariables)
+		require.Equal(rec.PluginConfig, putResp.PluginConfig)
+		require.Equal(rec.ConfigFormat, putResp.ConfigFormat)
+		require.Equal(rec.Default, putResp.Default)
 
 		// Get exact
 		{
@@ -63,7 +129,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 			require.NotNil(resp)
 
 			// Ensure fields were saved correctly
-			require.Equal(rec.Id, resp.Id)
+			require.Equal(putResp.Id, resp.Id)
 			require.Equal(rec.Name, resp.Name)
 			require.Equal(rec.TargetRunner.Target, resp.TargetRunner.Target)
 			require.Equal(rec.OciUrl, resp.OciUrl)
@@ -80,6 +146,17 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 			})
 			require.NoError(err)
 			require.NotNil(resp)
+		}
+
+		// Get by name
+		{
+			resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+				Name: rec.Name,
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal(rec.Name, resp.Name)
+			require.Equal(putResp.Id, resp.Id)
 		}
 
 		// Get missing (returns not found error)
@@ -108,7 +185,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 		// Set
 		rec := serverptypes.TestOnDemandRunnerConfig(t, serverptypes.TestOnDemandRunnerConfig(t, nil))
 
-		err := s.OnDemandRunnerConfigPut(rec)
+		_, err := s.OnDemandRunnerConfigPut(rec)
 		require.NoError(err)
 
 		// Read
@@ -165,7 +242,7 @@ func TestOnDemandRunnerConfig_LabelTargeting(t *testing.T, factory Factory, rest
 		},
 	})
 
-	err := s.OnDemandRunnerConfigPut(rec)
+	_, err := s.OnDemandRunnerConfigPut(rec)
 	require.NoError(err)
 
 	resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{

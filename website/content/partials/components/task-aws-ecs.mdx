@@ -20,6 +20,22 @@ Docker image for the Waypoint On-Demand Runners.
 Docker image for the Waypoint On-Demand Runners. This will
 default to the server image with the name (not label) suffixed with '-odr'.".
 
+#### security_group_id
+
+Security Group ID to place the On-Demand Runner task in.
+
+Security Group ID to place the On-Demand Runner task in. This defaults to the security group used for the Waypoint server.
+
+- Type: **string**
+
+#### subnets
+
+List of subnets to place the On-Demand Runner task in.
+
+List of subnets to place the On-Demand Runner task in. This defaults to the list of subnets configured for the Waypoint server and must be either identical or a subset of the subnets used by the Waypoint server.
+
+- Type: **string**
+
 ### Optional Parameters
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
@@ -74,24 +90,6 @@ Configure the memory for the On-Demand runners. The default is 1024. See https:/
 AWS Region to use.
 
 AWS region to use. Defaults to the region used for the Waypoint Server.
-
-- Type: **string**
-- **Optional**
-
-#### security_group_id
-
-Security Group ID to place the On-Demand Runner task in.
-
-Security Group ID to place the On-Demand Runner task in. This defaults to the security group used for the Waypoint server.
-
-- Type: **string**
-- **Optional**
-
-#### subnets
-
-List of subnets to place the On-Demand Runner task in.
-
-List of subnets to place the On-Demand Runner task in. This defaults to the list of subnets configured for the Waypoint server and must be either identical or a subset of the subnets used by the Waypoint server.
 
 - Type: **string**
 - **Optional**

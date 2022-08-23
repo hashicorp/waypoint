@@ -7561,6 +7561,10 @@
       "properties": {
         "info": {
           "$ref": "#/definitions/hashicorp.waypoint.VersionInfo"
+        },
+        "server_features": {
+          "$ref": "#/definitions/hashicorp.waypoint.ServerFeatures",
+          "description": "Represents additional features that the current server supports."
         }
       }
     },
@@ -9995,6 +9999,27 @@
         }
       }
     },
+    "hashicorp.waypoint.ServerFeatures": {
+      "type": "object",
+      "properties": {
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.ServerFeatures.feature"
+          }
+        }
+      },
+      "description": "Represents features that the server supports.\nUseful for ensuring compatibility between clients and servers."
+    },
+    "hashicorp.waypoint.ServerFeatures.feature": {
+      "type": "string",
+      "enum": [
+        "FEATURE_UNSPECIFIED",
+        "FEATURE_INLINE_KEEPALIVES"
+      ],
+      "default": "FEATURE_UNSPECIFIED",
+      "title": "- FEATURE_INLINE_KEEPALIVES: Advertises that this server is capable of receiving inline keepalive messages"
+    },
     "hashicorp.waypoint.SetConfigSourceRequest": {
       "type": "object",
       "properties": {
@@ -10351,10 +10376,6 @@
           "$ref": "#/definitions/hashicorp.waypoint.Token.Trigger",
           "title": "trigger tokens can be used to trigger lifecycle actions via HTTP"
         },
-        "oauth_creds": {
-          "$ref": "#/definitions/hashicorp.waypoint.Token.OAuthCredentials",
-          "description": "A client that sees this populated will use the details to fetch a token\nvia oauth instead of submitting this token directly."
-        },
         "unused_user": {
           "type": "string",
           "description": "The user that the token is for. This must be \"waypoint\" for\nbackwards compat reasons."
@@ -10421,24 +10442,6 @@
         }
       }
     },
-    "hashicorp.waypoint.Token.OAuthCredentials": {
-      "type": "object",
-      "properties": {
-        "url": {
-          "type": "string",
-          "title": "The url for the oauth2 provider"
-        },
-        "client_id": {
-          "type": "string",
-          "title": "The OAuth client id to submit"
-        },
-        "client_secret": {
-          "type": "string",
-          "title": "The OAuth client secret that goes along with the client_id"
-        }
-      },
-      "description": "The OAuth message contains information that the client should use\nto generate on OAuth token for authenticating with the server rather\nthan just submitting the waypoint token directly."
-    },
     "hashicorp.waypoint.Token.Runner": {
       "type": "object",
       "properties": {
@@ -10486,9 +10489,31 @@
             "type": "string"
           },
           "description": "Any configuration style metadata that can be passed along with the token\nwithout invalidating the token body itself."
+        },
+        "oauth_creds": {
+          "$ref": "#/definitions/hashicorp.waypoint.TokenTransport.OAuthCredentials",
+          "description": "A client that sees this populated will use the details to fetch a token\nvia oauth instead of submitting this token directly."
         }
       },
       "description": "The outer structure of the token that is directly Marshaled and\nASCII armored."
+    },
+    "hashicorp.waypoint.TokenTransport.OAuthCredentials": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "title": "The url for the oauth2 provider"
+        },
+        "client_id": {
+          "type": "string",
+          "title": "The OAuth client id to submit"
+        },
+        "client_secret": {
+          "type": "string",
+          "title": "The OAuth client secret that goes along with the client_id"
+        }
+      },
+      "description": "The OAuth message contains information that the client should use\nto generate on OAuth token for authenticating with the server rather\nthan just submitting the waypoint token directly."
     },
     "hashicorp.waypoint.Trigger": {
       "type": "object",

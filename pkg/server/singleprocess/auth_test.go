@@ -279,7 +279,7 @@ func TestServiceAuth(t *testing.T) {
 		require.NoError(err)
 
 		var buf bytes.Buffer
-		buf.WriteString(tokenMagic)
+		buf.WriteString("wp24")
 		buf.Write(ttData)
 
 		rogue := base58.Encode(buf.Bytes())

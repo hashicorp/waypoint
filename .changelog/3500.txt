@@ -1,0 +1,4 @@
+```release-note:bug
+cli/serverinstall/nomad: Add service discovery provider configuration
+to server install for Nomad.
+```

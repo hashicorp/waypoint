@@ -2,6 +2,8 @@ package singleprocess
 
 import (
 	"context"
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -36,7 +38,7 @@ func (s *Service) UpsertBuild(
 	}
 
 	if err := s.state(ctx).BuildPut(!insert, result); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to insert build for app", "app", req.Build.Application, "id", req.Build.Id)
 	}
 
 	return &pb.UpsertBuildResponse{Build: result}, nil
@@ -55,7 +57,7 @@ func (s *Service) ListBuilds(
 		serverstate.ListWithOrder(req.Order),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to list builds for app", "app", req.Application.Application, "project", req.Application.Project)
 	}
 
 	return &pb.ListBuildsResponse{Builds: result}, nil
@@ -69,7 +71,12 @@ func (s *Service) GetLatestBuild(
 		return nil, err
 	}
 
-	return s.state(ctx).BuildLatest(req.Application, req.Workspace)
+	result, err := s.state(ctx).BuildLatest(req.Application, req.Workspace)
+	if err != nil {
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get latest build", "app", req.Application.Application, "project", req.Application.Project)
+	}
+
+	return result, nil
 }
 
 // GetBuild returns a Build based on ID
@@ -81,5 +88,10 @@ func (s *Service) GetBuild(
 		return nil, err
 	}
 
-	return s.state(ctx).BuildGet(req.Ref)
+	result, err := s.state(ctx).BuildGet(req.Ref)
+	if err != nil {
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get build", "id", req.Ref.Target)
+	}
+
+	return result, nil
 }

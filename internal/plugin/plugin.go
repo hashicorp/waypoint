@@ -3,6 +3,7 @@ package plugin
 import (
 	sdk "github.com/hashicorp/waypoint-plugin-sdk"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint/builtin/nomad/canary"
 	"github.com/hashicorp/waypoint/internal/factory"
 
 	"github.com/hashicorp/waypoint/builtin/aws/alb"
@@ -50,7 +51,7 @@ var (
 		"aws-ecr-pull":             awsecrpull.Options,
 		"nomad":                    nomad.Options,
 		"nomad-jobspec":            jobspec.Options,
-		"nomad-jobspec-canary":     jobspec.Options,
+		"nomad-jobspec-canary":     canary.Options,
 		"aws-ami":                  ami.Options,
 		"aws-ec2":                  ec2.Options,
 		"aws-alb":                  alb.Options,

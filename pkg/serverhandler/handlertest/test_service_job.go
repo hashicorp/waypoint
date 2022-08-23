@@ -1187,6 +1187,7 @@ func TestServiceQueueJob_odr_basic(t *testing.T, factory Factory) {
 		require.NoError(err)
 		task = taskResp.Task
 		require.Equal(pb.Task_RUNNING, task.JobState)
+		require.Equal(primaryJobId, task.TaskJob.Id)
 	}
 
 	// Complete our run task job so that we can move on

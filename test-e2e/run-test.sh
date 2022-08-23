@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 
 # Waypoint end to end test runner
 
@@ -20,14 +21,18 @@ spin()
 echo "Beginning Waypoint end-to-end tests..."
 echo
 
+if [ "${E2E_PLATFORM}" != "Docker" ] && [ "${E2E_PLATFORM}" != "Kubernetes" ] && [ "${E2E_PLATFORM}" != "Ecs" ] && [ "${E2E_PLATFORM}" != "Nomad" ]; then
+  echo "Environment variable 'E2E_PLATFORM' must be one of: 'Docker', 'Kubernetes', 'Ecs', 'Nomad'"
+  exit 1
+fi
+
 # For running script outside of `test-e2e` folder
-TESTDIR="${WP_TESTE2E_DIR:-"."}"
+TESTDIR="${WP_TESTE2E_DIR:-$(pwd)}"
 
 echo "==> Installing dependencies..."
 echo
 
-echo "Skipping for now"
-echo
+make tools
 
 # TODO: install packages for building waypoint and running supported platforms:
 # - git, curl, (probably more)
@@ -42,12 +47,24 @@ export GOARCH="$(go env GOARCH)"
 export GOEXE="$(go env GOEXE)"
 export OUTDIR="build/${GOOS}_${GOARCH}"
 
-echo "==> Building waypoint binary..."
-echo
+# Target working directory for the binary location if not specified
+export WP_BINARY="${WP_BINARY:-$TESTDIR/waypoint}"
 
-echo "Skipping for now"
-echo "Assuming waypoint is available on the path"
-echo
+if [ -z "$WP_EXAMPLES_PATH" ]; then
+  echo "WP_EXAMPLES_PATH unset; setting to ${TESTDIR}/waypoint-examples"
+  export WP_EXAMPLES_PATH="${TESTDIR}/waypoint-examples"
+fi
+
+echo "==> Checking if Waypoint binary is built..."
+if [ -f "${WP_BINARY}" ]; then
+  "${WP_BINARY}" version
+  echo
+else
+  echo "==> Building waypoint binary..."
+  echo
+  make
+  echo
+fi
 
 # TODO: build waypoint OR download a package, add a switch for this
 #   - add param for installing a certain waypoint server, allow install from alpha package
@@ -59,7 +76,7 @@ echo
 
 # Bring in test apps (potentially at a certain sha rather than `main`?)
 # git clone --depth 1 git@github.com:hashicorp/waypoint-examples.git
-if [[ ! -v WP_EXAMPLES_PATH ]]; then
+if [ ! -d "$WP_EXAMPLES_PATH" ]; then
   echo "==> Pulling in waypoint-examples for test..."
   echo
 
@@ -69,10 +86,7 @@ else
   echo
 fi
 
-# Test env vars
-export WP_BINARY="waypoint"
-export WP_SERVERIMAGE="hashicorp/waypoint:latest"
-export WP_SERVERIMAGE_UPGRADE="hashicorp/waypoint:latest"
+# 
 
 echo
 echo "==> Running Waypoint end-to-end tests..."
@@ -81,21 +95,31 @@ echo
 # TODO: allow for running all platforms, or only certain ones
 
 # only spin for local devs running on machine to show tests aren't frozen
-if [[ ! -v CI_ENV ]]; then
+if [ -z "$CI" ]; then
   spin &
   SPIN_PID=$!
-  trap "kill -9 $SPIN_PID" `seq 0 15`
+  trap 'kill -9 $SPIN_PID' $(seq 0 15)
 fi
 
-go test -v "github.com/hashicorp/waypoint/test-e2e"
+# Run Docker tests
+go test -v "github.com/hashicorp/waypoint/test-e2e" -run "$E2E_PLATFORM"
 testResult=$?
+
+# Set up Nomad
+# Run Nomad tests
+
+# Set up K8S/K3S
+# Run K8S tests
+
+# Set up ECS
+# Run ECS tests
 
 if [[ "$testResult" -eq 0 ]]; then
   echo
   echo "==> Cleaning up after finishing tests..."
   echo
 
-  if [[ ! -v WP_EXAMPLES_PATH ]]; then
+  if [[ ! -d WP_EXAMPLES_PATH ]]; then
     # Test clean up
     echo
     echo "* Cleaning up 'waypoint-examples'"
@@ -106,6 +130,6 @@ if [[ "$testResult" -eq 0 ]]; then
 fi
 
 # must be at end of script
-if [[ ! -v CI_ENV ]]; then
+if [ -z "$CI" ]; then
   kill -9 $SPIN_PID
 fi

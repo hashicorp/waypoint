@@ -84,61 +84,6 @@ func (x *Deployment) GetResourceState() *opaqueany.Any {
 	return nil
 }
 
-type Release struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Url           string         `protobuf:"bytes,1,opt,name=Url,proto3" json:"Url,omitempty"`
-	ResourceState *opaqueany.Any `protobuf:"bytes,2,opt,name=resource_state,json=resourceState,proto3" json:"resource_state,omitempty"`
-}
-
-func (x *Release) Reset() {
-	*x = Release{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Release) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Release) ProtoMessage() {}
-
-func (x *Release) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Release.ProtoReflect.Descriptor instead.
-func (*Release) Descriptor() ([]byte, []int) {
-	return file_waypoint_builtin_nomad_jobspec_plugin_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *Release) GetUrl() string {
-	if x != nil {
-		return x.Url
-	}
-	return ""
-}
-
-func (x *Release) GetResourceState() *opaqueany.Any {
-	if x != nil {
-		return x.ResourceState
-	}
-	return nil
-}
-
 // Resource contains the internal resource states.
 type Resource struct {
 	state         protoimpl.MessageState
@@ -149,7 +94,7 @@ type Resource struct {
 func (x *Resource) Reset() {
 	*x = Resource{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[2]
+		mi := &file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -162,7 +107,7 @@ func (x *Resource) String() string {
 func (*Resource) ProtoMessage() {}
 
 func (x *Resource) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[2]
+	mi := &file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -175,7 +120,7 @@ func (x *Resource) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Resource.ProtoReflect.Descriptor instead.
 func (*Resource) Descriptor() ([]byte, []int) {
-	return file_waypoint_builtin_nomad_jobspec_plugin_proto_rawDescGZIP(), []int{2}
+	return file_waypoint_builtin_nomad_jobspec_plugin_proto_rawDescGZIP(), []int{1}
 }
 
 type Resource_Job struct {
@@ -189,7 +134,7 @@ type Resource_Job struct {
 func (x *Resource_Job) Reset() {
 	*x = Resource_Job{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[3]
+		mi := &file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -202,7 +147,7 @@ func (x *Resource_Job) String() string {
 func (*Resource_Job) ProtoMessage() {}
 
 func (x *Resource_Job) ProtoReflect() protoreflect.Message {
-	mi := &file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[3]
+	mi := &file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -215,7 +160,7 @@ func (x *Resource_Job) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Resource_Job.ProtoReflect.Descriptor instead.
 func (*Resource_Job) Descriptor() ([]byte, []int) {
-	return file_waypoint_builtin_nomad_jobspec_plugin_proto_rawDescGZIP(), []int{2, 0}
+	return file_waypoint_builtin_nomad_jobspec_plugin_proto_rawDescGZIP(), []int{1, 0}
 }
 
 func (x *Resource_Job) GetName() string {
@@ -239,17 +184,12 @@ var file_waypoint_builtin_nomad_jobspec_plugin_proto_rawDesc = []byte{
 	0x0e, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x5f, 0x73, 0x74, 0x61, 0x74, 0x65, 0x18,
 	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x6f, 0x70, 0x61, 0x71, 0x75, 0x65, 0x61, 0x6e,
 	0x79, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x0d, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x53,
-	0x74, 0x61, 0x74, 0x65, 0x22, 0x52, 0x0a, 0x07, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x12,
-	0x10, 0x0a, 0x03, 0x55, 0x72, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x55, 0x72,
-	0x6c, 0x12, 0x35, 0x0a, 0x0e, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x5f, 0x73, 0x74,
-	0x61, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x6f, 0x70, 0x61, 0x71,
-	0x75, 0x65, 0x61, 0x6e, 0x79, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x0d, 0x72, 0x65, 0x73, 0x6f, 0x75,
-	0x72, 0x63, 0x65, 0x53, 0x74, 0x61, 0x74, 0x65, 0x22, 0x25, 0x0a, 0x08, 0x52, 0x65, 0x73, 0x6f,
-	0x75, 0x72, 0x63, 0x65, 0x1a, 0x19, 0x0a, 0x03, 0x4a, 0x6f, 0x62, 0x12, 0x12, 0x0a, 0x04, 0x6e,
-	0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x42,
-	0x20, 0x5a, 0x1e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2f, 0x62, 0x75, 0x69, 0x6c,
-	0x74, 0x69, 0x6e, 0x2f, 0x6e, 0x6f, 0x6d, 0x61, 0x64, 0x2f, 0x6a, 0x6f, 0x62, 0x73, 0x70, 0x65,
-	0x63, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x61, 0x74, 0x65, 0x22, 0x25, 0x0a, 0x08, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65,
+	0x1a, 0x19, 0x0a, 0x03, 0x4a, 0x6f, 0x62, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x42, 0x20, 0x5a, 0x1e, 0x77,
+	0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2f, 0x62, 0x75, 0x69, 0x6c, 0x74, 0x69, 0x6e, 0x2f,
+	0x6e, 0x6f, 0x6d, 0x61, 0x64, 0x2f, 0x6a, 0x6f, 0x62, 0x73, 0x70, 0x65, 0x63, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -264,22 +204,20 @@ func file_waypoint_builtin_nomad_jobspec_plugin_proto_rawDescGZIP() []byte {
 	return file_waypoint_builtin_nomad_jobspec_plugin_proto_rawDescData
 }
 
-var file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_waypoint_builtin_nomad_jobspec_plugin_proto_goTypes = []interface{}{
 	(*Deployment)(nil),    // 0: jobspec.Deployment
-	(*Release)(nil),       // 1: jobspec.Release
-	(*Resource)(nil),      // 2: jobspec.Resource
-	(*Resource_Job)(nil),  // 3: jobspec.Resource.Job
-	(*opaqueany.Any)(nil), // 4: opaqueany.Any
+	(*Resource)(nil),      // 1: jobspec.Resource
+	(*Resource_Job)(nil),  // 2: jobspec.Resource.Job
+	(*opaqueany.Any)(nil), // 3: opaqueany.Any
 }
 var file_waypoint_builtin_nomad_jobspec_plugin_proto_depIdxs = []int32{
-	4, // 0: jobspec.Deployment.resource_state:type_name -> opaqueany.Any
-	4, // 1: jobspec.Release.resource_state:type_name -> opaqueany.Any
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	3, // 0: jobspec.Deployment.resource_state:type_name -> opaqueany.Any
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_waypoint_builtin_nomad_jobspec_plugin_proto_init() }
@@ -301,18 +239,6 @@ func file_waypoint_builtin_nomad_jobspec_plugin_proto_init() {
 			}
 		}
 		file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Release); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Resource); i {
 			case 0:
 				return &v.state
@@ -324,7 +250,7 @@ func file_waypoint_builtin_nomad_jobspec_plugin_proto_init() {
 				return nil
 			}
 		}
-		file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+		file_waypoint_builtin_nomad_jobspec_plugin_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Resource_Job); i {
 			case 0:
 				return &v.state
@@ -343,7 +269,7 @@ func file_waypoint_builtin_nomad_jobspec_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_waypoint_builtin_nomad_jobspec_plugin_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

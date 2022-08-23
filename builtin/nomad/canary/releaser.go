@@ -1,9 +1,10 @@
-package jobspec
+package canary
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/waypoint/builtin/nomad/jobspec"
 	"strconv"
 	"time"
 
@@ -27,7 +28,7 @@ const (
 
 // Releaser is the ReleaseManager implementation for Nomad.
 type Releaser struct {
-	p      *Platform
+	p      *jobspec.Platform
 	config ReleaserConfig
 }
 
@@ -58,7 +59,7 @@ func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 		resource.WithDeclaredResourcesResp(dcr),
 		resource.WithResource(resource.NewResource(
 			resource.WithName(rmResourcePromotedJobName),
-			resource.WithState(&Resource_Job{}),
+			resource.WithState(&jobspec.Resource_Job{}),
 			resource.WithCreate(r.resourceJobCreate),
 			resource.WithDestroy(r.resourceJobDestroy),
 			resource.WithStatus(r.resourceJobStatus),
@@ -70,30 +71,28 @@ func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 
 // getNomadClient provides
 // the client connection used by resources to interact with Nomad.
-func (r *Releaser) getNomadClient() (*nomadClient, error) {
+func (r *Releaser) getNomadClient() (*api.Client, error) {
 	// Get our client
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return nil, err
 	}
-	return &nomadClient{
-		NomadClient: client,
-	}, nil
+	return client, nil
 }
 
 func (r *Releaser) resourceJobCreate(
 	ctx context.Context,
 	log hclog.Logger,
-	target *Deployment,
+	target *jobspec.Deployment,
 	result *Release,
-	state *Resource_Job,
-	client *nomadClient,
+	state *jobspec.Resource_Job,
+	client *api.Client,
 	st terminal.Status,
 	sg terminal.StepGroup,
 ) error {
 	// Set up clients
-	jobClient := client.NomadClient.Jobs()
-	deploymentClient := client.NomadClient.Deployments()
+	jobClient := client.Jobs()
+	deploymentClient := client.Deployments()
 
 	st.Update("Getting job...")
 	jobs, _, err := jobClient.PrefixList(target.Name)
@@ -214,7 +213,7 @@ func (r *Releaser) resourceJobCreate(
 	}
 
 	st.Update("Monitoring evaluation " + u.EvalID)
-	if err := nomad.NewMonitor(st, client.NomadClient).Monitor(u.EvalID); err != nil {
+	if err := nomad.NewMonitor(st, client).Monitor(u.EvalID); err != nil {
 		return err
 	}
 
@@ -228,8 +227,8 @@ func (r *Releaser) resourceJobCreate(
 
 func (r *Releaser) resourceJobDestroy(
 	log hclog.Logger,
-	client *nomadClient,
-	state *Resource_Job,
+	client *api.Client,
+	state *jobspec.Resource_Job,
 	sg terminal.StepGroup,
 ) error {
 	log.Trace("No resource destroyed")
@@ -240,14 +239,14 @@ func (r *Releaser) resourceJobStatus(
 	ctx context.Context,
 	log hclog.Logger,
 	sg terminal.StepGroup,
-	state *Resource_Job,
-	client *nomadClient,
+	state *jobspec.Resource_Job,
+	client *api.Client,
 	sr *resource.StatusResponse,
 ) error {
 	s := sg.Add("Checking status of Nomad job resource %q...", state.Name)
 	defer s.Abort()
 
-	jobClient := client.NomadClient.Jobs()
+	jobClient := client.Jobs()
 	s.Update("Getting job...")
 	// TODO: Because we don't have the namespace from the jobspec, we rely on the
 	//   NOMAD_NAMESPACE env var/searching for job via prefix- consider passing namespace
@@ -314,7 +313,7 @@ func (r *Releaser) Release(
 	src *component.Source,
 	job *component.JobInfo,
 	ui terminal.UI,
-	target *Deployment,
+	target *jobspec.Deployment,
 	dcr *component.DeclaredResourcesResp,
 ) (*Release, error) {
 	var result Release
@@ -354,7 +353,7 @@ func (r *Releaser) Destroy(
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
 	if release.ResourceState == nil {
-		rm.Resource(rmResourcePromotedJobName).SetState(&Resource_Job{
+		rm.Resource(rmResourcePromotedJobName).SetState(&jobspec.Resource_Job{
 			Name: rmResourcePromotedJobName,
 		})
 	} else {
@@ -381,7 +380,7 @@ func (r *Releaser) Status(
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
 	if release.ResourceState == nil {
-		rm.Resource(rmResourcePromotedJobName).SetState(&Resource_Job{
+		rm.Resource(rmResourcePromotedJobName).SetState(&jobspec.Resource_Job{
 			Name: rmResourcePromotedJobName,
 		})
 	} else {
@@ -450,10 +449,6 @@ type ReleaserConfig struct {
 
 	// If true, marks the deployment as failed
 	FailDeployment bool `hcl:"fail_deployment,optional"`
-}
-
-type nomadClient struct {
-	NomadClient *api.Client
 }
 
 func (r *Releaser) Documentation() (*docs.Documentation, error) {

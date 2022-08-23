@@ -279,6 +279,7 @@ func (r *Runner) recvConfig(
 
 		// Wait for the next configuration
 		resp, err := client.Recv()
+
 		if err != nil {
 			// EOF means a graceful close, don't reconnect.
 			if err == io.EOF || clierrors.IsCanceled(err) {

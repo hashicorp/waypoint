@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/mr-tron/base58"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/blake2b"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -41,10 +40,6 @@ const (
 	// the token as valid before attempting to decode it. This is mostly a nicity to improve
 	// understanding of the token data and error messages.
 	tokenMagic = "wp24"
-
-	// hmacKeySize is the size in bytes that the HMAC keys should be. Each key will contain this number of bytes
-	// of data from rand.Reader
-	hmacKeySize = 32
 )
 
 var (
@@ -81,7 +76,7 @@ func UserWithContext(ctx context.Context, u *pb.User) context.Context {
 // userFromContext returns the authenticated user in the request context.
 // This will return nil if the user is not authenticated. Note that a user
 // may not be authenticated but the request can still be authenticated
-// using a non-user token type. The safeste way to check is tokenFromContext.
+// using a non-user token type. The safeste way to check is decodedTokenFromContext.
 func (s *Service) userFromContext(ctx context.Context) *pb.User {
 	value, ok := ctx.Value(userKey{}).(*pb.User)
 	if !ok && s.superuser {
@@ -91,19 +86,19 @@ func (s *Service) userFromContext(ctx context.Context) *pb.User {
 	return value
 }
 
-type tokenKey struct{}
+type decodedTokenKey struct{}
 
-// TokenWithContext inserts the decrypted token t into the context.
-func TokenWithContext(ctx context.Context, t *pb.Token) context.Context {
-	return context.WithValue(ctx, tokenKey{}, t)
+// DecodedTokenWithContext inserts the decrypted token t into the context.
+func DecodedTokenWithContext(ctx context.Context, t *pb.Token) context.Context {
+	return context.WithValue(ctx, decodedTokenKey{}, t)
 }
 
-// tokenFromContext returns the validated token used with the request.
+// decodedTokenFromContext returns the validated token used with the request.
 // The token is guaranteed to be valid, meaning that it successfully
 // was signed and decrypted. This will return nil if no token was present
 // for the request.
-func (s *Service) tokenFromContext(ctx context.Context) *pb.Token {
-	value, ok := ctx.Value(tokenKey{}).(*pb.Token)
+func (s *Service) decodedTokenFromContext(ctx context.Context) *pb.Token {
+	value, ok := ctx.Value(decodedTokenKey{}).(*pb.Token)
 	if !ok && s.superuser {
 		// We are in implicit superuser mode meaning everything is always
 		// allowed. Create a login token for the superuser.
@@ -173,7 +168,7 @@ func (s *Service) Authenticate(
 	}
 
 	// Store the token in the context
-	ctx = TokenWithContext(ctx, body)
+	ctx = DecodedTokenWithContext(ctx, body)
 
 	// If we are at an unauthenticated endpoint, no need to verify further.
 	if anonEndpoint {
@@ -202,6 +197,8 @@ func (s *Service) Authenticate(
 func (s *Service) authRunner(
 	ctx context.Context, tokenRunner *pb.Token_Runner, endpoint string,
 ) (context.Context, error) {
+
+	log := hclog.FromContext(ctx)
 
 	runnerId, err := s.decodeId(tokenRunner.Id)
 	if err != nil {
@@ -237,6 +234,15 @@ func (s *Service) authRunner(
 		(r.AdoptionState != pb.Runner_ADOPTED &&
 			r.AdoptionState != pb.Runner_PREADOPTED)
 	if notAdopted {
+		if r == nil {
+			log.Debug("unknown runner attempted to connect", "id", runnerId)
+		} else {
+			log.Debug("rejecting runner due to adoption state", "id", runnerId, "state", r.AdoptionState.String())
+		}
+
+		// We sleep here to tarpit any runaway runners that are going to thrashing
+		// trying to connect over and over and over even though they're not allowed in.
+		time.Sleep(5 * time.Second)
 		return nil, status.Errorf(codes.PermissionDenied,
 			"runner is not adopted")
 	}
@@ -332,36 +338,25 @@ func (s *Service) authLogin(
 func (s *Service) decodeToken(ctx context.Context, token string) (*pb.TokenTransport, *pb.Token, error) {
 	data, err := base58.Decode(token)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrapf(err, "failed to base58 decode token")
 	}
 
 	if subtle.ConstantTimeCompare(data[:len(tokenMagic)], []byte(tokenMagic)) != 1 {
-		return nil, nil, errors.Wrapf(ErrInvalidToken, "bad magic")
+		return nil, nil, errors.Errorf("bad magic")
 	}
 
 	var tt pb.TokenTransport
 	err = proto.Unmarshal(data[len(tokenMagic):], &tt)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrapf(err, "failed to proto unmarshal token")
 	}
 
-	key, err := s.state(ctx).HMACKeyGet(tt.KeyId)
-	if err != nil || key == nil {
-		return nil, nil, errors.Wrapf(ErrInvalidToken, "unknown key")
-	}
-
-	// Hash the token body using the HMAC key so that we can compare
-	// with our signature to ensure this hasn't been tampered with.
-	h, err := blake2b.New256(key.Key)
+	isValid, err := s.state(ctx).TokenSignatureVerify(tt.Body, tt.Signature, tt.KeyId)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrapf(ErrInvalidToken, err.Error())
 	}
-
-	h.Write(tt.Body)
-	sum := h.Sum(nil)
-
-	if subtle.ConstantTimeCompare(sum, tt.Signature) != 1 {
-		return nil, nil, errors.Wrapf(ErrInvalidToken, "bad signature")
+	if !isValid {
+		return nil, nil, errors.Wrapf(ErrInvalidToken, "bad token signature")
 	}
 
 	// Decode the actual token structure
@@ -414,43 +409,33 @@ func (s *Service) decodeToken(ctx context.Context, token string) (*pb.TokenTrans
 // encodeToken Encodes the given token with the given key and metadata.
 // keyId controls which key is used to sign the key (key values are generated lazily).
 // metadata is attached to the token transport as configuration style information
-func (s *Service) encodeToken(ctx context.Context, keyId string, metadata map[string]string, body *pb.Token) (string, error) {
-	// Get the key material
-	key, err := s.state(ctx).HMACKeyCreateIfNotExist(keyId, hmacKeySize)
+func (s *Service) encodeToken(ctx context.Context, tt *pb.TokenTransport, body *pb.Token) (string, error) {
+	// Proto encode the token, this is what we encrypt (HCP) or sign/hash (OSS).
+	tokenBodyData, err := proto.Marshal(body)
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "failed to proto marshal the token")
 	}
 
-	// Proto encode the body, this is what we sign.
-	bodyData, err := proto.Marshal(body)
+	tokenSignature, err := s.state(ctx).TokenSignature(tokenBodyData, tt.KeyId)
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "failed getting token signature")
 	}
-
-	// Sign it
-	h, err := blake2b.New256(key.Key)
-	if err != nil {
-		return "", err
-	}
-	h.Write(bodyData)
 
 	// Build our wrapper which is not signed or encrypted.
-	var tt pb.TokenTransport
-	tt.Body = bodyData
-	tt.KeyId = keyId
-	tt.Metadata = metadata
-	tt.Signature = h.Sum(nil)
+	tt.Body = tokenBodyData
+	tt.Signature = tokenSignature
 
 	// Marshal the wrapper and base58 encode it.
-	ttData, err := proto.Marshal(&tt)
+	ttData, err := proto.Marshal(tt)
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "failed proto marshalling token transport")
 	}
 
 	var buf bytes.Buffer
 	buf.WriteString(tokenMagic)
 	buf.Write(ttData)
 
+	// Encode token
 	return base58.Encode(buf.Bytes()), nil
 }
 
@@ -516,7 +501,7 @@ func (s *Service) GenerateLoginToken(
 		createToken.Kind = &pb.Token_Login_{Login: login}
 	}
 
-	token, err := s.newToken(ctx, dur, DefaultKeyId, nil, createToken)
+	token, err := s.newToken(ctx, dur, s.activeAuthKeyId, nil, createToken)
 	if err != nil {
 		return nil, err
 	}
@@ -564,7 +549,7 @@ func (s *Service) GenerateRunnerToken(
 		},
 	}
 
-	token, err := s.newToken(ctx, dur, DefaultKeyId, nil, createToken)
+	token, err := s.newToken(ctx, dur, s.activeAuthKeyId, nil, createToken)
 	if err != nil {
 		return nil, err
 	}
@@ -600,7 +585,19 @@ func (s *Service) newToken(
 		return "", err
 	}
 
-	return s.encodeToken(ctx, keyId, metadata, body)
+	// Build our wrapper which is not signed or encrypted.
+	var tt pb.TokenTransport
+	tt.KeyId = keyId
+	tt.Metadata = metadata
+
+	if s.processToken != nil {
+		body, err = s.processToken(ctx, &tt, body)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return s.encodeToken(ctx, &tt, body)
 }
 
 // Create a new invite token.
@@ -678,7 +675,7 @@ func (s *Service) GenerateInviteToken(
 		Signup:     req.Signup,
 	}
 
-	token, err := s.newToken(ctx, dur, DefaultKeyId, nil, &pb.Token{
+	token, err := s.newToken(ctx, dur, s.activeAuthKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Invite_{Invite: invite},
 	})
 	if err != nil {
@@ -721,7 +718,7 @@ func (s *Service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteT
 	// Our login token is just the login token on the invite.
 	login := invite.Login
 
-	token, err := s.newToken(ctx, 0, DefaultKeyId, nil, &pb.Token{
+	token, err := s.newToken(ctx, 0, s.activeAuthKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Login_{Login: login},
 	})
 	if err != nil {
@@ -744,7 +741,7 @@ func (s *Service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.New
 	}
 
 	// Create a new token pointed to our existing user
-	token, err := s.newToken(ctx, 0, DefaultKeyId, nil, &pb.Token{
+	token, err := s.newToken(ctx, 0, s.activeAuthKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Login_{
 			Login: &pb.Token_Login{
 				UserId: user.Id,

@@ -16,6 +16,8 @@ import (
 
 type LogsCommand struct {
 	*baseCommand
+
+	deployment string
 }
 
 var logColors = map[pb.LogBatch_Entry_Source]*color.Color{
@@ -34,7 +36,7 @@ func (c *LogsCommand) Run(args []string) int {
 	}
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		stream, err := app.Logs(ctx)
+		stream, err := app.Logs(ctx, c.deployment)
 		if err != nil {
 			if !clierrors.IsCanceled(err) {
 				app.UI.Output("Error reading logs: %s", err, terminal.WithErrorStyle())
@@ -99,7 +101,14 @@ func (c *LogsCommand) Run(args []string) int {
 }
 
 func (c *LogsCommand) Flags() *flag.Sets {
-	return c.flagSet(flagSetOperation, nil)
+	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.StringVar(&flag.StringVar{
+			Name:   "deployment-seq",
+			Usage:  "Get logs for a specific deployment of the app using the deployment sequence number.",
+			Target: &c.deployment,
+		})
+	})
 }
 
 func (c *LogsCommand) AutocompleteArgs() complete.Predictor {

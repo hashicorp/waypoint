@@ -43,4 +43,8 @@ to a specific deployment or filter out certain log messages.
 - `-var=<key=value>` - Variable value to set for this operation. Can be specified multiple times.
 - `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "_.auto.wpvars" or "_.auto.wpvars.json" files are present, they will be automatically loaded.
 
+#### Command Options
+
+- `-deployment-seq=<string>` - Get logs for a specific deployment of the app using the deployment sequence number.
+
 @include "commands/logs_more.mdx"

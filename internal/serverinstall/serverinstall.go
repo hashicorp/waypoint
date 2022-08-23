@@ -107,12 +107,6 @@ type InstallRunnerOpts struct {
 	Id string
 }
 
-// An optional interface that the installer can implement to request
-// an ondemand runner be registered.
-type OnDemandRunnerConfigProvider interface {
-	OnDemandRunnerConfig() *pb.OnDemandRunnerConfig
-}
-
 var Platforms = map[string]Installer{
 	"ecs":        &ECSInstaller{},
 	"kubernetes": &K8sInstaller{},

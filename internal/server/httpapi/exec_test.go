@@ -11,9 +11,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wspb"
 
+	"github.com/hashicorp/waypoint/pkg/protocolversion"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/gen/mocks"
 )
@@ -91,6 +93,13 @@ type execImpl struct {
 
 	// Recv is the list of requests received
 	Recv []*pb.ExecStreamRequest
+}
+
+// InlineKeepaliveInterceptor may call this
+func (v *execImpl) GetVersionInfo(_ context.Context, _ *empty.Empty) (*pb.GetVersionInfoResponse, error) {
+	return &pb.GetVersionInfoResponse{
+		Info: protocolversion.Current(),
+	}, nil
 }
 
 func (v *execImpl) StartExecStream(srv pb.Waypoint_StartExecStreamServer) error {

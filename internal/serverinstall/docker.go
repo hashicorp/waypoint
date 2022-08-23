@@ -346,7 +346,7 @@ func (i *DockerInstaller) Upgrade(
 
 	httpAddr = "localhost:" + httpPort
 
-	if len(containers) < 0 {
+	if len(containers) == 0 {
 		s.Update("No waypoint server detected. Nothing to upgrade.")
 		s.Status(terminal.StatusWarn)
 		s.Done()

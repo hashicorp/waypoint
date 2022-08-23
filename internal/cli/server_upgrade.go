@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/waypoint/builtin/k8s"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"os"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/waypoint/builtin/k8s"
 
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
@@ -410,7 +412,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 	s.Update("Previous runner uninstalled")
 	s.Done()
 
-	if odc, ok := p.(serverinstall.OnDemandRunnerConfigProvider); ok {
+	if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
 		odr := odc.OnDemandRunnerConfig()
 
 		runnerConfigName := odr.PluginType + "-bootstrap-profile"
@@ -474,6 +476,9 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 					case "kubernetes":
 						// attempt to parse the runner profile config into the correct task launcher config struct
 						var result *k8s.TaskLauncherConfig
+						// NOTE(briancain): This is here due to a k8s task plugin bug. When
+						// we attempt to upgrade if we detect the previous mistake we warn
+						// users that certain key values in their plugin config are wrong.
 						if cfg.ConfigFormat == pb.Hcl_JSON {
 							err = json.Unmarshal(cfg.PluginConfig, result)
 							if err != nil {
@@ -507,9 +512,11 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 				}
 			}
 
-			c.ui.Output("")
-			c.ui.Output(runnerMultiDefault, strings.Join(runnerDefaultNames[:], "\n"), strings.Join(runnerUnsetStr[:], "\n"), terminal.WithWarningStyle())
-			c.ui.Output("")
+			if len(runnerDefaultNames) > 0 {
+				c.ui.Output("")
+				c.ui.Output(runnerMultiDefault, strings.Join(runnerDefaultNames[:], "\n"), strings.Join(runnerUnsetStr[:], "\n"), terminal.WithWarningStyle())
+				c.ui.Output("")
+			}
 		}
 
 		// TODO(mitchellh): This creates a new auth token for the new runner.

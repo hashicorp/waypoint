@@ -52,7 +52,7 @@ func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, configpkg.
 		Workspace: c.refWorkspace.Workspace,
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, []configpkg.ValidationResult{{Error: err}}, err
 	}
 
 	// Validate
@@ -60,7 +60,6 @@ func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, configpkg.
 	if err != nil {
 		return nil, results, err
 	}
-
 	return cfg, results, nil
 }
 

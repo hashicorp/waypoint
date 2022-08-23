@@ -76,20 +76,18 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 
 // getNomadJobspecClient is a value provider for our resource manager and provides
 // the client connection used by resources to interact with Nomad.
-func (p *Platform) getNomadClient() (*nomadClient, error) {
+func (p *Platform) getNomadClient() (*api.Client, error) {
 	// Get our client
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return nil, err
 	}
-	return &nomadClient{
-		NomadClient: client,
-	}, nil
+	return client, nil
 }
 
 func (p *Platform) resourceJobCreate(
 	ctx context.Context,
-	client *nomadClient,
+	client *api.Client,
 	result *Deployment,
 	deployConfig *component.DeploymentConfig,
 	img *docker.Image,
@@ -98,11 +96,11 @@ func (p *Platform) resourceJobCreate(
 ) error {
 	st := ui.Status()
 	defer st.Close()
-	jobclient := client.NomadClient.Jobs()
+	jobclient := client.Jobs()
 
 	// Parse the HCL
 	st.Update("Parsing the job specification...")
-	job, err := p.jobspec(client.NomadClient, p.config.Jobspec, p.config.Hcl1)
+	job, err := p.jobspec(client, p.config.Jobspec, p.config.Hcl1)
 	if err != nil {
 		return err
 	}
@@ -114,7 +112,7 @@ func (p *Platform) resourceJobCreate(
 	job.SetMeta(metaId, result.Id)
 
 	// Update our client to use the Namespace set in the jobspec
-	client.NomadClient.SetNamespace(*job.Namespace)
+	client.SetNamespace(*job.Namespace)
 
 	// Get Consul ACL token from environment
 	*job.ConsulToken, err = nomad.ConsulAuth()
@@ -142,7 +140,7 @@ func (p *Platform) resourceJobCreate(
 	// Wait on the allocation
 	evalID := regResult.EvalID
 	st.Update("Monitoring evaluation " + evalID)
-	if err := nomad.NewMonitor(st, client.NomadClient).Monitor(evalID); err != nil {
+	if err := nomad.NewMonitor(st, client).Monitor(evalID); err != nil {
 		return err
 	}
 	st.Step(terminal.StatusOK, "Deployment successfully rolled out!")
@@ -154,13 +152,13 @@ func (p *Platform) resourceJobDestroy(
 	ctx context.Context,
 	state *Resource_Job,
 	sg terminal.StepGroup,
-	client *nomadClient,
+	client *api.Client,
 ) error {
 	step := sg.Add("")
 	defer func() { step.Abort() }()
 	step.Update("Deleting job: %s", state.Name)
 	step.Done()
-	_, _, err := client.NomadClient.Jobs().Deregister(state.Name, true, nil)
+	_, _, err := client.Jobs().Deregister(state.Name, true, nil)
 	return err
 }
 
@@ -169,17 +167,17 @@ func (p *Platform) resourceJobStatus(
 	log hclog.Logger,
 	sg terminal.StepGroup,
 	state *Resource_Job,
-	client *nomadClient,
+	client *api.Client,
 	sr *resource.StatusResponse,
 	ui terminal.UI,
 ) error {
 	s := sg.Add("Gathering health report for Nomad job...")
 	defer s.Abort()
 
-	jobClient := client.NomadClient.Jobs()
+	jobClient := client.Jobs()
 
 	s.Update("Parsing the job specification...")
-	jobspec, err := p.jobspec(client.NomadClient, p.config.Jobspec, p.config.Hcl1)
+	jobspec, err := p.jobspec(client, p.config.Jobspec, p.config.Hcl1)
 	if err != nil {
 		return err
 	}
