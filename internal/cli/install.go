@@ -123,6 +123,7 @@ func (c *InstallCommand) Run(args []string) int {
 	retries := 0
 	maxRetries := 12
 	sr := sg.Add("Attempting to make connection to server...") // stepgroup for retry ui
+	defer func() { sr.Abort() }()
 
 	for {
 		log.Info("connecting to the server so we can set the server config", "addr", contextConfig.Server.Address)
@@ -172,6 +173,16 @@ func (c *InstallCommand) Run(args []string) int {
 			terminal.WithErrorStyle(),
 		)
 		return 1
+	} else {
+		// Close the step here, so that the order of resolved steps makes sense to
+		// the user in case we fail on the "Retrieving initial auth token..." series
+		// Prior to this change, if we failed to retrieve the auth token, the resolved
+		// step with the error message would appear _before_ the above "Successfully connected
+		// to Waypoint server!" message and that is confusing
+		s.Update("Configured server connection")
+		s.Status(terminal.StatusOK)
+		s.Done()
+		s = sg.Add("")
 	}
 
 	client := pb.NewWaypointClient(conn)
