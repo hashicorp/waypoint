@@ -125,7 +125,7 @@ func (s *Service) RunPipeline(
 
 	// Build out all of the queued job requests for running this pipelines steps
 	stepJobs, pipelineRun, stepIds, err := s.buildStepJobs(ctx, log, req,
-		make(map[string]interface{}), nodeIdMap, pipeline, pipelineRun)
+		make(map[string]interface{}), nodeIdMap, make(map[string][]string), pipeline, pipelineRun)
 	if err != nil {
 		return nil, err
 	}
@@ -185,6 +185,7 @@ func (s *Service) buildStepJobs(
 	req *pb.RunPipelineRequest,
 	visitedPipelines map[string]interface{},
 	nodeIdMap map[string]*pb.Ref_PipelineStep,
+	parentDep map[string][]string,
 	pipeline *pb.Pipeline,
 	pipelineRun *pb.PipelineRun,
 ) ([]*pb.QueueJobRequest, *pb.PipelineRun, map[string]string, error) {
@@ -234,22 +235,28 @@ func (s *Service) buildStepJobs(
 					pipeline.Id, dep)
 			}
 			if nodeDepId == "" {
-				return nil, nil, status.Errorf(codes.Internal,
+				return nil, nil, nil, status.Errorf(codes.Internal,
 					"node ID was blank from pipeline %q and step name %q!!",
 					pipeline.Id, dep)
 			}
 
-			// TODO(briancain): not sure if this is the right solution here....
-			// maybe we gotta look to see if the step is a pipeline ref and don't
-			// add it as a DependsOn because it won't have a job id
-			// Committing this for now, will be fixed next week.
 			d, ok := stepIds[nodeDepId]
 			if !ok {
+				// Don't include a pipeline step ref because it won't actually queue a job.
 				log.Info("No step id found for nodeDepId", "pipeline", pipeline.Name,
 					"step", step.Name, "dep_id", nodeDepId)
 				continue
 			}
+
 			dependsOn = append(dependsOn, d)
+		}
+
+		// Depend on all JOB IDs from parent step. If we were given a parent pipeline
+		// with its step dependencies we're in an embedded pipeline and need to ensure
+		// the downstream steps have an implicit dependency on the parent embedded
+		// pipeline Ref step
+		for _, stepDepends := range parentDep {
+			dependsOn = append(dependsOn, stepDepends...)
 		}
 
 		nodeId, ok := s.stepToNodeId(ctx, log, pipeline.Id, name, nodeIdMap)
@@ -350,8 +357,12 @@ func (s *Service) buildStepJobs(
 				return nil, nil, nil, err
 			}
 
+			// Pass through *this* steps job dependency IDs so that the child
+			// steps aren't scheduled prior to any dependencies they are waiting for.
+			parentStepDep := map[string][]string{pipeline.Id: job.DependsOn}
+
 			embedJobs, embedRun, embedStepIds, err := s.buildStepJobs(ctx, log, req,
-				visitedPipelines, nodeIdMap, embeddedPipeline, pipelineRun)
+				visitedPipelines, nodeIdMap, parentStepDep, embeddedPipeline, pipelineRun)
 			if err != nil {
 				return nil, nil, nil, err
 			}
