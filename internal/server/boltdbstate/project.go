@@ -69,15 +69,8 @@ func (s *State) ProjectGet(ref *pb.Ref_Project) (*pb.Project, error) {
 // delete. This will delete all operations associated with this project
 // as well.
 func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
-	// Get our project to delete
-	project, err := s.ProjectGet(ref)
-	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			return nil
-		}
-		return err
-	}
-
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
 	// We perform all of our reads before our write to avoid the deadlocked state
 	var (
 		builds        []*pb.Build
@@ -90,7 +83,16 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 		pipelines     []*pb.Pipeline
 		configVars    []*pb.ConfigVar
 	)
-	if err = s.db.View(func(dbTxn *bolt.Tx) error {
+	if err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		// Get our project to delete
+		project, err := s.projectGet(dbTxn, memTxn, ref)
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				return nil
+			}
+			return err
+		}
+
 		for _, app := range project.Applications {
 			appRef := &pb.Ref_Application{
 				Application: app.Name,
@@ -134,7 +136,6 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 				configVars = append(configVars, appConfigVars...)
 			}
 		}
-
 		// Get project-scoped config
 		if projectConfigVars, err := s.ConfigGet(&pb.ConfigGetRequest{
 			Scope: &pb.ConfigGetRequest_Project{Project: ref},
@@ -171,94 +172,87 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 			return err
 		}
 
+		// Builds, artifacts, deployments, releases, status reports, pipelines, triggers,
+		// workspaces and config are deleted with a project
+		// Jobs and tasks will NOT be deleted along with a project
+		// Instances are expected to be deleted before ProjectDelete, via the destroy op
+		for _, build := range builds {
+			if err = s.buildDelete(dbTxn, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: build.Id}}); err != nil {
+				return err
+			}
+			s.log.Debug("deleted build " + build.Id)
+		}
+		for _, artifact := range artifacts {
+			if err = s.artifactDelete(dbTxn, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: artifact.Id}}); err != nil {
+				return err
+			}
+			s.log.Debug("deleted artifact " + artifact.Id)
+		}
+		for _, deployment := range deployments {
+			if err = s.deploymentDelete(dbTxn, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: deployment.Id}}); err != nil {
+				return err
+			}
+			s.log.Debug("deleted deployment " + deployment.Id)
+		}
+		for _, release := range releases {
+			if err = s.releaseDelete(dbTxn, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: release.Id}}); err != nil {
+				return err
+			}
+			s.log.Debug("deleted release " + release.Id)
+		}
+		for _, statusReport := range statusReports {
+			if err = s.statusReportDelete(dbTxn, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: statusReport.Id}}); err != nil {
+				return err
+			}
+			s.log.Debug("deleted status report " + statusReport.Id)
+		}
+
+		// Unset all configs we retrieved
+		for _, config := range configVars {
+			if err = s.configSet(dbTxn, memTxn, &pb.ConfigVar{
+				Target:     config.Target,
+				Name:       config.Name,
+				Value:      &pb.ConfigVar_Unset{},
+				Internal:   config.Internal,
+				NameIsPath: config.NameIsPath,
+			}); err != nil {
+				return err
+			}
+		}
+
+		// delete workspaces for a project
+		for _, workspace := range workspaces {
+			if err = s.workspaceDelete(dbTxn, memTxn, workspace.Workspace); err != nil {
+				return err
+			}
+		}
+
+		// delete triggers for project
+		for _, trigger := range triggers {
+			if err = s.triggerDelete(dbTxn, memTxn, &pb.Ref_Trigger{Id: trigger.Id}); err != nil {
+				return err
+			}
+		}
+
+		// delete pipelines for project
+		for _, pipeline := range pipelines {
+			if err = s.pipelineDelete(dbTxn, memTxn, &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{Id: pipeline.Id},
+			},
+			}); err != nil {
+				return err
+			}
+		}
+		if err = s.projectDelete(dbTxn, memTxn, ref); err != nil {
+			return err
+		}
+
 		return nil
 	}); err != nil {
 		return err
 	}
-
-	// Builds, artifacts, deployments, releases, status reports, pipelines, triggers,
-	// workspaces and config are deleted with a project
-	// Jobs and tasks will NOT be deleted along with a project
-	// Instances are expected to be deleted before ProjectDelete, via the destroy op
-	for _, build := range builds {
-		if err = s.BuildDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: build.Id}}); err != nil {
-			return err
-		}
-		s.log.Debug("deleted build " + build.Id)
-	}
-	for _, artifact := range artifacts {
-		if err = s.ArtifactDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: artifact.Id}}); err != nil {
-			return err
-		}
-		s.log.Debug("deleted artifact " + artifact.Id)
-	}
-	for _, deployment := range deployments {
-		if err = s.DeploymentDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: deployment.Id}}); err != nil {
-			return err
-		}
-		s.log.Debug("deleted deployment " + deployment.Id)
-	}
-	for _, release := range releases {
-		if err = s.ReleaseDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: release.Id}}); err != nil {
-			return err
-		}
-		s.log.Debug("deleted release " + release.Id)
-	}
-	for _, statusReport := range statusReports {
-		if err = s.StatusReportDelete(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: statusReport.Id}}); err != nil {
-			return err
-		}
-		s.log.Debug("deleted status report " + statusReport.Id)
-	}
-
-	// Unset all configs we retrieved
-	for _, config := range configVars {
-		if err = s.ConfigSet(&pb.ConfigVar{
-			Target:     config.Target,
-			Name:       config.Name,
-			Value:      &pb.ConfigVar_Unset{},
-			Internal:   config.Internal,
-			NameIsPath: config.NameIsPath,
-		}); err != nil {
-			return err
-		}
-	}
-
-	// delete workspaces for a project
-	for _, workspace := range workspaces {
-		if err = s.WorkspaceDelete(workspace.Workspace.Workspace); err != nil {
-			return err
-		}
-	}
-
-	// delete triggers for project
-	for _, trigger := range triggers {
-		if err = s.TriggerDelete(&pb.Ref_Trigger{Id: trigger.Id}); err != nil {
-			return err
-		}
-	}
-
-	// delete pipelines for project
-	for _, pipeline := range pipelines {
-		if err = s.PipelineDelete(&pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{
-			Id: &pb.Ref_PipelineId{Id: pipeline.Id},
-		},
-		}); err != nil {
-			return err
-		}
-	}
-
-	memTxn := s.inmem.Txn(true)
-	defer memTxn.Abort()
-
-	err = s.db.Update(func(dbTxn *bolt.Tx) error {
-		return s.projectDelete(dbTxn, memTxn, ref)
-	})
-	if err == nil {
-		memTxn.Commit()
-	}
-
-	return err
+	memTxn.Commit()
+	return nil
 }
 
 // ProjectList returns the list of projects.

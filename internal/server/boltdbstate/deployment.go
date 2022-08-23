@@ -1,8 +1,10 @@
 package boltdbstate
 
 import (
+	"errors"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
+	bolt "go.etcd.io/bbolt"
 )
 
 var deploymentOp = &appOperation{
@@ -66,4 +68,15 @@ func (s *State) DeploymentDelete(
 	ref *pb.Ref_Operation,
 ) error {
 	return deploymentOp.Delete(s, ref)
+}
+
+func (s *State) deploymentDelete(
+	dbTxn *bolt.Tx,
+	ref *pb.Ref_Operation,
+) error {
+	id, ok := ref.Target.(*pb.Ref_Operation_Id)
+	if !ok {
+		return errors.New("invalid type for target to delete app operation")
+	}
+	return deploymentOp.delete(dbTxn, []byte(id.Id))
 }
