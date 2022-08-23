@@ -91,6 +91,9 @@ func (r *Runner) executeReleaseOp(
 	// If we're pruning, then let's query the deployments we want to prune
 	// ahead of time so that fails fast.
 	var pruneDeploys []*pb.Deployment
+	// If we are pruning deployments, we also prune the releases which
+	// released the deployments we're pruning
+	var pruneReleases []*pb.Release
 	if op.Release.Prune {
 		// Determine the number of deployments to keep around.
 		retain := 2
@@ -148,9 +151,27 @@ func (r *Runner) executeReleaseOp(
 			// Mark for deletion
 			ds = append(ds, d)
 		}
+		rl, err := r.client.ListReleases(ctx, &pb.ListReleasesRequest{
+			Application: app.Ref(),
+			Workspace:   project.WorkspaceRef(),
+		})
+		// Set up a slice of releases, whose max length is the # of releases
+		// we have
+		rs := make([]*pb.Release, 0, len(rl.Releases))
+		var rc int
+		for _, release := range rl.Releases {
+			for _, d := range ds {
+				if release.DeploymentId == d.Id {
+					rs = append(rs, release)
+					rc++
+				}
+			}
+
+		}
 
 		log.Info("will prune deploys", "len", len(ds))
 		pruneDeploys = ds
+		pruneReleases = rs[:rc]
 	}
 
 	// Do the release
@@ -177,6 +198,16 @@ func (r *Runner) executeReleaseOp(
 		for _, d := range pruneDeploys {
 			app.UI.Output("Deployment: %s (v%d)", d.Id, d.Sequence, terminal.WithInfoStyle())
 			if err := app.DestroyDeploy(ctx, d); err != nil {
+				return result, err
+			}
+		}
+	}
+	if len(pruneReleases) > 0 {
+		log.Info("pruning releases", "len", len(pruneReleases))
+		app.UI.Output("Pruning old releases...", terminal.WithHeaderStyle())
+		for _, release := range pruneReleases {
+			app.UI.Output("Release: %s (v%d)", release.Id, release.Sequence, terminal.WithInfoStyle())
+			if err := app.DestroyRelease(ctx, release); err != nil {
 				return result, err
 			}
 		}
