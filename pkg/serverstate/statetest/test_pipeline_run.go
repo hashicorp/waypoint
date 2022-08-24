@@ -67,26 +67,26 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Set another pipeline run
-		latest_r := ptypes.TestPipelineRun(t, &pb.PipelineRun{Pipeline: pipeline})
-		err = s.PipelineRunPut(latest_r)
+		r3 := ptypes.TestPipelineRun(t, &pb.PipelineRun{Pipeline: pipeline})
+		err = s.PipelineRunPut(r3)
 		require.NoError(err)
-
-		// Get run by pipeline and sequence, should auto increment
-		{
-			resp, err := s.PipelineRunGet(pipeline, 3)
-			require.NoError(err)
-			require.NotNil(resp)
-			require.Equal(latest_r.Id, resp.Id)
-			require.Equal(latest_r.Sequence, resp.Sequence)
-		}
 
 		// Get latest run by pipeline ID
 		{
 			resp, err := s.PipelineRunGetLatest(pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id)
 			require.NoError(err)
 			require.NotNil(resp)
-			require.Equal(latest_r.Id, resp.Id)
-			require.Equal(latest_r.Sequence, resp.Sequence)
+			require.Equal(r3.Id, resp.Id)
+			require.Equal(r3.Sequence, resp.Sequence)
+		}
+
+		// Get run by pipeline and sequence, should auto increment
+		{
+			resp, err := s.PipelineRunGet(pipeline, 3)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal(r3.Id, resp.Id)
+			require.Equal(r3.Sequence, resp.Sequence)
 		}
 	})
 
