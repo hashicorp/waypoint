@@ -171,6 +171,7 @@ func (r *Runner) executeReleaseOp(
 
 		log.Info("will prune deploys", "len", len(ds))
 		pruneDeploys = ds
+		log.Info("will prune releases", "len", len(rs[:rc]))
 		pruneReleases = rs[:rc]
 	}
 
