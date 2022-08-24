@@ -230,8 +230,7 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 		// defined else where. If this is a ref, the raw hcl for the pipeline should
 		// be a "built-in" step of type "pipeline"
 		if step.PipelineRaw != nil {
-			// We need to determine if the embedded pipeline is defined directly
-			// inside a step, or is simply a reference to a pipeline else where
+			// Parse the embedded pipeline assuming it has steps
 			if len(step.PipelineRaw.StepRaw) > 0 {
 				// This means this is an embedded pipeline, i.e. the HCL definition
 				// is nested within the step PipelineRaw. we parse that pipeline
@@ -270,7 +269,7 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 			}
 
 			continue // continue to build the rest of the parent pipeline
-		} // else do below
+		} // else handle any "built-in" steps
 
 		// NOTE(briancain): This is what you'd change to support future Step plugins
 		// or future built-in step operations.
