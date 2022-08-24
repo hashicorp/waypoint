@@ -688,47 +688,51 @@ app "wpmini" {
 	doc.SetField(
 		"capacity",
 		"CPU, Memory, and resource limits for each Cloud Run instance.",
-	)
 
-	doc.SetField(
-		"capacity.memory",
-		"Memory to allocate the Cloud Run instance specified in MB, min 128, max 4096.",
-		docs.Default("128"),
-	)
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"memory",
+				"Memory to allocate the Cloud Run instance specified in MB, min 128, max 4096.",
+				docs.Default("128"),
+			)
 
-	doc.SetField(
-		"capacity.cpu_count",
-		"Number of CPUs to allocate the Cloud Run instance, min 1, max 2.",
-		docs.Default("1"),
-	)
+			doc.SetField(
+				"cpu_count",
+				"Number of CPUs to allocate the Cloud Run instance, min 1, max 2.",
+				docs.Default("1"),
+			)
 
-	doc.SetField(
-		"capacity.request_timeout",
-		"Maximum time a request can take before timing out, max 900.",
-		docs.Default("300"),
-	)
+			doc.SetField(
+				"request_timeout",
+				"Maximum time a request can take before timing out, max 900.",
+				docs.Default("300"),
+			)
 
-	doc.SetField(
-		"capacity.max_requests_per_container",
-		"Maximum number of concurrent requests each instance can handle. When the maximum requests are exceeded, Cloud Run will create an additional instance.",
-		docs.Default("80"),
+			doc.SetField(
+				"max_requests_per_container",
+				"Maximum number of concurrent requests each instance can handle. When the maximum requests are exceeded, Cloud Run will create an additional instance.",
+				docs.Default("80"),
+			)
+		}),
 	)
 
 	doc.SetField(
 		"auto_scaling",
 		"Configuration to control the auto scaling parameters for Cloud Run.",
+
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"max",
+				`Maximum number of Cloud Run instances. When the maximum requests per container is exceeded, Cloud Run will create an additional container instance to handle load.
+				This parameter controls the maximum number of instances that can be created.`,
+				docs.Default("1000"),
+			)
+		}),
 	)
 
 	doc.SetField(
 		"service_account_name",
 		"Specify a service account email that Cloud Run will use to run the service. You must have the `iam.serviceAccounts.actAs` permission on the service account.",
-	)
-
-	doc.SetField(
-		"auto_scaling.max",
-		`Maximum number of Cloud Run instances. When the maximum requests per container is exceeded, Cloud Run will create an additional container instance to handle load.
-		This parameter controls the maximum number of instances that can be created.`,
-		docs.Default("1000"),
 	)
 
 	doc.SetField(
