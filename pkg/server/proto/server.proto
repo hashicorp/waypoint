@@ -4863,6 +4863,15 @@ message ListPipelinesResponse {
   repeated Pipeline pipelines = 1;
 }
 
+message ListPipelineRunsRequest {
+  Ref.Pipeline pipeline = 1;
+}
+
+message ListPipelineRunsResponse {
+  // All of the listed pipelines
+  repeated PipelineRun pipeline_run = 1;
+}
+
 message ConfigSyncPipelineRequest {
   // The project to sync all pipeline configs on
   Ref.Project project = 1;
