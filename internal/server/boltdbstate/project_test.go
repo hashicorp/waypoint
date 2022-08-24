@@ -531,8 +531,8 @@ func TestProject(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
-		const projectName = "testproject"
-		const appName = "testapp"
+		const projectName = "projecttestsequence"
+		const appName = "apptestsequence"
 		// Create a project with one app
 		require.NoError(s.ProjectPut(&pb.Project{
 			Name: projectName,
