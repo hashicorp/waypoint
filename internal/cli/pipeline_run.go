@@ -96,10 +96,9 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		}
 
 		step.Update("Pipeline %q has started running. Attempting to read job stream sequentially in order", pipelineIdent)
-		step.Done()
 
-		steps := len(resp.AllJobIds)
-		app.UI.Output("%d steps detected.", steps)
+		steps := len(resp.JobMap)
+		step.Update("%d steps detected, run sequence %d", steps, resp.Sequence)
 		// Receive job ids from running pipeline, use job client to attach to job stream
 		// and stream here. First pass can be linear job streaming
 		for _, jobId := range resp.AllJobIds {
