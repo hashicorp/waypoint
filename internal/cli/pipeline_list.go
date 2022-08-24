@@ -72,7 +72,7 @@ func (c *PipelineListCommand) Run(args []string) int {
 
 	c.ui.Output("Waypoint Pipelines for %s", c.refProject.Project, terminal.WithHeaderStyle())
 
-	tblHeaders := []string{"ID", "Name", "Owner", "Total Steps"}
+	tblHeaders := []string{"ID", "Name", "Owner", "Current Total Steps"}
 	tbl := terminal.NewTable(tblHeaders...)
 
 	for _, pipeline := range pipelines {
