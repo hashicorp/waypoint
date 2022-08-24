@@ -114,7 +114,7 @@ func (s *Service) RunPipeline(
 				},
 			},
 		},
-		Status: pb.PipelineRun_PENDING,
+		State: pb.PipelineRun_PENDING,
 	}); err != nil {
 		return nil, err
 	}
@@ -247,7 +247,7 @@ func (s *Service) RunPipeline(
 		}
 	}
 
-	run.Status = pb.PipelineRun_STARTING
+	run.State = pb.PipelineRun_STARTING
 	if err = s.state(ctx).PipelineRunPut(run); err != nil {
 		return nil, err
 	}
