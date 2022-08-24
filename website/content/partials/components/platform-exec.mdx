@@ -67,17 +67,17 @@ deploy {
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
-#### template
+#### template (category)
 
 A stanza that declares that a file or directory should be template-rendered.
 
-- Type: **exec.ConfigTemplate**
-
-#### template.path
+##### template.path
 
 The path to the file or directory to render as a template.
 
 Templating uses the following format: https://golang.org/pkg/text/template/ Available template variables depends on the input artifact.
+
+- Type: **string**
 
 ### Optional Parameters
 
