@@ -173,19 +173,12 @@ func (op *appOperation) Get(s *State, ref *pb.Ref_Operation) (interface{}, error
 }
 
 // Delete deletes an operation record by reference
-func (op *appOperation) Delete(s *State, ref *pb.Ref_Operation) error {
+func (op *appOperation) Delete(s *State, value proto.Message) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
-	target, ok := ref.Target.(*pb.Ref_Operation_Id)
-	if !ok {
-		return status.Errorf(codes.FailedPrecondition,
-			"unknown operation reference type: %T", ref.Target)
-	}
-	id := target.Id
-
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
-		return op.delete(dbTxn, []byte(id))
+		return op.delete(dbTxn, memTxn, value)
 	})
 	if err == nil {
 		memTxn.Commit()
@@ -196,14 +189,41 @@ func (op *appOperation) Delete(s *State, ref *pb.Ref_Operation) error {
 
 func (op *appOperation) delete(
 	dbTxn *bolt.Tx,
-	id []byte,
+	memTxn *memdb.Txn,
+	value proto.Message,
 ) error {
+	id := op.valueField(value, "Id").(string)
 	// Delete the value from the bucket
-	if err := op.dbDelete(dbTxn, id); err != nil {
+	if err := op.dbDelete(dbTxn, value, []byte(id)); err != nil {
 		return err
 	}
-
+	if err := memTxn.Delete(op.memTableName(), &operationIndexRecord{Id: string(id)}); err != nil {
+		return err
+	}
 	return nil
+}
+
+// dbDelete deletes the value from the database
+func (op *appOperation) dbDelete(
+	dbTxn *bolt.Tx,
+	value proto.Message,
+	id []byte,
+) error {
+	// Get our application
+	appRef := op.valueField(value, "Application").(*pb.Ref_Application)
+	if appRef == nil {
+		return status.Errorf(codes.Internal, "state: Application must be set on value %T", value)
+	}
+
+	var seq uint64
+	if f := op.valueFieldReflect(value, "Sequence"); f.IsValid() {
+		// Subtract 1 from the sequence # because we're deleting an operation
+		seq = atomic.AddUint64(op.appSeq(appRef), ^uint64(1-1))
+		f.Set(reflect.ValueOf(seq))
+	}
+
+	b := dbTxn.Bucket(op.Bucket)
+	return b.Delete(id)
 }
 
 func (op *appOperation) getIdForSeq(
@@ -486,15 +506,6 @@ func (op *appOperation) dbGet(
 	}
 
 	return nil
-}
-
-// dbDelete deletes the value from the database
-func (op *appOperation) dbDelete(
-	dbTxn *bolt.Tx,
-	id []byte,
-) error {
-	b := dbTxn.Bucket(op.Bucket)
-	return b.Delete(id)
 }
 
 // dbPut wites the value to the database and also sets up any index records.
