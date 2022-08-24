@@ -23,7 +23,7 @@ func (r *Runner) executeDestroyProjectOp(
 	}
 
 	// Update the project state to indicate that it's being destroyed
-	_, err := client.UpsertProject(ctx,
+	pbProject, err := client.UpsertProject(ctx,
 		&pb.UpsertProjectRequest{
 			Project: &pb.Project{
 				Name:  destroyProjectOp.DestroyProject.Project.Name,
@@ -36,13 +36,13 @@ func (r *Runner) executeDestroyProjectOp(
 	}
 
 	if !destroyProjectOp.DestroyProject.SkipDestroyResources {
-		for _, app := range project.Apps() {
+		for _, app := range pbProject.Project.Applications {
 			// Get the workspaces for the app we're currently destroying
 			workspaces, err := client.ListWorkspaces(ctx, &pb.ListWorkspacesRequest{
 				Scope: &pb.ListWorkspacesRequest_Application{
 					Application: &pb.Ref_Application{
 						Project:     destroyProjectOp.DestroyProject.Project.Name,
-						Application: app,
+						Application: app.Name,
 					},
 				},
 			})
@@ -54,10 +54,10 @@ func (r *Runner) executeDestroyProjectOp(
 				log.Debug("Destroying resources in workspace %s", workspace.Name)
 				// TODO: The destroy operation doesn't currently respect the Workspace
 				// being set on the Job - this should be updated
-				_, err := r.executeDestroyOp(ctx,
+				if _, err := r.executeDestroyOp(ctx,
 					&pb.Job{
 						Application: &pb.Ref_Application{
-							Application: app,
+							Application: app.Name,
 						},
 						Operation: &pb.Job_Destroy{
 							Destroy: &pb.Job_DestroyOp{
@@ -70,9 +70,33 @@ func (r *Runner) executeDestroyProjectOp(
 							Workspace: workspace.Name,
 						},
 					}, project,
-				)
-				if err != nil {
+				); err != nil {
 					return nil, err
+				}
+
+				// Get the hostnames for our app/workspace and delete them
+				if hostnames, err := client.ListHostnames(ctx, &pb.ListHostnamesRequest{
+					Target: &pb.Hostname_Target{
+						Target: &pb.Hostname_Target_Application{
+							Application: &pb.Hostname_TargetApp{
+								Application: &pb.Ref_Application{
+									Application: app.Name,
+									Project:     pbProject.Project.Name,
+								},
+								Workspace: &pb.Ref_Workspace{
+									Workspace: workspace.Name,
+								},
+							},
+						},
+					},
+				}); err != nil {
+					return nil, err
+				} else {
+					for _, hostname := range hostnames.Hostnames {
+						if _, err = client.DeleteHostname(ctx, &pb.DeleteHostnameRequest{Hostname: hostname.Hostname}); err != nil {
+							return nil, err
+						}
+					}
 				}
 			}
 
