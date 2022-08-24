@@ -119,11 +119,11 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.NotNil(resp)
 			require.Equal(r.Id, resp.Id)
 			require.Equal(r.Sequence, resp.Sequence)
-			require.Equal(pb.PipelineRun_PENDING, resp.Status)
+			require.Equal(pb.PipelineRun_PENDING, resp.State)
 		}
 
 		// Update existing pipeline run
-		r.Status = pb.PipelineRun_ERROR
+		r.State = pb.PipelineRun_ERROR
 		err = s.PipelineRunPut(r)
 		require.NoError(err)
 
@@ -134,7 +134,7 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.NotNil(resp)
 			require.Equal(r.Id, resp.Id)
 			require.Equal(uint64(1), resp.Sequence)
-			require.Equal(r.Status, resp.Status)
+			require.Equal(r.State, resp.State)
 		}
 	})
 

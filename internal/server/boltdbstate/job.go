@@ -1746,14 +1746,14 @@ func (s *State) pipelineComplete(jobId string) error {
 	}
 
 	if job.State == pb.Job_ERROR {
-		run.Status = pb.PipelineRun_ERROR
+		run.State = pb.PipelineRun_ERROR
 	} else if job.State == pb.Job_SUCCESS {
 		// If job Id matches last job queued by pipeline.
 		// We will have to change this in the future when pipeline steps run in parallel,
 		// and the last job queued may not be the last job to complete in the pipeline
 		// TODO:XX figure out how ^
 		if job.Id == run.Jobs[len(run.Jobs)-1].Id {
-			run.Status = pb.PipelineRun_SUCCESS
+			run.State = pb.PipelineRun_SUCCESS
 			s.log.Trace("pipeline run is complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
 		}
 	}
@@ -1781,8 +1781,8 @@ func (s *State) pipelineAck(jobId string) error {
 	}
 
 	// Update the new pipeline run state if it's not already running
-	if run.Status != pb.PipelineRun_RUNNING {
-		run.Status = pb.PipelineRun_RUNNING
+	if run.State != pb.PipelineRun_RUNNING {
+		run.State = pb.PipelineRun_RUNNING
 	}
 	s.log.Trace("pipeline is running", "job", jobId, "pipeline", run.Pipeline, "run", run.Sequence)
 	if err := s.PipelineRunPut(run); err != nil {
@@ -1817,7 +1817,7 @@ func (s *State) pipelineCancel(jobId string) error {
 	if job.State == pb.Job_SUCCESS {
 		return nil
 	} else {
-		run.Status = pb.PipelineRun_CANCELLED
+		run.State = pb.PipelineRun_CANCELLED
 		s.log.Trace("pipeline run cancelled", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
 	}
 	// PipelineRunPut the new state

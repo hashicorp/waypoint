@@ -4768,7 +4768,7 @@ message PipelineRun {
 
   repeated Ref.Job jobs = 4;
 
-  State status = 5;
+  State state = 5;
 
   enum State {
     UNKNOWN = 0; // no state defined, the default

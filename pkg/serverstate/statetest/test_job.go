@@ -1708,7 +1708,7 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		err = s.PipelineRunPut(r)
 		require.NoError(err)
 		require.Equal(uint64(1), r.Sequence)
-		require.Equal(pb.PipelineRun_PENDING, r.Status)
+		require.Equal(pb.PipelineRun_PENDING, r.State)
 
 		// Assign the job, we should get this build
 		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
@@ -1728,7 +1728,7 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		run, err := s.PipelineRunGetById(r.Id)
 		require.NoError(err)
 		require.NotNil(run)
-		require.Equal(pb.PipelineRun_RUNNING, run.Status)
+		require.Equal(pb.PipelineRun_RUNNING, run.State)
 		require.Equal(job.Pipeline.RunSequence, run.Sequence)
 
 		// We should have an output buffer
@@ -1749,7 +1749,7 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		run, err = s.PipelineRunGetById(pr.Id)
 		require.NoError(err)
 		require.NotNil(run)
-		require.Equal(pb.PipelineRun_SUCCESS, run.Status)
+		require.Equal(pb.PipelineRun_SUCCESS, run.State)
 		require.Equal(job.Pipeline.RunSequence, run.Sequence)
 	})
 }
@@ -2055,7 +2055,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		r.Jobs = []*pb.Ref_Job{{Id: "A"}, {Id: "B"}}
 		err = s.PipelineRunPut(r)
 		require.NoError(err)
-		require.Equal(pb.PipelineRun_PENDING, r.Status)
+		require.Equal(pb.PipelineRun_PENDING, r.State)
 
 		// Cancel parent
 		require.NoError(s.JobCancel("A", false))
@@ -2080,7 +2080,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		require.NotNil(run)
 		require.NotEmpty(run.Jobs)
 		require.Equal(uint64(1), run.Sequence)
-		require.Equal(pb.PipelineRun_CANCELLED, run.Status)
+		require.Equal(pb.PipelineRun_CANCELLED, run.State)
 	})
 
 	t.Run("assigned", func(t *testing.T) {

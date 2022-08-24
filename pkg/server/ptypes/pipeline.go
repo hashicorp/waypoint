@@ -67,7 +67,7 @@ func TestPipelineRun(t testing.T, src *pb.PipelineRun) *pb.PipelineRun {
 				},
 			},
 		},
-		Status: pb.PipelineRun_PENDING,
+		State: pb.PipelineRun_PENDING,
 	}))
 
 	return src
