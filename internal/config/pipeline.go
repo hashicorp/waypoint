@@ -228,7 +228,7 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 		// We have an embeded pipeline for this step. This can either be an hclPipeline
 		// defined directly in the step, or a pipeline reference to another pipeline
 		// defined else where. If this is a ref, the raw hcl for the pipeline should
-		// be empty.
+		// be a "built-in" step of type "pipeline"
 		if step.PipelineRaw != nil {
 			// We need to determine if the embedded pipeline is defined directly
 			// inside a step, or is simply a reference to a pipeline else where
