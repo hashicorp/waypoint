@@ -61,13 +61,7 @@ func (s *State) BuildLatest(
 	return result.(*pb.Build), nil
 }
 
-// BuildDelete deletes the build from the DB
-func (s *State) BuildDelete(
-	ref *pb.Ref_Operation,
-) error {
-	return buildOp.Delete(s, nil)
-}
-
+// buildDelete deletes the build from the DB
 func (s *State) buildDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, b *pb.Build) error {
 	return buildOp.delete(dbTxn, memTxn, b)
 }

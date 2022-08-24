@@ -73,11 +73,7 @@ func (s *State) StatusReportLatest(
 	return result.(*pb.StatusReport), nil
 }
 
-// StatusReportDelete deletes a status report from the database
-func (s *State) StatusReportDelete(ref *pb.Ref_Operation) error {
-	return statusReportOp.Delete(s, nil)
-}
-
+// statusReportDelete deletes a status report from the database
 func (s *State) statusReportDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, sr *pb.StatusReport) error {
 	return statusReportOp.delete(dbTxn, memTxn, sr)
 }

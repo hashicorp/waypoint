@@ -61,13 +61,7 @@ func (s *State) ReleaseLatest(
 	return result.(*pb.Release), nil
 }
 
-// ReleaseDelete deletes the release from the DB
-func (s *State) ReleaseDelete(
-	ref *pb.Ref_Operation,
-) error {
-	return releaseOp.Delete(s, nil)
-}
-
+// releaseDelete deletes the release from the DB
 func (s *State) releaseDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, r *pb.Release) error {
 	return releaseOp.delete(dbTxn, memTxn, r)
 }
