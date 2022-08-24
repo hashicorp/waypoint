@@ -24,6 +24,11 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 		return 1
 	}
 
+	if len(args) > 0 {
+		c.ui.Output("No arguments are required for 'project destroy' - please set the -project flag.", terminal.WithErrorStyle())
+		return 1
+	}
+
 	// Get the project we're destroying
 	project, err := c.project.Client().GetProject(c.Ctx, &pb.GetProjectRequest{
 		Project: c.project.Ref(),
@@ -54,8 +59,7 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 	_, err = c.project.DestroyProject(c.Ctx, &pb.Job_DestroyProjectOp{
 		Project:              project.Project,
 		SkipDestroyResources: c.skipDestroyResources,
-	},
-	)
+	})
 	if err != nil {
 		c.ui.Output("Error destroying project: %s", err.Error(), terminal.WithErrorStyle())
 		return 1
