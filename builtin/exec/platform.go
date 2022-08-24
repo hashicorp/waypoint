@@ -358,15 +358,17 @@ deploy {
 	doc.SetField(
 		"template",
 		"A stanza that declares that a file or directory should be template-rendered.",
-	)
 
-	doc.SetField(
-		"template.path",
-		"The path to the file or directory to render as a template.",
-		docs.Summary(
-			"Templating uses the following format: https://golang.org/pkg/text/template/",
-			"Available template variables depends on the input artifact.",
-		),
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"path",
+				"The path to the file or directory to render as a template.",
+				docs.Summary(
+					"Templating uses the following format: https://golang.org/pkg/text/template/",
+					"Available template variables depends on the input artifact.",
+				),
+			)
+		}),
 	)
 
 	return doc, nil
