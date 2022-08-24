@@ -20,7 +20,7 @@ func PipelineGraph(v *pb.Pipeline) (*graph.Graph, error) {
 	return pipelineGraph(v.Steps)
 }
 
-// TestPipeline returns a valid user for tests.
+// TestPipeline returns a valid pipeline proto for tests.
 func TestPipeline(t testing.T, src *pb.Pipeline) *pb.Pipeline {
 	t.Helper()
 
@@ -51,7 +51,30 @@ func TestPipeline(t testing.T, src *pb.Pipeline) *pb.Pipeline {
 	return src
 }
 
-// ValidatePipeline validates the user structure.
+// TestPipelineRun returns a valid pipeline run for tests.
+func TestPipelineRun(t testing.T, src *pb.PipelineRun) *pb.PipelineRun {
+	t.Helper()
+
+	if src == nil {
+		src = &pb.PipelineRun{}
+	}
+
+	require.NoError(t, mergo.Merge(src, &pb.PipelineRun{
+		Id: "test_run",
+		Pipeline: &pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{
+					Id: "test",
+				},
+			},
+		},
+		State: pb.PipelineRun_PENDING,
+	}))
+
+	return src
+}
+
+// ValidatePipeline validates the pipeline structure.
 func ValidatePipeline(v *pb.Pipeline) error {
 	return validationext.Error(validation.ValidateStruct(v,
 		ValidatePipelineRules(v)...,
@@ -80,6 +103,27 @@ func ValidatePipelineRules(v *pb.Pipeline) []*validation.FieldRules {
 				return validation.ValidateStruct(s, ValidateStepRules(s)...)
 			})),
 		),
+	}
+}
+
+// ValidatePipelineRun validates the pipeline run structure.
+func ValidatePipelineRun(v *pb.PipelineRun) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		ValidatePipelineRunRules(v)...,
+	))
+}
+
+// ValidatePipelineRunRules
+func ValidatePipelineRunRules(v *pb.PipelineRun) []*validation.FieldRules {
+	return []*validation.FieldRules{
+		validation.Field(&v.Sequence, validation.Required),
+		validation.Field(&v.Pipeline, validation.Required),
+
+		validationext.StructField(&v.Pipeline, func() []*validation.FieldRules {
+			return []*validation.FieldRules{
+				validation.Field(&v.Pipeline.Ref, validation.Required),
+			}
+		}),
 	}
 }
 

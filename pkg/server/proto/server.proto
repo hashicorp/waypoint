@@ -693,7 +693,7 @@ message Variable {
     // matching protobuf format, or any complex hcl type as a raw string.
     oneof value {
       // 'sensitive' values are hashed as SHA256 values for
-	    // the purposes of output and logging
+      // the purposes of output and logging
       string sensitive = 1;
       string str = 2;
       bool bool = 3;
@@ -1045,7 +1045,8 @@ message Ref {
       // Reference a single pipeline by ID.
       PipelineId id = 1;
 
-      // Reference an existing pipeline by Project owner and Pipeline Name
+      // Reference an existing pipeline by Project name and Pipeline name
+      // Format: "project-name/pipeline-name"
       // This assumes that a project cannot have two pipelines with the same name.
       PipelineOwner owner = 2;
     }
@@ -1064,11 +1065,14 @@ message Ref {
   }
 
   message PipelineStep {
-    // ID of te pipeline
+    // ID of the pipeline
     string pipeline = 1;
 
     // Step name within the pipeline.
     string step = 2;
+
+    // Pipeline run sequence
+    uint64 run_sequence = 3;
   }
 }
 
@@ -1280,7 +1284,7 @@ message Task {
   Ref.Job watch_job = 9;
 
   // Both start_job and stop_job relate to task_job.These jobs were
-  // responsibile for starting and stopping the runner which executed the task
+  // responsible for starting and stopping the runner which executed the task
   // job.
   Ref.Job start_job = 3;
   Ref.Job stop_job = 4;
@@ -1295,7 +1299,7 @@ message Task {
 
   // The overall state of the Task triple. See the enum def for details for
   // each possible Task state. This will be computed for each GetTaskResponse
-  // based on the Task job ids receieved from the database.
+  // based on the Task job ids received from the database.
   State job_state = 7;
 
   // The resource that gets created to run the task job for this Task
@@ -1307,7 +1311,7 @@ message Task {
     UNKNOWN = 0; // no state defined, the default
     PENDING = 1; // no jobs have been ran yet
     STARTING = 2; // start_job is running
-    STARTED  = 3; // start_job complete, task is not running yet
+    STARTED = 3; // start_job complete, task is not running yet
     RUNNING = 4; // task is running
     COMPLETED = 5; // task is done
     STOPPING = 6; // stop_job is running
@@ -1372,7 +1376,7 @@ message CancelTaskRequest {
 
 // ErrorDetail is intended for use in `status`.
 message ErrorDetail {
-  string key  = 1;
+  string key = 1;
   string value = 2;
 }
 
@@ -1698,6 +1702,7 @@ message Job {
   // This can be used to run custom runner binaries or custom tasks without
   // a runner.
   TaskOverride ondemand_runner_task = 115;
+
   message TaskOverride {
     // Launch info for the task. The environment variables will be merged
     // with the defaults. If no OCI URL is specified, the ODR profile
@@ -1826,6 +1831,11 @@ message Job {
   // an on-demand runner task. If the Task Ref is set, that means this job
   // is part of the referenced task id.
   Ref.Task task = 114;
+
+  // PipelineStep is a reference to the pipeline and step that might have triggered this job.
+  // If the PipelineStep is nil, this job was not initiated by a pipeline.
+  // If the Pipeline Ref is set, this job is part of the referenced pipeline.
+  Ref.PipelineStep pipeline = 117;
 
   enum State {
     UNKNOWN = 0;
@@ -4680,7 +4690,7 @@ message Pipeline {
 
       //
       // "reserved" built-in pipeline step operations. These map directly to
-      // the lifecylce operations in Waypoint, i.e. Build, Deploy, Release, Up.
+      // the lifecycle operations in Waypoint, i.e. Build, Deploy, Release, Up.
       //
 
       // Built-in build operation
@@ -4746,6 +4756,28 @@ message Pipeline {
       int32 prune_retain = 2;
       bool prune_retain_override = 3;
     }
+  }
+}
+
+message PipelineRun {
+  string id = 1;
+  // The sequence number for this pipeline run.
+  uint64 sequence = 2;
+
+  Ref.Pipeline pipeline = 3;
+
+  repeated Ref.Job jobs = 4;
+
+  State state = 5;
+
+  enum State {
+    UNKNOWN = 0; // no state defined, the default
+    PENDING = 1; // pipeline run created
+    STARTING = 2; // root_job queued
+    RUNNING = 3; // jobs are working
+    ERROR = 4; // when any job errors, the pipeline aborts
+    CANCELLED = 5; // when any job gets manually cancelled, the entire pipeline aborts
+    SUCCESS = 6; // last_job completed
   }
 }
 
