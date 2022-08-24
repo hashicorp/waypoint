@@ -21,7 +21,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
-	"github.com/hashicorp/waypoint/embedJson"
+	embedJson "github.com/hashicorp/waypoint/embedJson"
 	"github.com/hashicorp/waypoint/internal/cli/datagen"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/datasource"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/plugin"
+	fmtpkg "github.com/hashicorp/waypoint/pkg/config"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
@@ -285,6 +286,12 @@ type PlugDocs struct {
 	Type        string `json:"type"`
 }
 
+type fieldInfo struct {
+	contents string
+	isParent bool
+	children map[string]string
+}
+
 func (c *InitCommand) hclGen() bool {
 	brackets := 0
 	hclFile, err := os.Create("waypoint.hcl")
@@ -292,7 +299,6 @@ func (c *InitCommand) hclGen() bool {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
 	}
-	defer hclFile.Close()
 	c.ui.Output("Initial waypoint.hcl created!", terminal.WithStyle(terminal.SuccessBoldStyle))
 	c.ui.Output("Type \"exit\" at any point to exit the generator")
 	c.ui.Output("Name your project", terminal.WithHeaderStyle())
@@ -355,14 +361,24 @@ func (c *InitCommand) hclGen() bool {
 			c.exitSafe(hclFile, brackets)
 			return false
 		}
-		for key, elem := range fieldMap {
-			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
+		err = c.writeFields(hclFile, fieldMap, brackets)
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return false
 		}
 		c.ui.Output(
 			"Step complete: builder configuration",
 			terminal.WithSuccessStyle(),
 		)
 	}
+
+	// Here we want to close a bracket so that the registry does not appear in the "use" stanza
+	err = c.closeBrackets(hclFile, 1, brackets)
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	}
+	brackets--
 
 	c.ui.Output("Configure registry", terminal.WithHeaderStyle())
 	// Select a registry
@@ -388,8 +404,9 @@ func (c *InitCommand) hclGen() bool {
 			c.exitSafe(hclFile, brackets)
 			return false
 		}
-		for key, elem := range fieldMap {
-			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
+		err = c.writeFields(hclFile, fieldMap, brackets)
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		}
 		c.ui.Output(
 			"Step complete: registry configuration",
@@ -431,8 +448,9 @@ func (c *InitCommand) hclGen() bool {
 			c.exitSafe(hclFile, brackets)
 			return false
 		}
-		for key, elem := range fieldMap {
-			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
+		err = c.writeFields(hclFile, fieldMap, brackets)
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		}
 		c.ui.Output(
 			"Step complete: deployment platform configuration",
@@ -472,8 +490,9 @@ func (c *InitCommand) hclGen() bool {
 			c.exitSafe(hclFile, brackets)
 			return false
 		}
-		for key, elem := range fieldMap {
-			hclFile.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem)))
+		err = c.writeFields(hclFile, fieldMap, brackets)
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		}
 		c.ui.Output("Step complete: releaser configuration", terminal.WithSuccessStyle())
 	}
@@ -483,17 +502,55 @@ func (c *InitCommand) hclGen() bool {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
 	}
+	hclFile.Close()
 	c.ui.Output("\nAll plugin configuration complete", terminal.WithSuccessStyle())
 	c.ui.Output("\nwaypoint.hcl saved!", terminal.WithStyle(terminal.SuccessBoldStyle))
 	c.ui.Output(
 		"\nIf you skipped any steps, open your waypoint.hcl file to add missing plugins or fields before continuing. (See https://www.waypointproject.io/plugins)",
 	)
 	c.ui.Output("Otherwise, run \"waypoint init\" again to start using Waypoint!\n")
+	c.ui.Output("Now attempting to format the HCL file:\n")
+	b, err := ioutil.ReadFile("waypoint.hcl")
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	}
+	out, err := fmtpkg.Format(b, "waypoint.hcl")
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	}
+	if err := ioutil.WriteFile("waypoint.hcl", out, 0644); err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return false
+	}
+	c.ui.Output("\nFormatting successful!", terminal.WithSuccessStyle())
 	return true
+}
+
+func (c *InitCommand) writeFields(file *os.File, fieldMap map[string]fieldInfo, brackets int) error {
+	for key, elem := range fieldMap {
+		if elem.isParent {
+			file.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s {\n", key)))
+			brackets++
+			for name, cont := range elem.children {
+				file.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", name, cont)))
+			}
+			err := c.closeBrackets(file, 1, brackets)
+			if err != nil {
+				return err
+			}
+			brackets--
+		} else {
+			file.Write([]byte(fmt.Sprintf(c.genIndent(brackets)+"%s = \"%s\"\n", key, elem.contents)))
+		}
+	}
+	return nil
 }
 
 func (c *InitCommand) exitSafe(file *os.File, outstanding int) error {
 	c.closeBrackets(file, outstanding, outstanding)
+	file.Close()
 	c.ui.Output("Generator exited. Any information you added before exiting has been included in your waypoint.hcl file. Edit this file manually before using Waypoint.")
 	return nil
 }
@@ -520,8 +577,8 @@ func (c *InitCommand) genIndent(outstanding int) string {
 	return spaces
 }
 
-func (c *InitCommand) populatePlugins(plug PlugDocs) (map[string]string, error, bool) {
-	m := make(map[string]string)
+func (c *InitCommand) populatePlugins(plug PlugDocs) (map[string]fieldInfo, error, bool) {
+	m := make(map[string]fieldInfo)
 	fCount := 0
 	for _, f := range plug.PlugDocs {
 		if f.Category {
@@ -553,39 +610,36 @@ func (c *InitCommand) populatePlugins(plug PlugDocs) (map[string]string, error, 
 				terminal.WithHeaderStyle(),
 			)
 		}
-		fCount = 0
 		for _, field := range plug.PlugDocs {
 			if field.Category {
 				// Subfield handling
+				m[field.Field] = fieldInfo{isParent: true, children: make(map[string]string)}
 				for _, sfield := range field.PlugSubDocs {
 					if !sfield.Optional {
-						cont, err, close := c.populateField(sfield.Field, sfield.Type, fCount)
-						fCount++
+						cont, err, close := c.populateField(sfield.Field, sfield.Type)
 						if err != nil {
 							return m, err, false
 						} else if close {
 							return m, nil, true
 						}
-						m[sfield.Field] = cont
+						m[field.Field].children[sfield.Field] = cont
 					}
 				}
-
 			} else {
-				cont, err, close := c.populateField(field.Field, field.Type, fCount)
-				fCount++
+				cont, err, close := c.populateField(field.Field, field.Type)
 				if err != nil {
 					return m, err, false
 				} else if close {
 					return m, nil, true
 				}
-				m[field.Field] = cont
+				m[field.Field] = fieldInfo{contents: cont, isParent: false}
 			}
 		}
 	}
 	return m, nil, false
 }
 
-func (c *InitCommand) populateField(name string, fType string, count int) (string, error, bool) {
+func (c *InitCommand) populateField(name string, fType string) (string, error, bool) {
 	getField := true
 	typeString := fType
 	if typeString == "" {
