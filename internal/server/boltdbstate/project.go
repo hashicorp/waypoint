@@ -177,31 +177,31 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 		// Jobs and tasks will NOT be deleted along with a project
 		// Instances are expected to be deleted before ProjectDelete, via the destroy op
 		for _, build := range builds {
-			if err = s.buildDelete(dbTxn, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: build.Id}}); err != nil {
+			if err = s.buildDelete(dbTxn, memTxn, build); err != nil {
 				return err
 			}
 			s.log.Debug("deleted build " + build.Id)
 		}
 		for _, artifact := range artifacts {
-			if err = s.artifactDelete(dbTxn, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: artifact.Id}}); err != nil {
+			if err = s.artifactDelete(dbTxn, memTxn, artifact); err != nil {
 				return err
 			}
 			s.log.Debug("deleted artifact " + artifact.Id)
 		}
 		for _, deployment := range deployments {
-			if err = s.deploymentDelete(dbTxn, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: deployment.Id}}); err != nil {
+			if err = s.deploymentDelete(dbTxn, memTxn, deployment); err != nil {
 				return err
 			}
 			s.log.Debug("deleted deployment " + deployment.Id)
 		}
 		for _, release := range releases {
-			if err = s.releaseDelete(dbTxn, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: release.Id}}); err != nil {
+			if err = s.releaseDelete(dbTxn, memTxn, release); err != nil {
 				return err
 			}
 			s.log.Debug("deleted release " + release.Id)
 		}
 		for _, statusReport := range statusReports {
-			if err = s.statusReportDelete(dbTxn, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: statusReport.Id}}); err != nil {
+			if err = s.statusReportDelete(dbTxn, memTxn, statusReport); err != nil {
 				return err
 			}
 			s.log.Debug("deleted status report " + statusReport.Id)

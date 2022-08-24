@@ -524,4 +524,127 @@ func TestProject(t *testing.T) {
 		_, err = s.StatusReportGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport2App2"}})
 		require.Error(err)
 	})
+
+	t.Run("check sequence # is reset for app operation after deleting and re-initting a project", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		const projectName = "testproject"
+		const appName = "testapp"
+		// Create a project with one app
+		require.NoError(s.ProjectPut(&pb.Project{
+			Name: projectName,
+			Applications: []*pb.Application{
+				{
+					Project: &pb.Ref_Project{Project: projectName},
+					Name:    appName,
+				},
+			},
+		}))
+
+		// Read it back
+		projectBeforeDelete, err := s.ProjectGet(&pb.Ref_Project{Project: projectName})
+		require.NoError(err)
+		require.NotNil(projectBeforeDelete)
+
+		// Create a build, artifact, deployment, release, trigger, workspace, and pipeline
+		// Set a config at the project and app scope
+		require.NoError(s.BuildPut(false, &pb.Build{
+			Id: "testBuild",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+			Id: "testDeployment",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		// Delete the project (this should also delete the build)
+		require.NoError(s.ProjectDelete(&pb.Ref_Project{Project: projectName}))
+
+		// Attempt to get the project again (expected error)
+		_, err = s.ProjectGet(&pb.Ref_Project{Project: projectName})
+		require.Error(err)
+
+		// Re-create the project
+		require.NoError(s.ProjectPut(&pb.Project{
+			Name: projectName,
+			Applications: []*pb.Application{
+				{
+					Project: &pb.Ref_Project{Project: projectName},
+					Name:    appName,
+				},
+			},
+		}))
+
+		// Read it back
+		projectAfterReInit, err := s.ProjectGet(&pb.Ref_Project{Project: projectName})
+		require.NoError(err)
+		require.NotNil(projectAfterReInit)
+
+		// Create new build after the project is re-initialized
+		require.NoError(s.BuildPut(false, &pb.Build{
+			Id: "testBuild",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+			Id: "testArtifact",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+			Id: "testDeployment",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.ReleasePut(false, &pb.Release{
+			Id: "testRelease",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		// Verify that the app operation sequence is 1, since it is the 1st operation for the new (albeit
+		// re-initialized it was deleted) project
+		build, err := s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild"}})
+		require.NoError(err)
+		require.Equal(1, int(build.Sequence))
+
+		artifact, err := s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact"}})
+		require.NoError(err)
+		require.Equal(1, int(artifact.Sequence))
+
+		deployment, err := s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment"}})
+		require.NoError(err)
+		require.Equal(1, int(deployment.Sequence))
+
+		release, err := s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease"}})
+		require.NoError(err)
+		require.Equal(1, int(release.Sequence))
+	})
 }

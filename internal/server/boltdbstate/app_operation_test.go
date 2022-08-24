@@ -82,11 +82,7 @@ func TestAppOperation(t *testing.T) {
 		require.Equal(uint64(1), b.Sequence)
 
 		// Delete it by ID
-		err = op.Delete(s, &pb.Ref_Operation{
-			Target: &pb.Ref_Operation_Id{
-				Id: b.Id,
-			},
-		})
+		err = op.Delete(s, b)
 		require.Nil(err)
 	})
 
@@ -525,14 +521,14 @@ func TestAppOperation(t *testing.T) {
 		defer s.Close()
 
 		// Attempt to delete an operation that doesn't exist
-		err := op.Delete(s, &pb.Ref_Operation{
-			Target: &pb.Ref_Operation_Id{
-				Id: "abc123",
+		err := op.Delete(s, &pb.Build{
+			Id: "id",
+			Application: &pb.Ref_Application{
+				Application: "app123",
+				Project:     "project456",
 			},
 		})
-		// We expect no error here because attempting deletion of a record whose key does
-		// not exist returns no error in bolt: https://pkg.go.dev/go.etcd.io/bbolt@v1.3.6#Bucket.Delete
-		require.NoError(err)
+		require.Error(err)
 	})
 }
 

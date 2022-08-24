@@ -1,7 +1,7 @@
 package boltdbstate
 
 import (
-	"errors"
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 	bolt "go.etcd.io/bbolt"
@@ -65,16 +65,9 @@ func (s *State) ReleaseLatest(
 func (s *State) ReleaseDelete(
 	ref *pb.Ref_Operation,
 ) error {
-	return releaseOp.Delete(s, ref)
+	return releaseOp.Delete(s, nil)
 }
 
-func (s *State) releaseDelete(
-	dbTxn *bolt.Tx,
-	ref *pb.Ref_Operation,
-) error {
-	id, ok := ref.Target.(*pb.Ref_Operation_Id)
-	if !ok {
-		return errors.New("invalid type for target to delete app operation")
-	}
-	return releaseOp.delete(dbTxn, []byte(id.Id))
+func (s *State) releaseDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, r *pb.Release) error {
+	return releaseOp.delete(dbTxn, memTxn, r)
 }
