@@ -40,7 +40,10 @@ func (c *Project) DestroyProject(ctx context.Context, op *pb.Job_DestroyProjectO
 
 	// Execute it
 	result, err := c.doJob(ctx, job, c.UI)
-	return result.ProjectDestroy, err
+	if err != nil {
+		return nil, err
+	}
+	return result.ProjectDestroy, nil
 }
 
 func (c *App) Auth(ctx context.Context, op *pb.Job_AuthOp) (*pb.Job_AuthResult, error) {
