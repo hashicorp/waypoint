@@ -1690,21 +1690,17 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		// Create a new pipeline run
 		pr := &pb.PipelineRun{Pipeline: pipeline}
 		r := serverptypes.TestPipelineRun(t, pr)
-		err = s.PipelineRunPut(r)
-		require.NoError(err)
-		require.Equal(uint64(1), r.Sequence)
 
 		// Create a job
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: jobRef.Id,
 			Pipeline: &pb.Ref_PipelineStep{
 				Pipeline:    p.Id,
-				RunSequence: r.Sequence,
+				RunSequence: 1,
 			},
 		})))
 
-		// Update pipeline run with job information
-		r.Jobs = append(pr.Jobs, jobRef)
+		r.Jobs = append(r.Jobs, jobRef)
 		err = s.PipelineRunPut(r)
 		require.NoError(err)
 		require.Equal(uint64(1), r.Sequence)
@@ -2029,7 +2025,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
-		// Create a pending pipeline run
+		// Create a new pipeline run
 		p := serverptypes.TestPipeline(t, nil)
 		err := s.PipelinePut(p)
 		require.NoError(err)
@@ -2037,8 +2033,6 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 			Pipeline: &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: &pb.Ref_PipelineId{Id: p.Id}}},
 		}
 		r := serverptypes.TestPipelineRun(t, pr)
-		err = s.PipelineRunPut(r)
-		require.NoError(err)
 
 		// Create jobs
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
