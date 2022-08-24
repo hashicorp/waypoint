@@ -178,7 +178,7 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 	*/
 
 	if token != "" {
-		externalRPC, err := tokenutil.SetupExternalCreds(ctx, cfg.Log, token, "waypoint-cli")
+		externalRPC, err := tokenutil.SetupExternalCreds(ctx, cfg.Log, token)
 		if err != nil {
 			return nil, err
 		}

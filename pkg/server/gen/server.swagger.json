@@ -10502,6 +10502,10 @@
         "client_secret": {
           "type": "string",
           "title": "The OAuth client secret that goes along with the client_id"
+        },
+        "audience": {
+          "type": "string",
+          "title": "The OAuth audience"
         }
       },
       "description": "The OAuth message contains information that the client should use\nto generate on OAuth token for authenticating with the server rather\nthan just submitting the waypoint token directly."

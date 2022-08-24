@@ -4883,6 +4883,9 @@ message TokenTransport {
 
     // The OAuth client secret that goes along with the client_id
     string client_secret = 3;
+
+    // The OAuth audience
+    string audience = 4;
   }
 }
 
