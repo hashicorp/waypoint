@@ -173,11 +173,8 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.NotNil(resp)
 			require.Len(resp, 3)
 			require.NotEqual(r.Id, r2.Id, r3.Id)
-			require.Equal(r.Id, resp[0].Id)
 			require.Equal(uint64(1), resp[0].Sequence)
-			require.Equal(r2.Id, resp[1].Id)
 			require.Equal(uint64(2), resp[1].Sequence)
-			require.Equal(r3.Id, resp[2].Id)
 			require.Equal(uint64(3), resp[2].Sequence)
 		}
 	})
