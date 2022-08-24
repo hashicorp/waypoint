@@ -120,25 +120,21 @@ type Interface interface {
 	ArtifactGet(*pb.Ref_Operation) (*pb.PushedArtifact, error)
 	ArtifactLatest(*pb.Ref_Application, *pb.Ref_Workspace) (*pb.PushedArtifact, error)
 	ArtifactList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.PushedArtifact, error)
-	ArtifactDelete(operation *pb.Ref_Operation) error
 
 	BuildPut(bool, *pb.Build) error
 	BuildGet(*pb.Ref_Operation) (*pb.Build, error)
 	BuildLatest(*pb.Ref_Application, *pb.Ref_Workspace) (*pb.Build, error)
 	BuildList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.Build, error)
-	BuildDelete(operation *pb.Ref_Operation) error
 
 	DeploymentPut(bool, *pb.Deployment) error
 	DeploymentGet(*pb.Ref_Operation) (*pb.Deployment, error)
 	DeploymentLatest(*pb.Ref_Application, *pb.Ref_Workspace) (*pb.Deployment, error)
 	DeploymentList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.Deployment, error)
-	DeploymentDelete(operation *pb.Ref_Operation) error
 
 	ReleasePut(bool, *pb.Release) error
 	ReleaseGet(*pb.Ref_Operation) (*pb.Release, error)
 	ReleaseLatest(*pb.Ref_Application, *pb.Ref_Workspace) (*pb.Release, error)
 	ReleaseList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.Release, error)
-	ReleaseDelete(operation *pb.Ref_Operation) error
 
 	StatusReportPut(bool, *pb.StatusReport) error
 	StatusReportGet(*pb.Ref_Operation) (*pb.StatusReport, error)
@@ -148,7 +144,6 @@ type Interface interface {
 		func(*pb.StatusReport) (bool, error),
 	) (*pb.StatusReport, error)
 	StatusReportList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.StatusReport, error)
-	StatusReportDelete(*pb.Ref_Operation) error
 
 	//---------------------------------------------------------------
 	// Trigger

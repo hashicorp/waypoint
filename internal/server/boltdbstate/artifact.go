@@ -61,13 +61,7 @@ func (s *State) ArtifactLatest(
 	return result.(*pb.PushedArtifact), nil
 }
 
-// ArtifactDelete deletes the artifact from the DB
-func (s *State) ArtifactDelete(
-	ref *pb.Ref_Operation,
-) error {
-	return artifactOp.Delete(s, nil)
-}
-
+// artifactDelete deletes the artifact from the DB
 func (s *State) artifactDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, a *pb.PushedArtifact) error {
 	return artifactOp.delete(dbTxn, memTxn, a)
 }
