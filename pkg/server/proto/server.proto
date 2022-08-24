@@ -4849,6 +4849,8 @@ message RunPipelineResponse {
   // corresponds to. Note that some jobs may correspond to pipelines other
   // than the initial pipeline if nested pipelines are used.
   map<string, Ref.PipelineStep> job_map = 3;
+
+  uint64 sequence = 4;
 }
 
 message ListPipelinesRequest {

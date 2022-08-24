@@ -9694,6 +9694,10 @@
             "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineStep"
           },
           "description": "This provides a lookup from job ID to what step and pipeline a job\ncorresponds to. Note that some jobs may correspond to pipelines other\nthan the initial pipeline if nested pipelines are used."
+        },
+        "sequence": {
+          "type": "string",
+          "format": "uint64"
         }
       }
     },
