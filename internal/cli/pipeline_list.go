@@ -74,7 +74,7 @@ func (c *PipelineListCommand) Run(args []string) int {
 
 	c.ui.Output("Waypoint Pipelines for %s", c.refProject.Project, terminal.WithHeaderStyle())
 
-	tblHeaders := []string{"ID", "Name", "Owner", "Current Total Steps", "Latest Run Started", "Last Run Completed", "State", "Total Runs"}
+	tblHeaders := []string{"ID", "Name", "Owner", "Current Steps", "Last Run Started", "Last Run Completed", "State", "Total Runs"}
 	tbl := terminal.NewTable(tblHeaders...)
 
 	for _, pipeline := range pipelines {
@@ -108,7 +108,7 @@ func (c *PipelineListCommand) Run(args []string) int {
 		runs := pipelineRunsResp.PipelineRuns
 
 		lastRun := runs[len(runs)-1]
-		totalRuns := string(lastRun.Sequence)
+		totalRuns := strconv.FormatUint(lastRun.Sequence, 10)
 
 		jobs := lastRun.Jobs
 		j, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
