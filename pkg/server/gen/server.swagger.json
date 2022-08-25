@@ -8672,6 +8672,18 @@
         }
       }
     },
+    "hashicorp.waypoint.ListPipelineRunsResponse": {
+      "type": "object",
+      "properties": {
+        "pipeline_run": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.PipelineRun"
+          },
+          "title": "All of the listed pipelines"
+        }
+      }
+    },
     "hashicorp.waypoint.ListPipelinesResponse": {
       "type": "object",
       "properties": {
@@ -9100,6 +9112,44 @@
           "type": "boolean"
         }
       }
+    },
+    "hashicorp.waypoint.PipelineRun": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string",
+          "format": "uint64",
+          "description": "The sequence number for this pipeline run."
+        },
+        "pipeline": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline"
+        },
+        "jobs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.Ref.Job"
+          }
+        },
+        "status": {
+          "$ref": "#/definitions/hashicorp.waypoint.PipelineRun.State"
+        }
+      }
+    },
+    "hashicorp.waypoint.PipelineRun.State": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "PENDING",
+        "STARTING",
+        "RUNNING",
+        "ERROR",
+        "CANCELLED",
+        "SUCCESS"
+      ],
+      "default": "UNKNOWN"
     },
     "hashicorp.waypoint.Project": {
       "type": "object",

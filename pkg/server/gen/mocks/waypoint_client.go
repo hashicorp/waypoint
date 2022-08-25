@@ -1758,6 +1758,36 @@ func (_m *WaypointClient) ListOnDemandRunnerConfigs(ctx context.Context, in *emp
 	return r0, r1
 }
 
+// ListPipelineRuns provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ListPipelineRuns(ctx context.Context, in *gen.ListPipelineRunsRequest, opts ...grpc.CallOption) (*gen.ListPipelineRunsResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.ListPipelineRunsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListPipelineRunsRequest, ...grpc.CallOption) *gen.ListPipelineRunsResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListPipelineRunsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListPipelineRunsRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListPipelines provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) ListPipelines(ctx context.Context, in *gen.ListPipelinesRequest, opts ...grpc.CallOption) (*gen.ListPipelinesResponse, error) {
 	_va := make([]interface{}, len(opts))

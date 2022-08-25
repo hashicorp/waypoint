@@ -436,6 +436,11 @@ service Waypoint {
   // if no pipelines are defined for the project.
   rpc ListPipelines(ListPipelinesRequest) returns (ListPipelinesResponse);
 
+  // ListPipelineRus takes a pipeline ref and returns a list of runs of that pipeline.
+  // It will return an error if the requested pipeline does not exist, or an empty response
+  // if there are no runs for the pipeline.
+  rpc ListPipelineRuns(ListPipelineRunsRequest) returns (ListPipelineRunsResponse);
+
   // ConfigSyncPipeline takes a request for a given project and syncs the current
   // project config to the Waypoint database.
   rpc ConfigSyncPipeline(ConfigSyncPipelineRequest) returns (ConfigSyncPipelineResponse);
