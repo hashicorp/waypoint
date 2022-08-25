@@ -192,6 +192,7 @@ func (c *InstallCommand) Run(args []string) int {
 	// We need our bootstrap token immediately
 	var callOpts []grpc.CallOption
 	tokenResp, err := client.BootstrapToken(ctx, &empty.Empty{})
+	var token string
 	if err != nil && status.Code(err) != codes.PermissionDenied {
 		c.ui.Output(
 			"Error getting the initial token: %s\n\n%s",
@@ -201,11 +202,30 @@ func (c *InstallCommand) Run(args []string) int {
 		)
 		return 1
 	}
-
+	// If we're not using the k8s install path, then we set the token
+	// based on the tokenResp
 	if tokenResp != nil {
+		token = tokenResp.Token
+	}
+	// Our k8s installer uses the helm chart behind the scenes, which bootstraps
+	// the server; therefore we need to get the token that was created and we
+	// expect this error type
+	if tokenResp == nil && status.Code(err) == codes.PermissionDenied && c.platform == "kubernetes" {
+		loginCmd := LoginCommand{
+			flagK8S:            true,
+			flagK8STokenSecret: "waypoint-server-token",
+		}
+		var exitCode int
+		token, exitCode = loginCmd.loginK8S(ctx)
+		if exitCode > 0 {
+			return exitCode
+		}
+	}
+
+	if token != "" {
 		log.Debug("token received, setting on context")
 		contextConfig.Server.RequireAuth = true
-		contextConfig.Server.AuthToken = tokenResp.Token
+		contextConfig.Server.AuthToken = token
 	} else {
 		// try default context in case server was started again from install
 		defaultCtxName, err := c.contextStorage.Default()
