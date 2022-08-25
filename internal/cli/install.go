@@ -208,7 +208,7 @@ func (c *InstallCommand) Run(args []string) int {
 		contextConfig.Server.AuthToken = tokenResp.Token
 	} else {
 		// try default context in case server was started again from install
-		defaultCtx, err := c.contextStorage.Default()
+		defaultCtxName, err := c.contextStorage.Default()
 		if err != nil {
 			c.ui.Output(
 				"Error getting default context to use existing auth token: %s\n\n%s\n\n%s",
@@ -220,12 +220,12 @@ func (c *InstallCommand) Run(args []string) int {
 			return 1
 		}
 
-		if defaultCtx != "" {
-			defaultCtxConfig, err := c.contextStorage.Load(defaultCtx)
+		if defaultCtxName != "" {
+			defaultCtxConfig, err := c.contextStorage.Load(defaultCtxName)
 			if err != nil {
 				c.ui.Output(
 					"Error loading the context %q to use existing auth token: %s\n\n%s\n\n%s",
-					defaultCtx,
+					defaultCtxName,
 					clierrors.Humanize(err),
 					errInstallToken,
 					errInstallRunning,
