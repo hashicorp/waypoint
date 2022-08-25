@@ -1,4 +1,4 @@
-{{page-title (concat @model.application.application "Deployments")}}
+{{page-title "Deployments"}}
 {{#let (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployments.deployment.resource') as |isNotResourcePage|}}
   <div class={{if (and isNotResourcePage this.deploymentsByGeneration) "grid grid--menu-with-panel"}}>
   {{#if isNotResourcePage}}
