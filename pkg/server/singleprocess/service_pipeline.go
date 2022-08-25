@@ -159,6 +159,7 @@ func (s *Service) RunPipeline(
 		}
 
 		jobIds = append(jobIds, jobId)
+		stepRef.RunSequence = pipelineRun.Sequence
 		jobMap[jobId] = stepRef
 	}
 
