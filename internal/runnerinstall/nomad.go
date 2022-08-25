@@ -172,7 +172,7 @@ func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 			"-state-dir=/data/runner",
 			"-cookie=" + opts.Cookie,
 			"-vv",
-		}, opts.RunnerRunFlags...),
+		}, opts.RunnerAgentFlags...),
 		"auth_soft_fail": c.AuthSoftFail,
 	}
 

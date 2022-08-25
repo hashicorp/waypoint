@@ -223,8 +223,8 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 			TlsSkipVerify: c.serverTlsSkipVerify,
 			RequireAuth:   c.serverRequireAuth,
 		},
-		Id:             id,
-		RunnerRunFlags: secondaryArgs,
+		Id:               id,
+		RunnerAgentFlags: secondaryArgs,
 	})
 	if err != nil {
 		c.ui.Output("Error installing runner: %s", clierrors.Humanize(err),
