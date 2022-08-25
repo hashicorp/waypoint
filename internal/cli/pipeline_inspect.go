@@ -89,6 +89,21 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		return 0
 	}
 
+	// rebuild the pipeline ref because ListPipelineRuns only takes ID
+	runs, err := c.project.Client().ListPipelineRuns(c.Ctx, &pb.ListPipelineRunsRequest{
+		Pipeline: &pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{
+					Id: resp.Pipeline.Id,
+				},
+			},
+		},
+	})
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return 1
+	}
+
 	if c.flagJson {
 		var m jsonpb.Marshaler
 		m.Indent = "\t"
@@ -110,6 +125,11 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		owner = "???"
 	}
 
+	lastRun := runs.PipelineRuns[len(runs.PipelineRuns)-1]
+	j, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+		JobId: lastRun.Jobs[len(lastRun.Jobs)-1].Id,
+	})
+
 	c.ui.Output("Pipeline Configuration", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
@@ -123,6 +143,21 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		},
 		{
 			Name: "Root Step Name", Value: resp.RootStep,
+		},
+		{
+			Name: "Total Steps", Value: resp.Pipeline.Steps,
+		},
+		{
+			Name: "Total Runs", Value: lastRun.Sequence,
+		},
+		{
+			Name: "Last Run Started", Value: j.QueueTime,
+		},
+		{
+			Name: "Last Run Completed", Value: j.CompleteTime,
+		},
+		{
+			Name: "Last Run Status", Value: lastRun.State,
 		},
 	}, terminal.WithInfoStyle())
 
