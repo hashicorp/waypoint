@@ -30,12 +30,12 @@ func (c *PipelineRunCommand) Run(args []string) int {
 
 	var pipelineName string
 	if len(c.args) == 0 && c.flagPipelineId == "" {
-		c.ui.Output("Pipeline Name required.\n\n%s", c.Help(), terminal.WithErrorStyle())
+		c.ui.Output("Pipeline name or ID required.\n\n%s", c.Help(), terminal.WithErrorStyle())
 		return 1
 	} else if c.flagPipelineId == "" {
 		pipelineName = c.args[0]
 	} else {
-		c.ui.Output("Both pipeline name and id were specified, using pipeline id", terminal.WithWarningStyle())
+		c.ui.Output("Both pipeline name and ID were specified, using pipeline ID", terminal.WithWarningStyle())
 	}
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
@@ -132,7 +132,7 @@ func (c *PipelineRunCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.StringVar(&flag.StringVar{
-			Name:    "-id",
+			Name:    "id",
 			Target:  &c.flagPipelineId,
 			Default: "",
 			Usage:   "Run a pipeline by ID.",
