@@ -132,7 +132,7 @@ func (c *PipelineRunCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.StringVar(&flag.StringVar{
-			Name:    "pipeline-id",
+			Name:    "-id",
 			Target:  &c.flagPipelineId,
 			Default: "",
 			Usage:   "Run a pipeline by ID.",
