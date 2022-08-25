@@ -1,0 +1,4 @@
+```release-note:improvement
+install/runner: Allow additional arguments for `waypoint runner agent` command
+to be supplied to `waypoint runner install` CLI
+```
