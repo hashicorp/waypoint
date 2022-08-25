@@ -50,6 +50,7 @@ type fieldInfo struct {
 func HclGen(ui terminal.UI) bool {
 	brackets := 0
 	hclFile, err := os.Create("waypoint.hcl")
+	var hclFileByte []byte
 	if err != nil {
 		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
@@ -62,20 +63,20 @@ func HclGen(ui terminal.UI) bool {
 		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
 	} else if close {
-		exitSafe(hclFile, brackets, ui)
+		exitSafe(hclFile, brackets, ui, hclFileByte)
 		return false
 	}
-	hclFile.Write([]byte(fmt.Sprintf("project = \"%s\"\n", projName)))
+	hclFileByte = append(hclFileByte, []byte(fmt.Sprintf("project = \"%s\"\n", projName))...)
 	ui.Output("Name your app", terminal.WithHeaderStyle())
 	appName, err, close := getName("app", ui)
 	if err != nil {
 		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
 	} else if close {
-		exitSafe(hclFile, brackets, ui)
+		exitSafe(hclFile, brackets, ui, hclFileByte)
 		return false
 	}
-	hclFile.Write([]byte(fmt.Sprintf("app \"%s\" {\n", appName)))
+	hclFileByte = append(hclFileByte, []byte(fmt.Sprintf("app \"%s\" {\n", appName))...)
 	brackets++
 
 	var pluginNames []string
@@ -100,23 +101,23 @@ func HclGen(ui terminal.UI) bool {
 		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
 	} else if close {
-		exitSafe(hclFile, brackets, ui)
+		exitSafe(hclFile, brackets, ui, hclFileByte)
 		return false
 	}
-	hclFile.Write([]byte(fmt.Sprintf(genIndent(brackets) + "build {\n")))
+	hclFileByte = append(hclFileByte, []byte(fmt.Sprintf(genIndent(brackets)+"build {\n"))...)
 	brackets++
 	if plug.Name != "" {
-		hclFile.Write([]byte(fmt.Sprintf(genIndent(brackets)+"use \"%s\" {\n", plug.Name)))
+		hclFileByte = append(hclFileByte, []byte(fmt.Sprintf(genIndent(brackets)+"use \"%s\" {\n", plug.Name))...)
 		brackets++
 		fieldMap, err, close := populatePlugins(plug, ui)
 		if err != nil {
 			ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return false
 		} else if close {
-			exitSafe(hclFile, brackets, ui)
+			exitSafe(hclFile, brackets, ui, hclFileByte)
 			return false
 		}
-		err = writeFields(hclFile, fieldMap, brackets, ui)
+		hclFileByte, err = writeFields(hclFileByte, fieldMap, brackets, ui)
 		if err != nil {
 			ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return false
@@ -128,11 +129,7 @@ func HclGen(ui terminal.UI) bool {
 	}
 
 	// Here we want to close a bracket so that the registry does not appear in the "use" stanza
-	err = closeBrackets(hclFile, 1, brackets)
-	if err != nil {
-		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return false
-	}
+	hclFileByte = closeBrackets(hclFileByte, 1, brackets)
 	brackets--
 
 	ui.Output("Configure registry", terminal.WithHeaderStyle())
@@ -142,24 +139,24 @@ func HclGen(ui terminal.UI) bool {
 		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
 	} else if close {
-		exitSafe(hclFile, brackets, ui)
+		exitSafe(hclFile, brackets, ui, hclFileByte)
 		return false
 	}
 	// A registry stanza will only appear in the file if one is chosen
 	if plug.Name != "" {
-		hclFile.Write([]byte(fmt.Sprintf(genIndent(brackets) + "registry {\n")))
+		hclFileByte = append(hclFileByte, []byte(fmt.Sprintf(genIndent(brackets)+"registry {\n"))...)
 		brackets++
-		hclFile.Write([]byte(fmt.Sprintf(genIndent(brackets)+"use \"%s\" {\n", plug.Name)))
+		hclFileByte = append(hclFileByte, []byte(fmt.Sprintf(genIndent(brackets)+"use \"%s\" {\n", plug.Name))...)
 		brackets++
 		fieldMap, err, close := populatePlugins(plug, ui)
 		if err != nil {
 			ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return false
 		} else if close {
-			exitSafe(hclFile, brackets, ui)
+			exitSafe(hclFile, brackets, ui, hclFileByte)
 			return false
 		}
-		err = writeFields(hclFile, fieldMap, brackets, ui)
+		hclFileByte, err = writeFields(hclFileByte, fieldMap, brackets, ui)
 		if err != nil {
 			ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		}
@@ -171,11 +168,7 @@ func HclGen(ui terminal.UI) bool {
 
 	// After the registry stanza we want to close the brackets on the build
 	// and registry (if it exists) stanzas
-	err = closeBrackets(hclFile, brackets-1, brackets)
-	if err != nil {
-		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return false
-	}
+	hclFileByte = closeBrackets(hclFileByte, brackets-1, brackets)
 	brackets = 1
 
 	ui.Output("Configure deployment platform", terminal.WithHeaderStyle())
@@ -185,25 +178,25 @@ func HclGen(ui terminal.UI) bool {
 		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
 	} else if close {
-		exitSafe(hclFile, brackets, ui)
+		exitSafe(hclFile, brackets, ui, hclFileByte)
 		return false
 	}
 
 	// A deployer stanza will only appear in the file if one is chosen
 	if plug.Name != "" {
-		hclFile.Write([]byte(fmt.Sprintf(genIndent(brackets) + "deploy {\n")))
+		hclFileByte = append(hclFileByte, []byte(fmt.Sprintf(genIndent(brackets)+"deploy {\n"))...)
 		brackets++
-		hclFile.Write([]byte(fmt.Sprintf(genIndent(brackets)+"use \"%s\" {\n", plug.Name)))
+		hclFileByte = append(hclFileByte, []byte(fmt.Sprintf(genIndent(brackets)+"use \"%s\" {\n", plug.Name))...)
 		brackets++
 		fieldMap, err, close := populatePlugins(plug, ui)
 		if err != nil {
 			ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return false
 		} else if close {
-			exitSafe(hclFile, brackets, ui)
+			exitSafe(hclFile, brackets, ui, hclFileByte)
 			return false
 		}
-		err = writeFields(hclFile, fieldMap, brackets, ui)
+		hclFileByte, err = writeFields(hclFileByte, fieldMap, brackets, ui)
 		if err != nil {
 			ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		}
@@ -213,11 +206,7 @@ func HclGen(ui terminal.UI) bool {
 		)
 	}
 	// After the deployer stanza we want to close the brackets on the deployer stanza
-	err = closeBrackets(hclFile, brackets-1, brackets)
-	if err != nil {
-		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return false
-	}
+	hclFileByte = closeBrackets(hclFileByte, brackets-1, brackets)
 	brackets = 1
 
 	ui.Output("Configure releaser", terminal.WithHeaderStyle())
@@ -227,36 +216,33 @@ func HclGen(ui terminal.UI) bool {
 		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
 	} else if close {
-		exitSafe(hclFile, brackets, ui)
+		exitSafe(hclFile, brackets, ui, hclFileByte)
 		return false
 	}
 
 	// A releaser stanza will only appear in the file if one is chosen
 	if plug.Name != "" {
-		hclFile.Write([]byte(fmt.Sprintf(genIndent(brackets) + "release {\n")))
+		hclFileByte = append(hclFileByte, []byte(fmt.Sprintf(genIndent(brackets)+"release {\n"))...)
 		brackets++
-		hclFile.Write([]byte(fmt.Sprintf(genIndent(brackets)+"use \"%s\" {\n", plug.Name)))
+		hclFileByte = append(hclFileByte, []byte(fmt.Sprintf(genIndent(brackets)+"use \"%s\" {\n", plug.Name))...)
 		brackets++
 		fieldMap, err, close := populatePlugins(plug, ui)
 		if err != nil {
 			ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return false
 		} else if close {
-			exitSafe(hclFile, brackets, ui)
+			exitSafe(hclFile, brackets, ui, hclFileByte)
 			return false
 		}
-		err = writeFields(hclFile, fieldMap, brackets, ui)
+		hclFileByte, err = writeFields(hclFileByte, fieldMap, brackets, ui)
 		if err != nil {
 			ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		}
 		ui.Output("Step complete: releaser configuration", terminal.WithSuccessStyle())
 	}
 	// After the releaser stanza we want to close all the brackets
-	err = closeBrackets(hclFile, brackets, brackets)
-	if err != nil {
-		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return false
-	}
+	hclFileByte = closeBrackets(hclFileByte, brackets, brackets)
+	hclFile.Write(hclFileByte)
 	hclFile.Close()
 	ui.Output("\nAll plugin configuration complete", terminal.WithSuccessStyle())
 	ui.Output("\nwaypoint.hcl saved!", terminal.WithStyle(terminal.SuccessBoldStyle))
@@ -265,12 +251,7 @@ func HclGen(ui terminal.UI) bool {
 	)
 	ui.Output("Otherwise, run \"waypoint init\" again to start using Waypoint!\n")
 	ui.Output("Now attempting to format the HCL file:\n")
-	b, err := ioutil.ReadFile("waypoint.hcl")
-	if err != nil {
-		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return false
-	}
-	out, err := fmtpkg.Format(b, "waypoint.hcl")
+	out, err := fmtpkg.Format(hclFileByte, "waypoint.hcl")
 	if err != nil {
 		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
@@ -283,34 +264,32 @@ func HclGen(ui terminal.UI) bool {
 	return true
 }
 
-func writeFields(file *os.File, fieldMap map[string]fieldInfo, brackets int, ui terminal.UI) error {
+func writeFields(byteS []byte, fieldMap map[string]fieldInfo, brackets int, ui terminal.UI) ([]byte, error) {
 	for key, elem := range fieldMap {
 		if elem.isParent {
-			file.Write([]byte(fmt.Sprintf(genIndent(brackets)+"%s {\n", key)))
+			byteS = append(byteS, []byte(fmt.Sprintf(genIndent(brackets)+"%s {\n", key))...)
 			brackets++
 			for name, cont := range elem.children {
-				file.Write([]byte(fmt.Sprintf(genIndent(brackets)+"%s = \"%s\"\n", name, cont)))
+				byteS = append(byteS, []byte(fmt.Sprintf(genIndent(brackets)+"%s = \"%s\"\n", name, cont))...)
 			}
-			err := closeBrackets(file, 1, brackets)
-			if err != nil {
-				return err
-			}
+			byteS = closeBrackets(byteS, 1, brackets)
 			brackets--
 		} else {
-			file.Write([]byte(fmt.Sprintf(genIndent(brackets)+"%s = \"%s\"\n", key, elem.contents)))
+			byteS = append(byteS, []byte(fmt.Sprintf(genIndent(brackets)+"%s = \"%s\"\n", key, elem.contents))...)
 		}
 	}
-	return nil
+	return byteS, nil
 }
 
-func exitSafe(file *os.File, outstanding int, ui terminal.UI) error {
-	closeBrackets(file, outstanding, outstanding)
+func exitSafe(file *os.File, outstanding int, ui terminal.UI, byteS []byte) error {
+	byteS = closeBrackets(byteS, outstanding, outstanding)
+	file.Write(byteS)
 	file.Close()
 	ui.Output("Generator exited. Any information you added before exiting has been included in your waypoint.hcl file. Edit this file manually before using Waypoint.")
 	return nil
 }
 
-func closeBrackets(file *os.File, toClose int, outstanding int) error {
+func closeBrackets(byteS []byte, toClose int, outstanding int) []byte {
 	extra := outstanding - toClose
 	toPrint := ""
 	for i := toClose; i > 0; i-- {
@@ -318,10 +297,10 @@ func closeBrackets(file *os.File, toClose int, outstanding int) error {
 			toPrint = toPrint + "    "
 		}
 		toPrint = toPrint + "}\n"
-		file.Write([]byte(fmt.Sprintf(toPrint)))
+		byteS = append(byteS, []byte(fmt.Sprintf(toPrint))...)
 		toPrint = ""
 	}
-	return nil
+	return byteS
 }
 
 func genIndent(outstanding int) string {
