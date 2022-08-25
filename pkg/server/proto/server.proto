@@ -4875,6 +4875,8 @@ message ListPipelinesResponse {
   repeated Pipeline pipelines = 1;
 }
 
+// NOTE(xx): these requests will be refactored in a future PR to optimize for UI
+// Will also add PipelineBundle and PipelineRunBundle objects
 message ListPipelineRunsRequest {
   Ref.Pipeline pipeline = 1;
 }

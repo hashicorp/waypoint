@@ -15137,6 +15137,8 @@ func (x *ListPipelinesResponse) GetPipelines() []*Pipeline {
 	return nil
 }
 
+// NOTE(xx): these requests will be refactored in a future PR to optimize for UI
+// Will also add PipelineBundle and PipelineRunBundle objects
 type ListPipelineRunsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
