@@ -35,15 +35,16 @@ func (s *State) PipelineRunPut(pr *pb.PipelineRun) error {
 				"A pipeline ref for the pipeline run is required")
 		}
 
-		// only alter sequence if this is a new pipeline run
 		if pr.Id == "" {
 			id, err := ulid()
 			if err != nil {
 				return err
 			}
 			pr.Id = id
+		}
 
-			// increment sequence if this is not the first run
+		// only alter sequence if this is a new pipeline run
+		if pr.State == pb.PipelineRun_PENDING {
 			pId := pr.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id
 			raw, err := memTxn.Last(
 				pipelineRunIndexTableName,
@@ -52,6 +53,7 @@ func (s *State) PipelineRunPut(pr *pb.PipelineRun) error {
 			if err != nil {
 				return err
 			}
+			// increment sequence if this is not the first run
 			if raw != nil {
 				idx := raw.(*pipelineRunIndexRecord)
 				seq, _ := strconv.ParseUint(idx.Sequence, 10, 64)

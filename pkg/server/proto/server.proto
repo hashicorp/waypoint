@@ -4710,6 +4710,9 @@ message Pipeline {
       // Built-in up operation
       Up up = 8;
 
+      // A reference to a different pipeline
+      Pipeline pipeline = 9;
+
       // TODO: custom plugins, pipeline references
     }
 
@@ -4761,6 +4764,10 @@ message Pipeline {
       int32 prune_retain = 2;
       bool prune_retain_override = 3;
     }
+
+    message Pipeline {
+      Ref.Pipeline ref = 1;
+    }
   }
 }
 
@@ -4773,7 +4780,7 @@ message PipelineRun {
 
   repeated Ref.Job jobs = 4;
 
-  State status = 5;
+  State state = 5;
 
   enum State {
     UNKNOWN = 0; // no state defined, the default

@@ -327,9 +327,15 @@ func (c *Pipeline) Validate() error {
 	var result error
 
 	for _, stepRaw := range c.StepRaw {
-		if stepRaw == nil || stepRaw.Use == nil || stepRaw.Use.Type == "" {
+		if stepRaw == nil && stepRaw.PipelineRaw == nil {
 			result = multierror.Append(result, fmt.Errorf(
-				"step stage with a default 'use' stanza is required"))
+				"step stage with a default 'use' stanza or a 'pipeline' stanza is required"))
+		} else if stepRaw.Use != nil && stepRaw.PipelineRaw != nil {
+			result = multierror.Append(result, fmt.Errorf(
+				"step stage with a 'use' stanza and pipeline stanza is not valid"))
+		} else if stepRaw.PipelineRaw == nil && (stepRaw.Use == nil || stepRaw.Use.Type == "") {
+			result = multierror.Append(result, fmt.Errorf(
+				"step stage %q is required to define a 'use' stanza and label", stepRaw.Name))
 		}
 
 		// else, other step validations?

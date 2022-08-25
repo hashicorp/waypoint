@@ -60,6 +60,7 @@ func TestPipelineRun(t testing.T, src *pb.PipelineRun) *pb.PipelineRun {
 	}
 
 	require.NoError(t, mergo.Merge(src, &pb.PipelineRun{
+		Id: "test_run",
 		Pipeline: &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
 				Id: &pb.Ref_PipelineId{
@@ -67,7 +68,56 @@ func TestPipelineRun(t testing.T, src *pb.PipelineRun) *pb.PipelineRun {
 				},
 			},
 		},
-		Status: pb.PipelineRun_PENDING,
+		State: pb.PipelineRun_PENDING,
+	}))
+
+	return src
+}
+
+// TestPipelineCycle returns an invalid pipeline with a step cycle for tests.
+func TestPipelineCycle(t testing.T, src *pb.Pipeline) *pb.Pipeline {
+	t.Helper()
+
+	if src == nil {
+		src = &pb.Pipeline{}
+	}
+
+	require.NoError(t, mergo.Merge(src, &pb.Pipeline{
+		Id:   "cycle",
+		Name: "cycle",
+		Owner: &pb.Pipeline_Project{
+			Project: &pb.Ref_Project{
+				Project: "project",
+			},
+		},
+		Steps: map[string]*pb.Pipeline_Step{
+			"root": {
+				Name: "root",
+				Kind: &pb.Pipeline_Step_Exec_{
+					Exec: &pb.Pipeline_Step_Exec{
+						Image: "hashicorp/waypoint",
+					},
+				},
+			},
+			"two": {
+				Name:      "two",
+				DependsOn: []string{"three"},
+				Kind: &pb.Pipeline_Step_Exec_{
+					Exec: &pb.Pipeline_Step_Exec{
+						Image: "hashicorp/waypoint",
+					},
+				},
+			},
+			"three": {
+				Name:      "three",
+				DependsOn: []string{"two"},
+				Kind: &pb.Pipeline_Step_Exec_{
+					Exec: &pb.Pipeline_Step_Exec{
+						Image: "hashicorp/waypoint",
+					},
+				},
+			},
+		},
 	}))
 
 	return src
