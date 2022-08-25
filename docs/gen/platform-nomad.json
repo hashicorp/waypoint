@@ -1,0 +1,192 @@
+{
+   "description": "Deploy to a nomad cluster as a service using docker",
+   "example": "deploy {\n        use \"nomad\" {\n          region = \"global\"\n          datacenter = \"dc1\"\n          auth {\n            username = \"username\"\n            password = \"password\"\n          }\n          static_environment = {\n            \"environment\": \"production\",\n            \"LOG_LEVEL\": \"debug\"\n          }\n          service_port = 3000\n          replicas = 1\n        }\n}",
+   "mappers": null,
+   "name": "nomad",
+   "optionalFields": [
+      {
+         "Field": "datacenter",
+         "Type": "string",
+         "Synopsis": "The Nomad datacenter to deploy the job to.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "dc1",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "namespace",
+         "Type": "string",
+         "Synopsis": "The Nomad namespace to deploy the job to.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "region",
+         "Type": "string",
+         "Synopsis": "The Nomad region to deploy the job to.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "global",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "replicas",
+         "Type": "int",
+         "Synopsis": "The replica count for the job.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "1",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "resources",
+         "Type": "nomad.Resources",
+         "Synopsis": "The amount of resources to allocate to the deployed allocation.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "cpu",
+               "Type": "int",
+               "Synopsis": "Amount of CPU in MHz to allocate to this task",
+               "Summary": "",
+               "Optional": true,
+               "Default": "100",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "memorymb",
+               "Type": "int",
+               "Synopsis": "Amount of memory in MB to allocate to this task.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "300",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
+         "Field": "service_port",
+         "Type": "uint",
+         "Synopsis": "TCP port the job is listening on.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "service_provider",
+         "Type": "string",
+         "Synopsis": "Specifies the service registration provider to use for registering a service for the job",
+         "Summary": "",
+         "Optional": true,
+         "Default": "consul",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "static_environment",
+         "Type": "map of string to string",
+         "Synopsis": "Environment variables to add to the job.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrs": [
+      {
+         "Field": "id",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "name",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "resource_state",
+         "Type": "opaqueany.Any",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "auth",
+         "Type": "nomad.AuthConfig",
+         "Synopsis": "The credentials for docker registry.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "consul_token",
+         "Type": "",
+         "Synopsis": "The Consul ACL token used to register services with the Nomad job.",
+         "Summary": "Uses the runner config environment variable CONSUL_HTTP_TOKEN.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "CONSUL_HTTP_TOKEN",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "vault_token",
+         "Type": "",
+         "Synopsis": "The Vault token used to deploy the Nomad job with a token having specific Vault policies attached.",
+         "Summary": "Uses the runner config environment variable VAULT_TOKEN.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "VAULT_TOKEN",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "platform",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

@@ -1,0 +1,269 @@
+{
+   "description": "Deploy a container to Google Cloud Run",
+   "example": "project = \"wpmini\"\n\napp \"wpmini\" {\n  labels = {\n    \"service\" = \"wpmini\",\n    \"env\"     = \"dev\"\n  }\n\n  build {\n    use \"pack\" {}\n\n    registry {\n      use \"docker\" {\n        image = \"gcr.io/waypoint-project-id/wpmini\"\n        tag   = \"latest\"\n      }\n    }\n  }\n\n  deploy {\n    use \"google-cloud-run\" {\n      project  = \"waypoint-project-id\"\n      location = \"europe-north1\"\n\n      port = 5000\n\n      static_environment = {\n        \"NAME\" : \"World\"\n      }\n\n      capacity {\n        memory                     = 128\n        cpu_count                  = 2\n        max_requests_per_container = 10\n        request_timeout            = 300\n      }\n\n\t  service_account_name = \"cloudrun@waypoint-project-id.iam.gserviceaccount.com\"\n\n      auto_scaling {\n        max = 10\n      }\n\n      cloudsql_instances = [\"waypoint-project-id:europe-north1:sql-instance\"]\n\n      vpc_access {\n        connector = \"custom-vpc-connector\"\n        egress = \"all\"\n      }\n    }\n  }\n\n  release {\n    use \"google-cloud-run\" {}\n  }\n}",
+   "mappers": null,
+   "name": "google-cloud-run",
+   "optionalFields": [
+      {
+         "Field": "cloudsql_instances",
+         "Type": "list of string",
+         "Synopsis": "Specify list of CloudSQL instances that the Cloud Run instance will have access to.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "port",
+         "Type": "int",
+         "Synopsis": "The port your application listens on.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "service_account_name",
+         "Type": "string",
+         "Synopsis": "Specify a service account email that Cloud Run will use to run the service. You must have the `iam.serviceAccounts.actAs` permission on the service account.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "static_environment",
+         "Type": "map of string to string",
+         "Synopsis": "Additional environment variables to be added to the Cloud Run instance.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "unauthenticated",
+         "Type": "bool",
+         "Synopsis": "Is public unauthenticated access allowed for the Cloud Run instance?",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "vpc_access",
+         "Type": "cloudrun.VPCAccess",
+         "Synopsis": "VPCAccess details",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "connector",
+               "Type": "string",
+               "Synopsis": "Set VPC Access Connector for the Cloud Run instance.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "egress",
+               "Type": "string",
+               "Synopsis": "Set VPC egress. Supported values are 'all' and 'private-ranges-only'.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      }
+   ],
+   "outputAttrs": [
+      {
+         "Field": "id",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "region",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "resource",
+         "Type": "cloudrun.Deployment_Resource",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "resource_state",
+         "Type": "opaqueany.Any",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "revision_id",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "url",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "auto_scaling",
+         "Type": "cloudrun.AutoScaling",
+         "Synopsis": "Configuration to control the auto scaling parameters for Cloud Run.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "auto_scaling.max",
+         "Type": "",
+         "Synopsis": "Maximum number of Cloud Run instances. When the maximum requests per container is exceeded, Cloud Run will create an additional container instance to handle load.\n\t\tThis parameter controls the maximum number of instances that can be created.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "1000",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "capacity",
+         "Type": "cloudrun.Capacity",
+         "Synopsis": "CPU, Memory, and resource limits for each Cloud Run instance.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "capacity.cpu_count",
+         "Type": "",
+         "Synopsis": "Number of CPUs to allocate the Cloud Run instance, min 1, max 2.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "1",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "capacity.max_requests_per_container",
+         "Type": "",
+         "Synopsis": "Maximum number of concurrent requests each instance can handle. When the maximum requests are exceeded, Cloud Run will create an additional instance.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "80",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "capacity.memory",
+         "Type": "",
+         "Synopsis": "Memory to allocate the Cloud Run instance specified in MB, min 128, max 4096.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "128",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "capacity.request_timeout",
+         "Type": "",
+         "Synopsis": "Maximum time a request can take before timing out, max 900.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "300",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "location",
+         "Type": "string",
+         "Synopsis": "GCP location, e.g. europe-north-1.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "project",
+         "Type": "string",
+         "Synopsis": "GCP project ID where the Cloud Run instance will be deployed.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "platform",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

@@ -172,6 +172,7 @@ gen/doc:
 .PHONY: gen/website-mdx
 gen/website-mdx:
 	go run ./cmd/waypoint docs -website-mdx
+	go run ./cmd/waypoint docs -json
 	go run ./tools/gendocs
 	cd ./website; npx --no-install next-hashicorp format
 
