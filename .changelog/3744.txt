@@ -1,0 +1,3 @@
+```release-note:bug
+cli/install/k8s: Fixes the k8s installer race condition with the bootstrap token
+```
