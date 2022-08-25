@@ -85,6 +85,11 @@ func (c *RunnerInspectCommand) Run(args []string) int {
 		stateStr = "unknown"
 	}
 
+	// Omit label that the user didn't set from the output
+	if _, ok := resp.Labels["waypoint.hashicorp.com/runner-hash"]; ok {
+		delete(resp.Labels, "waypoint.hashicorp.com/runner-hash")
+	}
+
 	c.ui.Output("Runner:", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
