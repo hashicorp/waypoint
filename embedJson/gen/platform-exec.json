@@ -38,19 +38,20 @@
          "Optional": false,
          "Default": "",
          "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "template.path",
-         "Type": "",
-         "Synopsis": "The path to the file or directory to render as a template.",
-         "Summary": "Templating uses the following format: https://golang.org/pkg/text/template/ Available template variables depends on the input artifact.",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "path",
+               "Type": "string",
+               "Synopsis": "The path to the file or directory to render as a template.",
+               "Summary": "Templating uses the following format: https://golang.org/pkg/text/template/ Available template variables depends on the input artifact.",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
       }
    ],
    "type": "platform",

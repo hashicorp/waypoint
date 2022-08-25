@@ -1,0 +1,3 @@
+```release-note:feature
+CLI: New waypoint.hcl interactive generator, accessed with `waypoint init` when no waypoint.hcl exists in the current project
+```
