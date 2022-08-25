@@ -9145,7 +9145,7 @@
             "$ref": "#/definitions/hashicorp.waypoint.Ref.Job"
           }
         },
-        "status": {
+        "state": {
           "$ref": "#/definitions/hashicorp.waypoint.PipelineRun.State"
         }
       }
