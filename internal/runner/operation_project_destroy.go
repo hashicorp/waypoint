@@ -36,13 +36,13 @@ func (r *Runner) executeDestroyProjectOp(
 	}
 
 	if !destroyProjectOp.DestroyProject.SkipDestroyResources {
-		for _, app := range pbProject.Project.Applications {
+		for _, app := range project.Apps() {
 			// Get the workspaces for the app we're currently destroying
 			workspaces, err := client.ListWorkspaces(ctx, &pb.ListWorkspacesRequest{
 				Scope: &pb.ListWorkspacesRequest_Application{
 					Application: &pb.Ref_Application{
 						Project:     destroyProjectOp.DestroyProject.Project.Name,
-						Application: app.Name,
+						Application: app,
 					},
 				},
 			})
@@ -57,7 +57,8 @@ func (r *Runner) executeDestroyProjectOp(
 				if _, err := r.executeDestroyOp(ctx,
 					&pb.Job{
 						Application: &pb.Ref_Application{
-							Application: app.Name,
+							Application: app,
+							Project:     pbProject.Project.Name,
 						},
 						Operation: &pb.Job_Destroy{
 							Destroy: &pb.Job_DestroyOp{
@@ -80,7 +81,7 @@ func (r *Runner) executeDestroyProjectOp(
 						Target: &pb.Hostname_Target_Application{
 							Application: &pb.Hostname_TargetApp{
 								Application: &pb.Ref_Application{
-									Application: app.Name,
+									Application: app,
 									Project:     pbProject.Project.Name,
 								},
 								Workspace: &pb.Ref_Workspace{

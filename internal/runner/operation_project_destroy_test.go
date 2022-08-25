@@ -32,14 +32,17 @@ func TestProjectDestroyOp(t *testing.T) {
 	// Start it
 	require.NoError(runner.Start(ctx))
 
+	const projectName string = "projectDestroyTestProject"
+	const appName string = "projectDestroyTestApp"
+
 	// Create a project for us to destroy
 	projectResp, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 		Project: &pb.Project{
-			Name: "testProject",
+			Name: projectName,
 			Applications: []*pb.Application{
 				{
-					Project: &pb.Ref_Project{Project: "testProject"},
-					Name:    "testApp",
+					Project: &pb.Ref_Project{Project: projectName},
+					Name:    appName,
 				},
 			},
 		},
@@ -51,8 +54,8 @@ func TestProjectDestroyOp(t *testing.T) {
 	deploymentResp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
 		Deployment: &pb.Deployment{
 			Application: &pb.Ref_Application{
-				Application: "testApp",
-				Project:     "testProject",
+				Application: appName,
+				Project:     projectName,
 			},
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}})
@@ -63,7 +66,7 @@ func TestProjectDestroyOp(t *testing.T) {
 		Operation: &pb.Job_DestroyProject{
 			DestroyProject: &pb.Job_DestroyProjectOp{
 				Project: &pb.Project{
-					Name: "testProject",
+					Name: projectName,
 				},
 				SkipDestroyResources: false,
 			},
@@ -79,17 +82,16 @@ func TestProjectDestroyOp(t *testing.T) {
 	require.NotNil(t, res.ProjectDestroy.JobId)
 
 	// Verify that we can't get the project we deleted
-	getProjectResp, err := client.GetProject(ctx, &pb.GetProjectRequest{Project: &pb.Ref_Project{Project: "testProject"}})
+	getProjectResp, err := client.GetProject(ctx, &pb.GetProjectRequest{Project: &pb.Ref_Project{Project: projectName}})
 	require.Error(err)
 	require.Nil(getProjectResp)
 
-	// TODO: Enable this test after cascading deletion is implemented
 	// Verify that we can't get the deployment destroyed
-	//getDeploymentResp, err := client.GetDeployment(ctx, &pb.GetDeploymentRequest{
-	//	Ref: &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: deploymentResp.Deployment.Id}},
-	//})
-	//require.Error(err)
-	//require.Nil(getDeploymentResp)
+	getDeploymentResp, err := client.GetDeployment(ctx, &pb.GetDeploymentRequest{
+		Ref: &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: deploymentResp.Deployment.Id}},
+	})
+	require.Error(err)
+	require.Nil(getDeploymentResp)
 }
 
 // NOTE: This test is very similar to the previous test, with the exception of the
