@@ -75,13 +75,13 @@ func (r *Runner) AcceptMany(ctx context.Context) {
 				// This won't be fixed unless the runner is closed and restarted.
 				r.logger.Error("runner unexpectedly deregistered, exiting")
 				return
+			case codes.Unavailable, codes.Unimplemented:
+				// Server became unavailable. Unimplemented likely means that the server
+				// is running behind a proxy and is failing health checks.
 
-			case codes.Unavailable:
-				// Server became unavailable. Let's just sleep to give the
-				// server time to come back.
-				r.logger.Warn("server unavailable, sleeping before retry")
-				time.Sleep(2 * time.Second)
-
+				// Let's just sleep to give the server time to come back.
+				r.logger.Warn("server unavailable, sleeping before retry", "error", err)
+				time.Sleep(time.Duration(2+rand.Intn(3)) * time.Second)
 			default:
 				r.logger.Error("error running job", "error", err)
 			}
