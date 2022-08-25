@@ -7895,6 +7895,10 @@
         "task": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.Task",
           "description": "task is a reference to a given Task that this job might be apart of. If\nthe task is Nil, it means the server does not associate this job with\nan on-demand runner task. If the Task Ref is set, that means this job\nis part of the referenced task id."
+        },
+        "pipeline": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineStep",
+          "description": "PipelineStep is a reference to the pipeline and step that might have triggered this job.\nIf the PipelineStep is nil, this job was not initiated by a pipeline.\nIf the Pipeline Ref is set, this job is part of the referenced pipeline."
         }
       },
       "description": "A Job is a job that executes on a runner and is queued by QueueOperation."
@@ -9379,7 +9383,7 @@
         },
         "owner": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineOwner",
-          "description": "Reference an existing pipeline by Project owner and Pipeline Name\nThis assumes that a project cannot have two pipelines with the same name."
+          "description": "Reference an existing pipeline by Project name and Pipeline name\nFormat: \"project-name/pipeline-name\"\nThis assumes that a project cannot have two pipelines with the same name."
         }
       },
       "description": "Pipeline references a pipeline using one or more lookup types."
@@ -9410,11 +9414,16 @@
       "properties": {
         "pipeline": {
           "type": "string",
-          "title": "ID of te pipeline"
+          "title": "ID of the pipeline"
         },
         "step": {
           "type": "string",
           "description": "Step name within the pipeline."
+        },
+        "run_sequence": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Pipeline run sequence"
         }
       }
     },
@@ -10263,7 +10272,7 @@
         },
         "start_job": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.Job",
-          "description": "Both start_job and stop_job relate to task_job.These jobs were\nresponsibile for starting and stopping the runner which executed the task\njob."
+          "description": "Both start_job and stop_job relate to task_job.These jobs were\nresponsible for starting and stopping the runner which executed the task\njob."
         },
         "stop_job": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.Job"
@@ -10278,7 +10287,7 @@
         },
         "job_state": {
           "$ref": "#/definitions/hashicorp.waypoint.Task.State",
-          "description": "The overall state of the Task triple. See the enum def for details for\neach possible Task state. This will be computed for each GetTaskResponse\nbased on the Task job ids receieved from the database."
+          "description": "The overall state of the Task triple. See the enum def for details for\neach possible Task state. This will be computed for each GetTaskResponse\nbased on the Task job ids received from the database."
         },
         "resource_name": {
           "type": "string",
@@ -10367,10 +10376,6 @@
           "$ref": "#/definitions/hashicorp.waypoint.Token.Trigger",
           "title": "trigger tokens can be used to trigger lifecycle actions via HTTP"
         },
-        "oauth_creds": {
-          "$ref": "#/definitions/hashicorp.waypoint.Token.OAuthCredentials",
-          "description": "A client that sees this populated will use the details to fetch a token\nvia oauth instead of submitting this token directly."
-        },
         "unused_user": {
           "type": "string",
           "description": "The user that the token is for. This must be \"waypoint\" for\nbackwards compat reasons."
@@ -10437,24 +10442,6 @@
         }
       }
     },
-    "hashicorp.waypoint.Token.OAuthCredentials": {
-      "type": "object",
-      "properties": {
-        "url": {
-          "type": "string",
-          "title": "The url for the oauth2 provider"
-        },
-        "client_id": {
-          "type": "string",
-          "title": "The OAuth client id to submit"
-        },
-        "client_secret": {
-          "type": "string",
-          "title": "The OAuth client secret that goes along with the client_id"
-        }
-      },
-      "description": "The OAuth message contains information that the client should use\nto generate on OAuth token for authenticating with the server rather\nthan just submitting the waypoint token directly."
-    },
     "hashicorp.waypoint.Token.Runner": {
       "type": "object",
       "properties": {
@@ -10502,9 +10489,31 @@
             "type": "string"
           },
           "description": "Any configuration style metadata that can be passed along with the token\nwithout invalidating the token body itself."
+        },
+        "oauth_creds": {
+          "$ref": "#/definitions/hashicorp.waypoint.TokenTransport.OAuthCredentials",
+          "description": "A client that sees this populated will use the details to fetch a token\nvia oauth instead of submitting this token directly."
         }
       },
       "description": "The outer structure of the token that is directly Marshaled and\nASCII armored."
+    },
+    "hashicorp.waypoint.TokenTransport.OAuthCredentials": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "title": "The url for the oauth2 provider"
+        },
+        "client_id": {
+          "type": "string",
+          "title": "The OAuth client id to submit"
+        },
+        "client_secret": {
+          "type": "string",
+          "title": "The OAuth client secret that goes along with the client_id"
+        }
+      },
+      "description": "The OAuth message contains information that the client should use\nto generate on OAuth token for authenticating with the server rather\nthan just submitting the waypoint token directly."
     },
     "hashicorp.waypoint.Trigger": {
       "type": "object",

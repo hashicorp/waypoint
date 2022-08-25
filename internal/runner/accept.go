@@ -18,7 +18,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/serverclient"
+	"github.com/hashicorp/waypoint/pkg/tokenutil"
 )
 
 var heartbeatDuration = 5 * time.Second
@@ -75,13 +75,13 @@ func (r *Runner) AcceptMany(ctx context.Context) {
 				// This won't be fixed unless the runner is closed and restarted.
 				r.logger.Error("runner unexpectedly deregistered, exiting")
 				return
+			case codes.Unavailable, codes.Unimplemented:
+				// Server became unavailable. Unimplemented likely means that the server
+				// is running behind a proxy and is failing health checks.
 
-			case codes.Unavailable:
-				// Server became unavailable. Let's just sleep to give the
-				// server time to come back.
-				r.logger.Warn("server unavailable, sleeping before retry")
-				time.Sleep(2 * time.Second)
-
+				// Let's just sleep to give the server time to come back.
+				r.logger.Warn("server unavailable, sleeping before retry", "error", err)
+				time.Sleep(time.Duration(2+rand.Intn(3)) * time.Second)
 			default:
 				r.logger.Error("error running job", "error", err)
 			}
@@ -131,8 +131,8 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	// The runningCtx has the token that is set during runner adoption.
 	// This is required for API calls to succeed. Put the token into ctx
 	// as well so that this can be used for API calls.
-	if tok := serverclient.TokenFromContext(r.runningCtx); tok != "" {
-		ctx = serverclient.TokenWithContext(ctx, tok)
+	if tok := tokenutil.TokenFromContext(r.runningCtx); tok != "" {
+		ctx = tokenutil.TokenWithContext(ctx, tok)
 	}
 
 	// Retry tracks whether we're trying a job stream connection or not.

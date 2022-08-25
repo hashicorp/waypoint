@@ -39,19 +39,23 @@ deploy {
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
-#### capacity
+#### capacity (category)
 
 The capacity details for the container.
 
-- Type: **aci.Capacity**
-
-#### capacity.cpu
+##### capacity.cpu
 
 Number of CPUs to allocate the container, min 1, max based on resource availability of the region.
 
-#### capacity.memory
+##### capacity.cpu_count
+
+- Type: **int**
+
+##### capacity.memory
 
 Memory to allocate the container specified in MB, min 1024, max based on resource availability of the region.
+
+- Type: **int**
 
 #### resource_group
 
@@ -59,31 +63,39 @@ The resource group to deploy the container to.
 
 - Type: **string**
 
-#### volume
+#### volume (category)
 
 The volume details for a container.
 
-- Type: **list of aci.Volume**
-
-#### volume.azure_file_share
+##### volume.azure_file_share
 
 The details for the Azure file share volume.
 
-#### volume.git_repo
+- Type: **aci.AzureFileShareVolume**
+
+##### volume.git_repo
 
 The details for GitHub repo to mount as a volume.
 
-#### volume.name
+- Type: **aci.GitRepoVolume**
+
+##### volume.name
 
 The name of the volume to mount into the container.
 
-#### volume.path
+- Type: **string**
+
+##### volume.path
 
 The path to mount the volume to in the container.
 
-#### volume.read_only
+- Type: **string**
+
+##### volume.read_only
 
 Specify if the volume is read only.
+
+- Type: **bool**
 
 ### Optional Parameters
 

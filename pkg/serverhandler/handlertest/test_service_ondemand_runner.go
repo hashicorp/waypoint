@@ -57,7 +57,6 @@ func TestServiceOnDemandRunnerConfig(t *testing.T, factory Factory) {
 	t.Run("update non-existent", func(t *testing.T) {
 		require := require.New(t)
 
-		// Create, should get an ID back
 		resp, err := client.UpsertOnDemandRunnerConfig(ctx, &Req{
 			Config: serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
 				Id: "nope",
@@ -67,7 +66,10 @@ func TestServiceOnDemandRunnerConfig(t *testing.T, factory Factory) {
 		require.Nil(resp)
 		st, ok := status.FromError(err)
 		require.True(ok)
-		require.Equal(codes.NotFound, st.Code())
+
+		// It's unclear if this is an attempt to create a new ODR profile with a given ID,
+		// or update an ODR profile that doesn't exist. Either way, it's illegal.
+		require.True(st.Code() == codes.NotFound || st.Code() == codes.InvalidArgument)
 	})
 
 	t.Run("create with target runner labels", func(t *testing.T) {

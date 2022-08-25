@@ -1,0 +1,92 @@
+{
+   "description": "\nDeploy to a Nomad cluster from a pre-existing Nomad job specification file.\n\nThis plugin lets you use any pre-existing Nomad job specification file to\ndeploy to Nomad. This deployment is able to support all the features of Waypoint.\nYou may use Waypoint's [templating features](/docs/waypoint-hcl/functions/template)\nto template the Nomad jobspec with information such as the artifact from\na previous build step, entrypoint environment variables, etc.\n\n### Artifact Access\n\nYou may use Waypoint's [templating features](/docs/waypoint-hcl/functions/template)\nto access information such as the artifact from the build or push stages.\nAn example below shows this by using `templatefile` mixed with\nvariables such as `artifact.image` to dynamically configure the\nDocker image within the Nomad job specification.\n\n-\u003e **Note:** If using [Nomad interpolation](https://www.nomadproject.io/docs/runtime/interpolation) in your jobspec file,\nand the `templatefile` function in your waypoint.hcl file, any interpolated values must be escaped with a second \n`$`. For example: `$${meta.metadata}` instead of `${meta.metadata}`.\n\n### Entrypoint Functionality\n\nWaypoint [entrypoint functionality](/docs/entrypoint#functionality) such\nas logs, exec, app configuration, and more require two properties to be true:\n\n1. The running image must already have the Waypoint entrypoint installed\n  and configured as the entrypoint. This should happen in the build stage.\n\n2. Proper environment variables must be set so the entrypoint knows how\n  to communicate to the Waypoint server. **This step happens in this\n  deployment stage.**\n\n**Step 2 does not happen automatically.** You must manually set the entrypoint\nenvironment variables using the [templating feature](/docs/waypoint-hcl/functions/template).\nOne of the examples below shows the entrypoint environment variables being\ninjected.\n\n-\u003e **Note:** The Waypoint entrypoint and the [Nomad entrypoint functionality](https://www.nomadproject.io/docs/drivers/docker#entrypoint) \ncannot be used simultaneously. In order to use the features of the Waypoint entrypoint, the Nomad entrypoint must not be used in your jobspec.\n\n### URL Service\n\nIf you want your workload to be accessible by the\n[Waypoint URL service](/docs/url), you must set the PORT environment variable\nwithin your job and be using the Waypoint entrypoint (documented in the\nprevious section).\n\nThe PORT environment variable should be the port that your web service\nis listening on that the URL service will connect to. See one of the examples\nbelow for more details.\n\n",
+   "example": "// The waypoint.hcl file\ndeploy {\n  use \"nomad-jobspec\" {\n    // Templated to perhaps bring in the artifact from a previous\n    // build/registry, entrypoint env vars, etc.\n    jobspec = templatefile(\"${path.app}/app.nomad.tpl\")\n  }\n}\n\n// The app.nomad.tpl file\njob \"web\" {\n  datacenters = [\"dc1\"]\n\n  group \"app\" {\n    task \"app\" {\n      driver = \"docker\"\n\n      config {\n        image = \"${artifact.image}:${artifact.tag}\"\n      }\n\n      env {\n        %{ for k,v in entrypoint.env ~}\n        ${k} = \"${v}\"\n        %{ endfor ~}\n\n        // Ensure we set PORT for the URL service. This is only necessary\n        // if we want the URL service to function.\n        PORT = 3000\n      }\n    }\n  }\n}",
+   "mappers": null,
+   "name": "nomad-jobspec",
+   "optionalFields": [
+      {
+         "Field": "hcl1",
+         "Type": "bool",
+         "Synopsis": "Parses jobspec as HCL1 instead of HCL2.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "false",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrs": [
+      {
+         "Field": "id",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "name",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "resource_state",
+         "Type": "opaqueany.Any",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "consul_token",
+         "Type": "",
+         "Synopsis": "The Consul ACL token used to register services with the Nomad job.",
+         "Summary": "Uses the runner config environment variable CONSUL_HTTP_TOKEN.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "CONSUL_HTTP_TOKEN",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "jobspec",
+         "Type": "string",
+         "Synopsis": "Path to a Nomad job specification file.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "vault_token",
+         "Type": "",
+         "Synopsis": "The Vault token used to deploy the Nomad job with a token having specific Vault policies attached.",
+         "Summary": "Uses the runner config environment variable VAULT_TOKEN.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "VAULT_TOKEN",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "platform",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

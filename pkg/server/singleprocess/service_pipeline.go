@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/go-hclog"
+
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -95,13 +96,31 @@ func (s *Service) RunPipeline(
 	}
 
 	// Generate job IDs for each of the steps. We need to know the IDs in
-	// advance to setup the dependency chain.
+	// advance to set up the dependency chain.
 	stepIds := map[string]string{}
 	for name := range pipeline.Steps {
 		stepIds[name], err = server.Id()
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// Initialize a pipeline run
+	if err = s.state(ctx).PipelineRunPut(&pb.PipelineRun{
+		Pipeline: &pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{
+					Id: pipeline.Id,
+				},
+			},
+		},
+		State: pb.PipelineRun_PENDING,
+	}); err != nil {
+		return nil, err
+	}
+	run, err := s.state(ctx).PipelineRunGetLatest(pipeline.Id)
+	if err != nil {
+		return nil, err
 	}
 
 	// Generate the jobs for each of the steps
@@ -115,6 +134,11 @@ func (s *Service) RunPipeline(
 		job := proto.Clone(req.JobTemplate).(*pb.Job)
 		job.Id = stepIds[name]
 		job.DependsOn = append(job.DependsOn, dependsOn...)
+		job.Pipeline = &pb.Ref_PipelineStep{
+			Pipeline:    pipeline.Id,
+			Step:        step.Name,
+			RunSequence: run.Sequence,
+		}
 
 		// Queue the right job depending on the Step type. We will queue a Waypoint
 		// operation if the type is a reserved built in step.
@@ -197,6 +221,7 @@ func (s *Service) RunPipeline(
 			}
 		}
 
+		run.Jobs = append(run.Jobs, &pb.Ref_Job{Id: job.Id})
 		stepJobs = append(stepJobs, &pb.QueueJobRequest{
 			Job: job,
 		})
@@ -216,9 +241,15 @@ func (s *Service) RunPipeline(
 		jobId := stepIds[v.(string)]
 		jobIds = append(jobIds, jobId)
 		jobMap[jobId] = &pb.Ref_PipelineStep{
-			Pipeline: pipeline.Id,
-			Step:     v.(string),
+			Pipeline:    pipeline.Id,
+			Step:        v.(string),
+			RunSequence: run.Sequence,
 		}
+	}
+
+	run.State = pb.PipelineRun_STARTING
+	if err = s.state(ctx).PipelineRunPut(run); err != nil {
+		return nil, err
 	}
 
 	// Queue all the jobs atomically

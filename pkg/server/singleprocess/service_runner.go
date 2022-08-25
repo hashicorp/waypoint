@@ -129,7 +129,7 @@ func (s *Service) RunnerToken(
 
 	// Get our token because our behavior changes a bit with different tokens.
 	// Token may be nil because this is an unauthenticated endpoint.
-	if tok := s.tokenFromContext(ctx); tok != nil {
+	if tok := s.decodedTokenFromContext(ctx); tok != nil {
 		switch k := tok.Kind.(type) {
 		case *pb.Token_Login_:
 			// Legacy (pre WP 0.8) token. We accept these as preadopted. We just
@@ -888,7 +888,7 @@ func (s *Service) runnerVerifyToken(
 	runnerLabels map[string]string, // real runner labels
 ) error {
 	// Get our token and reverify that we are adopted.
-	tok := s.tokenFromContext(ctx)
+	tok := s.decodedTokenFromContext(ctx)
 	if tok == nil {
 		log.Error("no token, should not be possible")
 		return status.Errorf(codes.Unauthenticated, "no token")

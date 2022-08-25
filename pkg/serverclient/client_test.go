@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
+	"github.com/hashicorp/waypoint/pkg/tokenutil"
 )
 
 func TestConnect(t *testing.T) {
@@ -60,8 +61,14 @@ func TestConnect(t *testing.T) {
 
 		defer gl.Close()
 
-		token.ExternalCreds = &pb.Token_OauthCreds{
-			OauthCreds: &pb.Token_OAuthCredentials{
+		token.Kind = &pb.Token_Login_{
+			Login: &pb.Token_Login{
+				UserId: "xxyyzz",
+			},
+		}
+
+		tt.ExternalCreds = &pb.TokenTransport_OauthCreds{
+			OauthCreds: &pb.TokenTransport_OAuthCredentials{
 				Url:          "http://" + l.Addr().String(),
 				ClientId:     "xxyyzz",
 				ClientSecret: "aabbcc",
@@ -71,12 +78,17 @@ func TestConnect(t *testing.T) {
 		tt.Body, err = proto.Marshal(&token)
 		require.NoError(t, err)
 
+		tt.Signature = []byte{0, 1, 2, 3, 4}
+
 		ttData, err := proto.Marshal(&tt)
 		require.NoError(t, err)
 
-		data := append([]byte(tokenMagic), ttData...)
+		data := append([]byte(tokenutil.TokenMagic), ttData...)
 
 		strToken := base58.Encode(data)
+
+		minToken, err := tokenutil.StripCreds(&tt)
+		require.NoError(t, err)
 
 		serv := http.Server{
 			Handler: http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
@@ -92,7 +104,10 @@ func TestConnect(t *testing.T) {
 
 		go serv.Serve(l)
 
-		var seenToken []string
+		var (
+			seenToken   []string
+			seenWPToken []string
+		)
 
 		gs := grpc.NewServer(
 			grpc.UnaryInterceptor(func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
@@ -102,6 +117,7 @@ func TestConnect(t *testing.T) {
 				}
 
 				seenToken = md["authorization"]
+				seenWPToken = md[tokenutil.MetadataKey]
 
 				return nil, fmt.Errorf("nope 2")
 			}))
@@ -129,6 +145,7 @@ func TestConnect(t *testing.T) {
 		require.Error(t, err)
 
 		assert.Equal(t, "debug this-is-an-oauth-token", seenToken[0])
+		assert.Equal(t, minToken, seenWPToken[0])
 	})
 }
 

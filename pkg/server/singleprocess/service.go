@@ -39,7 +39,7 @@ type Service struct {
 	// processToken allows an implementation the ability to alter a to be
 	// generated token before it's generated. This can be used to alter semantics
 	// about the token, such as adding labels, metadata, or additional info
-	processToken func(ctx context.Context, token *pb.Token) (*pb.Token, error)
+	processToken func(ctx context.Context, transport *pb.TokenTransport, token *pb.Token) (*pb.Token, error)
 
 	logStreamProvider logstream.Provider
 
@@ -271,7 +271,7 @@ type config struct {
 	idEncoder func(ctx context.Context, id string) (encodedId string, err error)
 	idDecoder func(encodedId string) (id string, err error)
 
-	processToken func(ctx context.Context, token *pb.Token) (*pb.Token, error)
+	processToken func(ctx context.Context, transport *pb.TokenTransport, token *pb.Token) (*pb.Token, error)
 
 	serverConfig         *serverconfig.Config
 	log                  hclog.Logger
@@ -425,7 +425,7 @@ func WithFeatures(features ...pb.ServerFeaturesFeature) Option {
 // WithTokenProcessor installs a function that will be called just before
 // a new token is encoded. This allows customization of that Token to include
 // additional information.
-func WithTokenProcessor(fn func(context.Context, *pb.Token) (*pb.Token, error)) Option {
+func WithTokenProcessor(fn func(context.Context, *pb.TokenTransport, *pb.Token) (*pb.Token, error)) Option {
 	return func(s *Service, cfg *config) error {
 		cfg.processToken = fn
 		return nil

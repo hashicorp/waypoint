@@ -4,24 +4,21 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"net/url"
 	"os"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
-	"golang.org/x/oauth2/clientcredentials"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/oauth"
 	"google.golang.org/grpc/keepalive"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/env"
 	"github.com/hashicorp/waypoint/pkg/inlinekeepalive"
 	"github.com/hashicorp/waypoint/pkg/protocolversion"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
+	"github.com/hashicorp/waypoint/pkg/tokenutil"
 )
 
 // ErrNoServerConfig is the error when there is no server configuration
@@ -40,7 +37,7 @@ type ConnectOption func(*connectConfig) error
 // We return the raw connection so that you have control over how to close it,
 // and to support potentially alternate services in the future.
 //
-// Authentication is done using a ContextToken type. You can replace the
+// Authentication is done using a tokenutil.ContextToken type. You can replace the
 // token at runtime by changing the context in use on a per-RPC basis.
 func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, error) {
 	// Defaults
@@ -102,7 +99,7 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		))
 	}
 
-	// We always add the ContextToken to the gRPC options so that it can be
+	// We always add the tokenutil.ContextToken to the gRPC options so that it can be
 	// overridden. If the token is empty, it does nothing.
 	var token string
 	if cfg.Auth {
@@ -121,7 +118,7 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		}
 	}
 
-	var perRPC credentials.PerRPCCredentials = ContextToken(token)
+	var perRPC credentials.PerRPCCredentials = tokenutil.ContextToken(token)
 
 	logArgs := []interface{}{
 		"address", cfg.Addr,
@@ -181,32 +178,13 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 	*/
 
 	if token != "" {
-		tokenData, err := TokenDecode(token)
+		externalRPC, err := tokenutil.SetupExternalCreds(ctx, cfg.Log, token, "waypoint-cli")
 		if err != nil {
 			return nil, err
 		}
 
-		if tokenData.ExternalCreds != nil {
-			if oc, ok := tokenData.ExternalCreds.(*pb.Token_OauthCreds); ok {
-				conf := &clientcredentials.Config{
-					ClientID:       oc.OauthCreds.ClientId,
-					ClientSecret:   oc.OauthCreds.ClientSecret,
-					TokenURL:       oc.OauthCreds.Url,
-					EndpointParams: url.Values{"audience": {"waypoint-cli"}},
-				}
-
-				oauthToken, err := conf.Token(ctx)
-				if err != nil {
-					return nil, err
-				}
-
-				perRPC = oauth.NewOauthAccess(oauthToken)
-
-				logArgs = append(logArgs,
-					"oauth-url", oc.OauthCreds.Url,
-					"oauth-client-id", oc.OauthCreds.ClientId,
-				)
-			}
+		if externalRPC != nil {
+			perRPC = externalRPC
 		}
 	}
 

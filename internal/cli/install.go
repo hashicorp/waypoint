@@ -3,11 +3,12 @@ package cli
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/installutil"
-	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/waypoint/internal/installutil"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/posener/complete"
@@ -24,6 +25,7 @@ import (
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverclient"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
+	"github.com/hashicorp/waypoint/pkg/tokenutil"
 )
 
 type InstallCommand struct {
@@ -123,6 +125,7 @@ func (c *InstallCommand) Run(args []string) int {
 	retries := 0
 	maxRetries := 12
 	sr := sg.Add("Attempting to make connection to server...") // stepgroup for retry ui
+	defer func() { sr.Abort() }()
 
 	for {
 		log.Info("connecting to the server so we can set the server config", "addr", contextConfig.Server.Address)
@@ -172,6 +175,16 @@ func (c *InstallCommand) Run(args []string) int {
 			terminal.WithErrorStyle(),
 		)
 		return 1
+	} else {
+		// Close the step here, so that the order of resolved steps makes sense to
+		// the user in case we fail on the "Retrieving initial auth token..." series
+		// Prior to this change, if we failed to retrieve the auth token, the resolved
+		// step with the error message would appear _before_ the above "Successfully connected
+		// to Waypoint server!" message and that is confusing
+		s.Update("Configured server connection")
+		s.Status(terminal.StatusOK)
+		s.Done()
+		s = sg.Add("")
 	}
 
 	client := pb.NewWaypointClient(conn)
@@ -265,8 +278,10 @@ func (c *InstallCommand) Run(args []string) int {
 		}
 	}
 
+	// TODO this should eventually not use StaticToken but something that can
+	// setup access via oauth if the token contains that as well.
 	callOpts = append(callOpts, grpc.PerRPCCredentials(
-		serverclient.StaticToken(contextConfig.Server.AuthToken)))
+		tokenutil.StaticToken(contextConfig.Server.AuthToken)))
 
 	// This is our default, so let's actually set the timestamp if not set on the CLI
 	if c.contextName == "" {
@@ -546,7 +561,7 @@ func installRunner(
 	// If this installation platform supports an out-of-the-box ODR
 	// config then we set that up. This enables on-demand runners to
 	// work immediately.
-	if odc, ok := p.(serverinstall.OnDemandRunnerConfigProvider); ok {
+	if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
 		s = sg.Add("Registering on-demand runner configuration...")
 
 		if odrConfig == nil {
@@ -554,10 +569,6 @@ func installRunner(
 		}
 
 		odrConfig.Name = odrConfig.PluginType + "-bootstrap-profile"
-		if err != nil {
-			ui.Output("Error getting version: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		}
 
 		_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 			Config: odrConfig,
