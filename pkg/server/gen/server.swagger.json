@@ -8675,7 +8675,7 @@
     "hashicorp.waypoint.ListPipelineRunsResponse": {
       "type": "object",
       "properties": {
-        "pipeline_run": {
+        "pipeline_runs": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/hashicorp.waypoint.PipelineRun"

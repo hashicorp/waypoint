@@ -4874,7 +4874,7 @@ message ListPipelineRunsRequest {
 
 message ListPipelineRunsResponse {
   // All of the listed pipelines
-  repeated PipelineRun pipeline_run = 1;
+  repeated PipelineRun pipeline_runs = 1;
 }
 
 message ConfigSyncPipelineRequest {
