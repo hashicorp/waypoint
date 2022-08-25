@@ -17,8 +17,8 @@ import (
 type PipelineInspectCommand struct {
 	*baseCommand
 
-	flagJson       bool
-	flagPipelineId string
+	flagJson         bool
+	flagPipelineName string
 }
 
 func (c *PipelineInspectCommand) Run(args []string) int {
@@ -30,13 +30,12 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		return 1
 	}
 
-	var pipelineId string
-	if len(c.args) == 0 {
-		c.ui.Output("Pipeline ID required.\n\n%s", c.Help(), terminal.WithErrorStyle())
+	if len(c.args) == 0 && c.flagPipelineName == "" {
+		c.ui.Output("Pipeline ID or name required.\n\n%s", c.Help(), terminal.WithErrorStyle())
 		return 1
+	} else if len(c.args) != 0 && c.flagPipelineName != "" {
+		c.ui.Output("Both pipeline name and ID were specified, using pipeline name", terminal.WithWarningStyle())
 	}
-
-	pipelineId = c.args[0]
 
 	// Pre-calculate our project ref
 	projectRef := &pb.Ref_Project{Project: c.flagProject}
@@ -52,15 +51,29 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		}
 	}
 
-	resp, err := c.project.Client().GetPipeline(c.Ctx, &pb.GetPipelineRequest{
-		Pipeline: &pb.Ref_Pipeline{
-			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: pipelineId,
+	pipelineRef := &pb.Ref_Pipeline{}
+	if c.flagPipelineName != "" {
+		pipelineRef = &pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Owner{
+				Owner: &pb.Ref_PipelineOwner{
+					Project:      projectRef,
+					PipelineName: c.flagPipelineName,
 				},
 			},
-		},
+		}
+	} else {
+		pipelineRef = &pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{
+					Id: c.args[0],
+				},
+			},
+		}
+	}
+	resp, err := c.project.Client().GetPipeline(c.Ctx, &pb.GetPipelineRequest{
+		Pipeline: pipelineRef,
 	})
+
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			c.ui.Output("Pipeline not found: %s", clierrors.Humanize(err),
@@ -126,6 +139,13 @@ func (c *PipelineInspectCommand) Flags() *flag.Sets {
 			Target:  &c.flagJson,
 			Default: false,
 			Usage:   "Output the Pipeline as json.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "name",
+			Target:  &c.flagPipelineName,
+			Default: "",
+			Usage:   "Inspect a pipeline by name.",
 		})
 	})
 }
