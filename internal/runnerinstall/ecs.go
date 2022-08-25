@@ -181,7 +181,7 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			runSvcArn, err = launchRunner(
 				ctx, ui, log, sess,
 				opts.AdvertiseClient.Env(),
-				opts.RunnerRunFlags,
+				opts.RunnerAgentFlags,
 				executionRole,
 				taskRole,
 				logGroup,
