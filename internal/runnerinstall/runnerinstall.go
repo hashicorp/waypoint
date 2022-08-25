@@ -52,6 +52,11 @@ type InstallOpts struct {
 
 	// Unique ID for the runner.
 	Id string
+
+	// Labels is the set of labels which can be applied to the runner. They will
+	// be used via the `label` flag on the `runner agent` command in the runner
+	// container
+	Labels map[string]string
 }
 
 var Platforms = map[string]RunnerInstaller{

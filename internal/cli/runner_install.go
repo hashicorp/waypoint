@@ -18,14 +18,15 @@ import (
 type RunnerInstallCommand struct {
 	*baseCommand
 
-	platform              []string `hcl:"platform,optional"`
-	skipAdopt             bool     `hcl:"skip_adopt,optional"`
-	serverUrl             string   `hcl:"server_url,required"`
-	id                    string   `hcl:"id,optional"`
-	runnerProfileOdrImage string   `hcl:"odr_image,optional"`
-	serverTls             bool     `hcl:"server_tls,optional"`
-	serverTlsSkipVerify   bool     `hcl:"server_tls_skip_verify,optional"`
-	serverRequireAuth     bool     `hcl:"server_require_auth,optional"`
+	platform              []string          `hcl:"platform,optional"`
+	skipAdopt             bool              `hcl:"skip_adopt,optional"`
+	serverUrl             string            `hcl:"server_url,required"`
+	id                    string            `hcl:"id,optional"`
+	runnerProfileOdrImage string            `hcl:"odr_image,optional"`
+	serverTls             bool              `hcl:"server_tls,optional"`
+	serverTlsSkipVerify   bool              `hcl:"server_tls_skip_verify,optional"`
+	serverRequireAuth     bool              `hcl:"server_require_auth,optional"`
+	labels                map[string]string `hcl:"labels,optional"`
 }
 
 func (c *RunnerInstallCommand) AutocompleteArgs() complete.Predictor {
@@ -98,6 +99,12 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 			Name:   "id",
 			Usage:  "If this is set, the runner will use the specified id.",
 			Target: &c.id,
+		})
+
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "label",
+			Target: &c.labels,
+			Usage:  "Labels to set for this runner in 'k=v' format. Can be specified multiple times.",
 		})
 
 		for _, name := range sortedPlatformNames {
@@ -214,7 +221,8 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 			TlsSkipVerify: c.serverTlsSkipVerify,
 			RequireAuth:   c.serverRequireAuth,
 		},
-		Id: id,
+		Id:     id,
+		Labels: c.labels,
 	})
 	if err != nil {
 		c.ui.Output("Error installing runner: %s", clierrors.Humanize(err),
