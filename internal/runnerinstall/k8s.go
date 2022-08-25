@@ -174,17 +174,12 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		}
 	}
 
-	var labels []string
-	for labelKey, labelValue := range opts.Labels {
-		labels = append(labels, "-label="+labelKey+"="+labelValue)
-	}
-
 	values := map[string]interface{}{
 		"server": map[string]interface{}{
 			"enabled": false,
 		},
 		"runner": map[string]interface{}{
-			"agentArgs": labels,
+			"agentArgs": opts.RunnerRunFlags,
 			"id":        opts.Id,
 			"image": map[string]interface{}{
 				"repository": runnerImageRef.Repository(),
