@@ -249,7 +249,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		var odrConfig *pb.OnDemandRunnerConfig
 		s = sg.Add("Creating runner profile and targeting runner %s", strings.ToUpper(id))
 		if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
-			odrConfig = odc.OnDemandRunnerConfig()
+			odrConfig = odc.OnDemandRunnerConfig(c.id)
 		} else {
 			odrConfig = &pb.OnDemandRunnerConfig{
 				Name: platform[0] + "-" + strings.ToUpper(id),

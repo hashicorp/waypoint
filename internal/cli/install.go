@@ -565,7 +565,7 @@ func installRunner(
 		s = sg.Add("Registering on-demand runner configuration...")
 
 		if odrConfig == nil {
-			odrConfig = odc.OnDemandRunnerConfig()
+			odrConfig = odc.OnDemandRunnerConfig("")
 		}
 
 		odrConfig.Name = odrConfig.PluginType + "-bootstrap-profile"

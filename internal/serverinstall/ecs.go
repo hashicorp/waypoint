@@ -1484,7 +1484,7 @@ func createNLB(
 }
 
 // OnDemandRunnerConfig implements OnDemandRunnerConfigProvider
-func (i *ECSInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+func (i *ECSInstaller) OnDemandRunnerConfig(string) *pb.OnDemandRunnerConfig {
 	// Generate some configuration. Some of the OnDemand configurations have
 	// defaults so we should be fine to directly use them
 	cfgMap := map[string]interface{}{

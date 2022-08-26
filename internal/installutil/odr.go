@@ -37,5 +37,15 @@ func DefaultRunnerName(id string) string {
 // An optional interface that the installer can implement to request
 // an ondemand runner be registered.
 type OnDemandRunnerConfigProvider interface {
-	OnDemandRunnerConfig() *pb.OnDemandRunnerConfig
+	OnDemandRunnerConfig(id string) *pb.OnDemandRunnerConfig
+}
+
+func DefaultRunnerProfileName(id string, platform string) string {
+	var name string
+	if id != "" {
+		name = platform + "-" + id
+	} else {
+		name = platform
+	}
+	return name
 }

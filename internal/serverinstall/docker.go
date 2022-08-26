@@ -639,7 +639,7 @@ func (i *DockerInstaller) InstallRunner(
 	return nil
 }
 
-func (i *DockerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
+func (i *DockerInstaller) OnDemandRunnerConfig(string) *pb.OnDemandRunnerConfig {
 	return &pb.OnDemandRunnerConfig{
 		Name:       "docker",
 		OciUrl:     i.config.odrImage,
