@@ -1,0 +1,60 @@
+---
+layout: docs
+page_title: Adoption Workflow
+description: |-
+  An overview of the adoption process for Waypoint Static Runners.
+---
+
+# Adoption Workflow
+
+Waypoint runners can exist in various states depending on how they are
+initially installed into a platform. Most runners will move from `Pending` to
+`Adopted` to `Rejected` states during their entire lifecycle.
+
+## Pending Runners
+
+The `Pending` runner state is the default state which newly installed runners
+will be in as they have yet to receive a runner token from the server. Runners
+in this state may be configured to talk to a Waypoint Server but have not yet
+been adopted by the Server and therefore will not receive jobs to run. Runners
+will also show up in this state if they are forgotten about by the server with
+the [`waypoint runner forget`](/commands/runner-forget) command.
+
+When in the `Pending` state, runners may be moved into the `Adopted` state by
+issuing the [`waypoint runner adopt`](/commands/runner-adopt) command with the
+desired Runner ID.
+
+Runners automatically skip this state if they are in the `Preadopted` state.
+
+## Preadopted Runners
+
+When creating a new runner it is possible to generate the runner token which
+seeded to the new runner before its initial installation. These runners which
+have an already valid runner token are able to immediately receive jobs from
+the Waypoint Server when they start. They also skip the `Pending` state to
+directly enter the `Preadopted` state.
+
+Preadopted runners may be moved into the `Rejected` state like other runners by
+issuing [`waypoint runner reject`](/commands/runner-reject). If a preadopted
+runner is rejected a new runner token must be created for the runner before it
+is allowed to receive jobs again.
+
+## Adopted Runners
+
+Runners adopted with [`waypoint runner adopt`](/commands/runner-adopt) will
+store the runner token received by the server in their configured state
+directory. Once a runner has been adopted it may start receiving job
+assignments from the Waypoint server as usual.
+
+## Rejected Runners
+
+When a user rejects a Waypoint Runner with the [`waypoint runner reject`](/commands/runner-reject) command the rejected runner is no longer able
+to receive job assignments from the Waypoint Server. Rejected runners will
+continue to appear in the list of runners that the server knows about so that
+subsequent requests by this same runner are ignored.
+
+Rejecting a runner does not invalidate its token. If a rejected runner is
+forgotten the previously rejected runner may reconnect to the server as long as
+its token is good. This runner will be able to accept jobs as if it were never
+rejected in the first place. By default runner tokens are valid for 30 days and
+upon expiring they will need to be recreated with [`waypoint runner token`](/commands/runner-token) and reconfigured
