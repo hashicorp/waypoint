@@ -188,6 +188,7 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			runSvcArn, err = launchRunner(
 				ctx, ui, log, sess,
 				opts.AdvertiseClient.Env(),
+				opts.RunnerAgentFlags,
 				executionRole,
 				taskRole,
 				logGroup,
@@ -358,7 +359,7 @@ func launchRunner(
 	ui terminal.UI,
 	log hclog.Logger,
 	sess *session.Session,
-	env []string,
+	env, extraArgs []string,
 	executionRoleArn, taskRoleArn, logGroup, region, cpu, memory, runnerImage, cluster, cookie, id string,
 	netInfo *awsinstallutil.NetworkInformation,
 	efsInfo *awsinstallutil.EfsInformation,
@@ -394,9 +395,15 @@ func launchRunner(
 			Value: aws.String(value),
 		})
 	}
+
+	var args []*string
+	for _, arg := range extraArgs {
+		args = append(args, aws.String(arg))
+	}
+
 	def := ecs.ContainerDefinition{
 		Essential: aws.Bool(true),
-		Command: []*string{
+		Command: append([]*string{
 			aws.String("runner"),
 			aws.String("agent"),
 			aws.String("-id=" + id),
@@ -404,7 +411,7 @@ func launchRunner(
 			aws.String("-cookie=" + cookie),
 			aws.String("-state-dir=/data/runner"),
 			aws.String("-vv"),
-		},
+		}, args...),
 		Name:  aws.String(runnerName),
 		Image: aws.String(runnerImage),
 		PortMappings: []*ecs.PortMapping{
