@@ -162,14 +162,14 @@ func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 	task := api.NewTask("runner", "docker")
 	task.Config = map[string]interface{}{
 		"image": c.RunnerImage,
-		"args": []string{
+		"args": append([]string{
 			"runner",
 			"agent",
 			"-id=" + opts.Id,
 			"-state-dir=/data/runner",
 			"-cookie=" + opts.Cookie,
 			"-vv",
-		},
+		}, opts.RunnerAgentFlags...),
 		"auth_soft_fail": c.AuthSoftFail,
 	}
 

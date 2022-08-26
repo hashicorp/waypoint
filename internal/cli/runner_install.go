@@ -202,6 +202,15 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		}
 	}
 
+	// collect any args after a `--` break to pass forward as secondary flags
+	var secondaryArgs []string
+	for i, f := range args {
+		if f == "--" {
+			secondaryArgs = args[(i + 1):]
+			break
+		}
+	}
+
 	s = sg.Add("Installing runner...")
 	err = p.Install(ctx, &runnerinstall.InstallOpts{
 		Log:        log,
@@ -214,7 +223,8 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 			TlsSkipVerify: c.serverTlsSkipVerify,
 			RequireAuth:   c.serverRequireAuth,
 		},
-		Id: id,
+		Id:               id,
+		RunnerAgentFlags: secondaryArgs,
 	})
 	if err != nil {
 		c.ui.Output("Error installing runner: %s", clierrors.Humanize(err),

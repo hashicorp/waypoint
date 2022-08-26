@@ -52,6 +52,9 @@ type InstallOpts struct {
 
 	// Unique ID for the runner.
 	Id string
+
+	// Flags which will be supplied to the `waypoint runner agent` command
+	RunnerAgentFlags []string
 }
 
 var Platforms = map[string]RunnerInstaller{

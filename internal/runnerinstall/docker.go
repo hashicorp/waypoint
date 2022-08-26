@@ -106,7 +106,7 @@ func (i *DockerRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) 
 		User:         "root",
 		Image:        runnerImage,
 		Env:          opts.AdvertiseClient.Env(),
-		Cmd:          []string{"runner", "agent", "-id=" + opts.Id, "-cookie=" + opts.Cookie, "-vv"},
+		Cmd:          append([]string{"runner", "agent", "-id=" + opts.Id, "-cookie=" + opts.Cookie, "-vv"}, opts.RunnerAgentFlags...),
 		Labels: map[string]string{
 			"waypoint-type": "runner",
 		},
