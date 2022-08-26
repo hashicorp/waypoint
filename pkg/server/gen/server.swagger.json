@@ -10929,6 +10929,15 @@
       },
       "description": "A deployment packaged alongside prefetched related messages."
     },
+    "hashicorp.waypoint.UI.GetDeploymentResponse": {
+      "type": "object",
+      "properties": {
+        "deployment": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.DeploymentBundle",
+          "description": "The deployment with related messages prefetched."
+        }
+      }
+    },
     "hashicorp.waypoint.UI.GetProjectResponse": {
       "type": "object",
       "properties": {
