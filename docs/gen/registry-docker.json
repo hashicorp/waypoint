@@ -1,0 +1,238 @@
+{
+   "description": "Push a Docker image to a Docker compatible registry",
+   "example": "build {\n  use \"docker\" {}\n  registry {\n    use \"docker\" {\n      image = \"hashicorp/http-echo\"\n      tag   = \"latest\"\n    }\n  }\n}",
+   "input": "docker.Image",
+   "mappers": null,
+   "name": "docker",
+   "optionalFields": [
+      {
+         "Field": "auth",
+         "Type": "docker.Auth",
+         "Synopsis": "the authentication information to log into the docker repository",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "auth",
+               "Type": "string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "email",
+               "Type": "string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "hostname",
+               "Type": "string",
+               "Synopsis": "Hostname of Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "identityToken",
+               "Type": "string",
+               "Synopsis": "Token used to authenticate user",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "password",
+               "Type": "string",
+               "Synopsis": "Password of Docker registry account",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "registryToken",
+               "Type": "string",
+               "Synopsis": "Bearer tokens to be sent to Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "serverAddress",
+               "Type": "string",
+               "Synopsis": "Address of Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "username",
+               "Type": "string",
+               "Synopsis": "Username of Docker registry account",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
+         "Field": "encoded_auth",
+         "Type": "string",
+         "Synopsis": "the authentication information to log into the docker repository",
+         "Summary": "The format of this is base64-encoded JSON. The structure is the [`AuthConfig`](https://pkg.go.dev/github.com/docker/cli/cli/config/types#AuthConfig) structure used by Docker.\n  WARNING: be very careful to not leak the authentication information by hardcoding it here. Use a helper function like `file()` to read the information from a file not stored in VCS",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "insecure",
+         "Type": "bool",
+         "Synopsis": "access the registry via http rather than https",
+         "Summary": "This indicates that the registry should be accessed via http rather than https. Not recommended for production usage.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "local",
+         "Type": "bool",
+         "Synopsis": "if set, the image will only be tagged locally and not pushed to a remote repository",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "password",
+         "Type": "string",
+         "Synopsis": "password associated with username on the registry",
+         "Summary": "This optional conflicts with encoded_auth and thusly only one can be used at a time. If both are used, encoded_auth takes precedence.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "username",
+         "Type": "string",
+         "Synopsis": "username to authenticate with the registry",
+         "Summary": "This optional conflicts with encoded_auth and thusly only one can be used at a time. If both are used, encoded_auth takes precedence.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "output": "docker.Image",
+   "outputAttrs": [
+      {
+         "Field": "architecture",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "image",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "location",
+         "Type": "docker.isImage_Location",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "tag",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "image",
+         "Type": "string",
+         "Synopsis": "the image to push the local image to, fully qualified",
+         "Summary": "this value must be the fully qualified name to the image. for example: gcr.io/waypoint-demo/demo",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "tag",
+         "Type": "string",
+         "Synopsis": "the tag for the new image",
+         "Summary": "this is added to image to provide the full image reference",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "registry",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

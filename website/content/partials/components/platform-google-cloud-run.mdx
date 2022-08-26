@@ -69,38 +69,44 @@ app "wpmini" {
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
-#### auto_scaling
+#### auto_scaling (category)
 
 Configuration to control the auto scaling parameters for Cloud Run.
 
-- Type: **cloudrun.AutoScaling**
-
-#### auto_scaling.max
+##### auto_scaling.max
 
 Maximum number of Cloud Run instances. When the maximum requests per container is exceeded, Cloud Run will create an additional container instance to handle load.
 This parameter controls the maximum number of instances that can be created.
 
-#### capacity
+- Type: **int**
+
+#### capacity (category)
 
 CPU, Memory, and resource limits for each Cloud Run instance.
 
-- Type: **cloudrun.Capacity**
-
-#### capacity.cpu_count
+##### capacity.cpu_count
 
 Number of CPUs to allocate the Cloud Run instance, min 1, max 2.
 
-#### capacity.max_requests_per_container
+- Type: **int**
+
+##### capacity.max_requests_per_container
 
 Maximum number of concurrent requests each instance can handle. When the maximum requests are exceeded, Cloud Run will create an additional instance.
 
-#### capacity.memory
+- Type: **int**
+
+##### capacity.memory
 
 Memory to allocate the Cloud Run instance specified in MB, min 128, max 4096.
 
-#### capacity.request_timeout
+- Type: **int**
+
+##### capacity.request_timeout
 
 Maximum time a request can take before timing out, max 900.
+
+- Type: **int**
 
 #### location
 

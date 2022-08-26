@@ -2997,51 +2997,53 @@ deploy {
 			"This runs additional containers in addition to the main container that",
 			"comes from the build phase.",
 		),
-	)
 
-	doc.SetField(
-		"sidecar.name",
-		"Name of the container",
-	)
-
-	doc.SetField(
-		"sidecar.image",
-		"Image of the sidecar container",
-	)
-
-	doc.SetField(
-		"sidecar.memory",
-		"The amount (in MiB) of memory to present to the container",
-	)
-
-	doc.SetField(
-		"sidecar.memory_reservation",
-		"The soft limit (in MiB) of memory to reserve for the container",
-	)
-
-	doc.SetField(
-		"sidecar.container_port",
-		"The port number for the container",
-	)
-
-	doc.SetField(
-		"sidecar.host_port",
-		"The port number on the host to reserve for the container",
-	)
-
-	doc.SetField(
-		"sidecar.protocol",
-		"The protocol used for port mapping.",
-	)
-
-	doc.SetField(
-		"sidecar.static_environment",
-		"Environment variables to expose to this container",
-	)
-
-	doc.SetField(
-		"sidecar.secrets",
-		"Secrets to expose to this container",
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"name",
+				"Name of the container",
+			)
+		
+			doc.SetField(
+				"image",
+				"Image of the sidecar container",
+			)
+		
+			doc.SetField(
+				"memory",
+				"The amount (in MiB) of memory to present to the container",
+			)
+		
+			doc.SetField(
+				"memory_reservation",
+				"The soft limit (in MiB) of memory to reserve for the container",
+			)
+		
+			doc.SetField(
+				"container_port",
+				"The port number for the container",
+			)
+		
+			doc.SetField(
+				"host_port",
+				"The port number on the host to reserve for the container",
+			)
+		
+			doc.SetField(
+				"protocol",
+				"The protocol used for port mapping.",
+			)
+		
+			doc.SetField(
+				"static_environment",
+				"Environment variables to expose to this container",
+			)
+		
+			doc.SetField(
+				"secrets",
+				"Secrets to expose to this container",
+			)
+		}),
 	)
 
 	var memvals []int

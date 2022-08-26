@@ -1,0 +1,205 @@
+{
+   "description": "\nUse an existing, pre-built Docker image.\n\nThis builder will automatically inject the Waypoint entrypoint. You\ncan disable this with the \"disable_entrypoint\" configuration.\n\nIf you wish to rename or retag an image, use this along with the\n\"docker\" registry option which will rename/retag the image and then\npush it to the specified registry.\n\nIf Docker isn't available (the Docker daemon isn't running or a DOCKER_HOST\nisn't set), a daemonless solution will be used instead.\n\nIf \"disable_entrypoint\" is set to true and the Waypoint configuration\nhas no registry, this builder will not physically pull the image. This enables\nWaypoint to work in environments where the image is built outside of Waypoint\n(such as in a CI pipeline).\n",
+   "example": "build {\n  use \"docker-pull\" {\n    image = \"gcr.io/my-project/my-image\"\n    tag   = \"abcd1234\"\n  }\n}",
+   "input": "component.Source",
+   "mappers": null,
+   "name": "docker-pull",
+   "optionalFields": [
+      {
+         "Field": "auth",
+         "Type": "docker.Auth",
+         "Synopsis": "the authentication information to log into the docker repository",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "auth",
+               "Type": "string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "email",
+               "Type": "string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "hostname",
+               "Type": "string",
+               "Synopsis": "Hostname of Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "identityToken",
+               "Type": "string",
+               "Synopsis": "Token used to authenticate user",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "password",
+               "Type": "string",
+               "Synopsis": "Password of Docker registry account",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "registryToken",
+               "Type": "string",
+               "Synopsis": "Bearer tokens to be sent to Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "serverAddress",
+               "Type": "string",
+               "Synopsis": "Address of Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "username",
+               "Type": "string",
+               "Synopsis": "Username of Docker registry account",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
+         "Field": "disable_entrypoint",
+         "Type": "bool",
+         "Synopsis": "if set, the entrypoint binary won't be injected into the image",
+         "Summary": "The entrypoint binary is what provides extended functionality such as logs and exec. If it is not injected at build time the expectation is that the image already contains it",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "encoded_auth",
+         "Type": "string",
+         "Synopsis": "the authentication information to log into the docker repository",
+         "Summary": "WARNING: be very careful to not leak the authentication information by hardcoding it here. Use a helper function like `file()` to read the information from a file not stored in VCS",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "output": "docker.Image",
+   "outputAttrs": [
+      {
+         "Field": "architecture",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "image",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "location",
+         "Type": "docker.isImage_Location",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "tag",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "image",
+         "Type": "string",
+         "Synopsis": "The image to pull.",
+         "Summary": "This should NOT include the tag (the value following the ':' in a Docker image). Use `tag` to define the image tag.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "tag",
+         "Type": "string",
+         "Synopsis": "The tag of the image to pull.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "builder",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}
