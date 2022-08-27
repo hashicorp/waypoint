@@ -87,6 +87,8 @@ func (c *RunnerListCommand) Run(args []string) int {
 		if stateStr == "" {
 			stateStr = "unknown"
 		}
+		// Omit label that the user didn't set from the output
+		delete(r.Labels, "waypoint.hashicorp.com/runner-hash")
 
 		var labelStr string
 		for k, v := range r.Labels {

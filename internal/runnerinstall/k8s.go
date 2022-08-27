@@ -179,7 +179,8 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			"enabled": false,
 		},
 		"runner": map[string]interface{}{
-			"id": opts.Id,
+			"agentArgs": opts.RunnerAgentFlags,
+			"id":        opts.Id,
 			"image": map[string]interface{}{
 				"repository": runnerImageRef.Repository(),
 				"tag":        runnerImageRef.Tag(),
