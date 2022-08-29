@@ -123,7 +123,7 @@ func (s *Service) RunPipeline(
 		return nil, err
 	}
 
-	// Build out all of the queued job requests for running this pipelines steps
+	// Build out all of the queued job requests for running this pipeline's steps
 	stepJobs, pipelineRun, stepIds, err := s.buildStepJobs(ctx, log, req,
 		make(map[string]interface{}), nodeIdMap, make(map[string][]string), pipeline, pipelineRun)
 	if err != nil {
@@ -151,7 +151,7 @@ func (s *Service) RunPipeline(
 			// NOTE(briancain):
 			// This could be better. It's basically here because we want to keep track
 			// of an embedded pipeline step ref within the step graph, but it doesn't have
-			// a "job id" because the root of the embedded pipeline is the actual ID where
+			// a "job id" because the root of the embedded pipeline is the actual ID whereas
 			// this is simply a reference.
 			// We don't want to add it as a job id because it doesn't actually create a job.
 			// jobId = "embedded-pipeline-ref-" + nodeId
@@ -204,7 +204,7 @@ func (s *Service) buildStepJobs(
 	visitedPipelines[pipeline.Name] = struct{}{}
 
 	// Generate job IDs for each of the steps. We need to know the IDs in
-	// advance to setup the dependency chain.
+	// advance to set up the dependency chain.
 	stepIds := map[string]string{}
 	for name, step := range pipeline.Steps {
 		if _, ok := step.Kind.(*pb.Pipeline_Step_Pipeline_); !ok {
@@ -252,7 +252,7 @@ func (s *Service) buildStepJobs(
 			dependsOn = append(dependsOn, d)
 		}
 
-		// Depend on all JOB IDs from parent step. If we were given a parent pipeline
+		// Depend on all job IDs from parent step. If we were given a parent pipeline
 		// with its step dependencies we're in an embedded pipeline and need to ensure
 		// the downstream steps have an implicit dependency on the parent embedded
 		// pipeline Ref step
@@ -358,8 +358,8 @@ func (s *Service) buildStepJobs(
 				return nil, nil, nil, err
 			}
 
-			// Pass through *this* steps job dependency IDs so that the child
-			// steps aren't scheduled prior to any dependencies they are waiting for.
+			// Pass through *this* step's job dependency IDs, so that the child
+			// step's jobs aren't scheduled prior to any dependencies.
 			parentStepDep := map[string][]string{pipeline.Id: job.DependsOn}
 
 			embedJobs, embedRun, embedStepIds, err := s.buildStepJobs(ctx, log, req,
