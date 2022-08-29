@@ -313,24 +313,14 @@ func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 		LabelSelector: fmt.Sprintf("app=%s", DefaultRunnerTagName),
 	})
 	if err != nil {
-		// TODO: don't include the error here, because the function that
-		// calls this one also outputs the error
-		ui.Output(
-			"Error looking up deployments: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
+		return fmt.Errorf("could not find deployments in namespace %q: %s", i.Config.Namespace, err)
 	}
 
 	listHelmClient, err := deploymentClient.List(ctx, metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=waypoint-%s", opts.Id),
 	})
 	if err != nil {
-		ui.Output(
-			"Error looking up deployments: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
+		return fmt.Errorf("could not find deployments in namespace %q: %s", i.Config.Namespace, err)
 	}
 
 	if len(listK8sClient.Items) == 0 && len(listHelmClient.Items) == 0 {
