@@ -128,6 +128,8 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 	defer sg.Wait()
 
 	s := sg.Add("Uninstalling runner...")
+	defer func() { s.Abort() }()
+
 	err := p.Uninstall(ctx, &runnerinstall.InstallOpts{
 		Log:        log,
 		UI:         c.ui,
@@ -135,9 +137,10 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 		Id:         c.id,
 	})
 	if err != nil {
-		c.ui.Output("Error uninstalling runner: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
+		s.Update("Error uninstalling runner")
+		s.Status(terminal.StatusError)
+		s.Done()
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 	s.Update("Runner %q uninstalled successfully", c.id)

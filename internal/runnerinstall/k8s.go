@@ -288,33 +288,63 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 }
 
 func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
-	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeconfigPath, i.Config.K8sContext)
+	ui := opts.UI
+	// Our checks here follow the logic of:
+	// Up until v0.8.2, we installed runners with the k8s client,
+	// and the Label was "app=waypoint-runner" and the Name "waypoint-runner-random-id"
+	// As of 0.9.0, we install runners with helm, with a Label following the
+	// pattern ("app.kubernetes.io/instance=waypoint-%s", runnerId)
+	// and the Name ("waypoint-"+strings.ToLower(runnerId))
+	//
+	// Therefore we need to ascertain A) if the runner exists on the cluster at
+	// all (it might not be if the user is auth'd to the wrong cluster), and then B)
+	// if the name/label matches the Helm pattern or the k8s client pattern so
+	// we know how to uninstall it
+
+	// A) Is runner on the cluster at all?
+	clientset, err := i.NewClient()
 	if err != nil {
+		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
 	}
 
-	helmList := action.NewList(actionConfig)
-	releases, _ := helmList.Run()
-
-	isHelm := false
-
-	for _, release := range releases {
-		opts.Log.Debug(fmt.Sprintf("Releases %+v", release.Name))
-		if release.Name == "waypoint-"+strings.ToLower(opts.Id) {
-			isHelm = true
-			break
-		}
+	deploymentClient := clientset.AppsV1().Deployments(i.Config.Namespace)
+	listK8sClient, err := deploymentClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app=%s", DefaultRunnerTagName),
+	})
+	if err != nil {
+		// TODO: don't include the error here, because the function that
+		// calls this one also outputs the error
+		ui.Output(
+			"Error looking up deployments: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
 	}
 
-	if isHelm {
-		i.uninstallWithHelm(ctx, opts)
+	listHelmClient, err := deploymentClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=waypoint-%s", opts.Id),
+	})
+	if err != nil {
+		ui.Output(
+			"Error looking up deployments: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
+
+	if len(listK8sClient.Items) == 0 && len(listHelmClient.Items) == 0 {
+		return fmt.Errorf("runner with ID %q not found in namespace %q", opts.Id, i.Config.Namespace)
+	}
+
+	// B) Decide which uninstall path we use based on if there is a runner with
+	// the naming patterns we get with our 0.9.0+ helm installer
+	if len(listHelmClient.Items) > 0 {
+		err = i.uninstallWithHelm(ctx, opts)
 	} else {
-		i.uninstallWithK8s(ctx, opts)
+		err = i.uninstallWithK8s(ctx, opts)
 	}
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Uninstall is a method of K8sInstaller and implements the Installer interface to
@@ -337,15 +367,17 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 	}
 
 	deploymentClient := clientset.AppsV1().Deployments(i.Config.Namespace)
-	if list, err := deploymentClient.List(ctx, metav1.ListOptions{
+	list, err := deploymentClient.List(ctx, metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app=%s", DefaultRunnerTagName),
-	}); err != nil {
+	})
+	if err != nil {
 		ui.Output(
 			"Error looking up deployments: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 		return err
-	} else if len(list.Items) > 0 {
+	}
+	if len(list.Items) > 0 {
 		s.Update("Deleting any automatically installed runners...")
 
 		// Record various settings we can reuse for runner reinstallation
@@ -434,7 +466,7 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 		s.Done()
 	} else {
 		opts.UI.Output("No runners with id "+opts.Id+" installed.", terminal.WithErrorStyle())
-		return errors.New("no runner installed with id" + opts.Id + " installed")
+		return errors.New("runner with ID " + opts.Id + " not found in namespace " + i.Config.Namespace)
 	}
 
 	return nil
@@ -496,11 +528,8 @@ func (i *K8sRunnerInstaller) uninstallWithHelm(ctx context.Context, opts *Instal
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=%s", helmRunnerId),
 	}
 	err = i.CleanPVC(ctx, opts.UI, opts.Log, listOptions)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func (i *K8sRunnerInstaller) UninstallFlags(set *flag.Set) {
