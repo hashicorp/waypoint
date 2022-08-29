@@ -7,7 +7,7 @@ description: |-
 
 # Adoption Workflow
 
-Waypoint runners can exist in various states depending on how they are
+Waypoint Runners can exist in various states depending on how they are
 initially installed into a platform. Most runners will move from `Pending` to
 `Adopted` to `Rejected` states during their entire lifecycle.
 
@@ -44,7 +44,7 @@ is allowed to receive jobs again.
 Runners adopted with [`waypoint runner adopt`](/commands/runner-adopt) will
 store the runner token received by the server in their configured state
 directory. Once a runner has been adopted it may start receiving job
-assignments from the Waypoint server as usual.
+assignments from the Waypoint Server as usual.
 
 ## Rejected Runners
 
@@ -55,6 +55,29 @@ subsequent requests by this same runner are ignored.
 
 Rejecting a runner does not invalidate its token. If a rejected runner is
 forgotten the previously rejected runner may reconnect to the server as long as
-its token is good. This runner will be able to accept jobs as if it were never
-rejected in the first place. By default runner tokens are valid for 30 days and
-upon expiring they will need to be recreated with [`waypoint runner token`](/commands/runner-token) and reconfigured
+its token is not expired. This runner will be able to accept jobs as if it were
+never rejected in the first place.
+
+# Runner Tokens
+
+Runner tokens are special tokens which can only be used by runners receiving
+job assignments from the Waypoint Server. These tokens cannot be revoked, only
+rejected through the [`waypoint runner reject`](/commands/runner-reject)
+command. By default runner tokens are valid for 30 days and upon expiring they
+will need to be recreated with [`waypoint runner token`](/commands/runner-token).
+Runners must then be restarted with the new token to receive job assignments
+again. Token expirations may be altered when generating a runner token with
+['waypoint runner token'](/commands/runner-token).
+
+The Waypoint Runner will look for the token in two places before requesting a
+new token from the Waypoint Server. First the runner will look in its state
+directory for a `token` file containing a Waypoint Runner token. If a `token`
+file doesn't exist then the Waypoint Runner will look in the
+`WAYPOINT_SERVER_TOKEN` environment variable. If both of these locations do not
+contain a token then the Waypoint Runner enters the `Pending` state and an
+adoption request is sent to the server for a user to manually adopt. Runners
+adopted store the received token within the `token` file in the runner's state
+directory.
+
+See [Additional Runners](/docs/runner/run-manual) for more information about
+Waypoint Runner installation.
