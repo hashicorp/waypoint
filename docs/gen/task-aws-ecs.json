@@ -70,28 +70,6 @@
          "SubFields": null
       },
       {
-         "Field": "security_group_id",
-         "Type": "string",
-         "Synopsis": "Security Group ID to place the On-Demand Runner task in",
-         "Summary": "Security Group ID to place the On-Demand Runner task in. This defaults to the security group used for the Waypoint server",
-         "Optional": true,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "subnets",
-         "Type": "string",
-         "Synopsis": "List of subnets to place the On-Demand Runner task in.",
-         "Summary": "List of subnets to place the On-Demand Runner task in. This defaults to the list of subnets configured for the Waypoint server and must be either identical or a subset of the subnets used by the Waypoint server",
-         "Optional": true,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
          "Field": "task_role_name",
          "Type": "string",
          "Synopsis": "The name of the AWS IAM role to apply to the task's Task Role",
@@ -123,6 +101,28 @@
          "Type": "",
          "Synopsis": "Docker image for the Waypoint On-Demand Runners",
          "Summary": "Docker image for the Waypoint On-Demand Runners. This will\ndefault to the server image with the name (not label) suffixed with '-odr'.\"",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "security_group_id",
+         "Type": "string",
+         "Synopsis": "Security Group ID to place the On-Demand Runner task in",
+         "Summary": "Security Group ID to place the On-Demand Runner task in. This defaults to the security group used for the Waypoint server",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "subnets",
+         "Type": "string",
+         "Synopsis": "List of subnets to place the On-Demand Runner task in.",
+         "Summary": "List of subnets to place the On-Demand Runner task in. This defaults to the list of subnets configured for the Waypoint server and must be either identical or a subset of the subnets used by the Waypoint server",
          "Optional": false,
          "Default": "",
          "EnvVar": "",
