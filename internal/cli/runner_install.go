@@ -127,7 +127,7 @@ Usage: waypoint runner install [options]
   on the runner profile that is generated as part of adopting a runner during
   the install, the command would be:
 
-    waypoint runner install -server-tls-skip-verify -- -label=environment=primary
+    waypoint runner install -server-addr=localhost:9701 -server-tls-skip-verify -- -label=environment=primary
 
 ` + c.Flags().Help())
 }
