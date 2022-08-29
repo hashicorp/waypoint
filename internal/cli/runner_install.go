@@ -211,9 +211,31 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		}
 	}
 
-	// TODO: Parse any `-label` flags from secondaryArgs so we can set them
-	// on the runner profile
-	var targetLabels map[string]string
+	// This loop is used to parse any arguments supplied after `--` for label flags so that we can
+	// apply them to our runner profile as target labels later
+	targetLabels := make(map[string]string)
+	for i, arg := range secondaryArgs {
+		// A label flag can be either `-label=key=value` or `-label key=value`
+		// so we need to parse for both cases
+		if strings.Contains(arg, "-label=") {
+			kv := strings.Split(strings.TrimPrefix(arg, "-label="), "=")
+			targetLabels[kv[0]] = kv[1]
+		} else if strings.Contains(arg, "-label") {
+			// If -label is the final argument and there is no KV pair following it, we don't attempt to parse
+			if i+1 < len(secondaryArgs) {
+				// We get the next argument because if it's space delimited, the KV pair
+				// should be the next positional argument
+				kvPair := secondaryArgs[i+1]
+				// If there's no "=", then we skip the argument because it's not a KV pair
+				if !strings.Contains(kvPair, "=") {
+					continue
+				} else {
+					kv := strings.Split(strings.TrimPrefix(secondaryArgs[i+1], "-label="), "=")
+					targetLabels[kv[0]] = kv[1]
+				}
+			}
+		}
+	}
 
 	s = sg.Add("Installing runner...")
 	err = p.Install(ctx, &runnerinstall.InstallOpts{
