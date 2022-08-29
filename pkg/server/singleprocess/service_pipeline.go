@@ -191,7 +191,7 @@ func (s *Service) buildStepJobs(
 	pipelineRun *pb.PipelineRun,
 ) ([]*pb.QueueJobRequest, *pb.PipelineRun, map[string]string, error) {
 	if len(visitedPipelines) != 0 {
-		// Determine if we've already visisted this pipeline and included its jobs.
+		// Determine if we've already visited this pipeline and included its jobs.
 		// Otherwise we'll get stuck in a cycle. This only really works because
 		// pipeline names are unique for a project. If we ever start allowing for
 		// pipelines across projects we'll need to namespace this value.
@@ -401,7 +401,7 @@ func (s *Service) buildStepJobs(
 
 // pipelineGraphFull takes a pipeline, and optionally accepts an existing Graph
 // and parent step, and attempts to build a full graph for a given Pipeline including
-// any nested pipeline steps. It keeps track of visisted steps so that we don't
+// any nested pipeline steps. It keeps track of visited steps so that we don't
 // get stuck in a loop building the graph. This means step names must be unique
 // across pipelines.
 func (s *Service) pipelineGraphFull(
@@ -409,7 +409,7 @@ func (s *Service) pipelineGraphFull(
 	log hclog.Logger,
 	g *graph.Graph,
 	parentStep string,
-	visistedNodes map[string]string,
+	visitedNodes map[string]string,
 	nodeIdMap map[string]*pb.Ref_PipelineStep,
 	pipeline *pb.Pipeline,
 ) (*graph.Graph, map[string]*pb.Ref_PipelineStep, error) {
@@ -424,11 +424,11 @@ func (s *Service) pipelineGraphFull(
 	// Note that pipeline.Steps is not an ordered list of steps. It's a map of key val
 	// steps so the order will not match the order steps are defined in a waypoint.hcl.
 	for _, step := range pipeline.Steps {
-		if len(visistedNodes) != 0 {
-			if pipeName, ok := visistedNodes[step.Name]; ok && pipeName == pipeline.Name {
-				log.Trace("we've cycled to a node we've already visisted!", "pipeline", pipeName, "step", step.Name)
+		if len(visitedNodes) != 0 {
+			if pipeName, ok := visitedNodes[step.Name]; ok && pipeName == pipeline.Name {
+				log.Trace("we've cycled to a node we've already visited!", "pipeline", pipeName, "step", step.Name)
 				return nil, nil, status.Error(codes.FailedPrecondition,
-					"we've already visisted this node, that means we've got a cycle")
+					"we've already visited this node, that means we've got a cycle")
 			}
 		}
 
@@ -454,7 +454,7 @@ func (s *Service) pipelineGraphFull(
 
 		// Keep track of the fact that we've visited this step node in this pipeline
 		// to prevent infinite cycles as we build embedded pipeline graphs
-		visistedNodes[step.Name] = pipeline.Name
+		visitedNodes[step.Name] = pipeline.Name
 
 		if g != nil {
 			if parentStep == "" {
@@ -518,7 +518,7 @@ func (s *Service) pipelineGraphFull(
 			// Build the nested pipelines graph
 			parentStep := nodeId
 			embeddedGraph, n, err := s.pipelineGraphFull(ctx, log, stepGraph,
-				parentStep, visistedNodes, nodeIdMap, embeddedPipeline)
+				parentStep, visitedNodes, nodeIdMap, embeddedPipeline)
 			if err != nil {
 				return nil, nil, err
 			}
