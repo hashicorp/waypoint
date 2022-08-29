@@ -4886,6 +4886,16 @@ message ListPipelineRunsResponse {
   repeated PipelineRun pipeline_runs = 1;
 }
 
+message GetPipelineRunRequest {
+  Ref.Pipeline pipeline = 1;
+  uint64 sequence = 2;
+}
+
+message GetPipelineRunResponse {
+  // A single pipeline run
+  PipelineRun pipeline_run = 1;
+}
+
 message ConfigSyncPipelineRequest {
   // The project to sync all pipeline configs on
   Ref.Project project = 1;
