@@ -276,7 +276,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		s = sg.Add("Creating runner profile and targeting runner %s", strings.ToUpper(id))
 		if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
 			odrConfig = odc.OnDemandRunnerConfig()
-
+			odrConfig.Name = odrConfig.Name + "-" + strings.ToUpper(id)
 		} else {
 			odrConfig = &pb.OnDemandRunnerConfig{
 				Name:       platform[0] + "-" + strings.ToUpper(id),
@@ -284,7 +284,6 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 				PluginType: platform[0],
 			}
 		}
-		odrConfig.Name = odrConfig.Name + "-" + id
 		if targetLabels != nil {
 			odrConfig.TargetRunner = &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Labels{

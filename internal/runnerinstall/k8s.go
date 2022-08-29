@@ -567,7 +567,7 @@ func (i *K8sRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		Name:         "kubernetes",
 		OciUrl:       i.Config.RunnerImage,
 		PluginType:   "kubernetes",
-		Default:      true,
+		Default:      false,
 		PluginConfig: cfgJson,
 		ConfigFormat: pb.Hcl_JSON,
 	}
