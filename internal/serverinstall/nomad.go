@@ -1054,7 +1054,7 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 	return "", nil
 }
 
-func (i *NomadInstaller) OnDemandRunnerConfig(string) *pb.OnDemandRunnerConfig {
+func (i *NomadInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	// Generate some configuration
 	cfgMap := map[string]interface{}{}
 	if v := i.config.runnerResourcesCPU; v != "" {

@@ -720,7 +720,7 @@ func (i *K8sInstaller) HasRunner(
 }
 
 // OnDemandRunnerConfig implements OnDemandRunnerConfigProvider
-func (i *K8sInstaller) OnDemandRunnerConfig(string) *pb.OnDemandRunnerConfig {
+func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	// Generate some configuration
 	cfgMap := map[string]interface{}{}
 	if v := i.config.imagePullSecret; v != "" {

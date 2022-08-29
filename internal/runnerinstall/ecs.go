@@ -696,7 +696,7 @@ func (i *ECSRunnerInstaller) setupTaskRole(
 }
 
 // OnDemandRunnerConfig implements OnDemandRunnerConfigProvider
-func (i *ECSRunnerInstaller) OnDemandRunnerConfig(id string) *pb.OnDemandRunnerConfig {
+func (i *ECSRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	// Generate some configuration. Some of the OnDemand configurations have
 	// defaults so we should be fine to directly use them
 	cfgMap := map[string]interface{}{
@@ -728,7 +728,7 @@ func (i *ECSRunnerInstaller) OnDemandRunnerConfig(id string) *pb.OnDemandRunnerC
 	}
 
 	return &pb.OnDemandRunnerConfig{
-		Name:         installutil.DefaultRunnerProfileName(id, "ecs"),
+		Name:         "ecs",
 		OciUrl:       i.Config.RunnerImage,
 		PluginType:   "aws-ecs",
 		Default:      false,

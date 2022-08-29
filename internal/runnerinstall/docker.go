@@ -213,10 +213,10 @@ func (d DockerRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 
 func (d DockerRunnerInstaller) UninstallFlags(set *flag.Set) {}
 
-func (i *DockerRunnerInstaller) OnDemandRunnerConfig(id string) *pb.OnDemandRunnerConfig {
+func (i *DockerRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	// TODO: Add options for plugin config here
 	return &pb.OnDemandRunnerConfig{
-		Name:       installutil.DefaultRunnerProfileName(id, "docker"),
+		Name:       "docker",
 		OciUrl:     i.Config.RunnerImage,
 		PluginType: "docker",
 		Default:    false,

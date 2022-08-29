@@ -526,7 +526,7 @@ func (i *K8sRunnerInstaller) UninstallFlags(set *flag.Set) {
 }
 
 // OnDemandRunnerConfig implements OnDemandRunnerConfigProvider
-func (i *K8sRunnerInstaller) OnDemandRunnerConfig(id string) *pb.OnDemandRunnerConfig {
+func (i *K8sRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	// Generate some configuration
 	cfgMap := map[string]interface{}{}
 	if v := i.Config.ImagePullSecret; v != "" {
@@ -564,7 +564,7 @@ func (i *K8sRunnerInstaller) OnDemandRunnerConfig(id string) *pb.OnDemandRunnerC
 	}
 
 	return &pb.OnDemandRunnerConfig{
-		Name:         installutil.DefaultRunnerProfileName(id, "kubernetes"),
+		Name:         "kubernetes",
 		OciUrl:       i.Config.RunnerImage,
 		PluginType:   "kubernetes",
 		Default:      true,

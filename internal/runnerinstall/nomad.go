@@ -395,7 +395,7 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 
 func (i *NomadRunnerInstaller) UninstallFlags(set *flag.Set) {}
 
-func (i *NomadRunnerInstaller) OnDemandRunnerConfig(id string) *pb.OnDemandRunnerConfig {
+func (i *NomadRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	// Generate some configuration
 	cfgMap := map[string]interface{}{}
 	if v := i.Config.RunnerResourcesCPU; v != "" {
@@ -427,7 +427,7 @@ func (i *NomadRunnerInstaller) OnDemandRunnerConfig(id string) *pb.OnDemandRunne
 	}
 
 	return &pb.OnDemandRunnerConfig{
-		Name:         installutil.DefaultRunnerProfileName(id, "nomad"),
+		Name:         "nomad",
 		OciUrl:       i.Config.RunnerImage,
 		PluginType:   "nomad",
 		Default:      true,

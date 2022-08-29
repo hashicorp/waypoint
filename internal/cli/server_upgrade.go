@@ -413,7 +413,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 	s.Done()
 
 	if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
-		odr := odc.OnDemandRunnerConfig("")
+		odr := odc.OnDemandRunnerConfig()
 
 		runnerConfigName := odr.PluginType + "-bootstrap-profile"
 		// We attempt to look up the default runner profile from the previous
