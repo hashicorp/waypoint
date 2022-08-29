@@ -1,0 +1,3 @@
+```release-note:bug
+core/runner: Server no longer panics when a runner stopped after it is forgotten.
+```
