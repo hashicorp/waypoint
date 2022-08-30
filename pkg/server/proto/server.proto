@@ -429,6 +429,9 @@ service Waypoint {
   // GetPipeline returns a pipeline proto by pipeline ref id
   rpc GetPipeline(GetPipelineRequest) returns (GetPipelineResponse);
 
+  // GetPipelineRun returns a pipeline run proto by pipeline ref id and sequence
+  rpc GetPipelineRun(GetPipelineRunRequest) returns (GetPipelineRunResponse);
+
   // ListPipelines takes a project and evaluates the projects config to get
   // a list of Pipeline protos to return in the response. These pipelines
   // are scoped to a single project from the request. It will return an
@@ -436,7 +439,7 @@ service Waypoint {
   // if no pipelines are defined for the project.
   rpc ListPipelines(ListPipelinesRequest) returns (ListPipelinesResponse);
 
-  // ListPipelineRus takes a pipeline ref and returns a list of runs of that pipeline.
+  // ListPipelineRuns takes a pipeline ref and returns a list of runs of that pipeline.
   // It will return an error if the requested pipeline does not exist, or an empty response
   // if there are no runs for the pipeline.
   rpc ListPipelineRuns(ListPipelineRunsRequest) returns (ListPipelineRunsResponse);

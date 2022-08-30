@@ -859,6 +859,29 @@ func (_m *WaypointServer) GetPipeline(_a0 context.Context, _a1 *gen.GetPipelineR
 	return r0, r1
 }
 
+// GetPipelineRun provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetPipelineRun(_a0 context.Context, _a1 *gen.GetPipelineRunRequest) (*gen.GetPipelineRunResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetPipelineRunResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetPipelineRunRequest) *gen.GetPipelineRunResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetPipelineRunResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetPipelineRunRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetProject provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetProject(_a0 context.Context, _a1 *gen.GetProjectRequest) (*gen.GetProjectResponse, error) {
 	ret := _m.Called(_a0, _a1)

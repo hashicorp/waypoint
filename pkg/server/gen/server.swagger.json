@@ -7495,6 +7495,15 @@
       ],
       "default": "INVALID"
     },
+    "hashicorp.waypoint.GetPipelineRunResponse": {
+      "type": "object",
+      "properties": {
+        "pipeline_run": {
+          "$ref": "#/definitions/hashicorp.waypoint.PipelineRun",
+          "title": "A single pipeline run"
+        }
+      }
+    },
     "hashicorp.waypoint.GetProjectResponse": {
       "type": "object",
       "properties": {
