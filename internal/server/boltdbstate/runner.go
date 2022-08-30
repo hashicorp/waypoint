@@ -304,8 +304,7 @@ func (s *State) runnerSetAdoptionState(
 func (s *State) runnerOffline(dbTxn *bolt.Tx, memTxn *memdb.Txn, id string) error {
 	r, err := s.runnerById(dbTxn, id)
 	if status.Code(err) == codes.NotFound {
-		r = nil
-		err = nil
+		return nil
 	}
 	if err != nil {
 		return err
