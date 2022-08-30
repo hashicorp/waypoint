@@ -81,7 +81,7 @@ docker/tools:
 	docker build -f tools.Dockerfile -t waypoint-tools:dev .
 
 .PHONY: docker/gen/server
-docker/gen/server:
+docker/gen/server: docker/tools
 	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
 	docker run -v `pwd`:/waypoint -it docker.io/library/waypoint-tools:dev make gen/server
 
