@@ -192,9 +192,10 @@ func (s *Service) buildStepJobs(
 ) ([]*pb.QueueJobRequest, *pb.PipelineRun, map[string]string, error) {
 	if len(visitedPipelines) != 0 {
 		// Determine if we've already visited this pipeline and included its jobs.
-		// Otherwise we'll get stuck in a cycle. This only really works because
-		// pipeline names are unique for a project. If we ever start allowing for
-		// pipelines across projects we'll need to namespace this value.
+		// Otherwise, we'll get stuck in a cycle. This only really works because
+		// pipeline names are unique for a project. If we ever allow for
+		// pipelines across projects, we'll need to namespace this value for find
+		// some other way of tracking our visisted pipelines for the job builder.
 		if _, ok := visitedPipelines[pipeline.Name]; ok {
 			return nil, nil, nil, nil
 		}
@@ -540,13 +541,13 @@ func (s *Service) pipelineGraphFull(
 func (s *Service) stepToNodeId(
 	ctx context.Context,
 	log hclog.Logger,
-	pipelineName string,
+	pipelineId string,
 	stepName string,
 	nodeIdMap map[string]*pb.Ref_PipelineStep,
 ) (string, bool) {
 	for nodeId, stepRef := range nodeIdMap {
 		if stepRef != nil &&
-			stepRef.Pipeline == pipelineName && stepRef.Step == stepName {
+			stepRef.Pipeline == pipelineId && stepRef.Step == stepName {
 			return nodeId, true
 		}
 	}
