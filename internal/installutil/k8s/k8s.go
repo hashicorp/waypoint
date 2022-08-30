@@ -103,7 +103,7 @@ func (i *K8sInstaller) CleanPVC(ctx context.Context, ui terminal.UI, log hclog.L
 			metav1.DeleteOptions{},
 			listOptions,
 		); err != nil {
-			s.Update("Unable to delete PVCs", terminal.StatusError)
+			s.Update("Unable to delete PVCs")
 			s.Abort()
 			return err
 		}
@@ -122,7 +122,7 @@ func (i *K8sInstaller) CleanPVC(ctx context.Context, ui terminal.UI, log hclog.L
 			}
 		})
 		if err != nil {
-			s.Update("Unable to delete PVCs", terminal.StatusError)
+			s.Update("Unable to delete PVCs")
 			s.Abort()
 			return err
 		}
