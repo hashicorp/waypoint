@@ -137,6 +137,8 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 		Id:         c.id,
 	})
 	if err != nil {
+		s.Update("Unable to uninstall runner", terminal.StatusError)
+		s.Abort()
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
