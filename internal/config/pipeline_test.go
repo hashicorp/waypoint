@@ -4,7 +4,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestPipeline(t *testing.T) {
@@ -108,6 +111,49 @@ func TestPipeline(t *testing.T) {
 				require.Equal("zero", s3.DependsOn[0])
 			},
 		},
+
+		{
+			"pipeline_nested.hcl",
+			"foo",
+			func(t *testing.T, c *Pipeline) {
+				require := require.New(t)
+
+				require.NotNil(t, c)
+				require.Equal("foo", c.Name)
+
+				steps := c.Steps
+				require.Len(steps, 2)
+				s := steps[0]
+
+				var p testStepPluginConfig
+				diag := s.Configure(&p, nil)
+				if diag.HasErrors() {
+					t.Fatal(diag.Error())
+				}
+
+				require.NotEmpty(t, p.config.Foo)
+				require.Equal("example.com/test", s.ImageURL)
+
+				// This should be an embedded pipeline
+				s2 := steps[1]
+				embedPipeline := s2.Pipeline
+
+				require.Equal("bar", embedPipeline.Name)
+				require.Len(embedPipeline.Steps, 1)
+				ps := embedPipeline.Steps[0]
+				require.Equal("boo", ps.Name)
+
+				var pt testStepPluginConfig
+				diag = ps.Configure(&pt, nil)
+				if diag.HasErrors() {
+					t.Fatal(diag.Error())
+				}
+
+				require.NotEmpty(t, pt.config.Foo)
+				require.Equal("nested", pt.config.Foo)
+				require.Equal("example.com/test", ps.ImageURL)
+			},
+		},
 	}
 
 	// Test all the cases
@@ -136,7 +182,6 @@ func TestPipelineProtos(t *testing.T) {
 		File string
 		Func func(*testing.T, *Config)
 	}{
-		// TODO verify a step exec was set properly and the fields are set on the proto
 		{
 			"pipeline_exec_step.hcl",
 			func(t *testing.T, c *Config) {
@@ -151,6 +196,17 @@ func TestPipelineProtos(t *testing.T) {
 		},
 
 		{
+			"pipeline_invalid_step.hcl",
+			func(t *testing.T, c *Config) {
+				require := require.New(t)
+
+				_, err := c.PipelineProtos()
+				require.Error(err)
+				require.Equal(codes.Internal, status.Code(err))
+			},
+		},
+
+		{
 			"pipeline_exec_step_many.hcl",
 			func(t *testing.T, c *Config) {
 				require := require.New(t)
@@ -161,6 +217,68 @@ func TestPipelineProtos(t *testing.T) {
 
 				require.Equal(pipelines[0].Name, "foo")
 				require.Equal(pipelines[1].Name, "bar")
+			},
+		},
+
+		{
+			"pipeline_nested_pipes.hcl",
+			func(t *testing.T, c *Config) {
+				require := require.New(t)
+
+				pipelines, err := c.PipelineProtos()
+				require.NoError(err)
+				require.Len(pipelines, 2)
+
+				require.Equal(pipelines[0].Name, "nested")
+				require.Equal(pipelines[1].Name, "foo")
+
+				// validate nested pipeline was set as a ref on parent pipeline
+				parentPipe := pipelines[1]
+				require.Len(parentPipe.Steps, 2)
+				require.Equal(parentPipe.Steps["test"].Name, "test")
+				require.Equal(parentPipe.Steps["pipe"].Name, "pipe")
+				pRef, ok := parentPipe.Steps["pipe"].Kind.(*pb.Pipeline_Step_Pipeline_)
+				require.Equal(ok, true)
+				require.NotNil(pRef)
+
+				pipeOwner, ok := pRef.Pipeline.Ref.Ref.(*pb.Ref_Pipeline_Owner)
+				require.Equal(ok, true)
+				require.Equal(pipeOwner.Owner.Project.Project, "foo")
+				require.Equal(pipeOwner.Owner.PipelineName, "nested")
+
+				// validate nested pipeline was created
+				require.Len(pipelines[0].Steps, 1)
+
+				nestedStep := pipelines[0].Steps["test_nested"]
+				require.Equal(nestedStep.Name, "test_nested")
+			},
+		},
+
+		{
+			"pipeline_nested_refs.hcl",
+			func(t *testing.T, c *Config) {
+				require := require.New(t)
+
+				pipelines, err := c.PipelineProtos()
+				require.NoError(err)
+				require.Len(pipelines, 2)
+
+				require.Equal(pipelines[0].Name, "foo")
+				require.Equal(pipelines[1].Name, "pipe2")
+
+				// validate nested pipeline was set as a ref on parent pipeline
+				parentPipe := pipelines[0]
+				require.Len(parentPipe.Steps, 2)
+				require.Equal(parentPipe.Steps["test"].Name, "test")
+				require.Equal(parentPipe.Steps["pipe"].Name, "pipe")
+				pRef, ok := parentPipe.Steps["pipe"].Kind.(*pb.Pipeline_Step_Pipeline_)
+				require.Equal(ok, true)
+				require.NotNil(pRef)
+
+				pipeOwner, ok := pRef.Pipeline.Ref.Ref.(*pb.Ref_Pipeline_Owner)
+				require.Equal(ok, true)
+				require.Equal(pipeOwner.Owner.Project.Project, "foo")
+				require.Equal(pipeOwner.Owner.PipelineName, "pipe2")
 			},
 		},
 	}

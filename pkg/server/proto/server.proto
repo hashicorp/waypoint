@@ -4705,6 +4705,9 @@ message Pipeline {
       // Built-in up operation
       Up up = 8;
 
+      // A reference to a different pipeline
+      Pipeline pipeline = 9;
+
       // TODO: custom plugins, pipeline references
     }
 
@@ -4755,6 +4758,10 @@ message Pipeline {
       // is false, then pruning uses the default behavior (retain 2).
       int32 prune_retain = 2;
       bool prune_retain_override = 3;
+    }
+
+    message Pipeline {
+      Ref.Pipeline ref = 1;
     }
   }
 }
