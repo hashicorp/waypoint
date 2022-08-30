@@ -264,12 +264,8 @@ func (r *Releaser) resourceJobStatus(
 	q := &api.QueryOptions{Namespace: state.Namespace}
 	job, _, err := jobClient.Info(state.Id, q)
 
-	if err != nil {
-		s.Done()
-
-		jobResource.Name = state.Name
-		jobResource.Health = sdk.StatusReport_MISSING
-		jobResource.HealthMessage = sdk.StatusReport_MISSING.String()
+	if err != nil && job == nil {
+		return err
 	} else if job == nil {
 		s.Update("No job was found")
 		s.Status(terminal.StatusError)
