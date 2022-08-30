@@ -128,6 +128,10 @@ func TestConfigValidatePipelineSteps(t *testing.T) {
 			"pipeline_step_no_use.hcl",
 			"step stage with a default 'use'",
 		},
+		{
+			"pipeline_step_double.hcl",
+			"step stage with both a 'use' stanza and pipeline stanza",
+		},
 	}
 
 	for _, tt := range cases {
