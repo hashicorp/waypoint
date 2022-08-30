@@ -155,15 +155,12 @@ func (r *Runner) executeReleaseOp(
 			Application: app.Ref(),
 			Workspace:   project.WorkspaceRef(),
 		})
-		// Set up a slice of releases, whose max length is the # of releases
-		// we have
-		rs := make([]*pb.Release, 0, len(rl.Releases))
-		var rc int
+
+		var rs []*pb.Release
 		for _, release := range rl.Releases {
 			for _, d := range ds {
 				if release.DeploymentId == d.Id {
 					rs = append(rs, release)
-					rc++
 				}
 			}
 
@@ -171,8 +168,8 @@ func (r *Runner) executeReleaseOp(
 
 		log.Info("will prune deploys", "len", len(ds))
 		pruneDeploys = ds
-		log.Info("will prune releases", "len", len(rs[:rc]))
-		pruneReleases = rs[:rc]
+		log.Info("will prune releases", "len", len(rs))
+		pruneReleases = rs
 	}
 
 	// Do the release
