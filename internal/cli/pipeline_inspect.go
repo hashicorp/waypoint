@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 
+	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
@@ -19,6 +20,7 @@ type PipelineInspectCommand struct {
 
 	flagJson         bool
 	flagPipelineName string
+	flagRunSequence  int
 }
 
 func (c *PipelineInspectCommand) Run(args []string) int {
@@ -125,13 +127,8 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		owner = "???"
 	}
 
-	lastRun := runs.PipelineRuns[len(runs.PipelineRuns)-1]
-	j, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
-		JobId: lastRun.Jobs[len(lastRun.Jobs)-1].Id,
-	})
-
 	c.ui.Output("Pipeline Configuration", terminal.WithHeaderStyle())
-	c.ui.NamedValues([]terminal.NamedValue{
+	output := []terminal.NamedValue{
 		{
 			Name: "ID", Value: resp.Pipeline.Id,
 		},
@@ -145,24 +142,79 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 			Name: "Root Step Name", Value: resp.RootStep,
 		},
 		{
-			Name: "Total Steps", Value: resp.Pipeline.Steps,
+			Name: "Total Steps", Value: len(resp.Pipeline.Steps),
 		},
-		{
-			Name: "Total Runs", Value: lastRun.Sequence,
-		},
-		{
-			Name: "Last Run Started", Value: j.QueueTime,
-		},
-		{
-			Name: "Last Run Completed", Value: j.CompleteTime,
-		},
-		{
-			Name: "Last Run Status", Value: lastRun.State,
-		},
-	}, terminal.WithInfoStyle())
+	}
+
+	s := uint64(c.flagRunSequence)
+	if s > 0 {
+		run, err := c.project.Client().GetPipelineRun(c.Ctx, &pb.GetPipelineRunRequest{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: &pb.Ref_PipelineId{
+						Id: resp.Pipeline.Id,
+					},
+				},
+			},
+			Sequence: s,
+		})
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+		startJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+			JobId: run.PipelineRun.Jobs[0].Id,
+		})
+		endJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+			JobId: run.PipelineRun.Jobs[len(run.PipelineRun.Jobs)-1].Id,
+		})
+		output = append(output, []terminal.NamedValue{
+			{
+				Name: "Run Sequence", Value: run.PipelineRun.Sequence,
+			},
+			{
+				Name: "Jobs Queued", Value: run.PipelineRun.Jobs,
+			},
+			{
+				Name: "Run Started", Value: humanize.Time(startJob.QueueTime.AsTime()),
+			},
+			{
+				Name: "Run Completed", Value: humanize.Time(endJob.CompleteTime.AsTime()),
+			},
+			{
+				Name: "State", Value: run.PipelineRun.State,
+			},
+		}...)
+	} else {
+		lastRun := runs.PipelineRuns[len(runs.PipelineRuns)-1]
+		startJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+			JobId: lastRun.Jobs[0].Id,
+		})
+		endJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+			JobId: lastRun.Jobs[len(lastRun.Jobs)-1].Id,
+		})
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+		output = append(output, []terminal.NamedValue{
+			{
+				Name: "Total Runs", Value: lastRun.Sequence,
+			},
+			{
+				Name: "Last Run Started", Value: humanize.Time(startJob.QueueTime.AsTime()),
+			},
+			{
+				Name: "Last Run Completed", Value: humanize.Time(endJob.CompleteTime.AsTime()),
+			},
+			{
+				Name: "Last Run Status", Value: lastRun.State,
+			},
+		}...)
+	}
+	c.ui.NamedValues(output, terminal.WithInfoStyle())
 
 	// TODO(briancain): Use graphviz to build a pipeline graph and display in the terminal?
-
 	return 0
 }
 
@@ -181,6 +233,12 @@ func (c *PipelineInspectCommand) Flags() *flag.Sets {
 			Target:  &c.flagPipelineName,
 			Default: "",
 			Usage:   "Inspect a pipeline by name.",
+		})
+
+		f.IntVar(&flag.IntVar{
+			Name:   "run",
+			Target: &c.flagRunSequence,
+			Usage:  "Inspect a specific run sequence.",
 		})
 	})
 }
