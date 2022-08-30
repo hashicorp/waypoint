@@ -56,9 +56,8 @@ func (c *PipelineRunCommand) Run(args []string) int {
 
 		// build the initial job template for running the pipeline
 		runJobTemplate := &pb.Job{
-			Application: app.Ref(),
-			Workspace:   c.project.WorkspaceRef(),
-
+			Application:  app.Ref(),
+			Workspace:    c.project.WorkspaceRef(),
 			TargetRunner: &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{}},
 		}
 
@@ -99,24 +98,37 @@ func (c *PipelineRunCommand) Run(args []string) int {
 
 		steps := len(resp.JobMap)
 		step.Update("%d steps detected, run sequence %d", steps, resp.Sequence)
+		step.Done()
+		
 		// Receive job ids from running pipeline, use job client to attach to job stream
 		// and stream here. First pass can be linear job streaming
+		successful := steps
 		for _, jobId := range resp.AllJobIds {
 			app.UI.Output("Executing Step %q", resp.JobMap[jobId].Step, terminal.WithHeaderStyle())
 			app.UI.Output("Reading job stream (jobId: %s)...", jobId, terminal.WithInfoStyle())
 			app.UI.Output("")
 
-			// Throw away the job result for now. We could do something fancy with this
-			// later.
-			_, err := jobstream.Stream(c.Ctx, jobId,
+			result, err := jobstream.Stream(c.Ctx, jobId,
 				jobstream.WithClient(c.project.Client()),
 				jobstream.WithUI(app.UI))
 			if err != nil {
 				return err
 			}
+
+			var state pb.Status_State
+			if result.Build != nil {
+				state = result.Build.Build.Status.State
+			} else if result.Deploy != nil {
+				state = result.Deploy.Deployment.Status.State
+			} else if result.Release != nil {
+				state = result.Deploy.Deployment.Status.State
+			}
+			if state != pb.Status_SUCCESS {
+				successful--
+			}
 		}
 
-		app.UI.Output("✔ Pipeline %q (%s) finished! %d steps successfully completed.", pipelineIdent, app.Ref().Project, steps, terminal.WithSuccessStyle())
+		app.UI.Output("✔ Pipeline %q (%s) finished! %d/%d steps successfully completed.", pipelineIdent, app.Ref().Project, successful, steps, terminal.WithSuccessStyle())
 
 		return nil
 	})
