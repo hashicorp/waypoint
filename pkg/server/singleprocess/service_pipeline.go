@@ -435,12 +435,10 @@ func (s *Service) pipelineGraphFull(
 	nodeStepRef *nodeToStepRef,
 	pipeline *pb.Pipeline,
 ) (*graph.Graph, *nodeToStepRef, error) {
-	var stepGraph *graph.Graph
+	stepGraph := &graph.Graph{}
 	if g != nil {
 		// We're handling an embedded pipeline graph
 		stepGraph = g
-	} else if stepGraph == nil {
-		stepGraph = &graph.Graph{}
 	}
 
 	// Beginning of the graph builder
