@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"sort"
+	"strings"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/installutil"
@@ -11,8 +14,6 @@ import (
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 	"github.com/posener/complete"
 	empty "google.golang.org/protobuf/types/known/emptypb"
-	"sort"
-	"strings"
 )
 
 type RunnerInstallCommand struct {
@@ -118,6 +119,15 @@ Usage: waypoint runner install [options]
   This command will attempt to install a runner for the server configured in 
   the current Waypoint context. It will adopt the runner after installation, 
   unless the '-skip-adopt' flag is set to true.
+
+  To further customize the runner installation, you may pass advanced flag
+  options specified in the documentation for the 'runner agent' command. To set
+  these values, include a '--' after the full argument list for 'install',
+  followed by these advanced flag options. As an example, to set a label k/v
+  on the runner profile that is generated as part of adopting a runner during
+  the install, the command would be:
+
+    waypoint runner install -server-addr=localhost:9701 -server-tls-skip-verify -- -label=environment=primary
 
 ` + c.Flags().Help())
 }
