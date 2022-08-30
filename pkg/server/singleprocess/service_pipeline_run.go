@@ -24,3 +24,21 @@ func (s *Service) ListPipelineRuns(
 		PipelineRuns: result,
 	}, nil
 }
+
+func (s *Service) GetPipelineRun(
+	ctx context.Context,
+	req *pb.GetPipelineRunRequest,
+) (*pb.GetPipelineRunResponse, error) {
+	if err := serverptypes.ValidateGetPipelineRunRequest(req); err != nil {
+		return nil, err
+	}
+
+	result, err := s.state(ctx).PipelineRunGet(req.Pipeline, req.Sequence)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetPipelineRunResponse{
+		PipelineRun: result,
+	}, nil
+}
