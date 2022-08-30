@@ -99,7 +99,7 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		steps := len(resp.JobMap)
 		step.Update("%d steps detected, run sequence %d", steps, resp.Sequence)
 		step.Done()
-		
+
 		// Receive job ids from running pipeline, use job client to attach to job stream
 		// and stream here. First pass can be linear job streaming
 		successful := steps
