@@ -219,6 +219,6 @@ func (i *DockerRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig 
 		Name:       "docker",
 		OciUrl:     i.Config.RunnerImage,
 		PluginType: "docker",
-		Default:    true,
+		Default:    false,
 	}
 }

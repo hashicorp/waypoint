@@ -221,6 +221,32 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		}
 	}
 
+	// This loop is used to parse any arguments supplied after `--` for label flags so that we can
+	// apply them to our runner profile as target labels later
+	targetLabels := make(map[string]string)
+	for i, arg := range secondaryArgs {
+		// A label flag can be either `-label=key=value` or `-label key=value`
+		// so we need to parse for both cases
+		if strings.Contains(arg, "-label=") {
+			kv := strings.Split(strings.TrimPrefix(arg, "-label="), "=")
+			targetLabels[kv[0]] = kv[1]
+		} else if strings.Contains(arg, "-label") {
+			// If -label is the final argument and there is no KV pair following it, we don't attempt to parse
+			if i+1 < len(secondaryArgs) {
+				// We get the next argument because if it's space delimited, the KV pair
+				// should be the next positional argument
+				kvPair := secondaryArgs[i+1]
+				// If there's no "=", then we skip the argument because it's not a KV pair
+				if !strings.Contains(kvPair, "=") {
+					continue
+				} else {
+					kv := strings.Split(strings.TrimPrefix(secondaryArgs[i+1], "-label="), "=")
+					targetLabels[kv[0]] = kv[1]
+				}
+			}
+		}
+	}
+
 	s = sg.Add("Installing runner...")
 	err = p.Install(ctx, &runnerinstall.InstallOpts{
 		Log:        log,
@@ -260,20 +286,32 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		s = sg.Add("Creating runner profile and targeting runner %s", strings.ToUpper(id))
 		if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
 			odrConfig = odc.OnDemandRunnerConfig()
+			odrConfig.Name = odrConfig.Name + "-" + strings.ToUpper(id)
 		} else {
 			odrConfig = &pb.OnDemandRunnerConfig{
-				Name: platform[0] + "-" + strings.ToUpper(id),
-				TargetRunner: &pb.Ref_Runner{
-					Target: &pb.Ref_Runner_Id{
-						Id: &pb.Ref_RunnerId{
-							Id: strings.ToUpper(id),
-						},
-					},
-				},
+				Name:       platform[0] + "-" + strings.ToUpper(id),
 				OciUrl:     c.runnerProfileOdrImage,
 				PluginType: platform[0],
 			}
 		}
+		if targetLabels != nil {
+			odrConfig.TargetRunner = &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Labels{
+					Labels: &pb.Ref_RunnerLabels{
+						Labels: targetLabels,
+					},
+				},
+			}
+		} else {
+			odrConfig.TargetRunner = &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Id{
+					Id: &pb.Ref_RunnerId{
+						Id: strings.ToUpper(id),
+					},
+				},
+			}
+		}
+
 		runnerProfile, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{Config: odrConfig})
 		if err != nil {
 			c.ui.Output("Error creating runner profile: %s", clierrors.Humanize(err),

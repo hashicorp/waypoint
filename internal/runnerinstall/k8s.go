@@ -432,8 +432,8 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 		s.Update("Runner deployment deleted")
 		s.Done()
 	} else {
-		s.Update("No runners installed.")
-		s.Done()
+		opts.UI.Output("No runners with id "+opts.Id+" installed.", terminal.WithErrorStyle())
+		return errors.New("no runner installed with id" + opts.Id + " installed")
 	}
 
 	return nil
@@ -567,7 +567,7 @@ func (i *K8sRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		Name:         "kubernetes",
 		OciUrl:       i.Config.RunnerImage,
 		PluginType:   "kubernetes",
-		Default:      true,
+		Default:      false,
 		PluginConfig: cfgJson,
 		ConfigFormat: pb.Hcl_JSON,
 	}
