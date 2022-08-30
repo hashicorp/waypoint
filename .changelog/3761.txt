@@ -1,0 +1,3 @@
+```release-note:bug
+cli/runnerinstall: Fix output error message for missing arguments on Nomad runner installation
+```
