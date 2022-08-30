@@ -17,8 +17,8 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
-	hclpkg "github.com/hashicorp/waypoint/hclgen"
 	"github.com/hashicorp/waypoint/internal/cli/datagen"
+	hclpkg "github.com/hashicorp/waypoint/internal/cli/hclgen"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
@@ -171,7 +171,7 @@ func (c *InitCommand) Run(args []string) int {
 			)
 			return 1
 		} else if strings.ToLower(proceed) == "yes" || strings.ToLower(proceed) == "y" {
-			c.ui.Output("Starting interactive .hcl generator.\n")
+			c.ui.Output("Starting interactive HCL generator.\n")
 			if !hclpkg.HclGen(c.ui) {
 				return 1
 			}
