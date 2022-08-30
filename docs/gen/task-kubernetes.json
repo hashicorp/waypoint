@@ -109,6 +109,17 @@
          "SubFields": null
       },
       {
+         "Field": "ephemeral_storage",
+         "Type": "k8s.ResourceConfig",
+         "Synopsis": "ephemeral_storage resource request to be added to the task container",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
          "Field": "memory",
          "Type": "k8s.ResourceConfig",
          "Synopsis": "memory resource request to be added to the task container",

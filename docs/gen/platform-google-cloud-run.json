@@ -172,19 +172,20 @@
          "Optional": false,
          "Default": "",
          "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "auto_scaling.max",
-         "Type": "",
-         "Synopsis": "Maximum number of Cloud Run instances. When the maximum requests per container is exceeded, Cloud Run will create an additional container instance to handle load.\n\t\tThis parameter controls the maximum number of instances that can be created.",
-         "Summary": "",
-         "Optional": false,
-         "Default": "1000",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "max",
+               "Type": "int",
+               "Synopsis": "Maximum number of Cloud Run instances. When the maximum requests per container is exceeded, Cloud Run will create an additional container instance to handle load.\n\t\t\t\tThis parameter controls the maximum number of instances that can be created.",
+               "Summary": "",
+               "Optional": false,
+               "Default": "1000",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
       },
       {
          "Field": "capacity",
@@ -194,52 +195,53 @@
          "Optional": false,
          "Default": "",
          "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "capacity.cpu_count",
-         "Type": "",
-         "Synopsis": "Number of CPUs to allocate the Cloud Run instance, min 1, max 2.",
-         "Summary": "",
-         "Optional": false,
-         "Default": "1",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "capacity.max_requests_per_container",
-         "Type": "",
-         "Synopsis": "Maximum number of concurrent requests each instance can handle. When the maximum requests are exceeded, Cloud Run will create an additional instance.",
-         "Summary": "",
-         "Optional": false,
-         "Default": "80",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "capacity.memory",
-         "Type": "",
-         "Synopsis": "Memory to allocate the Cloud Run instance specified in MB, min 128, max 4096.",
-         "Summary": "",
-         "Optional": false,
-         "Default": "128",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "capacity.request_timeout",
-         "Type": "",
-         "Synopsis": "Maximum time a request can take before timing out, max 900.",
-         "Summary": "",
-         "Optional": false,
-         "Default": "300",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "cpu_count",
+               "Type": "int",
+               "Synopsis": "Number of CPUs to allocate the Cloud Run instance, min 1, max 2.",
+               "Summary": "",
+               "Optional": false,
+               "Default": "1",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "max_requests_per_container",
+               "Type": "int",
+               "Synopsis": "Maximum number of concurrent requests each instance can handle. When the maximum requests are exceeded, Cloud Run will create an additional instance.",
+               "Summary": "",
+               "Optional": false,
+               "Default": "80",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "memory",
+               "Type": "int",
+               "Synopsis": "Memory to allocate the Cloud Run instance specified in MB, min 128, max 4096.",
+               "Summary": "",
+               "Optional": false,
+               "Default": "128",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "request_timeout",
+               "Type": "int",
+               "Synopsis": "Maximum time a request can take before timing out, max 900.",
+               "Summary": "",
+               "Optional": false,
+               "Default": "300",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
       },
       {
          "Field": "location",

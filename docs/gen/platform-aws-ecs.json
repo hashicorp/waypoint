@@ -483,107 +483,119 @@
          "Optional": false,
          "Default": "",
          "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "sidecar.container_port",
-         "Type": "",
-         "Synopsis": "The port number for the container",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "sidecar.host_port",
-         "Type": "",
-         "Synopsis": "The port number on the host to reserve for the container",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "sidecar.image",
-         "Type": "",
-         "Synopsis": "Image of the sidecar container",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "sidecar.memory",
-         "Type": "",
-         "Synopsis": "The amount (in MiB) of memory to present to the container",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "sidecar.memory_reservation",
-         "Type": "",
-         "Synopsis": "The soft limit (in MiB) of memory to reserve for the container",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "sidecar.name",
-         "Type": "",
-         "Synopsis": "Name of the container",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "sidecar.protocol",
-         "Type": "",
-         "Synopsis": "The protocol used for port mapping.",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "sidecar.secrets",
-         "Type": "",
-         "Synopsis": "Secrets to expose to this container",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "sidecar.static_environment",
-         "Type": "",
-         "Synopsis": "Environment variables to expose to this container",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "SubFields": null
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "container_port",
+               "Type": "int",
+               "Synopsis": "The port number for the container",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "health_check",
+               "Type": "ecs.HealthCheckConfig",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "host_port",
+               "Type": "int",
+               "Synopsis": "The port number on the host to reserve for the container",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "image",
+               "Type": "string",
+               "Synopsis": "Image of the sidecar container",
+               "Summary": "",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "memory",
+               "Type": "int",
+               "Synopsis": "The amount (in MiB) of memory to present to the container",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "memory_reservation",
+               "Type": "int",
+               "Synopsis": "The soft limit (in MiB) of memory to reserve for the container",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "name",
+               "Type": "string",
+               "Synopsis": "Name of the container",
+               "Summary": "",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "protocol",
+               "Type": "string",
+               "Synopsis": "The protocol used for port mapping.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "secrets",
+               "Type": "map of string to string",
+               "Synopsis": "Secrets to expose to this container",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "static_environment",
+               "Type": "map of string to string",
+               "Synopsis": "Environment variables to expose to this container",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
       }
    ],
    "type": "platform",
