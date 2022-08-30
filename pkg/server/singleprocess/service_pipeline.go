@@ -101,6 +101,7 @@ func (s *Service) RunPipeline(
 	stepGraph, nodeToStepRef, err := s.pipelineGraphFull(ctx, log, nil, "",
 		make(map[string]string), nil, pipeline)
 	if err != nil {
+		log.Error("server failed to build full pipeline graph to determine cycles", "err", err)
 		return nil, err
 	}
 

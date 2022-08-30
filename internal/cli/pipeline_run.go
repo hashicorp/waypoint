@@ -51,8 +51,16 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		sg := app.UI.StepGroup()
 		defer sg.Wait()
 
-		step := sg.Add("Building pipeline execution request...")
+		step := sg.Add("Syncing pipeline configs...")
 		defer step.Abort()
+
+		_, err := app.ConfigSync(ctx, &pb.Job_ConfigSyncOp{})
+		if err != nil {
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+
+		step.Update("Building pipeline execution request...")
 
 		// build the initial job template for running the pipeline
 		runJobTemplate := &pb.Job{
@@ -156,7 +164,9 @@ func (c *PipelineRunCommand) Help() string {
 Usage: waypoint pipeline run [options] <pipeline-name>
 
   Run a pipeline by name. If run outside of a project dir, a '-project' flag is
-	required.
+	required. Before running a requested pipeline, this command will sync
+	pipeline configs so it runs the most up to date configuration version for a
+	pipeline.
 
 ` + c.Flags().Help())
 }
