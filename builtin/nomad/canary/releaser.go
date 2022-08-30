@@ -265,6 +265,9 @@ func (r *Releaser) resourceJobStatus(
 	job, _, err := jobClient.Info(state.Id, q)
 
 	if err != nil && job == nil {
+		jobResource.Name = state.Name
+		jobResource.Health = sdk.StatusReport_UNKNOWN
+		jobResource.HealthMessage = sdk.StatusReport_UNKNOWN.String()
 		return err
 	} else if job == nil {
 		s.Update("No job was found")
