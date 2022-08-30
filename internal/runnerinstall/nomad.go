@@ -75,9 +75,9 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 	// for `waypoint install` (which also installs a runner) vs. `waypoint runner install`.
 	// Since the runner's ID is set to "static" on the server install, we can use that
 	// to differentiate the flag names here.
-	if i.Config.CsiVolumeProvider == "" && i.Config.HostVolume == "" && opts.Id == "static" {
+	if i.Config.CsiVolumeProvider == "" && i.Config.HostVolume == "" && opts.Id == installutil.Id {
 		return fmt.Errorf("please include '-nomad-runner-csi-volume-provider' or '-nomad-runner-host-volume'")
-	} else if i.Config.CsiVolumeProvider == "" && i.Config.HostVolume == "" && opts.Id != "static" {
+	} else if i.Config.CsiVolumeProvider == "" && i.Config.HostVolume == "" && opts.Id != installutil.Id {
 		return fmt.Errorf("please include '-nomad-csi-volume-provider' or '-nomad-host-volume'")
 	} else if i.Config.CsiVolumeProvider != "" {
 		if i.Config.HostVolume != "" {
