@@ -253,7 +253,10 @@ func (op *deployDestroyOperation) Upsert(
 }
 
 func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App, msg proto.Message) (interface{}, error) {
-	destroy := msg.(*pb.Deployment)
+	destroy, ok := msg.(*pb.Deployment)
+	if !ok {
+		return nil, errors.New("failed to cast deploy destroy operation proto to a Deployment")
+	}
 
 	destroyer, ok := op.Component.Value.(component.Destroyer)
 	if !ok || destroyer.DestroyFunc() == nil {
