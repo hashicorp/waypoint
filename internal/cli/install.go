@@ -520,11 +520,6 @@ func installRunner(
 		AuthToken:     resp.Token,
 	}
 
-	// We set the ID to be "static" since it is the initial static runner
-	// Specific platform implementations should add the suffix -runner to
-	// resource names
-	id := "static"
-
 	// Install!
 	s.Update("Installing runner...")
 	err = p.InstallRunner(ctx, &runnerinstall.InstallOpts{
@@ -533,7 +528,7 @@ func installRunner(
 		Cookie:          config.Config.Cookie,
 		ServerAddr:      advertiseAddr.Addr,
 		AdvertiseClient: connConfig,
-		Id:              id,
+		Id:              installutil.Id,
 	})
 
 	if err != nil {
@@ -545,10 +540,10 @@ func installRunner(
 		)
 		return 1
 	}
-	s.Update("Runner %q installed", id)
+	s.Update("Runner %q installed", installutil.Id)
 	s.Done()
 
-	err = installutil.AdoptRunner(ctx, ui, client, id, advertiseAddr.Addr)
+	err = installutil.AdoptRunner(ctx, ui, client, installutil.Id, advertiseAddr.Addr)
 	if err != nil {
 		ui.Output("Error adopting runner: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
