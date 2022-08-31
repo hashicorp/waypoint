@@ -128,16 +128,20 @@ func (a *App) destroyDeploy(
 		return errors.New("failed to convert destroyment proto to a Deployment")
 	}
 
+	var message string
 	if len(destroyProto.DeclaredResources) > 0 {
-		a.UI.Output("These resources were not destroyed for app %q:", a.ref.Application, terminal.WithWarningStyle())
+		message = message + fmt.Sprintf("These resources were not destroyed for app %q:\n", a.ref.Application)
 		for _, resource := range destroyProto.DeclaredResources {
-			a.UI.Output("- "+resource.Name, terminal.WithWarningStyle())
+			message = message + "- " + resource.Name + "\n"
 		}
+		a.UI.Output(message, terminal.WithWarningStyle())
+		message = ""
 		if len(destroyProto.DestroyedResources) > 0 {
-			a.UI.Output("These resources were destroyed for app %q:", a.ref.Application, terminal.WithSuccessStyle())
+			message = message + fmt.Sprintf("These resources were destroyed for app %q:\n", a.ref.Application)
 			for _, resource := range destroyProto.DestroyedResources {
-				a.UI.Output("- "+resource.Name, terminal.WithSuccessStyle())
+				message = message + "- " + resource.Name + "\n"
 			}
+			a.UI.Output(message, terminal.WithSuccessStyle())
 		}
 	}
 
