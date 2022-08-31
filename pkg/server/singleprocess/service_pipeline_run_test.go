@@ -34,9 +34,7 @@ func TestServicePipelineRun(t *testing.T) {
 
 		pRef := &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: p.Pipeline.Id,
-				},
+				Id: p.Pipeline.Id,
 			},
 		}
 
