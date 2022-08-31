@@ -1685,7 +1685,7 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		p := serverptypes.TestPipeline(t, nil)
 		err := s.PipelinePut(p)
 		require.NoError(err)
-		pipeline := &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: &pb.Ref_PipelineId{Id: p.Id}}}
+		pipeline := &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: p.Id}}
 
 		// Create a new pipeline run
 		pr := &pb.PipelineRun{Pipeline: pipeline}
@@ -2030,7 +2030,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		err := s.PipelinePut(p)
 		require.NoError(err)
 		pr := &pb.PipelineRun{
-			Pipeline: &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: &pb.Ref_PipelineId{Id: p.Id}}},
+			Pipeline: &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: p.Id}},
 		}
 		r := serverptypes.TestPipelineRun(t, pr)
 
