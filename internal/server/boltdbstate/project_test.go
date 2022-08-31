@@ -594,7 +594,25 @@ func TestProject(t *testing.T) {
 
 		// Create new build after the project is re-initialized
 		require.NoError(s.BuildPut(false, &pb.Build{
-			Id: "testBuild",
+			Id: "testBuild1",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.BuildPut(false, &pb.Build{
+			Id: "testBuild2",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.BuildPut(false, &pb.Build{
+			Id: "testBuild3",
 			Application: &pb.Ref_Application{
 				Application: appName,
 				Project:     projectName,
@@ -603,7 +621,25 @@ func TestProject(t *testing.T) {
 		}))
 
 		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
-			Id: "testArtifact",
+			Id: "testArtifact1",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+			Id: "testArtifact2",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+			Id: "testArtifact3",
 			Application: &pb.Ref_Application{
 				Application: appName,
 				Project:     projectName,
@@ -612,7 +648,25 @@ func TestProject(t *testing.T) {
 		}))
 
 		require.NoError(s.DeploymentPut(false, &pb.Deployment{
-			Id: "testDeployment",
+			Id: "testDeployment1",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+			Id: "testDeployment2",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+			Id: "testDeployment3",
 			Application: &pb.Ref_Application{
 				Application: appName,
 				Project:     projectName,
@@ -621,7 +675,25 @@ func TestProject(t *testing.T) {
 		}))
 
 		require.NoError(s.ReleasePut(false, &pb.Release{
-			Id: "testRelease",
+			Id: "testRelease1",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.ReleasePut(false, &pb.Release{
+			Id: "testRelease2",
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		}))
+
+		require.NoError(s.ReleasePut(false, &pb.Release{
+			Id: "testRelease3",
 			Application: &pb.Ref_Application{
 				Application: appName,
 				Project:     projectName,
@@ -631,20 +703,50 @@ func TestProject(t *testing.T) {
 
 		// Verify that the app operation sequence is 1, since it is the 1st operation for the new (albeit
 		// re-initialized it was deleted) project
-		build, err := s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild"}})
+		build1, err := s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild1"}})
 		require.NoError(err)
-		require.Equal(1, int(build.Sequence))
+		require.Equal(1, int(build1.Sequence))
+		build2, err := s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild2"}})
+		require.NoError(err)
+		require.Equal(2, int(build2.Sequence))
+		build3, err := s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild3"}})
+		require.NoError(err)
+		require.Equal(3, int(build3.Sequence))
 
-		artifact, err := s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact"}})
+		artifact1, err := s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact1"}})
 		require.NoError(err)
-		require.Equal(1, int(artifact.Sequence))
+		require.Equal(1, int(artifact1.Sequence))
 
-		deployment, err := s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment"}})
+		artifact2, err := s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact2"}})
 		require.NoError(err)
-		require.Equal(1, int(deployment.Sequence))
+		require.Equal(2, int(artifact2.Sequence))
 
-		release, err := s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease"}})
+		artifact3, err := s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact3"}})
 		require.NoError(err)
-		require.Equal(1, int(release.Sequence))
+		require.Equal(3, int(artifact3.Sequence))
+
+		deployment1, err := s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment1"}})
+		require.NoError(err)
+		require.Equal(1, int(deployment1.Sequence))
+
+		deployment2, err := s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment2"}})
+		require.NoError(err)
+		require.Equal(2, int(deployment2.Sequence))
+
+		deployment3, err := s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment3"}})
+		require.NoError(err)
+		require.Equal(3, int(deployment3.Sequence))
+
+		release1, err := s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease1"}})
+		require.NoError(err)
+		require.Equal(1, int(release1.Sequence))
+
+		release2, err := s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease2"}})
+		require.NoError(err)
+		require.Equal(2, int(release2.Sequence))
+
+		release3, err := s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease3"}})
+		require.NoError(err)
+		require.Equal(3, int(release3.Sequence))
 	})
 }
