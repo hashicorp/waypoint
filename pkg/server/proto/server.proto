@@ -1051,17 +1051,13 @@ message Ref {
   message Pipeline {
     oneof ref {
       // Reference a single pipeline by ID.
-      PipelineId id = 1;
+      string id = 1;
 
       // Reference an existing pipeline by Project name and Pipeline name
       // Format: "project-name/pipeline-name"
       // This assumes that a project cannot have two pipelines with the same name.
       PipelineOwner owner = 2;
     }
-  }
-
-  message PipelineId {
-    string id = 1;
   }
 
   message PipelineOwner {
@@ -1074,13 +1070,16 @@ message Ref {
 
   message PipelineStep {
     // ID of the pipeline
-    string pipeline = 1;
+    string pipeline_id = 1;
+
+    // Name of the pipeline
+    string pipeline_name = 2;
 
     // Step name within the pipeline.
-    string step = 2;
+    string step = 3;
 
     // Pipeline run sequence
-    uint64 run_sequence = 3;
+    uint64 run_sequence = 4;
   }
 }
 

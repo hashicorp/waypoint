@@ -9449,7 +9449,7 @@
       "type": "object",
       "properties": {
         "id": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineId",
+          "type": "string",
           "description": "Reference a single pipeline by ID."
         },
         "owner": {
@@ -9458,14 +9458,6 @@
         }
       },
       "description": "Pipeline references a pipeline using one or more lookup types."
-    },
-    "hashicorp.waypoint.Ref.PipelineId": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
     },
     "hashicorp.waypoint.Ref.PipelineOwner": {
       "type": "object",
@@ -9483,9 +9475,13 @@
     "hashicorp.waypoint.Ref.PipelineStep": {
       "type": "object",
       "properties": {
-        "pipeline": {
+        "pipeline_id": {
           "type": "string",
           "title": "ID of the pipeline"
+        },
+        "pipeline_name": {
+          "type": "string",
+          "title": "Name of the pipeline"
         },
         "step": {
           "type": "string",
