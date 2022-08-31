@@ -1321,6 +1321,11 @@ func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) erro
 
 		// Go through and ensure that each exists.
 		for _, id := range jobpb.DependsOn {
+			if id == "" {
+				return status.Errorf(codes.FailedPrecondition,
+					"job %q has an empty string id for depends_on", jobpb.Id)
+			}
+
 			dependsMap[id] = struct{}{}
 
 			_, err := s.jobById(dbTxn, id)

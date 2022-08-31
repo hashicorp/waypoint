@@ -74,6 +74,55 @@ func TestPipelineRun(t testing.T, src *pb.PipelineRun) *pb.PipelineRun {
 	return src
 }
 
+// TestPipelineCycle returns an invalid pipeline with a step cycle for tests.
+func TestPipelineCycle(t testing.T, src *pb.Pipeline) *pb.Pipeline {
+	t.Helper()
+
+	if src == nil {
+		src = &pb.Pipeline{}
+	}
+
+	require.NoError(t, mergo.Merge(src, &pb.Pipeline{
+		Id:   "cycle",
+		Name: "cycle",
+		Owner: &pb.Pipeline_Project{
+			Project: &pb.Ref_Project{
+				Project: "project",
+			},
+		},
+		Steps: map[string]*pb.Pipeline_Step{
+			"root": {
+				Name: "root",
+				Kind: &pb.Pipeline_Step_Exec_{
+					Exec: &pb.Pipeline_Step_Exec{
+						Image: "hashicorp/waypoint",
+					},
+				},
+			},
+			"two": {
+				Name:      "two",
+				DependsOn: []string{"three"},
+				Kind: &pb.Pipeline_Step_Exec_{
+					Exec: &pb.Pipeline_Step_Exec{
+						Image: "hashicorp/waypoint",
+					},
+				},
+			},
+			"three": {
+				Name:      "three",
+				DependsOn: []string{"two"},
+				Kind: &pb.Pipeline_Step_Exec_{
+					Exec: &pb.Pipeline_Step_Exec{
+						Image: "hashicorp/waypoint",
+					},
+				},
+			},
+		},
+	}))
+
+	return src
+}
+
 // ValidatePipeline validates the pipeline structure.
 func ValidatePipeline(v *pb.Pipeline) error {
 	return validationext.Error(validation.ValidateStruct(v,

@@ -9022,6 +9022,10 @@
           "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Up",
           "title": "Built-in up operation"
         },
+        "pipeline": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step.Pipeline",
+          "title": "A reference to a different pipeline"
+        },
         "image": {
           "type": "string",
           "description": "Docker image to execute. This should be a fully qualified image URL."
@@ -9063,6 +9067,14 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "hashicorp.waypoint.Pipeline.Step.Pipeline": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline"
         }
       }
     },

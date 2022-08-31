@@ -430,7 +430,7 @@ func (i *NomadRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		Name:         "nomad",
 		OciUrl:       i.Config.RunnerImage,
 		PluginType:   "nomad",
-		Default:      true,
+		Default:      false,
 		PluginConfig: cfgJson,
 		ConfigFormat: pb.Hcl_JSON,
 	}

@@ -731,7 +731,7 @@ func (i *ECSRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		Name:         "ecs",
 		OciUrl:       i.Config.RunnerImage,
 		PluginType:   "aws-ecs",
-		Default:      true,
+		Default:      false,
 		PluginConfig: cfgJson,
 		ConfigFormat: pb.Hcl_JSON,
 	}

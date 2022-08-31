@@ -382,6 +382,31 @@ func (c *InitCommand) validateProject() bool {
 		s.Status(terminal.StatusOK)
 	}
 
+	sp := sg.Add("Registering all pipelines for project %q", ref.Project)
+	protoPipes, err := c.cfg.PipelineProtos()
+	if err != nil {
+		c.stepError(s, initStepPipeline, err)
+		return false
+	}
+
+	for _, pipeline := range protoPipes {
+		sp.Update("Registering Pipeline %q with the server...", pipeline.Name)
+
+		_, err := client.UpsertPipeline(c.Ctx, &pb.UpsertPipelineRequest{
+			Pipeline: pipeline,
+		})
+		if err != nil {
+			c.stepError(sp, initStepPipeline, err)
+			sp.Status(terminal.StatusError)
+			sp.Done()
+
+			return false
+		}
+	}
+	sp.Update("Project %q pipelines are registered with the server.", ref.Project)
+	sp.Status(terminal.StatusOK)
+	sp.Done()
+
 	s.Update("Project %q and all apps are registered with the server.", ref.Project)
 	s.Status(terminal.StatusOK)
 	s.Done()
@@ -656,6 +681,7 @@ const (
 	initStepConnect
 	initStepPluginConfig
 	initStepProject
+	initStepPipeline
 	initStepAuth
 )
 
@@ -701,6 +727,24 @@ The project and apps must be registered prior to performing any operations.
 This creates some metadata with the server. We require registration as a
 verification that the project/app names are correct and that you're targeting
 the correct server.
+			`,
+		},
+	},
+
+	initStepPipeline: {
+		Error: "Error while checking for pipeline registration.",
+		ErrorDetails: `
+There was an error while the checking if the pipelines for the project
+are registered with the Waypoint server. This error may be temporary and
+you may retry to init. See the error message below.
+		`,
+
+		Other: map[string]string{
+			"unregistered-desc": `
+The projects pipelines must be registered prior to performing any operations.
+This creates some metadata with the server. We require registration as a
+verification that the project/app names and pipelines are correct and that
+you're targeting the correct server.
 			`,
 		},
 	},

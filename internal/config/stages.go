@@ -57,6 +57,9 @@ type Step struct {
 	// The OCI image to use for executing this step
 	ImageURL string `hcl:"image_url,optional"`
 
+	// An optional embedded pipeline stanza
+	Pipeline *Pipeline `hcl:"pipeline,block"`
+
 	ctx *hcl.EvalContext
 }
 
