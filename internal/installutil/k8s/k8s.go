@@ -31,7 +31,7 @@ type K8sConfig struct {
 	CpuLimit        string `hcl:"cpu_limit,optional"`
 	MemLimit        string `hcl:"mem_limit,optional"`
 	ImagePullSecret string `hcl:"image_pull_secret,optional"`
-	
+
 	// Used for serverinstall
 	ServerImage        string            `hcl:"server_image,optional"`
 	ServiceAnnotations map[string]string `hcl:"service_annotations,optional"`
