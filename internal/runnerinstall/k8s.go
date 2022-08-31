@@ -314,15 +314,16 @@ func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 		LabelSelector: fmt.Sprintf("app=%s", DefaultRunnerTagName),
 	})
 	if err != nil {
-		return fmt.Errorf("could not find deployments in namespace %q: %s", i.Config.Namespace, err)
+		return fmt.Errorf("could not list deployments in namespace %q: %s", i.Config.Namespace, err)
 	}
 
 	// Search for runner with 0.9+ tag format, installed with helm
-	listHelmClient, err := deploymentClient.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=waypoint-%s", opts.Id),
+	podClient := clientset.CoreV1().Pods(i.Config.Namespace)
+	listHelmClient, err := podClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=waypoint-%s", strings.ToLower(opts.Id)),
 	})
 	if err != nil {
-		return fmt.Errorf("could not find deployments in namespace %q: %s", i.Config.Namespace, err)
+		return fmt.Errorf("could not list pods in namespace %q: %s", i.Config.Namespace, err)
 	}
 
 	// If both lists are empty, the runner is not here at all
