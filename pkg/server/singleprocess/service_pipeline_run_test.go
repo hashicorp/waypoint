@@ -12,15 +12,18 @@ import (
 )
 
 func TestServicePipelineRun(t *testing.T) {
-	ctx := context.Background()
-	require := require.New(t)
-
-	// Create our server
-	impl, err := New(WithDB(testDB(t)))
-	require.NoError(err)
-	client := server.TestServer(t, impl)
-
 	t.Run("get and list", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Initialize our app
+		TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
 		// Create pipeline
 		p, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
 			Pipeline: serverptypes.TestPipeline(t, nil),
@@ -55,5 +58,21 @@ func TestServicePipelineRun(t *testing.T) {
 		require.Equal(p.Pipeline.Id, run.PipelineRun.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id)
 		require.Equal(len(run.PipelineRun.Jobs), len(resp.AllJobIds))
 		require.Equal(resp.Sequence, run.PipelineRun.Sequence)
+
+		// Run Pipeline again
+		resp, err = client.RunPipeline(ctx, &pb.RunPipelineRequest{
+			Pipeline:    pRef,
+			JobTemplate: jobTemplate,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+
+		// Two pipeline runs should exist
+		runs, err := client.ListPipelineRuns(ctx, &pb.ListPipelineRunsRequest{
+			Pipeline: pRef,
+		})
+		require.NoError(err)
+		require.NotEmpty(runs)
+		require.Len(runs.PipelineRuns, 2)
 	})
 }
