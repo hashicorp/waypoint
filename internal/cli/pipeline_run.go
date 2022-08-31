@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/posener/complete"
 
@@ -121,14 +122,21 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			} else if result.Deploy != nil {
 				state = result.Deploy.Deployment.Status.State
 			} else if result.Release != nil {
-				state = result.Deploy.Deployment.Status.State
+				state = result.Release.Release.Status.State
 			}
 			if state != pb.Status_SUCCESS {
 				successful--
 			}
 		}
 
-		app.UI.Output("✔ Pipeline %q (%s) finished! %d/%d steps successfully completed.", pipelineIdent, app.Ref().Project, successful, steps, terminal.WithSuccessStyle())
+		output := fmt.Sprintf("Pipeline %q (%s) finished! %d/%d steps successfully completed.", pipelineIdent, app.Ref().Project, successful, steps)
+		if successful == 0 {
+			app.UI.Output("✖ %s", output, terminal.WithErrorStyle())
+		} else if successful < steps {
+			app.UI.Output("● %s", output, terminal.WithWarningStyle())
+		} else {
+			app.UI.Output("✔ %s", output, terminal.WithSuccessStyle())
+		}
 
 		return nil
 	})
