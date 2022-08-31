@@ -1,0 +1,300 @@
+---
+layout: docs
+page_title: Pipelines
+description: |-
+  The overview of Waypoint Pipelines.
+---
+
+# Waypoint Custom Pipelines
+
+~> **NOTE**: Custom Pipelines is currently a **Tech Preview** feature of Waypoint.
+Given that, we invite all Waypoint users to give custom pipelines a try and let
+us know your experience with it, feature requests and enhancements, or any bugs
+you might find via our [Discuss forums](https://discuss.hashicorp.com/c/waypoint/51)
+or [GitHub](https://github.com/hashicorp/waypoint/issues). We look forward to
+hearing about your experience and ways Waypoint can help make your experience
+delivering your applications even better!
+
+Waypoint before the introduction of Pipelines has always had a relatively fixed
+built-in pipeline with the `waypoint up` CLI which ran a build, deploy, and
+release. An "Up" was a special operation that encapsulated a Build, Deploy, and
+Release for an application. For most users getting started with Waypoint, this
+simple pipeline is powerful enough to get off the ground continuously building
+and deploying an application to production. However, as projects and teams
+become more complicated addressing real world concerns, users wished for more
+control and customization over the order in which Waypoint deploys applications.
+Running tests after a build, security scanning artifacts prior to a deploy, and
+so on. This was not easily possible with the current Waypoint model. Custom
+Pipelines are an answer to this problem. With this tech preview, users can
+define pipelines that can run in whichever order required to deliver an
+application. Additionally, pipelines allow for custom execution steps through
+the "Exec" plugin that will run any kind of bash script as part of the pipeline
+execution for operations like running tests or security scanning.
+
+Pipelines give users a way to tell Waypoint what order these operations should
+be run in, as well as any operation options that might need to be configured
+like disabling an artifact push for the build step, or pruning old deployments
+on a release in the release step. Waypoint projects still expect the
+application to be defined outside of a pipeline in its own `app` stanza.
+
+Please visit the [Pipeline Configuration Docs](/docs/pipelines/config)
+for more information about the configuration of a Pipeline for a
+Waypoint project.
+
+### Pipeline Runs
+
+TODO – Write about pipeline run tracking and the CLI
+
+Each time a pipeline is run, Waypoint will keep track of the resulting run and
+detail how each step went or report any failures from running a Step job.
+
+```shell
+
+```
+
+### Exec Step Plugin
+
+Pipelines come with a built-in step plugin named `exec`. This plugin allows a
+step to execute bash within the Pipeline run. This could be used to run tests
+after a build or deploy, or use tools packaged into the exec step image to
+security scan the built artifact.
+
+```hcl
+pipeline "example" {
+  step "run-some-code" {
+    image_url = "https://localhost:5000/waypoint-odr:dev"
+
+    use "exec" {
+      # executes a binary test with some arguments
+      command = "test"
+      args    = ["--full", "test-all"]
+    }
+  }
+}
+```
+
+### Embedded Pipelines in Steps
+
+You can optionally define a full pipeline within a Pipeline Step. This pattern
+is useful if you have a series of steps that make sense to be grouped together
+- such as doing a deploy and release within a specific workspace.
+
+```hcl
+pipeline "simple-nested" {
+  step "build" {
+    use "build" {
+    }
+  }
+
+  step "deploy" {
+    pipeline "deploy" {
+      step "deploy" {
+        use "deploy" {
+        }
+      }
+      step "release" {
+        use "release" {
+          prune = true
+        }
+      }
+    }
+  }
+}
+```
+
+~> **NOTE**: Currently, Waypoint only allows for 1 level of nesting when defining an embedded pipeline. However, Pipelines can also be used as a reference within a step.
+
+### Reference Pipelines As Steps
+
+You can reference other Pipelines within a Project via a `"pipeline"` step:
+
+```hcl
+project = "my-pipeline-project"
+
+pipeline "simple-nested" {
+  step "build" {
+    use "build" {
+    }
+  }
+
+  step "my-deploy" {
+    #  "pipeline" is a special "built-in" step that references another pipeline
+    use "pipeline" {
+      project = "my-pipeline-project"
+      name    = "deploy"
+    }
+  }
+}
+
+pipeline "deploy" {
+  step "deploy" {
+    use "deploy" {
+    }
+  }
+  step "release" {
+    use "release" {
+      prune = true
+    }
+  }
+}
+```
+
+### Pipelines Across Workspaces
+
+TODO – Write about Waypoint Pipelines and how it works with workspaces
+
+Additionally, pipelines can be defined and scoped to a Workspace for deploying in various environments.
+
+```hcl
+
+```
+
+## Examples
+
+Below is an example that redefines the Up operation to be a pipeline with 3 steps for a build, deploy, and release. This example pipeline could be used as a starting point for more complicated pipelines.
+
+```hcl
+project = "my-project"
+
+pipeline "full-up" {
+  step "my-build" {
+    use "build" {
+    }
+  }
+
+  step "my-deploy" {
+    use "deploy" {
+    }
+  }
+
+  step "my-release" {
+    use "release" {
+    }
+  }
+}
+
+app "my-app" {
+  build { ... }
+  deploy { ... }
+  release { ... }
+}
+```
+
+For the “exec” steps, it accepts a command and arg parameter for running commands.
+
+```hcl
+pipeline "build-and-test" {
+  step "my-build" {
+    use "build" {
+    }
+  }
+  step "test" {
+    image_url = "https://localhost:5000/waypoint-odr:dev"
+    use "exec" {
+      # executes a binary test with some arguments
+      command = "test"
+      args    = ["--full", "test-all"]
+    }
+  }
+  step "my-deploy" {
+    use "deploy" {
+    }
+  }
+}
+```
+
+To run the "full-up" custom pipeline, it's as simple as `waypoint pipeline run full-up`:
+
+```shell
+brian@ubuntu:waypoint-tetris λ waypoint pipeline run example
+
+» Running pipeline "example" for application "tetris"
+✓ Pipeline "example" has started running. Attempting to read job stream sequentially in order
+  Performing operation on "kubernetes" with runner profile "kubernetes-bootstrap-profile"
+
+» Cloning data from Git
+  URL: https://github.com/briancain/waypoint-tetris.git
+
+» Downloading from Git
+  Git Commit: 2133658e209f623c019ddb3c9e48c2c7ee9f4d1f
+   Timestamp: 2022-08-29 17:04:04 +0000 UTC
+     Message: Adding example pipeline
+
+
+» Executing Step "build"
+  Reading job stream (jobId: 01GBNAQRW2M6TTZ4C0JKT0AXRD)...
+
+  Performing operation on "kubernetes" with runner profile "kubernetes-bootstrap-profile"
+
+» Cloning data from Git
+  URL: https://github.com/briancain/waypoint-tetris.git
+
+» Downloading from Git
+  Git Commit: 2133658e209f623c019ddb3c9e48c2c7ee9f4d1f
+   Timestamp: 2022-08-29 17:04:04 +0000 UTC
+     Message: Adding example pipeline
+
+✓ Running build v1
+✓ Building Docker image with kaniko...
+✓ Testing registry and uploading entrypoint layer
+✓ Executing kaniko...
+ │ INFO[0001] Retrieving image manifest nginx:stable
+ │ INFO[0001] Returning cached image manifest
+ │ INFO[0001] Executing 0 build triggers
+ │ INFO[0001] Unpacking rootfs as cmd COPY ./public/ /var/www requires it.
+ │ INFO[0004] COPY ./public/ /var/www
+ │ INFO[0004] Taking snapshot of files...
+ │ INFO[0004] COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+ │ INFO[0004] Taking snapshot of files...
+ │ INFO[0004] Pushing image to localhost:32953/tetris:latest
+ │ INFO[0005] Pushed image to 1 destinations
+✓ Image pushed to 'my-container-registry/tetris:latest'
+✓ Running push build v1
+
+» Executing Step "deploy"
+  Reading job stream (jobId: 01GBNAQRW29Q1M7QNQ0F1JX2CS)...
+
+  Performing operation on "kubernetes" with runner profile "kubernetes-bootstrap-profile"
+
+» Cloning data from Git
+  URL: https://github.com/briancain/waypoint-tetris.git
+
+» Downloading from Git
+  Git Commit: 2133658e209f623c019ddb3c9e48c2c7ee9f4d1f
+   Timestamp: 2022-08-29 17:04:04 +0000 UTC
+     Message: Adding example pipeline
+
+✓ Running deploy v1
+✓ Kubernetes client connected to https://10.96.0.1:443 with namespace default
+✓ Creating deployment...
+✓ Expected "http" port "3000" for app "tetris-v1"
+✓ Deployment successfully rolled out!
+✓ Horizontal Pod Autoscaler has been created
+
+» Executing Step "release"
+  Reading job stream (jobId: 01GBNAQRW22N7PQXSF2KGXT1MS)...
+
+  Performing operation on "kubernetes" with runner profile "kubernetes-bootstrap-profile"
+
+» Cloning data from Git
+  URL: https://github.com/briancain/waypoint-tetris.git
+
+» Downloading from Git
+  Git Commit: 2133658e209f623c019ddb3c9e48c2c7ee9f4d1f
+   Timestamp: 2022-08-29 17:04:04 +0000 UTC
+     Message: Adding example pipeline
+
+✓ Running release v1
+✓ Kubernetes client connected to https://my-kubernetes.example.com:443 with namespace default
+✓ Creating service...
+✓ Service is ready!
+✔ Pipeline "example" (k8s-tetris) finished!
+```
+
+## Future Roadmap For Pipelines
+
+We plan on continuing to make improvements to pipelines in the coming months to bring it out of tech preview. This includes more support for running batches of operations for a pipeline by improving Waypoints internal job system, sharing VCS project source code between Steps, giving Pipeline steps the ability to share input and output variables, approval Steps to "manually" sign off on releases and more!
+
+Current open feature requests, bug reports, and general issues can be found via
+the [core/pipeline](https://github.com/hashicorp/waypoint/issues?q=is%3Aissue+is%3Aopen+label%3Acore%2Fpipeline)
+label on GitHub!

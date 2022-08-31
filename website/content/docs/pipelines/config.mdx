@@ -1,0 +1,177 @@
+---
+layout: docs
+page_title: Pipelines Configuration
+description: |-
+  The page for detailing Waypoint pipeline configurations
+---
+
+# Pipelines Configuration
+
+This section details some of the various step built-in plugins and their
+configuration options.
+
+## Built-In Step Config Options
+
+Currently, Pipeline steps have "built-in" plugins that are backed by the existing
+Waypoint job system. Below documents each of these built-in steps and their
+parameters.
+
+### `build`
+
+This built-in step will run a Build operation job, similar to running `waypoint build`.
+
+```hcl
+step "my-build-step" {
+  use "build" {
+    disable_push = false
+  }
+}
+```
+
+##### disable_push
+
+- Type: **bool**
+- **Optional**
+
+### `deploy`
+
+This built-in step will run a Deploy operation job, similar to running `waypoint deploy`.
+
+```hcl
+step "my-deploy-step" {
+  use "deploy" {
+  }
+}
+```
+
+### `release`
+
+This built-in step will run a Release operation job, similar to running `waypoint release`.
+
+```hcl
+step "my-release-step" {
+  use "release" {
+    prune        = true
+    prune_retain = 4
+  }
+}
+```
+
+##### deployment_ref
+
+0 or unset means do a release with the latest deployment. Otherwise this accepts
+a Deployment sequence to release.
+
+- Type: **int**
+- **Optional**
+
+##### prune
+
+If true, will prune old releases beyond the `prune_retain` limit when a new release is created.
+
+- Type: **bool**
+- **Optional**
+
+##### prune_retain
+
+The total number of deployments to retain when pruning on a release. This will
+only be valid if `prune_retain_override` is set to true.
+
+- Type: **int**
+- **Optional**
+- Default: 2
+
+##### prune_retain_override
+
+If true, will respect the `prune_retain` value when pruning during a release.
+
+- Type: **bool**
+- **Optional**
+
+### `up`
+
+This built-in step will run an Up operation job, similar to running `waypoint up`.
+
+```hcl
+step "my-up-step" {
+  use "up" {
+    prune = true
+  }
+}
+```
+
+##### prune
+
+If true, will prune old releases beyond the `prune_retain` limit when a new release is created.
+
+- Type: **bool**
+- **Optional**
+
+##### prune_retain
+
+The total number of deployments to retain when pruning on a release. This will
+only be valid if `prune_retain_override` is set to true.
+
+- Type: **int**
+- **Optional**
+- Default: 2
+
+##### prune_retain_override
+
+If true, will respect the `prune_retain` value when pruning during a release.
+
+- Type: **bool**
+- **Optional**
+
+### `exec`
+
+```hcl
+step "my-exec-step" {
+  use "exec" {
+    command = "echo"
+    args    = ["hello world!"]
+  }
+}
+```
+
+##### command
+
+The command to execute on the container for this Step.
+
+- Type: **string**
+- **Required**
+
+##### args
+
+The arguments to pass through to the command when running on the container for this Step.
+
+- Type: **string**
+- **Optional**
+
+### `pipeline`
+
+This built-in step lets you reference another pipeline within a Step to be run.
+
+```hcl
+step "my-pipeline-step" {
+  use "pipeline" {
+    project = "my-pipeline-project"
+    name    = "other-pipeline"
+  }
+}
+```
+
+##### project
+
+The project that the pipeline reference exists in. **Note that currently
+Waypoint does not support running across Project pipelines**.
+
+- Type: **string**
+- **Optional**
+
+##### name
+
+The pipeline name that the pipeline reference is for.
+
+- Type: **string**
+- **Required**
