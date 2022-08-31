@@ -109,9 +109,7 @@ func (s *Service) RunPipeline(
 	if err = s.state(ctx).PipelineRunPut(&pb.PipelineRun{
 		Pipeline: &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: pipeline.Id,
-				},
+				Id: pipeline.Id,
 			},
 		},
 		State: pb.PipelineRun_PENDING,
@@ -294,9 +292,10 @@ func (s *Service) buildStepJobs(
 		job.Id = stepIds[nodeId]
 		job.DependsOn = append(job.DependsOn, dependsOn...)
 		job.Pipeline = &pb.Ref_PipelineStep{
-			Pipeline:    pipeline.Id,
-			Step:        step.Name,
-			RunSequence: pipelineRun.Sequence,
+			PipelineId:   pipeline.Id,
+			PipelineName: pipeline.Name,
+			Step:         step.Name,
+			RunSequence:  pipelineRun.Sequence,
 		}
 
 		// Queue the right job depending on the Step type. We will queue a Waypoint
@@ -474,8 +473,8 @@ func (s *Service) pipelineGraphFull(
 		}
 
 		nodeStepRef.nodeStepRefs[nodeId] = &pb.Ref_PipelineStep{
-			Pipeline: pipeline.Id,
-			Step:     step.Name,
+			PipelineId: pipeline.Id,
+			Step:       step.Name,
 		}
 		nodeStepRef.stepRefs[nodePipelineStepRef{pipeline: pipeline.Id, step: step.Name}] = nodeId
 
@@ -518,8 +517,8 @@ func (s *Service) pipelineGraphFull(
 
 				// add node id to map
 				nodeStepRef.nodeStepRefs[depId] = &pb.Ref_PipelineStep{
-					Pipeline: pipeline.Id,
-					Step:     dep,
+					PipelineId: pipeline.Id,
+					Step:       dep,
 				}
 				nodeStepRef.stepRefs[nodePipelineStepRef{pipeline: pipeline.Id, step: dep}] = depId
 			}
