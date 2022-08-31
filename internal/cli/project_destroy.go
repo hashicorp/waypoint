@@ -24,8 +24,8 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 		return 1
 	}
 
-	if len(args) > 0 {
-		c.ui.Output("No arguments are required for 'project destroy' - please set the -project flag.", terminal.WithErrorStyle())
+	if c.project == nil {
+		c.ui.Output("The -project flag must be set.", terminal.WithErrorStyle())
 		return 1
 	}
 
