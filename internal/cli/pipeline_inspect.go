@@ -168,6 +168,12 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		endJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
 			JobId: run.PipelineRun.Jobs[len(run.PipelineRun.Jobs)-1].Id,
 		})
+		var sha string
+		var msg string
+		if startJob.DataSourceRef != nil {
+			sha = startJob.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
+			msg = startJob.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.CommitMessage
+		}
 		output = append(output, []terminal.NamedValue{
 			{
 				Name: "Run Sequence", Value: run.PipelineRun.Sequence,
@@ -184,6 +190,12 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 			{
 				Name: "State", Value: run.PipelineRun.State,
 			},
+			{
+				Name: "Git Commit SHA", Value: sha,
+			},
+			{
+				Name: "Git Commit Message", Value: msg,
+			},
 		}...)
 	} else {
 		lastRun := runs.PipelineRuns[len(runs.PipelineRuns)-1]
@@ -197,6 +209,10 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
+		var sha string
+		if startJob.DataSourceRef != nil {
+			sha = startJob.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
+		}
 		output = append(output, []terminal.NamedValue{
 			{
 				Name: "Total Runs", Value: lastRun.Sequence,
@@ -209,6 +225,9 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 			},
 			{
 				Name: "Last Run Status", Value: lastRun.State,
+			},
+			{
+				Name: "Last Run Commit SHA", Value: sha,
 			},
 		}...)
 	}
