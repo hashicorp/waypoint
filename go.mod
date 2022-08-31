@@ -334,7 +334,7 @@ require (
 	github.com/evanphx/grpc-gateway v1.16.1-0.20220211183845-48e5be386c15
 	github.com/hashicorp/go-grpc-net-conn v0.0.0-20220321172933-7ab38178cb90
 	github.com/hashicorp/opaqueany v0.0.0-20220321170339-a5c6ff5bb0ec
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20220815171738-0c7040f14e61
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20220831214951-89c00954cebb
 	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/rs/cors v1.7.0 // indirect
