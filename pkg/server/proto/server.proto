@@ -809,6 +809,8 @@ message Project {
 
   ProjectState state = 11;
 
+  // ProjectState is set to active when the project is created and throughout its lifetime.
+  // When a project destroy operation begins, the state is set to destroying.
   enum ProjectState {
     ACTIVE = 0;
     DESTROYING = 1;
@@ -3564,6 +3566,7 @@ message Deployment {
   // Resources that this deployment has created or manages.
   repeated DeclaredResource declared_resources = 19;
 
+  // Resources that a destroy operation has destroyed
   repeated DestroyedResource destroyed_resources = 21;
 
   // This is the populated preload data. Most of this data can be retrieved
