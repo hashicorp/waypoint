@@ -427,9 +427,7 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 func (c *Pipeline) Ref() *pb.Ref_Pipeline {
 	return &pb.Ref_Pipeline{
 		Ref: &pb.Ref_Pipeline_Id{
-			Id: &pb.Ref_PipelineId{
-				Id: c.Name,
-			},
+			Id: c.Name,
 		},
 	}
 }
