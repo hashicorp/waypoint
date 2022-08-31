@@ -74,5 +74,22 @@ func TestServicePipelineRun(t *testing.T) {
 		require.NoError(err)
 		require.NotEmpty(runs)
 		require.Len(runs.PipelineRuns, 2)
+
+		// Run Pipeline again
+		resp, err = client.RunPipeline(ctx, &pb.RunPipelineRequest{
+			Pipeline:    pRef,
+			JobTemplate: jobTemplate,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+
+		// Three pipeline runs should exist
+		runs, err = client.ListPipelineRuns(ctx, &pb.ListPipelineRunsRequest{
+			Pipeline: pRef,
+		})
+		require.NoError(err)
+		require.NotEmpty(runs)
+		require.Len(runs.PipelineRuns, 3)
+		require.Equal(uint64(3), runs.PipelineRuns[len(runs.PipelineRuns)-1].Sequence)
 	})
 }
