@@ -125,7 +125,7 @@ func (a *App) destroyDeploy(
 
 	destroyProto, ok := destroyment.(*pb.Deployment)
 	if !ok {
-		return err
+		return errors.New("failed to convert destroyment proto to a Deployment")
 	}
 
 	if len(destroyProto.DeclaredResources) > 0 {
