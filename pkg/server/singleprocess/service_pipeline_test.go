@@ -209,12 +209,14 @@ func TestServiceRunPipeline(t *testing.T) {
 				},
 			},
 		}
+
 		// Pipeline Runs should exist
 		runs, err := client.ListPipelineRuns(ctx, &pb.ListPipelineRunsRequest{
 			Pipeline: pRef,
 		})
 		require.NoError(err)
 		require.NotEmpty(runs)
+		require.Len(runs.PipelineRuns, 1)
 
 		// Get pipeline run
 		run, err := client.GetPipelineRun(ctx, &pb.GetPipelineRunRequest{
