@@ -125,7 +125,7 @@ func (a *App) destroyDeploy(
 
 	destroyProto, ok := destroyment.(*pb.Deployment)
 	if !ok {
-		return errors.New("failed to convert destroyment proto to a Deployment")
+		return errors.New("error converting operation message into a Deployment proto message")
 	}
 
 	var message string
