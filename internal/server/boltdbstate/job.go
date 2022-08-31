@@ -1759,13 +1759,13 @@ func (s *State) pipelineComplete(jobId string) error {
 		// TODO:XX figure out how ^
 		if job.Id == run.Jobs[len(run.Jobs)-1].Id {
 			run.State = pb.PipelineRun_SUCCESS
-			s.log.Trace("pipeline run is complete", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
+			s.log.Trace("pipeline run is complete", "job", job.Id, "pipeline", job.Pipeline.PipelineId, "run", run.Sequence)
 		}
 	}
 
 	// PipelineRunPut the new state
 	if err = s.PipelineRunPut(run); err != nil {
-		s.log.Error("failed to complete pipeline run", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
+		s.log.Error("failed to complete pipeline run", "job", job.Id, "pipeline", job.Pipeline.PipelineId, "run", job.Pipeline.RunSequence)
 		return err
 	}
 
@@ -1823,11 +1823,11 @@ func (s *State) pipelineCancel(jobId string) error {
 		return nil
 	} else {
 		run.State = pb.PipelineRun_CANCELLED
-		s.log.Trace("pipeline run cancelled", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", run.Sequence)
+		s.log.Trace("pipeline run cancelled", "job", job.Id, "pipeline", job.Pipeline.PipelineId, "run", run.Sequence)
 	}
 	// PipelineRunPut the new state
 	if err := s.PipelineRunPut(run); err != nil {
-		s.log.Error("failed to cancel pipeline run", "job", job.Id, "pipeline", job.Pipeline.Pipeline, "run", job.Pipeline.RunSequence)
+		s.log.Error("failed to cancel pipeline run", "job", job.Id, "pipeline", job.Pipeline.PipelineId, "run", job.Pipeline.RunSequence)
 		return err
 	}
 
