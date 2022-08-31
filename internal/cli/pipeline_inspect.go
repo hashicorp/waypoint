@@ -213,7 +213,7 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
-		
+
 		var sha string
 		var msg string
 		if startJob.DataSourceRef != nil {
