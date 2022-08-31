@@ -23,10 +23,10 @@ func (r *Runner) executeDestroyProjectOp(
 	}
 
 	// Update the project state to indicate that it's being destroyed
-	pbProject, err := client.UpsertProject(ctx,
+	_, err := client.UpsertProject(ctx,
 		&pb.UpsertProjectRequest{
 			Project: &pb.Project{
-				Name:  destroyProjectOp.DestroyProject.Project.Name,
+				Name:  destroyProjectOp.DestroyProject.Project.Project,
 				State: pb.Project_DESTROYING,
 			},
 		},
@@ -41,7 +41,7 @@ func (r *Runner) executeDestroyProjectOp(
 			workspaces, err := client.ListWorkspaces(ctx, &pb.ListWorkspacesRequest{
 				Scope: &pb.ListWorkspacesRequest_Application{
 					Application: &pb.Ref_Application{
-						Project:     destroyProjectOp.DestroyProject.Project.Name,
+						Project:     destroyProjectOp.DestroyProject.Project.Project,
 						Application: app,
 					},
 				},
@@ -58,7 +58,7 @@ func (r *Runner) executeDestroyProjectOp(
 					&pb.Job{
 						Application: &pb.Ref_Application{
 							Application: app,
-							Project:     pbProject.Project.Name,
+							Project:     destroyProjectOp.DestroyProject.Project.Project,
 						},
 						Operation: &pb.Job_Destroy{
 							Destroy: &pb.Job_DestroyOp{
@@ -82,7 +82,7 @@ func (r *Runner) executeDestroyProjectOp(
 							Application: &pb.Hostname_TargetApp{
 								Application: &pb.Ref_Application{
 									Application: app,
-									Project:     pbProject.Project.Name,
+									Project:     destroyProjectOp.DestroyProject.Project.Project,
 								},
 								Workspace: &pb.Ref_Workspace{
 									Workspace: workspace.Name,
@@ -107,16 +107,14 @@ func (r *Runner) executeDestroyProjectOp(
 	log.Debug("Deleting DB records for project")
 	// Delete the project from the database
 	_, err = client.DestroyProject(ctx, &pb.DestroyProjectRequest{
-		Project: &pb.Ref_Project{
-			Project: destroyProjectOp.DestroyProject.Project.Name,
-		},
+		Project: destroyProjectOp.DestroyProject.Project,
 	})
 	// If there is an error destroying a project, reset its state to ACTIVE
 	if err != nil {
 		_, err := client.UpsertProject(ctx,
 			&pb.UpsertProjectRequest{
 				Project: &pb.Project{
-					Name:  destroyProjectOp.DestroyProject.Project.Name,
+					Name:  destroyProjectOp.DestroyProject.Project.Project,
 					State: pb.Project_ACTIVE,
 				},
 			},

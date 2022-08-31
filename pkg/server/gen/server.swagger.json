@@ -6632,7 +6632,8 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/hashicorp.waypoint.DestroyedResource"
-          }
+          },
+          "title": "Resources that a destroy operation has destroyed"
         },
         "preload": {
           "$ref": "#/definitions/hashicorp.waypoint.Deployment.Preload",
@@ -8111,7 +8112,7 @@
       "type": "object",
       "properties": {
         "project": {
-          "$ref": "#/definitions/hashicorp.waypoint.Project"
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project"
         },
         "skip_destroy_resources": {
           "type": "boolean"
@@ -9327,7 +9328,8 @@
         "ACTIVE",
         "DESTROYING"
       ],
-      "default": "ACTIVE"
+      "default": "ACTIVE",
+      "description": "ProjectState is set to active when the project is created and throughout its lifetime.\nWhen a project destroy operation begins, the state is set to destroying."
     },
     "hashicorp.waypoint.PushedArtifact": {
       "type": "object",

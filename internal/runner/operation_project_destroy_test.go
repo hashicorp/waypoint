@@ -65,8 +65,8 @@ func TestProjectDestroyOp(t *testing.T) {
 	job := &pb.Job{
 		Operation: &pb.Job_DestroyProject{
 			DestroyProject: &pb.Job_DestroyProjectOp{
-				Project: &pb.Project{
-					Name: projectName,
+				Project: &pb.Ref_Project{
+					Project: projectName,
 				},
 				SkipDestroyResources: false,
 			},
@@ -151,8 +151,8 @@ func TestProjectDestroyOp_SkipDestroyResources(t *testing.T) {
 	job := &pb.Job{
 		Operation: &pb.Job_DestroyProject{
 			DestroyProject: &pb.Job_DestroyProjectOp{
-				Project: &pb.Project{
-					Name: "testProject",
+				Project: &pb.Ref_Project{
+					Project: "testProject",
 				},
 				SkipDestroyResources: true,
 			},

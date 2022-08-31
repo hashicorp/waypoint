@@ -2369,7 +2369,7 @@ message Job {
   // as well as (optionally) the destruction of all resources created within
   // a project
   message DestroyProjectOp {
-    Project project = 1;
+    Ref.Project project = 1;
     bool skip_destroy_resources = 2;
   }
 
