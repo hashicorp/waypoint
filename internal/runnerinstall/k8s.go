@@ -28,26 +28,7 @@ import (
 )
 
 type K8sRunnerInstaller struct {
-	k8sinstallutil.K8sInstaller
-	Config K8sConfig
-}
-
-type K8sConfig struct {
-	KubeconfigPath       string `hcl:"kubeconfig,optional"`
-	K8sContext           string `hcl:"context,optional"`
-	Version              string `hcl:"version,optional"`
-	Namespace            string `hcl:"namespace,optional"`
-	RunnerImage          string `hcl:"runner_image,optional"`
-	CpuRequest           string `hcl:"runner_cpu_request,optional"`
-	MemRequest           string `hcl:"runner_mem_request,optional"`
-	CreateServiceAccount bool   `hcl:"odr_service_account_init,optional"`
-	OdrImage             string `hcl:"odr_image"`
-
-	// Required for backwards compatibility
-	imagePullPolicy string `hcl:"image_pull_policy,optional"`
-	CpuLimit        string `hcl:"cpu_limit,optional"`
-	MemLimit        string `hcl:"mem_limit,optional"`
-	ImagePullSecret string `hcl:"image_pull_secret,optional"`
+	Config k8sinstallutil.K8sConfig
 }
 
 const (
@@ -152,7 +133,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		return err
 	}
 
-	clientSet, err := i.K8sInstaller.NewClient()
+	clientSet, err := k8sinstallutil.NewClient(i.Config)
 	if err != nil {
 		opts.UI.Output("Error creating k8s clientset: %s", clierrors.Humanize(err), terminal.StatusError)
 		return err
@@ -302,7 +283,7 @@ func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	// we know how to uninstall it
 
 	// A) Is runner on the cluster at all?
-	clientset, err := i.NewClient()
+	clientset, err := k8sinstallutil.NewClient(i.Config)
 	if err != nil {
 		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
@@ -355,7 +336,7 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 	s := sg.Add("Inspecting Kubernetes cluster...")
 	defer func() { s.Abort() }()
 
-	clientset, err := i.NewClient()
+	clientset, err := k8sinstallutil.NewClient(i.Config)
 	if err != nil {
 		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
@@ -379,7 +360,7 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 	if v := podSpec.Containers; len(v) > 0 {
 		c := v[0]
 
-		i.Config.imagePullPolicy = string(c.ImagePullPolicy)
+		i.Config.ImagePullPolicy = string(c.ImagePullPolicy)
 		if m := c.Resources.Requests; len(m) > 0 {
 			if v, ok := m[apiv1.ResourceMemory]; ok {
 				i.Config.MemRequest = v.String()
@@ -507,7 +488,7 @@ func (i *K8sRunnerInstaller) uninstallWithHelm(ctx context.Context, opts *Instal
 	listOptions := metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=%s", helmRunnerId),
 	}
-	err = i.CleanPVC(ctx, opts.UI, opts.Log, listOptions)
+	err = k8sinstallutil.CleanPVC(ctx, opts.UI, opts.Log, listOptions, i.Config)
 
 	return err
 }
@@ -543,7 +524,7 @@ func (i *K8sRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		cfgMap["image_secret"] = v
 	}
 	// TODO: Enable specification of service account name
-	if v := i.Config.imagePullPolicy; v != "" {
+	if v := i.Config.ImagePullPolicy; v != "" {
 		cfgMap["image_pull_policy"] = v
 	}
 

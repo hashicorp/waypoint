@@ -25,9 +25,6 @@ LOOP:
 	for {
 		select {
 		case <-timer.C:
-			ui.Output("Cancelled.",
-				terminal.WithErrorStyle(),
-			)
 			return errors.New("runner not detected by server after 5 minutes")
 		default:
 		}
