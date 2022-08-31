@@ -146,7 +146,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			if k8sErrors.IsNotFound(err) {
 				err = nil
 			} else {
-				opts.UI.Output("Error getting service account: %s", clierrors.Humanize(err), terminal.StatusError)
+				opts.UI.Output(fmt.Sprintf("Error getting service account: %s", clierrors.Humanize(err)), terminal.StatusError)
 				return err
 			}
 		} else {
