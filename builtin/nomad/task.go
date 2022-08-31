@@ -3,18 +3,17 @@ package nomad
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
-	"github.com/oklog/ulid"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/oklog/ulid"
 )
 
 // TaskLauncher implements the TaskLauncher plugin interface to support
@@ -286,9 +285,50 @@ func (p *TaskLauncher) StartTask(
 func (p *TaskLauncher) WatchTask(
 	ctx context.Context,
 	log hclog.Logger,
+	ui terminal.UI,
 	ti *TaskInfo,
 ) (*component.TaskResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "WatchTask not implemented")
+	// We'll query for the allocation in the namespace of our task launcher
+	queryOpts := &api.QueryOptions{Namespace: p.config.Namespace}
+
+	// Accumulate our result on this
+	var result component.TaskResult
+
+	if client, err := getNomadClient(); err != nil {
+		return nil, err
+	} else {
+		if allocs, _, err := client.Jobs().Allocations(ti.Id, true, queryOpts); err != nil {
+			return nil, err
+		} else {
+			if len(allocs) != 1 {
+				return nil, errors.New("there should be one allocation in the job")
+			}
+			if alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts); err != nil {
+				return nil, err
+			} else {
+				tg := alloc.GetTaskGroup()
+				if len(tg.Tasks) != 1 {
+					return nil, errors.New("there should be one task in the allocation")
+				}
+				task := tg.Tasks[0]
+
+				ch := make(chan struct{})
+				logStream, errChan := client.AllocFS().Logs(alloc, true, task.Name, "stderr", "", 0, ch, queryOpts)
+				select {
+				case err := <-errChan:
+					return nil, err
+				case <-logStream:
+					data := <-logStream
+					message := string(data.Data)
+					log.Info(message)
+					ui.Output(message)
+				}
+			}
+		}
+	}
+
+	result.ExitCode = 0
+	return &result, nil
 }
 
 var _ component.TaskLauncher = (*TaskLauncher)(nil)
