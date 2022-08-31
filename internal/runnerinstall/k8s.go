@@ -330,7 +330,7 @@ func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	// Move to: B) Decide which uninstall path we use based on if there is a runner
 	// with the naming patterns we get with our 0.9.0+ helm installer
 	if len(listK8sClient.Items) == 0 && len(listHelmClient.Items) == 0 {
-		return fmt.Errorf("runner with ID %q not found in namespace %q", opts.Id, i.Config.Namespace)
+		return fmt.Errorf("runner with ID %q not found in namespace %q with context %q", opts.Id, i.Config.Namespace, i.Config.K8sContext)
 	} else if len(listHelmClient.Items) > 0 {
 		err = i.uninstallWithHelm(ctx, opts)
 	} else {
