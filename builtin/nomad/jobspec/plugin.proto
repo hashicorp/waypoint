@@ -16,5 +16,7 @@ message Deployment {
 message Resource {
   message Job {
     string name = 1;
+    string id = 2;
+    string namespace = 3;
   }
 }
