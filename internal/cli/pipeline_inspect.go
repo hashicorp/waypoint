@@ -283,7 +283,8 @@ func (c *PipelineInspectCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint pipeline inspect [options] <pipeline-id>
 
-  Inspect the full details of a pipeline by id for a project.
+  Inspect the full details of a pipeline by id or name for a project.
+  Including the '-run' option will show full details of a specific run of this pipeline. 
 
 ` + c.Flags().Help())
 }
