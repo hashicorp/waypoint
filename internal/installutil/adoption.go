@@ -69,3 +69,9 @@ The Waypoint runner was unable to connect to Waypoint server. Maybe the
 -server-addr specified is not accessible from the Waypoint runner?
 `)
 )
+
+// Id
+// We set the ID to be "static" since it is the initial static runner
+// Specific platform implementations should add the suffix -runner to
+// resource names
+const Id = "static"

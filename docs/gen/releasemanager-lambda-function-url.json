@@ -1,0 +1,35 @@
+{
+   "description": "Create an AWS Lambda function URL",
+   "example": "release {\n\tuse \"lambda-function-url\" {\n\t\tauth_type = \"NONE\"\n\t}\n}",
+   "input": "lambda.Deployment",
+   "mappers": null,
+   "name": "lambda-function-url",
+   "optionalFields": [
+      {
+         "Field": "auth_type",
+         "Type": "string",
+         "Synopsis": "the Lambda function URL auth type",
+         "Summary": "The AuthType parameter determines how Lambda authenticates or authorizes requests to your function URL. Must be either `AWS_IAM` or `NONE`.",
+         "Optional": true,
+         "Default": "NONE",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "principal",
+         "Type": "string",
+         "Synopsis": "the principal to use when auth_type is `AWS_IAM`",
+         "Summary": "The Principal parameter specifies the principal that is allowed to invoke the function.",
+         "Optional": true,
+         "Default": "*",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "output": "lambda.Release",
+   "requiredFields": null,
+   "type": "releasemanager",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

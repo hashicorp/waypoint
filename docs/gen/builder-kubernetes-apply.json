@@ -1,0 +1,8 @@
+{
+   "mappers": null,
+   "name": "kubernetes-apply",
+   "optionalFields": null,
+   "requiredFields": null,
+   "type": "builder",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

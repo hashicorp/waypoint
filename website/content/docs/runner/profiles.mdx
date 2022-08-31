@@ -19,9 +19,9 @@ runner profile already configured. You can view runner profiles with the `waypoi
 ```shell-session
 $ waypoint runner profile list
 
-     NAME    | PLUGIN TYPE |           OCI URL             | DEFAULT
--------------+-------------+-------------------------------+----------
-  kubernetes | kubernetes  | hashicorp/waypoint-odr:latest | yes
+     NAME                      | PLUGIN TYPE |           OCI URL             | DEFAULT
+-------------------------------+-------------+-------------------------------+----------
+  kubernetes-bootstrap-profile | kubernetes  | hashicorp/waypoint-odr:latest | yes
 ```
 
 If a default runner profile is configured for a given plugin, Waypoint will use that profile to create a new on-demand
@@ -31,9 +31,9 @@ be sufficient.
 You can also closely inspect a runner profile by name with the `waypoint runner profile inspect` command:
 
 ```shell-session
-# waypoint runner profile inspect kubernetes
+# waypoint runner profile inspect kubernetes-bootstrap-profile
 » Runner profile:
-                   Name: kubernetes
+                   Name: kubernetes-bootstrap-profile
                      ID: 01FHZH1T53SR7V68JGZ52BKSAK
                 Default: true
                 OCI URL: hashicorp/waypoint-odr:latest
@@ -48,10 +48,10 @@ You can also closely inspect a runner profile by name with the `waypoint runner 
 
 $ waypoint runner profile list
 Runner profiles
-     NAME    | PLUGIN TYPE |            OCI URL            | DEFAULT
--------------+-------------+-------------------------------+----------
-  kubernetes | kubernetes  | hashicorp/waypoint-odr:latest | yes
-  ecs        | aws-ecs     | hashicorp/waypoint-odr:latest |
+     NAME                      | PLUGIN TYPE |            OCI URL            | DEFAULT
+-------------------------------+-------------+-------------------------------+----------
+  kubernetes-bootstrap-profile | kubernetes  | hashicorp/waypoint-odr:latest | yes
+  ecs                          | aws-ecs     | hashicorp/waypoint-odr:latest |
 ```
 
 ## Modifying runner profiles
@@ -162,14 +162,4 @@ $ waypoint runner profile inspect dev
 $ waypoint runner profile delete 01G65VD1SSB3HYJ3FS9K629A3B
 
 » Runner profile deleted
-```
-
-## Using Profiles for Projects
-
-Projects can be configured to use specific runner profiles, rather than the default. To force a particular project
-to build using an on-demand runner on ECS, for example, add a new runner profile as described
-[above](/docs/runner/profiles#adding-a-new-runner-profile), and then use `waypoint project apply` to set the `-runner-profile`:
-
-```shell-session
-$ waypoint project apply -runner-profile=ecs <your-project-name>
 ```

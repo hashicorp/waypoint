@@ -98,9 +98,10 @@ func (s *Service) RunPipeline(
 
 	// Get the graph for the steps so we can get the root. We enforce a
 	// single root so the root is always the first step.
-	stepGraph, nodeIdMap, err := s.pipelineGraphFull(ctx, log, nil, "",
-		make(map[string]string), make(map[string]*pb.Ref_PipelineStep), pipeline)
+	stepGraph, nodeToStepRef, err := s.pipelineGraphFull(ctx, log, nil, "",
+		make(map[string]string), nil, pipeline)
 	if err != nil {
+		log.Error("server failed to build full pipeline graph to determine cycles", "err", err)
 		return nil, err
 	}
 
@@ -123,9 +124,9 @@ func (s *Service) RunPipeline(
 		return nil, err
 	}
 
-	// Build out all of the queued job requests for running this pipelines steps
+	// Build out all of the queued job requests for running this pipeline's steps
 	stepJobs, pipelineRun, stepIds, err := s.buildStepJobs(ctx, log, req,
-		make(map[string]interface{}), nodeIdMap, make(map[string][]string), pipeline, pipelineRun)
+		make(map[string]interface{}), nodeToStepRef, make(map[string][]string), pipeline, pipelineRun)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +137,7 @@ func (s *Service) RunPipeline(
 	for _, v := range stepGraph.KahnSort() {
 		// Look up step name and ref by the assigned node ID from graph generation
 		nodeId := v.(string)
-		stepRef, ok := nodeIdMap[nodeId]
+		stepRef, ok := nodeToStepRef.nodeStepRefs[nodeId]
 		if !ok {
 			return nil, status.Errorf(codes.Internal,
 				"could not get pipeline step ref for node id %q", nodeId)
@@ -151,7 +152,7 @@ func (s *Service) RunPipeline(
 			// NOTE(briancain):
 			// This could be better. It's basically here because we want to keep track
 			// of an embedded pipeline step ref within the step graph, but it doesn't have
-			// a "job id" because the root of the embedded pipeline is the actual ID where
+			// a "job id" because the root of the embedded pipeline is the actual ID whereas
 			// this is simply a reference.
 			// We don't want to add it as a job id because it doesn't actually create a job.
 			// jobId = "embedded-pipeline-ref-" + nodeId
@@ -181,21 +182,42 @@ func (s *Service) RunPipeline(
 	}, nil
 }
 
+// nodeToStepRef is a helper struct used in both buildStepJobs and pipelineGraphFull.
+// Its job is to keep track of each vertex in a pipeline graph where its node
+// id is unique to the full graph and is backed by a specific Pipeline Step that
+// the node Id is referencing.
+type nodeToStepRef struct {
+	// Map[NodeId] Pipeline Step Ref
+	nodeStepRefs map[string]*pb.Ref_PipelineStep
+
+	// Map[Pipeline + Step] Node Id
+	// Use the value of this, to look up the Step Ref in nodeStepRefs
+	stepRefs map[nodePipelineStepRef]string
+}
+
+// nodePipelineStepRef is a simple struct that is *like* a pb.Ref_PipelineStep.
+// We include this as its own struct because it's not safe to compare protobuf
+// struct pointers within a maps key.
+type nodePipelineStepRef struct {
+	pipeline, step string
+}
+
 func (s *Service) buildStepJobs(
 	ctx context.Context,
 	log hclog.Logger,
 	req *pb.RunPipelineRequest,
 	visitedPipelines map[string]interface{},
-	nodeIdMap map[string]*pb.Ref_PipelineStep,
+	nodeStepRef *nodeToStepRef,
 	parentDep map[string][]string,
 	pipeline *pb.Pipeline,
 	pipelineRun *pb.PipelineRun,
 ) ([]*pb.QueueJobRequest, *pb.PipelineRun, map[string]string, error) {
 	if len(visitedPipelines) != 0 {
-		// Determine if we've already visisted this pipeline and included its jobs.
-		// Otherwise we'll get stuck in a cycle. This only really works because
-		// pipeline names are unique for a project. If we ever start allowing for
-		// pipelines across projects we'll need to namespace this value.
+		// Determine if we've already visited this pipeline and included its jobs.
+		// Otherwise, we'll get stuck in a cycle. This only really works because
+		// pipeline names are unique for a project. If we ever allow for
+		// pipelines across projects, we'll need to namespace this value for find
+		// some other way of tracking our visisted pipelines for the job builder.
 		if _, ok := visitedPipelines[pipeline.Name]; ok {
 			return nil, nil, nil, nil
 		}
@@ -205,11 +227,11 @@ func (s *Service) buildStepJobs(
 	visitedPipelines[pipeline.Name] = struct{}{}
 
 	// Generate job IDs for each of the steps. We need to know the IDs in
-	// advance to setup the dependency chain.
+	// advance to set up the dependency chain.
 	stepIds := map[string]string{}
 	for name, step := range pipeline.Steps {
 		if _, ok := step.Kind.(*pb.Pipeline_Step_Pipeline_); !ok {
-			nodeId, ok := s.stepToNodeId(ctx, log, pipeline.Id, name, nodeIdMap)
+			nodeId, ok := nodeStepRef.stepRefs[nodePipelineStepRef{pipeline: pipeline.Id, step: name}]
 			if !ok {
 				return nil, nil, nil, status.Errorf(codes.Internal,
 					"failed to get node ID from pipeline %q and step name %q",
@@ -230,7 +252,7 @@ func (s *Service) buildStepJobs(
 	for name, step := range pipeline.Steps {
 		var dependsOn []string
 		for _, dep := range step.DependsOn {
-			nodeDepId, ok := s.stepToNodeId(ctx, log, pipeline.Id, dep, nodeIdMap)
+			nodeDepId, ok := nodeStepRef.stepRefs[nodePipelineStepRef{pipeline: pipeline.Id, step: dep}]
 			if !ok {
 				return nil, nil, nil, status.Errorf(codes.Internal,
 					"failed to get node ID from pipeline %q and step name %q",
@@ -253,7 +275,7 @@ func (s *Service) buildStepJobs(
 			dependsOn = append(dependsOn, d)
 		}
 
-		// Depend on all JOB IDs from parent step. If we were given a parent pipeline
+		// Depend on all job IDs from parent step. If we were given a parent pipeline
 		// with its step dependencies we're in an embedded pipeline and need to ensure
 		// the downstream steps have an implicit dependency on the parent embedded
 		// pipeline Ref step
@@ -261,7 +283,7 @@ func (s *Service) buildStepJobs(
 			dependsOn = append(dependsOn, stepDepends...)
 		}
 
-		nodeId, ok := s.stepToNodeId(ctx, log, pipeline.Id, name, nodeIdMap)
+		nodeId, ok := nodeStepRef.stepRefs[nodePipelineStepRef{pipeline: pipeline.Id, step: name}]
 		if !ok {
 			return nil, nil, nil, status.Errorf(codes.Internal,
 				"failed to get node ID from pipeline %q and step name %q",
@@ -359,12 +381,12 @@ func (s *Service) buildStepJobs(
 				return nil, nil, nil, err
 			}
 
-			// Pass through *this* steps job dependency IDs so that the child
-			// steps aren't scheduled prior to any dependencies they are waiting for.
+			// Pass through *this* step's job dependency IDs, so that the child
+			// step's jobs aren't scheduled prior to any dependencies.
 			parentStepDep := map[string][]string{pipeline.Id: job.DependsOn}
 
 			embedJobs, embedRun, embedStepIds, err := s.buildStepJobs(ctx, log, req,
-				visitedPipelines, nodeIdMap, parentStepDep, embeddedPipeline, pipelineRun)
+				visitedPipelines, nodeStepRef, parentStepDep, embeddedPipeline, pipelineRun)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -402,7 +424,7 @@ func (s *Service) buildStepJobs(
 
 // pipelineGraphFull takes a pipeline, and optionally accepts an existing Graph
 // and parent step, and attempts to build a full graph for a given Pipeline including
-// any nested pipeline steps. It keeps track of visisted steps so that we don't
+// any nested pipeline steps. It keeps track of visited steps so that we don't
 // get stuck in a loop building the graph. This means step names must be unique
 // across pipelines.
 func (s *Service) pipelineGraphFull(
@@ -410,32 +432,38 @@ func (s *Service) pipelineGraphFull(
 	log hclog.Logger,
 	g *graph.Graph,
 	parentStep string,
-	visistedNodes map[string]string,
-	nodeIdMap map[string]*pb.Ref_PipelineStep,
+	visitedNodes map[string]string,
+	nodeStepRef *nodeToStepRef,
 	pipeline *pb.Pipeline,
-) (*graph.Graph, map[string]*pb.Ref_PipelineStep, error) {
-	var stepGraph *graph.Graph
+) (*graph.Graph, *nodeToStepRef, error) {
+	stepGraph := &graph.Graph{}
 	if g != nil {
 		// We're handling an embedded pipeline graph
 		stepGraph = g
-	} else if stepGraph == nil {
-		stepGraph = &graph.Graph{}
+	}
+
+	// Beginning of the graph builder
+	if nodeStepRef == nil {
+		nodeStepRef = &nodeToStepRef{
+			nodeStepRefs: make(map[string]*pb.Ref_PipelineStep),
+			stepRefs:     make(map[nodePipelineStepRef]string),
+		}
 	}
 
 	// Note that pipeline.Steps is not an ordered list of steps. It's a map of key val
 	// steps so the order will not match the order steps are defined in a waypoint.hcl.
 	for _, step := range pipeline.Steps {
-		if len(visistedNodes) != 0 {
-			if pipeName, ok := visistedNodes[step.Name]; ok && pipeName == pipeline.Name {
-				log.Trace("we've cycled to a node we've already visisted!", "pipeline", pipeName, "step", step.Name)
+		if len(visitedNodes) != 0 {
+			if pipeName, ok := visitedNodes[step.Name]; ok && pipeName == pipeline.Name {
+				log.Trace("we've cycled to a node we've already visited!", "pipeline", pipeName, "step", step.Name)
 				return nil, nil, status.Error(codes.FailedPrecondition,
-					"we've already visisted this node, that means we've got a cycle")
+					"we've already visited this node, that means we've got a cycle")
 			}
 		}
 
 		// Look up step and pipeline id in case we generated the id when we added
 		// dependencies from a different step
-		nodeId, ok := s.stepToNodeId(ctx, log, pipeline.Id, step.Name, nodeIdMap)
+		nodeId, ok := nodeStepRef.stepRefs[nodePipelineStepRef{pipeline: pipeline.Id, step: step.Name}]
 		if !ok {
 			var err error
 			// unique node graph id for full graph
@@ -445,17 +473,18 @@ func (s *Service) pipelineGraphFull(
 			}
 		}
 
-		nodeIdMap[nodeId] = &pb.Ref_PipelineStep{
+		nodeStepRef.nodeStepRefs[nodeId] = &pb.Ref_PipelineStep{
 			Pipeline: pipeline.Id,
 			Step:     step.Name,
 		}
+		nodeStepRef.stepRefs[nodePipelineStepRef{pipeline: pipeline.Id, step: step.Name}] = nodeId
 
 		// Add our step to the graph as a vertex
 		stepGraph.Add(nodeId)
 
 		// Keep track of the fact that we've visited this step node in this pipeline
 		// to prevent infinite cycles as we build embedded pipeline graphs
-		visistedNodes[step.Name] = pipeline.Name
+		visitedNodes[step.Name] = pipeline.Name
 
 		if g != nil {
 			if parentStep == "" {
@@ -476,7 +505,7 @@ func (s *Service) pipelineGraphFull(
 		for _, dep := range step.DependsOn {
 			// Look up the dependency step by name in case we've already generated
 			// a node ID for it for our stepGraph
-			depId, ok := s.stepToNodeId(ctx, log, pipeline.Id, dep, nodeIdMap)
+			depId, ok := nodeStepRef.stepRefs[nodePipelineStepRef{pipeline: pipeline.Id, step: dep}]
 			if !ok {
 				var err error
 				// We haven't reached this node yet, but we're adding it to the graph so
@@ -488,10 +517,11 @@ func (s *Service) pipelineGraphFull(
 				}
 
 				// add node id to map
-				nodeIdMap[depId] = &pb.Ref_PipelineStep{
+				nodeStepRef.nodeStepRefs[depId] = &pb.Ref_PipelineStep{
 					Pipeline: pipeline.Id,
 					Step:     dep,
 				}
+				nodeStepRef.stepRefs[nodePipelineStepRef{pipeline: pipeline.Id, step: dep}] = depId
 			}
 
 			// Add the dependency as a vertex and draw an edge to *this* steps node ID
@@ -518,13 +548,13 @@ func (s *Service) pipelineGraphFull(
 
 			// Build the nested pipelines graph
 			parentStep := nodeId
-			embeddedGraph, n, err := s.pipelineGraphFull(ctx, log, stepGraph,
-				parentStep, visistedNodes, nodeIdMap, embeddedPipeline)
+			embeddedGraph, embedNodeToStepRef, err := s.pipelineGraphFull(ctx, log, stepGraph,
+				parentStep, visitedNodes, nodeStepRef, embeddedPipeline)
 			if err != nil {
 				return nil, nil, err
 			}
 
-			nodeIdMap = n
+			nodeStepRef = embedNodeToStepRef
 			stepGraph = embeddedGraph
 		}
 	}
@@ -535,22 +565,5 @@ func (s *Service) pipelineGraphFull(
 			pipeline.Name, cycles)
 	}
 
-	return stepGraph, nodeIdMap, nil
-}
-
-func (s *Service) stepToNodeId(
-	ctx context.Context,
-	log hclog.Logger,
-	pipelineName string,
-	stepName string,
-	nodeIdMap map[string]*pb.Ref_PipelineStep,
-) (string, bool) {
-	for nodeId, stepRef := range nodeIdMap {
-		if stepRef != nil &&
-			stepRef.Pipeline == pipelineName && stepRef.Step == stepName {
-			return nodeId, true
-		}
-	}
-
-	return "", false
+	return stepGraph, nodeStepRef, nil
 }

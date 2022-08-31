@@ -92,15 +92,20 @@ func ServeKeepalives(
 
 	intervalTicker := time.NewTicker(sendInterval)
 	for {
+
 		sendMx.Lock()
+		// NOTE(izaak): It's possible here that we're attempting to send after CloseSend
+		// has been called, but before the context has been canceled. We could avoid that
+		// by adding another mutex, but I think it's OK.
 		err := stream.SendMsg(&pb.InlineKeepalive{Signature: KeepaliveProtoSignature})
 		sendMx.Unlock()
+
 		if err != nil {
 			if err == io.EOF {
 				log.Trace("topping inline keepalive server - received EOF on SendMsg")
 				return
 			}
-			log.Error("Failed sending inlinekeepalive", "err", err)
+			log.Debug("Failed sending inlinekeepalive", "err", err)
 		}
 
 		select {

@@ -89,49 +89,76 @@ The AWS region for the ECS cluster.
 
 - Type: **string**
 
-#### sidecar
+#### sidecar (category)
 
 Additional container to run as a sidecar.
 
 This runs additional containers in addition to the main container that comes from the build phase.
 
-- Type: **list of ecs.ContainerConfig**
-
-#### sidecar.container_port
+##### sidecar.container_port
 
 The port number for the container.
 
-#### sidecar.host_port
+- Type: **int**
+- **Optional**
+
+##### sidecar.health_check
+
+- Type: **ecs.HealthCheckConfig**
+
+##### sidecar.host_port
 
 The port number on the host to reserve for the container.
 
-#### sidecar.image
+- Type: **int**
+- **Optional**
+
+##### sidecar.image
 
 Image of the sidecar container.
 
-#### sidecar.memory
+- Type: **string**
+
+##### sidecar.memory
 
 The amount (in MiB) of memory to present to the container.
 
-#### sidecar.memory_reservation
+- Type: **int**
+- **Optional**
+
+##### sidecar.memory_reservation
 
 The soft limit (in MiB) of memory to reserve for the container.
 
-#### sidecar.name
+- Type: **int**
+- **Optional**
+
+##### sidecar.name
 
 Name of the container.
 
-#### sidecar.protocol
+- Type: **string**
+
+##### sidecar.protocol
 
 The protocol used for port mapping.
 
-#### sidecar.secrets
+- Type: **string**
+- **Optional**
+
+##### sidecar.secrets
 
 Secrets to expose to this container.
 
-#### sidecar.static_environment
+- Type: **map of string to string**
+- **Optional**
+
+##### sidecar.static_environment
 
 Environment variables to expose to this container.
+
+- Type: **map of string to string**
+- **Optional**
 
 ### Optional Parameters
 
