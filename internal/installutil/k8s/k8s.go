@@ -143,7 +143,7 @@ func CleanPVC(ctx context.Context, ui terminal.UI, log hclog.Logger, listOptions
 			}
 		})
 		if err != nil {
-			s.Update("Unable to delete PVCs")
+			s.Update("Deleted PVCs not cleaned up after 10 minutes")
 			s.Abort()
 			return err
 		}

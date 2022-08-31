@@ -677,7 +677,10 @@ func (i *K8sInstaller) InstallRunner(
 			OdrImage:             i.Config.OdrImage,
 		},
 	}
-
+	// parachute in case we remove the flag defaults one day
+	if runnerInstaller.Config.Namespace == "" {
+		runnerInstaller.Config.Namespace = "default"
+	}
 	err := runnerInstaller.Install(ctx, opts)
 	if err != nil {
 		return err
@@ -696,6 +699,11 @@ func (i *K8sInstaller) UninstallRunner(
 			K8sContext:     i.Config.K8sContext,
 			Namespace:      i.Config.Namespace,
 		},
+	}
+
+	// parachute in case we remove the flag defaults one day
+	if runnerUninstaller.Config.Namespace == "" {
+		runnerUninstaller.Config.Namespace = "default"
 	}
 
 	err := runnerUninstaller.Uninstall(ctx, opts)
@@ -925,7 +933,7 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 		Name:    "k8s-namespace",
 		Target:  &i.Config.Namespace,
 		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
-		Default: "",
+		Default: "default",
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -1011,7 +1019,7 @@ func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 		Name:    "k8s-namespace",
 		Target:  &i.Config.Namespace,
 		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
-		Default: "",
+		Default: "default",
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -1056,7 +1064,7 @@ func (i *K8sInstaller) UninstallFlags(set *flag.Set) {
 		Name:    "k8s-namespace",
 		Target:  &i.Config.Namespace,
 		Usage:   "Namespace in Kubernetes to uninstall the Waypoint server from.",
-		Default: "",
+		Default: "default",
 	})
 }
 
