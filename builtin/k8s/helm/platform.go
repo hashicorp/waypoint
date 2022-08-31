@@ -89,13 +89,9 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	chartNS := ""
-	if v := p.config.Namespace; v != "" {
-		chartNS = v
-	}
-	if chartNS == "" {
-		// If all else fails, default the namespace to "default"
-		chartNS = "default"
+	if p.config.Namespace == "" {
+		// default the namespace to "default"
+		p.config.Namespace = "default"
 	}
 
 	// From here on out, we will always return a partial deployment if we error.
@@ -115,7 +111,7 @@ func (p *Platform) Deploy(
 		client.Devel = p.config.Devel
 		client.DependencyUpdate = false
 		client.Timeout = 300 * time.Second
-		client.Namespace = chartNS
+		client.Namespace = p.config.Namespace
 		client.ReleaseName = p.config.Name
 		client.GenerateName = false
 		client.NameTemplate = ""
@@ -151,7 +147,7 @@ func (p *Platform) Deploy(
 	client.Devel = p.config.Devel
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
-	client.Namespace = chartNS
+	client.Namespace = p.config.Namespace
 	client.Atomic = false
 	client.SkipCRDs = false
 	client.SubNotes = true

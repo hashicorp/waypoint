@@ -144,13 +144,9 @@ func (i *K8sInstaller) Install(
 		return nil, err
 	}
 
-	chartNS := ""
-	if v := i.Config.Namespace; v != "" {
-		chartNS = v
-	}
-	if chartNS == "" {
+	if i.Config.Namespace == "" {
 		// If all else fails, default the namespace to "default"
-		chartNS = "default"
+		i.Config.Namespace = "default"
 	}
 
 	client := action.NewInstall(actionConfig)
@@ -162,7 +158,7 @@ func (i *K8sInstaller) Install(
 	client.Devel = true
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
-	client.Namespace = chartNS
+	client.Namespace = i.Config.Namespace
 	client.ReleaseName = "waypoint"
 	client.GenerateName = false
 	client.NameTemplate = ""
@@ -244,7 +240,7 @@ func (i *K8sInstaller) Install(
 		}
 
 		s.Update("Getting waypoint-ui service...")
-		svc, err := clientset.CoreV1().Services(chartNS).Get(
+		svc, err := clientset.CoreV1().Services(i.Config.Namespace).Get(
 			ctx, "waypoint-ui", metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -422,13 +418,9 @@ func (i *K8sInstaller) Upgrade(
 		return nil, err
 	}
 
-	chartNS := ""
-	if v := i.Config.Namespace; v != "" {
-		chartNS = v
-	}
-	if chartNS == "" {
+	if i.Config.Namespace == "" {
 		// If all else fails, default the namespace to "default"
-		chartNS = "default"
+		i.Config.Namespace = "default"
 	}
 
 	client := action.NewUpgrade(actionConfig)
@@ -439,7 +431,7 @@ func (i *K8sInstaller) Upgrade(
 	client.Devel = true
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
-	client.Namespace = chartNS
+	client.Namespace = i.Config.Namespace
 	client.Atomic = false
 	client.SkipCRDs = false
 	client.SubNotes = true
@@ -505,7 +497,7 @@ func (i *K8sInstaller) Upgrade(
 		}
 
 		s.Update("Getting waypoint-ui service...")
-		svc, err := clientset.CoreV1().Services(chartNS).Get(
+		svc, err := clientset.CoreV1().Services(i.Config.Namespace).Get(
 			ctx, "waypoint-ui", metav1.GetOptions{})
 		if err != nil {
 			return false, err

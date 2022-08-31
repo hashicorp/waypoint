@@ -59,13 +59,9 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		return err
 	}
 
-	chartNS := ""
-	if v := i.Config.Namespace; v != "" {
-		chartNS = v
-	}
-	if chartNS == "" {
-		// If all else fails, default the namespace to "default"
-		chartNS = "default"
+	// If all else fails, default the namespace to "default"
+	if i.Config.Namespace == "" {
+		i.Config.Namespace = "default"
 	}
 
 	// This setup for Helm install matches the setup for the Helm platform plugin
@@ -78,7 +74,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	client.Devel = true
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
-	client.Namespace = chartNS
+	client.Namespace = i.Config.Namespace
 	client.ReleaseName = "waypoint-" + strings.ToLower(opts.Id)
 	client.GenerateName = false
 	client.NameTemplate = ""
