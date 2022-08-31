@@ -172,11 +172,10 @@ func TestProjectDestroyOp_SkipDestroyResources(t *testing.T) {
 	require.Error(err)
 	require.Nil(getProjectResp)
 
-	// TODO: Enable this test after cascading deletion is implemented
 	// Verify that we can't get the deployment destroyed
-	//getDeploymentResp, err := client.GetDeployment(ctx, &pb.GetDeploymentRequest{
-	//	Ref: &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: deploymentResp.Deployment.Id}},
-	//})
-	//require.Error(err)
-	//require.Nil(getDeploymentResp)
+	getDeploymentResp, err := client.GetDeployment(ctx, &pb.GetDeploymentRequest{
+		Ref: &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: deploymentResp.Deployment.Id}},
+	})
+	require.Error(err)
+	require.Nil(getDeploymentResp)
 }
