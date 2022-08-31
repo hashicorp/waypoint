@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -149,7 +150,7 @@ func (c *JobListCommand) Run(args []string) int {
 
 	c.ui.Output("Waypoint Jobs", terminal.WithHeaderStyle())
 
-	tblHeaders := []string{"ID", "Operation", "State", "Time Completed", "Target Runner", "Workspace", "Project", "Application"}
+	tblHeaders := []string{"ID", "Operation", "State", "Time Completed", "Target Runner", "Workspace", "Project", "Application", "Pipeline"}
 	tbl := terminal.NewTable(tblHeaders...)
 
 	for _, j := range jobs {
@@ -231,6 +232,11 @@ func (c *JobListCommand) Run(args []string) int {
 			completeTime = humanize.Time(j.CompleteTime.AsTime())
 		}
 
+		pipeline := ""
+		if j.Pipeline != nil {
+			pipeline = j.Pipeline.Pipeline + "[run: " + strconv.FormatUint(j.Pipeline.RunSequence, 10) + "]" + "[step: " + j.Pipeline.Step + "]"
+		}
+
 		tblColumn := []string{
 			j.Id,
 			op,
@@ -240,6 +246,7 @@ func (c *JobListCommand) Run(args []string) int {
 			j.Workspace.Workspace,
 			j.Application.Project,
 			j.Application.Application,
+			pipeline,
 		}
 
 		tbl.Rich(tblColumn, nil)
