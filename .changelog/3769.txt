@@ -1,5 +1,0 @@
-```release-note:feature
-core: users can now view details about historical pipeline runs, and see details of specific pipeline runs
-cli: `waypoint pipeline list/inspect/run` CLI outputs now include information about pipeline runs,
-such as last run start and completion times, total runs, last run sequence, and more.
-```
