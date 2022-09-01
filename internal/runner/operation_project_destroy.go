@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"github.com/hashicorp/go-hclog"
+	projConfig "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"google.golang.org/grpc/codes"
@@ -15,6 +16,7 @@ func (r *Runner) executeDestroyProjectOp(
 	log hclog.Logger,
 	job *pb.Job,
 	project *core.Project,
+	cfg *projConfig.Config,
 ) (*pb.Job_Result, error) {
 	client := project.Client()
 	destroyProjectOp, ok := job.Operation.(*pb.Job_DestroyProject)
@@ -54,8 +56,12 @@ func (r *Runner) executeDestroyProjectOp(
 			// Destroy the resources in the workspaces for the app
 			for _, workspace := range workspaces.Workspaces {
 				log.Debug("Destroying resources in workspace %s", workspace.Name)
-				// TODO: The destroy operation doesn't currently respect the Workspace
-				// being set on the Job - this should be updated
+				// We get a copy of the project with the current workspace set to destroy the
+				// deployments in each workspace
+				newProject, err := project.Copy(ctx, workspace.Name, cfg)
+				if err != nil {
+					return nil, err
+				}
 				if _, err := r.executeDestroyOp(ctx,
 					&pb.Job{
 						Application: &pb.Ref_Application{
@@ -72,7 +78,7 @@ func (r *Runner) executeDestroyProjectOp(
 						Workspace: &pb.Ref_Workspace{
 							Workspace: workspace.Name,
 						},
-					}, project,
+					}, newProject,
 				); err != nil {
 					return nil, err
 				}
