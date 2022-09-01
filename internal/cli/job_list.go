@@ -24,6 +24,9 @@ type JobListCommand struct {
 	flagState              []string
 	flagTargetRunner       string
 	flagTargetRunnerLabels map[string]string
+	flagPipelineId         string
+	flagPipelineName       string
+	flagPipelineSequence   int
 }
 
 func (c *JobListCommand) Run(args []string) int {
@@ -94,6 +97,15 @@ func (c *JobListCommand) Run(args []string) int {
 				Labels: c.flagTargetRunnerLabels,
 			},
 		}}
+	}
+
+	if c.flagPipelineId != "" || c.flagPipelineId != "" {
+		pipelineStep := &pb.Ref_PipelineStep{
+			PipelineId:   c.flagPipelineId,
+			PipelineName: c.flagPipelineName,
+			RunSequence:  uint64(c.flagPipelineSequence),
+		}
+		req.Pipeline = pipelineStep
 	}
 
 	resp, err := c.project.Client().ListJobs(ctx, req)
@@ -270,6 +282,12 @@ func (c *JobListCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
+			Name:   "workspace",
+			Target: &c.flagWorkspace,
+			Usage:  "List jobs in the specified workspace.",
+		})
+
+		f.StringVar(&flag.StringVar{
 			Name:    "target-runner-id",
 			Target:  &c.flagTargetRunner,
 			Default: "",
@@ -281,6 +299,24 @@ func (c *JobListCommand) Flags() *flag.Sets {
 			Target: &c.flagTargetRunnerLabels,
 			Usage: "List jobs that were only assigned to the target runner by labels. " +
 				"Can be repeated multiple times.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "pipeline-id",
+			Target: &c.flagPipelineId,
+			Usage:  "List jobs initiated by the specific pipeline, look up by pipeline ID.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "pipeline-name",
+			Target: &c.flagPipelineName,
+			Usage:  "List jobs initiated by the specific pipeline, look up by pipeline owner.",
+		})
+
+		f.IntVar(&flag.IntVar{
+			Name:   "sequence",
+			Target: &c.flagPipelineSequence,
+			Usage:  "List jobs initiated by the specific pipeline run, only valid used together with -pipeline",
 		})
 
 		f.BoolVar(&flag.BoolVar{
