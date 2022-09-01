@@ -58,7 +58,7 @@ func (r *Runner) executeDestroyProjectOp(
 				log.Debug("Destroying resources in workspace %s", workspace.Name)
 				// We get a copy of the project with the current workspace set to destroy the
 				// deployments in each workspace
-				newProject, err := project.Copy(ctx, workspace.Name, cfg)
+				newProject, err := project.InWorkspace(ctx, workspace.Name, cfg)
 				if err != nil {
 					return nil, err
 				}

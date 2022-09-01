@@ -245,11 +245,11 @@ func (p *Project) Ref() *pb.Ref_Project {
 	return &pb.Ref_Project{Project: p.name}
 }
 
-// Copy creates a copy of the project, for a different workspace.
+// InWorkspace creates a copy of the project, for a different workspace.
 // The project's config is required to be passed in because the Config
 // option is not set on a project, so we can't reference it directly.
 // Getters for other project fields are used here to limit their exposure.
-func (p *Project) Copy(ctx context.Context, workspace string, projConfig *config.Config) (*Project, error) {
+func (p *Project) InWorkspace(ctx context.Context, workspace string, projConfig *config.Config) (*Project, error) {
 	project, err := NewProject(ctx,
 		WithLogger(p.getLogger()),
 		WithUI(p.getUI()),
