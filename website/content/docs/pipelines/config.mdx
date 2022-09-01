@@ -13,7 +13,7 @@ configuration options.
 ## Built-In Step Config Options
 
 Currently, Pipeline steps have "built-in" plugins that are backed by the existing
-Waypoint job system. Below documents each of these built-in steps and their
+Waypoint job system. See below examples of each of these built-in steps and their
 parameters.
 
 ### `build`
@@ -59,8 +59,8 @@ step "my-release-step" {
 
 ##### deployment_ref
 
-0 or unset means do a release with the latest deployment. Otherwise this accepts
-a Deployment sequence to release.
+0 or unset will use the latest deployment for a release. To specify a Deployment
+for release, this accepts Deployment sequence numbers.
 
 - Type: **int**
 - **Optional**

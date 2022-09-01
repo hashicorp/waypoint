@@ -9,33 +9,33 @@ description: |-
 
 ~> **NOTE**: Custom Pipelines is currently a **Tech Preview** feature of Waypoint.
 Given that, we invite all Waypoint users to give custom pipelines a try and let
-us know your experience with it, feature requests and enhancements, or any bugs
-you might find via our [Discuss forums](https://discuss.hashicorp.com/c/waypoint/51)
-or [GitHub](https://github.com/hashicorp/waypoint/issues). We look forward to
-hearing about your experience and ways Waypoint can help make your experience
+us know your experience with it on our [Discuss forums](https://discuss.hashicorp.com/c/waypoint/51),
+and feature requests, enhancements, or any bugs you might find 
+via [GitHub](https://github.com/hashicorp/waypoint/issues). We look forward to
+hearing what you think and ways Waypoint can help make your experience
 delivering your applications even better!
 
-Waypoint before the introduction of Pipelines has always had a relatively fixed
-built-in pipeline with the `waypoint up` CLI which ran a build, deploy, and
-release. An "Up" was a special operation that encapsulated a Build, Deploy, and
+Waypoint, before the introduction of Pipelines, has always had a relatively fixed
+built-in pipeline with the `waypoint up` CLI command.
+An "Up" was a special operation that encapsulated a Build, Deploy, and
 Release for an application. For most users getting started with Waypoint, this
 simple pipeline is powerful enough to get off the ground continuously building
-and deploying an application to production. However, as projects and teams
-become more complicated addressing real world concerns, users wished for more
-control and customization over the order in which Waypoint deploys applications.
-Running tests after a build, security scanning artifacts prior to a deploy, and
-so on. This was not easily possible with the current Waypoint model. Custom
-Pipelines are an answer to this problem. With this tech preview, users can
-define pipelines that can run in whichever order required to deliver an
-application. Additionally, pipelines allow for custom execution steps through
-the "Exec" plugin that will run any kind of bash script as part of the pipeline
-execution for operations like running tests or security scanning.
+and deploying an application to production.
 
-Pipelines give users a way to tell Waypoint what order these operations should
-be run in, as well as any operation options that might need to be configured
-like disabling an artifact push for the build step, or pruning old deployments
-on a release in the release step. Waypoint projects still expect the
-application to be defined outside of a pipeline in its own `app` stanza.
+However, as projects and teams
+become more complicated addressing real-world concerns, users wished for more
+control and customization over the order in which Waypoint deploys applications.
+Teams need to run tests after a build, security scan artifacts prior to a deploy, and
+so on. Custom Pipelines enable teams to solve these problems. With this tech preview, users can
+define pipelines to run in the order they require to deliver their
+application. Additionally, pipelines allow for custom execution steps through
+the "Exec" plugin, allowing teams to run scripts as part of the pipeline
+execution, further enabling highly-customized operations.
+
+Pipelines allow users to tell Waypoint what order these operations should
+run in and configure any operation options necessary, like disabling an
+artifact push in the `build` step, or pruning old deployments
+on a release in the `release` step.
 
 Please visit the [Pipeline Configuration Docs](/docs/pipelines/config)
 for more information about the configuration of a Pipeline for a
@@ -76,7 +76,7 @@ pipeline "example" {
 ### Embedded Pipelines in Steps
 
 You can optionally define a full pipeline within a Pipeline Step. This pattern
-is useful if you have a series of steps that make sense to be grouped together
+is useful if you have a series of steps that make sense to be grouped together,
 such as doing a deploy and release within a specific workspace.
 
 ```hcl
@@ -102,11 +102,11 @@ pipeline "simple-nested" {
 }
 ```
 
-~> **NOTE**: Currently, Waypoint only allows for 1 level of nesting when defining an embedded pipeline. However, Pipelines can also be used as a reference within a step.
+~> **NOTE**: Currently, this Tech Preview only allows for 1 level of nesting when defining an embedded pipeline. However, Pipelines can also be used as a reference within a step.
 
 ### Reference Pipelines As Steps
 
-You can reference other Pipelines within a Project via a `"pipeline"` step:
+You can reference other Pipelines within a Project via a `pipeline` step:
 
 ```hcl
 project = "my-pipeline-project"
@@ -151,7 +151,9 @@ Additionally, pipelines can be defined and scoped to a Workspace for deploying i
 
 ## Examples
 
-Below is an example that redefines the Up operation to be a pipeline with 3 steps for a build, deploy, and release. This example pipeline could be used as a starting point for more complicated pipelines.
+Below is an example that redefines the Up operation to be a pipeline with three
+steps for a build, deploy, and release. This example could be used as a starting
+point for more complicated pipelines.
 
 ```hcl
 project = "my-project"
@@ -180,7 +182,7 @@ app "my-app" {
 }
 ```
 
-For the “exec” steps, it accepts a command and arg parameter for running commands.
+For the `exec` steps, it accepts a command and arg parameter for running commands.
 
 ```hcl
 pipeline "build-and-test" {
@@ -293,7 +295,7 @@ brian@ubuntu:waypoint-tetris λ waypoint pipeline run example
 
 ## Future Roadmap For Pipelines
 
-We plan on continuing to make improvements to pipelines in the coming months to bring it out of tech preview. This includes more support for running batches of operations for a pipeline by improving Waypoints internal job system, sharing VCS project source code between Steps, giving Pipeline steps the ability to share input and output variables, approval Steps to "manually" sign off on releases and more!
+We plan to continue making improvements to pipelines in the coming months to bring it out of Tech Preview. This includes more support for running batches of operations for a pipeline by improving Waypoints internal job system, sharing VCS project source code between Steps, giving Pipeline Steps the ability to share input and output variables, approval Steps to "manually" sign off on releases, and more!
 
 Current open feature requests, bug reports, and general issues can be found via
 the [core/pipeline](https://github.com/hashicorp/waypoint/issues?q=is%3Aissue+is%3Aopen+label%3Acore%2Fpipeline)
