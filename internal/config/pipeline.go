@@ -1,12 +1,12 @@
 package config
 
 import (
-	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/gohcl"
-	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
@@ -433,9 +433,7 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 func (c *Pipeline) Ref() *pb.Ref_Pipeline {
 	return &pb.Ref_Pipeline{
 		Ref: &pb.Ref_Pipeline_Id{
-			Id: &pb.Ref_PipelineId{
-				Id: c.Name,
-			},
+			Id: c.Name,
 		},
 	}
 }

@@ -79,9 +79,7 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		if c.flagPipelineId != "" {
 			runPipelineReq.Pipeline = &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
-					Id: &pb.Ref_PipelineId{
-						Id: c.flagPipelineId,
-					},
+					Id: c.flagPipelineId,
 				},
 			}
 		} else {

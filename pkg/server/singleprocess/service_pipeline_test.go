@@ -53,9 +53,7 @@ func TestServicePipeline(t *testing.T) {
 		pResp, err := client.GetPipeline(ctx, &pb.GetPipelineRequest{
 			Pipeline: &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
-					Id: &pb.Ref_PipelineId{
-						Id: "doesnotexist",
-					},
+					Id: "doesnotexist",
 				},
 			},
 		})
@@ -78,9 +76,7 @@ func TestServicePipeline(t *testing.T) {
 		pResp, err := client.GetPipeline(ctx, &pb.GetPipelineRequest{
 			Pipeline: &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
-					Id: &pb.Ref_PipelineId{
-						Id: "test",
-					},
+					Id: "test",
 				},
 			},
 		})
@@ -178,9 +174,7 @@ func TestServiceRunPipeline(t *testing.T) {
 		resp, err := client.RunPipeline(ctx, &pb.RunPipelineRequest{
 			Pipeline: &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
-					Id: &pb.Ref_PipelineId{
-						Id: pipeResp.Pipeline.Id,
-					},
+					Id: pipeResp.Pipeline.Id,
 				},
 			},
 			JobTemplate: jobTemplate,
@@ -204,9 +198,7 @@ func TestServiceRunPipeline(t *testing.T) {
 
 		pRef := &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: pipeline.Id,
-				},
+				Id: pipeline.Id,
 			},
 		}
 
@@ -224,7 +216,7 @@ func TestServiceRunPipeline(t *testing.T) {
 			Sequence: 1,
 		})
 		require.NoError(err)
-		require.Equal(pipeline.Id, run.PipelineRun.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id)
+		require.Equal(pipeline.Id, run.PipelineRun.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id)
 		require.Equal(len(run.PipelineRun.Jobs), len(resp.AllJobIds))
 		require.Equal(resp.Sequence, run.PipelineRun.Sequence)
 	})
@@ -268,9 +260,7 @@ func TestServiceRunPipeline(t *testing.T) {
 				Pipeline: &pb.Pipeline_Step_Pipeline{
 					Ref: &pb.Ref_Pipeline{
 						Ref: &pb.Ref_Pipeline_Id{
-							Id: &pb.Ref_PipelineId{
-								Id: "embed",
-							},
+							Id: "embed",
 						},
 					},
 				},
@@ -325,9 +315,7 @@ func TestServiceRunPipeline(t *testing.T) {
 		resp, err := client.RunPipeline(ctx, &pb.RunPipelineRequest{
 			Pipeline: &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
-					Id: &pb.Ref_PipelineId{
-						Id: pipeResp.Pipeline.Id,
-					},
+					Id: pipeResp.Pipeline.Id,
 				},
 			},
 			JobTemplate: jobTemplate,
@@ -391,9 +379,7 @@ func TestServiceRunPipeline(t *testing.T) {
 						Pipeline: &pb.Pipeline_Step_Pipeline{
 							Ref: &pb.Ref_Pipeline{
 								Ref: &pb.Ref_Pipeline_Id{
-									Id: &pb.Ref_PipelineId{
-										Id: "embed",
-									},
+									Id: "embed",
 								},
 							},
 						},
@@ -443,9 +429,7 @@ func TestServiceRunPipeline(t *testing.T) {
 						Pipeline: &pb.Pipeline_Step_Pipeline{
 							Ref: &pb.Ref_Pipeline{
 								Ref: &pb.Ref_Pipeline_Id{
-									Id: &pb.Ref_PipelineId{
-										Id: "test",
-									},
+									Id: "test",
 								},
 							},
 						},
@@ -465,9 +449,7 @@ func TestServiceRunPipeline(t *testing.T) {
 		resp, err := client.RunPipeline(ctx, &pb.RunPipelineRequest{
 			Pipeline: &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
-					Id: &pb.Ref_PipelineId{
-						Id: pipeResp.Pipeline.Id,
-					},
+					Id: pipeResp.Pipeline.Id,
 				},
 			},
 			JobTemplate: jobTemplate,
@@ -521,9 +503,7 @@ func TestServiceRunPipeline(t *testing.T) {
 				Pipeline: &pb.Pipeline_Step_Pipeline{
 					Ref: &pb.Ref_Pipeline{
 						Ref: &pb.Ref_Pipeline_Id{
-							Id: &pb.Ref_PipelineId{
-								Id: "embed",
-							},
+							Id: "embed",
 						},
 					},
 				},
@@ -578,9 +558,7 @@ func TestServiceRunPipeline(t *testing.T) {
 		resp, err := client.RunPipeline(ctx, &pb.RunPipelineRequest{
 			Pipeline: &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
-					Id: &pb.Ref_PipelineId{
-						Id: pipeResp.Pipeline.Id,
-					},
+					Id: pipeResp.Pipeline.Id,
 				},
 			},
 			JobTemplate: jobTemplate,
@@ -629,9 +607,7 @@ func TestServiceRunPipeline(t *testing.T) {
 						Pipeline: &pb.Pipeline_Step_Pipeline{
 							Ref: &pb.Ref_Pipeline{
 								Ref: &pb.Ref_Pipeline_Id{
-									Id: &pb.Ref_PipelineId{
-										Id: "uzumaki",
-									},
+									Id: "uzumaki",
 								},
 							},
 						},
@@ -653,9 +629,7 @@ func TestServiceRunPipeline(t *testing.T) {
 						Pipeline: &pb.Pipeline_Step_Pipeline{
 							Ref: &pb.Ref_Pipeline{
 								Ref: &pb.Ref_Pipeline_Id{
-									Id: &pb.Ref_PipelineId{
-										Id: "embed",
-									},
+									Id: "embed",
 								},
 							},
 						},
@@ -705,9 +679,7 @@ func TestServiceRunPipeline(t *testing.T) {
 						Pipeline: &pb.Pipeline_Step_Pipeline{
 							Ref: &pb.Ref_Pipeline{
 								Ref: &pb.Ref_Pipeline_Id{
-									Id: &pb.Ref_PipelineId{
-										Id: "test",
-									},
+									Id: "test",
 								},
 							},
 						},
@@ -748,9 +720,7 @@ func TestServiceRunPipeline(t *testing.T) {
 						Pipeline: &pb.Pipeline_Step_Pipeline{
 							Ref: &pb.Ref_Pipeline{
 								Ref: &pb.Ref_Pipeline_Id{
-									Id: &pb.Ref_PipelineId{
-										Id: "uzumaki",
-									},
+									Id: "uzumaki",
 								},
 							},
 						},
@@ -763,9 +733,7 @@ func TestServiceRunPipeline(t *testing.T) {
 						Pipeline: &pb.Pipeline_Step_Pipeline{
 							Ref: &pb.Ref_Pipeline{
 								Ref: &pb.Ref_Pipeline_Id{
-									Id: &pb.Ref_PipelineId{
-										Id: "test",
-									},
+									Id: "test",
 								},
 							},
 						},
@@ -785,9 +753,7 @@ func TestServiceRunPipeline(t *testing.T) {
 		resp, err := client.RunPipeline(ctx, &pb.RunPipelineRequest{
 			Pipeline: &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
-					Id: &pb.Ref_PipelineId{
-						Id: "test",
-					},
+					Id: "test",
 				},
 			},
 			JobTemplate: jobTemplate,

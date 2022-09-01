@@ -6,12 +6,12 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
@@ -45,7 +45,7 @@ func (s *State) PipelineRunPut(pr *pb.PipelineRun) error {
 
 		// only alter sequence if this is a new pipeline run
 		if pr.State == pb.PipelineRun_PENDING {
-			pId := pr.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id
+			pId := pr.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id
 			raw, err := memTxn.Last(
 				pipelineRunIndexTableName,
 				pipelineRunIndexPId,
@@ -108,9 +108,7 @@ func (s *State) PipelineRunGetByJobId(jobId string) (*pb.PipelineRun, error) {
 		}
 		ref := &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: job.Pipeline.Pipeline,
-				},
+				Id: job.Pipeline.PipelineId,
 			},
 		}
 		p, err := s.pipelineGet(dbTxn, memTxn, ref)
@@ -252,7 +250,7 @@ func (s *State) PipelineRunList(pRef *pb.Ref_Pipeline) ([]*pb.PipelineRun, error
 
 	var out []*pb.PipelineRun
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
-		rrs, err := s.pipelineRunList(memTxn, pId.Id.Id)
+		rrs, err := s.pipelineRunList(memTxn, pId.Id)
 		if err != nil {
 			return err
 		}
@@ -302,7 +300,7 @@ func (s *State) pipelineRunIndexSet(txn *memdb.Txn, id []byte, value *pb.Pipelin
 	record := &pipelineRunIndexRecord{
 		Id:         string(id),
 		Sequence:   fmt.Sprint(value.Sequence),
-		PipelineId: value.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id,
+		PipelineId: value.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id,
 	}
 
 	// Insert the index

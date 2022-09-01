@@ -34,9 +34,7 @@ func TestServicePipelineRun(t *testing.T) {
 
 		pRef := &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: p.Pipeline.Id,
-				},
+				Id: p.Pipeline.Id,
 			},
 		}
 
@@ -55,7 +53,7 @@ func TestServicePipelineRun(t *testing.T) {
 			Sequence: 1,
 		})
 		require.NoError(err)
-		require.Equal(p.Pipeline.Id, run.PipelineRun.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id)
+		require.Equal(p.Pipeline.Id, run.PipelineRun.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id)
 		require.Equal(len(run.PipelineRun.Jobs), len(resp.AllJobIds))
 		require.Equal(resp.Sequence, run.PipelineRun.Sequence)
 

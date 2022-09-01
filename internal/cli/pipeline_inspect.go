@@ -66,9 +66,7 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 	} else {
 		pipelineRef = &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: c.args[0],
-				},
+				Id: c.args[0],
 			},
 		}
 	}
@@ -95,9 +93,7 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 	runs, err := c.project.Client().ListPipelineRuns(c.Ctx, &pb.ListPipelineRunsRequest{
 		Pipeline: &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: resp.Pipeline.Id,
-				},
+				Id: resp.Pipeline.Id,
 			},
 		},
 	})
@@ -151,9 +147,7 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		run, err := c.project.Client().GetPipelineRun(c.Ctx, &pb.GetPipelineRunRequest{
 			Pipeline: &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
-					Id: &pb.Ref_PipelineId{
-						Id: resp.Pipeline.Id,
-					},
+					Id: resp.Pipeline.Id,
 				},
 			},
 			Sequence: s,
