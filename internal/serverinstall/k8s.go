@@ -479,7 +479,7 @@ func (i *K8sInstaller) Upgrade(
 		},
 	}
 
-	s = sg.Add("Installing Waypoint Helm chart...")
+	s.Update("Installing Waypoint Helm chart...")
 	_, err = client.RunWithContext(ctx, "waypoint", c, values)
 	if err != nil {
 		return nil, err
