@@ -213,6 +213,11 @@ func (s *State) PipelineList(pRef *pb.Ref_Project) ([]*pb.Pipeline, error) {
 			if err != nil {
 				return err
 			}
+			if pRef != nil {
+				if val.Owner.(*pb.Pipeline_Project).Project.Project != pRef.Project {
+					continue
+				}
+			}
 
 			out = append(out, val)
 		}
