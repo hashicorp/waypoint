@@ -416,7 +416,7 @@ func (s *State) JobList(
 			if req.Pipeline.PipelineId != "" && (req.Pipeline.PipelineId != job.Pipeline.PipelineId) {
 				continue
 			}
-			if (req.Pipeline.PipelineId == job.Pipeline.PipelineId || req.Pipeline.PipelineId == job.Pipeline.PipelineId) && req.Pipeline.RunSequence != job.Pipeline.RunSequence {
+			if (req.Pipeline.PipelineId == job.Pipeline.PipelineId || req.Pipeline.PipelineName == job.Pipeline.PipelineName) && req.Pipeline.RunSequence != job.Pipeline.RunSequence {
 				continue
 			}
 		}
