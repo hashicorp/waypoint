@@ -696,6 +696,35 @@
             "type": "string"
           },
           {
+            "name": "pipeline.pipeline_id",
+            "description": "ID of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_name",
+            "description": "Name of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.step",
+            "description": "Step name within the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.run_sequence",
+            "description": "Pipeline run sequence.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
             "name": "jobState",
             "in": "query",
             "required": false,
@@ -802,6 +831,35 @@
             "type": "string"
           },
           {
+            "name": "pipeline.pipeline_id",
+            "description": "ID of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_name",
+            "description": "Name of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.step",
+            "description": "Step name within the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.run_sequence",
+            "description": "Pipeline run sequence.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
             "name": "jobState",
             "in": "query",
             "required": false,
@@ -892,6 +950,35 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_id",
+            "description": "ID of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_name",
+            "description": "Name of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.step",
+            "description": "Step name within the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.run_sequence",
+            "description": "Pipeline run sequence.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -1022,6 +1109,35 @@
             "type": "string"
           },
           {
+            "name": "pipeline.pipeline_id",
+            "description": "ID of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_name",
+            "description": "Name of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.step",
+            "description": "Step name within the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.run_sequence",
+            "description": "Pipeline run sequence.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
             "name": "jobState",
             "in": "query",
             "required": false,
@@ -1112,6 +1228,35 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_id",
+            "description": "ID of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_name",
+            "description": "Name of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.step",
+            "description": "Step name within the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.run_sequence",
+            "description": "Pipeline run sequence.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [

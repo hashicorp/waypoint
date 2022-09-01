@@ -2389,7 +2389,8 @@ message ListJobsRequest {
   Ref.Project project = 2;
   Ref.Application application = 3;
   Ref.Runner targetRunner = 4;
-  repeated Job.State jobState = 5;
+  Ref.PipelineStep pipeline = 5;
+  repeated Job.State jobState = 6;
 }
 
 message ListJobsResponse {
