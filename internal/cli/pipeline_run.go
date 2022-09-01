@@ -104,35 +104,29 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		}
 
 		step.Update("Pipeline %q has started running. Attempting to read job stream sequentially in order", pipelineIdent)
-
-		steps := len(resp.JobMap)
-		step.Update("%d steps detected, run sequence %d", steps, resp.Sequence)
 		step.Done()
 
 		// Receive job ids from running pipeline, use job client to attach to job stream
 		// and stream here. First pass can be linear job streaming
+		steps := len(resp.JobMap)
+		app.UI.Output("%d steps detected, run sequence %d", steps, resp.Sequence, terminal.WithHeaderStyle())
 		successful := steps
 		for _, jobId := range resp.AllJobIds {
 			app.UI.Output("Executing Step %q", resp.JobMap[jobId].Step, terminal.WithHeaderStyle())
 			app.UI.Output("Reading job stream (jobId: %s)...", jobId, terminal.WithInfoStyle())
 			app.UI.Output("")
 
-			result, err := jobstream.Stream(c.Ctx, jobId,
+			_, err := jobstream.Stream(c.Ctx, jobId,
 				jobstream.WithClient(c.project.Client()),
 				jobstream.WithUI(app.UI))
 			if err != nil {
 				return err
 			}
 
-			var state pb.Status_State
-			if result.Build != nil {
-				state = result.Build.Build.Status.State
-			} else if result.Deploy != nil {
-				state = result.Deploy.Deployment.Status.State
-			} else if result.Release != nil {
-				state = result.Release.Release.Status.State
-			}
-			if state != pb.Status_SUCCESS {
+			job, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+				JobId: jobId,
+			})
+			if job.State != pb.Job_SUCCESS {
 				successful--
 			}
 		}
