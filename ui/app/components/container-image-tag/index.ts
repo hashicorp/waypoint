@@ -26,7 +26,7 @@ function stateFromResource(resource: StatusReport.Resource.AsObject): unknown {
   try {
     return JSON.parse(resource.stateJson);
   } catch (error) {
-    console.error('Could not pass stateJson for resource', resource);
+    console.error('Could not parse stateJson for resource', resource);
     return {};
   }
 }
