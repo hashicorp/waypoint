@@ -7,18 +7,18 @@ description: |-
 
 # Pipeline Configurations
 
-This section details some of the various step built-in plugins and their
+This section details some of the various built-in Step plugins and their
 configuration options.
 
 ## Built-In Step Config Options
 
-Currently, Pipeline steps have "built-in" plugins that are backed by the existing
-Waypoint job system. See below examples of each of these built-in steps and their
+Currently, Pipeline Steps have "built-in" plugins that are backed by the existing
+Waypoint job system. See below examples of each of these built-in Steps and their
 parameters.
 
 ### `build`
 
-This built-in step will run a Build operation job, similar to running `waypoint build`.
+This built-in Step will run a Build operation job, similar to running `waypoint build`.
 
 ```hcl
 step "my-build-step" {
@@ -35,7 +35,7 @@ step "my-build-step" {
 
 ### `deploy`
 
-This built-in step will run a Deploy operation job, similar to running `waypoint deploy`.
+This built-in Step will run a Deploy operation job, similar to running `waypoint deploy`.
 
 ```hcl
 step "my-deploy-step" {
@@ -46,7 +46,7 @@ step "my-deploy-step" {
 
 ### `release`
 
-This built-in step will run a Release operation job, similar to running `waypoint release`.
+This built-in Step will run a Release operation job, similar to running `waypoint release`.
 
 ```hcl
 step "my-release-step" {
@@ -90,7 +90,7 @@ If true, will respect the `prune_retain` value when pruning during a release.
 
 ### `up`
 
-This built-in step will run an Up operation job, similar to running `waypoint up`.
+This built-in Step will run an Up operation job, similar to running `waypoint up`.
 
 ```hcl
 step "my-up-step" {
@@ -150,7 +150,7 @@ The arguments to pass through to the command when running on the container for t
 
 ### `pipeline`
 
-This built-in step lets you reference another pipeline within a Step to be run.
+This built-in Step lets you reference another pipeline within a Step to be run.
 
 ```hcl
 step "my-pipeline-step" {
