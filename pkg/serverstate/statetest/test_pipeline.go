@@ -17,7 +17,7 @@ func init() {
 	}
 }
 
-func TestPipeline(t *testing.T, factory Factory, restartF RestartFactory) {
+func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 	t.Run("Put and Get", func(t *testing.T) {
 		require := require.New(t)
 
@@ -421,5 +421,104 @@ func TestPipeline(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.NotNil(resp)
 			require.Len(resp, 3)
 		}
+	})
+
+	t.Run("Step Workspace", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Set
+		p := ptypes.TestPipeline(t, nil)
+		err := s.PipelinePut(p)
+		require.NoError(err) // no job id set
+
+		// Get exact by id
+		resp, err := s.PipelineGet(&pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{Id: p.Id},
+			},
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.Len(resp.Steps, 1)
+
+		// verify nil workspace for step(s), and add new ref while we're here
+		for _, step := range resp.Steps {
+			require.Nil(step.Workspace)
+			step.Workspace = &pb.Ref_Workspace{Workspace: "dev"}
+		}
+
+		// Put to update
+		err = s.PipelinePut(resp)
+		require.NoError(err) // no job id set
+
+		// Get exact by id and repeat the check
+		resp, err = s.PipelineGet(&pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{Id: p.Id},
+			},
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.Len(resp.Steps, 1)
+
+		// verify non-nil workspace for step
+		for _, step := range resp.Steps {
+			require.NotNil(step.Workspace)
+			require.Equal(step.Workspace.Workspace, "dev")
+		}
+
+		// Add more steps. New var for the pipe reference, but they reference
+		// the same ID
+		updatedPipe := ptypes.TestPipelineAppendSteps(t, p, []*pb.Pipeline_Step{
+			{
+				Name: "none",
+			},
+			{
+				Name:      "staging",
+				Workspace: &pb.Ref_Workspace{Workspace: "staging"},
+			},
+		})
+		err = s.PipelinePut(updatedPipe)
+		require.NoError(err) // no job id set
+
+		// Get exact by id and repeat the check
+		resp, err = s.PipelineGet(&pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{Id: p.Id}, // intentionally using old ID
+			},
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.Len(resp.Steps, 3)
+
+		for name, step := range resp.Steps {
+			if name == "staging" {
+				require.NotNil(step.Workspace)
+				require.Equal(step.Workspace.Workspace, "staging")
+				continue
+			}
+			require.Nil(step.Workspace)
+		}
+
+		// Delete
+		require.NoError(s.PipelineDelete(&pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{Id: p.Id},
+			},
+		}))
+
+		// Verify delete with other pipe reference.
+		// For reasons unknown, the response returned here is "empty" of any
+		// values but not actually nil.
+		_, err = s.PipelineGet(&pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{Id: updatedPipe.Id},
+			},
+		})
+		require.Error(err)
+		require.Equal(codes.NotFound, status.Code(err))
 	})
 }
