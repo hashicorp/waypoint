@@ -310,7 +310,7 @@ func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 
 	// Search for a runner with 0.8.x tag format, installed with k8s client
 	deploymentClient := clientset.AppsV1().Deployments(i.Config.Namespace)
-	listK8sClient, err := deploymentClient.List(ctx, metav1.ListOptions{
+	k8sClientList, err := deploymentClient.List(ctx, metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app=%s", DefaultRunnerTagName),
 	})
 	if err != nil {
@@ -319,7 +319,7 @@ func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 
 	// Search for runner with 0.9+ tag format, installed with helm
 	podClient := clientset.CoreV1().Pods(i.Config.Namespace)
-	listHelmClient, err := podClient.List(ctx, metav1.ListOptions{
+	helmClientList, err := podClient.List(ctx, metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=waypoint-%s", strings.ToLower(opts.Id)),
 	})
 	if err != nil {
@@ -329,15 +329,15 @@ func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	// If both lists are empty, the runner is not here at all
 	// Move to: B) Decide which uninstall path we use based on if there is a runner
 	// with the naming patterns we get with our 0.9.0+ helm installer
-	if len(listK8sClient.Items) == 0 && len(listHelmClient.Items) == 0 {
+	if len(k8sClientList.Items) == 0 && len(helmClientList.Items) == 0 {
 		return fmt.Errorf("runner with ID %q not found in namespace %q with current context", opts.Id, i.Config.Namespace)
-	} else if len(listHelmClient.Items) > 0 {
+	} else if len(helmClientList.Items) > 0 {
 		err = i.uninstallWithHelm(ctx, opts)
 	} else {
 		// Once we're here, we know that there is >0 K8S runners, and 0 Helm runners,
 		// so we can proceed with the k8s uninstall
 		// This should only include default runners installed on 0.8.x
-		err = i.uninstallWithK8s(ctx, opts, listK8sClient)
+		err = i.uninstallWithK8s(ctx, opts, k8sClientList)
 	}
 	return err
 }
