@@ -402,6 +402,18 @@ func (s *State) JobList(
 			}
 		}
 
+		if req.Pipeline != nil {
+			if req.Pipeline.RunSequence != 0 && (req.Pipeline.RunSequence != job.Pipeline.RunSequence) {
+				continue
+			}
+			if req.Pipeline.PipelineName != "" && (req.Pipeline.PipelineName != job.Pipeline.PipelineName) {
+				continue
+			}
+			if req.Pipeline.PipelineId != "" && (req.Pipeline.PipelineId != job.Pipeline.PipelineId) {
+				continue
+			}
+		}
+
 		result = append(result, job)
 	}
 
