@@ -13,7 +13,7 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
-func TestServicePipeline(t *testing.T) {
+func TestServicePipeline_Basic(t *testing.T) {
 	ctx := context.Background()
 
 	// Create our server
@@ -101,7 +101,7 @@ func TestServicePipeline(t *testing.T) {
 
 }
 
-func TestServiceRunPipeline(t *testing.T) {
+func TestServicePipeline_Run(t *testing.T) {
 	t.Run("runs a pipeline by request", func(t *testing.T) {
 		require := require.New(t)
 		ctx := context.Background()
@@ -766,7 +766,7 @@ func TestServiceRunPipeline(t *testing.T) {
 
 }
 
-func TestServiceListPipelines(t *testing.T) {
+func TestServicePipeline_List(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
 
