@@ -205,13 +205,14 @@ pipeline "build-and-test" {
 }
 ```
 
-To run the "full-up" custom pipeline, it's as simple as `waypoint pipeline run full-up`:
+To run the example pipeline named "full-up" defined in this example, it's as
+simple as `waypoint pipeline run full-up`:
 
 ```shell
-brian@ubuntu:waypoint-tetris λ waypoint pipeline run example
+brian@ubuntu:waypoint-tetris λ waypoint pipeline run full-up
 
-» Running pipeline "example" for application "tetris"
-✓ Pipeline "example" has started running. Attempting to read job stream sequentially in order
+» Running pipeline "full-up" for application "tetris"
+✓ Pipeline "full-up" has started running. Attempting to read job stream sequentially in order
   Performing operation on "kubernetes" with runner profile "kubernetes-bootstrap-profile"
 
 » Cloning data from Git
@@ -290,7 +291,7 @@ brian@ubuntu:waypoint-tetris λ waypoint pipeline run example
 ✓ Kubernetes client connected to https://my-kubernetes.example.com:443 with namespace default
 ✓ Creating service...
 ✓ Service is ready!
-✔ Pipeline "example" (k8s-tetris) finished!
+✔ Pipeline "full-up" (k8s-tetris) finished!
 ```
 
 ## Future Roadmap For Pipelines
