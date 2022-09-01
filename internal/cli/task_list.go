@@ -166,7 +166,7 @@ func (c *TaskListCommand) Run(args []string) int {
 
 		pipeline := ""
 		if t.TaskJob.Pipeline != nil {
-			pipeline = t.TaskJob.Pipeline.Pipeline + "[run: " + strconv.FormatUint(t.TaskJob.Pipeline.RunSequence, 10) + "]" + "[step: " + t.TaskJob.Pipeline.Step + "]"
+			pipeline = t.TaskJob.Pipeline.PipelineName + "[run: " + strconv.FormatUint(t.TaskJob.Pipeline.RunSequence, 10) + "]" + "[step: " + t.TaskJob.Pipeline.Step + "]"
 		}
 
 		tblColumn := []string{

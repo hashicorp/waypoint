@@ -234,7 +234,7 @@ func (c *JobListCommand) Run(args []string) int {
 
 		pipeline := ""
 		if j.Pipeline != nil {
-			pipeline = j.Pipeline.Pipeline + "[run: " + strconv.FormatUint(j.Pipeline.RunSequence, 10) + "]" + "[step: " + j.Pipeline.Step + "]"
+			pipeline = j.Pipeline.PipelineName + "[run: " + strconv.FormatUint(j.Pipeline.RunSequence, 10) + "]" + "[step: " + j.Pipeline.Step + "]"
 		}
 
 		tblColumn := []string{
