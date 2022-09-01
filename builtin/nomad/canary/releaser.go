@@ -217,6 +217,10 @@ func (r *Releaser) resourceJobCreate(
 		return err
 	}
 
+	state.Name = *job.Name
+	state.Id = *job.ID
+	state.Namespace = *job.Namespace
+
 	// TODO: Automatically search for Consul service, determine FQDN for service
 	// TODO: Automatically search for ingress gateway, determine FQDN for service
 	// TODO: Automatically search for IP and port of random Nomad alloc in job
@@ -251,33 +255,20 @@ func (r *Releaser) resourceJobStatus(
 	// TODO: Because we don't have the namespace from the jobspec, we rely on the
 	//   NOMAD_NAMESPACE env var/searching for job via prefix- consider passing namespace
 	//   from deploy phase
-	jobs, _, err := jobClient.PrefixList(state.Name)
-	if err != nil {
-		return err
-	} else if len(jobs) == 0 {
-		s.Status(terminal.StatusError)
-		s.Update("Job not found.")
-		return nil
-	}
-
 	jobResource := sdk.StatusReport_Resource{
 		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER,
 	}
 	sr.Resources = append(sr.Resources, &jobResource)
 
 	s.Update("Getting job info...")
-	q := &api.QueryOptions{Namespace: jobs[0].JobSummary.Namespace}
-	job, _, err := jobClient.Info(jobs[0].ID, q)
+	q := &api.QueryOptions{Namespace: state.Namespace}
+	job, _, err := jobClient.Info(state.Id, q)
 
-	if err != nil {
-		s.Update("No job was found")
-		s.Status(terminal.StatusError)
-		s.Done()
-		s = sg.Add("")
-
+	if err != nil && job == nil {
 		jobResource.Name = state.Name
-		jobResource.Health = sdk.StatusReport_MISSING
-		jobResource.HealthMessage = sdk.StatusReport_MISSING.String()
+		jobResource.Health = sdk.StatusReport_UNKNOWN
+		jobResource.HealthMessage = sdk.StatusReport_UNKNOWN.String()
+		return err
 	} else if job == nil {
 		s.Update("No job was found")
 		s.Status(terminal.StatusError)
