@@ -99,7 +99,14 @@ func (c *JobListCommand) Run(args []string) int {
 		}}
 	}
 
-	if c.flagPipelineId != "" || c.flagPipelineName != "" {
+	if c.flagPipelineSequence != 0 && (c.flagPipelineId == "" && c.flagPipelineName == "") {
+		c.ui.Output("Cannot list jobs by pipeline run without `-pipeline-id` or `-pipeline-name`.\n"+c.Help(), terminal.WithErrorStyle())
+		return 1
+	}
+	if c.flagPipelineId != "" && c.flagPipelineName != "" {
+		c.ui.Output("Cannot specify both 'pipeline-id' and 'pipeline-name' flags.\n"+c.Help(), terminal.WithErrorStyle())
+		return 1
+	} else if c.flagPipelineId != "" || c.flagPipelineName != "" {
 		pipelineStep := &pb.Ref_PipelineStep{
 			PipelineId:   c.flagPipelineId,
 			PipelineName: c.flagPipelineName,
@@ -308,7 +315,7 @@ func (c *JobListCommand) Flags() *flag.Sets {
 		})
 
 		f.IntVar(&flag.IntVar{
-			Name:   "sequence",
+			Name:   "run",
 			Target: &c.flagPipelineSequence,
 			Usage:  "List jobs initiated by the specific pipeline run, only valid used together with -pipeline",
 		})
@@ -344,7 +351,8 @@ func (c *JobListCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint job list [options]
 
-  List all known jobs from Waypoint server.
+  List known jobs from Waypoint server.
+  Options to filter job list by project, workspace, target runner, pipeline, and pipeline run.
 
 ` + c.Flags().Help())
 }

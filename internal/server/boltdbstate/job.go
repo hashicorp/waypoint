@@ -403,6 +403,10 @@ func (s *State) JobList(
 		}
 
 		if req.Pipeline != nil {
+			if job.Pipeline == nil {
+				continue
+			}
+			// check whether the job is a match for pipeline name or id, and run sequence (if specified).
 			if req.Pipeline.RunSequence != 0 && (req.Pipeline.RunSequence != job.Pipeline.RunSequence) {
 				continue
 			}
@@ -410,6 +414,9 @@ func (s *State) JobList(
 				continue
 			}
 			if req.Pipeline.PipelineId != "" && (req.Pipeline.PipelineId != job.Pipeline.PipelineId) {
+				continue
+			}
+			if (req.Pipeline.PipelineId == job.Pipeline.PipelineId || req.Pipeline.PipelineId == job.Pipeline.PipelineId) && req.Pipeline.RunSequence != job.Pipeline.RunSequence {
 				continue
 			}
 		}
