@@ -1,0 +1,282 @@
+{
+   "description": "Deploy a container to Docker, local or remote",
+   "example": "deploy {\n  use \"docker\" {\n\tcommand      = [\"ps\"]\n\tservice_port = 3000\n\tstatic_environment = {\n\t  \"environment\": \"production\",\n\t  \"LOG_LEVEL\": \"debug\"\n\t}\n  }\n}",
+   "input": "docker.Image",
+   "mappers": null,
+   "name": "docker",
+   "optionalFields": [
+      {
+         "Field": "auth",
+         "Type": "docker.Auth",
+         "Synopsis": "the authentication information to log into the docker repository",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "auth",
+               "Type": "string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "email",
+               "Type": "string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "hostname",
+               "Type": "string",
+               "Synopsis": "Hostname of Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "identityToken",
+               "Type": "string",
+               "Synopsis": "Token used to authenticate user",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "password",
+               "Type": "string",
+               "Synopsis": "Password of Docker registry account",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "registryToken",
+               "Type": "string",
+               "Synopsis": "Bearer tokens to be sent to Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "serverAddress",
+               "Type": "string",
+               "Synopsis": "Address of Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "username",
+               "Type": "string",
+               "Synopsis": "Username of Docker registry account",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
+         "Field": "binds",
+         "Type": "list of string",
+         "Synopsis": "A 'source:destination' list of folders to mount onto the container from the host.",
+         "Summary": "A list of folders to mount onto the container from the host. The expected format for each string entry in the list is `source:destination`. So for example: `binds: [\"host_folder/scripts:/scripts\"]",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "command",
+         "Type": "list of string",
+         "Synopsis": "the command to run to start the application in the container",
+         "Summary": "",
+         "Optional": true,
+         "Default": "the image entrypoint",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "extra_ports",
+         "Type": "list of uint",
+         "Synopsis": "additional TCP ports the application is listening on to expose on the container",
+         "Summary": "Used to define and expose multiple ports that the application is listening on for the container in use. These ports will get merged with service_port when creating the container if defined.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "force_pull",
+         "Type": "bool",
+         "Synopsis": "always pull the docker container from the registry",
+         "Summary": "",
+         "Optional": true,
+         "Default": "false",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "labels",
+         "Type": "map of string to string",
+         "Synopsis": "A map of key/value pairs to label the docker container with.",
+         "Summary": "A map of key/value pair(s), stored in docker as a string. Each key/value pair must be unique. Validiation occurs at the docker layer, not in Waypoint. Label keys are alphanumeric strings which may contain periods (.) and hyphens (-).",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "networks",
+         "Type": "list of string",
+         "Synopsis": "An list of strings with network names to connect the container to.",
+         "Summary": "A list of networks to connect the container to. By default the container will always connect to the `waypoint` network.",
+         "Optional": true,
+         "Default": "waypoint",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "resources",
+         "Type": "map of string to string",
+         "Synopsis": "A map of resources to configure the container with, such as memory or cpu limits.",
+         "Summary": "these options are used to configure the container used when deploying with docker. Currently, the supported resources are 'memory' and 'cpu' limits. The field 'memory' is expected to be defined as \"512MB\", \"44kB\", etc.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "scratch_path",
+         "Type": "string",
+         "Synopsis": "a path within the container to store temporary data",
+         "Summary": "docker will mount a tmpfs at this path",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "service_port",
+         "Type": "uint",
+         "Synopsis": "port that your service is running on in the container",
+         "Summary": "",
+         "Optional": true,
+         "Default": "3000",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "static_environment",
+         "Type": "map of string to string",
+         "Synopsis": "environment variables to expose to the application",
+         "Summary": "these environment variables should not be run of the mill configuration variables, use waypoint config for that. These variables are used to control over all container modes, such as configuring it to start a web app vs a background worker",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "output": "docker.Deployment",
+   "outputAttrs": [
+      {
+         "Field": "container",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "id",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "name",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "resource_state",
+         "Type": "opaqueany.Any",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "client_config",
+         "Type": "docker.ClientConfig",
+         "Synopsis": "client config for remote Docker engine",
+         "Summary": "this config block can be used to configure a remote Docker engine. By default Waypoint will attempt to discover this configuration using the environment variables: `DOCKER_HOST` to set the url to the docker server. `DOCKER_API_VERSION` to set the version of the API to reach, leave empty for latest. `DOCKER_CERT_PATH` to load the TLS certificates from. `DOCKER_TLS_VERIFY` to enable or disable TLS verification, off by default.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "platform",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

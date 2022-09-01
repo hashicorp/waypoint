@@ -118,7 +118,7 @@ func (s *State) pipelineGet(
 	switch r := ref.Ref.(type) {
 	case *pb.Ref_Pipeline_Id:
 		s.log.Trace("looking up pipeline by id", "id", r.Id)
-		pipelineId = r.Id.Id
+		pipelineId = r.Id
 	case *pb.Ref_Pipeline_Owner:
 		s.log.Trace("looking up pipeline by owner and name",
 			"owner", r.Owner.Project, "name", r.Owner.PipelineName)
@@ -245,9 +245,7 @@ func (s *State) pipelineList(
 
 		result = append(result, &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: idx.Id,
-				},
+				Id: idx.Id,
 			},
 		})
 	}

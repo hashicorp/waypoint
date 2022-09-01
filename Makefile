@@ -81,7 +81,7 @@ docker/tools:
 	docker build -f tools.Dockerfile -t waypoint-tools:dev .
 
 .PHONY: docker/gen/server
-docker/gen/server:
+docker/gen/server: docker/tools
 	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
 	docker run -v `pwd`:/waypoint -it docker.io/library/waypoint-tools:dev make gen/server
 
@@ -172,6 +172,7 @@ gen/doc:
 .PHONY: gen/website-mdx
 gen/website-mdx:
 	go run ./cmd/waypoint docs -website-mdx
+	go run ./cmd/waypoint docs -json
 	go run ./tools/gendocs
 	cd ./website; npx --no-install next-hashicorp format
 

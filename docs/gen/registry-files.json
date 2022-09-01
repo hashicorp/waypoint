@@ -1,0 +1,36 @@
+{
+   "description": "Copies files to a specific directory",
+   "example": "build {\n  use \"files\" {}\n  registry {\n\tuse \"files\" {\n\t  path = \"/path/to/file\"\n\t}\n  }\n}",
+   "mappers": null,
+   "name": "files",
+   "optionalFields": null,
+   "outputAttrs": [
+      {
+         "Field": "path",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "path",
+         "Type": "string",
+         "Synopsis": "the filesystem path to store the files into",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "registry",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

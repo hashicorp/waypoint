@@ -91,9 +91,7 @@ func (c *PipelineListCommand) Run(args []string) int {
 		pipelineRunsResp, err := c.project.Client().ListPipelineRuns(c.Ctx, &pb.ListPipelineRunsRequest{
 			Pipeline: &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
-					Id: &pb.Ref_PipelineId{
-						Id: pipeline.Id,
-					},
+					Id: pipeline.Id,
 				},
 			},
 		})

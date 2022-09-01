@@ -536,48 +536,52 @@ deploy {
 	doc.SetField(
 		"capacity",
 		"the capacity details for the container",
-	)
 
-	doc.SetField(
-		"capacity.memory",
-		"memory to allocate the container specified in MB, min 1024, max based on resource availability of the region.",
-		docs.Default("1024"),
-	)
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"memory",
+				"memory to allocate the container specified in MB, min 1024, max based on resource availability of the region.",
+				docs.Default("1024"),
+			)
 
-	doc.SetField(
-		"capacity.cpu",
-		"number of CPUs to allocate the container, min 1, max based on resource availability of the region.",
-		docs.Default("1"),
+			doc.SetField(
+				"cpu",
+				"number of CPUs to allocate the container, min 1, max based on resource availability of the region.",
+				docs.Default("1"),
+			)
+		}),
 	)
 
 	doc.SetField(
 		"volume",
 		"the volume details for a container",
-	)
 
-	doc.SetField(
-		"volume.name",
-		"the name of the volume to mount into the container",
-	)
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"name",
+				"the name of the volume to mount into the container",
+			)
 
-	doc.SetField(
-		"volume.path",
-		"the path to mount the volume to in the container",
-	)
+			doc.SetField(
+				"path",
+				"the path to mount the volume to in the container",
+			)
 
-	doc.SetField(
-		"volume.read_only",
-		"specify if the volume is read only",
-	)
+			doc.SetField(
+				"read_only",
+				"specify if the volume is read only",
+			)
 
-	doc.SetField(
-		"volume.azure_file_share",
-		"the details for the Azure file share volume",
-	)
+			doc.SetField(
+				"azure_file_share",
+				"the details for the Azure file share volume",
+			)
 
-	doc.SetField(
-		"volume.git_repo",
-		"the details for GitHub repo to mount as a volume",
+			doc.SetField(
+				"git_repo",
+				"the details for GitHub repo to mount as a volume",
+			)
+		}),
 	)
 
 	doc.Input("docker.Image")

@@ -115,6 +115,49 @@ jobs:
           fi
       - notify_main_failure
 
+  generate-json-docs:
+    docker:
+      - image: *GOLANG_IMAGE
+    environment:
+      <<: *ENVIRONMENT
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: generate json plugin docs
+          command: go run ./cmd/waypoint docs -json
+      - run:
+          command: rm waypoint-restore.db.lock; git status
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+      - notify_main_failure
+
+  check-json-docs:
+    docker:
+      - image: *WEBSITE_IMAGE
+    environment:
+      <<: *ENVIRONMENT
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          command: git status
+      - run: |
+          if ! git diff --exit-code docs/gen > /dev/null; then
+            echo "Website directory has unstaged json changes. This is because you have modified doc strings"
+            echo "that must be reflected in the json docs. Run the following make command:"
+            echo
+            echo "make gen/website-mdx"
+            echo
+            echo "And then validate that the corresponding json docs look acceptable."
+            git status
+            exit 1
+          fi
+      - notify_main_failure
+
   go-test:
     docker:
       - image: *GOLANG_IMAGE
@@ -543,6 +586,21 @@ workflows:
       - check-website-mdx:
           requires:
             - generate-website-mdx
+          filters:
+            branches:
+              ignore:
+                - main
+
+  json-docs:
+    jobs:
+      - generate-json-docs:
+          filters:
+            branches:
+              ignore:
+                - main
+      - check-json-docs:
+          requires:
+            - generate-json-docs
           filters:
             branches:
               ignore:

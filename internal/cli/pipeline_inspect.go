@@ -53,7 +53,7 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		}
 	}
 
-	pipelineRef := &pb.Ref_Pipeline{}
+	var pipelineRef *pb.Ref_Pipeline
 	if c.flagPipelineName != "" {
 		pipelineRef = &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Owner{
@@ -66,9 +66,7 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 	} else {
 		pipelineRef = &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: c.args[0],
-				},
+				Id: c.args[0],
 			},
 		}
 	}
@@ -95,9 +93,7 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 	runs, err := c.project.Client().ListPipelineRuns(c.Ctx, &pb.ListPipelineRunsRequest{
 		Pipeline: &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: resp.Pipeline.Id,
-				},
+				Id: resp.Pipeline.Id,
 			},
 		},
 	})
@@ -151,9 +147,7 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		run, err := c.project.Client().GetPipelineRun(c.Ctx, &pb.GetPipelineRunRequest{
 			Pipeline: &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
-					Id: &pb.Ref_PipelineId{
-						Id: resp.Pipeline.Id,
-					},
+					Id: resp.Pipeline.Id,
 				},
 			},
 			Sequence: s,
@@ -202,6 +196,10 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		startJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
 			JobId: lastRun.Jobs[0].Id,
 		})
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
 		endJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
 			JobId: lastRun.Jobs[len(lastRun.Jobs)-1].Id,
 		})
@@ -209,6 +207,7 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
+
 		var sha string
 		var msg string
 		if startJob.DataSourceRef != nil {

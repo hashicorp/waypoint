@@ -1,0 +1,945 @@
+{
+   "description": "Deploy the application into a Kubernetes cluster using Deployment objects",
+   "example": "use \"kubernetes\" {\n\timage_secret = \"registry_secret\"\n\treplicas = 3\n\tprobe_path = \"/_healthz\"\n}",
+   "mappers": null,
+   "name": "kubernetes",
+   "optionalFields": [
+      {
+         "Field": "annotations",
+         "Type": "map of string to string",
+         "Synopsis": "annotations to be added to the application pod",
+         "Summary": "annotations are added to the pod spec of the deployed application. This is useful when using mutating webhook admission controllers to further process pod events.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "autoscale",
+         "Type": "k8s.AutoscaleConfig",
+         "Synopsis": "sets up a horizontal pod autoscaler to scale deployments automatically",
+         "Summary": "This configuration will automatically set up and associate the current deployment with a horizontal pod autoscaler in Kuberentes. Note that for this to work, you must also define resource limits and requests for a deployment otherwise the metrics-server will not be able to properly determine a deployments target CPU utilization",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "cpu_percent",
+               "Type": "int32",
+               "Synopsis": "the target CPU percent utilization before the horizontal pod autoscaler scales up a deployments replicas",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "max_replicas",
+               "Type": "int32",
+               "Synopsis": "the maximum amount of pods to scale to for a deployment",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "min_replicas",
+               "Type": "int32",
+               "Synopsis": "the minimum amount of pods to have for a deployment",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
+         "Field": "context",
+         "Type": "string",
+         "Synopsis": "the kubectl context to use, as defined in the kubeconfig file",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "cpu",
+         "Type": "k8s.ResourceConfig",
+         "Synopsis": "cpu resource configuration",
+         "Summary": "CPU lets you define resource limits and requests for a container in a deployment.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "limit",
+               "Type": "string",
+               "Synopsis": "maximum amount of cpu to give the container. Supports m to indicate milli-cores",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "request",
+               "Type": "string",
+               "Synopsis": "how much cpu to give the container in cpu cores. Supports m to indicate milli-cores",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
+         "Field": "image_secret",
+         "Type": "string",
+         "Synopsis": "name of the Kubernetes secrete to use for the image",
+         "Summary": "this references an existing secret, waypoint does not create this secret",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "kubeconfig",
+         "Type": "string",
+         "Synopsis": "path to the kubeconfig file to use",
+         "Summary": "by default uses from current user's home directory",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "KUBECONFIG",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "labels",
+         "Type": "map of string to string",
+         "Synopsis": "a map of key value labels to apply to the deployment pod",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "memory",
+         "Type": "k8s.ResourceConfig",
+         "Synopsis": "memory resource configuration",
+         "Summary": "Memory lets you define resource limits and requests for a container in a deployment.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "limit",
+               "Type": "string",
+               "Synopsis": "maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "request",
+               "Type": "string",
+               "Synopsis": "how much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
+         "Field": "namespace",
+         "Type": "string",
+         "Synopsis": "namespace to target deployment into",
+         "Summary": "namespace is the name of the Kubernetes namespace to apply the deployment in. This is useful to create deployments in non-default namespaces without creating kubeconfig contexts for each",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "probe",
+         "Type": "k8s.Probe",
+         "Synopsis": "configuration to control liveness and readiness probes",
+         "Summary": "Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "failure_threshold",
+               "Type": "uint",
+               "Synopsis": "number of times a liveness probe can fail before the container is killed",
+               "Summary": "failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
+               "Optional": true,
+               "Default": "30",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "initial_delay",
+               "Type": "uint",
+               "Synopsis": "time in seconds to wait before performing the initial liveness and readiness probes",
+               "Summary": "",
+               "Optional": true,
+               "Default": "5",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "timeout",
+               "Type": "uint",
+               "Synopsis": "time in seconds before the probe fails",
+               "Summary": "",
+               "Optional": true,
+               "Default": "5",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
+         "Field": "probe_path",
+         "Type": "string",
+         "Synopsis": "the HTTP path to request to test that the application is running",
+         "Summary": "without this, the test will simply be that the application has bound to the port",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "replicas",
+         "Type": "int32",
+         "Synopsis": "the number of replicas to maintain",
+         "Summary": "if the replica count is maintained outside waypoint, for instance by a pod autoscaler, do not set this variable",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "resources",
+         "Type": "map of string to string",
+         "Synopsis": "a map of resource limits and requests to apply to a container on deploy",
+         "Summary": "resource limits and requests for a container. This exists to allow any possible resources. For cpu and memory, use those relevant settings instead. Keys must start with either `limits_` or `requests_`. Any other options will be ignored.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "scratch_path",
+         "Type": "list of string",
+         "Synopsis": "a path for the service to store temporary data",
+         "Summary": "a path to a directory that will be created for the service to store temporary data using tmpfs",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "service_account",
+         "Type": "string",
+         "Synopsis": "service account name to be added to the application pod",
+         "Summary": "service account is the name of the Kubernetes service account to add to the pod. This is useful to apply Kubernetes RBAC to the application.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "service_port",
+         "Type": "uint",
+         "Synopsis": "the TCP port that the application is listening on",
+         "Summary": "by default, this config variable is used for exposing a single port for the container in use. For multi-port configuration, use 'ports' instead.",
+         "Optional": true,
+         "Default": "3000",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "static_environment",
+         "Type": "map of string to string",
+         "Synopsis": "environment variables to control broad modes of the application",
+         "Summary": "environment variables that are meant to configure the container in a static way. This might be control an image that has multiple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrs": [
+      {
+         "Field": "id",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "name",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "resource_state",
+         "Type": "opaqueany.Any",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "pod",
+         "Type": "k8s.Pod",
+         "Synopsis": "the configuration for a pod",
+         "Summary": "Pod describes the configuration for a pod when deploying",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "container",
+               "Type": "k8s.Container",
+               "Synopsis": "container describes the commands and arguments for a container config",
+               "Summary": "",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": true,
+               "SubFields": [
+                  {
+                     "Field": "args",
+                     "Type": "list of string",
+                     "Synopsis": "an array of string arguments to pass through to the container",
+                     "Summary": "",
+                     "Optional": true,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "SubFields": null
+                  },
+                  {
+                     "Field": "command",
+                     "Type": "list of string",
+                     "Synopsis": "an array of strings to run for the container",
+                     "Summary": "",
+                     "Optional": true,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "SubFields": null
+                  },
+                  {
+                     "Field": "cpu",
+                     "Type": "k8s.ResourceConfig",
+                     "Synopsis": "cpu resource configuration",
+                     "Summary": "CPU lets you define resource limits and requests for a container in a deployment.",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": true,
+                     "SubFields": [
+                        {
+                           "Field": "limit",
+                           "Type": "string",
+                           "Synopsis": "maximum amount of cpu to give the container. Supports m to indicate milli-cores",
+                           "Summary": "",
+                           "Optional": true,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        },
+                        {
+                           "Field": "request",
+                           "Type": "string",
+                           "Synopsis": "how much cpu to give the container in cpu cores. Supports m to indicate milli-cores",
+                           "Summary": "",
+                           "Optional": true,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        }
+                     ]
+                  },
+                  {
+                     "Field": "memory",
+                     "Type": "k8s.ResourceConfig",
+                     "Synopsis": "memory resource configuration",
+                     "Summary": "Memory lets you define resource limits and requests for a container in a deployment.",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": true,
+                     "SubFields": [
+                        {
+                           "Field": "limit",
+                           "Type": "string",
+                           "Synopsis": "maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+                           "Summary": "",
+                           "Optional": true,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        },
+                        {
+                           "Field": "request",
+                           "Type": "string",
+                           "Synopsis": "how much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+                           "Summary": "",
+                           "Optional": true,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        }
+                     ]
+                  },
+                  {
+                     "Field": "name",
+                     "Type": "string",
+                     "Synopsis": "name of the container",
+                     "Summary": "",
+                     "Optional": true,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "SubFields": null
+                  },
+                  {
+                     "Field": "port",
+                     "Type": "list of k8s.Port",
+                     "Synopsis": "a port and options that the application is listening on",
+                     "Summary": "used to define and expose multiple ports that the application or process is listening on for the container in use. Can be specified multiple times for many ports.",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": true,
+                     "SubFields": [
+                        {
+                           "Field": "host_ip",
+                           "Type": "string",
+                           "Synopsis": "what host IP to bind the external port to",
+                           "Summary": "",
+                           "Optional": true,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        },
+                        {
+                           "Field": "host_port",
+                           "Type": "uint",
+                           "Synopsis": "the corresponding worker node port",
+                           "Summary": "Number of port to expose on the host. If specified, this must be a valid port number, 0 \u003c x \u003c 65536. If HostNetwork is specified, this must match ContainerPort. Most containers do not need this.",
+                           "Optional": true,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        },
+                        {
+                           "Field": "name",
+                           "Type": "string",
+                           "Synopsis": "name of the port",
+                           "Summary": "If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.",
+                           "Optional": false,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        },
+                        {
+                           "Field": "port",
+                           "Type": "uint",
+                           "Synopsis": "the port number",
+                           "Summary": "Number of port to expose on the pod's IP address. This must be a valid port number, 0 \u003c x \u003c 65536.",
+                           "Optional": false,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        },
+                        {
+                           "Field": "protocol",
+                           "Type": "string",
+                           "Synopsis": "protocol for port. Must be UDP, TCP, or SCTP",
+                           "Summary": "",
+                           "Optional": true,
+                           "Default": "TCP",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        }
+                     ]
+                  },
+                  {
+                     "Field": "probe",
+                     "Type": "k8s.Probe",
+                     "Synopsis": "configuration to control liveness and readiness probes",
+                     "Summary": "Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": true,
+                     "SubFields": [
+                        {
+                           "Field": "failure_threshold",
+                           "Type": "uint",
+                           "Synopsis": "number of times a liveness probe can fail before the container is killed",
+                           "Summary": "failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
+                           "Optional": true,
+                           "Default": "5",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        },
+                        {
+                           "Field": "initial_delay",
+                           "Type": "uint",
+                           "Synopsis": "time in seconds to wait before performing the initial liveness and readiness probes",
+                           "Summary": "",
+                           "Optional": true,
+                           "Default": "5",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        },
+                        {
+                           "Field": "timeout",
+                           "Type": "uint",
+                           "Synopsis": "time in seconds before the probe fails",
+                           "Summary": "",
+                           "Optional": true,
+                           "Default": "5",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        }
+                     ]
+                  },
+                  {
+                     "Field": "probe_path",
+                     "Type": "string",
+                     "Synopsis": "the HTTP path to request to test that the application is running",
+                     "Summary": "without this, the test will simply be that the application has bound to the port",
+                     "Optional": true,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "SubFields": null
+                  },
+                  {
+                     "Field": "resources",
+                     "Type": "map of string to string",
+                     "Synopsis": "a map of resource limits and requests to apply to a container on deploy",
+                     "Summary": "resource limits and requests for a container. This exists to allow any possible resources. For cpu and memory, use those relevant settings instead. Keys must start with either `limits_` or `requests_`. Any other options will be ignored.",
+                     "Optional": true,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "SubFields": null
+                  },
+                  {
+                     "Field": "static_environment",
+                     "Type": "map of string to string",
+                     "Synopsis": "environment variables to control broad modes of the application",
+                     "Summary": "environment variables that are meant to configure the container in a static way. This might be control an image that has multiple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands",
+                     "Optional": true,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "SubFields": null
+                  }
+               ]
+            },
+            {
+               "Field": "security_context",
+               "Type": "k8s.PodSecurityContext",
+               "Synopsis": "holds pod-level security attributes and container settings",
+               "Summary": "",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": true,
+               "SubFields": [
+                  {
+                     "Field": "fs_group",
+                     "Type": "int64",
+                     "Synopsis": "a special supplemental group that applies to all containers in a pod",
+                     "Summary": "",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "SubFields": null
+                  },
+                  {
+                     "Field": "run_as_non_root",
+                     "Type": "bool",
+                     "Synopsis": "indicates that the container must run as a non-root user",
+                     "Summary": "",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "SubFields": null
+                  },
+                  {
+                     "Field": "run_as_user",
+                     "Type": "int64",
+                     "Synopsis": "the UID to run the entrypoint of the container process",
+                     "Summary": "",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "SubFields": null
+                  }
+               ]
+            },
+            {
+               "Field": "sidecar",
+               "Type": "list of k8s.Sidecar",
+               "Synopsis": "a sidecar container within the same pod",
+               "Summary": "Another container to run alongside the app container in the kubernetes pod. Can be specified multiple times for multiple sidecars.",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": true,
+               "SubFields": [
+                  {
+                     "Field": "container",
+                     "Type": "k8s.Container",
+                     "Synopsis": "container describes the commands and arguments for a container config",
+                     "Summary": "",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": true,
+                     "SubFields": [
+                        {
+                           "Field": "args",
+                           "Type": "list of string",
+                           "Synopsis": "an array of string arguments to pass through to the container",
+                           "Summary": "",
+                           "Optional": true,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        },
+                        {
+                           "Field": "command",
+                           "Type": "list of string",
+                           "Synopsis": "an array of strings to run for the container",
+                           "Summary": "",
+                           "Optional": true,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        },
+                        {
+                           "Field": "cpu",
+                           "Type": "k8s.ResourceConfig",
+                           "Synopsis": "cpu resource configuration",
+                           "Summary": "CPU lets you define resource limits and requests for a container in a deployment.",
+                           "Optional": false,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": true,
+                           "SubFields": [
+                              {
+                                 "Field": "limit",
+                                 "Type": "string",
+                                 "Synopsis": "maximum amount of cpu to give the container. Supports m to indicate milli-cores",
+                                 "Summary": "",
+                                 "Optional": true,
+                                 "Default": "",
+                                 "EnvVar": "",
+                                 "Category": false,
+                                 "SubFields": null
+                              },
+                              {
+                                 "Field": "request",
+                                 "Type": "string",
+                                 "Synopsis": "how much cpu to give the container in cpu cores. Supports m to indicate milli-cores",
+                                 "Summary": "",
+                                 "Optional": true,
+                                 "Default": "",
+                                 "EnvVar": "",
+                                 "Category": false,
+                                 "SubFields": null
+                              }
+                           ]
+                        },
+                        {
+                           "Field": "memory",
+                           "Type": "k8s.ResourceConfig",
+                           "Synopsis": "memory resource configuration",
+                           "Summary": "Memory lets you define resource limits and requests for a container in a deployment.",
+                           "Optional": false,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": true,
+                           "SubFields": [
+                              {
+                                 "Field": "limit",
+                                 "Type": "string",
+                                 "Synopsis": "maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+                                 "Summary": "",
+                                 "Optional": true,
+                                 "Default": "",
+                                 "EnvVar": "",
+                                 "Category": false,
+                                 "SubFields": null
+                              },
+                              {
+                                 "Field": "request",
+                                 "Type": "string",
+                                 "Synopsis": "how much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes",
+                                 "Summary": "",
+                                 "Optional": true,
+                                 "Default": "",
+                                 "EnvVar": "",
+                                 "Category": false,
+                                 "SubFields": null
+                              }
+                           ]
+                        },
+                        {
+                           "Field": "name",
+                           "Type": "string",
+                           "Synopsis": "name of the container",
+                           "Summary": "",
+                           "Optional": true,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        },
+                        {
+                           "Field": "port",
+                           "Type": "list of k8s.Port",
+                           "Synopsis": "a port and options that the application is listening on",
+                           "Summary": "used to define and expose multiple ports that the application or process is listening on for the container in use. Can be specified multiple times for many ports.",
+                           "Optional": false,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": true,
+                           "SubFields": [
+                              {
+                                 "Field": "host_ip",
+                                 "Type": "string",
+                                 "Synopsis": "what host IP to bind the external port to",
+                                 "Summary": "",
+                                 "Optional": true,
+                                 "Default": "",
+                                 "EnvVar": "",
+                                 "Category": false,
+                                 "SubFields": null
+                              },
+                              {
+                                 "Field": "host_port",
+                                 "Type": "uint",
+                                 "Synopsis": "the corresponding worker node port",
+                                 "Summary": "Number of port to expose on the host. If specified, this must be a valid port number, 0 \u003c x \u003c 65536. If HostNetwork is specified, this must match ContainerPort. Most containers do not need this.",
+                                 "Optional": true,
+                                 "Default": "",
+                                 "EnvVar": "",
+                                 "Category": false,
+                                 "SubFields": null
+                              },
+                              {
+                                 "Field": "name",
+                                 "Type": "string",
+                                 "Synopsis": "name of the port",
+                                 "Summary": "If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.",
+                                 "Optional": false,
+                                 "Default": "",
+                                 "EnvVar": "",
+                                 "Category": false,
+                                 "SubFields": null
+                              },
+                              {
+                                 "Field": "port",
+                                 "Type": "uint",
+                                 "Synopsis": "the port number",
+                                 "Summary": "Number of port to expose on the pod's IP address. This must be a valid port number, 0 \u003c x \u003c 65536.",
+                                 "Optional": false,
+                                 "Default": "",
+                                 "EnvVar": "",
+                                 "Category": false,
+                                 "SubFields": null
+                              },
+                              {
+                                 "Field": "protocol",
+                                 "Type": "string",
+                                 "Synopsis": "protocol for port. Must be UDP, TCP, or SCTP",
+                                 "Summary": "",
+                                 "Optional": true,
+                                 "Default": "TCP",
+                                 "EnvVar": "",
+                                 "Category": false,
+                                 "SubFields": null
+                              }
+                           ]
+                        },
+                        {
+                           "Field": "probe",
+                           "Type": "k8s.Probe",
+                           "Synopsis": "configuration to control liveness and readiness probes",
+                           "Summary": "Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.",
+                           "Optional": false,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": true,
+                           "SubFields": [
+                              {
+                                 "Field": "failure_threshold",
+                                 "Type": "uint",
+                                 "Synopsis": "number of times a liveness probe can fail before the container is killed",
+                                 "Summary": "failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
+                                 "Optional": true,
+                                 "Default": "5",
+                                 "EnvVar": "",
+                                 "Category": false,
+                                 "SubFields": null
+                              },
+                              {
+                                 "Field": "initial_delay",
+                                 "Type": "uint",
+                                 "Synopsis": "time in seconds to wait before performing the initial liveness and readiness probes",
+                                 "Summary": "",
+                                 "Optional": true,
+                                 "Default": "5",
+                                 "EnvVar": "",
+                                 "Category": false,
+                                 "SubFields": null
+                              },
+                              {
+                                 "Field": "timeout",
+                                 "Type": "uint",
+                                 "Synopsis": "time in seconds before the probe fails",
+                                 "Summary": "",
+                                 "Optional": true,
+                                 "Default": "5",
+                                 "EnvVar": "",
+                                 "Category": false,
+                                 "SubFields": null
+                              }
+                           ]
+                        },
+                        {
+                           "Field": "probe_path",
+                           "Type": "string",
+                           "Synopsis": "the HTTP path to request to test that the application is running",
+                           "Summary": "without this, the test will simply be that the application has bound to the port",
+                           "Optional": true,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        },
+                        {
+                           "Field": "resources",
+                           "Type": "map of string to string",
+                           "Synopsis": "a map of resource limits and requests to apply to a container on deploy",
+                           "Summary": "resource limits and requests for a container. This exists to allow any possible resources. For cpu and memory, use those relevant settings instead. Keys must start with either `limits_` or `requests_`. Any other options will be ignored.",
+                           "Optional": true,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        },
+                        {
+                           "Field": "static_environment",
+                           "Type": "map of string to string",
+                           "Synopsis": "environment variables to control broad modes of the application",
+                           "Summary": "environment variables that are meant to configure the container in a static way. This might be control an image that has multiple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands",
+                           "Optional": true,
+                           "Default": "",
+                           "EnvVar": "",
+                           "Category": false,
+                           "SubFields": null
+                        }
+                     ]
+                  },
+                  {
+                     "Field": "image",
+                     "Type": "string",
+                     "Synopsis": "image of the sidecar container",
+                     "Summary": "",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "SubFields": null
+                  }
+               ]
+            }
+         ]
+      }
+   ],
+   "type": "platform",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

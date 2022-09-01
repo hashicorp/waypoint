@@ -18,7 +18,9 @@ Manually execute a pipeline by name.
 Usage: `waypoint pipeline run [options] <pipeline-name>`
 
 Run a pipeline by name. If run outside of a project dir, a '-project' flag is
-required.
+required. Before running a requested pipeline, this command will sync
+pipeline configs so it runs the most up to date configuration version for a
+pipeline.
 
 #### Global Options
 
