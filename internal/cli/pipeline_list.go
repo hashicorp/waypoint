@@ -102,34 +102,40 @@ func (c *PipelineListCommand) Run(args []string) int {
 			return 1
 		}
 
-		// Note(xx): This will be refactored in a future PR to use a pipeline bundle
-		// that caches this information without having to make a call to the pipeline runs endpoint
-		// for every pipeline and jobs for every pipeline run.
+		var totalRuns string
+		var lastRunStart string
+		var lastRunEnd string
+		var state string
+
 		runs := pipelineRunsResp.PipelineRuns
+		if len(runs) > 0 {
+			// Note(xx): This will be refactored in a future PR to use a pipeline bundle
+			// that caches this information without having to make a call to the pipeline runs endpoint
+			// for every pipeline and jobs for every pipeline run.
+			lastRun := runs[len(runs)-1]
+			totalRuns = strconv.FormatUint(lastRun.Sequence, 10)
 
-		lastRun := runs[len(runs)-1]
-		totalRuns := strconv.FormatUint(lastRun.Sequence, 10)
+			jobs := lastRun.Jobs
+			j, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+				JobId: jobs[0].Id,
+			})
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+			lastRunStart = humanize.Time(j.QueueTime.AsTime())
 
-		jobs := lastRun.Jobs
-		j, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
-			JobId: jobs[0].Id,
-		})
-		if err != nil {
-			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
+			j, err = c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+				JobId: jobs[len(jobs)-1].Id,
+			})
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+
+			lastRunEnd = humanize.Time(j.CompleteTime.AsTime())
+			state = strings.ToLower(lastRun.State.String())
 		}
-		lastRunStart := humanize.Time(j.QueueTime.AsTime())
-
-		j, err = c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
-			JobId: jobs[len(jobs)-1].Id,
-		})
-		if err != nil {
-			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		}
-		lastRunEnd := humanize.Time(j.CompleteTime.AsTime())
-
-		state := strings.ToLower(lastRun.State.String())
 
 		tblColumn := []string{
 			pipeline.Id,
