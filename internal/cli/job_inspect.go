@@ -182,6 +182,24 @@ func (c *JobInspectCommand) Run(args []string) int {
 		},
 	}, terminal.WithInfoStyle())
 
+	if resp.Pipeline != nil {
+		c.ui.Output("Pipeline Info", terminal.WithHeaderStyle())
+		c.ui.NamedValues([]terminal.NamedValue{
+			{
+				Name: "Name", Value: resp.Pipeline.PipelineName,
+			},
+			{
+				Name: "ID", Value: resp.Pipeline.PipelineId,
+			},
+			{
+				Name: "Step", Value: resp.Pipeline.Step,
+			},
+			{
+				Name: "Run Sequence", Value: resp.Pipeline.RunSequence,
+			},
+		}, terminal.WithInfoStyle())
+	}
+
 	c.ui.Output("Job Results", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
