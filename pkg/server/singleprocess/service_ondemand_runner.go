@@ -59,7 +59,7 @@ func (s *Service) ListOnDemandRunnerConfigs(
 	log := hclog.FromContext(ctx)
 	result, err := s.state(ctx).OnDemandRunnerConfigList()
 	if err != nil {
-		return nil, hcerr.Externalize(log, err, "failed to list-demand runner configs")
+		return nil, hcerr.Externalize(log, err, "failed to list on-demand runner configs")
 	}
 
 	return &pb.ListOnDemandRunnerConfigsResponse{Configs: result}, nil
