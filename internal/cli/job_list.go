@@ -99,7 +99,7 @@ func (c *JobListCommand) Run(args []string) int {
 		}}
 	}
 
-	if c.flagPipelineId != "" || c.flagPipelineId != "" {
+	if c.flagPipelineId != "" || c.flagPipelineName != "" {
 		pipelineStep := &pb.Ref_PipelineStep{
 			PipelineId:   c.flagPipelineId,
 			PipelineName: c.flagPipelineName,
@@ -279,12 +279,6 @@ func (c *JobListCommand) Flags() *flag.Sets {
 			Target: &c.flagState,
 			Values: jobStateValues,
 			Usage:  "List jobs that only match the requested state. Can be repeated multiple times.",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:   "workspace",
-			Target: &c.flagWorkspace,
-			Usage:  "List jobs in the specified workspace.",
 		})
 
 		f.StringVar(&flag.StringVar{
