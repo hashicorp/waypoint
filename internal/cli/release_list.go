@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -194,6 +195,18 @@ func (c *ReleaseListCommand) Run(args []string) int {
 
 					details = append(details, "image:"+img)
 				}
+			}
+
+			j, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+				JobId: releaseBundle.Release.JobId,
+			})
+			if err != nil {
+				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return err
+			}
+			if j.Pipeline != nil {
+				pipeline := "pipeline: " + j.Pipeline.PipelineName + "[run: " + strconv.FormatUint(j.Pipeline.RunSequence, 10) + "]" + "[step: " + j.Pipeline.Step + "]"
+				details = append(details, pipeline)
 			}
 
 			if b.Preload.Artifact != nil {
