@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"strings"
 	"time"
 
@@ -298,12 +300,15 @@ func (p *TaskLauncher) WatchTask(
 		return nil, err
 	} else {
 		if allocs, _, err := client.Jobs().Allocations(ti.Id, true, queryOpts); err != nil {
+			log.Error("Failed to get allocations for ODR job: %s", ti.Id)
 			return nil, err
 		} else {
 			if len(allocs) != 1 {
+				log.Error("Invalid # of allocs for ODR job.")
 				return nil, errors.New("there should be one allocation in the job")
 			}
 			if alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts); err != nil {
+				log.Error("Failed to get info for alloc "+allocs[0].ID+". Error: %s", err.Error())
 				return nil, err
 			} else {
 				tg := alloc.GetTaskGroup()
@@ -312,13 +317,47 @@ func (p *TaskLauncher) WatchTask(
 				}
 				task := tg.Tasks[0]
 
+				var state string
+				allocTask, ok := alloc.TaskStates[task.Name]
+				if !ok {
+					return nil, errors.New("ODR task not in alloc")
+				}
+				state = allocTask.State
+
+				// We'll give the ODR 5 minutes to start up
+				// TODO: Make this configurable
+				ctx, cancel := context.WithTimeout(ctx, time.Minute*time.Duration(5))
+				defer cancel()
+				ticker := time.NewTicker(5 * time.Second)
+				for state == "pending" {
+					select {
+					case <-ticker.C:
+					case <-ctx.Done(): // cancelled
+						return nil, status.Errorf(codes.Aborted, "Context cancelled from timeout waiting for ODR task to start %s", ctx.Err())
+					}
+					if alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts); err != nil {
+						log.Error("Failed to get info for alloc "+allocs[0].ID+". Error: %s", err.Error())
+						return nil, err
+					} else {
+						state = alloc.TaskStates[task.Name].State
+					}
+				}
+
+				// Only follow the logs if our task is still alive
+				follow := true
+				if state == "dead" {
+					follow = false
+				}
+
+				log.Debug("Getting logs for alloc: " + alloc.Name + ", task: " + task.Name)
 				ch := make(chan struct{})
-				logStream, errChan := client.AllocFS().Logs(alloc, true, task.Name, "stderr", "", 0, ch, queryOpts)
+				logStream, errChan := client.AllocFS().Logs(alloc, follow, task.Name, "stderr", "", 0, ch, queryOpts)
+
 				select {
 				case err := <-errChan:
+					log.Error("Error reading logs from alloc: %q", err.Error())
 					return nil, err
-				case <-logStream:
-					data := <-logStream
+				case data := <-logStream:
 					message := string(data.Data)
 					log.Info(message)
 					ui.Output(message)
