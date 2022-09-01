@@ -429,12 +429,20 @@ service Waypoint {
   // GetPipeline returns a pipeline proto by pipeline ref id
   rpc GetPipeline(GetPipelineRequest) returns (GetPipelineResponse);
 
+  // GetPipelineRun returns a pipeline run proto by pipeline ref id and sequence
+  rpc GetPipelineRun(GetPipelineRunRequest) returns (GetPipelineRunResponse);
+
   // ListPipelines takes a project and evaluates the projects config to get
   // a list of Pipeline protos to return in the response. These pipelines
   // are scoped to a single project from the request. It will return an
   // error if the requested project does not exist, or an empty response
   // if no pipelines are defined for the project.
   rpc ListPipelines(ListPipelinesRequest) returns (ListPipelinesResponse);
+
+  // ListPipelineRuns takes a pipeline ref and returns a list of runs of that pipeline.
+  // It will return an error if the requested pipeline does not exist, or an empty response
+  // if there are no runs for the pipeline.
+  rpc ListPipelineRuns(ListPipelineRunsRequest) returns (ListPipelineRunsResponse);
 
   // ConfigSyncPipeline takes a request for a given project and syncs the current
   // project config to the Waypoint database.
@@ -4856,6 +4864,8 @@ message RunPipelineResponse {
   // corresponds to. Note that some jobs may correspond to pipelines other
   // than the initial pipeline if nested pipelines are used.
   map<string, Ref.PipelineStep> job_map = 3;
+
+  uint64 sequence = 4;
 }
 
 message ListPipelinesRequest {
@@ -4866,6 +4876,27 @@ message ListPipelinesRequest {
 message ListPipelinesResponse {
   // All of the listed pipelines
   repeated Pipeline pipelines = 1;
+}
+
+// NOTE(xx): these requests will be refactored in a future PR to optimize for UI
+// Will also add PipelineBundle and PipelineRunBundle objects
+message ListPipelineRunsRequest {
+  Ref.Pipeline pipeline = 1;
+}
+
+message ListPipelineRunsResponse {
+  // All of the listed pipelines
+  repeated PipelineRun pipeline_runs = 1;
+}
+
+message GetPipelineRunRequest {
+  Ref.Pipeline pipeline = 1;
+  uint64 sequence = 2;
+}
+
+message GetPipelineRunResponse {
+  // A single pipeline run
+  PipelineRun pipeline_run = 1;
 }
 
 message ConfigSyncPipelineRequest {

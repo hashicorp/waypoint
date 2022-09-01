@@ -221,6 +221,21 @@ func ValidateListPipelinesRequest(v *pb.ListPipelinesRequest) error {
 	)
 }
 
+// ValidateListPipelineRunsRequest
+func ValidateListPipelineRunsRequest(v *pb.ListPipelineRunsRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Pipeline, validation.Required)),
+	)
+}
+
+// ValidateGetPipelineRequest
+func ValidateGetPipelineRunRequest(v *pb.GetPipelineRunRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Pipeline, validation.Required),
+		validation.Field(&v.Sequence, validation.Required)),
+	)
+}
+
 // ValidateGetPipelineRequest
 func ValidateGetPipelineRequest(v *pb.GetPipelineRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,

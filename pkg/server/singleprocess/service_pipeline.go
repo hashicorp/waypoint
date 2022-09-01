@@ -178,6 +178,7 @@ func (s *Service) RunPipeline(
 		JobId:     jobIds[0],
 		AllJobIds: jobIds,
 		JobMap:    jobMap,
+		Sequence:  pipelineRun.Sequence,
 	}, nil
 }
 

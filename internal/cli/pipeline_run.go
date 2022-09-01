@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/posener/complete"
 
@@ -30,12 +31,12 @@ func (c *PipelineRunCommand) Run(args []string) int {
 
 	var pipelineName string
 	if len(c.args) == 0 && c.flagPipelineId == "" {
-		c.ui.Output("Pipeline Name required.\n\n%s", c.Help(), terminal.WithErrorStyle())
+		c.ui.Output("Pipeline name or ID required.\n\n%s", c.Help(), terminal.WithErrorStyle())
 		return 1
 	} else if c.flagPipelineId == "" {
 		pipelineName = c.args[0]
 	} else {
-		c.ui.Output("Both pipeline name and id were specified, using pipeline id", terminal.WithWarningStyle())
+		c.ui.Output("Both pipeline name and ID were specified, using pipeline ID", terminal.WithWarningStyle())
 	}
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
@@ -64,9 +65,8 @@ func (c *PipelineRunCommand) Run(args []string) int {
 
 		// build the initial job template for running the pipeline
 		runJobTemplate := &pb.Job{
-			Application: app.Ref(),
-			Workspace:   c.project.WorkspaceRef(),
-
+			Application:  app.Ref(),
+			Workspace:    c.project.WorkspaceRef(),
 			TargetRunner: &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{}},
 		}
 
@@ -106,24 +106,44 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		step.Update("Pipeline %q has started running. Attempting to read job stream sequentially in order", pipelineIdent)
 		step.Done()
 
-		// Receieve job ids from running pipeline, use job client to attach to job stream
+		// Receive job ids from running pipeline, use job client to attach to job stream
 		// and stream here. First pass can be linear job streaming
+		step = sg.Add("")
+		defer step.Abort()
+
+		steps := len(resp.JobMap)
+		step.Update("%d steps detected, run sequence %d", steps, resp.Sequence)
+		step.Done()
+
+		successful := steps
 		for _, jobId := range resp.AllJobIds {
 			app.UI.Output("Executing Step %q", resp.JobMap[jobId].Step, terminal.WithHeaderStyle())
 			app.UI.Output("Reading job stream (jobId: %s)...", jobId, terminal.WithInfoStyle())
 			app.UI.Output("")
 
-			// Throw away the job result for now. We could do something fancy with this
-			// later.
 			_, err := jobstream.Stream(c.Ctx, jobId,
 				jobstream.WithClient(c.project.Client()),
 				jobstream.WithUI(app.UI))
 			if err != nil {
 				return err
 			}
+
+			job, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+				JobId: jobId,
+			})
+			if job.State != pb.Job_SUCCESS {
+				successful--
+			}
 		}
 
-		app.UI.Output("✔ Pipeline %q (%s) finished!", pipelineIdent, app.Ref().Project, terminal.WithSuccessStyle())
+		output := fmt.Sprintf("Pipeline %q (%s) finished! %d/%d steps successfully completed.", pipelineIdent, app.Ref().Project, successful, steps)
+		if successful == 0 {
+			app.UI.Output("✖ %s", output, terminal.WithErrorStyle())
+		} else if successful < steps {
+			app.UI.Output("● %s", output, terminal.WithWarningStyle())
+		} else {
+			app.UI.Output("✔ %s", output, terminal.WithSuccessStyle())
+		}
 
 		return nil
 	})
@@ -139,7 +159,7 @@ func (c *PipelineRunCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.StringVar(&flag.StringVar{
-			Name:    "pipeline-id",
+			Name:    "id",
 			Target:  &c.flagPipelineId,
 			Default: "",
 			Usage:   "Run a pipeline by ID.",

@@ -7495,6 +7495,15 @@
       ],
       "default": "INVALID"
     },
+    "hashicorp.waypoint.GetPipelineRunResponse": {
+      "type": "object",
+      "properties": {
+        "pipeline_run": {
+          "$ref": "#/definitions/hashicorp.waypoint.PipelineRun",
+          "title": "A single pipeline run"
+        }
+      }
+    },
     "hashicorp.waypoint.GetProjectResponse": {
       "type": "object",
       "properties": {
@@ -8672,6 +8681,18 @@
         }
       }
     },
+    "hashicorp.waypoint.ListPipelineRunsResponse": {
+      "type": "object",
+      "properties": {
+        "pipeline_runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.PipelineRun"
+          },
+          "title": "All of the listed pipelines"
+        }
+      }
+    },
     "hashicorp.waypoint.ListPipelinesResponse": {
       "type": "object",
       "properties": {
@@ -9112,6 +9133,44 @@
           "type": "boolean"
         }
       }
+    },
+    "hashicorp.waypoint.PipelineRun": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string",
+          "format": "uint64",
+          "description": "The sequence number for this pipeline run."
+        },
+        "pipeline": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline"
+        },
+        "jobs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.Ref.Job"
+          }
+        },
+        "state": {
+          "$ref": "#/definitions/hashicorp.waypoint.PipelineRun.State"
+        }
+      }
+    },
+    "hashicorp.waypoint.PipelineRun.State": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "PENDING",
+        "STARTING",
+        "RUNNING",
+        "ERROR",
+        "CANCELLED",
+        "SUCCESS"
+      ],
+      "default": "UNKNOWN"
     },
     "hashicorp.waypoint.Project": {
       "type": "object",
@@ -9706,6 +9765,10 @@
             "$ref": "#/definitions/hashicorp.waypoint.Ref.PipelineStep"
           },
           "description": "This provides a lookup from job ID to what step and pipeline a job\ncorresponds to. Note that some jobs may correspond to pipelines other\nthan the initial pipeline if nested pipelines are used."
+        },
+        "sequence": {
+          "type": "string",
+          "format": "uint64"
         }
       }
     },

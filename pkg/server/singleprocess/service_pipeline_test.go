@@ -201,6 +201,32 @@ func TestServiceRunPipeline(t *testing.T) {
 			names = append(names, resp.JobMap[id].Step)
 		}
 		require.Equal([]string{"root", "B", "C", "D", "E", "F", "G"}, names)
+
+		pRef := &pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: &pb.Ref_PipelineId{
+					Id: pipeline.Id,
+				},
+			},
+		}
+
+		// Pipeline Runs should exist
+		runs, err := client.ListPipelineRuns(ctx, &pb.ListPipelineRunsRequest{
+			Pipeline: pRef,
+		})
+		require.NoError(err)
+		require.NotEmpty(runs)
+		require.Len(runs.PipelineRuns, 1)
+
+		// Get pipeline run
+		run, err := client.GetPipelineRun(ctx, &pb.GetPipelineRunRequest{
+			Pipeline: pRef,
+			Sequence: 1,
+		})
+		require.NoError(err)
+		require.Equal(pipeline.Id, run.PipelineRun.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id.Id)
+		require.Equal(len(run.PipelineRun.Jobs), len(resp.AllJobIds))
+		require.Equal(resp.Sequence, run.PipelineRun.Sequence)
 	})
 
 	t.Run("runs a pipeline with embedded pipelines by request", func(t *testing.T) {

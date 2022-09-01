@@ -3,7 +3,9 @@ package cli
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
+	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/posener/complete"
 
@@ -72,7 +74,7 @@ func (c *PipelineListCommand) Run(args []string) int {
 
 	c.ui.Output("Waypoint Pipelines for %s", c.refProject.Project, terminal.WithHeaderStyle())
 
-	tblHeaders := []string{"ID", "Name", "Owner", "Total Steps"}
+	tblHeaders := []string{"ID", "Name", "Owner", "Current Steps", "Last Run Started", "Last Run Completed", "State", "Total Runs"}
 	tbl := terminal.NewTable(tblHeaders...)
 
 	for _, pipeline := range pipelines {
@@ -86,11 +88,64 @@ func (c *PipelineListCommand) Run(args []string) int {
 
 		totalSteps := strconv.Itoa(len(pipeline.Steps))
 
+		pipelineRunsResp, err := c.project.Client().ListPipelineRuns(c.Ctx, &pb.ListPipelineRunsRequest{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: &pb.Ref_PipelineId{
+						Id: pipeline.Id,
+					},
+				},
+			},
+		})
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+
+		var totalRuns string
+		var lastRunStart string
+		var lastRunEnd string
+		var state string
+
+		runs := pipelineRunsResp.PipelineRuns
+		if len(runs) > 0 {
+			// Note(xx): This will be refactored in a future PR to use a pipeline bundle
+			// that caches this information without having to make a call to the pipeline runs endpoint
+			// for every pipeline and jobs for every pipeline run.
+			lastRun := runs[len(runs)-1]
+			totalRuns = strconv.FormatUint(lastRun.Sequence, 10)
+
+			jobs := lastRun.Jobs
+			j, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+				JobId: jobs[0].Id,
+			})
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+			lastRunStart = humanize.Time(j.QueueTime.AsTime())
+
+			j, err = c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+				JobId: jobs[len(jobs)-1].Id,
+			})
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+
+			lastRunEnd = humanize.Time(j.CompleteTime.AsTime())
+			state = strings.ToLower(lastRun.State.String())
+		}
+
 		tblColumn := []string{
 			pipeline.Id,
 			pipeline.Name,
 			owner,
 			totalSteps,
+			lastRunStart,
+			lastRunEnd,
+			state,
+			totalRuns,
 		}
 
 		tbl.Rich(tblColumn, nil)
