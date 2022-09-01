@@ -4,6 +4,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/posener/complete"
+	empty "google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/installutil"
@@ -12,8 +15,6 @@ import (
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
-	"github.com/posener/complete"
-	empty "google.golang.org/protobuf/types/known/emptypb"
 )
 
 type RunnerInstallCommand struct {
@@ -294,7 +295,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 				PluginType: platform[0],
 			}
 		}
-		if targetLabels != nil {
+		if len(targetLabels) != 0 {
 			odrConfig.TargetRunner = &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Labels{
 					Labels: &pb.Ref_RunnerLabels{
