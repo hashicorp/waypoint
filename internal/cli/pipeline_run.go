@@ -108,8 +108,13 @@ func (c *PipelineRunCommand) Run(args []string) int {
 
 		// Receive job ids from running pipeline, use job client to attach to job stream
 		// and stream here. First pass can be linear job streaming
+		step = sg.Add("")
+		defer step.Abort()
+
 		steps := len(resp.JobMap)
-		app.UI.Output("%d steps detected, run sequence %d", steps, resp.Sequence, terminal.WithHeaderStyle())
+		step.Update("%d steps detected, run sequence %d", steps, resp.Sequence)
+		step.Done()
+
 		successful := steps
 		for _, jobId := range resp.AllJobIds {
 			app.UI.Output("Executing Step %q", resp.JobMap[jobId].Step, terminal.WithHeaderStyle())
