@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"sort"
+	"strconv"
 
 	"github.com/dustin/go-humanize"
 	"github.com/posener/complete"
@@ -83,6 +84,18 @@ func (c *BuildListCommand) Run(args []string) int {
 				completeTime = humanize.Time(b.Status.CompleteTime.AsTime())
 			}
 
+			var pipeline string
+			j, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+				JobId: b.JobId,
+			})
+			if err != nil {
+				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return err
+			}
+			if j.Pipeline != nil {
+				pipeline = j.Pipeline.PipelineName + "[run: " + strconv.FormatUint(j.Pipeline.RunSequence, 10) + "]" + "[step: " + j.Pipeline.Step + "]"
+			}
+
 			table.Rich([]string{
 				status,
 				c.flagId.FormatId(b.Sequence, b.Id),
@@ -90,6 +103,7 @@ func (c *BuildListCommand) Run(args []string) int {
 				b.Component.Name,
 				startTime,
 				completeTime,
+				pipeline,
 			}, []string{
 				statusColor,
 			})
