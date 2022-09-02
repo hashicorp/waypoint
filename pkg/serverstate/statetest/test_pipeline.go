@@ -437,7 +437,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		// Get exact by id
 		resp, err := s.PipelineGet(&pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{Id: p.Id},
+				Id: p.Id,
 			},
 		})
 		require.NoError(err)
@@ -457,7 +457,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		// Get exact by id and repeat the check
 		resp, err = s.PipelineGet(&pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{Id: p.Id},
+				Id: p.Id,
 			},
 		})
 		require.NoError(err)
@@ -487,7 +487,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		// Get exact by id and repeat the check
 		resp, err = s.PipelineGet(&pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{Id: p.Id}, // intentionally using old ID
+				Id: p.Id, // intentionally using old ID
 			},
 		})
 		require.NoError(err)
@@ -506,7 +506,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		// Delete
 		require.NoError(s.PipelineDelete(&pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{Id: p.Id},
+				Id: p.Id,
 			},
 		}))
 
@@ -515,7 +515,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		// values but not actually nil.
 		_, err = s.PipelineGet(&pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{Id: updatedPipe.Id},
+				Id: updatedPipe.Id,
 			},
 		})
 		require.Error(err)
