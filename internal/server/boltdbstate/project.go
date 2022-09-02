@@ -237,7 +237,7 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 		// delete pipelines for project
 		for _, pipeline := range pipelines {
 			if err = s.pipelineDelete(dbTxn, memTxn, &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{Id: pipeline.Id},
+				Id: pipeline.Id,
 			},
 			}); err != nil {
 				return err
