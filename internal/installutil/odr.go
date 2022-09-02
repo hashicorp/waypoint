@@ -2,6 +2,7 @@ package installutil
 
 import (
 	"fmt"
+
 	"github.com/distribution/distribution/v3/reference"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -29,6 +30,10 @@ func DefaultODRImage(serverImage string) (string, error) {
 }
 
 const DefaultServerImage = "hashicorp/waypoint:latest"
+
+// When we have a serverImage value to give to DefaultODRImage,
+// we should use that. When we don't, we can use this value
+const DefaultRunnerImage = "hashicorp/waypoint-odr:latest"
 
 func DefaultRunnerName(id string) string {
 	return "waypoint-" + id + "-runner"

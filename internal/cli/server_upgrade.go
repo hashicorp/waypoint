@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/installutil"
 	"os"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/waypoint/internal/installutil"
 
 	"github.com/hashicorp/waypoint/builtin/k8s"
 
@@ -432,7 +433,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 		} else {
 			ociUrl := odr.OciUrl
 			if ociUrl == "" {
-				ociUrl = "hashicorp/waypoint-odr:latest"
+				ociUrl = installutil.DefaultRunnerImage
 			}
 			odr = &pb.OnDemandRunnerConfig{
 				Id:                   oldRunnerConfig.Config.Id,

@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/waypoint/builtin/k8s"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/waypoint/builtin/k8s"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -260,7 +261,7 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-runner-image",
 		Target:  &i.Config.RunnerImage,
-		Default: installutil.DefaultServerImage,
+		Default: installutil.DefaultRunnerImage,
 		Usage:   "Docker image for the Waypoint runner.",
 	})
 
