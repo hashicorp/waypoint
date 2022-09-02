@@ -11,13 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/oklog/ulid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint/builtin/aws/utils"
 )
 
 // TaskLauncher implements the TaskLauncher plugin interface to support
@@ -63,10 +63,10 @@ type TaskLauncherConfig struct {
 
 	// Subnets are the list of subnets for the cluster. These will match the
 	// subnets used for the Cluster
-	Subnets string `hcl:"subnets,required"`
+	Subnets string `hcl:"subnets"`
 
 	// SecurityGroupId is the security group used for the Waypoint tasks.
-	SecurityGroupId string `hcl:"security_group_id,required"`
+	SecurityGroupId string `hcl:"security_group_id"`
 
 	// LogGroup is the CloudWatch log group name to use.
 	LogGroup string `hcl:"log_group,optional"`
