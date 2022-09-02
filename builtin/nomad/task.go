@@ -5,17 +5,18 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
+	"github.com/oklog/ulid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
-	"github.com/oklog/ulid"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 // TaskLauncher implements the TaskLauncher plugin interface to support
