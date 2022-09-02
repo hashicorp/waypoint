@@ -63,9 +63,7 @@ func TestPipelineRun(t testing.T, src *pb.PipelineRun) *pb.PipelineRun {
 		Id: "test_run",
 		Pipeline: &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{
-					Id: "test",
-				},
+				Id: "test",
 			},
 		},
 		State: pb.PipelineRun_PENDING,
@@ -218,6 +216,21 @@ func ValidateUpsertPipelineRequest(v *pb.UpsertPipelineRequest) error {
 func ValidateListPipelinesRequest(v *pb.ListPipelinesRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
 		validation.Field(&v.Project, validation.Required)),
+	)
+}
+
+// ValidateListPipelineRunsRequest
+func ValidateListPipelineRunsRequest(v *pb.ListPipelineRunsRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Pipeline, validation.Required)),
+	)
+}
+
+// ValidateGetPipelineRequest
+func ValidateGetPipelineRunRequest(v *pb.GetPipelineRunRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Pipeline, validation.Required),
+		validation.Field(&v.Sequence, validation.Required)),
 	)
 }
 

@@ -37,7 +37,7 @@ func TestPipeline(t *testing.T, factory Factory, restartF RestartFactory) {
 		{
 			resp, err := s.PipelineGet(&pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
-					Id: &pb.Ref_PipelineId{Id: p.Id},
+					Id: p.Id,
 				},
 			})
 			require.NoError(err)
@@ -47,7 +47,7 @@ func TestPipeline(t *testing.T, factory Factory, restartF RestartFactory) {
 		// Delete
 		require.NoError(s.PipelineDelete(&pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
-				Id: &pb.Ref_PipelineId{Id: p.Id},
+				Id: p.Id,
 			},
 		}))
 	})

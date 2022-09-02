@@ -543,7 +543,7 @@ deploy {
 				"memory to allocate the container specified in MB, min 1024, max based on resource availability of the region.",
 				docs.Default("1024"),
 			)
-		
+
 			doc.SetField(
 				"cpu",
 				"number of CPUs to allocate the container, min 1, max based on resource availability of the region.",
@@ -561,22 +561,22 @@ deploy {
 				"name",
 				"the name of the volume to mount into the container",
 			)
-		
+
 			doc.SetField(
 				"path",
 				"the path to mount the volume to in the container",
 			)
-		
+
 			doc.SetField(
 				"read_only",
 				"specify if the volume is read only",
 			)
-		
+
 			doc.SetField(
 				"azure_file_share",
 				"the details for the Azure file share volume",
 			)
-		
+
 			doc.SetField(
 				"git_repo",
 				"the details for GitHub repo to mount as a volume",
