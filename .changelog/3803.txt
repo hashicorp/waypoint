@@ -1,0 +1,7 @@
+```release-note:bug
+cli: `runner profile delete` deletes by name rather than the user-invisible ID.
+```
+
+```release-note:bug
+cli: `runner profile set` does not create entries with duplicate names. 
+```
