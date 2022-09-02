@@ -390,12 +390,21 @@ func (s *Service) buildStepJobs(
 			// step's jobs aren't scheduled prior to any dependencies.
 			parentStepDep := map[string][]string{pipeline.Id: job.DependsOn}
 
-			// TODO: add the parent step workspace ref. Note this only works now
-			// because we are limiting nested pipelines to 1 layer.
 			embedJobs, embedRun, embedStepIds, err := s.buildStepJobs(ctx, log, req,
 				visitedPipelines, nodeStepRef, parentStepDep, embeddedPipeline, pipelineRun)
 			if err != nil {
 				return nil, nil, nil, err
+			}
+
+			// Add the parent step workspace ref.
+			// **Note** this only works now because we are limiting nested
+			// pipelines to 1 layer.
+			if step.Workspace != nil {
+				for _, jobReq := range embedJobs {
+					jobReq.Job.Workspace = &pb.Ref_Workspace{
+						Workspace: step.Workspace.Workspace,
+					}
+				}
 			}
 
 			// add the nested jobs
