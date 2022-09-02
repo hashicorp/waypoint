@@ -3736,6 +3736,49 @@ export class WaypointClient {
     this.methodDescriptorGetPipeline);
   }
 
+  methodDescriptorGetPipelineRun = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/GetPipelineRun',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.GetPipelineRunRequest,
+    pkg_server_proto_server_pb.GetPipelineRunResponse,
+    (request: pkg_server_proto_server_pb.GetPipelineRunRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.GetPipelineRunResponse.deserializeBinary
+  );
+
+  getPipelineRun(
+    request: pkg_server_proto_server_pb.GetPipelineRunRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.GetPipelineRunResponse>;
+
+  getPipelineRun(
+    request: pkg_server_proto_server_pb.GetPipelineRunRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetPipelineRunResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.GetPipelineRunResponse>;
+
+  getPipelineRun(
+    request: pkg_server_proto_server_pb.GetPipelineRunRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.GetPipelineRunResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/GetPipelineRun',
+        request,
+        metadata || {},
+        this.methodDescriptorGetPipelineRun,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/GetPipelineRun',
+    request,
+    metadata || {},
+    this.methodDescriptorGetPipelineRun);
+  }
+
   methodDescriptorListPipelines = new grpcWeb.MethodDescriptor(
     '/hashicorp.waypoint.Waypoint/ListPipelines',
     grpcWeb.MethodType.UNARY,
@@ -3777,6 +3820,49 @@ export class WaypointClient {
     request,
     metadata || {},
     this.methodDescriptorListPipelines);
+  }
+
+  methodDescriptorListPipelineRuns = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/ListPipelineRuns',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.ListPipelineRunsRequest,
+    pkg_server_proto_server_pb.ListPipelineRunsResponse,
+    (request: pkg_server_proto_server_pb.ListPipelineRunsRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.ListPipelineRunsResponse.deserializeBinary
+  );
+
+  listPipelineRuns(
+    request: pkg_server_proto_server_pb.ListPipelineRunsRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListPipelineRunsResponse>;
+
+  listPipelineRuns(
+    request: pkg_server_proto_server_pb.ListPipelineRunsRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListPipelineRunsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListPipelineRunsResponse>;
+
+  listPipelineRuns(
+    request: pkg_server_proto_server_pb.ListPipelineRunsRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.ListPipelineRunsResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/ListPipelineRuns',
+        request,
+        metadata || {},
+        this.methodDescriptorListPipelineRuns,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/ListPipelineRuns',
+    request,
+    metadata || {},
+    this.methodDescriptorListPipelineRuns);
   }
 
   methodDescriptorConfigSyncPipeline = new grpcWeb.MethodDescriptor(
