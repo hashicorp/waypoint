@@ -1,0 +1,228 @@
+{
+   "description": "Deploy a container to Azure Container Instances",
+   "example": "deploy {\n  use \"azure-container-instance\" {\n    resource_group = \"resource-group-name\"\n    location       = \"westus\"\n    ports          = [8080]\n\n    capacity {\n      memory = \"1024\"\n      cpu_count = 4\n    }\n\n    volume {\n      name = \"vol1\"\n      path = \"/consul\"\n      read_only = true\n\n      git_repo {\n        repository = \"https://github.com/hashicorp/consul\"\n        revision = \"v1.8.3\"\n      }\n    }\n  }\n}",
+   "input": "docker.Image",
+   "mappers": null,
+   "name": "azure-container-instance",
+   "optionalFields": [
+      {
+         "Field": "location",
+         "Type": "string",
+         "Synopsis": "the resource location to deploy the container instance to",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "managed_identity",
+         "Type": "string",
+         "Synopsis": "the managed identity assigned to the container group",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "ports",
+         "Type": "list of int",
+         "Synopsis": "the ports the container is listening on, the first port in this list will be used by the entrypoint binary to direct traffic to your application",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "static_environment",
+         "Type": "map of string to string",
+         "Synopsis": "environment variables to control broad modes of the application",
+         "Summary": "environment variables that are meant to configure the application in a static way. This might be control an image that has multiple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "subscription_id",
+         "Type": "string",
+         "Synopsis": "the Azure subscription id",
+         "Summary": "if not set uses the environment variable AZURE_SUBSCRIPTION_ID",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "AZURE_SUBSCRIPTION_ID",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "output": "aci.Deployment",
+   "outputAttrs": [
+      {
+         "Field": "container_group",
+         "Type": "aci.Deployment_ContainerGroup",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "id",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "url",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "capacity",
+         "Type": "aci.Capacity",
+         "Synopsis": "the capacity details for the container",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "cpu",
+               "Type": "",
+               "Synopsis": "number of CPUs to allocate the container, min 1, max based on resource availability of the region.",
+               "Summary": "",
+               "Optional": false,
+               "Default": "1",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "cpu_count",
+               "Type": "int",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "memory",
+               "Type": "int",
+               "Synopsis": "memory to allocate the container specified in MB, min 1024, max based on resource availability of the region.",
+               "Summary": "",
+               "Optional": false,
+               "Default": "1024",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
+         "Field": "resource_group",
+         "Type": "string",
+         "Synopsis": "the resource group to deploy the container to",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "volume",
+         "Type": "list of aci.Volume",
+         "Synopsis": "the volume details for a container",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "azure_file_share",
+               "Type": "aci.AzureFileShareVolume",
+               "Synopsis": "the details for the Azure file share volume",
+               "Summary": "",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "git_repo",
+               "Type": "aci.GitRepoVolume",
+               "Synopsis": "the details for GitHub repo to mount as a volume",
+               "Summary": "",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "name",
+               "Type": "string",
+               "Synopsis": "the name of the volume to mount into the container",
+               "Summary": "",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "path",
+               "Type": "string",
+               "Synopsis": "the path to mount the volume to in the container",
+               "Summary": "",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "read_only",
+               "Type": "bool",
+               "Synopsis": "specify if the volume is read only",
+               "Summary": "",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      }
+   ],
+   "type": "platform",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

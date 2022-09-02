@@ -1,0 +1,136 @@
+{
+   "description": "\nLaunch a Kubernetes pod for on-demand tasks from the Waypoint server.\n\nThis will use the standard Kubernetes environment variables to source\nauthentication information for Kubernetes. If this is running within Kubernetes\nitself (typical for a Kubernetes-based installation), it will use the pod's\nservice account unless other auth is explicitly given. This allows the task\nlauncher to work by default.\n",
+   "example": "task {\n\tuse \"kubernetes\" {}\n}",
+   "mappers": null,
+   "name": "kubernetes",
+   "optionalFields": [
+      {
+         "Field": "context",
+         "Type": "string",
+         "Synopsis": "the kubectl context to use, as defined in the kubeconfig file",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "image_pull_policy",
+         "Type": "string",
+         "Synopsis": "pull policy to use for the task container image",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "image_secret",
+         "Type": "string",
+         "Synopsis": "name of the Kubernetes secret to use for the image",
+         "Summary": "this references an existing secret; Waypoint does not create this secret",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "kubeconfig",
+         "Type": "string",
+         "Synopsis": "path to the kubeconfig file to use",
+         "Summary": "by default uses from current user's home directory",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "KUBECONFIG",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "namespace",
+         "Type": "string",
+         "Synopsis": "namespace in which to launch task",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "service_account",
+         "Type": "string",
+         "Synopsis": "service account name to be added to the application pod",
+         "Summary": "service account is the name of the Kubernetes service account to add to the pod. This is useful to apply Kubernetes RBAC to the application.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "watchtask_startup_timeout_seconds",
+         "Type": "int",
+         "Synopsis": "This option configures how long the WatchTask should wait for a task pod to start-up before attempting to stream its logs. If the pod does not start up within the given timeout, WatchTask will exit.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "30",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrs": [
+      {
+         "Field": "id",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "cpu",
+         "Type": "k8s.ResourceConfig",
+         "Synopsis": "cpu resource request to be added to the task container",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "ephemeral_storage",
+         "Type": "k8s.ResourceConfig",
+         "Synopsis": "ephemeral_storage resource request to be added to the task container",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "memory",
+         "Type": "k8s.ResourceConfig",
+         "Synopsis": "memory resource request to be added to the task container",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "task",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

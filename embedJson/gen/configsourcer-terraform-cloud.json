@@ -1,0 +1,93 @@
+{
+   "description": "Read Terraform state outputs from Terraform Cloud.",
+   "example": "config {\n  env = {\n    \"DATABASE_USERNAME\" = dynamic(\"terraform-cloud\", {\n\t\t\torganization = \"foocorp\"\n\t\t\tworkspace = \"databases\"\n\t\t\toutput = \"db_username\"\n    })\n\n    \"DATABASE_PASSWORD\" = dynamic(\"vault\", {\n\t\t\torganization = \"foocorp\"\n\t\t\tworkspace = \"databases\"\n\t\t\toutput = \"db_password\"\n    })\n\n    \"DATABASE_HOST\" = dynamic(\"vault\", {\n\t\t\torganization = \"foocorp\"\n\t\t\tworkspace = \"databases\"\n\t\t\toutput = \"db_hostname\"\n    })\n  }\n}",
+   "mappers": null,
+   "name": "terraform-cloud",
+   "optionalFields": null,
+   "optionalSourceFields": [
+      {
+         "Field": "base_url",
+         "Type": "string",
+         "Synopsis": "The scheme, host, and port to calculate the URL to fetch using",
+         "Summary": "This is provided to allow users to query values from Terraform Enterprise installations",
+         "Optional": true,
+         "Default": "https://api.terraform.io",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "refresh_interval",
+         "Type": "string",
+         "Synopsis": "How often the outputs should be fetch.",
+         "Summary": "The format of this value is the Go time duration format. Specifically a whole number followed by: s for seconds, m for minutes, h for hours. The minimum value for this setting is 60 seconds, with no specified maximum.",
+         "Optional": true,
+         "Default": "10m0s",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "skip_verify",
+         "Type": "bool",
+         "Synopsis": "Do not validate the TLS cert presented by Terraform Cloud.",
+         "Summary": "This is not recommended unless absolutely necessary.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "TFC_SKIP_VERIFY",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "requiredFields": [
+      {
+         "Field": "organization",
+         "Type": "string",
+         "Synopsis": "The Terraform Cloud organization to query",
+         "Summary": "within a single workspace, multiple dynamic values that use the same organization and workspace will only read the value once. This allows outputs to be extracted into multiple values. The example above shows this functionality by reading the username and password into separate values.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "output",
+         "Type": "string",
+         "Synopsis": "The name of the output to read the value of",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "workspace",
+         "Type": "string",
+         "Synopsis": "The Terraform Cloud workspace associated with the given organization to read the outputs of",
+         "Summary": "The outputs associtaed with the most recent state version for the given workspace are the ones that are used. These values are refreshed according to refreshInternal, a source field.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "requiredSourceFields": [
+      {
+         "Field": "token",
+         "Type": "string",
+         "Synopsis": "The Terraform Cloud API token",
+         "Summary": "The token is used to authenticate access to the specific organization and workspace. Tokens are managed at https://app.terraform.io/app/settings/tokens.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "sourceFieldsHelp": "Source Parameters\nThe parameters below are used with `waypoint config source-set` to configure\nthe behavior this plugin. These are _not_ used in `dynamic` calls. The\nparameters used for `dynamic` are in the previous section.\n",
+   "type": "configsourcer",
+   "use": "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
+}
