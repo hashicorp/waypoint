@@ -5,6 +5,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -91,6 +93,14 @@ func (r *Runner) executeDestroyProjectOp(
 						},
 					},
 				}); err != nil {
+					if status.Code(err) == codes.FailedPrecondition {
+						urlDisabledErr := "rpc error: code = FailedPrecondition desc = server doesn't have the URL service enabled"
+						if err.Error() == urlDisabledErr {
+							//means that the server doesn't have the URL service enabled
+							//so no hostnames to list/delete
+							break
+						}
+					}
 					return nil, err
 				} else {
 					for _, hostname := range hostnames.Hostnames {
