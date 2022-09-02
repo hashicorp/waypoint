@@ -1,6 +1,6 @@
 FROM golang:1.17.6
 
-ARG PROTOC_VERSION="3.15.8"
+ARG PROTOC_VERSION="3.17.3"
 
 RUN apt-get update; apt-get install unzip
 
