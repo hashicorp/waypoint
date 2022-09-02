@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"github.com/hashicorp/go-hclog"
+	configinternal "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/singleprocess"
@@ -76,7 +77,9 @@ func TestProjectDestroyOp(t *testing.T) {
 	require.NoError(err)
 	require.NotNil(project)
 
-	res, err := runner.executeDestroyProjectOp(ctx, runner.logger, job, project)
+	cfg := configinternal.TestConfig(t, core.TestProjectConfig)
+
+	res, err := runner.executeDestroyProjectOp(ctx, runner.logger, job, project, cfg)
 	require.NoError(err)
 	require.NotNil(t, res.ProjectDestroy)
 	require.NotNil(t, res.ProjectDestroy.JobId)
@@ -162,7 +165,8 @@ func TestProjectDestroyOp_SkipDestroyResources(t *testing.T) {
 	require.NoError(err)
 	require.NotNil(project)
 
-	res, err := runner.executeDestroyProjectOp(ctx, runner.logger, job, project)
+	cfg := configinternal.TestConfig(t, core.TestProjectConfig)
+	res, err := runner.executeDestroyProjectOp(ctx, runner.logger, job, project, cfg)
 	require.NoError(err)
 	require.NotNil(t, res.ProjectDestroy)
 	require.NotNil(t, res.ProjectDestroy.JobId)

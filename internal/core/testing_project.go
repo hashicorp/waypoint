@@ -30,7 +30,7 @@ func TestProject(t testing.T, opts ...Option) *Project {
 
 	defaultOpts := []Option{
 		WithClient(singleprocess.TestServer(t)),
-		WithConfig(config.TestConfig(t, testProjectConfig)),
+		WithConfig(config.TestConfig(t, TestProjectConfig)),
 		WithDataDir(projDir),
 	}
 
@@ -73,8 +73,8 @@ func TestFactoryRegister(t testing.T, f *factory.Factory, n string, v interface{
 	require.NoError(t, f.Register(n, func() interface{} { return v }))
 }
 
-// testProjectConfig is the default config for TestProject
-const testProjectConfig = `
+// TestProjectConfig is the default config for TestProject
+const TestProjectConfig = `
 project = "test"
 
 app "test" {
