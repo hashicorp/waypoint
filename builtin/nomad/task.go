@@ -317,18 +317,12 @@ func (p *TaskLauncher) WatchTask(
 				}
 				task := tg.Tasks[0]
 
-				var state string
-				allocTask, ok := alloc.TaskStates[task.Name]
-				if !ok {
-					return nil, errors.New("ODR task not in alloc")
-				}
-				state = allocTask.State
-
 				// We'll give the ODR 5 minutes to start up
 				// TODO: Make this configurable
 				ctx, cancel := context.WithTimeout(ctx, time.Minute*time.Duration(5))
 				defer cancel()
 				ticker := time.NewTicker(5 * time.Second)
+				state := "pending"
 				for state == "pending" {
 					select {
 					case <-ticker.C:
@@ -339,7 +333,11 @@ func (p *TaskLauncher) WatchTask(
 						log.Error("Failed to get info for alloc "+allocs[0].ID+". Error: %s", err.Error())
 						return nil, err
 					} else {
-						state = alloc.TaskStates[task.Name].State
+						allocTask, ok := alloc.TaskStates[task.Name]
+						if !ok {
+							return nil, errors.New("ODR task not in alloc")
+						}
+						state = allocTask.State
 					}
 				}
 
@@ -352,15 +350,21 @@ func (p *TaskLauncher) WatchTask(
 				log.Debug("Getting logs for alloc: " + alloc.Name + ", task: " + task.Name)
 				ch := make(chan struct{})
 				logStream, errChan := client.AllocFS().Logs(alloc, follow, task.Name, "stderr", "", 0, ch, queryOpts)
+			READ_LOGS:
+				for {
+					select {
+					case data := <-logStream:
+						if data == nil {
+							break READ_LOGS
+						}
+						message := string(data.Data)
+						log.Info(message)
+						ui.Output(message)
+					case err := <-errChan:
+						log.Error("Error reading logs from alloc: %q", err.Error())
+						return nil, err
 
-				select {
-				case err := <-errChan:
-					log.Error("Error reading logs from alloc: %q", err.Error())
-					return nil, err
-				case data := <-logStream:
-					message := string(data.Data)
-					log.Info(message)
-					ui.Output(message)
+					}
 				}
 			}
 		}
