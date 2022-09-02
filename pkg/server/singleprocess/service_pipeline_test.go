@@ -221,6 +221,158 @@ func TestServicePipeline_Run(t *testing.T) {
 		require.Equal(resp.Sequence, run.PipelineRun.Sequence)
 	})
 
+	t.Run("runs a pipeline with workspace scoped steps by request", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Initialize our app
+		TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+		// Create our pipeline
+		pipeline := serverptypes.TestPipeline(t, nil)
+		pipeline.Steps["B"] = &pb.Pipeline_Step{
+			Name:      "B",
+			DependsOn: []string{"root"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		pipeline.Steps["C"] = &pb.Pipeline_Step{
+			Name:      "C",
+			DependsOn: []string{"B"},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "staging",
+			},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		pipeline.Steps["D"] = &pb.Pipeline_Step{
+			Name:      "D",
+			DependsOn: []string{"C"},
+			Kind: &pb.Pipeline_Step_Build_{
+				Build: &pb.Pipeline_Step_Build{},
+			},
+		}
+		pipeline.Steps["E"] = &pb.Pipeline_Step{
+			Name:      "E",
+			DependsOn: []string{"D"},
+			Kind: &pb.Pipeline_Step_Deploy_{
+				Deploy: &pb.Pipeline_Step_Deploy{},
+			},
+		}
+		pipeline.Steps["F"] = &pb.Pipeline_Step{
+			Name:      "F",
+			DependsOn: []string{"E"},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "default",
+			},
+			Kind: &pb.Pipeline_Step_Release_{
+				Release: &pb.Pipeline_Step_Release{},
+			},
+		}
+		pipeline.Steps["G"] = &pb.Pipeline_Step{
+			Name:      "G",
+			DependsOn: []string{"F"},
+			Kind: &pb.Pipeline_Step_Up_{
+				Up: &pb.Pipeline_Step_Up{},
+			},
+		}
+
+		// Create, should get an ID back
+		pipeResp, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: pipeline,
+		})
+		require.NoError(err)
+
+		// Build our job template
+		jobTemplate := serverptypes.TestJobNew(t, nil)
+		resp, err := client.RunPipeline(ctx, &pb.RunPipelineRequest{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: pipeResp.Pipeline.Id,
+				},
+			},
+			JobTemplate: jobTemplate,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+
+		// Job should exist
+		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: resp.JobId})
+		require.NoError(err)
+		require.Equal(pb.Job_QUEUED, job.State)
+
+		// We should have all the job IDs
+		require.Len(resp.AllJobIds, 7)
+		var names []string
+		for _, id := range resp.AllJobIds {
+			require.Contains(resp.JobMap, id)
+			names = append(names, resp.JobMap[id].Step)
+		}
+		require.Equal([]string{"root", "B", "C", "D", "E", "F", "G"}, names)
+
+		// check all workspaces equal what we expect
+		for stepName, stepSrc := range pipeline.Steps {
+			// find the job that matches this step
+			var jobId string
+			for id, jobStep := range resp.JobMap {
+				if stepName == jobStep.Step {
+					jobId = id
+					break
+				}
+			}
+			stepJob, err := client.GetJob(ctx, &pb.GetJobRequest{
+				JobId: jobId,
+			})
+			require.NoError(err)
+			require.NotEmpty(stepJob)
+			require.Equal(stepJob.Id, jobId)
+
+			// the default jobs we're using for tests come with a default
+			// workspace "w_test", see TestJobNew usage
+			expectedWorkspaceVal := "w_test"
+			if stepSrc.Workspace != nil {
+				expectedWorkspaceVal = stepSrc.Workspace.Workspace
+			}
+
+			require.Equal(stepJob.Workspace.Workspace, expectedWorkspaceVal)
+		}
+
+		pRef := &pb.Ref_Pipeline{
+			Ref: &pb.Ref_Pipeline_Id{
+				Id: pipeline.Id,
+			},
+		}
+
+		// Pipeline Runs should exist
+		runs, err := client.ListPipelineRuns(ctx, &pb.ListPipelineRunsRequest{
+			Pipeline: pRef,
+		})
+		require.NoError(err)
+		require.NotEmpty(runs)
+		require.Len(runs.PipelineRuns, 1)
+
+		// Get pipeline run
+		run, err := client.GetPipelineRun(ctx, &pb.GetPipelineRunRequest{
+			Pipeline: pRef,
+			Sequence: 1,
+		})
+		require.NoError(err)
+		require.Equal(pipeline.Id, run.PipelineRun.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id)
+		require.Equal(len(run.PipelineRun.Jobs), len(resp.AllJobIds))
+		require.Equal(resp.Sequence, run.PipelineRun.Sequence)
+	})
+
 	t.Run("runs a pipeline with embedded pipelines by request", func(t *testing.T) {
 		require := require.New(t)
 		ctx := context.Background()
@@ -864,4 +1016,63 @@ func TestServicePipeline_List(t *testing.T) {
 	// we get back match the ones we inserted.
 	require.Equal(pipelinesResp.Pipelines[0].Name, "another")
 	require.Equal(pipelinesResp.Pipelines[1].Name, "test")
+}
+
+func TestServicePipeline_Step_Workspace(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	type Req = pb.UpsertPipelineRequest
+
+	t.Run("default nil", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		resp, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: serverptypes.TestPipeline(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		result := resp.Pipeline
+		require.NotEmpty(result.Id)
+
+		require.Len(result.Steps, 1)
+		require.Nil(result.Steps["root"].Workspace)
+	})
+
+	// TODO: [clint] - add test(s) that append scoped steps and use
+	// client.UpsertPipeline
+
+	// t.Run("get an existing pipeline by id", func(t *testing.T) {
+	// 	require := require.New(t)
+
+	// 	// Create, should get an ID back
+	// 	resp, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+	// 		Pipeline: serverptypes.TestPipeline(t, nil),
+	// 	})
+	// 	require.NoError(err)
+	// 	require.NotNil(resp)
+	// 	result := resp.Pipeline
+	// 	require.NotEmpty(result.Id)
+
+	// 	pResp, err := client.GetPipeline(ctx, &pb.GetPipelineRequest{
+	// 		Pipeline: &pb.Ref_Pipeline{
+	// 			Ref: &pb.Ref_Pipeline_Id{
+	// 				Id: &pb.Ref_PipelineId{
+	// 					Id: "test",
+	// 				},
+	// 			},
+	// 		},
+	// 	})
+	// 	require.NoError(err)
+	// 	require.NotNil(pResp)
+	// 	require.Equal(pResp.RootStep, "root")
+
+	// 	pipeline := pResp.Pipeline
+	// 	require.Equal(pipeline.Name, "test")
+	// })
 }
