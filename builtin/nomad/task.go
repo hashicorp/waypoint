@@ -363,7 +363,6 @@ func (p *TaskLauncher) WatchTask(
 					case err := <-errChan:
 						log.Error("Error reading logs from alloc: %q", err.Error())
 						return nil, err
-
 					}
 				}
 			}
