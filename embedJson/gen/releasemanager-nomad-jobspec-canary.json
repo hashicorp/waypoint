@@ -1,0 +1,33 @@
+{
+   "description": "\nPromotes a Nomad canary deployment initiated by a Nomad jobspec deployment.\n\nIf your Nomad deployment is configured to use canaries, this releaser plugin lets\nyou promote (or fail) the canary deployment. You may also target specific task\ngroups within your job for promotion, if you have multiple task groups in your canary\ndeployment.\n\n-\u003e **Note:** Using the `-prune=false` flag is recommended for this releaser. By default,\nWaypoint prunes and destroys all unreleased deployments and keeps only one previous\ndeployment. Therefore, if `-prune=false` is not set, Waypoint may delete\nyour job via \"pruning\" a previous version. See [deployment pruning](/docs/lifecycle/release#deployment-pruning)\nfor more information.\n\n### Release URL\n\nIf you want the URL of the release of your deployment to be published in Waypoint,\nyou must set the meta 'waypoint.hashicorp.com/release_url' in your jobspec. The\nvalue specified in this meta field will be published as the release URL for your\napplication. In the future, this may source from Consul.\n\n",
+   "example": "// The waypoint.hcl file\nrelease {\n  use \"nomad-jobspec-canary\" {\n    groups = [\n      \"app\"\n    ]\n  }\n}\n\n// The app.nomad.tpl file\njob \"web\" {\n  datacenters = [\"dc1\"]\n\n  group \"app\" {\n    network {\n      mode = \"bridge\"\n      port \"http\" {\n        to = 80\n      }\n    }\n\n    // Setting a canary in the update stanza indicates a canary deployment\n    update {\n      max_parallel = 1\n      canary       = 1\n      auto_revert  = true\n      auto_promote = false\n      health_check = \"task_states\"\n    }\n\n    service {\n      name = \"app\"\n      port = 80\n      connect {\n        sidecar_service {}\n      }\n    }\n\n    task \"app\" {\n      driver = \"docker\"\n      config {\n        image = \"${artifact.image}:${artifact.tag}\"\n        ports  = [\"http\"]\n      }\n\n      env {\n        %{ for k,v in entrypoint.env ~}\n        ${k} = \"${v}\"\n        %{ endfor ~}\n\n        // Ensure we set PORT for the URL service. This is only necessary\n        // if we want the URL service to function.\n        PORT = 80\n      }\n    }\n  }\n\n  group \"app-gateway\" {\n    network {\n      mode = \"bridge\"\n      port \"inbound\" {\n        static = 8080\n        to     = 8080\n      }\n    }\n\n    service {\n      name = \"gateway\"\n      port = \"8080\"\n\n      connect {\n        gateway {\n          proxy {}\n\n          ingress {\n            listener {\n              port = 8080\n              protocol = \"http\"\n              service {\n                name  = \"app\"\n                hosts = [ \"*\" ]\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n  meta = {\n    // Ensure we set meta for Waypoint to detect the release URL\n    \"waypoint.hashicorp.com/release_url\" = \"http://app.ingress.dc1.consul:8080\"\n  }\n}",
+   "mappers": null,
+   "name": "nomad-jobspec-canary",
+   "optionalFields": [
+      {
+         "Field": "fail_deployment",
+         "Type": "bool",
+         "Synopsis": "If true, marks the deployment as failed.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "groups",
+         "Type": "list of string",
+         "Synopsis": "List of task group names which are to be promoted.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "requiredFields": null,
+   "type": "releasemanager",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

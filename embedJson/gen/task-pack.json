@@ -1,0 +1,8 @@
+{
+   "mappers": null,
+   "name": "pack",
+   "optionalFields": null,
+   "requiredFields": null,
+   "type": "task",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

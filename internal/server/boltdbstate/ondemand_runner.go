@@ -30,7 +30,10 @@ func (s *State) OnDemandRunnerConfigPut(o *pb.OnDemandRunnerConfig) (*pb.OnDeman
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
 
-		existingConfig, err := s.onDemandRunnerGet(dbTxn, memTxn, &pb.Ref_OnDemandRunnerConfig{Id: o.Id})
+		existingConfig, err := s.onDemandRunnerGet(dbTxn, memTxn, &pb.Ref_OnDemandRunnerConfig{
+			Id:   o.Id,
+			Name: o.Name,
+		})
 		if err != nil && status.Code(err) != codes.NotFound {
 			return errors.Wrapf(err, "failed to check for existing on-demand runner config")
 		}
@@ -39,19 +42,24 @@ func (s *State) OnDemandRunnerConfigPut(o *pb.OnDemandRunnerConfig) (*pb.OnDeman
 			return status.Errorf(codes.InvalidArgument, "cannot set the ID of a new odr profile")
 		}
 
-		if existingConfig != nil && o.Name != "" && existingConfig.Id != "" && o.Id != existingConfig.Id {
-			return status.Errorf(codes.InvalidArgument, "cannot update the ID id existing runner profile with name %q", o.Name)
+		if existingConfig != nil && o.Name != "" && existingConfig.Id != "" && o.Id != "" && o.Id != existingConfig.Id {
+			return status.Errorf(codes.InvalidArgument, "cannot update the ID of existing runner profile with name %q", o.Name)
 		}
 
 		if o.Id != "" && status.Code(err) == codes.NotFound {
 			return err
 		}
 
-		id, err := ulid()
-		if err != nil {
-			return err
+		// If we're updating a record, use that ID
+		if existingConfig != nil && existingConfig.Id != "" {
+			o.Id = existingConfig.Id
+		} else {
+			id, err := ulid()
+			if err != nil {
+				return err
+			}
+			o.Id = id
 		}
-		o.Id = id
 
 		// If no name was given, set it to the id.
 		if o.Name == "" {
@@ -269,13 +277,18 @@ func (s *State) onDemandRunnerDelete(
 	ref *pb.Ref_OnDemandRunnerConfig,
 ) error {
 	// Get the ondemandRunner. If it doesn't exist then we're successful.
-	_, err := s.onDemandRunnerGet(dbTxn, memTxn, ref)
+	resp, err := s.onDemandRunnerGet(dbTxn, memTxn, ref)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			return nil
 		}
 
 		return err
+	}
+
+	// The input ref may have been by name, and we just found the id
+	if ref.Id == "" {
+		ref.Id = resp.Id
 	}
 
 	// Delete from bolt

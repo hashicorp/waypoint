@@ -146,7 +146,7 @@ jobs:
       - run:
           command: git status
       - run: |
-          if ! git diff --exit-code docs/gen > /dev/null; then
+          if ! git diff --exit-code embedJson/gen > /dev/null; then
             echo "Website directory has unstaged json changes. This is because you have modified doc strings"
             echo "that must be reflected in the json docs. Run the following make command:"
             echo

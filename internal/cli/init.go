@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
 	"github.com/hashicorp/waypoint/internal/cli/datagen"
+	hclpkg "github.com/hashicorp/waypoint/internal/cli/hclgen"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
@@ -157,8 +158,28 @@ func (c *InitCommand) Run(args []string) int {
 
 	// If we have no config, initialize a new one.
 	if path == "" {
-		if !c.initNew() {
+		proceed, err := c.ui.Input(&terminal.Input{
+			Prompt: "Do you want help generating a waypoint.hcl file? Type 'yes' to initialize the interactive generator or 'no' to generate a template waypoint.hcl file: ",
+			Style:  "",
+			Secret: false,
+		})
+		if err != nil {
+			c.ui.Output(
+				"Error getting input: %s",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
 			return 1
+		} else if strings.ToLower(proceed) == "yes" || strings.ToLower(proceed) == "y" {
+			c.ui.Output("Starting interactive HCL generator.\n")
+			if !hclpkg.HclGen(c.ui) {
+				return 1
+			}
+		} else {
+			c.ui.Output("Generating template file\n")
+			if !c.initNew() {
+				return 1
+			}
 		}
 
 		return 0

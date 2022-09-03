@@ -1,0 +1,100 @@
+{
+   "description": "Release target groups by attaching them to an ALB",
+   "input": "alb.TargetGroup",
+   "mappers": [
+      {
+         "Input": "ec2.Deployment",
+         "Output": "alb.TargetGroup",
+         "Description": "Allow EC2 Deployments to be hooked up to an ALB"
+      },
+      {
+         "Input": "lambda.Deployment",
+         "Output": "alb.TargetGroup",
+         "Description": "Allow Lambda Deployments to be hooked up to an ALB"
+      }
+   ],
+   "name": "aws-alb",
+   "optionalFields": [
+      {
+         "Field": "certificate",
+         "Type": "string",
+         "Synopsis": "ARN for the certificate to install on the ALB listener",
+         "Summary": "when this is set, the port automatically changes to 443 unless overriden in this configuration",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "domain_name",
+         "Type": "string",
+         "Synopsis": "Fully qualified domain name to set for the ALB",
+         "Summary": "set along with zone_id to have DNS automatically setup for the ALB. this value should include the full hostname and domain name, for instance app.example.com",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "listener_arn",
+         "Type": "string",
+         "Synopsis": "the ARN on an existing ALB to configure",
+         "Summary": "when this is set, no ALB or Listener is created. Instead the application is configured by manipulating this existing Listener. This allows users to configure their ALB outside waypoint but still have waypoint hook the application to that ALB",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "name",
+         "Type": "string",
+         "Synopsis": "the name to assign the ALB",
+         "Summary": "names have to be unique per region",
+         "Optional": true,
+         "Default": "derived from application name",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "port",
+         "Type": "int",
+         "Synopsis": "the TCP port to configure the ALB to listen on",
+         "Summary": "",
+         "Optional": true,
+         "Default": "80 for HTTP, 443 for HTTPS",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "subnets",
+         "Type": "list of string",
+         "Synopsis": "the subnet ids to allow the ALB to run in",
+         "Summary": "",
+         "Optional": true,
+         "Default": "public subnets in the account default VPC",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "zone_id",
+         "Type": "string",
+         "Synopsis": "Route53 ZoneID to create a DNS record into",
+         "Summary": "set along with domain_name to have DNS automatically setup for the ALB",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "output": "alb.Release",
+   "requiredFields": null,
+   "type": "releasemanager",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

@@ -1,17 +1,26 @@
 package cli
 
 import (
+	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/posener/complete"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type RunnerProfileDeleteCommand struct {
 	*baseCommand
+
+	// NOTE(izaak): prior to this change, runner profiles were only ever deleted by name, and
+	// we don't have a great record of enforcing uniqueness of runner profile names.
+	// Ideally, you would only ever need to delete by name, but some existing users may
+	// have more than one profile with the same name, and might need this functionality.
+	// They'd have to do some work to discover the profile id though - we don't surface it in the CLI.
+	// We can likely deprecate this flag in the future.
+	flagId string
 }
 
 func (c *RunnerProfileDeleteCommand) Run(args []string) int {
@@ -25,15 +34,19 @@ func (c *RunnerProfileDeleteCommand) Run(args []string) int {
 		return 1
 	}
 
-	if len(c.args) == 0 {
-		c.ui.Output("Runner profile id required.", terminal.WithErrorStyle())
+	if len(c.args) == 0 && c.flagId == "" {
+		c.ui.Output("Runner profile name required, or id flag required.", terminal.WithErrorStyle())
 		return 1
 	}
-	id := c.args[0]
+	var name string
+	if len(c.args) > 0 {
+		name = c.args[0]
+	}
 
 	_, err := c.project.Client().DeleteOnDemandRunnerConfig(c.Ctx, &pb.DeleteOnDemandRunnerConfigRequest{
 		Config: &pb.Ref_OnDemandRunnerConfig{
-			Id: id,
+			Name: name,
+			Id:   c.flagId,
 		},
 	})
 	if err != nil && status.Code(err) != codes.NotFound {
@@ -52,7 +65,16 @@ func (c *RunnerProfileDeleteCommand) Run(args []string) int {
 }
 
 func (c *RunnerProfileDeleteCommand) Flags() *flag.Sets {
-	return c.flagSet(0, func(sets *flag.Sets) {})
+	return c.flagSet(0, func(sets *flag.Sets) {
+		f := sets.NewSet("Command Options")
+
+		f.StringVar(&flag.StringVar{
+			Name:    "id",
+			Target:  &c.flagId,
+			Default: "",
+			Usage:   "The id of the runner profile to delete.",
+		})
+	})
 }
 
 func (c *RunnerProfileDeleteCommand) AutocompleteArgs() complete.Predictor {
@@ -69,7 +91,7 @@ func (c *RunnerProfileDeleteCommand) Synopsis() string {
 
 func (c *RunnerProfileDeleteCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint runner profile delete <id>
+Usage: waypoint runner profile delete <name>
 
   Delete the specified runner profile.
 

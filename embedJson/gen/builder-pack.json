@@ -1,0 +1,132 @@
+{
+   "description": "\nCreate a Docker image using CloudNative Buildpacks.\n\n**This plugin must either be run via Docker or inside an ondemand runner**.\n",
+   "example": "build {\n  use \"pack\" {\n\tbuilder     = \"heroku/buildpacks:20\"\n\tdisable_entrypoint = false\n  }\n}",
+   "input": "component.Source",
+   "mappers": [
+      {
+         "Input": "pack.Image",
+         "Output": "docker.Image",
+         "Description": "Allow pack images to be used as normal docker images"
+      }
+   ],
+   "name": "pack",
+   "optionalFields": [
+      {
+         "Field": "builder",
+         "Type": "string",
+         "Synopsis": "The buildpack builder image to use",
+         "Summary": "",
+         "Optional": true,
+         "Default": "heroku/buildpacks:20",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "buildpacks",
+         "Type": "list of string",
+         "Synopsis": "The exact buildpacks to use",
+         "Summary": "If set, the builder will run these buildpacks in the specified order. They can be listed using several [URI formats](https://buildpacks.io/docs/app-developer-guide/specific-buildpacks).",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "disable_entrypoint",
+         "Type": "bool",
+         "Synopsis": "if set, the entrypoint binary won't be injected into the image",
+         "Summary": "The entrypoint binary is what provides extended functionality such as logs and exec. If it is not injected at build time the expectation is that the image already contains it",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "ignore",
+         "Type": "list of string",
+         "Synopsis": "file patterns to match files which will not be included in the build",
+         "Summary": "Each pattern follows the semantics of .gitignore. This is a summarized version:\n\n1. A blank line matches no files, so it can serve as a separator\n\t for readability.\n\n2. A line starting with # serves as a comment. Put a backslash (\"\\\")\n\t in front of the first hash for patterns that begin with a hash.\n\n3. Trailing spaces are ignored unless they are quoted with backslash (\"\\\").\n\n4. An optional prefix \"!\" which negates the pattern; any matching file\n\t excluded by a previous pattern will become included again. It is not\n\t possible to re-include a file if a parent directory of that file is\n\t excluded. Git doesn’t list excluded directories for performance reasons,\n\t so any patterns on contained files have no effect, no matter where they\n\t are defined. Put a backslash (\"\\\") in front of the first \"!\" for\n\t patterns that begin with a literal \"!\", for example, \"\\!important!.txt\".\n\n5. If the pattern ends with a slash, it is removed for the purpose of the\n\t following description, but it would only find a match with a directory.\n\t In other words, foo/ will match a directory foo and paths underneath it,\n\t but will not match a regular file or a symbolic link foo (this is\n\t consistent with the way how pathspec works in general in Git).\n\n6. If the pattern does not contain a slash /, Git treats it as a shell glob\n\t pattern and checks for a match against the pathname relative to the\n\t location of the .gitignore file (relative to the top level of the work\n\t tree if not from a .gitignore file).\n\n7. Otherwise, Git treats the pattern as a shell glob suitable for\n\t consumption by fnmatch(3) with the FNM_PATHNAME flag: wildcards in the\n\t pattern will not match a / in the pathname. For example,\n\t \"Documentation/*.html\" matches \"Documentation/git.html\" but not\n\t \"Documentation/ppc/ppc.html\" or \"tools/perf/Documentation/perf.html\".\n\n8. A leading slash matches the beginning of the pathname. For example,\n\t \"/*.c\" matches \"cat-file.c\" but not \"mozilla-sha1/sha1.c\".\n\n9. Two consecutive asterisks (\"**\") in patterns matched against full\n\t pathname may have special meaning:\n\n\t\ti.   A leading \"**\" followed by a slash means match in all directories.\n\t\t\t\t For example, \"** /foo\" matches file or directory \"foo\" anywhere,\n\t\t\t\t the same as pattern \"foo\". \"** /foo/bar\" matches file or directory\n\t\t\t\t \"bar\" anywhere that is directly under directory \"foo\".\n\n\t\tii.  A trailing \"/**\" matches everything inside. For example, \"abc/**\"\n\t\t\t\t matches all files inside directory \"abc\", relative to the location\n\t\t\t\t of the .gitignore file, with infinite depth.\n\n\t\tiii. A slash followed by two consecutive asterisks then a slash matches\n\t\t\t\t zero or more directories. For example, \"a/** /b\" matches \"a/b\",\n\t\t\t\t \"a/x/b\", \"a/x/y/b\" and so on.\n\n\t\tiv.  Other consecutive asterisks are considered invalid.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "process_type",
+         "Type": "string",
+         "Synopsis": "The process type to use from your Procfile. if not set, defaults to `web`",
+         "Summary": "The process type is used to control over all container modes, such as configuring it to start a web app vs a background worker",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "static_environment",
+         "Type": "map of string to string",
+         "Synopsis": "environment variables to expose to the buildpack",
+         "Summary": "these environment variables should not be run of the mill configuration variables, use waypoint config for that. These variables are used to control over all container modes, such as configuring it to start a web app vs a background worker",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "output": "pack.Image",
+   "outputAttrs": [
+      {
+         "Field": "build_labels",
+         "Type": "map of string to string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "image",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "remote",
+         "Type": "bool",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "tag",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": null,
+   "type": "builder",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}
