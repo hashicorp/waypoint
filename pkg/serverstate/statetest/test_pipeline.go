@@ -505,7 +505,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 			},
 		})
 		err = s.PipelinePut(updatedPipe)
-		require.NoError(err) // no job id set
+		require.NoError(err)
 
 		// Get exact by id and repeat the check
 		resp, err = s.PipelineGet(&pb.Ref_Pipeline{
