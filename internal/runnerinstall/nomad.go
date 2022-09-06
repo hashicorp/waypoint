@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/installutil"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/waypoint/internal/installutil"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
