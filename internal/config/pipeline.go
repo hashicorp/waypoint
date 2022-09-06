@@ -364,7 +364,7 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 			}
 		case "exec":
 			var execBody struct {
-				Command string   `hcl:"command,optional"`
+				Command string   `hcl:"command"`
 				Args    []string `hcl:"args,optional"`
 			}
 
@@ -381,11 +381,9 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 				},
 			}
 		case "pipeline":
-			// TODO(briancain): setting name to 'required' makes the HCL parser
-			// panic saying 'required' is an invalid hcl tag :thinking:
 			var pipelineBody struct {
-				Project string `hcl:"project,optional"`
-				Name    string `hcl:"name,optional"`
+				Project string `hcl:"project"`
+				Name    string `hcl:"name"`
 			}
 
 			// Evaluate the step body hcl to get options
