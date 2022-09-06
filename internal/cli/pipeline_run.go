@@ -39,6 +39,16 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		c.ui.Output("Both pipeline name and ID were specified, using pipeline ID", terminal.WithWarningStyle())
 	}
 
+	if *c.flagLocal {
+		// TODO(briancain): Remove this warning when local support for Pipelines is introduced.
+		// GitHub: https://github.com/hashicorp/waypoint/issues/3813
+		c.ui.Output("At the moment, the initial Tech Preview of Custom Pipelines does not allow "+
+			"for executing pipelines with a local runner. The CLI will attempt to run the "+
+			"requested pipeline but it will likely fail if the project was not configured "+
+			"to run remotely.",
+			terminal.WithWarningStyle())
+	}
+
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// setup pipeline name to be used for UI printing
 		pipelineIdent := pipelineName
