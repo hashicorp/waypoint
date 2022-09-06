@@ -1507,10 +1507,8 @@ export namespace Ref {
 
 
   export class Pipeline extends jspb.Message {
-    getId(): Ref.PipelineId | undefined;
-    setId(value?: Ref.PipelineId): Pipeline;
-    hasId(): boolean;
-    clearId(): Pipeline;
+    getId(): string;
+    setId(value: string): Pipeline;
 
     getOwner(): Ref.PipelineOwner | undefined;
     setOwner(value?: Ref.PipelineOwner): Pipeline;
@@ -1529,7 +1527,7 @@ export namespace Ref {
 
   export namespace Pipeline {
     export type AsObject = {
-      id?: Ref.PipelineId.AsObject,
+      id: string,
       owner?: Ref.PipelineOwner.AsObject,
     }
 
@@ -1537,25 +1535,6 @@ export namespace Ref {
       REF_NOT_SET = 0,
       ID = 1,
       OWNER = 2,
-    }
-  }
-
-
-  export class PipelineId extends jspb.Message {
-    getId(): string;
-    setId(value: string): PipelineId;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): PipelineId.AsObject;
-    static toObject(includeInstance: boolean, msg: PipelineId): PipelineId.AsObject;
-    static serializeBinaryToWriter(message: PipelineId, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): PipelineId;
-    static deserializeBinaryFromReader(message: PipelineId, reader: jspb.BinaryReader): PipelineId;
-  }
-
-  export namespace PipelineId {
-    export type AsObject = {
-      id: string,
     }
   }
 
@@ -1586,11 +1565,17 @@ export namespace Ref {
 
 
   export class PipelineStep extends jspb.Message {
-    getPipeline(): string;
-    setPipeline(value: string): PipelineStep;
+    getPipelineId(): string;
+    setPipelineId(value: string): PipelineStep;
+
+    getPipelineName(): string;
+    setPipelineName(value: string): PipelineStep;
 
     getStep(): string;
     setStep(value: string): PipelineStep;
+
+    getRunSequence(): number;
+    setRunSequence(value: number): PipelineStep;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): PipelineStep.AsObject;
@@ -1602,8 +1587,10 @@ export namespace Ref {
 
   export namespace PipelineStep {
     export type AsObject = {
-      pipeline: string,
+      pipelineId: string,
+      pipelineName: string,
       step: string,
+      runSequence: number,
     }
   }
 
@@ -3023,6 +3010,11 @@ export class Job extends jspb.Message {
   hasTask(): boolean;
   clearTask(): Job;
 
+  getPipeline(): Ref.PipelineStep | undefined;
+  setPipeline(value?: Ref.PipelineStep): Job;
+  hasPipeline(): boolean;
+  clearPipeline(): Job;
+
   getOperationCase(): Job.OperationCase;
 
   serializeBinary(): Uint8Array;
@@ -3084,6 +3076,7 @@ export namespace Job {
     cancelTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     expireTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     task?: Ref.Task.AsObject,
+    pipeline?: Ref.PipelineStep.AsObject,
   }
 
   export class TaskOverride extends jspb.Message {
@@ -10096,6 +10089,11 @@ export namespace Pipeline {
     hasUp(): boolean;
     clearUp(): Step;
 
+    getPipeline(): Pipeline.Step.Pipeline | undefined;
+    setPipeline(value?: Pipeline.Step.Pipeline): Step;
+    hasPipeline(): boolean;
+    clearPipeline(): Step;
+
     getImage(): string;
     setImage(value: string): Step;
 
@@ -10118,6 +10116,7 @@ export namespace Pipeline {
       deploy?: Pipeline.Step.Deploy.AsObject,
       release?: Pipeline.Step.Release.AsObject,
       up?: Pipeline.Step.Up.AsObject,
+      pipeline?: Pipeline.Step.Pipeline.AsObject,
       image: string,
     }
 
@@ -10248,6 +10247,27 @@ export namespace Pipeline {
     }
 
 
+    export class Pipeline extends jspb.Message {
+      getRef(): Ref.Pipeline | undefined;
+      setRef(value?: Ref.Pipeline): Pipeline;
+      hasRef(): boolean;
+      clearRef(): Pipeline;
+
+      serializeBinary(): Uint8Array;
+      toObject(includeInstance?: boolean): Pipeline.AsObject;
+      static toObject(includeInstance: boolean, msg: Pipeline): Pipeline.AsObject;
+      static serializeBinaryToWriter(message: Pipeline, writer: jspb.BinaryWriter): void;
+      static deserializeBinary(bytes: Uint8Array): Pipeline;
+      static deserializeBinaryFromReader(message: Pipeline, reader: jspb.BinaryReader): Pipeline;
+    }
+
+    export namespace Pipeline {
+      export type AsObject = {
+        ref?: Ref.Pipeline.AsObject,
+      }
+    }
+
+
     export enum KindCase { 
       KIND_NOT_SET = 0,
       EXEC = 3,
@@ -10255,6 +10275,7 @@ export namespace Pipeline {
       DEPLOY = 6,
       RELEASE = 7,
       UP = 8,
+      PIPELINE = 9,
     }
   }
 
@@ -10262,6 +10283,54 @@ export namespace Pipeline {
   export enum OwnerCase { 
     OWNER_NOT_SET = 0,
     PROJECT = 3,
+  }
+}
+
+export class PipelineRun extends jspb.Message {
+  getId(): string;
+  setId(value: string): PipelineRun;
+
+  getSequence(): number;
+  setSequence(value: number): PipelineRun;
+
+  getPipeline(): Ref.Pipeline | undefined;
+  setPipeline(value?: Ref.Pipeline): PipelineRun;
+  hasPipeline(): boolean;
+  clearPipeline(): PipelineRun;
+
+  getJobsList(): Array<Ref.Job>;
+  setJobsList(value: Array<Ref.Job>): PipelineRun;
+  clearJobsList(): PipelineRun;
+  addJobs(value?: Ref.Job, index?: number): Ref.Job;
+
+  getState(): PipelineRun.State;
+  setState(value: PipelineRun.State): PipelineRun;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): PipelineRun.AsObject;
+  static toObject(includeInstance: boolean, msg: PipelineRun): PipelineRun.AsObject;
+  static serializeBinaryToWriter(message: PipelineRun, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): PipelineRun;
+  static deserializeBinaryFromReader(message: PipelineRun, reader: jspb.BinaryReader): PipelineRun;
+}
+
+export namespace PipelineRun {
+  export type AsObject = {
+    id: string,
+    sequence: number,
+    pipeline?: Ref.Pipeline.AsObject,
+    jobsList: Array<Ref.Job.AsObject>,
+    state: PipelineRun.State,
+  }
+
+  export enum State { 
+    UNKNOWN = 0,
+    PENDING = 1,
+    STARTING = 2,
+    RUNNING = 3,
+    ERROR = 4,
+    CANCELLED = 5,
+    SUCCESS = 6,
   }
 }
 
@@ -10423,6 +10492,9 @@ export class RunPipelineResponse extends jspb.Message {
   getJobMapMap(): jspb.Map<string, Ref.PipelineStep>;
   clearJobMapMap(): RunPipelineResponse;
 
+  getSequence(): number;
+  setSequence(value: number): RunPipelineResponse;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): RunPipelineResponse.AsObject;
   static toObject(includeInstance: boolean, msg: RunPipelineResponse): RunPipelineResponse.AsObject;
@@ -10436,6 +10508,7 @@ export namespace RunPipelineResponse {
     jobId: string,
     allJobIdsList: Array<string>,
     jobMapMap: Array<[string, Ref.PipelineStep.AsObject]>,
+    sequence: number,
   }
 }
 
@@ -10476,6 +10549,90 @@ export class ListPipelinesResponse extends jspb.Message {
 export namespace ListPipelinesResponse {
   export type AsObject = {
     pipelinesList: Array<Pipeline.AsObject>,
+  }
+}
+
+export class ListPipelineRunsRequest extends jspb.Message {
+  getPipeline(): Ref.Pipeline | undefined;
+  setPipeline(value?: Ref.Pipeline): ListPipelineRunsRequest;
+  hasPipeline(): boolean;
+  clearPipeline(): ListPipelineRunsRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListPipelineRunsRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ListPipelineRunsRequest): ListPipelineRunsRequest.AsObject;
+  static serializeBinaryToWriter(message: ListPipelineRunsRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListPipelineRunsRequest;
+  static deserializeBinaryFromReader(message: ListPipelineRunsRequest, reader: jspb.BinaryReader): ListPipelineRunsRequest;
+}
+
+export namespace ListPipelineRunsRequest {
+  export type AsObject = {
+    pipeline?: Ref.Pipeline.AsObject,
+  }
+}
+
+export class ListPipelineRunsResponse extends jspb.Message {
+  getPipelineRunsList(): Array<PipelineRun>;
+  setPipelineRunsList(value: Array<PipelineRun>): ListPipelineRunsResponse;
+  clearPipelineRunsList(): ListPipelineRunsResponse;
+  addPipelineRuns(value?: PipelineRun, index?: number): PipelineRun;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListPipelineRunsResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ListPipelineRunsResponse): ListPipelineRunsResponse.AsObject;
+  static serializeBinaryToWriter(message: ListPipelineRunsResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListPipelineRunsResponse;
+  static deserializeBinaryFromReader(message: ListPipelineRunsResponse, reader: jspb.BinaryReader): ListPipelineRunsResponse;
+}
+
+export namespace ListPipelineRunsResponse {
+  export type AsObject = {
+    pipelineRunsList: Array<PipelineRun.AsObject>,
+  }
+}
+
+export class GetPipelineRunRequest extends jspb.Message {
+  getPipeline(): Ref.Pipeline | undefined;
+  setPipeline(value?: Ref.Pipeline): GetPipelineRunRequest;
+  hasPipeline(): boolean;
+  clearPipeline(): GetPipelineRunRequest;
+
+  getSequence(): number;
+  setSequence(value: number): GetPipelineRunRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetPipelineRunRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetPipelineRunRequest): GetPipelineRunRequest.AsObject;
+  static serializeBinaryToWriter(message: GetPipelineRunRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetPipelineRunRequest;
+  static deserializeBinaryFromReader(message: GetPipelineRunRequest, reader: jspb.BinaryReader): GetPipelineRunRequest;
+}
+
+export namespace GetPipelineRunRequest {
+  export type AsObject = {
+    pipeline?: Ref.Pipeline.AsObject,
+    sequence: number,
+  }
+}
+
+export class GetPipelineRunResponse extends jspb.Message {
+  getPipelineRun(): PipelineRun | undefined;
+  setPipelineRun(value?: PipelineRun): GetPipelineRunResponse;
+  hasPipelineRun(): boolean;
+  clearPipelineRun(): GetPipelineRunResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetPipelineRunResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: GetPipelineRunResponse): GetPipelineRunResponse.AsObject;
+  static serializeBinaryToWriter(message: GetPipelineRunResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetPipelineRunResponse;
+  static deserializeBinaryFromReader(message: GetPipelineRunResponse, reader: jspb.BinaryReader): GetPipelineRunResponse;
+}
+
+export namespace GetPipelineRunResponse {
+  export type AsObject = {
+    pipelineRun?: PipelineRun.AsObject,
   }
 }
 
