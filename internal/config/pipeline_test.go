@@ -154,6 +154,60 @@ func TestPipeline(t *testing.T) {
 				require.Equal("example.com/test", ps.ImageURL)
 			},
 		},
+
+		{
+			"pipeline_step_workspace.hcl",
+			"foo",
+			func(t *testing.T, c *Pipeline) {
+				require := require.New(t)
+
+				require.NotNil(t, c)
+				require.Equal("foo", c.Name)
+
+				steps := c.Steps
+				require.Len(steps, 3)
+				for _, step := range steps {
+					if step.Name == "testworkspace" {
+						require.Equal("testworkspace", step.Workspace)
+					}
+				}
+			},
+		},
+
+		{
+			"pipeline_step_workspace_nested.hcl",
+			"foo",
+			func(t *testing.T, c *Pipeline) {
+				require := require.New(t)
+
+				require.NotNil(t, c)
+				require.Equal("foo", c.Name)
+
+				steps := c.Steps
+				require.Len(steps, 5)
+
+				// expect step 0 to not have a pipeline or workspace set
+				require.Nil(steps[0].Pipeline)
+				require.Empty(steps[0].Workspace)
+
+				// we expect step 1 to have the testworkspace workspace set
+				require.Equal("testworkspace", steps[1].Workspace)
+
+				// step 2 should have a pipeline
+				pipe1 := steps[2]
+				require.NotNil(pipe1.Pipeline)
+				require.Len(pipe1.Pipeline.Steps, 1)
+				require.Empty(pipe1.Pipeline.Steps[0].Workspace)
+
+				// step 3 should have a pipeline
+				pipe2 := steps[3]
+				require.NotNil(pipe2.Pipeline)
+				require.Len(pipe2.Pipeline.Steps, 3)
+				require.Empty(pipe2.Pipeline.Steps[0].Workspace)
+				require.Equal("dontoverride", pipe2.Pipeline.Steps[1].Workspace)
+				require.Empty(pipe2.Pipeline.Steps[2].Workspace)
+			},
+		},
 	}
 
 	// Test all the cases
@@ -279,6 +333,22 @@ func TestPipelineProtos(t *testing.T) {
 				require.Equal(ok, true)
 				require.Equal(pipeOwner.Owner.Project.Project, "foo")
 				require.Equal(pipeOwner.Owner.PipelineName, "pipe2")
+			},
+		},
+		{
+			"pipeline_step_workspace.hcl",
+			func(t *testing.T, c *Config) {
+				require := require.New(t)
+
+				pipelines, err := c.PipelineProtos()
+				require.NoError(err)
+				require.Len(pipelines, 1)
+
+				require.Equal(pipelines[0].Name, "foo")
+
+				testStep := pipelines[0].Steps["testws"]
+				require.NotNil(testStep.Workspace)
+				require.Equal("testws", testStep.Workspace.Workspace)
 			},
 		},
 	}

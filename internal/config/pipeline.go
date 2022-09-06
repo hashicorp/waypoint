@@ -49,6 +49,9 @@ type hclStep struct {
 
 	// An optional embedded pipeline stanza
 	PipelineRaw *hclPipeline `hcl:"pipeline,block"`
+
+	// An optional embedded pipeline stanza
+	Workspace string `hcl:"workspace,optional"`
 }
 
 // Pipelines returns the id of all the defined pipelines
@@ -102,6 +105,7 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 			DependsOn: stepRaw.DependsOn,
 			ImageURL:  stepRaw.ImageURL,
 			Use:       stepRaw.Use,
+			Workspace: stepRaw.Workspace,
 		}
 
 		// Parse a nested pipeline step if defined
@@ -156,6 +160,7 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 					DependsOn: embedStepRaw.DependsOn,
 					ImageURL:  embedStepRaw.ImageURL,
 					Use:       embedStepRaw.Use,
+					Workspace: embedStepRaw.Workspace,
 				}
 				embSteps = append(embSteps, &s)
 			}
@@ -218,6 +223,12 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 			Name:      step.Name,
 			DependsOn: step.DependsOn,
 			Image:     step.ImageURL,
+		}
+
+		if step.Workspace != "" {
+			s.Workspace = &pb.Ref_Workspace{
+				Workspace: step.Workspace,
+			}
 		}
 
 		// If no dependency was explictily set, we rely on the previous step
