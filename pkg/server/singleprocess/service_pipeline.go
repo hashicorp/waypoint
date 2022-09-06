@@ -396,9 +396,9 @@ func (s *Service) buildStepJobs(
 				return nil, nil, nil, err
 			}
 
-			// Add the parent step workspace ref.
-			// **Note** this only works now because we are limiting nested
-			// pipelines to 1 layer.
+			// Add the parent step workspace ref and apply it to all embedded
+			// pipeline job templates if step was not configured with a
+			// workspace ref.
 			if step.Workspace != nil {
 				for _, jobReq := range embedJobs {
 					jobReq.Job.Workspace = &pb.Ref_Workspace{
