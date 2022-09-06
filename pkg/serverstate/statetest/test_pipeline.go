@@ -455,7 +455,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		// Set
 		p := ptypes.TestPipeline(t, nil)
 		err := s.PipelinePut(p)
-		require.NoError(err) // no job id set
+		require.NoError(err)
 
 		// Get exact by id
 		resp, err := s.PipelineGet(&pb.Ref_Pipeline{
