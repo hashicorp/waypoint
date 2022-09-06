@@ -357,6 +357,23 @@ READ_LOGS:
 		select {
 		case data := <-logStream:
 			if data == nil {
+				// check if task is dead, if it is dead, return
+				alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts)
+				if err != nil {
+					log.Error("Failed to get info for alloc "+allocs[0].ID+". Error: %s", err.Error())
+					return nil, err
+				}
+				allocTask, ok := alloc.TaskStates[task.Name]
+				if !ok {
+					return nil, status.Error(codes.Unknown, "ODR task not in alloc")
+				}
+				state = allocTask.State
+				if state != "running" {
+					// if the task is no longer running, exit
+					result.ExitCode = 0
+					return &result, nil
+				}
+
 				break READ_LOGS
 			}
 			message := string(data.Data)
