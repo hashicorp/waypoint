@@ -61,6 +61,9 @@ type Step struct {
 	Pipeline *Pipeline `hcl:"pipeline,block"`
 
 	ctx *hcl.EvalContext
+
+	// Optional workspace scoping
+	Workspace string `hcl:"workspace,optional"`
 }
 
 // Build are the build settings.
