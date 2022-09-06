@@ -683,13 +683,23 @@ func (i *NomadInstaller) HasRunner(
 	if err != nil {
 		return false, err
 	}
+	var jobs []*api.JobListStub
 
-	jobs, _, err := client.Jobs().PrefixList(runnerName)
+	// Check for runner with job name pre-0.9
+	jobsWithOldRunnerName, _, err := client.Jobs().PrefixList(runnerName)
 	if err != nil {
 		return false, err
 	}
+	jobs = append(jobs, jobsWithOldRunnerName...)
+
+	// Check for runner with job name post-0.9
+	jobWithNewRunnerName, _, err := client.Jobs().PrefixList(runnerJobName)
+	if err != nil {
+		return false, err
+	}
+	jobs = append(jobs, jobWithNewRunnerName...)
 	for _, j := range jobs {
-		if j.Name == runnerName {
+		if j.Name == runnerJobName || j.Name == runnerName {
 			return true, nil
 		}
 	}

@@ -1,0 +1,4 @@
+```release-note:bug
+upgrade: Nomad server upgrade upgrade now detects runners with the name
+`waypoint-runner` or `waypoint-static-runner`
+```
