@@ -22,7 +22,7 @@ type RunnerInstallCommand struct {
 
 	platform              []string `hcl:"platform,optional"`
 	skipAdopt             bool     `hcl:"skip_adopt,optional"`
-	serverUrl             string   `hcl:"server_url,required"`
+	serverUrl             string   `hcl:"server_url"`
 	id                    string   `hcl:"id,optional"`
 	runnerProfileOdrImage string   `hcl:"odr_image,optional"`
 	serverTls             bool     `hcl:"server_tls,optional"`
