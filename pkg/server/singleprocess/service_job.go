@@ -133,6 +133,33 @@ func (s *Service) queueJobReqToJob(
 		job.DataSource = project.DataSource
 	}
 
+	// If the data source is set to remote, then let the server hook populate it.
+	if job.DataSource.GetRemote() != nil {
+		if s.populateDataSource != nil {
+			job, err = s.populateDataSource(ctx, job)
+			if err != nil {
+				log.Error("error populating data source for job", "error", err)
+				return nil, "", status.Errorf(codes.Internal,
+					"An internal server issue was detected when calculating the data source")
+			}
+
+			// The new job can't still have remote, so if it wasn't updated, then
+			// error out.
+			if job.DataSource.GetRemote() != nil {
+				log.Error("populateDataSource returned another remote DS job")
+				return nil, "", status.Errorf(codes.Internal,
+					"An internal server issue was detected when calculating the data source")
+			}
+		} else {
+			log.Error("job has a remote DataSource but server provided to populateDataSource")
+			// This is a server misconfiguration.
+			if job.DataSource.GetRemote() != nil {
+				return nil, "", status.Errorf(codes.Internal,
+					"An internal server issue was detected when calculating the data source")
+			}
+		}
+	}
+
 	// Get the next id
 	if job.Id == "" {
 		id, err := server.Id()

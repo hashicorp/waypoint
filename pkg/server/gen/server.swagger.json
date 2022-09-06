@@ -8023,6 +8023,10 @@
         "git": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.Git",
           "description": "git will check out the data from a Git repository."
+        },
+        "remote": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.Remote",
+          "description": "remote means that the Waypoint server has special logic for how to\nfetch the data."
         }
       }
     },
@@ -8362,6 +8366,15 @@
         "release": {
           "$ref": "#/definitions/hashicorp.waypoint.Release",
           "description": "The release that was just created. If the release operation was a noop,\nfor example if the target deployment shares a generation with the\npreviously released deployment, then this may be an existing release.\nCallers can verify by checking if the target deployment changed\nor not."
+        }
+      }
+    },
+    "hashicorp.waypoint.Job.Remote": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description is information about how the Waypoint server\nacquires the data."
         }
       }
     },
