@@ -296,77 +296,76 @@ func (p *TaskLauncher) WatchTask(
 
 	// Accumulate our result on this
 	var result component.TaskResult
-
-	if client, err := getNomadClient(); err != nil {
+	client, err := getNomadClient()
+	if err != nil {
 		return nil, err
-	} else {
-		if allocs, _, err := client.Jobs().Allocations(ti.Id, true, queryOpts); err != nil {
-			log.Error("Failed to get allocations for ODR job: %s", ti.Id)
+	}
+	allocs, _, err := client.Jobs().Allocations(ti.Id, true, queryOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(allocs) != 1 {
+		log.Error("Invalid # of allocs for ODR job.")
+		return nil, errors.New("there should be one allocation in the job")
+	}
+	alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts)
+	if err != nil {
+		log.Error("Failed to get info for alloc "+allocs[0].ID+". Error: %s", err.Error())
+		return nil, err
+	}
+	tg := alloc.GetTaskGroup()
+	if len(tg.Tasks) != 1 {
+		return nil, errors.New("there should be one task in the allocation")
+	}
+	task := tg.Tasks[0]
+
+	// We'll give the ODR 5 minutes to start up
+	// TODO: Make this configurable
+	ctx, cancel := context.WithTimeout(ctx, time.Minute*time.Duration(5))
+	defer cancel()
+	ticker := time.NewTicker(5 * time.Second)
+	state := "pending"
+	for state == "pending" {
+		select {
+		case <-ticker.C:
+		case <-ctx.Done(): // cancelled
+			return nil, status.Errorf(codes.Aborted, "Context cancelled from timeout waiting for ODR task to start %s", ctx.Err())
+		}
+		alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts)
+		if err != nil {
+			log.Error("Failed to get info for alloc "+allocs[0].ID+". Error: %s", err.Error())
 			return nil, err
-		} else {
-			if len(allocs) != 1 {
-				log.Error("Invalid # of allocs for ODR job.")
-				return nil, errors.New("there should be one allocation in the job")
+		}
+		allocTask, ok := alloc.TaskStates[task.Name]
+		if !ok {
+			return nil, errors.New("ODR task not in alloc")
+		}
+		state = allocTask.State
+	}
+
+	// Only follow the logs if our task is still alive
+	follow := true
+	if state == "dead" {
+		follow = false
+	}
+
+	log.Debug("Getting logs for alloc: " + alloc.Name + ", task: " + task.Name)
+	ch := make(chan struct{})
+	logStream, errChan := client.AllocFS().Logs(alloc, follow, task.Name, "stderr", "", 0, ch, queryOpts)
+READ_LOGS:
+	for {
+		select {
+		case data := <-logStream:
+			if data == nil {
+				break READ_LOGS
 			}
-			if alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts); err != nil {
-				log.Error("Failed to get info for alloc "+allocs[0].ID+". Error: %s", err.Error())
-				return nil, err
-			} else {
-				tg := alloc.GetTaskGroup()
-				if len(tg.Tasks) != 1 {
-					return nil, errors.New("there should be one task in the allocation")
-				}
-				task := tg.Tasks[0]
-
-				// We'll give the ODR 5 minutes to start up
-				// TODO: Make this configurable
-				ctx, cancel := context.WithTimeout(ctx, time.Minute*time.Duration(5))
-				defer cancel()
-				ticker := time.NewTicker(5 * time.Second)
-				state := "pending"
-				for state == "pending" {
-					select {
-					case <-ticker.C:
-					case <-ctx.Done(): // cancelled
-						return nil, status.Errorf(codes.Aborted, "Context cancelled from timeout waiting for ODR task to start %s", ctx.Err())
-					}
-					if alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts); err != nil {
-						log.Error("Failed to get info for alloc "+allocs[0].ID+". Error: %s", err.Error())
-						return nil, err
-					} else {
-						allocTask, ok := alloc.TaskStates[task.Name]
-						if !ok {
-							return nil, errors.New("ODR task not in alloc")
-						}
-						state = allocTask.State
-					}
-				}
-
-				// Only follow the logs if our task is still alive
-				follow := true
-				if state == "dead" {
-					follow = false
-				}
-
-				log.Debug("Getting logs for alloc: " + alloc.Name + ", task: " + task.Name)
-				ch := make(chan struct{})
-				logStream, errChan := client.AllocFS().Logs(alloc, follow, task.Name, "stderr", "", 0, ch, queryOpts)
-			READ_LOGS:
-				for {
-					select {
-					case data := <-logStream:
-						if data == nil {
-							break READ_LOGS
-						}
-						message := string(data.Data)
-						log.Info(message)
-						ui.Output(message)
-					case err := <-errChan:
-						log.Error("Error reading logs from alloc: %q", err.Error())
-						return nil, err
-					}
-				}
-			}
+			message := string(data.Data)
+			log.Info(message)
+			ui.Output(message)
+		case err := <-errChan:
+			log.Error("Error reading logs from alloc: %q", err.Error())
+			return nil, err
 		}
 	}
 
