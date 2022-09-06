@@ -3,7 +3,6 @@ package nomad
 import (
 	"context"
 	"crypto/rand"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -307,7 +306,7 @@ func (p *TaskLauncher) WatchTask(
 
 	if len(allocs) != 1 {
 		log.Error("Invalid # of allocs for ODR job.")
-		return nil, errors.New("there should be one allocation in the job")
+		return nil, status.Error(codes.Internal, "there should be one allocation in the job")
 	}
 	alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts)
 	if err != nil {
@@ -316,7 +315,7 @@ func (p *TaskLauncher) WatchTask(
 	}
 	tg := alloc.GetTaskGroup()
 	if len(tg.Tasks) != 1 {
-		return nil, errors.New("there should be one task in the allocation")
+		return nil, status.Error(codes.Internal, "there should be one task in the allocation")
 	}
 	task := tg.Tasks[0]
 
@@ -339,7 +338,7 @@ func (p *TaskLauncher) WatchTask(
 		}
 		allocTask, ok := alloc.TaskStates[task.Name]
 		if !ok {
-			return nil, errors.New("ODR task not in alloc")
+			return nil, status.Error(codes.Unknown, "ODR task not in alloc")
 		}
 		state = allocTask.State
 	}
