@@ -213,12 +213,6 @@ func (s *State) PipelineList(pRef *pb.Ref_Project) ([]*pb.Pipeline, error) {
 			if err != nil {
 				return err
 			}
-			if pRef != nil {
-				if val.Owner.(*pb.Pipeline_Project).Project.Project != pRef.Project {
-					continue
-				}
-			}
-
 			out = append(out, val)
 		}
 
@@ -235,7 +229,7 @@ func (s *State) pipelineList(
 	memTxn *memdb.Txn,
 	ref *pb.Ref_Project,
 ) ([]*pb.Ref_Pipeline, error) {
-	iter, err := memTxn.Get(pipelineIndexTableName, pipelineIndexId+"_prefix", "")
+	iter, err := memTxn.Get(pipelineIndexTableName, pipelineIndexProjectId, ref.Project)
 	if err != nil {
 		return nil, err
 	}
