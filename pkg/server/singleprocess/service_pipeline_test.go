@@ -494,8 +494,17 @@ func TestServicePipeline_Run(t *testing.T) {
 		require.NoError(err)
 		client := server.TestServer(t, impl)
 
+		// Create a job to use in TestJobNew that specifies the default
+		// workspace. "default" is used for operations that do not have a
+		// workspace specified, and we need to check for this sentinel value
+		// when overriding embedded pipeline steps workspace value.
+		defaultJob := &pb.Job{
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "default",
+			},
+		}
 		// Initialize our app
-		TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+		TestApp(t, client, serverptypes.TestJobNew(t, defaultJob).Application)
 
 		// Create our pipeline
 		pipeline := serverptypes.TestPipeline(t, nil)
@@ -568,6 +577,27 @@ func TestServicePipeline_Run(t *testing.T) {
 						},
 					},
 				},
+				"otherws": {
+					Name: "otherws",
+					Workspace: &pb.Ref_Workspace{
+						Workspace: "otherws",
+					},
+					DependsOn: []string{"second"},
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+				"third": {
+					Name:      "third",
+					DependsOn: []string{"second"},
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
 			},
 		}
 
@@ -578,7 +608,7 @@ func TestServicePipeline_Run(t *testing.T) {
 		require.NoError(err)
 
 		// Build our job template
-		jobTemplate := serverptypes.TestJobNew(t, nil)
+		jobTemplate := serverptypes.TestJobNew(t, defaultJob)
 		resp, err := client.RunPipeline(ctx, &pb.RunPipelineRequest{
 			Pipeline: &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
@@ -596,15 +626,22 @@ func TestServicePipeline_Run(t *testing.T) {
 		require.Equal(pb.Job_QUEUED, job.State)
 
 		// We should have all the job IDs
-		require.Len(resp.JobMap, 5)
-		require.Len(resp.AllJobIds, 5)
+		require.Len(resp.JobMap, 7)
+		require.Len(resp.AllJobIds, 7)
 
 		// find our embedded jobs and verify they used the correct workspace
 		for id, jobStep := range resp.JobMap {
 			if jobStep.PipelineId == embeddedResp.Pipeline.Id {
+				// all the embedded steps should inherit the parent steps
+				// workspace, except the step named "otherws", which has itself
+				// a specified workspace
+				expectedWs := "embedded-workspace"
+				if jobStep.Step == "otherws" {
+					expectedWs = "otherws"
+				}
 				embeddedJob, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: id})
 				require.NoError(err)
-				require.Equal("embedded-workspace", embeddedJob.Workspace.Workspace)
+				require.Equal(expectedWs, embeddedJob.Workspace.Workspace)
 			}
 		}
 	})

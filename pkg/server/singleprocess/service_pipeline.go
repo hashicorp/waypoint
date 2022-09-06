@@ -298,6 +298,8 @@ func (s *Service) buildStepJobs(
 			RunSequence:  pipelineRun.Sequence,
 		}
 
+		// step has a specific workspace set, update the job to use that
+		// workspace
 		if step.Workspace != nil {
 			job.Workspace = &pb.Ref_Workspace{
 				Workspace: step.Workspace.Workspace,
@@ -401,8 +403,10 @@ func (s *Service) buildStepJobs(
 			// workspace ref.
 			if step.Workspace != nil {
 				for _, jobReq := range embedJobs {
-					jobReq.Job.Workspace = &pb.Ref_Workspace{
-						Workspace: step.Workspace.Workspace,
+					if jobReq.Job.Workspace.Workspace == "default" {
+						jobReq.Job.Workspace = &pb.Ref_Workspace{
+							Workspace: step.Workspace.Workspace,
+						}
 					}
 				}
 			}
