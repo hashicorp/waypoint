@@ -17,7 +17,7 @@ pipeline "foo" {
     }
   }
 
-  step "pipe_normal" {
+  step "pipe_nested" {
     pipeline "nested" {
       step "test_nested" {
         image_url = "example.com/test"
@@ -29,9 +29,9 @@ pipeline "foo" {
     }
   }
   
-  step "pipe_changed" {
+  step "pipe_nested_workspace" {
     workspace = "testworkspace"
-    pipeline "nested" {
+    pipeline "nested_workspace" {
       step "test_nested" {
         image_url = "example.com/test"
 
@@ -47,7 +47,7 @@ pipeline "foo" {
           command = "nested"
         }
       }
-      step "test_nested_overridejk" {
+      step "test_nested_override" {
         image_url = "example.com/test"
 
         use "exec" {

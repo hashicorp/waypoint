@@ -351,6 +351,56 @@ func TestPipelineProtos(t *testing.T) {
 				require.Equal("testws", testStep.Workspace.Workspace)
 			},
 		},
+
+		{
+			"pipeline_step_workspace_nested.hcl",
+			func(t *testing.T, c *Config) {
+				require := require.New(t)
+
+				pipelines, err := c.PipelineProtos()
+				require.NoError(err)
+				require.Len(pipelines, 3)
+
+				// grab our pipes and test individually
+				var fooPipe *pb.Pipeline
+				var nestedPipe *pb.Pipeline
+				var nestedWSPipe *pb.Pipeline
+				for _, p := range pipelines {
+					if p.Name == "foo" {
+						fooPipe = p
+					}
+					if p.Name == "nested" {
+						nestedPipe = p
+					}
+					if p.Name == "nested_workspace" {
+						nestedWSPipe = p
+					}
+				}
+
+				// The fooPipe has 5 steps, 3 of them are nested pipelines. The
+				// other 2 should have 1 with no workspace (inherits default),
+				// the other set as "testworkspace"
+				require.Len(fooPipe.Steps, 5)
+				require.Len(nestedPipe.Steps, 1)
+				require.Len(nestedWSPipe.Steps, 3)
+				require.Empty(fooPipe.Steps["test"].Workspace)
+				require.Empty(fooPipe.Steps["normal"].Workspace)
+				require.Equal("testworkspace", fooPipe.Steps["testworkspace"].Workspace.Workspace)
+
+				// The nested pipe has 1 step, with no workspace specified
+				require.Len(nestedPipe.Steps, 1)
+				require.Empty(nestedPipe.Steps["test_nested"].Workspace)
+
+				// The nestedWSPipe has 5 steps, 1 of them has a workspace
+				// specified. The parent step has a workspace specified however
+				// during parsing that value is not cascaded down to the
+				// sub-steps; that's handled during step/job creation
+				require.Len(nestedWSPipe.Steps, 3)
+				require.Empty(nestedWSPipe.Steps["test_nested"].Workspace)
+				require.Equal("dontoverride", nestedWSPipe.Steps["test_nested_dontoverride"].Workspace.Workspace)
+				require.Empty(nestedWSPipe.Steps["test_nested_override"].Workspace)
+			},
+		},
 	}
 
 	// Test all the cases
