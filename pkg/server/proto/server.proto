@@ -4784,6 +4784,10 @@ message Pipeline {
     // Docker image to execute. This should be a fully qualified image URL.
     string image = 5;
 
+    // Workspace to use in step execution. If undefined, will default to the
+    // Workspace used when running the pipeline, otherwise 'default'
+    Ref.Workspace workspace = 10;
+
     message Exec {
       // TODO(briancain): update this to use the Step exec instead of the plugin
       // Docker image to execute. This should be a fully qualified image URL.
