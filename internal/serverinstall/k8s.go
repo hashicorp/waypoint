@@ -341,7 +341,7 @@ func (i *K8sInstaller) Install(
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		// the label we use for LabelSelector is set here
 		// https://github.com/hashicorp/waypoint-helm/blob/d2f6de6e9010b94da84f37eeaca4a8190a439060/templates/bootstrap-job.yaml#L8
-		jobs, err := clientset.BatchV1().Jobs(i.config.namespace).List(ctx, metav1.ListOptions{
+		jobs, err := clientset.BatchV1().Jobs(i.Config.Namespace).List(ctx, metav1.ListOptions{
 			LabelSelector: "app.kubernetes.io/instance=waypoint",
 		})
 		if err != nil {
