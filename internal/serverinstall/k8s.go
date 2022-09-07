@@ -8,12 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/waypoint/internal/installutil"
-	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
-	"github.com/hashicorp/waypoint/internal/runnerinstall"
+	dockerparser "github.com/novln/docker-parser"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
-
+	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,11 +23,13 @@ import (
 	"github.com/hashicorp/waypoint/builtin/k8s"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/installutil"
+	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
 	k8sinstallutil "github.com/hashicorp/waypoint/internal/installutil/k8s"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
-	dockerparser "github.com/novln/docker-parser"
 )
 
 //
@@ -363,6 +363,45 @@ func (i *K8sInstaller) Install(
 		return nil, err
 	}
 	s.Done()
+
+	s = sg.Add("Waiting for the bootstrap process to finish...")
+	var bootJobName string
+	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+		// the label we use for LabelSelector is set here
+		// https://github.com/hashicorp/waypoint-helm/blob/d2f6de6e9010b94da84f37eeaca4a8190a439060/templates/bootstrap-job.yaml#L8
+		jobs, err := clientset.BatchV1().Jobs(i.config.namespace).List(ctx, metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/instance=waypoint",
+		})
+		if err != nil {
+			return false, nil
+		}
+		// NOTE(krantzinator): the job we are searching for is prefixed with `waypoint-bootstrap`
+		// per our Helm chart; if that naming ever changes, this will also need to be updated
+		// https://github.com/hashicorp/waypoint-helm/blob/d2f6de6e9010b94da84f37eeaca4a8190a439060/templates/bootstrap-job.yaml#L5
+		jobPrefix := "waypoint-bootstrap-"
+		var bootJob *batchv1.Job
+		for _, j := range jobs.Items {
+			if strings.Contains(j.Name, jobPrefix) {
+				bootJob = &j
+				bootJobName = j.Name
+				break
+			}
+		}
+		if bootJob.Status.Succeeded == 1 {
+			return true, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		log.Error("no bootstrap job found, returning", "job_name", bootJobName, "err", err)
+		s.Update("No bootstrap job found")
+		s.Status(terminal.WarningStyle)
+		s.Done()
+		return nil, err
+	}
+	s.Update("Server bootstrap complete!")
+	s.Done()
+	s = sg.Add("")
 
 	s.Update("Waypoint server installed with Helm!")
 	s.Status(terminal.StatusOK)
