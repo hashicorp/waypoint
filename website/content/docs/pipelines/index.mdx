@@ -8,29 +8,21 @@ description: |-
 # Waypoint Custom Pipelines
 
 ~> **NOTE**: Custom Pipelines is currently a **Tech Preview** feature of Waypoint.
-Given that, we invite all Waypoint users to give custom pipelines a try and let
-us know your experience with it on our [Discuss forums](https://discuss.hashicorp.com/c/waypoint/51),
-and feature requests, enhancements, or any bugs you might find
+We invite all Waypoint users to give custom pipelines a try and let us know about your experience on our [Discuss forums](https://discuss.hashicorp.com/c/waypoint/51), as well as feature requests, enhancements, or bugs
 via [GitHub](https://github.com/hashicorp/waypoint/issues). We look forward to
-hearing what you think and ways Waypoint can help make your experience
+hearing what you think and how Waypoint can help make your experience
 delivering your applications even better!
 
-Waypoint, before the introduction of Pipelines, has always had a relatively fixed
+Before the introduction of Pipelines, Waypoint had a relatively fixed
 built-in pipeline with the `waypoint up` CLI command.
-An "Up" was a special operation that encapsulated a Build, Deploy, and
-Release for an application. For most users getting started with Waypoint, this
-simple pipeline is powerful enough to get off the ground continuously building
-and deploying an application to production.
+An "Up" is a special operation that encapsulates the Build, Deploy, and
+Release workflow for an application. This
+simple yet powerful pipeline is great for most early users of Waypoint to continuously build
+and deploy an application to production.
 
-However, as projects and teams
-become more complicated addressing real-world concerns, users wished for more
-control and customization over the order in which Waypoint deploys applications.
-Teams need to run tests after a build, security scan artifacts prior to a deploy, and
-so on. Custom Pipelines enable teams to solve these problems. With this tech preview, users can
-define pipelines to run in the order they require to deliver their
-application. Additionally, pipelines allow for custom execution steps through
-the "Exec" plugin, allowing teams to run scripts as part of the pipeline
-execution, further enabling highly-customized operations.
+As our product grew, so did our users. Users wished for more fine-tuned control and customization over how Waypoint deploys applications. Teams need to run tests after a build, security scan artifacts prior to a deploy, and so on. Custom Pipelines enable teams to solve increasingly complex challenges. 
+In the Tech Preview, users can define pipelines to run in the order they require to deliver their
+application. Additionally, users can run scripts as a pipeline execution step via the "Exec" plugin, which further enables highly customized operations.
 
 Pipelines allow users to tell Waypoint what order these operations should
 run in and configure any operation options necessary; such as disabling an
