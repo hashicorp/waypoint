@@ -305,8 +305,8 @@ func (p *TaskLauncher) WatchTask(
 	}
 
 	if len(allocs) != 1 {
-		log.Error("Invalid # of allocs for ODR job.")
-		return nil, status.Error(codes.Internal, "there should be one allocation in the job")
+		log.Error("Invalid # of allocs for ODR job", "total_allocs", len(allocs))
+		return nil, status.Errorf(codes.Internal, "Invalid # of allocs for ODR job: %d", len(allocs))
 	}
 	alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts)
 	if err != nil {
@@ -333,7 +333,7 @@ func (p *TaskLauncher) WatchTask(
 		}
 		alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts)
 		if err != nil {
-		log.Error("Failed to get info for alloc waiting for task to start", "alloc_id", allocs[0].ID, "err", err.Error())
+			log.Error("Failed to get info for alloc waiting for task to start", "alloc_id", allocs[0].ID, "err", err.Error())
 			return nil, err
 		}
 		allocTask, ok := alloc.TaskStates[task.Name]
@@ -360,7 +360,7 @@ READ_LOGS:
 				// check if task is dead, if it is dead, return
 				alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts)
 				if err != nil {
-		log.Error("Failed to get info for alloc to stream logs", "alloc_id", allocs[0].ID, "err", err.Error())
+					log.Error("Failed to get info for alloc to stream logs", "alloc_id", allocs[0].ID, "err", err.Error())
 					return nil, err
 				}
 				allocTask, ok := alloc.TaskStates[task.Name]
