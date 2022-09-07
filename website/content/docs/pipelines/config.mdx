@@ -10,6 +10,84 @@ description: |-
 This section details some of the various built-in Step plugins and their
 configuration options.
 
+## Step Configurations
+
+Steps have a few basic configuration options that are defined below.
+
+##### name
+
+```hcl
+// this step has a label name "my-step-name"
+step "my-step-name" {
+  use "build" { }
+}
+```
+
+- Stanza label
+- Type: **string**
+- **Required**
+
+##### depends_on
+
+A step can depend on many other steps within a pipeline. By default, a step will
+always depend on the previously defined step unless `depends_on` is set. No
+step cycles are allowed.
+
+```hcl
+step "my-step-name" {
+  depends_on = ["step-1", "step-3", "root"]
+
+  use "deploy" { }
+}
+```
+
+- Type: **Array of strings**
+- **Optional**
+
+##### image_url
+
+Currently used only for the `exec` step, this is the container image URL that will be used
+to spawn the `exec` pipeline step.
+
+```hcl
+step "my-step-name" {
+  image_url = "https://example.com:5000/waypoint-odr:latest"
+
+  use "exec" { }
+}
+```
+
+- Type: **string**
+- **Optional**
+
+##### use
+
+If used in a step, this will denote which "built-in" Step plugin to use.
+
+```hcl
+// this step will "use" the build plugin
+step "my-step-name" {
+  use "build" { }
+}
+```
+
+- Type: **stanza**
+
+##### pipeline
+
+Steps can also contain embedded pipelines.
+
+Note that it isn't valid to have a "use" and a "pipeline "stanza inside a Step.
+
+```hcl
+// this step has an embedded pipeline
+step "my-step-name" {
+  pipeline "another-pipeline" {
+    step "more" { ... }
+  }
+}
+```
+
 ## Built-In Step Config Options
 
 Currently, Pipeline Steps have "built-in" plugins that are backed by the existing
