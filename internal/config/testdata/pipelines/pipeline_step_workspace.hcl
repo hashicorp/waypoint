@@ -9,9 +9,9 @@ pipeline "foo" {
     }
   }
   
-  step "testws" {
+  step "testworkspace" {
     image_url = "example.com/test"
-    workspace = "testws"
+    workspace = "testworkspace"
     use "exec" {
       command = "bar"
     }

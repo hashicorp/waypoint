@@ -348,9 +348,9 @@ func TestPipelineProtos(t *testing.T) {
 
 				require.Equal(pipelines[0].Name, "foo")
 
-				testStep := pipelines[0].Steps["testws"]
+				testStep := pipelines[0].Steps["testworkspace"]
 				require.NotNil(testStep.Workspace)
-				require.Equal("testws", testStep.Workspace.Workspace)
+				require.Equal("testworkspace", testStep.Workspace.Workspace)
 			},
 		},
 
