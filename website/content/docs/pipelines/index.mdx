@@ -43,13 +43,72 @@ Waypoint project.
 
 ### Pipeline Runs
 
-TODO – Write about pipeline run tracking and the CLI
+Each time a pipeline is run, Waypoint keeps track of the steps and run results.
+As you can see from the [waypoint pipeline run console example output](/docs/pipelines#examples),
+Waypoint identifies how many steps are in the pipeline and how many are successfully
+completed. Users can then further deep dive into specific pipeline runs to view
+more information.
 
-Each time a pipeline is run, Waypoint will keep track of the resulting run and
-detail how each step went or report any failures from running a Step job.
+`waypoint pipeline list` shows the current steps, last run start and complete
+times, last run state, and total runs for every pipeline in the project.
 
 ```shell
+❯ waypoint pipeline list
 
+» Waypoint Pipelines for my-project
+              ID             | NAME |    OWNER     | CURRENT STEPS | LAST RUN STARTED | LAST RUN COMPLETED |  STATE  | TOTAL RUNS  
+-----------------------------+------+--------------+---------------+------------------+--------------------+---------+-------------
+  01GBBBC63TR5DYQXQVGJPS8JGZ | test | example-java |             2 | 5 days ago       | 5 days ago         | success |          5  
+```
+
+`waypoint pipeline inspect` can look up a specific pipeline by ID (default) or
+name, as well as an additional option to view a specific run of that pipeline.
+Pipeline run information will include run state, steps, timestamps, and associated job IDs.
+
+```shell
+❯ waypoint pipeline inspect -name=test
+
+
+» Pipeline Configuration
+                  ID: 01GBBBC63TR5DYQXQVGJPS8JGZ
+                Name: test
+               Owner: example-java
+      Root Step Name: build
+         Total Steps: 2
+          Total Runs: 9
+    Last Run Started: 1 minute ago
+  Last Run Completed: a long while ago
+     Last Run Status: RUNNING
+```
+
+```shell
+❯ waypoint pipeline inspect -name=test -run=3
+
+» Pipeline Configuration
+              ID: 01GBBBC63TR5DYQXQVGJPS8JGZ
+            Name: test
+           Owner: example-java
+  Root Step Name: build
+     Total Steps: 2
+    Run Sequence: 3
+     Jobs Queued: [id:"01GBBBQJZHZVMKRAQSXGYXKEZY" id:"01GBBBQJZH05YD6MN91X30G7HF"]
+     Run Started: 5 days ago
+   Run Completed: 5 days ago
+           State: ERROR
+```
+
+All endpoints and CLI commands related to the running of pipelines: tasks, jobs,
+deployments, releases, and builds will reflect pipeline and pipeline run
+information. See `waypoint artifact list-builds` below for an example:
+
+```
+❯ waypoint artifact list-builds
+
+» example-java
+    | ID | WORKSPACE | BUILDER |   STARTED   |  COMPLETED  |        PIPELINE
+----+----+-----------+---------+-------------+-------------+----------------------------
+  ✔ | 18 | default   | pack    | 3 hours ago | 3 hours ago | test[run: 2][step: build]
+  ✔ | 17 | default   | pack    | 4 hours ago | 4 hours ago | test[run: 1][step: build]
 ```
 
 ### Exec Step Plugin
