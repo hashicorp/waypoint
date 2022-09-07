@@ -62,7 +62,7 @@ step "my-step-name" {
 
 ##### workspace
 
-If set, will override what workspace this step runs in.
+If set, will override the workspace in which this step runs.
 
 ```hcl
 step "my-step-name" {
@@ -92,7 +92,7 @@ step "my-step-name" {
 
 Steps can also contain embedded pipelines.
 
-Note that it isn't valid to have a "use" and a "pipeline "stanza inside a Step.
+Note that it isn't valid to have both a "use" and a "pipeline "stanza inside a Step.
 
 ```hcl
 // this step has an embedded pipeline
@@ -106,7 +106,7 @@ step "my-step-name" {
 ## Built-In Step Config Options
 
 Currently, Pipeline Steps have "built-in" plugins that are backed by the existing
-Waypoint job system. See below examples of each of these built-in Steps and their
+Waypoint job system. See below for examples of each of these built-in Steps and their
 parameters.
 
 ### `build`

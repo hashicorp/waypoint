@@ -33,7 +33,7 @@ the "Exec" plugin, allowing teams to run scripts as part of the pipeline
 execution, further enabling highly-customized operations.
 
 Pipelines allow users to tell Waypoint what order these operations should
-run in and configure any operation options necessary, like disabling an
+run in and configure any operation options necessary; such as disabling an
 artifact push in the `build` step, or pruning old deployments
 on a release in the `release` step.
 
@@ -43,7 +43,7 @@ Waypoint project.
 
 ### Pipeline Runs
 
-Each time a pipeline is run, Waypoint keeps track of the steps and run results.
+Each time a pipeline is run, Waypoint keeps track of the steps, jobs, and run results.
 As you can see from the [waypoint pipeline run console example output](/docs/pipelines#examples),
 Waypoint identifies how many steps are in the pipeline and how many are successfully
 completed. Users can then further deep dive into specific pipeline runs to view
@@ -209,11 +209,11 @@ $ workspace pipeline run builder -workspace=dev
 
 You can override the environment that a Pipeline step runs in by specifying a
 `workspace` param for any step in your Pipeline definition. For example,
-this pipelines "build-prod" step will run in the production workspace.
+this pipeline's "build-prod" step will run in the production ("prod") workspace.
 
-Notice that in the app definition, it contains two build stanzas, one of which
-is _workspace scoped_. That means when the "build-prod" step runs, it will
-use that workspace scoped build plugin pack rather than the default "docker" plugin.
+Notice that the "build" stanza in the "app" definition contains two "use" plugin definitions, 
+one of which is _workspace scoped_. That means when the "build-prod" step runs, it will
+use the "prod" workspace scoped build plugin pack rather than the default "docker" plugin.
 
 ```hcl
 // waypoint.hcl
@@ -289,8 +289,8 @@ pipeline "builder" {
 
 ## Examples
 
-Below is an example that redefines the Up operation to be a pipeline with three
-steps for a build, deploy, and release. This example could be used as a starting
+Below is an example that redefines the Up operation as a pipeline with three
+steps for a build, deploy, and release workflow. This example could be used as a starting
 point for more complicated pipelines.
 
 ```hcl
@@ -317,7 +317,7 @@ app "my-app" {
 }
 ```
 
-For the `exec` steps, it accepts a command and arg parameter for running commands.
+The `exec` step accepts "command" and "arg" parameters for executing commands.
 
 ```hcl
 pipeline "build-and-test" {
@@ -338,11 +338,11 @@ pipeline "build-and-test" {
 }
 ```
 
-To run the example pipeline named "full-up" defined in this example, it's as
+To run the example pipeline named "full-up" defined in this example, it is as
 simple as `waypoint pipeline run full-up`:
 
 ```shell
-brian@ubuntu:waypoint-tetris λ waypoint pipeline run full-up
+❯ waypoint pipeline run full-up
 
 » Running pipeline "full-up" for application "tetris"
 ✓ Pipeline "full-up" has started running. Attempting to read job stream sequentially in order
