@@ -375,7 +375,7 @@ func (i *K8sInstaller) Install(
 		if err != nil {
 			return false, nil
 		}
-		// the job we are searching for is prefixed with `waypoint-bootstrap`
+		// NOTE(krantzinator): the job we are searching for is prefixed with `waypoint-bootstrap`
 		// per our Helm chart; if that naming ever changes, this will also need to be updated
 		// https://github.com/hashicorp/waypoint-helm/blob/d2f6de6e9010b94da84f37eeaca4a8190a439060/templates/bootstrap-job.yaml#L5
 		jobPrefix := "waypoint-bootstrap-"
@@ -393,7 +393,7 @@ func (i *K8sInstaller) Install(
 		return false, nil
 	})
 	if err != nil {
-		log.Error("no bootstrap job found, returning", "job_name", bootJobName)
+		log.Error("no bootstrap job found, returning", "job_name", bootJobName, "err", err)
 		s.Update("No bootstrap job found")
 		s.Status(terminal.WarningStyle)
 		s.Done()
