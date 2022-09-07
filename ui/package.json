@@ -26,7 +26,6 @@
     "test:ember:percy:ci": "percy exec ember test --path=dist"
   },
   "devDependencies": {
-    "@ember-decorators/component": "^6.1.1",
     "@ember/optional-features": "^2.0.0",
     "@ember/render-modifiers": "^2.0.2",
     "@ember/test-helpers": "^2.6.0",
