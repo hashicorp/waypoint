@@ -31,7 +31,8 @@ step "my-step-name" {
 
 A step can depend on many other steps within a pipeline. By default, a step will
 always depend on the previously defined step unless `depends_on` is set. No
-step cycles are allowed.
+step cycles are allowed. This means you cannot have steps that depend on other
+steps that form a cyclic dependency.
 
 ```hcl
 step "my-step-name" {
