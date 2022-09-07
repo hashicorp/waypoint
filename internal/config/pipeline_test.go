@@ -167,9 +167,11 @@ func TestPipeline(t *testing.T) {
 				steps := c.Steps
 				require.Len(steps, 3)
 				for _, step := range steps {
+					expected := ""
 					if step.Name == "testworkspace" {
-						require.Equal("testworkspace", step.Workspace)
+						expected = "testworkspace"
 					}
+					require.Equal(expected, step.Workspace)
 				}
 			},
 		},
