@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -256,7 +257,7 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "oci-url",
 			Target:  &c.flagOCIUrl,
-			Default: "hashicorp/waypoint-odr:latest",
+			Default: installutil.DefaultRunnerImage,
 			Usage:   "The url for the OCI image to launch for the on-demand runner.",
 		})
 

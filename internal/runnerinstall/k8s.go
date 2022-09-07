@@ -5,17 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/waypoint/builtin/k8s"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"strings"
 	"time"
 
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/internal/clierrors"
-	"github.com/hashicorp/waypoint/internal/installutil"
-	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
-	k8sinstallutil "github.com/hashicorp/waypoint/internal/installutil/k8s"
-	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/mitchellh/mapstructure"
 	dockerparser "github.com/novln/docker-parser"
 	"helm.sh/helm/v3/pkg/action"
@@ -24,6 +16,15 @@ import (
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/k8s"
+	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/installutil"
+	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
+	k8sinstallutil "github.com/hashicorp/waypoint/internal/installutil/k8s"
+	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type K8sRunnerInstaller struct {
@@ -260,7 +261,7 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-runner-image",
 		Target:  &i.Config.RunnerImage,
-		Default: installutil.DefaultServerImage,
+		Default: installutil.DefaultRunnerImage,
 		Usage:   "Docker image for the Waypoint runner.",
 	})
 

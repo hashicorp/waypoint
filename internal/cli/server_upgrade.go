@@ -4,13 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/installutil"
 	"os"
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/hashicorp/waypoint/builtin/k8s"
 
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
@@ -19,9 +16,11 @@ import (
 
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/k8s"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/clisnapshot"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"github.com/hashicorp/waypoint/internal/serverinstall"
@@ -432,7 +431,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 		} else {
 			ociUrl := odr.OciUrl
 			if ociUrl == "" {
-				ociUrl = "hashicorp/waypoint-odr:latest"
+				ociUrl = installutil.DefaultRunnerImage
 			}
 			odr = &pb.OnDemandRunnerConfig{
 				Id:                   oldRunnerConfig.Config.Id,
