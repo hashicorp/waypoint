@@ -488,6 +488,10 @@
       {
         "title": "Additional Runners",
         "path": "runner/run-manual"
+      },
+      {
+        "title": "Adoption Workflow",
+        "path": "runner/adoption"
       }
     ]
   },
