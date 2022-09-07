@@ -1,0 +1,4 @@
+```release-note:bug
+upgrade: Update ECS server upgrade to respect -ecs-server-image flag when the
+existing server image is hashicorp/waypoint:latest
+```
