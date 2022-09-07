@@ -141,8 +141,7 @@ such as doing a deploy and release within a specific workspace.
 ```hcl
 pipeline "simple-nested" {
   step "build" {
-    use "build" {
-    }
+    use "build" { }
   }
 
   step "deploy" {
@@ -172,8 +171,7 @@ project = "my-pipeline-project"
 
 pipeline "simple-nested" {
   step "build" {
-    use "build" {
-    }
+    use "build" { }
   }
 
   step "my-deploy" {
@@ -187,8 +185,7 @@ pipeline "simple-nested" {
 
 pipeline "deploy" {
   step "deploy" {
-    use "deploy" {
-    }
+    use "deploy" { }
   }
   step "release" {
     use "release" {
@@ -219,18 +216,15 @@ project = "my-project"
 
 pipeline "full-up" {
   step "my-build" {
-    use "build" {
-    }
+    use "build" { }
   }
 
   step "my-deploy" {
-    use "deploy" {
-    }
+    use "deploy" { }
   }
 
   step "my-release" {
-    use "release" {
-    }
+    use "release" { }
   }
 }
 
@@ -246,8 +240,7 @@ For the `exec` steps, it accepts a command and arg parameter for running command
 ```hcl
 pipeline "build-and-test" {
   step "my-build" {
-    use "build" {
-    }
+    use "build" { }
   }
   step "test" {
     image_url = "https://localhost:5000/waypoint-odr:dev"
@@ -258,8 +251,7 @@ pipeline "build-and-test" {
     }
   }
   step "my-deploy" {
-    use "deploy" {
-    }
+    use "deploy" { }
   }
 }
 ```
@@ -272,6 +264,8 @@ brian@ubuntu:waypoint-tetris λ waypoint pipeline run full-up
 
 » Running pipeline "full-up" for application "tetris"
 ✓ Pipeline "full-up" has started running. Attempting to read job stream sequentially in order
+✓ 3 steps detected, run sequence 2
+
   Performing operation on "kubernetes" with runner profile "kubernetes-bootstrap-profile"
 
 » Cloning data from Git
@@ -350,7 +344,7 @@ brian@ubuntu:waypoint-tetris λ waypoint pipeline run full-up
 ✓ Kubernetes client connected to https://my-kubernetes.example.com:443 with namespace default
 ✓ Creating service...
 ✓ Service is ready!
-✔ Pipeline "full-up" (k8s-tetris) finished!
+✔ Pipeline "full-up" (k8s-tetris) finished! 3/3 steps successfully completed.
 ```
 
 ## Future Roadmap For Pipelines
