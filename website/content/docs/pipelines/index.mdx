@@ -20,7 +20,7 @@ Release workflow for an application. This
 simple yet powerful pipeline is great for most early users of Waypoint to continuously build
 and deploy an application to production.
 
-As our product grew, so did our users. Users wished for more fine-tuned control and customization over how Waypoint deploys applications. Teams need to run tests after a build, security scan artifacts prior to a deploy, and so on. Custom Pipelines enable teams to solve increasingly complex challenges. 
+As our product grew, so did our users. Users wished for more fine-tuned control and customization over how Waypoint deploys applications. Teams need to run tests after a build, security scan artifacts prior to a deploy, and so on. Custom Pipelines enable teams to solve increasingly complex challenges.
 In the Tech Preview, users can define pipelines to run in the order they require to deliver their
 application. Additionally, users can run scripts as a pipeline execution step via the "Exec" plugin, which further enables highly customized operations.
 
@@ -203,7 +203,7 @@ You can override the environment that a Pipeline step runs in by specifying a
 `workspace` param for any step in your Pipeline definition. For example,
 this pipeline's "build-prod" step will run in the production ("prod") workspace.
 
-Notice that the "build" stanza in the "app" definition contains two "use" plugin definitions, 
+Notice that the "build" stanza in the "app" definition contains two "use" plugin definitions,
 one of which is _workspace scoped_. That means when the "build-prod" step runs, it will
 use the "prod" workspace scoped build plugin pack rather than the default "docker" plugin.
 
