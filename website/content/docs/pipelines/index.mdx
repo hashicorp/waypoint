@@ -141,7 +141,7 @@ such as doing a deploy and release within a specific workspace.
 ```hcl
 pipeline "simple-nested" {
   step "build" {
-    use "build" { }
+    use "build" {}
   }
 
   step "deploy" {
@@ -171,7 +171,7 @@ project = "my-pipeline-project"
 
 pipeline "simple-nested" {
   step "build" {
-    use "build" { }
+    use "build" {}
   }
 
   step "my-deploy" {
@@ -185,7 +185,7 @@ pipeline "simple-nested" {
 
 pipeline "deploy" {
   step "deploy" {
-    use "deploy" { }
+    use "deploy" {}
   }
   step "release" {
     use "release" {
@@ -219,16 +219,15 @@ use that workspace scoped build plugin pack rather than the default "docker" plu
 // waypoint.hcl
 pipeline "builder" {
   step "build-dev" {
-    use "build" { }
+    use "build" {}
   }
   step "build-prod" {
     workspace = "prod"
-    use "build" {
-    }
+    use "build" {}
   }
   step "deploy-dev" {
     use "deploy" {
-      release=false
+      release = false
     }
   }
 }
@@ -257,17 +256,17 @@ You can also use this to set a workspace for an embedded pipeline:
 ```hcl
 pipeline "builder" {
   step "build" {
-    use "build" { }
+    use "build" {}
   }
   step "deploy-test" {
     workspace = "test"
     pipeline "deploy-test-env" {
       step "build" {
         // test env uses docker-pull
-        use "build" { }
+        use "build" {}
       }
       step "deploy" {
-        use "deploy" { }
+        use "deploy" {}
       }
       // more steps here...
     }
@@ -277,10 +276,10 @@ pipeline "builder" {
     pipeline "deploy-prod-env" {
       step "build" {
         // prod env uses docker-pull
-        use "build" { }
+        use "build" {}
       }
       step "deploy" {
-        use "deploy" { }
+        use "deploy" {}
       }
       // more steps here...
     }
@@ -299,15 +298,15 @@ project = "my-project"
 
 pipeline "full-up" {
   step "my-build" {
-    use "build" { }
+    use "build" {}
   }
 
   step "my-deploy" {
-    use "deploy" { }
+    use "deploy" {}
   }
 
   step "my-release" {
-    use "release" { }
+    use "release" {}
   }
 }
 
@@ -323,7 +322,7 @@ For the `exec` steps, it accepts a command and arg parameter for running command
 ```hcl
 pipeline "build-and-test" {
   step "my-build" {
-    use "build" { }
+    use "build" {}
   }
   step "test" {
     image_url = "https://localhost:5000/waypoint-odr:dev"
@@ -334,7 +333,7 @@ pipeline "build-and-test" {
     }
   }
   step "my-deploy" {
-    use "deploy" { }
+    use "deploy" {}
   }
 }
 ```

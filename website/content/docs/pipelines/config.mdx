@@ -19,7 +19,7 @@ Steps have a few basic configuration options that are defined below.
 ```hcl
 // this step has a label name "my-step-name"
 step "my-step-name" {
-  use "build" { }
+  use "build" {}
 }
 ```
 
@@ -37,7 +37,7 @@ step cycles are allowed.
 step "my-step-name" {
   depends_on = ["step-1", "step-3", "root"]
 
-  use "deploy" { }
+  use "deploy" {}
 }
 ```
 
@@ -53,7 +53,7 @@ to spawn the `exec` pipeline step.
 step "my-step-name" {
   image_url = "https://example.com:5000/waypoint-odr:latest"
 
-  use "exec" { }
+  use "exec" {}
 }
 ```
 
@@ -68,7 +68,7 @@ If set, will override what workspace this step runs in.
 step "my-step-name" {
   workspace = "production"
 
-  use "deploy" { }
+  use "deploy" {}
 }
 ```
 
@@ -82,7 +82,7 @@ If used in a step, this will denote which "built-in" Step plugin to use.
 ```hcl
 // this step will "use" the build plugin
 step "my-step-name" {
-  use "build" { }
+  use "build" {}
 }
 ```
 
@@ -132,7 +132,7 @@ This built-in Step will run a Deploy operation job, similar to running `waypoint
 
 ```hcl
 step "my-deploy-step" {
-  use "deploy" { }
+  use "deploy" {}
 }
 ```
 
