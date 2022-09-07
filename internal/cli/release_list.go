@@ -205,7 +205,7 @@ func (c *ReleaseListCommand) Run(args []string) int {
 				return err
 			}
 			if j.Pipeline != nil {
-				pipeline := "pipeline: " + j.Pipeline.PipelineName + "[run: " + strconv.FormatUint(j.Pipeline.RunSequence, 10) + "]" + "[step: " + j.Pipeline.Step + "]"
+				pipeline := "name: " + j.Pipeline.PipelineName + ", run: " + strconv.FormatUint(j.Pipeline.RunSequence, 10) + ", step: " + j.Pipeline.Step
 				details = append(details, pipeline)
 			}
 

@@ -56,7 +56,7 @@ func (c *BuildListCommand) Run(args []string) int {
 
 		const bullet = "●"
 
-		table := terminal.NewTable("", "ID", "Workspace", "Builder", "Started", "Completed")
+		table := terminal.NewTable("", "ID", "Workspace", "Builder", "Started", "Completed", "Pipeline")
 		for _, b := range resp.Builds {
 			// Determine our bullet
 			status := ""
@@ -93,7 +93,7 @@ func (c *BuildListCommand) Run(args []string) int {
 				return err
 			}
 			if j.Pipeline != nil {
-				pipeline = j.Pipeline.PipelineName + "[run: " + strconv.FormatUint(j.Pipeline.RunSequence, 10) + "]" + "[step: " + j.Pipeline.Step + "]"
+				pipeline = "name: " + j.Pipeline.PipelineName + ", run: " + strconv.FormatUint(j.Pipeline.RunSequence, 10) + ", step: " + j.Pipeline.Step
 			}
 
 			table.Rich([]string{
