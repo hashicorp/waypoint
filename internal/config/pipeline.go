@@ -305,7 +305,7 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 		case "release":
 			var releaseBody struct {
 				DeploymentRef       uint64 `hcl:"deployment_ref,optional"` // 0 or "unset" means latest
-				Prune               bool   `hcl:"prune,optional"`
+				Prune               *bool  `hcl:"prune,optional"`          // nil means unset, we default to "true"
 				PruneRetain         int32  `hcl:"prune_retain,optional"`
 				PruneRetainOverride bool   `hcl:"prune_retain_override,optional"`
 			}
@@ -330,10 +330,16 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 				}
 			}
 
+			// unset, so default to true
+			if releaseBody.Prune == nil {
+				b := true
+				releaseBody.Prune = &b
+			}
+
 			s.Kind = &pb.Pipeline_Step_Release_{
 				Release: &pb.Pipeline_Step_Release{
 					Deployment:          deployRef,
-					Prune:               releaseBody.Prune,
+					Prune:               *releaseBody.Prune,
 					PruneRetain:         releaseBody.PruneRetain,
 					PruneRetainOverride: releaseBody.PruneRetainOverride,
 				},
@@ -358,7 +364,7 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 			}
 		case "exec":
 			var execBody struct {
-				Command string   `hcl:"command,optional"`
+				Command string   `hcl:"command"`
 				Args    []string `hcl:"args,optional"`
 			}
 
@@ -375,11 +381,9 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 				},
 			}
 		case "pipeline":
-			// TODO(briancain): setting name to 'required' makes the HCL parser
-			// panic saying 'required' is an invalid hcl tag :thinking:
 			var pipelineBody struct {
-				Project string `hcl:"project,optional"`
-				Name    string `hcl:"name,optional"`
+				Project string `hcl:"project"`
+				Name    string `hcl:"name"`
 			}
 
 			// Evaluate the step body hcl to get options

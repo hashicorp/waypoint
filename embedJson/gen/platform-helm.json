@@ -1,0 +1,147 @@
+{
+   "description": "\nDeploy to Kubernetes from a Helm chart. The Helm chart can be a local path\nor a chart in a repository.\n\n### Entrypoint Functionality\n\nWaypoint [entrypoint functionality](/docs/entrypoint#functionality) such\nas logs, exec, app configuration, and more require two properties to be true:\n\n1. The running image must already have the Waypoint entrypoint installed\n  and configured as the entrypoint. This should happen in the build stage.\n\n2. Proper environment variables must be set so the entrypoint knows how\n  to communicate to the Waypoint server. **This step happens in this\n  deployment stage.**\n\n**Step 2 does not happen automatically.** You must manually set the entrypoint\nenvironment variables using the [templating feature](/docs/waypoint-hcl/functions/template).\nThese must be passed in using Helm values (i.e. the chart must make\nenvironment variables configurable).\n\nThis is documented in more detail with a full example in the\n[Kubernetes Helm Deployment documentation](/docs/kubernetes/helm-deploy).\n\n#### URL Service\n\nIf you want your workload to be accessible by the\n[Waypoint URL service](/docs/url), you must set the PORT environment variable\nwithin the pod with your web service and also be using the Waypoint\nentrypoint (documented in the previous section).\n\nThe PORT environment variable should be the port that your web service\nis listening on that the URL service will connect to. See one of the examples\nbelow for more details.\n\n",
+   "example": "// Configuring an image to match the build. This assumes the chart\n// has a value named \"deployment.image\".\ndeploy {\n  use \"helm\" {\n    chart = \"${path.app}/chart\"\n\n    set {\n      name  = \"deployment.image\"\n      value = artifact.name\n    }\n  }\n}",
+   "mappers": null,
+   "name": "helm",
+   "optionalFields": [
+      {
+         "Field": "context",
+         "Type": "string",
+         "Synopsis": "The kubectl context to use, as defined in the kubeconfig file.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "devel",
+         "Type": "bool",
+         "Synopsis": "True to considered non-released chart versions for installation.",
+         "Summary": "This is equivalent to the `--devel` flag to `helm install`.",
+         "Optional": true,
+         "Default": "false",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "driver",
+         "Type": "string",
+         "Synopsis": "The Helm storage driver to use.",
+         "Summary": "This can be one of `configmap`, `secret`, `memory`, or `sql`. The SQL connection string can not be set currently so this must be set on the runners.",
+         "Optional": true,
+         "Default": "secret",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "kubeconfig",
+         "Type": "string",
+         "Synopsis": "Path to the kubeconfig file to use.",
+         "Summary": "If this isn't set, the default lookup used by `kubectl` will be used.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "KUBECONFIG",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "namespace",
+         "Type": "string",
+         "Synopsis": "Namespace to deploy the Helm chart.",
+         "Summary": "This will be created if it does not exist. This defaults to the current namespace of the auth settings.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "repository",
+         "Type": "string",
+         "Synopsis": "URL of the Helm repository that contains the chart.",
+         "Summary": "This only needs to be set if you're NOT using a local chart.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "values",
+         "Type": "list of string",
+         "Synopsis": "Values in raw YAML to configure the Helm chart.",
+         "Summary": "These values are usually loaded from files using HCL functions such as `file` or templating with `templatefile`. Multiple values will be merged using the same logic as the `-f` flag with Helm.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "version",
+         "Type": "string",
+         "Synopsis": "The version of the chart to install.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrs": [
+      {
+         "Field": "release",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "chart",
+         "Type": "string",
+         "Synopsis": "The name or path of the chart to install.",
+         "Summary": "If you're installing a local chart, this is the path to the chart. If you're installing a chart from a repository (have the `repository` configuration set), then this is the name of the chart in the repository.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "name",
+         "Type": "string",
+         "Synopsis": "Name of the Helm release.",
+         "Summary": "This must be globally unique within the context of your Helm installation.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "set",
+         "Type": "list of struct { Name string \"hcl:\\\"name,attr\\\"\"; Value string \"hcl:\\\"value,attr\\\"\"; Type string \"hcl:\\\"type,optional\\\"\" }",
+         "Synopsis": "A single value to set. This can be repeated multiple times.",
+         "Summary": "This sets a single value. Separate nested values with a `.`. This is the same as the `--set` flag on `helm install`.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "platform",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

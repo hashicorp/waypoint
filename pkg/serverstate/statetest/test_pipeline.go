@@ -421,5 +421,28 @@ func TestPipeline(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.NotNil(resp)
 			require.Len(resp, 3)
 		}
+
+		// a fourth that is in a different project
+		p4 := ptypes.TestPipeline(t, &pb.Pipeline{
+			Id:   "wario",
+			Name: "wario",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "not-our-project",
+				},
+			},
+		})
+		err = s.PipelinePut(p4)
+		require.NoError(err)
+
+		// List should still return three pipelines
+		{
+			resp, err := s.PipelineList(&pb.Ref_Project{
+				Project: "project",
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Len(resp, 3)
+		}
 	})
 }

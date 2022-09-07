@@ -1,0 +1,8 @@
+{
+   "mappers": null,
+   "name": "aws-ec2",
+   "optionalFields": null,
+   "requiredFields": null,
+   "type": "releasemanager",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

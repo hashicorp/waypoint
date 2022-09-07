@@ -57,6 +57,19 @@ func ValidateOnDemandRunnerConfigRules(p *pb.OnDemandRunnerConfig) []*validation
 		validation.Field(&p.PluginType, validation.Required),
 		validation.Field(&p.PluginConfig, isPluginHcl(p)),
 		validation.Field(&p.Name, validation.By(validatePathToken)),
+		validation.Field(&p.TargetRunner, validation.By(func(i interface{}) error {
+			targetRunner, _ := i.(*pb.Ref_Runner)
+			if targetRunner == nil {
+				return nil
+			}
+			switch runner := targetRunner.Target.(type) {
+			case *pb.Ref_Runner_Labels:
+				if len(runner.Labels.Labels) == 0 {
+					return errors.New("profile targets a runner with labels, but does not specify any labels")
+				}
+			}
+			return nil
+		})),
 	}
 }
 

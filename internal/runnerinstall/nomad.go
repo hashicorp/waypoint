@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/installutil"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/waypoint/internal/installutil"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -44,7 +45,7 @@ type NomadConfig struct {
 	CsiFS                string            `hcl:"csi_fs,optional"`
 	CsiTopologies        map[string]string `hcl:"nomad_csi_topologies,optional"`
 	CsiExternalId        string            `hcl:"nomad_csi_external_id,optional"`
-	CsiPluginId          string            `hcl:"nomad_csi_plugin_id,required"`
+	CsiPluginId          string            `hcl:"nomad_csi_plugin_id"`
 	CsiSecrets           map[string]string `hcl:"nomad_csi_secrets,optional"`
 	CsiVolume            string            `hcl:"nomad_csi_volume,optional"`
 

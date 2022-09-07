@@ -280,7 +280,7 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Uninstalling Runner...")
+	s := sg.Add("Finding runner in ECS services...")
 	defer func() { s.Abort() }()
 
 	sess, err := utils.GetSession(&utils.SessionConfig{

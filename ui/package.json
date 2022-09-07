@@ -134,12 +134,12 @@
     "edition": "octane"
   },
   "dependencies": {
-    "@hashicorp/design-system-components": "^1.0.3",
+    "@hashicorp/design-system-components": "^1.0.4",
     "@hashicorp/ember-flight-icons": "^2.0.10",
-    "@types/google-protobuf": "^3.7.2",
+    "@types/google-protobuf": "^3.15.6",
     "api-common-protos": "link:./lib/api-common-protos",
     "ember-cli-typescript-blueprints": "^3.0.0",
-    "google-protobuf": "^3.12.2",
+    "google-protobuf": "^3.21.0",
     "grpc-web": "link:./lib/grpc-web",
     "opaqueany": "link:./lib/opaqueany",
     "waypoint-client": "link:./lib/waypoint-client",

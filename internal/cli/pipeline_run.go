@@ -39,6 +39,16 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		c.ui.Output("Both pipeline name and ID were specified, using pipeline ID", terminal.WithWarningStyle())
 	}
 
+	if c.flagLocal != nil && *c.flagLocal {
+		// TODO(briancain): Remove this warning when local support for Pipelines is introduced.
+		// GitHub: https://github.com/hashicorp/waypoint/issues/3813
+		c.ui.Output("At the moment, the initial Tech Preview of Custom Pipelines does not allow "+
+			"for executing pipelines with a local runner. The CLI will attempt to run the "+
+			"requested pipeline but it will likely fail if the project was not configured "+
+			"to run remotely.",
+			terminal.WithWarningStyle())
+	}
+
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// setup pipeline name to be used for UI printing
 		pipelineIdent := pipelineName
@@ -102,35 +112,34 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		}
 
 		step.Update("Pipeline %q has started running. Attempting to read job stream sequentially in order", pipelineIdent)
+		step.Done()
+
+		// Receive job ids from running pipeline, use job client to attach to job stream
+		// and stream here. First pass can be linear job streaming
+		step = sg.Add("")
+		defer step.Abort()
 
 		steps := len(resp.JobMap)
 		step.Update("%d steps detected, run sequence %d", steps, resp.Sequence)
 		step.Done()
 
-		// Receive job ids from running pipeline, use job client to attach to job stream
-		// and stream here. First pass can be linear job streaming
 		successful := steps
 		for _, jobId := range resp.AllJobIds {
 			app.UI.Output("Executing Step %q", resp.JobMap[jobId].Step, terminal.WithHeaderStyle())
 			app.UI.Output("Reading job stream (jobId: %s)...", jobId, terminal.WithInfoStyle())
 			app.UI.Output("")
 
-			result, err := jobstream.Stream(c.Ctx, jobId,
+			_, err := jobstream.Stream(c.Ctx, jobId,
 				jobstream.WithClient(c.project.Client()),
 				jobstream.WithUI(app.UI))
 			if err != nil {
 				return err
 			}
 
-			var state pb.Status_State
-			if result.Build != nil {
-				state = result.Build.Build.Status.State
-			} else if result.Deploy != nil {
-				state = result.Deploy.Deployment.Status.State
-			} else if result.Release != nil {
-				state = result.Release.Release.Status.State
-			}
-			if state != pb.Status_SUCCESS {
+			job, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+				JobId: jobId,
+			})
+			if job.State != pb.Job_SUCCESS {
 				successful--
 			}
 		}

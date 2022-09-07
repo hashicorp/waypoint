@@ -73,7 +73,7 @@ the install, the command would be:
 - `-k8s-context=<string>` - The Kubernetes context to install the Waypoint runner to. If left unset, Waypoint will use the current Kubernetes context.
 - `-k8s-helm-version=<string>` - The version of the Helm chart to use for the Waypoint runner install. The required version number format is: 'vX.Y.Z'.
 - `-k8s-namespace=<string>` - The namespace in the Kubernetes cluster into which the Waypoint runner will be installed. The default is default.
-- `-k8s-runner-image=<string>` - Docker image for the Waypoint runner. The default is hashicorp/waypoint:latest.
+- `-k8s-runner-image=<string>` - Docker image for the Waypoint runner. The default is hashicorp/waypoint-odr:latest.
 - `-k8s-cpu-request=<string>` - Requested amount of CPU for Waypoint runner. The default is 250m.
 - `-k8s-mem-request=<string>` - Requested amount of memory for Waypoint runner. The default is 256Mi.
 - `-k8s-runner-service-account-init` - Create the service account if it does not exist. The default is true.

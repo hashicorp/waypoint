@@ -1906,6 +1906,10 @@ message Job {
 
       // git will check out the data from a Git repository.
       Git git = 2;
+
+      // remote means that the Waypoint server has special logic for how to
+      // fetch the data.
+      Remote remote = 3;
     }
 
     // Ref is a reference to the exact set of data used by a data source.
@@ -1922,6 +1926,12 @@ message Job {
   }
 
   message Local {}
+
+  message Remote {
+    // Description is information about how the Waypoint server
+    // acquires the data.
+    string description = 1;
+  }
 
   message Git {
     // url of the repository to clone. Local paths are not allowed.

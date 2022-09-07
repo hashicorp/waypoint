@@ -1,0 +1,137 @@
+{
+   "description": "\nLaunch a Docker container as a task.\n\nIf a Docker server is available (either locally or via environment variables\nsuch as \"DOCKER_HOST\"), then it will be used to start the container.\n",
+   "example": "task {\n  use \"docker\" {\n\t\tforce_pull = true\n  }\n}",
+   "mappers": null,
+   "name": "docker",
+   "optionalFields": [
+      {
+         "Field": "binds",
+         "Type": "list of string",
+         "Synopsis": "A 'source:destination' list of folders to mount onto the container from the host.",
+         "Summary": "A list of folders to mount onto the container from the host. The expected format for each string entry in the list is `source:destination`. So for example: `binds: [\"host_folder/scripts:/scripts\"]`",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "debug_containers",
+         "Type": "bool",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "force_pull",
+         "Type": "bool",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "labels",
+         "Type": "map of string to string",
+         "Synopsis": "A map of key/value pairs to label the docker container with.",
+         "Summary": "A map of key/value pair(s), stored in docker as a string. Each key/value pair must be unique. Validiation occurs at the docker layer, not in Waypoint. Label keys are alphanumeric strings which may contain periods (.) and hyphens (-).",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "networks",
+         "Type": "list of string",
+         "Synopsis": "A list of strings with network names to connect the container to.",
+         "Summary": "A list of networks to connect the container to. By default the container will always connect to the `waypoint` network.",
+         "Optional": true,
+         "Default": "waypoint",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "resources",
+         "Type": "docker.TaskResources",
+         "Synopsis": "The resources that the tasks should use.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "cpu",
+               "Type": "int64",
+               "Synopsis": "The cpu shares that the tasks should use",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "memory",
+               "Type": "string",
+               "Synopsis": "The amount of memory to use. Defined as '512MB', '44kB', etc.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
+         "Field": "static_environment",
+         "Type": "map of string to string",
+         "Synopsis": "environment variables to expose to the application",
+         "Summary": "These variables are used to control all of a container's modes, such as configuring it to start a web app vs a background worker. These environment variables should not be common configuration variables normally set in `waypoint config`.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrs": [
+      {
+         "Field": "id",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "client_config",
+         "Type": "docker.ClientConfig",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "task",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

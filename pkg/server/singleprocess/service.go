@@ -41,6 +41,8 @@ type Service struct {
 	// about the token, such as adding labels, metadata, or additional info
 	processToken func(ctx context.Context, transport *pb.TokenTransport, token *pb.Token) (*pb.Token, error)
 
+	populateDataSource func(ctx context.Context, job *pb.Job) (*pb.Job, error)
+
 	logStreamProvider logstream.Provider
 
 	// urlConfig is not nil if the URL service is enabled. This is guaranteed
@@ -107,6 +109,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	s.decodeId = cfg.idDecoder
 	s.features = cfg.features
 	s.processToken = cfg.processToken
+	s.populateDataSource = cfg.populateDataSource
 
 	if !cfg.oidcDisabled {
 		s.oidcCache = wpoidc.NewProviderCache()
@@ -271,7 +274,8 @@ type config struct {
 	idEncoder func(ctx context.Context, id string) (encodedId string, err error)
 	idDecoder func(encodedId string) (id string, err error)
 
-	processToken func(ctx context.Context, transport *pb.TokenTransport, token *pb.Token) (*pb.Token, error)
+	processToken       func(ctx context.Context, transport *pb.TokenTransport, token *pb.Token) (*pb.Token, error)
+	populateDataSource func(context.Context, *pb.Job) (*pb.Job, error)
 
 	serverConfig         *serverconfig.Config
 	log                  hclog.Logger
@@ -443,6 +447,13 @@ func WithTokenProcessor(fn func(context.Context, *pb.TokenTransport, *pb.Token) 
 func WithActiveAuthKeyId(id string) Option {
 	return func(s *Service, cfg *config) error {
 		cfg.activeAuthKeyId = id
+		return nil
+	}
+}
+
+func WithPopulateJobDataSource(fn func(context.Context, *pb.Job) (*pb.Job, error)) Option {
+	return func(s *Service, cfg *config) error {
+		cfg.populateDataSource = fn
 		return nil
 	}
 }

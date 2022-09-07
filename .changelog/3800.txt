@@ -1,0 +1,3 @@
+```release-note:bug
+core/runner: Default to odr oci image url for runner profiles created via runner install
+```

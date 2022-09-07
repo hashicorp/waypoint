@@ -46,7 +46,7 @@ func (i *K8sInstaller) NewClient() (*kubernetes.Clientset, error) {
 		namespace, _, err := newCmdConfig.Namespace()
 		if err != nil {
 			return nil, fmt.Errorf(
-				"Error getting namespace from client config: %s",
+				"error getting namespace from client config: %s",
 				clierrors.Humanize(err),
 			)
 		}
@@ -57,7 +57,7 @@ func (i *K8sInstaller) NewClient() (*kubernetes.Clientset, error) {
 	clientconfig, err := newCmdConfig.ClientConfig()
 	if err != nil {
 		return nil, fmt.Errorf(
-			"Error initializing kubernetes client: %s",
+			"error initializing kubernetes client: %s",
 			clierrors.Humanize(err),
 		)
 	}
@@ -65,7 +65,7 @@ func (i *K8sInstaller) NewClient() (*kubernetes.Clientset, error) {
 	clientset, err := kubernetes.NewForConfig(clientconfig)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"Error initializing kubernetes client: %s",
+			"error initializing kubernetes client: %s",
 			clierrors.Humanize(err),
 		)
 	}
@@ -103,7 +103,7 @@ func (i *K8sInstaller) CleanPVC(ctx context.Context, ui terminal.UI, log hclog.L
 			metav1.DeleteOptions{},
 			listOptions,
 		); err != nil {
-			s.Update("Unable to delete PVCs", terminal.StatusError)
+			s.Update("Unable to delete PVCs")
 			s.Abort()
 			return err
 		}
@@ -122,7 +122,7 @@ func (i *K8sInstaller) CleanPVC(ctx context.Context, ui terminal.UI, log hclog.L
 			}
 		})
 		if err != nil {
-			s.Update("Unable to delete PVCs", terminal.StatusError)
+			s.Update("Unable to delete PVCs")
 			s.Abort()
 			return err
 		}

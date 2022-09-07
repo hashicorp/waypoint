@@ -1,0 +1,3 @@
+```release-note:improvement
+internal/runnerinstall: Fix order of error checking and make error message more specific
+```
