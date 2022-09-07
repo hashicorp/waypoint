@@ -536,7 +536,7 @@ func (i *ECSInstaller) Upgrade(
 	s = sg.Add("Updating task definition")
 	defer func() { s.Abort() }()
 
-	if *containerDef.Image == installutil.DefaultServerImage && upgradeImg == installutil.DefaultServerImage {
+	if containerDef != nil && *containerDef.Image == installutil.DefaultServerImage && upgradeImg == installutil.DefaultServerImage {
 		// we can just update/force-deploy the service
 		_, err := ecsSvc.UpdateService(&ecs.UpdateServiceInput{
 			ForceNewDeployment:            aws.Bool(true),
