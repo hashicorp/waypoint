@@ -56,9 +56,9 @@ times, last run state, and total runs for every pipeline in the project.
 ❯ waypoint pipeline list
 
 » Waypoint Pipelines for my-project
-              ID             | NAME |    OWNER     | CURRENT STEPS | LAST RUN STARTED | LAST RUN COMPLETED |  STATE  | TOTAL RUNS  
+              ID             | NAME |    OWNER     | CURRENT STEPS | LAST RUN STARTED | LAST RUN COMPLETED |  STATE  | TOTAL RUNS
 -----------------------------+------+--------------+---------------+------------------+--------------------+---------+-------------
-  01GBBBC63TR5DYQXQVGJPS8JGZ | test | example-java |             2 | 5 days ago       | 5 days ago         | success |          5  
+  01GBBBC63TR5DYQXQVGJPS8JGZ | test | example-java |             2 | 5 days ago       | 5 days ago         | success |          5
 ```
 
 `waypoint pipeline inspect` can look up a specific pipeline by ID (default) or
@@ -197,12 +197,95 @@ pipeline "deploy" {
 
 ### Pipelines Across Workspaces
 
-TODO – Write about Waypoint Pipelines and how it works with workspaces
+Pipelines can be defined and scoped to a Workspace for deploying in various environments.
+When you use the pipeline run CLI, you can run a pipeline in a different workspace
+with the `-workspace` flag.
 
-Additionally, pipelines can be defined and scoped to a Workspace for deploying in various environments.
+```shell
+$ workspace pipeline run builder -workspace=dev
+```
+
+#### Workspace Scoped Steps
+
+You can override the environment that a Pipeline step runs in by specifying a
+`workspace` param for any step in your Pipeline definition. For example,
+this pipelines "build-prod" step will run in the production workspace.
+
+Notice that in the app definition, it contains two build stanzas, one of which
+is _workspace scoped_. That means when the "build-prod" step runs, it will
+use that workspace scoped build plugin pack rather than the default "docker" plugin.
 
 ```hcl
+// waypoint.hcl
+pipeline "builder" {
+  step "build-dev" {
+    use "build" { }
+  }
+  step "build-prod" {
+    workspace = "prod"
+    use "build" {
+    }
+  }
+  step "deploy-dev" {
+    use "deploy" {
+      release=false
+    }
+  }
+}
 
+// waypoint.hcl
+app "tetris" {
+  build {
+    use "docker" {}
+
+    workspace "prod" {
+      use "pack" {}
+    }
+  }
+  deploy {
+    use "docker" {}
+
+    workspace "prod" {
+      use "kubernetes" {}
+    }
+  }
+}
+```
+
+You can also use this to set a workspace for an embedded pipeline:
+
+```hcl
+pipeline "builder" {
+  step "build" {
+    use "build" { }
+  }
+  step "deploy-test" {
+    workspace = "test"
+    pipeline "deploy-test-env" {
+      step "build" {
+        // test env uses docker-pull
+        use "build" { }
+      }
+      step "deploy" {
+        use "deploy" { }
+      }
+      // more steps here...
+    }
+  }
+  step "deploy-prod" {
+    workspace = "prod"
+    pipeline "deploy-prod-env" {
+      step "build" {
+        // prod env uses docker-pull
+        use "build" { }
+      }
+      step "deploy" {
+        use "deploy" { }
+      }
+      // more steps here...
+    }
+  }
+}
 ```
 
 ## Examples
