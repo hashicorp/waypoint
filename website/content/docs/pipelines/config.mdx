@@ -60,6 +60,21 @@ step "my-step-name" {
 - Type: **string**
 - **Optional**
 
+##### workspace
+
+If set, will override what workspace this step runs in.
+
+```hcl
+step "my-step-name" {
+  workspace = "production"
+
+  use "deploy" { }
+}
+```
+
+- Type: **string**
+- **Optional**
+
 ##### use
 
 If used in a step, this will denote which "built-in" Step plugin to use.
