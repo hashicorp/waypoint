@@ -660,6 +660,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"project destroy": func() (cli.Command, error) {
+			return &ProjectDestroyCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"fmt": func() (cli.Command, error) {
 			return &FmtCommand{

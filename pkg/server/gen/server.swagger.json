@@ -6628,6 +6628,13 @@
           },
           "description": "Resources that this deployment has created or manages."
         },
+        "destroyed_resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.DestroyedResource"
+          },
+          "title": "Resources that a destroy operation has destroyed"
+        },
         "preload": {
           "$ref": "#/definitions/hashicorp.waypoint.Deployment.Preload",
           "description": "This is the populated preload data. Most of this data can be retrieved\nthrough additional API calls or manually computed, but certain API\ncalls will pre-populate some of these fields for convenience. The exact\npre-populated fields depend on the API."
@@ -6661,6 +6668,31 @@
         "job_data_source_ref": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref",
           "description": "The ref that was used in the job to run this operation. This is\nalso accessible by querying the job via the job_id and should always\nmatch.\n\nThis may be null under multiple circumstances: (1) the job was\nmanually triggered with local data (no datasource) or (2) the job\nwas run in earlier versions of Waypoint before we tracked this or\n(3) the job hasn't yet loaded the data.\n\nThis is always pre-populated if it is exists."
+        }
+      }
+    },
+    "hashicorp.waypoint.DestroyedResource": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name name for the resource. Usually derived from the platform. Required."
+        },
+        "type": {
+          "type": "string",
+          "title": "platform-specific type of the resource type. i.e. instance, pod, auto-scaling group, etc"
+        },
+        "platform": {
+          "type": "string",
+          "description": "The platform on which the resource should exist, i.e. docker, gcp, k8s, etc."
+        },
+        "state": {
+          "$ref": "#/definitions/opaqueany.Any",
+          "description": "Internal ResourceManager representation of the resource."
+        },
+        "state_json": {
+          "type": "string",
+          "description": "Any additional information a plugin wants to expose on this resource.\nEX: Availability zones on a load balancer, concurrency limit on a lambda function, etc."
         }
       }
     },
@@ -7843,6 +7875,9 @@
         "pipeline_step": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.PipelineStepOp"
         },
+        "destroy_project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.DestroyProjectOp"
+        },
         "state": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.State",
           "title": "state of the job"
@@ -8073,6 +8108,18 @@
         }
       }
     },
+    "hashicorp.waypoint.Job.DestroyProjectOp": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project"
+        },
+        "skip_destroy_resources": {
+          "type": "boolean"
+        }
+      },
+      "title": "DestroyProjectOp triggers the deletion of a project from the database\nas well as (optionally) the destruction of all resources created within\na project"
+    },
     "hashicorp.waypoint.Job.DocsOp": {
       "type": "object"
     },
@@ -8288,6 +8335,14 @@
         }
       }
     },
+    "hashicorp.waypoint.Job.ProjectDestroyResult": {
+      "type": "object",
+      "properties": {
+        "job_id": {
+          "type": "string"
+        }
+      }
+    },
     "hashicorp.waypoint.Job.PushOp": {
       "type": "object",
       "properties": {
@@ -8431,6 +8486,9 @@
         },
         "pipeline_config_sync": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.PipelineConfigSyncResult"
+        },
+        "project_destroy": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.ProjectDestroyResult"
         }
       }
     },
@@ -9232,6 +9290,9 @@
         "status_report_poll": {
           "$ref": "#/definitions/hashicorp.waypoint.Project.AppStatusPoll",
           "description": "Application polling settings. Polling will trigger a \"StatusFunc\" for collecting a\nreport on the current status of the application.\nFor now, polling is only done on the `default` workspace. A future\nversion of Waypoint will expand polling to other workspaces.\n\nEach polling event is tracked as a separate job. You can query the\npoll operations and their success/failure by using the ListJobs API."
+        },
+        "state": {
+          "$ref": "#/definitions/hashicorp.waypoint.Project.ProjectState"
         }
       }
     },
@@ -9260,6 +9321,15 @@
           "description": "interval is a duration string of how often to poll, such as \"5s\".\nThe server may enforce minimum values, in which case a value lower\nthan the minimum will be ignored."
         }
       }
+    },
+    "hashicorp.waypoint.Project.ProjectState": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "DESTROYING"
+      ],
+      "default": "ACTIVE",
+      "description": "ProjectState is set to active when the project is created and throughout its lifetime.\nWhen a project destroy operation begins, the state is set to destroying."
     },
     "hashicorp.waypoint.PushedArtifact": {
       "type": "object",

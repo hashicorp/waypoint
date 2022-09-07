@@ -81,6 +81,22 @@ func (s *Service) ListProjects(
 	return &pb.ListProjectsResponse{Projects: result}, nil
 }
 
+func (s *Service) DestroyProject(
+	ctx context.Context,
+	req *pb.DestroyProjectRequest,
+) (*empty.Empty, error) {
+	if err := serverptypes.ValidateDestroyProjectRequest(req); err != nil {
+		return nil, err
+	}
+
+	err := s.state(ctx).ProjectDelete(req.Project)
+	if err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
+}
+
 func (s *Service) GetApplication(
 	ctx context.Context,
 	req *pb.GetApplicationRequest,

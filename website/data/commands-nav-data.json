@@ -207,6 +207,10 @@
     "path": "project-apply"
   },
   {
+    "title": "project destroy",
+    "path": "project-destroy"
+  },
+  {
     "title": "project inspect",
     "path": "project-inspect"
   },

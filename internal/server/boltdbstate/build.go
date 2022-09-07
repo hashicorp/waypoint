@@ -1,8 +1,10 @@
 package boltdbstate
 
 import (
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
+	bolt "go.etcd.io/bbolt"
 )
 
 var buildOp = &appOperation{
@@ -57,4 +59,9 @@ func (s *State) BuildLatest(
 	}
 
 	return result.(*pb.Build), nil
+}
+
+// buildDelete deletes the build from the DB
+func (s *State) buildDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, b *pb.Build) error {
+	return buildOp.delete(dbTxn, memTxn, b)
 }

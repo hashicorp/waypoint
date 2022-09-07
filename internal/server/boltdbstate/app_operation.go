@@ -172,6 +172,60 @@ func (op *appOperation) Get(s *State, ref *pb.Ref_Operation) (interface{}, error
 	return result, nil
 }
 
+// Delete deletes an operation record by reference
+func (op *appOperation) Delete(s *State, value proto.Message) error {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		return op.delete(dbTxn, memTxn, value)
+	})
+	if err == nil {
+		memTxn.Commit()
+	}
+
+	return err
+}
+
+func (op *appOperation) delete(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	value proto.Message,
+) error {
+	id := op.valueField(value, "Id").(string)
+	// Delete the value from the bucket
+	if err := op.dbDelete(dbTxn, value, []byte(id)); err != nil {
+		return err
+	}
+	if err := memTxn.Delete(op.memTableName(), &operationIndexRecord{Id: string(id)}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// dbDelete deletes the value from the database
+func (op *appOperation) dbDelete(
+	dbTxn *bolt.Tx,
+	value proto.Message,
+	id []byte,
+) error {
+	// Get our application
+	appRef := op.valueField(value, "Application").(*pb.Ref_Application)
+	if appRef == nil {
+		return status.Errorf(codes.Internal, "state: Application must be set on value %T", value)
+	}
+
+	var seq uint64
+	if f := op.valueFieldReflect(value, "Sequence"); f.IsValid() {
+		// Subtract 1 from the sequence # because we're deleting an operation
+		seq = atomic.AddUint64(op.appSeq(appRef), ^uint64(1-1))
+		f.Set(reflect.ValueOf(seq))
+	}
+
+	b := dbTxn.Bucket(op.Bucket)
+	return b.Delete(id)
+}
+
 func (op *appOperation) getIdForSeq(
 	s *State,
 	dbTxn *bolt.Tx,

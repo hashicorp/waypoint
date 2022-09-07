@@ -1,8 +1,10 @@
 package boltdbstate
 
 import (
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
+	bolt "go.etcd.io/bbolt"
 )
 
 var statusReportOp = &appOperation{
@@ -69,4 +71,9 @@ func (s *State) StatusReportLatest(
 	}
 
 	return result.(*pb.StatusReport), nil
+}
+
+// statusReportDelete deletes a status report from the database
+func (s *State) statusReportDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, sr *pb.StatusReport) error {
+	return statusReportOp.delete(dbTxn, memTxn, sr)
 }
