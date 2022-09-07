@@ -310,7 +310,7 @@ func (p *TaskLauncher) WatchTask(
 	}
 	alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts)
 	if err != nil {
-		log.Error("Failed to get info for alloc "+allocs[0].ID+". Error: %s", err.Error())
+		log.Error("Failed to get info for alloc.", "alloc_id", allocs[0].ID, "err", err.Error())
 		return nil, err
 	}
 	tg := alloc.GetTaskGroup()
@@ -329,11 +329,11 @@ func (p *TaskLauncher) WatchTask(
 		select {
 		case <-ticker.C:
 		case <-ctx.Done(): // cancelled
-			return nil, status.Errorf(codes.Aborted, "Context cancelled from timeout waiting for ODR task to start %s", ctx.Err())
+			return nil, status.Errorf(codes.Aborted, "Context cancelled from timeout waiting for ODR task to start: %s", ctx.Err())
 		}
 		alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts)
 		if err != nil {
-			log.Error("Failed to get info for alloc "+allocs[0].ID+". Error: %s", err.Error())
+		log.Error("Failed to get info for alloc waiting for task to start", "alloc_id", allocs[0].ID, "err", err.Error())
 			return nil, err
 		}
 		allocTask, ok := alloc.TaskStates[task.Name]
@@ -349,7 +349,7 @@ func (p *TaskLauncher) WatchTask(
 		follow = false
 	}
 
-	log.Debug("Getting logs for alloc: " + alloc.Name + ", task: " + task.Name)
+	log.Debug("Getting logs for alloc", "alloc_name", alloc.Name, "task_name", task.Name)
 	ch := make(chan struct{})
 	logStream, errChan := client.AllocFS().Logs(alloc, follow, task.Name, "stderr", "", 0, ch, queryOpts)
 READ_LOGS:
@@ -360,7 +360,7 @@ READ_LOGS:
 				// check if task is dead, if it is dead, return
 				alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts)
 				if err != nil {
-					log.Error("Failed to get info for alloc "+allocs[0].ID+". Error: %s", err.Error())
+		log.Error("Failed to get info for alloc to stream logs", "alloc_id", allocs[0].ID, "err", err.Error())
 					return nil, err
 				}
 				allocTask, ok := alloc.TaskStates[task.Name]
@@ -380,7 +380,7 @@ READ_LOGS:
 			log.Info(message)
 			ui.Output(message)
 		case err := <-errChan:
-			log.Error("Error reading logs from alloc: %q", err.Error())
+			log.Error("Error reading logs from alloc", "err", err.Error())
 			return nil, err
 		}
 	}
