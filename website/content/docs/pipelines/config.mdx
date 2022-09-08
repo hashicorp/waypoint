@@ -1,0 +1,270 @@
+---
+layout: docs
+page_title: Pipelines Configuration
+description: |-
+  The page for detailing Waypoint pipeline configurations
+---
+
+# Pipeline Configurations
+
+This section details some of the various built-in Step plugins and their
+configuration options.
+
+## Step Configurations
+
+Steps have a few basic configuration options that are defined below.
+
+##### name
+
+```hcl
+// this step has a label name "my-step-name"
+step "my-step-name" {
+  use "build" {}
+}
+```
+
+- Stanza label
+- Type: **string**
+- **Required**
+
+##### depends_on
+
+A step can depend on many other steps within a pipeline. By default, a step will
+always depend on the previously defined step unless `depends_on` is set. No
+step cycles are allowed. This means you cannot have steps that depend on other
+steps that form a cyclic dependency.
+
+```hcl
+step "my-step-name" {
+  depends_on = ["step-1", "step-3", "root"]
+
+  use "deploy" {}
+}
+```
+
+- Type: **Array of strings**
+- **Optional**
+
+##### image_url
+
+Currently used only for the `exec` step, this is the container image URL that will be used
+to spawn the `exec` pipeline step.
+
+```hcl
+step "my-step-name" {
+  image_url = "https://example.com:5000/waypoint-odr:latest"
+
+  use "exec" {}
+}
+```
+
+- Type: **string**
+- **Optional**
+
+##### workspace
+
+If set, will override the workspace in which this step runs.
+
+```hcl
+step "my-step-name" {
+  workspace = "production"
+
+  use "deploy" {}
+}
+```
+
+- Type: **string**
+- **Optional**
+
+##### use
+
+If used in a step, this will denote which "built-in" Step plugin to use.
+
+```hcl
+// this step will "use" the build plugin
+step "my-step-name" {
+  use "build" {}
+}
+```
+
+- Type: **stanza**
+
+##### pipeline
+
+Steps can also contain embedded pipelines.
+
+Note that it isn't valid to have both a "use" and a "pipeline "stanza inside a Step.
+
+```hcl
+// this step has an embedded pipeline
+step "my-step-name" {
+  pipeline "another-pipeline" {
+    step "more" { ... }
+  }
+}
+```
+
+## Built-In Step Config Options
+
+Currently, Pipeline Steps have "built-in" plugins that are backed by the existing
+Waypoint job system. See below for examples of each of these built-in Steps and their
+parameters.
+
+### `build`
+
+This built-in Step will run a Build operation job, similar to running `waypoint build`.
+
+```hcl
+step "my-build-step" {
+  use "build" {
+    disable_push = false
+  }
+}
+```
+
+##### disable_push
+
+- Type: **bool**
+- **Optional**
+
+### `deploy`
+
+This built-in Step will run a Deploy operation job, similar to running `waypoint deploy`.
+
+```hcl
+step "my-deploy-step" {
+  use "deploy" {}
+}
+```
+
+### `release`
+
+This built-in Step will run a Release operation job, similar to running `waypoint release`.
+
+```hcl
+step "my-release-step" {
+  use "release" {
+    prune        = true
+    prune_retain = 4
+  }
+}
+```
+
+##### deployment_ref
+
+0 or unset will use the latest deployment for a release. To specify a Deployment
+for release, this accepts Deployment sequence numbers.
+
+- Type: **int**
+- **Optional**
+
+##### prune
+
+If true, will prune old releases beyond the `prune_retain` limit when a new release is created.
+
+- Type: **bool**
+- **Optional**
+
+##### prune_retain
+
+The total number of deployments to retain when pruning on a release. This will
+only be valid if `prune_retain_override` is set to true.
+
+- Type: **int**
+- **Optional**
+- Default: 2
+
+##### prune_retain_override
+
+If true, will respect the `prune_retain` value when pruning during a release.
+
+- Type: **bool**
+- **Optional**
+
+### `up`
+
+This built-in Step will run an Up operation job, similar to running `waypoint up`.
+
+```hcl
+step "my-up-step" {
+  use "up" {
+    prune = true
+  }
+}
+```
+
+##### prune
+
+If true, will prune old releases beyond the `prune_retain` limit when a new release is created.
+
+- Type: **bool**
+- **Optional**
+
+##### prune_retain
+
+The total number of deployments to retain when pruning on a release. This will
+only be valid if `prune_retain_override` is set to true.
+
+- Type: **int**
+- **Optional**
+- Default: 2
+
+##### prune_retain_override
+
+If true, will respect the `prune_retain` value when pruning during a release.
+
+- Type: **bool**
+- **Optional**
+
+### `exec`
+
+```hcl
+step "my-exec-step" {
+  use "exec" {
+    command = "echo"
+    args    = ["hello world!"]
+  }
+}
+```
+
+##### command
+
+The command to execute on the container for this Step.
+
+- Type: **string**
+- **Required**
+
+##### args
+
+The arguments to pass through to the command when running on the container for this Step.
+
+- Type: **string**
+- **Optional**
+
+### `pipeline`
+
+This built-in Step lets you reference another pipeline within a Step to be run.
+
+```hcl
+step "my-pipeline-step" {
+  use "pipeline" {
+    project = "my-pipeline-project"
+    name    = "other-pipeline"
+  }
+}
+```
+
+##### project
+
+The project that the pipeline reference exists in. **Note that currently
+Waypoint does not support running across Project pipelines**.
+
+- Type: **string**
+- **Optional**
+
+##### name
+
+The pipeline name that the pipeline reference is for.
+
+- Type: **string**
+- **Required**
