@@ -10,14 +10,15 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint/builtin/nomad"
@@ -58,11 +59,12 @@ func (p *Platform) StatusFunc() interface{} {
 	return p.Status
 }
 
-func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
+func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp, dtr *component.DestroyedResourcesResp) *resource.Manager {
 	return resource.NewManager(
 		resource.WithLogger(log.Named("resource_manager")),
 		resource.WithValueProvider(p.getNomadClient),
 		resource.WithDeclaredResourcesResp(dcr),
+		resource.WithDestroyedResourcesResp(dtr),
 		resource.WithResource(resource.NewResource(
 			resource.WithName(rmResourceJobName),
 			resource.WithState(&Resource_Job{}),
@@ -337,7 +339,7 @@ func (p *Platform) Deploy(
 	// We'll update the user in real time
 	sg := ui.StepGroup()
 	defer sg.Wait()
-	rm := p.resourceManager(log, dcr)
+	rm := p.resourceManager(log, dcr, nil)
 	if err := rm.CreateAll(
 		ctx, log, sg, ui,
 		src, img, deployConfig, &result,
@@ -357,10 +359,12 @@ func (p *Platform) Destroy(
 	log hclog.Logger,
 	deployment *Deployment,
 	ui terminal.UI,
+	dcr *component.DeclaredResourcesResp,
+	dtr *component.DestroyedResourcesResp,
 ) error {
 	sg := ui.StepGroup()
 	defer sg.Wait()
-	rm := p.resourceManager(log, nil)
+	rm := p.resourceManager(log, dcr, dtr)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
@@ -449,7 +453,7 @@ func (p *Platform) Status(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	rm := p.resourceManager(log, nil)
+	rm := p.resourceManager(log, nil, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.

@@ -10,7 +10,6 @@ import (
 	"github.com/docker/distribution/reference"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/mitchellh/copystructure"
 	"github.com/mitchellh/mapstructure"
 	"google.golang.org/grpc/codes"
@@ -26,6 +25,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
+	"github.com/hashicorp/waypoint/builtin/aws/utils"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -150,11 +151,12 @@ func (p *Platform) ConfigSet(config interface{}) error {
 	return nil
 }
 
-func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
+func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp, dtr *component.DestroyedResourcesResp) *resource.Manager {
 	return resource.NewManager(
 		resource.WithLogger(log.Named("resource_manager")),
 		resource.WithValueProvider(p.getClientset),
 		resource.WithDeclaredResourcesResp(dcr),
+		resource.WithDestroyedResourcesResp(dtr),
 		resource.WithResource(resource.NewResource(
 			resource.WithName(platformName),
 			resource.WithState(&Resource_Deployment{}),
@@ -1245,7 +1247,7 @@ func (p *Platform) Deploy(
 	defer sg.Wait()
 
 	// Create our resource manager and create
-	rm := p.resourceManager(log, dcr)
+	rm := p.resourceManager(log, dcr, nil)
 	if err := rm.CreateAll(
 		ctx, log, sg, ui,
 		src, img, deployConfig, &result,
@@ -1265,11 +1267,13 @@ func (p *Platform) Destroy(
 	log hclog.Logger,
 	deployment *Deployment,
 	ui terminal.UI,
+	dcr *component.DeclaredResourcesResp,
+	dtr *component.DestroyedResourcesResp,
 ) error {
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	rm := p.resourceManager(log, nil)
+	rm := p.resourceManager(log, dcr, dtr)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
@@ -1300,7 +1304,7 @@ func (p *Platform) Status(
 	step := sg.Add("Gathering health report for Kubernetes deployment...")
 	defer func() { step.Abort() }() // Defer in func in case more steps are added to this func in the future
 
-	rm := p.resourceManager(log, nil)
+	rm := p.resourceManager(log, nil, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
