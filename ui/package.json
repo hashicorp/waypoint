@@ -53,7 +53,7 @@
     "date-fns": "^2.15.0",
     "docker-parse-image": "^3.0.1",
     "ember-a11y-refocus": "^2.3.0",
-    "ember-a11y-testing": "^4.3.0",
+    "ember-a11y-testing": "^5.0.0",
     "ember-auto-import": "^2.2.4",
     "ember-auto-import-typescript": "^0.6.3",
     "ember-changeset": "^3.15.0",
