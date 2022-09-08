@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/waypoint/builtin/nomad/jobspec"
 	"strconv"
 	"time"
+
+	"github.com/hashicorp/waypoint/builtin/nomad/jobspec"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
@@ -52,11 +54,12 @@ func (r *Releaser) StatusFunc() interface{} {
 	return r.Status
 }
 
-func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
+func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp, dtr *component.DestroyedResourcesResp) *resource.Manager {
 	return resource.NewManager(
 		resource.WithLogger(log.Named("resource_manager")),
 		resource.WithValueProvider(r.getNomadClient),
 		resource.WithDeclaredResourcesResp(dcr),
+		resource.WithDestroyedResourcesResp(dtr),
 		resource.WithResource(resource.NewResource(
 			resource.WithName(rmResourcePromotedJobName),
 			resource.WithState(&jobspec.Resource_Job{}),
@@ -317,7 +320,7 @@ func (r *Releaser) Release(
 	defer st.Close()
 	defer sg.Wait()
 
-	rm := r.resourceManager(log, dcr)
+	rm := r.resourceManager(log, dcr, nil)
 	if err := rm.CreateAll(
 		ctx, log, st, sg, &result, target,
 	); err != nil {
@@ -335,11 +338,13 @@ func (r *Releaser) Destroy(
 	log hclog.Logger,
 	release *Release,
 	ui terminal.UI,
+	dcr *component.DeclaredResourcesResp,
+	dtr *component.DestroyedResourcesResp,
 ) error {
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	rm := r.resourceManager(log, nil)
+	rm := r.resourceManager(log, dcr, dtr)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
@@ -366,7 +371,7 @@ func (r *Releaser) Status(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	rm := r.resourceManager(log, nil)
+	rm := r.resourceManager(log, nil, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
