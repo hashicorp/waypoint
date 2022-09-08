@@ -90,6 +90,24 @@ func TestServiceProject(t *testing.T, factory Factory) {
 			require.Len(resp.Projects, 1)
 		}
 	})
+
+	t.Run("destroy", func(t *testing.T) {
+		require := require.New(t)
+
+		// Destroys the specified project
+		{
+			_, err := client.DestroyProject(ctx, &pb.DestroyProjectRequest{
+				Project: &pb.Ref_Project{Project: "example"},
+			})
+			require.NoError(err)
+
+			resp, err := client.GetProject(ctx, &pb.GetProjectRequest{
+				Project: &pb.Ref_Project{Project: "example"},
+			})
+			require.Error(err)
+			require.Nil(resp)
+		}
+	})
 }
 
 func TestServiceProject_GetApplication(t *testing.T, factory Factory) {

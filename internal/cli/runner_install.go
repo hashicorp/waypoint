@@ -66,7 +66,7 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "odr-image",
 			Usage:   "Docker image for the on-demand runners.",
-			Default: "hashicorp/waypoint-odr:latest",
+			Default: installutil.DefaultRunnerImage,
 			Target:  &c.runnerProfileOdrImage,
 		})
 

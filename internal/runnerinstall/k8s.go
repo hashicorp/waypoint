@@ -3,50 +3,32 @@ package runnerinstall
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/hashicorp/waypoint/builtin/k8s"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/mitchellh/mapstructure"
+	dockerparser "github.com/novln/docker-parser"
+	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	v1 "k8s.io/api/apps/v1"
+	apiv1 "k8s.io/api/core/v1"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+
+	"github.com/hashicorp/waypoint/builtin/k8s"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/installutil"
 	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
 	k8sinstallutil "github.com/hashicorp/waypoint/internal/installutil/k8s"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"github.com/mitchellh/mapstructure"
-	dockerparser "github.com/novln/docker-parser"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	apiv1 "k8s.io/api/core/v1"
-	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type K8sRunnerInstaller struct {
-	k8sinstallutil.K8sInstaller
-	Config K8sConfig
-}
-
-type K8sConfig struct {
-	KubeconfigPath       string `hcl:"kubeconfig,optional"`
-	K8sContext           string `hcl:"context,optional"`
-	Version              string `hcl:"version,optional"`
-	Namespace            string `hcl:"namespace,optional"`
-	RunnerImage          string `hcl:"runner_image,optional"`
-	CpuRequest           string `hcl:"runner_cpu_request,optional"`
-	MemRequest           string `hcl:"runner_mem_request,optional"`
-	CreateServiceAccount bool   `hcl:"odr_service_account_init,optional"`
-	OdrImage             string `hcl:"odr_image"`
-
-	// Required for backwards compatibility
-	imagePullPolicy string `hcl:"image_pull_policy,optional"`
-	CpuLimit        string `hcl:"cpu_limit,optional"`
-	MemLimit        string `hcl:"mem_limit,optional"`
-	ImagePullSecret string `hcl:"image_pull_secret,optional"`
+	Config k8sinstallutil.K8sConfig
 }
 
 const (
@@ -77,13 +59,9 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		return err
 	}
 
-	chartNS := ""
-	if v := i.Config.Namespace; v != "" {
-		chartNS = v
-	}
-	if chartNS == "" {
-		// If all else fails, default the namespace to "default"
-		chartNS = "default"
+	// If all else fails, default the namespace to "default"
+	if i.Config.Namespace == "" {
+		i.Config.Namespace = "default"
 	}
 
 	// This setup for Helm install matches the setup for the Helm platform plugin
@@ -96,7 +74,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	client.Devel = true
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
-	client.Namespace = chartNS
+	client.Namespace = i.Config.Namespace
 	client.ReleaseName = "waypoint-" + strings.ToLower(opts.Id)
 	client.GenerateName = false
 	client.NameTemplate = ""
@@ -151,7 +129,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		return err
 	}
 
-	clientSet, err := i.K8sInstaller.NewClient()
+	clientSet, err := k8sinstallutil.NewClient(i.Config)
 	if err != nil {
 		opts.UI.Output("Error creating k8s clientset: %s", clierrors.Humanize(err), terminal.StatusError)
 		return err
@@ -164,7 +142,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			if k8sErrors.IsNotFound(err) {
 				err = nil
 			} else {
-				opts.UI.Output("Error getting service account: %s", clierrors.Humanize(err), terminal.StatusError)
+				opts.UI.Output(fmt.Sprintf("Error getting service account: %s", clierrors.Humanize(err)), terminal.StatusError)
 				return err
 			}
 		} else {
@@ -260,7 +238,7 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-runner-image",
 		Target:  &i.Config.RunnerImage,
-		Default: installutil.DefaultServerImage,
+		Default: installutil.DefaultRunnerImage,
 		Usage:   "Docker image for the Waypoint runner.",
 	})
 
@@ -287,39 +265,64 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 }
 
 func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
-	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeconfigPath, i.Config.K8sContext)
+	ui := opts.UI
+	// Our checks here follow the logic of:
+	// Up until v0.8.2, we installed runners with the k8s client,
+	// and the Label was "app=waypoint-runner" and the Name "waypoint-runner-random-id"
+	// As of 0.9.0, we install runners with helm, with a Label following the
+	// pattern ("app.kubernetes.io/instance=waypoint-%s", runnerId)
+	// and the Name ("waypoint-"+strings.ToLower(runnerId))
+	//
+	// Therefore we need to ascertain A) if the runner exists on the cluster at
+	// all (it might not be if the user is auth'd to the wrong cluster), and then B)
+	// if the name/label matches the Helm pattern or the k8s client pattern so
+	// we know how to uninstall it
+
+	// A) Is runner on the cluster at all?
+	clientset, err := k8sinstallutil.NewClient(i.Config)
 	if err != nil {
+		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
 	}
 
-	helmList := action.NewList(actionConfig)
-	releases, _ := helmList.Run()
-
-	isHelm := false
-
-	for _, release := range releases {
-		opts.Log.Debug(fmt.Sprintf("Releases %+v", release.Name))
-		if release.Name == "waypoint-"+strings.ToLower(opts.Id) {
-			isHelm = true
-			break
-		}
+	// Search for a runner with 0.8.x tag format, installed with k8s client
+	deploymentClient := clientset.AppsV1().Deployments(i.Config.Namespace)
+	k8sClientList, err := deploymentClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app=%s", DefaultRunnerTagName),
+	})
+	if err != nil {
+		return fmt.Errorf("could not list deployments in namespace %q with current context: %s", i.Config.Namespace, err)
 	}
 
-	if isHelm {
-		i.uninstallWithHelm(ctx, opts)
+	// Search for runner with 0.9+ tag format, installed with helm
+	podClient := clientset.CoreV1().Pods(i.Config.Namespace)
+	helmClientList, err := podClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=waypoint-%s", strings.ToLower(opts.Id)),
+	})
+	if err != nil {
+		return fmt.Errorf("could not list pods in namespace %q with current context: %s", i.Config.Namespace, err)
+	}
+
+	// If both lists are empty, the runner is not here at all
+	// Move to: B) Decide which uninstall path we use based on if there is a runner
+	// with the naming patterns we get with our 0.9.0+ helm installer
+	if len(k8sClientList.Items) == 0 && len(helmClientList.Items) == 0 {
+		return fmt.Errorf("runner with ID %q not found in namespace %q with current context", opts.Id, i.Config.Namespace)
+	} else if len(helmClientList.Items) > 0 {
+		err = i.uninstallWithHelm(ctx, opts)
 	} else {
-		i.uninstallWithK8s(ctx, opts)
+		// Once we're here, we know that there is >0 K8S runners, and 0 Helm runners,
+		// so we can proceed with the k8s uninstall
+		// This should only include default runners installed on 0.8.x
+		err = i.uninstallWithK8s(ctx, opts, k8sClientList)
 	}
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Uninstall is a method of K8sInstaller and implements the Installer interface to
 // remove a waypoint-server statefulset and the associated PVC and service from
 // a Kubernetes cluster
-func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *InstallOpts) error {
+func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *InstallOpts, listK8sClient *v1.DeploymentList) error {
 	ui := opts.UI
 	log := opts.Log
 
@@ -329,112 +332,99 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 	s := sg.Add("Inspecting Kubernetes cluster...")
 	defer func() { s.Abort() }()
 
-	clientset, err := i.NewClient()
+	clientset, err := k8sinstallutil.NewClient(i.Config)
 	if err != nil {
 		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
 	}
 
 	deploymentClient := clientset.AppsV1().Deployments(i.Config.Namespace)
-	if list, err := deploymentClient.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", DefaultRunnerTagName),
-	}); err != nil {
+	s.Update("Deleting any automatically installed runners...")
+
+	// Record various settings we can reuse for runner reinstallation
+	// if we're doing an upgrade. We need to do this because the upgrade
+	// flags don't contain the installation settings, and we prefer them
+	// not to; instead we just retain the old settings.
+	//
+	// Note we have lots of conditionals here to try to avoid weird
+	// panic situations if the remote side doesn't have the fields we
+	// expect.
+	podSpec := listK8sClient.Items[0].Spec.Template.Spec
+	if secrets := podSpec.ImagePullSecrets; len(secrets) > 0 {
+		i.Config.ImagePullSecret = secrets[0].Name
+	}
+	if v := podSpec.Containers; len(v) > 0 {
+		c := v[0]
+
+		i.Config.ImagePullPolicy = string(c.ImagePullPolicy)
+		if m := c.Resources.Requests; len(m) > 0 {
+			if v, ok := m[apiv1.ResourceMemory]; ok {
+				i.Config.MemRequest = v.String()
+			}
+			if v, ok := m[apiv1.ResourceCPU]; ok {
+				i.Config.CpuRequest = v.String()
+			}
+		}
+		if m := c.Resources.Limits; len(m) > 0 {
+			if v, ok := m[apiv1.ResourceMemory]; ok {
+				i.Config.MemLimit = v.String()
+			}
+			if v, ok := m[apiv1.ResourceCPU]; ok {
+				i.Config.CpuLimit = v.String()
+			}
+		}
+	}
+
+	// create our wait channel to later poll for statefulset+pod deletion
+	w, err := deploymentClient.Watch(
+		ctx,
+		metav1.ListOptions{
+			LabelSelector: "app=" + DefaultRunnerTagName,
+		},
+	)
+	if err != nil {
 		ui.Output(
-			"Error looking up deployments: %s", clierrors.Humanize(err),
+			"Error creating deployments watcher %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 		return err
-	} else if len(list.Items) > 0 {
-		s.Update("Deleting any automatically installed runners...")
 
-		// Record various settings we can reuse for runner reinstallation
-		// if we're doing an upgrade. We need to do this because the upgrade
-		// flags don't contain the installation settings, and we prefer them
-		// not to; instead we just retain the old settings.
-		//
-		// Note we have lots of conditionals here to try to avoid weird
-		// panic situations if the remote side doesn't have the fields we
-		// expect.
-		podSpec := list.Items[0].Spec.Template.Spec
-		if secrets := podSpec.ImagePullSecrets; len(secrets) > 0 {
-			i.Config.ImagePullSecret = secrets[0].Name
-		}
-		if v := podSpec.Containers; len(v) > 0 {
-			c := v[0]
-
-			i.Config.imagePullPolicy = string(c.ImagePullPolicy)
-			if m := c.Resources.Requests; len(m) > 0 {
-				if v, ok := m[apiv1.ResourceMemory]; ok {
-					i.Config.MemRequest = v.String()
-				}
-				if v, ok := m[apiv1.ResourceCPU]; ok {
-					i.Config.CpuRequest = v.String()
-				}
-			}
-			if m := c.Resources.Limits; len(m) > 0 {
-				if v, ok := m[apiv1.ResourceMemory]; ok {
-					i.Config.MemLimit = v.String()
-				}
-				if v, ok := m[apiv1.ResourceCPU]; ok {
-					i.Config.CpuLimit = v.String()
-				}
-			}
-		}
-
-		// create our wait channel to later poll for statefulset+pod deletion
-		w, err := deploymentClient.Watch(
-			ctx,
-			metav1.ListOptions{
-				LabelSelector: "app=" + DefaultRunnerTagName,
-			},
-		)
-		if err != nil {
-			ui.Output(
-				"Error creating deployments watcher %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-
-		}
-		// send DELETE to statefulset collection
-		if err = deploymentClient.DeleteCollection(
-			ctx,
-			metav1.DeleteOptions{},
-			metav1.ListOptions{
-				LabelSelector: "app=" + DefaultRunnerTagName,
-			},
-		); err != nil {
-			ui.Output(
-				"Error deleting Waypoint deployment: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-
-		// wait for deletion to complete
-		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-			select {
-			case wCh := <-w.ResultChan():
-				if wCh.Type == "DELETED" {
-					w.Stop()
-					return true, nil
-				}
-				log.Trace("deployment collection not fully removed, waiting")
-				return false, nil
-			default:
-				log.Trace("no message received on watch.ResultChan(), waiting for Event")
-				return false, nil
-			}
-		})
-		if err != nil {
-			return err
-		}
-		s.Update("Runner deployment deleted")
-		s.Done()
-	} else {
-		opts.UI.Output("No runners with id "+opts.Id+" installed.", terminal.WithErrorStyle())
-		return errors.New("no runner installed with id" + opts.Id + " installed")
 	}
+	// send DELETE to statefulset collection
+	if err = deploymentClient.DeleteCollection(
+		ctx,
+		metav1.DeleteOptions{},
+		metav1.ListOptions{
+			LabelSelector: "app=" + DefaultRunnerTagName,
+		},
+	); err != nil {
+		ui.Output(
+			"Error deleting Waypoint deployment: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
+
+	// wait for deletion to complete
+	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		select {
+		case wCh := <-w.ResultChan():
+			if wCh.Type == "DELETED" {
+				w.Stop()
+				return true, nil
+			}
+			log.Trace("deployment collection not fully removed, waiting")
+			return false, nil
+		default:
+			log.Trace("no message received on watch.ResultChan(), waiting for Event")
+			return false, nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+	s.Update("Runner deployment deleted")
+	s.Done()
 
 	return nil
 }
@@ -472,7 +462,7 @@ func (i *K8sRunnerInstaller) uninstallWithHelm(ctx context.Context, opts *Instal
 	// proper runner installation and that we are uninstalling what we think we
 	// should be uninstalling.
 	if strings.ToLower(runnerCfg.Id) != strings.ToLower(opts.Id) {
-		return errors.New("Runner not found")
+		return fmt.Errorf("found runner with id %q does not match given id %q", runnerCfg.Id, opts.Id)
 	}
 	s.Update("Runner %q found; uninstalling runner...", opts.Id)
 	client := action.NewUninstall(actionConfig)
@@ -494,12 +484,9 @@ func (i *K8sRunnerInstaller) uninstallWithHelm(ctx context.Context, opts *Instal
 	listOptions := metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=%s", helmRunnerId),
 	}
-	err = i.CleanPVC(ctx, opts.UI, opts.Log, listOptions)
-	if err != nil {
-		return err
-	}
+	err = k8sinstallutil.CleanPVC(ctx, opts.UI, opts.Log, listOptions, i.Config)
 
-	return nil
+	return err
 }
 
 func (i *K8sRunnerInstaller) UninstallFlags(set *flag.Set) {
@@ -533,7 +520,7 @@ func (i *K8sRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 		cfgMap["image_secret"] = v
 	}
 	// TODO: Enable specification of service account name
-	if v := i.Config.imagePullPolicy; v != "" {
+	if v := i.Config.ImagePullPolicy; v != "" {
 		cfgMap["image_pull_policy"] = v
 	}
 

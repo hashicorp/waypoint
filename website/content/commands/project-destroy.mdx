@@ -1,0 +1,48 @@
+---
+layout: commands
+page_title: 'Commands: Project destroy'
+sidebar_title: 'project destroy'
+description: 'Delete the specified project and optionally destroy its resources.'
+---
+
+# Waypoint Project destroy
+
+Command: `waypoint project destroy`
+
+Delete the specified project and optionally destroy its resources.
+
+@include "commands/project-destroy_desc.mdx"
+
+## Usage
+
+Usage: `waypoint project destroy [options]`
+
+Delete the project and all resources created for all apps in the project, within
+the platform each app was deployed to.
+
+You can optionally skip destroying the resources by setting
+-skip-destroy-resources to true.
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation. The default is false.
+- `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-project=<string>` (`-p`) - Project to target.
+- `-workspace=<string>` (`-w`) - Workspace to operate in.
+
+#### Operation Options
+
+- `-label=<key=value>` - Labels to set for this operation. Can be specified multiple times.
+- `-local` - True to use a local runner to execute the operation, false to use a remote runner.
+  If unset, Waypoint will automatically determine where the operation will occur,
+  defaulting to remote if possible.
+- `-remote-source=<key=value>` - Override configurations for how remote runners source data. This is specified to the data source type being used in your configuration. This is used for example to set a specific Git ref to run against.
+- `-var=<key=value>` - Variable value to set for this operation. Can be specified multiple times.
+- `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "_.auto.wpvars" or "_.auto.wpvars.json" files are present, they will be automatically loaded.
+
+#### Command Options
+
+- `-skip-destroy-resources` - Skips destroying resources created for the Waypoint project. The default is false.
+- `-auto-approve` - Destroy the project and all of its resources without confirmation. The default is false.
+
+@include "commands/project-destroy_more.mdx"

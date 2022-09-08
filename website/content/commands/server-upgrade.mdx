@@ -63,7 +63,7 @@ manually installed runners will not be automatically upgraded.
 
 - `-k8s-advertise-internal` - Advertise the internal service address rather than the external. This is useful if all your deployments will be able to access the private service address. This will default to false but will be automatically set to true if the external host is detected to be localhost. The default is false.
 - `-k8s-context=<string>` - The Kubernetes context to upgrade the Waypoint server to. If left unset, Waypoint will use the current Kubernetes context.
-- `-k8s-namespace=<string>` - Namespace to install the Waypoint server into for Kubernetes.
+- `-k8s-namespace=<string>` - Namespace to install the Waypoint server into for Kubernetes. The default is default.
 - `-k8s-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
 - `-k8s-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners.
 - `-k8s-runner-service-account=<string>` - Service account to assign to the on-demand runner. If this is blank, a service account will be created automatically with the correct permissions. The default is waypoint-runner.

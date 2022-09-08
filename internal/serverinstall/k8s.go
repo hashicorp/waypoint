@@ -8,12 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/waypoint/internal/installutil"
-	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
-	"github.com/hashicorp/waypoint/internal/runnerinstall"
+	dockerparser "github.com/novln/docker-parser"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
-
+	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,41 +23,19 @@ import (
 	"github.com/hashicorp/waypoint/builtin/k8s"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/installutil"
+	helminstallutil "github.com/hashicorp/waypoint/internal/installutil/helm"
 	k8sinstallutil "github.com/hashicorp/waypoint/internal/installutil/k8s"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
-	dockerparser "github.com/novln/docker-parser"
 )
 
 //
 type K8sInstaller struct {
-	k8sinstallutil.K8sInstaller
-	config k8sConfig
-}
-
-type k8sConfig struct {
-	serverImage        string            `hcl:"server_image,optional"`
-	namespace          string            `hcl:"namespace,optional"`
-	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
-
-	odrImage              string `hcl:"odr_image,optional"`
-	odrServiceAccount     string `hcl:"odr_service_account,optional"`
-	odrServiceAccountInit bool   `hcl:"odr_service_account_init,optional"`
-
-	advertiseInternal bool   `hcl:"advertise_internal,optional"`
-	imagePullPolicy   string `hcl:"image_pull_policy,optional"`
-	k8sContext        string `hcl:"k8s_context,optional"`
-	cpuRequest        string `hcl:"cpu_request,optional"`
-	memRequest        string `hcl:"mem_request,optional"`
-	cpuLimit          string `hcl:"cpu_limit,optional"`
-	memLimit          string `hcl:"mem_limit,optional"`
-	storageClassName  string `hcl:"storageclassname,optional"`
-	storageRequest    string `hcl:"storage_request,optional"`
-	secretFile        string `hcl:"secret_file,optional"`
-	imagePullSecret   string `hcl:"image_pull_secret,optional"`
-	kubeConfigPath    string `hcl:"kubeconfig_path,optional"`
-	version           string `hcl:"version,optional"`
+	Config k8sinstallutil.K8sConfig
+	// Config k8sConfig
 }
 
 const (
@@ -73,9 +49,9 @@ const (
 func (i *K8sInstaller) newClient() (*kubernetes.Clientset, error) {
 	// Build our K8S client.
 	configOverrides := &clientcmd.ConfigOverrides{}
-	if i.config.k8sContext != "" {
+	if i.Config.K8sContext != "" {
 		configOverrides = &clientcmd.ConfigOverrides{
-			CurrentContext: i.config.k8sContext,
+			CurrentContext: i.Config.K8sContext,
 		}
 	}
 	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -86,7 +62,7 @@ func (i *K8sInstaller) newClient() (*kubernetes.Clientset, error) {
 	// Discover the current target namespace in the user's config so if they
 	// run kubectl commands waypoint will show up. If we use the default namespace
 	// they might not see the objects we've created.
-	if i.config.namespace == "" {
+	if i.Config.Namespace == "" {
 		namespace, _, err := newCmdConfig.Namespace()
 		if err != nil {
 			return nil, fmt.Errorf(
@@ -95,7 +71,7 @@ func (i *K8sInstaller) newClient() (*kubernetes.Clientset, error) {
 			)
 		}
 
-		i.config.namespace = namespace
+		i.Config.Namespace = namespace
 	}
 
 	clientconfig, err := newCmdConfig.ClientConfig()
@@ -123,9 +99,9 @@ func (i *K8sInstaller) Install(
 	ctx context.Context,
 	opts *InstallOpts,
 ) (*InstallResults, error) {
-	if i.config.odrImage == "" {
+	if i.Config.OdrImage == "" {
 		var err error
-		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
+		i.Config.OdrImage, err = installutil.DefaultODRImage(i.Config.ServerImage)
 		if err != nil {
 			return nil, err
 		}
@@ -137,7 +113,7 @@ func (i *K8sInstaller) Install(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	clientset, err := i.newClient()
+	clientset, err := k8sinstallutil.NewClient(i.Config)
 	if err != nil {
 		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return nil, err
@@ -163,18 +139,14 @@ func (i *K8sInstaller) Install(
 		return nil, err
 	}
 
-	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
+	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeConfigPath, i.Config.K8sContext)
 	if err != nil {
 		return nil, err
 	}
 
-	chartNS := ""
-	if v := i.config.namespace; v != "" {
-		chartNS = v
-	}
-	if chartNS == "" {
+	if i.Config.Namespace == "" {
 		// If all else fails, default the namespace to "default"
-		chartNS = "default"
+		i.Config.Namespace = "default"
 	}
 
 	client := action.NewInstall(actionConfig)
@@ -186,7 +158,7 @@ func (i *K8sInstaller) Install(
 	client.Devel = true
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
-	client.Namespace = chartNS
+	client.Namespace = i.Config.Namespace
 	client.ReleaseName = "waypoint"
 	client.GenerateName = false
 	client.NameTemplate = ""
@@ -200,7 +172,7 @@ func (i *K8sInstaller) Install(
 	client.CreateNamespace = true
 
 	var version string
-	if i.config.version == "" {
+	if i.Config.Version == "" {
 		tags, err := helminstallutil.GetLatestHelmChartVersion(ctx)
 		if err != nil {
 			opts.UI.Output("Error getting latest tag of Waypoint helm chart.", terminal.WithErrorStyle())
@@ -208,7 +180,7 @@ func (i *K8sInstaller) Install(
 		}
 		version = *tags[0].Name
 	} else {
-		version = i.config.version
+		version = i.Config.Version
 	}
 	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/"+version+".tar.gz", settings)
 	if err != nil {
@@ -220,7 +192,7 @@ func (i *K8sInstaller) Install(
 		return nil, err
 	}
 
-	imageRef, err := dockerparser.Parse(i.config.serverImage)
+	imageRef, err := dockerparser.Parse(i.Config.ServerImage)
 	if err != nil {
 		ui.Output("Error parsing image ref: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return nil, err
@@ -235,12 +207,12 @@ func (i *K8sInstaller) Install(
 			},
 			"resources": map[string]interface{}{
 				"requests": map[string]interface{}{
-					"memory": i.config.memRequest,
-					"cpu":    i.config.cpuRequest,
+					"memory": i.Config.MemRequest,
+					"cpu":    i.Config.CpuRequest,
 				},
 				"limits": map[string]interface{}{
-					"memory": i.config.memLimit,
-					"cpu":    i.config.cpuLimit,
+					"memory": i.Config.MemLimit,
+					"cpu":    i.Config.CpuLimit,
 				},
 			},
 		},
@@ -262,13 +234,13 @@ func (i *K8sInstaller) Install(
 
 	// TODO: Move this to a util function for install and upgrade to use
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		clientset, err := i.NewClient()
+		clientset, err := k8sinstallutil.NewClient(i.Config)
 		if err != nil {
 			return false, err
 		}
 
 		s.Update("Getting waypoint-ui service...")
-		svc, err := clientset.CoreV1().Services(chartNS).Get(
+		svc, err := clientset.CoreV1().Services(i.Config.Namespace).Get(
 			ctx, "waypoint-ui", metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -340,7 +312,7 @@ func (i *K8sInstaller) Install(
 		// If we want internal or we're a localhost address, we use the internal
 		// address. The "localhost" check is specifically for Docker for Desktop
 		// since pods can't reach this.
-		if i.config.advertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
+		if i.Config.AdvertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
 			advertiseAddr.Addr = fmt.Sprintf("%s:%d",
 				serverName,
 				grpcPort,
@@ -364,6 +336,45 @@ func (i *K8sInstaller) Install(
 	}
 	s.Done()
 
+	s = sg.Add("Waiting for the bootstrap process to finish...")
+	var bootJobName string
+	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+		// the label we use for LabelSelector is set here
+		// https://github.com/hashicorp/waypoint-helm/blob/d2f6de6e9010b94da84f37eeaca4a8190a439060/templates/bootstrap-job.yaml#L8
+		jobs, err := clientset.BatchV1().Jobs(i.Config.Namespace).List(ctx, metav1.ListOptions{
+			LabelSelector: "app.kubernetes.io/instance=waypoint",
+		})
+		if err != nil {
+			return false, nil
+		}
+		// NOTE(krantzinator): the job we are searching for is prefixed with `waypoint-bootstrap`
+		// per our Helm chart; if that naming ever changes, this will also need to be updated
+		// https://github.com/hashicorp/waypoint-helm/blob/d2f6de6e9010b94da84f37eeaca4a8190a439060/templates/bootstrap-job.yaml#L5
+		jobPrefix := "waypoint-bootstrap-"
+		var bootJob *batchv1.Job
+		for _, j := range jobs.Items {
+			if strings.Contains(j.Name, jobPrefix) {
+				bootJob = &j
+				bootJobName = j.Name
+				break
+			}
+		}
+		if bootJob.Status.Succeeded == 1 {
+			return true, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		log.Error("no bootstrap job found, returning", "job_name", bootJobName, "err", err)
+		s.Update("No bootstrap job found")
+		s.Status(terminal.WarningStyle)
+		s.Done()
+		return nil, err
+	}
+	s.Update("Server bootstrap complete!")
+	s.Done()
+	s = sg.Add("")
+
 	s.Update("Waypoint server installed with Helm!")
 	s.Status(terminal.StatusOK)
 	s.Done()
@@ -381,9 +392,9 @@ func (i *K8sInstaller) Upgrade(
 	ctx context.Context, opts *InstallOpts, serverCfg serverconfig.Client) (
 	*InstallResults, error,
 ) {
-	if i.config.odrImage == "" {
+	if i.Config.OdrImage == "" {
 		var err error
-		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
+		i.Config.OdrImage, err = installutil.DefaultODRImage(i.Config.ServerImage)
 		if err != nil {
 			return nil, err
 		}
@@ -402,18 +413,14 @@ func (i *K8sInstaller) Upgrade(
 		return nil, err
 	}
 
-	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
+	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeConfigPath, i.Config.K8sContext)
 	if err != nil {
 		return nil, err
 	}
 
-	chartNS := ""
-	if v := i.config.namespace; v != "" {
-		chartNS = v
-	}
-	if chartNS == "" {
+	if i.Config.Namespace == "" {
 		// If all else fails, default the namespace to "default"
-		chartNS = "default"
+		i.Config.Namespace = "default"
 	}
 
 	client := action.NewUpgrade(actionConfig)
@@ -424,7 +431,7 @@ func (i *K8sInstaller) Upgrade(
 	client.Devel = true
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
-	client.Namespace = chartNS
+	client.Namespace = i.Config.Namespace
 	client.Atomic = false
 	client.SkipCRDs = false
 	client.SubNotes = true
@@ -432,7 +439,7 @@ func (i *K8sInstaller) Upgrade(
 	client.Description = ""
 
 	var version string
-	if i.config.version == "" {
+	if i.Config.Version == "" {
 		tags, err := helminstallutil.GetLatestHelmChartVersion(ctx)
 		if err != nil {
 			opts.UI.Output("Error getting latest tag of Waypoint helm chart.", terminal.WithErrorStyle())
@@ -440,7 +447,7 @@ func (i *K8sInstaller) Upgrade(
 		}
 		version = *tags[0].Name
 	} else {
-		version = i.config.version
+		version = i.Config.Version
 	}
 
 	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/"+version+".tar.gz", settings)
@@ -453,7 +460,7 @@ func (i *K8sInstaller) Upgrade(
 		return nil, err
 	}
 
-	imageRef, err := dockerparser.Parse(i.config.serverImage)
+	imageRef, err := dockerparser.Parse(i.Config.ServerImage)
 	if err != nil {
 		ui.Output("Error parsing image ref: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return nil, err
@@ -472,7 +479,7 @@ func (i *K8sInstaller) Upgrade(
 		},
 	}
 
-	s = sg.Add("Installing Waypoint Helm chart...")
+	s.Update("Installing Waypoint Helm chart...")
 	_, err = client.RunWithContext(ctx, "waypoint", c, values)
 	if err != nil {
 		return nil, err
@@ -484,13 +491,13 @@ func (i *K8sInstaller) Upgrade(
 	var grpcAddr string
 
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		clientset, err := i.NewClient()
+		clientset, err := k8sinstallutil.NewClient(i.Config)
 		if err != nil {
 			return false, err
 		}
 
 		s.Update("Getting waypoint-ui service...")
-		svc, err := clientset.CoreV1().Services(chartNS).Get(
+		svc, err := clientset.CoreV1().Services(i.Config.Namespace).Get(
 			ctx, "waypoint-ui", metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -564,7 +571,7 @@ func (i *K8sInstaller) Upgrade(
 		// If we want internal or we're a localhost address, we use the internal
 		// address. The "localhost" check is specifically for Docker for Desktop
 		// since pods can't reach this.
-		if i.config.advertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
+		if i.Config.AdvertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
 			advertiseAddr.Addr = fmt.Sprintf("%s:%d",
 				serverName,
 				grpcPort,
@@ -610,14 +617,14 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	s := sg.Add("Getting Helm action configuration...")
 	defer func() { s.Abort() }()
 
-	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.config.kubeConfigPath, i.config.k8sContext)
+	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeConfigPath, i.Config.K8sContext)
 	if err != nil {
 		return err
 	}
 	s.Update("Helm action initialized, creating new Helm uninstall object...")
 
 	chartNS := ""
-	if v := i.config.namespace; v != "" {
+	if v := i.Config.Namespace; v != "" {
 		chartNS = v
 	}
 	if chartNS == "" {
@@ -645,7 +652,7 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	listOptions := metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=%s,component=server", "waypoint"),
 	}
-	err = i.CleanPVC(ctx, ui, opts.Log, listOptions)
+	err = k8sinstallutil.CleanPVC(ctx, ui, opts.Log, listOptions, i.Config)
 	if err != nil {
 		return err
 	}
@@ -660,17 +667,20 @@ func (i *K8sInstaller) InstallRunner(
 	opts *runnerinstall.InstallOpts,
 ) error {
 	runnerInstaller := runnerinstall.K8sRunnerInstaller{
-		Config: runnerinstall.K8sConfig{
-			K8sContext:           i.config.k8sContext,
-			Namespace:            i.config.namespace,
-			RunnerImage:          i.config.serverImage,
-			CpuRequest:           i.config.cpuRequest,
-			MemRequest:           i.config.memRequest,
+		Config: k8sinstallutil.K8sConfig{
+			K8sContext:           i.Config.K8sContext,
+			Namespace:            i.Config.Namespace,
+			RunnerImage:          i.Config.ServerImage,
+			CpuRequest:           i.Config.CpuRequest,
+			MemRequest:           i.Config.MemRequest,
 			CreateServiceAccount: true,
-			OdrImage:             i.config.odrImage,
+			OdrImage:             i.Config.OdrImage,
 		},
 	}
-
+	// parachute in case we remove the flag defaults one day
+	if runnerInstaller.Config.Namespace == "" {
+		runnerInstaller.Config.Namespace = "default"
+	}
 	err := runnerInstaller.Install(ctx, opts)
 	if err != nil {
 		return err
@@ -684,11 +694,16 @@ func (i *K8sInstaller) UninstallRunner(
 	opts *runnerinstall.InstallOpts,
 ) error {
 	runnerUninstaller := runnerinstall.K8sRunnerInstaller{
-		Config: runnerinstall.K8sConfig{
+		Config: k8sinstallutil.K8sConfig{
 			KubeconfigPath: "",
-			K8sContext:     i.config.k8sContext,
-			Namespace:      i.config.namespace,
+			K8sContext:     i.Config.K8sContext,
+			Namespace:      i.Config.Namespace,
 		},
+	}
+
+	// parachute in case we remove the flag defaults one day
+	if runnerUninstaller.Config.Namespace == "" {
+		runnerUninstaller.Config.Namespace = "default"
 	}
 
 	err := runnerUninstaller.Uninstall(ctx, opts)
@@ -703,12 +718,12 @@ func (i *K8sInstaller) HasRunner(
 	ctx context.Context,
 	opts *InstallOpts,
 ) (bool, error) {
-	clientset, err := i.NewClient()
+	clientset, err := k8sinstallutil.NewClient(i.Config)
 	if err != nil {
 		return false, err
 	}
 
-	deploymentClient := clientset.AppsV1().Deployments(i.config.namespace)
+	deploymentClient := clientset.AppsV1().Deployments(i.Config.Namespace)
 	list, err := deploymentClient.List(ctx, metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("app=%s", runnerName),
 	})
@@ -723,28 +738,28 @@ func (i *K8sInstaller) HasRunner(
 func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	// Generate some configuration
 	cfgMap := map[string]interface{}{}
-	if v := i.config.imagePullSecret; v != "" {
+	if v := i.Config.ImagePullSecret; v != "" {
 		cfgMap["image_secret"] = v
 	}
-	if v := i.config.odrServiceAccount; v != "" {
+	if v := i.Config.OdrServiceAccount; v != "" {
 		cfgMap["service_account"] = v
 	}
-	if v := i.config.imagePullPolicy; v != "" {
+	if v := i.Config.ImagePullPolicy; v != "" {
 		cfgMap["image_pull_policy"] = v
 	}
 
 	var cpuConfig k8s.ResourceConfig
 	var memConfig k8s.ResourceConfig
-	if v := i.config.cpuRequest; v != "" {
+	if v := i.Config.CpuRequest; v != "" {
 		cpuConfig.Request = v
 	}
-	if v := i.config.memRequest; v != "" {
+	if v := i.Config.MemRequest; v != "" {
 		memConfig.Request = v
 	}
-	if v := i.config.cpuLimit; v != "" {
+	if v := i.Config.CpuLimit; v != "" {
 		cpuConfig.Limit = v
 	}
-	if v := i.config.memLimit; v != "" {
+	if v := i.Config.MemLimit; v != "" {
 		memConfig.Limit = v
 	}
 	cfgMap["cpu"] = cpuConfig
@@ -761,7 +776,7 @@ func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 
 	return &pb.OnDemandRunnerConfig{
 		Name:         "kubernetes",
-		OciUrl:       i.config.odrImage,
+		OciUrl:       i.Config.OdrImage,
 		PluginType:   "kubernetes",
 		Default:      true,
 		PluginConfig: cfgJson,
@@ -771,18 +786,18 @@ func (i *K8sInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 
 // newServiceAccount takes in a k8sConfig and creates the ServiceAccount
 // definition for the ODR.
-func newServiceAccount(c k8sConfig) (*apiv1.ServiceAccount, error) {
+func newServiceAccount(c k8sinstallutil.K8sConfig) (*apiv1.ServiceAccount, error) {
 	return &apiv1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.odrServiceAccount,
-			Namespace: c.namespace,
+			Name:      c.OdrServiceAccount,
+			Namespace: c.Namespace,
 		},
 	}, nil
 }
 
 // newServiceAccountClusterRoleWithBinding creates the cluster role and binding necessary to create and verify
 // a nodeport type services.
-func newServiceAccountClusterRoleWithBinding(c k8sConfig) (*rbacv1.ClusterRole, *rbacv1.ClusterRoleBinding, error) {
+func newServiceAccountClusterRoleWithBinding(c k8sinstallutil.K8sConfig) (*rbacv1.ClusterRole, *rbacv1.ClusterRoleBinding, error) {
 	return &rbacv1.ClusterRole{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: runnerClusterRoleName,
@@ -809,8 +824,8 @@ func newServiceAccountClusterRoleWithBinding(c k8sConfig) (*rbacv1.ClusterRole, 
 			Subjects: []rbacv1.Subject{
 				{
 					Kind:      "ServiceAccount",
-					Name:      c.odrServiceAccount,
-					Namespace: c.namespace,
+					Name:      c.OdrServiceAccount,
+					Namespace: c.Namespace,
 				},
 			},
 		}, nil
@@ -818,11 +833,11 @@ func newServiceAccountClusterRoleWithBinding(c k8sConfig) (*rbacv1.ClusterRole, 
 
 // newServiceAccountRoleBinding creates the role binding necessary to
 // map the ODR role to the service account.
-func newServiceAccountRoleBinding(c k8sConfig) (*rbacv1.RoleBinding, error) {
+func newServiceAccountRoleBinding(c k8sinstallutil.K8sConfig) (*rbacv1.RoleBinding, error) {
 	return &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      runnerRoleBindingName,
-			Namespace: c.namespace,
+			Namespace: c.Namespace,
 		},
 
 		// Our default runner role is just the default "edit" role. This
@@ -837,8 +852,8 @@ func newServiceAccountRoleBinding(c k8sConfig) (*rbacv1.RoleBinding, error) {
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:      "ServiceAccount",
-				Name:      c.odrServiceAccount,
-				Namespace: c.namespace,
+				Name:      c.OdrServiceAccount,
+				Namespace: c.Namespace,
 			},
 		},
 	}, nil
@@ -848,12 +863,12 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-config-path",
 		Usage:  "Path to the kubeconfig file to use.",
-		Target: &i.config.kubeConfigPath,
+		Target: &i.Config.KubeConfigPath,
 	})
 
 	set.BoolVar(&flag.BoolVar{
 		Name:   "k8s-advertise-internal",
-		Target: &i.config.advertiseInternal,
+		Target: &i.Config.AdvertiseInternal,
 		Usage: "Advertise the internal service address rather than the external. " +
 			"This is useful if all your deployments will be able to access the private " +
 			"service address. This will default to false but will be automatically set to " +
@@ -862,13 +877,13 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 
 	set.StringMapVar(&flag.StringMapVar{
 		Name:   "k8s-annotate-service",
-		Target: &i.config.serviceAnnotations,
+		Target: &i.Config.ServiceAnnotations,
 		Usage:  "Annotations for the Service generated.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-context",
-		Target: &i.config.k8sContext,
+		Target: &i.Config.K8sContext,
 		Usage: "The Kubernetes context to install the Waypoint server to. If left" +
 			" unset, Waypoint will use the current Kubernetes context.",
 		Default: "",
@@ -881,81 +896,81 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-helm-version",
-		Target: &i.config.version,
+		Target: &i.Config.Version,
 		Usage: "The version of the Helm chart to use for the Waypoint runner install. " +
 			"The required version number format is: 'vX.Y.Z'.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-cpu-request",
-		Target:  &i.config.cpuRequest,
+		Target:  &i.Config.CpuRequest,
 		Usage:   "Configures the requested CPU amount for the Waypoint server in Kubernetes.",
 		Default: "0",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-mem-request",
-		Target:  &i.config.memRequest,
+		Target:  &i.Config.MemRequest,
 		Usage:   "Configures the requested memory amount for the Waypoint server in Kubernetes.",
 		Default: "0",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-cpu-limit",
-		Target:  &i.config.cpuLimit,
+		Target:  &i.Config.CpuLimit,
 		Usage:   "Configures the CPU limit for the Waypoint server in Kubernetes.",
 		Default: "0",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-mem-limit",
-		Target:  &i.config.memLimit,
+		Target:  &i.Config.MemLimit,
 		Usage:   "Configures the memory limit for the Waypoint server in Kubernetes.",
 		Default: "0",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-namespace",
-		Target:  &i.config.namespace,
+		Target:  &i.Config.Namespace,
 		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
-		Default: "",
+		Default: "default",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-pull-policy",
-		Target:  &i.config.imagePullPolicy,
+		Target:  &i.Config.ImagePullPolicy,
 		Usage:   "Set the pull policy for the Waypoint server image.",
 		Default: "",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-pull-secret",
-		Target: &i.config.imagePullSecret,
+		Target: &i.Config.ImagePullSecret,
 		Usage:  "Secret to use to access the Waypoint server image on Kubernetes.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-secret-file",
-		Target: &i.config.secretFile,
+		Target: &i.Config.SecretFile,
 		Usage:  "Use the Kubernetes Secret in the given path to access the Waypoint server image.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-server-image",
-		Target:  &i.config.serverImage,
+		Target:  &i.Config.ServerImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: installutil.DefaultServerImage,
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-odr-image",
-		Target: &i.config.odrImage,
+		Target: &i.Config.OdrImage,
 		Usage:  "Docker image for the Waypoint On-Demand Runners",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-runner-service-account",
-		Target: &i.config.odrServiceAccount,
+		Target: &i.Config.OdrServiceAccount,
 		Usage: "Service account to assign to the on-demand runner. If this is blank, " +
 			"a service account will be created automatically with the correct permissions.",
 		Default: "waypoint-runner",
@@ -963,20 +978,20 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 
 	set.BoolVar(&flag.BoolVar{
 		Name:    "k8s-runner-service-account-init",
-		Target:  &i.config.odrServiceAccountInit,
+		Target:  &i.Config.OdrServiceAccountInit,
 		Usage:   "Create the service account if it does not exist.",
 		Default: true,
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-storageclassname",
-		Target: &i.config.storageClassName,
+		Target: &i.Config.StorageClassName,
 		Usage:  "Name of the StorageClass required by the volume claim to install the Waypoint server image to.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-storage-request",
-		Target:  &i.config.storageRequest,
+		Target:  &i.Config.StorageRequest,
 		Usage:   "Configures the requested persistent volume size for the Waypoint server in Kubernetes.",
 		Default: "1Gi",
 	})
@@ -985,7 +1000,7 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 	set.BoolVar(&flag.BoolVar{
 		Name:   "k8s-advertise-internal",
-		Target: &i.config.advertiseInternal,
+		Target: &i.Config.AdvertiseInternal,
 		Usage: "Advertise the internal service address rather than the external. " +
 			"This is useful if all your deployments will be able to access the private " +
 			"service address. This will default to false but will be automatically set to " +
@@ -994,7 +1009,7 @@ func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-context",
-		Target: &i.config.k8sContext,
+		Target: &i.Config.K8sContext,
 		Usage: "The Kubernetes context to upgrade the Waypoint server to. If left" +
 			" unset, Waypoint will use the current Kubernetes context.",
 		Default: "",
@@ -1002,27 +1017,27 @@ func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-namespace",
-		Target:  &i.config.namespace,
+		Target:  &i.Config.Namespace,
 		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
-		Default: "",
+		Default: "default",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-server-image",
-		Target:  &i.config.serverImage,
+		Target:  &i.Config.ServerImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: installutil.DefaultServerImage,
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-odr-image",
-		Target: &i.config.odrImage,
+		Target: &i.Config.OdrImage,
 		Usage:  "Docker image for the Waypoint On-Demand Runners",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-runner-service-account",
-		Target: &i.config.odrServiceAccount,
+		Target: &i.Config.OdrServiceAccount,
 		Usage: "Service account to assign to the on-demand runner. If this is blank, " +
 			"a service account will be created automatically with the correct permissions.",
 		Default: "waypoint-runner",
@@ -1030,7 +1045,7 @@ func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 
 	set.BoolVar(&flag.BoolVar{
 		Name:    "k8s-runner-service-account-init",
-		Target:  &i.config.odrServiceAccountInit,
+		Target:  &i.Config.OdrServiceAccountInit,
 		Usage:   "Create the service account if it does not exist.",
 		Default: true,
 	})
@@ -1039,7 +1054,7 @@ func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 func (i *K8sInstaller) UninstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-context",
-		Target: &i.config.k8sContext,
+		Target: &i.Config.K8sContext,
 		Usage: "The Kubernetes context to unisntall the Waypoint server from. If left" +
 			" unset, Waypoint will use the current Kubernetes context.",
 		Default: "",
@@ -1047,9 +1062,9 @@ func (i *K8sInstaller) UninstallFlags(set *flag.Set) {
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-namespace",
-		Target:  &i.config.namespace,
+		Target:  &i.Config.Namespace,
 		Usage:   "Namespace in Kubernetes to uninstall the Waypoint server from.",
-		Default: "",
+		Default: "default",
 	})
 }
 

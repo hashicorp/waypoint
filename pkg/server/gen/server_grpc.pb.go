@@ -78,6 +78,9 @@ type WaypointClient interface {
 	// ListApplications because applications are a part of projects and you
 	// can use GetProject to get more information about the project.
 	ListProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListProjectsResponse, error)
+	// DestroyProject deletes a project from the database as well as (optionally)
+	// destroys all resources created within a project
+	DestroyProject(ctx context.Context, in *DestroyProjectRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// GetApplication returns one application on the project.
 	GetApplication(ctx context.Context, in *GetApplicationRequest, opts ...grpc.CallOption) (*GetApplicationResponse, error)
 	// UpsertApplication upserts an application with a project.
@@ -493,6 +496,15 @@ func (c *waypointClient) GetProject(ctx context.Context, in *GetProjectRequest, 
 func (c *waypointClient) ListProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListProjectsResponse, error) {
 	out := new(ListProjectsResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListProjects", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) DestroyProject(ctx context.Context, in *DestroyProjectRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DestroyProject", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1526,6 +1538,9 @@ type WaypointServer interface {
 	// ListApplications because applications are a part of projects and you
 	// can use GetProject to get more information about the project.
 	ListProjects(context.Context, *emptypb.Empty) (*ListProjectsResponse, error)
+	// DestroyProject deletes a project from the database as well as (optionally)
+	// destroys all resources created within a project
+	DestroyProject(context.Context, *DestroyProjectRequest) (*emptypb.Empty, error)
 	// GetApplication returns one application on the project.
 	GetApplication(context.Context, *GetApplicationRequest) (*GetApplicationResponse, error)
 	// UpsertApplication upserts an application with a project.
@@ -1829,6 +1844,9 @@ func (UnimplementedWaypointServer) GetProject(context.Context, *GetProjectReques
 }
 func (UnimplementedWaypointServer) ListProjects(context.Context, *emptypb.Empty) (*ListProjectsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListProjects not implemented")
+}
+func (UnimplementedWaypointServer) DestroyProject(context.Context, *DestroyProjectRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DestroyProject not implemented")
 }
 func (UnimplementedWaypointServer) GetApplication(context.Context, *GetApplicationRequest) (*GetApplicationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetApplication not implemented")
@@ -2427,6 +2445,24 @@ func _Waypoint_ListProjects_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).ListProjects(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_DestroyProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DestroyProjectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DestroyProject(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/DestroyProject",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DestroyProject(ctx, req.(*DestroyProjectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4049,6 +4085,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListProjects",
 			Handler:    _Waypoint_ListProjects_Handler,
+		},
+		{
+			MethodName: "DestroyProject",
+			Handler:    _Waypoint_DestroyProject_Handler,
 		},
 		{
 			MethodName: "GetApplication",

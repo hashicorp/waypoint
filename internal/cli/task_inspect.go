@@ -209,6 +209,8 @@ func (c *TaskInspectCommand) FormatJob(job *pb.Job) error {
 		op = "Init"
 	case *pb.Job_PipelineStep:
 		op = "PipelineStep"
+	case *pb.Job_DestroyProject:
+		op = "DestroyProject"
 	default:
 		op = "Unknown"
 	}

@@ -24,7 +24,7 @@ func TestAppOperation(t *testing.T) {
 
 	op.Test(t)
 
-	t.Run("basic put and get", func(t *testing.T) {
+	t.Run("basic put and get and delete", func(t *testing.T) {
 		require := require.New(t)
 
 		s := TestState(t)
@@ -63,25 +63,27 @@ func TestAppOperation(t *testing.T) {
 		require.Equal("A", b.Id)
 		require.Equal(uint64(1), b.Sequence)
 
-		{
-			// Get it by sequence
-			raw, err = op.Get(s, &pb.Ref_Operation{
-				Target: &pb.Ref_Operation_Sequence{
-					Sequence: &pb.Ref_OperationSeq{
-						Application: b.Application,
-						Number:      b.Sequence,
-					},
+		// Get it by sequence
+		raw, err = op.Get(s, &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Sequence{
+				Sequence: &pb.Ref_OperationSeq{
+					Application: b.Application,
+					Number:      b.Sequence,
 				},
-			})
-			require.NoError(err)
-			require.NotNil(raw)
+			},
+		})
+		require.NoError(err)
+		require.NotNil(raw)
 
-			b, ok = raw.(*pb.Build)
-			require.True(ok)
-			require.NotNil(b.Application)
-			require.Equal("A", b.Id)
-			require.Equal(uint64(1), b.Sequence)
-		}
+		b, ok = raw.(*pb.Build)
+		require.True(ok)
+		require.NotNil(b.Application)
+		require.Equal("A", b.Id)
+		require.Equal(uint64(1), b.Sequence)
+
+		// Delete it by ID
+		err = op.Delete(s, b)
+		require.Nil(err)
 	})
 
 	t.Run("get with data source ref", func(t *testing.T) {
@@ -510,6 +512,23 @@ func TestAppOperation(t *testing.T) {
 
 		// Observe that the watch fires
 		require.False(ws.Watch(time.After(1 * time.Second)))
+	})
+
+	t.Run("attempt deletion of non-existent operation id", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Attempt to delete an operation that doesn't exist
+		err := op.Delete(s, &pb.Build{
+			Id: "id",
+			Application: &pb.Ref_Application{
+				Application: "app123",
+				Project:     "project456",
+			},
+		})
+		require.Error(err)
 	})
 }
 
