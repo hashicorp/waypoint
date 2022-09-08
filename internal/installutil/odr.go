@@ -33,7 +33,7 @@ const DefaultServerImage = "hashicorp/waypoint:latest"
 
 // When we have a serverImage value to give to DefaultODRImage,
 // we should use that. When we don't, we can use this value
-const DefaultRunnerImage = "hashicorp/waypoint-odr:latest"
+const DefaultOdrImage = "hashicorp/waypoint-odr:latest"
 
 func DefaultRunnerName(id string) string {
 	return "waypoint-" + id + "-runner"

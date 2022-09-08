@@ -431,7 +431,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 		} else {
 			ociUrl := odr.OciUrl
 			if ociUrl == "" {
-				ociUrl = installutil.DefaultRunnerImage
+				ociUrl = installutil.DefaultOdrImage
 			}
 			odr = &pb.OnDemandRunnerConfig{
 				Id:                   oldRunnerConfig.Config.Id,

@@ -66,7 +66,7 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "odr-image",
 			Usage:   "Docker image for the on-demand runners.",
-			Default: installutil.DefaultRunnerImage,
+			Default: installutil.DefaultOdrImage,
 			Target:  &c.runnerProfileOdrImage,
 		})
 
