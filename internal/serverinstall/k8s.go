@@ -670,7 +670,7 @@ func (i *K8sInstaller) InstallRunner(
 		Config: k8sinstallutil.K8sConfig{
 			K8sContext:           i.Config.K8sContext,
 			Namespace:            i.Config.Namespace,
-			ServerImage:          i.Config.ServerImage,
+			RunnerImage:          i.Config.ServerImage,
 			CpuRequest:           i.Config.CpuRequest,
 			MemRequest:           i.Config.MemRequest,
 			CreateServiceAccount: true,

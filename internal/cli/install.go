@@ -375,12 +375,12 @@ func (c *InstallCommand) Run(args []string) int {
 	s.Update("Server installed and configured!")
 	s.Done()
 
-	if c.flagRunner {
-		// we pass nil for the ODR config because it's a fresh install
-		if code := installRunner(c.Ctx, log, client, c.ui, p, advertiseAddr, nil); code > 0 {
-			return code
-		}
-	}
+	// if c.flagRunner {
+	// 	// we pass nil for the ODR config because it's a fresh install
+	// 	if code := installRunner(c.Ctx, log, client, c.ui, p, advertiseAddr, nil); code > 0 {
+	// 		return code
+	// 	}
+	// }
 
 	// Close and success
 	c.ui.Output(outInstallSuccess,

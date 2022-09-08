@@ -117,7 +117,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 
 	odrImage := i.Config.OdrImage
 	if odrImage == "" {
-		odrImage, err = installutil.DefaultODRImage(i.Config.ServerImage)
+		odrImage, err = installutil.DefaultODRImage(i.Config.RunnerImage)
 		if err != nil {
 			opts.UI.Output("Error getting default ODR image: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 			return err
