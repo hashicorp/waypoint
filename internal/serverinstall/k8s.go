@@ -194,7 +194,13 @@ func (i *K8sInstaller) Install(
 
 	imageRef, err := dockerparser.Parse(i.Config.ServerImage)
 	if err != nil {
-		ui.Output("Error parsing image ref: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+		ui.Output("Error parsing server image ref: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+		return nil, err
+	}
+
+	odrImageRef, err := dockerparser.Parse(i.Config.OdrImage)
+	if err != nil {
+		ui.Output("Error parsing on-demand runner image ref: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return nil, err
 	}
 
@@ -218,6 +224,16 @@ func (i *K8sInstaller) Install(
 		},
 		"runner": map[string]interface{}{
 			"enabled": false,
+			"image": map[string]interface{}{
+				"repository": odrImageRef.Repository(),
+				"tag":        odrImageRef.Tag(),
+			},
+			"odr": map[string]interface{}{
+				"image": map[string]interface{}{
+					"repository": odrImageRef.Repository(),
+					"tag":        odrImageRef.Tag(),
+				},
+			},
 		},
 	}
 
