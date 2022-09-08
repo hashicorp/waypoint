@@ -144,6 +144,8 @@ func (c *TaskListCommand) Run(args []string) int {
 			op = "Init"
 		case *pb.Job_PipelineStep:
 			op = "PipelineStep"
+		case *pb.Job_DestroyProject:
+			op = "DestroyProject"
 		default:
 			op = "Unknown"
 			c.Log.Debug("encountered unsupported task operation", "op", t.TaskJob.Operation)

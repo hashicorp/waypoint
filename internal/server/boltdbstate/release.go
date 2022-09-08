@@ -1,8 +1,10 @@
 package boltdbstate
 
 import (
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
+	bolt "go.etcd.io/bbolt"
 )
 
 var releaseOp = &appOperation{
@@ -57,4 +59,9 @@ func (s *State) ReleaseLatest(
 	}
 
 	return result.(*pb.Release), nil
+}
+
+// releaseDelete deletes the release from the DB
+func (s *State) releaseDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, r *pb.Release) error {
+	return releaseOp.delete(dbTxn, memTxn, r)
 }

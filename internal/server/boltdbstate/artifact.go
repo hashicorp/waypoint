@@ -1,8 +1,10 @@
 package boltdbstate
 
 import (
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
+	bolt "go.etcd.io/bbolt"
 )
 
 var artifactOp = &appOperation{
@@ -57,4 +59,9 @@ func (s *State) ArtifactLatest(
 	}
 
 	return result.(*pb.PushedArtifact), nil
+}
+
+// artifactDelete deletes the artifact from the DB
+func (s *State) artifactDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, a *pb.PushedArtifact) error {
+	return artifactOp.delete(dbTxn, memTxn, a)
 }

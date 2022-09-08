@@ -1,8 +1,10 @@
 package boltdbstate
 
 import (
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
+	bolt "go.etcd.io/bbolt"
 )
 
 var deploymentOp = &appOperation{
@@ -59,4 +61,9 @@ func (s *State) DeploymentLatest(
 	}
 
 	return result.(*pb.Deployment), nil
+}
+
+// deploymentDelete deletes the deployment from the DB
+func (s *State) deploymentDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, d *pb.Deployment) error {
+	return deploymentOp.delete(dbTxn, memTxn, d)
 }

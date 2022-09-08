@@ -3,6 +3,9 @@ package helm
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
+
 	"github.com/google/go-github/github"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/builtin/k8s"
@@ -17,8 +20,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/client-go/tools/clientcmd"
-	"net/url"
-	"strings"
 )
 
 // restClientGetter is a RESTClientGetter interface implementation for the
@@ -91,7 +92,6 @@ func ActionInit(log hclog.Logger, kubeConfigPath string, context string) (*actio
 	if err != nil {
 		return nil, err
 	}
-
 	driver := "secret"
 
 	// For logging, we'll debug log to a custom named logger.

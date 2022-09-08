@@ -245,6 +245,61 @@ func (p *Project) Ref() *pb.Ref_Project {
 	return &pb.Ref_Project{Project: p.name}
 }
 
+// InWorkspace creates a copy of the project, for a different workspace.
+// The project's config is required to be passed in because the Config
+// option is not set on a project, so we can't reference it directly.
+// Getters for other project fields are used here to limit their exposure.
+func (p *Project) InWorkspace(ctx context.Context, workspace string, projConfig *config.Config) (*Project, error) {
+	project, err := NewProject(ctx,
+		WithLogger(p.getLogger()),
+		WithUI(p.getUI()),
+		WithComponents(p.getFactories()),
+		WithClient(p.getClient()),
+		WithConfig(projConfig),
+		WithDataDir(p.getDataDir()),
+		WithLabels(p.getLabels()),
+		WithVariables(p.getVariables()),
+		WithWorkspace(workspace),
+		WithJobInfo(p.getJobInfo()),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return project, nil
+}
+
+func (p *Project) getLogger() hclog.Logger {
+	return p.logger
+}
+
+func (p *Project) getUI() terminal.UI {
+	return p.UI
+}
+
+func (p *Project) getFactories() map[component.Type]*factory.Factory {
+	return p.factories
+}
+
+func (p *Project) getClient() pb.WaypointClient {
+	return p.client
+}
+
+func (p *Project) getDataDir() *datadir.Project {
+	return p.dir
+}
+
+func (p *Project) getLabels() map[string]string {
+	return p.labels
+}
+
+func (p *Project) getVariables() variables.Values {
+	return p.variables
+}
+
+func (p *Project) getJobInfo() *component.JobInfo {
+	return p.jobInfo
+}
+
 // WorkspaceRef returns the project ref for API calls.
 func (p *Project) WorkspaceRef() *pb.Ref_Workspace {
 	return &pb.Ref_Workspace{

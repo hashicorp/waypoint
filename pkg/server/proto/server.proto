@@ -98,6 +98,10 @@ service Waypoint {
   // can use GetProject to get more information about the project.
   rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse) {}
 
+  // DestroyProject deletes a project from the database as well as (optionally)
+  // destroys all resources created within a project
+  rpc DestroyProject(DestroyProjectRequest) returns (google.protobuf.Empty) {};
+
   // GetApplication returns one application on the project.
   rpc GetApplication(GetApplicationRequest) returns (GetApplicationResponse);
 
@@ -802,6 +806,15 @@ message Project {
     // than the minimum will be ignored.
     string interval = 2;
   }
+
+  ProjectState state = 11;
+
+  // ProjectState is set to active when the project is created and throughout its lifetime.
+  // When a project destroy operation begins, the state is set to destroying.
+  enum ProjectState {
+    ACTIVE = 0;
+    DESTROYING = 1;
+  }
 }
 
 message Workspace {
@@ -1231,6 +1244,24 @@ message DeclaredResource {
 
   // high level type of the resource, used for display purposes.
   ResourceCategoryDisplayHint category_display_hint = 5;
+}
+
+message DestroyedResource {
+  // Unique name name for the resource. Usually derived from the platform. Required.
+  string name = 1;
+
+  // platform-specific type of the resource type. i.e. instance, pod, auto-scaling group, etc
+  string type = 2;
+
+  // The platform on which the resource should exist, i.e. docker, gcp, k8s, etc.
+  string platform = 3;
+
+  // Internal ResourceManager representation of the resource.
+  opaqueany.Any state = 4;
+
+  // Any additional information a plugin wants to expose on this resource.
+  // EX: Availability zones on a load balancer, concurrency limit on a lambda function, etc.
+  string state_json = 5;
 }
 
 enum ResourceCategoryDisplayHint {
@@ -1775,6 +1806,7 @@ message Job {
     InitOp init = 68;
     WatchTaskOp watch_task = 69;
     PipelineStepOp pipeline_step = 70;
+    DestroyProjectOp destroy_project = 71;
   }
 
   //-----------------------------------------------------------------
@@ -1871,6 +1903,7 @@ message Job {
     WatchTaskResult watch_task = 15;
     PipelineStepResult pipeline_step = 16;
     PipelineConfigSyncResult pipeline_config_sync = 17;
+    ProjectDestroyResult project_destroy = 18;
   }
 
   message Config {
@@ -2285,6 +2318,10 @@ message Job {
     map<string, Ref.Pipeline> synced_pipelines = 1;
   }
 
+  message ProjectDestroyResult {
+    string job_id = 1;
+  }
+
   // PollOp triggers a poll action for a project. The job will fail if there
   // is no data source configured for the project.
   //
@@ -2326,6 +2363,14 @@ message Job {
   message PipelineStepOp {
     // The step to execute.
     Pipeline.Step step = 1;
+  }
+
+  // DestroyProjectOp triggers the deletion of a project from the database
+  // as well as (optionally) the destruction of all resources created within
+  // a project
+  message DestroyProjectOp {
+    Ref.Project project = 1;
+    bool skip_destroy_resources = 2;
   }
 
   // Note that since we run pipeline steps as jobs, the output of the pipeline
@@ -3057,6 +3102,10 @@ message ListProjectsResponse {
   repeated Ref.Project projects = 1;
 }
 
+message DestroyProjectRequest {
+  Ref.Project project = 1;
+}
+
 message GetApplicationRequest {
   Ref.Application application = 1;
 }
@@ -3517,6 +3566,9 @@ message Deployment {
 
   // Resources that this deployment has created or manages.
   repeated DeclaredResource declared_resources = 19;
+
+  // Resources that a destroy operation has destroyed
+  repeated DestroyedResource destroyed_resources = 21;
 
   // This is the populated preload data. Most of this data can be retrieved
   // through additional API calls or manually computed, but certain API

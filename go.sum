@@ -1138,8 +1138,8 @@ github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef h1:YKouRHFf
 github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef/go.mod h1:cAGI4nVnEfAyMeqt9oB+Mase8DNn3qA/LDNHURiwssY=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9 h1:i9hzlv2SpmaNcQ8ZLGn01fp2Gqyejj0juVs7rYDgecE=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9/go.mod h1:ObgQSWSX9rsNofh16kctm6XxLW2QW1Ay6/9ris6T6DU=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20220502215818-69a3eeb201d8 h1:htvf9CMha7Cn0fSlOgOQThQnff0oB1s+ssJD3w+G4zk=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20220502215818-69a3eeb201d8/go.mod h1:rogx91d8Lpgj/LC5yHtD7fea1OikuGKiut6QW75wNOA=
+github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20220831214951-89c00954cebb h1:3fHZU0HzNxasyPXb5a+ilFLHbi7BZqqs0vjp74yYOHo=
+github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20220831214951-89c00954cebb/go.mod h1:rogx91d8Lpgj/LC5yHtD7fea1OikuGKiut6QW75wNOA=
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20190923154419-df201c70410d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
@@ -1245,8 +1245,8 @@ github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8
 github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0/go.mod h1:1NbS8ALrpOvjt0rHPNLyCIeMtbizbir8U//inJ+zuB8=
 github.com/karrick/godirwalk v1.15.8 h1:7+rWAZPn9zuRxaIqqT8Ohs2Q2Ac0msBqwRdxNCr2VVs=
 github.com/karrick/godirwalk v1.15.8/go.mod h1:j4mkqPuvaLI8mp1DroR3P6ad7cyYd4c1qeJ3RV7ULlk=
-github.com/kevinburke/go-bindata v3.22.0+incompatible h1:/JmqEhIWQ7GRScV0WjX/0tqBrC5D21ALg0H0U/KZ/ts=
-github.com/kevinburke/go-bindata v3.22.0+incompatible/go.mod h1:/pEEZ72flUW2p0yi30bslSp9YqD9pysLxunQDdb2CPM=
+github.com/kevinburke/go-bindata v3.23.0+incompatible h1:rqNOXZlqrYhMVVAsQx8wuc+LaA73YcfbQ407wAykyS8=
+github.com/kevinburke/go-bindata v3.23.0+incompatible/go.mod h1:/pEEZ72flUW2p0yi30bslSp9YqD9pysLxunQDdb2CPM=
 github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd h1:Coekwdh0v2wtGp9Gmz1Ze3eVRAWJMLokvN3QjdzCHLY=
 github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
