@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -23,6 +24,9 @@ type JobListCommand struct {
 	flagState              []string
 	flagTargetRunner       string
 	flagTargetRunnerLabels map[string]string
+	flagPipelineId         string
+	flagPipelineName       string
+	flagPipelineSequence   int
 }
 
 func (c *JobListCommand) Run(args []string) int {
@@ -95,6 +99,22 @@ func (c *JobListCommand) Run(args []string) int {
 		}}
 	}
 
+	if c.flagPipelineSequence != 0 && (c.flagPipelineId == "" && c.flagPipelineName == "") {
+		c.ui.Output("Cannot list jobs by pipeline run without `-pipeline-id` or `-pipeline-name`.\n"+c.Help(), terminal.WithErrorStyle())
+		return 1
+	}
+	if c.flagPipelineId != "" && c.flagPipelineName != "" {
+		c.ui.Output("Cannot specify both 'pipeline-id' and 'pipeline-name' flags.\n"+c.Help(), terminal.WithErrorStyle())
+		return 1
+	} else if c.flagPipelineId != "" || c.flagPipelineName != "" {
+		pipelineStep := &pb.Ref_PipelineStep{
+			PipelineId:   c.flagPipelineId,
+			PipelineName: c.flagPipelineName,
+			RunSequence:  uint64(c.flagPipelineSequence),
+		}
+		req.Pipeline = pipelineStep
+	}
+
 	resp, err := c.project.Client().ListJobs(ctx, req)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -149,7 +169,7 @@ func (c *JobListCommand) Run(args []string) int {
 
 	c.ui.Output("Waypoint Jobs", terminal.WithHeaderStyle())
 
-	tblHeaders := []string{"ID", "Operation", "State", "Time Completed", "Target Runner", "Workspace", "Project", "Application"}
+	tblHeaders := []string{"ID", "Operation", "State", "Time Completed", "Target Runner", "Workspace", "Project", "Application", "Pipeline"}
 	tbl := terminal.NewTable(tblHeaders...)
 
 	for _, j := range jobs {
@@ -233,6 +253,11 @@ func (c *JobListCommand) Run(args []string) int {
 			completeTime = humanize.Time(j.CompleteTime.AsTime())
 		}
 
+		pipeline := ""
+		if j.Pipeline != nil {
+			pipeline = "name: " + j.Pipeline.PipelineName + ", run: " + strconv.FormatUint(j.Pipeline.RunSequence, 10) + ", step: " + j.Pipeline.Step
+		}
+
 		tblColumn := []string{
 			j.Id,
 			op,
@@ -242,6 +267,7 @@ func (c *JobListCommand) Run(args []string) int {
 			j.Workspace.Workspace,
 			j.Application.Project,
 			j.Application.Application,
+			pipeline,
 		}
 
 		tbl.Rich(tblColumn, nil)
@@ -278,6 +304,24 @@ func (c *JobListCommand) Flags() *flag.Sets {
 				"Can be repeated multiple times.",
 		})
 
+		f.StringVar(&flag.StringVar{
+			Name:   "pipeline-id",
+			Target: &c.flagPipelineId,
+			Usage:  "List jobs initiated by the specific pipeline, look up by pipeline ID.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "pipeline-name",
+			Target: &c.flagPipelineName,
+			Usage:  "List jobs initiated by the specific pipeline, look up by pipeline owner.",
+		})
+
+		f.IntVar(&flag.IntVar{
+			Name:   "run",
+			Target: &c.flagPipelineSequence,
+			Usage:  "List jobs initiated by the specific pipeline run, only valid used together with -pipeline",
+		})
+
 		f.BoolVar(&flag.BoolVar{
 			Name:    "desc",
 			Target:  &c.flagDesc,
@@ -309,7 +353,8 @@ func (c *JobListCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint job list [options]
 
-  List all known jobs from Waypoint server.
+  List known jobs from Waypoint server.
+  Options to filter job list by project, workspace, target runner, pipeline, and pipeline run.
 
 ` + c.Flags().Help())
 }
