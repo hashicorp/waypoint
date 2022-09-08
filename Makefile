@@ -174,7 +174,7 @@ gen/website-mdx:
 	go run ./cmd/waypoint docs -website-mdx
 	go run ./cmd/waypoint docs -json
 	go run ./tools/gendocs
-	cd ./website; npx --no-install next-hashicorp format
+	cd ./website; npx --no-install next-hashicorp format content # only format the content folder in website
 
 .PHONY: tools
 tools: # install dependencies and tools required to build
