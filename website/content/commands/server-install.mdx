@@ -93,7 +93,7 @@ and disable the UI, the command would be:
 - `-k8s-pull-secret=<string>` - Secret to use to access the Waypoint server image on Kubernetes.
 - `-k8s-secret-file=<string>` - Use the Kubernetes Secret in the given path to access the Waypoint server image.
 - `-k8s-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
-- `-k8s-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners.
+- `-k8s-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners. This will default to the server image with the name (not label) suffixed with '-odr'.
 - `-k8s-runner-service-account=<string>` - Service account to assign to the on-demand runner. If this is blank, a service account will be created automatically with the correct permissions. The default is waypoint-runner.
 - `-k8s-runner-service-account-init` - Create the service account if it does not exist. The default is true.
 - `-k8s-storageclassname=<string>` - Name of the StorageClass required by the volume claim to install the Waypoint server image to.

@@ -670,7 +670,7 @@ func (i *K8sInstaller) InstallRunner(
 		Config: k8sinstallutil.K8sConfig{
 			K8sContext:           i.Config.K8sContext,
 			Namespace:            i.Config.Namespace,
-			RunnerImage:          i.Config.ServerImage,
+			ServerImage:          i.Config.ServerImage,
 			CpuRequest:           i.Config.CpuRequest,
 			MemRequest:           i.Config.MemRequest,
 			CreateServiceAccount: true,
@@ -965,7 +965,8 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-odr-image",
 		Target: &i.Config.OdrImage,
-		Usage:  "Docker image for the Waypoint On-Demand Runners",
+		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
+			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -1032,7 +1033,8 @@ func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-odr-image",
 		Target: &i.Config.OdrImage,
-		Usage:  "Docker image for the Waypoint On-Demand Runners",
+		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
+			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
 
 	set.StringVar(&flag.StringVar{
