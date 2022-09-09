@@ -96,7 +96,11 @@ func (c *InstallCommand) Run(args []string) int {
 		}
 	}
 
-	result, err := p.Install(ctx, &serverinstall.InstallOpts{
+	// NOTE(briancain): Currently only the K8s Helm installer returns a bootstrap
+	// token. Helm also installs a runner, so we use this fact to determine if
+	// we should not only bootstrap a token but also install a runner. We could
+	// make this better in the future.
+	result, bootstrapToken, err := p.Install(ctx, &serverinstall.InstallOpts{
 		Log:            log,
 		UI:             c.ui,
 		ServerRunFlags: secondaryArgs,
@@ -191,36 +195,24 @@ func (c *InstallCommand) Run(args []string) int {
 
 	s.Update("Retrieving initial auth token...")
 
-	// We need our bootstrap token immediately
 	var callOpts []grpc.CallOption
-	tokenResp, err := client.BootstrapToken(ctx, &empty.Empty{})
-	var token string
-	if err != nil && status.Code(err) != codes.PermissionDenied {
-		c.ui.Output(
-			"Error getting the initial token: %s\n\n%s",
-			clierrors.Humanize(err),
-			errInstallRunning,
-			terminal.WithErrorStyle(),
-		)
-		return 1
-	}
-	// If we're not using the k8s install path, then we set the token
-	// based on the tokenResp
-	if tokenResp != nil {
-		token = tokenResp.Token
-	}
-	// Our k8s installer uses the helm chart behind the scenes, which bootstraps
-	// the server; therefore we need to get the token that was created and we
-	// expect this error type
-	if tokenResp == nil && status.Code(err) == codes.PermissionDenied && c.platform == "kubernetes" {
-		loginCmd := LoginCommand{
-			flagK8S:            true,
-			flagK8STokenSecret: "waypoint-server-token",
+	token := bootstrapToken
+	if bootstrapToken == "" {
+		// We need our bootstrap token immediately
+		tokenResp, err := client.BootstrapToken(ctx, &empty.Empty{})
+		if err != nil && status.Code(err) != codes.PermissionDenied {
+			c.ui.Output(
+				"Error getting the initial token: %s\n\n%s",
+				clierrors.Humanize(err),
+				errInstallRunning,
+				terminal.WithErrorStyle(),
+			)
+			return 1
 		}
-		var exitCode int
-		token, exitCode = loginCmd.loginK8S(ctx)
-		if exitCode > 0 {
-			return exitCode
+		// If we're not using the k8s install path, then we set the token
+		// based on the tokenResp
+		if tokenResp != nil {
+			token = tokenResp.Token
 		}
 	}
 
@@ -375,9 +367,17 @@ func (c *InstallCommand) Run(args []string) int {
 	s.Update("Server installed and configured!")
 	s.Done()
 
+	// NOTE(briancain): Right now we rely on the fact that only K8S returns a bootstrap
+	// token from the installation interface helper. Since we know helm sets up
+	// a bootstrap job AS WELL AS a runner, we don't need to install another runner
+	// or another runner profile.
 	if c.flagRunner {
+		existingODRConfigSetup := false
+		if bootstrapToken != "" {
+			existingODRConfigSetup = true
+		}
 		// we pass nil for the ODR config because it's a fresh install
-		if code := installRunner(c.Ctx, log, client, c.ui, p, advertiseAddr, nil); code > 0 {
+		if code := installRunner(c.Ctx, log, client, c.ui, p, advertiseAddr, nil, existingODRConfigSetup); code > 0 {
 			return code
 		}
 	}
@@ -510,6 +510,7 @@ func installRunner(
 	p serverinstall.Installer,
 	advertiseAddr *pb.ServerConfig_AdvertiseAddr,
 	odrConfig *pb.OnDemandRunnerConfig,
+	existingODRConfigSetup bool,
 ) int {
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -573,30 +574,35 @@ func installRunner(
 		return 1
 	}
 
-	// If this installation platform supports an out-of-the-box ODR
-	// config then we set that up. This enables on-demand runners to
-	// work immediately.
-	if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
-		s = sg.Add("Registering on-demand runner configuration...")
+	// NOTE(briancain): Some installers like the Kubernetes Helm install already sets up a runner profile
+	// when the server is installed. For this reason, we shouldn't create another
+	// bootstrap runner profile.
+	if !existingODRConfigSetup {
+		// If this installation platform supports an out-of-the-box ODR
+		// config then we set that up. This enables on-demand runners to
+		// work immediately.
+		if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
+			s = sg.Add("Registering on-demand runner configuration...")
 
-		if odrConfig == nil {
-			odrConfig = odc.OnDemandRunnerConfig()
+			if odrConfig == nil {
+				odrConfig = odc.OnDemandRunnerConfig()
+			}
+
+			odrConfig.Name = odrConfig.PluginType + "-bootstrap-profile"
+
+			_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+				Config: odrConfig,
+			})
+			if err != nil {
+				ui.Output("Error creating ondemand runner: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			} else {
+				s.Update("Registered ondemand runner!")
+				s.Status(terminal.StatusOK)
+			}
+
+			s.Done()
 		}
-
-		odrConfig.Name = odrConfig.PluginType + "-bootstrap-profile"
-
-		_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
-			Config: odrConfig,
-		})
-		if err != nil {
-			ui.Output("Error creating ondemand runner: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		} else {
-			s.Update("Registered ondemand runner!")
-			s.Status(terminal.StatusOK)
-		}
-
-		s.Done()
 	}
 
 	return 0
