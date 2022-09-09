@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/opaqueany"
+	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -242,10 +244,15 @@ func (op *releaseDestroyOperation) Name() string {
 	return "release destroy"
 }
 
-func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
+func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App, msg proto.Message) (interface{}, error) {
 	// If we have no releaser then we're done.
 	if op.Component == nil {
 		return nil, nil
+	}
+
+	destroy, ok := msg.(*pb.Release)
+	if !ok {
+		return nil, errors.New("failed to cast release destroy operation proto to a Release")
 	}
 
 	// If we don't implement the destroy plugin we just mark it as destroyed.
@@ -259,13 +266,49 @@ func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app
 		return nil, nil // Fail silently for now, this will be fixed in v0.2
 	}
 
-	return app.callDynamicFunc(ctx,
+	baseArgs := []argmapper.Arg{plugin.ArgNamedAny("release", op.Release.Release)}
+	declaredResourcesResp := &component.DeclaredResourcesResp{}
+	destroyedResourcesResp := &component.DestroyedResourcesResp{}
+	args := append(baseArgs, argmapper.Typed(declaredResourcesResp), argmapper.Typed(destroyedResourcesResp))
+
+	// We don't need the result, we just need the declared and destroyed resources
+	// which we can access without the result since they were passed by reference
+	_, err := app.callDynamicFunc(ctx,
 		log,
 		nil,
 		op.Component,
 		destroyer.DestroyFunc(),
-		plugin.ArgNamedAny("release", op.Release.Release),
+		args...,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	declaredResources := make([]*pb.DeclaredResource, len(declaredResourcesResp.DeclaredResources))
+	if len(declaredResourcesResp.DeclaredResources) > 0 {
+		for i, pluginDeclaredResource := range declaredResourcesResp.DeclaredResources {
+			var serverDeclaredResource pb.DeclaredResource
+			if err := mapstructure.Decode(pluginDeclaredResource, &serverDeclaredResource); err != nil {
+				return nil, status.Errorf(codes.Internal, "failed to decode plugin declared resource named %q: %s", pluginDeclaredResource.Name, err)
+			}
+			declaredResources[i] = &serverDeclaredResource
+		}
+	}
+	destroy.DeclaredResources = declaredResources
+
+	destroyedResources := make([]*pb.DestroyedResource, len(destroyedResourcesResp.DestroyedResources))
+	if len(destroyedResourcesResp.DestroyedResources) > 0 {
+		for i, pluginDestroyedResource := range destroyedResourcesResp.DestroyedResources {
+			var serverDestroyedResource pb.DestroyedResource
+			if err := mapstructure.Decode(pluginDestroyedResource, &serverDestroyedResource); err != nil {
+				return nil, status.Errorf(codes.Internal, "failed to decode plugin declared resource named %q: %s", pluginDestroyedResource.Name, err)
+			}
+			destroyedResources[i] = &serverDestroyedResource
+		}
+	}
+	destroy.DestroyedResources = destroyedResources
+
+	return nil, err
 }
 
 func (op *releaseDestroyOperation) StatusPtr(msg proto.Message) **pb.Status {
