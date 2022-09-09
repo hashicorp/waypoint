@@ -9908,6 +9908,13 @@
           },
           "description": "A platform resource that this release has created, depends on, or manages."
         },
+        "destroyed_resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.DestroyedResource"
+          },
+          "title": "Resources that a destroy operation has destroyed"
+        },
         "preload": {
           "$ref": "#/definitions/hashicorp.waypoint.Release.Preload",
           "description": "This is the populated preload data. Most of this data can be retrieved\nthrough additional API calls or manually computed, but certain API\ncalls will pre-populate some of these fields for convenience. The exact\npre-populated fields depend on the API."
