@@ -188,13 +188,13 @@ func (s *State) onDemandRunnerGet(
 	b := dbTxn.Bucket(onDemandRunnerBucket)
 
 	if ref.Id != "" {
-		s.log.Info("looking up ondemand runner config by id", "id", ref.Id)
+		s.log.Info("looking up on-demand runner config by id", "id", ref.Id)
 		return &result, dbGet(b, []byte(strings.ToLower(ref.Id)), &result)
 	}
 
 	// Look for one by name if possible.
 	if ref.Name != "" {
-		s.log.Info("looking up ondemand runner config by name", "name", ref.Name)
+		s.log.Info("looking up on-demand runner config by name", "name", ref.Name)
 		iter, err := memTxn.Get(
 			onDemandRunnerIndexTableName,
 			onDemandRunnerIndexName+"_prefix",
@@ -207,7 +207,7 @@ func (s *State) onDemandRunnerGet(
 		next := iter.Next()
 		if next == nil {
 			// Indicates that there isn't one of the given name.
-			return nil, status.Errorf(codes.NotFound, "ondemand runner config not found")
+			return nil, status.Errorf(codes.NotFound, "on-demand runner config not found: %v", ref)
 		}
 
 		idx := next.(*onDemandRunnerIndexRecord)

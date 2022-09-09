@@ -521,7 +521,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 		// TODO(mitchellh): This creates a new auth token for the new runner.
 		// In the future, we need to invalidate the old token. We don't have
 		// the functionality to do this today.
-		return installRunner(ctx, installOpts.Log, client, c.ui, p, advertiseAddr, odr)
+		return installRunner(ctx, installOpts.Log, client, c.ui, p, advertiseAddr, odr, true)
 	}
 	return 0
 }

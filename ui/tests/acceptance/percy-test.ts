@@ -21,13 +21,15 @@ async function snapshot(name: string): Promise<void> {
 // Before we send snapshots to Percy, we must move the Flight spritesheet into
 // #ember-testing so that it gets serialized along with everything else. Without
 // this step, icons are not rendered in Percy.
-function domTransformation(dom: HTMLElement): void {
+function domTransformation(dom: HTMLElement): HTMLElement {
   let sandbox = dom.querySelector('#ember-testing');
   let spritesheet = dom.querySelector('svg.flight-sprite-container');
 
   if (sandbox && spritesheet) {
     sandbox.appendChild(spritesheet);
   }
+
+  return dom;
 }
 
 module('Acceptance | Percy', function (hooks) {

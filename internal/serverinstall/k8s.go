@@ -3,6 +3,7 @@ package serverinstall
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -98,12 +99,12 @@ func (i *K8sInstaller) newClient() (*kubernetes.Clientset, error) {
 func (i *K8sInstaller) Install(
 	ctx context.Context,
 	opts *InstallOpts,
-) (*InstallResults, error) {
+) (*InstallResults, string, error) {
 	if i.Config.OdrImage == "" {
 		var err error
 		i.Config.OdrImage, err = installutil.DefaultODRImage(i.Config.ServerImage)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 	}
 
@@ -116,7 +117,7 @@ func (i *K8sInstaller) Install(
 	clientset, err := k8sinstallutil.NewClient(i.Config)
 	if err != nil {
 		ui.Output(err.Error(), terminal.WithErrorStyle())
-		return nil, err
+		return nil, "", err
 	}
 
 	s := sg.Add("Inspecting Kubernetes cluster")
@@ -136,12 +137,12 @@ func (i *K8sInstaller) Install(
 	defer func() { s.Abort() }()
 	settings, err := helminstallutil.SettingsInit()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeConfigPath, i.Config.K8sContext)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	if i.Config.Namespace == "" {
@@ -176,7 +177,7 @@ func (i *K8sInstaller) Install(
 		tags, err := helminstallutil.GetLatestHelmChartVersion(ctx)
 		if err != nil {
 			opts.UI.Output("Error getting latest tag of Waypoint helm chart.", terminal.WithErrorStyle())
-			return nil, err
+			return nil, "", err
 		}
 		version = *tags[0].Name
 	} else {
@@ -184,24 +185,24 @@ func (i *K8sInstaller) Install(
 	}
 	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/"+version+".tar.gz", settings)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	c, err := loader.Load(path)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	imageRef, err := dockerparser.Parse(i.Config.ServerImage)
 	if err != nil {
 		ui.Output("Error parsing server image ref: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-		return nil, err
+		return nil, "", err
 	}
 
 	odrImageRef, err := dockerparser.Parse(i.Config.OdrImage)
 	if err != nil {
 		ui.Output("Error parsing on-demand runner image ref: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-		return nil, err
+		return nil, "", err
 	}
 
 	values := map[string]interface{}{
@@ -240,7 +241,7 @@ func (i *K8sInstaller) Install(
 	s.Update("Installing Waypoint Helm chart...")
 	_, err = client.RunWithContext(ctx, c, values)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	var contextConfig clicontext.Config
@@ -348,7 +349,7 @@ func (i *K8sInstaller) Install(
 		return true, nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	s.Done()
 
@@ -385,8 +386,27 @@ func (i *K8sInstaller) Install(
 		s.Update("No bootstrap job found")
 		s.Status(terminal.WarningStyle)
 		s.Done()
-		return nil, err
+		return nil, "", err
 	}
+
+	secretClient := clientset.CoreV1().Secrets(i.Config.Namespace)
+
+	// Get the secret
+	// TODO(briancain): make a flag for this like the cli/login.go command has
+	// TODO(briancain): Extract the cli.loginK8S method outside of the CLI package?
+	secret, err := secretClient.Get(ctx, "waypoint-server-token", metav1.GetOptions{})
+	if err != nil {
+		ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return nil, "", err
+	}
+
+	// Get our token
+	tokenB64 := secret.Data["token"]
+	if len(tokenB64) == 0 {
+		return nil, "", errors.New("failed to read token secret from response")
+	}
+	bootstrapToken := string(tokenB64)
+
 	s.Update("Server bootstrap complete!")
 	s.Done()
 	s = sg.Add("")
@@ -396,10 +416,11 @@ func (i *K8sInstaller) Install(
 	s.Done()
 
 	return &InstallResults{
-		Context:       &contextConfig,
-		AdvertiseAddr: &advertiseAddr,
-		HTTPAddr:      httpAddr,
-	}, nil
+			Context:       &contextConfig,
+			AdvertiseAddr: &advertiseAddr,
+			HTTPAddr:      httpAddr,
+		},
+		bootstrapToken, nil
 }
 
 // Upgrade is a method of K8sInstaller and implements the Installer interface to
