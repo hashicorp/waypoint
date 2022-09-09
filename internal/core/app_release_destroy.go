@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/opaqueany"
@@ -242,7 +243,7 @@ func (op *releaseDestroyOperation) Name() string {
 	return "release destroy"
 }
 
-func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
+func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App, msg proto.Message) (interface{}, error) {
 	// If we have no releaser then we're done.
 	if op.Component == nil {
 		return nil, nil
@@ -259,13 +260,21 @@ func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app
 		return nil, nil // Fail silently for now, this will be fixed in v0.2
 	}
 
+	declaredResourcesResp := &component.DeclaredResourcesResp{}
+	destroyedResourcesResp := &component.DestroyedResourcesResp{}
+
 	return app.callDynamicFunc(ctx,
 		log,
 		nil,
 		op.Component,
 		destroyer.DestroyFunc(),
 		plugin.ArgNamedAny("release", op.Release.Release),
+		argmapper.Typed(declaredResourcesResp),
+		argmapper.Typed(destroyedResourcesResp),
 	)
+
+	// TODO(emp): Populate declared and destroyed Resoures here back on the message
+	// like deployDestroy does.
 }
 
 func (op *releaseDestroyOperation) StatusPtr(msg proto.Message) **pb.Status {
