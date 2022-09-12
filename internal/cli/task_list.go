@@ -102,7 +102,6 @@ func (c *TaskListCommand) Run(args []string) int {
 
 	for _, t := range tasks {
 		var op string
-		// Job_Noop seems to be missing the isJob_operation method
 		switch t.TaskJob.Operation.(type) {
 		case *pb.Job_Noop_:
 			op = "Noop"
