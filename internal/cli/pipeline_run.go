@@ -131,7 +131,7 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			if err != nil {
 				return err
 			}
-			ws := "default-nil"
+			ws := "default"
 			if job.Workspace != nil {
 				ws = job.Workspace.Workspace
 			}
