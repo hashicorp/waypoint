@@ -227,7 +227,7 @@ func (s *Service) buildStepJobs(
 	// Generate job IDs for each of the steps. We need to know the IDs in
 	// advance to set up the dependency chain.
 	stepIds := map[string]string{}
-	for name, _ := range pipeline.Steps {
+	for name := range pipeline.Steps {
 		nodeId, ok := nodeStepRef.stepRefs[nodePipelineStepRef{pipeline: pipeline.Id, step: name}]
 		if !ok {
 			return nil, nil, nil, status.Errorf(codes.Internal,
