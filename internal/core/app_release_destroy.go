@@ -266,10 +266,8 @@ func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app
 		return nil, nil // Fail silently for now, this will be fixed in v0.2
 	}
 
-	baseArgs := []argmapper.Arg{plugin.ArgNamedAny("release", op.Release.Release)}
 	declaredResourcesResp := &component.DeclaredResourcesResp{}
 	destroyedResourcesResp := &component.DestroyedResourcesResp{}
-	args := append(baseArgs, argmapper.Typed(declaredResourcesResp), argmapper.Typed(destroyedResourcesResp))
 
 	// We don't need the result, we just need the declared and destroyed resources
 	// which we can access without the result since they were passed by reference
@@ -278,7 +276,9 @@ func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app
 		nil,
 		op.Component,
 		destroyer.DestroyFunc(),
-		args...,
+		plugin.ArgNamedAny("release", op.Release.Release),
+		argmapper.Typed(declaredResourcesResp),
+		argmapper.Typed(destroyedResourcesResp),
 	)
 	if err != nil {
 		return nil, err
