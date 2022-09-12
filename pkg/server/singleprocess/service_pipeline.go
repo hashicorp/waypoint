@@ -227,20 +227,18 @@ func (s *Service) buildStepJobs(
 	// Generate job IDs for each of the steps. We need to know the IDs in
 	// advance to set up the dependency chain.
 	stepIds := map[string]string{}
-	for name, step := range pipeline.Steps {
-		if _, ok := step.Kind.(*pb.Pipeline_Step_Pipeline_); !ok {
-			nodeId, ok := nodeStepRef.stepRefs[nodePipelineStepRef{pipeline: pipeline.Id, step: name}]
-			if !ok {
-				return nil, nil, nil, status.Errorf(codes.Internal,
-					"failed to get node ID from pipeline %q and step name %q",
-					pipeline.Id, name)
-			}
+	for name, _ := range pipeline.Steps {
+		nodeId, ok := nodeStepRef.stepRefs[nodePipelineStepRef{pipeline: pipeline.Id, step: name}]
+		if !ok {
+			return nil, nil, nil, status.Errorf(codes.Internal,
+				"failed to get node ID from pipeline %q and step name %q",
+				pipeline.Id, name)
+		}
 
-			var err error
-			stepIds[nodeId], err = server.Id()
-			if err != nil {
-				return nil, nil, nil, err
-			}
+		var err error
+		stepIds[nodeId], err = server.Id()
+		if err != nil {
+			return nil, nil, nil, err
 		}
 	}
 
@@ -264,9 +262,11 @@ func (s *Service) buildStepJobs(
 
 			d, ok := stepIds[nodeDepId]
 			if !ok {
-				// Don't include a pipeline step ref because it won't actually queue a job.
-				log.Info("No step id found for nodeDepId", "pipeline", pipeline.Name,
+				log.Error("No step id found for nodeDepId", "pipeline", pipeline.Name,
 					"step", step.Name, "dep_id", nodeDepId)
+				return nil, nil, nil, status.Errorf(codes.Internal,
+					"no step ID was found for nodeDepId from pipeline %q and step name %q!!",
+					pipeline.Name, nodeDepId)
 				continue
 			}
 
@@ -425,6 +425,17 @@ func (s *Service) buildStepJobs(
 						"an embedded pipeline step matches a parent step name: %s", k)
 				}
 			}
+
+			// Steps of type Pipline Refs are now noop jobs. This is currently a work around to ensure that
+			// if a step parent is *Also* an embedded pipeline, we should not run until
+			// that pipeline is complete. To accomplish this, we make a Noop job depend
+			// on all of the embedded pipeline jobs.
+			job.Operation = &pb.Job_Noop_{
+				Noop: &pb.Job_Noop{},
+			}
+			for _, stepJobReq := range embedJobs {
+				job.DependsOn = append(job.DependsOn, stepJobReq.Job.Id)
+			}
 		default:
 			job.Operation = &pb.Job_PipelineStep{
 				PipelineStep: &pb.Job_PipelineStepOp{
@@ -515,10 +526,12 @@ func (s *Service) pipelineGraphFull(
 					pipeline.Name)
 			}
 
+			// TODO(briancain): We need to write a test to validate that embedded pipelines
+			// properly draw edges from the parent step to *this* node id.
 			// Add an edge to the parent step as an implicit dependency
 			// Embedded pipeline steps have an implicit dependency on the parent step
 			// from the parent pipeline.
-			stepGraph.AddEdge(parentStep, nodeId)
+			stepGraph.AddEdge(nodeId, parentStep)
 		}
 
 		// Add any dependencies as defined by the current Step
