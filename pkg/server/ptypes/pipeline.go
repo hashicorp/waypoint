@@ -51,6 +51,30 @@ func TestPipeline(t testing.T, src *pb.Pipeline) *pb.Pipeline {
 	return src
 }
 
+// TestPipelineStep creates a valid pipeline step for testing, with optional
+// workspace reference.
+func TestPipelineAppendSteps(t testing.T, src *pb.Pipeline, srcSteps []*pb.Pipeline_Step) *pb.Pipeline {
+	t.Helper()
+
+	pipe := TestPipeline(t, src)
+
+	for _, step := range srcSteps {
+		require.NoError(t, mergo.Merge(step, &pb.Pipeline_Step{
+			Name:      "next",
+			DependsOn: []string{"root"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}))
+
+		pipe.Steps[step.Name] = step
+	}
+
+	return pipe
+}
+
 // TestPipelineRun returns a valid pipeline run for tests.
 func TestPipelineRun(t testing.T, src *pb.PipelineRun) *pb.PipelineRun {
 	t.Helper()

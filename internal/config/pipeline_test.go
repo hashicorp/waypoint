@@ -154,6 +154,62 @@ func TestPipeline(t *testing.T) {
 				require.Equal("example.com/test", ps.ImageURL)
 			},
 		},
+
+		{
+			"pipeline_step_workspace.hcl",
+			"foo",
+			func(t *testing.T, c *Pipeline) {
+				require := require.New(t)
+
+				require.NotNil(t, c)
+				require.Equal("foo", c.Name)
+
+				steps := c.Steps
+				require.Len(steps, 3)
+				for _, step := range steps {
+					expected := ""
+					if step.Name == "testworkspace" {
+						expected = "testworkspace"
+					}
+					require.Equal(expected, step.Workspace)
+				}
+			},
+		},
+
+		{
+			"pipeline_step_workspace_nested.hcl",
+			"foo",
+			func(t *testing.T, c *Pipeline) {
+				require := require.New(t)
+
+				require.NotNil(t, c)
+				require.Equal("foo", c.Name)
+
+				steps := c.Steps
+				require.Len(steps, 5)
+
+				// expect step 0 to not have a pipeline or workspace set
+				require.Nil(steps[0].Pipeline)
+				require.Empty(steps[0].Workspace)
+
+				// we expect step 1 to have the testworkspace workspace set
+				require.Equal("testworkspace", steps[1].Workspace)
+
+				// step 2 should have a pipeline
+				pipe1 := steps[2]
+				require.NotNil(pipe1.Pipeline)
+				require.Len(pipe1.Pipeline.Steps, 1)
+				require.Empty(pipe1.Pipeline.Steps[0].Workspace)
+
+				// step 3 should have a pipeline
+				pipe2 := steps[3]
+				require.NotNil(pipe2.Pipeline)
+				require.Len(pipe2.Pipeline.Steps, 3)
+				require.Empty(pipe2.Pipeline.Steps[0].Workspace)
+				require.Equal("dontoverride", pipe2.Pipeline.Steps[1].Workspace)
+				require.Empty(pipe2.Pipeline.Steps[2].Workspace)
+			},
+		},
 	}
 
 	// Test all the cases
@@ -279,6 +335,72 @@ func TestPipelineProtos(t *testing.T) {
 				require.Equal(ok, true)
 				require.Equal(pipeOwner.Owner.Project.Project, "foo")
 				require.Equal(pipeOwner.Owner.PipelineName, "pipe2")
+			},
+		},
+		{
+			"pipeline_step_workspace.hcl",
+			func(t *testing.T, c *Config) {
+				require := require.New(t)
+
+				pipelines, err := c.PipelineProtos()
+				require.NoError(err)
+				require.Len(pipelines, 1)
+
+				require.Equal(pipelines[0].Name, "foo")
+
+				testStep := pipelines[0].Steps["testworkspace"]
+				require.NotNil(testStep.Workspace)
+				require.Equal("testworkspace", testStep.Workspace.Workspace)
+			},
+		},
+
+		{
+			"pipeline_step_workspace_nested.hcl",
+			func(t *testing.T, c *Config) {
+				require := require.New(t)
+
+				pipelines, err := c.PipelineProtos()
+				require.NoError(err)
+				require.Len(pipelines, 3)
+
+				// grab our pipes and test individually
+				var fooPipe *pb.Pipeline
+				var nestedPipe *pb.Pipeline
+				var nestedWSPipe *pb.Pipeline
+				for _, p := range pipelines {
+					if p.Name == "foo" {
+						fooPipe = p
+					}
+					if p.Name == "nested" {
+						nestedPipe = p
+					}
+					if p.Name == "nested_workspace" {
+						nestedWSPipe = p
+					}
+				}
+
+				// The fooPipe has 5 steps, 3 of them are nested pipelines. The
+				// other 2 should have 1 with no workspace (inherits default),
+				// the other set as "testworkspace"
+				require.Len(fooPipe.Steps, 5)
+				require.Len(nestedPipe.Steps, 1)
+				require.Len(nestedWSPipe.Steps, 3)
+				require.Empty(fooPipe.Steps["test"].Workspace)
+				require.Empty(fooPipe.Steps["normal"].Workspace)
+				require.Equal("testworkspace", fooPipe.Steps["testworkspace"].Workspace.Workspace)
+
+				// The nested pipe has 1 step, with no workspace specified
+				require.Len(nestedPipe.Steps, 1)
+				require.Empty(nestedPipe.Steps["test_nested"].Workspace)
+
+				// The nestedWSPipe has 5 steps, 1 of them has a workspace
+				// specified. The parent step has a workspace specified however
+				// during parsing that value is not cascaded down to the
+				// sub-steps; that's handled during step/job creation
+				require.Len(nestedWSPipe.Steps, 3)
+				require.Empty(nestedWSPipe.Steps["test_nested"].Workspace)
+				require.Equal("dontoverride", nestedWSPipe.Steps["test_nested_dontoverride"].Workspace.Workspace)
+				require.Empty(nestedWSPipe.Steps["test_nested_override"].Workspace)
 			},
 		},
 	}

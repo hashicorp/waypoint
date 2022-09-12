@@ -298,6 +298,14 @@ func (s *Service) buildStepJobs(
 			RunSequence:  pipelineRun.Sequence,
 		}
 
+		// step has a specific workspace set, update the job to use that
+		// workspace
+		if step.Workspace != nil {
+			job.Workspace = &pb.Ref_Workspace{
+				Workspace: step.Workspace.Workspace,
+			}
+		}
+
 		// Queue the right job depending on the Step type. We will queue a Waypoint
 		// operation if the type is a reserved built in step.
 		switch o := step.Kind.(type) {
@@ -388,6 +396,19 @@ func (s *Service) buildStepJobs(
 				visitedPipelines, nodeStepRef, parentStepDep, embeddedPipeline, pipelineRun)
 			if err != nil {
 				return nil, nil, nil, err
+			}
+
+			// Add the parent step workspace ref and apply it to all embedded
+			// pipeline job templates if step was not configured with a
+			// workspace ref.
+			if step.Workspace != nil {
+				for _, jobReq := range embedJobs {
+					if jobReq.Job.Workspace.Workspace == "default" {
+						jobReq.Job.Workspace = &pb.Ref_Workspace{
+							Workspace: step.Workspace.Workspace,
+						}
+					}
+				}
 			}
 
 			// add the nested jobs
