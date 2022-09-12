@@ -9266,6 +9266,10 @@
         "image": {
           "type": "string",
           "description": "Docker image to execute. This should be a fully qualified image URL."
+        },
+        "workspace": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "title": "Workspace to use in step execution. If undefined, will default to the\nWorkspace used when running the pipeline, otherwise 'default'"
         }
       },
       "description": "A single step within the pipeline."

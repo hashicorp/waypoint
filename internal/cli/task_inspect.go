@@ -167,8 +167,9 @@ func (c *TaskInspectCommand) FormatJob(job *pb.Job) error {
 	}
 
 	var op string
-	// Job_Noop seems to be missing the isJob_operation method
 	switch job.Operation.(type) {
+	case *pb.Job_Noop_:
+		op = "Noop"
 	case *pb.Job_Build:
 		op = "Build"
 	case *pb.Job_Push:
