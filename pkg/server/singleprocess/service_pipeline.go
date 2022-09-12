@@ -425,7 +425,7 @@ func (s *Service) buildStepJobs(
 				}
 			}
 
-			// Steps of type Pipline Refs are now noop jobs. This is currently a work around to ensure that
+			// Steps of type Pipeline Refs are now noop jobs. This is currently a work around to ensure that
 			// if a step parent is *Also* an embedded pipeline, we should not run until
 			// that pipeline is complete. To accomplish this, we make a Noop job depend
 			// on all of the embedded pipeline jobs.
