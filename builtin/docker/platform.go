@@ -82,12 +82,11 @@ func (p *Platform) StatusFunc() interface{} {
 	return p.Status
 }
 
-func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp, dtr *component.DestroyedResourcesResp) *resource.Manager {
+func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
 	return resource.NewManager(
 		resource.WithLogger(log.Named("resource_manager")),
 		resource.WithValueProvider(p.getDockerClient),
 		resource.WithDeclaredResourcesResp(dcr),
-		resource.WithDestroyedResourcesResp(dtr),
 		resource.WithResource(resource.NewResource(
 			resource.WithName("network"),
 			resource.WithState(&Resource_Network{}),
@@ -298,7 +297,7 @@ func (p *Platform) Status(
 	s := sg.Add("Gathering health report for Docker platform...")
 	defer s.Abort()
 
-	rm := p.resourceManager(log, nil, nil)
+	rm := p.resourceManager(log, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
@@ -603,7 +602,7 @@ func (p *Platform) Deploy(
 	result.Name = src.App
 
 	// Create our resource manager and create
-	rm := p.resourceManager(log, dcr, nil)
+	rm := p.resourceManager(log, dcr)
 	if err := rm.CreateAll(
 		ctx, log, sg, ui,
 		src, job, img, deployConfig, &result,
@@ -634,13 +633,11 @@ func (p *Platform) Destroy(
 	log hclog.Logger,
 	deployment *Deployment,
 	ui terminal.UI,
-	dcr *component.DeclaredResourcesResp,
-	dtr *component.DestroyedResourcesResp,
 ) error {
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	rm := p.resourceManager(log, dcr, dtr)
+	rm := p.resourceManager(log, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.

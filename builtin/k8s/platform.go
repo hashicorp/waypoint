@@ -151,12 +151,11 @@ func (p *Platform) ConfigSet(config interface{}) error {
 	return nil
 }
 
-func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp, dtr *component.DestroyedResourcesResp) *resource.Manager {
+func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
 	return resource.NewManager(
 		resource.WithLogger(log.Named("resource_manager")),
 		resource.WithValueProvider(p.getClientset),
 		resource.WithDeclaredResourcesResp(dcr),
-		resource.WithDestroyedResourcesResp(dtr),
 		resource.WithResource(resource.NewResource(
 			resource.WithName(platformName),
 			resource.WithState(&Resource_Deployment{}),
@@ -1247,7 +1246,7 @@ func (p *Platform) Deploy(
 	defer sg.Wait()
 
 	// Create our resource manager and create
-	rm := p.resourceManager(log, dcr, nil)
+	rm := p.resourceManager(log, dcr)
 	if err := rm.CreateAll(
 		ctx, log, sg, ui,
 		src, img, deployConfig, &result,
@@ -1267,13 +1266,11 @@ func (p *Platform) Destroy(
 	log hclog.Logger,
 	deployment *Deployment,
 	ui terminal.UI,
-	dcr *component.DeclaredResourcesResp,
-	dtr *component.DestroyedResourcesResp,
 ) error {
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	rm := p.resourceManager(log, dcr, dtr)
+	rm := p.resourceManager(log, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
@@ -1304,7 +1301,7 @@ func (p *Platform) Status(
 	step := sg.Add("Gathering health report for Kubernetes deployment...")
 	defer func() { step.Abort() }() // Defer in func in case more steps are added to this func in the future
 
-	rm := p.resourceManager(log, nil, nil)
+	rm := p.resourceManager(log, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.

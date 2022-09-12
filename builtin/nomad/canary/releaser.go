@@ -54,12 +54,11 @@ func (r *Releaser) StatusFunc() interface{} {
 	return r.Status
 }
 
-func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp, dtr *component.DestroyedResourcesResp) *resource.Manager {
+func (r *Releaser) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
 	return resource.NewManager(
 		resource.WithLogger(log.Named("resource_manager")),
 		resource.WithValueProvider(r.getNomadClient),
 		resource.WithDeclaredResourcesResp(dcr),
-		resource.WithDestroyedResourcesResp(dtr),
 		resource.WithResource(resource.NewResource(
 			resource.WithName(rmResourcePromotedJobName),
 			resource.WithState(&jobspec.Resource_Job{}),
@@ -320,7 +319,7 @@ func (r *Releaser) Release(
 	defer st.Close()
 	defer sg.Wait()
 
-	rm := r.resourceManager(log, dcr, nil)
+	rm := r.resourceManager(log, dcr)
 	if err := rm.CreateAll(
 		ctx, log, st, sg, &result, target,
 	); err != nil {
@@ -344,7 +343,7 @@ func (r *Releaser) Destroy(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	rm := r.resourceManager(log, dcr, dtr)
+	rm := r.resourceManager(log, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
@@ -371,7 +370,7 @@ func (r *Releaser) Status(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	rm := r.resourceManager(log, nil, nil)
+	rm := r.resourceManager(log, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.

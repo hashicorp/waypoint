@@ -59,12 +59,11 @@ func (p *Platform) StatusFunc() interface{} {
 	return p.Status
 }
 
-func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp, dtr *component.DestroyedResourcesResp) *resource.Manager {
+func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
 	return resource.NewManager(
 		resource.WithLogger(log.Named("resource_manager")),
 		resource.WithValueProvider(p.getNomadClient),
 		resource.WithDeclaredResourcesResp(dcr),
-		resource.WithDestroyedResourcesResp(dtr),
 		resource.WithResource(resource.NewResource(
 			resource.WithName(rmResourceJobName),
 			resource.WithState(&Resource_Job{}),
@@ -339,7 +338,7 @@ func (p *Platform) Deploy(
 	// We'll update the user in real time
 	sg := ui.StepGroup()
 	defer sg.Wait()
-	rm := p.resourceManager(log, dcr, nil)
+	rm := p.resourceManager(log, dcr)
 	if err := rm.CreateAll(
 		ctx, log, sg, ui,
 		src, img, deployConfig, &result,
@@ -364,7 +363,7 @@ func (p *Platform) Destroy(
 ) error {
 	sg := ui.StepGroup()
 	defer sg.Wait()
-	rm := p.resourceManager(log, dcr, dtr)
+	rm := p.resourceManager(log, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
@@ -453,7 +452,7 @@ func (p *Platform) Status(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	rm := p.resourceManager(log, nil, nil)
+	rm := p.resourceManager(log, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
